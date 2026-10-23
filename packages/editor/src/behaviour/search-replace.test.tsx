@@ -3,8 +3,9 @@
  *
  * The bugs guarded: a case or whole-word toggle that changes the match count
  * but not the replacement (the count and a replace-all must agree on the same
- * ranges); a toggle the reader cannot reach; and a default that silently
- * matched a different case than the count reported.
+ * ranges); a toggle the reader cannot reach; a default that silently matched a
+ * different case than the count reported; and a **disabled** bar that still
+ * stepped its match, because a read-only host keeps receiving keys.
  */
 
 import { useState, type ReactNode } from "react";
@@ -17,19 +18,24 @@ import { SearchReplace } from "../search/search-replace.js";
 interface Root {
   readonly renderer: ReturnType<typeof createTestRoot>["renderer"];
   readonly unmount: () => void;
+  readonly rerender: (node: ReactNode) => void;
 }
 
 let current: Root | undefined;
 
 const render = (node: ReactNode): Root => {
   const root = createTestRoot({ width: 1000, height: 700 });
-  root.render(<ThemeProvider theme={darkTheme}>{node}</ThemeProvider>);
+  const rerender = (next: ReactNode): void => {
+    root.render(<ThemeProvider theme={darkTheme}>{next}</ThemeProvider>);
+  };
+  rerender(node);
   const mounted: Root = {
     renderer: root.renderer,
     unmount: () => {
       root.unmount();
       current = undefined;
     },
+    rerender,
   };
   current = mounted;
   return mounted;
@@ -127,6 +133,26 @@ describe("SearchReplace", () => {
     const field = search.renderer.findByTestId("search-replace-replace");
     search.renderer.nativeSimulateKeyDown(field?.id ?? -1, "f3");
     expect(text(search)).toContain("2 / 2");
+    search.unmount();
+  });
+
+  it("refuses to step the match once the bar is disabled", () => {
+    const search = render(
+      <SearchReplace value="cat cat" onValueChange={() => undefined} />,
+    );
+    typeInto(search, "search-replace-find", "cat");
+    expect(text(search)).toContain("1 / 2");
+
+    search.rerender(
+      <SearchReplace
+        value="cat cat"
+        onValueChange={() => undefined}
+        disabled
+      />,
+    );
+    const field = search.renderer.findByTestId("search-replace-find");
+    search.renderer.nativeSimulateKeyDown(field?.id ?? -1, "f3");
+    expect(text(search)).toContain("1 / 2");
     search.unmount();
   });
 

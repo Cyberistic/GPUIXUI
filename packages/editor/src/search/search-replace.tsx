@@ -8,9 +8,11 @@
  * surface) stays the single owner of the text.
  *
  * F3 moves to the next match and Shift+F3 to the previous; next/previous and
- * replace act on the active match. Without a caret or scroll-offset API the bar
- * cannot move the editor's selection to the active match — it reports the match
- * (`n / m`) and leaves the jump to a surface that can.
+ * replace act on the active match. A **disabled** bar is inert on that route
+ * too: a read-only host still receives keys, so F3 must not step the match.
+ * Without a caret or scroll-offset API the bar cannot move the editor's
+ * selection to the active match — it reports the match (`n / m`) and leaves the
+ * jump to a surface that can.
  */
 
 import type { KeyEvent } from "@gpuix/react";
@@ -47,6 +49,7 @@ export interface SearchReplaceProps {
   readonly nextLabel?: string;
   /** The previous-match action's name. Default `"Previous match"`. */
   readonly previousLabel?: string;
+  /** Refuse every route, key included: a read-only host still receives keys. */
   readonly disabled?: boolean;
   /** A Tailwind class string for the bar, joined after the recipe so it wins. */
   readonly className?: string;
@@ -88,12 +91,12 @@ export const SearchReplace = ({
   const active = count === 0 ? 0 : Math.min(activeIndex, count - 1);
 
   const go = (step: 1 | -1): void => {
-    if (count === 0) return;
+    if (disabled || count === 0) return;
     setActiveIndex((active + step + count) % count);
   };
 
   const replaceOne = (): void => {
-    if (count === 0) return;
+    if (disabled || count === 0) return;
     const range = Arr.getUnsafe(ranges, active);
     onValueChange(
       value.slice(0, range.start) + replacement + value.slice(range.end),
@@ -101,11 +104,14 @@ export const SearchReplace = ({
   };
 
   const replaceEvery = (): void => {
-    if (count === 0) return;
+    if (disabled || count === 0) return;
     onValueChange(replaceAll(value, query, replacement, options));
   };
 
   const onKeyDown = (event: KeyEvent): void => {
+    // A read-only host still receives keys, so a disabled bar must refuse this
+    // route itself rather than trusting the field's `disabled` prop.
+    if (disabled) return;
     if (event.key === "f3") {
       event.preventDefault();
       go(event.modifiers?.shift === true ? -1 : 1);
