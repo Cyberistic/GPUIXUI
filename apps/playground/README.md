@@ -1326,8 +1326,30 @@ tip's text is painted.
 | hover a sibling | `leaves=1` and the tip stops painting — leaving closes it (80ms close timer) |
 | hover again, `Escape` | the tip paints again, then Escape dismisses it while the focus stays on the trigger |
 
-14 checks, `--only tooltip-lifecycle`, green on 0.11.0; capture
-`.artifacts/live/tooltip-open.png`. Negative control, measured: mounting the
+#### The entry, frame by frame
+
+A tip's fade and its travel are `motion` values no window reports, so the entry
+is read where it paints and on the renderer's **motion clock**, the way
+`surface-fade` reads a dialog's. The clock is frozen before the hover and
+advanced by an exact offset for each frame, so a slow paint cannot name a frame
+the renderer never produced. The fixture paints a white strip behind the trigger
+and publishes the tip's own `onLayout` box beside the frame.
+
+| Frame | Check |
+| ----- | ----- |
+| frozen mount | the pixel inside the surface is the strip and the content box paints no ink — an arriving tip paints none of itself |
+| advance `20ms` (an eighth of the fast `160ms` level) | the ink's brightest pixel is a **mix** of the `popover` surface and the ink it rests at, so the fade is painted rather than skipped; the ink's top row also sits **3 device rows** (1.5 points) below its resting row, so the `2`-point travel is painted on the content |
+| advance past the level | the surface's fill is exactly its `popover` role and the ink its own resting colour |
+
+Measured detail worth keeping: the **surface fill does not fade toward the
+strip**. At the first painted frame it already reads near its resting darkness
+(the runtime's floating layer paints its own plate under the styled content), so
+a probe sampling the fill would see no fade at all; the ink is the part that
+moves from the surface colour to its own.
+
+32 checks, `--only tooltip-lifecycle`, green on 0.11.0; capture
+`.artifacts/live/tooltip-open.png` and the three `tooltip-fade-*.png` frames.
+Negative control, measured: mounting the
 trigger without the `Tooltip` wrapper fails
 `a hover opens the tip with its own content` (`expected true, got false`,
 exit `1`).

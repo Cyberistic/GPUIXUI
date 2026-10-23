@@ -440,6 +440,16 @@ import {
   surfaceFadeColour,
   type FadeBox,
 } from "./fade.js";
+import {
+  TOOLTIP_PARTIAL_MS,
+  TOOLTIP_REST_MS,
+  formatTooltipBox,
+  inkPeak,
+  inkTopRow,
+  parseTooltipBox,
+  tooltipSample,
+  type TooltipBox,
+} from "./tooltip-fade.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
 import {
   firesOf,
@@ -3223,7 +3233,23 @@ const TooltipProbe = (): ReactNode => {
           or Escape closes it. A Tab traversal focuses the trigger without
           running its onFocus, so the tip stays closed.
         </text>
-        <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+        {/*
+          The white strip the entry is sampled over: the tip floats above the
+          trigger, inside this band, so its fade composites against a page a
+          dark surface can be told apart from (`surface-fade`'s backing).
+        */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-end",
+            gap: 24,
+            height: 120,
+            marginLeft: -theme.spacing.xl,
+            paddingLeft: theme.spacing.xl + theme.spacing.sm,
+            backgroundColor: FADE_BACKING,
+          }}
+        >
           <Tooltip
             content={
               <div onLayout={(payload) => setTip(boxOf(payload))}>
@@ -3246,6 +3272,15 @@ const TooltipProbe = (): ReactNode => {
           </Tooltip>
           {target("tooltip-away", "Leave here")}
         </div>
+        <text
+          testId="tooltip-box"
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {formatTooltipBox(tip)}
+        </text>
         <text
           testId="tooltip-readout"
           style={{
@@ -7805,6 +7840,157 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* focusedId(ctx),
       "tooltip-trigger",
     );
+
+    // ── The entry, on the renderer's motion clock ───────────────────────────
+    // The tip has no readout of its own paint: the fade is a value no style
+    // report can see, so it is read where it paints — a point inside the
+    // surface, over the white strip the fixture paints behind the trigger. The
+    // reading is taken on the motion clock (see `surface-fade`) so a slow paint
+    // cannot name a frame the renderer never produced: freeze, advance by an
+    // exact offset, capture.
+    const pauseClock = yield* ctx.expectSome(
+      "the window exposes a motion clock",
+      Option.fromNullishOr(ctx.host.clockPause),
+    );
+    const fastForward = yield* ctx.expectSome(
+      "the clock can be advanced",
+      Option.fromNullishOr(ctx.host.clockFastForward),
+    );
+    const resumeClock = yield* ctx.expectSome(
+      "the clock can be resumed",
+      Option.fromNullishOr(ctx.host.clockResume),
+    );
+    const surface = yield* ctx.expectSome(
+      "the palette names the tip's surface colour",
+      surfaceFadeColour(palettes.dark.colors.popover),
+    );
+
+    /** The tip's box as its own layout report publishes it right now. */
+    const tipBox = (): Effect.Effect<
+      TooltipBox,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > =>
+      Effect.flatMap(ctx.host.text("tooltip-box"), (value) =>
+        ctx.expectSome("the tip publishes its own box", parseTooltipBox(value)),
+      );
+
+    /** The colour at the sample point of a capture of `box`. */
+    const sampleIn = (
+      frame: Pixels.Pixels,
+      box: TooltipBox,
+      scale: number,
+    ): Option.Option<Pixels.Rgba> => {
+      const point = framePoint(tooltipSample(box), scale);
+      return Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y));
+    };
+
+    /** Captures `name` and samples it at the point inside `box`. */
+    const captureSample = (
+      name: string,
+      box: TooltipBox,
+      scale: number,
+    ): Effect.Effect<
+      Pixels.Rgba,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > =>
+      Effect.gen(function* () {
+        yield* ctx.host.capture(name);
+        return yield* ctx.expectSome(
+          `the ${name} capture holds the sample point`,
+          sampleIn(yield* ctx.host.pixels(name), box, scale),
+        );
+      });
+
+    // The pointer is on the trigger from the Escape above, so the entry starts
+    // from a leave rather than from an open tip.
+    yield* ctx.host.hover("tooltip-away");
+    yield* settleTip(false);
+
+    const frozenAt = yield* pauseClock();
+    yield* ctx.host.hover("tooltip-trigger");
+    const mountValue = yield* settleUntil(
+      ctx.host.text("tooltip-box"),
+      (value) => Option.isSome(parseTooltipBox(value)),
+    );
+    const mount = yield* ctx.expectSome(
+      "the mount frame publishes the tip's box",
+      parseTooltipBox(mountValue),
+    );
+    yield* ctx.host.capture("tooltip-fade-mount");
+    const mountFrame = yield* ctx.host.pixels("tooltip-fade-mount");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(mountFrame, size),
+    );
+    const mountSample = yield* ctx.expectSome(
+      "the mount capture holds the sample point",
+      sampleIn(mountFrame, mount, scale),
+    );
+    yield* ctx.expectEqual(
+      "a frozen mount paints the strip, not the tip",
+      isBacking(mountSample, FADE_BACKING_RGBA),
+      true,
+    );
+
+    const partialAt = yield* fastForward(TOOLTIP_PARTIAL_MS);
+    yield* ctx.expectEqual(
+      "the clock advances by the partial offset",
+      Math.round(partialAt - frozenAt),
+      TOOLTIP_PARTIAL_MS,
+    );
+    yield* settleUntil(
+      captureSample("tooltip-fade-partial", mount, scale),
+      (sample) => !isBacking(sample, FADE_BACKING_RGBA),
+      FADE_CAPTURE_ATTEMPTS,
+    );
+
+    yield* fastForward(TOOLTIP_REST_MS - TOOLTIP_PARTIAL_MS);
+    const settled = yield* settleUntil(
+      captureSample("tooltip-fade-settled", mount, scale),
+      (sample) => isSurface(sample, surface),
+      FADE_CAPTURE_ATTEMPTS,
+    );
+    yield* ctx.expectEqual(
+      "past its level the tip rests on its own colour",
+      isSurface(settled, surface),
+      true,
+    );
+
+    // The travel is painted on the content, not on the surface's own edge (the
+    // floating layer's plate keeps its box): the entering ink sits lower than
+    // the ink it settles at, and the fade is the ink's own colour moving from
+    // the surface toward its resting ink.
+    const partialFrame = yield* ctx.host.pixels("tooltip-fade-partial");
+    const settledFrame = yield* ctx.host.pixels("tooltip-fade-settled");
+    const rest = yield* tipBox();
+    const enteringTop = yield* ctx.expectSome(
+      "the entering frame paints the tip's text",
+      inkTopRow(partialFrame, mount, scale, surface),
+    );
+    const restingTop = yield* ctx.expectSome(
+      "the resting frame paints the tip's text",
+      inkTopRow(settledFrame, rest, scale, surface),
+    );
+    yield* ctx.expectEqual(
+      "the entering tip sits lower than the one it rests at",
+      enteringTop > restingTop,
+      true,
+    );
+    const enteringInk = yield* ctx.expectSome(
+      "the entering frame holds the tip's ink",
+      inkPeak(partialFrame, mount, scale),
+    );
+    const restingInk = yield* ctx.expectSome(
+      "the resting frame holds the tip's ink",
+      inkPeak(settledFrame, rest, scale),
+    );
+    yield* ctx.expectEqual(
+      "partway through its level the ink is a mix of surface and its own colour",
+      isFading(enteringInk, surface, restingInk),
+      true,
+    );
+    yield* resumeClock();
   });
 
 /**

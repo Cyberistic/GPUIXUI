@@ -123,7 +123,7 @@ export const liveRegistry = [
   {
     id: "tooltip-lifecycle",
     title:
-      "Overlay: the shipped Tooltip opens on hover above its trigger, closes on leave and dismisses on Escape, while a Tab traversal leaves it closed",
+      "Overlay: the shipped Tooltip opens on hover above its trigger, fades and rises into place, closes on leave and dismisses on Escape, while a Tab traversal leaves it closed",
     capability: "overlay",
   },
   {
