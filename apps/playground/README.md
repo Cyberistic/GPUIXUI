@@ -42,11 +42,12 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-109 probes a real window can prove, of which twenty mount shipped
+110 probes a real window can prove, of which twenty-one mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the collapsible section, the popover,
+the popover's reflow,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail), eight mount
@@ -113,7 +114,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (45/45 green); -> 2 on a host with no binding
+# -> 0 here (46/46 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -719,10 +720,10 @@ locate rule and replace-all, so a green probe cannot stand on wrong numbers.
 
 ## Evidence on this host
 
-The suite is **45/45 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **46/46 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-45/45 scenarios passed · capabilities: layout=verified text=verified
+46/46 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -743,6 +744,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down and `deltaX` negative to scroll right (the opposite of the DOM); an `overflowX` strip clamps exactly at `contentWidth − viewportWidth` |
 | panel | pointer capture + inclusive clamp |
+| panel group | the shipped `PanelGroup` paints its three fractions of the space **between** its dividers (125.6 / 345.4 / 157 of a 640-wide group) and the panes plus the two 6px dividers are the whole width; the collapse toggle is the first stop inside the group, and Enter collapses that pane to its header (the others take the space) and expands it back to the same shares; the first divider is the next tab stop and `right` trades exactly 16px with its one neighbour (the third pane keeps 25%) while `left` returns it (`panel-group-core`) |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints. A row that grows **while painted** re-measures on the next frame and the rows below shift by the growth; the list paints whole rows only, so a growth that leaves less than a row of viewport defers the following row's paint until a scroll (`virtual-list-expand`). A page prepended above a scrolled reader keeps their rows and their `y` exactly while the offset grows by the page height, and at `0` the anchor is dropped so the new page paints (`virtual-list-prepend`) |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | data grid | a frozen first column is its own vertical scroller beside the grid, mirrored in `onScrollChange` with a re-entrancy guard: a wheel over either pane moves both, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same `-1440` (`data-grid-frozen-column`). A header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
@@ -6132,6 +6134,66 @@ and expecting the in-flow base's fill at the flow centre fails
 `the positioned cover paints over the in-flow child` with `expected true, got
 false`.
 
+### `floating-reflow-lifecycle` — measured on 0.11.0 here
+
+**Does an open panel stay attached when its anchor is laid out again?**
+`header-menu-lifecycle` proved the **paint-level** half: a wheel moves the
+trigger and the panel follows it in the same read. A **reflow** is a different
+event — the anchor's box is computed again — and a panel that keeps the pixels
+it entered at would drift off the control it belongs to. The consumer cases are
+a dock's divider dragged with a menu open, a column menu while a column hides,
+and a window zoom. This probe drives the last one, because `zoomWindow` is the
+only reflow the automation protocol exposes without a pointer.
+
+Three anchors are open at once and every one of them derives its `left`/`top`
+from `useWindowSize`, so the zoom lays all three out again and nothing here
+writes a pixel the runtime did not compute:
+
+| Surface | Anchor | Painted panel |
+| ------- | ------ | ------------- |
+| a raw `FloatingLayer` (`side="left"`, `align="start"`, `sideOffset={6}`) | 700,120 → 1480,120 | 554,120 → 1334,120 |
+| the same raw layer at the window's bottom edge | y 440 → 843 | y 440 → 843 |
+| the shipped `Popover`, opened by a press | 460,440 → 1240,843 | y 382 → 785 |
+
+The window opens at **900×520** and the platform's zoom takes it to
+**1680×923**. The raw panel ends **6** points left of its anchor at rest and
+still ends 6 left of it when the anchor sits 780 points further right; the
+bottom pair keeps its top alignment through a 403-point move down the window.
+The shipped popover keeps both of its offsets against a trigger that moved
+780 right and 403 down.
+
+Three rules a plan can use:
+
+1. **An open surface stays on its anchor, not on its pixels.** A pane may be
+   resized with a menu open: the panel is laid out again with the box it points
+   at, so a dock does not have to dismiss its menus on a divider drag.
+2. **Both axes follow.** A horizontal reflow carries the panel sideways and a
+   vertical one carries it down; measuring only `x` would leave a window that
+   grows downwards unproven.
+3. **The rest offset is the contract.** The probe compares offsets, never
+   absolute pixels: a window reports no style, and the placement arithmetic
+   (gap, alignment) is what a component owns.
+
+Two honest limits. The probe drives a **window zoom**, not a divider drag or a
+column hide: those change a sibling's width (`dock-reflow` and
+`table-columns-lifecycle` measure the reflow itself), and this probe is what
+says the surfaces follow it. And the **side** a panel opened on is decided once
+per open (`packages/components/src/internal/use-placement.ts`), so a menu that
+flipped above its trigger at the window's bottom edge keeps that side while it
+stays open; that is a source read, not a measurement this probe makes.
+
+27 checks, `--only floating-reflow-lifecycle`, green on 0.11.0 here (~3.5–3.9 s,
+three runs). Fixture `src/live/floating-reflow.ts` (the ids, the anchor
+arithmetic, the offset rule and the check count) + `floating-reflow.test.ts`
+(the arithmetic against both window sizes, the unique ids, the check count, the
+probe's own route and this section). Negative control measured, exit `1`,
+restored green: expecting the panel to stay on its **absolute** pixels fails
+`NEGATIVE CONTROL the panel stays on its absolute pixels` with
+`expected 554 ± 1, got 1334` — the 780-point move the offset checks are not
+allowed to hide. Evidence: `apps/playground/README.md` §`floating-reflow-lifecycle`,
+`.artifacts/live/floating-reflow.png` and
+`.artifacts/live/floating-reflow-zoomed.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6364,7 +6426,8 @@ narrower. Each deviation is deliberate and measured:
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
-  and `z-index-lifecycle` (fifty-one probes, each run alone).
+  and `z-index-lifecycle` and `floating-reflow-lifecycle` (fifty-two probes, each
+  run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

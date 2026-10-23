@@ -690,6 +690,12 @@ export const liveRegistry = [
       "Layout: a local zIndex orders positioned siblings for paint and hit testing, no level keeps tree order, and a level on an in-flow child is inert",
     capability: "layout",
   },
+  {
+    id: "floating-reflow-lifecycle",
+    title:
+      "Floating: an open panel rests with the anchor a window reflow lays out again, on both the primitive and the shipped popover",
+    capability: "floating",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -494,6 +494,19 @@ import {
 } from "./selection-event.js";
 import { settleNumber, settleUntil } from "./settle.js";
 import {
+  REFLOW_ANCHOR,
+  REFLOW_IDS,
+  REFLOW_MIN_TRAVEL,
+  REFLOW_PANEL,
+  REFLOW_POPOVER_INSET,
+  REFLOW_SIDE_GAP,
+  REFLOW_TOP,
+  reflowAnchorLeft,
+  reflowAnchorTop,
+  reflowOffset,
+  trailingGap,
+} from "./floating-reflow.js";
+import {
   FIELD_INK_IDS,
   HINT_TEXT,
   HINT_TYPED,
@@ -5124,6 +5137,394 @@ const floatingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
     yield* ctx.host.capture("floating-sides");
+  });
+
+/**
+ * `floating-reflow-lifecycle` — an open panel when its anchor is laid out again.
+ *
+ * `header-menu-lifecycle` proved an anchored surface follows its anchor's
+ * **paint-level** offset (a wheel moves the trigger and the panel together). A
+ * reflow is a different event: the anchor's box is computed again, and a panel
+ * that is already open was placed against the old one. The dock case is a menu
+ * left open while a divider is dragged; the table case is a column menu while a
+ * column hides; the window case is this probe, because `zoomWindow` is the one
+ * reflow the automation protocol can drive without a pointer.
+ *
+ * Every anchor's `left`/`top` is derived from `useWindowSize`, so the zoom moves
+ * them and nothing here writes a pixel the runtime did not lay out. Two raw
+ * `FloatingLayer`s answer for the primitive (`side` and `align` on both axes);
+ * the shipped `Popover` mounted open answers for the component layer.
+ */
+const FloatingReflowProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+
+  const panel = (testId: string): ReactNode => (
+    <div
+      testId={testId}
+      style={{
+        width: REFLOW_PANEL.width,
+        height: REFLOW_PANEL.height,
+        padding: theme.spacing.sm,
+        pointerEvents: "auto",
+        backgroundColor: theme.colors.popover,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+        borderRadius: theme.radius.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        panel
+      </text>
+    </div>
+  );
+
+  const anchor = (testId: string, panelId: string, top: number): ReactNode => (
+    <div
+      testId={testId}
+      style={{
+        position: "absolute",
+        left: reflowAnchorLeft(window.width),
+        top,
+        width: REFLOW_ANCHOR.width,
+        height: REFLOW_ANCHOR.height,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.colors.muted,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {testId}
+      </text>
+      <FloatingLayer side="left" align="start" sideOffset={REFLOW_SIDE_GAP}>
+        {panel(panelId)}
+      </FloatingLayer>
+    </div>
+  );
+
+  return (
+    <div
+      testId={REFLOW_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+          position: "absolute",
+          left: theme.spacing.xl,
+          top: theme.spacing.xl,
+        }}
+      >
+        Three open anchors: does a reflow carry their panels?
+      </text>
+      {anchor(REFLOW_IDS.rightAnchor, REFLOW_IDS.rightPanel, REFLOW_TOP)}
+      {anchor(
+        REFLOW_IDS.bottomAnchor,
+        REFLOW_IDS.bottomPanel,
+        reflowAnchorTop(window.height),
+      )}
+      <div
+        style={{
+          position: "absolute",
+          left: reflowAnchorLeft(window.width) - REFLOW_POPOVER_INSET,
+          top: reflowAnchorTop(window.height),
+        }}
+      >
+        <Popover>
+          <PopoverTrigger testId={REFLOW_IDS.popoverTrigger}>
+            Columns
+          </PopoverTrigger>
+          <PopoverContent testId={REFLOW_IDS.popoverPanel}>
+            <text>Visible columns</text>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The reflow probe's checks.
+ *
+ * Each anchor is measured against its panel's painted box, never against a
+ * constant: the gap the layer asks for and the top edge `align="start"` holds
+ * are the contract, and the assertions after the zoom re-read them against the
+ * anchor's **new** box, so a panel left on its old pixels fails naming the gap
+ * it actually paints.
+ */
+const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(REFLOW_IDS.probe);
+
+    /** A painted box read that records no check, so a poll can re-read freely. */
+    const optionalBox = (testId: string) =>
+      Effect.map(ctx.host.bounds(testId), Option.fromNullishOr);
+
+    /** An anchor and its panel, once both paint. */
+    const optionalPair = (anchorId: string, panelId: string) =>
+      Effect.map(
+        Effect.all([optionalBox(anchorId), optionalBox(panelId)], {
+          concurrency: 1,
+        }),
+        ([anchor, panel]) => Option.all([anchor, panel]),
+      );
+
+    /** The same pair, polled until `holds` — a poll must not record a check. */
+    const settledPair = (
+      anchorId: string,
+      panelId: string,
+      holds: (pair: readonly [Smoke.Bounds, Smoke.Bounds]) => boolean,
+    ) =>
+      settleUntil(optionalPair(anchorId, panelId), (pair) =>
+        Option.match(pair, {
+          onNone: () => false,
+          onSome: holds,
+        }),
+      );
+
+    /** Both boxes painted, or a check that names the pair and the moment. */
+    const paintedPair = (anchorId: string, panelId: string, when: string) =>
+      Effect.flatMap(
+        settledPair(anchorId, panelId, () => true),
+        (pair) =>
+          ctx.expectSome(
+            `the window paints ${anchorId} and ${panelId} ${when}`,
+            pair,
+          ),
+      );
+
+    /** The window's size once it changed and the anchor's box moved with it. */
+    const settledReflow = (previous: Smoke.Size, anchorId: string) => {
+      const poll = (
+        tries: number,
+      ): Effect.Effect<Smoke.Size, Smoke.SmokeHostError> =>
+        Effect.gen(function* () {
+          const size = yield* ctx.host.windowSize();
+          const anchor = yield* optionalBox(anchorId);
+          const moved =
+            size.width !== previous.width &&
+            size.height !== previous.height &&
+            Option.match(anchor, {
+              onNone: () => false,
+              onSome: (box) =>
+                Math.abs(box.x - reflowAnchorLeft(previous.width)) > 1,
+            });
+          if (moved || tries <= 0) return size;
+          yield* Effect.sleep(Duration.millis(100));
+          return yield* poll(tries - 1);
+        });
+      return poll(20);
+    };
+
+    const opened = yield* ctx.host.windowSize();
+    yield* ctx.expectEqual(
+      "the window reports a positive width",
+      opened.width > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the window reports a positive height",
+      opened.height > 0,
+      true,
+    );
+
+    // 1. At rest, each raw layer sits one gap left of its anchor on the
+    //    anchor's top edge, and the shipped popover opens below its trigger.
+    const right = yield* paintedPair(
+      REFLOW_IDS.rightAnchor,
+      REFLOW_IDS.rightPanel,
+      "at rest",
+    );
+    const [rightAnchorRest, rightPanelRest] = right;
+    const rightOffset = reflowOffset(rightAnchorRest, rightPanelRest);
+    yield* ctx.expectNear(
+      "the raw panel ends one gap left of its anchor",
+      trailingGap(rightAnchorRest, rightPanelRest),
+      REFLOW_SIDE_GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the raw panel starts on its anchor's top edge",
+      rightPanelRest.y,
+      rightAnchorRest.y,
+      1,
+    );
+
+    const bottom = yield* paintedPair(
+      REFLOW_IDS.bottomAnchor,
+      REFLOW_IDS.bottomPanel,
+      "at rest",
+    );
+    const [bottomAnchorRest, bottomPanelRest] = bottom;
+    yield* ctx.expectNear(
+      "the bottom panel ends one gap left of its anchor",
+      trailingGap(bottomAnchorRest, bottomPanelRest),
+      REFLOW_SIDE_GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the bottom panel starts on its anchor's top edge",
+      bottomPanelRest.y,
+      bottomAnchorRest.y,
+      1,
+    );
+
+    // The popover is opened by a press rather than mounted open: its placement
+    // is measured once per open, and a surface mounted open measures the
+    // trigger during the mount's own layout pass.
+    yield* ctx.host.click(REFLOW_IDS.popoverTrigger);
+    // The surface is measured against its anchor once per open, one frame after
+    // the open commits; the wait keeps the "rest" offset a rest offset.
+    yield* Effect.sleep(Duration.millis(300));
+    const popoverRest = yield* paintedPair(
+      REFLOW_IDS.popoverTrigger,
+      REFLOW_IDS.popoverPanel,
+      "at rest",
+    );
+    const [triggerRest, popoverPanelRest] = popoverRest;
+    // The panel enters with a few pixels of travel along its entry axis, so the
+    // offset is read at rest: a mid-tween read measures the travel, not the gap.
+    const popoverRestY = yield* settleNumber(
+      boxAxis("y")(ctx, REFLOW_IDS.popoverPanel),
+    );
+    const popoverOffset = reflowOffset(triggerRest, {
+      ...popoverPanelRest,
+      y: popoverRestY,
+    });
+    yield* ctx.host.capture("floating-reflow");
+
+    // 2. Reflow the window. Every anchor's left/top is derived from
+    //    `useWindowSize`, so the zoom lays all three out again.
+    yield* ctx.host.zoomWindow();
+    const zoomed = yield* settledReflow(opened, REFLOW_IDS.rightAnchor);
+    yield* ctx.expectEqual(
+      "the platform's zoom widens the window",
+      zoomed.width > opened.width,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the platform's zoom heightens the window",
+      zoomed.height > opened.height,
+      true,
+    );
+
+    const rightAfter = yield* paintedPair(
+      REFLOW_IDS.rightAnchor,
+      REFLOW_IDS.rightPanel,
+      "after the zoom",
+    );
+    const [rightAnchorZoomed, rightPanelZoomed] = rightAfter;
+    yield* ctx.expectEqual(
+      "the reflow moves the right anchor",
+      rightAnchorZoomed.x - rightAnchorRest.x >= REFLOW_MIN_TRAVEL,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the right panel keeps its gap from the reflowed anchor",
+      trailingGap(rightAnchorZoomed, rightPanelZoomed),
+      REFLOW_SIDE_GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the right panel keeps its top alignment after the reflow",
+      rightPanelZoomed.y,
+      rightAnchorZoomed.y,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the right panel's offset survives the reflow",
+      reflowOffset(rightAnchorZoomed, rightPanelZoomed).dx,
+      rightOffset.dx,
+      1,
+    );
+
+    const bottomAfter = yield* paintedPair(
+      REFLOW_IDS.bottomAnchor,
+      REFLOW_IDS.bottomPanel,
+      "after the zoom",
+    );
+    const [bottomAnchorZoomed, bottomPanelZoomed] = bottomAfter;
+    yield* ctx.expectEqual(
+      "the reflow moves the bottom anchor",
+      bottomAnchorZoomed.y - bottomAnchorRest.y >= REFLOW_MIN_TRAVEL,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the bottom panel keeps its gap from the reflowed anchor",
+      trailingGap(bottomAnchorZoomed, bottomPanelZoomed),
+      REFLOW_SIDE_GAP,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the bottom panel keeps its top alignment after the reflow",
+      bottomPanelZoomed.y,
+      bottomAnchorZoomed.y,
+      1,
+    );
+
+    const popoverAfter = yield* paintedPair(
+      REFLOW_IDS.popoverTrigger,
+      REFLOW_IDS.popoverPanel,
+      "after the zoom",
+    );
+    const [triggerZoomed, popoverPanelZoomed] = popoverAfter;
+    yield* ctx.expectEqual(
+      "the reflow moves the popover's trigger down the window",
+      triggerZoomed.y - triggerRest.y >= REFLOW_MIN_TRAVEL,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the popover keeps its horizontal offset from the reflowed trigger",
+      reflowOffset(triggerZoomed, popoverPanelZoomed).dx,
+      popoverOffset.dx,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the popover keeps its vertical offset from the reflowed trigger",
+      reflowOffset(triggerZoomed, popoverPanelZoomed).dy,
+      popoverOffset.dy,
+      1,
+    );
+    yield* ctx.host.capture("floating-reflow-zoomed");
+
+    // 3. Zoom back, so the window is left as the probes after it expect, and
+    //    the same offsets hold on the way back.
+    yield* ctx.host.zoomWindow();
+    const restored = yield* settledReflow(zoomed, REFLOW_IDS.rightAnchor);
+    yield* ctx.expectNear(
+      "zooming back restores the window it opened at",
+      restored.width,
+      opened.width,
+      1,
+    );
+    const rightRestored = yield* paintedPair(
+      REFLOW_IDS.rightAnchor,
+      REFLOW_IDS.rightPanel,
+      "on the way back",
+    );
+    yield* ctx.expectNear(
+      "the right panel follows the anchor back",
+      trailingGap(rightRestored[0], rightRestored[1]),
+      REFLOW_SIDE_GAP,
+      1,
+    );
   });
 
 const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
@@ -28986,5 +29387,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "z-index-lifecycle",
     view: () => <ZIndexProbe />,
     steps: zIndexSteps,
+  },
+  "floating-reflow-lifecycle": {
+    id: "floating-reflow-lifecycle",
+    view: () => <FloatingReflowProbe />,
+    steps: floatingReflowSteps,
   },
 };
