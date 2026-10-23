@@ -8424,6 +8424,143 @@
   color: var(--placeholder);
 }
 
+/* The page's scene: a header, the bar, the outside-press control, the readout
+   and the rules the drawing follows. `.gx-nav-tile` is the same bar inline. */
+.gx-demo-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(560px, 100%);
+}
+
+.gx-nav-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gx-nav-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-nav-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-nav-subtitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gx-nav-controls-note {
+  max-width: 320px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--placeholder);
+}
+
+.gx-nav-readout {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.gx-nav-hint {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+.gx-nav-hint kbd {
+  padding: 0 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.gx-nav-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-nav-trigger:disabled {
+  color: var(--placeholder);
+  cursor: default;
+}
+
+.gx-nav-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gx-nav-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-nav-tile .gx-nav-bar {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.gx-nav-tile-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-nav-tile-note {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.gx-nav-content-static {
+  position: static;
+  margin-top: 6px;
+  width: 100%;
+  min-width: 0;
+  box-shadow: none;
+}
+
 /* ---- preview card: mirrors components/src/preview-card.tsx ----
    A hoverable popover surface (`bg-popover … rounded-lg border shadow-md`):
    it may hold a link, which is what separates it from a tooltip. Opens on

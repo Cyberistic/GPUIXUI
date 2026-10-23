@@ -7587,7 +7587,56 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 205/205
+`[x]` `[██████████]` 206/206
+
+`[x]` Curate the **Navigation menu** page and hold its pointer clock, its
+one-panel rule and its panel to the source — `/docs/components/navigation-menu`
+served only the package page (strategy 4: no preview), so the one overlay whose
+whole contract is temporal had nothing a reader could press: the page could not
+show that exactly one panel is open, that a rest on a trigger opens after
+`openDelay` and leaving **both** the trigger and its panel closes after
+`closeDelay`, or that an explicit press, key, `Escape` or outside press cancels a
+pending hover so a closed panel cannot spring back. The curated page shadows
+`packages/components/docs/navigation-menu.mdx` and carries the ten template
+sections: the 150 ms pair, the press/key/suspension rules, `ArrowDown` opening
+with focus on the **panel surface** (not its first link) while `Enter`/`Space`
+leave focus on the trigger, the roving `Left`/`Right`/`Home`/`End` group, the
+panel's accessible name being the item's **`value`** rather than its label, the
+recipe's fixed `rounded-lg`/`min-w-[220px]`/6px inset beside the theme's
+`elevation.md` lift, and every measured gap (no `href`, no `aria-haspopup`, no
+`aria-current`, no pointer-type signal, no portal or trap). Two browser
+previews: `navigation-menu-demo` (a product nav driven by the preview's own
+reducer — hover, press, arrows, `Escape`, a chosen link and a simulated outside
+press, with the open item, the roving focus and the last route in a live
+readout) and `navigation-menu-states` (at rest, one open, a disabled trigger).
+The state machine lives in `src/components/docs/navigation-menu-preview.ts` so it
+is testable: `navigation-menu-preview.test.ts` (13 cases) reads
+`packages/components/src/navigation-menu.tsx` for both defaults, the toggle, the
+`stopHover`/`suspended` guards, the `isTriggerPoint` exemption, `isDown`'s
+`requestPanelFocus`, the panel's `role="group"`/`aria-label={value}`/`tabIndex`,
+and drives the reducer over the one-panel, pointer-grace, key-beats-hover and
+never-spring-back transitions plus `navTimer` and the roving wrap;
+`navigation-menu-demo.test.tsx` (4 cases) renders both scenes and holds one open
+panel of three triggers, the named group, the 3 link rows, the disabled trigger
+and both copyable sources. `component-page-truth.test.ts` gained the page and
+`holds the nav's one-panel rule, its pointer clock and its panel to the source`,
+which reads the source and the `NAVIGATION_MENU_CONTENT` recipe, and the generic
+count case derives **23** from the suite (the components workstream's link
+`onActivate` alias added two). The sidebar (`meta.json` Navigation), the
+Components index, `/docs/theming`'s switch list, `sources.ts`, the app README
+ledger, `package-docs.test.ts`'s curated set, the strategy's "Curated today"
+line and `package-page-template` all name the page. The same pass followed the
+components workstream's in-flight trigger refactor on the two curated pages it
+touched: `date-picker` (18 → **20** native cases, `onActivate`/`onClick` rows,
+`@gpuixui/primitives/button`) and `popover` (12 → **14**, the trigger table and
+the same dependency), whose package pages now document the deprecated alias.
+Directions measured: `OPEN_DELAY_MS = 200` fails `waits the delay the preview
+prints before a hover opens`; the page at "250 ms" fails the truth case by name.
+`nub run --filter @gpuixui/docs test` is **1 163 passed** with only the two
+foreign failures recorded in Interlocks (the editor pages' six cross-links and
+the two dock pages with no limitations section); `check-types`, `oxlint`,
+`check:tests` and `fmt` are clean for this change. No native GPUix scenario
+applies — a docs page and its drawing have no runtime path.
 
 `[x]` Let a reader see a component in **both palettes** — the site's switch
 offered four platforms and no way to compare the library's light theme: every

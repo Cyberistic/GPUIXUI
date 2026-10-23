@@ -8,7 +8,10 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { CountingNumberDemo, countingNumberDemoSource } from "./counting-number-demo";
+import {
+  CountingNumberDemo,
+  countingNumberDemoSource,
+} from "./counting-number-demo";
 import {
   AvatarStates,
   AvatarWorkflow,
@@ -185,7 +188,9 @@ import {
 } from "./message-scroller-demo";
 import {
   NavigationMenuDemo,
+  NavigationMenuStates,
   navigationMenuDemoSource,
+  navigationMenuStatesSource,
 } from "./navigation-menu-demo";
 import { PreviewCardDemo, previewCardDemoSource } from "./preview-card-demo";
 import { BoxDemo, boxDemoSource } from "./box-demo";
@@ -2852,6 +2857,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   "navigation-menu-demo": {
     render: NavigationMenuDemo,
     source: navigationMenuDemoSource,
+  },
+  "navigation-menu-states": {
+    render: NavigationMenuStates,
+    source: navigationMenuStatesSource,
   },
   "preview-card-demo": {
     render: PreviewCardDemo,

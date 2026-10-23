@@ -100,6 +100,17 @@ is an ordinary button — `Enter` and `Space` toggle it.
 | `collisionPadding` | `number` | `8` |
 | `alignOffset` | `number` | `0` |
 
+### PopoverTrigger
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `onActivate` | `(event) => void` | — |
+| `onClick` | `(event) => void` | — |
+
+`onActivate` is the action's one handler — it toggles the popover after the
+caller's own work; `onClick` is the deprecated alias and only runs when
+`onActivate` is absent.
+
 ## Theming
 
 | Part | Reads |
@@ -136,7 +147,8 @@ than a `dark:` variant.
 | `@gpuix/react/floating` | `FloatingLayer` positioning, `useControllableState`, `mergeStyles` |
 | `@gpuixui/tw` | the `POPOVER_CONTENT` recipe |
 | `effect` | `Match` for the dismiss-key dispatch |
-| this package | the shared dismiss stack and the local button stand-in |
+| `@gpuixui/primitives/button` | the trigger's action contract, shared with the rest of the library |
+| this package | the shared dismiss stack |
 
 ## Related
 
@@ -146,7 +158,7 @@ than a `dark:` variant.
 
 ## Status
 
-`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 12 native
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 14 native
 behaviour tests, both themes. The runtime snaps a surface but does not flip it
 and centres `align="center"` on the containing block, so the component flips a
 snapped surface back off its trigger and measures the centre itself. It paints

@@ -65,6 +65,7 @@ components/field.mdx        Curated: one message slot, submit-time validation, n
 components/form.mdx         Curated: the submit lifecycle, the core's field meta, the flat summary
 components/inline-edit.mdx  Curated: one finish per edit, blur commits, the caller's value
 components/list.mdx         Curated: one roving tab stop, type-ahead, the range that skips a row
+components/navigation-menu.mdx Curated: one panel, the hover clock, the panel's fixed box
 components/pagination.mdx   Curated: the derived window, the gap-of-one rule, the clamped page
 components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
@@ -120,7 +121,8 @@ src/components/docs/keyboard-shortcuts-demo.tsx The cheat sheet's groups and key
 src/components/docs/mention-input-demo.tsx The mention field's query and ranked list
 src/components/docs/message-demo.tsx       The conversation row's variants and slots
 src/components/docs/message-scroller-demo.tsx The scroller's pin, unread and jump
-src/components/docs/navigation-menu-demo.tsx The nav's one-panel contract
+src/components/docs/navigation-menu-demo.tsx The nav's two browser renderings and their source strings
+src/components/docs/navigation-menu-preview.ts The nav's reducer, its hover clock and its roving group
 src/components/docs/preview-card-demo.tsx  The hoverable card's open and close
 src/components/docs/breadcrumb-preview.ts The breadcrumb preview's collapse rule and separator count
 src/components/docs/breadcrumb-demo.tsx  The breadcrumb's two browser renderings and their source strings

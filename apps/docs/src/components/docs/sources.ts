@@ -22,6 +22,7 @@ import field from "../../../../../packages/components/src/field.tsx?raw";
 import form from "../../../../../packages/components/src/form.tsx?raw";
 import inlineEdit from "../../../../../packages/components/src/inline-edit.tsx?raw";
 import list from "../../../../../packages/components/src/list.tsx?raw";
+import navigationMenu from "../../../../../packages/components/src/navigation-menu.tsx?raw";
 import pagination from "../../../../../packages/components/src/pagination.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import searchInput from "../../../../../packages/components/src/search-input.tsx?raw";
@@ -67,6 +68,7 @@ export const componentSources = {
   form,
   inlineEdit,
   list,
+  navigationMenu,
   pagination,
   popover,
   searchInput,

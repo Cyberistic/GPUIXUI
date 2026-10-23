@@ -164,6 +164,8 @@ control they are that control's own press.
 | `disabled` | `boolean` | `false` | adds to the root's disabled rule; never removes it |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `testId` | `string` | `"date-picker-trigger"` | the trigger's test identity |
+| `onActivate` | `(event) => void` | — | the action's one handler: it opens the surface from a press or an activating key |
+| `onClick` | `(event) => void` | — | the deprecated alias; only runs when `onActivate` is absent |
 
 The trigger extends the button's props, so it also takes the GPUix host props
 (`ref`, `style`, `role`, `aria-*`) and merges `style` last.
@@ -246,6 +248,7 @@ density scale.
 | `@gpuix/react` | the host props, the key event and the renderer's focus call |
 | `@gpuix/react/floating` | `mergeStyles` and the floating content's anchoring |
 | `@gpuixui/icons` | the two chevrons and the trigger's caret |
+| `@gpuixui/primitives/button` | the trigger's action contract, shared with the rest of the library |
 | `@gpuixui/tw` | the date-picker recipes and `cn` |
 
 ## Related
@@ -264,7 +267,7 @@ whole, while `@gpuix/native@0.11.0` publishes no `aria-current` for today, no
 `aria-disabled` for an unavailable day and no `aria-haspopup` on the trigger. The
 package's own `docs/date-picker.mdx` records the same limits.
 
-`src/behaviour/date-picker.test.tsx` runs **18 native behaviour tests** in the
+`src/behaviour/date-picker.test.tsx` runs **20 native behaviour tests** in the
 real GPUix renderer on the pinned runtime: opening and focusing a day, a choice
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 `PageDown` browsing without changing the value, `Escape` focus-return, the

@@ -410,9 +410,9 @@ the install block and the copyable source.
 Curated today: Accordion, Alert, Avatar, Badge, Breadcrumb, Button, Card,
 Carousel, Checkbox, Collapsible, Color picker, Combobox, Command menu,
 Confirmation dialog, Context menu, Date picker, Dialog, Drawer, Dropdown menu,
-Empty state, Field and inline validation, Form, Inline edit, List, Pagination,
-Popover, Search input, Select, Stepper, Switch, Table, Tag input, Tabs, Time picker,
-Timeline, Tooltip, Toast.
+Empty state, Field and inline validation, Form, Inline edit, List,
+Navigation menu, Pagination, Popover, Search input, Select, Stepper, Switch,
+Table, Tag input, Tabs, Time picker, Timeline, Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the

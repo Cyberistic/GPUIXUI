@@ -235,6 +235,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/list.tsx",
   },
   {
+    file: "navigation-menu.mdx",
+    row: "Navigation Menu",
+    suite: "packages/components/src/behaviour/navigation-menu.test.tsx",
+    shadowed: "packages/components/docs/navigation-menu.mdx",
+    source: "packages/components/src/navigation-menu.tsx",
+  },
+  {
     file: "pagination.mdx",
     row: "Pagination",
     suite: "packages/components/src/behaviour/pagination.test.tsx",
@@ -2988,6 +2995,73 @@ describe("the curated component pages", () => {
     expect(text).toContain("24px");
     expect(text).toContain("draft is the component's");
     expect(text).toContain("The cap is checked **before** the duplicate");
+  });
+
+  it("holds the nav's one-panel rule, its pointer clock and its panel to the source", () => {
+    const page = pages.find(
+      (candidate) => candidate.file === "navigation-menu.mdx",
+    );
+    expect(
+      page,
+      "the navigation menu page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    // The delays the page prints are the component's defaults.
+    expect(source).toContain("openDelay = 150");
+    expect(source).toContain("closeDelay = 150");
+
+    // One panel, a toggle on its own trigger, and the pointer policy's
+    // suspension after any explicit route.
+    expect(source).toContain("setOpen(expanded ? null : value)");
+    expect(source).toContain("stopHover();");
+    expect(source).toContain("if (suspended.current) return;");
+    expect(source).toContain(
+      "if (hovered.current !== null || panelHovered.current) return;",
+    );
+    expect(source).toContain("if (isTriggerPoint(event.x, event.y)) return;");
+
+    // The trigger's three refusal routes, and the panel it names.
+    expect(source.match(/if \(disabled\) return;/g)).toHaveLength(2);
+    expect(source).toContain("aria-expanded={expanded}");
+    expect(source).toContain('role="group"');
+    expect(source).toContain("aria-label={value}");
+    expect(source).toContain("sideOffset={4}");
+
+    // ArrowDown is the only key that reaches for the panel's focus.
+    expect(source).toContain("if (isDown(event)) {");
+    expect(source).toContain("requestPanelFocus(value)");
+    expect(source).toContain("moveFocus(value, -1)");
+    expect(source).toContain("moveFocus(value, 1)");
+    expect(source).toContain('moveFocus(value, "first")');
+    expect(source).toContain('moveFocus(value, "last")');
+
+    // The panel's lift is the recipe's own `md` level, and its corner is fixed.
+    expect(source).toContain(
+      "overlaySurfaceStyle(NAVIGATION_MENU_CONTENT, className, theme)",
+    );
+    expect(recipes).toContain(
+      "flex flex-col gap-0.5 min-w-[220px] p-1.5 bg-popover text-popover-foreground rounded-lg border border-border shadow-md pointer-events-auto",
+    );
+
+    // The exit frame: mounted through its tween, taking no presses.
+    expect(source).toContain('fadeFromAnchor("bottom", 4)');
+    expect(source).toContain('useSurfaceTiming("normal")');
+    expect(source).toContain("PresenceShield");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("150 ms");
+    expect(text).toContain("Exactly one panel is open");
+    expect(text).toContain("`elevation.md` lift");
+    expect(text).toContain("rounded-lg");
+    expect(text).toContain("No `aria-haspopup`");
+    expect(text).toContain("No `aria-current`");
+    expect(text).toContain("`value`");
+    expect(text).toContain("ArrowDown` lands on the panel");
+    expect(text).toContain("200 ms");
   });
 
   it("list every package the component imports", () => {

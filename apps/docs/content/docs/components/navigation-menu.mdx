@@ -1,0 +1,203 @@
+---
+title: Navigation menu
+description: A horizontal nav whose items open one anchored panel at a time — by press, by key or after a rest on the trigger.
+---
+
+`NavigationMenu` is a navigation bar, not a menu: its triggers stay in the tab
+order, the panel is reachable content rather than a listbox, and choosing a link
+is a selection instead of a command. It is the one overlay in the library that
+keeps its own roving group, because the point of a nav bar is to move across it
+without opening anything. Gaps below were measured on `@gpuix/native@0.11.0`.
+
+<ComponentPreview name="navigation-menu-demo" />
+
+Every route into the drawing is the component's: rest on a trigger, press it,
+step across the row with the arrow keys, or open with `Enter`, `Space` or
+`ArrowDown`. The readout under the bar is the drawing's; the panel itself is the
+rule.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="NavigationMenu" />
+
+<ComponentSource
+  name="navigationMenu"
+  file="packages/components/src/navigation-menu.tsx"
+/>
+
+## Usage
+
+```tsx
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@gpuixui/components/navigation-menu";
+
+<NavigationMenu label="Product" onValueChange={setSection} value={section}>
+  <NavigationMenuList>
+    <NavigationMenuItem value="platform">
+      <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuLink onSelect={() => open("overview")}>
+          Overview
+        </NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+</NavigationMenu>;
+```
+
+`label` is required: it names the `navigation` landmark. An item's `value` is
+its identity in the nav and the name the component gives its panel, so a value
+should read as a word. Controlled (`value` + `onValueChange`) and uncontrolled
+(`defaultValue`) are both supported; a controlled nav stays closed whenever the
+caller does not change its value, including for a hover.
+
+## One panel at a time
+
+Exactly one panel is open. Pressing a second trigger replaces the first, and
+pressing the open trigger closes it — the nav ignores the outside press that
+lands on its own triggers, so a trigger's own press cannot close and reopen its
+panel in one gesture.
+
+The pointer is a second route with its own clock: resting on a trigger opens its
+panel after `openDelay`, moving across the row switches panels, and leaving the
+trigger **and** its panel closes after `closeDelay`. Both default to 150 ms. An
+explicit press, key, `Escape` or outside press cancels a pending hover timer and
+suspends the pointer policy until the pointer reaches a trigger again, because
+the runtime delivers the pointer's leave *after* the event that opened another
+panel.
+
+## Composition
+
+```text
+NavigationMenu                 role="navigation", named by label
+└── NavigationMenuList         role="list"
+    └── NavigationMenuItem     role="listitem" · value
+        ├── NavigationMenuTrigger   button · aria-expanded
+        └── NavigationMenuContent   anchored role="group"
+            └── NavigationMenuLink  a full-width button row · onSelect
+```
+
+The parts are checked: a misplaced sibling throws with the part that owns it
+instead of painting a nav with no rows.
+
+<ComponentPreview name="navigation-menu-states" />
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| `Enter` / `Space` | opens the focused trigger; focus stays on the trigger |
+| `ArrowDown` | opens the focused trigger and moves focus onto the **panel surface** |
+| `ArrowLeft` / `ArrowRight` | moves focus between triggers, wrapping — without opening |
+| `Home` / `End` | moves focus to the first or last trigger — without opening |
+| `Escape` | closes the topmost layer and returns focus to the open item's trigger |
+| `Enter` on a link | runs the link's `onActivate` (or its deprecated `onClick`) once, then closes the panel |
+| `Tab` | leaves the nav for the next control; the panel is not a focus trap |
+
+`ArrowDown` lands on the panel, not on its first link. That is the measured
+behaviour and a deliberate gap: a reader who expects the first item needs one
+`Tab` more. A disabled trigger is out of the tab order and opens nothing on
+hover, press or key.
+
+## API reference
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `NavigationMenu` | `role="navigation"`, named by `label` | `label` (required), `value`, `defaultValue`, `onValueChange`, `openDelay`, `closeDelay`, `className`, `children` |
+| `NavigationMenuList` | `role="list"` row | `className`, `children` |
+| `NavigationMenuItem` | `role="listitem"` | `value` (required), `className`, `children` |
+| `NavigationMenuTrigger` | button carrying `aria-expanded` | every `Button` prop, plus `disabled`; `onActivate` is the action's handler and `onClick` its deprecated alias |
+| `NavigationMenuContent` | anchored `role="group"` panel | `className`, `children` |
+| `NavigationMenuLink` | full-width ghost button row | `onSelect`; `onActivate` with `onClick` as the deprecated alias; every `Button` prop |
+
+The root's prop surface is the whole nav's; a part's own `Button` props reach
+the trigger and the link, including `disabled`, `label` and the pointer
+handlers the trigger composes.
+
+## Theming
+
+The nav reads roles; it never picks a colour:
+
+| Part | Reads |
+| ---- | ----- |
+| trigger at rest | `mutedForeground` text, transparent fill |
+| trigger under the pointer, or open | `foreground` text |
+| panel | `popover` fill, `popoverForeground` text, `border` edge, `elevation.md` lift |
+| link row | `popoverForeground` at rest; `accent` fill and `accentForeground` text under the pointer |
+| focus ring | `ring`, the runtime's `focusVisible` outline, painted after `Tab` and never after a mouse press |
+
+The panel's recipe is shadcn's: `rounded-lg` (a fixed 8px corner, not the
+platform radius), `min-w-[220px]`, a 6px inset and a 2px gap between rows.
+Switching the platform style therefore repaints the nav and changes the
+trigger's height, while the panel keeps its fixed corner — the same split the
+dropdown and context menus have.
+
+## Accessibility and limitations
+
+- The nav is a `navigation` landmark named by `label`; each item is a `listitem`
+  and each trigger a button carrying `aria-expanded`.
+- The panel is a `role="group"` whose accessible name is the item's **`value`**,
+  not its visible label. Give a value a word a reader can hear.
+- **No `aria-haspopup`** in `@gpuix/native@0.11.0`. A reader hears a button that
+  expands, not one that reports a popup.
+- **No `href`**: there is no anchor element, so `NavigationMenuLink` is a button
+  that reports `onSelect`. A router pushes the route itself.
+- **No `aria-current`**: mark the active item in the page's own text; the
+  component has no selected state.
+- The panel is not portalled and takes no focus trap. It is anchored content,
+  not a modal surface, so `Tab` continues into the page.
+- No pointer-type signal: touch opens by press, because a touch has no rest.
+  A hover timer is cancelled the moment the pointer leaves the trigger.
+- The opening motion is a fade plus 4px of travel from the trigger's side
+  (200 ms); the surface stays mounted for its exit tween and takes no presses
+  while it leaves.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `this package` | the one-panel state, the pointer policy, the roving triggers and the dismiss layer |
+| `@gpuix/react` | the renderer's focus call and the host elements |
+| `@gpuix/react/floating` | the anchored panel, its placement and the style merge |
+| `@gpuixui/primitives/button` | the trigger and link contract: activation, disabled and the busy rules |
+| `@gpuixui/tw` | the `NAVIGATION_MENU_*` recipes, compiled through the default registry |
+| `effect` | `Option` over the renderer's bounds in the trigger hit test |
+
+`react` is the peer every component shares. `@gpuixui/tokens` is reached through
+the package's theme provider, so the nav reads roles and metrics rather than
+importing colours.
+
+## Related
+
+- **Dropdown menu** — a button that opens a command list; items run actions.
+- **Context menu** — the same menu surface at the pointer, from a right press.
+- **Breadcrumb** — the trail that says where the nav's destination sits.
+- **Tabs** — switching panes inside a page rather than between sections.
+- **Popover** — a non-modal anchored panel that is not a nav.
+
+## Status
+
+**Status: `done`.** `COMPONENTS.md` records the runtime support as `partial`,
+and the missing half is the API rather than the opening path: no `href`, no
+`aria-haspopup`, no pointer-type signal and no `aria-current`. The one-panel
+rule, the hover clock and the roving group are measured in the real renderer.
+
+`packages/components/src/behaviour/navigation-menu.test.tsx` runs **23 native
+behaviour tests** on `@gpuix/native@0.11.0`: a disabled trigger opening nothing,
+the triggers rendering in order with no panel, a press opening and reporting
+`aria-expanded`, exactly one panel, `Enter`/`ArrowDown` opening with `ArrowDown`
+taking focus into the panel, the roving arrows and `Home`/`End`, `Escape`
+closing and returning focus, an outside press closing, a link running once and
+closing, a link's `Enter` activation running from inside the panel, the
+deprecated `onClick` alias running when it is the only handler, the controlled
+value, the four hover rules (delay, crossing into the panel, switching panels, a
+key beating a pending open), the two "does not spring back" rules, a hover open
+on a controlled nav that stays closed, the panel reading the active theme, and
+the three motion cases (4px of travel, the exit frame without a press, reduced
+motion at rest).

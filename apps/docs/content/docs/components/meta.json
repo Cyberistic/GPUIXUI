@@ -45,6 +45,7 @@
     "tabs",
     "stepper",
     "breadcrumb",
+    "navigation-menu",
     "pagination"
   ]
 }

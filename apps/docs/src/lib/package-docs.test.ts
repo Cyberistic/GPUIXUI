@@ -172,6 +172,7 @@ describe("the package docs collections", () => {
     "/docs/components/form",
     "/docs/components/inline-edit",
     "/docs/components/list",
+    "/docs/components/navigation-menu",
     "/docs/components/pagination",
     "/docs/components/popover",
     "/docs/components/search-input",
