@@ -52,6 +52,38 @@ calculation that never arrived, or an `Infinity` — reads as the default 3, and
 finite count below one keeps one card. An unbounded queue would retain a card
 and its auto-dismiss timer for every toast ever pushed.
 
+## Queue and history
+
+The store is the transient half of a notification centre, not its storage. It
+keeps `max` cards (3 by default), and the fourth push expires the oldest —
+so a history panel has to record every title it pushes itself, while the
+viewport paints only what is still live. The playground's
+`notification-centre-lifecycle` measured the composition on 0.11.0 (30 checks):
+three cards
+in one column (356 wide, one right edge, 12px apart, in push order), the fourth
+push leaving `queued=3 ids=2,3,4` while the app's panel still lists the expired
+title, a card action reporting once with the survivors reflowing, the app's
+clear emptying the queue, and a 700 ms transient dismissing itself with no press.
+
+```tsx
+const toast = useToast();
+const [history, setHistory] = useState<ReadonlyArray<string>>([]);
+
+const notify = (title: string) => {
+  setHistory((kept) => [title, ...kept]);
+  toast.push({ title });
+};
+
+<ToastProvider>
+  <App />
+  <NotificationPanel titles={history} />
+  <ToastViewport />
+</ToastProvider>;
+```
+
+The binding publishes no notification API — no OS centre, badge or persistence
+— so the history is the app's to own and this stack is what alerts.
+
 ## Motion
 
 The stack moves on its own timing, not a shared level: a card rises 16px into

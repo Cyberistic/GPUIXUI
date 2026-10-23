@@ -421,6 +421,7 @@ const CITATIONS: ReadonlyArray<readonly [string, string]> = [
   ["Multi-pane editing layouts", "multi-pane-editor"],
   ["Code editor integration", "editor-overlay"],
   ["Crop area", "crop-overlay"],
+  ["Notification centre", "notification-centre-lifecycle"],
 ];
 
 /** The `column-resize` fixture's direct numbers, read as source. */
@@ -739,6 +740,74 @@ describe("the measured target rows", () => {
         (claim) =>
           expect(rowText(row), `${row.name}: ${claim}`).toContain(claim),
       ),
+    );
+  });
+
+  it("states the notification centre's bound and the history it must own", () => {
+    // The bug this guards: the row said "composition over toasts + panels", which
+    // reads as a styling note, while the one fact a centre is planned around is
+    // storage — the store keeps three cards and expires the oldest, so the panel
+    // must record every title itself. Both the row and the page are held to the
+    // store's own bound and the probe's readouts, so neither can drift from them.
+    const read = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");
+    const derive = (source: string, pattern: RegExp): number =>
+      Number(pattern.exec(source)?.[1] ?? Number.NaN);
+    const store = read("packages/components/src/toast/store.ts");
+    const fixture = read("apps/playground/src/live/notification-centre.ts");
+    const bound = derive(store, /const DEFAULT_MAX = (\d+);/);
+    const gap = derive(fixture, /\bNOTIFICATION_GAP = (\d+);/);
+    const checks = derive(fixture, /\bNOTIFICATION_CHECKS = (\d+);/);
+    const transient = derive(fixture, /\bNOTIFICATION_TRANSIENT_MS = (\d+);/);
+    expect([bound, gap, checks, transient].every(Number.isFinite)).toBe(true);
+    expect(derive(fixture, /\bNOTIFICATION_MAX = (\d+);/)).toBe(bound);
+
+    const section = readmeSection(
+      "### `notification-centre-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(section).toContain(
+      `${checks} checks, \`--only notification-centre-lifecycle\``,
+    );
+    expect(section).toContain(`queued=${bound} ids=2,3,4`);
+
+    const row = Option.getOrElse(
+      Arr.findFirst(
+        targetRows(),
+        (candidate) => candidate.name === "Notification centre",
+      ),
+      () => {
+        throw new Error("COMPONENTS.md: no Notification centre row");
+      },
+    );
+    expect(row.status).not.toBe("todo");
+    expect(row.support).not.toBe("?");
+    expect(row.support).toContain("measured");
+    Arr.forEach(
+      [
+        "`notification-centre-lifecycle`",
+        `${checks} checks`,
+        `${bound}** cards`,
+        `${gap}px apart`,
+        `queued=${bound} ids=2,3,4`,
+        `${transient} ms transient`,
+        "history is the app's",
+        "In-window",
+        "no notification API",
+      ],
+      (claim) => expect(rowText(row), claim).toContain(claim),
+    );
+
+    const page = read("packages/components/docs/toast.mdx");
+    Arr.forEach(
+      [
+        "## Queue and history",
+        `${bound} by default`,
+        `${checks} checks`,
+        "fourth push expires the oldest",
+        "history is the app's",
+        "no notification API",
+      ],
+      (claim) => expect(page, claim).toContain(claim),
     );
   });
 
