@@ -209,9 +209,21 @@ describe("the Apple platform style", () => {
 
   it("switches green on and grey off, which the accent cannot derive", () => {
     expect(darwin.switch).toEqual({
-      light: { on: "#34C759", off: "#E9E9EA", knob: "#FFFFFF" },
+      light: { on: "#34C759", off: "#E3E3E8", knob: "#FFFFFF" },
       dark: { on: "#30D158", off: "#39393D", knob: "#FFFFFF" },
     });
+    // The light off track is a measured step off the HIG's own grey, for the
+    // reason the blue is: a declared switch draws no edge, and `#E9E9EA` sits
+    // 1.003:1 from this style's `muted` sidebar. `switch.test.ts` holds both.
+    expect(
+      contrastRatio("#E9E9EA", darwin.colors.light.muted ?? ""),
+    ).toBeLessThan(1.05);
+    expect(
+      contrastRatio(
+        darwin.switch?.light?.off ?? "",
+        darwin.colors.light.muted ?? "",
+      ),
+    ).toBeGreaterThanOrEqual(1.05);
     // The resolved theme carries the mode's half, and a high-contrast base —
     // which keeps its own palette — keeps the library's switch too.
     expect(platformTheme(lightTheme, "darwin").switch).toEqual(
@@ -488,6 +500,10 @@ describe("platform documentation", () => {
       .filter(
         ([, text]) =>
           !["28", "36", "32"].every((height) => text.includes(height)) ||
+          !text.includes("expected 14, got 8") ||
+          // The HIG moved `lg` from 10 to 14; the first run's reading stays in
+          // the record, so a surface that drops it loses the measurement's
+          // history rather than tidying a stale number.
           !text.includes("expected 10, got 8"),
       )
       .map(([name]) => name);

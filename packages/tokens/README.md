@@ -564,7 +564,17 @@ A style may also declare the platform's own switch — Apple's green on and grey
 off, a white knob — which `Theme.switch` carries once applied. The accent family
 cannot derive those fills, so the declaration is separate; the primitives draw
 the platform's 51×31 box only for a theme that carries it, and an authored look
-that declares none keeps the library's accent toggle.
+that declares none keeps the library's accent toggle. Those three colours are
+**measured**, because they enter a theme through no role: `switchFailures(theme)`
+holds the knob on each track and each track on the four strips a switch stands on
+(the page, a card, a popover and a muted toolbar) to the perceptibility floor, and
+`invalidSwitchColors(theme)` names a value the renderer cannot paint. The report
+found Apple's `#E9E9EA` off track at **1.003:1** on its own `muted` sidebar — a
+declared switch draws no edge — so it ships the smallest step that clears
+(`#E3E3E8`, 1.058:1). The floor is the perceptibility one, not the 3:1 a state
+indicator needs, because the platform's own values sit under it: Apple's green is
+1.98:1 on its page and its knob 1.24:1 on the off track, with the HIG's shadow
+carrying the knob.
 
 All three axes are measured as painted: the playground's `theme-platform` probe
 reads each platform's mono family, `primary` fill, `lg` radius and `md` control

@@ -19,6 +19,7 @@ export * from "./scales.js";
 export * from "./selection.js";
 export * from "./series.js";
 export * from "./styles.js";
+export * from "./switch.js";
 export * from "./syntax.js";
 export * from "./system-theme.js";
 export * from "./theme.js";

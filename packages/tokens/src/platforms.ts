@@ -167,8 +167,11 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     syntax: { dark: platformDarkSyntax },
     // Apple's switch: 51×31pt with a 27pt knob, green on and grey off. The
     // values are the system palette's own, published on the HIG's colour page.
+    // The light off track is one step darker than the HIG's `#E9E9EA`, because
+    // that grey is this style's own `muted` sidebar to within 1.003:1 and a
+    // declared switch draws no edge — `switchFailures` measures both halves.
     switch: {
-      light: { on: "#34C759", off: "#E9E9EA", knob: "#FFFFFF" },
+      light: { on: "#34C759", off: "#E3E3E8", knob: "#FFFFFF" },
       dark: { on: "#30D158", off: "#39393D", knob: "#FFFFFF" },
     },
     colors: {

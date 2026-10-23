@@ -805,13 +805,46 @@ a value you leave out is the base theme's. The dark sets carry a lighter
 
 A style may also declare the platform's **own switch**, the one control whose
 paint the accent family cannot derive. Apple's toggle is green on and grey off —
-`#34C759` / `#E9E9EA` in light, `#30D158` / `#39393D` in dark, with a white 27pt
+`#34C759` / `#E3E3E8` in light, `#30D158` / `#39393D` in dark, with a white 27pt
 knob — while a checked Windows or Linux switch is the accent fill.
 `PlatformStyle.switch` is that declaration, `Theme.switch` is the half for the
 resolved mode, and a primitive draws the platform's 51×31 box only when the
 theme carries it: `sm` and `lg` keep the library's derived steps, because the HIG
 publishes one switch. An authored look that declares none clears it, so Luna over
 macOS keeps Luna's chrome and the library's toggle.
+
+**That paint is measured like a role, because it is not one.**
+`switchPaintRoles` (`on`, `off`, `knob`) and `switchPlacements` are the table:
+the knob on each track it can sit in, and each track on the four strips a switch
+stands on (`switchSurfaces` — the page, a card, a popover and a `muted` toolbar,
+the canonical home of a settings switch). `switchFailures(theme)` returns both
+halves of the report — `paint`, every value the renderer cannot paint, and
+`placements`, every pair too faint to be found — and `invalidSwitchColors(theme)`
+is the grammar half on its own, beside `invalidColorRoles` and
+`invalidShadowColors` for the other two authored colour tables. A theme that
+declares no switch answers with an empty report: its toggle is painted from
+`primary`, `muted` and `foreground`, which the mark, contrast and decorative
+tables already hold where a switch stands.
+
+The floor is the **perceptibility** one (`1.05:1`), not the `3:1` a state
+indicator needs, and the difference is measured rather than assumed: a declared
+switch is a platform control reproduced, and Apple's own values sit under the
+bar — its green is **1.98:1** on its page and its white knob **1.24:1** on its
+off track, with the HIG's drop shadow (which the primitive paints, `elevation.sm`
+on the knob) carrying the knob. A consumer who needs the stronger cue paints the
+library's accent switch instead of declaring one. What the report refuses is the
+switch that is not there at all: a track equal to the strip it stands in, a knob
+equal to its track, or a value the runtime ignores. It found the shipped macOS
+light off track: Apple's `#E9E9EA` sat **1.003:1** from this style's own `muted`
+sidebar, and a declared switch draws **no edge** (`switchBox` gives it
+`borderWidth: 0`), so the track *was* the control's silhouette and it vanished in
+exactly the panel a switch lives in. The track takes the smallest step that
+clears (`#E3E3E8`, 1.058:1), and every other placement in both modes already
+cleared. `switchFailures` and `invalidSwitchColors` sit beside [`auditTheme`](#checking-your-own-theme)
+for now, for the reason `invalidScales` and `highlightFailures` do: the docs
+site's readout words each report it prints and derives the printed count from the
+gate's own keys, so folding a twelfth report in is one coordinated change with
+that page (`TODO.md` → Interlocks).
 
 Each `darwin` set and all three dark sets carry their own `secondary`, because
 `platformTheme` inherits the base `#E1E5EC` and those windows and popovers sit
