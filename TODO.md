@@ -10229,8 +10229,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       Directions measured: renaming the heading fails with `expected … to
       contain '## The browser build'`, and adding the reconciler import fails
       the new case — restored, `gpuix-web`/`link-integrity` are 16/16, the docs
-      suite is 122 files / 1 340 tests, `check-types` is clean, and the dev
-      server renders the section with `href="/live"`.
+      suite is 122 files / 1 340 tests (124 / 1 363 once the blocks commit
+      merged), `check-types` is clean, and the dev server renders the section
+      with `href="/live"`.
 
 `[x]` Place the **MultiStepForm page the components lane mounted** — the new
       `packages/components/docs/multi-step-form.mdx` is a wizard shell over
