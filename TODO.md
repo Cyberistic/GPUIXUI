@@ -10377,7 +10377,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 315/316
+`[ ]` `[█████████░]` 315/317
 
 `[x]` Stop the **component index teaching sections the pages do not have** — its
       "How to read a page" table was written from memory and read as a promise:
@@ -10606,6 +10606,12 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `?q=zzzzzz` renders `"false"`. `nub run --filter @gpuixui/docs test` is
       **140 files / 1 220 tests** green, `check-types` and `build` clean. No
       native scenario applies — a site page's own filter.
+
+`[ ]` Add **`apps/docs/.tanstack/`** to `.gitignore` — `vite build` writes the
+      generated route-tree cache there, and the repository ignores `dist/`,
+      `build/`, `.source/` and `.alchemy/` but not this directory, so a docs
+      build leaves an untracked tree that a `git add apps/docs` would swallow.
+      Owner: repo tooling (`.gitignore` is shared).
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`
