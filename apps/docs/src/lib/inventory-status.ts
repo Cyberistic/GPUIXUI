@@ -113,6 +113,41 @@ export const laneRows: ReadonlyArray<{
     reason:
       "a reorder is the caller's own pointer gesture; no shipped component paints one",
   },
+  {
+    row: "Collapsible sidebars",
+    file: "apps/docs/content/docs/runtime.mdx",
+    cites: "sidebar-clip-lifecycle",
+    reason:
+      "a sidebar is a composition of the dock's layout and the motion width; the clip that makes it a sidebar is measured, not shipped as a component",
+  },
+  {
+    row: "Keyboard navigation",
+    file: "apps/docs/content/docs/runtime.mdx",
+    cites: "grid-focus-lifecycle",
+    reason:
+      "real native focus is the runtime's; the roving-focus model is the composition each shipped family carries rather than one component",
+  },
+  {
+    row: "Command palette",
+    file: "apps/docs/content/docs/patterns.mdx",
+    cites: "command-palette",
+    reason:
+      "the palette is the shipped CommandMenu plus a window shortcut the app binds; the patterns page teaches that composition",
+  },
+  {
+    row: "Breadcrumb navigation",
+    file: "packages/components/docs/breadcrumb.mdx",
+    cites: "breadcrumb-navigation-lifecycle",
+    reason:
+      "the trail is the shipped Breadcrumb and the routing is the app's; the package page records the narrow-pane measurement",
+  },
+  {
+    row: "Syntax highlighting",
+    file: "apps/docs/content/docs/runtime.mdx",
+    cites: "editor-surface",
+    reason:
+      "a host capability rather than a component: <code> and <diff> paint the highlighted view, and CodeBlock/CodeEditor compose them",
+  },
 ];
 
 /** The inventory document, the source the strip reads. */

@@ -102,7 +102,16 @@ module-aligned square the component reserves. The encoder is held to a
 module-for-module comparison against an independent implementation at versions
 1, 6 and 10.
 
-## Limits
+## Accessibility
+
+The frame is `role="img"` and `label` is its accessible name: a symbol is one
+image to assistive technology, not a grid of modules. The default name is
+`"QR code"`, so a caller should pass the address or purpose it encodes (`"The
+component documentation"`) rather than leave a reader guessing. The symbol paints
+as one `<svg>` mask, so there is no per-module node to traverse and nothing to
+focus; the overflow state carries the same name and states the capacity in text.
+
+## Limitations
 
 - **Versions 1–10.** The largest symbol holds 274 bytes at `L`. Larger values are
   refused, not split into structured-append symbols.

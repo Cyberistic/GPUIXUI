@@ -95,7 +95,19 @@ complement drawn as up to four bars:
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
 
-## Limits
+## Accessibility
+
+The frame is a `role="group"` named by `label`. Each corner handle is a
+`role="slider"` Tab stop announcing the rectangle as `aria-valuetext`
+(`60, 40, 100 × 70`), so a reader who cannot drag can still resize the hole with
+the arrow keys — this is the keyboard path the window probe did not measure and
+the logic and element suites hold. The four veil bars declare
+`pointerEvents: "none"` and paint nothing to the accessibility tree, so the mask
+is not announced. A gesture reports through `onChange`; the runtime has no live
+region, so a caller that must announce the new rectangle should render the value
+beside the frame, as the example does.
+
+## Limitations
 
 - **No rotation.** A rotated crop is a transform of the picture, and the runtime
   has no `transform` (upstream issue #102); rotate the bytes before cropping.
