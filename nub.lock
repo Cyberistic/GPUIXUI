@@ -183,6 +183,9 @@ importers:
       '@gpuixui/data':
         specifier: workspace:*
         version: link:../../packages/data
+      '@gpuixui/dock':
+        specifier: workspace:*
+        version: link:../../packages/dock
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives

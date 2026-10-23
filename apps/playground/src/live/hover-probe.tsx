@@ -231,9 +231,7 @@ const hoverPixels = (
       crop,
       yield* ctx.expectSome(
         `${probeCase.id} names the hover fill it counts`,
-        Option.fromNullishOr(
-          Pixels.hexToRgba(theme.colors[HOVER_PAINT.hover]),
-        ),
+        Option.fromNullishOr(Pixels.hexToRgba(theme.colors[HOVER_PAINT.hover])),
       ),
     );
   });

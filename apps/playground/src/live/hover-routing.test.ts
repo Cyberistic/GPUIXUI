@@ -49,7 +49,9 @@ describe("the counts a case's readout prints", () => {
   });
 
   it("refuses a word that is not a number and a lost field", () => {
-    expect(Option.isNone(decodeHoverCounts("row=x child=1 leave=0"))).toBe(true);
+    expect(Option.isNone(decodeHoverCounts("row=x child=1 leave=0"))).toBe(
+      true,
+    );
     expect(Option.isNone(decodeHoverCounts("row=1 leave=0"))).toBe(true);
   });
 });
@@ -99,13 +101,17 @@ describe("the fixture", () => {
 
 describe("the probe's view", () => {
   it("paints the row's pointer feedback through the runtime's native hover state", () => {
-    expect(probe).toContain("hover: { backgroundColor: theme.colors[HOVER_PAINT.hover] }");
+    expect(probe).toContain(
+      "hover: { backgroundColor: theme.colors[HOVER_PAINT.hover] }",
+    );
     expect(probe).toContain('rest: "card"');
     expect(probe).toContain('hover: "accent"');
   });
 
   it("nests a filled child that opts out of the pointer in the inert case", () => {
-    expect(probe).toContain('pointerEvents: probeCase.id === "inert-div" ? "none" : undefined');
+    expect(probe).toContain(
+      'pointerEvents: probeCase.id === "inert-div" ? "none" : undefined',
+    );
   });
 
   it("counts the hover fill off the row's own crop", () => {
@@ -130,6 +136,6 @@ describe("the registry and the README", () => {
       "### `hover-routing-lifecycle` — measured on 0.11.0 here",
     );
     expect(readme).toContain("a fill is the boundary a hover stops at");
-    expect(readme).toContain("`pointerEvents: \"none\"`");
+    expect(readme).toContain('`pointerEvents: "none"`');
   });
 });

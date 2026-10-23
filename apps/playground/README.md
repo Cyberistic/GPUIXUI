@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-90 probes a real window can prove, of which eighteen mount shipped
+91 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -56,7 +56,7 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel, a scroll region's keyboard contract and size, a split pane, a virtual
 list, a paginated list's loading-row
-restore, a dock's keyboard order, an anchored menu in a scrolled header, the
+restore, the shipped split pane's keyboard contract, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
 handler, a field's hint and value ink, a configurable data grid, a resizable
 data-grid column, a generated
@@ -1968,6 +1968,38 @@ press keeps receiving moves after the pointer leaves its box, which is what a
 6px divider needs. The `pointer-capture` probe now isolates the runtime rule and
 measures the shipped `Slider` against it, so the Slider pages' "no pointer
 capture" sentence is retired rather than left as a competing claim.
+
+### `dock-split-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/dock` `SplitPane`, mounted as the library publishes it:
+`size=320` controlled by the probe, `min=80`, `max=440`, `dividerLabel="Shipped
+pane width"` and `testId="dock-split"`. `split-pane-lifecycle` measures the
+runtime rules a divider must honour with a probe-local control; this probe
+measures that the component the library actually ships composes them, so a
+regression in the package cannot hide behind the fixture.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | `320 px`; the first pane's content paints 320 points wide and the divider starts on its right edge |
+| `Tab` | the focus lands on `dock-split-divider`, and the focused divider paints the theme's `ring` outline |
+| `right` | `336 px resizes=1`: one `DIVIDER_STEP` (16px), reported to the caller's `onResize`; the painted pane is 336 and the focus stays on the divider |
+| `left` | back to `320 px` |
+| `Home` | `80 px`, the painted pane is the caller's minimum |
+| `End` | `440 px`, the caller's maximum |
+| `right` at the maximum | `440 px`: the step clamps instead of crossing the bound |
+
+19 checks, `--only dock-split-lifecycle`, green on 0.11.0 (4.6 s).
+
+**The pointer half is blocked in the component, and this probe records it
+rather than hiding it.** A press on the shipped divider focuses nothing and
+reports no resize (`resizes=0`) while the probe-local divider in
+`split-pane-lifecycle` drags normally in the same runtime. The cause is the
+divider's own `highlight` layer: it is `position: "absolute"` over the whole
+6px control, and the runtime's hit test stops at a positioned child even when
+it declares `pointerEvents: "none"` — the rule `press-routing-lifecycle`
+measured. The dock owner has the fix in `TODO.md` → Interlocks (*`Divider`'s
+pointer path*); when it lands, this probe gains the drag rows. Evidence:
+`.artifacts/live/dock-split-keyboard.png`.
 
 ### `virtual-list-lifecycle` — measured on 0.11.0 here
 
@@ -5223,7 +5255,8 @@ narrower. Each deviation is deliberate and measured:
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
-  `image-fit`, `grid-focus-lifecycle`, `system-theme-follow` and `document-type` (thirty-two probes, each run alone).
+  `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
+  and `dock-split-lifecycle` (thirty-three probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

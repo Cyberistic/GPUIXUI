@@ -16,6 +16,7 @@
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
     "@gpuixui/data": "workspace:*",
+    "@gpuixui/dock": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/testing": "workspace:*",
     "@gpuixui/tokens": "workspace:*",

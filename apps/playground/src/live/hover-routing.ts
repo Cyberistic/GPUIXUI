@@ -121,9 +121,7 @@ export const formatHoverCounts = (counts: HoverCounts): string =>
   `row=${counts.row} child=${counts.child} leave=${counts.leave}`;
 
 /** The counts a painted line names, decoded rather than compared. */
-export const decodeHoverCounts = (
-  text: string,
-): Option.Option<HoverCounts> =>
+export const decodeHoverCounts = (text: string): Option.Option<HoverCounts> =>
   Option.flatMap(
     Option.all(
       Arr.map(text.trim().split(/\s+/), (token) => {
@@ -138,8 +136,7 @@ export const decodeHoverCounts = (
             );
       }),
     ),
-    (pairs) =>
-      Schema.decodeUnknownOption(HoverCounts)(R.fromEntries(pairs)),
+    (pairs) => Schema.decodeUnknownOption(HoverCounts)(R.fromEntries(pairs)),
   );
 
 /** A logical box, as the runtime's layout report gives it. */

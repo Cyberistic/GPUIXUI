@@ -742,6 +742,41 @@ describe("the workspace lane's shipped panels", () => {
     expect(layouts).toContain("](/docs/dock/split-pane)");
   });
 
+  it("lists only the gaps the dock does not close", () => {
+    // The Gaps table still said "no split-pane component" and called docking "a
+    // composition over split panes, which do not exist yet", and the routing
+    // bullet sent a panel model to `@gpuixui/components` — three claims the
+    // table above them contradicted. The package's persisted shapes and the
+    // routes are read, so the table cannot send a reader to a package that does
+    // not own the work.
+    const gaps = workspace.slice(
+      workspace.indexOf("## Gaps, with the evidence"),
+    );
+    expect(gaps).not.toBe("");
+
+    const index = readFileSync(
+      new URL("../../../../packages/dock/src/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(index).toContain("PanelLayout");
+    expect(index).toContain("DockNode");
+
+    const retracted = [
+      "No split-pane component",
+      "split panes, which do not exist yet",
+      "| Resizable panes |",
+      "| Docking layouts |",
+      "then a component in `@gpuixui/components`",
+    ];
+    expect(retracted.filter((claim) => gaps.includes(claim))).toEqual([]);
+
+    // What remains is a runtime limit, and the shipped shape is named.
+    expect(gaps).toContain("one window per process");
+    expect(gaps).toContain("`PanelLayout`");
+    expect(gaps).toContain("`DockNode`");
+    expect(workspace).toContain("@gpuixui/dock");
+  });
+
   it("links the page titles the dock collection mounts", () => {
     // The link lives in the surface table, not only in prose: a reader planning
     // a shell reads the table first, so a row that lost its route is the same

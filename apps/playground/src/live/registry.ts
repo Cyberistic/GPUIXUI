@@ -223,6 +223,12 @@ export const liveRegistry = [
     capability: "panel",
   },
   {
+    id: "dock-split-lifecycle",
+    title:
+      "Panel: the shipped SplitPane is a Tab stop that resizes from the keyboard in a window",
+    capability: "panel",
+  },
+  {
     id: "virtual-list-lifecycle",
     title:
       "Table: a window's <virtual-list> paints only its visible rows and reports the range it moved to",
