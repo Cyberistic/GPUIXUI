@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { CropRect } from "./crop/logic.js";
@@ -89,6 +90,28 @@ describe("renderCropArea", () => {
       width: 240,
       height: 160,
     });
+  });
+
+  it("reads a blank name as the default, never an unnamed frame", () => {
+    Arr.forEach(["", "   "], (label) => {
+      const root = renderCropArea(props({ label }), lightTheme, surfaceOf());
+      expect(expectSome(elementProp(root, "aria-label"))).toBe("Crop area");
+      expect(expectSome(elementProp(handleOf(root, "se"), "aria-label"))).toBe(
+        "Crop area bottom right handle",
+      );
+    });
+  });
+
+  it("publishes the name it was given without its padding", () => {
+    const root = renderCropArea(
+      props({ label: "  Thumbnail  " }),
+      lightTheme,
+      surfaceOf(),
+    );
+    expect(expectSome(elementProp(root, "aria-label"))).toBe("Thumbnail");
+    expect(expectSome(elementProp(handleOf(root, "nw"), "aria-label"))).toBe(
+      "Thumbnail top left handle",
+    );
   });
 
   it("masks everything but the hole, and the bars take no pointer", () => {

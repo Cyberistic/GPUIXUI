@@ -95,7 +95,7 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
   readonly aspectRatio?: number;
   /** Paint the rule-of-thirds guides inside the hole. Default `false`. */
   readonly guides?: boolean;
-  /** The frame's accessible name. Default `"Crop area"`. */
+  /** The frame's accessible name. Default `"Crop area"`; a blank name reads as the default. */
   readonly label?: string;
   /** Refuse the gestures; the frame keeps painting. */
   readonly disabled?: boolean;
@@ -103,6 +103,16 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
 }
 
 const CORNERS: ReadonlyArray<CropCorner> = ["nw", "ne", "sw", "se"];
+
+const DEFAULT_LABEL = "Crop area";
+
+/**
+ * The frame's accessible name, and the name every handle is built from. A blank
+ * name reads as the default rather than publishing an unnamed group and four
+ * handles called "`nw` handle".
+ */
+const frameLabel = (label: string): string =>
+  label.trim().length === 0 ? DEFAULT_LABEL : label.trim();
 
 /** The frame's box, read from the caller's two sides. */
 export const cropBounds = (width: number, height: number): CropBounds => ({
@@ -169,12 +179,13 @@ export const renderCropArea = (
     handleSize = CROP_HANDLE_SIZE,
     aspectRatio,
     guides = false,
-    label = "Crop area",
+    label = DEFAULT_LABEL,
     disabled = false,
     className,
     style,
     ...rest
   } = props;
+  const name = frameLabel(label);
   const bounds = cropBounds(width, height);
   const crop = clampCrop(value, bounds, minSize, aspectRatio);
   const bars = cropBars(crop, bounds);
@@ -183,7 +194,7 @@ export const renderCropArea = (
     <div
       {...rest}
       role="group"
-      aria-label={label}
+      aria-label={name}
       onMouseDown={(event) => {
         if (!disabled) surface.onFrameDown(event);
       }}
@@ -242,7 +253,7 @@ export const renderCropArea = (
             key={corner}
             testId={`crop-handle-${corner}`}
             role="slider"
-            aria-label={`${label} ${cornerLabel(corner)} handle`}
+            aria-label={`${name} ${cornerLabel(corner)} handle`}
             aria-valuetext={cropLabel(crop)}
             tabIndex={disabled ? -1 : 0}
             onMouseDown={(event) => {
