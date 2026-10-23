@@ -1629,7 +1629,35 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 144/144
+`[x]` `[██████████]` 145/145
+
+`[x]` Measure **whether a window ever says "this is a repeat"** — every
+      activating control in the library refuses an activation whose event carries
+      `isHeld` (`decideActivation`), the guard that keeps a held Enter from
+      firing a menu row's action repeatedly, and it had only ever been proved
+      with synthetic events: a binding that never set the flag would leave every
+      guard dead code with every unit test green. The `key-hold-lifecycle` live
+      probe drives an **unguarded** control that logs the payload and the
+      **shipped** `Button` in the same window: the flag arrives
+      (`down=j:false,j:true`, and the app-level handler reads
+      `window=j:false,j:true`), the key-up reaches the control it was pressed on,
+      and the guard holds — Enter activates once through two repeats
+      (`activations=1`), Space activates once on its release, while a pointer
+      press runs both props (`activations=3 presses=1`). It also measured that a
+      keyboard activation reaches `onActivate` alone, so a consumer wiring a
+      primitive `Button`'s `onClick` has a pointer-only control. 17 checks,
+      `--only key-hold-lifecycle`, green on 0.11.0 here (~0.7–0.9 s, two runs).
+      Fixture `src/live/key-hold.ts` + `key-hold.test.ts` (the readouts, the ids,
+      the keys, the host verb's declaration and its documentation, the probe's
+      mounts and chords, the registry entry, the README section and its row).
+      Negative control measured, exit `1`, restored green: claiming the held
+      Enter activates fails `a held Enter does not activate again`
+      (`expected "activations=2 presses=0", got "activations=1 presses=0"`).
+      `AsyncSmokeHost` gained the optional `keyDown(keystroke, isHeld)` verb (the
+      automation protocol's only route that carries the flag), implemented in the
+      live host and documented in `packages/testing/README.md`. Evidence:
+      `apps/playground/README.md` §`key-hold-lifecycle`. Documenting the
+      `onClick` half is the Interlock below
 
 `[x]` Measure **what a field's own undo does to the app** — MISSION lists
       **input editing** among the interactions a window has to verify, and the
@@ -7676,6 +7704,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Land `chart-surface-lifecycle` as one unit — the data workstream's probe (`apps/playground/src/live/chart-surface.ts`, its view and steps in `scenarios.tsx`) was in the shared tree while its **registry entry** was committed alone (`f6f78f6b`), so `liveProbeBodies` lost the body the `Record<LiveProbeId, …>` requires and the playground did not compile; the entry is removed (`f2cf7c80`) until the body and the entry land together. The registry entry, the `liveProbeBodies` body and the README section must be one commit, in registry order (the README is held to the registry by `src/live/registry.test.ts`) | data (`apps/playground/src/live/registry.ts`, `scenarios.tsx`, `README.md`) | **resolved 2026-10-23** — `f2376f16` landed the entry, the `liveProbeBodies` body and the README section together: `registry.ts` declares `chart-surface-lifecycle` in registry order, `scenarios.tsx` exports its body, and `README.md` §`chart-surface-lifecycle` prints the 40 checks, the fixture and the two captures. `--only chart-surface-lifecycle` is 1/1 on 0.11.0, and `src/live/registry.test.ts` holds the README to the registry. No code change here — this row is the retraction of a stale open marker |
 | Publish the **undo contract a field owns** — the capability record's input/text rows stop at keystrokes, clipboard and selection, and `docs/gpuix-capabilities.md` + `/docs/runtime#measured-in-a-window` say nothing about undo, which is a field behaviour no component can implement: the playground's `text-undo-lifecycle` measured that `cmd-z`/`shift-cmd-z` restore a snapshot **and** reach a controlled `onChange`, that a value pushed in from outside the field clears both stacks (so a field the app rewrites on every change loses undo silently), that an unrelated re-render keeps the history, and that the chord never reaches an app-level window handler while the field has focus. The record should carry those four findings and the 700 ms coalesce window, and `/docs/runtime`'s row should cite the probe; the components' `InlineEdit`/field pages owe the "format on commit, not on every change" rule. Measured evidence: `apps/playground/README.md` §`text-undo-lifecycle`, 15 checks green on 0.11.0 | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) and components (`docs/inline-edit.mdx`, `docs/field.mdx`) | **docs half landed 2026-10-23** — `docs/gpuix-capabilities.md` §3 gains **Field undo** (`supported, with limits`, 15 checks) with the stack, the push that clears it, the per-field history and the chord's owner, `/docs/runtime#measured-in-a-window` publishes the same row, §5 owes `text-undo-lifecycle`, and `capability-doc.test.ts` derives the readouts, the check count and the coalesce window from `src/live/text-undo.ts` so neither document can print a value the probe no longer measures. **Still open for components:** `docs/inline-edit.mdx` and `docs/field.mdx` owe the format-on-commit rule |
 | Document the window host's **`keyDown`** verb on `/docs/testing` — the host interface gains `keyDown(keystroke, isHeld)`, an **optional, window-only** verb that sends a key *down* with the platform's repeat flag so a held `Enter` can be refused by every activating control; the testing page's verb table has no row for it, so its guard fails `documents every verb of the window host` with `[ 'keyDown' ]`, and the page's *Five verbs are optional* sentence plus the guard's optional list would leave the sixth out | docs-site (`apps/docs/content/docs/testing.mdx`, `apps/docs/src/lib/testing-page.test.ts`) | open — the interface change is `packages/testing/src/smoke.ts`'s (uncommitted in the shared tree on 2026-10-23); the row lands with it, because the optional-verbs case cannot name a member `HEAD` does not declare |
+| State the **pointer-only half of a primitive `Button`'s `onClick`** — the playground's `key-hold-lifecycle` measured that a keyboard activation of the shipped `Button` reaches `onActivate` alone (`presses=0` through six key events) while a pointer press runs both props, so a consumer wiring `onClick` — the React habit, and a prop `ButtonProps` still accepts — has a control no keyboard can trigger. `packages/primitives/docs/button.mdx`'s API table says `onActivate` is "click or activating key" without saying `onClick` is the pointer route, and `interaction` props are inherited silently. Either state the split on the page and in `ButtonProps`' JSDoc, or drop `onClick` from the primitive's public surface once plan 160's adapter is gone. Measured evidence: `apps/playground/README.md` §`key-hold-lifecycle`, 17 checks green on 0.11.0 | primitives (`packages/primitives/docs/button.mdx`, `src/components/Button.tsx`'s `onClick` doc) | open — the probe and its README section are landed; the page and the prop's JSDoc are owed |
 
 ## Phase D — data and workspace components
 

@@ -314,6 +314,16 @@ export const createLiveHost = ({
       call(`key ${keystroke}`, () =>
         app.call("keystrokes", { keys: keystroke }),
       ),
+    /**
+     * A key down with the platform's repeat flag, through the protocol's own
+     * `keyDown` command. Aimed at the focused element (`elementId` 0), so a
+     * probe focuses the control it measures first — the same path a held key
+     * takes when the OS repeats it.
+     */
+    keyDown: (keystroke, isHeld) =>
+      call(`keyDown ${keystroke} held=${isHeld}`, () =>
+        app.call("keyDown", { key: keystroke, isHeld }),
+      ),
     selectedText: () =>
       named(
         "getSelectedText",

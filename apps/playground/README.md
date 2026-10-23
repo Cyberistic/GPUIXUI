@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-106 probes a real window can prove, of which twenty mount shipped
+107 probes a real window can prove, of which twenty mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -793,7 +793,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
-| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `text-undo-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field |
+| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
@@ -5888,6 +5888,62 @@ pane's report fails `the levels the budget hides leave the trail`
 platform's activation, which the probe asks for before measuring and which this
 host does not honour, which is itself the measurement.
 
+### `key-hold-lifecycle` — measured on 0.11.0 here
+
+**Does a window ever say "this is a repeat"?** Every activating control in the
+library refuses an activation whose event carries `isHeld` — that is what keeps
+a held Enter from firing a menu row's action over and over — and the guard had
+only ever been proved with synthetic events. Until a window delivers the flag it
+is a branch nobody has taken, and a binding that never sets it would leave every
+guard dead code with every unit test green. The probe drives both halves at
+once: an **unguarded** control that logs the payload it was handed, and the
+**shipped** `Button` whose guard has to hold.
+
+| Step | Measured |
+| ---- | -------- |
+| a code focus on the unguarded control | `getFocusedElementId` reports it, and no key was needed |
+| its first press (`j`, flag clear) | `down=j:false up=0` |
+| a repeat of the same key (`isHeld: true`) | `down=j:false,j:true` — the **flag arrives** |
+| the window handler beside it | `window=j:false,j:true` — the app-level channel carries the same flag |
+| the release | `down=j:false,j:true up=1` — the key-up reaches the control it was pressed on |
+| a code focus on the shipped `Button` | focus lands, `activations=0 presses=0` — a focus is not a press |
+| Enter, flag clear | `activations=1 presses=0` |
+| Enter repeated twice (`isHeld: true`) | still `activations=1` — **the guard holds** |
+| the Enter release | `activations=1` — Enter acts on the press only |
+| Space press, then a repeat | `activations=1` — a press starts the gesture and runs nothing |
+| the Space release | `activations=2` — the release is the one activation |
+| a pointer press | `activations=3 presses=1` — a press runs **both** props |
+
+The three rules a plan needs:
+
+1. **A repeat is a key event, and the flag says so.** The binding sends key-down
+   again while a key is held and stamps it `isHeld: true`, on the element and on
+   the window handler. A handler that must not run twice reads that flag; one
+   that *should* repeat — an arrow walking a tree, PageDown in a log — ignores it
+   and keeps moving. The guard is only ever about **activation**.
+2. **The library's guard holds in a window.** Enter activates once through two
+   repeats and Space activates once on its release, which is the contract
+   `decideActivation` states. The unguarded control in the same window hears all
+   three downs, so the count of one is the guard's doing and not a key that never
+   arrived.
+3. **`onActivate` is the key route, `onClick` the pointer one.** Every key above
+   left `presses=0`; the pointer press ran both. A consumer that wires a
+   primitive `Button`'s `onClick` alone therefore has a pointer-only control,
+   while `onActivate` is called for either route (with the payload that caused
+   it). The API table says `onActivate` is "click or activating key"; the probe
+   is what shows `onClick` is not.
+
+17 checks, `--only key-hold-lifecycle`, green on 0.11.0 here (~0.7–0.9 s, two
+consecutive runs). Fixture `src/live/key-hold.ts` (the ids, the three keys, the
+log codec and the count) + `key-hold.test.ts` (the readouts, the ids, the flag the
+host verb declares, the probe's mounts, the chords it drives, the registry entry
+and this section). Negative control measured, exit `1`: claiming the held Enter
+activates again fails `a held Enter does not activate again` (`expected
+"activations=2 presses=0", got "activations=1 presses=0"`); restored, green. No
+capture: every claim is a readout. `AsyncSmokeHost` gained `keyDown(keystroke,
+isHeld)` for this — the automation protocol's only route that carries the flag —
+documented in `packages/testing/README.md`.
+
 ### `text-undo-lifecycle` — measured on 0.11.0 here
 
 **What does a field's own undo do to the app?** MISSION lists **input editing**
@@ -6181,7 +6237,7 @@ narrower. Each deviation is deliberate and measured:
   `faded-hitbox-lifecycle` and `markdown-fence` and
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
-  `text-undo-lifecycle` (forty-eight
+  `text-undo-lifecycle` and `key-hold-lifecycle` (forty-nine
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the

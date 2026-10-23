@@ -1059,6 +1059,7 @@ import {
   BreadcrumbNavigationProbe,
   breadcrumbNavigationSteps,
 } from "./breadcrumb-navigation-probe.js";
+import { KeyHoldProbe, keyHoldSteps } from "./key-hold-probe.js";
 import { TextUndoProbe, textUndoSteps } from "./text-undo-probe.js";
 import {
   ACTION_RING_DANGER,
@@ -28963,6 +28964,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "breadcrumb-navigation-lifecycle",
     view: () => <BreadcrumbNavigationProbe />,
     steps: breadcrumbNavigationSteps,
+  },
+  "key-hold-lifecycle": {
+    id: "key-hold-lifecycle",
+    view: () => <KeyHoldProbe />,
+    steps: keyHoldSteps,
   },
   "text-undo-lifecycle": {
     id: "text-undo-lifecycle",

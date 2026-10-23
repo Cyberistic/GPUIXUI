@@ -95,12 +95,17 @@ exact offset and hand the frame back to live time — the same reading every run
 They are optional because only a window has one; the offscreen renderer exposes
 a clock too, but no scenario has needed to drive it.
 
-Keys are two verbs on purpose. `key(keystroke)` presses through the automation
+Keys are three verbs on purpose. `key(keystroke)` presses through the automation
 protocol, which a window delivers as a **key down only** (measured: a probe
 listening on `onKeyDown`/`onKeyUp` saw `space` arrive once, as a press). A
 control that activates on release — Space on a button, checkbox or switch,
 which is the platform's own rule — is therefore driven with `keyUp(keystroke)`,
-which releases through the renderer's `simulateKeyUp`.
+which releases through the renderer's `simulateKeyUp`. `keyDown(keystroke,
+isHeld)` sends a key **down** with the platform's repeat flag: an OS-held key
+arrives as repeated downs with `isHeld: true`, which is what every activating
+control refuses (`decideActivation`), so the verb is how a probe tells a working
+guard from a dead one. It is optional because only a window's protocol carries
+the flag.
 
 Focus has four verbs. `focusNext()` runs the window's own traversal and
 `focusElement(testId)` moves native focus from component code. `blur()` is the

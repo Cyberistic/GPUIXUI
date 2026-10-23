@@ -667,6 +667,12 @@ export const liveRegistry = [
     capability: "layout",
   },
   {
+    id: "key-hold-lifecycle",
+    title:
+      "Input: a held key arrives with isHeld set, the shipped Button activates once through the repeats, and the app-level channel carries the same flag",
+    capability: "input",
+  },
+  {
     id: "text-undo-lifecycle",
     title:
       "Input: a field's own cmd-z restores its text and reports it through onChange, a value pushed in from outside clears the history, and the text area undoes too",

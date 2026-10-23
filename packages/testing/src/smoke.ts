@@ -581,6 +581,21 @@ export interface AsyncSmokeHost {
   ) => Effect.Effect<ListAnchor | null, SmokeHostError>;
   readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
   /**
+   * Sends a key **down** with the platform's repeat flag.
+   *
+   * `key(keystroke)` drives the automation protocol's input pipeline, and the
+   * payload it produces carries no repeat state. A held key is delivered as
+   * repeated key-down events with `isHeld: true`, and every activating control
+   * in the library refuses an activation for one (`decideActivation`), so the
+   * flag is the difference between a guard that works and a held Enter firing
+   * an action repeatedly. Optional because only a window's protocol carries it;
+   * a synchronous host has no repeat to synthesise.
+   */
+  readonly keyDown?: (
+    keystroke: string,
+    isHeld: boolean,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
    * The text the window currently has selected, or `null` for no selection.
    *
    * A window reports selection from its renderer (`getSelectedText`), which is
