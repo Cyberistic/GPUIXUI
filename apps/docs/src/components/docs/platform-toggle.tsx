@@ -11,8 +11,6 @@ import {
 import type { PlatformName, Theme } from "@gpuixui/tokens";
 import {
   lookFromSearch,
-  lookLabel,
-  lookOrder,
   lookParam,
   platformFromSearch,
   platformLabel,
@@ -69,7 +67,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     select: (state) => state.location.searchStr,
   });
   const [platform, setPlatform] = useState<PlatformName>(
-    () => platformFromSearch(search) ?? "default",
+    () => platformFromSearch(search) ?? "darwin",
   );
   const [look, setLook] = useState<LookName>(
     () => lookFromSearch(search) ?? "native",
@@ -190,7 +188,7 @@ function ChoiceGroup<T extends string>({
  * the theme the two resolve to.
  */
 export function PlatformToggle() {
-  const { platform, look, theme, setPlatform, setLook } = usePlatform();
+  const { platform, theme, setPlatform } = usePlatform();
 
   return (
     <div className="gx-platform not-prose">
@@ -203,16 +201,6 @@ export function PlatformToggle() {
         label="Platform style"
         onSelect={setPlatform}
         selected={platform}
-      />
-      <p className="gx-platform-title">Look</p>
-      <ChoiceGroup
-        choices={lookOrder.map((option) => ({
-          value: option,
-          label: lookLabel(option),
-        }))}
-        label="Authored look"
-        onSelect={setLook}
-        selected={look}
       />
       <p className="gx-platform-meta">
         {theme.name} · {theme.typography.mono}

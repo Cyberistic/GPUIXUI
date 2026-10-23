@@ -2653,8 +2653,9 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  height: calc(var(--row-height) + var(--spacing-md));
-  padding: 0 12px;
+  min-height: calc(var(--row-height) + var(--spacing-md));
+  height: auto;
+  padding: 8px 12px;
   border: 0;
   border-radius: calc(var(--radius) - 2px);
   background: transparent;
@@ -2698,6 +2699,7 @@
 .gx-list-title {
   overflow: hidden;
   font-size: 13px;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2705,6 +2707,7 @@
 .gx-list-description {
   overflow: hidden;
   font-size: 11.5px;
+  line-height: 1.35;
   color: var(--muted-foreground);
   text-overflow: ellipsis;
   white-space: nowrap;
