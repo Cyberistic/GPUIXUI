@@ -52,7 +52,12 @@ this runtime announces state through `aria-valuetext` and has no
 group whole and a group left out keeps the default. `MessagesProvider` is the
 same seam without a theme, for a sub-tree in another language — it extends the
 table above it rather than resetting it — and `useMessages` reads the resolved
-table. Reference: [`docs/theme-provider.mdx`](./docs/theme-provider.mdx) §Words.
+table. A **formatter** a caller passes for one bar is words too: `Progress`'s
+`formatValue`/`loadingText` and `Meter`'s `formatValue` go through
+`spokenText`, so an answer that says nothing (a locale table with no row for
+this measurement) leaves the component's own words standing instead of
+publishing an empty `aria-valuetext`. Reference:
+[`docs/theme-provider.mdx`](./docs/theme-provider.mdx) §Words.
 
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.

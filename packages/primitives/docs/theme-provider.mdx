@@ -39,6 +39,13 @@ the group's own `label` and the end, so a language that puts the end first owns
 the order rather than receiving an English suffix. The shipped sentence is
 `"<label> minimum"` / `"<label> maximum"`; a blank label names neither thumb.
 
+A **formatter** a caller passes for one measurement is words too, and it follows
+the same rule a blank name does: `Progress`'s `formatValue`/`loadingText` and
+`Meter`'s `formatValue` go through `spokenText`, so an answer that says nothing
+— a locale table with no row for this bar — leaves the component's own words
+(the clamped percentage, or the provider's indeterminate word) standing rather
+than publishing an empty `aria-valuetext`. A real answer is trimmed and used.
+
 A group named whole replaces the inherited one; a group left out — or written
 `undefined` — keeps it, so a provider forwarding an optional group it never
 received cannot erase the words around it. That matters most for `starName`,
