@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 
 /**
  * Dashboard block — the landing's product window and the `/docs/blocks/dashboard`
@@ -220,6 +220,7 @@ function WeekBars() {
               width={barW}
               x={x}
               y={y}
+              style={{ animationDelay: `${i * 30}ms` }}
             />
             <text
               className="gx-dash-axis-label"
@@ -235,6 +236,26 @@ function WeekBars() {
     </svg>
   );
 }
+
+/** A donut segment's inline paint plus the custom properties its `stroke-dasharray`
+ *  draw animation reads: the segment length, the gap to the circumference, and
+ *  the circumference itself. */
+interface DonutSegmentStyle extends CSSProperties {
+  readonly "--dash-len": number;
+  readonly "--dash-gap": number;
+  readonly "--dash-circ": number;
+}
+
+/** The stroke colour and the draw-animation variables for one donut segment. */
+const donutSegmentStyle = (
+  segment: { readonly color: string; readonly length: number },
+  circumference: number,
+): DonutSegmentStyle => ({
+  stroke: segment.color,
+  "--dash-len": segment.length,
+  "--dash-gap": circumference - segment.length,
+  "--dash-circ": circumference,
+});
 
 /** Five-segment donut with the total in the centre. */
 function TokenDonut() {
@@ -263,6 +284,7 @@ function TokenDonut() {
       <g transform="rotate(-90 50 50)">
         {segments.map((segment) => (
           <circle
+            className="gx-dash-donut-segment"
             cx="50"
             cy="50"
             fill="none"
@@ -271,7 +293,7 @@ function TokenDonut() {
             strokeDasharray={`${segment.length} ${circumference - segment.length}`}
             strokeDashoffset={-segment.offset}
             strokeWidth="13"
-            style={{ stroke: segment.color }}
+            style={donutSegmentStyle(segment, circumference)}
           />
         ))}
       </g>
@@ -362,9 +384,13 @@ function HourlyStack() {
           <g key={column.label}>
             {column.segments.map((segment) => (
               <rect
+                className="gx-dash-segment"
                 height={segment.height}
                 key={segment.series}
-                style={{ fill: colorAt(segment.series) }}
+                style={{
+                  fill: colorAt(segment.series),
+                  animationDelay: `${i * 30}ms`,
+                }}
                 width={barW}
                 x={x}
                 y={segment.y}

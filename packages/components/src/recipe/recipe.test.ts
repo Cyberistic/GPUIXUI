@@ -1291,22 +1291,21 @@ describe("Toast recipe", () => {
       display: "flex",
       flexDirection: "column",
       alignItems: "flex-end",
-      gap: 8,
-      maxWidth: 380,
+      gap: 12,
+      maxWidth: 356,
       pointerEvents: "none",
     });
     expect(style(TOAST_CARD)).toEqual({
       display: "flex",
       flexDirection: "row",
       alignItems: "flex-start",
-      width: 380,
+      width: 356,
       backgroundColor: darkTheme.colors.popover,
       color: darkTheme.colors.popoverForeground,
       borderWidth: 1,
       borderColor: darkTheme.colors.border,
       borderRadius: 6,
       boxShadow: elevationShadow(darkTheme, "md"),
-      overflow: "hidden",
       pointerEvents: "auto",
     });
   });

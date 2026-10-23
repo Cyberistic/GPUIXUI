@@ -9,6 +9,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import { motionTimingOf } from "@gpuixui/motion/timing";
 import {
   cn,
   TOAST_CARD,
@@ -20,16 +21,22 @@ import {
 import { HashMap, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Button, IconButton } from "../internal/button.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
 import {
   exitWindowMs,
-  fadeFromSide,
   PresenceShield,
   presenceMotion,
   presenceStyle,
-  useSurfaceTiming,
+  useMotionPreference,
+  type SurfaceFrames,
   type SurfaceTiming,
 } from "../internal/presence.js";
 import { recipeStyle } from "../internal/recipe.js";
@@ -56,6 +63,34 @@ const glyph = (value: ToastTone): "info" | "success" | "warning" | "error" =>
     Match.when("danger", () => "error" as const),
     Match.exhaustive,
   );
+
+/** The toast's own timing: it arrives a touch slower than a menu and leaves
+ *  faster than it entered, so the stack reads as arriving gently and leaving
+ *  promptly. The durations are sonner's, not a shared level's, so the toast's
+ *  feel never drags another surface along (or the reverse). */
+const useToastTiming = (): SurfaceTiming => {
+  const preference = useMotionPreference();
+  return {
+    enter: motionTimingOf(220, { phase: "enter", preference }),
+    exit: motionTimingOf(180, { phase: "exit", preference }),
+  };
+};
+
+/**
+ * The toast's enter and exit frames: it rises `16px` into place (a `top` travel,
+ * the runtime's slide-up) and leaves by fading while it slides `16px` to the
+ * right (a `left` travel). `fanLift` is the hover fan's resting offset: while
+ * the stack is hovered the older cards rest that far above their slot, so the
+ * runtime tweens `top` between the fanned and unfanned frames.
+ */
+const toastFrames = (fanLift: number): SurfaceFrames => ({
+  initial: { opacity: 0, top: 16 },
+  animate: { opacity: 1, top: -fanLift },
+  exit: { opacity: 0, top: -fanLift, left: 16 },
+});
+
+/** The vertical lift, in pixels, one hovered stack fans each older card by. */
+const FAN_STEP = 8;
 
 /** One painted card: a live toast, or one playing out its exit. */
 interface StackEntry {
@@ -149,40 +184,50 @@ const useToastStack = (
   return entries;
 };
 
-/** One card. Its left bar and tone icon carry the status; the surface is neutral. */
+/** One card. Its tone icon carries the status; the surface is neutral. */
 const ToastCard = ({
   toast,
   present,
   timing,
+  fanLift,
+  stackHovered,
+  onHoverChange,
 }: {
   readonly toast: Toast;
   readonly present: boolean;
   readonly timing: SurfaceTiming;
+  readonly fanLift: number;
+  readonly stackHovered: boolean;
+  readonly onHoverChange: (hovered: boolean) => void;
 }) => {
   const theme = useTheme();
   const { dismiss, pause, resume, actionFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
-  const held = useRef({ hover: false, focus: 0, paused: false });
+  const focus = useRef(0);
+  const paused = useRef(false);
 
-  /** Pause while either reason holds; resume only when the last one leaves. */
+  /** Pause while the stack is hovered or a control holds focus; resume only
+   *  when the last reason leaves. */
   const syncHold = (): void => {
-    const after = held.current.hover || held.current.focus > 0;
-    if (after === held.current.paused) return;
-    held.current.paused = after;
+    const after = stackHovered || focus.current > 0;
+    if (after === paused.current) return;
+    paused.current = after;
     if (after) pause(toast.id);
     else resume(toast.id);
   };
 
-  const setHover = (value: boolean): void => {
-    held.current.hover = value;
-    syncHold();
-  };
+  /** The card's own hover feeds the stack fan; the hold reads `stackHovered`. */
+  const setHover = (value: boolean): void => onHoverChange(value);
 
   /** Two controls can hold focus; a count keeps moving between them held. */
   const setFocus = (value: boolean): void => {
-    held.current.focus = Math.max(0, held.current.focus + (value ? 1 : -1));
+    focus.current = Math.max(0, focus.current + (value ? 1 : -1));
     syncHold();
   };
+
+  useEffect(() => {
+    syncHold();
+  }, [stackHovered]);
 
   const action = Option.flatMap(toast.action, (candidate) =>
     Option.map(actionFor(toast.id), (onSelect) => ({
@@ -199,7 +244,7 @@ const ToastCard = ({
   return (
     <div
       testId={`toast-${toast.id}`}
-      motion={presenceMotion(fadeFromSide("right", 16), {
+      motion={presenceMotion(toastFrames(fanLift), {
         mounted: true,
         present,
         timing,
@@ -213,16 +258,16 @@ const ToastCard = ({
       )}
     >
       <div
-        style={{ width: 3, alignSelf: "stretch", backgroundColor: palette.fg }}
-      />
-      <div
         style={{
           display: "flex",
           flexDirection: "row",
           alignItems: "flex-start",
-          gap: theme.spacing.lg,
+          gap: 10,
           flexGrow: 1,
-          padding: theme.spacing.lg,
+          paddingTop: 14,
+          paddingBottom: 14,
+          paddingLeft: 16,
+          paddingRight: 16,
         }}
       >
         <div
@@ -311,8 +356,22 @@ export const ToastViewport = ({
 }: ToastViewportProps) => {
   const theme = useTheme();
   const { toasts } = useToast();
-  const timing = useSurfaceTiming("notice");
+  const timing = useToastTiming();
   const stack = useToastStack(toasts, timing);
+  // The stack fans when the pointer rests on any card; a count survives moving
+  // between two cards, whose leave precedes the next card's enter.
+  const hoverCount = useRef(0);
+  const [stackHovered, setStackHovered] = useState(false);
+  const onHoverChange = (hovered: boolean): void => {
+    hoverCount.current = Math.max(0, hoverCount.current + (hovered ? 1 : -1));
+    setStackHovered(hoverCount.current > 0);
+  };
+  // The fan lifts the older cards: the newest rests still and each older card
+  // sits one step higher, so hovering widens the gap between neighbours.
+  const present = Arr.filter(stack, (entry) => entry.present);
+  const rankById = HashMap.fromIterable(
+    Arr.map(present, (entry, index) => [entry.toast.id, index] as const),
+  );
 
   return (
     <div
@@ -330,14 +389,24 @@ export const ToastViewport = ({
       )}
     >
       {children}
-      {Arr.map(stack, (entry) => (
-        <ToastCard
-          key={entry.toast.id}
-          toast={entry.toast}
-          present={entry.present}
-          timing={timing}
-        />
-      ))}
+      {Arr.map(stack, (entry) => {
+        const fanLift = Option.match(HashMap.get(rankById, entry.toast.id), {
+          onNone: () => 0,
+          onSome: (rank) =>
+            stackHovered ? (HashMap.size(rankById) - 1 - rank) * FAN_STEP : 0,
+        });
+        return (
+          <ToastCard
+            key={entry.toast.id}
+            toast={entry.toast}
+            present={entry.present}
+            timing={timing}
+            fanLift={fanLift}
+            stackHovered={stackHovered}
+            onHoverChange={onHoverChange}
+          />
+        );
+      })}
     </div>
   );
 };

@@ -85,6 +85,20 @@ Under `preference: "reduced"` the duration is `0` and no easing is named. The
 caller keeps the frames — an opacity, an offset — so the resting appearance never
 depends on the preference.
 
+`motionTimingOf(durationMs, options)` names a duration outside the five levels
+with the same phase easing and reduced rule — a toast enters at 220 ms and leaves
+at 180 ms, durations the level table does not carry.
+
+```ts
+import { motionTimingOf } from "@gpuixui/motion";
+
+const enter = motionTimingOf(220, { phase: "enter" });
+// { duration: 0.22, ease: "easeOut" }
+
+const leave = motionTimingOf(180, { phase: "exit" });
+// { duration: 0.18, ease: "easeIn" }
+```
+
 ## Springs
 
 | Preset | Stiffness | Damping | For |

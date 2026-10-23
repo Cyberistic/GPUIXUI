@@ -1399,16 +1399,14 @@ describe("the curated component pages", () => {
     expect(cardRecipe).toContain("pointer-events-auto");
     expect(viewport).toContain("presenceStyle(present)");
     expect(presenceSeam).toContain('pointerEvents: present ? "auto" : "none"');
-    expect(viewport).toContain("held.current.focus > 0");
-    expect(viewport).toContain(
-      "Math.max(0, held.current.focus + (value ? 1 : -1))",
-    );
-    expect(viewport).toContain("width: 3");
+    expect(viewport).toContain("focus.current > 0");
+    expect(viewport).toContain("Math.max(0, focus.current + (value ? 1 : -1))");
+    expect(viewport).toContain("top: -fanLift");
     expect(viewport).toContain("actionFor(toast.id)");
     expect(viewport).toContain("onSelect();");
     expect(viewport).not.toContain("aria-live");
 
-    expect(recipes).toContain("w-[380px]");
+    expect(recipes).toContain("w-[356px]");
     expect(recipes).toContain("bg-popover");
     expect(recipes).toContain("shadow-md");
 
@@ -1420,7 +1418,7 @@ describe("the curated component pages", () => {
     expect(text).toContain("remaining");
     expect(text).toContain("No `aria-live` and no `aria-atomic`");
     expect(text).toContain("No progress indicator");
-    expect(text).toContain("380px");
+    expect(text).toContain("356px");
     expect(text).toContain("16 native behaviour tests");
     expect(text).toContain("Render the viewport **last**");
     // The clock a traversal cannot hold: a window focuses the card's control

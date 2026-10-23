@@ -112,6 +112,33 @@ const phaseOf = (phase: MotionPhase): MotionPhase =>
   namesPhase(phase) ? phase : "standard";
 
 /**
+ * A named millisecond duration and phase as the runtime's timing, in seconds.
+ *
+ * This is the one place a timing is built from a duration, so a surface that
+ * moves on a duration outside {@link motionLevels} still keeps the shared
+ * reduced rule here instead of re-implementing it: under the reduced preference
+ * the duration is zero and no easing is named, so the target is painted without
+ * a transition. A duration that is not positive and finite reads as the house
+ * surface arrival ({@link motionLevels.normal}), the timing a surface that asked
+ * for nothing moves with.
+ */
+export const motionTimingOf = (
+  durationMs: number,
+  options: MotionTimingOptions = {},
+): MotionTiming => {
+  const phase = options.phase ?? "standard";
+  if (options.preference === "reduced") return { duration: 0 };
+  const ms =
+    Number.isFinite(durationMs) && durationMs > 0
+      ? durationMs
+      : motionLevels.normal;
+  return {
+    duration: ms / 1000,
+    ease: motionEasings[phaseOf(phase)],
+  };
+};
+
+/**
  * A level and phase as the runtime's timing, in seconds.
  *
  * Under the reduced preference the duration is zero and no easing is named:
@@ -122,11 +149,4 @@ const phaseOf = (phase: MotionPhase): MotionPhase =>
 export const motionTiming = (
   level: MotionLevel,
   options: MotionTimingOptions = {},
-): MotionTiming => {
-  const phase = options.phase ?? "standard";
-  if (options.preference === "reduced") return { duration: 0 };
-  return {
-    duration: levelMs(level) / 1000,
-    ease: motionEasings[phaseOf(phase)],
-  };
-};
+): MotionTiming => motionTimingOf(levelMs(level), options);

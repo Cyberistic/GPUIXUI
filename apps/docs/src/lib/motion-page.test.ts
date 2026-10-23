@@ -760,8 +760,10 @@ describe("the motion page", () => {
     // The unit the function converts to is the runtime's: the levels are
     // milliseconds and the returned duration is seconds. `levelMs` is the seam
     // that also keeps an unreadable level from reaching the runtime as
-    // `undefined / 1000`, so the guard names it rather than the table read.
-    expect(timing).toContain("levelMs(level) / 1000");
+    // `undefined / 1000`, so `motionTiming` hands it the guarded value and the
+    // shared `motionTimingOf` divides by 1000.
+    expect(timing).toContain("motionTimingOf(levelMs(level), options)");
+    expect(timing).toContain("ms / 1000");
     expect(timing).toContain(": motionLevels.normal;");
     expect(pageText).toContain("a duration in **seconds**");
     expect(timing).toContain(
