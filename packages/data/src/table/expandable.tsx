@@ -27,6 +27,15 @@
  * runs `onClick` — and a row that only answered the pointer left a keyboard
  * reader no way to open a panel at all.
  *
+ * The key is answered **only while the row itself holds focus**: a key typed
+ * in a field inside the row reaches the row's handler on the focus path
+ * (`press-routing-lifecycle`'s `field-cell`), so an unguarded row opens its
+ * panel while the reader types a space. The runtime builds the payload for the
+ * element the handler is on, so the origin is the renderer's focused element,
+ * the rule `ScrollArea` follows. A disabled row answers neither the pointer nor
+ * the key — a `tabIndex` of `-1` is ordered before the zero stops rather than
+ * removed from the chain, so programmatic focus can still land on it.
+ *
  * ```tsx
  * <TableHeader>
  *   <TableRow>
@@ -48,8 +57,9 @@
 import { Icon } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import { mergeStyles } from "@gpuix/react/floating";
-import type { Props } from "@gpuix/react";
-import type { ReactNode } from "react";
+import { useGpuix, type Props, type PublicInstance } from "@gpuix/react";
+import * as Option from "effect/Option";
+import { useCallback, useRef, type ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { TABLE_DETAIL_CELL, TABLE_DETAIL_ROW } from "./recipe.js";
@@ -146,14 +156,27 @@ export const TableExpandableRow = ({
   style,
   tabIndex,
   onKeyDown,
+  instanceRef,
   ...rest
 }: TableExpandableRowProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const row = useRef<PublicInstance | null>(null);
+  const attach = useCallback(
+    (instance: PublicInstance | null) => {
+      row.current = instance;
+      if (typeof instanceRef === "function") instanceRef(instance);
+      else if (instanceRef !== null && instanceRef !== undefined)
+        instanceRef.current = instance;
+    },
+    [instanceRef],
+  );
   const open = expanded === true;
   return (
     <>
       <TableRow
         {...rest}
+        instanceRef={attach}
         disabled={disabled}
         aria-expanded={open}
         // The row is the disclosure's control, so it is a stop in the Tab order
@@ -162,6 +185,13 @@ export const TableExpandableRow = ({
         tabIndex={disabled === true ? -1 : (tabIndex ?? 0)}
         onKeyDown={(event) => {
           onKeyDown?.(event);
+          if (disabled === true) return;
+          const ours = Option.fromNullishOr(row.current?.id);
+          const focused = Option.fromNullishOr(
+            renderer?.getFocusedElementId?.(),
+          );
+          if (!Option.exists(focused, (id) => Option.contains(ours, id)))
+            return;
           if (event.key === "enter" || event.key === "space") onToggle?.();
         }}
         className={className}

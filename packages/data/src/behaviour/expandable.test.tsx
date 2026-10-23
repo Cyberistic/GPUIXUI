@@ -14,12 +14,15 @@
  *   open the row (`press-routing-lifecycle`).
  */
 
+import { Input } from "@gpuixui/primitives";
 import * as Option from "effect/Option";
+import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ExpandableRowsExample } from "../../examples/expandable-rows.example.js";
 import {
   clickCentreOf,
   paintedText,
+  pressKey,
   requireBounds,
 } from "../internal/interaction.js";
 import {
@@ -27,6 +30,16 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import { TableExpandableRow } from "../table/expandable.js";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  TableViewport,
+} from "../table/table.js";
 
 let root: DataTestRoot | undefined;
 
@@ -55,6 +68,65 @@ afterEach(() => {
   root?.unmount();
   root = undefined;
 });
+
+/**
+ * A row whose cells hold a field, beside a disabled row.
+ *
+ * The key half of the runtime's routing is the focus path: a key typed in a
+ * field inside a row **reaches the row's handler**, so a disclosure row that
+ * toggles on every Enter turns the panel open while the reader confirms a value
+ * (`press-routing-lifecycle`'s `field-cell` route). A row that cannot act must
+ * refuse its keys for the same reason it refuses its press.
+ */
+const RowFocusFixture = () => {
+  const [note, setNote] = useState("");
+  const [open, setOpen] = useState(false);
+  const [disabledOpen, setDisabledOpen] = useState(false);
+  return (
+    <Table height={240} aria-label="Rows with a field" testId="focus-table">
+      <TableViewport>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell width={120}>Name</TableHeaderCell>
+            <TableHeaderCell width={220}>Note</TableHeaderCell>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableExpandableRow
+            testId="focus-row"
+            detailTestId="focus-detail"
+            expanded={open}
+            onToggle={() => setOpen((current) => !current)}
+            cells={
+              <>
+                <TableCell width={120}>row</TableCell>
+                <TableCell width={220}>
+                  <Input
+                    label="Note"
+                    value={note}
+                    onValueChange={setNote}
+                    size="sm"
+                    testId="focus-field"
+                  />
+                </TableCell>
+              </>
+            }
+            detail={<text>detail panel</text>}
+          />
+          <TableExpandableRow
+            testId="focus-disabled-row"
+            detailTestId="focus-disabled-detail"
+            disabled
+            expanded={disabledOpen}
+            onToggle={() => setDisabledOpen((current) => !current)}
+            cells={<TableCell width={340}>disabled row</TableCell>}
+            detail={<text>disabled panel</text>}
+          />
+        </TableBody>
+      </TableViewport>
+    </Table>
+  );
+};
 
 describe("the expandable table row", () => {
   it("opens the panel under the row the press lands on", () => {
@@ -162,5 +234,29 @@ describe("the expandable table row", () => {
     root.renderer.nativeSimulateKeyDown(row, "enter");
     root.renderer.flush();
     expect(paintedText(root)).not.toContain("src/readme.md");
+  });
+
+  it("keeps a key typed in a cell to that cell, and a disabled row to itself", () => {
+    root = renderData(<RowFocusFixture />);
+    settle(root);
+
+    // Space inside the field decides the field's value; it must not also open
+    // the disclosure row the field sits in (`press-routing-lifecycle` measured
+    // the key reaching the row's handler through the focus path).
+    pressKey(root, "focus-field", "space");
+    root.renderer.flush();
+    expect(paintedText(root)).not.toContain("detail panel");
+
+    // The row itself is still the disclosure's control.
+    pressKey(root, "focus-row", "enter");
+    root.renderer.flush();
+    expect(paintedText(root)).toContain("detail panel");
+
+    // A disabled row refuses the pointer and the keyboard: a negative tab index
+    // is ordered before the zero stops rather than removed from the chain, so
+    // programmatic focus can reach it.
+    pressKey(root, "focus-disabled-row", "space");
+    root.renderer.flush();
+    expect(paintedText(root)).not.toContain("disabled panel");
   });
 });
