@@ -49,8 +49,11 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 | `viewportTestId` | `string` | — | the implicit viewport's locator |
 | `viewportRef` | `Ref<PublicInstance>` | — | the implicit viewport's element |
 
-A composed `ScrollAreaViewport` takes every scroll prop above, each defaulting
-to the area's, and adds one name of its own:
+A composed `ScrollAreaViewport` takes the scroll props above — `axis`,
+`onScroll`, `onScrollChange`, `onLayout`, `scrollbarColor`, `scrollbarWidth`,
+`focusable` and `label` — each defaulting to the area's; `style`, `className`,
+`children` and `testId` describe the viewport's own element. The one name it adds
+is its handle:
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
