@@ -287,7 +287,8 @@ circle is content, not a control.
 
 Two border roles:
 
-- `border` is decorative — dividers and card edges. It is intentionally subtle.
+- `border` is decorative — dividers and card edges, and the softer share a menu
+  paints between two groups of actions. It is intentionally subtle.
 - `borderStrong` is functional — a control's boundary, and the edge a field
   owes (§8). It meets 3:1
   against every surface a control can sit on — the canvas, a card, a field, a
@@ -796,7 +797,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, and every raised elevation level (`sm`, `md`, `lg`) | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, a menu's soft group rule, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, and every raised elevation level (`sm`, `md`, `lg`) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, whose edge is the contrast table's claim on a row's wash) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | a bar's rail (`muted`) on background, card and popover — never on the muted strip it is made of | 1.05:1 | 1.05:1 |
 | a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
@@ -924,7 +925,14 @@ tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
 selected or accented with, the resting fill of a tonal action, the rail a bar
 draws its value inside, the face a
 disabled control wears and the shadow of a
-raised surface are held to 1.05:1 against what they are painted on. A loading
+raised surface are held to 1.05:1 against what they are painted on. A menu's rule
+between two groups is the same role painted at half strength — `@gpuixui/tw`'s
+`MENU_SEPARATOR` writes `bg-border/50` and `softDividerAlpha` is that share, so a
+menu's group separator is not a region's edge and steps back rather than
+competing with the surface it sits in — and it is measured at that share as
+`softDivider` on the `popover` a menu paints, the one placement the table
+compared as the full role.
+A loading
 dialog's skeleton is measured on the dialog's own `popover` fill, not only on
 the page, a card and a muted list. The rail is measured on the page, a card and
 a popover — never on the `muted` strip it is made of — and the five dark quiet

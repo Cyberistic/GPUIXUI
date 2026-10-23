@@ -327,7 +327,33 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 176/176
+`[x]` `[██████████]` 177/177
+
+`[x]` Measure the **rule a menu draws at half the border role** — `@gpuixui/tw`'s
+`MENU_SEPARATOR` is `bg-border/50` and `MenuSeparator` draws it inside the menu
+surface, while `decorativeSurfaces` measured `border` as the role on four strips:
+the one divider that is a **share** rather than the role was measured by nothing,
+so a brand whose edge reads at full strength and halves into its own menu paints
+two groups of actions as one list with every report empty. `softDividerAlpha`
+(`0.5`) is the share, the placement is `border` at it on the `popover` a menu
+paints and the failure is reported as `softDivider` — a kind of its own, because
+the share is the finding and two `divider` lines with the same role and strip
+would not say which paint failed. `softRuleBrand` is the measured brand: its
+`border` clears the opaque rule on the popover and loses the half one.
+`soft-rule.test.ts` (7 cases) derives the number from the recipe's own class
+string, reads `MENU_CONTENT`/`MenuSeparator` so the placement cannot outlive its
+painter, refuses a share on a region divider, sweeps all 18 shipped,
+high-contrast, platform and authored styles (the tightest soft rule is Dark's at
+**1.068:1**, and the opaque rule passes on the same strip) and holds the four
+documents to the share and the painter. Directions measured: dropping the
+placement fails the coverage and brand cases by name; changing the recipe to
+`bg-border/40` fails `expected 0.4 to be 0.5`; and a dark `border` at `#262C36`
+— which still clears the floor at full strength — fails the sweep naming `Dark`.
+The `/docs/themes` readout's twelfth kind is the docs-site half (`TODO.md` →
+Interlocks). Docs in `docs/tokens.md` §Decorative surfaces, `docs/design-system.md`
+§6/§8/§9, the package README and the `Decorative surfaces` row. No native
+scenario applies — a pure contract and its values; the menu's own paint is held
+by the recipe suite.
 
 `[x]` Measure the **switch paint a platform style declares** — `PlatformStyle.switch`
 carries three raw colours (`on`, `off`, `knob`) into `Theme.switch`, and because
@@ -7225,6 +7251,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Carry the **disabled-mid-edit discard** to the curated Inline edit page — `packages/components`' `InlineEdit` now refuses to commit a draft when the caller disables the control while it is open, because a read-only host still receives `Enter`, the host's submit and the blur. The curated page's API table now states the rule (its `disabled` row reads "a control disabled **mid-edit** discards the draft"), so a reader is told the path that used to write | docs-site (`apps/docs/content/docs/components/inline-edit.mdx`) | **resolved 2026-10-23** — landed with the page's disabled row and its keyboard section; the two "`Escape` is the only discard" sentences stay because `inline-edit-page.test.ts` requires them and they describe a reader's own paths (a disabled field's draft is discarded by the component, not by a key the reader presses) |
 | Carry the **disabled mid-open rule and the new count** to the curated Date picker page — the shipped `DatePicker` now closes with the control when a caller disables it while its calendar is open, and refuses `choose`/`clear` while `disabled`; the curated page printed **20 native behaviour tests** against the suite's 21 | docs-site (`apps/docs/content/docs/components/date-picker.mdx`) | **resolved 2026-10-23** (`df74c631`) — the page prints the suite's **21** cases and its disabled paragraph names the mid-open rule; `component-page-truth.test.ts` is green (47/47) |
 | Offer the **third authored look** in the docs platform switch — `@gpuixui/tokens` ships three looks (`retroNames` = `luna`, `aero`, `omarchy`) and the tokens pages, README and `COMPONENTS.md` row now name all three, while the site's switch is still written for the era pair: `apps/docs/src/components/docs/platform-toggle.tsx` describes its group as "the authored Luna and Aero styles `retroStyles` ships", `apps/docs/content/docs/theming.mdx` §Authored looks offers only **Windows XP (Luna)** and **Windows 7 (Aero)**, and `apps/docs/src/lib/platform.test.ts`'s `the authored look` suite asserts only `lookLabel("luna")`/`lookLabel("aero")`. A reader of the site cannot switch to the look the package now ships, and the tokens-side guard cannot see that page. The switch should offer `omarchy` beside the pair (resolved through the same `retroTheme` path and remembered like the other looks), the Theming page should name all three with Omarchy's provenance (Tokyo Night dark, Flexoki Light light — not an invented edition), and `platform.test.ts` should derive its look list from `retroNames` so a fourth look fails there too | docs-site (`platform-toggle.tsx`, `content/docs/theming.mdx`, `src/lib/platform.test.ts`) | open — the tokens half landed 2026-10-23 (`retro.test.ts`'s `names every look…`/`states the look and theme counts…`/`keeps the invented dark editions…`) |
+| Name the **twelfth decorative surface kind** on `/docs/themes` — `decorativeSurfaces` gained `softDivider`: the `border` role at `softDividerAlpha` (`0.5`), which is what `@gpuixui/tw`'s `MENU_SEPARATOR` paints (`bg-border/50`) inside a menu's `popover`. It is a separate kind rather than a second `divider` placement because the share is the finding: the table measured the full role, so the softer rule a menu draws between two groups of actions was measured by nothing, and a failure has to name which of the two paints failed. Every shipped, high-contrast, platform and authored style clears 1.05:1 at half strength (tightest Dark at 1.068:1) and `packages/tokens/src/soft-rule.test.ts` holds it. The **Decorative surfaces** bullet in the audit list still says "Eleven kinds are measured" and names eleven, so `src/lib/theming-page.test.ts`'s `names every decorative surface kind the report measures` now fails with `the decorative bullet does not name these surface kinds: [ 'softDivider' ]` | docs-site (`apps/docs/content/docs/themes.mdx`, the **Decorative surfaces** bullet of §The theme audit) | open — the fix is the count and one clause: "Twelve kinds are measured", and "a `softDivider` is the softer rule a menu draws between two groups — the `border` role at `softDividerAlpha`, which is what `MENU_SEPARATOR` writes". The guard derives the count from the package, so only the word and the clause are the page's. The tokens half is on `master` (`soft-rule.test.ts`, `docs/tokens.md` §Decorative surfaces, `docs/design-system.md` §8/§9, the `Decorative surfaces` row) |
 
 ## Phase D — data and workspace components
 

@@ -2299,8 +2299,9 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Fifteen surfaces carry no text and are not an essential boundary, so WCAG's floors
-do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
+Sixteen surfaces carry no text and are not an essential boundary, so WCAG's floors
+do not apply to them: the dividers (`border`, and the softer share a menu paints
+between two groups of actions), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
 wash a row is tinted with while it is hovered, pressed, selected or accented, the
 resting fill of a tonal action (`secondary`), the rail a bar draws its value
@@ -2316,7 +2317,8 @@ that looks like an empty row or an empty dialog, a dialog with no layer behind
 it, a message with no surface or no boundary, a scroller whose thumb nobody can
 find, a menu row that does not answer the pointer, a button that looks like a
 label, a bar with no total, a disabled control that looks available, a table whose
-grid disappears on the row the reader chose.
+grid disappears on the row the reader chose, or two groups of actions read as one
+list.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -2327,6 +2329,7 @@ how a status edge is measured at the alpha its component actually uses:
 | Surface | Role | Measured over |
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
+| softDivider | `border` at `softDividerAlpha` | `popover` (the surface a menu paints) |
 | skeleton | `skeleton` | `background`, `card`, `popover`, `muted` |
 | scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `primary`, `destructive`, `input`, `selected`, `active`, `accent`, `hover`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
@@ -2342,6 +2345,21 @@ how a status edge is measured at the alpha its component actually uses:
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
 findable, which is the same reason a divider is.
+
+A menu's rule between two groups is the same role painted at half strength
+(`softDividerAlpha`, the `bg-border/50` that `@gpuixui/tw`'s `MENU_SEPARATOR`
+writes and `MenuSeparator` draws inside `MENU_CONTENT`). The design is
+deliberate — a rule that ends a region is the full role, while a rule that only
+separates groups inside one floating surface steps back so it does not compete
+with that surface's own edge — and the table measured the role, so the softer
+rule a menu actually paints was compared with nothing: a brand whose edge reads
+at full strength can still land half of it inside its own menu, drawing two
+groups of actions as one list while the report stayed empty. The share is
+therefore part of the placement (`alpha`), reported as `softDivider` on the
+`popover` a menu paints, and `soft-rule.test.ts` derives the number from the
+recipe's class string so a painter that changes its share fails rather than
+drifting. Every shipped, high-contrast, platform and authored style clears the
+1.05:1 floor at half strength — the tightest soft rule is Dark's at **1.068:1**.
 
 A **loading placeholder** is the empty-row defect one surface over. The contract
 measured it on the page, a card and a muted list, and not on the floating surface
@@ -4226,7 +4244,8 @@ the documented brand theme, so a documented brand that loses its on-colour fails
 the suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
-every divider, skeleton, veil, status tint, status edge, scrollbar thumb, state
+every divider, the soft rule a menu draws between groups (`softDivider`),
+skeleton, veil, status tint, status edge, scrollbar thumb, state
 wash, filled action, bar rail, disabled face and elevation placement is
 measured, the edge is held to the share `statusTone` paints, the veil and the
 shadow are composited rather than skipped, a surface that matches its page or
@@ -4238,7 +4257,7 @@ floating strip the contract later gained found three more on the fill a loading
 dialog paints (`popover`) — macOS dark 1.049:1, Linux dark 1.031:1 and Windows
 dark 1.039:1 — so those carry a `skeleton` too, and the tightest skeleton is the
 authored Luna dark look's dialog — `skeleton` on `popover` — at 1.054:1. The
-tightest of the eleven surface kinds is the base dark theme's chosen row — `accent`
+tightest of the twelve surface kinds is the base dark theme's chosen row — `accent`
 on `selected` — at 1.052:1 (the Aero look's dark progress rail, `muted` on
 `popover`, is a hair behind it). The state-wash half found five
 aliases: the base dark theme's `hover` was its

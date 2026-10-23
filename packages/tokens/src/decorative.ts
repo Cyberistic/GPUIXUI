@@ -1,5 +1,7 @@
 /**
- * The perceptibility contract for the surfaces that carry no text: dividers,
+ * The perceptibility contract for the surfaces that carry no text: dividers —
+ * the full `border` role where a rule ends a region and the softer half of it
+ * where a menu separates two groups of actions —
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
  * hovered, pressed, selected or accented — the wash a row is repainted with when
@@ -11,7 +13,8 @@
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
  * unless this file states one. They still have a minimum job: be seen. A divider
- * that matches the page is a card without an edge; a skeleton that matches the
+ * that matches the page is a card without an edge, and a menu's softer rule that
+ * matches the surface is two groups of actions read as one list; a skeleton that matches the
  * row it stands in is an empty list that looks loaded, and one that matches the
  * dialog it stands in is a loading dialog with nothing in it; a veil that dims
  * nothing is a dialog with no layer behind it; a tint that matches the strip it
@@ -61,7 +64,9 @@ export const decorativeFloor = 1.05;
 export interface DecorativeSurface {
   /**
    * What the surface is for, so a failure names the design decision rather than
-   * two roles: `divider` rules a region, `skeleton` stands in for content that
+   * two roles: `divider` rules a region, `softDivider` is the quieter rule a
+   * menu draws between groups of actions (see {@link softDividerAlpha}),
+   * `skeleton` stands in for content that
    * has not loaded, `scrim` is the veil under a modal, `statusTint` is the soft
    * fill behind a status message, `statusEdge` bounds it, `scrollbar` is the
    * thumb a scroller paints, `stateWash` is the tint behind a hovered, pressed,
@@ -78,6 +83,7 @@ export interface DecorativeSurface {
    */
   readonly surface:
     | "divider"
+    | "softDivider"
     | "skeleton"
     | "scrim"
     | "statusTint"
@@ -218,6 +224,23 @@ const filledActionStrips = ["background", "card", "popover", "muted"] as const;
  */
 const trackRole = "muted" as const;
 const trackStrips = ["background", "card", "popover"] as const;
+
+/**
+ * The share of `border` the rule between two groups of menu actions paints:
+ * `@gpuixui/tw`'s `MENU_SEPARATOR` writes `bg-border/50`, which the compiler
+ * turns into `alpha(border, 0.5)` (`packages/components/src/menu/item.tsx`
+ * paints it through `overlaySurfaceStyle`).
+ *
+ * It is the only divider drawn at a share rather than as the role, and the table
+ * measured the role — so the softer rule a menu actually draws was compared with
+ * nothing. The share is a design decision, not an accident: a rule that ends a
+ * region (`Separator`, a select's list separator, a code block's rule) is the
+ * full `border` role, while a rule that only separates two groups inside one
+ * floating surface steps back so it does not compete with the surface's own
+ * edge. `soft-rule.test.ts` derives the number from the recipe's class string, so
+ * a painter that changes its share fails rather than drifting from this value.
+ */
+export const softDividerAlpha = 0.5;
 
 /**
  * The pointer feedback a filled role paints: its hover and its press, each a
@@ -793,7 +816,9 @@ const elevationStrips = [
 /**
  * The decorative surfaces the library paints. Each is measured where it is
  * actually used rather than against a single generic surface: a divider sits on
- * the page, inside a card, in a popover and in a muted toolbar strip; a
+ * the page, inside a card, in a popover and in a muted toolbar strip, while the
+ * softer rule a menu draws between groups is measured at the share it paints on
+ * the surface that holds it; a
  * skeleton stands in for a row on a page, in a card, in a dialog or popover whose
  * content has not loaded and in a muted list; a soft status surface is the tint a
  * message sits in and its edge bounds it, on every strip a message is placed on;
@@ -807,6 +832,18 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "card" },
   { surface: "divider", role: "border", over: "popover" },
   { surface: "divider", role: "border", over: "muted" },
+  // A menu's own rule steps back: it separates two groups of actions inside one
+  // floating surface rather than ending a region, so the recipe paints it at
+  // half the `border` role (`MENU_SEPARATOR` is `bg-border/50`). The table named
+  // the role, so the rule the menu draws was measured by nothing — and on a
+  // floating surface it is the only thing between two groups, since the rows
+  // themselves are the same fill. `popover` is the one strip a menu paints.
+  {
+    surface: "softDivider",
+    role: "border",
+    over: "popover",
+    alpha: softDividerAlpha,
+  },
   ...skeletonStrips.map(
     (over): DecorativeSurface => ({
       surface: "skeleton",

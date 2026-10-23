@@ -960,7 +960,10 @@ keeps `foreground`, and a quiet label or icon `mutedForeground`, so the
 segmented `secondary` group strip is measured as the background of both rather
 than only as the strip its edge and ring are found on.
 The decorative surfaces use `decorativeFloor` (1.05:1), and
-`decorativeSurfaces` names the placements measured — dividers, skeleton fills,
+`decorativeSurfaces` names the placements measured — dividers, the softer rule a
+menu draws between two groups of actions (a share of `border`: `MENU_SEPARATOR`
+paints `bg-border/50`, reported as `softDivider` on the `popover` a menu paints),
+skeleton fills,
 the modal veil on the strips a modal covers, each status tone's soft tint on the four strips a message sits
 on and its edge on those same four and on the four washes a row tints under a
 badge (read at the share `statusEdgeAlpha` that `statusTone` paints), the

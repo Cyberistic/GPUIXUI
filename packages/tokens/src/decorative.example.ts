@@ -70,6 +70,17 @@ export const flatSelectionBrand = extendTheme(lightTheme, {
   colors: { accent: lightTheme.colors.selected },
 });
 
+/**
+ * A brand whose edge reads at full strength and vanishes at half. The rule that
+ * ends a region passes on the menu's own surface; the softer rule a menu draws
+ * between two groups of actions — the same role, painted at
+ * `softDividerAlpha` — lands in it, so a menu's groups read as one list while
+ * the report that only compared the role stayed empty.
+ */
+export const softRuleBrand = extendTheme(lightTheme, {
+  colors: { border: "#F7F7F7", background: lightTheme.colors.card },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(

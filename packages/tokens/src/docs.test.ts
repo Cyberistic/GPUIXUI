@@ -943,6 +943,7 @@ describe("the verification section's contracts", () => {
     // no phrase here until the page is told, which is the point of the mapping.
     const phrases: Readonly<Record<string, string>> = {
       divider: "divider",
+      softDivider: "soft rule",
       skeleton: "skeleton",
       scrim: "veil",
       statusTint: "status tint",
