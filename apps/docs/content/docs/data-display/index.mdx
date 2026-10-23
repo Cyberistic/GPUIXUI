@@ -259,6 +259,23 @@ re-deriving them.
   a key typed in an editable cell reaches the row's `onKeyDown`
   (`field-cell → hits=row-key`) while the field keeps it, so the row reads the
   event's own `elementId` before acting on an arrow (`press-routing-lifecycle`).
+- **A reorder's drop is found beneath the topmost hit, not by a target's own
+  handler** — a row that wants the pointer after it leaves its box listens to
+  `mouseDown` + `mouseMove`, which is what makes the runtime capture the gesture:
+  **no other row hears the release** (`heard=0` after every drag, and dropping
+  the row's `onMouseMove` leaves the release on the target row with `heard=1`
+  and no reorder), so a drop target cannot be a listener. `drag-reorder`
+  measured the route that is left on four 44px rows: the drop is the first id
+  `renderer.getElementsAt(x, y)` reports **that belongs to a row**, because the
+  `<text>` label a row paints is reported above it (`top=other`) — reading only
+  the topmost id measures `over=none misses=1` and no reorder, while the search
+  beneath it lands `from=alpha over=delta` and the painted order moves with it
+  (`row-alpha` takes `row-delta`'s old `y`). Match the hits against the ids the
+  rows registered from their refs, move by the slot the drop row held, and give
+  the reorder handle the press: a row behind a filled cell never hears one
+  (`press-routing-lifecycle`). Nothing paints a drag image or carries a payload
+  between windows, so a reorder is the caller's gesture and `onFileDrop` is the
+  only OS drop path.
 - **A fill takes the row's hover too, so a decorative child opts out** — a row's
   pointer feedback is the runtime's native `style.hover`, and its hovered set
   comes from the same hit test the press takes: `hover-routing-lifecycle`

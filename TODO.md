@@ -8353,7 +8353,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 228/228
+`[x]` `[██████████]` 229/229
+
+`[x]` Carry the **status strip to every mounted page, and hold the inventory in
+      both directions** — `inventory-status.test.ts` retyped the mounted
+      collections as three of the nine (`primitives`, `icons`, `components`), so
+      the data, dock, editor and media pages were never checked and **eight**
+      opened with no strip at all (`table-sorting`, `table-selection`,
+      `frozen-columns`, `virtualization`, `virtual-tree`, `/docs/dock/split-pane`,
+      `/docs/editor/code-editor`, `/docs/media/drop-zone`); the alias table also
+      joined one page to one row, so the table page could not publish the column,
+      resize and filter rows it documents, nor the dock page its tab, nesting and
+      persistence rows — **sixteen shipped rows had no page**. The collection
+      list now comes from `packageCollections` (one source, so a new lane cannot
+      sit outside the check), `pageRows` maps a title to the rows it publishes
+      (primary first, which the strip reports), `rowsForPage` keeps the declared
+      order rather than the inventory's, and `unpublishedRows` holds the
+      inventory's own rule — a `done` row must be published by a page — with the
+      one lane-only row (`Drag and drop`) argued in `laneRows` beside the file
+      and the probe that teach it; `/docs/data-display` gained the `drag-reorder`
+      rule (the drop is the first hit that belongs to a row, and the dragged row
+      keeps the release). Directions measured: removing the ten aliases fails
+      four cases — 8 pages reported `COMPONENTS.md has no row for this page`, 9
+      titles against the one argued exemption, `publishes every shipped row on a
+      page` naming 16 rows beginning `Sortable tables`, and the multi-row case
+      reading `[ 'Tables' ]`; deleting the new data-display bullet fails the lane
+      case by name. 117 files / 1 242 tests green, `check-types`, `lint`, `fmt`
+      and `check:tests` clean. No native scenario applies — page metadata and its
+      guards have no runtime path.
 
 `[x]` Record the **one element a window paints at its render root** — the toast
       probe found it by accident: `ToastProvider` mounted *as* the window's root

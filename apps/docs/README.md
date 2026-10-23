@@ -299,7 +299,7 @@ src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables of COMPONENTS.md into lane rows
 src/lib/inventory-data.ts           The parsed inventory, at build time
-src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip
+src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip, both ways
 src/lib/public-api.ts               Derives the entry points from each package's exports map
 src/lib/public-api-data.ts          The entry points, at build time
 src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
@@ -377,10 +377,17 @@ Every package page opens with a **status strip** generated from its
 `COMPONENTS.md` row (`src/components/docs/status-strip.tsx`): the inventory's
 status and its GPUix support verdict, plus a link to the inventory. The join is
 the page title (`src/lib/inventory-status.ts`), which normalises punctuation and
-a trailing plural and names the titles whose row reads differently. The page
-therefore cannot claim more than the inventory, and a row that changes changes
-the page with no docs edit; `src/lib/inventory-status.test.ts` holds every
-mounted page to a row, and the pages that have none are argued in the module.
+a trailing plural and names the titles whose row reads differently. A page may
+publish several rows — the table page teaches the column menu, the resize strip
+and the filter field, the dock page its tabs, nesting and persistence — and the
+first one is what its strip reports. The guard holds both directions: every page
+**every mounted collection** serves resolves a row (the collection list comes
+from `packageCollections`, so a new lane cannot sit outside the check), and every
+row the inventory calls shipped is published by a page, with a row documented
+only on a lane page argued in `laneRows` beside the file and probe that teach it.
+The page therefore cannot claim more than the inventory, a row that changes
+changes the page with no docs edit, and a page that has none is argued in the
+module.
 
 ## Pages that read the workspace
 
