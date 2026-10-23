@@ -97,6 +97,7 @@ import {
   useToast,
   type CommandAction,
 } from "@gpuixui/components";
+import { SplitPane as DockSplitPane } from "@gpuixui/dock";
 import {
   Button,
   Checkbox,
@@ -10043,6 +10044,216 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     yield* ctx.host.capture("split-keyboard");
+  });
+
+/**
+ * The shipped `@gpuixui/dock` `SplitPane`, not a probe-local copy.
+ *
+ * `split-pane-lifecycle` measures the runtime rules a divider must honour; this
+ * probe measures that the component the library actually ships composes them —
+ * the controlled `size`, the painted pane, the Tab stop, the ring and the
+ * arrow/Home/End steps. A local split would keep the feasibility measurement
+ * green while the shipped component drifted.
+ *
+ * The pointer half is **blocked by the component**, not by the runtime: a press
+ * on the shipped divider focuses nothing and reports no resize, because its
+ * absolutely positioned highlight layer takes the hit test. That is recorded for
+ * the dock owner in `TODO.md` (`Divider`'s pointer path) and the probe measures
+ * the keyboard contract until it lands.
+ */
+const DockSplitProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [size, setSize] = useState(320);
+  const [resizes, setResizes] = useState(0);
+
+  return (
+    <div
+      testId="dock-split-probe"
+      style={{
+        width: 720,
+        height: 420,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped SplitPane: focus the divider with Tab and use the arrows,
+        Home and End.
+      </text>
+      <div style={{ width: 500, height: 140 }}>
+        <DockSplitPane
+          size={size}
+          min={80}
+          max={440}
+          dividerLabel="Shipped pane width"
+          testId="dock-split"
+          onResize={(next) => {
+            setSize(next);
+            setResizes((current) => current + 1);
+          }}
+          first={
+            <div
+              testId="dock-split-left"
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: theme.colors.muted,
+              }}
+            />
+          }
+          second={
+            <div
+              testId="dock-split-right"
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: theme.colors.card,
+              }}
+            />
+          }
+        />
+      </div>
+      <text
+        testId="dock-split-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`${Math.round(size)} px`}
+      </text>
+      <text
+        testId="dock-split-resizes"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`resizes=${resizes}`}
+      </text>
+    </div>
+  );
+};
+
+const dockSplitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("dock-split-readout");
+    yield* Effect.sleep(SETTLE);
+
+    yield* ctx.expectEqual(
+      "the shipped split starts at the caller's size",
+      yield* ctx.host.text("dock-split-readout"),
+      "320 px",
+    );
+    const start = yield* paintedBox(ctx, "dock-split-left");
+    yield* ctx.expectNear(
+      "the shipped first pane paints the caller's size",
+      start.width,
+      320,
+      1,
+    );
+    const divider = yield* paintedBox(ctx, "dock-split-divider");
+    yield* ctx.expectNear(
+      "the shipped divider sits on the first pane's right edge",
+      divider.x,
+      start.x + start.width,
+      1,
+    );
+
+    // The ring is the cue that tells a keyboard reader where the keys go.
+    const ring = yield* ctx.expectSome(
+      "the theme names a ring colour",
+      Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.ring)),
+    );
+    yield* ctx.host.capture("dock-split-rest");
+    yield* ctx.expectEqual(
+      "a divider no key has reached paints no keyboard ring",
+      yield* paintedPixels(ctx, "dock-split-rest", ring),
+      0,
+    );
+
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Tab puts the keyboard on the shipped divider",
+      yield* focusedAfterPaint(ctx),
+      "dock-split-divider",
+    );
+    yield* ctx.host.capture("dock-split-focused");
+    yield* ctx.expectEqual(
+      "the focused shipped divider paints the keyboard ring",
+      (yield* paintedPixels(ctx, "dock-split-focused", ring)) > 0,
+      true,
+    );
+
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow widens the shipped pane by one step and reports it",
+      `${yield* ctx.host.text("dock-split-readout")} ${yield* ctx.host.text("dock-split-resizes")}`,
+      "336 px resizes=1",
+    );
+    const grown = yield* paintedBox(ctx, "dock-split-left");
+    yield* ctx.expectNear(
+      "the shipped pane paints the widened size",
+      grown.width,
+      336,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the shipped divider keeps the focus after a key resize",
+      yield* focusedAfterPaint(ctx),
+      "dock-split-divider",
+    );
+
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the opposite arrow narrows it back",
+      yield* ctx.host.text("dock-split-readout"),
+      "320 px",
+    );
+
+    yield* ctx.host.key("home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Home jumps to the caller's minimum",
+      yield* ctx.host.text("dock-split-readout"),
+      "80 px",
+    );
+    const collapsed = yield* paintedBox(ctx, "dock-split-left");
+    yield* ctx.expectNear(
+      "the shipped pane paints the minimum Home named",
+      collapsed.width,
+      80,
+      1,
+    );
+
+    yield* ctx.host.key("end");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "End jumps to the caller's maximum",
+      yield* ctx.host.text("dock-split-readout"),
+      "440 px",
+    );
+
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow held at the maximum clamps",
+      yield* ctx.host.text("dock-split-readout"),
+      "440 px",
+    );
+
+    yield* ctx.host.capture("dock-split-keyboard");
   });
 
 /** The virtual list probe's row height and count, and its viewport. */
@@ -25703,6 +25914,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "split-pane-lifecycle",
     view: () => <SplitPaneProbe />,
     steps: splitSteps,
+  },
+  "dock-split-lifecycle": {
+    id: "dock-split-lifecycle",
+    view: () => <DockSplitProbe />,
+    steps: dockSplitSteps,
   },
   "virtual-list-lifecycle": {
     id: "virtual-list-lifecycle",
