@@ -350,6 +350,34 @@ describe("the charts", () => {
     );
   });
 
+  it("labels an axis measured in thousands", () => {
+    // A chart of revenue in the thousands has a tick step of 1250: the label's
+    // precision came out at `-1`, and `toFixed(-1)` throws `RangeError`, so
+    // mounting the chart crashed the renderer. The axis prints whole numbers.
+    root = renderData(
+      <BarChart
+        aria-label="Revenue in thousands"
+        labels={["Q1", "Q2"]}
+        series={[{ key: "revenue", label: "Revenue", values: [4200, 3800] }]}
+        width={200}
+        height={100}
+        testId="chart-thousands"
+      />,
+    );
+    settle(root);
+
+    // The scale is the 5000 the widest value rounds to, in four 1250 steps.
+    expect(
+      root.renderer.findByTestId("chart-thousands-tick-5000"),
+    ).toBeDefined();
+    expect(
+      root.renderer.findByTestId("chart-thousands-tick-1250"),
+    ).toBeDefined();
+    const text = paintedText(root);
+    expect(text).toContain("1250");
+    expect(text).toContain("5000");
+  });
+
   it("puts a line's points over the labels it draws under", () => {
     // The labels (and the bars) are centred in `width / labels.length` slots,
     // so a path spaced edge to edge stood its first and last points half a slot

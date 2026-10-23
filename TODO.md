@@ -9257,6 +9257,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `[ NaN ]`. `docs/charts.mdx` §The numbers, the README's chart paragraph and
     the Tier 3 Charts row teach the rule and print the new case counts. Owner:
     data.
+  - [x] Floor a **tick label's precision at whole numbers** — `tickLabel` added
+    its guard digit to `Math.ceil(-Math.log10(step))` unconditionally, so any
+    scale whose four-tick step is `100` or more — revenue, bytes, a row count —
+    asked for a negative `toFixed` precision: `toFixed(-1)` throws `RangeError`,
+    so mounting a chart of values in the thousands crashed the renderer instead
+    of printing the numbers its bars are read against (`axisTicks(1000, 4)` is
+    `0, 250, 500, 750, 1000`). The precision is floored at zero now.
+    `src/chart/logic.test.ts` gains `prints a whole scale whose step is a
+    hundred or more` (a `1000` scale, the exact `100` step that first went
+    negative, and a tick past a thousand); `src/behaviour/chart.test.tsx` gains
+    `labels an axis measured in thousands`, mounting a `4200`/`3800` chart and
+    reading its `tick-1250`/`tick-5000` labels out of the renderer. Both
+    directions measured: without the floor the unit case throws the
+    `RangeError` from `tickLabel` and the window case reports the missing
+    `tick-5000`; with it, 196 unit / 115 behaviour green, `check-types` clean,
+    headless `--only data-charts-core` (1/1) and live
+    `--only chart-surface-lifecycle` (1/1, 1 783 ms, a real window).
+    `docs/charts.mdx` §The numbers, the README's chart paragraph and the Tier 3
+    Charts row (whose printed counts walk to 27/15) state the rule. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

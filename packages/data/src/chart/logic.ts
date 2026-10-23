@@ -229,6 +229,10 @@ export const axisTicks = (scale: number, count = 4): ReadonlyArray<number> => {
  * exponential notation rather than rounding every tick away. Trailing zeros
  * are dropped, so a whole scale still reads `0, 25, 50, 75, 100`.
  *
+ * A step of `100` or more needs no fraction at all: the guard digit is only
+ * ever **added** to the step's magnitude, never taken below whole numbers,
+ * which `toFixed` refuses.
+ *
  * `step` is the distance between adjacent ticks (`scale / steps`), not the
  * scale: the precision a label needs is the precision of its neighbour.
  */
@@ -237,7 +241,7 @@ export const tickLabel = (tick: number, step: number): string => {
   if (!Number.isFinite(step) || step <= 0) return `${tick}`;
   // One guard digit past the step's magnitude keeps adjacent labels distinct
   // when a step is not a power of ten.
-  const decimals = Math.ceil(-Math.log10(step)) + 1;
+  const decimals = Math.max(0, Math.ceil(-Math.log10(step)) + 1);
   if (decimals > 20) return tick === 0 ? "0" : tick.toExponential(2);
   return `${Number(tick.toFixed(decimals))}`;
 };

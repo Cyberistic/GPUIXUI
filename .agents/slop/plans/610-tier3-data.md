@@ -466,6 +466,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   package's status row, Charts row and page to the probe. Direction measured:
   tinting every layer with the first palette slot fails `the bars plot paints
   the second series' tint`; restored, 1/1.
+- **A tick label's precision stops at whole numbers**: `tickLabel` added its
+  guard digit to `Math.ceil(-Math.log10(step))` unconditionally, so a chart
+  whose four-tick step is `100` or more asked `toFixed` for a negative
+  precision, which throws `RangeError` — a revenue or byte chart in the
+  thousands crashed the renderer on mount instead of printing its axis. The
+  precision is floored at zero (`0, 250, 500, 750, 1000`). `chart/logic.test.ts`
+  gains the whole-scale case and `behaviour/chart.test.tsx` mounts a
+  `4200`/`3800` chart; directions measured: without the floor the unit case
+  throws from `tickLabel` and the window case reports the missing `tick-5000`.
+  Green: 196 unit / 115 behaviour, `check-types` clean, headless
+  `--only data-charts-core` (1/1) and live `--only chart-surface-lifecycle`
+  (1/1 on 0.11.0). Docs in `docs/charts.mdx` §The numbers, the README chart
+  paragraph and the Charts row.
 
 
 ## 5. Acceptance

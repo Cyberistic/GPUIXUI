@@ -62,9 +62,11 @@ fixed two decimals: a four-step axis over `0.005` prints
 `0, 25, 50, 75, 100`. A fixed two decimals rounded three of those small steps to
 `0`, so a chart of rates or seconds read as a column of zeros and its bars had
 no number to be read against; `tickLabel(tick, step)` is the formatter and is
-exported for a custom axis. `ticks` names the steps: a count the axis cannot
-read is four (`NaN`, an infinity), and a count past `AXIS_STEP_LIMIT` (20) is
-capped rather than mounting an unbounded column of labels.
+exported for a custom axis. The precision is never narrower than whole numbers,
+so a revenue or byte chart whose step is `250` prints `0, 250, 500, 750, 1000`
+rather than asking for `toFixed(-1)`. `ticks` names the steps: a count the axis
+cannot read is four (`NaN`, an infinity), and a count past `AXIS_STEP_LIMIT`
+(20) is capped rather than mounting an unbounded column of labels.
 
 `labels` names the columns: a series with more values than labels paints only
 the labelled slots, and the extra values draw nowhere. A chart with **no** labels

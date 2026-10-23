@@ -426,7 +426,10 @@ bar's top reads against the value beside it. A tick's **label takes its
 precision from the step between ticks** (`tickLabel`): a four-step axis over
 `0.005` prints `0, 0.0013, 0.0025, 0.0037, 0.005`, while `100` still prints
 `0, 25, 50, 75, 100` — a fixed two decimals rounded three of the small steps
-away and left a column of zeros for a chart of rates or seconds. `ticks` names
+away and left a column of zeros for a chart of rates or seconds. The precision
+never falls below whole numbers, so a revenue chart with a `250` step prints
+`0, 250, 500, 750, 1000` instead of asking `toFixed` for `-1` decimals (which
+throws, and took the renderer down with it). `ticks` names
 the steps: a count the axis cannot read is four and a count past
 `AXIS_STEP_LIMIT` (20) is capped, so a computed count cannot empty the axis or
 mount an unbounded column of labels. Every mark sits at the centre of its

@@ -113,6 +113,31 @@ describe("the chart scale", () => {
     expect(tickLabel(Number.NaN, 1)).toBe("0");
   });
 
+  it("prints a whole scale whose step is a hundred or more", () => {
+    // A chart of revenue or bytes has a step of 250: `-log10(250)` rounds to a
+    // precision of `-1`, and `toFixed(-1)` throws `RangeError`, so the axis
+    // crashed the renderer instead of printing the numbers the bars are read
+    // against. A precision below zero is whole numbers, never a narrower one.
+    const thousands = axisTicks(1000, 4);
+    expect(Arr.map(thousands, (tick) => tickLabel(tick, 1000 / 4))).toEqual([
+      "0",
+      "250",
+      "500",
+      "750",
+      "1000",
+    ]);
+    // A step of exactly 100 was the first to reach the negative precision.
+    expect(Arr.map(axisTicks(400, 4), (tick) => tickLabel(tick, 100))).toEqual([
+      "0",
+      "100",
+      "200",
+      "300",
+      "400",
+    ]);
+    // A tick past a thousand still reads as its own value.
+    expect(tickLabel(1250, 250)).toBe("1250");
+  });
+
   it("reads an unreadable or unbounded tick count as a chart can paint it", () => {
     // `ticks` is often computed. `NaN` used to mount no tick at all and a huge
     // count mounted one text host per step.
