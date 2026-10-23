@@ -108,7 +108,10 @@ description, because a picture of numbers is the one thing a role cannot carry:
 - a value past the last label draws nowhere and is not described, and one the
   caller never supplied reads `no value` rather than the `0` the geometry
   substitutes;
-- a ring slice reads its own value (`Direct 40`);
+- a ring slice reads its own value (`Direct 40`), and a datum that draws no
+  slice — a zero, or a value the geometry cannot read — keeps its image too, so
+  `Referral 0` is a reading rather than a legend entry with no number beside it
+  while the ring paints nothing for it;
 - a `Sparkline` is **one image**, not a group of them: the caller's `aria-label`
   names it (`Trend` when absent) and its values are its description.
 
@@ -125,9 +128,10 @@ parts are mounted in the offscreen renderer by `src/behaviour/chart.test.tsx`
 and `src/behaviour/chart-a11y.test.tsx`. The **paint** is measured in a real
 window by the playground's `chart-surface-lifecycle`, which counts each series'
 tint inside its own plot's crop (so a swatch or the page behind cannot stand in
-for a mark), reads a stack from its floor, three ring slices and the absent
-zero layer, the sparkline in the caller's colour, and a widened bar at a point
-it did not reach before the press — 40 checks on `@gpuix/native` 0.11.0:
+for a mark), reads a stack from its floor, three ring slices and none of the
+zero datum's colour in the ring, the sparkline in the caller's colour, and a
+widened bar at a point it did not reach before the press — 41 checks on
+`@gpuix/native` 0.11.0:
 
 ```sh
 nub run --filter playground build

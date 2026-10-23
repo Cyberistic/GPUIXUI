@@ -443,7 +443,9 @@ each series is an image named by its label, and the values travel in
 described and one the caller never supplied reads `no value` rather than the
 `0` the geometry substitutes. A series with a labelled slot keeps its image even
 when no value draws: a chart of zeros, or of negatives the geometry cannot show,
-still reads `Q1 0, Q2 -4` rather than vanishing from the tree. A `Sparkline` is
+still reads `Q1 0, Q2 -4` rather than vanishing from the tree. A ring follows
+the same rule per datum: a zero paints no slice and still reads `Referral 0`, so
+a legend entry never stands without its number. A `Sparkline` is
 one image, not a group of them: the caller's `aria-label` names it and its values
 are its description.
 

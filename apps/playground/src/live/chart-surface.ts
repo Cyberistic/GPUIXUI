@@ -27,7 +27,7 @@ export interface ChartSurfacePoint {
 }
 
 /** The checks the live run asserts, recorded by the README section. */
-export const CHART_SURFACE_CHECKS = 40;
+export const CHART_SURFACE_CHECKS = 41;
 
 /** The probe's root. */
 export const CHART_SURFACE_PROBE = "chart-surface-probe";

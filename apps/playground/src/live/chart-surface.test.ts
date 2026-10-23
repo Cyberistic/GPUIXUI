@@ -254,8 +254,9 @@ describe("the chart-surface fixture", () => {
       expect(at).toBeLessThan(sweep.value.to);
     });
 
-    // The zero datum paints no segment at all, which is what the probe reads
-    // from the absent `referral` layer.
+    // The zero datum paints no segment at all; the probe reads that from the
+    // ring's pixels, because the datum keeps its image so its value is
+    // announced.
     const zero = Arr.findFirstIndex(
       CHART_SURFACE_SOURCES,
       (source) => source.value === 0,

@@ -177,19 +177,29 @@ describe("the charts", () => {
     expect(text).toContain("0.005");
   });
 
-  it("paints one slice per datum and skips a value of zero", () => {
+  it("paints one slice per datum and no slice for a value of zero", () => {
     const root = mount();
 
-    expect(
-      root.renderer.findByTestId("chart-donut-layer-direct"),
-    ).toBeDefined();
-    expect(
-      root.renderer.findByTestId("chart-donut-layer-social"),
-    ).toBeDefined();
-    // A datum with nothing to show paints no layer at all, so nothing claims it.
-    expect(
-      root.renderer.findByTestId("chart-donut-layer-referral"),
-    ).toBeUndefined();
+    // A datum keeps its image even when it draws nothing — its value is the
+    // reading — so only the geometry is skipped: the zero source paints an
+    // empty mask rather than a slice.
+    const slices = ["direct", "social", "referral"] as const;
+    Arr.forEach(slices, (key) => {
+      expect(
+        root.renderer.findByTestId(`chart-donut-layer-${key}`),
+      ).toBeDefined();
+    });
+    const sourceOf = (key: string): string => {
+      const source = root.renderer.findByTestId(`chart-donut-layer-${key}`)
+        ?.customProps?.source;
+      if (typeof source !== "string") {
+        throw new Error(`behaviour: no SVG source on the ${key} slice`);
+      }
+      return source;
+    };
+    expect(sourceOf("direct")).toContain("<path");
+    expect(sourceOf("social")).toContain("<path");
+    expect(sourceOf("referral")).not.toContain("<path");
   });
 
   it("draws a sparkline in the first series colour", () => {

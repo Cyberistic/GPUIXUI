@@ -3104,7 +3104,7 @@ nub run --filter playground build
 nub apps/playground/dist/live/run.js --only chart-surface-lifecycle
 ```
 
-40 checks, green on 0.11.0 (~1.8 s). Fixture: `src/live/chart-surface.ts` (the
+41 checks, green on 0.11.0 (~1.8 s). Fixture: `src/live/chart-surface.ts` (the
 four categories, the series and ring data, the two frame values, the plot sizes
 and the sample points) + `chart-surface.test.ts` (5 cases: the bar and stack
 samples are inside marks `groupedBarMarks`/`stackedBarMarks` draw, each ring
@@ -3119,7 +3119,7 @@ README row and charts page cite this probe). Evidence:
 | Does one plot carry more than one tint? | The bars plot paints **both** series colours, sampled at the first category's two marks (`rgba(…, 255)` each), and the count of each tint inside the plot crop is non-zero — the thing a single `<svg source>` mask cannot do |
 | Do the axis and labels stay text beside the plot? | The axis prints `100` at its ceiling and `0` at its floor, the first category prints `Q1`, and the legend's `revenue` swatch reads the first series' own colour |
 | Is a stack read from its floor? | The lower sample reads the first series and the point above it the second, so the two fills are stacked in one slot rather than drawn over each other |
-| Does a ring paint a slice per non-empty datum? | Three source colours paint inside the ring's crop at the points their shares land on, and `referral` (value `0`) paints no layer at all |
+| Does a ring paint a slice per non-empty datum? | Three source colours paint inside the ring's crop at the points their shares land on, and `referral` (value `0`) paints no pixel in its own colour while its image stays in the tree so its value is announced |
 | Does a sparkline keep the caller's colour? | The colour read from the probe's `spark=` readout is counted inside the sparkline's box |
 | Does a changed value repaint the mark? | Before the press the point above the first bar is the surface behind the plot; after it, the same point reads the series' colour, and the second series still paints beside it |
 

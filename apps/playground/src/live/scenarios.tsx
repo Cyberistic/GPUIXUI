@@ -16713,8 +16713,9 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(solid(paintSecond)),
     );
 
-    // 4. A ring paints one segment per non-empty datum; the zero source is not
-    //    a slice, and its layer is not in the tree at all.
+    // 4. A ring paints one segment per non-empty datum. The zero source is not
+    //    a slice: none of the ring's pixels carry its colour, while its image
+    //    stays in the tree so a reader hears the datum's own value.
     const donut = yield* box(chartSurfacePart(CHART_SURFACE_DONUT, "plot"));
     yield* ctx.expectEqual(
       "the ring paints its first slice",
@@ -16750,11 +16751,20 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         ),
       { concurrency: 1 },
     );
+    const paintFourth = yield* ctx.expectSome(
+      "the zero source's colour is the theme's fourth",
+      Arr.get(palette, 3),
+    );
     yield* ctx.expectEqual(
-      "the zero source paints no layer",
+      "the zero source paints no slice",
+      countIn(frame, donut, solid(paintFourth)),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the zero source keeps its image",
       (yield* ctx.host.bounds(
         chartSurfacePart(CHART_SURFACE_DONUT, "layer", "referral"),
-      )) === null,
+      )) !== null,
       true,
     );
 

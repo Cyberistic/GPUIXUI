@@ -11,6 +11,7 @@
  * drifts from the shipped screen fails instead of measuring a copy.
  */
 import { Effect } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { examples } from "@gpuixui/data/examples";
 import type { Smoke } from "@gpuixui/testing";
@@ -91,16 +92,27 @@ export const dataChartsScenario: ScenarioBody = {
         revenue,
       );
 
-      // A zero datum paints no slice, and the sparkline shares the chart's
-      // first colour.
+      // A zero datum paints no slice but keeps its reading: the ring's four
+      // sources reach the tree, and the sparkline shares the chart's first
+      // colour.
       yield* ctx.expectSome(
         "the first slice painted",
         Option.fromNullishOr(ctx.host.bounds("chart-donut-layer-direct")),
       );
+      const tree = yield* ctx.expectSome(
+        "the renderer reports an accessibility tree",
+        Option.fromNullishOr(ctx.host.a11yTree()),
+      );
+      const zero = yield* ctx.expectSome(
+        "the zero datum keeps its image in the tree",
+        Arr.findFirst(tree.nodes, (node) =>
+          Option.contains(node.label, "Referral"),
+        ),
+      );
       yield* ctx.expectEqual(
-        "a zero datum paints no slice",
-        ctx.host.bounds("chart-donut-layer-referral") === null,
-        true,
+        "the zero datum reads its own value",
+        Option.getOrElse(zero.description, () => ""),
+        "0",
       );
       yield* ctx.expectEqual(
         "the sparkline agrees with the first series colour",

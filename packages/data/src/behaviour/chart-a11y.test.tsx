@@ -142,6 +142,32 @@ describe("a chart's accessibility tree", () => {
     ]);
   });
 
+  it("announces a ring datum that draws no slice", () => {
+    // Bug guarded: a ring datum with nothing to draw — a zero, or a value the
+    // geometry cannot read — painted no layer at all, so its reading vanished
+    // from the tree while the legend still named the datum: a reader heard
+    // three categories and two numbers, and could not tell a zero from a value
+    // left out. This is the loss the series charts closed for a bar of zeros;
+    // the datum keeps its image and simply draws no slice.
+    const tree = treeOf(
+      <DonutChart
+        aria-label="Traffic by source"
+        data={[
+          { key: "direct", label: "Direct", value: 40 },
+          { key: "referral", label: "Referral", value: 0 },
+          { key: "unknown", label: "Unknown", value: Number.NaN },
+        ]}
+      />,
+    );
+
+    const images = withRole(tree, tree.root, "Image");
+    expect(Arr.map(images, (id) => wordsOf(tree, id))).toEqual([
+      { label: "Direct", description: "40" },
+      { label: "Referral", description: "0" },
+      { label: "Unknown", description: "no value" },
+    ]);
+  });
+
   it("announces a series whose values draw no bar", () => {
     // A bar chart of zeros paints no bar — a zero keeps its slot and has no
     // height — but the series exists and its values are the reading. Dropping

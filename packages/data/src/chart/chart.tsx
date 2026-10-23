@@ -453,6 +453,11 @@ export interface DonutChartProps extends Omit<Props, "children"> {
  *
  * A single datum that fills the ring paints two halves — an arc from an angle
  * to itself is empty, which the geometry suite measures.
+ *
+ * A datum keeps its image while it is part of the ring's data, even when it
+ * draws no slice: a zero, or a value the geometry cannot read, paints no
+ * segment but its reading is still the number a reader came for — the same rule
+ * the series charts follow for a bar of zeros. Only the geometry is skipped.
  */
 export const DonutChart = ({
   data,
@@ -488,23 +493,18 @@ export const DonutChart = ({
           height: box.height,
         }}
       >
-        {data.map((one, index) =>
-          Arr.match(segments[index] ?? [], {
-            onEmpty: () => null,
-            onNonEmpty: (marks) => (
-              <ChartLayer
-                key={one.key}
-                chartTestId={testId}
-                seriesKey={one.key}
-                label={one.label}
-                description={seriesDescription([one.value])}
-                colour={seriesColour(palette, index)}
-                marks={marks}
-                box={box}
-              />
-            ),
-          }),
-        )}
+        {data.map((one, index) => (
+          <ChartLayer
+            key={one.key}
+            chartTestId={testId}
+            seriesKey={one.key}
+            label={one.label}
+            description={seriesDescription([one.value])}
+            colour={seriesColour(palette, index)}
+            marks={segments[index] ?? []}
+            box={box}
+          />
+        ))}
       </div>
       {legend ? (
         <ChartLegend
