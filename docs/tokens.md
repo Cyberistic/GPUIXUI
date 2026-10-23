@@ -390,8 +390,8 @@ sat on the floor: Windows dark's `#60CDFF` primary hovered to **1.05:1**, a
 primary button that never answered the pointer, so the platform carries
 `#4CC2FF` (1.068:1 hover, 1.095:1 press) and you can see the change in the
 [platform chrome table](#platform-styles). The tightest placement over all 16
-shipped, high-contrast, platform and authored styles is **1.06:1** (high-contrast
-dark's primary hover).
+shipped, high-contrast, platform and authored styles is **1.06:1** (Dark ·
+Omarchy's destructive hover).
 
 ```ts
 import {
@@ -421,7 +421,7 @@ strips it can sit on (see [Decorative surfaces](#decorative-surfaces)), which is
 why the base light `secondary` is `#E1E5EC` rather than the `muted` value it used
 to be. A **row's wash** is deliberately not a fill placement, because the fill
 cannot answer it: measured over the sixteen styles, `secondary` reads
-**1.0000:1** against `hover` in both high-contrast variants and **32 of the 64**
+**1.0000:1** against `hover` in both high-contrast variants and **36 of the 72**
 wash placements are under the floor. What carries a tonal action on a row is its
 edge — `borderStrong`, which the contrast table holds to the boundary floor on
 `hover`, `active`, `accent` and `selected` and which clears it in every style,
@@ -495,7 +495,7 @@ placed there paints the tone's tint, not the page — and the tints are
 deliberately **not** in `brandTextSurfaces`, because a tint is one tone away
 from the page and a single colour measured on all of them would be dragged away
 from the brand everywhere. Measured, the shared colour is under its floor in
-**28 of the 64** tint placements across the sixteen styles (the count and every
+**28 of the 72** tint placements across the eighteen styles (the count and every
 cell below are computed by `brand-text.test.ts`, so they move with the
 palettes):
 
@@ -572,7 +572,8 @@ tail into "Other"; the scale is not a cycle.
 | `5` | `#A5262B` | `#FF9E9E` | `#CC3439` | `#FFC6C6` |
 
 The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
-`highContrastDarkSeries`. Three contracts are measured:
+`highContrastDarkSeries`. An authored look may
+carry its own (`omarchySeries`). Three contracts are measured:
 
 - **On the plot.** Every swatch is held to the theme's own boundary floor
   against every surface a plot is drawn on — `seriesSurfaces` is `background`,
@@ -777,7 +778,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 
 | Role | macOS light | macOS dark | Linux light | Linux dark | Windows light | Windows dark |
 | ---- | ----------- | ---------- | ----------- | ---------- | ------------- | ------------ |
-| `background` | `#F2F2F7` | `#1C1C1E` | `#F6F5F4` | `#242424` | `#F3F3F3` | `#202020` |
+| `background` | `#F2F2F7` | `#1C1C1E` | `#FAFAFA` | `#242424` | `#F3F3F3` | `#202020` |
 | `card` | `#FFFFFF` | `#26262A` | `#FFFFFF` | `#303030` | `#FFFFFF` | `#2C2C2C` |
 | `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
 | `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
@@ -788,9 +789,9 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
 | `borderStrong` | `#67686D` | `#ACACB1` | `#6A6965` | `#B2B3B4` | `#696A6B` | `#ACACAD` |
-| `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0078D4` | `#4CC2FF` |
+| `primary` | `#0A6CD6` | `#0A84FF` | `#1A6DD3` | `#78AEED` | `#0078D4` | `#4CC2FF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
-| `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0078D4` | `#4CC2FF` |
+| `ring` | `#0A6CD6` | `#4CA2FF` | `#1A6DD3` | `#78AEED` | `#0078D4` | `#4CC2FF` |
 | `accent` | `#CADEF7` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
 | `accentForeground` | `#08407A` | `#B2D3F9` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
 | `selected` | `#D3E5FB` | `#0C3864` | `#CADDF3` | `#1F4363` | `#C8E0F3` | `#143E59` |
@@ -934,14 +935,15 @@ retroTheme(themes.light, "luna"); // "Light · Windows XP (Luna)"
 retroStyles.aero.colors.dark.primary; // "#5FB6F2", visible and copyable
 ```
 
-Two looks ship: Windows XP's Luna and Windows 7's Aero. Their UI face is the
-sentinel on both — the era is carried by colour, radius and density — so the
-table names what differs:
+Three looks ship: Windows XP's Luna, Windows 7's Aero and Omarchy. Their UI face
+is the sentinel on all three — the era is carried by colour, radius and density —
+so the table names what differs:
 
 | Look | `mono` | `radius.md` | density |
 | ---- | ------ | ----------- | ------- |
 | `luna` — Windows XP (Luna) | `Lucida Console` | 2 | `compact` |
 | `aero` — Windows 7 (Aero) | `Consolas` | 4 | `comfortable` |
+| `omarchy` — Omarchy | `JetBrains Mono` | 2 | `compact` |
 
 `retroStyles` is the table and `retroTheme(base, name)` resolves one for the
 base's mode. `retroNames` is the ordered index and `isRetroName` narrows a
@@ -950,7 +952,7 @@ stored `unknown` to a look, the same pattern every persisted axis follows.
 `applyStyle` over `platformStyles` — so a consumer who authors a style of their
 own applies it with no registry and no new platform name.
 
-Four facts about these two:
+These facts about the authored looks:
 
 - **The chrome is the era's; the artwork is not.** Luna's `#ECE9D8` face, its
   blue title-bar accent, the `#7F9DB9` field edge and the `#316AC5` selection,
@@ -1824,7 +1826,7 @@ and it wears the other two washes: `list.tsx` tints `accent` under the pointer,
 keeps `active` while pressed and fills `selected` once the row is chosen, and a
 status caption is `Text tone="destructive"` → the tone's readable role. So a
 destructive status label is measured on both of those washes too, where the
-tightest shipped placement is the Luna look's chosen row at 7.97:1 — a failed
+tightest shipped placement is the Luna look's chosen row at 7.77:1 — a failed
 item in an inbox row stays readable exactly when the reader selects it. A
 **bordered** control is the third case: the
 secondary action paints `borderStrong` and keeps that edge while the same
@@ -1868,7 +1870,7 @@ tints its field fill could swallow the colon between two time segments with ever
 report empty. The pair is measured at the secondary floor (4.5:1, 7:1 in the
 high-contrast pair) and every shipped, high-contrast, platform and authored theme
 clears it, the tightest placement being the muted line in Windows XP (Luna)
-light's field's own fill at 7.64:1, so no palette moved.
+light's field's own fill at 6.31:1, so no palette moved.
 `contrast.test.ts`'s `the muted text inside a field's own fill` suite reads all
 three painters, reports a role equal to its own fill at 1.00:1 and sweeps the 16
 styles.
@@ -1885,7 +1887,7 @@ The descriptive line beside it stays `mutedForeground` on `selected` at the
 secondary floor, and `foreground`/`selected` keeps the primitives' painter
 measured. Every shipped, high-contrast, platform and authored theme clears the
 body floor, the tightest of the five placements being the base dark theme's
-pressed wash at 7.31:1, so no palette moved: what the pairs close is the gap a
+pressed wash at 7.12:1, so no palette moved: what the pairs close is the gap a
 brand could fall into, where a `selected` close to its page — or a wash close to
 `selectedForeground` — erases the label it just selected with every other report
 empty. `contrast.test.ts`'s `the text a selected row keeps` suite reads both
@@ -2144,7 +2146,7 @@ passes.
 **The fade is a page mechanism.** A fade composites the fill with whatever is
 behind it, so its result belongs to the strip the control sits on rather than to
 the control. Measured, the same faded `primary` label that keeps the floor on the
-page lands at **1.47:1–1.49:1** on a card in four of the light styles — Linux,
+page lands at **1.48:1–1.49:1** on a card in four of the light styles — Linux,
 macOS, Windows XP (Luna) and Windows 7 (Aero) — so `disabledFadePairs` measures
 the three filled actions on `background` only. A disabled action on a card, a
 popover or a group strip paints the neutral pair instead:
@@ -2520,7 +2522,7 @@ role measured a fill those rows do not paint while leaving the painted one
 unnamed.
 
 Measured over the sixteen shipped, high-contrast, platform and authored styles,
-the raw `border` is under the 1.05:1 floor on **20 of the 80** placements: the
+the raw `border` is under the 1.05:1 floor on **22 of the 88** placements: the
 base light theme's `accent` (**1.001:1**) and `hover` (1.036:1) and the base dark
 theme's (**1.004:1** and 1.045:1), each doubled by the `default` platform style
 that wears it; macOS light's `accent` at 1.023:1 and its two presses at 1.029:1
@@ -3237,7 +3239,11 @@ and the tables; the probe is the paint. Evidence:
 | `full` | 9999 | pills and avatars |
 
 This is the default theme's scale. A platform style replaces it —
+<<<<<<< HEAD
 macOS 6/10/14/18, Linux 4/6/9/12, Windows 4/4/8/8 — so a Windows control reads
+=======
+macOS 4/6/10/14, Linux 4/6/12/16, Windows 4/4/8/8 — so a Windows control reads
+>>>>>>> origin/agent/platform-gnome
 squarer than a macOS one. `full` stays rounded everywhere.
 
 ## Density
@@ -3722,10 +3728,10 @@ that fill — but both tones are drawn from the same accent family as the wash, 
 a selection moves the fill *toward* the text instead of away from it. Measured
 across the sixteen shipped, high-contrast, platform and authored styles, the
 wash costs contrast in **every one of the 80 placements** on those two tones (it
-never once helps) and leaves **39 of the 80 under the floor the unwashed pair
+never once helps) and leaves **43 of the 90 under the floor the unwashed pair
 already met** — the selected row's title, now held to the body floor on the same
 role, accounts for the increase. The tightest is Windows XP (Luna) light's secondary
-line on a selected row at **3.68:1** against 4.5, with the tightest body
+line on a selected row at **3.38:1** against 4.5, with the tightest body
 placement the base dark theme's selected row title at **5.11:1** against 7. No
 share can serve both jobs: one strong enough to be seen
 on the page is exactly what erases text on a saturated fill, and one weak enough
@@ -4231,7 +4237,7 @@ and a theme passes only when the wash is visible against what it covers
 7:1, secondary 4.5:1). It reports the pre-fix Linux dark wash at 6.63:1 and the
 pre-fix secondary value on macOS light at 4.30:1 by name, a brand whose wash is
 its own text colour, a transparent wash and a surface it cannot composite, and
-all 16 shipped, platform and authored themes clear every contract.
+all 18 shipped, platform and authored themes clear every contract.
 
 `packages/tokens/src/series.test.ts` covers the categorical scale: every
 shipped, platform and authored theme holds every swatch to its variant's
@@ -4463,7 +4469,7 @@ cannot go untested. Evidence:
 - The selection wash is measured on the content tones; a run marked `selectable`
   inside an `accent` or `selected` box is outside the contract, because one
   translucent role cannot be both strong enough for the page and weak enough for
-  a saturated fill (measured: 39 of the 80 placements there miss their floor).
+  a saturated fill (measured: 43 of the 90 placements there miss their floor).
   A selectable run belongs on a content tone.
 - No font family is bundled: `registerFonts` is consumer-only, so there is no
   redistribution licence to review yet. Shipping one needs the same review

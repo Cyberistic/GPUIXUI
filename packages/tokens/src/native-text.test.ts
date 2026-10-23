@@ -425,7 +425,7 @@ describe("nativeTextTheme", () => {
     });
 
     expect(failures).toEqual([]);
-    expect(shipped.length).toBe(16);
+    expect(shipped.length).toBe(18);
   });
 
   it("keeps the placeholder visibly fainter than secondary text", () => {
@@ -837,7 +837,7 @@ describe("the diff host's colours", () => {
     );
 
     expect(failures).toEqual([]);
-    expect(shipped.length).toBe(16);
+    expect(shipped.length).toBe(18);
   });
 
   it("lets the tone's readable role carry the ink, not its solid fill", () => {
@@ -1167,19 +1167,20 @@ describe("the accent a document host paints", () => {
         .filter(({ stepped }) => stepped)
         .map(({ label, worst }) => `${label} ${worst}`),
     ).toEqual([]);
-    // Ten of the sixteen styles cannot carry it — every light one, and the two
+    // Eleven of the eighteen styles cannot carry it — every light one, and the two
     // dark platform rows whose accent is a light blue on a near-black page.
     expect(under.map(({ label, worst }) => `${label} ${worst}`)).toEqual([
       "light 4.00",
       "high-contrast light 6.54",
       "darwin light 3.37",
       "darwin dark 3.14",
-      "linux light 3.23",
+      "linux light 3.36",
       "linux dark 4.10",
       "win32 light 3.13",
       "default light 4.00",
       "luna light 3.09",
       "aero light 3.34",
+      "omarchy light 3.90",
     ]);
   });
 
@@ -1279,9 +1280,9 @@ describe("the fence a document host paints", () => {
     );
 
     expect(failures).toEqual([]);
-    // 16 styles × 2 fills × (24 tokens + the strip's label): a sweep that
+    // 18 styles × 2 fills × (24 tokens + the strip's label): a sweep that
     // measured nothing would otherwise pass.
-    expect(shipped.length * nativeTextFills.length * 25).toBe(800);
+    expect(shipped.length * nativeTextFills.length * 25).toBe(900);
 
     // The tightest is the smallest margin over its own floor: the comment sits
     // at a lower ratio but answers the secondary floor.

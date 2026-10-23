@@ -230,13 +230,15 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     label: "Linux",
     sans: systemUiFont,
     mono: "DejaVu Sans Mono",
-    radius: { none: 0, sm: 4, md: 6, lg: 9, xl: 12, full: 9999 },
+    radius: { none: 0, sm: 4, md: 6, lg: 12, xl: 16, full: 9999 },
     density: "spacious",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
     colors: {
       light: {
-        background: "#F6F5F4",
+        // Adwaita's window fill; the control and window corners are 6px and
+        // 12px (`$button_radius`, `$window_radius` in libadwaita 1.5).
+        background: "#FAFAFA",
         card: "#FFFFFF",
         popover: "#FFFFFF",
         input: "#FFFFFF",
@@ -245,14 +247,17 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         active: "#DCDBD8",
         border: "#D4D2CF",
         borderStrong: "#6A6965",
-        primary: "#1C71D8",
+        // Adwaita's standalone accent is Blue 4: it is the action fill that
+        // carries white text and a visible pointer step. Blue 3 tints the
+        // selection wash below.
+        primary: "#1A6DD3",
         primaryForeground: "#FFFFFF",
-        ring: "#1C71D8",
+        ring: "#1A6DD3",
         accent: "#D2E4F7",
         accentForeground: "#12457F",
         selected: "#CADDF3",
         selectedForeground: "#0F3E74",
-        selection: "#1C71D83D",
+        selection: "#3584E43D",
       },
       dark: {
         background: "#242424",

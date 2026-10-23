@@ -370,7 +370,7 @@ describe("the fade's page scope", () => {
 
     expect(ratios.map((ratio) => ratio?.toFixed(3) ?? "unmeasurable")).toEqual([
       "1.491",
-      "1.468",
+      "1.484",
       "1.485",
       "1.480",
     ]);

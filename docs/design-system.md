@@ -93,7 +93,7 @@ and the `accent`/`selected` washes a row paints under an action) clears the
 floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. A run
 that knows its surface asks for it: a link inside an `Alert`'s description sits
 on that message's `xSoft` tint, where the shared colour is under the floor in 28
-of the 64 tint placements (macOS dark on `warningSoft` measures 3.43:1), so it
+of the 72 tint placements (macOS dark on `warningSoft` measures 3.43:1), so it
 paints `brandTextOn(theme, surface)`. The message's own copy keeps the tone's
 readable role. The same rule covers status text: a required marker or a field
 error paints `statusTone(theme, tone).foreground`, the tone's readable role,
@@ -179,12 +179,12 @@ pre-HIG scale and reads `expected 14, got 8` now that this style's `lg` is 14.
 
 **A look is not a platform.** The four platform names are the operating systems a
 window runs on, and the persisted choice the docs toggle offers; a look is a
-`PlatformStyle` applied by name, and the package ships two more of them —
-Windows XP's Luna and Windows 7's Aero — in `retroStyles`, resolved with
+`PlatformStyle` applied by name, and the package ships three more of them —
+Windows XP's Luna, Windows 7's Aero and Omarchy — in `retroStyles`, resolved with
 `retroTheme`. Both read the same way a platform style does: the era is carried
 by colour, radius and density, while `sans` stays the sentinel and the mono
-family is the era's own. Neither era had a dark mode, so both dark editions are
-authored for this library (invented, not reconstructed), and all four themes run
+family is the era's own. Neither Windows era had a dark mode, so those dark editions are
+authored for this library (invented, not reconstructed), and all six themes run
 `contrastFailures` and `decorativeFailures` in `retro.test.ts` like every other
 shipped theme. `applyStyle(base, style)` is the single merge rule behind both,
 so a brand can author a third look as data rather than forking a component or
@@ -218,7 +218,7 @@ Density is a **theme** property, not a component prop:
 
 The default is `comfortable`; a platform style carries the preset its native
 windows use — macOS `compact`, Windows `comfortable`, GNOME `spacious`. Radius
-scales follow the same rule: macOS 6/10/14/18, Linux 4/6/9/12, Windows 4/4/8/8,
+scales follow the same rule: macOS 6/10/14/18, Linux 4/6/12/16, Windows 4/4/8/8,
 against the default 4/6/8/12.
 
 It changes control height, horizontal padding and row height only. Type sizes
@@ -276,7 +276,8 @@ square; `xl` is 10 now. `invalidScales` is not one of the audit's reports yet;
 
 ## 7. Radii, borders and elevation
 
-Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.
+Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12; the
+Linux style carries Adwaita's 4/6/12/16 steps.
 Pills and avatars use `full` (clamped by the renderer to half the short side).
 Identity marks use their own diameter scale — 20, 26, 32, 40 — with 32 as the
 default. It is fixed rather than theme-driven, and never follows density: a
@@ -313,7 +314,7 @@ pointed one tints `hover`/`accent` under it, and a pressed one repaints the wash
 `pointerWash` derives. The press is not the `active` role: both packages derive it
 over the wash the row was wearing, and seven of the thirty-two press placements
 paint a colour the role does not name. Measured over the shipped styles, the raw
-`border` is under the 1.05:1 perceptibility floor on **20 of the 80** placements —
+`border` is under the 1.05:1 perceptibility floor on **22 of the 88** placements —
 the base themes' `accent` at 1.001:1 and 1.004:1, and six of the presses the rows
 paint (macOS dark's over `hover` at 1.000:1) — so the grid disappears exactly
 where the reader is looking. The rule is derived instead:
@@ -372,7 +373,7 @@ the state washes make, one control over, and it found the shipped alias: light
 `secondary` *was* `muted`, so a secondary button in a toolbar was a label with no
 button around it, and each platform window was 1.015–1.049:1 from it. A **row's
 wash** is the edge's claim instead: the fill reads 1.0000:1 against `hover` in
-both high-contrast variants and 32 of the 64 wash placements are under the floor,
+both high-contrast variants and 36 of the 72 wash placements are under the floor,
 while `borderStrong` is held to the 3:1 boundary floor on `hover`, `active`,
 `accent` and `selected` and clears it in every style (tightest 3.73:1, Windows
 light's `active`). The base light fill is now `#E1E5EC`,
@@ -472,7 +473,7 @@ row and it wears the other two washes: `list.tsx` fills `selected` once a row is
 chosen and tints `accent` under the pointer, and a destructive status caption
 (`Text tone="destructive"`) keeps the tone's readable role, so that role is
 measured on both — the tightest shipped placement is the Luna look's chosen row
-at 7.97:1. It is also a **pointer** surface: the row fills `selected` once chosen
+at 7.77:1. It is also a **pointer** surface: the row fills `selected` once chosen
 and tints `accent` under the pointer, so the fill a click repaints is the one the
 row already wears. `decorativeFailures` measures that replacement like every
 other wash, and it found **eleven of the sixteen** shipped styles with no step at
@@ -540,7 +541,7 @@ primitives' `surface="selected"` + default `Text` in the same slot. The row also
 tints a wash under itself as the pointer arrives (`accent` on hover, `active` on
 press) and the title keeps its role there, so `selectedForeground` is held to the
 body floor on all four surfaces; the tightest is the base dark theme's pressed
-wash at 7.31:1. Every shipped, high-contrast, platform and authored style clears
+wash at 7.12:1. Every shipped, high-contrast, platform and authored style clears
 it, so no palette moved: the pairs close the gap a brand could fall into, where a
 selection close to its page — or a wash close to the text the row keeps — erases
 the label it just selected while every other report passes.
@@ -607,7 +608,7 @@ enabled pair passes.
 
 **The fade is also a page mechanism.** Its result belongs to the strip behind the
 control, and a filled action's does not survive the move onto a card: measured,
-the faded `primary` label lands at **1.47:1–1.49:1** on a card in four of the
+the faded `primary` label lands at **1.48:1–1.49:1** on a card in four of the
 light styles — Linux, macOS, Windows XP (Luna) and Windows 7 (Aero) — under the
 floor the page clears. So the fade is measured on `background` for a filled
 action, and a disabled action on a card, a popover or a group strip paints the
@@ -809,10 +810,10 @@ A **saturated state tone** is not a selection surface. A box also paints
 fill — but both tones are drawn from the same accent family as the wash, so the
 selection moves the fill toward the text instead of away from it. Measured, the
 wash costs contrast in every one of the 80 placements on those two tones and
-leaves 39 of them under the floor the unwashed pair already met — the selected
+leaves 43 of them under the floor the unwashed pair already met — the selected
 row's title, now at the body floor on the same role, accounts for the increase.
 The tightest is Windows XP (Luna) light's secondary line on a selected row at
-3.68:1; the tightest body placement is the base dark theme's selected row title
+3.38:1; the tightest body placement is the base dark theme's selected row title
 at 5.11:1. One translucent role cannot be strong
 enough for the page and weak enough for a saturated fill, so a selectable run
 belongs on a content tone and a state row that needs selectable text paints it
@@ -879,7 +880,7 @@ over the same fill. It was measured on every surface around a field and on none
 inside one, so a brand that tints its field fill could swallow the colon between
 two time segments with every report empty; the pair is measured now at the
 secondary floor, and the tightest shipped placement is Windows XP (Luna) light's
-line inside its own fill at 7.64:1.
+line inside its own fill at 6.31:1.
 
 The **status text** is measured the same way, on every strip a message can be
 written on. A `FieldError` paints the tone's readable role and no fill of its

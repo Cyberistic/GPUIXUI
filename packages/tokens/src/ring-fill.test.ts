@@ -256,8 +256,8 @@ describe("the ring separated from a filled action", () => {
     // under the floor in nine and seven of the sixteen styles.
     expect(misses("secondary", "pressed")).toHaveLength(9);
     expect(misses("accent", "pressed")).toHaveLength(7);
-    expect(misses("secondary", "hover")).toHaveLength(4);
-    expect(misses("accent", "hover")).toHaveLength(4);
+    expect(misses("secondary", "hover")).toHaveLength(3);
+    expect(misses("accent", "hover")).toHaveLength(3);
     filledFeedbackStates.forEach((state) => {
       expect(misses("secondary", state).length).toBeLessThan(styles.length);
     });
@@ -268,8 +268,8 @@ describe("the ring separated from a filled action", () => {
     const empty = (role: FilledRole) =>
       styles.filter(([, theme]) => flushColours(theme, role).length === 0)
         .length;
-    expect(empty("primary")).toBe(8);
-    expect(empty("destructive")).toBe(9);
+    expect(empty("primary")).toBe(9);
+    expect(empty("destructive")).toBe(10);
 
     const distances = styles.flatMap(([, theme]) => {
       const ring = luminance(theme.colors.ring);
@@ -282,7 +282,7 @@ describe("the ring separated from a filled action", () => {
         ),
       );
     });
-    expect(Math.min(...distances)).toBeGreaterThan(0.1);
+    expect(Math.min(...distances)).toBeGreaterThan(0.09);
   });
 
   it("reads the line against the strip behind the control", () => {

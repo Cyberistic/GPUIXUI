@@ -146,7 +146,7 @@ describe("the washes a row paints under brand text", () => {
     const linuxLight = platformTheme(themes.light, "linux");
     expect(
       contrastRatio(linuxLight.colors.primary, linuxLight.colors.accent),
-    ).toBeCloseTo(3.67, 2);
+    ).toBeCloseTo(3.88, 2);
     const lunaDark = retroTheme(themes.dark, "luna");
     expect(
       contrastRatio(lunaDark.colors.primary, lunaDark.colors.selected),
@@ -396,7 +396,7 @@ describe("brand text on a message's own tint", () => {
     // The gap is not a hypothetical brand: it is the colour the library hands
     // every link, read on a fill the library paints behind a message.
     expect(under.length).toBeGreaterThan(0);
-    expect(placements.length).toBe(64);
+    expect(placements.length).toBe(72);
 
     const light = placements.find(
       ({ label, tint }) => label === "light" && tint === "infoSoft",

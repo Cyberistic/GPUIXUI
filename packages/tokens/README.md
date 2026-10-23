@@ -484,7 +484,7 @@ The two **saturated state tones** are deliberately not surfaces: a box paints
 wash, so a selection moves them toward the text rather than away from it. The
 wash costs contrast in all 80 placements on those tones and leaves 39 under the
 floor the unwashed pair met (tightest: Luna light's secondary line on a selected
-row, 3.68:1; tightest body placement: the base dark theme's selected row title,
+row, 3.38:1; tightest body placement: the base dark theme's selected row title,
 5.11:1). A selectable run belongs on a content tone; the suite reads the
 tones the box resolves so one cannot be added without a measurement or a
 recorded reason.
@@ -614,11 +614,13 @@ tables go through (`platformTheme` is `applyStyle` over `platformStyles`).
 | ---- | ------ | ------ | ----------- | ------- |
 | `luna` (Windows XP) | `.SystemUIFont` | `Lucida Console` | 2 | `compact` |
 | `aero` (Windows 7) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` |
+| `omarchy` (Omarchy) | `.SystemUIFont` | `JetBrains Mono` | 2 | `compact` |
 
 The chrome values are the era's own and carry no Microsoft artwork, gradient,
-icon or logo. Neither era had a dark mode, so both dark editions are authored for
-this library — invented, not reconstructions — and all four themes are held to
-`contrastFailures` and `decorativeFailures` in `retro.test.ts`. The UI face stays
+icon or logo. Neither Windows era had a dark mode, so both of those dark editions
+are authored for this library — invented, not reconstructions — and all six
+themes are held to `contrastFailures` and `decorativeFailures` in
+`retro.test.ts`. The UI face stays
 the sentinel because no font is bundled; the era is carried by colour, radius and
 density.
 
@@ -961,7 +963,7 @@ A **row's rule** is a placement of its own: a table row paints its thin `border`
 inside the row, over the fill the row wears — the three states it tints or fills
 (`dividerWashes`: `hover`, `accent`, `selected`) and the press it **derives**
 (`dividerPresses`, because a press is `pointerWash(theme, "active", replaced)`,
-not the `active` role). The raw role misses 20 of the 80 shipped placements, so
+not the `active` role). The raw role misses 22 of the 88 shipped placements, so
 `dividerOn(theme, surface)` steps `border` toward `borderStrong` by the smallest
 2% that clears the floor, and `dividerFailures` reports a palette whose strongest
 line cannot answer one — as `derivedDivider` or `pressedDivider`, inside the

@@ -69,6 +69,29 @@ describe("retroStyles", () => {
     );
   });
 
+  it("paints Omarchy with its own palette, square geometry and mono face", () => {
+    const style = retroStyles.omarchy;
+    expect(style.label).toBe("Omarchy");
+    expect(style.mono).toBe("JetBrains Mono");
+    expect(style.radius).toEqual({
+      none: 0,
+      sm: 1,
+      md: 2,
+      lg: 3,
+      xl: 4,
+      full: 9999,
+    });
+    expect(style.density).toBe("compact");
+    // Tokyo Night's baseline roles from the Omarchy Style guide.
+    expect(style.colors.dark.background).toBe("#1A1B26");
+    expect(style.colors.dark.primary).toBe("#7AA2F7");
+    expect(style.colors.dark.foreground).toBe("#C0CAF5");
+    expect(style.colors.dark.selected).toBe("#292E42");
+    // Its stated light reference is Flexoki Light.
+    expect(style.colors.light.background).toBe("#FFFCF0");
+    expect(style.colors.light.primary).toBe("#205EA6");
+  });
+
   it("keeps the platform axis as it is", () => {
     // A look is not a platform: the persisted key and the docs toggle offer the
     // four operating systems, and a look is applied by name instead.
@@ -156,8 +179,11 @@ describe("retroTheme", () => {
   });
 
   it("inherits a role the look does not author", () => {
-    retroThemes.forEach(({ label, theme, base }) => {
-      expect(theme.colors.destructive, label).toBe(base.colors.destructive);
+    retroThemes.forEach(({ label, name, theme, base }) => {
+      if (name !== "omarchy") {
+        // Luna and Aero keep the base red; Omarchy's own palette names one.
+        expect(theme.colors.destructive, label).toBe(base.colors.destructive);
+      }
       expect(theme.colors.overlay, label).toBe(base.colors.overlay);
     });
   });

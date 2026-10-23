@@ -42,7 +42,7 @@ import { applyStyle } from "./theme.js";
  * derives from this list, so a new look must also gain a style in
  * {@link retroStyles}.
  */
-export const retroNames = ["luna", "aero"] as const;
+export const retroNames = ["luna", "aero", "omarchy"] as const;
 
 /** An authored look a consumer can apply on top of a base theme. */
 export type RetroName = (typeof retroNames)[number];
@@ -200,6 +200,121 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
 };
 
 /**
+ * Omarchy's chrome, per mode.
+ *
+ * The dark edition is Tokyo Night (`themes/tokyo-night/colors.toml`), the
+ * default the Omarchy Style guide names: page `#1A1B26`, raised surface
+ * `#1F2230`, bright text `#C0CAF5`, secondary text `#A9B1D6`, accent
+ * `#7AA2F7`, brand `#9ECE6A`, selection ground `#292E42` and the `#414868`
+ * strong edge. The light edition is the guide's Flexoki Light reference:
+ * canvas `#FFFCF0`, surface `#F2F0E5`, inset `#E6E4D9`, ink `#100F0F`,
+ * secondary `#575653`, border `#B7B5AC`, selection `#DAD8CE`, accent
+ * `#205EA6`, danger `#AF3029`, warning `#855B00`, success `#526600`
+ * (`application-design.md` §1.5).
+ */
+const omarchyColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> =
+  {
+    light: {
+      background: "#FFFCF0",
+      foreground: "#100F0F",
+      card: "#F2F0E5",
+      popover: "#F2F0E5",
+      input: "#F0EEE4",
+      inputForeground: "#100F0F",
+      secondary: "#DAD8CE",
+      secondaryForeground: "#100F0F",
+      muted: "#E6E4D9",
+      mutedForeground: "#575653",
+      // Omarchy's states are foreground-tinted, not accent-coated: hover and
+      // selection are the neutral steps, and the accent stays text and edges.
+      hover: "#DAD8CE",
+      active: "#CECDC3",
+      accent: "#DAD8CE",
+      accentForeground: "#100F0F",
+      selected: "#CECDC3",
+      selectedForeground: "#100F0F",
+      border: "#B7B5AC",
+      borderStrong: "#575653",
+      primary: "#205EA6",
+      primaryForeground: "#FFFCF0",
+      ring: "#205EA6",
+      success: "#526600",
+      successForeground: "#FFFCF0",
+      warning: "#855B00",
+      warningForeground: "#FFFCF0",
+      info: "#205EA6",
+      infoForeground: "#FFFCF0",
+      infoSoft: "#CFE0F5",
+      infoSoftForeground: "#0F3A66",
+      successSoft: "#D5E0B4",
+      successSoftForeground: "#334200",
+      warningSoft: "#EAD29A",
+      warningSoftForeground: "#4A3300",
+      destructiveSoft: "#F6D2C9",
+      destructiveSoftForeground: "#671510",
+      placeholder: "#605E59",
+      disabled: "#CECDC3",
+      disabledForeground: "#87857E",
+      skeleton: "#DAD8CE",
+      scrollbar: "#B7B5AC",
+      selection: "#205EA63D",
+      shadow: "#00000040",
+    },
+    dark: {
+      background: "#1A1B26",
+      foreground: "#C0CAF5",
+      card: "#1F2230",
+      popover: "#1F2230",
+      input: "#13141C",
+      inputForeground: "#C0CAF5",
+      secondary: "#2A2E42",
+      secondaryForeground: "#C0CAF5",
+      muted: "#2A2A2A",
+      mutedForeground: "#A9B1D6",
+      hover: "#2A2E42",
+      active: "#343850",
+      accent: "#2F334A",
+      accentForeground: "#C0CAF5",
+      selected: "#292E42",
+      selectedForeground: "#C0CAF5",
+      border: "#2A2E42",
+      // Omarchy's `border-strong` is `#414868`; a control edge and focus ring are
+      // also read on the four soft status tints, where that step is under the 3:1
+      // boundary floor. The accent carries both there.
+      borderStrong: "#7AA2F7",
+      primary: "#7AA2F7",
+      primaryForeground: "#13141C",
+      ring: "#7AA2F7",
+      // Omarchy's `#F7768E` sits too close to the light ink to show a pointer
+      // step, so the filled action takes the red one ramp step deeper; the
+      // status tint keeps the palette's red family.
+      destructive: "#F06A84",
+      destructiveForeground: "#13141C",
+      success: "#9ECE6A",
+      successForeground: "#13141C",
+      warning: "#E0AF68",
+      warningForeground: "#13141C",
+      info: "#7AA2F7",
+      infoForeground: "#13141C",
+      infoSoft: "#23345A",
+      infoSoftForeground: "#A9C4FF",
+      successSoft: "#23331F",
+      successSoftForeground: "#B9E88A",
+      warningSoft: "#3A3018",
+      warningSoftForeground: "#F0C98A",
+      destructiveSoft: "#45242F",
+      destructiveSoftForeground: "#FFC6CE",
+      placeholder: "#8B93B8",
+      disabled: "#181A24",
+      disabledForeground: "#565F89",
+      skeleton: "#30354C",
+      scrollbar: "#414868",
+      selection: "#7AA2F71A",
+      shadow: "#000000",
+    },
+  };
+
+/**
  * The categorical scale Luna's light edition needs, in legend order.
  *
  * The shared light table is designed against a near-white page; on Luna's
@@ -212,6 +327,23 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
  * scale already.
  */
 export const lunaSeries: SeriesColors = [
+  "#5F4BDB",
+  "#1B45AC",
+  "#158754",
+  "#9A6300",
+  "#A5262B",
+];
+
+/**
+ * The categorical scale Omarchy's light edition needs, in legend order.
+ *
+ * The shared light table's amber measures 2.96:1 on this edition's `#E6E4D9`
+ * inset, under the 3:1 a data mark needs, so the look carries the shared hues
+ * with the amber one ramp step deeper (`#9A6300`); deeper still collapses the
+ * amber and red for a deuteranope. The dark edition keeps the shared dark
+ * scale, whose page it is designed for.
+ */
+export const omarchySeries: SeriesColors = [
   "#5F4BDB",
   "#1B45AC",
   "#158754",
@@ -249,6 +381,21 @@ export const retroStyles: Readonly<Record<RetroName, PlatformStyle>> = {
     density: "comfortable",
     contrast: "default",
     colors: aeroColors,
+  },
+  omarchy: {
+    label: "Omarchy",
+    sans: systemUiFont,
+    mono: "JetBrains Mono",
+    // Near-square geometry is Omarchy's signature: `Style.cornerRadius`
+    // follows the effective Hyprland rounding, and its default is 0; the
+    // library's ordered scale keeps the smallest 1–4px steps.
+    radius: { none: 0, sm: 1, md: 2, lg: 3, xl: 4, full: 9999 },
+    // The shell baseline is a 12px body with 28px rows and intrinsic controls;
+    // `compact` is the preset those metrics land in.
+    density: "compact",
+    contrast: "default",
+    colors: omarchyColors,
+    series: { light: omarchySeries },
   },
 };
 

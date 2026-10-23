@@ -126,7 +126,7 @@ describe("the syntax palette", () => {
     // look themes (four base variants, three platforms and two looks in both
     // modes). A sweep that measured nothing would otherwise pass.
     expect(syntaxRoles.length * syntaxSurfaces.length * everyTheme.length).toBe(
-      24 * 2 * 14,
+      24 * 2 * 16,
     );
   });
 

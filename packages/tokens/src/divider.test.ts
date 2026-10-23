@@ -221,14 +221,14 @@ describe("a rule on the row it crosses", () => {
   });
 
   it("counts the placements the raw role misses", () => {
-    // 20 of 80 over the sixteen styles. The count is the measurement the
+    // 22 of 88 over the eighteen styles. The count is the measurement the
     // catalogue prints; it moves only when a palette or a style changes, and
     // then the page moves with it.
     const missed = measured.filter(({ theme, wash }) =>
       underFloor(ratioOf(theme.colors.border, wash)),
     );
 
-    expect(missed).toHaveLength(20);
+    expect(missed).toHaveLength(22);
   });
 
   it("clears every wash in every shipped style", () => {
@@ -253,7 +253,7 @@ describe("a rule on the row it crosses", () => {
     expect(authoredTightest.state).toBe("selected");
     expect(authoredTightest.ratio?.toFixed(3)).toBe("1.053");
     const ratios = stepped.map(({ ratio }) => ratio ?? 0);
-    expect(stepped).toHaveLength(20);
+    expect(stepped).toHaveLength(22);
     expect(Math.min(...ratios).toFixed(3)).toBe("1.050");
     expect(Math.max(...ratios).toFixed(3)).toBe("1.081");
   });
@@ -370,7 +370,7 @@ describe("a rule on the row it crosses", () => {
     [catalogue, designSystem].forEach((page) => {
       expect(page).toContain("dividerOn");
       expect(page).toContain("pressedDivider");
-      expect(page).toContain("20 of the 80");
+      expect(page).toContain("22 of the 88");
     });
     expect(catalogue).toContain("dividerPresses");
     expect(catalogue).toContain("dividerFailures");

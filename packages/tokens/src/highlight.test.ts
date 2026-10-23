@@ -208,6 +208,7 @@ describe("the pair a theme can carry", () => {
       { name: "Dark · Windows", share: 0.27, worst: "6.54" },
       { name: "Dark · Windows XP (Luna)", share: 0.23, worst: "6.09" },
       { name: "Dark · Windows 7 (Aero)", share: 0.26, worst: "6.55" },
+      { name: "Dark · Omarchy", share: 0.13, worst: "5.16" },
     ]);
     // Every other style keeps the runtime's 30%: the step is the exception.
     expect(
