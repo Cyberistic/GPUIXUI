@@ -2036,6 +2036,81 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("a bar of your own");
   });
 
+  it("publishes the horizontal thumb the same probe measured, from its fixture", () => {
+    // A table body, a tab rail and a toolbar overflow sideways, and the record
+    // published the vertical half only — so a component that read `scrollY`
+    // alone had no measured statement that its sideways scroller paints a
+    // thumb at all. `scrollbar-thumb` asks the same rule on the width, and the
+    // numbers below are derived from the probe's own constants.
+    const fixture = read("apps/playground/src/live/scrollbar.ts");
+    const block = (name: string): string =>
+      new RegExp(
+        `export const ${name}: ScrollbarCase = \\{([\\s\\S]*?)\\n\\};`,
+      ).exec(fixture)?.[1] ?? "";
+    const field = (source: string, key: string): number =>
+      Number(
+        new RegExp(`${key}: ([\\d_]+)`)
+          .exec(source)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+
+    const viewport = /export const SCROLLBAR_VIEWPORT = \{([^}]*)\}/.exec(
+      fixture,
+    )?.[1];
+    const track = field(viewport ?? "", "width");
+    const horizontal = block("SCROLLBAR_HORIZONTAL");
+    const content = field(horizontal, "content");
+    const thickness = Number(
+      /width: Option\.some\((\d+)\)/.exec(horizontal)?.[1] ?? Number.NaN,
+    );
+    const sideways = constant("SCROLLBAR_HORIZONTAL_SCROLLED_BY");
+    const min = constant("SCROLLBAR_MIN_THUMB");
+
+    // The premises: the sideways content is wider than the viewport, and the
+    // wheel travels far enough that a working rule moves the thumb visibly.
+    expect(track).toBeGreaterThan(0);
+    expect(content).toBeGreaterThan(track);
+    expect(thickness).toBeGreaterThan(0);
+    expect(sideways).toBeGreaterThan(0);
+    expect(min).toBeGreaterThan(0);
+
+    const max = content - track;
+    const rule = Math.round(
+      Math.min(Math.max((track * track) / (track + max), Math.min(min, track)), track),
+    );
+    /** The cap loses the rounded point, which a solid-colour crop cannot count. */
+    const painted = rule - 1;
+    const start = Math.round(Math.min(Math.max(sideways / max, 0), 1) * (track - rule));
+
+    expect(rule).toBeLessThan(track);
+    expect(painted).toBeGreaterThan(min);
+    expect(start).toBeGreaterThan(0);
+    expect(start).toBeLessThan(track - rule);
+
+    const row = rowFor("Scrollbar thumb");
+    expect(row?.evidence).toContain("bottom");
+    expect(row?.evidence).toContain("width");
+    expect(row?.evidence).toContain(`**${painted}**`);
+    expect(row?.evidence).toContain(`**${rule}**`);
+    expect(row?.evidence).toContain(`**${start}**`);
+    expect(row?.evidence).toContain("scrollY");
+
+    const page = measuredRow("Scrollbar thumb");
+    expect(page, "the page's measured table has no horizontal thumb row").toBeDefined();
+    expect(page?.[1]).toContain(`**${painted}**`);
+    expect(page?.[1]).toContain(`**${rule}**`);
+    expect(page?.[1]).toContain(`**${start}**`);
+    expect(page?.[1]).toContain("bottom");
+    expect(page?.[1]).toContain("width");
+    expect(page?.[1]).toContain("scrollY");
+  });
+
   it("records the second thumb a two-axis scroller paints, from its fixture", () => {
     // `ScrollArea` accepts `axis="both"`, and a log pane or editor surface
     // overflows both ways — but the record said only "for each axis with more
