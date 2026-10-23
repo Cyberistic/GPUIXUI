@@ -317,6 +317,27 @@ describe("the reduced coast the README teaches", () => {
   });
 });
 
+describe("the presence table the README teaches", () => {
+  it("names every entry point the presence subpath exports", () => {
+    // The bug this guards: `presenceMotion` — the one composition that turns
+    // the frames and the timing into the runtime's `motion` prop — shipped on
+    // `@gpuixui/motion/presence` and was taught only by the components package's
+    // seam, so a consumer painting its own surface could not learn it from the
+    // package it imports. Every runtime export of the table is named here.
+    const presence = sources.find(({ name }) => name === "presence.ts")?.text;
+    expect(presence, "presence.ts was not read").toBeDefined();
+    const exported = [
+      ...(presence ?? "").matchAll(/^export const (\w+)/gm),
+    ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
+    // A scan that read nothing cannot satisfy the rule vacuously.
+    expect(exported.length).toBeGreaterThanOrEqual(8);
+    // A bullet may print the call (`presenceTiming(level, preference)`), so the
+    // name is matched at the start of a code span rather than alone.
+    const missing = exported.filter((name) => !readme.includes(`\`${name}`));
+    expect(missing).toEqual([]);
+  });
+});
+
 describe("the imports the README teaches", () => {
   it("reaches each symbol from the subpath that exports it", () => {
     // A floor: deleting the snippets must not make the rule vacuous.

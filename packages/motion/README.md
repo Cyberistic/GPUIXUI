@@ -131,6 +131,11 @@ A surface that enters and leaves reads one table, exported from
   place rather than losing the movement it asked for;
 - `presenceTiming(level, preference)` gives the enter and exit tween at one
   level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"`;
+- `presenceMotion(frames, present, timing)` is the runtime's `motion` prop for a
+  surface — the frames' first paint, the resting frame while it is open or the
+  exit frame while it leaves, and that phase's transition — so a consumer that
+  paints its own surface composes the table instead of restating the three
+  fields;
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds
   a box stays mounted for, including the wait a delayed run sits out first; a
   field that cannot be scheduled adds no time (a negative wait never shortens the

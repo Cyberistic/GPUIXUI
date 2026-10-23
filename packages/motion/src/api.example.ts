@@ -23,6 +23,9 @@ import {
 } from "./index.js";
 import {
   exitWindowMs,
+  fadeFromAnchor,
+  presenceMotion,
+  presenceStyle,
   presenceTiming,
   transitionWindowMs,
 } from "./presence.js";
@@ -84,3 +87,25 @@ export const presenceWindowExample = (): readonly number[] => [
   exitWindowMs(presenceTiming("normal")),
   transitionWindowMs({ duration: 0.32, delay: -0.1 }),
 ];
+
+/**
+ * The frames, the timing and the pointer rule a surface hands the runtime.
+ *
+ * `presenceMotion` is the composition a consumer owns when it paints its own
+ * surface: the entry frame first, the resting or exit frame the presence names,
+ * and the phase's transition — a panel below its trigger starts toward the
+ * trigger and moves away from it, while a leaving one takes no presses.
+ */
+export const presenceCompositionExample = (): {
+  readonly entering: ReturnType<typeof presenceMotion>;
+  readonly leaving: ReturnType<typeof presenceMotion>;
+  readonly pointsAtRest: boolean;
+} => {
+  const frames = fadeFromAnchor("bottom", 4);
+  const timing = presenceTiming("normal");
+  return {
+    entering: presenceMotion(frames, true, timing),
+    leaving: presenceMotion(frames, false, timing),
+    pointsAtRest: presenceStyle(true).pointerEvents === "auto",
+  };
+};

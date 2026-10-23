@@ -20,6 +20,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   compositionExample,
+  presenceCompositionExample,
   presenceWindowExample,
   reducedMotionExample,
   springExample,
@@ -100,6 +101,25 @@ describe("the usage example", () => {
     // paints ended. `presenceTiming("normal")` is 200 ms, and the 100 ms wait is
     // no wait rather than 100 ms subtracted from it.
     expect(presenceWindowExample()).toEqual([200, 320]);
+  });
+
+  it("composes the frames, the timing and the pointer rule a surface paints", () => {
+    // The composition the README teaches: an anchored panel below its trigger
+    // starts toward the trigger (`top: -4`) and rests at `0`, the exit retraces
+    // that travel, the enter decelerates and the exit accelerates, and only the
+    // resting surface is a pointer target.
+    const { entering, leaving, pointsAtRest } = presenceCompositionExample();
+    expect(entering).toEqual({
+      initial: { opacity: 0, top: -4 },
+      animate: { opacity: 1, top: 0 },
+      transition: { duration: 0.2, ease: "easeOut" },
+    });
+    expect(leaving).toEqual({
+      initial: { opacity: 0, top: -4 },
+      animate: { opacity: 0, top: -4 },
+      transition: { duration: 0.2, ease: "easeIn" },
+    });
+    expect(pointsAtRest).toBe(true);
   });
 
   it("is excluded from the build by the name it carries", () => {

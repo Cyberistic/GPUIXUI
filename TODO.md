@@ -1774,7 +1774,24 @@ applies — printed figures a suite derives.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 153/153
+`[x]` `[██████████]` 154/154
+
+`[x]` Follow the **tooltip's presence seam** after the primitives moved it —
+      `tooltip-fade.test.ts` held the tip's entry level by reading
+      `motionTiming("fast"` twice out of
+      `packages/primitives/src/core/presence.ts`, and commit `5e68a98a` replaced
+      that copy with `surfaceTiming` over `@gpuixui/motion/presence`'s
+      `presenceTiming`, so the suite read a seam that no longer existed and
+      `nub run --filter playground test` was red at `HEAD` (10/10 in the file
+      after the fix). The case now holds the level where it lives: the
+      primitive names `presenceTiming("fast")`, the motion package reads both
+      phases from that level (`enter:`/`exit: motionTiming(level`), and
+      `Tooltip.tsx` takes its one timing from `surfaceTiming(reducedMotion)` —
+      so an exit at another level still cannot unmount the tip before the entry
+      the probe measures. Directions measured: the old test fails at `HEAD` with
+      `expected … to contain 'motionTiming("fast"'`; restored, the file is
+      10/10 and the playground suite is 102 files / 950 tests green. No native
+      scenario re-run — the probe itself is unchanged.
 
 `[x]` Measure **an exclusive-choice menu's mark and its choice** in a window —
       the components suite holds the radio rows' `aria-selected`, their
@@ -14379,6 +14396,8 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/components`: **the tab pill stayed where its tab used to be** — a layout event reports a **size** change, not a move (the rule `internal/surface-box.tsx` already records for `Magnetic` and `ImageZoom`), and `TabsList` placed the shared selected surface from the boxes each trigger last reported: a tab pushed along the rail by a longer neighbour, or by a trigger appearing before it, kept the box it reported when the rail was last laid out, so the pill sat at the x the selected tab had left (measured `x: 42` against the tab's `x: 197`). The rail now re-reads its `tabs-origin` probe and every trigger from the renderer in one pass whenever a box, the origin, the row set or the caller's rail class/style changes (`getElementBounds`, the rules `internal/use-placement.ts` uses), so both boxes come from the same paint and the offsets are exact even when the rail itself moved; an unchanged pass sets no state. Proof: `src/behaviour/tabs-reflow.test.tsx` (2 cases, a measurement contract beside the interaction suite so the Tabs record's native count stays the interaction suite's): `stays under a tab a growing sibling pushed along` and `stays under its tab when a trigger appears before it`. Directions measured: with `HEAD`'s `tabs.tsx` restored both fail by name (`x: 42` for `197`, `x: 5` for `139`); restored, the reflow file is 2/2, `tabs.test.tsx` 22/22, `presence.test.tsx`'s `a tab pill` 1/1 and the live `--only tabs-lifecycle` probe 1/1 on 0.11.0, with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs: `docs/tabs.mdx` §Limitations, the module header and the rail's `keepOrigin`/reflow JSDocs.
 
 `[x]` `@gpuixui/motion`: **a preference that turned back off relaunched the coast it had already ended** — a reduced commit retired the retained value (`motion.set(destination)`), but the hook's effect re-ran on the preference flip and launched the same declaration again from the frame it ended on: measured in the GPUix renderer, a 50 ms coast released at `400` rested at `20` under the preference and then drifted on to `40`, replaying a gesture the reader had already watched finish — while the README, the hook's JSDoc and `/docs/motion` all promised it did not. `useInertia` records the declaration a reduced commit ended (`retired`, compared by `sameCoast`) and holds it in both directions: the animated branch republishes the retained frame without releasing it, and a later reduced commit holds that frame rather than projecting a new rest from it. A genuinely new release forgets the record, so the next gesture still starts from the frame on screen. Proof: `packages/components/src/behaviour/motion-hooks.test.tsx` gains `does not relaunch a coast whose journey the reduced preference ended`, `holds an ended coast rather than projecting it again` and `starts a new release from the frame an ended coast rests on` (the last one is the negative control: the hold must not swallow the next gesture). Directions measured at `HEAD`: `expected '38.72662049526765:25.467590094646898:false' to be '20:0:false'`, `expected '40:0:true' to be '20:0:false'` and the new release never reaching `35:0:true`; restored, the file is 14/14, the motion package 164/164, and `check-types` is clean in both packages. Docs: `packages/motion/README.md` §React hooks states the hold (and `docs.test.ts`'s `holds a gesture the reduced preference already ended` reads `retired`/`sameCoast` and both branches); `/docs/motion` already taught it, so the page needed no change. No native scenario applies — the frame is the hook's render in the real GPUix renderer, which the behaviour suite runs.
+
+`[x]` `@gpuixui/motion`: **the composition entry point was taught only by another package** — `presenceMotion(frames, present, timing)` is the one function that turns the frames and the phase's timing into the runtime's `motion` prop for a consumer painting its own surface, and it was named nowhere in `packages/motion/README.md`: the presence table listed the four frame builders, the timing, both window conversions, the stagger and the pointer rule, so the unit a reader composes last was documented only in `@gpuixui/components`' seam and its page. The README's §presence table now teaches it (first paint, resting or exit frame, that phase's transition), `api.example.ts`'s executed `presenceCompositionExample` composes the real calls, and `docs.test.ts`'s `names every entry point the presence subpath exports` derives the table's ten runtime exports from `presence.ts` and requires each one at the start of a README code span, so a new export cannot ship untaught. Directions measured: deleting the bullet fails the case with `expected [ 'presenceMotion' ] to deeply equal []`; restored, the package is 14 files / 166 tests with `check-types` clean. Docs: `packages/motion/README.md` §The presence table and `src/example.test.ts`'s `composes the frames, the timing and the pointer rule a surface paints` (the enter decelerates at `top: -4 → 0`, the exit retraces it, only the resting surface is a pointer target). No native scenario applies — a README, a subpath's exports and their values.
 
 ## TanStack cores
 
