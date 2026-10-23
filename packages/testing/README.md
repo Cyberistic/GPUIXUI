@@ -7,6 +7,11 @@ It never imports `@gpuix/react` or `@gpuix/native`. That is the whole point: its
 tests run on any host — including a host where no GPUix binding exists — while
 the native half (`apps/playground`) supplies the real renderer.
 
+**Held by a test.** `src/platform-free.test.ts` walks every source and suite and
+reads the manifest, so the law is not a convention: no file may import
+`@gpuix/*`, the runtime dependencies may be Effect and nothing else, and the
+sentences on this page are cases in it.
+
 ## What it is not
 
 - Not a test framework. It is the scenario/check/report model; run it under
