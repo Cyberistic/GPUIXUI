@@ -41,7 +41,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode, Ref } from "react";
 import { recipeStyle } from "../recipe.js";
-import { pointerWash, textStyle, useTheme } from "../theme.js";
+import { dividerOn, pointerWash, textStyle, useTheme } from "../theme.js";
 import {
   reportBoth,
   TableFrameProvider,
@@ -225,7 +225,11 @@ export const TableHeader = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TABLE_HEADER, className), theme), {
           borderBottomWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
+          // The header sits on the table's own `card` fill; the rule is the
+          // same derivation a row uses, so a brand whose `border` is too close
+          // to its card gets a visible line here too.
+          borderColor:
+            dividerOn(theme, theme.colors.card) ?? theme.colors.border,
         }),
         style,
       )}
@@ -363,6 +367,23 @@ export const TableRow = ({
       : interactive
         ? TABLE_ROW_INTERACTIVE
         : TABLE_ROW;
+  /**
+   * The rule a row paints, derived from the **surface it crosses**.
+   *
+   * A row is a surface of its own: a chosen row fills `selected`, the pointer
+   * tints `accent`, and a press repaints the derived wash. The raw `border`
+   * role is under the 1.05:1 floor on 17 of the 64 shipped wash placements, so
+   * the rule is `dividerOn`'s — `border` stepped toward `borderStrong` until it
+   * clears the wash it crosses, and the authored role where it already does.
+   */
+  const rule = (surface: string): string =>
+    dividerOn(theme, surface) ?? theme.colors.border;
+  const hoverFill =
+    selected === true ? theme.colors.accent : theme.colors.hover;
+  const pressFill =
+    (selected === true
+      ? pointerWash(theme, "active", "accent")
+      : pointerWash(theme, "active", "hover")) ?? theme.colors.active;
   return (
     <div
       {...rest}
@@ -373,7 +394,9 @@ export const TableRow = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(recipe, className), theme), {
           borderBottomWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
+          borderColor: rule(
+            selected === true ? theme.colors.selected : theme.colors.card,
+          ),
           // A chosen row answers the pointer too: the selection fill says which
           // record is chosen, and the `accent` wash a step off it says the
           // pointer is on it. The press takes the wash derived over the hover,
@@ -383,26 +406,21 @@ export const TableRow = ({
           // An unchosen row is the same rule one step earlier: the recipe tints
           // `hover`, and the press derives over the wash it replaces — the
           // contract's third transition (`active` over `hover`), not the raw
-          // role.
+          // role. The rule is re-derived for each fill, because a wash a row
+          // moves onto is a surface the divider must clear too.
           ...(interactive
             ? {
                 cursor: "pointer",
-                ...(selected === true
-                  ? {
-                      hover: { backgroundColor: theme.colors.accent },
-                      active: {
-                        backgroundColor:
-                          pointerWash(theme, "active", "accent") ??
-                          theme.colors.active,
-                      },
-                    }
-                  : {
-                      active: {
-                        backgroundColor:
-                          pointerWash(theme, "active", "hover") ??
-                          theme.colors.active,
-                      },
-                    }),
+                hover: {
+                  // A style prop's state record replaces the compiled class's,
+                  // so the row restates the recipe's own `hover` fill.
+                  backgroundColor: hoverFill,
+                  borderColor: rule(hoverFill),
+                },
+                active: {
+                  backgroundColor: pressFill,
+                  borderColor: rule(pressFill),
+                },
               }
             : {}),
         }),

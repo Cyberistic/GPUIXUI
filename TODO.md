@@ -7020,7 +7020,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 199/199
+`[x]` `[██████████]` 200/200
+
+`[x]` Publish the **focus ring a filled action paints** — `/docs/accessibility`
+taught the ring from the tokens and the typings, while the one case the offset
+exists for was measured by `action-ring` (39 checks) and cited nowhere: in the
+dark palette the shipped `primary` fill and the `ring` role are both `#A7A9FF`,
+so a flush belt is drawn in the fill it must stand out from. The outline sits
+**3** points out (`offset 2` plus half the 2-point line), the page is one point
+out and the fill two points inside; a press focuses the action but paints **no
+ring**, `Tab` paints it, and the outline changes no box (identical
+`x,y,width,height` with and without it). §3 gains **Keyboard focus ring**
+(`supported, with limits`), `/docs/runtime` publishes it, §5 owes `action-ring`,
+and the accessibility page's focus section carries the measured bullet.
+`capability-doc.test.ts` gains `publishes the focus ring a filled action paints`:
+it derives the offset from `ring-offset.ts` and the line width from
+`themes.dark.borderWidth.strong`, asserts the palette premise
+(`primary === ring`), derives the 3-point band, reads the probe's count from the
+README, and holds the record, the page and the accessibility page to each value.
+Directions measured: with the row absent the case fails `expected undefined to be
+'supported, with limits'`, and dropping `**no ring**` from the page fails
+`to contain 'paints **no ring**'`; restored, the two files are 107/107 and
+`check-types` is clean. No native scenario applies — a docs page and its guard
+have no runtime path.
 
 `[x]` Publish the **layout a move does not report** — the record's **Container
 queries** row sent a component to `onLayout` to measure its box, and no row said

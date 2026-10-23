@@ -156,6 +156,14 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `TableEmpty`, and the same suite's windowed case holds the message's `Label`
   under a `Cell` whose parent is a `Row` (removing the wrap fails with `the
   tree has no Cell node`).
+- **A table row's rule is derived from the fill it crosses**: the raw `border`
+  role sat under the 1.05:1 floor on 17 of the 64 shipped wash placements (the
+  base themes' `accent` at 1.001:1 and 1.004:1), so `TableRow` asks
+  `dividerOn(theme, fill)` for its base rule, its `accent`/`hover` pointer fill
+  and its derived press wash; `TableHeader` uses the same function for the card
+  it sits on. `table.test.tsx` holds the base, hover and press rules off the
+  window (the raw `#2A303B` fails against the derived `#2E3540`), and the page
+  is `docs/table-selection.mdx` §The row's rule.
 - **A caption string is text the tree can hear**: a raw string inside the
   caption's box paints but the runtime makes no node of it, so the documented
   `<TableCaption>12 files</TableCaption>` was silent; a string or number child

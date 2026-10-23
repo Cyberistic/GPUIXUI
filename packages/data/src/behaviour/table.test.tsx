@@ -22,7 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { afterEach, describe, expect, it } from "vitest";
-import { darkTheme, pointerWash } from "@gpuixui/tokens";
+import { darkTheme, dividerOn, pointerWash } from "@gpuixui/tokens";
 import { TableExample } from "../../examples/table.example.js";
 import { TableColumnDivider } from "../columns/divider.js";
 import { requireStyle } from "../internal/interaction.js";
@@ -206,6 +206,57 @@ describe("the example table", () => {
     expect(requireStyle(root, "files-row-file-3").active).toMatchObject({
       backgroundColor:
         pointerWash(darkTheme, "active", "hover") ?? darkTheme.colors.active,
+    });
+  });
+
+  it("derives the rule from the fill the row wears", () => {
+    // The raw `border` role is under the 1.05:1 floor on 17 of the 64 shipped
+    // wash placements, so a rule painted raw disappears on the row the reader
+    // is looking at. The row asks `dividerOn` for the surface it crosses — and
+    // the dark theme's `accent` is one of the placements the authored role
+    // loses (1.004:1), so a raw rule here is measurably wrong rather than a
+    // taste.
+    const root = mount();
+    const styleOf = (testId: string): Record<string, unknown> =>
+      requireStyle(root, testId);
+
+    // At rest an unchosen row sits on the table's card.
+    expect(styleOf("files-row-file-3").borderColor).toBe(
+      dividerOn(darkTheme, darkTheme.colors.card),
+    );
+
+    click(root, "files-row-file-3");
+    root.renderer.flush();
+    expect(styleOf("files-row-file-3").borderColor).toBe(
+      dividerOn(darkTheme, darkTheme.colors.selected),
+    );
+
+    const bounds = boundsOf(root, "files-row-file-3");
+    root.renderer.nativeSimulateMouseMove(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+    root.renderer.flush();
+
+    // The chosen row's hover moves it onto `accent`; the rule follows the fill.
+    const accentRule = dividerOn(darkTheme, darkTheme.colors.accent);
+    expect(styleOf("files-row-file-3").hover).toMatchObject({
+      borderColor: accentRule,
+    });
+    expect(styleOf("files-row-file-3").hover).not.toMatchObject({
+      borderColor: darkTheme.colors.border,
+    });
+
+    const pressFill =
+      pointerWash(darkTheme, "active", "accent") ?? darkTheme.colors.active;
+    expect(styleOf("files-row-file-3").active).toMatchObject({
+      borderColor: dividerOn(darkTheme, pressFill),
+    });
+
+    // An unchosen row restates the recipe's hover fill and derives its rule
+    // from that wash, so the pointer never leaves the grid behind.
+    expect(styleOf("files-row-file-2").hover).toMatchObject({
+      borderColor: dividerOn(darkTheme, darkTheme.colors.hover),
     });
   });
 
