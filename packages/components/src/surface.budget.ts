@@ -85,7 +85,10 @@ export const surfaceBudget = {
   // `internal/surface-box.tsx`, the origin probe `Magnetic` and `ImageZoom` read
   // a pointer against: `onLayout` reports a size change, not a move, so the box
   // a surface last reported is stale after a pane opens or a scroll.
-  modules: 166,
+  // 166 → 167 for HighlightText's wash seam (`highlight-text/wash.ts`): the
+  // theme's measured find pair, its corner and the active-mark rule live beside
+  // the ranges, so the component paints a find wash instead of `selection`.
+  modules: 167,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB

@@ -13,6 +13,17 @@ import { HighlightText } from "@gpuixui/components/highlight-text";
 <HighlightText text="Native by default" query="native" />;
 ```
 
+A find surface marks the match the reader is on with the active colour:
+
+```tsx
+<HighlightText
+  text="native by native"
+  query="native"
+  activeIndex={1}
+  stepMs={0}
+/>
+```
+
 ## API
 
 | Prop | Type | Default |
@@ -23,7 +34,9 @@ import { HighlightText } from "@gpuixui/components/highlight-text";
 | `caseSensitive` | `boolean` | `false` |
 | `wholeWord` | `boolean` | `false` |
 | `stepMs` | `number` | `60` |
-| `color` | `string` | `theme.colors.selection` |
+| `color` | `string` | `findHighlight(theme).color` |
+| `activeColor` | `string` | `findHighlight(theme).activeColor` |
+| `activeIndex` | `number` | — |
 | `role` | `TextRole` | `"body"` |
 | `className` | `string` | — |
 | `style` | `StateStyle<HighlightTextState>` | — |
@@ -32,8 +45,9 @@ import { HighlightText } from "@gpuixui/components/highlight-text";
 
 - The sweep is a real-time timer, not a motion-clock tween.
 - `ranges` index UTF-16 units; `ranges` wins over `query`.
-- The wash is translucent; pick a role the contrast contract covers.
-- Every mark paints the same wash.
+- The default wash is the theme's translucent `findHighlight` pair, which holds the matched text to the theme's body floor; a caller's own `color`/`activeColor` is not measured.
+- `activeIndex` counts the marks this phrase paints, not the document's; a find bar over many rows converts its document-wide index first (`matchIndexOffset`).
+- An `activeIndex` past the marks the sweep has painted is ignored until that mark begins — it is never applied to a neighbour.
 
 ## Related
 

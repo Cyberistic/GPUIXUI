@@ -118,6 +118,38 @@ describe("HighlightText", () => {
     }
   });
 
+  it("paints only the mark the caller names as the active match", () => {
+    const mark = (activeIndex: number | undefined) => (
+      <HighlightText
+        text="native by native"
+        query="native"
+        activeIndex={activeIndex}
+        stepMs={0}
+      />
+    );
+    const page = renderComponent(mark(1));
+    try {
+      expect(washes(page.renderer).map((wash) => wash.active)).toEqual([
+        false,
+        true,
+      ]);
+
+      page.rerender(mark(0));
+      expect(washes(page.renderer).map((wash) => wash.active)).toEqual([
+        true,
+        false,
+      ]);
+
+      page.rerender(mark(undefined));
+      expect(washes(page.renderer).map((wash) => wash.active)).toEqual([
+        false,
+        false,
+      ]);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("replays the sweep when the query changes", async () => {
     const page = renderComponent(
       <HighlightText text="native by design" query="native" stepMs={1000} />,

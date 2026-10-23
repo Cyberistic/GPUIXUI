@@ -8,9 +8,10 @@
  * point at a time, and a mark grows as one range rather than a run of quads
  * (abutting translucent quads show their seams).
  *
- * The default wash is the theme's `selection` role, the one translucent surface
- * the contrast contract measures text inside; it is not a second colour system.
- * The reveal is a real-time timer, so a paused renderer clock does not hold it.
+ * The default wash is the theme's `findHighlight` pair — the colours
+ * `@gpuixui/tokens` derives from `primary` so the matched text keeps the body
+ * floor — with the active mark painted at the stronger share. The reveal is a
+ * real-time timer, so a paused renderer clock does not hold it.
  */
 
 import type { Props } from "@gpuix/react";
@@ -31,6 +32,7 @@ import {
   sweptRanges,
   type Range,
 } from "./highlight-text/logic.js";
+import { washFor } from "./highlight-text/wash.js";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
@@ -63,8 +65,16 @@ export interface HighlightTextProps extends Omit<Props, "children" | "style"> {
    * the first frame.
    */
   readonly stepMs?: number;
-  /** The wash colour. Default: the theme's `selection` role. */
+  /** Every match's wash. Default: the theme's `findHighlight` colour. */
   readonly color?: string;
+  /** The active match's wash. Default: the theme's `findHighlight` active colour. */
+  readonly activeColor?: string;
+  /**
+   * Which mark is the active match, by its index among this phrase's marks.
+   * The runtime paints it with `activeColor`; a find bar over a document
+   * converts its document-wide index first.
+   */
+  readonly activeIndex?: number;
   /** A typographic role from the theme. Default `"body"`. */
   readonly role?: TextRole;
   /** A Tailwind class string, joined after the resting style so it wins. */
@@ -94,6 +104,8 @@ export const HighlightText = ({
   wholeWord = false,
   stepMs: stepMsProp,
   color,
+  activeColor,
+  activeIndex,
   role = "body",
   className,
   style,
@@ -151,14 +163,15 @@ export const HighlightText = ({
     complete,
     reducedMotion,
   };
-  const wash = color ?? theme.colors.selection;
+  const painted = sweptRanges(text, marks, revealed);
+  const wash = washFor(theme, { color, activeColor, activeIndex }, Arr.length(painted));
 
   return (
     <div
       {...rest}
       highlight={{
-        ranges: hostRanges(sweptRanges(text, marks, revealed)),
-        color: wash,
+        ranges: hostRanges(painted),
+        ...wash,
       }}
       style={mergeStyles(
         recipeStyle(cn(className), theme),
@@ -187,6 +200,7 @@ export const highlightTextMeta = {
     "the sweep is a real-time timer, so it is not driven by the renderer's motion clock",
     "no animated highlight: the wash is repainted as a shorter range each step",
     "the query's case folding is the regular-expression engine's; a locale that changes the string length needs the caller's ranges",
+    "`activeIndex` counts the marks this phrase paints, not a document's matches; a find bar converts a document-wide index first",
   ],
   docs: "docs/highlight-text.mdx",
   example: "examples/highlight-text.example.tsx",
