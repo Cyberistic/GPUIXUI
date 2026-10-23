@@ -46,15 +46,34 @@ export interface MotionState {
   readonly complete: boolean;
 }
 
+/**
+ * The frame a reduced reader sees when nothing moves.
+ *
+ * The preference removes the journey, so the presentation is the resting value
+ * from the render that names it — not the frame the removed run would have
+ * started from. The retained value still samples the run in an effect (so a
+ * later animated preference starts where the reader is), but the paint must not
+ * wait for that commit: a changed target would otherwise show the previous
+ * frame first, which is the one-frame flash the mount rule already forbids.
+ */
+const restingFrame = (value: number, complete: boolean): MotionState => ({
+  value,
+  velocity: 0,
+  complete,
+});
+
 /** Hook options. */
 export interface MotionOptions {
   /**
    * The reader's reduced-motion preference. Default `false`.
    *
-   * A reduced hook paints its resting frame in the **first** render — the
+   * A reduced hook paints its resting frame in the render that names it — the
    * target, or a coast's projected rest — and ignores `initial`, because that
-   * value is the start of a journey the preference removed. A mount that
-   * skipped such a run reports it as complete.
+   * value is the start of a journey the preference removed. A later target or
+   * release changed while the preference is on paints (and completes) the same
+   * way, rather than showing the previous frame for one commit. A mount that
+   * skipped such a run reports it as complete; a mount that asked for no journey
+   * does not.
    */
   readonly reducedMotion?: boolean;
   /**
@@ -200,10 +219,26 @@ export const useMotion = (
   const declared = useRef(transition);
   declared.current = retainTransition(declared.current, transition);
   const running = declared.current;
+  /** The frame a reduced render paints: the target, repaired once. */
+  const resting = startValue(target, undefined);
 
   useEffect(() => {
     if (skipped.current) {
       skipped.current = false;
+      return;
+    }
+    if (reduced(options)) {
+      // The render already paints the resting frame; retargeting the retained
+      // value to it now means a preference that turns back on starts where the
+      // reader is, and the skipped journey reports its end with that frame.
+      if (resting === motion.current) return;
+      motion.set(resting);
+      publish(setFrame, {
+        value: resting,
+        velocity: 0,
+        active: false,
+        complete: true,
+      });
       return;
     }
     publish(setFrame, settleBefore(motion, origin, reduced(options)));
@@ -218,13 +253,22 @@ export const useMotion = (
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, target, running, origin, options.reducedMotion]);
+  }, [motion, target, resting, running, origin, options.reducedMotion]);
 
-  return {
-    value: frame.value,
-    velocity: frame.velocity,
-    complete: frame.complete,
-  };
+  return reducedMotion
+    ? restingFrame(
+        resting,
+        // A destination this render just reached is a journey the preference
+        // removed: report its end with it, rather than one commit later. The
+        // mount that asked for no journey (the value it started on) keeps
+        // `complete` false.
+        frame.complete || resting !== motion.current,
+      )
+    : {
+        value: frame.value,
+        velocity: frame.velocity,
+        complete: frame.complete,
+      };
 };
 
 /**
@@ -300,6 +344,16 @@ export const useInertia = (
   const running = declared.current;
 
   useEffect(() => {
+    if (reduced(options)) {
+      // The render paints the projection the declaration names; establishing the
+      // coast and finishing it in this commit retires the run so a preference
+      // that turns back on does not relaunch a gesture the reader saw end.
+      motion.coast(running.inertia, running.velocity);
+      const ended = motion.sample(performance.now() - start, true);
+      skippingStart.current = false;
+      publish(setFrame, ended);
+      return;
+    }
     const sampled = settleBefore(motion, start, reduced(options));
     if (skippingStart.current && sampled.value === offset) {
       // The mount painted the rest the preference names, so the release offset
@@ -319,11 +373,20 @@ export const useInertia = (
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, running, start, options.reducedMotion]);
+  }, [motion, running, start, offset, options.reducedMotion]);
 
-  return {
-    value: frame.value,
-    velocity: frame.velocity,
-    complete: frame.complete,
-  };
+  const resting = project(running.inertia, offset, running.velocity);
+  return reducedMotion
+    ? restingFrame(
+        resting,
+        // The projection this render names is the gesture's end; a release the
+        // render just accumulated to reports it with the frame, not a commit
+        // later. A coast that cannot leave its offset asked for no journey.
+        frame.complete || resting !== motion.current,
+      )
+    : {
+        value: frame.value,
+        velocity: frame.velocity,
+        complete: frame.complete,
+      };
 };

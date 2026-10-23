@@ -11,10 +11,18 @@
  * mounted. The declaration is retained by value now (the rule the retained value
  * already applied) and a frame is published only when it differs, so the same
  * component rests and stops.
+ *
+ * The reduced preference's later frames are the second guard: it painted the
+ * resting frame only in the mount's first render, so a target or a release
+ * changed while it was on kept the previous frame for one commit — the same
+ * one-frame flash the mount rule forbids — and reported the skipped journey
+ * against the run that was leaving. A reduced render now paints the destination
+ * it names, with the completion edge, and retires the retained run in the same
+ * commit.
  */
 
 import { describe, expect, it } from "vitest";
-import { inertia, springPhysics } from "@gpuixui/motion";
+import { inertia, layoutSpring, springPhysics } from "@gpuixui/motion";
 import { useInertia, useSpring } from "@gpuixui/motion/react";
 import { after, waitFor } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -40,6 +48,42 @@ const InlineCoast = ({ release }: { readonly release: number }) => {
   paints.count += 1;
   const { value } = useInertia(release, inertia(350, { max: 60 }));
   return <text testId="inline-coast">{String(value)}</text>;
+};
+
+/** A spring a reduced reader drives: the target is the frame it names. */
+const ReducedTarget = ({
+  target,
+  reduced,
+  initial,
+}: {
+  readonly target: number;
+  readonly reduced: boolean;
+  readonly initial?: number;
+}) => {
+  const { value, velocity, complete } = useSpring(target, layoutSpring, {
+    initial,
+    reducedMotion: reduced,
+  });
+  return (
+    <text testId="reduced-target">{`${value}:${velocity}:${complete}`}</text>
+  );
+};
+
+/** A coast a reduced reader releases: the projection is the frame it names. */
+const ReducedCoast = ({
+  release,
+  reduced,
+}: {
+  readonly release: number;
+  readonly reduced: boolean;
+}) => {
+  const { value, velocity, complete } = useInertia(release, inertia(350), {
+    initial: 0,
+    reducedMotion: reduced,
+  });
+  return (
+    <text testId="reduced-coast">{`${value}:${velocity}:${complete}`}</text>
+  );
 };
 
 /** Every painted string, joined: the frame the loop last published. */
@@ -75,6 +119,60 @@ describe("the motion hooks", () => {
       await after(120);
       expect(paints.count).toBe(rested);
       expect(rested).toBeLessThan(200);
+    } finally {
+      page.unmount();
+    }
+  });
+});
+
+describe("the reduced preference's later frames", () => {
+  it("paints a target changed while it is on in the frame it arrives", () => {
+    // The defect: the render still published the previous frame, so a reduced
+    // count-up or width change flashed the value it was leaving for one commit.
+    const page = renderComponent(<ReducedTarget target={100} reduced />);
+    try {
+      expect(painted(page)).toBe("100:0:false");
+      page.rerender(<ReducedTarget target={200} reduced />);
+      expect(painted(page)).toBe("200:0:true");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints a release changed while it is on in the frame it arrives", () => {
+    // The projection is the resting frame, so a new release names a new one;
+    // the previous projection must not survive the commit that changes it.
+    const page = renderComponent(<ReducedCoast release={400} reduced />);
+    try {
+      expect(painted(page)).toBe("140:0:true");
+      page.rerender(<ReducedCoast release={300} reduced />);
+      expect(painted(page)).toBe("105:0:true");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints the resting frame in the commit the preference turns on", () => {
+    // The preference removes the journey, so the frame it lands on is the one
+    // the reader sees when the setting changes — not the tween's next sample.
+    const page = renderComponent(
+      <ReducedTarget target={100} reduced={false} initial={0} />,
+    );
+    try {
+      expect(painted(page)).toBe("0:0:false");
+      page.rerender(<ReducedTarget target={100} reduced initial={0} />);
+      expect(painted(page)).toBe("100:0:true");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps a mount that asked for no journey from reporting one", () => {
+    // The over-correction: a reduced mount with no `initial` has no run to
+    // complete, so the target paints with `complete` false.
+    const page = renderComponent(<ReducedTarget target={100} reduced />);
+    try {
+      expect(painted(page)).toBe("100:0:false");
     } finally {
       page.unmount();
     }

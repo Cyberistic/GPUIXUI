@@ -122,7 +122,11 @@ Under the reduced preference there is **no first run to start**: a hook mounted
 with `initial` paints the frame the preference names in its first render — the
 target, or a coast's projected rest — and reports the skipped run as complete.
 The `initial` belongs to an animated mount, so a reduced count-up or a reduced
-drag release never flashes the value it was supposed to arrive from.
+drag release never flashes the value it was supposed to arrive from. A target or
+release changed **while the preference is on** paints the same way in the render
+that names it, with the completion edge, and retires the retained run in that
+commit: the previous frame never survives the change for a reader who asked for
+no journey, and a preference that turns back on starts where the reader is.
 
 The hooks own one clock, so they **sample once before retargeting**: a run that
 has come to rest is not advanced while nothing moves, and handing the retained
@@ -195,7 +199,9 @@ accumulates from; an unreadable one is no offset, so the coast starts at `0`.
 The reduced preference is read at the same boundary: a reduced mount paints the
 resting frame — the target, or the coast's projected rest — rather than the
 `initial` the run it removed would have started from, and reports that skipped
-run as complete.
+run as complete. A destination changed under the preference is read the same way
+on every render, not only the mount's first: the value, the zero velocity and the
+completion edge belong to the frame that names it.
 
 ## The runtime's declarative timing
 
