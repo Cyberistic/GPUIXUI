@@ -37,9 +37,14 @@ import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import {
   contrastFloors,
+  contrastFloorsFor,
   contrastRatio,
   decorativeFloor,
+  getTheme,
+  platformNames,
   platformTheme,
+  retroNames,
+  retroTheme,
 } from "@gpuixui/tokens";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -606,6 +611,47 @@ describe("DropdownMenu", () => {
     ).toBeLessThan(contrastFloors.boundary);
 
     menu.unmount();
+  });
+
+  it("paints a highlighted row's bar in a role the mark floor measures", () => {
+    // The bug: the bar painted `colors.accent`, a wash role, on the `hover`
+    // wash the highlighted row already wears — under the 3:1 mark floor in all
+    // sixteen shipped, high-contrast, platform and authored styles, and
+    // 1.000:1 on the Luna dark look's own row — so the cue naming the row that
+    // leads an open submenu was invisible.
+    const styles = [
+      getTheme("light"),
+      getTheme("dark"),
+      getTheme("light", "high"),
+      getTheme("dark", "high"),
+      ...Arr.flatMap(platformNames, (name) => [
+        platformTheme(getTheme("light"), name),
+        platformTheme(getTheme("dark"), name),
+      ]),
+      ...Arr.flatMap(retroNames, (look) => [
+        retroTheme(getTheme("light"), look),
+        retroTheme(getTheme("dark"), look),
+      ]),
+    ];
+
+    Arr.forEach(styles, (theme) => {
+      const menu = renderComponent(<FileActions onSelect={vi.fn()} />, theme);
+      clickCentreOf(menu, "trigger");
+      menu.renderer.simulateKeystrokes("down");
+
+      const bar = menu.renderer.findByTestId("rename")?.style.borderColor;
+
+      menu.unmount();
+
+      expect(bar).toBe(theme.colors.primary);
+      expect(
+        contrastRatio(theme.colors.primary, theme.colors.hover) ?? 0,
+      ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
+      // The premise: the role the bar used to paint cannot be read on the wash.
+      expect(
+        contrastRatio(theme.colors.accent, theme.colors.hover) ?? 0,
+      ).toBeLessThan(contrastFloorsFor(theme).boundary);
+    });
   });
 
   it("paints a row press the highlight it replaces can show", () => {

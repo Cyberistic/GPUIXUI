@@ -87,7 +87,7 @@ export interface MenuItemState {
 /** The row's own look, shared by actions, checkbox rows and the Command menu.
  *
  * The resting geometry and type come from the `MENU_ITEM` recipe (fixed shadcn
- * metrics); the density height, the accent bar and the state colours stay here
+ * metrics); the density height, the emphasis bar and the state colours stay here
  * because they are density- and state-driven (ADR 0006).
  */
 export const menuRowStyle = (
@@ -112,7 +112,13 @@ export const menuRowStyle = (
     ...overlaySurfaceStyle(MENU_ITEM, className, theme),
     height: controlHeight(theme, "sm"),
     borderLeftWidth: theme.borderWidth.strong,
-    borderColor: active ? theme.colors.accent : theme.colors.popover,
+    // The bar marks the row that leads an open submenu or holds the palette's
+    // highlight, and it sits on that row's `hover` wash. A mark has to be found
+    // from across the surface, so it paints `primary` — the role the mark
+    // contract measures at 3:1 on the popover and on the wash, as the check
+    // mark beside it does. `accent` is a wash role: it read 1.000:1 on the
+    // Luna dark look's own row and under the floor in all sixteen styles.
+    borderColor: active ? theme.colors.primary : theme.colors.popover,
     backgroundColor: active ? theme.colors.hover : undefined,
     // The 50% fade composited a disabled label into its own fill, which a
     // high-contrast theme asks 3:1 of; the `disabled`/`disabledForeground` pair

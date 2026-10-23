@@ -91,6 +91,14 @@ Both rows mark their state with a check and `aria-selected`, because 0.11.0 has
 no `aria-checked`. A row's accessible name is its label, so a composed label
 passes `textValue`.
 
+## Highlight
+
+Arrow keys move real focus onto a row, so the highlighted row is the one with
+focus. It tints the `hover` wash and draws a `primary` bar on its leading edge;
+the bar also marks the row whose submenu is open. `primary` is a mark role the
+token contract measures at 3:1 (4.5:1 in a high-contrast theme) on the popover
+and on the `hover` wash the row wears.
+
 ## Limitations
 
 - No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`.
