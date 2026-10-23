@@ -44,8 +44,8 @@ import {
  * resolves `platformTheme` from `@gpuixui/tokens`, and every preview reads the
  * families that theme names. The palette is the library's other axis — its
  * light and dark themes, so a component can be seen in both — and the look is
- * the third: the authored Luna and Aero styles `retroStyles` ships, applied over
- * the platform's theme, so the picker shows a real library style rather than a
+ * the third: the authored looks `retroStyles` ships, applied over the
+ * platform's theme, so a picker shows a real library style rather than a
  * docs-only skin. Every choice lives in the URL, so a link carries it, and in
  * local storage, so a navigation does not reset it. A first visit has neither,
  * so it opens on the platform the browser reports.

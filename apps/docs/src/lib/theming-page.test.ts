@@ -12,6 +12,7 @@ import {
   indicatorSurfaces,
   isThemeMode,
   keyboardFocusDimOpacity,
+  retroNames,
   retroStyles,
   selectionPairs,
   seriesColors,
@@ -858,6 +859,21 @@ describe("the theming page's look parameter", () => {
   /** The prose with its line wrapping flattened: a label is one sentence, not two lines. */
   const flat = (text: string): string => text.replace(/\s+/g, " ");
 
+  /**
+   * The paragraph that names the looks a link can carry, read alone.
+   *
+   * The section continues into §Take one… and §Follow the desktop's palette,
+   * which name Omarchy for its `colors.toml`; reading the whole section let the
+   * look paragraph offer two of the three styles the library ships and still
+   * pass, because a later subsection happened to carry the third name.
+   */
+  const paragraph = flat(
+    picker.slice(
+      picker.indexOf("`?look=luna`"),
+      picker.indexOf("Both axes resolve"),
+    ),
+  );
+
   it("names every look the query accepts, by the library's label", () => {
     // The sidebar switch offers platforms only, so the page names the looks a
     // `?look=` link can carry; a look added to the library without a sentence
@@ -867,8 +883,20 @@ describe("the theming page's look parameter", () => {
     expect(
       lookOrder
         .filter((look) => look !== "native")
-        .filter((look) => !flat(picker).includes(lookLabel(look))),
+        .filter((look) => !paragraph.includes(lookLabel(look))),
     ).toEqual([]);
+    expect(paragraph).toContain("`?look=omarchy`");
+  });
+
+  it("states each look's provenance, so Omarchy is not read as invented", () => {
+    // Two of the three styles are reconstructions and one is not: Luna and Aero
+    // never had a dark mode, so their dark editions are this library's, while
+    // Omarchy's pair is the shell's own. A paragraph that lists three names
+    // without that split teaches a reader the wrong provenance.
+    expect(paragraph).toContain("Tokyo Night");
+    expect(paragraph).toContain("Flexoki Light");
+    expect(paragraph).toContain("invented");
+    expect(retroNames).toContain("omarchy");
   });
 
   it("writes the look to the URL, says it is no control, and not a platform", () => {
@@ -903,7 +931,12 @@ describe("the theming page's look parameter", () => {
     expect(resolvePlatformTheme("default", "dark", "luna").name).toContain(
       retroStyles.luna.label,
     );
-    expect(flat(page("theming.mdx"))).toContain(retroStyles.aero.label);
+    const theming = flat(page("theming.mdx"));
+    expect(
+      retroNames
+        .map((name) => retroStyles[name].label)
+        .filter((label) => !theming.includes(label)),
+    ).toEqual([]);
   });
 });
 

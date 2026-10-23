@@ -389,14 +389,17 @@ authored styles are library data a link can carry:
 https://gpuixui.sudokw.com/docs/components/button?platform=win32&look=luna
 ```
 
-`?look=luna` or `?look=aero` names one of the authored styles
-`@gpuixui/tokens` ships — **Windows XP (Luna)** or **Windows 7 (Aero)** — over
-whatever the platform switch resolved, and the choice is remembered beside the
-platform. A look is data of the same shape as a platform style (`retroStyles`),
-applied with `applyStyle`, so the preview paints the look's palette, radii,
-density and monospace family rather than a docs-only skin. A look is the
-extension mechanism in practice — the same table a consumer can edit to ship
-their own style.
+`?look=luna`, `?look=aero` or `?look=omarchy` names one of the three authored
+styles `@gpuixui/tokens` ships — **Windows XP (Luna)**, **Windows 7 (Aero)** or
+**Omarchy** — over whatever the platform switch resolved, and the choice is
+remembered beside the platform. A look is data of the same shape as a platform
+style (`retroStyles`), applied with `applyStyle`, so the preview paints the
+look's palette, radii, density and monospace family rather than a docs-only
+skin. The Luna and Aero palettes are the eras' own chrome, with dark editions
+invented for this library, while Omarchy's pair is the shell's: Tokyo Night for
+dark and the guide's Flexoki Light reference for light. A look is the extension
+mechanism in practice — the same table a consumer can edit to ship their own
+style.
 
 Both axes resolve through one theme, and the surface a preview renders on
 carries it as CSS variables from the same bridge the theme editor uses. Nothing

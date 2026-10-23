@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, keyboardFocusDimOpacity, selectionPairs, seriesColors, seriesSurfaces, syntaxRoles, syntaxSurfaces, targetSize, themes } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, keyboardFocusDimOpacity, selectionPairs, seriesColors, seriesSurfaces, softDividerAlpha, syntaxRoles, syntaxSurfaces, targetSize, themes } from "@gpuixui/tokens";
 import { TokenList } from "@/components/docs/token-list";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
@@ -89,10 +89,12 @@ call reports eleven independent failures:
   because its contrast depends on the surface behind it.
 - **Decorative surfaces**: the {decorativeSurfaces.length} placements
   `decorativeFailures` measures carry no text, so WCAG gives them no floor at
-  all. Eleven kinds are measured, each where a component paints it: a `divider`
-  rules a region, a `skeleton` stands in for content that has not loaded, a
-  `scrim` is the veil under a modal, a `statusTint` is the soft fill behind a
-  status message and a `statusEdge` bounds it, a `scrollbar` is the thumb a
+  all. Twelve kinds are measured, each where a component paints it: a `divider`
+  rules a region, a `softDivider` is the quieter rule a menu draws between two
+  groups of actions — the `border` role at {softDividerAlpha} of its strength,
+  which is what `MENU_SEPARATOR` writes — a `skeleton` stands in for content
+  that has not loaded, a `scrim` is the veil under a modal, a `statusTint` is
+  the soft fill behind a status message and a `statusEdge` bounds it, a `scrollbar` is the thumb a
   scroller tints, a `stateWash` is the tint behind a hovered, pressed, selected
   or accented row, a `filledAction` is the resting face of a `secondary` action
   (the one filled variant with no brand colour of its own and no border), a

@@ -184,10 +184,18 @@ describe("the authored look", () => {
     expect(lookFromSearch(`?look=${lookSearch("aero")}`)).toBe("aero");
   });
 
-  it("labels a look without inventing a name", () => {
+  it("labels every look the library ships, with no two sharing a name", () => {
+    // The labels are `retroStyles`' own; a look added to the library must reach
+    // the page, and two looks that read as one would make a `?look=` link
+    // ambiguous. `native` is the switch's own style, not an authored look.
+    const labels = lookOrder
+      .filter((look) => look !== "native")
+      .map((look) => lookLabel(look));
+
+    expect(labels).toEqual(retroNames.map((name) => retroStyles[name].label));
+    expect(new Set(labels).size).toBe(retroNames.length);
+    expect(labels.filter((label) => label.trim().length === 0)).toEqual([]);
     expect(lookLabel("native")).toBe("Platform");
-    expect(lookLabel("luna")).toBe(retroStyles.luna.label);
-    expect(lookLabel("aero")).toBe(retroStyles.aero.label);
   });
 
   it("paints the look's palette, radii and families over the platform", () => {
