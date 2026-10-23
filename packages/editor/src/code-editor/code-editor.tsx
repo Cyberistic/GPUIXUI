@@ -41,7 +41,7 @@ import { useState } from "react";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { codeLines } from "./highlight.js";
-import { enterIndent, tabInserts, type TabMode } from "./logic.js";
+import { enterIndent, tabIndent, tabInserts, type TabMode } from "./logic.js";
 
 /** The editor's resting appearance: a field-edged surface with a gutter. */
 const EDITOR_ROOT =
@@ -75,7 +75,11 @@ export interface CodeEditorProps {
   readonly lineNumbers?: boolean;
   /** What Tab does: insert indentation, or move focus. Default `"insert"`. */
   readonly tabMode?: TabMode;
-  /** The string Tab inserts in `"insert"` mode. Default two spaces. */
+  /**
+   * The string Tab inserts in `"insert"` mode. Default two spaces. An empty
+   * string leaves Tab as the platform's traversal, and a value that is not a
+   * string reads as the default.
+   */
   readonly indent?: string;
   readonly placeholder?: string;
   readonly readOnly?: boolean;
@@ -152,9 +156,10 @@ export const CodeEditor = ({
 
   const onKeyDown = (event: KeyEvent): void => {
     if (readOnly || disabled) return;
-    if (event.key === "tab" && tabInserts(tabMode)) {
+    const tab = tabIndent(indent);
+    if (event.key === "tab" && tabInserts(tabMode, tab)) {
       event.preventDefault();
-      setValue(value + indent);
+      setValue(value + tab);
     }
   };
 

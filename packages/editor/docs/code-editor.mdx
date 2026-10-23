@@ -26,7 +26,7 @@ import { CodeEditor } from "@gpuixui/editor";
 | `language` | `string` | — | The tokenizer's language id. |
 | `lineNumbers` | `boolean` | `true` | Number the rows in a gutter. |
 | `tabMode` | `"insert" \| "focus"` | `"insert"` | What Tab does. |
-| `indent` | `string` | `"  "` | The string Tab inserts. |
+| `indent` | `string` | `"  "` | The string Tab inserts. An empty string leaves Tab as the platform traversal, and a value that is not a string reads as the default. |
 | `placeholder` | `string` | — | The editor's hint, painted in the theme's `placeholder` role and announced as the field's description; the host is handed none. |
 | `readOnly` | `boolean` | `false` | View-only. |
 | `disabled` | `boolean` | `false` | Not editable, out of the tab order. |
@@ -41,4 +41,5 @@ import { CodeEditor } from "@gpuixui/editor";
 
 - **A transparent textarea paints no caret** and reports no scroll offset.
 - **Tab and Enter insert at the end**, because the runtime exposes no caret position.
+- **Tab only swallows the traversal when it inserts something**: an empty `indent` leaves the platform's Tab, so a field is never a keyboard trap, and an indent restored from storage that is not a string reads as the default `"  "`.
 - No native host, so pixel-exact layer alignment is unverified.

@@ -11,9 +11,11 @@
 
 import { useState, type ReactNode } from "react";
 import { createTestRoot } from "@gpuix/react/testing";
+import { Button } from "@gpuixui/primitives";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CodeEditor } from "../code-editor/code-editor.js";
 
@@ -50,6 +52,13 @@ const valueOf = (root: Root): string => {
   return typeof value === "string" ? value : "";
 };
 
+/** The test id of the element holding focus, if it names one. */
+const focusedTestId = (root: Root): Option.Option<string> =>
+  Option.flatMap(
+    Option.fromNullishOr(root.renderer.getFocusedElementId()),
+    (id) => Option.fromNullishOr(root.renderer.getElement(id)?.testId),
+  );
+
 const type = (root: Root, keys: string): void => {
   const field = root.renderer.findByTestId("code-editor");
   root.renderer.focusElement(field?.id ?? -1);
@@ -61,6 +70,7 @@ const Controlled = (props: {
   readonly initial: string;
   readonly readOnly?: boolean;
   readonly disabled?: boolean;
+  readonly indent?: string;
   readonly onChange?: (value: string) => void;
 }) => {
   const [value, setValue] = useState(props.initial);
@@ -69,6 +79,7 @@ const Controlled = (props: {
       value={value}
       readOnly={props.readOnly}
       disabled={props.disabled}
+      indent={props.indent}
       onValueChange={(next) => {
         props.onChange?.(next);
         setValue(next);
@@ -121,6 +132,44 @@ describe("CodeEditor", () => {
     type(editor, "enter");
     expect(onChange).not.toHaveBeenCalled();
     expect(valueOf(editor)).toBe("const a = 1");
+    editor.unmount();
+  });
+
+  it("keeps Tab as the traversal when the indent inserts nothing", () => {
+    // The bug guarded: `tabMode` still swallowed Tab with `indent=""`, so the
+    // field was a keyboard trap — every Tab inserted "" and none moved focus.
+    const editor = render(
+      <div>
+        <Button testId="before">Before</Button>
+        <CodeEditor defaultValue="const a = 1" testId="code-editor" indent="" />
+        <Button testId="after">After</Button>
+      </div>,
+    );
+    editor.renderer.focusElement(
+      editor.renderer.findByTestId("before")?.id ?? -1,
+    );
+    editor.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(editor)).toEqual(Option.some("code-editor"));
+    editor.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(editor)).toEqual(Option.some("after"));
+    expect(valueOf(editor)).toBe("const a = 1");
+    editor.unmount();
+  });
+
+  it("reads an indent it cannot store as the default", () => {
+    // The bug guarded: a preference restored as `null` reached
+    // `value + indent`, so Tab typed the word "null" into the document.
+    const onChange = vi.fn();
+    const editor = render(
+      <Controlled
+        initial="const a = 1"
+        indent={null as unknown as string}
+        onChange={onChange}
+      />,
+    );
+    type(editor, "tab");
+    expect(onChange).toHaveBeenCalledWith("const a = 1  ");
+    expect(valueOf(editor)).toBe("const a = 1  ");
     editor.unmount();
   });
 
