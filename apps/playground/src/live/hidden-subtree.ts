@@ -9,10 +9,11 @@
  * consequence is measured rather than typed: a `display: none` box still lays
  * out, paints and keeps its tab stop, while an invisible one paints nothing.
  *
- * The shipped `Carousel` rests on the first word: every slide stays mounted so
- * its state survives, and only the active one is laid out with `display`. This
- * probe mounts it beside a bare wrapper so a finding is about the runtime and
- * about the one component that relies on it.
+ * The shipped `Carousel` used to rest on the first word, painting every slide
+ * and keeping the spare one's controls as tab stops. It now mounts only the
+ * slide on screen, so the same window measures both the word and the one
+ * component that had relied on it: the two words on bare wrappers, and a
+ * carousel whose spare slide is not in the tree at all.
  *
  * `dock-focus-lifecycle` measured the clipped shape — a control inside a
  * zero-width parent keeps its stop. This is the sibling question for the two
@@ -33,7 +34,9 @@ export const HIDDEN_IDS = {
   carousel: "hidden-carousel",
   activeSlide: "hidden-active-slide",
   activeSlideFrame: "hidden-active-slide-frame",
+  /** The **second** slide's control: in the tree only while it is on screen. */
   inactiveSlide: "hidden-inactive-slide",
+  /** The second slide's frame, which mounts when the carousel steps to it. */
   inactiveSlideFrame: "hidden-inactive-slide-frame",
   after: "hidden-after",
   readout: "hidden-readout",
@@ -75,10 +78,10 @@ export const HIDING_CASES: ReadonlyArray<HidingCase> = [
  * How many Tab presses the walk may spend before it gives up.
  *
  * The visible stops are `before`, the display-hidden control, the carousel,
- * the active slide's control and `after`; two more presses reach a repeat even
- * when both hidden controls and the spare slide keep a stop each.
+ * the active slide's control and `after`; three more presses reach the repeat
+ * the cycle rule cuts at, with slack for a frame the focus needs to land.
  */
-export const HIDDEN_WALK = 10;
+export const HIDDEN_WALK = 8;
 
 /**
  * The readout's one spelling: the slide on screen and the keys the invisible
@@ -94,15 +97,15 @@ export const hiddenReadout = (state: {
  * before the hidden shapes to the one after the carousel.
  *
  * A `display: none` wrapper is in this list because the renderer ignores the
- * word: the row is what the window measured, not what the CSS reads, and the
- * probe's record says which entry is the defect to flip.
+ * word: the row is what the window measured, not what the CSS reads. The
+ * carousel's spare slide is **not** in it: only the slide on screen is mounted,
+ * so its control has no stop to walk.
  */
 export const HIDDEN_STOPS: ReadonlyArray<string> = [
   HIDDEN_IDS.before,
   HIDDEN_IDS.displayControl,
   HIDDEN_IDS.carousel,
   HIDDEN_IDS.activeSlide,
-  HIDDEN_IDS.inactiveSlide,
   HIDDEN_IDS.after,
 ];
 
@@ -116,15 +119,15 @@ export const HIDDEN_STOPS: ReadonlyArray<string> = [
  * - the invisible control reports no box, its visible frame keeps the 32-point
  *   row it held, and that row's centre is sampled and paints the page (5);
  * - the walk starts where the probe put it and repeats the measured stops (2);
- * - both carousel slides paint their own box, share a row, and the spare one is
- *   laid out one slide-width along it (4) — the defect the record carries until
- *   the component stops trusting `display`;
- * - stepping the carousel moves the slide and both slides still paint (3);
+ * - the carousel lays out one slide box: the active slide paints, the spare one
+ *   reports nothing, and the one mounted slide is the frame's width (4);
+ * - a step moves that window: the readout names slide two, the first slide is
+ *   gone from the tree, the second paints and fills the same frame (4);
  * - the invisible control focused from code reports what the window did, and a
  *   key typed at it proves whether it is live (2). The window reports the id as
  *   focused and delivers no key: a code focus is not proof of a live control.
  */
-export const HIDDEN_CHECKS = 2 + 1 + 4 + 5 + 2 + 4 + 3 + 2;
+export const HIDDEN_CHECKS = 2 + 1 + 4 + 5 + 2 + 4 + 4 + 2;
 
 /** Whether `id` is inside a subtree the probe's style hides. */
 export const isHiddenControl = (id: string): boolean =>

@@ -7,11 +7,13 @@
  * in the style type, so a component can write either and the difference is
  * invisible to the type checker — which is why it is measured in a window.
  *
- * The shipped `Carousel` is the consumer: it keeps every slide mounted so a
- * form on slide two survives a visit to slide three, and hides the spare ones
- * with `display`. If `display: none` is ignored, every slide paints, the frame
- * is as wide as all of them, and the spare slide's controls stay in the tab
- * order.
+ * The shipped `Carousel` is the one component that leaned on the first word: it
+ * used to keep every slide mounted so a form on slide two survived a visit to
+ * slide three, and hid the spare ones with `display`. Because `display: none`
+ * is ignored, every slide painted and the frame was as wide as all of them. It
+ * now mounts only the slide on screen, so this window proves the fixed shape
+ * beside the two words: one slide box, one frame wide, and a traversal that
+ * never visits the spare slide's control.
  *
  * The invisible control counts the keys it hears, so a focus it takes from code
  * is proved live rather than assumed.
@@ -321,32 +323,39 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Arr.join(Arr.drop(HIDDEN_STOPS, 1), " > "),
     );
 
-    // 3. The carousel paints both of its slides, in one row: the defect this
-    //    probe records until the component stops trusting `display`.
+    // 3. The mount window: the slide on screen is the only one in the tree, and
+    //    it is the frame's whole width. A spare slide kept mounted would paint
+    //    beside it and keep its control as a tab stop, because `display: none`
+    //    is not a hiding word here.
+    const carousel = yield* ctx.expectSome(
+      "the carousel lays out",
+      Option.fromNullishOr(yield* ctx.host.bounds(HIDDEN_IDS.carousel)),
+    );
     const active = yield* ctx.expectSome(
       "the active slide paints",
       Option.fromNullishOr(yield* ctx.host.bounds(HIDDEN_IDS.activeSlideFrame)),
     );
-    const inactive = yield* ctx.expectSome(
-      "the spare slide paints: the carousel's hide is a no-op",
-      Option.fromNullishOr(
-        yield* ctx.host.bounds(HIDDEN_IDS.inactiveSlideFrame),
+    yield* ctx.expectEqual(
+      "the spare slide is not in the tree: one slide box, not two",
+      Option.isNone(
+        Option.fromNullishOr(
+          yield* ctx.host.bounds(HIDDEN_IDS.inactiveSlideFrame),
+        ),
       ),
+      true,
     );
+    // The track draws one 1-point edge each side, and the slide is its content
+    // box, so the frame's width less the slide's is the track's edge.
+    const trackEdge = 2 * palettes.dark.borderWidth.thin;
     yield* ctx.expectNear(
-      "the spare slide shares the active one's row",
-      inactive.y,
-      active.y,
-      1,
-    );
-    yield* ctx.expectNear(
-      "the spare slide sits one slide-width along that row",
-      inactive.x - active.x,
-      active.width,
+      "the one mounted slide fills the frame the carousel lays out",
+      carousel.width - active.width,
+      trackEdge,
       1,
     );
 
-    // 4. A step moves the selection and hides nothing: the same two boxes paint.
+    // 4. A step moves the mount window with it: the slide the reader left is
+    //    gone from the tree and the one now on screen is the only box painted.
     yield* ctx.host.focusElement(HIDDEN_IDS.carousel);
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
@@ -355,17 +364,26 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text(HIDDEN_IDS.readout),
       "slide=1",
     );
-    yield* Effect.forEach(
-      [HIDDEN_IDS.activeSlideFrame, HIDDEN_IDS.inactiveSlideFrame],
-      (id) =>
-        Effect.flatMap(ctx.host.bounds(id), (bounds) =>
-          ctx.expectEqual(
-            `${id} still paints after the step`,
-            Option.isSome(Option.fromNullishOr(bounds)),
-            true,
-          ),
+    yield* ctx.expectEqual(
+      "the slide that left the screen unmounts",
+      Option.isNone(
+        Option.fromNullishOr(
+          yield* ctx.host.bounds(HIDDEN_IDS.activeSlideFrame),
         ),
-      { concurrency: 1, discard: true },
+      ),
+      true,
+    );
+    const stepped = yield* ctx.expectSome(
+      "the slide now on screen is the only one painted",
+      Option.fromNullishOr(
+        yield* ctx.host.bounds(HIDDEN_IDS.inactiveSlideFrame),
+      ),
+    );
+    yield* ctx.expectNear(
+      "the stepped slide fills the same frame",
+      carousel.width - stepped.width,
+      trackEdge,
+      1,
     );
 
     // 5. The invisible control from code: the traversal's answer is not the

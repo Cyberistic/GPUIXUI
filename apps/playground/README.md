@@ -5495,22 +5495,22 @@ visibility?: string`), so a component can write either and nothing at compile
 time tells it which one works. The pinned renderer answers it in one function:
 `apply_styles` matches `display` against `"flex"` and `"grid"` only, while
 `visibility: "hidden"` becomes GPUI's `invisible()`. The probe mounts both words
-around a focusable control, then mounts the shipped `Carousel` — every slide
-stays mounted so its state survives, and only the active one is meant to be laid
-out with `display`.
+around a focusable control, then mounts the shipped `Carousel`, which keeps only
+the slide on screen in the tree — so the same window measures the word and the
+one component that used to hide a slide with it.
 
 | Step | Result |
 | ---- | ------ |
 | the `display: none` wrapper's control | still reports its own **200×32** box (at `16,92`) and paints its own `#1E222A` fill on the `#11141A` page: the word did nothing |
 | the `visibility: hidden` wrapper's control | reports **no** box, and the 32-point row it would fill paints the page |
-| Tab from `hidden-before` | `hidden-display-control` → `hidden-carousel` → `hidden-active-slide` → `hidden-inactive-slide` → `hidden-after` → back |
+| Tab from `hidden-before` | `hidden-display-control` → `hidden-carousel` → `hidden-active-slide` → `hidden-after` → back |
 | the invisible control in that walk | **absent**: `visibility` removes a stop the way `display` was meant to |
-| the carousel's two slide boxes | both paint, in one row, each **433** wide: the spare slide is laid out beside the active one |
-| `right` on the carousel | `slide=1`, and **both** slides still report their box |
+| the carousel at rest | **one** slide box: the active frame is **866** wide inside the **868** carousel (the track's 2-point edge), and the spare slide's frame reports nothing |
+| `right` on the carousel | `slide=1`: the first slide unmounts, and the second is the only box painted, at the same **866** |
 | `focusElement` on the invisible control | the window reports its id as focused |
 | a key typed then | never reaches it (`invisibleKeys=0`) |
 
-23 checks, `--only hidden-subtree-lifecycle`, green on 0.11.0 here (~1.0 s).
+24 checks, `--only hidden-subtree-lifecycle`, green on 0.11.0 here (~1.0 s).
 
 Five rules a component carries:
 
@@ -5526,14 +5526,13 @@ Five rules a component carries:
 4. **A code focus on an invisible control is a focus id with no input.** The
    window reports the id, and the typed key is not delivered. An app that parks
    focus on a hidden surface must move it back before it expects a keystroke.
-5. **The shipped `Carousel` is broken by rule 1.** Every slide it keeps mounted
-   is painted and layout-taken: the frame is two slides wide, the spare slide's
-   controls are tab stops, and stepping the selection hides nothing. The
-   component declares "inactive slides are hidden with `display: none`", which
-   the window contradicts. The fix is the component's (see `TODO.md` →
-   Interlocks): unmount the slides the reader cannot see, or compose
-   `visibility` with a measured frame so the row is the active slide's width —
-   and the probe's spare-slide checks flip with it.
+5. **A subtree that must not paint is unmounted, not hidden.** The shipped
+   `Carousel` used to keep every slide mounted and hide the spares with
+   `display`: both slides painted, each **433** — half the frame — and the spare
+   slide's control was a live stop. It mounts only the slide on screen now, so
+   the window reads one **866**-wide box and a walk with no spare-slide stop.
+   The cost is paid where the reader can see it: a slide's local state does not
+   survive a visit, so a form on slide two is empty when the reader returns.
 
 One negative control measured, exit `1`, restored green: painting the
 `display: none` control in the page role fails

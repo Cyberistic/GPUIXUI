@@ -627,7 +627,7 @@ export const liveRegistry = [
   {
     id: "hidden-subtree-lifecycle",
     title:
-      "Focus: a display:none box still paints and keeps its tab stop while visibility:hidden paints nothing, and the carousel's spare slide is a display no-op",
+      "Focus: a display:none box still paints and keeps its tab stop while visibility:hidden paints nothing, and a carousel mounts only the slide on screen",
     capability: "focus",
   },
   {

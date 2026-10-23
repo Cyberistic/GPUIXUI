@@ -81,14 +81,22 @@ describe("the fence composite", () => {
   it("makes the strip a second wash rather than a boundary", () => {
     Arr.forEach([fenceBaseTheme, fencePlatformTheme], (theme) => {
       expect(stripIsSecondWash(theme)).toBe(true);
-      const body = Option.getOrElse(fenceBody(theme), () => theme.colors.background);
-      const strip = Option.getOrElse(fenceStrip(theme), () => theme.colors.background);
+      const body = Option.getOrElse(
+        fenceBody(theme),
+        () => theme.colors.background,
+      );
+      const strip = Option.getOrElse(
+        fenceStrip(theme),
+        () => theme.colors.background,
+      );
       expect(strip).not.toBe(body);
       // The rule the runtime draws carries the strip; the fill only has to be
       // a step above its body.
       const ratio = Option.fromNullishOr(contrastRatio(strip, body));
       expect(Option.isSome(ratio)).toBe(true);
-      expect(Option.getOrElse(ratio, () => Number.POSITIVE_INFINITY)).toBeLessThan(1.1);
+      expect(
+        Option.getOrElse(ratio, () => Number.POSITIVE_INFINITY),
+      ).toBeLessThan(1.1);
     });
   });
 });

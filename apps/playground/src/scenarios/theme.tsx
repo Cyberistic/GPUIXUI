@@ -622,7 +622,9 @@ export const themeLookScenario: ScenarioBody = {
         "the looks paint as many distinct lg steps as their styles author",
         Arr.length(Arr.dedupe(radii)),
         Arr.length(
-          Arr.dedupe(Arr.map(retroNames, (look) => retroStyles[look].radius.lg)),
+          Arr.dedupe(
+            Arr.map(retroNames, (look) => retroStyles[look].radius.lg),
+          ),
         ),
       );
       const fills = Arr.map(painted, ({ theme }) => theme.colors.primary);
