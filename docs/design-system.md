@@ -307,18 +307,23 @@ Two border roles:
 
 A **rule drawn on a row** is not a state, and it is measured against the state
 the row is in. A table row paints its own rule inside the row — the thin
-`border` role, on the row's own fill — so a selected row fills `selected` and a
-pointed one tints `hover`/`accent` under it. Measured over the shipped styles,
-the raw `border` is under the 1.05:1 perceptibility floor on 17 of the 64 wash
-placements (the base themes' `accent` at 1.001:1 and 1.004:1, macOS dark's
-`active` at 1.000:1), so the grid disappears exactly where the reader is
-looking. The rule is derived instead: `dividerOn(theme, surface)` steps `border`
-toward `borderStrong` by the smallest 2% that clears the floor and returns the
-role where it already does, so a quiet row keeps its rule and only a washed one
-steps. The helper, the placement count and the four washes are in
-[`docs/tokens.md` §Decorative surfaces](./tokens.md#decorative-surfaces). The
-data package's table does not ask for it yet, so that defect is live until it
-does.
+`border` role, on the row's own fill — so a selected row fills `selected`, a
+pointed one tints `hover`/`accent` under it, and a pressed one repaints the wash
+`pointerWash` derives. The press is not the `active` role: both packages derive it
+over the wash the row was wearing, and seven of the thirty-two press placements
+paint a colour the role does not name. Measured over the shipped styles, the raw
+`border` is under the 1.05:1 perceptibility floor on **20 of the 80** placements —
+the base themes' `accent` at 1.001:1 and 1.004:1, and six of the presses the rows
+paint (macOS dark's over `hover` at 1.000:1) — so the grid disappears exactly
+where the reader is looking. The rule is derived instead:
+`dividerOn(theme, surface)` steps `border` toward `borderStrong` by the smallest
+2% that clears the floor and returns the role where it already does, so a quiet
+row keeps its rule and only a washed or pressed one steps. The helper, the
+placement count and the states (`dividerWashes`, plus `dividerPresses` for the
+press, reported as `pressedDivider`) are in
+[`docs/tokens.md` §Decorative surfaces](./tokens.md#decorative-surfaces). The data
+package's `TableRow` asks for the helper with the fill it wears, the derived press
+included, so the placements are live.
 
 A **field is carried by its edge, not its fill.** A field sits on the page, a
 card, a popover and a `muted` toolbar, and in the light palettes the page

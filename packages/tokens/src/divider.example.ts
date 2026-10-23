@@ -1,7 +1,7 @@
 /**
- * The divider derivation over the wash a row wears, and a brand whose own
+ * The divider derivation over the wash a row wears, and the two brands whose own
  * strongest line cannot answer one. Executed by `divider.test.ts`, so the call
- * site the catalogue documents is a real one.
+ * sites the catalogue documents are real ones.
  */
 
 import {
@@ -10,7 +10,11 @@ import {
   dividerOn,
   extendTheme,
   lightTheme,
+  platformTheme,
+  pointerWash,
+  themes,
   type DividerWash,
+  type PointerWashSurface,
   type Theme,
 } from "./index.js";
 
@@ -19,8 +23,8 @@ import {
  *
  * A table row draws its own rule inside the row, so the colour has to be read
  * against the fill the row is wearing — the `hover` a pointed row tints, the
- * `accent` a chosen row hovers with, the `active` it presses into, or the
- * `selected` fill it holds once chosen.
+ * `accent` a chosen row hovers with, or the `selected` fill it holds once
+ * chosen.
  */
 export const rowRule = (theme: Theme, wash: DividerWash): string | undefined =>
   dividerOn(theme, theme.colors[wash]);
@@ -37,6 +41,35 @@ export const ruleSeparation = (
 };
 
 /**
+ * The rule a **pressed** row paints, over the wash the press derives.
+ *
+ * A press is not the `active` role: both packages derive it with `pointerWash`
+ * over the wash the row was wearing, and seven of the thirty-two press
+ * placements in the shipped styles paint a colour that role does not name. The
+ * rule is read against that wash, so the call site names the wash it replaces
+ * rather than a role.
+ */
+export const pressRule = (
+  theme: Theme,
+  replaced: PointerWashSurface,
+): string | undefined => {
+  const wash = pointerWash(theme, "active", replaced);
+  return wash === undefined ? undefined : dividerOn(theme, wash);
+};
+
+/** How far a pressed row's rule is from the wash it is drawn on. */
+export const pressSeparation = (
+  theme: Theme,
+  replaced: PointerWashSurface,
+): number | undefined => {
+  const rule = pressRule(theme, replaced);
+  const wash = pointerWash(theme, "active", replaced);
+  return rule === undefined || wash === undefined
+    ? undefined
+    : contrastRatio(rule, wash);
+};
+
+/**
  * A brand whose strongest line **is** the fill a chosen row hovers with.
  *
  * `borderStrong` is the ceiling the derivation may step to, so a palette that
@@ -47,11 +80,28 @@ export const swallowedRuleBrand = extendTheme(lightTheme, {
   colors: { borderStrong: lightTheme.colors.accent },
 });
 
+/** The pressed wash the authored macOS light style paints, which its `active` role is not. */
+const authoredPress =
+  pointerWash(platformTheme(themes.light, "darwin"), "active", "hover") ??
+  lightTheme.colors.active;
+
+/**
+ * A brand whose strongest line **is** the wash a press derives.
+ *
+ * The role is not the press: macOS light's press over `hover` is a step off its
+ * `active` role, and a palette that makes its whole rule family that colour has
+ * no line left to draw on the pressed row.
+ */
+export const swallowedPressBrand = extendTheme(
+  platformTheme(themes.light, "darwin"),
+  { colors: { border: authoredPress, borderStrong: authoredPress } },
+);
+
 /** A failure written the way a theme editor shows it. */
 export const reportRules = (theme: Theme): ReadonlyArray<string> =>
   dividerFailures(theme).map(
-    ({ role, over, ratio }) =>
-      `${role} on ${over} is ${
+    ({ surface, role, over, ratio }) =>
+      `${role} on ${surface === "pressedDivider" ? `the press over ${over}` : over} is ${
         ratio === undefined ? "unmeasurable" : ratio.toFixed(2)
       }`,
   );

@@ -80,6 +80,7 @@ import {
   decorativeFailures,
   decorativeFloor,
   decorativeSurfaces,
+  dividerPresses,
   dividerWashes,
   pointerWashTransitions,
 } from "./decorative.js";
@@ -1709,13 +1710,14 @@ describe("decorativeFailures", () => {
     expect(decorativeFailures(lightTheme, 1)).toEqual([]);
     // Every role placement plus every derived placement — a filled role's hover
     // and press, the wash a row paints in a pointer state, and the rule it
-    // draws on that wash: an impossible floor has to fail all of them, or a
-    // placement is being skipped.
+    // draws on that wash and on the press it derives: an impossible floor has to
+    // fail all of them, or a placement is being skipped.
     expect(decorativeFailures(lightTheme, 21).length).toBe(
       decorativeSurfaces.length +
         actionFeedbackPlacements.length +
         pointerWashTransitions.length +
-        dividerWashes.length,
+        dividerWashes.length +
+        dividerPresses.length,
     );
   });
 });

@@ -2210,7 +2210,7 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Fourteen surfaces carry no text and are not an essential boundary, so WCAG's floors
+Fifteen surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
 wash a row is tinted with while it is hovered, pressed, selected or accented, the
@@ -2218,7 +2218,7 @@ resting fill of a tonal action (`secondary`), the rail a bar draws its value
 inside (`muted`), the face a control wears while it
 is unavailable (`disabled`), the derived hover and press a filled role paints, the
 derived wash a row paints in a pointer state, the derived rule a row draws across
-the wash it crosses, and
+the wash it crosses and across the press it derives, and
 the shadow a raised surface drops. They still
 have one job — be seen — so they get one floor of their own,
 `decorativeFloor = 1.05:1`. Below it a
@@ -2247,7 +2247,8 @@ how a status edge is measured at the alpha its component actually uses:
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
 | track | `muted` | `background`, `card`, `popover` (never `muted` itself) |
 | disabledFace | `disabled` | `primary`, `secondary`, `destructive`, `accent`, `input` |
-| derivedDivider | `border`, stepped toward `borderStrong` | `hover`, `active`, `accent`, `selected` |
+| derivedDivider | `border`, stepped toward `borderStrong` | `hover`, `accent`, `selected` |
+| pressedDivider | `border`, the same derivation over the wash a press derives | `active` over `accent`, `active` over `hover` |
 
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
@@ -2460,37 +2461,52 @@ is.
 A **rule a row draws** is the same defect one surface on, and it is not a state.
 A table row paints its own rule inside the row — `borderWidth.thin` in `border`,
 on the row's own fill (`packages/data/src/table/table.tsx`) — so the line that
-separates two records is measured against the wash the row is wearing. Measured
-over the sixteen shipped, high-contrast, platform and authored styles, the raw
-`border` is under the 1.05:1 floor on **17 of the 64** placements: the base light
-theme's and the base dark theme's `accent` at **1.001:1** and **1.004:1**, macOS
-light's `active` at 1.050:1 and its `accent` at 1.023:1, macOS dark's `active` at
-**1.000:1** and its `accent` at 1.011:1, Windows light's `hover` at 1.048:1 and
-its `accent` at 1.020:1, Windows dark's `active` at 1.047:1 and its `selected` at
-1.038:1, and Aero light's `selected` at 1.036:1. A palette edit cannot close it:
-the same `border` carries the page and the card under every quiet row, so raising
-it to clear a saturated wash draws a grid on the surfaces it already reads on.
+separates two records is measured against the wash the row is wearing: the three
+states a row wears (`hover`, `accent` and `selected`, `dividerWashes`) and the
+press it **derives** (`dividerPresses`). A press is not the `active` role: both
+packages derive it with `pointerWash(theme, "active", replaced)` over the wash the
+row was wearing, so seven of the thirty-two press placements paint a colour the
+role does not name — macOS light's press over `accent` is `#D6D6DE` against a
+`#DEDEE6` role, macOS dark's `#3E3E44` against `#3A3A40`, and Luna light's, Aero
+light's and Linux dark's move theirs too — and measuring the role measured a fill
+those rows do not paint while leaving the painted one unnamed.
+
+Measured over the sixteen shipped, high-contrast, platform and authored styles,
+the raw `border` is under the 1.05:1 floor on **20 of the 80** placements: the
+base light theme's `accent` (**1.001:1**) and `hover` (1.036:1) and the base dark
+theme's (**1.004:1** and 1.045:1), each doubled by the `default` platform style
+that wears it; macOS light's `accent` at 1.023:1 and its two presses at 1.029:1
+and 1.030:1; macOS dark's `accent` at 1.011:1 and its press over `hover` at
+**1.000:1**; Windows light's `hover` at 1.048:1 and `accent` at 1.020:1; Windows
+dark's `selected` at 1.038:1 and its two presses at 1.016:1 and 1.047:1; and Aero
+light's `selected` at 1.036:1 and its press over `accent` at 1.038:1. A palette
+edit cannot close it: the same `border` carries the page and the card under every
+quiet row, so raising it to clear a saturated wash draws a grid on the surfaces it
+already reads on.
 
 `dividerOn(theme, surface)` therefore derives the rule from the surface it
 crosses: the theme's `border`, stepped toward `borderStrong` — the functional
 boundary and the strongest line a theme owns — by the smallest **2%** step that
 clears the floor, returned unchanged where it already does. `borderStrong` clears
-all 64 placements in every shipped style (its tightest is 3.73:1, Windows light's
-`active`), so the derivation always has room: the lines it moves land at
-**1.057:1 to 1.080:1**, while the tightest placement overall is an authored rule
-the derivation did not touch (macOS dark's `selected` at **1.053:1**), so a quiet
-row keeps the rule it had. A surface the renderer
+all 80 placements in every shipped style (its tightest is 3.73:1, Windows light's
+press over `accent`), so the derivation always has room: the lines it moves land
+at **1.050:1 to 1.081:1**, and the tightest placement overall is the press a row
+paints, macOS light's over `hover`, at **1.050:1** — one 2% step above the floor.
+The tightest rule the derivation does not touch is macOS dark's `selected` at
+1.053:1, so a quiet row keeps the rule it had. A surface the renderer
 cannot measure (a translucent role, or the `null` a store hands back) keeps
 `border` rather than a guess, and a palette whose own strongest line cannot
-answer a wash keeps `borderStrong`. `dividerWashes` is the four surfaces and
-`dividerFailures` names a placement the palette cannot answer; the report rides
+answer a wash keeps `borderStrong`. `dividerWashes` is the three states a row
+wears, `dividerPresses` the two presses it derives, and `dividerFailures` names a
+placement the palette cannot answer — including a press it cannot derive, because
+the theme carries no `foreground` — reported as `pressedDivider`; the report rides
 the `decorative` one, so the gate holds it without a new contract.
 
-**Adoption is the data workstream's, and the defect is live until it lands.**
-`packages/data`'s table still paints `colors.border` on its header and every row
-(`table.tsx`), so the measured placements above are what a reader sees today; the
-tokens half is the helper, this measurement and the report
-(`TODO.md` → Interlocks records the remaining half).
+**The data table paints it.** `TableRow` derives its rule from the fill it wears —
+the card at rest, `selected` once chosen — and re-derives it for the `hover` and
+`active` records, so the pressed row's rule is derived over the wash the press
+paints rather than over the role (`table.tsx`); `table.test.tsx` reads those
+colours back off a window.
 
 The **elevation tint** is in the table too, and it is the surface this page used
 to say was deliberately outside it. A shadow is a blurred geometry, so a flat
