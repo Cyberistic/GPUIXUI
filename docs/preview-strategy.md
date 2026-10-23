@@ -439,7 +439,7 @@ the page opens with a note saying the drawing is not the shipped frame and
 naming the command that opens the companion playground — `nub run
 dev:playground`, read from the root manifest rather than typed twice — with a
 link to [how to run it](/docs/installation#run-the-playground).
-`src/components/docs/native-run-note.test.ts` holds the command to the manifest's
+`src/components/docs/native-run-note.test.tsx` holds the command to the manifest's
 script, the link to a heading the installation page has, and the page frame to
 mounting the note. The primitive layer is one sidebar section even though two
 packages write its pages, because a reader looks for a lane of the library, not
@@ -749,16 +749,14 @@ must be a prop an interface declares or a part an exported component declares, i
 
 The **Accessibility and limitations** row has a shared half as well as a
 per-component one. A page states what its own control does and cannot do; the
-runtime's whole ARIA budget — the role-required rule, the seven attributes that
-are published, the fifteen it refuses, the absent live region, the focus ring
-and the keyboard dim — is the cross-cutting contract on `/docs/accessibility`,
-so a page does not have to restate the runtime in order to be honest.
-`src/lib/accessibility-page.test.ts` holds that page to the installed typings,
-the capability record, the primitives' label rule, the tokens' focus helpers and
-the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
-capability row that changes cannot leave the contract teaching the old budget.
-`src/lib/package-page-template.test.ts` holds every package page to its own
-`## API` and `## Limitations`.
+runtime's ARIA budget — the role-required rule, the attributes it publishes, the
+attributes it refuses and the absent live region — is the cross-cutting contract
+on `/docs/accessibility`, so a page does not have to restate the runtime in order
+to be honest. `src/lib/accessibility-page.test.ts` holds that page's attribute
+table and refused list to the capability record's row, so a runtime bump that
+changes the budget fails the page rather than leaving it teaching the previous
+release. `src/lib/package-page-template.test.ts` holds every package page to its
+own `## API` and `## Limitations`.
 
 The package's own pages are the component's doc file: a page that ships a demo
 mounts it as a labelled browser approximation (strategy 3), a lane with no demo

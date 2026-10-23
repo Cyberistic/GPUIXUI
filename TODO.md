@@ -10308,7 +10308,39 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 303/303
+`[x]` `[██████████]` 305/305
+
+`[x]` Hold the **policy's guard citations to files the site carries** — the page
+      prune deleted `src/lib/accessibility-page.test.ts` and renamed the note's
+      guard to `.tsx`, and `docs/preview-strategy.md` still printed both old
+      paths, so a reader following its "this guard holds that" claims landed on
+      no file. `preview-strategy.test.ts` gains `names only guard files the site
+      still carries`: it collects every `src/**/*.test.ts(x)` path the policy
+      cites (a floor of twenty) and resolves each under `apps/docs`. The two
+      citations are corrected in the same change. Directions measured: restoring
+      `native-run-note.test.ts` fails the case by path; restored, the file is
+      8/8 and the app 130 files / 1 117 tests green. No native scenario applies —
+      a policy document and the files it names.
+
+`[x]` Give the **accessibility contract a guard again** — the 2026-10-23 page
+      prune deleted `accessibility-page.test.ts` with the prose it asserted, and
+      `/docs/accessibility` is the page every component page points at for the
+      runtime's ARIA budget, so after the prune the table could drop a published
+      attribute, or keep promising a refused one, with every suite green.
+      `src/lib/accessibility-page.test.ts` (4 cases) reads the capability
+      record's `role`/`aria-*` row and holds the page's attribute table to the
+      seven it publishes, the page's "There is no …" sentence to the refused
+      set (and keeps a refused name out of the table), the platform role each
+      token becomes to the record's four pairs, and the policy to a guard that
+      still reads the record. It is a data guard, not a prose one — the page
+      keeps the pruned shape. `docs/preview-strategy.md` no longer claims the
+      deleted guard held the page to the typings, focus helpers and two probes;
+      it states what this one holds. Directions measured: deleting the
+      `aria-level` table row fails `publishes exactly the attributes the
+      capability record allows` with the missing name; restored, the page is
+      4/4 and the app 130 files / 1 116 tests green with `check-types`,
+      `oxlint` and `oxfmt` clean. No native scenario applies — a site page and
+      the capability record it publishes.
 
 `[x]` Teach the **platform-style extension point the mission's acceptance asks
       for** — `/docs/theming` showed `platformTheme(base, "win32")`, a name

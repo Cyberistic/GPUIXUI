@@ -141,6 +141,21 @@ describe("the preview strategy document", () => {
     expect({ missing, extra }).toEqual({ missing: [], extra: [] });
   });
 
+  it("names only guard files the site still carries", () => {
+    // Bug guarded: the prune deleted `accessibility-page.test.ts` and renamed
+    // `native-run-note.test.ts` to `.tsx`, and the policy kept citing both
+    // paths, so a reader following a claim about a guard landed on no file.
+    const policy = read("docs/preview-strategy.md");
+    const cited = [...policy.matchAll(/`(src\/[^`]+\.test\.tsx?)`/g)].flatMap(
+      (match) => (match[1] === undefined ? [] : [match[1]]),
+    );
+
+    expect(cited.length).toBeGreaterThanOrEqual(20);
+    expect(
+      cited.filter((path) => !existsSync(new URL(`apps/docs/${path}`, root))),
+    ).toEqual([]);
+  });
+
   it("does not claim a preview every component page ships", () => {
     // Bug guarded: the policy said "A page that ships a demo — every component
     // and primitive page does". `MultiStepForm` ships none: its state belongs
