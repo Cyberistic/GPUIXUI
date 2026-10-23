@@ -621,11 +621,10 @@ contract wherever the module handles a named key, so a component cannot ship key
 with no notes. `keyboard-strip.test.tsx` prints every note of every contract and
 holds the two mounts.
 
-Two gaps are recorded rather than papered over: the primitives' `Select` takes
-its keys from the runtime's headless list (`@gpuix/react`), which is not
-workspace source the guard can read, and the package lanes that ship no curated
-page (`files`, `shell`, `editor`, `media`, `data`, and the components without a
-curated twin) are the next wave. `TODO.md` carries both.
+One gap is recorded rather than papered over: the primitives' `Select` takes its
+keys from the runtime's headless list (`@gpuix/react`), which is not workspace
+source the guard can read. A page whose keys are handled by a sink the derivation
+cannot see stays out until the sink is named; `TODO.md` carries the first.
 
 ### The related line is generated, not written
 

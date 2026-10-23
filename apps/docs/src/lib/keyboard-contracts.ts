@@ -28,6 +28,8 @@ export const keyLabels = [
   "Arrow Right",
   "Page Up",
   "Page Down",
+  "Delete",
+  "Backspace",
   "Ctrl+N",
   "Ctrl+P",
   "Cmd/Ctrl+A",
@@ -103,9 +105,32 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
+    url: "/docs/components/chat",
+    sources: ["packages/components/src/chat.tsx"],
+    notes: [
+      {
+        keys: ["Escape"],
+        action: "stops a reply that is streaming, while the composer is busy",
+      },
+    ],
+  },
+  {
     url: "/docs/components/checkbox",
     sources: ["packages/primitives/src/components/Checkbox.tsx"],
     notes: [{ keys: activation, action: "toggles the box" }],
+  },
+  {
+    url: "/docs/primitives/checkbox-group",
+    sources: ["packages/primitives/src/components/CheckboxGroup.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right"],
+        action: "moves focus along the group's orientation",
+      },
+      { keys: ["Home", "End"], action: "the first or last option" },
+      { keys: activation, action: "toggles the focused option" },
+    ],
+    also: "A typed prefix moves focus to the first matching option without toggling it.",
   },
   {
     url: "/docs/components/collapsible",
@@ -235,6 +260,17 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
+    url: "/docs/components/hotkey-recorder",
+    sources: ["packages/components/src/hotkey-recorder.tsx"],
+    notes: [
+      {
+        keys: activation,
+        action: "starts a recording, and clears through the clear target",
+      },
+      { keys: ["Escape"], action: "cancels a recording" },
+    ],
+  },
+  {
     url: "/docs/components/inline-edit",
     sources: ["packages/components/src/inline-edit.tsx"],
     notes: [
@@ -262,6 +298,18 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "A typed letter jumps to the first row whose label starts with it.",
   },
   {
+    url: "/docs/components/mention-input",
+    sources: ["packages/components/src/mention-input.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Down", "Arrow Up", "Ctrl+N", "Ctrl+P"],
+        action: "moves the suggestion highlight",
+      },
+      { keys: ["Escape"], action: "dismisses the suggestion list" },
+      { keys: activation, action: "selects the highlighted mention" },
+    ],
+  },
+  {
     url: "/docs/components/navigation-menu",
     sources: ["packages/components/src/navigation-menu.tsx"],
     notes: [
@@ -283,6 +331,37 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     notes: [
       { keys: ["Escape"], action: "closes the popover" },
       { keys: ["Tab"], action: "closes it and lets focus leave" },
+    ],
+  },
+  {
+    url: "/docs/components/preview-card",
+    sources: ["packages/components/src/preview-card.tsx"],
+    notes: [{ keys: ["Escape"], action: "closes the open card" }],
+  },
+  {
+    url: "/docs/primitives/radio-group",
+    sources: ["packages/primitives/src/components/RadioGroup.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right"],
+        action: "moves focus along the group's orientation and selects",
+      },
+      { keys: ["Home", "End"], action: "the first or last option" },
+      { keys: activation, action: "selects the focused option" },
+    ],
+    also: "A typed prefix selects the option it reaches, because selection follows focus.",
+  },
+  {
+    url: "/docs/primitives/rating",
+    sources: ["packages/primitives/src/components/Rating.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right"],
+        action: "steps the score by a star, or by half a star in half mode",
+      },
+      { keys: ["Home", "End"], action: "the lowest or highest score" },
+      { keys: ["Delete", "Backspace"], action: "clears the score" },
+      { keys: activation, action: "commits the focused star's score" },
     ],
   },
   {
@@ -341,6 +420,81 @@ export const keyboardContracts: readonly KeyboardContract[] = [
         action: "moves the focused segment by an hour, or by a minute step",
       },
       { keys: activation, action: "clears through the clear target" },
+    ],
+  },
+  {
+    url: "/docs/primitives/toggle",
+    sources: ["packages/primitives/src/components/Toggle.tsx"],
+    notes: [{ keys: activation, action: "toggles the pressed state" }],
+  },
+  {
+    url: "/docs/primitives/toggle-group",
+    sources: ["packages/primitives/src/components/ToggleGroup.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right"],
+        action: "moves focus along the group's orientation",
+      },
+      { keys: ["Home", "End"], action: "the first or last option" },
+      { keys: activation, action: "toggles the focused option" },
+    ],
+    also: "A typed prefix moves focus to the first matching option without toggling it.",
+  },
+  {
+    url: "/docs/data-display/expandable-rows",
+    sources: ["packages/data/src/table/expandable.tsx"],
+    notes: [{ keys: activation, action: "expands or collapses the row" }],
+  },
+  {
+    url: "/docs/editor/code-editor",
+    sources: ["packages/editor/src/code-editor/code-editor.tsx"],
+    notes: [
+      {
+        keys: ["Tab"],
+        action:
+          "inserts the indent at the caret instead of leaving the field, when `tabMode` allows it",
+      },
+    ],
+  },
+  {
+    url: "/docs/shell/toolbar",
+    sources: ["packages/shell/src/toolbar/toolbar.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Left", "Arrow Right"],
+        action: "moves focus between the toolbar's slots",
+      },
+      {
+        keys: activation,
+        action:
+          "toggles the overflow menu, and runs the focused overflow action",
+      },
+      { keys: ["Escape"], action: "closes the overflow menu" },
+    ],
+  },
+  {
+    url: "/docs/shell/app-menu",
+    sources: ["packages/shell/src/app-menu/app-menu.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Left", "Arrow Right"],
+        action: "moves between the bar's menus",
+      },
+      {
+        keys: ["Arrow Down"],
+        action: "opens the highlighted menu, and moves down a row once open",
+      },
+      { keys: ["Arrow Up"], action: "moves up a row once a menu is open" },
+      {
+        keys: activation,
+        action:
+          "opens the highlighted menu, and runs the open menu's highlighted action",
+      },
+      {
+        keys: ["Escape"],
+        action: "closes the open menu and returns focus to its trigger",
+      },
+      { keys: ["Tab"], action: "closes the menu bar state" },
     ],
   },
 ];

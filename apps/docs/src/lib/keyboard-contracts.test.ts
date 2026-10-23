@@ -8,7 +8,8 @@ import {
   keyboardContracts,
   type KeyLabel,
 } from "./keyboard-contracts";
-import { readCuratedPages } from "./page-dependencies-source";
+import { readCuratedPages, readPackagePages } from "./page-dependencies-source";
+import { servedPages } from "./curated-twins";
 
 /**
  * The keyboard strip is the only place a component page states its keys, so it
@@ -17,15 +18,18 @@ import { readCuratedPages } from "./page-dependencies-source";
  * The second half is the one a reader pays for — a page that teaches `Escape`
  * on a surface that never dismisses is worse than no note.
  *
- * The completeness case reads every curated page's own `<ComponentSource>` and
- * requires a contract wherever the module handles a named key, so a new
+ * The completeness case reads every mounted page's resolved module — the
+ * curated page's own `<ComponentSource>` and each package page's component —
+ * and requires a contract wherever the module handles a named key, so a
  * component cannot ship with keys and no notes. The predicate table is the
  * shared seam: `@gpuixui/components` decides keys through `internal/key.ts`, and
- * the primitives through `core/keyboard.ts`'s `decideActivation`; a component
- * that grows a handler by one of these names is covered without a docs edit.
+ * the primitives through `core/keyboard.ts`'s `decideActivation`, `decideMove`,
+ * `decideAbsolute` and `core/rating.ts`'s `decideRating`; a component that grows
+ * a handler by one of these names is covered without a docs edit.
  *
- * The primitives' `Select` and the package lanes that ship no curated page are
- * outside this wave; `TODO.md` carries them.
+ * What remains outside this wave is the primitives' `Select` (its keys belong to
+ * the runtime's headless list) and a page whose keys are handled by a sink the
+ * derivation cannot see; `TODO.md` carries the first.
  */
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
@@ -40,6 +44,18 @@ const predicateKeys: Readonly<Record<string, readonly KeyLabel[]>> = {
   isActivation: ["Enter", "Space"],
   activationHandlers: ["Enter", "Space"],
   decideActivation: ["Enter", "Space"],
+  decideMove: ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right"],
+  decideAbsolute: ["Home", "End"],
+  decideRating: [
+    "Arrow Up",
+    "Arrow Down",
+    "Arrow Left",
+    "Arrow Right",
+    "Home",
+    "End",
+    "Delete",
+    "Backspace",
+  ],
   isEnter: ["Enter"],
   isDismiss: ["Escape"],
   isTab: ["Tab"],
@@ -57,7 +73,8 @@ const predicateKeys: Readonly<Record<string, readonly KeyLabel[]>> = {
 
 /**
  * A key matched by its literal name. The shape is the one a handler writes —
- * `Match.when("up", …)` or `event.key === "up"` — so an unrelated `"up"` string
+ * `Match.when("up", …)`, `event.key === "tab"`, or the same comparison against
+ * a local `key` (`const key = event.key ?? ""`) — so an unrelated `"up"` string
  * cannot add a key to the contract.
  */
 const literalKeys: Readonly<Record<string, KeyLabel>> = {
@@ -80,19 +97,17 @@ const escapeRegExp = (value: string): string =>
 
 /** Every named key a module handles. */
 const keysIn = (source: string): ReadonlySet<KeyLabel> => {
-  const found = new Set<KeyLabel>();
-  for (const [predicate, keys] of Object.entries(predicateKeys)) {
-    if (new RegExp(`\\b${predicate}\\b`).test(source)) {
-      keys.forEach((key) => found.add(key));
-    }
-  }
-  for (const [literal, key] of Object.entries(literalKeys)) {
+  const predicates = Object.entries(predicateKeys).flatMap(
+    ([predicate, keys]) =>
+      new RegExp(`\\b${predicate}\\b`).test(source) ? keys : [],
+  );
+  const literals = Object.entries(literalKeys).flatMap(([literal, key]) => {
     const pattern = new RegExp(
-      `(?:Match\\.when|event\\.key ===|event\\.key !==)\\s*\\(?\\s*"${escapeRegExp(literal)}"`,
+      `(?:Match\\.when|(?:event\\.)?key ===|(?:event\\.)?key !==)\\s*\\(?\\s*"${escapeRegExp(literal)}"`,
     );
-    if (pattern.test(source)) found.add(key);
-  }
-  return found;
+    return pattern.test(source) ? [key] : [];
+  });
+  return new Set([...predicates, ...literals]);
 };
 
 /** The keys a contract's cited modules handle. */
@@ -189,8 +204,11 @@ describe("the keyboard contracts", () => {
     expect(unreadable).toEqual([]);
   });
 
-  it("gives every curated page whose component handles a key a contract", () => {
-    const missing = readCuratedPages(root).flatMap((page) => {
+  it("gives every page whose component handles a key a contract", () => {
+    const missing = servedPages([
+      ...readCuratedPages(root),
+      ...readPackagePages(root),
+    ]).flatMap((page) => {
       if (page.module === undefined) return [];
       const keys = keysIn(read(page.module));
       return keys.size > 0 && contractFor(page.url) === undefined
