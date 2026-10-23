@@ -340,6 +340,7 @@ src/lib/floating-reflow.test-util.ts The panel placement both reflow guards prin
 src/lib/aria-budget.test-util.ts   The runtime's closed `aria-*` set, and the absence a page's limits claim
 src/lib/app-css.test-util.ts       The site palette both measuring guards read from the style sheet
 src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
+src/lib/search-results.ts           The endpoint's answer, trimmed to one row per address
 src/lib/curated-twins.ts            The primitive pages a curated page replaces: served, indexed and listed once
 src/lib/search-tree.ts              The tree search reads: package sections filled, separators unnamed
 src/lib/search-links.ts             The search dialog's pre-query entry points
@@ -482,6 +483,13 @@ breadcrumb, so the sidebar's group headings used to leak in (`Docs › Blocks �
 Blocks`) while a package page showed none at all; a result now names the
 section it lives in, `Docs › Components` or `Docs › Primitives`.
 `search-tree.test.ts` holds the shape and the route's one-tree rule.
+`src/lib/search-results.ts` trims the answer to one row per address: the index
+splits a long heading into several chunks that all carry the heading's anchor,
+so a query used to show the same `Components › API reference` row three times.
+The route keeps the best-ranked chunk for each URL and passes a body it does not
+recognise through whole, so a future envelope still reaches the dialog;
+`search-results.test.ts` holds the collapse, the distinct sections, the round
+trip and the route's use of it.
 
 The packages' files are written as Markdown and compiled here as MDX, which is
 stricter: frontmatter must be valid YAML and prose may not contain a raw

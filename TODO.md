@@ -10408,7 +10408,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 364/364
+`[x]` `[██████████]` 365/365
+
+`[x]` Answer **one search row per address** — the index splits a long heading
+      into several chunks and every chunk carries the heading's own anchor, so
+      `?query=button` answered with `/docs/components/button#api-reference`
+      **three times** and `#limitations` twice (measured on the served build:
+      60 rows, 17 repeats); the dialog rendered each under the same label.
+      `src/lib/search-results.ts` decodes the endpoint's body through
+      `Schema.fromJsonString` (the site reads `url` and carries every other
+      field through), keeps the best-ranked row per address with `Arr`/`HashSet`,
+      and re-encodes; the route passes a body it cannot decode through whole,
+      because a future envelope should reach the dialog rather than empty it.
+      `search-results.test.ts` (7 cases) holds the chunk collapse, a distinct
+      heading on one page, distinct pages, the empty list, the field-preserving
+      round trip, the three refusals and the route's use of the seam. Directions
+      measured: with `dedupeSearchResults` returning its input, two cases fail by
+      name (`expected [ …(6) ] to deeply equal [ …(3) ]`); restored, the served
+      endpoint answers **43** rows for `button` with no repeated URL, and
+      `dialog`/`slider`/`props` repeat none either, `cache-control` and
+      `content-type` preserved. `apps/docs/README.md` §Search records the rule
+      and the module row. No native scenario applies — a request handler and its
+      codec.
 
 `[x]` Teach **how to write the page** the checklist asks for — `/docs/contributing`
       told a contributor that a component ships a page and which checks to run,
