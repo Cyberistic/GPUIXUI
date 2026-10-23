@@ -579,8 +579,8 @@ describe("the tones the wash is painted on", () => {
  *
  * The bug this guards: `selection` is authored for the content tones, and a
  * selectable run inside an `Alert` sits on the tone's `xSoft` tint — a content
- * tone, but one the designed wash cannot serve. Every light tint carries it; 30
- * of the 32 dark placements fall under the body floor (Windows dark's
+ * tone, but one the designed wash cannot serve. Every light tint carries it; 32
+ * of the 36 dark placements fall under the body floor (Windows dark's
  * `warningSoft` at 5.21:1), because the accent a dark wash is drawn from is
  * lighter than the tint and moves it toward the near-white text. Nothing painted
  * or measured that placement, so selectable message copy shipped unreadable with
@@ -731,6 +731,19 @@ describe("the wash a status message can carry", () => {
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
     const inventory = read("../../../COMPONENTS.md");
+    const designed = styles.flatMap((theme) =>
+      softTints.map((tint) => ({
+        mode: theme.mode,
+        ...over(theme, tint, theme.colors.selection),
+      })),
+    );
+    // The count the pages print is the sweep's own: the designed wash buries the
+    // copy on most of the dark tints, and the number of placements it leaves
+    // readable moved with the authored look. A hardcoded "30 of the 32" kept the
+    // pages claiming a denominator the suite had already outgrown.
+    const dark = designed.filter(({ mode }) => mode === "dark");
+    const buried = dark.filter(({ body, floor }) => body < floor);
+    const buriedClaim = `${buried.length} of the ${dark.length} dark`;
     const derived = styles.flatMap((theme) =>
       softTints.map((tint) => ({
         mode: theme.mode,
@@ -751,10 +764,16 @@ describe("the wash a status message can carry", () => {
       });
     const reach = `${Math.max(...steps) * 2}%`;
 
-    [catalogue, readme, inventory].forEach((page) => {
-      expect(page).toContain("selectionOn");
-      expect(page).toContain("30 of the 32");
-      expect(page).toContain("5.21");
+    [catalogue, design, readme, inventory].forEach((page) => {
+      const prose = flat(page);
+      expect(prose).toContain("selectionOn");
+      expect(prose).toContain(buriedClaim);
+      expect(prose).toContain("5.21");
+      // The derived half is the whole table: every tint placement resolves once
+      // the wash is chosen for the surface it sits on.
+      expect(prose).toContain(`All ${derived.length} tint placements resolve`);
+      expect(prose).not.toContain("30 of the 32");
+      expect(prose).not.toContain("All 64 tint");
     });
     // The page prints the values the sweep measures, so a palette edit that
     // moves the tightest placement cannot leave the catalogue teaching an old one.

@@ -3945,8 +3945,8 @@ page with its reason.
 **A status message's tint is the one surface the wash is derived for.** An
 `Alert`'s description is a container — it may hold an action, so it may hold a
 selectable run — and the fill behind its copy is the tone's `xSoft` role: a
-content tone, but one the designed wash cannot serve. Measured over the sixteen
-styles, every light tint carries the wash, and **30 of the 32 dark tint
+content tone, but one the designed wash cannot serve. Measured over the eighteen
+styles, every light tint carries the wash, and **32 of the 36 dark tint
 placements fall under the body floor** — the worst is Windows dark's
 `warningSoft` at **5.21:1** — because the accent a dark wash is drawn from is
 lighter than the tint, so the wash moves the fill toward the near-white text.
@@ -3957,7 +3957,7 @@ is the same trade the saturated tones above leave out.
 paints on: the theme's own `selection`, moved toward the page — the role
 furthest from body ink in both modes — by the smallest 2% step that keeps the
 wash visible (1.05:1) and the text readable (the theme's body floor) on *that*
-surface, at the same translucent share. All 64 tint placements resolve: the
+surface, at the same translucent share. All 72 tint placements resolve: the
 light tints keep the theme's own wash, the dark ones move as far as 70% of the way
 to the page, and the tightest resolved placement is 7.00:1 of text under a
 1.05:1 wash (the two era looks' warning tints). A surface no step can serve
