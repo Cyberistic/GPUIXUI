@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { hourlyBars } from "./dashboard";
 
@@ -60,5 +62,36 @@ describe("hourlyBars", () => {
     expect(shifted.every((column) => column.bottom === plot.bottom)).toBe(
       false,
     );
+  });
+});
+
+/** The chart rules the dashboard's SVG reads, as authored text. */
+const blocksCss = (): string =>
+  readFileSync(
+    fileURLToPath(new URL("../../styles/blocks.css", import.meta.url)),
+    "utf8",
+  );
+
+describe("chart load animation", () => {
+  it("grows bars from the baseline and draws the donut from zero", () => {
+    const css = blocksCss();
+
+    // The bar and stacked segments scale up from their bottom edge.
+    expect(css).toContain("@keyframes gx-dash-grow");
+    expect(css).toContain("transform: scaleY(0)");
+    expect(css).toContain("transform-origin: bottom");
+    // The donut's arc is drawn from zero via its dash length.
+    expect(css).toContain("@keyframes gx-dash-draw");
+    expect(css).toContain("stroke-dasharray: 0 var(--dash-circ)");
+  });
+
+  it("paints the final frame at once under reduced motion", () => {
+    const css = blocksCss();
+
+    // The reduce block disables the growth/draw animation, so the first frame
+    // is already the final geometry — no travel for a reader who asked for none.
+    expect(css).toContain("prefers-reduced-motion: reduce");
+    expect(css).toContain("animation: none");
+    expect(css).toContain(".gx-dash-donut-segment");
   });
 });

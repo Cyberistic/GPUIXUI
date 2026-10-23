@@ -13,6 +13,7 @@ import {
   motionEasings,
   motionLevels,
   motionTiming,
+  motionTimingOf,
   type MotionLevel,
 } from "./timing.js";
 
@@ -145,6 +146,42 @@ describe("reduced motion", () => {
 
   it("keeps an animated run on its level's own duration and easing", () => {
     expect(motionTiming("normal", { preference: "animated" })).toEqual({
+      duration: 0.2,
+      ease: "easeInOut",
+    });
+  });
+});
+
+describe("motionTimingOf", () => {
+  it("names a duration outside the shared levels, with the phase easing", () => {
+    // A toast enters at 220 ms and leaves at 180 ms: durations the level table
+    // does not carry, so the surface builds its timing from here instead of
+    // borrowing a level that would change the feel of every other surface.
+    expect(motionTimingOf(220, { phase: "enter" })).toEqual({
+      duration: 0.22,
+      ease: "easeOut",
+    });
+    expect(motionTimingOf(180, { phase: "exit" })).toEqual({
+      duration: 0.18,
+      ease: "easeIn",
+    });
+  });
+
+  it("collapses to an instant assignment under the reduced preference", () => {
+    expect(motionTimingOf(220, { preference: "reduced" })).toEqual({
+      duration: 0,
+    });
+  });
+
+  it("reads a duration it cannot run as the house surface arrival", () => {
+    // The same fallback `motionTiming` applies to an unknown level: a NaN or a
+    // zero must not hand the runtime a NaN or an instant tween the caller did
+    // not ask for.
+    expect(motionTimingOf(Number.NaN)).toEqual({
+      duration: 0.2,
+      ease: "easeInOut",
+    });
+    expect(motionTimingOf(0)).toEqual({
       duration: 0.2,
       ease: "easeInOut",
     });

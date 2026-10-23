@@ -1979,11 +1979,11 @@
 }
 
 /* ---- toast: mirrors components/src/toast/viewport.tsx ----
-   The card is `popover` on `popoverForeground`, `border` at a thin edge,
-   `radius.md`, the `md` elevation and the tone's own colour on the 3px bar and
-   the glyph. The viewport takes no pointer events so the page under it stays
-   usable; each card turns them back on. Width is the recipe's 380px, narrowed
-   for the preview's frame. */
+   The card is `popover` on `popoverForeground`, `border` at a thin edge, the
+   radius, sonner's `0 4px 12px` lift and the tone's own colour on the glyph.
+   The viewport takes no pointer events so the page under it stays usable; the
+   stack wrapper turns them back on so hovering it (a card or the gap between
+   two) fans the stack and pauses every clock. Width is 356px. */
 .gx-toast-demo {
   position: relative;
   width: 100%;
@@ -2030,8 +2030,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
-  width: min(320px, 100%);
+  gap: 12px;
+  width: min(356px, 100%);
   pointer-events: none;
 }
 
@@ -2040,18 +2040,56 @@
   padding: 8px 0;
 }
 
+.gx-toast-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  pointer-events: auto;
+}
+
 .gx-toast-card {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--popover);
   color: var(--popover-foreground);
-  box-shadow: 0 8px 22px var(--shadow);
-  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   pointer-events: auto;
+  animation: gx-toast-in 220ms ease-out;
+  transition: transform 220ms ease-out;
+}
+
+.gx-toast-leaving {
+  animation: gx-toast-out 180ms ease-in forwards;
+}
+
+@keyframes gx-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gx-toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
 }
 
 .gx-toast-info {
@@ -2070,26 +2108,12 @@
   --toast-tone: var(--destructive);
 }
 
-.gx-toast-bar {
-  flex: 0 0 3px;
-  align-self: stretch;
-  background: var(--toast-tone);
-}
-
-.gx-toast-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  padding: 12px;
-}
-
 .gx-toast-glyph {
   flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
   color: var(--toast-tone);
-  font-size: 13px;
-  line-height: 18px;
 }
 
 .gx-toast-copy {
@@ -2151,7 +2175,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .gx-btn,
-  .gx-spinner {
+  .gx-spinner,
+  .gx-toast-card {
     transition: none;
     animation: none;
   }

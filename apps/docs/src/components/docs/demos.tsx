@@ -2351,79 +2351,227 @@ interface PreviewToast {
   readonly duration?: number;
 }
 
-const toastGlyph = {
-  info: "ℹ",
-  success: "✓",
-  warning: "⚠",
-  danger: "✕",
-} as const;
+/** The vertical lift, in pixels, one hovered stack fans each older card by. */
+const TOAST_FAN_STEP = 8;
+/** How long a leaving card stays mounted for its exit tween. */
+const TOAST_EXIT_MS = 180;
+/** The auto-dismiss delay a draft without a `duration` takes. */
+const TOAST_DEFAULT_MS = 5_000;
+/** Cards kept before the oldest drops, mirroring the store's default `max`. */
+const TOAST_MAX = 3;
 
-/** One card, with the preview's own auto-dismiss clock. */
+/**
+ * The hover fan's rule: the newest card rests still and each older card lifts
+ * one step further, so hovering widens the gap between neighbours by `step`
+ * while the stack as a whole rises. A single card does not fan.
+ */
+export const toastFanLift = (
+  index: number,
+  count: number,
+  step = TOAST_FAN_STEP,
+): number => (count > 1 ? Math.max(0, count - 1 - index) * step : 0);
+
+/** A 24px status glyph, tinted by `currentColor`; the tone colours it. */
+const ToastGlyph = ({ children }: { readonly children: ReactNode }) => (
+  <svg
+    aria-hidden="true"
+    className="gx-toast-glyph"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    {children}
+  </svg>
+);
+
+/** Sonner's four status marks: check, x, info and the warning triangle. */
+const toastGlyph: Readonly<Record<PreviewToast["tone"], ReactNode>> = {
+  info: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </>
+  ),
+  success: <path d="M20 6 9 17l-5-5" />,
+  warning: (
+    <>
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </>
+  ),
+  danger: (
+    <>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </>
+  ),
+};
+
+/** A queued toast plus whether it is playing out its exit tween. */
+interface PreviewEntry {
+  readonly toast: PreviewToast;
+  readonly leaving: boolean;
+}
+
+/** One card. Its tone glyph carries the status; the surface is neutral. */
 const ToastCardPreview = ({
   toast,
+  leaving,
+  fanLift,
   onDismiss,
   onAction,
 }: {
   readonly toast: PreviewToast;
+  readonly leaving: boolean;
+  readonly fanLift: number;
   readonly onDismiss: () => void;
   readonly onAction?: () => void;
-}) => {
-  const dismiss = useRef(onDismiss);
-
-  useEffect(() => {
-    dismiss.current = onDismiss;
-  }, [onDismiss]);
-
-  useEffect(() => {
-    if (toast.duration === 0) return undefined;
-    const handle = setTimeout(() => dismiss.current(), toast.duration ?? 5_000);
-    return () => clearTimeout(handle);
-  }, [toast.duration, toast.id]);
-
-  return (
-    <div className={`gx-toast-card gx-toast-${toast.tone}`}>
-      <span aria-hidden="true" className="gx-toast-bar" />
-      <div className="gx-toast-body">
-        <span aria-hidden="true" className="gx-toast-glyph">
-          {toastGlyph[toast.tone]}
-        </span>
-        <div className="gx-toast-copy">
-          <p className="gx-toast-title">{toast.title}</p>
-          {toast.description === undefined ? null : (
-            <p className="gx-toast-desc">{toast.description}</p>
-          )}
-        </div>
-        {toast.actionLabel === undefined ? null : (
-          <button className="gx-toast-action" onClick={onAction} type="button">
-            {toast.actionLabel}
-          </button>
-        )}
-        <button
-          aria-label="Dismiss"
-          className="gx-toast-dismiss"
-          onClick={onDismiss}
-          type="button"
-        >
-          ✕
-        </button>
-      </div>
+}) => (
+  <div
+    className={`gx-toast-card gx-toast-${toast.tone}${
+      leaving ? " gx-toast-leaving" : ""
+    }`}
+    style={fanLift > 0 ? { transform: `translateY(-${fanLift}px)` } : undefined}
+  >
+    <ToastGlyph>{toastGlyph[toast.tone]}</ToastGlyph>
+    <div className="gx-toast-copy">
+      <p className="gx-toast-title">{toast.title}</p>
+      {toast.description === undefined ? null : (
+        <p className="gx-toast-desc">{toast.description}</p>
+      )}
     </div>
+    {toast.actionLabel === undefined ? null : (
+      <button className="gx-toast-action" onClick={onAction} type="button">
+        {toast.actionLabel}
+      </button>
+    )}
+    <button
+      aria-label="Dismiss"
+      className="gx-toast-dismiss"
+      onClick={onDismiss}
+      type="button"
+    >
+      ✕
+    </button>
+  </div>
+);
+
+/**
+ * The preview's queue: pushes, auto-dismiss timers, the hover fan and the pause
+ * that holds every clock while the pointer rests on the stack. It mirrors the
+ * store's `pause`/`resume` with `setTimeout` because the DOM shim owns its own
+ * clock. `seed` pre-fills the tone comparison.
+ */
+const useToastPreview = (
+  seed: ReadonlyArray<Omit<PreviewToast, "id">> = [],
+) => {
+  const [entries, setEntries] = useState<ReadonlyArray<PreviewEntry>>(() =>
+    seed.map((draft, index) => ({
+      toast: { ...draft, id: `seed-${index + 1}` },
+      leaving: false,
+    })),
   );
+  const [hovered, setHovered] = useState(false);
+  const nextId = useRef(seed.length);
+  const running = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const deadlines = useRef(new Map<string, number>());
+  const remaining = useRef(new Map<string, number>());
+
+  const dismiss = (id: string): void => {
+    const handle = running.current.get(id);
+    if (handle !== undefined) {
+      clearTimeout(handle);
+      running.current.delete(id);
+    }
+    deadlines.current.delete(id);
+    remaining.current.delete(id);
+    setEntries((list) =>
+      list.map((entry) =>
+        entry.toast.id === id ? { ...entry, leaving: true } : entry,
+      ),
+    );
+    setTimeout(() => {
+      setEntries((list) => list.filter((entry) => entry.toast.id !== id));
+    }, TOAST_EXIT_MS);
+  };
+
+  const arm = (id: string, ms: number): void => {
+    running.current.set(
+      id,
+      setTimeout(() => dismiss(id), ms),
+    );
+    deadlines.current.set(id, Date.now() + ms);
+  };
+
+  const push = (draft: Omit<PreviewToast, "id">): void => {
+    nextId.current += 1;
+    const toast = { ...draft, id: String(nextId.current) };
+    setEntries((list) => {
+      const appended = [...list, { toast, leaving: false }];
+      const dropped = appended.slice(
+        0,
+        Math.max(0, appended.length - TOAST_MAX),
+      );
+      dropped.forEach((entry) => {
+        const handle = running.current.get(entry.toast.id);
+        if (handle !== undefined) {
+          clearTimeout(handle);
+          running.current.delete(entry.toast.id);
+        }
+        deadlines.current.delete(entry.toast.id);
+        remaining.current.delete(entry.toast.id);
+      });
+      return appended.slice(-TOAST_MAX);
+    });
+    const ms = toast.duration ?? TOAST_DEFAULT_MS;
+    if (ms > 0) arm(toast.id, ms);
+  };
+
+  /** Stop every running clock, keeping the time each has left. */
+  const pauseTimers = (): void => {
+    running.current.forEach((handle, id) => {
+      clearTimeout(handle);
+      const deadline = deadlines.current.get(id);
+      remaining.current.set(
+        id,
+        deadline === undefined ? 0 : Math.max(0, deadline - Date.now()),
+      );
+    });
+    running.current.clear();
+    deadlines.current.clear();
+  };
+
+  /** Restart every held clock with its remaining time. */
+  const resumeTimers = (): void => {
+    remaining.current.forEach((ms, id) => {
+      remaining.current.delete(id);
+      if (ms <= 0) dismiss(id);
+      else arm(id, ms);
+    });
+  };
+
+  const onStackEnter = (): void => {
+    setHovered(true);
+    pauseTimers();
+  };
+
+  const onStackLeave = (): void => {
+    setHovered(false);
+    resumeTimers();
+  };
+
+  return { entries, hovered, push, dismiss, onStackEnter, onStackLeave };
 };
 
 /** A publish/undo workflow, capped at three cards like the store. */
 const ToastWorkflow = () => {
-  const [toasts, setToasts] = useState<ReadonlyArray<PreviewToast>>([]);
-  const nextId = useRef(0);
-
-  const push = (draft: Omit<PreviewToast, "id">) => {
-    nextId.current += 1;
-    const toast = { ...draft, id: String(nextId.current) };
-    setToasts((current) => [...current, toast].slice(-3));
-  };
-
-  const dismiss = (id: string) =>
-    setToasts((current) => current.filter((toast) => toast.id !== id));
+  const { entries, hovered, push, dismiss, onStackEnter, onStackLeave } =
+    useToastPreview();
 
   return (
     <div className="gx-toast-demo">
@@ -2463,7 +2611,8 @@ const ToastWorkflow = () => {
           </button>
         </div>
         <p className="gx-toast-hint">
-          A fourth toast drops the oldest. An action runs once and dismisses.
+          A fourth toast drops the oldest. Hover the stack to fan it and pause
+          every clock; leaving resumes them.
         </p>
       </div>
       <div
@@ -2471,40 +2620,46 @@ const ToastWorkflow = () => {
         className="gx-toast-viewport"
         role="status"
       >
-        {toasts.map((toast) => (
-          <ToastCardPreview
-            key={toast.id}
-            onAction={
-              toast.actionLabel === undefined
-                ? undefined
-                : () => {
-                    dismiss(toast.id);
-                    push({
-                      title: "Changes restored",
-                      description: "The previous version is live again.",
-                      tone: "info",
-                    });
-                  }
-            }
-            onDismiss={() => dismiss(toast.id)}
-            toast={toast}
-          />
-        ))}
+        <div
+          className="gx-toast-stack"
+          onMouseEnter={onStackEnter}
+          onMouseLeave={onStackLeave}
+        >
+          {entries.map((entry, index) => (
+            <ToastCardPreview
+              key={entry.toast.id}
+              fanLift={hovered ? toastFanLift(index, entries.length) : 0}
+              leaving={entry.leaving}
+              onAction={
+                entry.toast.actionLabel === undefined
+                  ? undefined
+                  : () => {
+                      dismiss(entry.toast.id);
+                      push({
+                        title: "Changes restored",
+                        description: "The previous version is live again.",
+                        tone: "info",
+                      });
+                    }
+              }
+              onDismiss={() => dismiss(entry.toast.id)}
+              toast={entry.toast}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
-const toastToneSamples: ReadonlyArray<PreviewToast> = [
+const toastToneSamples: ReadonlyArray<Omit<PreviewToast, "id">> = [
   {
-    id: "info",
     title: "Update available",
     description: "Version 2.4 is ready to install.",
     tone: "info",
     duration: 0,
   },
   {
-    id: "success",
     title: "Changes published",
     description: "The site rebuilds in about a minute.",
     tone: "success",
@@ -2512,14 +2667,12 @@ const toastToneSamples: ReadonlyArray<PreviewToast> = [
     duration: 0,
   },
   {
-    id: "warning",
     title: "Disk almost full",
     description: "1.2 GB left on this volume.",
     tone: "warning",
     duration: 0,
   },
   {
-    id: "danger",
     title: "Upload failed",
     description: "The connection closed before the file finished.",
     tone: "danger",
@@ -2529,8 +2682,8 @@ const toastToneSamples: ReadonlyArray<PreviewToast> = [
 
 /** The four tones, held open so their colour and glyph can be compared. */
 const ToastTones = () => {
-  const [dismissed, setDismissed] = useState<ReadonlyArray<string>>([]);
-  const dismiss = (id: string) => setDismissed((current) => [...current, id]);
+  const { entries, hovered, dismiss, onStackEnter, onStackLeave } =
+    useToastPreview(toastToneSamples);
 
   return (
     <div className="gx-toast-demo gx-toast-tones">
@@ -2539,20 +2692,26 @@ const ToastTones = () => {
         className="gx-toast-viewport"
         role="status"
       >
-        {toastToneSamples
-          .filter((toast) => !dismissed.includes(toast.id))
-          .map((toast) => (
+        <div
+          className="gx-toast-stack"
+          onMouseEnter={onStackEnter}
+          onMouseLeave={onStackLeave}
+        >
+          {entries.map((entry, index) => (
             <ToastCardPreview
-              key={toast.id}
+              key={entry.toast.id}
+              fanLift={hovered ? toastFanLift(index, entries.length) : 0}
+              leaving={entry.leaving}
               onAction={
-                toast.actionLabel === undefined
+                entry.toast.actionLabel === undefined
                   ? undefined
-                  : () => dismiss(toast.id)
+                  : () => dismiss(entry.toast.id)
               }
-              onDismiss={() => dismiss(toast.id)}
-              toast={toast}
+              onDismiss={() => dismiss(entry.toast.id)}
+              toast={entry.toast}
             />
           ))}
+        </div>
       </div>
     </div>
   );

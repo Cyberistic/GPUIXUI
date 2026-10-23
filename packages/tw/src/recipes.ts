@@ -388,12 +388,13 @@ export const COMMAND_HINT = "text-xs text-muted-foreground";
  * direction, right alignment, gap, width cap and pass-through pointer are the
  * resting recipe. */
 export const TOAST_VIEWPORT =
-  "flex flex-col items-end gap-2 max-w-[380px] pointer-events-none";
+  "flex flex-col items-end gap-3 max-w-[356px] pointer-events-none";
 
-/** `toast/viewport.tsx` — one card. The tone bar and glyph stay in `style`
- * (tone-driven); the surface, border, radius and elevation are fixed shadcn. */
+/** `toast/viewport.tsx` — one card. The status glyph's tone and the hover fan
+ * stay in `style` (state-driven); the surface, border, radius and elevation are
+ * fixed shadcn. */
 export const TOAST_CARD =
-  "flex flex-row items-start w-[380px] bg-popover text-popover-foreground border border-border rounded-md shadow-md overflow-hidden pointer-events-auto";
+  "flex flex-row items-start w-[356px] bg-popover text-popover-foreground border border-border rounded-md shadow-md pointer-events-auto";
 
 /** `toast/viewport.tsx` — the card title. */
 export const TOAST_TITLE =

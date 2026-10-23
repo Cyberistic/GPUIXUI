@@ -824,6 +824,46 @@
   fill: var(--dash-accent);
 }
 
+/* Charts grow in on mount: a bar scales up from the baseline, a donut segment
+   draws its arc from zero, and the stacked columns grow bottom-up. The 30 ms
+   stagger is inline (`animation-delay`) so it reads per column. */
+.gx-dash-bar,
+.gx-dash-segment {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: gx-dash-grow 500ms ease-out backwards;
+}
+
+.gx-dash-donut-segment {
+  animation: gx-dash-draw 500ms ease-out backwards;
+}
+
+@keyframes gx-dash-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes gx-dash-draw {
+  from {
+    stroke-dasharray: 0 var(--dash-circ);
+  }
+  to {
+    stroke-dasharray: var(--dash-len) var(--dash-gap);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-dash-bar,
+  .gx-dash-segment,
+  .gx-dash-donut-segment {
+    animation: none;
+  }
+}
+
 .gx-dash-donut-row {
   display: flex;
   align-items: center;

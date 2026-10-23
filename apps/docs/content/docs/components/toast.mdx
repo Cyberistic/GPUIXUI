@@ -79,7 +79,7 @@ the draft, because a function cannot cross the store's schema boundary.
 | custom duration | `duration: Duration.seconds(8)` |
 | zero or infinite duration | never auto-dismisses; the card stays until dismissed |
 | ids | monotonic (`"1"`, `"2"`, …), never reused |
-| hovering a card | pauses its clock; leaving resumes with the **remaining** time |
+| hovering a card | fans the stack and pauses every clock; leaving resumes with the **remaining** time |
 | focus on a card's control | pauses too, and the last reason to leave resumes |
 | an action | one labelled control; pressing runs the handler once and dismisses |
 
@@ -147,18 +147,20 @@ by its action) or a long enough duration to read.
 | card | `colors.popover` on `colors.popoverForeground` |
 | edge | `borderWidth.thin` in `colors.border` |
 | radius and lift | `radius.md` and the `md` elevation |
-| padding | `spacing.lg` |
-| tone bar and glyph | the tone's own colour, the status palette Alert and Badge share |
-| width | 380px |
+| padding | 14px vertical, 16px horizontal, 10px gap |
+| tone glyph | the tone's own colour, the status palette Alert and Badge share |
+| width | 356px |
 | position | `spacing.xl` from the viewport's right and bottom edges |
 
-The card's surface is neutral on purpose: the left bar and the tone glyph carry
-the status, so four tones read the same shape and a theme repaints the bar by
-moving the status roles.
+The card's surface is neutral on purpose: the tone glyph carries the status, so
+four tones read the same shape and a theme repaints the glyph by moving the
+status roles.
 
-A card slides in from the right edge (16px plus a fade, the `notice` 500 ms
-timing) and stays painted for that tween after it leaves the store. `MotionProvider`
-supplies the reduced-motion preference, which paints at rest.
+A card rises 16px into place (220 ms, a fade) and leaves by sliding 16px to the
+right (180 ms); it stays painted for that exit tween after it leaves the store.
+Hovering the stack fans the older cards — each lifts a step higher, widening the
+gap — and pauses every clock. `MotionProvider` supplies the reduced-motion
+preference, which paints at rest.
 
 ## Accessibility and limitations
 
@@ -170,8 +172,9 @@ supplies the reduced-motion preference, which paints at rest.
   page, or moving the focus.
 - **No progress indicator** for the remaining time. The store knows the
   deadline; the card does not paint it.
-- Hovering or focusing a card pauses its clock with the remaining time; the
-  preview above reproduces the push, the cap and the dismissal, not the hold.
+- Hovering the stack pauses every card's clock with the remaining time and fans
+  the older cards; focusing a card pauses its own. The preview above reproduces
+  the push, the cap, the fan, the hold and the dismissal.
 - Not portalled: the viewport is an absolutely positioned element in its parent,
   so it must be the last child of the app root. There is no `zIndex` to raise it.
 - The card's enter and leave are the runtime's motion; the leave is timed by the
