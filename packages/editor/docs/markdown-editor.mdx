@@ -146,9 +146,9 @@ and it is what `CodeEditor` does one tier down.
 `src/behaviour/markdown-editor.test.tsx` (15 native behaviour tests) types into
 the real field, follows the edit into the preview, switches all three views,
 drags the divider and steps it by keyboard (a controlled size stays put, and a
-stored NaN opens at the middle), holds the read-only and disabled refusals, and
-holds the disabled editor out of the tab order — a `Tab` from a control before it
-lands on the control after it, while an editable editor takes that press — and
+stored NaN opens at the middle), holds the read-only and disabled refusals, holds
+the disabled editor out of the tab order (a `Tab` from a control before it lands
+on the control after it, while an editable editor takes that press), and reads
 its `disabledOpacity` paint;
 `src/markdown/logic.test.ts` (17 cases) holds the fence families, the run length
 and the closer's rules, the counts, the stored mode and the split's band;
