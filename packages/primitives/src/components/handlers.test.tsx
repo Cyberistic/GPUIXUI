@@ -12,6 +12,9 @@
  * - the caller's handler runs **first**, once, with the runtime's own event;
  * - the part still acts afterwards, exactly once — a handler observes, it does
  *   not replace the control's contract;
+ * - the buttons are the one exception, on activating keys only: the action runs
+ *   first, so a trigger's `onKeyDown` can record the row its surface must focus
+ *   (plan 160). A click keeps the caller-first order;
  * - a blocked press installs no handler at all, so neither the caller's
  *   `onClick` nor the action runs;
  * - keys and focus stay observable on a disabled control, because a control
@@ -281,6 +284,23 @@ describe("a caller's keys", () => {
       expect(onKeyDown).toHaveBeenCalledOnce();
       expect(onKeyUp).toHaveBeenCalledOnce();
       expect(part.changes).toBe(1);
+    },
+  );
+
+  it.each([button, iconButton])(
+    "runs $name's activation before the caller's key handler",
+    ({ render }) => {
+      // The one part whose keys invert the rule above (plan 160's Phase 4
+      // delta): a trigger opens in its `onKeyDown` and records the row the
+      // surface must focus, so an activation that ran afterwards cleared that
+      // record. A click keeps the caller-first order, held by the suite above.
+      const onKeyDown = nothing();
+      const part = render({ onKeyDown }, false);
+      handler(part.element, "onKeyDown")(keyEvent("enter"));
+      expect(part.changes).toBe(1);
+      expect(part.changeOrder).toBeLessThan(
+        onKeyDown.mock.invocationCallOrder[0] ?? 0,
+      );
     },
   );
 

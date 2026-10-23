@@ -54,7 +54,7 @@ shipped, platform and authored styles and names the fill it replaced.
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key; not called while busy |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; a click is observed first, an activating key acts first |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here |
 | `ref` | `Ref<PublicInstance>` | — | the element itself |
@@ -63,6 +63,11 @@ shipped, platform and authored styles and names the fill it replaced.
 | `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }`, merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
+
+A key is the one interaction the button acts on before handing it over: a
+trigger opens in its own `onKeyDown` and records the row its surface must focus,
+so the activation leads and the caller's handler observes it afterwards. A
+click keeps the caller-first order.
 
 ## Limitations
 

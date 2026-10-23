@@ -26,6 +26,12 @@
  * button's own, never handed the element: `onClick` observes a press the button
  * accepts, and a busy or disabled button takes no press at all.
  *
+ * The key pair composes the other way round: the activation runs **before** the
+ * caller's `onKeyDown`/`onKeyUp`. A trigger opens and records the row its
+ * surface must focus in that handler, so an activation that followed it cleared
+ * the record (plan 160's Phase 4 delta). Every other part keeps
+ * `composeEvent`'s caller-first rule; only the action leads a key.
+ *
  * The rest of the runtime's host props (`ActionHostProps`) pass straight
  * through, because a trigger has to be addressable: a `ref` anchors the surface
  * it opens, `aria-expanded`/`aria-selected` announce it, and the pointer pair
@@ -250,8 +256,10 @@ export const renderButton = (
       onMouseLeave={onMouseLeave}
       onFocus={composeEvent<EventPayload>(onFocus, focus.onFocus)}
       onBlur={composeEvent<EventPayload>(onBlur, focus.onBlur)}
-      onKeyDown={composeEvent<KeyEvent>(onKeyDown, onKey("down"))}
-      onKeyUp={composeEvent<KeyEvent>(onKeyUp, onKey("up"))}
+      // The activation leads a key (see the header): a caller's handler records
+      // the row an opened surface must focus, so it must run after the action.
+      onKeyDown={composeEvent<KeyEvent>(onKey("down"), onKeyDown)}
+      onKeyUp={composeEvent<KeyEvent>(onKey("up"), onKeyUp)}
       style={style}
     >
       {loading === true ? (

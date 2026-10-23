@@ -66,6 +66,10 @@ export const mergeStyle = (
  * default (a Tab, a text edit) calls `preventDefault()` on the event it is
  * given; that flag is the runtime's, not this package's.
  *
+ * A button's activating key is the one departure: the action leads, because a
+ * trigger records the row its activation opens in the caller's key handler — so
+ * `Button`/`IconButton` compose their action first (plan 160).
+ *
  * A part with more than one interactive element installs the caller's handler
  * on every element it gives that handler to — each option row, each cell — so
  * the caller observes the interaction wherever it landed. A blocked press (a
