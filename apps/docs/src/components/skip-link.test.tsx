@@ -88,7 +88,13 @@ describe("the skip link", () => {
     // a 13px bar over the chrome; the pair below is the contract the CSS has.
     expect(rule).toContain("top: -100px");
     expect(focused).toContain("top: 12px");
-    expect(focused).toContain("outline");
+    // The bar paints from the docs palette (`docs-theme.test.ts` measures every
+    // role pair), and its outline is the ring role's non-text contrast.
+    expect(rule).toContain("background: var(--background)");
+    expect(rule).toContain("color: var(--foreground)");
+    expect(focused).toContain("outline: 2px solid var(--ring)");
+    // Above the docs chrome, whose own layers stop at 50.
+    expect(rule).toContain("z-index: 100");
   });
 
   it("states the contract in the preview policy", () => {
