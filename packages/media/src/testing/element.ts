@@ -156,3 +156,14 @@ export const findByTestId = (
       }),
   );
 };
+
+/** Every `<text>` host element in the tree, in paint order. */
+export const textElements = (
+  element: ReactElement,
+): ReadonlyArray<ReactElement> => {
+  const nested = Arr.flatMap(elementChildren(element), textElements);
+  return Option.match(hostTag(element), {
+    onSome: (tag) => (tag === "text" ? Arr.prepend(nested, element) : nested),
+    onNone: () => nested,
+  });
+};

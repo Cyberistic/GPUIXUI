@@ -17,6 +17,7 @@ import type { Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import { Button } from "@gpuixui/primitives/button";
+import { visibleCopy } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -40,7 +41,7 @@ export interface DropPayload {
 export interface DropZoneProps extends Omit<Props, "children"> {
   /** The zone's visible and accessible name. */
   readonly label: string;
-  /** Why the reader should drop or pick here. */
+  /** Why the reader should drop or pick here. A blank one paints no line. */
   readonly description?: string;
   /** Called with the dropped files, in drop order. */
   readonly onDrop: (payload: DropPayload) => void;
@@ -113,6 +114,10 @@ export const renderDropZone = (
   // wrapper still holds the last hover flag.
   const highlighted = surface.hovered && !disabled;
   const pick = accessibleName(pickLabel, "Choose files");
+  // A description is copy like a name: a blank one paints a full blank line
+  // under the zone's label (`visibleCopy`), so a key an i18n table never filled
+  // leaves the zone's spacing alone instead of adding a line that says nothing.
+  const copy = visibleCopy(description);
 
   return (
     <div
@@ -143,10 +148,8 @@ export const renderDropZone = (
     >
       <Icon name="upload" color={theme.colors.mutedForeground} />
       <text style={{ color: theme.colors.foreground }}>{label}</text>
-      {description === undefined ? null : (
-        <text style={{ color: theme.colors.mutedForeground }}>
-          {description}
-        </text>
+      {copy === undefined ? null : (
+        <text style={{ color: theme.colors.mutedForeground }}>{copy}</text>
       )}
       {onPick === undefined ? null : (
         <Button

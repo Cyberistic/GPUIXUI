@@ -10419,39 +10419,38 @@ Work that this workstream needs but does not own. Another agent owns each row.
       contents, and on a page no contract names. `keyboard-contracts.test.ts` (6
       cases) derives the keys from the cited modules in both directions: the
       `@gpuixui/components` predicates in `internal/key.ts`, the primitives'
-      `decideActivation`, and a literal `Match.when("up", …)`, so a dropped
-      handler or an invented key fails by name; it also requires a contract for
-      every curated page whose `<ComponentSource>` module handles a named key.
-      `keyboard-strip.test.tsx` (6 cases) prints every note of every contract and
-      holds the two mounts. Directions measured: removing `dialog`'s Escape row
-      fails `missing Escape`; adding a Home row fails `invented Home`; deleting
-      the accordion contract fails with the page and its eight keys; unmounting
-      the package frame fails `expected 1 to be 2`. Contracted today: twenty-five
-      curated pages (accordion, alert, breadcrumb, button, carousel, checkbox,
-      collapsible, color picker, combobox, command menu, confirm dialog, context
-      menu, date picker, dialog, drawer, dropdown menu, inline edit, list,
-      navigation menu, popover, search input, switch, tabs, tag input, time
-      picker). Docs: the policy's §The keyboard contract is generated, not
-      written and the template's `keyboard` row, the components index's "How to
-      read a page" row (the case that teaches the row fails without it), the site
-      ledger's two module rows. Green: the docs suite **163 files / 1 712
-      tests**, `check-types` and `build` clean. The two gaps
-      named in the policy (the primitives' `Select` and the package lanes with no
-      curated page) are the row below. No native scenario applies — the model
-      reads source files and the strip prints them; no claim about a native frame
-      is made.
+      `decideActivation`/`decideMove`/`decideAbsolute`/`decideRating`, and a
+      literal `key === "tab"` or `Match.when("up", …)`, so a dropped handler or
+      an invented key fails by name; it also requires a contract for every served
+      page — curated page or package page — whose resolved module handles a
+      named key. `keyboard-strip.test.tsx` (6 cases) prints every note of every
+      contract and holds the two mounts. Directions measured: removing `dialog`'s
+      Escape row fails `missing Escape`; adding a Home row fails `invented Home`;
+      deleting the accordion contract fails with the page and its eight keys;
+      unmounting the package frame fails `expected 1 to be 2`. Contracted today:
+      **38 pages** across every collection — the 25 curated component pages, the
+      primitives' `checkbox-group`/`radio-group`/`rating`/`toggle`/`toggle-group`,
+      the components' `chat`/`hotkey-recorder`/`mention-input`/`preview-card`, and
+      `data-display/expandable-rows`, `editor/code-editor`, `shell/toolbar` and
+      `shell/app-menu`. The widened scan found the last four by itself (the raw
+      `key === "enter"` sites the predicate table had missed) and the toolbar's
+      Left/Right roving, which its first contract omitted. Docs: the policy's §The
+      keyboard contract is generated, not written and the template's `keyboard`
+      row, the components index's "How to read a page" row (the case that teaches
+      the row fails without it), the site ledger's two module rows. Green: the
+      docs suite **163 files / 1 712 tests**, `check-types` and `build` clean. The
+      one gap the policy names (the primitives' `Select`, whose keys are the
+      runtime's headless list) is the row below. No native scenario applies — the
+      model reads source files and the strip prints them; no claim about a native
+      frame is made.
 
-`[ ]` Extend the **keyboard contracts** past the curated lane — `packages/primitives`
-      `Select` takes its arrows/Enter/Escape from the runtime's headless list
-      (`@gpuix/react`), so the key derivation cannot read them from workspace
-      source; and the package lanes with no curated twin (`files`, `shell`,
-      `editor`, `media`, `data`, plus the components without one) ship key-bearing
-      modules the model does not cover yet (`preview-card`, `mention-input`,
-      `chat`, `hotkey-recorder`, the tree/table rows, the app menu, the toolbar,
-      the media player). The first needs a cited runtime contract (or a note that
-      the keys are the runtime's, argued like the ARIA budget); the second is a
-      row per page in `keyboard-contracts.ts` with the completeness scan widened
-      to `readPackagePages`. Owner: docs-site.
+`[ ]` Give the **primitives' Select** keyboard notes — its arrows, Enter and Escape
+      belong to the runtime's headless list (`@gpuix/react`), so the derivation
+      cannot read them from workspace source and the page keeps its prose alone.
+      It needs a cited runtime contract (or a note that the keys are the headless
+      list's, argued the way the ARIA budget is) and a derivation that reads it,
+      so a runtime bump fails the page the way a moved handler does. Owner:
+      docs-site.
 
 `[x]` Compile the **class reference** the styling page only sampled — `/docs/styling`
       showed ten representative classes (`h-9`, `px-3`, …) and no way to find the
@@ -17098,3 +17097,5 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/editor`: **a blank name published an unnamed find bar and a silent diff** — `SearchReplace` and `DiffViewer` destructured their names with defaults (`findLabel = "Find"`, `label = "Diff"`, …), and a default covers only `undefined`: an i18n table's missing row or a saved record handed over `""` / `"   "`, so the find and replacement fields reached `aria-label` with nothing, the previous/next actions were named by their `↑`/`↓` glyph rather than `Previous match`/`Next match`, and the diff — whose rows are `role="presentation"` and therefore carry no words of their own — published a group with no name at all. Every name now reads through the primitives' `accessibleName` and falls back to the module's own default constant, the rule the package's `CodeEditor` and `MarkdownEditor` already followed. Proof: `src/behaviour/search-replace.test.tsx` gains `reads a blank name as the default, never an unnamed control` (both fields' `aria-label`, and the four action names read off the a11y tree) and `src/behaviour/diff-viewer.test.tsx` `names the surface when the stored label is blank`; directions measured with the guards reverted, the two cases fail by name (`expected undefined to be 'Find'`, `expected '   ' to be 'Diff'`) while the other 38 pass; restored, the package is 7 files / 64 unit cases and 5 files / **40** behaviour cases green with `check-types`, `oxlint` and `oxfmt` clean (`check:tests` is red only on the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`). Docs `packages/editor/docs/{search-replace,diff-viewer}.mdx` §API/§Limitations state the rule, and the `Search and replace`/`Diff viewer` rows print it with the new counts (5 native, 3 native). No native scenario applies — the names are read off the render, and the `markdown-fence`/`editor-surface` paint is unchanged.
 
 `[x]` `packages/components`: **a blank confirmation label painted the irreversible action as a nameless box** — `ConfirmDialog` destructured `confirmLabel = "Confirm"` and `cancelLabel = "Cancel"`, and a default covers only `undefined`: an i18n table's missing key or a saved record handed over `""` / `"   "`, which reached the two `Button`s as their only child, so the modal that asks before a destructive action offered two actions with no words and no accessible names — one of them the action that cannot be undone. Both labels are read through the primitives' `accessibleName` and fall back to the module's own constants, the rule `MultiStepForm`'s actions already followed. Proof: `src/behaviour/confirm-dialog.test.tsx` gains `reads a blank action label as the default, never an unnamed action` (both actions read off the a11y tree by name), measured failing at `HEAD` with `expected [ '', '' ] to deeply equal ArrayContaining ["Cancel", "Confirm"]`; restored, the file is 8/8 and the package **956** unit cases green with `check-types`, `oxlint` and `oxfmt` clean (`check:tests` is red only on the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`). Docs `packages/components/docs/confirm-dialog.mdx` §API/§Limitations state the rule, and the `Confirmation dialogs` row prints it with the new count (8 native). No native scenario applies — the names are read off the real renderer, and the measured `dialog-lifecycle` routes are unchanged.
+
+`[x]` `packages/media`: **a caption or description that arrived blank laid out a full blank line** — `ImagePreview` painted its `caption` whenever it was not `undefined`, and `DropZone` did the same for `description`, so copy an i18n table never filled — or a saved record handed over `"   "` — painted a line that said nothing. The pinned runtime measures the difference the test suites had already recorded for `visibleCopy` in `@gpuixui/primitives/core`: `""` lays out at **0 px** and a run of spaces at **16 px**, so the whitespace-only string is the visible bug, while the components' `=== undefined` guard let it through (the same rule the wizard's step description already followed). Both surfaces read the copy through `visibleCopy` now, so a blank caption paints no line and a real one is painted exactly as written, spacing kept. Proof: `src/image-preview.test.tsx` and `src/drop-zone.test.tsx` each gain `paints no caption/description line for a … that arrived blank` (blank, spaces and tabs paint no `<text>`; `"  By Ada  "` / `"  Up to 2 MB  "` still paint, with their padding), and the package's new `src/behaviour/visible-copy.test.tsx` (3 native cases) reads `getAllText()` off a real renderer: the three surfaces paint no whitespace line, and the negative control keeps the caller's own spacing. Directions measured: with `visibleCopy` reverted to the raw prop, the two unit cases fail on the painted line and the two window cases fail `expected [ '   ' ] to not include '   '` / `expected [ 'Drop files', '   ' ] …`; restored, `@gpuixui/media` is **12 files / 169 unit** and **4 files / 20 behaviour** cases green with `check-types` clean. Docs `packages/media/docs/{image-preview,drop-zone}.mdx` §Limitations state the rule and both prop JSDocs carry it; the `Image preview` and `File / folder selection` rows print it beside the measured box. No playground scenario applies — the line is read off the render the behaviour suite drives, and the `image-fit`/`file-drop` probes paint the same components with real copy.

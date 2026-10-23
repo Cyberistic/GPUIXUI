@@ -37,3 +37,4 @@ import { DropZone } from "@gpuixui/media";
 - **No automatable live drop**: only the offscreen renderer simulates one.
 - A drop is swallowed while a text field holds the input session.
 - A **blank `pickLabel`** reads as `"Choose files"` and is trimmed, so the one reliable route on a host without a drop event is never an unnamed action.
+- **A blank `description` paints no line**: `description` is copy from a data table or an i18n file, so an empty or whitespace-only one is an absence — the pinned runtime lays out `""` at 0px and a run of spaces at 16px, so it is read through `visibleCopy` before the paint and a description given is painted exactly as written.

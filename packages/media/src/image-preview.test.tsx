@@ -24,6 +24,7 @@ import {
   hostStyleNumber,
   hostTag,
   expectSome,
+  textElements,
 } from "./testing/element.js";
 
 const box = (src: string, props: object = {}) => {
@@ -181,5 +182,32 @@ describe("ImagePreview", () => {
       ),
     );
     expect(expectSome(elementProp(retry, "children"))).toBe("Retry");
+  });
+
+  it("paints no caption line for a caption that arrived blank", () => {
+    // The bug guarded: `caption === undefined` covered only an absent prop, so a
+    // caption an i18n table or a saved record handed over blank laid out a full
+    // blank line under the picture — measured on the pinned runtime, `""` is
+    // 0px tall and a run of spaces is 16px (`visibleCopy`, which the wizard's
+    // step description already uses).
+    Arr.forEach(["", "   ", "\t\n"], (caption) => {
+      const root = renderImagePreview(
+        { src: "data:image/png;base64,AA==", alt: "photo", caption },
+        lightTheme,
+      );
+      expect(textElements(root)).toStrictEqual([]);
+    });
+    // The negative control: a real caption is painted exactly as written.
+    const captioned = renderImagePreview(
+      {
+        src: "data:image/png;base64,AA==",
+        alt: "photo",
+        caption: "  By Ada  ",
+      },
+      lightTheme,
+    );
+    expect(
+      Arr.map(textElements(captioned), (line) => elementProp(line, "children")),
+    ).toStrictEqual([Option.some("  By Ada  ")]);
   });
 });

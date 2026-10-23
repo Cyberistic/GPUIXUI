@@ -13,6 +13,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { renderDropZone, type DropPayload } from "./drop-zone.js";
@@ -23,6 +24,7 @@ import {
   hostHandler,
   hostStyleString,
   expectSome,
+  textElements,
 } from "./testing/element.js";
 
 const noop = (): void => undefined;
@@ -212,5 +214,35 @@ describe("DropZone", () => {
     });
     expect(entered).not.toHaveBeenCalled();
     expect(left).toHaveBeenCalledTimes(1);
+  });
+
+  it("paints no description line for a description that arrived blank", () => {
+    // The bug guarded: `description === undefined` covered only an absent prop,
+    // so a description an i18n table never filled laid out a full blank line
+    // under the zone's label (a run of spaces is 16px on the pinned runtime),
+    // while the wizard's step description already read a blank as absence.
+    Arr.forEach(["", "   ", "\t\n"], (value) => {
+      const root = renderDropZone(
+        { label: "Drop files", onDrop: noop, description: value },
+        lightTheme,
+        surface(false),
+      );
+      expect(
+        Arr.map(textElements(root), (line) => elementProp(line, "children")),
+      ).toStrictEqual([Option.some("Drop files")]);
+    });
+    // The negative control: a real description is painted exactly as written.
+    const described = renderDropZone(
+      {
+        label: "Drop files",
+        onDrop: noop,
+        description: "  Up to 2 MB  ",
+      },
+      lightTheme,
+      surface(false),
+    );
+    expect(
+      Arr.map(textElements(described), (line) => elementProp(line, "children")),
+    ).toStrictEqual([Option.some("Drop files"), Option.some("  Up to 2 MB  ")]);
   });
 });

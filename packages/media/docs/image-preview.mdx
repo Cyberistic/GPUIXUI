@@ -45,3 +45,4 @@ import { ImagePreview } from "@gpuixui/media";
 - The loading state is a `Spinner`, announced as `loadingLabel`.
 - A **blank `loadingLabel`, `errorLabel` or `retryLabel`** reads as its documented default and is trimmed: a label table is copy, so an empty string is an absence, not a name, and the spinner, the error sentence and the retry action are always announced.
 - **A blank picture name reads as `"Picture"`**: the runtime publishes an `<img>` as an `Image` node named by its `alt`, so an empty name — an i18n row, or a saved record's `null` — would otherwise be announced with no name at all. A name given is trimmed and kept.
+- **A blank caption paints no line**: `caption` is copy from a data table or an i18n file, so an empty or whitespace-only one is an absence — the pinned runtime lays out `""` at 0px and a run of spaces at 16px, so it is read through `visibleCopy` before the paint and a caption given is painted exactly as written.

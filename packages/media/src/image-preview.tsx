@@ -17,6 +17,7 @@ import { ImageZoom } from "@gpuixui/components/image-zoom";
 import { Icon } from "@gpuixui/icons";
 import { Spinner } from "@gpuixui/primitives";
 import { Button } from "@gpuixui/primitives/button";
+import { visibleCopy } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Schema from "effect/Schema";
@@ -42,7 +43,7 @@ export interface ImagePreviewProps extends Omit<Props, "children"> {
   readonly src: string;
   /** The picture's accessible name. A blank or non-text value reads as `"Picture"`. */
   readonly alt: string;
-  /** A line under the frame. */
+  /** A line under the frame. A blank one paints no line. */
   readonly caption?: string;
   /** Default: `"error"` for a blank `src`, else `"loaded"`. */
   readonly status?: ImagePreviewStatus;
@@ -127,6 +128,10 @@ export const renderImagePreview = (
   // a name a reader cannot identify: a saved record writes `null` where it
   // carried no name, so both the blank and the non-text arrive here as absent.
   const pictureName = accessibleName(alt, PICTURE_NAME);
+  // A caption is copy like a name: a blank one paints a full blank line under
+  // the picture (`visibleCopy` holds the measured 16px rule), so an i18n row
+  // that arrived empty leaves the picture alone instead of adding a line.
+  const captionText = visibleCopy(caption);
   // A record restored from storage writes `null` where it carried no picture;
   // reading the source as text keeps the derived error state paintable instead
   // of throwing out of `isBlank`.
@@ -201,8 +206,10 @@ export const renderImagePreview = (
       >
         {body}
       </div>
-      {caption === undefined ? null : (
-        <text style={{ color: theme.colors.mutedForeground }}>{caption}</text>
+      {captionText === undefined ? null : (
+        <text style={{ color: theme.colors.mutedForeground }}>
+          {captionText}
+        </text>
       )}
     </div>
   );
