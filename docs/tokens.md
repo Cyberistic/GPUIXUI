@@ -2600,7 +2600,7 @@ already reads on.
 crosses: the theme's `border`, stepped toward `borderStrong` — the functional
 boundary and the strongest line a theme owns — by the smallest **2%** step that
 clears the floor, returned unchanged where it already does. `borderStrong` clears
-all 80 placements in every shipped style (its tightest is 3.73:1, Windows light's
+all 90 placements in every shipped style (its tightest is 3.73:1, Windows light's
 press over `accent`), so the derivation always has room: the lines it moves land
 at **1.050:1 to 1.081:1**, and the tightest placement overall is the press a row
 paints, macOS light's over `hover`, at **1.050:1** — one 2% step above the floor.

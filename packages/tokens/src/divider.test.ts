@@ -70,6 +70,7 @@ const read = (path: string): string =>
 const catalogue = read("../../../docs/tokens.md");
 const designSystem = read("../../../docs/design-system.md");
 const inventory = read("../../../COMPONENTS.md");
+const readme = read("../README.md");
 const table = read("../../data/src/table/table.tsx");
 
 /** Every shipped, high-contrast, platform and authored style, named. */
@@ -388,6 +389,9 @@ describe("a rule on the row it crosses", () => {
       expect(page).toContain("seven of the thirty-six press placements");
     });
     expect(inventory).toContain(`${missed.length} of the ${placements.length}`);
+    expect(readme).toContain(
+      `${missed.length} of the ${placements.length} shipped placements`,
+    );
     expect(catalogue).toContain("dividerPresses");
     expect(catalogue).toContain("dividerFailures");
     expect(catalogue).toContain("1.050");

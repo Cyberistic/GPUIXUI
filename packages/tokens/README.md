@@ -489,7 +489,7 @@ dark at 7.20:1. A runnable example lives in
 The two **saturated state tones** are deliberately not surfaces: a box paints
 `accent` and `selected`, and both are drawn from the same accent family as the
 wash, so a selection moves them toward the text rather than away from it. The
-wash costs contrast in all 80 placements on those tones and leaves 39 under the
+wash costs contrast in all 90 placements on those tones and leaves 43 under the
 floor the unwashed pair met (tightest: Luna light's secondary line on a selected
 row, 3.38:1; tightest body placement: the base dark theme's selected row title,
 5.11:1). A selectable run belongs on a content tone; the suite reads the
@@ -984,7 +984,7 @@ A **row's rule** is a placement of its own: a table row paints its thin `border`
 inside the row, over the fill the row wears — the three states it tints or fills
 (`dividerWashes`: `hover`, `accent`, `selected`) and the press it **derives**
 (`dividerPresses`, because a press is `pointerWash(theme, "active", replaced)`,
-not the `active` role). The raw role misses 22 of the 88 shipped placements, so
+not the `active` role). The raw role misses 22 of the 90 shipped placements, so
 `dividerOn(theme, surface)` steps `border` toward `borderStrong` by the smallest
 2% that clears the floor, and `dividerFailures` reports a palette whose strongest
 line cannot answer one — as `derivedDivider` or `pressedDivider`, inside the
