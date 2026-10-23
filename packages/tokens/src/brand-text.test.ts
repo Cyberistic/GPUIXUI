@@ -111,7 +111,7 @@ describe("the surfaces a brand-coloured run can sit on", () => {
       platformTheme(themes.dark, "darwin").colors.primary,
       platformTheme(themes.dark, "darwin").colors.popover,
     );
-    expect(popover).toBeCloseTo(3.81, 1);
+    expect(popover).toBeCloseTo(4.94, 1);
   });
 });
 
@@ -142,7 +142,7 @@ describe("the washes a row paints under brand text", () => {
     const darwinDark = platformTheme(themes.dark, "darwin");
     expect(
       contrastRatio(darwinDark.colors.primary, darwinDark.colors.accent),
-    ).toBeCloseTo(3.06, 2);
+    ).toBeCloseTo(3.96, 2);
     const linuxLight = platformTheme(themes.light, "linux");
     expect(
       contrastRatio(linuxLight.colors.primary, linuxLight.colors.accent),
@@ -166,7 +166,7 @@ describe("the washes a row paints under brand text", () => {
       lunaDark.colors.primary,
       lunaDark.colors.selected,
     );
-    expect(accent).toBeCloseTo(3.06, 2);
+    expect(accent).toBeCloseTo(3.96, 2);
     expect(selected).toBeCloseTo(4.45, 2);
     expect(page).toContain("the two washes a **row** paints");
     expect(page).toContain(
@@ -412,7 +412,7 @@ describe("brand text on a message's own tint", () => {
     const darwinDark = platformTheme(themes.dark, "darwin");
     expect(
       contrastRatio(darwinDark.colors.primary, darwinDark.colors.warningSoft),
-    ).toBeCloseTo(2.32, 2);
+    ).toBeCloseTo(3.01, 2);
     const worst = placements.reduce((low, placement) =>
       placement.ratio < low.ratio ? placement : low,
     );

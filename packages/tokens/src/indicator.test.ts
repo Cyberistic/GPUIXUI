@@ -91,13 +91,13 @@ describe("every shipped theme shows its marks", () => {
           : low,
       );
 
-    // A wash a row wears is the tightest strip in the whole set: macOS dark's
-    // primary mark against the `accent` a list row tints under its own pointer
-    // is 3.06:1, the least headroom over the 3:1 floor in the 16 styles.
+    // A message's soft tint is the tightest strip in the whole set: macOS
+    // dark's primary mark on the warning tint a filled action stands on is
+    // 3.009:1, the least headroom over the 3:1 floor in the styles measured.
     expect(tightest.role).toBe("primary");
-    expect(tightest.surface).toBe("accent");
+    expect(tightest.surface).toBe("warningSoft");
     expect(tightest.theme).toBe("Dark · macOS");
-    expect(tightest.ratio).toBeCloseTo(3.06, 2);
+    expect(tightest.ratio).toBeCloseTo(3.009, 3);
   });
 });
 
@@ -194,9 +194,26 @@ describe("a mark on the row a reader chose", () => {
     );
 
     expect(rows).toEqual([]);
-    // The catalogue prints the tightest placement, so the page and the sweep
-    // cannot disagree about how much headroom the row washes leave.
-    expect(catalogue).toContain("3.06:1");
+    // The catalogue prints the tightest placement the sweep measures, so the
+    // page cannot keep a margin the contract no longer has: the row washes are
+    // no longer the tightest strip — a message's tint is.
+    const closest = shipped
+      .flatMap((theme) =>
+        placements(theme).map((placement) => ({
+          theme: theme.name,
+          ...placement,
+        })),
+      )
+      .reduce((low, placement) =>
+        (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
+      );
+
+    expect(
+      catalogue.replace(/\s+/g, " "),
+      `${closest.theme} ${closest.role}/${closest.surface}`,
+    ).toContain(
+      `macOS dark's \`primary\` mark on the warning tint a filled action stands in, at ${closest.ratio?.toFixed(3)}:1`,
+    );
   });
 });
 
@@ -306,6 +323,94 @@ describe("a status mark paints the readable role, not the solid fill", () => {
   });
 });
 
+/**
+ * Guards the mark a **message's own tint** carries.
+ *
+ * `indicatorSurfaces` named the page, a card, a popover, a muted strip, the four
+ * washes a row wears and a field's fill, and none of the four soft status tints
+ * a message is painted on: an `Alert` fills its tone's `xSoft` role and its
+ * description is a container, so a filled `primary` action a consumer places
+ * there paints its face on that tint — the same composition the contrast table
+ * measures for the action's edge. Measured, macOS dark's system blue was under
+ * the 3:1 a face a reader has to find needs on **all four** tints (2.33:1 on the
+ * warning tint (`2.32:1`), while every other style cleared them.
+ */
+describe("a mark on a message's own tint", () => {
+  const tints = statusTones.map((tone) => `${tone}Soft` as const);
+
+  it("measures the four soft tints a message fills", () => {
+    expect(indicatorSurfaces).toEqual(expect.arrayContaining(tints));
+  });
+
+  it("holds the painters that put a filled action inside an alert", () => {
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const alert = readFileSync(
+      new URL("../../components/src/alert.tsx", import.meta.url),
+      "utf8",
+    );
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+
+    const tones = recipes.slice(
+      recipes.indexOf("export const ALERT_TONES"),
+      recipes.indexOf("export const ALERT_ICON"),
+    );
+    tints.forEach((tint) => expect(tones).toContain(`bg-${tint}`));
+    expect(alert).toContain("ALERT_TONES[value]");
+    // The description is the container a filled action can go in.
+    expect(alert).toContain("It is a container, so it may hold an action");
+    // The primary variant fills `primary` with no edge of its own, so its face
+    // is the whole control: the mark contract is what keeps it findable.
+    expect(button).toContain('variant = "secondary"');
+    expect(button).toContain('"primary"');
+  });
+
+  it("reports the system blue macOS dark lost on every tint", () => {
+    // The value the style inherited before this contract existed, measured on
+    // the tints the base dark theme declares.
+    const systemBlue = extendTheme(platformTheme(themes.dark, "darwin"), {
+      colors: { primary: "#0A84FF" },
+    });
+
+    expect(
+      indicatorFailures(systemBlue)
+        .filter(({ role }) => role === "primary")
+        .map(({ surface, ratio }) => [
+          surface,
+          Number(ratio?.toFixed(2)),
+          contrastFloorsFor(systemBlue).boundary,
+        ]),
+    ).toEqual([
+      ["infoSoft", 2.88, 3],
+      ["successSoft", 2.56, 3],
+      ["warningSoft", 2.32, 3],
+      ["destructiveSoft", 2.76, 3],
+    ]);
+  });
+
+  it("keeps a filled action findable on every tint in every shipped theme", () => {
+    expect(
+      shipped.flatMap((theme) =>
+        tints.flatMap((surface) => {
+          const ratio = contrastRatio(
+            theme.colors.primary,
+            theme.colors[surface],
+          );
+          const floor = contrastFloorsFor(theme).boundary;
+          return ratio === undefined || ratio < floor
+            ? [`${theme.name} primary on ${surface}: ${ratio} (needs ${floor})`]
+            : [];
+        }),
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("a mark it cannot measure is reported, not skipped", () => {
   it("reports a translucent fill on every strip", () => {
     const translucent = extendTheme(lightTheme, {
@@ -351,12 +456,14 @@ describe("the catalogue documents the contract", () => {
  * `indicatorFailures(theme)` defaulted to the default 3:1 floor whatever the
  * theme declared, so a brand derived from a high-contrast theme — whose marks
  * must be found at 4.5:1 — passed a report whose floors its own variant does not
- * accept. `#6B6B6B` is a mark that clears 3:1 on every strip and only 3.67:1 and
- * 4.35:1 on the two washes a row tints under the pointer.
+ * accept. `#636363` is a mark that clears 3:1 on every strip — the tightest is
+ * the `destructiveSoft` a message's action stands on, at 3.04:1 — and stays
+ * under the 4.5:1 a high-contrast theme asks on the strips in the middle of the
+ * range.
  */
 describe("the floors an indicator report uses", () => {
   const brand = extendTheme(highContrastLightTheme, {
-    colors: { primary: "#6B6B6B" },
+    colors: { primary: "#636363" },
   });
 
   it("holds the marks to the theme's own variant", () => {
@@ -368,10 +475,12 @@ describe("the floors an indicator report uses", () => {
         floor,
       })),
     ).toEqual([
-      { role: "primary", surface: "hover", floor: 4.5 },
       { role: "primary", surface: "active", floor: 4.5 },
-      { role: "primary", surface: "accent", floor: 4.5 },
       { role: "primary", surface: "selected", floor: 4.5 },
+      { role: "primary", surface: "infoSoft", floor: 4.5 },
+      { role: "primary", surface: "successSoft", floor: 4.5 },
+      { role: "primary", surface: "warningSoft", floor: 4.5 },
+      { role: "primary", surface: "destructiveSoft", floor: 4.5 },
     ]);
   });
 

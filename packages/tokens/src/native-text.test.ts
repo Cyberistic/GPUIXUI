@@ -1173,7 +1173,7 @@ describe("the accent a document host paints", () => {
       "light 4.00",
       "high-contrast light 6.54",
       "darwin light 3.37",
-      "darwin dark 3.14",
+      "darwin dark 3.97",
       "linux light 3.36",
       "linux dark 4.10",
       "win32 light 3.13",

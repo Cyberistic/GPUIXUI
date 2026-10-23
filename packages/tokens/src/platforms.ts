@@ -217,7 +217,14 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         active: "#3A3A40",
         border: "#3A3A40",
         borderStrong: "#ACACB1",
-        primary: "#0A84FF",
+        // Apple's dark system blue, one step lighter than the HIG's `#0A84FF`:
+        // a filled `primary` action placed in an `Alert`'s description paints
+        // its face on the tone's soft tint, and the system blue read 2.33:1 on
+        // the warning tint — under the 3:1 a face a reader has to find needs.
+        // The smallest step toward white that clears all four tints is 20%
+        // (`3.009:1` on the warning tint, the tightest), and it keeps the
+        // `#11141A` label at 6.54:1 on the fill.
+        primary: "#3B9DFF",
         primaryForeground: "#11141A",
         ring: "#4CA2FF",
         accent: "#1A3D60",

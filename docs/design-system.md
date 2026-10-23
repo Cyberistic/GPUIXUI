@@ -84,7 +84,7 @@ action in the library.
 **A fill role is not a text role.** `primary` is designed as a surface — it
 carries `primaryForeground`, and that is the pair the contrast table measures.
 Written as text it fails the 4.5:1 a reader needs: the base light brand is
-4.30:1 on the wash a pressed link tints behind itself, macOS dark 3.10:1, Linux
+4.30:1 on the wash a pressed link tints behind itself, macOS dark 4.01:1, Linux
 light 3.44:1. So a link or any brand-coloured run paints `brandText(theme)`,
 which returns the brand where it already reads and otherwise steps it toward the
 theme's `foreground` until the least readable of the eight surfaces it can sit on
@@ -716,8 +716,9 @@ The keyboard line is **separated from the control's own fill by one line's
 width** (one `borderWidth.strong`, 2 points in the shipped themes), so the strip
 behind the control shows through the gap and the ring is read against that strip.
 That is what lets a filled action be focused at all: `ring` is the brand, so a
-flush line was drawn in the action's own colour (1.00–1.38:1 on `primary` in all
-sixteen styles), and no single colour could clear both the page and a brand face.
+flush line was drawn in the action's own colour (1.00–1.15:1 on `primary`, 1.00–1.38:1
+on `destructive`, in all sixteen styles), and no single colour could clear both the
+page and a brand face.
 The ring is measured on every strip a control sits on — the page, a card, a
 popover, a toolbar, a secondary panel, the `input`/`selected`/`hover`/`active`/
 `accent` surfaces a control can sit inside, and the soft status tint an action
@@ -737,11 +738,11 @@ component packages already apply in their own seam.
 
 A **filled action** is why the ring is separated. `ring` is the brand and
 `primary` is the brand, so a flush line is drawn in the fill it touches —
-**1.00–1.38:1** on both `primary` and `destructive` in every
-shipped style — and the pair is unsatisfiable rather than unmet: at
+**1.00–1.15:1** on `primary` and **1.00–1.38:1** on `destructive`
+in every shipped style — and the pair is unsatisfiable rather than unmet: at
 `outlineOffset: 0` one colour would have to clear the boundary floor against both
-the page and the fill, and no luminance does in 8 of the sixteen styles for
-`primary` (9 for `destructive`), while where one exists it is at least 0.11 of
+the page and the fill, and no luminance does in ten of the eighteen styles for
+either `primary` or `destructive`, while where one exists it is at least 0.11 of
 relative luminance from the brand. The neutral faces held at rest, but their
 derived pointer fills did not — the press fell under the floor in **8 of the
 sixteen** styles for `secondary` and six for `accent`. The line now sits **one
@@ -799,7 +800,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | a filled role's derived pointer step (`filledHover` / `filledPressed` through `actionFeedbackPlacements`) against the fill it replaces | 1.05:1 | 1.05:1 |
 | focus ring on background, card, popover, muted and secondary, on the `input`/`selected`/`hover`/`active`/`accent` surfaces a control can sit inside, and on the four soft status tints an action inside a message draws it on — the line is separated from the control's own fill by one `borderWidth.strong`, so the gap shows the strip behind it and a filled action's own brand face is never a ring surface (§8); and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint, on the `hover`/`active` wash a bordered control tints, on the derived pointer fills of the one action that paints an edge (`filledHover`/`filledPressed("secondary")`, held by `styles.test.ts`), and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
-| an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
+| an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick, a field's caret or a filled action's face in a message — on background, card, popover, a muted strip, a field's `input` fill, on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row), and on the four soft status tints a message is filled with | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, a menu's soft group rule, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, and every raised elevation level (`sm`, `md`, `lg`) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, whose edge is the contrast table's claim on a row's wash) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
@@ -899,8 +900,8 @@ whose presence dot is a mark. The selected wash was measured by nothing, and
 Luna light's shared success step landed at 2.82:1 on it: a conversation's
 presence dot vanished exactly when the reader selected that conversation. The
 look carries the next green step as its `success` (4.12:1 there). The tightest
-placement in the whole set is now macOS dark's primary mark on a list row's
-`accent` wash, at 3.06:1.
+placement in the whole set is now macOS dark's primary mark on the warning tint
+a filled action stands in, at 3.009:1.
 
 A field's own fill holds a **third** text role besides the value and the
 placeholder: the muted line. A time picker paints its separator and its clear

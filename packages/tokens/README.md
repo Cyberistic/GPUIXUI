@@ -314,7 +314,7 @@ as invisible.
 `primary` is a fill, not a text colour: it is designed to carry
 `primaryForeground`, and as text it is under the 4.5:1 a link needs — the base
 light brand measures 4.30:1 on the wash a pressed link tints behind itself and
-macOS dark 3.10:1. `brandText(theme)` returns the brand where it already reads
+macOS dark 4.01:1. `brandText(theme)` returns the brand where it already reads
 and otherwise steps it toward the theme's `foreground` until the least readable
 of the eight surfaces a link can sit on clears the theme's floor (4.5:1 default,
 7:1 high contrast) — the page surfaces, the washes a link tints, and the
@@ -399,11 +399,10 @@ sibling keep their boxes. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
 A **filled action's** own face is why the ring is separated. `ring` *is* the
-brand, so a flush line merges with `primary`/`destructive` (**1.00–1.38:1** on
-both faces in all sixteen styles), and at `outlineOffset: 0` one colour
+brand, so a flush line merges with `primary` (**1.00–1.15:1**) and `destructive`
+(**1.00–1.38:1**) in all sixteen styles, and at `outlineOffset: 0` one colour
 would have to clear the boundary floor against both the face and the page — the
-feasible luminance set is empty in **8 of the sixteen** styles for `primary` and
-9 for `destructive`, and where one exists it is ≥0.11 from the brand. With the
+feasible luminance set is empty in **ten of the eighteen** styles for either face, and where one exists it is ≥0.11 from the brand. With the
 line one line's width outside the control, every filled action is measured on
 the surface it sits on like any other control, and the tightest ring placement
 over the sixteen styles is Windows's red message tint at 3.05:1.
@@ -606,7 +605,7 @@ Each platform's values are editable, not a preset you are stuck with:
 ```ts
 import { extendTheme, platformStyles, platformTheme, themes } from "@gpuixui/tokens";
 
-platformStyles.darwin.colors.dark.primary; // "#0A84FF"
+platformStyles.darwin.colors.dark.primary; // "#3B9DFF"
 
 const house = extendTheme(platformTheme(themes.dark, "win32"), {
   colors: {

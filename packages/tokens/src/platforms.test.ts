@@ -195,8 +195,15 @@ describe("the Apple platform style", () => {
   });
 
   it("paints the system blue, deepening light only where a label must read", () => {
-    // `#0A84FF` is Apple's dark system blue, and carries its own dark label.
-    expect(darwin.colors.dark.primary).toBe("#0A84FF");
+    // `#3B9DFF` is Apple's dark system blue one step lighter: the HIG's
+    // `#0A84FF` measured under the 3:1 a filled action's face needs on the four
+    // soft status tints it can stand in (2.32:1 on the warning tint), and this
+    // is the smallest step toward white that clears all four. It still carries
+    // its own dark label.
+    expect(darwin.colors.dark.primary).toBe("#3B9DFF");
+    expect(
+      contrastRatio(darwin.colors.dark.primaryForeground, "#0A84FF"),
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
     // `#007AFF` with a white label measures 4.02:1 — under the 4.5:1 the
     // library's own contract puts under text on a coloured fill. The light fill
     // is the measured step; the deviation is this test's premise, not a drift.

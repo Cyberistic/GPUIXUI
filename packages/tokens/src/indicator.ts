@@ -64,6 +64,13 @@ export const indicatorRoles = [
  * painted `success`, `destructive`, `mutedForeground` or a tone's readable role
  * (`avatar.tsx`). A dot on the row a reader has chosen was measured by nothing,
  * and it found Luna light's success fill at 2.99:1 on the look's selected wash.
+ *
+ * A message's own **soft tint** is the last surface a mark stands on: an
+ * `Alert`'s description is a container, so a filled `primary` action a consumer
+ * places there paints its face on the tone's `xSoft` role — the same
+ * composition the contrast table measures for the action's edge. A mark there
+ * was measured by nothing, and it found macOS dark's system blue at 2.33:1 on
+ * the warning tint, under the 3:1 a face a reader has to find needs.
  */
 export const indicatorSurfaces = [
   "background",
@@ -78,6 +85,7 @@ export const indicatorSurfaces = [
   // drawn on: `nativeTextTheme` hands the runtime `primary` as the caret on the
   // fill the field paints. It was the one mark surface no placement named.
   "input",
+  ...statusTones.map((tone) => `${tone}Soft` as const),
 ] as const;
 
 /** One indicator mark that cannot be found on the strip it is drawn on. */

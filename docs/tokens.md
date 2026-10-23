@@ -443,12 +443,12 @@ styles:
 | Where the brand is written | Theme | Ratio |
 | -------------------------- | ----- | ----- |
 | `primary` on the `active` wash a pressed link tints | base light | **4.30:1** |
-| `primary` on `active` | macOS dark | **3.10:1** |
-| `primary` on `popover` | macOS dark | 3.81:1 |
+| `primary` on `active` | macOS dark | **4.01:1** |
+| `primary` on `popover` | macOS dark | 4.94:1 |
 | `primary` on `active` | Linux light | 3.44:1 |
 | `primary` on the page | Windows XP (Luna) light | 4.31:1 |
 | `primary` on `active` | Windows 7 (Aero) light | 3.83:1 |
-| `primary` on the `accent` wash a hovered row paints | macOS dark | 3.06:1 |
+| `primary` on the `accent` wash a hovered row paints | macOS dark | 3.96:1 |
 | `primary` on `selected` | Windows XP (Luna) dark | 4.45:1 |
 
 `brandText(theme)` returns a colour for them instead of a second palette:
@@ -501,7 +501,7 @@ palettes):
 
 | Where the brand is written | Theme | Ratio |
 | -------------------------- | ----- | ----- |
-| `primary` on `warningSoft` | macOS dark | **2.32:1** |
+| `primary` on `warningSoft` | macOS dark | **3.01:1** |
 | the shared colour on `warningSoft` | macOS dark | **3.43:1** |
 | the shared colour on `infoSoft` | base light | 4.46:1 |
 | the shared colour on `warningSoft` | base dark | 3.94:1 |
@@ -789,7 +789,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
 | `borderStrong` | `#67686D` | `#ACACB1` | `#6A6965` | `#B2B3B4` | `#696A6B` | `#ACACAD` |
-| `primary` | `#0A6CD6` | `#0A84FF` | `#1A6DD3` | `#78AEED` | `#0078D4` | `#4CC2FF` |
+| `primary` | `#0A6CD6` | `#3B9DFF` | `#1A6DD3` | `#78AEED` | `#0078D4` | `#4CC2FF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1A6DD3` | `#78AEED` | `#0078D4` | `#4CC2FF` |
 | `accent` | `#CADEF7` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
@@ -921,7 +921,7 @@ import {
 } from "@gpuixui/tokens";
 
 // What the macOS style ships, visible and copyable.
-platformStyles.darwin.colors.dark.primary; // "#0A84FF"
+platformStyles.darwin.colors.dark.primary; // "#3B9DFF"
 
 // Take the platform look and own the parts you change. A brand that changes a
 // fill owns its on-colour too, or the platform's foreground is designed for a
@@ -1987,11 +1987,11 @@ or the geometry.
 A **filled action** is the case that decides the geometry. `ring` *is* the brand
 — `ring` and `primary` are the same ramp step in thirteen of the sixteen styles —
 so a line flush with the fill is drawn in the action's own colour: measured, it
-reads **1.00–1.38:1** on both `primary` and `destructive` in
-every style, at rest and under the pointer. A flush ring is not a palette the
+reads **1.00–1.15:1** on `primary` and **1.00–1.38:1** on `destructive`
+in every style, at rest and under the pointer. A flush ring is not a palette the
 styles fail to meet; it is unsatisfiable. One colour would have to clear the
-boundary floor against both the page and the fill, and no luminance does in **8
-of the sixteen** styles for `primary` and **9 of the sixteen** for `destructive`,
+boundary floor against both the page and the fill, and no luminance does in **ten
+of the eighteen** styles for either `primary` or `destructive`,
 while where a colour does exist its nearest point is still **0.11** of relative
 luminance away from the brand — so it is never the brand the ring is. Two of the
 four faces were paired and held at rest (`ring` on `secondary`, `ring` on
@@ -2717,12 +2717,14 @@ A mark still has one job: a reader has to find it from across a panel. So it is
 held to the theme's non-text floor — `contrastFloors.boundary`, 3:1 (4.5:1 in a
 high-contrast theme) — on every strip a bar or dot is drawn on.
 
-The 8 mark roles, on the 9 strips, are `indicatorRoles` and `indicatorSurfaces`
+The 8 mark roles, on the 13 strips, are `indicatorRoles` and `indicatorSurfaces`
 — `background`, `card`, `popover` and a `muted` toolbar strip at rest, the four
 washes a row wears (`hover` and `active` while the pointer is on it or pressed,
-`accent` under the pointer on a list row and `selected` once it is chosen), and a
-field's own `input` fill, where the native text host paints its caret
-(`nativeTextTheme` hands the runtime `primary` as the caret):
+`accent` under the pointer on a list row and `selected` once it is chosen), a
+field's own `input` fill where the native text host paints its caret
+(`nativeTextTheme` hands the runtime `primary` as the caret), and the four soft
+status tints a message is painted on (`infoSoft`, `successSoft`, `warningSoft`,
+`destructiveSoft`):
 
 | Mark | Role |
 | ---- | ---- |
@@ -2775,10 +2777,20 @@ theme's own variant's — `contrastFloorsFor(theme).boundary` — so a high-cont
 brand is held to 4.5:1 without the caller naming a floor set; an explicit floor
 set still overrides it. Every shipped,
 high-contrast, platform and authored theme passes; the tightest placement is
-macOS dark's `primary` mark on the `accent` a list row tints under its own
-pointer, at 3.06:1. `indicator.test.ts` holds the sweep, the rule, the four
-washes and their painters, the Aero pre-fix values, the Luna dot, the
-unmeasurable case, the variant default and a caller's stricter floor.
+macOS dark's `primary` mark on the warning tint a filled action stands in, at
+3.009:1. `indicator.test.ts` holds the sweep, the rule, the four washes and their
+painters, the Aero pre-fix values, the Luna dot, the unmeasurable case, the
+variant default and a caller's stricter floor.
+
+A **message's own tint** is the last strip a mark stands on, and the one that
+needed the palette: an `Alert` fills its tone's `xSoft` role and its description
+is a container, so a filled `primary` action a consumer places there paints its
+face on that tint — the composition the contrast table already measures for the
+action's edge. Measured, macOS dark's system blue `#0A84FF` sat at **2.88**,
+**2.56**, **2.32** and **2.76** on the four tints, all under the 3:1 a face a
+reader has to find needs, while every other style cleared them. The style takes
+the smallest step toward white that clears (`#3B9DFF`, 3.009:1 on the warning
+tint) and keeps its `#11141A` label at 6.54:1 on the fill.
 
 ### Every role is measured
 
@@ -3936,8 +3948,8 @@ export const searchHighlight = (theme: Theme) => {
   stronger safe wash — a dark palette whose text is already near the floor. Both
   washes stay translucent, so the strip shows through the way the runtime's own
   do. Across the shipped styles the active share lands at 34–53%, and the pair is
-  always distinguishable: the tightest separation is **1.150:1**, high-contrast
-  dark on a `muted` strip.
+  always distinguishable: the tightest separation is **1.077:1**, macOS dark's
+  active and resting washes on its own popover.
 - The corner is `radius.sm`, the tightest step the scale carries. The runtime's
   own 2px is a literal, not a step — a look whose radii are authored (Luna's are
   1–4px) otherwise keeps a corner from another design system.
@@ -4359,15 +4371,16 @@ swatch, names the tightest placement over every shipped style (Aero light's seri
 lines.
 
 `packages/tokens/src/indicator.test.ts` covers the marks a component paints: the
-eight roles on the nine surfaces — `background`, `card`, `popover` and `muted` at
-rest, the four washes a row wears (`hover`, `active`, `accent`, `selected`) and a
-field's own `input` fill — are held to the theme's non-text floor in all 16
-shipped, platform and authored themes, the tightest placement is named (macOS
-dark's `primary` on `accent`, the wash a list row tints under its own pointer, at
-3.06:1), the solid `warning` role is measured as 1.78:1 on the page so the
-reason a status mark paints the tone's readable role is a measurement rather
-than an opinion, a translucent mark and a caller's stricter floor are reported,
-and each status tone must have a mark role.
+eight roles on the 13 surfaces — `background`, `card`, `popover` and
+`muted` at rest, the four washes a row wears (`hover`, `active`, `accent`,
+`selected`), a field's own `input` fill, and the four soft status tints a message
+is filled with (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`) —
+are held to the theme's non-text floor in all 18 shipped, platform and authored
+themes, the tightest placement is named (macOS dark's `primary` on `warningSoft`,
+the tint a filled action stands in, at 3.01:1), the solid `warning` role is
+measured as 1.78:1 on the page so the reason a status mark paints the tone's
+readable role is a measurement rather than an opinion, a translucent mark and a
+caller's stricter floor are reported, and each status tone must have a mark role.
 
 `packages/tokens/src/elevation.test.ts` covers the shadow scale: one shadow per
 level with exactly the runtime's five fields, the role's hue and strength per
@@ -4405,7 +4418,7 @@ its own hover.
 `packages/tokens/src/brand-text.test.ts` covers the brand as **text**: every
 shipped, high-contrast, platform and authored theme is held to its own variant's
 text floor on all eight surfaces a link can sit on, the fill role is measured below
-that floor on the pressed wash (4.30:1 in the base light theme, 3.10:1 in macOS
+that floor on the pressed wash (4.30:1 in the base light theme, 4.01:1 in macOS
 dark) so the derivation has a premise, a brand that already reads is returned
 unchanged while the base light one moves, a high-contrast theme is held to 7:1
 rather than 4.5:1, the result is opaque and stays between the brand and the

@@ -244,7 +244,7 @@ describe("the ring separated from a filled action", () => {
     expect(misses("destructive", "rest")).toHaveLength(styles.length);
     expect(misses("primary", "pressed")).toHaveLength(styles.length);
     expect(misses("destructive", "pressed")).toHaveLength(styles.length);
-    expect(spread(ratios("primary", "rest"))).toBe("1.00–1.38");
+    expect(spread(ratios("primary", "rest"))).toBe("1.00–1.15");
     expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.38");
 
     // The neutral faces at rest held, which is what made the finding a statement
@@ -268,7 +268,7 @@ describe("the ring separated from a filled action", () => {
     const empty = (role: FilledRole) =>
       styles.filter(([, theme]) => flushColours(theme, role).length === 0)
         .length;
-    expect(empty("primary")).toBe(9);
+    expect(empty("primary")).toBe(10);
     expect(empty("destructive")).toBe(10);
 
     const distances = styles.flatMap(([, theme]) => {

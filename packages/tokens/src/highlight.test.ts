@@ -244,10 +244,11 @@ describe("the pair a theme can carry", () => {
     );
 
     expect(apart.every(({ ratio }) => ratio >= decorativeFloor)).toBe(true);
-    // Printed on the catalogue: the high-contrast dark pair is the closest.
-    expect(tightest.name).toBe("High contrast dark");
-    expect(tightest.surface).toBe("muted");
-    expect(tightest.ratio.toFixed(3)).toBe("1.150");
+    // Printed on the catalogue: macOS dark's pair is the closest, because its
+    // lighter brand face leaves the derived active share the least headroom.
+    expect(tightest.name).toBe("Dark · macOS");
+    expect(tightest.surface).toBe("popover");
+    expect(tightest.ratio.toFixed(3)).toBe("1.077");
   });
 
   it("returns the tightest corner the radius scale carries", () => {
@@ -392,7 +393,7 @@ describe("what the pages teach", () => {
     // derived pair gets to being indistinguishable.
     expect(page).toContain("3.05");
     expect(page).toContain("6.14");
-    expect(page).toContain("1.150");
+    expect(page).toContain("1.077");
   });
 
   it("names every style whose resting share the derivation steps", () => {
