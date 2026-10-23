@@ -883,10 +883,10 @@ table, names the inventory and sits in the sidebar.
 pages, and a hand-written list of them had already lost three data pages and
 every workspace package but the dock and shell: `<LanePages>` reads the same
 component index the grid does, groups each lane's pages by the package that
-ships them, and prints their descriptions. `lane-pages.test.tsx` walks the
-packages' docs folders independently and requires every page's link, title and
-description in the rendered list, so a new page cannot arrive only in the
-sidebar.
+ships them, and prints their descriptions. `src/components/docs/lane-pages.test.tsx`
+walks the packages' docs folders independently and requires every page's link,
+title and description in the rendered list, so a new page cannot arrive only in
+the sidebar.
 
 **No preview for a component that does not exist.** A lane preview is either a
 shipped component (`<ComponentPreview>`) or a composition of shipped parts
