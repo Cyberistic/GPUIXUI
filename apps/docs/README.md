@@ -426,8 +426,10 @@ is why the route column is the collection's root.
 `src/lib/page-tree.ts` merges each package's pages into its section and sorts
 the section by title, so curated and package pages read as one alphabetical lane
 with no sub-groups. A curated page keeps its URL, and the search index skips the
-package page for that URL. Components is open by default; the other lanes stay
-collapsed.
+package page for that URL. A primitive curated in the Components section retires
+its package page instead (`src/lib/curated-twins.ts`): the old address answers a
+301 and no generated list carries it. Components is open by default; the other
+lanes stay collapsed.
 
 ### Search
 
@@ -445,7 +447,9 @@ The packages' files are written as Markdown and compiled here as MDX, which is
 stricter: frontmatter must be valid YAML and prose may not contain a raw
 `<tag>` outside code. `src/lib/package-docs.test.ts` guards that, that every
 `packages/*/docs` directory is mounted, and that the primitives index links every
-page it ships — a violation fails the collection, not just one page.
+page it ships — at the curated page for the five primitives whose package page
+`src/lib/curated-twins.ts` retires. A violation fails the collection, not just
+one page.
 `src/lib/package-page-template.test.ts` holds every package page to the two
 sections a component page may never hide — `## API`, and an accessibility or
 limitations section — with the pages still missing the second recorded in the
