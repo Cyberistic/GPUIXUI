@@ -59,26 +59,43 @@ export interface PresenceHitRule {
 }
 
 /**
+ * The distance a frame travels, read from a caller's number.
+ *
+ * An offset is caller arithmetic — the measured gap between a trigger and the
+ * surface it opens — so a failed measurement is a number the runtime cannot
+ * paint: it draws a non-finite inset as nothing, which leaves the entry and exit
+ * frames carrying no start offset at all, and the travel the caller asked for is
+ * silently gone. A distance no formula can read is therefore **no travel**; the
+ * surface still fades, at the axis and direction it named. A negative offset is a
+ * direction, not an unusable number, so it is kept.
+ */
+const travelOf = (offset: number): number =>
+  Number.isFinite(offset) ? offset : 0;
+
+/**
  * A fade that travels `offset` pixels along one axis.
  *
  * A positive `top` starts the surface low and rises it into place; a negative
- * one starts high.
+ * one starts high. An offset that cannot be read travels nowhere
+ * ({@link travelOf}).
  */
 export const fadeFrom = (
   axis: "top" | "left",
   offset: number,
-): PresenceFrames =>
-  axis === "top"
+): PresenceFrames => {
+  const travel = travelOf(offset);
+  return axis === "top"
     ? {
-        initial: { opacity: 0, top: offset },
+        initial: { opacity: 0, top: travel },
         animate: { opacity: 1, top: 0 },
-        exit: { opacity: 0, top: offset },
+        exit: { opacity: 0, top: travel },
       }
     : {
-        initial: { opacity: 0, left: offset },
+        initial: { opacity: 0, left: travel },
         animate: { opacity: 1, left: 0 },
-        exit: { opacity: 0, left: offset },
+        exit: { opacity: 0, left: travel },
       };
+};
 
 /** A fade that travels nowhere: a scrim dims, it does not move. */
 export const fadeOnly: PresenceFrames = {

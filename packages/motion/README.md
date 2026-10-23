@@ -125,7 +125,10 @@ A surface that enters and leaves reads one table, exported from
   `left`, never a `transform`, because the runtime has no such style key. A side
   the package does not name takes the house `bottom`, so a placement restored
   from storage cannot send a surface in from an edge it was never measured
-  against;
+  against; a distance it cannot read (a failed measurement reaching the table as
+  `NaN` or an infinity) is **no travel** — the frame carries `0` on its axis
+  instead of a number the runtime paints as nothing, so the surface fades in
+  place rather than losing the movement it asked for;
 - `presenceTiming(level, preference)` gives the enter and exit tween at one
   level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"`;
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds

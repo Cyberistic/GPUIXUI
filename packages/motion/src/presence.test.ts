@@ -75,6 +75,39 @@ describe("the presence frames", () => {
       top: -4,
     });
   });
+
+  it("travels nowhere for a distance it cannot read", () => {
+    // The bug this guards: the offset is caller arithmetic too — the measured
+    // gap a surface opens by — and a failed measurement is not a frame. The
+    // runtime paints a non-finite inset as nothing, so `NaN` reached the entry
+    // and the exit carrying no start offset at all: the travel the caller asked
+    // for was silently gone, from a table whose other inputs (the side, the
+    // duration, the wait) are all repaired.
+    const still = {
+      initial: { opacity: 0, top: 0 },
+      animate: { opacity: 1, top: 0 },
+      exit: { opacity: 0, top: 0 },
+    };
+    expect(fadeFrom("top", Number.NaN)).toEqual(still);
+    expect(fadeFrom("left", Number.POSITIVE_INFINITY)).toEqual({
+      initial: { opacity: 0, left: 0 },
+      animate: { opacity: 1, left: 0 },
+      exit: { opacity: 0, left: 0 },
+    });
+    // Every entry point reads it through the same rule.
+    expect(fadeFromAnchor("right", Number.NaN)).toEqual({
+      initial: { opacity: 0, left: 0 },
+      animate: { opacity: 1, left: 0 },
+      exit: { opacity: 0, left: 0 },
+    });
+    expect(fadeFromSide("left", Number.NaN)).toEqual({
+      initial: { opacity: 0, left: 0 },
+      animate: { opacity: 1, left: 0 },
+      exit: { opacity: 0, left: 0 },
+    });
+    // A negative offset is a direction, not an unusable number.
+    expect(fadeFrom("top", -8).initial).toEqual({ opacity: 0, top: -8 });
+  });
 });
 
 describe("the presence timing", () => {

@@ -13993,6 +13993,25 @@ which the behaviour suite runs in the real renderer.
       the presence suite 32/32, toast 17/17, the package 101 files / 947 tests,
       `check-types` clean. Docs: `packages/components/docs/toast.mdx` §Motion and
       the `Toasts / notifications` inventory row.
+`[x]` `@gpuixui/motion`: **a presence frame carried a distance no paint can
+      read** — `fadeFrom`/`fadeFromAnchor`/`fadeFromSide` took the caller's
+      `offset` verbatim while every other input of the same table is repaired
+      (a side the union does not name takes `bottom`, a duration or wait that
+      cannot run is no time, a delay that cannot be scheduled adds nothing). The
+      offset is caller arithmetic too — the measured gap a surface opens by — and
+      the runtime paints a non-finite inset as **nothing**, so a failed
+      measurement reached the entry and the exit carrying no start offset at all:
+      the travel was silently gone and the frame held a number nothing can
+      paint. `travelOf` reads a non-finite distance as **no travel** (the axis
+      keeps `0`, so the surface fades in place and a negative offset still means
+      a direction), and all three entry points compose it. Proof:
+      `src/presence.test.ts`'s `travels nowhere for a distance it cannot read`
+      (NaN and an infinity on each entry point, plus the negative control that
+      must keep travelling); measured with `travelOf` made an identity, the case
+      fails on the unreadable frame, restored 163/163. `packages/motion/README.md`
+      §The presence table states the rule. No native scenario applies — the frame
+      is a number the table returns; the surfaces' own paint is
+      `behaviour/presence.test.tsx`'s (32/32 green).
 `[x]` Reveal and scroll: blur, fade, zoom, slide, highlight, auto-height, scroll-fade, scroll-progress
   - `[x]` `auto-height` — `AutoHeight` measures its content through `onLayout` and tweens the clipping box to it (mount window, re-measure, reduced motion), `src/behaviour/auto-height.test.tsx` (4), `docs/auto-height.mdx`, the example and the inventory row; `CollapsibleContent` now uses it, so the recorded "mounts instantly" limitation is closed
   - `[x]` `reveal` — `Reveal` is the house entrance as a component: fade plus a relative `top`/`left` offset, on mount or on an `open` change (the subtree unmounts after its exit), `from` names the edge, `distance`/`delayMs`/`level` shape the arrival, and the reduced preference paints at rest at once; `src/reveal/frames.ts` + its unit suite, `src/behaviour/reveal.test.tsx` (7), `docs/reveal.mdx`, the example and the row. Covers the catalogue's **fade** and **slide**, which are the same primitive with a different edge. Measured: a wrong edge sign fails the direction case, a "none" that moves fails the fade-only case, and an entry that paints at rest fails the arrival case
