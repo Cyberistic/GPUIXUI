@@ -23,6 +23,7 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { useState, type ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
+import { accessibleName } from "./name.js";
 
 /** One dropped file, derived from an absolute path. */
 export interface DropEntry {
@@ -98,7 +99,7 @@ export const renderDropZone = (
     description,
     onDrop,
     onPick,
-    pickLabel = "Choose files",
+    pickLabel,
     disabled = false,
     className,
     style,
@@ -111,6 +112,7 @@ export const renderDropZone = (
   // promise of an action, so a disabled zone paints at rest even while the
   // wrapper still holds the last hover flag.
   const highlighted = surface.hovered && !disabled;
+  const pick = accessibleName(pickLabel, "Choose files");
 
   return (
     <div
@@ -154,7 +156,7 @@ export const renderDropZone = (
           testId="drop-zone-pick"
           onActivate={() => onPick()}
         >
-          {pickLabel}
+          {pick}
         </Button>
       )}
     </div>

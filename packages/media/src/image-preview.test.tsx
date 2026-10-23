@@ -6,10 +6,12 @@
  * stored frame size or corner the runtime cannot lay out must read as the
  * documented default rather than dropping the box or the radius. The negative
  * control is a real source, which must paint the picture (the shipped
- * `ImageZoom`), not the error.
+ * `ImageZoom`), not the error. A blank `loadingLabel`, `errorLabel` or
+ * `retryLabel` reads as its default too, so no state is published unnamed.
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { ImageZoom } from "@gpuixui/components/image-zoom";
 import { lightTheme } from "@gpuixui/tokens";
@@ -17,6 +19,7 @@ import { renderImagePreview } from "./image-preview.js";
 import type { ImagePreviewStatus } from "./image-preview.js";
 import {
   elementChildren,
+  elementProp,
   findByTestId,
   hostStyleNumber,
   hostTag,
@@ -87,5 +90,48 @@ describe("ImagePreview", () => {
     expect(hostStyleNumber(frame, "borderRadius")).toStrictEqual(
       Option.some(lightTheme.radius.md),
     );
+  });
+
+  it("reads a blank label as the documented default, never an unnamed state", () => {
+    // A label table can hand over an empty string, and a destructuring default
+    // only covers `undefined`: the spinner, the error sentence and the retry
+    // action were published with no name at all.
+    const loading = renderImagePreview(
+      { src: "x.png", alt: "photo", status: "loading", loadingLabel: "  " },
+      lightTheme,
+    );
+    expect(
+      elementProp(
+        expectSome(findByTestId(loading, "image-preview-loading")),
+        "label",
+      ),
+    ).toStrictEqual(Option.some("Loading"));
+
+    const failed = renderImagePreview(
+      {
+        src: "",
+        alt: "photo",
+        errorLabel: "",
+        retryLabel: "",
+        onRetry: () => undefined,
+      },
+      lightTheme,
+    );
+    const error = expectSome(findByTestId(failed, "image-preview-error"));
+    const text = expectSome(
+      Arr.findFirst(
+        elementChildren(error),
+        (child) => Option.getOrElse(hostTag(child), () => "") === "text",
+      ),
+    );
+    expect(expectSome(elementProp(text, "children"))).toBe(
+      "Could not load image",
+    );
+    const retry = expectSome(
+      Arr.findFirst(elementChildren(error), (child) =>
+        Option.isSome(elementProp(child, "onActivate")),
+      ),
+    );
+    expect(expectSome(elementProp(retry, "children"))).toBe("Retry");
   });
 });

@@ -4,15 +4,25 @@
  * The state machine itself lives in `upload/queue.ts` (tested there); this suite
  * guards the *view's* decision: an errored row offers a retry that reaches the
  * caller, a done row offers none (the negative control), and the remove action
- * reaches the caller for every row.
+ * reaches the caller for every row. A blank label also reads as its documented
+ * default — the group, the empty state and both actions keep a name a copy
+ * table's empty string would have erased.
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { renderFileUpload } from "./file-upload.js";
 import type { UploadItem } from "./upload/queue.js";
-import { elementHandler, findByTestId, expectSome } from "./testing/element.js";
+import {
+  elementChildren,
+  elementHandler,
+  elementProp,
+  findByTestId,
+  expectSome,
+  hostTag,
+} from "./testing/element.js";
 
 const noop = (): void => undefined;
 
@@ -68,5 +78,54 @@ describe("FileUpload", () => {
     const remove = expectSome(findByTestId(root, "upload-remove-a"));
     expectSome(elementHandler(remove, "onActivate"))({});
     expect(removed).toStrictEqual(["a"]);
+  });
+
+  it("reads a blank name as the documented default, never an unnamed row", () => {
+    // A label table is copy as often as a literal: an empty string reached
+    // `aria-label` and the action names, so the group, the empty state, the
+    // retry and the remove said nothing while their defaults sat unused.
+    const errored = renderFileUpload(
+      {
+        upload: async () => undefined,
+        files: [],
+        label: "",
+        retryLabel: "",
+        removeLabel: "",
+      },
+      lightTheme,
+      [item({ status: "error", token: 1 })],
+      { onRetry: noop, onRemove: noop },
+    );
+    expect(expectSome(elementProp(errored, "aria-label"))).toBe("Upload files");
+    expect(
+      expectSome(
+        elementProp(
+          expectSome(findByTestId(errored, "upload-retry-a")),
+          "children",
+        ),
+      ),
+    ).toBe("Retry");
+    expect(
+      expectSome(
+        elementProp(
+          expectSome(findByTestId(errored, "upload-remove-a")),
+          "label",
+        ),
+      ),
+    ).toBe("Remove a.txt");
+
+    const empty = renderFileUpload(
+      { upload: async () => undefined, files: [], emptyLabel: "   " },
+      lightTheme,
+      [],
+      { onRetry: noop, onRemove: noop },
+    );
+    const text = expectSome(
+      Arr.findFirst(
+        elementChildren(empty),
+        (child) => Option.getOrElse(hostTag(child), () => "") === "text",
+      ),
+    );
+    expect(expectSome(elementProp(text, "children"))).toBe("No files");
   });
 });

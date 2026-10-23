@@ -24,8 +24,8 @@ import { DropZone } from "@gpuixui/media";
 | `onDrop` | `(payload: DropPayload) => void` (required) | — |
 | `description` | `string` | — |
 | `onPick` | `() => void` | — |
-| `pickLabel` | `string` | `"Choose files"` |
-| `disabled` | `boolean` | `false` | Refuse drops and the pick; the zone paints at rest. |
+| `pickLabel` | `string` | `"Choose files"` (a blank label reads as the default) |
+| `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
 
 ## Limitations
@@ -34,3 +34,4 @@ import { DropZone } from "@gpuixui/media";
 - **A disabled zone paints at rest**: it refuses the drop and the pick, and the hover highlight goes with them rather than promising an action it will not take.
 - **No automatable live drop**: only the offscreen renderer simulates one.
 - A drop is swallowed while a text field holds the input session.
+- A **blank `pickLabel`** reads as `"Choose files"` and is trimmed, so the one reliable route on a host without a drop event is never an unnamed action.

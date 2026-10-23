@@ -24,6 +24,7 @@ import { cn } from "@gpuixui/tw";
 import { textStyle } from "@gpuixui/tokens";
 import type { ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
+import { accessibleName } from "./name.js";
 import {
   encodeQr,
   levelOf,
@@ -94,14 +95,6 @@ const errorText = (theme: Theme): StyleDesc => ({
 export const qrOverflowMessage = (bytes: number, capacity: number): string =>
   `A QR code holds ${capacity} bytes at this level; the value is ${bytes}.`;
 
-/**
- * The symbol's accessible name. A blank name reads as the default rather than
- * publishing an image that names nothing: a QR code carries information, so it
- * is never decoration.
- */
-const qrLabel = (label: string): string =>
-  label.trim().length === 0 ? DEFAULT_LABEL : label.trim();
-
 /** The element `QrCode` renders. Pure in its arguments. */
 export const renderQrCode = (
   props: QrCodeProps,
@@ -114,7 +107,7 @@ export const renderQrCode = (
     quietZone = QR_QUIET_ZONE,
     ink = QR_INK,
     paper = QR_PAPER,
-    label = DEFAULT_LABEL,
+    label,
     className,
     style,
     ...rest
@@ -152,7 +145,7 @@ export const renderQrCode = (
         <div
           {...rest}
           role="img"
-          aria-label={qrLabel(label)}
+          aria-label={accessibleName(label, DEFAULT_LABEL)}
           style={mergeStyles(
             mergeStyles(recipeStyle(cn("rounded-sm", className), theme), {
               display: "flex",

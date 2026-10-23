@@ -44,6 +44,7 @@ import {
   type CropModifiers,
 } from "./crop/logic.js";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
+import { accessibleName } from "./name.js";
 
 /** The handler side of a gesture, owned by the React wrapper. */
 export interface CropAreaSurface {
@@ -105,14 +106,6 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
 const CORNERS: ReadonlyArray<CropCorner> = ["nw", "ne", "sw", "se"];
 
 const DEFAULT_LABEL = "Crop area";
-
-/**
- * The frame's accessible name, and the name every handle is built from. A blank
- * name reads as the default rather than publishing an unnamed group and four
- * handles called "`nw` handle".
- */
-const frameLabel = (label: string): string =>
-  label.trim().length === 0 ? DEFAULT_LABEL : label.trim();
 
 /** The frame's box, read from the caller's two sides. */
 export const cropBounds = (width: number, height: number): CropBounds => ({
@@ -185,7 +178,7 @@ export const renderCropArea = (
     style,
     ...rest
   } = props;
-  const name = frameLabel(label);
+  const name = accessibleName(label, DEFAULT_LABEL);
   const bounds = cropBounds(width, height);
   const crop = clampCrop(value, bounds, minSize, aspectRatio);
   const bars = cropBars(crop, bounds);

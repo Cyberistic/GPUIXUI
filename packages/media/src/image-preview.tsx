@@ -23,6 +23,7 @@ import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import type { ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
+import { accessibleName } from "./name.js";
 
 /** What the preview is painting right now. */
 export const ImagePreviewStatus = Schema.Literals([
@@ -106,9 +107,9 @@ export const renderImagePreview = (
     alt,
     caption,
     status: statusProp,
-    loadingLabel = "Loading",
-    errorLabel = "Could not load image",
-    retryLabel = "Retry",
+    loadingLabel,
+    errorLabel,
+    retryLabel,
     onRetry,
     width = DEFAULT_WIDTH,
     height = DEFAULT_HEIGHT,
@@ -119,6 +120,9 @@ export const renderImagePreview = (
     style,
     ...rest
   } = props;
+  const loading = accessibleName(loadingLabel, "Loading");
+  const error = accessibleName(errorLabel, "Could not load image");
+  const retry = accessibleName(retryLabel, "Retry");
   const status = resolveStatus(src, statusProp);
   const boxWidth = frameSide(width, DEFAULT_WIDTH);
   const boxHeight = frameSide(height, DEFAULT_HEIGHT);
@@ -126,7 +130,7 @@ export const renderImagePreview = (
 
   const body = Match.value(status).pipe(
     Match.when("loading", () => (
-      <Spinner label={loadingLabel} testId="image-preview-loading" />
+      <Spinner label={loading} testId="image-preview-loading" />
     )),
     Match.when("error", () => (
       <div
@@ -139,12 +143,10 @@ export const renderImagePreview = (
         }}
       >
         <Icon name="error" color={theme.colors.destructive} />
-        <text style={{ color: theme.colors.mutedForeground }}>
-          {errorLabel}
-        </text>
+        <text style={{ color: theme.colors.mutedForeground }}>{error}</text>
         {onRetry === undefined ? null : (
           <Button variant="secondary" size="sm" onActivate={() => onRetry()}>
-            {retryLabel}
+            {retry}
           </Button>
         )}
       </div>

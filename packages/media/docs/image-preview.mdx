@@ -40,3 +40,4 @@ import { ImagePreview } from "@gpuixui/media";
 - **No load/error signal**: the `<img>` host has no `onLoad`/`onError`, so `status` is caller-driven and the only error the component detects itself is a blank `src`.
 - The docs site cannot render this live; the code above is the real source.
 - The loading state is a `Spinner`, announced as `loadingLabel`.
+- A **blank `loadingLabel`, `errorLabel` or `retryLabel`** reads as its documented default and is trimmed: a label table is copy, so an empty string is an absence, not a name, and the spinner, the error sentence and the retry action are always announced.

@@ -8,7 +8,8 @@
  * the leave handler was gated on `!disabled`, so the flag survived a pointer
  * that left during the disabled window. The negative controls are the disabled
  * zone (which must refuse a drop) and the resting vs. hovered border (the
- * highlight is a real, distinct state).
+ * highlight is a real, distinct state). A blank pick label reads as its
+ * documented default, so the fallback route is never an unnamed action.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -17,6 +18,7 @@ import { lightTheme } from "@gpuixui/tokens";
 import { renderDropZone, type DropPayload } from "./drop-zone.js";
 import {
   elementHandler,
+  elementProp,
   findByTestId,
   hostHandler,
   hostStyleString,
@@ -123,6 +125,29 @@ describe("DropZone", () => {
       ),
     )({});
     expect(picked).toBe(true);
+  });
+
+  it("reads a blank pick label as the documented default", () => {
+    // The pick label came from a copy table, so an empty string reached the
+    // action's text and left the one reliable route on a drop-less host unnamed.
+    const root = renderDropZone(
+      {
+        label: "Drop files",
+        onDrop: noop,
+        onPick: noop,
+        pickLabel: "   ",
+      },
+      lightTheme,
+      surface(false),
+    );
+    expect(
+      expectSome(
+        elementProp(
+          expectSome(findByTestId(root, "drop-zone-pick")),
+          "children",
+        ),
+      ),
+    ).toBe("Choose files");
   });
 
   it("refuses a drop while disabled", () => {

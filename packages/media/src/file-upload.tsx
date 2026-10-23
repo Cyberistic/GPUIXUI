@@ -22,6 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
+import { accessibleName } from "./name.js";
 import {
   complete,
   emptyQueue,
@@ -149,20 +150,24 @@ export const renderFileUpload = (
   actions: FileUploadActions,
 ): ReactElement => {
   const {
-    label = "Upload files",
-    emptyLabel = "No files",
-    retryLabel = "Retry",
-    removeLabel = "Remove",
+    label,
+    emptyLabel,
+    retryLabel,
+    removeLabel,
     className,
     style,
     ...rest
   } = props;
+  const name = accessibleName(label, "Upload files");
+  const empty = accessibleName(emptyLabel, "No files");
+  const retry = accessibleName(retryLabel, "Retry");
+  const remove = accessibleName(removeLabel, "Remove");
 
   return (
     <div
       {...rest}
       role="group"
-      aria-label={label}
+      aria-label={name}
       style={mergeStyles(
         recipeStyle(cn("flex flex-col gap-2", className), theme),
         style,
@@ -170,13 +175,11 @@ export const renderFileUpload = (
     >
       {Arr.match(items, {
         onEmpty: () => (
-          <text style={{ color: theme.colors.mutedForeground }}>
-            {emptyLabel}
-          </text>
+          <text style={{ color: theme.colors.mutedForeground }}>{empty}</text>
         ),
         onNonEmpty: (rows) =>
           Arr.map(rows, (item) =>
-            renderRow(item, theme, actions, retryLabel, removeLabel),
+            renderRow(item, theme, actions, retry, remove),
           ),
       })}
     </div>
