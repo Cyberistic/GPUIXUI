@@ -302,7 +302,36 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 164/164
+`[x]` `[██████████]` 165/165
+
+`[x]` State the **target sizes' adoption where it landed**, and stop teaching a
+chevron that is not a target — `docs/tokens.md` §Target sizes and
+`docs/design-system.md` §6 both opened with "a tree chevron at `iconSize.xs`
+(12px)", and no painter draws a 12px chevron: the shipped tree's chevron is an
+`<Icon>` at `iconSize.md` (16px) inside a slot of the same size, and the glyph's
+own `pointerEvents: "none"` sends the press to the **row**, which is built at
+`density.rowHeight` and is what `target.test.ts` holds to the floor. Both pages
+then sent a reader to "`TODO.md` → Interlocks" for the component adoption after
+it had landed in both packages, and the `COMPONENTS.md` row still said
+"Remaining: the tree chevrons when a tree view lands" although `TreeView`,
+`VirtualTree` and `FileTree` ship. The pages now name the adopted parts and the
+suite that measures each at 24px (`targets.test.tsx` for the four clear controls,
+`selection-targets.runtime.test.tsx` for the standalone `Checkbox`/`Switch`,
+`groups.runtime.test.tsx` for a group option row, `Rating.test.tsx` for a star
+box) and state the tree's rule (`press-routing-lifecycle`); the inventory row
+drops its `Remaining:` clause. `target.test.ts` gains `the target sizes'
+adoption` (4 cases): both sections refuse the retracted chevron, the `TODO.md`
+pointer and a 12px claim while naming the real drawn sizes; the tree case reads
+`row.tsx`'s slot/height/press handler and `Icon`'s `pointerEvents` so a chevron
+that becomes its own target fails; every proof a page cites must exist and
+measure `targetSize.minimum`; and the inventory row cannot call a landed tree
+remaining. Directions measured: restoring the 12px sentence fails the first case
+by page, re-adding `Remaining:` fails the inventory case, and shrinking the
+tree's slot to `iconSize.xs` fails the painter case (`expected … to contain
+'width: theme.iconSize.md'`); green it is 13/13 in the file, 43 files / 2 492
+tests for the package, with the inventory hunk carried into `0e407c63` by
+another workstream's commit (the shared-index hazard in Interlocks — the content
+is on `master` under a message that does not name it).
 
 `[x]` Read a **stored value as absence, not a crash** — the incomplete-theme rule
 stopped at roles, levels and numeric groups, and the two nested tables a theme may
@@ -3700,7 +3729,10 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       again`. Docs: `docs/dropdown-menu.mdx` §Choice rows/§API/§Composition,
       `docs/context-menu.mdx` §Choice rows/§API, both examples, the two
       inventory rows and `docs/component-api.md` §8; the two metas record the
-      group's controlled value and the missing `aria-checked`.
+      group's controlled value and the missing `aria-checked`. Measured native
+      window: `menu-lifecycle` and `context-menu-lifecycle` re-ran green
+      (2/2, 0.11.0) with the widget in place; the radio row's own interaction is
+      the renderer suite, because no live probe mounts a radio group yet.
 
 `[x]` Tier 1 foundational components (code + test + example + docs + inventory):
       all 19 components have code, tests, a runtime-verified interaction, an
