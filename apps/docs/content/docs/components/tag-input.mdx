@@ -76,6 +76,12 @@ TagInput
 | `style` | `StateStyle<TagInputFieldState>` | — | resolved against `{ disabled }` and merged last |
 | `testId` | `string` | — | the input's locator; the painted hint follows it |
 | `onKeyDown` / `onFocus` / `onBlur` | host handlers | none | composed with the component's own; yours runs first |
+| `label` / `description` / `invalid` | `string` · `string` · `boolean` | none · none · `false` | the field's name, its announced help, and the invalid edge |
+| `disabled` / `readOnly` / `autoFocus` | `boolean` | `false` | inherited from the root's `disabled`, an uneditable field, and focus on mount |
+| `size` / `fullWidth` / `tabIndex` | `"sm" \| "md" \| "lg"` · `boolean` · `number` | `"md"` · `false` · the field's place | the input's height, its width, and its tab stop |
+| `ref` / `aria-id` / `onLayout` | the addressed element | none | the draft input: focus it, measure it, name it for automation |
+| `onClick` / `onKeyUp` | host handlers | none | composed with the field's own; yours runs first |
+| `onValueChange` / `defaultValue` | the field surface it inherits — see `Input` | none | the draft the field keeps before the tag is committed |
 
 ### `TagInputChip`
 

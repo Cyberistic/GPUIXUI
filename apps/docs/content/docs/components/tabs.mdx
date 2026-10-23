@@ -50,12 +50,16 @@ Tabs
 | `onValueChange` | `(value: string) => void` | none |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
 | `activation` | `"automatic" \| "manual"` | `"automatic"` |
+| `className` | `string` — joined after the root recipe | — |
+| `children` | parts — `TabsList`, `TabsContent` | — |
 
 ### TabsList
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `label` | `string` | none |
+| `className` | `string` — joined after the rail recipe | — |
+| `children` | parts — `TabsTrigger` | — |
 
 ### TabsTrigger
 
@@ -64,6 +68,7 @@ Tabs
 | `value` | `string` (required) | none |
 | `disabled` | `boolean` | `false` |
 | `style` | `StyleDesc \| (state) => StyleDesc` | none |
+| `className` | `string` — joined after the trigger recipe | — |
 
 ## Limitations
 

@@ -61,11 +61,11 @@ CommandMenu
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `CommandMenu` | the composed `Dialog` surface | `open: boolean` (required), `onOpenChange: (open: boolean) => void` (required), `actions: ReadonlyArray<CommandAction>` (required), `recents?: ReadonlyArray<string>`, `filter?: (action: CommandAction, query: string) => boolean` |
-| `CommandMenuInput` | host `<input>` | `placeholder?: string` (default `"Type a command…"`), `label?: string` (default `"Search commands"`) |
-| `CommandMenuList` | scrolling match column | — (renders the root's ranked matches) |
-| `CommandMenuItem` | one runnable row | `action: CommandAction` (required) |
-| `CommandMenuEmpty` | the no-match message | `children?: ReactNode` (default `No matching commands`) |
+| `CommandMenu` | the composed `Dialog` surface | `open` (required), `onOpenChange` (required), `actions` (required), `recents`, `filter`, `children` |
+| `CommandMenuInput` | host `<input>` | `placeholder` (default `"Type a command…"`), `label` (default `"Search commands"`), `className` |
+| `CommandMenuList` | scrolling match column | `className`; the root's ranked matches are its content |
+| `CommandMenuItem` | one runnable row | `action` (required), `className` |
+| `CommandMenuEmpty` | the no-match message | `children` (default `No matching commands`), `className` |
 
 ## Limitations
 

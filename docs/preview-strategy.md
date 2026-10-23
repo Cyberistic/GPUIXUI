@@ -747,9 +747,23 @@ commit or the source comment instead.
 
 `src/lib/component-page.test.ts` checks every curated page for the required
 sections and their order, a preview, and the package it installs from. It also
-**resolves the API table**: every backticked name in the table's first column
-must be a prop an interface declares or a part an exported component declares, in
-`packages/primitives` or `packages/components`.
+**resolves the API table**: every backticked name in a table's prop column must
+be a prop an interface declares or a part an exported component declares, in
+`packages/primitives`, `packages/components` or `packages/data`.
+
+Resolution is one direction only — a name the page prints must exist. The same
+guard holds the other direction: every prop the type a table documents
+**declares** has a row. The type is not derivable from a part's name
+(`ContextMenuItem` is `MenuItemProps`, `DialogTrigger` is `ButtonProps`), so the
+suite carries a page → table → type map and reads each declaration through
+`extends`, an alias intersection or union, and `Omit`, with the runtime's own
+`Props` surface left opaque. The page's own package wins a shared name: `Field`
+is two components called `FieldProps`, and `InputProps` is an alias of the
+primitives package's field. A row may name several props at once
+(`` `leading` / `trailing` ``, or a part's whole host surface on one line), which
+is how the shared interaction and address props stay readable. A `Member` list —
+`useTable`'s fields, which are values a hook returns rather than props a caller
+passes — is the one table the completeness rule exempts, and the map says so.
 
 The **Accessibility and limitations** row has a shared half as well as a
 per-component one. A page states what its own control does and cannot do; the

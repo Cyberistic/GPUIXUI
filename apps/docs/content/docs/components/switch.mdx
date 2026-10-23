@@ -60,8 +60,8 @@ Switch
 | `style` | `StateStyle<SwitchState>` | — | resolved against the live state and merged last |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | stable locator |
-| `ref` / `onLayout` | host address | none | the press band is the addressed element: focus it, measure it, and name it for automation with `aria-id` |
-| `onMouseEnter` / `onMouseLeave` | `TooltipTriggerProps` | none | forwarded to the press band, so a switch can be a `Tooltip` trigger; the tip's `aria-description` lands on the same help channel |
+| `ref` / `aria-id` / `onLayout` | host address | none | the press band is the addressed element: focus it, measure it, and name it for automation |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | the tooltip trigger pair and its words | none | forwarded to the press band, so a switch can be a `Tooltip` trigger; the tip's words land on the same help channel |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
 
 ### `SwitchThumb`

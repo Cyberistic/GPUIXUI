@@ -10347,7 +10347,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 309/310
+`[x]` `[██████████]` 310/310
 
 `[x]` Send the **curated component pages their related links back** — the page
       prune removed the hand-written `## Related` section from all 39 curated
@@ -10372,19 +10372,48 @@ Work that this workstream needs but does not own. Another agent owns each row.
       and `/docs/theming` carries no strip. No native scenario applies — a site
       page's navigation links.
 
-`[ ]` Hold each **curated page's API table to the props its component declares** —
-      `component-page.test.ts` resolves every name a table *does* list, so a
-      renamed prop fails, but a prop the prune's hand-written table omits is
-      silent. Measured on `/docs/components/button`: the table documents
-      `onClick` and `style` and stops, while `ButtonProps` also carries
-      `className`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur` and the tooltip
-      trigger's `onMouseEnter`/`onMouseLeave`; none of the six appears on the
-      page. The package pages are held to this rule by
-      `packages/primitives/src/docs.test.ts` §The primitives API tables (a page →
-      props-type map resolved through `extends`, an alias intersection and
-      `Omit`, with the runtime's own `Props`/`ActionHostProps` surface left
-      opaque); the 39 curated pages have no such guard. Reuse that reader, map
-      each page's documented part to its type, and add the missing rows.
+`[x]` Hold each **curated page's API table to the props its component declares** —
+      `component-page.test.ts` resolved every name a table *did* list, so a
+      renamed prop failed, but a prop the prune's hand-written table omitted was
+      silent: `/docs/components/button` documented `onClick` and `style` and
+      stopped, while `ButtonProps` also carried `className`, the five interaction
+      handlers and the tooltip trigger's `onMouseEnter`/`onMouseLeave`. The
+      package pages were held to this rule by `packages/primitives/src/docs.test.ts`
+      §The primitives API tables; the 39 curated pages had no such guard.
+      `src/lib/component-props.ts` is the reader: it scans
+      `packages/{primitives,components,data}/src` and resolves an interface's own
+      fields and parents, an alias's intersection **or union**, `Omit`, and a
+      `Schema.Class` body, with the runtime's `Props`/`ActionHostProps` surface
+      left opaque. Names collide across packages (`FieldProps` is two components,
+      `InputProps` is an alias of the primitives' field), so a name resolves
+      inside the package that referred to it, then inside the package the page
+      installs from, then anywhere — a flat map documented the wrong component.
+      `component-page.test.ts` gains a table parser (a `Prop` column, the second
+      column of `Part | Prop`, the third of `Part | Renders | Props`, and a
+      `Member` list that maps no type), a page → table → type map for **39 pages /
+      67 tables**, and three cases: the map is held both ways and every type is
+      declared, every prop a mapped type declares has a row in **that** table, and
+      the reader is measured against real declarations (`own`/`parent`/`tooltip`/
+      `alias` in, `omitted`/`runtime` out). The rows landed on 18 pages: the
+      button's `className`, five handlers and tooltip pair; `aria-id` and
+      `aria-description` on the checkbox and switch; `children` and `className` on
+      the dialog, popover, tabs, list, table, combobox and both menu families; the
+      two step-command controls' whole field surface on `Field`, `InlineEdit`,
+      `SearchInput` and `TagInputField`; the tooltip provider's timing table; and
+      `CommandMenu`'s props column rewritten one name per row (it wrapped a whole
+      signature in one pair of backticks, so no name resolved at all).
+      Directions measured: deleting button's `className` row fails
+      `button.mdx: the page: ButtonProps.className has no API row`, and pointing
+      the dialog trigger's table at `MenuItemProps` — a type whose props the page
+      omits — fails four rows by name (`onSelect`, `tone`, `leading`, `trailing`).
+      Verified: `apps/docs` is **135 files / 1 163 tests** green, `check-types`
+      clean, `build` Done, and `check:tests` accepts the three cases; `lint` is
+      red only on `packages/tokens/src/audit.test.ts:530` and `check:tests` only on
+      `packages/data/src/behaviour/scratch-probe.test.tsx` — both foreign and
+      already recorded. `docs/preview-strategy.md` §The component page template
+      states the completeness half beside the resolution half, and
+      `apps/docs/README.md` gains the module's ledger line. No native scenario
+      applies — a site page and a repository read.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

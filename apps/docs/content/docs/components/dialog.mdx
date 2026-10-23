@@ -66,6 +66,7 @@ Dialog
 | `defaultOpen` | `boolean` | `false` |
 | `onOpenChange` | `(open: boolean) => void` | none |
 | `dismissible` | `boolean` | `true` |
+| `children` | parts — `DialogTrigger`, `DialogContent`, `DialogClose` | — |
 
 ### DialogContent
 
@@ -75,6 +76,8 @@ Dialog
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
 | `showClose` | `boolean` | `true` |
 | `initialFocus` | `() => number \| null` | none |
+| `className` | `string` — joined after the surface recipe | — |
+| `children` | `ReactNode` — the surface's content | — |
 
 ### DialogTrigger and DialogClose
 

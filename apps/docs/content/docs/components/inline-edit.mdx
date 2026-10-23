@@ -52,6 +52,13 @@ export const RenameProject = () => {
 | `style` | `StateStyle<InlineEditState>` | — | resolved against `{ editing, disabled }`, merged last |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | stable locator |
+| `defaultValue` / `onValueChange` / `onChange` | the field surface it inherits — see `Input` | — | the draft the control keeps before a commit, and every edit it reports |
+| `onSubmit` | `(event: EventPayload) => void` | — | `Enter` while editing; the commit has already run |
+| `readOnly` / `autoFocus` | `boolean` | `false` | uneditable, or focused on mount |
+| `invalid` / `description` | `boolean` · `string` | `false` · none | validation paint, and the help the field announces |
+| `size` / `fullWidth` / `tabIndex` | `"sm" \| "md" \| "lg"` · `boolean` · `number` | `"md"` · `false` · the field's place | the input's height, its width, and its tab stop |
+| `ref` / `aria-id` / `onLayout` | the addressed element | — | the input while editing: focus it, measure it, name it for automation |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | — | composed with the control's own; yours runs first |
 
 ## Limitations
 

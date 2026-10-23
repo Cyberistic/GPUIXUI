@@ -80,6 +80,14 @@ Fieldset
 | `FieldInput` | `invalid` | `boolean` — overrides the field's own error as the validity signal | the field's state |
 | `FieldInput` | `disabled` | `boolean` — also inferred from a disabled `Fieldset` | `false` |
 | `FieldInput` | `style` | `StateStyle<{ disabled, focused, invalid }>` | the recipe |
+| `FieldInput` | `value` / `defaultValue` | `string` — the text; omit `value` to let the field keep its draft | — |
+| `FieldInput` | `onValueChange` / `onChange` | `(value: string) => void` · the raw host payload, first | — |
+| `FieldInput` | `onSubmit` | `(event: EventPayload) => void` — `Enter` in the input | — |
+| `FieldInput` | `placeholder` / `readOnly` / `autoFocus` | `string` · `boolean` · `boolean` | — |
+| `FieldInput` | `size` / `fullWidth` / `tabIndex` | `"sm" \| "md" \| "lg"` · `boolean` · `number` | `"md"` · `false` · the field's place |
+| `FieldInput` | `testId` | `string` — a stable locator | — |
+| `FieldInput` | `ref` / `aria-id` / `onLayout` | the addressed element: focus it, measure it, name it for automation | — |
+| `FieldInput` | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers, composed with the field's own | — |
 | `Fieldset` | `legend` | `string` — the visible heading and the group's name | required |
 | `Fieldset` | `disabled` | `boolean` — reaches the controls that honour it | `false` |
 

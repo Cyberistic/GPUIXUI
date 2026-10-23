@@ -109,6 +109,7 @@ ContextMenu
 | `closeOnSelect` | `boolean` | `true` | whether activation closes the menu |
 | `checked` | `boolean` | none | the checkbox row's state (required on `ContextMenuCheckboxItem`) |
 | `onCheckedChange` | `(checked: boolean) => void` | none | reported when the checkbox row toggles (required) |
+| `className` | `string` | none | compiled through `@gpuixui/tw` and joined after the recipe |
 | `style` | `MenuItemState` callback | none | `{ disabled, highlighted }`, merged after the row's roles |
 
 ### `ContextMenuRadioGroup` and `ContextMenuRadioItem`
@@ -119,8 +120,10 @@ ContextMenu
 | `onValueChange` | `(value: string) => void` | none | reported with a row's value when it is chosen, never the current one (required) |
 | `label` | `string` | none | the choice's accessible name; a painted `ContextMenuLabel` does not name the group |
 | `className` | `string` | none | compiled through `@gpuixui/tw`, joined after the recipe |
+| `children` | parts | none | the group's `ContextMenuRadioItem` rows |
 | `value` | `string` | none | this row's value inside the group (required on `ContextMenuRadioItem`) |
-| `disabled` / `leading` / `trailing` / `textValue` | as the action row | — | the row's own slots and type-ahead key |
+| `closeOnSelect` / `disabled` / `tone` / `leading` / `trailing` / `textValue` | as the action row | — | the row's own slots, tone and type-ahead key |
+| `style` | `MenuRadioItemState` callback | none | `{ checked, disabled, highlighted }`, merged after the row's roles |
 
 ### `ContextMenuSeparator`, `ContextMenuLabel`, `ContextMenuGroup`
 
@@ -130,6 +133,7 @@ ContextMenu
 | ---- | ---- | ------- | ----------- |
 | `children` | parts | none | `ContextMenuSub` holds a trigger and its content |
 | `label` | `string` | none | the second level's accessible name |
+| `disabled` / `leading` / `trailing` / `textValue` | the row surface | — | the sub trigger is an ordinary row that opens the second level |
 | `className` / `style` | host | none | merged last |
 
 ## Limitations

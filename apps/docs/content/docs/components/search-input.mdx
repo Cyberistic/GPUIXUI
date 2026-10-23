@@ -64,8 +64,13 @@ SearchInput
 | `className` | `string` | none | joined after the recipe, so it wins conflicts |
 | `style` | `StateStyle<SearchInputState>` | none | resolved against `{ disabled, focused }` and merged last on the field surface |
 | `testId` | `string` | `"search-input"` | the input's locator; the painted hint is `${testId}-hint` |
-| `ref` | `Ref<PublicInstance>` | none | the inner `<input>`, composed with the field's own focus ref |
-| `onKeyDown` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
+| `label` / `description` | `string` | none | the field's accessible name, and the help it announces |
+| `invalid` | `boolean` | `false` | the destructive edge a failed search paints |
+| `required` | `boolean` | `false` | the field is required by the form around it |
+| `readOnly` / `autoFocus` | `boolean` | `false` | uneditable, or focused on mount |
+| `size` / `fullWidth` / `tabIndex` | `"sm" \| "md" \| "lg"` · `boolean` · `number` | `"md"` · `false` · the field's place | height and padding from density, the full width, and the tab order |
+| `ref` / `aria-id` / `onLayout` | the addressed element | none | the inner `<input>`: focus it, measure it, name it for automation |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
 
 ## Limitations
 

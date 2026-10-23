@@ -62,6 +62,7 @@ List
 | `onValueChange` | `(value: string) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
 | `onActivate` | `(value: string) => void` — single and `none` only; absent from the multiple variant | — |
 | `dense` | `boolean` — a row at `density.rowHeight` instead of `rowHeight + spacing.md` | `false` |
+| `children` | parts — `ListItem` rows, one `ListSection` per group | — |
 | `className` | `string` — joined after the root recipe | — |
 
 ### ListItem
@@ -73,6 +74,7 @@ List
 | `disabled` | `boolean` | `false` |
 | `leading` | `ReactNode` — an icon, avatar or marker | — |
 | `trailing` | `ReactNode` — metadata, a badge or an action | — |
+| `children` | parts — `ListItemTitle`, `ListItemDescription` and the row's slots | — |
 | `className` | `string` — joined after the row recipe | — |
 | `style` | `StyleDesc` or a function of `{ active, disabled, selected }` | — |
 

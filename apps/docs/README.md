@@ -351,6 +351,7 @@ src/lib/examples.ts                 The example registry: ids, paths and header 
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
+src/lib/component-props.ts          The props a component declares, read through extends, aliases and Omit
 src/lib/component-index-query.ts    The docs indexes' filter on the page URL (`?q=`)
 src/lib/icon-gallery.ts             The icon gallery's entries and its paint rule
 src/lib/related.ts                  The related-component families a package page's strip prints

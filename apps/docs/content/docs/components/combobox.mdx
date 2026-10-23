@@ -89,6 +89,7 @@ Combobox
 | `loading` | `boolean` — the caller's fetch is in flight; an empty list says `Searching…` | `false` |
 | `onCreate` | `(query: string) => void` — single mode only; the caller adds the option | — |
 | `createLabel` | `(query: string) => string` | `Create "…"` |
+| `children` | parts — `ComboboxTrigger`, `ComboboxContent` | — |
 
 ### ComboboxTrigger
 
@@ -96,6 +97,8 @@ Combobox
 | ---- | ---- | ------- |
 | `placeholder` | `string` — shown while nothing is selected | `"Select…"` |
 | `label` | `string` — the trigger's accessible name | — |
+| `className` | `string` — joined after the trigger recipe | — |
+| `testId` | `string` | `"combobox-trigger"` |
 
 ### ComboboxContent
 
@@ -105,6 +108,8 @@ Combobox
 | `align` | `"start" \| "center" \| "end"` | `"start"` |
 | `sideOffset` | `number` — the gap to the trigger | `4` |
 | `alignOffset` | `number` — added on top of the measured centre correction | `0` |
+| `className` | `string` — joined after the surface recipe | — |
+| `children` | parts — `ComboboxInput`, `ComboboxList`, `ComboboxEmpty` | — |
 
 ### ComboboxInput
 

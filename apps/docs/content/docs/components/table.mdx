@@ -93,6 +93,7 @@ Table
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `height` | `number` — a definite height; the header stays painted and the body scrolls | — |
+| `children` | `ReactNode` — a `TableHeader`, an optional `TableSkeleton`, one `TableBody` | — |
 | `className` | `string` — joined after the recipe, so it wins conflicts | — |
 
 ### TableViewport, TableHeader, TableBody
@@ -101,6 +102,7 @@ Table
 | ---- | ---- | ------- |
 | `rows` | `number` — the skeleton's row count when the body has no children | `3` |
 | `height` | `number` — the body height `Table` measures and hands down | measured |
+| `children` | `ReactNode` — the rows, or the header cells the part owns | — |
 | `className` | `string` | — |
 
 ### TableRow
@@ -110,6 +112,7 @@ Table
 | `selected` | `boolean` — the chosen record's wash and label role | `false` |
 | `disabled` | `boolean` — no press, no pointer cursor | `false` |
 | `instanceRef` | `Ref<PublicInstance>` — the painted element, for `renderer.focusElement` | — |
+| `children` | `ReactNode` — the row's cells | — |
 | `className` | `string` | — |
 
 ### TableHeaderCell, TableCell
@@ -118,6 +121,7 @@ Table
 | ---- | ---- | ------- |
 | `width` | `number` — a fixed track; omitted, the cell shares the leftover width | — |
 | `align` | `"left" \| "center" \| "right"` | `"left"` |
+| `children` | `ReactNode` — the cell's text or element | — |
 | `className` | `string` | — |
 
 ### TableSkeleton

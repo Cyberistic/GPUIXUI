@@ -63,6 +63,7 @@ DropdownMenu
 | `open` | `boolean` | uncontrolled |
 | `defaultOpen` | `boolean` | `false` |
 | `onOpenChange` | `(open: boolean) => void` | none |
+| `children` | parts — a trigger, the content and its rows | — |
 
 ### DropdownMenuTrigger
 
@@ -76,6 +77,8 @@ DropdownMenu
 | `sideOffset` | `number` | `4` |
 | `collisionPadding` | `number` | `8` |
 | `alignOffset` | `number` | `0` — added to the measured centre correction |
+| `className` | `string` | none — joined after the surface recipe |
+| `children` | parts — the rows, groups and separators | none |
 
 ### DropdownMenuItem
 
@@ -88,6 +91,7 @@ DropdownMenu
 | `trailing` | `ReactNode` | none — a slot after it, for a shortcut |
 | `textValue` | `string` | the plain text children |
 | `closeOnSelect` | `boolean` | `true` |
+| `className` | `string` | none — joined after the row recipe |
 | `style` | `StyleDesc \| (state: MenuItemState) => StyleDesc` | none |
 
 ### DropdownMenuCheckboxItem
@@ -97,6 +101,9 @@ DropdownMenu
 | `checked` | `boolean` (required) | none |
 | `onCheckedChange` | `(checked: boolean) => void` (required) | none |
 | `closeOnSelect` | `boolean` | `false` — the row stays open |
+| `onSelect` / `disabled` / `tone` / `leading` / `trailing` / `textValue` | the row surface — see `DropdownMenuItem` | none | the toggle row is an ordinary row in everything but its mark |
+| `className` | `string` | none — joined after the row recipe |
+| `style` | `StyleDesc \| (state: MenuCheckboxItemState) => StyleDesc` | none |
 
 ### DropdownMenuRadioGroup / DropdownMenuRadioItem
 
@@ -106,7 +113,10 @@ DropdownMenu
 | `onValueChange` | `(value: string) => void` (required, group) | none — reports the chosen row's value |
 | `label` | `string` | none — the choice's accessible name |
 | `className` | `string` | none — compiled through `@gpuixui/tw` |
+| `children` | parts — the group's `DropdownMenuRadioItem` rows | none (group) |
 | `value` | `string` (required, row) | none — this row's value in the group |
+| `closeOnSelect` / `disabled` / `tone` / `leading` / `trailing` / `textValue` | the row surface — see `DropdownMenuItem` | none (row) |
+| `style` | `StyleDesc \| (state: MenuRadioItemState) => StyleDesc` | none — resolved against `{ checked, disabled, highlighted }` |
 
 ### The rest of the family
 

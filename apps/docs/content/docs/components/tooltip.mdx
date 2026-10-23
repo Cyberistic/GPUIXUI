@@ -66,6 +66,15 @@ Tooltip
 | `style` | `StyleDesc` | — | merged after the recipe **and** `className`, so it is the last word |
 | `testId` | `string` | — | lands on the tip's surface |
 
+`TooltipProvider` sets one timing for every tip below it.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `delay` | `number` | the runtime's `0` | milliseconds before a tip opens; a tip's own `delay` wins |
+| `skipDelay` | `number` | the runtime's `300` | the window after a close in which the next tip opens with no wait |
+| `disableHoverableContent` | `boolean` | the runtime's `false` | close as soon as the pointer leaves the trigger, for every tip below |
+| `children` | `ReactNode` | — (required) | the tree the provider covers |
+
 ## Limitations
 
 - The trigger carries the tip as `aria-description`; GPUix 0.11.0 has no `aria-describedby`, so there is no id reference between the two.
