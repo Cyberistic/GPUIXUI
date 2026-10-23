@@ -267,6 +267,21 @@ describe("a scoped run's capability verdict", () => {
     }),
   );
 
+  it.effect(
+    "does not let a repeated probe stand in for the one it skipped",
+    () =>
+      // The bug: the verdict compared the number of **results** to the number
+      // of declared probes, so `[first, first]` counted two and reported the
+      // capability `verified` while `second` had never run — the same evidence
+      // lie a scoped `--only` was already protected from.
+      Effect.gen(function* () {
+        const report = yield* runScoped([first, first], registry);
+        expect(Option.getOrUndefined(statusOf(report, "input"))).toBe(
+          "unverified",
+        );
+      }),
+  );
+
   it.effect("still fails a capability when its sampled probe failed", () =>
     // `unverified` must not swallow a real failure: a scoped run that saw a
     // failure has evidence, and it says so.
@@ -312,12 +327,14 @@ describe("a scoped run's capability verdict", () => {
     }),
   );
 
-  it("counts the registry per capability, in the suite's order", () => {
+  it("counts the distinct probes the registry declares, in the suite's order", () => {
     expect(coverageOf(registry)).toEqual([
       { capability: "input", declared: 2 },
     ]);
+    // A doubled registry is still two probes: counting entries would declare a
+    // scope bigger than the one that exists, and no run could ever cover it.
     expect(coverageOf([...registry, ...registry])).toEqual([
-      { capability: "input", declared: 4 },
+      { capability: "input", declared: 2 },
     ]);
     expect(coverageOf([])).toEqual([]);
   });

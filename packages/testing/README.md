@@ -17,12 +17,14 @@ sentences on this page are cases in it.
 - Not a test framework. It is the scenario/check/report model; run it under
   `@effect/vitest` or a CLI.
 - Not evidence. `runScenarios` only reports what it was actually run against.
-  A capability is `verified` only when every scenario covering it **ran** and
+  A capability is `verified` only when every probe covering it **ran** and
   passed, `failed` when one did not, and `unverified` when the run only sampled
   it — which is why a runner passes `coverage` (the registry it selected out of)
   and a `--only` run prints the capability it touched as `unverified` rather
-  than claiming a total it never measured. A host that could not load a binding
-  exits `2` (unverified) rather than reporting success.
+  than claiming a total it never measured. Probes are compared by `id` on both
+  sides: repeating one result cannot stand in for a probe that never ran, and a
+  registry that lists one id twice still declares one probe. A host that could
+  not load a binding exits `2` (unverified) rather than reporting success.
 - Not native. It has no GPUix dependency and cannot mount a renderer.
 
 ## Surface

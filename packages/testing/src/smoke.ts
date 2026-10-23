@@ -10,6 +10,7 @@ import { Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
@@ -877,26 +878,36 @@ const scenarioPassed = (result: ScenarioResult): boolean =>
   });
 
 /**
- * How many scenarios a registry declares for a capability — the scope a run
+ * How many probes a registry declares for a capability — the scope a run
  * selected out of.
  *
  * A `--only` run is evidence for the probes it ran and nothing else, so the
  * verdict needs the registry's own count: without it, one passing probe reports
- * its whole capability `verified`.
+ * its whole capability `verified`. A probe is its id, so two registry entries
+ * naming one id declare one probe, not two.
  */
 export interface Coverage {
   readonly capability: Capability;
   readonly declared: number;
 }
 
+/** The distinct ids in `entries`, one per probe however often it is listed. */
+const idsOf = (
+  entries: ReadonlyArray<{ readonly id: string }>,
+): HashSet.HashSet<string> =>
+  HashSet.fromIterable(Arr.map(entries, (e) => e.id));
+
 /** The scope `registry` declares, one entry per capability it covers. */
 export const coverageOf = (
-  registry: ReadonlyArray<{ readonly capability: Capability }>,
+  registry: ReadonlyArray<{
+    readonly capability: Capability;
+    readonly id: string;
+  }>,
 ): ReadonlyArray<Coverage> =>
   Arr.getSomes(
     Arr.map(CAPABILITIES, (capability) => {
-      const declared = Arr.length(
-        Arr.filter(registry, (entry) => entry.capability === capability),
+      const declared = HashSet.size(
+        idsOf(Arr.filter(registry, (entry) => entry.capability === capability)),
       );
       return declared === 0
         ? Option.none<Coverage>()
@@ -905,13 +916,14 @@ export const coverageOf = (
   );
 
 /**
- * The verdict per capability: `verified` only when every scenario the registry
+ * The verdict per capability: `verified` only when every probe the registry
  * declares for it ran and passed.
  *
  * Only capabilities the run touched get a line — the report speaks about the
  * run, never about the registry — but the declaration is what lets a **scoped**
  * run withhold `verified`: a `--only` run that sampled one probe reports
- * `unverified`, because the other probes covering it did not run. Without a
+ * `unverified`, because the other probes covering it did not run. Probes are
+ * compared by id, so repeating one cannot stand in for another. Without a
  * declaration the verdict can only be drawn from the scenarios handed over,
  * which is the documented fallback for a caller that owns its whole list.
  */
@@ -940,7 +952,9 @@ export const capabilityStatuses = (
             : Option.match(declared, {
                 onNone: () => "verified",
                 onSome: (count) =>
-                  Arr.length(ran) === count ? "verified" : "unverified",
+                  HashSet.size(idsOf(ran)) === count
+                    ? "verified"
+                    : "unverified",
               }),
         }),
       );
