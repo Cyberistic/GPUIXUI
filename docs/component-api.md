@@ -268,9 +268,15 @@ parts.
 
 This table is **executed**, not prose: `packages/components/src/api.test.ts`
 reads the Tier 2 rows below and fails when a shipped component has no row, when a
-row names a part the package does not export, or when an exported part of a
-component's family appears in no row. Adding a part therefore means updating the
-row in the same change.
+row names a part the package does not export, when an exported part of a
+component's family appears in no row, **and when the page that component owns
+documents no row for a part its row names**. The page is the API a consumer
+copies, so a part that ships and is exported but never appears in the page's
+`## API` table is learned only from a usage snippet — the dialog page named two
+of its eight parts before the rule landed. A one-part component documents its
+props directly (the primitives' convention), so the page row rule applies to a
+family with more than one part. Adding a part therefore means updating the row,
+the page and the package in the same change.
 
 ### Tier 1 — foundational
 

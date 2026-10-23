@@ -42,9 +42,21 @@ Alert
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
 | `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` |
+| `Alert` | `className` | `string` | — |
+| `AlertIcon` | `className` | `string` | — |
+| `AlertContent` | `className` | `string` | — |
+| `AlertTitle` | `className` | `string` | — |
+| `AlertDescription` | `className` | `string` | — |
 | `AlertLink` | `onSelect` | `() => void` | — |
+| `AlertLink` | `className` | `string` | — |
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` |
+
+`AlertIcon` takes the glyph as its children and paints it in the tone's readable
+role; `AlertTitle` paints the same role, and `AlertDescription` keeps the page
+foreground because body copy is read on the tint rather than as the message's
+own signal. `AlertContent` is presentational — it is the growing column the
+title, description and link sit in.
 
 ## Limitations
 

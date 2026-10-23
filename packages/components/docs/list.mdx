@@ -87,6 +87,19 @@ The type-ahead rule is published at `@gpuixui/components/typeahead`.
 | `leading` | `ReactNode` | — |
 | `trailing` | `ReactNode` | — |
 
+| `ListItemTitle` prop | Type | Default |
+| -------------------- | ---- | ------- |
+| `className` | `string` | — |
+
+| `ListItemDescription` prop | Type | Default |
+| -------------------------- | ---- | ------- |
+| `className` | `string` | — |
+
+`ListItemTitle` and `ListItemDescription` are the row's two text slots — one
+line each, clipped rather than wrapped — and they take the role the row's own
+fill was measured with, so a selected row's title keeps its on-colour and its
+description keeps the muted role the contract measures on that fill.
+
 ## Limitations
 
 - No drag reorder, group headers or nested rows.

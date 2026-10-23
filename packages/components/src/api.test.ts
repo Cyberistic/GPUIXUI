@@ -124,6 +124,35 @@ const partFiles: ReadonlyArray<string> = Arr.filter(
   (name) => Str.endsWith(".tsx")(name) && !Str.endsWith(".test.tsx")(name),
 );
 
+/** The page an inventory record points at, read from this suite's own package. */
+const pageOf = (docs: string): string =>
+  readFileSync(fileURLToPath(new URL(`../${docs}`, import.meta.url)), "utf8");
+
+/** The rule line of a Markdown table, e.g. `| ---- | ---- |`. */
+const tableRule = /^\|[\s:|-]*-[\s:|-]*$/;
+
+/** A table row's cells inside a page's `## API` section, header and rule dropped. */
+const apiRows = (page: string): ReadonlyArray<ReadonlyArray<string>> => {
+  const start = page.indexOf("\n## API\n");
+  if (start < 0) return [];
+  const end = page.indexOf("\n## ", start + 5);
+  const body = end < 0 ? page.slice(start) : page.slice(start, end);
+  return Arr.filterMap(body.split("\n"), (line) => {
+    if (!Str.startsWith("|")(line) || tableRule.test(line)) {
+      return Result.failVoid;
+    }
+    const cells = Arr.map(line.split(/(?<!\\)\|/).slice(1, -1), Str.trim);
+    const first = cells[0] ?? "";
+    return first === "Part" || first === "Prop"
+      ? Result.failVoid
+      : Result.succeed(cells);
+  });
+};
+
+/** Whether one row documents `part`: its first two cells name it in a code span. */
+const rowNamesPart = (cells: ReadonlyArray<string>, part: string): boolean =>
+  Arr.some(Arr.take(cells, 2), (cell) => cell.includes(`\`${part}\``));
+
 describe("component API contract", () => {
   it("names the boolean change callback beside the value one", () => {
     const controlled = section("## 2. Controlled and uncontrolled");
@@ -171,6 +200,56 @@ describe("component API contract", () => {
               isExportedPart(name) &&
               !documented.has(name),
           ).map((name) => `${meta.name}: exports ${name} with no §8 entry`),
+      }),
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("documents every part its §8 row names on the page it owns", () => {
+    // §8 is what the package exports; the page is the API a consumer copies.
+    // The dialog page named two of its eight parts, so a reader learned
+    // `DialogTrigger`, `DialogClose`, `DialogHeader`, `DialogTitle`,
+    // `DialogDescription` and `DialogFooter` existed only by reading the usage
+    // snippet — and the alert page named three of seven. A one-part component
+    // documents its props directly (the primitives' convention), so the row
+    // rule applies to a family with more than one part.
+    const problems = Arr.flatMap(inventory, (meta) =>
+      Option.match(partsOf(meta.name), {
+        onNone: () => [],
+        onSome: (parts) =>
+          Arr.length(parts) < 2
+            ? []
+            : Arr.filter(
+                parts,
+                (part) =>
+                  !Arr.some(apiRows(pageOf(meta.docs)), (cells) =>
+                    rowNamesPart(cells, part),
+                  ),
+              ).map((part) => `${meta.docs}: ${part} has no API row`),
+      }),
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("names no part on a page that its §8 row does not carry", () => {
+    // The other direction: a page whose part column names a part the contract
+    // dropped (a rename, or a part moved to another family) teaches a symbol
+    // the package no longer exports. Only a bare part cell is read, so a
+    // prop-only table (`| `List` prop | …`) is left to the page's own contract.
+    const barePart = /^`([A-Z][A-Za-z0-9]*)`$/;
+    const problems = Arr.flatMap(inventory, (meta) =>
+      Option.match(partsOf(meta.name), {
+        onNone: () => [],
+        onSome: (parts) =>
+          Arr.flatMap(apiRows(pageOf(meta.docs)), (cells) => {
+            const name = barePart.exec(cells[0] ?? "")?.[1];
+            return name !== undefined &&
+              !Arr.some(parts, (part) => part === name)
+              ? [`${meta.docs}: ${name} is documented but not in the §8 row`]
+              : [];
+          }),
       }),
     );
 

@@ -58,10 +58,29 @@ Dialog
 | `Dialog` | `defaultOpen` | `boolean` | `false` |
 | `Dialog` | `onOpenChange` | `(open: boolean) => void` | — |
 | `Dialog` | `dismissible` | `boolean` | `true` |
+| `DialogTrigger` | `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `DialogTrigger` | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `DialogTrigger` | `disabled` | `boolean` | `false` |
+| `DialogTrigger` | `onClick` | `(event: EventPayload) => void` | — |
 | `DialogContent` | `label` | `string` (required) | — |
 | `DialogContent` | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
 | `DialogContent` | `showClose` | `boolean` | `true` |
 | `DialogContent` | `initialFocus` | `() => number \| null` | — |
+| `DialogContent` | `className` | `string` | — |
+| `DialogHeader` | `className` | `string` | — |
+| `DialogTitle` | `className` | `string` | — |
+| `DialogDescription` | `className` | `string` | — |
+| `DialogFooter` | `className` | `string` | — |
+| `DialogClose` | `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `DialogClose` | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `DialogClose` | `disabled` | `boolean` | `false` |
+| `DialogClose` | `onClick` | `(event: EventPayload) => void` | — |
+
+`DialogTrigger` and `DialogClose` are ordinary actions: they take the button's
+variant, size, disabled state and press handler, announce the surface's open
+state through `aria-expanded`, and run the caller's `onClick` before opening or
+closing. `DialogHeader` leaves the room the floating close control needs, and
+`DialogTitle` is a level-2 heading while `DialogDescription` is a paragraph.
 
 ## Limitations
 
