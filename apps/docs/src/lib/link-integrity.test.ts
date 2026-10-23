@@ -76,7 +76,11 @@ const packagePages = packageCollections.flatMap((collection) => {
 const pages: ReadonlyArray<Page> = [...sitePages, ...packagePages];
 
 /** Routes outside the docs tree that a page may link to. */
-const extraRoutes: ReadonlyArray<string> = ["/"];
+const extraRoutes: ReadonlyArray<string> = [
+  "/",
+  // The live GPUix surface: a real wasm renderer, not a docs page.
+  "/live",
+];
 
 const mounted = new Set<string>([
   ...pages.map((page) => page.url),

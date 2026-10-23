@@ -25,6 +25,30 @@ stale silently.
 | Tray / menu bar | Not supported | Ship an in-window menu; a system tray needs a runtime change |
 | Native view / webview | Not supported | Use `markdown`/`code`/`diff` surfaces |
 
+## The browser build
+
+The pinned release ships a second target beside the `.node` binding: a `browser`
+entry over a **19.2 MiB** wasm renderer. It is GPUI's browser platform, not the
+headless test renderer — it appends its own `<canvas>`, paints through WebGPU
+with a WebGL2 fallback, and drives the same retained tree a native window drives.
+[/live](/live) is the one page on this site whose pixels come from it.
+
+The platform is a singleton, so a live surface is a whole page rather than a
+panel inside one:
+
+| Constraint | What it means for a page |
+| ---------- | ------------------------ |
+| One canvas, one window per document | a second `init()` fails with `GPUIX web is already running`, and a closed window cannot reopen; leaving the surface means reloading |
+| Cross-origin isolation | the renderer asks for shared memory, so the document needs `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`; without them `SharedArrayBuffer` is absent and it never starts |
+| WebGPU or WebGL2, or nothing | a browser with neither backend gets no surface, so the route owes a plain-text fallback rather than an empty canvas |
+
+`/live` is not the React reconciler. It feeds the renderer the mutation protocol
+the reconciler emits, with every style resolved by `@gpuixui/primitives/core`, so
+it proves the runtime paints in a browser — not that `render(<App />, { renderer })`
+is measured there. Every other page keeps its browser approximation and says so,
+and the companion playground remains the way to run the shipped components
+natively.
+
 ## Measured in a window
 
 Some limits are not in the matrix above, because the matrix is built from the

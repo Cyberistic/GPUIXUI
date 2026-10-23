@@ -56,6 +56,12 @@ const nativeManifest = (): Record<string, unknown> => {
 const policy = read("docs/preview-strategy.md");
 /** The site's own ledger restates the measurement, so it is held with the policy. */
 const ledger = read("apps/docs/README.md");
+/** The page a reader asks what the pinned runtime provides. */
+const runtimePage = read("apps/docs/content/docs/runtime.mdx");
+
+/** The wasm build's size, as every surface that prints it writes it. */
+const webSize = (): string =>
+  (statSync(new URL("wasm/gpuix-web_bg.wasm", native)).size / 1024 / 1024).toFixed(1);
 
 /** Every non-test module the docs app ships. */
 const appSources = (): ReadonlyArray<string> =>
@@ -118,12 +124,40 @@ describe("the GPUix web build", () => {
 
   it("quotes the build's real size", () => {
     const bytes = statSync(new URL("wasm/gpuix-web_bg.wasm", native)).size;
-    const mib = (bytes / 1024 / 1024).toFixed(1);
 
     // A bigger build changes the number the policy prints, so the size claim
     // cannot go stale (and plan 440's 25 MiB STOP condition has a source).
-    expect(policy).toContain(`${mib} MiB`);
+    expect(policy).toContain(`${webSize()} MiB`);
     expect(bytes).toBeGreaterThan(1024 * 1024);
+  });
+
+  it("publishes the browser target on the runtime page", () => {
+    // The runtime page is where a reader asks what the pinned package provides,
+    // and it named no browser build while every preview linked `/live` with no
+    // explanation of what that page is. The page prints the same three measured
+    // constraints, the size, and the gap that is still owed.
+    expect(runtimePage).toContain("## The browser build");
+    expect(runtimePage).toContain(`${webSize()} MiB`);
+    expect(runtimePage).toContain("[/live](/live)");
+    expect(runtimePage).toContain("GPUIX web is already running");
+    expect(runtimePage).toContain("Cross-Origin-Opener-Policy");
+    expect(runtimePage).toContain("Cross-Origin-Embedder-Policy");
+    expect(runtimePage).toContain("SharedArrayBuffer");
+    expect(runtimePage).toContain("WebGPU");
+    expect(runtimePage).toContain("WebGL2");
+    expect(runtimePage).toContain("browser approximation");
+
+    // Both directions: the surface drives the batch protocol, so the page owes
+    // the reconciler gap; the moment the route imports the reconciler, the page
+    // must stop calling it unmeasured. The policy points a reader at the page.
+    const usesReconciler = /^\s*import[^;]*["']@gpuix\/react["']/m.test(
+      read("apps/docs/src/components/docs/live-surface.tsx"),
+    );
+    expect(runtimePage.includes("not the React reconciler")).toBe(
+      !usesReconciler,
+    );
+    expect(runtimePage).toContain("render(<App />, { renderer })");
+    expect(policy).toContain("/docs/runtime");
   });
 
   it("keeps the policy's status and the tree in agreement", () => {

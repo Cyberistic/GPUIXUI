@@ -140,7 +140,9 @@ policy cannot claim the surface is mounted while no route imports the build, and
 it cannot claim a route that is not there. The guard also reads the installed
 package, so the size, the memory requirement and the browser entry it quotes
 cannot drift silently. Plan `440-live-gpuix-web-surface` is the record of how the
-route was reached; this section is its outcome.
+route was reached; this section is its outcome. `/docs/runtime` publishes the
+same three constraints, the build's size and the reconciler gap to a reader, and
+the guard holds that page to this policy.
 
 Two things `/live` is **not**, and its label says both:
 
