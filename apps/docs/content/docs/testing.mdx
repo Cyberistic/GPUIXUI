@@ -57,6 +57,9 @@ The live suite opens a real window and takes minutes. Scope it to the scenarios
 a change touches while iterating; the full live run is a release gate, not an
 iteration step.
 
+Both runners execute the built tree, so run `nub run --filter playground build`
+after a source change; the `smoke` script builds first.
+
 ## Limitations
 
 - **Workspace-internal**: only `apps/playground` depends on it.

@@ -10,8 +10,9 @@ import { describe, expect, it } from "vitest";
  *
  * This guard holds the page to the runners: both lanes take the shared
  * `--only`/`--list` flags the smoke CLI parses, the headless iteration command
- * is the built runner, and the full live run is called a release gate rather
- * than an iteration step. A renamed flag fails here before the page teaches it.
+ * runs the built tree (so the page names the build), and the full live run is
+ * called a release gate rather than an iteration step. A renamed flag fails here
+ * before the page teaches it.
  *
  * The reads are synchronous because this is a test boundary, like the rest of
  * the site's Markdown guards.
@@ -37,6 +38,8 @@ describe("the testing page", () => {
     expect(page).toContain("nub apps/playground/dist/smoke/run.js --only <id>");
     expect(page).toContain("nub apps/playground/dist/live/run.js --only <id>");
     expect(page).toContain("`--list`");
+    expect(page).toContain("nub run --filter playground build");
+    expect(page).toContain("execute the built tree");
   });
 
   it("keeps the full live suite a release gate, not an iteration step", () => {

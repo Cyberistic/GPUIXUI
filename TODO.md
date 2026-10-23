@@ -10319,10 +10319,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
       the end-of-task check, and the full live run as a release gate rather than
       an iteration step. `src/lib/testing-page.test.ts` (2 cases) reads the
       shared CLI in `apps/playground/src/smoke/run.ts` (the live runner imports
-      its parser and usage) and requires both commands and the gate sentence;
-      directions measured: replacing the headless `--only` line fails by path,
-      and rewording "release gate" fails by name. No native scenario applies —
-      a page and the runners it documents.
+      its parser and usage), names the build both runners need, and requires
+      both commands and the gate sentence; directions measured: replacing the
+      headless `--only` line fails by path, and rewording "release gate" fails by
+      name. No native scenario applies — a page and the runners it documents.
 
 `[x]` Hold the **component-page contract to its policy in both directions** —
       the guard that "requires the sections its policy declares" only checked
