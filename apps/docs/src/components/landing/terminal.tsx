@@ -1,4 +1,5 @@
 import { HighlightedCode } from "@/components/highlighted-code";
+import { countWord, landingLookCount } from "./data";
 
 /**
  * The "Run it in your terminal" section: a kitty/Ghostty-style dark frame with
@@ -40,7 +41,7 @@ const CODE = [
   "      </Stack>",
   '      <Stack direction="column" grow>',
   '        <Text role="h2">Components</Text>',
-  "        <Text>One set, three native looks.</Text>",
+  `        <Text>One set, ${countWord(landingLookCount).toLowerCase()} native looks.</Text>`,
   "      </Stack>",
   "    </Stack>",
   "  );",

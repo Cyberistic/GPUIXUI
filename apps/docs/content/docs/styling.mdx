@@ -20,14 +20,14 @@ A later class wins; a component passes your `className` last and merges `style` 
 
 | Registry | Compiles against | Who uses it |
 | -------- | ---------------- | ----------- |
-| the default registry | fixed metrics — `h-9` is 36, `px-3` is 12, `text-sm` is 14/20 | `@gpuixui/components` |
+| the default registry | the theme's density steps — `h-9` is the `md` control height, `px-3` is 12, `text-sm` is 14/20 | `@gpuixui/components` |
 | `recipeTw` | the theme's named steps — `h-md` is the density height, `gap-sm` the spacing scale, `type-body` a type role | `@gpuixui/primitives` |
 
 ## The default registry
 
 | Class | Resolves to |
 | ----- | ----------- |
-| `h-9` | `height: 36` |
+| `h-9` | `height: density.controlHeight.md` — 32 at the default, 28 compact, 36 spacious |
 | `px-3` | `paddingLeft`/`paddingRight: 12` |
 | `gap-2` | `gap: 8` |
 | `rounded-lg` | `borderRadius: 8` |
@@ -39,6 +39,8 @@ A later class wins; a component passes your `className` last and merges `style` 
 | `bg-primary/90` | the `primary` role at 90% alpha |
 | `shadow-md` | the theme's `md` elevation |
 | `grid-cols-3` | `gridTemplateColumns: 3` |
+
+The three shadcn control heights map to the density scale's `sm`/`md`/`lg`, so `h-8`, `h-9` and `h-10` resolve to the active theme's control heights rather than Tailwind's fixed 32/36/40 — the platform switch resizes a control instead of pinning it.
 
 ## States
 

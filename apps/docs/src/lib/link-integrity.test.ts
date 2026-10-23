@@ -58,7 +58,7 @@ const walk = (
 const sitePages = walk(
   new URL("apps/docs/content/docs/", root),
   "apps/docs/content/docs/",
-  (slug) => (slug === "" ? "/docs" : `/docs/${slug}`),
+  (slug) => (slug === "" || slug === "index" ? "/docs" : `/docs/${slug}`),
 );
 
 /** The pages a package ships, mounted as collections. */
@@ -211,6 +211,38 @@ const deadReason = (link: Link): string | undefined => {
   return known.has(hash) ? undefined : `no heading #${hash} on ${url}`;
 };
 
+/**
+ * Every in-site link a rendered component writes as a literal `href="/docs…"`.
+ *
+ * A page's Markdown is walked above; the strips and frames around the page are
+ * TSX, and nothing read them. The dependency strip on every component page
+ * linked `/docs/architecture#the-packages` while that page had no heading by
+ * that name, so the link a reader follows to learn where a package belongs
+ * landed at the top of the page.
+ */
+const componentLinks: ReadonlyArray<Link> = (() => {
+  const files = (dir: URL, prefix: string): ReadonlyArray<string> =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const path = `${prefix}${entry.name}`;
+      if (entry.isDirectory())
+        return files(new URL(`${entry.name}/`, dir), `${path}/`);
+      return entry.name.endsWith(".tsx") && !entry.name.includes(".test.")
+        ? [path]
+        : [];
+    });
+
+  return files(new URL("apps/docs/src/", root), "apps/docs/src/").flatMap(
+    (file) => {
+      const source = readFileSync(new URL(file, root), "utf8");
+      return [...source.matchAll(/\shref="(\/docs[^"]*)"/g)].flatMap((match) =>
+        match[1] === undefined
+          ? []
+          : [{ from: file, url: "/", target: match[1] }],
+      );
+    },
+  );
+})();
+
 const dead = pages.flatMap((page) =>
   linksOf(page)
     .map((link) => ({ link, reason: deadReason(link) }))
@@ -261,5 +293,18 @@ describe("the site's links", () => {
         (known) => `${known.from}: ${known.target} is not dead — drop the row`,
       ),
     ).toEqual([]);
+  });
+
+  it("mount every in-site link a component writes", () => {
+    const broken = componentLinks.flatMap((link) => {
+      const reason = deadReason(link);
+      return reason === undefined
+        ? []
+        : [`${link.from}: ${link.target} — ${reason}`];
+    });
+
+    // A walk that matched nothing would pass the assertion above.
+    expect(componentLinks.length).toBeGreaterThanOrEqual(10);
+    expect(broken).toEqual([]);
   });
 });

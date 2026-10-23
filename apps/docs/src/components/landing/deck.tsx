@@ -1,7 +1,8 @@
 /**
- * The hero deck: four platform windows, each running the **conversations
- * block** in its own dress — macOS Messages, Windows 11 Fluent, Linux Breeze
- * and Omarchy's Tokyo Night look — so each card is recognisably its desktop.
+ * The hero deck: one platform window per desktop in `landingPlatformOrder`,
+ * each running the **conversations block** in its own dress — macOS Messages,
+ * Windows 11 Fluent, Linux Breeze and Omarchy's Tokyo Night look — so each card
+ * is recognisably its desktop.
  *
  * macOS and Windows show on the light palette, Linux and Omarchy on the dark
  * one. The shuffle pauses on hover; the stack is a clean fan with no rotation.
@@ -20,7 +21,7 @@ import {
 import { toCssVars } from "../../lib/theme-css";
 import { BlockIcon } from "../docs/block-icons";
 import { ConversationWindow } from "../docs/conversations-block";
-import { platforms, repo } from "./data";
+import { platforms, countWord, landingLookCount, repo } from "./data";
 import type { Platform } from "./data";
 
 const SHUFFLE_MS = 1600;
@@ -81,7 +82,7 @@ export function Hero() {
       <h1 className="landing-title">
         One library.
         <br />
-        Four native <em>looks</em>.
+        {countWord(landingLookCount)} native <em>looks</em>.
       </h1>
 
       <p className="landing-sub">

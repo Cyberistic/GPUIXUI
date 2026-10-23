@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { densityPresets, type DensityName } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -15,6 +16,11 @@ import { describe, expect, it } from "vitest";
  * the reader-facing entry points from `exports` (the two `jsx-*` keys are
  * compiler targets, not specifiers a reader imports), the `Tw` host table from
  * `react.tsx`, and the extension API from the root module.
+ *
+ * It also holds the `h-9` row to the compiler. The page called the default
+ * registry "fixed metrics — `h-9` is 36", while `classesToStyle` maps `h-8`,
+ * `h-9` and `h-10` onto the density scale's `sm`/`md`/`lg`, so the row taught
+ * Tailwind's number where the default theme paints its own control height.
  *
  * The reads are synchronous because this is a test boundary, like the rest of
  * the site's Markdown guards.
@@ -64,6 +70,30 @@ const twHosts = (() => {
 
 const page = read("apps/docs/content/docs/styling.mdx").replace(/\s+/g, " ");
 
+/**
+ * The class → control-size table `utilities.ts` compiles with: `"9": "md"`.
+ *
+ * Read as text rather than imported because the mapping is module-private, and
+ * the point of the case is that the page follows the compiler's own table.
+ */
+const isControlStep = (value: string): value is "sm" | "md" | "lg" =>
+  value === "sm" || value === "md" || value === "lg";
+
+const controlSteps = new Map<string, "sm" | "md" | "lg">(
+  [
+    ...(
+      read("packages/tw/src/utilities.ts")
+        .split("const CONTROL_HEIGHT")[1]
+        ?.split("};")[0] ?? ""
+    ).matchAll(/"(\d+)":\s*"(sm|md|lg)"/g),
+  ].flatMap((match) => {
+    const [, size, step] = match;
+    return size === undefined || step === undefined || !isControlStep(step)
+      ? []
+      : [[size, step] as const];
+  }),
+);
+
 describe("the styling page", () => {
   it("names every entry point a reader imports", () => {
     const missing = readerEntryPoints.filter(
@@ -95,5 +125,20 @@ describe("the styling page", () => {
     expect(twHosts.length).toBeGreaterThanOrEqual(3);
     expect(missing).toEqual([]);
     expect(page).toContain("TwProvider");
+  });
+
+  it("teaches the control height the compiler resolves", () => {
+    // Bug guarded: the page taught Tailwind's `h-9` = 36 while the compiler
+    // resolves it through the active theme's density.
+    const step = controlSteps.get("9");
+    if (step === undefined) throw new Error("h-9 resolves to no control step");
+    const height = (preset: DensityName) =>
+      densityPresets[preset].controlHeight[step];
+
+    expect(page).toContain(`${height("comfortable")} at the default`);
+    expect(page).toContain(`${height("compact")} compact`);
+    expect(page).toContain(`${height("spacious")} spacious`);
+    expect(page).not.toContain("`h-9` is 36");
+    expect(page).not.toContain("height: 36");
   });
 });

@@ -36,6 +36,15 @@ const scale = readFileSync(
   "utf8",
 );
 
+/** The component's internal resolver: a stored size reads as `md`. */
+const resolver = readFileSync(
+  new URL(
+    "../../../../../packages/components/src/internal/theme.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 /** The names the page prints in its fallback table, plus the edges around it. */
 const names = [
   "Ada Lovelace",
@@ -169,7 +178,13 @@ describe("the avatar preview's geometry", () => {
 
   it("draws the initials at 40% of the diameter, as the component does", () => {
     expect(component).toContain("Math.round(diameter * 0.4)");
-    expect(component).toContain("const diameter = avatarSize[size];");
+    // A stored size name reads as `md` through the component's own resolver; a
+    // bare `avatarSize[size]` answered `undefined` for a name a release had
+    // dropped, and the preview pinned that lookup.
+    expect(component).toContain("const diameter = avatarPixels(size);");
+    expect(resolver).toContain(
+      "isAvatarSize(size) ? avatarSize[size] : avatarSize.md",
+    );
   });
 
   it("draws a 10px dot on the rim, inside the strong edge", () => {

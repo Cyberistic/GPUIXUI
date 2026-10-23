@@ -1,4 +1,5 @@
 import { useTheme } from "fumadocs-ui/provider/base";
+import { retroNames, retroStyles, type RetroName } from "@gpuixui/tokens";
 import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
 import { Hero } from "./deck";
@@ -6,7 +7,7 @@ import { Lineage } from "./lineage";
 import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
 import { DashboardRender } from "../docs/dashboard";
-import { attribution, navLinks, repo } from "./data";
+import { attribution, countWord, navLinks, repo } from "./data";
 
 export function Landing() {
   return (
@@ -131,41 +132,45 @@ function Dashboard() {
   );
 }
 
-const recipes = [
-  {
-    name: "Windows XP / 7 Aero",
-    body: "Luna surfaces, bevel edges, Segoe/Tahoma — an approximation where the runtime has no blur or inset shadow, labelled as such.",
-    href: "/docs/theming",
-  },
-  {
-    name: "Omarchy",
-    body: "Read the active theme's palette and re-apply it live when omarchy-theme-set runs.",
-    href: "/docs/theming",
-  },
-] as const;
+/** What each authored look repaints, in the order `retroNames` names them. */
+const lookBodies: Readonly<Record<RetroName, string>> = {
+  luna: "The 2001 beige, its blue selection and warm chrome.",
+  aero: "Glass-blue greys and a highlight that reads on every surface.",
+  omarchy: "Tokyo Night ink and Flexoki paper, read from your active theme.",
+};
 
-function Defaults() {
+const recipes = retroNames.map((look) => ({
+  id: look,
+  name: retroStyles[look].label,
+  body: lookBodies[look],
+  facts: `${retroStyles[look].density} · ${retroStyles[look].radius.md}px corners · ${retroStyles[look].mono}`,
+  href: "/docs/theming#the-look-picker",
+}));
+
+export function Defaults() {
   return (
     <section className="landing-section" id="platforms">
       <p className="landing-kicker">Defaults, then make them yours</p>
-      <h2 className="landing-h2">Three native looks, one starting point.</h2>
+      <h2 className="landing-h2">
+        {countWord(retroNames.length)} authored looks, one starting point.
+      </h2>
       <p className="landing-lead">
         Each platform ships its own default — the same component in native
-        chrome and type. Pick one and it looks at home out of the box, then
-        reshape it with <a href="/docs/theming">tokens</a> or in the{" "}
-        <a href="/docs/themes">theme editor</a>.
+        chrome and type. The library also ships authored looks over that base:
+        copy their values, edit them and ship your own style.
       </p>
 
       <div className="landing-recipes">
         {recipes.map((item) => (
           <a
             className="landing-panel landing-recipe"
+            data-look={item.id}
             href={item.href}
-            key={item.name}
+            key={item.id}
           >
             <h3>{item.name}</h3>
             <p>{item.body}</p>
-            <span className="landing-stat">recipe →</span>
+            <span className="landing-stat">{item.facts}</span>
           </a>
         ))}
       </div>

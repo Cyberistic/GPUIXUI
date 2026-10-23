@@ -143,4 +143,13 @@ describe("the license page", () => {
       pages.indexOf("contributing"),
     );
   });
+
+  it("scopes its claim to the records it renders", () => {
+    // The description said "Every reference, its verified licence" while the
+    // landing credits references with no record here (adabraka-ui, GPUI Kit),
+    // so the page promised a verification it does not show. The inventory is
+    // the scope it can keep.
+    expect(page).toContain("Every reference the licence inventory records");
+    expect(page).not.toMatch(/^description: Every reference,/m);
+  });
 });
