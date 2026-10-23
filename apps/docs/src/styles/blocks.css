@@ -2696,6 +2696,679 @@
   text-overflow: ellipsis;
 }
 
+/* ---- file manager ----
+   A three-pane browser: a 200px folder rail, the folder's tiles and a 320px
+   information rail. The selected tile's ring is a border that is always there,
+   transparent at rest, so a selection never moves the grid. */
+.gx-fm {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1080px;
+  height: 600px;
+  overflow: hidden;
+  container-type: inline-size;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--card);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  text-align: left;
+}
+
+.gx-fm-top {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 320px) 1fr;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  flex: none;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-fm-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-fm-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--input);
+  color: var(--placeholder);
+}
+
+.gx-fm-search:focus-within {
+  border-color: var(--ring);
+}
+
+.gx-fm-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.gx-fm-search-input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-fm-views {
+  display: flex;
+  justify-self: end;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--muted);
+}
+
+.gx-fm-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-fm-view:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-fm-view[data-active="true"] {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px var(--shadow);
+}
+
+.gx-fm-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-fm-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 200px;
+  flex: none;
+  padding: 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-fm-add {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.gx-fm-root,
+.gx-fm-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-fm-root {
+  margin-bottom: 4px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-fm-root:hover,
+.gx-fm-folder:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-fm-root[data-active="true"],
+.gx-fm-folder[data-active="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+  font-weight: 600;
+}
+
+.gx-fm-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-fm-storage {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: auto;
+  padding: 14px 8px 2px;
+}
+
+.gx-fm-storage-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-fm-storage-value {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-fm-track {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--secondary);
+}
+
+.gx-fm-fill {
+  display: block;
+  width: 60%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.gx-fm-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 16px;
+}
+
+.gx-fm-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.gx-fm-crumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gx-fm-crumb:hover:not(:disabled) {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-fm-crumb:disabled {
+  color: var(--foreground);
+  font-weight: 600;
+  cursor: default;
+}
+
+.gx-fm-sep {
+  display: inline-flex;
+  color: var(--placeholder);
+}
+
+.gx-fm-here {
+  font-weight: 600;
+}
+
+.gx-fm-back {
+  align-self: flex-start;
+  margin: 2px 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.gx-fm-back:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-fm-back:disabled {
+  color: var(--placeholder);
+  cursor: default;
+}
+
+.gx-fm-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  padding: 2px 4px 8px 2px;
+  overflow-y: auto;
+}
+
+.gx-fm-tiles[data-view="eye"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gx-fm-tiles[data-view="columns"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gx-fm-tiles[data-view="list"] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.gx-fm-tile {
+  position: relative;
+  display: flex;
+  border: 2px solid transparent;
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-fm-tile[data-selected="true"] {
+  border-color: var(--primary);
+  background: var(--selected);
+}
+
+.gx-fm-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-fm-pick:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-fm-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  background-size: cover;
+}
+
+.gx-fm-thumb[data-tone="0"],
+.gx-fm-preview[data-tone="0"] {
+  background-image: linear-gradient(135deg, var(--series-2), var(--series-5));
+}
+
+.gx-fm-thumb[data-tone="1"],
+.gx-fm-preview[data-tone="1"] {
+  background-image: linear-gradient(135deg, var(--series-1), var(--series-3));
+}
+
+.gx-fm-thumb[data-tone="2"],
+.gx-fm-preview[data-tone="2"] {
+  background-image: linear-gradient(135deg, var(--series-3), var(--series-5));
+}
+
+.gx-fm-thumb[data-tone="3"],
+.gx-fm-preview[data-tone="3"] {
+  background-image: linear-gradient(135deg, var(--series-4), var(--series-1));
+}
+
+.gx-fm-thumb[data-tone="4"],
+.gx-fm-preview[data-tone="4"] {
+  background-image: linear-gradient(135deg, var(--series-5), var(--series-2));
+}
+
+.gx-fm-name {
+  padding: 0 2px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-fm-meta {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--placeholder);
+}
+
+.gx-fm-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-fm-menu:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-fm-tiles[data-view="columns"] .gx-fm-name {
+  font-size: 11px;
+}
+
+.gx-fm-tiles[data-view="list"] .gx-fm-pick {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 34px 6px 6px;
+}
+
+.gx-fm-tiles[data-view="list"] .gx-fm-thumb {
+  width: 48px;
+  flex: none;
+}
+
+.gx-fm-tiles[data-view="list"] .gx-fm-name {
+  flex: none;
+  max-width: 45%;
+}
+
+.gx-fm-tiles[data-view="list"] .gx-fm-meta {
+  display: block;
+  margin-left: auto;
+}
+
+.gx-fm-tiles[data-view="list"] .gx-fm-menu {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gx-fm-empty {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-fm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  flex: none;
+  padding: 14px 16px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-fm-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background-size: cover;
+}
+
+.gx-fm-info-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-fm-filename {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-fm-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.gx-fm-download:hover {
+  background: var(--hover);
+}
+
+.gx-fm-label {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-fm-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+}
+
+.gx-fm-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11.5px;
+}
+
+.gx-fm-fact dt {
+  color: var(--muted-foreground);
+}
+
+.gx-fm-fact dd {
+  margin: 0;
+  text-align: right;
+  color: var(--foreground);
+}
+
+/* ---- email inbox ----
+   Four panes: the folder rail, the message list, the reading pane and the
+   sender card. The list's selection and the toolbar's tab are the two states;
+   both paint a reserved edge, never a changed box. */
+.gx-mail {
+  display: flex;
+  width: 100%;
+  max-width: 1180px;
+  height: 640px;
+  overflow: hidden;
+  container-type: inline-size;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--card);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  text-align: left;
+}
+
+.gx-mail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 220px;
+  flex: none;
+  padding: 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-mail-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.gx-mail-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-mail-new {
+  display: inline-flex;
+}
+
+.gx-mail-new .gx-btn-primary:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.gx-mail-new-more {
+  width: 24px;
+  padding: 0 5px;
+  border-left: 1px solid var(--primary-foreground);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.gx-mail-refresh {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  margin-bottom: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-mail-refresh:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-mail-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 10px;
+}
+
+.gx-mail-group-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 4px;
+  padding: 0 8px;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gx-mail-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-mail-folder:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-mail-folder[data-active="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+  font-weight: 600;
+}
+
+.gx-mail-folder-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .gx-cmd-keys {
   display: inline-flex;
   gap: 4px;
@@ -2717,6 +3390,582 @@
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--muted-foreground);
+}
+
+.gx-mail-count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-mail-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.gx-mail-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-mail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1px;
+}
+
+.gx-mail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.gx-mail-action:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-mail-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gx-mail-tab {
+  padding: 5px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-mail-tab:hover {
+  color: var(--foreground);
+}
+
+.gx-mail-tab[aria-selected="true"] {
+  border-bottom-color: var(--primary);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-mail-panes {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-mail-list {
+  width: 400px;
+  flex: none;
+  padding: 4px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+
+.gx-mail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-mail-row:hover {
+  background: var(--hover);
+}
+
+.gx-mail-row[data-selected="true"] {
+  background: var(--selected);
+}
+
+.gx-mail-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: var(--foreground);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.gx-mail-avatar-lg {
+  width: 38px;
+  height: 38px;
+  font-size: 12px;
+}
+
+.gx-mail-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-mail-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gx-mail-sender {
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-row[data-unread="false"] .gx-mail-sender {
+  font-weight: 500;
+}
+
+.gx-mail-chip {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.gx-mail-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  margin-left: auto;
+  color: var(--placeholder);
+}
+
+.gx-mail-date {
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  white-space: nowrap;
+}
+
+.gx-mail-subject {
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-row[data-unread="true"] .gx-mail-subject {
+  font-weight: 650;
+}
+
+.gx-mail-preview {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.gx-mail-dot[data-on="true"] {
+  background: var(--primary);
+}
+
+.gx-mail-empty {
+  margin: 0;
+  padding: 28px 16px;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.gx-mail-read {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.gx-mail-subject-lg {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-mail-from {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-mail-from-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-mail-from-text p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.gx-mail-to {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-mail-from-text .gx-mail-date {
+  display: block;
+  margin-top: 2px;
+}
+
+.gx-mail-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-mail-icon:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-mail-body {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow-y: auto;
+  color: var(--foreground);
+  font-size: 12.5px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.gx-mail-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: none;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 3px);
+  background: var(--muted);
+}
+
+.gx-mail-reply-input {
+  width: 100%;
+  min-height: 68px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  background: var(--input);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12.5px;
+  resize: vertical;
+}
+
+.gx-mail-reply-input:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 30%, transparent);
+}
+
+.gx-mail-reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.gx-mail-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  flex: none;
+  padding: 14px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-mail-label {
+  margin: 0;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gx-mail-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-mail-person-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gx-mail-person-mail {
+  margin: 1px 0 0;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-contact-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-mail-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+
+.gx-mail-contact-value {
+  max-width: 60%;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-contact-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-mail-contact-tab {
+  padding: 5px 7px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.gx-mail-contact-tab[aria-selected="true"] {
+  border-bottom-color: var(--primary);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-mail-contact-panel {
+  min-height: 58px;
+}
+
+.gx-mail-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0 0 0 14px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-mail-threads {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-mail-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 11.5px;
+}
+
+.gx-mail-thread-subject {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-thread-date {
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+
+@media (max-width: 1100px) {
+  .gx-fm-info,
+  .gx-mail-contact {
+    display: none;
+  }
+}
+
+/*
+ * The preview column is narrower than the viewport it sits in, so the block
+ * sizes its own rails from its container, not from the window. The wide
+ * breakpoints keep a rail on screen by narrowing it; the narrow ones drop a
+ * rail whole for the index card's thumbnail.
+ */
+@container (max-width: 1120px) {
+  .gx-fm-side {
+    width: 170px;
+  }
+
+  .gx-fm-info {
+    width: 220px;
+  }
+
+  .gx-mail-side {
+    width: 170px;
+  }
+
+  .gx-mail-list {
+    width: 280px;
+  }
+
+  .gx-mail-contact {
+    display: none;
+  }
+}
+
+@container (max-width: 900px) {
+  .gx-fm-side {
+    width: 150px;
+  }
+
+  .gx-fm-info {
+    width: 200px;
+  }
+
+  .gx-mail-side {
+    width: 160px;
+  }
+
+  .gx-mail-list {
+    width: 230px;
+  }
+}
+
+@container (max-width: 720px) {
+  .gx-fm-info {
+    display: none;
+  }
+}
+
+@container (max-width: 620px) {
+  .gx-fm-side,
+  .gx-fm-info {
+    display: none;
+  }
+
+  .gx-fm-top {
+    grid-template-columns: auto 1fr;
+  }
+
+  .gx-fm-search {
+    display: none;
+  }
+
+  .gx-mail-side {
+    display: none;
+  }
+
+  .gx-mail-list {
+    width: auto;
+    flex: 1;
+  }
+
+  .gx-mail-action {
+    gap: 0;
+    padding: 0 6px;
+    font-size: 0;
+  }
+}
+
+@container (max-width: 420px) {
+  .gx-fm-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gx-mail-read {
+    display: none;
+  }
 }
 
 /* ---- index cards ---- */

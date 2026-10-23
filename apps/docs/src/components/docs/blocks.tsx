@@ -15,6 +15,16 @@ import {
   dashboardPackages,
   dashboardSource,
 } from "./dashboard";
+import {
+  EmailInboxRender,
+  emailInboxPackages,
+  emailInboxSource,
+} from "./email-inbox-block";
+import {
+  FileManagerRender,
+  fileManagerPackages,
+  fileManagerSource,
+} from "./file-manager-block";
 import { KanbanRender, kanbanPackages, kanbanSource } from "./kanban-board";
 import {
   SettingsDialogRender,
@@ -281,6 +291,26 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: CommandCentreRender,
     source: commandCentreSource,
+  },
+  "file-manager-01": {
+    name: "file-manager-01",
+    slug: "file-manager",
+    title: "File manager",
+    description:
+      "A three-pane browser: a folder tree, a grid of image tiles and the selected file's facts.",
+    packages: [...fileManagerPackages],
+    render: FileManagerRender,
+    source: fileManagerSource,
+  },
+  "email-inbox-01": {
+    name: "email-inbox-01",
+    slug: "email-inbox",
+    title: "Email inbox",
+    description:
+      "A four-pane mail client: folders, a filterable message list, the reading pane and the sender's contact card.",
+    packages: [...emailInboxPackages],
+    render: EmailInboxRender,
+    source: emailInboxSource,
   },
 };
 
