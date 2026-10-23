@@ -376,6 +376,16 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   no bar and the description still says `Q1 0, Q2 -4`. Direction measured:
   restoring the marks test fails `announces a series whose values draw no bar`
   with `expected [] to deeply equal [ … ]`. 7 behaviour cases green.
+- **A `not` is followed, not refused**: `removeAt`/`appendAt` returned at the
+  `not` node, while `clauseAt`/`updateAt` already read its one child at index
+  `0`; a group a `not` negates therefore painted a clause Remove (and, with the
+  nested Add rule, its own Add) that changed nothing. Both reducers descend
+  through index `0` now, so a negated group is edited like any other; a path
+  naming the `not` itself or the clause it holds directly still leaves the tree
+  alone, and the builder paints no Add on a `not` and no Remove on its direct
+  child. Directions measured: at `HEAD` the new unit case fails `expected 2 to
+  be 1` and the window case fails on the clause the Remove should have taken;
+  with the descent, 29 unit and 9 behaviour cases green.
 
 
 ## 5. Acceptance

@@ -8,8 +8,9 @@ tree combines them with `all`, `any` and `not`. The builder paints the tree it
 is handed and adds clauses to its root group; a nested `any` or `not` group is
 part of the caller's tree (the builder paints and edits it, but does not create
 one). Every group it can extend paints its **own Add control**, so a nested
-`any` gains a clause in place. A group the tree holds but the builder cannot
-safely change — a `not`, or a group inside one — paints none.
+`any` gains a clause in place — including one inside a `not`. A `not` itself
+paints none, because it holds one child; a group inside one is a group like any
+other, and its clauses remove individually.
 
 ## Usage
 
@@ -85,7 +86,8 @@ buttons, and its value is the primitives' `Input`, named by the field it edits.
   `appendAt(tree, path, clause)` directly to build a group the tree does not
   hold yet.
 - A clause carries a Remove control only where removing it changes the tree: a
-  `not` holds one child and cannot be left empty, so a clause inside one has no
-  Remove of its own — remove the group whole when it sits in a group. A root
-  clause, or a root `not`, is cleared with **Clear**.
+  `not` holds one child and cannot be left empty, so the clause it holds
+  directly has no Remove of its own — remove the group whole when it sits in a
+  group. A clause inside a group the `not` negates removes like any other. A
+  root clause, or a root `not`, is cleared with **Clear**.
 - No pattern comparison: a value is compared literally.

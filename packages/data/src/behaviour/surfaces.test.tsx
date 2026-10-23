@@ -223,6 +223,62 @@ describe("the data surfaces", () => {
     );
   });
 
+  it("edits a group a not negates, where the builder paints its controls", () => {
+    // A `not` holds one child, so it paints no Add or Remove of its own — but a
+    // group inside it is a group like any other: its Add appends there and a
+    // clause's Remove takes that clause out. Both controls were painted while
+    // `appendAt`/`removeAt` refused every path through a `not`, so pressing
+    // either changed nothing while the button claimed it would.
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        {
+          kind: "not",
+          child: {
+            kind: "any",
+            children: [
+              {
+                kind: "predicate",
+                field: "name",
+                comparison: "contains",
+                value: "alpha",
+              },
+              {
+                kind: "predicate",
+                field: "size",
+                comparison: "greaterThan",
+                value: "1024",
+              },
+            ],
+          },
+        },
+      ],
+    };
+    root = renderData(<NestedBuilder tree={tree} />);
+    settle(root);
+
+    expect(paintedText(root)).toContain(
+      "not (any of (name contains alpha, size greaterThan 1024))",
+    );
+
+    clickCentreOf(root, "nested-0-0-1-remove");
+    root.renderer.flush();
+
+    // The clause the reader pressed is gone; its sibling stays.
+    expect(root.renderer.findByTestId("nested-0-0-1-value")).toBeUndefined();
+    expect(paintedText(root)).toContain("not (any of (name contains alpha))");
+
+    clickCentreOf(root, "nested-0-0-add");
+    root.renderer.flush();
+
+    // The Add appended a clause to the negated `any`, not to the root.
+    expect(root.renderer.findByTestId("nested-0-0-1-value")).toBeDefined();
+    expect(root.renderer.findByTestId("nested-1-value")).toBeUndefined();
+    expect(paintedText(root)).toContain(
+      "not (any of (name contains alpha, status equals",
+    );
+  });
+
   it("offers no Remove where removing the clause would leave the tree alone", () => {
     const negated: FilterTree = {
       kind: "not",

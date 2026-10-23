@@ -371,6 +371,42 @@ describe("editing a tree", () => {
     expect(clauseCount(next)).toBe(2);
   });
 
+  it("edits a group a not negates, because it is a group like any other", () => {
+    // The builder paints Remove and Add on a group's clauses wherever that
+    // group sits — including inside a `not` — so both paths must descend
+    // through the `not` to its child at index `0`. Refusing at the `not` left
+    // every press on those controls changing nothing.
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        {
+          kind: "not",
+          child: {
+            kind: "any",
+            children: [
+              clause("name", "contains", "alpha"),
+              clause("size", "greaterThan", "1024"),
+            ],
+          },
+        },
+      ],
+    };
+
+    const removed = removeAt(tree, [0, 0, 0]);
+
+    expect(clauseCount(removed)).toBe(1);
+    expect(clauseOf(removed, [0, 0, 0])).toMatchObject({ field: "size" });
+
+    const added = appendAt(tree, [0, 0], clause("status", "equals", "tracked"));
+
+    expect(clauseCount(added)).toBe(3);
+    expect(clauseOf(added, [0, 0, 2])).toMatchObject({ field: "status" });
+    // The `not` itself still takes no clause: its one child is not a group.
+    expect(appendAt(tree, [0], clause("status", "equals", "tracked"))).toEqual(
+      tree,
+    );
+  });
+
   it("adds a clause to the group that holds them", () => {
     const tree: FilterTree = {
       kind: "all",

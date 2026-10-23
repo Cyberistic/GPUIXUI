@@ -355,9 +355,11 @@ export const updateAt = (
  * A group that loses its last child keeps its shape: an empty `all` matches
  * everything, which is what an empty builder means.
  *
- * A `not` holds one child and cannot be left empty, so a path into one names
- * no removable node — the tree comes back unchanged and the builder removes
- * the `not` itself instead.
+ * A `not` holds one child and cannot be left empty, so a path naming that child
+ * names no removable node — the tree comes back unchanged and the builder
+ * removes the `not` itself instead. A path that goes **through** the child into
+ * a group it negates is followed: a group inside a `not` is a group like any
+ * other, and its clauses remove like any other.
  */
 export const removeAt = (tree: FilterTree, path: FilterPath): FilterTree => {
   if (path.length === 0) return tree;
@@ -384,7 +386,13 @@ export const removeAt = (tree: FilterTree, path: FilterPath): FilterTree => {
               at === head ? removeAt(child, rest) : child,
             ),
     })),
-    Match.when(isNot, () => tree),
+    Match.when(isNot, (group) =>
+      head === 0 && rest.length > 0
+        ? { ...group, child: removeAt(group.child, rest) }
+        : // The `not`'s own child is the one node it cannot lose; a path that
+          // stops there leaves the tree alone.
+          tree,
+    ),
     Match.exhaustive,
   );
 };
@@ -422,11 +430,13 @@ export const appendClause = (
  * root is {@link appendClause}, including its rule that a lone clause becomes an
  * `all` holding both.
  *
- * A path that names no group leaves the tree alone: a missing child, a clause, a
- * `not` (which holds one child and is not a group a clause may join here), or an
- * index past a group's children. The builder only paints Add where the append
- * lands, so an unchanged tree is a caller error rather than a state the UI
- * offers — the same rule `removeAt` follows for a control that cannot remove.
+ * A path that names no group leaves the tree alone: a missing child, a clause, the
+ * `not` itself (which holds one child and takes no clause of its own), or an
+ * index past a group's children. A path that goes **through** a `not` into the
+ * group it negates is followed, because that group is a group like any other.
+ * The builder only paints Add where the append lands, so an unchanged tree is a
+ * caller error rather than a state the UI offers — the same rule `removeAt`
+ * follows for a control that cannot remove.
  */
 export const appendAt = (
   tree: FilterTree,
@@ -452,7 +462,11 @@ export const appendAt = (
       );
     return Match.value(node).pipe(
       Match.when(isPredicate, () => node),
-      Match.when(isNot, () => node),
+      Match.when(isNot, (group) =>
+        // A `not` takes no clause of its own; index `0` is the one child it
+        // holds, so a path through it is followed into that child.
+        head === 0 ? { ...group, child: appendInto(group.child, tail) } : node,
+      ),
       Match.when(isAll, (group) => ({
         ...group,
         children: intoChildren(group.children),

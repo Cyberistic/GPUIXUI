@@ -159,10 +159,11 @@ const ClauseRow = ({
   /**
    * Whether removing this clause changes the tree.
    *
-   * A root clause and a clause inside a `not` do not: the root has no parent to
-   * drop it, and a `not` holds one child it cannot be left without. Neither
+   * A root clause and the child a `not` holds directly do not: the root has no
+   * parent to drop it, and a `not` cannot be left without its child. Neither
    * paints a Remove control, because a press that leaves the tree unchanged is
-   * a control claiming an action it cannot take.
+   * a control claiming an action it cannot take. A clause deeper inside a group
+   * the `not` negates does remove, and paints one.
    */
   readonly removable: boolean;
   readonly onChange: (next: FilterTree) => void;
@@ -367,7 +368,7 @@ const Tree = ({
           removable
         />
       ))}
-      {path.length === 0 || !removable ? undefined : (
+      {path.length === 0 ? undefined : (
         <Button
           variant="ghost"
           size="sm"
@@ -393,11 +394,13 @@ const Tree = ({
  * added and the whole tree cleared.
  *
  * A clause's Remove control paints only where removal changes the tree: a
- * `not` holds one child and is removed whole (when it sits in a group), and a
- * root clause is cleared with Clear. Add is the same rule: every `all`/`any`
- * group that sits in a group paints its own Add control, so a nested `any` can
- * be extended in place — the root's Add sits below the tree. A `not` paints
- * none, because {@link removeAt} cannot take a clause back out of one.
+ * `not` holds one child and is removed whole (when it sits in a group), so that
+ * child carries none and a root clause is cleared with Clear. A clause deeper
+ * inside a group the `not` negates removes like any other. Add is the same
+ * rule: every `all`/`any` group that sits in a group paints its own Add
+ * control, so a nested `any` can be extended in place — including one a `not`
+ * negates — while the root's Add sits below the tree. A `not` paints none, because
+ * it holds one child and {@link appendAt} cannot add a second.
  */
 export const AdvancedFilter = ({
   fields,

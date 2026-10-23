@@ -473,12 +473,14 @@ blank value a new clause starts with included, so an unfilled clause keeps no
 row rather than reading the blank as `0`. An empty `all` matches everything,
 which is what an empty builder means. The builder adds wherever a reader presses:
 `appendAt(tree, path, clause)` grows the `all`/`any` at a path, so a nested `any`
-gains a clause in place, while a path naming a clause, a `not` or nothing leaves
-the tree alone (a `not` paints no Add, because its clause cannot be removed
-again). The toolbar's search is the one
-**debounced** field (the core's `@tanstack/pacer` debouncer owns the wait); the
-table's own filter field is deliberately not, because `table-filter-lifecycle`
-measured the set narrowing as the reader types.
+gains a clause in place, while a path naming a clause or the `not` itself leaves
+the tree alone. A path through a `not` is followed into its one child, so a group
+a `not` negates is edited like any other — its Add appends there and a clause's
+Remove takes that clause out. A `not` paints no Add and the clause it holds
+directly paints no Remove, because a `not` cannot be left without its child. The
+toolbar's search is the one **debounced** field (the core's `@tanstack/pacer`
+debouncer owns the wait); the table's own filter field is deliberately not,
+because `table-filter-lifecycle` measured the set narrowing as the reader types.
 
 ## Styling
 
