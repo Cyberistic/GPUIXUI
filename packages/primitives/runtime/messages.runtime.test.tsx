@@ -22,6 +22,7 @@ import { MessagesProvider } from "../src/components/MessagesProvider.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { Progress } from "../src/components/Progress.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
+import { RangeSlider } from "../src/components/Slider.js";
 import { Rating } from "../src/components/Rating.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Stack } from "../src/components/Stack.js";
@@ -41,6 +42,8 @@ const french: PrimitiveMessages = {
   scrollRegion: "Zone de défilement",
   codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
   loading: { busy: "Chargement", indeterminate: "chargement" },
+  rangeEnd: (label, end) =>
+    `${end === "start" ? "minimum" : "maximum"} de ${label}`,
 };
 
 /** The word the accessibility node named `label` announces. */
@@ -187,6 +190,23 @@ it("announces a busy action and an indeterminate bar in the caller's words", asy
   // The busy spinner is named too, so the indicator is not a silent status.
   expect(named(runtime, "Status", "Chargement")).toBe(true);
   expect(announced(runtime, "Import")).toBe("chargement");
+});
+
+it("names a range slider's ends in the caller's words", async () => {
+  // The bug: both ends were named `<label> minimum` / `<label> maximum` inside
+  // the component, so a localised range announced an English suffix and had no
+  // way to say otherwise.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface messages={french}>
+      <RangeSlider label="Prix" defaultValue={[20, 60]} />
+    </Surface>,
+  );
+
+  expect(named(runtime, "Slider", "minimum de Prix")).toBe(true);
+  expect(named(runtime, "Slider", "maximum de Prix")).toBe(true);
+  expect(announced(runtime, "minimum de Prix")).toBe("20");
+  expect(announced(runtime, "maximum de Prix")).toBe("60");
 });
 
 it("keeps the shipped words when a caller names none", async () => {

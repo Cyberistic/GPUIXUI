@@ -14,6 +14,7 @@ export { accessibleName } from "./a11y.js";
 export {
   defaultMessages,
   pressWord,
+  rangeThumbNames,
   resolveMessages,
   selectionWord,
   starWord,
@@ -22,6 +23,7 @@ export type {
   LoadingWords,
   PressWords,
   PrimitiveMessages,
+  RangeEndWords,
   SelectionWords,
   StarWords,
 } from "./messages.js";

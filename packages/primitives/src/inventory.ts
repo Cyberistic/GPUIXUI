@@ -489,6 +489,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "A vertical track needs a caller-supplied height",
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
+      "Each thumb is named from the provider's rangeEnd sentence; the shipped one is English",
     ],
     source: [
       "src/components/Slider.tsx",

@@ -44,6 +44,11 @@ import { useGpuix } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import { accessibleName } from "../core/a11y.js";
+import {
+  defaultMessages,
+  rangeThumbNames,
+  type PrimitiveMessages,
+} from "../core/messages.js";
 import { controlRing } from "../core/focus.js";
 import { isPlainKey } from "../core/keyboard.js";
 import { primaryButton } from "../core/pointer.js";
@@ -86,6 +91,7 @@ import {
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** A single value on a track. */
@@ -144,7 +150,7 @@ export interface RangeSliderProps
   readonly size?: ControlSize;
   readonly disabled?: boolean;
   readonly invalid?: boolean;
-  /** The group's name; each thumb becomes "<label> minimum"/"<label> maximum". */
+  /** The group's name; each thumb becomes the provider's `rangeEnd` sentence. */
   readonly label?: string;
   readonly formatValue?: (value: number) => string;
   /** The axis the value runs along. Defaults to `horizontal`. */
@@ -547,6 +553,7 @@ export const renderRangeSlider = (
   state: ValueState<readonly [number, number]>,
   focus: RangeSliderFocus,
   handlers: RangeSliderHandlers,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const range = sliderRange(props);
   const span = spanOf(state.current, range);
@@ -556,12 +563,12 @@ export const renderRangeSlider = (
   // The group's name is the subject the two ends are derived from, so it takes
   // the package's name rule first: a padded label would otherwise announce its
   // padding in both thumb names, and a blank one would name the ends " minimum"
-  // and " maximum" instead of leaving them unnamed like an unnamed group.
-  const name = accessibleName(props.label);
-  const labels =
-    name === undefined
-      ? ([undefined, undefined] as const)
-      : ([`${name} minimum`, `${name} maximum`] as const);
+  // and " maximum" instead of leaving them unnamed like an unnamed group. The
+  // words come from the table, because a suffix is not copy in every language.
+  const labels = rangeThumbNames(
+    accessibleName(props.label),
+    messages.rangeEnd,
+  );
   // The address names one element, and the group's only focusable elements are
   // its thumbs: a form focuses the end the reader last used, or the start while
   // neither holds focus. The group itself carries the help, because that is the
@@ -887,5 +894,6 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         grabPoint.current = Option.none();
       },
     },
+    useMessages(),
   );
 };

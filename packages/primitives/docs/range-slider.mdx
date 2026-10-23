@@ -58,7 +58,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
-| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
+| `label` | `string` | none | group name; thumbs become the provider's `rangeEnd` sentence (`"<label> minimum"` / `"<label> maximum"`) |
 | `description` | `string` | none | announced help on the group node |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | the axis the two values run along; a vertical track needs a definite height |

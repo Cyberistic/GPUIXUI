@@ -65,6 +65,15 @@ export interface LoadingWords {
 }
 
 /**
+ * The two ends of a range slider are named from the group's own name.
+ *
+ * A suffix is not copy in every language — German and Japanese put the end
+ * before the subject — so this is a sentence over the caller's name and the end
+ * it belongs to rather than two more fields read with a space between them.
+ */
+export type RangeEndWords = (label: string, end: "start" | "end") => string;
+
+/**
  * The interface copy the primitives announce.
  *
  * `codeDigit` receives the caller's own `label` (already blank-filtered) or
@@ -85,6 +94,8 @@ export interface PrimitiveMessages {
   readonly codeDigit: (index: number, label: string | undefined) => string;
   /** The words a busy action and an indeterminate bar announce. */
   readonly loading: LoadingWords;
+  /** A range slider's two thumbs, named from the group's own name. */
+  readonly rangeEnd: RangeEndWords;
 }
 
 /** The English words the library ships. */
@@ -96,7 +107,23 @@ export const defaultMessages: PrimitiveMessages = {
   scrollRegion: "Scroll region",
   codeDigit: (index, label) => `${label ?? "Code"} digit ${index + 1}`,
   loading: { busy: "Loading", indeterminate: "loading" },
+  rangeEnd: (label, end) =>
+    `${label} ${end === "start" ? "minimum" : "maximum"}`,
 };
+
+/**
+ * The two names a range slider's thumbs announce.
+ *
+ * A blank group name names nothing, so both ends stay unnamed rather than
+ * announcing " minimum" and " maximum" — the same rule the group itself follows.
+ */
+export const rangeThumbNames = (
+  label: string | undefined,
+  end: RangeEndWords = defaultMessages.rangeEnd,
+): readonly [string | undefined, string | undefined] =>
+  label === undefined
+    ? [undefined, undefined]
+    : [end(label, "start"), end(label, "end")];
 
 /**
  * The table a provider paints: the caller's keys over the table above it.
@@ -105,10 +132,10 @@ export const defaultMessages: PrimitiveMessages = {
  * keeps it, so `messages={{ press: … }}` does not silence a checkbox. **A key
  * written `undefined` inherits too**, the rule `extendTheme` applies to a
  * theme's groups: a caller forwarding an optional group it never received must
- * not erase it. Two of these keys are sentences a component calls
- * (`starName`, `codeDigit`), so a hole there is a render that throws, and a
- * hole in `selection` silently speaks the shipped English inside a localised
- * tree.
+ * not erase it. Three of these keys are sentences a component calls
+ * (`starName`, `codeDigit`, `rangeEnd`), so a hole there is a render that
+ * throws, and a hole in `selection` silently speaks the shipped English inside a
+ * localised tree.
  *
  * The defaults are returned **as they are** when nothing is overridden, so the
  * shipped table has one identity rather than a copy per provider.
@@ -127,6 +154,7 @@ export const resolveMessages = (
         scrollRegion: messages.scrollRegion ?? inherited.scrollRegion,
         codeDigit: messages.codeDigit ?? inherited.codeDigit,
         loading: messages.loading ?? inherited.loading,
+        rangeEnd: messages.rangeEnd ?? inherited.rangeEnd,
       };
 
 /**

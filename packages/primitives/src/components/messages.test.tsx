@@ -23,6 +23,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   defaultMessages,
+  rangeThumbNames,
   resolveMessages,
   type PrimitiveMessages,
 } from "../core/messages.js";
@@ -36,6 +37,7 @@ import { renderRadioGroup } from "./RadioGroup.js";
 import { renderRating } from "./Rating.js";
 import { renderScrollAreaViewport, scrollPart } from "./ScrollArea.js";
 import { renderProgress } from "./Progress.js";
+import { renderRangeSlider } from "./Slider.js";
 import { renderButton } from "./Button.js";
 import { renderSpinner } from "./Spinner.js";
 import { renderSwitch } from "./Switch.js";
@@ -57,6 +59,8 @@ const french: PrimitiveMessages = {
   scrollRegion: "Zone de défilement",
   codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
   loading: { busy: "Chargement", indeterminate: "chargement" },
+  rangeEnd: (label, end) =>
+    `${end === "start" ? "minimum" : "maximum"} de ${label}`,
 };
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
@@ -94,6 +98,7 @@ describe("resolveMessages", () => {
     expect(resolved.selection).toEqual(defaultMessages.selection);
     expect(resolved.scrollRegion).toBe("Scroll region");
     expect(resolved.loading).toEqual(defaultMessages.loading);
+    expect(resolved.rangeEnd).toBe(defaultMessages.rangeEnd);
   });
 
   it("extends the table above it, which is what a nested provider does", () => {
@@ -124,6 +129,7 @@ describe("resolveMessages", () => {
         scrollRegion: undefined,
         codeDigit: undefined,
         loading: undefined,
+        rangeEnd: undefined,
       },
       french,
     );
@@ -135,6 +141,55 @@ describe("resolveMessages", () => {
 });
 
 describe("every control announces the table it is handed", () => {
+  it("names a range's two ends in the caller's sentence", () => {
+    // The bug this guards: both thumb names were built as `<label> minimum` /
+    // `<label> maximum` inside the component, so a localised range announced an
+    // English suffix with no seam at all — not even a per-instance prop, unlike
+    // the busy word. A sentence over the name is what a language that puts the
+    // end first needs.
+    expect(rangeThumbNames("Prix", french.rangeEnd)).toEqual([
+      "minimum de Prix",
+      "maximum de Prix",
+    ]);
+    // A blank group name names nothing, rather than " minimum".
+    expect(rangeThumbNames(undefined, french.rangeEnd)).toEqual([
+      undefined,
+      undefined,
+    ]);
+    expect(rangeThumbNames("Price")).toEqual([
+      "Price minimum",
+      "Price maximum",
+    ]);
+    // The component asks the table for the sentence: the painted thumbs carry
+    // the caller's words, not a suffix.
+    const range = renderRangeSlider(
+      { label: "Prix" },
+      testTheme,
+      initValueState<readonly [number, number]>(
+        Option.some([20, 60]),
+        [0, 100],
+      ),
+      { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+      {
+        onSpanChange: vi.fn(),
+        registerTrack: () => () => {},
+        registerThumb: () => () => {},
+        onPointerDown: vi.fn(),
+        onPointerMove: vi.fn(),
+        onPointerUp: vi.fn(),
+      },
+      french,
+    );
+    const provider = elementChildren(range)[0] ?? expect.fail("no parts");
+    const rail = elementChildren(provider)[0] ?? expect.fail("no rail");
+    const thumbs = Arr.filter(elementChildren(rail), (part) =>
+      Option.contains(hostProp(part, "role"), "slider"),
+    );
+    expect(
+      Arr.map(thumbs, (thumb) => expectSome(hostProp(thumb, "aria-label"))),
+    ).toEqual(["minimum de Prix", "maximum de Prix"]);
+  });
+
   it("announces a selection's three states", () => {
     const box = (indeterminate: boolean, checked: boolean) =>
       renderCheckbox(

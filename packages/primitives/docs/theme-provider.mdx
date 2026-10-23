@@ -25,7 +25,7 @@ import { darkTheme } from "@gpuixui/tokens";
 A control's state is announced in words, because this runtime has no
 `aria-checked`, `aria-pressed` or `aria-busy`. The provider carries them as
 `messages`, one complete group per state set: `selection` and `press`, `star` and
-`starName`, `scrollRegion` and `codeDigit`, and `loading`.
+`starName`, `scrollRegion` and `codeDigit`, `loading` and `rangeEnd`.
 
 `loading` is the busy vocabulary: `busy` is what a busy action says instead of
 `aria-busy` (it is the action's description and the busy spinner's name) and
@@ -34,11 +34,16 @@ report. Those two words are the defaults for `loadingLabel`, a `Spinner`'s `labe
 and `Progress`'s `loadingText`; a prop on one instance still wins, so a tree can
 translate once and still give one action its own wording.
 
+`rangeEnd` is the sentence a `RangeSlider` names its two thumbs with: it receives
+the group's own `label` and the end, so a language that puts the end first owns
+the order rather than receiving an English suffix. The shipped sentence is
+`"<label> minimum"` / `"<label> maximum"`; a blank label names neither thumb.
+
 A group named whole replaces the inherited one; a group left out — or written
 `undefined` — keeps it, so a provider forwarding an optional group it never
-received cannot erase the words around it. That matters most for `starName` and
-`codeDigit`: they are sentences a control calls, so a hole there is a render
-that throws.
+received cannot erase the words around it. That matters most for `starName`,
+`codeDigit` and `rangeEnd`: they are sentences a control calls, so a hole there
+is a render that throws.
 
 ## API
 
