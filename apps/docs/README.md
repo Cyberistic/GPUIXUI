@@ -341,7 +341,7 @@ src/lib/examples.ts                 The example registry: ids, paths and header 
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
-src/lib/component-index-query.ts    The index filter on the page URL (`?q=`)
+src/lib/component-index-query.ts    The docs indexes' filter on the page URL (`?q=`)
 src/lib/icon-gallery.ts             The icon gallery's entries and its paint rule
 src/lib/related.ts                  The related-component families a package page's strip prints
 src/lib/patterns.ts                 The one source of the patterns and their parts
@@ -456,7 +456,8 @@ No page restates what the code already says:
   the workspace source, which is far too large for a browser bundle, so
   `plugins/public-symbols-plugin.ts` reads it once at build time and exposes a
   virtual module; `src/lib/public-symbols-data.ts` reads that module and the
-  page renders one table.
+  page renders one table. The symbol filter travels in `?q=` like the component
+  index's, so a narrowed view can be linked.
 - **Component index** (`/docs/components`) lists every primitives and components
   page from its frontmatter (`component-index.ts`), so the index cannot
   advertise a page that does not exist and a new page appears without a docs

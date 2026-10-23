@@ -14,6 +14,13 @@ export.
 
 <ApiReference />
 
+The symbol table's filter travels in the URL — `?q=createTheme` — the way the
+component index carries its own `?q=`: a narrowed view can be linked, a reload
+opens the same rows, and clearing the box removes the parameter rather than
+leaving a bare `?q=` behind. The count above the table is the filter's own: it
+says how many of the published symbols match, so a page that hides a name says
+so.
+
 ## How to read it
 
 ### Entry points
@@ -95,3 +102,9 @@ module yields the symbols its source declares.
 The index is read once, at build time, so the page cannot fall behind the code
 it documents; the trade is that a new export shows up on the next build rather
 than the next edit.
+
+`api-reference.test.tsx` renders the table with and without a query and holds
+both counts to the pure filter's own answer, including the row count of both
+tables, so a view cannot paint a symbol the query rejected. It also reads the
+mount: a filter held in React state alone would fail here, because the URL is
+what makes a narrowed view shareable.

@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { packageCollections } from "../../lib/collection-routes";
 import { componentIndex } from "../../lib/component-index-data";
 import { notPublished, publicApi } from "../../lib/public-api-data";
 import { publicSymbolIndex } from "../../lib/public-symbols-data";
 import { docsUrlFor, filterSymbols } from "../../lib/public-symbols";
+import { useIndexQuery } from "./use-index-query";
 
 /**
  * A symbol's name, linked to the page that documents it when its package mounts
@@ -41,10 +41,24 @@ function SymbolName({
  * does this package give me" without the reader leaving it.
  *
  * Neither table is a copy: both are generated, so a page cannot advertise an
- * export the code does not have.
+ * export the code does not have. The symbol filter travels in the URL (`?q=…`)
+ * like the component index's, so a reader who found a name can link the view
+ * that holds it instead of pointing at a page of two thousand rows.
  */
 export function ApiReference() {
-  const [query, setQuery] = useState("");
+  const { query, chooseQuery } = useIndexQuery();
+
+  return <ApiReferenceView onQueryChange={chooseQuery} query={query} />;
+}
+
+/** The reference's markup, with the symbol filter the mount read off the URL. */
+export function ApiReferenceView({
+  query,
+  onQueryChange,
+}: {
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
+}) {
   const entryCount = publicApi.reduce(
     (total, pkg) => total + pkg.entries.length,
     0,
@@ -54,6 +68,7 @@ export function ApiReference() {
     (total, pkg) => total + pkg.symbols.length,
     0,
   );
+  const trimmed = query.trim();
 
   return (
     <div className="not-prose my-6">
@@ -109,18 +124,20 @@ export function ApiReference() {
       </div>
 
       <h3 className="mt-10 font-mono text-sm font-semibold">Symbols</h3>
-      <p className="m-0 mb-3 font-mono text-xs text-muted-foreground">
-        {publicSymbolIndex.count} symbols ·{" "}
-        {query.trim() === ""
-          ? "every name the packages publish"
-          : `${symbolCount} match “${query.trim()}”`}{" "}
-        · read from the source at build time
+      <p
+        aria-live="polite"
+        className="m-0 mb-3 font-mono text-xs text-muted-foreground"
+        role="status"
+      >
+        {trimmed === ""
+          ? `${publicSymbolIndex.count} symbols · every name the packages publish · read from the source at build time`
+          : `${symbolCount} of ${publicSymbolIndex.count} symbols match “${trimmed}” · read from the source at build time`}
       </p>
       <label className="block">
         <span className="sr-only">Filter symbols by name, kind or module</span>
         <input
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Filter by name, kind or module — try “dialog”, “theme”, “hook”"
           type="search"
           value={query}
@@ -128,8 +145,8 @@ export function ApiReference() {
       </label>
       {packages.length === 0 ? (
         <p className="rounded-xl border border-border px-3 py-6 text-center text-sm text-muted-foreground">
-          No symbol matches “{query.trim()}”. Try a shorter word, or the search
-          box at the top of the page.
+          No symbol matches “{trimmed}”. Try a shorter word, or the search box
+          at the top of the page.
         </p>
       ) : (
         <div className="mt-4 space-y-6">

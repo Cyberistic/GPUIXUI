@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { sidebarPages } from "./sidebar-pages.test-util";
-import { ApiReference } from "../components/docs/api-reference";
+import { ApiReferenceView } from "../components/docs/api-reference";
 import {
   buildPublicApi,
   entryPoints,
@@ -236,7 +236,9 @@ describe("the reference against the manifests", () => {
 });
 
 describe("the rendered reference", () => {
-  const markup = renderToStaticMarkup(<ApiReference />);
+  const markup = renderToStaticMarkup(
+    <ApiReferenceView onQueryChange={() => undefined} query="" />,
+  );
 
   it("prints every specifier the packages publish", () => {
     const missing = publicApi.flatMap((pkg) =>
