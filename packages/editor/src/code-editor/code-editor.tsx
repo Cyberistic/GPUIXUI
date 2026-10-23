@@ -10,8 +10,9 @@
  * Two runtime gaps limit the overlay (both measured upstream, see
  * `docs/code-editor.mdx`): a `<textarea>` with transparent ink paints no caret,
  * and it reports no scroll offset. The editor therefore states the caret colour
- * through `nativeTextTheme` and keeps the two layers on one scroll surface, and
- * documents what that still cannot reach.
+ * through `nativeTextTheme` on the page fill it paints (`"background"`, not a
+ * plain control's `"input"`), and keeps the two layers on one scroll surface,
+ * and documents what that still cannot reach.
  *
  * Tab and Enter are editing decisions, not input re-implementation. In
  * `"insert"` mode Tab swallows the focus traversal and inserts the indent
@@ -244,7 +245,7 @@ export const CodeEditor = ({
         </div>
         <textarea
           testId={testId}
-          theme={nativeTextTheme(theme)}
+          theme={nativeTextTheme(theme, "background")}
           aria-label={label}
           {...(help === undefined ? {} : { "aria-description": help })}
           value={value}
