@@ -254,7 +254,7 @@ export interface AlertLinkProps extends Props {
  *
  * It paints the brand **derived against this message's own tint** rather than
  * the shared link colour, because a tint is not a page surface: measured, the
- * page's brand is under the text floor on 29 of the 64 tint placements the
+ * page's brand is under the text floor on 28 of the 72 tint placements the
  * shipped styles carry (`brandTextOn` in `@gpuixui/tokens`). The run tints no
  * wash of its own, so the underline is the pointer cue and the tint is the only
  * surface the colour is read on. It is a block-level row, so it starts its own

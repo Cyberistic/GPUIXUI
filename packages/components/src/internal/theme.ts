@@ -130,7 +130,7 @@ export const controlRing = (
  * A press **replaces** the wash the row is already wearing — a list row's
  * `accent` under the pointer, a menu or collapsible row's `hover` — so the two
  * roles have to differ from each other, not merely from the strip. Measured over
- * the sixteen shipped, high-contrast, platform and authored styles, six painted
+ * the eighteen shipped, high-contrast, platform and authored styles, six painted
  * a press in the wash it replaced (macOS light's `active` sat 1.026:1 from the
  * `accent` a hovered list row wears, macOS dark 1.011:1), so the press was
  * invisible exactly where a reader had already pointed.
@@ -233,7 +233,7 @@ const softRoles: Readonly<Record<Tone, keyof ThemeColors>> = {
  *
  * A message's fill is its tone's soft role, which is **not** one of the surfaces
  * the shared `brandText` answers for: measured, that colour is under the text
- * floor on 29 of the 64 tint placements across the shipped styles (macOS dark's
+ * floor on 28 of the 72 tint placements across the shipped styles (macOS dark's
  * brand on `warningSoft` reads 3.43:1). The surface is known here, so the
  * derivation is held to it and the run keeps as much of the brand as the tint
  * allows — the same 2% step toward `foreground`, the theme's own floor.
@@ -246,7 +246,7 @@ export const messageLink = (theme: Theme, value: Tone): string =>
  *
  * The theme's designed `selection` role is authored for the content tones, and a
  * message's fill is its tone's `xSoft` role instead: measured, that wash leaves
- * the copy under the body floor in 30 of the 32 dark tint placements (Windows
+ * the copy under the body floor in 32 of the 36 dark tint placements (Windows
  * dark's `warningSoft` at 5.21:1). The surface is known here, so the wash is
  * derived against it — {@link selectionOn} moves it toward the page by the
  * smallest step that keeps it a visible cue and the copy readable, which is the

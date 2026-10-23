@@ -50,7 +50,7 @@ const themes: ReadonlyArray<readonly [string, Theme]> = [
   ["dark", darkTheme],
 ];
 
-/** The sixteen styles the token package ships: base, high contrast, platform, look. */
+/** The eighteen styles the token package ships: base, high contrast, platform, look. */
 const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   ["light", lightTheme],
   ["dark", darkTheme],
@@ -210,7 +210,7 @@ describe("pressWash", () => {
   });
 
   it("repairs the shipped styles whose press was the wash it replaced", () => {
-    // Measured over the sixteen styles: six painted the press in the wash the
+    // Measured over the eighteen styles: six painted the press in the wash the
     // row already wore (Light · macOS's `active` sat 1.026:1 from the `accent`
     // a hovered list row wears), and Light · macOS's press in its `hover` made
     // seven. Each is repaired by the derivation and not by the role.
@@ -286,5 +286,117 @@ describe("the provider is the token package's one", () => {
 
     expect(ownProviders).toEqual([]);
     expect(read("internal/theme.ts")).not.toContain("createContext");
+  });
+});
+
+describe("the sweeps the seam's documentation prints", () => {
+  /** The soft role each message tone fills, in `statusTones` order. */
+  const softRoles = Arr.map(
+    Tokens.statusTones,
+    (value) => `${value}Soft` as const,
+  );
+
+  /** A JSDoc's or a table cell's prose, with its wrapping removed. */
+  const prose = (relative: string): string =>
+    read(relative).replace(/\s+/g, " ");
+
+  const bodyOnTint = (
+    theme: Theme,
+    role: (typeof softRoles)[number],
+  ): number => {
+    const fill = theme.colors[role];
+    const wash = theme.colors.selection;
+    const composed = Tokens.blend(fill, wash, Tokens.alphaOf(wash));
+    return Tokens.contrastRatio(theme.colors.foreground, composed) ?? 0;
+  };
+
+  it("prints the brand's tint pair the sweep measures, not the pre-look set", () => {
+    // The two seams and the inventory row carried `29 of the 64`, figures from
+    // before the two Omarchy looks joined the eighteen styles the sweep walks.
+    const under = Arr.filter(
+      Arr.flatMap(everyStyle, ([, theme]) =>
+        Arr.map(softRoles, (role) => ({
+          ratio:
+            Tokens.contrastRatio(Tokens.brandText(theme), theme.colors[role]) ??
+            0,
+          floor: Tokens.contrastFloorsFor(theme).secondary,
+        })),
+      ),
+      ({ ratio, floor }) => ratio < floor,
+    ).length;
+    const claim = `${under} of the ${everyStyle.length * softRoles.length}`;
+
+    expect(claim).toBe("28 of the 72");
+    ["alert.tsx", "internal/theme.ts", "../../../COMPONENTS.md"].forEach(
+      (file) => {
+        expect(prose(file), file).toContain(claim);
+        expect(prose(file), file).not.toContain("29 of the 64");
+      },
+    );
+  });
+
+  it("prints the dark placements the designed wash buries", () => {
+    const dark = Arr.filter(
+      Arr.flatMap(everyStyle, ([, theme]) =>
+        Arr.map(softRoles, (role) => ({
+          theme,
+          body: bodyOnTint(theme, role),
+          floor:
+            theme.contrast === "high"
+              ? Tokens.highContrastFloors.body
+              : Tokens.contrastFloors.body,
+        })),
+      ),
+      ({ theme }) => theme.mode === "dark",
+    );
+    const buried = Arr.filter(dark, ({ body, floor }) => body < floor).length;
+    const claim = `${buried} of the ${dark.length} dark tint placements`;
+
+    expect(claim).toBe("32 of the 36 dark tint placements");
+    [
+      "internal/theme.ts",
+      "behaviour/selection.test.tsx",
+      "../../../COMPONENTS.md",
+    ].forEach((file) => {
+      expect(prose(file), file).toContain(claim);
+      expect(prose(file), file).not.toContain("30 of the 32");
+    });
+  });
+
+  it("prints the press and mark sweeps over every style the package ships", () => {
+    // The press replaces the wash it is painted on, and the mark has to be found
+    // on that wash: both JSDocs said `sixteen` after the third look shipped.
+    const repaired = Arr.filter(
+      Arr.flatMap(everyStyle, ([, theme]) =>
+        Arr.map(["accent", "hover"] as const, (replaced) => ({
+          replaced,
+          under:
+            (Tokens.contrastRatio(
+              theme.colors.active,
+              theme.colors[replaced],
+            ) ?? Number.POSITIVE_INFINITY) < Tokens.decorativeFloor,
+        })),
+      ),
+      ({ under }) => under,
+    );
+
+    expect(
+      Arr.filter(repaired, ({ replaced }) => replaced === "accent"),
+    ).toHaveLength(6);
+    expect(
+      Arr.filter(repaired, ({ replaced }) => replaced === "hover"),
+    ).toHaveLength(1);
+    expect(prose("internal/theme.ts")).toContain("eighteen shipped");
+    expect(prose("menu/item.tsx")).toContain("all eighteen styles");
+    // The mark's premise: the wash role cannot be found on the row it marks.
+    expect(
+      Arr.every(
+        everyStyle,
+        ([, theme]) =>
+          (Tokens.contrastRatio(theme.colors.accent, theme.colors.hover) ??
+            Number.POSITIVE_INFINITY) <
+          Tokens.contrastFloorsFor(theme).boundary,
+      ),
+    ).toBe(true);
   });
 });

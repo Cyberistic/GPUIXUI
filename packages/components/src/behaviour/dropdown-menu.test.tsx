@@ -616,7 +616,7 @@ describe("DropdownMenu", () => {
   it("paints a highlighted row's bar in a role the mark floor measures", () => {
     // The bug: the bar painted `colors.accent`, a wash role, on the `hover`
     // wash the highlighted row already wears — under the 3:1 mark floor in all
-    // sixteen shipped, high-contrast, platform and authored styles, and
+    // eighteen shipped, high-contrast, platform and authored styles, and
     // 1.000:1 on the Luna dark look's own row — so the cue naming the row that
     // leads an open submenu was invisible.
     const styles = [

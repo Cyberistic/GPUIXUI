@@ -117,7 +117,7 @@ export const menuRowStyle = (
     // from across the surface, so it paints `primary` — the role the mark
     // contract measures at 3:1 on the popover and on the wash, as the check
     // mark beside it does. `accent` is a wash role: it read 1.000:1 on the
-    // Luna dark look's own row and under the floor in all sixteen styles.
+    // Luna dark look's own row and under the floor in all eighteen styles.
     borderColor: active ? theme.colors.primary : theme.colors.popover,
     backgroundColor: active ? theme.colors.hover : undefined,
     // The 50% fade composited a disabled label into its own fill, which a

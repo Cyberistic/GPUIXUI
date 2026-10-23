@@ -13,7 +13,7 @@
  *
  * The second bug these guard: a message's own tint is not one of those content
  * tones, so the designed role leaves a selectable run's copy under the body floor
- * in 30 of the 32 dark tint placements. `Alert` derives the wash per surface
+ * in 32 of the 36 dark tint placements. `Alert` derives the wash per surface
  * (`selectionOn` through `messageSelection`), and the suite holds the paint and
  * the premise it is derived from.
  */
