@@ -25,6 +25,7 @@ import {
   keyboardMove,
   moveCrop,
   resizeCrop,
+  sameCrop,
 } from "./logic.js";
 
 const bounds = { width: 240, height: 160 };
@@ -424,6 +425,18 @@ describe("labels", () => {
     expect(cropLabel(opening)).toBe("60, 40, 100 × 70");
     expect(cornerLabel("nw")).toBe("top left");
     expect(cornerLabel("se")).toBe("bottom right");
+  });
+});
+
+describe("sameCrop", () => {
+  it("reads a rectangle as the hole it paints", () => {
+    expect(sameCrop(opening, new CropRect(boxes(opening)))).toBe(true);
+    expect(
+      sameCrop(opening, new CropRect({ ...boxes(opening), width: 101 })),
+    ).toBe(false);
+    expect(sameCrop(opening, new CropRect({ ...boxes(opening), x: 61 }))).toBe(
+      false,
+    );
   });
 });
 

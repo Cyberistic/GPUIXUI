@@ -48,6 +48,15 @@ export interface CropBounds {
   readonly height: number;
 }
 
+/**
+ * Whether two rectangles paint the same hole.
+ *
+ * A gesture reports through `onChange`, and a drag held past the frame's edge
+ * asks for the rectangle already on screen once per delivered move. Comparing
+ * here is what lets a component stay silent when there is nothing to change.
+ */
+export const sameCrop = Schema.toEquivalence(CropRect);
+
 /** One side of the mask. */
 export const CROP_BAR_SIDES = ["top", "right", "bottom", "left"] as const;
 /** One side of the mask. */

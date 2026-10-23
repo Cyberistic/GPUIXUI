@@ -87,6 +87,12 @@ A bar never takes the press meant for the picture: the bars are pointer
 transparent, and the frame under them starts the move gesture. A press on a
 handle starts a resize and cannot also start a move.
 
+A gesture reports **a rectangle that is not already on screen**: a drag held past
+the frame's edge computes its clamped hole once and is silent on the moves after
+it, and so is an arrow pressed at the minimum or the frame's edge. A caller that
+regenerates a preview, uploads or writes state in `onChange` therefore does that
+work once per rectangle instead of once per delivered frame.
+
 ## The mask
 
 The runtime cannot clip a child to a shape, so the mask is the hole's
@@ -157,15 +163,21 @@ Measurement, fixture and captures live with the playground:
 `apps/playground/README.md` §`crop-overlay` and
 `.artifacts/live/crop-{rest,min,max,dragged}.png`.
 
-`src/crop/logic.test.ts` (36 cases) holds the clamp — including a rectangle
+`src/crop/logic.test.ts` (37 cases) holds the clamp — including a rectangle
 whose four fields cannot be laid out — the bars as the hole's complement, the
 guides' thirds, every corner's resize, both clamps, moves, the keyboard step,
 the `Alt` move and the key dispatch (resize versus move, the 8-point Shift step,
-a non-arrow ignored), the gesture seam and the ratio lock (a stored rectangle
-shaped to it, a height-first drag, the fixed opposite corner, the keyboard path,
-a frame too small for the minimum at the ratio, and an unreadable ratio);
+a non-arrow ignored), the gesture seam, the rectangle equivalence a report reads
+and the ratio lock (a stored rectangle shaped to it, a height-first drag, the
+fixed opposite corner, the keyboard path, a frame too small for the minimum at
+the ratio, and an unreadable ratio);
 `src/crop-area.test.tsx` (11
 cases) holds the frame, the bars' pointer transparency, the four slider handles
 and their ring, the painted ratio, the guides on and off, the unreadable
 rectangle, minimum and handle side, the blank source, the repaint and the
-disabled state.
+disabled state. `src/behaviour/crop-area.test.tsx` (4 native cases in the real
+renderer) drives the gestures a fixture cannot: a drag held past the frame's
+edge reports its clamped rectangle **once** rather than once per move, each
+rectangle a drag inside the frame paints is reported, a press without a move
+reports nothing, and an arrow that asks for the rectangle already painted is
+silent. Run it with `nub run --filter @gpuixui/media test:behaviour`.

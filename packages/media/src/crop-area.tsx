@@ -35,6 +35,7 @@ import {
   cropKey,
   gestureCrop,
   handleBox,
+  sameCrop,
   type CropBounds,
   type CropGesture,
   type CropModifiers,
@@ -273,6 +274,15 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
     x: event.x ?? 0,
     y: event.y ?? 0,
   });
+  /**
+   * Ask the caller for a rectangle only when it is not the one already painted.
+   * A drag held past the frame's edge computes the clamped hole once and then
+   * repeats it on every delivered move; the same is true of an arrow pressed at
+   * the minimum or the frame's edge.
+   */
+  const report = (next: CropRect): void => {
+    if (!sameCrop(next, crop)) props.onChange(next);
+  };
 
   const surface: CropAreaSurface = {
     onFrameDown: (event) => {
@@ -287,7 +297,7 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
       Option.match(gesture.current, {
         onNone: () => undefined,
         onSome: (held) => {
-          props.onChange(
+          report(
             gestureCrop(held, point(event), bounds, min, props.aspectRatio),
           );
         },
@@ -320,7 +330,7 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
           onNone: () => undefined,
           onSome: (next) => {
             event.preventDefault?.();
-            props.onChange(next);
+            report(next);
           },
         },
       );
