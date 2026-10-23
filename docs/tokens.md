@@ -3239,11 +3239,7 @@ and the tables; the probe is the paint. Evidence:
 | `full` | 9999 | pills and avatars |
 
 This is the default theme's scale. A platform style replaces it —
-<<<<<<< HEAD
-macOS 6/10/14/18, Linux 4/6/9/12, Windows 4/4/8/8 — so a Windows control reads
-=======
-macOS 4/6/10/14, Linux 4/6/12/16, Windows 4/4/8/8 — so a Windows control reads
->>>>>>> origin/agent/platform-gnome
+macOS 6/10/14/18, Linux 4/6/12/16, Windows 4/4/8/8 — so a Windows control reads
 squarer than a macOS one. `full` stays rounded everywhere.
 
 ## Density
