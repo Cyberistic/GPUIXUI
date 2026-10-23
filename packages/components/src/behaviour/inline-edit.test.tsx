@@ -5,9 +5,11 @@
  * commits twice (keyDown and submit); Escape that commits the draft; an
  * unchanged draft that still calls `onCommit`; a disabled control that opens;
  * a control a caller disables mid-edit that still commits that draft on Enter
- * or blur; a controlled edit state the component overrides; and the caller's
- * own `onChange`, `onBlur` and `onSubmit` handlers, which the editor used to
- * drop because it wrote its own over them.
+ * or blur; a disabled control that opens; an editor a caller disables that
+ * stays a tab stop while it refuses every key; a controlled edit state the
+ * component overrides; and the caller's own `onChange`, `onBlur` and
+ * `onSubmit` handlers, which the editor used to drop because it wrote its own
+ * over them.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -184,6 +186,27 @@ describe("InlineEdit", () => {
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(edit.renderer.getAllText()).toEqual(["old", "Elsewhere"]);
+
+    edit.unmount();
+  });
+
+  it("takes the editor out of the tab order while the control is disabled", () => {
+    // Every disabled host in the package leaves the tab order, because a host
+    // input has no `disabled` and `readOnly` still takes focus. The editor kept
+    // the host's default stop, so a control a caller disabled mid-edit was a
+    // stop a reader could Tab onto and type into with nowhere for the text to go.
+    const edit = renderComponent(<Harness initial="old" />);
+    const editorTabStop = () =>
+      edit.renderer.findByType("input")[0]?.customProps?.tabIndex;
+
+    startEditing(edit);
+    expect(editorTabStop()).toBe(0);
+
+    edit.rerender(<Harness initial="old" disabled />);
+    expect(editorTabStop()).toBe(-1);
+
+    edit.rerender(<Harness initial="old" />);
+    expect(editorTabStop()).toBe(0);
 
     edit.unmount();
   });

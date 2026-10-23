@@ -203,6 +203,9 @@ export const InlineEdit = ({
       ref={attachInput}
       value={draft}
       readOnly={disabled}
+      // The host has no `disabled`, and `readOnly` still takes focus, so a
+      // control disabled mid-edit leaves the tab order by declaring it.
+      tabIndex={disabled ? -1 : 0}
       // The component decides first and the caller's handler sees the same
       // event after it, the order every host handler in this package composes.
       onChange={(event) => {

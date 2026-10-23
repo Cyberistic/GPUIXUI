@@ -35,7 +35,9 @@ decision — so `onSubmit` fires once per Enter, after the commit.
 **A disabled control refuses the edit in both phases.** It opens nothing, and a
 control a consumer disables mid-edit discards that draft — on `Enter`, on the
 host's submit, and on blur — so no path writes a value into an inert control.
-The editor stays `readOnly` until the caller frees it.
+The editor stays `readOnly` until the caller frees it, and it leaves the tab
+order while it refuses every key (`tabIndex={-1}`), because the host has no
+`disabled` and a read-only field still takes focus.
 
 ### Blur commits, and the host that proves it
 
