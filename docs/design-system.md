@@ -1066,12 +1066,18 @@ Colour is not the only measured contract. Every pointer target keeps
 `targetSize.minimum` — 24px — and a touch-first surface may raise it to
 `targetSize.comfortable`, 44px. Every shipped control height and every shipped
 row height is at or above the first floor; an icon-sized part — a checkbox's
-16px box, a 12px chevron — keeps
+16px box, a rating star's 18–20px glyph, a clear control's glyph — keeps
 its drawing and reserves the difference as padding with `targetInset`, so the
 look does not change and the target still reaches the floor. The floor is fixed
 rather than theme-owned: a brand can restyle the control, not lower the target.
-`target.test.ts` holds the helper and every density against it; adoption by the
-component packages is recorded in `TODO.md`.
+`target.test.ts` holds the helper and every density against it, and the
+component packages have adopted it: the four clear controls, the standalone
+`Checkbox`/`Switch`, a radio or checkbox group's option row and a rating's star
+box are each measured at 24px by `targets.test.tsx`,
+`selection-targets.runtime.test.tsx`, `groups.runtime.test.tsx` and
+`Rating.test.tsx`. A **tree** needs none of it: its chevron is a drawing whose
+`pointerEvents: "none"` lets the press reach the row, so the row's `rowHeight` is
+the target — `TreeView`, `VirtualTree` and `FileTree` all paint that row.
 
 Not covered, deliberately:
 
