@@ -1995,14 +1995,17 @@ and clause).
       while `bounds()` still reports the cell's width. **`lineClamp` does not
       paint**: a five-line paragraph still paints five with the clamp on the text
       and on the box, and only a definite two-line height with `overflow: "hidden"`
-      painted two. The shipped `Text` is the same on both halves: `truncate` paints
-      the marked one line, `clamp={2}` paints all five — a `maxLines` label is
-      silently uncut in a window. 29 checks,
+      painted two. The raw prop behaves the same on both halves, but **the
+      shipped `Text` no longer does**: the primitives' `clamp` resolves the
+      leading × line count with `overflow: "hidden"` and never sets `lineClamp`,
+      so the closure reads **two** lines in a **48**-point box (this row first
+      recorded the pre-fix 29-check reading; the probe is 30 checks now and its
+      third negative control restores the old expectation). 30 checks,
       `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
-      `src/live/truncation.ts` + `truncation.test.ts` (11 cases: the reader held
+      `src/live/truncation.ts` + `truncation.test.ts` (12 cases: the reader held
       to a drawn frame where a stem and a row of dots are known, at both device
       scales, a blank and an unreadable region refused, and the README's count and
-      clamp limitation read back). Two negative controls measured, exit `1`,
+      clamp limitation read back). Three negative controls measured, exit `1`,
       restored green: dropping `textOverflow` fails `an ellipsized run ends inside
       the box where a sliced glyph runs to the edge`, and raising the workaround's
       height to six lines fails `a definite height with a hidden overflow paints
