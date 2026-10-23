@@ -30,7 +30,12 @@
  * contract refuses is the switch that is not there at all.
  */
 
-import { isPaintableColor, type ThemeColors } from "./color.js";
+import {
+  isPaintableColor,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import type { SwitchColors } from "./theme.js";
@@ -128,9 +133,9 @@ export interface SwitchReport {
 }
 
 /** The switch-shaped part of a theme the contract reads. */
-export interface SwitchAuditSource {
+export interface SwitchAuditSource extends ColourSource {
   /** The roles a track is measured against; a strip the theme lost is reported. */
-  readonly colors: Partial<ThemeColors>;
+  readonly colors?: Partial<ThemeColors>;
   /** The declared paint, or nothing for the accent switch. */
   readonly switch?: Partial<SwitchColors>;
 }
@@ -193,7 +198,10 @@ export function switchFailures(
         const [top, under] =
           placement.slot === "knob"
             ? [declared(paint, "knob"), declared(paint, placement.over)]
-            : [declared(paint, placement.slot), theme.colors[placement.over]];
+            : [
+                declared(paint, placement.slot),
+                themeColors(theme)[placement.over],
+              ];
         const ratio = contrastRatio(top, under);
         return ratio !== undefined && ratio >= floor
           ? []

@@ -38,6 +38,7 @@ import {
   densityPresets,
   elevationShadow,
   extendTheme,
+  highlightFailures,
   invalidColorRoles,
   invalidNumbers,
   invalidScales,
@@ -51,6 +52,7 @@ import {
   retroNames,
   retroTheme,
   statusTone,
+  switchFailures,
   textStyle,
   themeColors,
   themes,
@@ -387,6 +389,16 @@ describe("an absent colour group", () => {
     expect(unmeasurable(report.disabledFade)).toBe(true);
     expect(unmeasurable(report.keyboardDim)).toBe(true);
     expect(unmeasurable(report.series.surfaces)).toBe(true);
+    // The two reports that live beside the gate keep the same rule: a find wash
+    // and a declared switch paint nothing on a theme with no roles.
+    expect(unmeasurable(highlightFailures({}))).toBe(true);
+    expect(
+      unmeasurable(
+        switchFailures({
+          switch: { on: "#3BC97F", off: "#E3E3E8", knob: "#FFFFFF" },
+        }).placements,
+      ),
+    ).toBe(true);
     // The two groups that are still there keep their own reports empty, so the
     // absence is the colour group rather than a theme the gate cannot read.
     expect(report.invalidNumbers).toEqual([]);

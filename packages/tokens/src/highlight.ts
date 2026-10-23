@@ -35,7 +35,14 @@
  * {@link highlightFailures} measures.
  */
 
-import { alpha, alphaOf, blend, type ThemeColors } from "./color.js";
+import {
+  alpha,
+  alphaOf,
+  blend,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -256,22 +263,20 @@ export interface HighlightFailure {
  * ```
  */
 export function highlightFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly HighlightFailure[] {
-  const { match, active } = sharesFor(theme.colors, floors);
+  const colors = themeColors(theme);
+  const { match, active } = sharesFor(colors, floors);
   const states = [
     { state: "match", share: match, floor: floors.body },
     { state: "active", share: active, floor: floors.secondary },
   ] as const;
   const measured = highlightSurfaces.flatMap((surface) =>
     states.flatMap(({ state, share, floor }) => {
-      const wash = composite(theme.colors, surface, share);
+      const wash = composite(colors, surface, share);
       const failures: HighlightFailure[] = [];
-      const visible = contrastRatio(wash, theme.colors[surface]);
+      const visible = contrastRatio(wash, colors[surface]);
       if (visible === undefined || visible < decorativeFloor) {
         failures.push({
           kind: "visibility",
@@ -282,7 +287,7 @@ export function highlightFailures(
           floor: decorativeFloor,
         });
       }
-      const legible = contrastRatio(theme.colors.foreground, wash);
+      const legible = contrastRatio(colors.foreground, wash);
       if (legible === undefined || legible < floor) {
         failures.push({
           kind: "legibility",
@@ -297,8 +302,8 @@ export function highlightFailures(
     }),
   );
   const apart = highlightSurfaces.flatMap((surface) => {
-    const wash = composite(theme.colors, surface, active);
-    const rest = composite(theme.colors, surface, match);
+    const wash = composite(colors, surface, active);
+    const rest = composite(colors, surface, match);
     const ratio = contrastRatio(wash, rest);
     return ratio !== undefined && ratio >= decorativeFloor
       ? []
