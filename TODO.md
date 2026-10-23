@@ -9098,7 +9098,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 244/244
+`[x]` `[██████████]` 245/245
+
+`[x]` Follow the **preference the primitives now read from the provider** — the
+      primitives' `Button`, `Switch` and `Tooltip` gained `useMotionPreference`
+      (`reducedMotionOf(props.reducedMotion, useMotionPreference())`), and three
+      site surfaces still read the previous shape: the curated Button, Switch and
+      Tooltip Dependencies tables did not list `@gpuixui/motion/react`, the
+      Switch page printed **3 native tests** against the suite's **4** (its new
+      case lands the thumb under the provider's reduced preference), and
+      `tooltip-preview.test.ts` required the wrapper's old
+      `surfaceTiming(props.reducedMotion === true)` call. The pages now list the
+      provider entry with the rule (the prop still wins on the control, the
+      provider is the default), the Switch Status names all four cases, and the
+      preview guard reads the resolution the wrapper actually performs
+      (`reducedMotionOf` → `useMotionPreference()` → `surfaceTiming`), so a
+      fifth case or a reverted wrapper fails by name. Directions measured: on
+      the committed tree the three cases failed with
+      `button.mdx: imports @gpuixui/motion/react, which its Dependencies table
+      does not list` (and the Switch and Tooltip twins),
+      `switch.mdx: says 3, suite runs 4`, and the preview's
+      `expected … to contain 'surfaceTiming(props.reducedMotion === true)'`;
+      restored, the docs suite is 120 files / 1 286 tests green with
+      `check-types` clean. No native scenario applies — page prose, its
+      dependency table and its guard have no runtime path.
 
 `[x]` Follow the **seams two workstreams moved** — the docs site reads the
       component sources, so a refactor there can leave a curated page and its

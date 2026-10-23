@@ -286,8 +286,12 @@ describe("the tooltip preview", () => {
     const seam = read(presence);
 
     // The travel is the tip's own, the timing and the window are the seam's.
+    // The preference is the provider's; the prop is the per-tip answer, so the
+    // wrapper resolves both before it asks the seam for a timing.
     expect(source).toContain("const TOOLTIP_OFFSET = 2;");
-    expect(source).toContain("surfaceTiming(props.reducedMotion === true)");
+    expect(source).toContain("const reducedMotion = reducedMotionOf(");
+    expect(source).toContain("useMotionPreference(),");
+    expect(source).toContain("surfaceTiming(reducedMotion)");
     expect(source).toContain("exitWindowMs(timing)");
     expect(source).toContain("presenceStyle(view.present)");
     expect(source).toContain(
