@@ -351,11 +351,13 @@ print from `column-resize-lifecycle`'s own fixture and steps, and
 prints from `floating-reflow-lifecycle`'s fixture, its runner's window and the
 probe's own README section.
 
-## Four collections
+## The mounted collections
 
-The site renders four Fumadocs collections: its own pages, plus one per package
-that ships documentation. The package pages are rendered as-is, never copied, so
-the site and the package cannot drift.
+The site renders a Fumadocs collection for its own pages and one for every
+package that ships documentation — nine collections filling four sidebar lanes.
+The package pages are rendered as-is, never copied, so the site and the package
+cannot drift. A page mounts at its collection's route plus its file name, which
+is why the route column is the collection's root.
 
 | Collection | Route | Sidebar |
 | ---------- | ----- | ------- |
@@ -363,6 +365,12 @@ the site and the package cannot drift.
 | `packages/primitives/docs` | `/docs/primitives/<name>` | Primitives |
 | `packages/icons/docs` | `/docs/icons/<name>` | Primitives |
 | `packages/components/docs` | `/docs/components/<name>` | Components |
+| `packages/data/docs` | `/docs/data-display/<name>` | Data display |
+| `packages/editor/docs` | `/docs/editor/<name>` | Workspace |
+| `packages/files/docs` | `/docs/files/<name>` | Workspace |
+| `packages/shell/docs` | `/docs/shell/<name>` | Workspace |
+| `packages/dock/docs` | `/docs/dock/<name>` | Workspace |
+| `packages/media/docs` | `/docs/media/<name>` | Workspace |
 
 `src/lib/page-tree.ts` fills each package's pages into its section, after the
 curated pages. A curated page keeps its URL, and the search index skips the

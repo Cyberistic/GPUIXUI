@@ -9518,6 +9518,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `Math.max(1, count)` restored the case fails on the `RangeError`; with the
     guard the behaviour suite is 116/116. The README's skeleton paragraph and
     the Tier 3 Tables row (whose count walks to 27) state the rule. Owner: data.
+  - [x] Keep a **cell width the layout cannot paint** on the column's track —
+    `cellLayout` wrote a caller's `width` into `width` and `flexBasis` verbatim,
+    and the runtime drops a value it cannot lay out: `NaN` and the infinities
+    reach native as `null`, and a negative paints nothing usable. A cell's width
+    is often computed — a share of a pane, a stored column size, a measurement
+    taken before the first layout — so the cell fell back to its own content and
+    a column's header and cells stopped sharing a track: measured in the window,
+    a 62px `Name` heading above a 204px body cell, the drift `KeyValue` was
+    already fixed for. A width that cannot paint now reads as **no width**, the
+    reading the prop already has when it is omitted, so the cell shares the
+    leftover track and a finite width is still the caller's exactly.
+    `table.test.tsx` gains `keeps a width that cannot paint on the column's one
+    track` (`NaN`/`Infinity`/`-20`, holding the header, its cell and the next
+    column to one track) and `keeps the width a caller can paint` (the 160px
+    negative control). Directions measured: with the bare write restored the
+    first case fails `expected 204 to be 62`; with it the behaviour suite is
+    29/29 in the table file. The README's cell-width paragraph, the Tables row
+    (whose count walks to 29) and plan 610 teach the rule. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
@@ -9757,7 +9775,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 254/254
+`[x]` `[██████████]` 255/255
+
+`[x]` Name **every mounted collection in the site ledger** — `apps/docs/README.md`
+      still headed its collection table *Four collections* and listed four rows
+      (the curated pages plus primitives, icons and components) after the data
+      and the five workspace packages had been mounted: a reader of the ledger
+      could not find `/docs/data-display`, `/docs/editor`, `/docs/files`,
+      `/docs/shell`, `/docs/dock` or `/docs/media`, and the policy's table —
+      which `package-docs.test.ts` holds in both directions — was the only
+      record that knew nine collections fill four lanes. The section is now *The
+      mounted collections* with all nine rows, and the guard parses **both**
+      tables with one reader (it finds the `packages/…` cell, because the policy
+      names the lane before the source and the ledger after the route, and
+      drops the `/<name>` suffix a page mounts under) and requires each to equal
+      `packageCollections`. Directions measured: deleting the media row fails
+      with `expected [ …(8) ] to deeply equal [ …(9) ]` and names
+      `packages/media/docs /docs/media Workspace` as missing; restored, the file
+      is 16/16 and the docs app is 121 files / 1 311 tests green with `oxlint`
+      and `oxfmt` clean. No native scenario applies — two documentation tables
+      and the mount list their suite reads.
 
 `[x]` Hold the **site ledger to the records it restates** — `apps/docs/README.md`
       copied two measurements and drifted from both. Its live-surface paragraph

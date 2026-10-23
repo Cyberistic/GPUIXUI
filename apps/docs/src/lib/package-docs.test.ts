@@ -46,6 +46,48 @@ const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
 /** A plain YAML scalar may not begin with one of these. */
 const YAML_RESERVED = /^[`@*&[\]{}>|%#]/;
 
+/**
+ * The mounted set, read out of a document's table.
+ *
+ * Both the policy and the site ledger list one row per collection; a route cell
+ * may carry the `<name>` suffix a page mounts under, which is not part of the
+ * collection's root.
+ */
+const documentedCollections = (
+  text: string,
+  startHeading: string,
+  endHeading: string,
+): ReadonlyArray<string> => {
+  const start = text.indexOf(startHeading);
+  const end = text.indexOf(endHeading, start);
+  return text
+    .slice(start, end)
+    .split("\n")
+    .filter((line) => line.startsWith("| ") && line.includes("`packages/"))
+    .map((line) =>
+      line
+        .split("|")
+        .map((cell) => cell.trim())
+        .slice(1, -1),
+    )
+    .flatMap((cells) => {
+      // The policy names the lane before the source; the ledger names it after
+      // the route. The package dir is the one cell both tables share.
+      const at = cells.findIndex((cell) => cell.includes("`packages/"));
+      const dir = cells[at];
+      const route = cells[at + 1];
+      const section = cells.at(-1);
+      return dir === undefined || route === undefined || section === undefined
+        ? []
+        : [
+            `${dir.replaceAll("`", "")} ${route
+              .replaceAll("`", "")
+              .replace(/\/<name>$/, "")} ${section}`,
+          ];
+    })
+    .toSorted();
+};
+
 const frontmatter = (source: string): string => {
   const match = /^---\n([\s\S]*?)\n---\n/.exec(source);
   return match?.[1] ?? "";
@@ -103,45 +145,38 @@ describe("the package docs collections", () => {
     ).toEqual([]);
   });
 
-  it("name every mounted collection in the policy's table", () => {
+  it("name every mounted collection in the policy's and the ledger's tables", () => {
     // `docs/preview-strategy.md`'s table is what an author reads before
-    // mounting a docs directory, so it is the mount list's other copy: a
-    // collection the site mounts and the table omits leaves the policy
-    // describing three of four sections, and a row no collection backs sends a
-    // reader looking for a route that does not exist.
+    // mounting a docs directory, and `apps/docs/README.md`'s table is the
+    // ledger's copy of the same set: a collection the site mounts and a table
+    // omits leaves a reader describing three of four sections, and a row no
+    // collection backs sends them looking for a route that does not exist.
     const policy = readFileSync(
       new URL("docs/preview-strategy.md", root),
       "utf8",
     );
-    const start = policy.indexOf("### Pages the package writes");
-    const end = policy.indexOf("### The dependency line", start);
-    const documented = policy
-      .slice(start, end)
-      .split("\n")
-      .filter((line) => line.startsWith("| ") && line.includes("`packages/"))
-      .map((line) =>
-        line
-          .split("|")
-          .map((cell) => cell.trim())
-          .slice(1, -1),
-      )
-      .flatMap(([, dir, route, section]) =>
-        dir === undefined || route === undefined || section === undefined
-          ? []
-          : [
-              `${dir.replaceAll("`", "")} ${route.replaceAll("`", "")} ${section}`,
-            ],
+    const ledger = readFileSync(new URL("apps/docs/README.md", root), "utf8");
+    const mounted = packageCollections
+      .map(
+        (collection) =>
+          `${collection.dir} ${collection.route} ${collection.section}`,
       )
       .toSorted();
 
-    expect(documented).toEqual(
-      packageCollections
-        .map(
-          (collection) =>
-            `${collection.dir} ${collection.route} ${collection.section}`,
-        )
-        .toSorted(),
-    );
+    expect(
+      documentedCollections(
+        policy,
+        "### Pages the package writes",
+        "### The dependency line",
+      ),
+    ).toEqual(mounted);
+    expect(
+      documentedCollections(
+        ledger,
+        "## The mounted collections",
+        "## Preview honesty",
+      ),
+    ).toEqual(mounted);
   });
 
   /**
