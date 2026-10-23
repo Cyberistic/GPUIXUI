@@ -118,6 +118,30 @@ A page that genuinely scrolls — a settings form, a dialog body — moves toget
 with a list inside it; that is a layout decision, not something a pane can
 guard against. See [Runtime](/docs/runtime) for the measurement.
 
+## A focus past a pane's fold is not revealed
+
+A dock's sidebar or inspector holds forms taller than the pane, and the keyboard
+walks them without moving the glass. `focus-reveal-lifecycle` measured it on two
+200×120 panes of 9 rows at 40px: a `Tab` traversal reached the ninth row
+(`focus-reveal-form-8`) with the pane's offset still **`0`**, so the focused
+control started **200** points below the pane's bottom edge and painted **0**
+pixels of its own marker — a code focus on the first or the last row moved
+nothing either. A **roving** list does reveal what its own key moved onto, through
+the renderer's `scrollIntoView`: three arrows landed `focus-reveal-roving-3` at
+**`-40`** (the minimal move — the row's bottom on the fold, not the `-120` that
+would align its top), five more reached **`-240`** at the content's end, and an
+arrow past the end changed neither the cursor nor the offset.
+
+Two rules follow:
+
+- **A form of plain tab stops must keep its controls visible.** No route in this
+  runtime reveals the control a traversal focused, so a pane tall enough for the
+  form is the only guard.
+- **A roving control reveals itself.** Give a long list the one-stop, arrow-key
+  shape `List`, `Select` and `Tabs` carry, and call `scrollIntoView` from the
+  layout effect that moves onto each row; the reveal clamps at the content's end,
+  so calling it on every move needs no guard.
+
 ## A press stops at the first filled child
 
 A dock composes pressable rows inside pressable groups — a document row with a

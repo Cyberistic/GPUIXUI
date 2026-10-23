@@ -8961,14 +8961,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
       reveal, the end and the check count from
       `apps/playground/src/live/focus-reveal.ts` and holds both documents to them;
       the evidence scanners' quoted-value tables gained the two element ids
-      (`focus-reveal-form-8`, `focus-reveal-roving-3`). Directions measured:
-      deleting the record row fails `the record has no focus-reveal row`, and
-      printing `**201** points` fails the clause by name; restored, the file is
-      116/116, `build` renders the page and `check-types` is clean. The docs suite
-      reads 1277/1280 in this pass, the three failures being
-      `inventory`/`inventory-status` on an in-flight `COMPONENTS.md` row outside
-      this workstream (line 306, five cells). No native scenario applies — a
-      published measurement and its guard have no runtime path.
+      (`focus-reveal-form-8`, `focus-reveal-roving-3`). `/docs/workspace` gains
+      **A focus past a pane's fold is not revealed** beside the scroller rules — a
+      pane holding a form must keep its controls visible, while a roving control
+      calls `scrollIntoView` on each move — and `lane-page.test.ts` gains `says a
+      focus past a pane's fold is not revealed, as the window measured it`, which
+      holds the page to the record row it cites. Directions measured:
+      deleting the record row fails `the record has no focus-reveal row`,
+      printing `**201** points` fails the clause by name, and deleting the
+      workspace section fails the lane case with both documents read; restored,
+      `capability-doc.test.ts` is 116/116, `lane-page.test.ts` 50/50, `build`
+      renders the pages and `check-types` is clean. The docs suite reads 1277/1280
+      in this pass, the three failures being `inventory`/`inventory-status` on an
+      in-flight `COMPONENTS.md` row outside this workstream (line 306, five
+      cells). No native scenario applies — a published measurement and its guard
+      have no runtime path.
 
 `[x]` Generate the **related components a package page cannot link** — `MISSION.md`
       asks every component page for its related components, and that was the row

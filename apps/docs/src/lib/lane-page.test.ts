@@ -648,6 +648,28 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("onScrollChange");
   });
 
+  it("says a focus past a pane's fold is not revealed, as the window measured it", () => {
+    // A dock's sidebar and inspector hold forms taller than their panes, and the
+    // page taught the scroller's wheel and the dock's keyboard order while saying
+    // nothing about the control a traversal focuses past the fold.
+    // `focus-reveal-lifecycle` measured the offset staying at 0 with the ninth
+    // row focused and the roving list revealing its own move, so the page owes a
+    // pane that holds a form both rules.
+    const reveal = rowFor(record, "Focus reveal in a scroller");
+
+    expect(reveal).toContain("supported, with limits");
+    expect(reveal).toContain("focus-reveal-lifecycle");
+    expect(reveal).toContain("focus-reveal-form-8");
+    expect(reveal).toContain("focus-reveal-roving-3");
+    expect(workspace).toContain("A focus past a pane's fold is not revealed");
+    expect(workspace).toContain("focus-reveal-lifecycle");
+    expect(workspace).toContain("focus-reveal-form-8");
+    expect(workspace).toContain("offset still **`0`**");
+    expect(workspace).toContain("focus-reveal-roving-3");
+    expect(workspace).toContain("scrollIntoView");
+    expect(workspace).toContain("keep its controls visible");
+  });
+
   it("stops a press at the first painted child, as the window measured it", () => {
     // A dock's document row carries a trailing action inside the group that also
     // selects it, and the page described the focus order, the panes, the
