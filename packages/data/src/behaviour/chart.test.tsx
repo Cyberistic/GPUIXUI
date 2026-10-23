@@ -23,7 +23,7 @@ import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { ChartExample } from "../../examples/chart.example.js";
-import { StackedBar } from "../chart/chart.js";
+import { BarChart, StackedBar } from "../chart/chart.js";
 import {
   paintedText,
   requireBounds,
@@ -213,5 +213,32 @@ describe("the charts", () => {
     // …and the top of the stack lands where that axis says it does: 120 of 200
     // leaves the stack 40px down from the plot's ceiling.
     expect(topOfLayer(root, "chart-totals-layer-b")).toBe(40);
+  });
+
+  it("paints no bar in a column the labels do not name", () => {
+    // A series longer than its labels used to paint a bar over a category that
+    // does not exist — past the plot's right edge, and against an axis that
+    // never names it. One label means one column; the 500 draws nowhere.
+    root = renderData(
+      <BarChart
+        aria-label="A series past its labels"
+        labels={["Q1"]}
+        series={[{ key: "revenue", label: "Revenue", values: [5, 500] }]}
+        width={200}
+        height={100}
+        testId="chart-past-labels"
+      />,
+    );
+    settle(root);
+
+    const source = root.renderer.findByTestId("chart-past-labels-layer-revenue")
+      ?.customProps?.source;
+    if (typeof source !== "string") {
+      throw new Error("behaviour: no SVG source on the bar layer");
+    }
+    expect([...source.matchAll(/<rect\b/g)]).toHaveLength(1);
+    // The lone bar is the labelled 5 of a 500 scale: a pixel tall under the
+    // ceiling. The discarded 500 would have stood the full plot at y = 0.
+    expect(topOfLayer(root, "chart-past-labels-layer-revenue")).toBe(99);
   });
 });

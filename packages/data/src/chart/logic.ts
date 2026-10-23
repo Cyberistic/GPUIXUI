@@ -122,10 +122,12 @@ export interface BarSlot {
   readonly barWidth: number;
 }
 
+/** How many category slots a count spans: whole, and at least one. */
+const slotCount = (count: number): number => Math.max(1, Math.floor(count));
+
 /** The slot a bar chart gives each category. */
 export const barSlot = (count: number, width: number, share = 0.6): BarSlot => {
-  const categories = Math.max(1, Math.floor(count));
-  const slot = Math.max(0, width) / categories;
+  const slot = Math.max(0, width) / slotCount(count);
   return { slot, barWidth: slot * Math.min(1, Math.max(0, share)) };
 };
 
@@ -140,7 +142,8 @@ const barHeight = (value: number, box: ChartBox, scale: number): number => {
  * One bar per value, left to right, standing on the box's floor.
  *
  * A zero paints no bar (a bar of one pixel would claim a value the data does
- * not have); the layout keeps its slot, so the labels still line up.
+ * not have); the layout keeps its slot, so the labels still line up. Only the
+ * `categories` slots exist: a value past the last one draws nowhere.
  */
 export const barMarks = (
   values: ReadonlyArray<number>,
@@ -151,7 +154,7 @@ export const barMarks = (
   const { slot, barWidth } = barSlot(categories, box.width);
   return Arr.map(
     Arr.filter(
-      Arr.map(values, (value, index) => ({
+      Arr.map(Arr.take(values, slotCount(categories)), (value, index) => ({
         index,
         height: barHeight(value, box, scale),
       })),
@@ -171,7 +174,8 @@ export const barMarks = (
  * Grouped bars: every series draws beside the others in each category slot.
  *
  * The group is centred in its slot, so three series still line up under one
- * label.
+ * label. A series with more values than there are slots paints only the
+ * labelled ones; the rest draw nowhere.
  */
 export const groupedBarMarks = (
   series: ReadonlyArray<ChartSeries>,
@@ -180,12 +184,13 @@ export const groupedBarMarks = (
   categories?: number,
 ): ReadonlyArray<ReadonlyArray<ChartMark>> => {
   const count = categoryCount(series, categories);
+  const slots = slotCount(count);
   const { slot } = barSlot(count, box.width);
   const width = series.length === 0 ? 0 : (slot * 0.8) / series.length;
   return Arr.map(series, (one, seriesIndex) =>
     Arr.map(
       Arr.filter(
-        Arr.map(one.values, (value, index) => ({
+        Arr.map(Arr.take(one.values, slots), (value, index) => ({
           index,
           height: barHeight(value, box, scale),
         })),

@@ -7,6 +7,8 @@
  * - a zero or a negative value painting a bar of one pixel, which claims a
  *   value the data does not have;
  * - a stacked series standing on the floor instead of on the series before it;
+ * - a series longer than the labelled slots painting past the last label, where
+ *   no category exists and the grid has no column;
  * - a single-point line painting a zero-length path the rasteriser drops;
  * - a ring of one value painting nothing, because an arc from an angle to
  *   itself is empty;
@@ -116,6 +118,25 @@ describe("the bar marks", () => {
     expect(
       Arr.map(marks, (mark) => (mark.kind === "rect" ? mark.x : -1)),
     ).toEqual([10, 60]);
+  });
+
+  it("paints only the labelled slots when a series runs past them", () => {
+    // One label means one slot. The 500 is a value the axis does not name and
+    // the plot has no column for; it used to paint a second bar at x = 240,
+    // past the box's 200px right edge.
+    const marks = barMarks([5, 500], box, 100, 1);
+    expect(marks).toHaveLength(1);
+    const bar = rectOf(marks[0]);
+    expect(bar).toMatchObject({ x: 40, width: 120, height: 5 });
+    expect(bar.x + bar.width).toBeLessThanOrEqual(box.width);
+  });
+
+  it("truncates a grouped series to the labelled slots too", () => {
+    const grouped = groupedBarMarks([series("a", [5, 500])], box, 100, 1);
+    expect(Arr.length(grouped[0] ?? [])).toBe(1);
+    const bar = rectOf(grouped[0]?.[0]);
+    expect(bar).toMatchObject({ x: 20, width: 160, height: 5 });
+    expect(bar.x + bar.width).toBeLessThanOrEqual(box.width);
   });
 
   it("groups several series inside one category slot", () => {
