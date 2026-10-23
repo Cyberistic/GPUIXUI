@@ -9816,6 +9816,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
     too, `docs/virtual-tree.mdx` §Limitations, the README and the Virtualized
     tables and Virtualized hierarchical data rows state the rule. Package suite
     205/205, behaviour green, `check-types` clean. Owner: data.
+  - [x] Read a **window's overdraw once**, as rows it can mount — `overdraw` is
+    often computed (a viewport divided by a row height, a stored density), and
+    `@tanstack/virtual-core` multiplies it into both edges of every range:
+    `new Array(NaN)` throws `RangeError: Invalid array length`, so
+    `overdraw={NaN}` painted nothing in a real frame (measured: the case read no
+    row at all; the unit case threw from `VirtualTable.getVirtualIndexes`).
+    `virtual/window.ts` exports `overdrawRows` — a finite count floored and never
+    negative (`0` stays no rows around the viewport), a `NaN` or an infinity the
+    documented `DEFAULT_OVERDRAW` (4) — and the calculator and `VirtualList`'s
+    host prop both read it. `virtual/window.test.ts` gains three cases and
+    `behaviour/virtual-table.test.tsx` one (`overdraw={NaN}` mounts the default
+    window and paints from row 0). Directions measured: with the raw
+    `Math.max(0, Math.floor(...))` restored the unit case throws the
+    `RangeError` and the window case paints no row; restored, unit 209/209 and
+    behaviour 128/128, `check-types` clean. `docs/virtualization.mdx` §An
+    overdraw is a count of rows and §API, the README's virtualization paragraph
+    and the Virtualized tables row teach the rule. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

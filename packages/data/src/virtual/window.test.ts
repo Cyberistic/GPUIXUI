@@ -22,8 +22,10 @@ import {
   anchorOffset,
   clampScrollOffset,
   createWindowCalculator,
+  DEFAULT_OVERDRAW,
   DEFAULT_ROW_HEIGHT,
   maxScrollOffset,
+  overdrawRows,
   rowCount,
   rowHeightOf,
   rowIndex,
@@ -174,6 +176,41 @@ describe("degenerate sizes", () => {
     });
     // The nine rows in view and nothing around them.
     expect(calculator.at(0).end).toBe(9);
+  });
+
+  it("reads an overdraw the window cannot mount as the default", () => {
+    // `overdraw` is often computed, and `@tanstack/virtual-core` multiplies it
+    // into both range edges: `new Array(NaN)` is a `RangeError`, so a `NaN`
+    // took the renderer down before the table painted a row.
+    [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY].forEach(
+      (overdraw) => {
+        const calculator = createWindowCalculator({ ...spec, overdraw });
+        expect(calculator.indicesAt(0), `${overdraw}`).toHaveLength(13);
+        expect(calculator.at(0), `${overdraw}`).toEqual({ start: 0, end: 13 });
+      },
+    );
+  });
+
+  it("reads a fractional overdraw as whole rows", () => {
+    const calculator = createWindowCalculator({ ...spec, overdraw: 2.7 });
+    expect(calculator.at(0)).toEqual({ start: 0, end: 11 });
+  });
+});
+
+describe("the overdraw a window holds", () => {
+  it("keeps a countable overdraw, floored and never negative", () => {
+    expect(overdrawRows(4)).toBe(4);
+    expect(overdrawRows(2.7)).toBe(2);
+    expect(overdrawRows(0)).toBe(0);
+    // A negative count is no rows around the viewport, not rows above it.
+    expect(overdrawRows(-3)).toBe(0);
+  });
+
+  it("reads an overdraw nothing could mount as the documented default", () => {
+    expect(overdrawRows(undefined)).toBe(DEFAULT_OVERDRAW);
+    expect(overdrawRows(Number.NaN)).toBe(DEFAULT_OVERDRAW);
+    expect(overdrawRows(Number.POSITIVE_INFINITY)).toBe(DEFAULT_OVERDRAW);
+    expect(overdrawRows(Number.NEGATIVE_INFINITY)).toBe(DEFAULT_OVERDRAW);
   });
 });
 

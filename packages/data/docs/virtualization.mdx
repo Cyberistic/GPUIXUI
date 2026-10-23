@@ -32,7 +32,7 @@ import { VirtualList } from "@gpuixui/data";
 | `estimatedItemHeight` | `number` | — | required with `itemCount`; a height the runtime cannot lay out is read as the shipped row's own (`37`) |
 | `windowStart` | `number` | `0` | the first rendered slice's index |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the built window |
-| `overdraw` | `number` | — | rows built beyond the viewport |
+| `overdraw` | `number` | — | rows built beyond the viewport; a count the runtime cannot read is the default (`4`), a negative is `0` |
 | `ref` | `Ref<PublicInstance>` | — | the list's instance, for `scrollToItem` |
 
 `VirtualTable` and `VirtualTableBody`:
@@ -46,7 +46,7 @@ import { VirtualList } from "@gpuixui/data";
 | `header` | `ReactNode` | — | the header row's cells |
 | `empty` | `ReactNode` | `No rows` | painted inside a `TableEmpty` row when `count` is `0`; a string paints as its own text element |
 | `caption` | `ReactNode` | — | the line below the frame; a string paints as its own text element |
-| `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
+| `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side; a count the window cannot read is `4`, a negative is `0` |
 | `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report |
 
@@ -86,6 +86,16 @@ viewport), the anchor's `index × NaN` clamped the offset to `0`, and a
 thousand-row table painted nothing past its first window for ever. A caller
 whose rows paint another height declares it; the fallback is an estimate, not a
 measurement of the caller's row.
+
+**An overdraw is a count of rows.** `overdraw` is often computed — a viewport
+divided by a row height, a density setting read from storage — and
+`@tanstack/virtual-core` multiplies it into both edges of every range:
+`new Array(NaN)` is a `RangeError`, so a `NaN` took the renderer down before the
+table painted a row. `overdrawRows` reads it once: a finite count floored and
+never negative (`0` still means no rows around the viewport), and a value nothing
+could mount (`NaN`, an infinity) as the documented default (`4`). `VirtualList`
+reads its own `overdraw` through the same rule before the host sees it, so the
+list and the window agree on how many rows surround the viewport.
 
 ## Limitations
 

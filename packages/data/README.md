@@ -339,6 +339,14 @@ else `DEFAULT_ROW_HEIGHT` (37), which is what the shipped row paints: a
 `behaviour/rowheight.test.tsx`. The estimate, the anchor, the reveal and the
 tree's cursor walks all read that one number.
 
+**An overdraw the window cannot read is the documented default.**
+`@tanstack/virtual-core` multiplies `overdraw` into both edges of every range,
+so a `NaN` reached `new Array(NaN)` and threw `RangeError: Invalid array length`
+— the table painted nothing. `overdrawRows` reads the count once: finite
+values are floored and never negative (`0` is no rows around the viewport), and
+a `NaN` or an infinity is `DEFAULT_OVERDRAW` (4). `VirtualList` reads its own
+`overdraw` through the same function before the host sees it.
+
 `count` is read **once**, as the whole non-negative number of rows the table
 holds — a fraction of a row cannot exist, and a count the table cannot read
 (`NaN`, an infinity, a negative) is `0`. That one number drives the runtime

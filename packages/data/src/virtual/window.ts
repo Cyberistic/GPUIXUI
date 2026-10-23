@@ -110,6 +110,22 @@ const viewportOf = (spec: WindowSpec): number =>
     : rowHeightOf(spec.rowHeight);
 
 /**
+ * The rows a window mounts around the viewport.
+ *
+ * `overdraw` is often computed — a viewport divided by a row height, a density
+ * setting read from storage — and `@tanstack/virtual-core` multiplies it into
+ * both range edges: a `NaN` produced `new Array(NaN)` inside the core's range
+ * extractor, which throws `RangeError: Invalid array length` before the table
+ * paints at all. A value the window cannot read is {@link DEFAULT_OVERDRAW}; a
+ * finite one is floored and never negative, so `0` still means no rows around
+ * the viewport.
+ */
+export const overdrawRows = (overdraw: number | undefined): number =>
+  overdraw === undefined || !Number.isFinite(overdraw)
+    ? DEFAULT_OVERDRAW
+    : Math.max(0, Math.floor(overdraw));
+
+/**
  * The row count the window can hold.
  *
  * `count` is often computed — a page's length, a filtered total, a row count a
@@ -162,7 +178,7 @@ export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
     observeElementRect: () => undefined,
     observeElementOffset: () => undefined,
     scrollToFn: () => undefined,
-    overscan: Math.max(0, Math.floor(spec.overdraw ?? DEFAULT_OVERDRAW)),
+    overscan: overdrawRows(spec.overdraw),
   });
 
   const indicesAt = (scrollOffset: number): ReadonlyArray<number> => {

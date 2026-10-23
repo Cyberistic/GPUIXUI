@@ -280,3 +280,48 @@ describe("the row count", () => {
     expect(allText(mounted)).not.toContain("row-2");
   });
 });
+
+describe("an overdraw the window cannot read", () => {
+  const overdrawn = (overdraw: number) => (
+    <VirtualTable
+      height={240}
+      aria-label="Rows"
+      count={VIRTUAL_TABLE_ROWS}
+      rowHeight={30}
+      overdraw={overdraw}
+      header={
+        <TableRow>
+          <TableHeaderCell width={120}>Name</TableHeaderCell>
+        </TableRow>
+      }
+      row={(index) => (
+        <TableRow>
+          <TableCell width={120}>{`row-${index}`}</TableCell>
+        </TableRow>
+      )}
+    />
+  );
+
+  it("mounts the documented window instead of taking the renderer down", () => {
+    // `overdraw` is often computed (a viewport divided by a row height, a
+    // stored density). The core multiplies it into both range edges, and
+    // `new Array(NaN)` throws `RangeError: Invalid array length` — a `NaN`
+    // crashed the whole table before it painted a row. It reads as the
+    // documented default now, which mounts a viewport of rows.
+    const mounted = renderData(overdrawn(Number.NaN));
+    root = mounted;
+    settle(mounted);
+
+    const painted = Arr.filterMap(mounted.renderer.getPaintedText(), (line) => {
+      const index = /^row-(\d+)$/.exec(line)?.[1];
+      return index === undefined
+        ? Result.failVoid
+        : Result.succeed(Number(index));
+    });
+    expect(painted[0]).toBe(0);
+    expect(painted.length).toBeGreaterThan(5);
+    // The default is a handful of rows, not the whole set: an infinity read
+    // as `all rows` would retain a thousand here.
+    expect(painted.length).toBeLessThan(60);
+  });
+});

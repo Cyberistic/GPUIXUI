@@ -45,7 +45,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
-import { rowCount, rowHeightOf, rowIndex } from "./window.js";
+import { rowCount, rowHeightOf, rowIndex, overdrawRows } from "./window.js";
 
 /** The window the runtime built, in absolute logical-row indices. */
 export interface VisibleRange {
@@ -79,7 +79,13 @@ interface VirtualListShared extends Omit<Props, "children" | "onVisibleRange"> {
   readonly followTail?: boolean;
   /** Where the content sits when it does not fill the viewport. */
   readonly alignment?: "top" | "bottom";
-  /** Rows built beyond the viewport, when the runtime can use them. */
+  /**
+   * Rows built beyond the viewport, when the runtime can use them.
+   *
+   * A value the runtime cannot use (`NaN`, an infinity, a negative) is read as
+   * the default rather than handed to native: the windowed table's arithmetic
+   * multiplies the same number into every range edge.
+   */
   readonly overdraw?: number;
   /**
    * Receives the built window. In the windowed mode this is the signal the app
@@ -148,7 +154,7 @@ export const VirtualList = (props: VirtualListProps) => {
     ...rest,
     followTail,
     alignment,
-    overdraw,
+    overdraw: overdraw === undefined ? undefined : overdrawRows(overdraw),
     onVisibleRange: handleRange,
     style: mergeStyles(
       recipeStyle(cn(className ?? ""), theme),
