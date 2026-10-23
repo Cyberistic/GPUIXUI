@@ -56,10 +56,10 @@ DropdownMenu
 | `DropdownMenuContent` | floating `role="menu"` surface | `label?`, `side?` (default `"bottom"`), `align?` (default `"start"`), `sideOffset?` (default `4`), `collisionPadding?` (default `8`) |
 | `DropdownMenuItem` | one action row | `onSelect?`, `disabled?`, `tone?`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` (default `true`) |
 | `DropdownMenuCheckboxItem` | an on/off row that stays open | `checked` (required), `onCheckedChange` (required) |
-| `DropdownMenuRadioGroup` | the exclusive choice its rows belong to | `value` (required), `onValueChange` (required), `className?` |
+| `DropdownMenuRadioGroup` | the exclusive choice its rows belong to, named by `label` | `value` (required), `onValueChange` (required), `label?`, `className?` |
 | `DropdownMenuRadioItem` | one choice; choosing it closes the menu | `value` (required), `disabled?`, `leading?`, `trailing?`, `textValue?` |
 | `DropdownMenuSub` / `DropdownMenuSubTrigger` / `DropdownMenuSubContent` | one secondary level | `DropdownMenuSubContent` takes the root surface's placement props |
-| `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | — |
+| `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | `DropdownMenuGroup` takes `label?` — the group's accessible name; a visible `DropdownMenuLabel` is painted text and does not name it |
 
 ## Choice rows
 
@@ -77,11 +77,15 @@ that stored its own choice would forget it on the next open. A track order or
 an appearance menu is app state:
 
 ```tsx
-<DropdownMenuRadioGroup value={sort} onValueChange={setSort}>
+<DropdownMenuRadioGroup value={sort} onValueChange={setSort} label="Sort by">
   <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
   <DropdownMenuRadioItem value="date">Date modified</DropdownMenuRadioItem>
 </DropdownMenuRadioGroup>
 ```
+
+`label` is what a screen reader announces on entering the group. 0.11.0 has no
+`aria-labelledby`, so a `DropdownMenuLabel` above the rows is painted text — a
+group without `label` is announced as an unnamed group.
 
 Both rows mark their state with a check and `aria-selected`, because 0.11.0 has
 no `aria-checked`. A row's accessible name is its label, so a composed label

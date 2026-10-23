@@ -85,7 +85,11 @@ export const ContextMenuExample = () => {
             </ContextMenuSub>
             <ContextMenuSeparator />
             <ContextMenuLabel>Group by</ContextMenuLabel>
-            <ContextMenuRadioGroup value={groupBy} onValueChange={setGroupBy}>
+            <ContextMenuRadioGroup
+              value={groupBy}
+              onValueChange={setGroupBy}
+              label="Group by"
+            >
               <ContextMenuRadioItem value="folder">Folder</ContextMenuRadioItem>
               <ContextMenuRadioItem value="owner">Owner</ContextMenuRadioItem>
             </ContextMenuRadioGroup>

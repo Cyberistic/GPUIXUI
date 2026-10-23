@@ -57,8 +57,8 @@ ContextMenu
 | `ContextMenuTrigger` | the area whose right click opens the menu | `disabled?` |
 | `ContextMenuContent` | `anchored` surface at the pointer | `label?` (default `"Context menu"`) |
 | `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows | `onSelect?`, `disabled?`, `tone?`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` |
-| `ContextMenuRadioGroup` / `ContextMenuRadioItem` | the shared exclusive choice: one marked row, and a choice closes the menu | `value` / `onValueChange` on the group; `value` (required) on the row |
-| `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure | — |
+| `ContextMenuRadioGroup` / `ContextMenuRadioItem` | the shared exclusive choice: one marked row, and a choice closes the menu | `value` / `onValueChange` / `label?` on the group; `value` (required) on the row |
+| `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure | `ContextMenuGroup` takes `label?` — the group's accessible name |
 | `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level | `ContextMenuSubContent` takes the root surface's placement props |
 
 ## Choice rows
@@ -68,6 +68,10 @@ The rows are the dropdown menu's, so an exclusive choice works the same way:
 is marked, and choosing a row closes the menu. A `ContextMenuCheckboxItem` is
 the on/off row that stays open. Both mark their state with a check and
 `aria-selected` because 0.11.0 has no `aria-checked`.
+
+Pass the choice's `label` to the group (`label="Group by"`): 0.11.0 has no
+`aria-labelledby`, so a painted `ContextMenuLabel` does not name the group a
+reader enters.
 
 ## Limitations
 

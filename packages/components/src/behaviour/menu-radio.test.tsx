@@ -59,10 +59,12 @@ const AppearanceMenu = ({
   onValueChange,
   triggerDisabled,
   disabledValue,
+  label,
 }: {
   readonly onValueChange: (value: string) => void;
   readonly triggerDisabled?: boolean;
   readonly disabledValue?: string;
+  readonly label?: string;
 }) => {
   const [value, setValue] = useState("system");
 
@@ -81,6 +83,7 @@ const AppearanceMenu = ({
               setValue(next);
               onValueChange(next);
             }}
+            {...(label === undefined ? {} : { label })}
           >
             <DropdownMenuRadioItem testId="system" value="system">
               System
@@ -183,6 +186,28 @@ describe("menu radio rows", () => {
     expect(nodesWithRole(menu.renderer, "menuitemcheckbox")).toEqual([]);
 
     menu.unmount();
+  });
+
+  it("names the choice its rows belong to", () => {
+    // 0.11.0 has no `aria-labelledby`, so a painted `MenuLabel` above the rows
+    // is invisible to a reader entering the group: the group node would read
+    // only "group". The `label` prop is the name, and the two directions show
+    // it is the prop that carries it rather than the row text.
+    const named = renderComponent(
+      <AppearanceMenu onValueChange={vi.fn()} label="Appearance" />,
+    );
+    clickCentreOf(named, "trigger");
+    expect(
+      nodesWithRole(named.renderer, "group").map((node) => node.name),
+    ).toEqual(["Appearance"]);
+    named.unmount();
+
+    const unnamed = renderComponent(<AppearanceMenu onValueChange={vi.fn()} />);
+    clickCentreOf(unnamed, "trigger");
+    expect(
+      nodesWithRole(unnamed.renderer, "group").map((node) => node.name),
+    ).toEqual([""]);
+    unnamed.unmount();
   });
 
   it("reports the chosen value once and returns focus to the trigger", async () => {

@@ -346,6 +346,14 @@ export interface MenuRadioGroupProps extends Omit<Props, "children"> {
   readonly value: string;
   /** Called with a row's value when it is chosen; never for the current one. */
   readonly onValueChange: (value: string) => void;
+  /**
+   * The choice's accessible name — what the rows are choosing between.
+   *
+   * 0.11.0 has no `aria-labelledby`, so a visible `MenuLabel` above the rows
+   * paints their caption and does not name the group a reader enters. Pass the
+   * same words here.
+   */
+  readonly label?: string;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
@@ -383,6 +391,7 @@ const useMenuRadioGroup = (): MenuRadioGroupValue => {
 export const MenuRadioGroup = ({
   value,
   onValueChange,
+  label,
   className,
   children,
   style,
@@ -394,7 +403,12 @@ export const MenuRadioGroup = ({
 
   return (
     <MenuRadioGroupContext.Provider value={group}>
-      <MenuGroupSurface className={className} style={style} {...rest}>
+      <MenuGroupSurface
+        label={label}
+        className={className}
+        style={style}
+        {...rest}
+      >
         {children}
       </MenuGroupSurface>
     </MenuRadioGroupContext.Provider>
@@ -514,6 +528,13 @@ export const MenuLabel = ({ className, style, ...rest }: MenuLabelProps) => {
 
 /** A labelled group of rows. */
 export interface MenuGroupProps extends Omit<Props, "children"> {
+  /**
+   * The group's accessible name.
+   *
+   * 0.11.0 has no `aria-labelledby`, so a visible `MenuLabel` is painted text
+   * and does not name the group a reader enters. Pass the same words here.
+   */
+  readonly label?: string;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
@@ -521,6 +542,7 @@ export interface MenuGroupProps extends Omit<Props, "children"> {
 
 /** The group's own surface, shared by a labelled group and a radio group. */
 const MenuGroupSurface = ({
+  label,
   className,
   children,
   style,
@@ -529,8 +551,9 @@ const MenuGroupSurface = ({
   const theme = useTheme();
   return (
     <div
-      role="group"
       {...rest}
+      role="group"
+      aria-label={label}
       style={mergeStyles(
         overlaySurfaceStyle(MENU_GROUP, className, theme),
         style,

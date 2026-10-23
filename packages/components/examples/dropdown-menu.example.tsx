@@ -81,7 +81,11 @@ export const DropdownMenuExample = () => {
               Show hidden files
             </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={sort} onValueChange={setSort}>
+            <DropdownMenuRadioGroup
+              value={sort}
+              onValueChange={setSort}
+              label="Sort by"
+            >
               <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="date">
                 Date modified
