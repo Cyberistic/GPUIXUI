@@ -111,8 +111,22 @@ export type {
 
 export { TableSortHeader, sortGlyph } from "./sort/header.js";
 export type { TableSortHeaderProps } from "./sort/header.js";
-export { directionOf, sortLabel, toggleSort } from "./sort/logic.js";
-export type { SortDirection, SortState, SortValue } from "./sort/logic.js";
+export {
+  directionIn,
+  directionOf,
+  pressSortOrder,
+  sortLabel,
+  sortOrderGlyph,
+  sortOrderLabel,
+  sortPosition,
+  toggleSort,
+} from "./sort/logic.js";
+export type {
+  SortDirection,
+  SortOrder,
+  SortState,
+  SortValue,
+} from "./sort/logic.js";
 
 export {
   allSelected,
