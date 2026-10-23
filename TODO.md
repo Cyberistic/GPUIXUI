@@ -6313,7 +6313,10 @@ and clause).
       (`expected '2' to be '1.5'`, `expected '0' to be '0.30000000000000004'`,
       `expected '0' to be '-0.00000025'`), the old component wiring fails the window
       case with `expected '2' to be '1.5'`, and restoring the page's Home/End
-      sentence fails the docs case on `retracted`. `nub run --filter
+      sentence fails the docs case on `retracted`. The `COMPONENTS.md` hunk rode
+      into `60ab2d40` by another workstream's commit (the shared-index hazard in
+      Interlocks), so the content is on `master` under a message that does not name
+      it. `nub run --filter
       @gpuixui/primitives test`: 54 files / 1 001 tests; `test:runtime`: 21 files /
       297 tests; `check-types`, `lint` and the repo formatter clean on these files.
 
