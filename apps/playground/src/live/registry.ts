@@ -600,6 +600,12 @@ export const liveRegistry = [
       "Scroll: a scroller that overflows both axes paints a native thumb on each trailing edge, and none when its content fits on both",
     capability: "scroll",
   },
+  {
+    id: "collapsible-lifecycle",
+    title:
+      "Layout: the shipped Collapsible measures its body in a window, clips to it and unmounts it when it closes",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

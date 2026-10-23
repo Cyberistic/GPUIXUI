@@ -41,6 +41,9 @@ import {
 import { examples as dataExamples } from "@gpuixui/data/examples";
 import {
   Badge,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Combobox,
   ComboboxContent,
   ComboboxEmpty,
@@ -870,6 +873,18 @@ import {
   FLEX_SHORT_CONTENT,
   FLEX_WIDTH_CASES,
 } from "./flex-sizing.js";
+import {
+  COLLAPSE_BODY,
+  COLLAPSE_GROW_BEFORE,
+  COLLAPSE_GROWN,
+  COLLAPSE_IDS,
+  COLLAPSE_MOUNTED,
+  COLLAPSE_PRESSES,
+  COLLAPSE_REST,
+  COLLAPSE_WIDTH,
+  collapseReadout,
+  type CollapsePress,
+} from "./collapse.js";
 import {
   BOTH_AXES,
   BOTH_CONTENT,
@@ -21424,6 +21439,256 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Whether the **shipped** `Collapsible` measures its body in a window.
+ *
+ * `motion-geometry` measured the runtime's `motion` on a raw box. A disclosure
+ * section is the other way round: `<AutoHeight>` is told the height its
+ * **content** reports through `onLayout`, so whether a section opens at all
+ * depends on a layout pass no renderer can stand in for. This probe drives the
+ * component the way a reader does, then reads the box that settles, the body
+ * inside it, and the unmount after the collapse.
+ *
+ * The body is grown while the section is closed: the reveal unmounts its
+ * subtree then, so the next open has to measure the height on screen instead of
+ * reusing the number it closed with.
+ */
+const CollapsibleProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [open, setOpen] = useState(false);
+  const [opens, setOpens] = useState(0);
+  const [closes, setCloses] = useState(0);
+  const [height, setHeight] = useState(COLLAPSE_BODY);
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.lg,
+  };
+  /** The box one section is laid out in: the width a reveal must not animate. */
+  const section = { width: COLLAPSE_WIDTH };
+  /** A body of one fixed height, so the reveal's target is a number. */
+  const body = (testId: string, bodyHeight: number) => (
+    <div
+      testId={testId}
+      style={{
+        height: bodyHeight,
+        backgroundColor: theme.colors.card,
+        borderRadius: theme.radius.md,
+      }}
+    />
+  );
+  const label = (text: string) => (
+    <text
+      style={{ ...textStyle(theme, "label"), color: theme.colors.foreground }}
+    >
+      {text}
+    </text>
+  );
+  return (
+    <div testId={COLLAPSE_IDS.probe} style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A disclosure section is a measured reveal: does the shipped Collapsible
+        report its body in a window, clip to it, and unmount the body when it
+        closes? The second section is open at mount, so the measurement at mount
+        is read too.
+      </text>
+      <div style={section}>
+        <Collapsible
+          open={open}
+          onOpenChange={(next) => {
+            setOpen(next);
+            if (next) setOpens((count) => count + 1);
+            else setCloses((count) => count + 1);
+          }}
+        >
+          <CollapsibleTrigger testId={COLLAPSE_IDS.trigger}>
+            {label("Reveal the body")}
+          </CollapsibleTrigger>
+          {/* The padding is dropped so the settled height is the body's own. */}
+          <CollapsibleContent testId={COLLAPSE_IDS.clip} className="p-0 gap-0">
+            {body(COLLAPSE_IDS.body, height)}
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+      <Button
+        testId={COLLAPSE_IDS.grow}
+        variant="secondary"
+        onClick={() => setHeight(COLLAPSE_GROWN)}
+      >
+        Grow the closed body
+      </Button>
+      <div style={section}>
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger testId={COLLAPSE_IDS.initialTrigger}>
+            {label("Open at mount")}
+          </CollapsibleTrigger>
+          <CollapsibleContent
+            testId={COLLAPSE_IDS.initialClip}
+            className="p-0 gap-0"
+          >
+            {body(COLLAPSE_IDS.initialBody, COLLAPSE_MOUNTED)}
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+      <text
+        testId={COLLAPSE_IDS.readout}
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {collapseReadout({ open, opens, closes, height })}
+      </text>
+    </div>
+  );
+};
+
+const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(COLLAPSE_IDS.trigger);
+    // A capture stalls the animation clock, so a run that starts right after
+    // one misses the mount tween's frames. The section that starts open is
+    // settling while this wait runs, which is why its read comes after it.
+    yield* Effect.sleep(Duration.millis(400));
+
+    /** A box field, `NaN` while the element paints nothing. */
+    const field = (testId: string, name: "width" | "height") =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.match(Option.fromNullishOr(bounds), {
+          onNone: () => Number.NaN,
+          onSome: (box) => box[name],
+        }),
+      );
+
+    /** The readout once it names `expected`, which a press reports by a frame. */
+    const readout = (expected: string) =>
+      settleUntil(ctx.host.text(COLLAPSE_IDS.readout), (line) =>
+        line.includes(expected),
+      );
+
+    const expectState = (label: string, expected: string) =>
+      Effect.gen(function* () {
+        const line = yield* readout(expected);
+        yield* ctx.expectContains(`${label} reports its state`, line, expected);
+      });
+
+    // A closed reveal is unmounted, not a zero-high box: the subtree (and the
+    // box that holds it) leaves the tree, so nothing inside it keeps running.
+    yield* expectState(
+      "a section that starts closed",
+      collapseReadout(COLLAPSE_REST),
+    );
+    const trigger = yield* paintedBox(ctx, COLLAPSE_IDS.trigger);
+    yield* ctx.expectEqual(
+      "the trigger paints a box of its own",
+      trigger.width > 0 && trigger.height > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a closed section paints no clipping box",
+      yield* settleGone(ctx, COLLAPSE_IDS.clip),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a closed section mounts no body",
+      yield* settleGone(ctx, COLLAPSE_IDS.body),
+      true,
+    );
+
+    // The mount path: a section that starts open measures its body without a
+    // press, so `defaultOpen` is a real reveal rather than a painted box.
+    const mountedClip = yield* settleNumber(
+      field(COLLAPSE_IDS.initialClip, "height"),
+    );
+    const mountedBody = yield* paintedBox(ctx, COLLAPSE_IDS.initialBody);
+    yield* ctx.expectNear(
+      "a section that starts open paints its body at mount",
+      mountedBody.height,
+      COLLAPSE_MOUNTED,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the mount measurement sets the clipping box",
+      mountedClip,
+      COLLAPSE_MOUNTED,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the clipping box keeps the width the caller gave it",
+      yield* settleNumber(field(COLLAPSE_IDS.initialClip, "width")),
+      COLLAPSE_WIDTH,
+      1,
+    );
+
+    // The presses, and the grow between the second and third: the body changes
+    // while the section is closed, so the reveal has nothing mounted to measure
+    // until it opens again.
+    yield* Effect.forEach(
+      COLLAPSE_PRESSES,
+      (press: CollapsePress, index) =>
+        Effect.gen(function* () {
+          if (index === COLLAPSE_GROW_BEFORE) {
+            yield* ctx.host.click(COLLAPSE_IDS.grow);
+            yield* expectState(
+              "growing the closed section",
+              collapseReadout({
+                ...COLLAPSE_REST,
+                opens: 1,
+                closes: 1,
+                height: COLLAPSE_GROWN,
+              }),
+            );
+          }
+          yield* ctx.host.click(COLLAPSE_IDS.trigger);
+          yield* expectState(press.label, collapseReadout(press));
+          if (!press.open) {
+            yield* ctx.expectEqual(
+              `${press.label}: the body leaves the tree`,
+              yield* settleGone(ctx, COLLAPSE_IDS.body),
+              true,
+            );
+            yield* ctx.expectEqual(
+              `${press.label}: the clipping box leaves with it`,
+              yield* settleGone(ctx, COLLAPSE_IDS.clip),
+              true,
+            );
+            return;
+          }
+          const body = yield* paintedBox(ctx, COLLAPSE_IDS.body);
+          yield* ctx.expectNear(
+            `${press.label}: the body paints the height the caller set`,
+            body.height,
+            press.height,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${press.label}: the clipping box settles on the measured body`,
+            yield* settleNumber(field(COLLAPSE_IDS.clip, "height")),
+            press.height,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${press.label}: the width is not animated`,
+            yield* settleNumber(field(COLLAPSE_IDS.clip, "width")),
+            COLLAPSE_WIDTH,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    // Captures come last: a screenshot stalls the animation clock, so one taken
+    // between a press and its reads makes the next run complete in one frame.
+    yield* ctx.host.capture("collapse-open");
+  });
+
+/**
  * What box an `<img>` paints, and what a style can make it paint.
  *
  * An image is the one element whose intrinsic ratio the runtime owns: GPUI
@@ -27244,5 +27509,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scrollbar-thumb-both",
     view: () => <ScrollbarBothProbe />,
     steps: scrollbarBothSteps,
+  },
+  "collapsible-lifecycle": {
+    id: "collapsible-lifecycle",
+    view: () => <CollapsibleProbe />,
+    steps: collapsibleSteps,
   },
 };

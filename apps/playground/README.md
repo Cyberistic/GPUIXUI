@@ -42,11 +42,12 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-94 probes a real window can prove, of which eighteen mount shipped
+95 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
-the command palette, the tabs, the list, the popover, the message scroller, the
+the command palette, the tabs, the list, the collapsible section, the popover,
+the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack
 and the modal focus rule), seven mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
@@ -5261,6 +5262,63 @@ backwards; and reading the horizontal band on that one-axis mount fails `the
 horizontal band paints a thumb` (`expected a value, got none`), so the
 bottom-edge thumb is that axis's overflow rather than a decoration.
 
+### `collapsible-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped `Collapsible` measure its body in a window?** `motion-geometry`
+measured the runtime's `motion` on a raw box. A disclosure section is the other
+way round: `<AutoHeight>` is handed the height its **content** reports through
+`onLayout`, so whether a section opens at all is a layout answer, and the
+component's behaviour suite runs in the renderer. This probe mounts the shipped
+`Collapsible` twice — one closed until pressed, one `defaultOpen` — presses the
+trigger and reads the boxes that settle.
+
+| Step | What the window reads |
+| --- | --- |
+| at rest | `open=false opens=0 closes=0 height=120`; the trigger paints its own box; **neither** the clipping box nor the body is in the tree |
+| the `defaultOpen` section | its body paints **80** and the clipping box settles on **80** with no press, so a mount measures as well as an open |
+| press `Reveal the body` | `open=true opens=1`; the body paints **120** and the clipping box settles on **120** |
+| press again | `closes=1`; the body and the clipping box both leave the tree |
+| grow the closed body, press again | the body is **200** while nothing is mounted; the reopen settles on **200**, not the retired **120** |
+| close, reopen | the grown body lands on **200** again, and the readout ends `open=true opens=3 closes=2 height=200` |
+
+The content recipe's padding is the difference the probe removes: with it left
+on, the same box measures **94** for an **80** body (the recipe's 6 + 8), which
+is why both sections pass `p-0 gap-0` and one read is one number.
+
+31 checks, `--only collapsible-lifecycle`, green on 0.11.0 here (~2.0–2.1 s,
+two runs). Fixture: `src/live/collapse.ts` (`COLLAPSE_IDS`, the three body
+heights, `collapseReadout` for the one spelling of the line,
+`COLLAPSE_PRESSES` with the grow's index, `COLLAPSE_OPENS`/`COLLAPSE_CLOSES`
+and `COLLAPSE_CHECKS`) + `collapse.test.ts` (11 cases: the sequence's counts and
+heights, the grow's position, the locators, the count, the registry entry, this
+section with its reads, rules and negative control, and the view's wiring). The
+view and steps live in `src/live/scenarios.tsx`.
+
+Four rules a disclosure rests on:
+
+1. **A closed section keeps nothing mounted.** Neither the body nor the box that
+   held it is in the tree after the collapse, so state inside a closed section is
+   gone and a caller that needs it keeps it outside the reveal — `AutoHeight`'s
+   documented contract, now read in a window rather than asserted from intent.
+2. **The measurement is the content box's.** An **80** and a **120** body both
+   settle the clipping box exactly, so `onLayout` does report a content box whose
+   parent was zero high a frame earlier; a section needs no caller-supplied
+   height. The recipe's padding is part of that measurement (the **94**), so a
+   body that brings its own padding has to count it.
+3. **A body that changes while closed is measured on the next open.** The reveal
+   measured **200** after its subtree had been unmounted at **120**, so a
+   settings section may change its content while it is closed.
+4. **Height is animated and width is not.** Both sections keep the caller's
+   320 px through every press, so a disclosure in a column takes the column's
+   width and never tweens it.
+
+One negative control measured, exit `1`, restored green: leaving the content
+recipe's padding on the pressed section fails `the mount measurement sets the
+clipping box` (`expected 80 ± 1, got 94`), so the window reads the content box
+the reveal measures rather than the body's own box under another name.
+
+Evidence: `.artifacts/live/collapse-open.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5484,8 +5542,9 @@ narrower. Each deviation is deliberate and measured:
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
-  `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb` and
-  `scrollbar-thumb-both` (thirty-six probes, each run alone).
+  `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
+  `scrollbar-thumb-both` and `collapsible-lifecycle` (thirty-seven probes, each
+  run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
