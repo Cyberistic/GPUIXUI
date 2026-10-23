@@ -8,7 +8,8 @@
  *   value the data does not have;
  * - a stacked series standing on the floor instead of on the series before it;
  * - a series longer than the labelled slots painting past the last label, where
- *   no category exists and the grid has no column;
+ *   no category exists and the grid has no column — or raising the axis, so the
+ *   labelled bars shrink under a value that draws nowhere;
  * - a single-point line painting a zero-length path the rasteriser drops;
  * - a ring of one value painting nothing, because an arc from an angle to
  *   itself is empty;
@@ -74,6 +75,18 @@ describe("the chart scale", () => {
     expect(chartScale([series("a", [10, 50]), series("b", [93])])).toBe(100);
     expect(axisTicks(100, 4)).toEqual([0, 25, 50, 75, 100]);
     expect(axisTicks(100, 0)).toEqual([0, 100]);
+  });
+
+  it("measures only the slots the chart paints", () => {
+    // A value past the last label draws nowhere, so it cannot raise the axis
+    // and shrink every painted bar: measured, a stray 999 under two labels left
+    // the labelled 3 and 6 as 0.3px and 0.6px slivers.
+    const ragged = [series("a", [3, 6, 999])];
+    expect(chartScale(ragged)).toBe(1000);
+    expect(chartScale(ragged, 2)).toBe(10);
+    // The painted bar is read against the axis it is drawn on.
+    const marks = groupedBarMarks(ragged, box, chartScale(ragged, 2), 2);
+    expect(rectOf(marks[0]?.[1]).height).toBe(60);
   });
 
   it("reads a stack's axis against the totals, not its widest series", () => {

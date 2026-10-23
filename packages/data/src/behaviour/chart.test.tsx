@@ -14,6 +14,8 @@
  *   reader takes the bar's top for the smallest value;
  * - a stacked bar's axis measured over the widest series rather than the
  *   totals, so every stack claims a value the axis does not name;
+ * - a scale measured over values that draw nowhere, so a stray value past the
+ *   last label flattens every painted bar;
  * - a sparkline drawn from a different colour than the chart's first series.
  */
 
@@ -237,9 +239,38 @@ describe("the charts", () => {
       throw new Error("behaviour: no SVG source on the bar layer");
     }
     expect([...source.matchAll(/<rect\b/g)]).toHaveLength(1);
-    // The lone bar is the labelled 5 of a 500 scale: a pixel tall under the
-    // ceiling. The discarded 500 would have stood the full plot at y = 0.
-    expect(topOfLayer(root, "chart-past-labels-layer-revenue")).toBe(99);
+    // The discarded 500 draws nowhere, so it cannot raise the axis either: the
+    // scale is the labelled 5, and its bar stands the whole plot at y = 0. A
+    // scale that still read the tail would paint the same bar one pixel tall
+    // under a 500 ceiling, which reads as a value of almost nothing.
+    expect(topOfLayer(root, "chart-past-labels-layer-revenue")).toBe(0);
+  });
+
+  it("measures the axis over the slots the labels name", () => {
+    // A series ten times longer than its labels: only the first two values are
+    // painted, so a 999 tail that draws nowhere must not flatten them.
+    root = renderData(
+      <BarChart
+        aria-label="A ragged series"
+        labels={["Q1", "Q2"]}
+        series={[{ key: "revenue", label: "Revenue", values: [3, 6, 999] }]}
+        width={200}
+        height={100}
+        testId="chart-ragged-bars"
+      />,
+    );
+    settle(root);
+
+    // The painted maximum is 6, whose ceiling is 10 — not the 1000 the stray
+    // value would round to.
+    expect(
+      root.renderer.findByTestId("chart-ragged-bars-tick-10"),
+    ).toBeDefined();
+    expect(
+      root.renderer.findByTestId("chart-ragged-bars-tick-1000"),
+    ).toBeUndefined();
+    // The 6 of a 10 ceiling leaves the bar 40px down the plot.
+    expect(topOfLayer(root, "chart-ragged-bars-layer-revenue")).toBe(40);
   });
 
   it("puts a line's points over the labels it draws under", () => {

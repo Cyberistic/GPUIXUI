@@ -11,7 +11,9 @@
  * Everything here is deterministic arithmetic over the caller's numbers: a
  * value that is not finite reads as `0`, a negative value paints nothing, and a
  * scale with no positive value still has a top of `1` so a bar chart of zeros
- * lays out instead of dividing by zero.
+ * lays out instead of dividing by zero. A scale is measured over the **slots
+ * the chart paints**: a value past the last label draws nowhere, so it cannot
+ * raise the axis and shrink every painted bar.
  */
 
 import * as Arr from "effect/Array";
@@ -45,15 +47,40 @@ export type ChartMark =
 export const drawableValue = (value: number): number =>
   Number.isFinite(value) && value > 0 ? value : 0;
 
-/** The largest drawable value in a series. */
-export const seriesMax = (series: ChartSeries): number =>
-  Arr.reduce(series.values, 0, (max, value) =>
+/**
+ * The values a series paints: only the labelled slots exist.
+ *
+ * A category the chart does not name draws nowhere, so it cannot raise the axis
+ * either — a stray value past the last label would otherwise shrink every
+ * painted bar towards a pixel while the axis named a value no slot shows. A
+ * count the chart cannot read is no count, so the series is taken whole.
+ */
+const paintedValues = (
+  values: ReadonlyArray<number>,
+  categories?: number,
+): ReadonlyArray<number> =>
+  Option.match(
+    Option.filter(Option.fromNullishOr(categories), Number.isFinite),
+    {
+      onNone: () => values,
+      onSome: (count) => Arr.take(values, Math.max(0, Math.floor(count))),
+    },
+  );
+
+/** The largest drawable value in a series, over the slots it paints. */
+export const seriesMax = (series: ChartSeries, categories?: number): number =>
+  Arr.reduce(paintedValues(series.values, categories), 0, (max, value) =>
     Math.max(max, drawableValue(value)),
   );
 
-/** The largest drawable value across every series. */
-export const chartMaxOf = (series: ReadonlyArray<ChartSeries>): number =>
-  Arr.reduce(series, 0, (max, one) => Math.max(max, seriesMax(one)));
+/** The largest drawable value across every series, over the painted slots. */
+export const chartMaxOf = (
+  series: ReadonlyArray<ChartSeries>,
+  categories?: number,
+): number =>
+  Arr.reduce(series, 0, (max, one) =>
+    Math.max(max, seriesMax(one, categories)),
+  );
 
 /**
  * A rounded ceiling above `raw`: 1, 2 or 5 times a power of ten.
@@ -70,9 +97,18 @@ export const niceCeiling = (raw: number): number => {
   return nice * magnitude;
 };
 
-/** The scale a chart draws against: the rounded ceiling of every series. */
-export const chartScale = (series: ReadonlyArray<ChartSeries>): number =>
-  niceCeiling(chartMaxOf(series));
+/**
+ * The scale a chart draws against: the rounded ceiling of every series.
+ *
+ * `categories` is the number of slots the chart paints — the labels it was
+ * given. A value past the last label draws nowhere, so it cannot raise the axis
+ * the painted bars are read against; without a count every value is measured,
+ * which is what a chart with no labels paints.
+ */
+export const chartScale = (
+  series: ReadonlyArray<ChartSeries>,
+  categories?: number,
+): number => niceCeiling(chartMaxOf(series, categories));
 
 /** How many category slots a series list spans, when the caller names none. */
 const categoryCount = (

@@ -360,6 +360,15 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   Direction measured: ignoring the count fails `reads a stack's axis against the
   totals, not its widest series` with `expected 500 to be 5`. 12 chart cases
   green.
+- **An axis is scaled by the slots it draws**: the same defect sat in
+  `chartScale`, which the grouped bar and the line use — `ChartFrame` passed
+  `labels.length` and the function dropped it, so `[3, 6, 999]` under two labels
+  painted 0.3px and 0.6px bars under a `1000` ceiling. `chartScale`, `seriesMax`
+  and `chartMaxOf` take the count through one `paintedValues` helper now. Two
+  directions measured: reverting it fails the new unit case (`expected 1000 to
+  be 10`) and both window cases (`99` for the no-bar-past-the-labels bar, and
+  the missing `tick-10`). 20 unit / 12 behaviour chart cases green.
+
 
 ## 5. Acceptance
 

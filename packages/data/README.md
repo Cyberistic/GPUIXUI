@@ -32,6 +32,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | Wheel moves every scrollable ancestor | `nested-scroll-lifecycle` | The table's `height` bounds the table; the body owns the vertical wheel. |
 | Chord presses arrive on `click` | `modifier-select-lifecycle` | Selection reads `event.modifiers.{shift,cmd,ctrl}`; the anchor rules are `selection/logic`. |
 | A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the core still holds the chosen ids, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
+| A sort is an order | `grid-core.test.ts`, `table.test.tsx` | A plain header press replaces the order; a Shift press appends the field as the next tie-break or flips it where it already sits. The core's sorted model walks every entry in turn, so records the primary sort ties are ordered by the second. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds, and only a **primary** press arms it: the runtime delivers `mouseDown` for all three buttons, so a right press — the context-menu gesture — and a middle one would otherwise start a resize. |
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
@@ -131,6 +132,28 @@ standing on (with the press's modifier flags, so Shift+Enter still extends a
 range). A focusable `div` has no activation of its own — only the pointer path
 runs `onClick` — so a walk that handled only the arrows left the row a reader
 Tabbed into as the one record the keyboard could not choose.
+
+Sorting is an **order**, not a field. `table.sort` is the primary sort and
+`table.sortOrder` is every entry the row model walks; a plain `TableSortHeader`
+press replaces the order, and a **Shift press** adds the column as the next
+tie-break (or flips it where it already sits). The header reports its press
+through `onSortPress` so the controller can compose it:
+
+```tsx
+<TableSortHeader
+  field="name"
+  label="Name"
+  sort={table.sort}
+  order={table.sortOrder}
+  onSortPress={table.pressSort}
+  width={260}
+/>
+```
+
+A consumer that owns one sort keeps the single-column callback —
+`onSort={(next) => setSort(Option.some(next))}` — and never passes `order`. The
+page is `docs/table-sorting.mdx`, and `src/behaviour/table.test.tsx` presses a
+second header with Shift and reads the tie-break out of the painted rows.
 
 A **checkbox column** is a fixed track at the head of the header and every row.
 The controller supplies the tri-state over the painted set, so the header cannot
@@ -377,10 +400,11 @@ labels and legend are text beside the plot:
 drawn from Effect or a store; `seriesColors(theme)` supplies the categorical
 palette every chart paints from. A **stacked** bar is one bar of its categories'
 totals, so its axis reads `stackedScale` — the ceiling of the tallest total, the
-same number the marks divide by (`chartScale`, the widest single value, is the
-grouped bar's and the line's). The axis column paints its ceiling at the plot's
-top and its floor on the plot's floor, so a bar's top reads against the value
-beside it. Every mark sits at the centre of its category slot — a bar, a line's
+same number the marks divide by (`chartScale`, the widest single value among the
+slots the chart paints, is the grouped bar's and the line's). A value past the
+last label draws nowhere, so it cannot raise the axis either. The axis column
+paints its ceiling at the plot's top and its floor on the plot's floor, so a
+bar's top reads against the value beside it. Every mark sits at the centre of its category slot — a bar, a line's
 point and the label under it share one `x` — so a series with fewer values than
 labels stays in the columns it names.
 
@@ -467,6 +491,7 @@ in the primitives' registry and a column width is data.
 | ------- | ----- |
 | Table core, fixed header, empty and loading states | shipped, window-verified |
 | Sort reducer + `TableSortHeader` | shipped, window-verified |
+| Multi-column sort (Shift press, `sortOrder`, `pressSort`) | shipped, window-verified |
 | Selection reducer + row paint + keyboard walk | shipped (the walk is composed in the example; `tabStop` names the one row stop, and no roving-focus API exists in the runtime) |
 | Selection column (`TableSelectionHeader`, `TableSelectionCell`) | shipped, window-verified |
 | Filter reducer + `TableFilterField` | shipped, window-verified |

@@ -55,7 +55,10 @@ its floor sits on the plot's floor — the same edge the bars stand on — so a
 bar's top is read against the number beside it.
 
 `labels` names the columns: a series with more values than labels paints only
-the labelled slots, and the extra values draw nowhere. A line's points sit at
+the labelled slots, and the extra values draw nowhere. An extra value cannot
+raise the axis either — the scale is measured over the slots the chart paints, so
+a stray `999` beside two labelled values of `3` and `6` scales the axis to `10`
+instead of flattening both bars under a `1000` ceiling. A line's points sit at
 the centre of their slot, like a bar and the label under it, so a series with
 fewer values than labels stays in the columns it names instead of stretching
 across the plot.
