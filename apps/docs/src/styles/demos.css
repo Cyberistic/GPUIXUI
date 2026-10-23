@@ -2167,6 +2167,17 @@
   color: var(--placeholder);
 }
 
+/*
+ * The class reference is a document table, not a specimen: the shared demo box
+ * centres its children, which would float the tables in the middle of the
+ * panel, so this one fills its box and reads from the left.
+ */
+.gx-demo.gx-style-reference {
+  display: block;
+  padding: 24px;
+  text-align: left;
+}
+
 /* ---- install / source blocks ---- */
 .gx-install-note {
   margin: 10px 0 0;

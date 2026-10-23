@@ -19,6 +19,7 @@
     "@gpuixui/media": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "effect": "catalog:",

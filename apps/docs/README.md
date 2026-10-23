@@ -248,6 +248,7 @@ src/components/docs/package-graph.tsx     The direction diagram below it, from t
 src/components/docs/type-scale.tsx        The typography specimen, from the theme
 src/components/docs/theme-matrix.tsx      The built-in themes, generated from the token package
 src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /docs/theming
+src/components/docs/style-reference.tsx   The class reference on /docs/styling, compiled from the theme
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
 src/components/docs/look-picker.tsx       The authored looks, as a control on /docs/theming
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered
@@ -388,6 +389,7 @@ src/lib/platform.ts                 The platform and look switch: parse, label, 
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/system-palette.ts           The desktop palette /docs/theming decodes and maps, from the shipped functions
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
+src/lib/style-reference.ts          The class groups /docs/styling prints, resolved by @gpuixui/tw
 src/lib/code-theme.ts               The Shiki themes a code block highlights with, from the syntax palette
 src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
@@ -557,6 +559,12 @@ No page restates what the code already says:
   page cannot call a row shipped while the inventory says `todo`.
 - **Typography and Theming** render specimens from the theme itself
   (`<TypeScale>`, `<TokenScales>`), so a token edit moves the page with it.
+- **Styling** (`/docs/styling`) compiles its class reference through
+  `@gpuixui/tw` against the resolved platform theme (`src/lib/style-reference.ts`),
+  so every printed height, corner and refusal reason is the release's own answer
+  and the platform switch repaints the table. The docs suite parses the
+  compiler's vocabulary out of `packages/tw/src/utilities.ts`, so a utility it
+  accepts without a row fails the docs until it is taught.
 - **License** (`/docs/license`) renders `LICENSES/*.md` through
   `<LicenseInventory>`; a record added beside the code appears with no docs
   change.

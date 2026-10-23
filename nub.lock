@@ -131,6 +131,9 @@ importers:
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
+      '@gpuixui/tw':
+        specifier: workspace:*
+        version: link:../../packages/tw
       '@tanstack/react-router':
         specifier: 'catalog:'
         version: 1.170.45(react@19.3.1)(react-dom@19.3.1(react@19.3.1))

@@ -13,6 +13,7 @@ import { LicenseInventory } from "./docs/license-table";
 import { LookPicker } from "./docs/look-picker";
 import { Pattern, PatternChoices } from "./docs/patterns";
 import { SeriesSwatches } from "./docs/series-swatches";
+import { StyleReference } from "./docs/style-reference";
 import { ThemeEditor } from "./docs/theme-editor";
 import { ThemeMatrix } from "./docs/theme-matrix";
 import { TokenScales } from "./docs/token-scales";
@@ -42,6 +43,7 @@ export const mdxComponents = {
   Pattern,
   PatternChoices,
   SeriesSwatches,
+  StyleReference,
   ThemeEditor,
   ThemeMatrix,
   TokenScales,
