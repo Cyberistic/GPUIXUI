@@ -23,6 +23,13 @@ import { ScrollProgress } from "@gpuixui/components/scroll-progress";
 </ScrollProgress>;
 ```
 
+## Keyboard
+
+The viewport is a tab stop that names itself a scroll region, so the same box
+the line reads is the one a keyboard reader moves: arrows scroll a row,
+PageUp/PageDown a page and Home/End the ends. `label` names the region as well
+as the reading line.
+
 ## API
 
 | Prop | Type | Default |
@@ -32,10 +39,13 @@ import { ScrollProgress } from "@gpuixui/components/scroll-progress";
 | `color` | `string` | `theme.colors.primary` |
 | `trackColor` | `string` | `theme.colors.muted` |
 | `label` | `string` | — |
+| `testId` | `string` | — |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
 
 ## Limitations
 
-- No keyboard scrolling; use `ScrollArea`.
 - No tween; the line follows the offset.
 - Vertical only.
 - No `aria-valuenow`; the reading is text.
+- The scrollbar's thumb takes no pointer input; the wheel and the keys are the routes.

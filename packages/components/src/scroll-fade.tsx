@@ -18,7 +18,7 @@
  * on a tween. The measurement lives in `internal/scroll-surface.tsx`.
  */
 
-import type { Props, StyleDesc } from "@gpuix/react";
+import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { ScrollSurface } from "./internal/scroll-surface.js";
@@ -31,8 +31,12 @@ import {
 } from "./scroll/metrics.js";
 
 /** {@link ScrollFade} props. */
-export interface ScrollFadeProps extends Omit<Props, "children" | "style"> {
+export interface ScrollFadeProps {
   readonly children?: ReactNode;
+  /** The scroller's locator, for a probe or an automation host. */
+  readonly testId?: string;
+  /** The scroll region's accessible name. Default: the primitives' "Scroll region". */
+  readonly label?: string;
   /**
    * The colour a fading edge settles into — the surface behind the content.
    * Defaults to the theme's `background` role.
@@ -90,7 +94,7 @@ export const ScrollFade = ({
   className,
   style,
   testId,
-  ...rest
+  label,
 }: ScrollFadeProps) => {
   const theme = useTheme();
   const base = testId ?? "scroll-fade";
@@ -100,8 +104,8 @@ export const ScrollFade = ({
 
   return (
     <ScrollSurface
-      {...rest}
       testId={testId}
+      label={label}
       className={className}
       style={style}
       chrome={(metrics) => (
@@ -138,8 +142,8 @@ export const scrollFadeMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the edges toggle with the offset instead of animating: a scroll position is a direct reading, and the runtime has no gradient animation",
-    "the box scrolls by wheel and scrollbar only; it is not a keyboard scroll region (use ScrollArea for that)",
     "the fade is vertical; a horizontal rail needs the gradient on the other axis",
+    "the scrollbar's thumb takes no pointer input; the wheel and the keyboard region are the routes",
   ],
   docs: "docs/scroll-fade.mdx",
   example: "examples/scroll-fade.example.tsx",

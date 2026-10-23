@@ -20,7 +20,7 @@
  * `internal/scroll-surface.tsx`.
  */
 
-import type { Props, StyleDesc } from "@gpuix/react";
+import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { ScrollSurface } from "./internal/scroll-surface.js";
@@ -31,8 +31,10 @@ import { scrollSize, type ScrollMetrics } from "./scroll/metrics.js";
 export type ScrollProgressSide = "top" | "bottom";
 
 /** {@link ScrollProgress} props. */
-export interface ScrollProgressProps extends Omit<Props, "children" | "style"> {
+export interface ScrollProgressProps {
   readonly children?: ReactNode;
+  /** The scroller's locator, for a probe or an automation host. */
+  readonly testId?: string;
   /** The edge the line sits on. Default `"bottom"`. */
   readonly side?: ScrollProgressSide;
   /** The line's thickness in pixels. Default `3`. */
@@ -117,15 +119,14 @@ export const ScrollProgress = ({
   className,
   style,
   testId,
-  ...rest
 }: ScrollProgressProps) => {
   const theme = useTheme();
   const base = testId ?? "scroll-progress";
 
   return (
     <ScrollSurface
-      {...rest}
       testId={testId}
+      label={label}
       className={className}
       style={style}
       chrome={(metrics) => (
@@ -153,7 +154,7 @@ export const scrollProgressMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the line follows the offset instead of tweening to it: a scroll position is a direct reading",
-    "the box scrolls by wheel and scrollbar only; it is not a keyboard scroll region (use ScrollArea for that)",
+    "the region is vertical only, and an arrow key moves it by the primitives' row height",
     "the runtime exposes no aria-valuenow, so the reading is announced through aria-valuetext",
   ],
   docs: "docs/scroll-progress.mdx",

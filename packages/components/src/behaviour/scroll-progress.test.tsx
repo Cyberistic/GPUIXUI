@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { ScrollProgress } from "../scroll-progress.js";
-import { settle } from "../internal/interaction.js";
+import { pressKey, settle } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -145,6 +145,30 @@ describe("ScrollProgress", () => {
       settle(page);
       settle(page);
       expect(widthOf(page)).toBe(0.7);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("reads the same box the keyboard scrolls", () => {
+    const page = renderComponent(<Reader />);
+    try {
+      settle(page);
+      settle(page);
+      const id = elementId(page, "progress");
+      page.renderer.focusElement(id);
+
+      pressKey(page, "Down");
+      settle(page);
+      expect(widthOf(page)).toBeGreaterThan(0);
+
+      pressKey(page, "End");
+      settle(page);
+      expect(widthOf(page)).toBe(1);
+
+      pressKey(page, "Home");
+      settle(page);
+      expect(widthOf(page)).toBe(0);
     } finally {
       page.unmount();
     }

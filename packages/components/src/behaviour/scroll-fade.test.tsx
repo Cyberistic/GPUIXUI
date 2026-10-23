@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { ScrollFade } from "../scroll-fade.js";
-import { settle } from "../internal/interaction.js";
+import { pressKey, settle } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -117,6 +117,30 @@ describe("ScrollFade", () => {
           { color: "#10101000", position: 1 },
         ],
       });
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("follows the keyboard scroll the same box answers", () => {
+    const page = renderComponent(<Reader />);
+    try {
+      settle(page);
+      settle(page);
+      page.renderer.focusElement(elementId(page, "fade"));
+
+      pressKey(page, "Down");
+      settle(page);
+      expect(has(page, "fade-top")).toBe(true);
+
+      pressKey(page, "End");
+      settle(page);
+      expect(has(page, "fade-bottom")).toBe(false);
+
+      pressKey(page, "Home");
+      settle(page);
+      expect(has(page, "fade-top")).toBe(false);
+      expect(has(page, "fade-bottom")).toBe(true);
     } finally {
       page.unmount();
     }

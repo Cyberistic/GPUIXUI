@@ -23,18 +23,27 @@ import { ScrollFade } from "@gpuixui/components/scroll-fade";
 </ScrollFade>;
 ```
 
+## Keyboard
+
+The viewport is a tab stop that names itself a scroll region. Arrows move it a
+row, PageUp/PageDown move it a page and Home/End go to the ends through GPUix's
+own `scrollTo`; a key aimed at a control inside the box stays with that control.
+Pass `label` to name the region.
+
 ## API
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `color` | `string` | theme `background` |
 | `edgeSize` | `number` | `32` |
+| `label` | `string` | the runtime's "Scroll region" |
+| `testId` | `string` | — |
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
 
 ## Limitations
 
-- No keyboard scrolling; use `ScrollArea`.
 - Vertical only.
 - No animation; the strips toggle with the offset.
 - The strips paint over the content.
+- The scrollbar's thumb takes no pointer input; the wheel and the keys are the routes.
