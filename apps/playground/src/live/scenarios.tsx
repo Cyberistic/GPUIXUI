@@ -1067,6 +1067,10 @@ import {
   hiddenSubtreeSteps,
 } from "./hidden-subtree-probe.js";
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
+import {
+  NotificationCentreProbe,
+  notificationCentreSteps,
+} from "./notification-centre-probe.js";
 import { FadedHitboxProbe, fadedHitboxSteps } from "./opacity-hit-probe.js";
 import { EmptyErrorProbe, emptyErrorSteps } from "./empty-error-probe.js";
 import { BlurDeliveryProbe, blurDeliverySteps } from "./blur-delivery-probe.js";
@@ -29359,6 +29363,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "crop-overlay",
     view: () => <CropOverlayProbe />,
     steps: cropOverlaySteps,
+  },
+  "notification-centre-lifecycle": {
+    id: "notification-centre-lifecycle",
+    view: () => <NotificationCentreProbe />,
+    steps: notificationCentreSteps,
   },
   "faded-hitbox-lifecycle": {
     id: "faded-hitbox-lifecycle",

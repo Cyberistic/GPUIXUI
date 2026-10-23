@@ -169,6 +169,12 @@ export const liveRegistry = [
     capability: "overlay",
   },
   {
+    id: "notification-centre-lifecycle",
+    title:
+      "Overlay: the toast store keeps three cards and expires the oldest, so a centre panel owns the history while the viewport paints the live stack",
+    capability: "overlay",
+  },
+  {
     id: "command-palette",
     title:
       "Workspace: the shipped CommandMenu filters by typing, highlights without moving focus, and runs the highlighted action",

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-110 probes a real window can prove, of which twenty-one mount shipped
+111 probes a real window can prove, of which twenty-one mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -1674,6 +1674,50 @@ viewport and `getPaintedText()` was empty for the panel. Two sibling host elemen
 root: every probe here mounts exactly one wrapper element, and the toast provider
 is mounted inside it. This is a runtime quirk, not a probe workaround — record it
 before nesting a provider at a window's root.
+
+### `notification-centre-lifecycle` — measured on 0.11.0 here
+
+Tier 5's **Notification centre** row was `?` — "composition over toasts +
+panels" — and the composition had never been painted. The measurement is about
+**storage**, not styling: the shipped toast store keeps three cards
+(`DEFAULT_MAX = 3`) and expires the oldest when a fourth arrives, so the toast
+half can be the alerting surface but not the history. The probe mounts the
+shipped `ToastProvider`/`ToastViewport` beside an app-owned centre panel that
+records every title it pushed, and then asks which half paints what.
+
+| Step | Check |
+| ---- | ----- |
+| mount | `queued=0 ids=none`, the panel paints `No notices yet`, no card paints |
+| push one | `queued=1 ids=1`, the viewport paints its title and the centre keeps it |
+| push two more | `queued=3 ids=1,2,3`; every card paints, one width and right edge, 12px apart in push order |
+| push a fourth | `queued=3 ids=2,3,4`; card 1 unpaints, its title leaves the viewport, and the **centre still lists it** |
+| press the live card's action | `actions=1`, the queue is `ids=3,4`, and the survivors reflow into one column |
+| press the app's clear | `queued=0 ids=none` and no card paints once the exit window ends |
+| push the 700 ms transient | it queues and paints, then `queued=0 ids=none` **without a press** |
+
+30 checks, `--only notification-centre-lifecycle`, green on 0.11.0 here
+(~7 s, three captures). The live negative control, measured: expecting the
+fourth push to stay live (`queued=4 ids=1,2,3,4`) fails
+`a fourth press expires the oldest card: expected "queued=4 ids=1,2,3,4",
+got "queued=3 ids=2,3,4"` (exit `1`), so the step reads the store's bound rather
+than the fixture's own number. Fixture: `src/live/notification-centre.ts` (the
+titles and tones, the locators, the queue model, the stack geometry and the
+readouts) + `notification-centre.test.ts` (the bounded queue, both stack
+directions, the action count, the registry entry, the probe's wiring and this
+section's numbers). The view and the steps live in
+`src/live/notification-centre-probe.tsx`. Evidence:
+`.artifacts/live/notification-stack.png`,
+`.artifacts/live/notification-expired.png` and
+`.artifacts/live/notification-transient.png`.
+
+Two honest limits. The **card's own dismiss control** is `toast-lifecycle`'s
+measurement (one card, its `Dismiss` press); this probe clears the queue with
+the app's `useToast().dismissAll` after measuring the action's single report,
+because every card carries the same `toast-dismiss` locator and an automation
+press cannot say which card it means. And the centre is **in-window only**: the
+binding publishes no notification API (`@gpuix/native@0.11.0`'s `index.d.ts` has
+no notification method), so an OS-level notification is not a surface this
+probe can compose.
 
 ### `command-palette` — measured on 0.11.0 here
 
@@ -6361,6 +6405,8 @@ src/live/table-filter.ts the filtered-grid fixture: the label match, the selecti
 src/live/table-columns.ts the configurable-grid fixture: widths, column offsets, the pan end and the column move
 src/live/crop-overlay.ts the crop frame's mask, handle and clamp arithmetic
 src/live/crop-overlay-probe.tsx the crop overlay's view and steps (one module)
+src/live/notification-centre.ts the notification queue's bound, stack geometry and readouts
+src/live/notification-centre-probe.tsx the notification centre's view and steps (one module)
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -6426,8 +6472,8 @@ narrower. Each deviation is deliberate and measured:
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
-  and `z-index-lifecycle` and `floating-reflow-lifecycle` (fifty-two probes, each
-  run alone).
+  and `z-index-lifecycle` and `floating-reflow-lifecycle` and
+  `notification-centre-lifecycle` (fifty-three probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
