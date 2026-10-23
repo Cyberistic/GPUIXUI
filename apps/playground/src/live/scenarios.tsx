@@ -1022,6 +1022,7 @@ import {
 } from "./hidden-subtree-probe.js";
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import { FadedHitboxProbe, fadedHitboxSteps } from "./opacity-hit-probe.js";
+import { EmptyErrorProbe, emptyErrorSteps } from "./empty-error-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -28517,5 +28518,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "faded-hitbox-lifecycle",
     view: () => <FadedHitboxProbe />,
     steps: fadedHitboxSteps,
+  },
+  "empty-error-states-lifecycle": {
+    id: "empty-error-states-lifecycle",
+    view: () => <EmptyErrorProbe />,
+    steps: emptyErrorSteps,
   },
 };

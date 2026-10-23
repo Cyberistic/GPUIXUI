@@ -93,6 +93,8 @@ describe("live probe documentation", () => {
       "tabs and panel switching",
       "theme switching",
       "table sort/selection",
+      "filtering/search",
+      "empty and error states",
       "panel resizing",
       "workspace restore",
     ]);

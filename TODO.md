@@ -1595,7 +1595,39 @@ data workstream's, recorded in `TODO.md` → Interlocks.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 140/140
+`[x]` `[██████████]` 141/141
+
+`[x]` Measure the **two fallback panels a collection shows** — MISSION lists
+      **empty and error states** among the interactions tested in the real
+      runtime, and neither had been driven: the shipped `EmptyState` was only
+      mounted by `examples-mount`, and `validation-lifecycle` measures a *field's*
+      schema message, not the panel a list falls back to. The
+      `empty-error-states-lifecycle` live probe starts on a failed load (the
+      shipped `Alert`, destructive tone, with its retry action), presses out to
+      the empty collection (the shipped `EmptyState`) and presses again to paint
+      the first record, reading each state's paint from a capture: the alert
+      paints its destructive soft role `#7E1D21` with the readable ink
+      `#FFE0E0` inside it and Retry `#A7A9FF`; the retry press leaves the alert
+      with **no box**, paints the empty title and explanation, and a point 8pt
+      inside the empty root is the panel's own `popover` fill `#222730` (the
+      component paints no surface of its own); the empty action paints
+      `#A7A9FF` and its press leaves the empty state with no box while the record
+      paints its `success` fill `#3BC97F`. 33 checks, `--only
+      empty-error-states-lifecycle`, green on 0.11.0 (~3.8 s, three captures).
+      Fixture `src/live/empty-error.ts` + `empty-error.test.ts` (13 cases: the
+      state machine, the readout, the roles held to `statusTone` and the palette,
+      the sample insets, both actions wired to the press, the three captures, the
+      absent-surface and recovery assertions, the registry entry and the README's
+      count, roles, critical-interaction row and section). Two negative controls
+      measured, exit `1` each, restored green: overriding the alert's surface
+      with the panel's fill fails `the error paints the destructive soft role`
+      (`expected false, got true`), and giving `EmptyState` a surface fails `the
+      empty state paints no surface of its own` (the same reading). The
+      critical-interaction table gained this row and a **filtering/search** row
+      (`table-filter-lifecycle`, `find-highlight`) whose interactions MISSION also
+      lists but the table had omitted; `registry.test.ts` holds both. Evidence:
+      `apps/playground/README.md` §`empty-error-states-lifecycle`,
+      `.artifacts/live/empty-error-{error,empty,ready}.png`
 
 `[x]` Measure the **tip's entry frame by frame** — the primitives' `Tooltip`
       fades on the `fast` level and travels `TOOLTIP_OFFSET` points, and the
@@ -8029,14 +8061,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
     §Columns paragraph and the Tier 3 **Resizable columns** row state it.
     Owner: data.
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
-`[x]` Verify critical interactions in the real runtime — MISSION's nine
-      representative interactions each map to live probes in
-      `apps/playground/README.md` §The critical interactions, and
+`[x]` Verify critical interactions in the real runtime — MISSION's eleven
+      representative interactions now map to live probes in
+      `apps/playground/README.md` §The critical interactions (**filtering/search**
+      and **empty and error states** joined the nine the table already had), and
       `src/live/registry.test.ts` fails when a row loses its probes or names an
       id the registry does not declare. Every cited probe has a `measured on
       0.11.0` section: the last full pass was 58/58, the probes measured alone
-      since then are listed in the same README bullet, and `markdown-fence`
-      joined that list this turn. Owner: playground
+      since then are listed in the same README bullet, and
+      `empty-error-states-lifecycle` joined that list this turn. Owner: playground
 
 ## Phase E — specialised components
 

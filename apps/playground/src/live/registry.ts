@@ -642,6 +642,12 @@ export const liveRegistry = [
       "Input: a box at opacity zero paints nothing yet keeps its tab stop, its press and its keys, so only an opt-out lets a press through a ghost",
     capability: "input",
   },
+  {
+    id: "empty-error-states-lifecycle",
+    title:
+      "Layout: a failed load paints its error surface and recovers, an empty panel paints no surface of its own, and both actions are real controls",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

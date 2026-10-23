@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-101 probes a real window can prove, of which nineteen mount shipped
+102 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -797,6 +797,8 @@ does not declare — so a rename cannot quietly retire an interaction.
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
+| filtering/search | `table-filter-lifecycle`, `find-highlight` | a query narrows the table to the records it matches and a cleared query restores them; a search surface paints the theme's resting wash for a match and a stronger one for the active match, and the runtime's own palette stays absent |
+| empty and error states | `empty-error-states-lifecycle`, `validation-lifecycle` | a failed load paints the destructive soft surface and a readable title, Retry replaces it with the empty panel (which paints no surface of its own), and its action paints the first record; a failed form submit paints the schema's message and a valid value clears it |
 | panel resizing | `split-pane-lifecycle` | a divider drag resizes the pane and clamps at the caller's bounds |
 | workspace restore | `workspace-restore` | a saved arrangement paints again after a re-mount, a corrupt string opens the default, and an out-of-bounds width is clamped |
 
@@ -5680,6 +5682,48 @@ the target. Exit `1`; restored, green.
 
 Captures: `.artifacts/live/faded-hitbox{,-pressed}.png`.
 
+### `empty-error-states-lifecycle` — measured on 0.11.0 here
+
+**Do a collection's two fallback panels actually work in a window?** MISSION
+names **empty and error states** among the interactions a real runtime has to
+verify, and neither had been driven here: the shipped `EmptyState` was only
+mounted by `examples-mount`, and `validation-lifecycle` measures a field's schema
+message rather than the panel a list shows when a load fails or nothing exists.
+The probe starts on the failed load, presses its way out to the empty collection,
+and presses again to paint the first record — so the two actions are proved to be
+real controls, and the paint of each state is read from a captured frame rather
+than inferred from the readout.
+
+| Step | Measured |
+| ---- | -------- |
+| the panel opens on the failed load | the shipped `Alert` paints its destructive soft surface `#7E1D21`, the title's readable ink `#FFE0E0` is found inside the alert's box, and Retry paints its filled role `#A7A9FF` |
+| the press on Retry | the readout moves to `state=empty`, the alert reports **no box**, and the empty panel paints its title and explanation |
+| the empty panel's own surface | a point **8pt** inside its root is the panel's own `popover` fill `#222730` — `EmptyState` paints no surface of its own, so the floating panel behind it is the only paint there |
+| the press on New project | the readout moves to `state=ready`, the empty panel reports **no box**, and the record paints its `success` fill `#3BC97F` under its name |
+| both ways out | both actions are the shipped `Button`; each press replaces the previous state rather than painting beside it, so an empty or failed screen is not a dead end |
+
+33 checks, `--only empty-error-states-lifecycle`, green on 0.11.0 here (~3.8 s,
+three captures). Fixture: `src/live/empty-error.ts` (the three states, the ids,
+the copy, the roles, the sample insets, the readout and the check count) +
+`empty-error.test.ts` (13 cases: the state machine, the readout, the roles held to
+`statusTone` and the palette, the sample insets, both actions wired to the press,
+the three captures, the absent-surface and recovery assertions, the registry
+entry and this section with its count, roles and critical-interaction row).
+Evidence: `.artifacts/live/empty-error-{error,empty,ready}.png`.
+
+What it settles, for a consumer building a list or table fallback:
+
+1. **An error state is a surface plus a way out.** The shipped `Alert` carries
+   the destructive tone's soft role and readable ink, and its retry action is a
+   filled `Button` — a panel that paints the message without a pressable action
+   cannot recover, which is why both actions are pressed here.
+2. **An empty state is not a surface.** `EmptyState` reserves its padding and
+   paints nothing behind it, so the collection's own fill shows through; a
+   consumer puts it inside a `Card` or pane rather than giving it a background.
+3. **A recovery unmounts the state it replaces.** Both presses leave no box for
+   the state they came from, so a stale alert or empty panel cannot linger under
+   the new content.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5908,8 +5952,8 @@ narrower. Each deviation is deliberate and measured:
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
   `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
-  `faded-hitbox-lifecycle` and `markdown-fence` (forty-three probes, each run
-  alone).
+  `faded-hitbox-lifecycle` and `markdown-fence` and
+  `empty-error-states-lifecycle` (forty-four probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
