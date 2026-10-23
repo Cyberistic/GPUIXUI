@@ -3,12 +3,15 @@
  *
  * The bug guarded: `onFileDrop` hands the zone absolute paths, and the zone must
  * report them to `onDrop` as `{ files }` with a basename each, never as the raw
- * path array. The negative controls are the disabled zone (which must refuse a
- * drop) and the resting vs. hovered border (the highlight is a real, distinct
- * state).
+ * path array. A zone disabled while the pointer was over it also kept
+ * advertising a drop: the paint read the hover flag regardless of `disabled` and
+ * the leave handler was gated on `!disabled`, so the flag survived a pointer
+ * that left during the disabled window. The negative controls are the disabled
+ * zone (which must refuse a drop) and the resting vs. hovered border (the
+ * highlight is a real, distinct state).
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { renderDropZone, type DropPayload } from "./drop-zone.js";
@@ -141,5 +144,48 @@ describe("DropZone", () => {
       eventType: "fileDrop",
     });
     expect(dropped).toBe(false);
+  });
+
+  it("paints a disabled zone at rest even while the hover flag is set", () => {
+    const disabled = renderDropZone(
+      { label: "Drop files", onDrop: noop, disabled: true },
+      lightTheme,
+      surface(true),
+    );
+    expect(hostStyleString(disabled, "borderColor")).toStrictEqual(
+      Option.some(lightTheme.colors.borderStrong),
+    );
+    expect(hostStyleString(disabled, "backgroundColor")).toStrictEqual(
+      Option.some(lightTheme.colors.muted),
+    );
+    // The negative control: the same flag on an enabled zone is the highlight.
+    const enabled = renderDropZone(
+      { label: "Drop files", onDrop: noop },
+      lightTheme,
+      surface(true),
+    );
+    expect(hostStyleString(enabled, "backgroundColor")).toStrictEqual(
+      Option.some(lightTheme.colors.accent),
+    );
+  });
+
+  it("clears a hover that ends while the zone is disabled", () => {
+    const entered = vi.fn();
+    const left = vi.fn();
+    const root = renderDropZone(
+      { label: "Drop files", onDrop: noop, disabled: true },
+      lightTheme,
+      { hovered: false, onEnter: entered, onLeave: left },
+    );
+    expectSome(hostHandler(root, "onMouseEnter"))({
+      elementId: 1,
+      eventType: "mouseEnter",
+    });
+    expectSome(hostHandler(root, "onMouseLeave"))({
+      elementId: 1,
+      eventType: "mouseLeave",
+    });
+    expect(entered).not.toHaveBeenCalled();
+    expect(left).toHaveBeenCalledTimes(1);
   });
 });

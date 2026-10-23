@@ -47,7 +47,7 @@ export interface DropZoneProps extends Omit<Props, "children"> {
   readonly onPick?: () => void;
   /** The pick button's label. Default `"Choose files"`. */
   readonly pickLabel?: string;
-  /** Refuse drops and the pick; the zone stays a painted region. */
+  /** Refuse drops and the pick; the zone paints at rest, without the highlight. */
   readonly disabled?: boolean;
   readonly className?: string;
 }
@@ -107,6 +107,10 @@ export const renderDropZone = (
     onFileDrop,
     ...rest
   } = props;
+  // A zone that refuses a drop must not advertise one: the highlight is the
+  // promise of an action, so a disabled zone paints at rest even while the
+  // wrapper still holds the last hover flag.
+  const highlighted = surface.hovered && !disabled;
 
   return (
     <div
@@ -118,7 +122,9 @@ export const renderDropZone = (
         onMouseEnter?.(event);
       }}
       onMouseLeave={(event) => {
-        if (!disabled) surface.onLeave();
+        // Always clear: a pointer that leaves during the disabled window would
+        // otherwise leave the flag set for a zone re-enabled later.
+        surface.onLeave();
         onMouseLeave?.(event);
       }}
       onFileDrop={(event) => {
@@ -128,7 +134,7 @@ export const renderDropZone = (
       style={mergeStyles(
         mergeStyles(
           recipeStyle(cn("rounded-lg", className), theme),
-          zoneStyle(theme, surface.hovered),
+          zoneStyle(theme, highlighted),
         ),
         style,
       )}
