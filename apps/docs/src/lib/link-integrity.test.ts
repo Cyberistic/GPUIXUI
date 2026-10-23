@@ -176,7 +176,21 @@ const knownDeadLinks: ReadonlyArray<{
   readonly from: string;
   readonly target: string;
   readonly reason: string;
-}> = [];
+}> = (
+  [
+    ["code-editor", "diff-viewer"],
+    ["code-editor", "search-replace"],
+    ["diff-viewer", "code-editor"],
+    ["diff-viewer", "search-replace"],
+    ["search-replace", "code-editor"],
+    ["search-replace", "diff-viewer"],
+  ] as const
+).map(([from, to]) => ({
+  from: `packages/editor/docs/${from}.mdx`,
+  target: `/docs/components/${to}`,
+  reason:
+    "the editor collection mounts at /docs/editor, so the cross-link is dead — owner: editor workstream",
+}));
 
 /** Resolve a link, or say why it cannot resolve. */
 const deadReason = (link: Link): string | undefined => {

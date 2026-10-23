@@ -79,7 +79,18 @@ interface KnownGap {
  * case below fails once the owner adds the section, so the entry is deleted in
  * the same change.
  */
-const knownGaps: ReadonlyArray<KnownGap> = [];
+const knownGaps: ReadonlyArray<KnownGap> = [
+  {
+    page: "packages/dock/docs/dock-layout.mdx",
+    section: "accessibility or limitations",
+    owner: "dock workstream",
+  },
+  {
+    page: "packages/dock/docs/panel-group.mdx",
+    section: "accessibility or limitations",
+    owner: "dock workstream",
+  },
+];
 
 const missing = pages.flatMap((page) =>
   sections.flatMap((section) =>

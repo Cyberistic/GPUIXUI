@@ -705,8 +705,10 @@ floor, so a walk that stopped matching cannot pass. It found one page without
 `## Related` (`packages/components/docs/message-scroller.mdx`); the page names
 its siblings now and `packages/components/src/docs.test.ts` holds every
 components page to a `## Related` section, so the defect is closed at its owner
-as well as here. The guard's known-gap ledger is the only place a gap lives,
-and it is empty today; a gap that is fixed deletes its entry in the same change
+as well as here. The guard's known-gap ledger is the only place a gap lives.
+Today it carries the two dock pages (`dock-layout.mdx`, `panel-group.mdx`) that
+have no accessibility or limitations section, owned by the dock workstream and
+recorded in `TODO.md`; a gap that is fixed deletes its entry in the same change
 — the ledger cannot outlive a fix.
 
 ## The getting-started page
