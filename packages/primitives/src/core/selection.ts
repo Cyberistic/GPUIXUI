@@ -12,6 +12,7 @@
 import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
 import {
+  disabledOpacity,
   filledHover,
   filledPressed,
   targetInset,
@@ -134,7 +135,10 @@ export const selectionBoxStyle = (
       : { backgroundColor: pressWash(theme) },
   };
   if (spec.disabled === true) {
-    style.opacity = 0.5;
+    // The fade's share is the token package's: `disabledFadeFailures`
+    // composites that number, so a literal here would keep the old value when
+    // the constant moves.
+    style.opacity = disabledOpacity;
     // A disabled control must not respond to the pointer at all.
     style.hover = {
       backgroundColor: filled(spec) ? role.background : undefined,
@@ -262,7 +266,7 @@ export const switchTrackStyle = (
       : { backgroundColor: pressWash(theme) },
   };
   if (spec.disabled === true) {
-    style.opacity = 0.5;
+    style.opacity = disabledOpacity;
     style.hover = {
       backgroundColor: filled(spec) ? role.background : theme.colors.muted,
       borderColor: filled(spec) ? role.background : emptyBorder,

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import {
   contrastFloorsFor,
   contrastRatio,
   darkTheme,
+  disabledOpacity,
   filledHover,
   filledPressed,
   lightTheme,
@@ -170,10 +172,38 @@ describe("selectionBoxStyle", () => {
 
   it("removes pointer feedback while disabled", () => {
     const style = selectionBoxStyle(spec({ disabled: true }), testTheme);
-    expect(style.opacity).toBeLessThan(1);
+    expect(style.opacity).toBe(disabledOpacity);
     expect(style.cursor).toBe("not-allowed");
     expect(style.hover?.borderColor).toBe(testTheme.colors.borderStrong);
     expect(style.hover?.backgroundColor).toBeUndefined();
+  });
+
+  it("writes a disabled fade from the token package's share, not a copy", () => {
+    // The bug guarded: the box and the switch track faded themselves with a
+    // written `0.5`, while `@gpuixui/tokens`' `disabledFadeFailures` composites
+    // `disabledOpacity`. The two agree today, so nothing painted differently —
+    // but the fade's share would drift the moment the constant moved, and a
+    // control's fade is the mechanism that contract measures. The tokens'
+    // guard only reads `core/style.ts`, so these two sites had no reader.
+    const source = readFileSync(
+      new URL("./selection.ts", import.meta.url),
+      "utf8",
+    );
+    expect(source).toMatch(
+      /import\s*\{[^}]*\bdisabledOpacity\b[^}]*\}\s*from\s*"@gpuixui\/tokens"/,
+    );
+    const writes = [...source.matchAll(/style\.opacity = ([^;]+);/g)].map(
+      ([, written]) => written,
+    );
+    expect(writes).toHaveLength(2);
+    expect(writes).not.toContain("0.5");
+    writes.forEach((written) => expect(written).toBe("disabledOpacity"));
+    // Both states paint it: the checkbox/radio box and the switch's track. A
+    // resolver that grew a third fade would fail the count above until the
+    // share it writes is the package's.
+    expect(switchTrackStyle(spec({ disabled: true }), testTheme).opacity).toBe(
+      disabledOpacity,
+    );
   });
 
   it("honours a destructive accent over the brand", () => {
