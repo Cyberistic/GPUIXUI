@@ -702,6 +702,12 @@ export const liveRegistry = [
       "Floating: an open panel rests with the anchor a window reflow lays out again, on both the primitive and the shipped popover",
     capability: "floating",
   },
+  {
+    id: "sidebar-clip-lifecycle",
+    title:
+      "Panel: a collapsing sidebar's outer clip hides its content in the paint and the press, not only in the layout report",
+    capability: "panel",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
