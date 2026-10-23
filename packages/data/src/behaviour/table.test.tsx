@@ -210,7 +210,7 @@ describe("the example table", () => {
   });
 
   it("derives the rule from the fill the row wears", () => {
-    // The raw `border` role is under the 1.05:1 floor on 17 of the 64 shipped
+    // The raw `border` role is under the 1.05:1 floor on 22 of the 90 shipped
     // wash placements, so a rule painted raw disappears on the row the reader
     // is looking at. The row asks `dividerOn` for the surface it crosses — and
     // the dark theme's `accent` is one of the placements the authored role

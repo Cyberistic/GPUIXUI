@@ -386,6 +386,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   child. Directions measured: at `HEAD` the new unit case fails `expected 2 to
   be 1` and the window case fails on the clause the Remove should have taken;
   with the descent, 29 unit and 9 behaviour cases green.
+- **A Tier 3 row's divider count is the contract's, not the style set it remembered**:
+  the `Tables` row said the raw `border` misses "20 of the 80" (the painter's JSDoc
+  said 17 of the 64) while `dividerFailures` measures **22 of 90** over eighteen
+  styles. `src/table/divider-counts.test.ts` derives the style set, the washes and
+  the derived presses from `@gpuixui/tokens`, pins 18/90/22, proves `dividerOn`
+  answers every placement, and holds the **specific** `| Tables |` row — found by
+  its own prefix — plus `table/table.tsx`, `docs/table-selection.mdx` and the
+  behaviour premise to the number while refusing both retracted ones. The tokens
+  guard's whole-file search was satisfied by the `Decorative surfaces` row, which
+  is why the Tier 3 row needs its own reader. Directions measured: all three cases
+  fail on the old text; with it, the package is 19 files / 167 tests.
 
 
 ## 5. Acceptance

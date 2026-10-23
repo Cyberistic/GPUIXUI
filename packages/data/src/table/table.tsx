@@ -372,7 +372,7 @@ export const TableRow = ({
    *
    * A row is a surface of its own: a chosen row fills `selected`, the pointer
    * tints `accent`, and a press repaints the derived wash. The raw `border`
-   * role is under the 1.05:1 floor on 17 of the 64 shipped wash placements, so
+   * role is under the 1.05:1 floor on 22 of the 90 shipped wash placements, so
    * the rule is `dividerOn`'s — `border` stepped toward `borderStrong` until it
    * clears the wash it crosses, and the authored role where it already does.
    */
