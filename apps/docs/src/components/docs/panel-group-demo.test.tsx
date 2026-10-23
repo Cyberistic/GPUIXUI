@@ -241,5 +241,8 @@ describe("the PanelGroup preview", () => {
     // The policy's approximation claim is the page's to print.
     expect(page).toContain("620");
     expect(page).toContain("onLayout");
+    // The drawn header is a real button where the shipped one is the primitive.
+    expect(page).toContain("real `<button>`");
+    expect(page).toContain("primitives' `Button`");
   });
 });

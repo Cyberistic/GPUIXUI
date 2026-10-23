@@ -43,3 +43,4 @@ const [layout, setLayout] = useState(initial);
 - Fractions need not sum to one; `normalizePanels` rescales them.
 - A collapsed pane's content leaves the tree and the remaining panes fill the gap.
 - The preview is a fixed 620px drawing: a divider's 16px step is converted against that frame, while the shipped group measures its own pane space in `onLayout`.
+- The preview's collapse header is a real `<button>`; the shipped pane header is the primitives' `Button`, so the two agree about activation and differ about the element.

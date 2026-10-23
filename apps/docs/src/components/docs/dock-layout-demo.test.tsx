@@ -167,5 +167,8 @@ describe("the DockLayout preview", () => {
     expect(page).toContain("620");
     expect(page).toContain("onLayout");
     expect(page).toContain("one-level tree");
+    // The drawn tab is a real button in a tablist, not the shipped div.
+    expect(page).toContain("real `<button>`s in a `tablist`");
+    expect(page).toContain('div role="tab"');
   });
 });
