@@ -368,13 +368,19 @@ export const StackedBar = (props: StackedBarProps) => (
 /** {@link LineChart} props. */
 export type LineChartProps = ChartProps;
 
-/** One path per series through its points, left to right. */
+/**
+ * One path per series through its points, left to right.
+ *
+ * The path is spaced over the **labelled** categories, like the bars, so a
+ * point sits above its own label and a series with values past the last label
+ * draws only the labelled ones.
+ */
 export const LineChart = (props: LineChartProps) => (
   <ChartFrame
     {...props}
     marks={(box, scale) =>
       Arr.map(props.series, (one) =>
-        Option.match(linePath(one.values, box, scale), {
+        Option.match(linePath(one.values, box, scale, props.labels.length), {
           onNone: () => [],
           onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
         }),

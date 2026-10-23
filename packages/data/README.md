@@ -356,7 +356,9 @@ totals, so its axis reads `stackedScale` — the ceiling of the tallest total, t
 same number the marks divide by (`chartScale`, the widest single value, is the
 grouped bar's and the line's). The axis column paints its ceiling at the plot's
 top and its floor on the plot's floor, so a bar's top reads against the value
-beside it.
+beside it. Every mark sits at the centre of its category slot — a bar, a line's
+point and the label under it share one `x` — so a series with fewer values than
+labels stays in the columns it names.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

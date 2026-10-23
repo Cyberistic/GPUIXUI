@@ -195,14 +195,31 @@ describe("the bar marks", () => {
 });
 
 describe("the line and ring marks", () => {
-  it("runs a path through every point", () => {
+  it("runs a path through every point, over the labelled slots", () => {
+    // The points stand at the centre of each of the three category slots
+    // (`200 / 3` wide), which is where the labels and the bars are centred.
     const path = linePath([100, 50, 0], box, 100);
-    expect(Option.getOrElse(path, () => "")).toBe("M0 0L100 50L200 100");
+    expect(Option.getOrElse(path, () => "")).toBe(
+      "M33.33 0L100 50L166.67 100",
+    );
     // One point paints a short run rather than a zero-length path.
     expect(Option.getOrElse(linePath([50], box, 100), () => "")).toBe(
       "M100 50h1",
     );
     expect(linePath([], box, 100)).toEqual(Option.none());
+  });
+
+  it("keeps a ragged series in its own categories", () => {
+    // Two values against four labels used to span the whole plot (`0 … 200`),
+    // drawing the second point under the fourth label; they belong in the first
+    // two of four 50px slots.
+    expect(Option.getOrElse(linePath([10, 20], box, 100, 4), () => "")).toBe(
+      "M25 90L75 80",
+    );
+    // A value past the last label draws nowhere — the rule `barMarks` follows.
+    expect(Option.getOrElse(linePath([1, 2, 3, 4], box, 100, 2), () => "")).toBe(
+      "M50 99L150 98",
+    );
   });
 
   it("paints one ring segment per positive value", () => {

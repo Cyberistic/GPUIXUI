@@ -256,6 +256,16 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).
   Frozen columns are the open TODO row.
+- **A line's points sit over their labels**: `linePath` spaced its points edge
+  to edge over the series' own length, while the labels and every bar are
+  centred in `width / labels.length` slots, so a line's first and last points
+  stood half a slot off and a two-value series against four labels drew across
+  the whole plot. It takes the labelled count (defaulting to the series' own),
+  drops a value past the last label and centres each point, so the page's own
+  rule — a series with more values than labels paints only the labelled
+  slots — is true for a line as well as a bar. `src/chart/logic.test.ts` holds
+  the ragged series and the dropped tail; directions measured: the old spacing
+  fails both with `M0 90L200 80` for `M25 90L75 80`.
 - **Type-ahead is the published seam**: the tree imports
   `typeaheadMatchIndex` from `@gpuixui/components/typeahead` and keeps only the
   position-to-key step; `TreeView` uses the seam's `typedChar`/`useTypeahead`, so

@@ -269,6 +269,13 @@ const num = (value: number): string =>
 /**
  * The path through a series' points, left to right.
  *
+ * A point sits at the **centre of its category slot**, which is where a bar
+ * stands and where the label under it is centred. Spacing the path edge to
+ * edge instead (`0 … width`) put the first and last points half a slot away
+ * from their own labels, and measured a two-value series across the whole plot
+ * while the axis named four categories. A value past the last category draws
+ * nowhere, the rule the bars follow.
+ *
  * A single value paints a half-pixel run rather than a zero-length path, which
  * some rasterisers drop; an empty series paints nothing.
  */
@@ -276,12 +283,14 @@ export const linePath = (
   values: ReadonlyArray<number>,
   box: ChartBox,
   scale: number,
+  categories: number = values.length,
 ): Option.Option<string> => {
-  const count = values.length;
-  if (count === 0) return Option.none();
-  const step = count === 1 ? 0 : box.width / (count - 1);
-  const points = Arr.map(values, (value, index) => ({
-    x: count === 1 ? box.width / 2 : index * step,
+  const slots = slotCount(categories);
+  const painted = Arr.take(values, slots);
+  if (painted.length === 0) return Option.none();
+  const { slot } = barSlot(slots, box.width);
+  const points = Arr.map(painted, (value, index) => ({
+    x: index * slot + slot / 2,
     y: box.height - barHeight(value, box, scale),
   }));
   const path = Arr.join(
@@ -292,7 +301,7 @@ export const linePath = (
     ),
     "",
   );
-  return Option.some(count === 1 ? `${path}h1` : path);
+  return Option.some(painted.length === 1 ? `${path}h1` : path);
 };
 
 /** The ring segment between two angles, in radians. */
