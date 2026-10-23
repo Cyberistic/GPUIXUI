@@ -89,6 +89,28 @@ describe("the keyboard page", () => {
     expect(page).toContain("/docs/workspace");
   });
 
+  it("installs the root handler the runtime offers, and runs what it resolves", () => {
+    // The registry's `resolve` takes the runtime's `KeyEvent`, while the
+    // decoders take the broader `EventPayload`; the page typed its root handler
+    // with `EventPayload` and handed it to `resolve`, so the copyable example
+    // did not compile. It also returned the resolved command without running
+    // it, although the prose says the registry only resolves.
+    const registry = readRepo("packages/keyboard/src/registry.ts");
+    const entry = typescriptSnippets(page).find((snippet) =>
+      snippet.includes("render("),
+    );
+
+    expect(registry).toContain("event: KeyEvent");
+    expect(entry, "the page prints no entry snippet").toBeDefined();
+    expect(entry).toContain("onKeyDown: (event) => {");
+    expect(entry).toContain(
+      'const command = registry.resolve(event, ["global"], "darwin");',
+    );
+    expect(entry).toContain("Option.isSome(command)");
+    expect(entry).toContain("Effect.runFork(command.value.handler)");
+    expect(entry).not.toContain("event: EventPayload");
+  });
+
   it("explains the physical-binding limit from the adapter, not from taste", () => {
     // The claim is true because the decode reads `key` and never `keyChar`, and
     // there is no `code` in a GPUix event. If the adapter changed, the page

@@ -157,20 +157,18 @@ does not want a layer.
 
 ## In React
 
-The provider supplies one registry to a subtree, and a hook reads the nearest one.
-Mount the handler once at the root — the runtime's one app-level key route — and
-ask the registry what this event means:
+The provider supplies one registry to a subtree, and `useCommandRegistry()`
+reads the nearest one. The **app-level route is not a hook**: the runtime
+delivers a window key only through `render`'s `onKeyDown` option, which sits
+outside the React tree. So one command list feeds both — the provider inside
+the tree, and the root handler the entry installs.
 
 ```tsx
-import {
-  CommandRegistryProvider,
-  useCommandRegistry,
-} from "@gpuixui/keyboard/react";
+import type { Command } from "@gpuixui/keyboard";
 import { Effect } from "effect";
-import type { EventPayload } from "@gpuix/react";
-import type { ReactNode } from "react";
 
-const commands = [
+/** One list, read by the provider inside the tree and the root handler outside it. */
+export const commands: ReadonlyArray<Command> = [
   {
     id: "palette",
     title: "Open the command palette",
@@ -179,23 +177,40 @@ const commands = [
     handler: Effect.void,
   },
 ];
+```
 
-/** The app installs this as its one root `onKeyDown` and runs the result itself. */
-export const useShortcutHandler = () => {
-  const registry = useCommandRegistry();
-  return (event: EventPayload) => registry.resolve(event, ["global"], "darwin");
-};
+```tsx
+import { commandRegistry } from "@gpuixui/keyboard";
+import { CommandRegistryProvider } from "@gpuixui/keyboard/react";
+import { render } from "@gpuix/react";
+import { Effect } from "effect";
+import * as Option from "effect/Option";
+import { commands } from "./commands";
 
-export const App = ({ children }: { readonly children?: ReactNode }) => (
+const registry = commandRegistry(commands);
+
+// `App` is the application's root component.
+render(
   <CommandRegistryProvider commands={commands}>
-    {children}
-  </CommandRegistryProvider>
+    <App />
+  </CommandRegistryProvider>,
+  {
+    onKeyDown: (event) => {
+      const command = registry.resolve(event, ["global"], "darwin");
+      if (Option.isSome(command)) Effect.runFork(command.value.handler);
+    },
+  },
 );
 ```
 
+The handler's parameter is contextually the runtime's `KeyEvent` — a key event
+carries `preventDefault`/`stopPropagation` on top of the `EventPayload` the
+decoders take — and the registry only resolves: running the handler is the
+caller's boundary, which is the entry here.
+
 Without a provider the hook returns an empty registry that resolves nothing, so
-an isolated component renders without a context error. The snippet above is the
-wiring, not a shipped component: the shipped
+an isolated component renders without a context error. The snippets above are
+the wiring, not a shipped component: the shipped
 [`KeyboardShortcuts`](/docs/components/keyboard-shortcuts) sheet and
 [`HotkeyRecorder`](/docs/components/hotkey-recorder) field are the two controls
 that consume this package today, and the recorder captures through

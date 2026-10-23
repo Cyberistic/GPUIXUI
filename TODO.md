@@ -10274,7 +10274,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 280/280
+`[x]` `[██████████]` 281/281
+
+`[x]` Teach the **root key route the runtime actually offers**, and run what it
+      resolves — `/docs/keyboard`'s React example typed its handler with
+      `EventPayload` and handed it to `CommandRegistry.resolve`, which takes the
+      runtime's `KeyEvent` (a `KeyEvent` adds `preventDefault`/`stopPropagation`
+      to the `EventPayload` the decoders take), so the copyable wiring did not
+      compile; and although the prose says the registry only resolves, the
+      example returned the resolved command and never ran it. The page now splits
+      the wiring the way the runtime does: one `commands` list feeds a
+      `CommandRegistryProvider` inside the tree, while the entry builds the same
+      registry with `commandRegistry(commands)` and installs `render`'s
+      `onKeyDown` — the app-level route, which no hook can install from inside
+      the tree — and the handler runs `command.value.handler` at that boundary
+      (`Option.isSome` + `Effect.runFork`). `keyboard-page.test.ts` gains
+      `installs the root handler the runtime offers, and runs what it resolves`:
+      it derives the `resolve` parameter from `registry.ts` and requires the
+      entry snippet to carry `render(`, the contextually typed
+      `onKeyDown: (event) =>`, the gate and the run, refusing an `EventPayload`
+      annotation. Directions measured: the committed page fails by name (`the
+      page prints no entry snippet`); restored, the file is 6/6. No native
+      scenario applies — a docs page and its guard have no runtime path.
 
 `[x]` Show the **icon set** instead of naming it — `/docs/primitives` linked
       `/docs/icons/icon`, whose §Names is a prose list of 76 names: the one page
