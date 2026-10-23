@@ -642,6 +642,85 @@ describe("the motion page", () => {
     expect(pageText).toContain("/docs/runtime#measured-in-a-window");
   });
 
+  it("publishes the paint a fade leaves, derived from its probe", () => {
+    // `motion-geometry` reads geometry, so the one thing the page could not
+    // answer is whether a surface actually fades: the presence seam is a motion
+    // description and no window exposes one. `surface-fade` reads the paint
+    // from a captured pixel on a frozen motion clock, and the page printed the
+    // seam's existence without the measurement — so a reader could not learn
+    // the level, the frames, or that a wall-clock read of a fade races the
+    // paint. The numbers are derived from the fixture and the timing module, so
+    // a level edit moves them here too.
+    const fade = readRepo("apps/playground/src/live/fade.ts");
+    const probe = readRepo("apps/playground/src/live/scenarios.tsx");
+    const readme = readRepo("apps/playground/README.md");
+    const dialog = readRepo("packages/components/src/dialog.tsx");
+    const presence = readRepo("packages/components/src/internal/presence.tsx");
+
+    const level = /export const FADE_LEVEL = "(\w+)"/.exec(fade)?.[1] ?? "";
+    const duration = Number(
+      /export const FADE_DURATION_MS = (\d+)/.exec(fade)?.[1],
+    );
+    const inset = Number(
+      /export const FADE_SAMPLE_INSET = (\d+)/.exec(fade)?.[1],
+    );
+    const backing =
+      /export const FADE_BACKING = "([^"]+)"/.exec(fade)?.[1] ?? "";
+    expect(level).toBe("slow");
+    expect(duration).toBe(Number(declaredLevels().get(level)));
+    expect(inset).toBeGreaterThan(0);
+    expect(backing).toBe("#FFFFFF");
+
+    // The fixture derives its two offsets, so the page's numbers are the
+    // fixture's arithmetic rather than three literals that can drift apart.
+    expect(fade).toContain(
+      "export const FADE_PARTIAL_MS = Math.round(FADE_DURATION_MS / 3);",
+    );
+    expect(fade).toContain(
+      "export const FADE_REST_MS = FADE_DURATION_MS + 80;",
+    );
+    const partial = Math.round(duration / 3);
+    const rest = duration + 80;
+
+    // The level is the shipped dialog's, and the fade starts at zero: a page
+    // that printed another level would describe a surface that does not ship.
+    expect(dialog).toContain(`useSurfaceTiming("${level}")`);
+    expect(presence).toContain("initial: { opacity: 0 }");
+    expect(presence).toContain("animate: { opacity: 1 }");
+
+    // Every reading the page prints is one the window asserts, so the claim
+    // cannot outlive its probe.
+    [
+      "a frozen mount paints the page, not the surface",
+      "partway through its level the surface is a mix of surface and page",
+      "past its level the surface rests on its own colour",
+      "a reduced surface paints at rest under the same frozen clock",
+    ].forEach((name) => {
+      expect(probe, `the probe no longer asserts ${name}`).toContain(name);
+    });
+
+    // The count is the probe's own record, not a number typed on the page.
+    const probeSection = readme.slice(readme.indexOf("### `surface-fade`"));
+    const checks =
+      /^(\d+) checks\./m.exec(
+        probeSection.slice(0, probeSection.indexOf("\n### ")),
+      )?.[1] ?? "";
+    expect(checks).not.toBe("");
+
+    expect(pageText).toContain("`surface-fade`");
+    expect(pageText).toContain(`${checks} checks`);
+    expect(pageText).toContain(`${duration} ms`);
+    expect(pageText).toContain(`\`+${partial}\` ms`);
+    expect(pageText).toContain(`\`+${rest}\` ms`);
+    expect(pageText).toContain(`**${inset} px**`);
+    expect(pageText).toContain(`\`${backing}\``);
+    expect(pageText).toContain("`#222730`");
+    expect(pageText).toContain("the journey is gone, the resting frame is not");
+    expect(pageText).toContain(
+      "Read a fade on the motion clock, not on wall time.",
+    );
+  });
+
   it("teaches the coast's declaration rule from the value's own guard", () => {
     // The page taught the `animate` no-op and said only that `coast` starts a
     // decay, so a reader building `inertia()` inline on a render could not learn

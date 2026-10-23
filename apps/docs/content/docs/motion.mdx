@@ -385,6 +385,39 @@ The probe (`motion-geometry`) and the rest of the table are on
 - `duration: 0` paints the two target sizes with no frame between them — the
   negative control, and the reason the hook example above assigns the value.
 
+### The paint a fade leaves
+
+A style report sees geometry, so `motion-geometry` cannot answer the thing an
+overlay's motion is usually for: whether the surface actually **fades**.
+`packages/components/src/internal/presence.tsx` enters a surface at
+`opacity: 0` and fades it to the resting frame, and the shipped `Dialog` takes
+that frame from `useSurfaceTiming("slow")` — **320 ms**. A paint is not in the
+style report, so the window probe `surface-fade` reads it from the pixel the
+fade leaves: it paints the page `#FFFFFF` behind the dialog and samples
+**12 px** inside the content's own left padding, clear of the ring at the edge
+and of any child, where only the surface can paint.
+
+| Frame | Clock | The pixel |
+| ----- | ----- | --------- |
+| mount | stopped | the page, `#FFFFFF` — the mount is at `opacity: 0` |
+| a third in | `+107` ms | a mix of the surface and the page, strictly between them |
+| past the level | `+400` ms | the surface's own colour, the dark palette's `popover` (`#222730`) |
+| reduced, mount | stopped | the surface's own colour — the journey is gone, the resting frame is not |
+
+**Read a fade on the motion clock, not on wall time.** A paint on this host can
+block longer than the 320 ms tween (a first frame held the JS thread about a
+second), so a capture taken "107 ms after the press" names a progress the
+renderer may not have painted — the same probe passed on a warm run and read a
+resting surface on a cold one. The window host exposes the clock the motion
+states are computed from, so the probe freezes it, advances it by an exact
+offset and captures that progress: the paint can take as long as it likes and
+the progress cannot drift. The frozen clock is also what makes the reduced half
+a control — an animated surface under it stays at opacity 0, so a preference the
+runtime ignored could never paint the surface there.
+
+Evidence: `apps/playground/README.md` §`surface-fade`, 23 checks, green on
+0.11.0 (two runs on 2026-10-23).
+
 ## Limits to design around
 
 - **No `transform`.** Scale, rotate and translate have no style key; a

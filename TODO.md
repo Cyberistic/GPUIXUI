@@ -8239,7 +8239,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 224/224
+`[x]` `[██████████]` 225/225
+
+`[x]` Publish the **paint a fade leaves** on `/docs/motion` — the page taught
+      the presence seam as a sentence ("`presence.tsx` composes them into a fade
+      plus an inset offset") and the measured table beside it covered geometry
+      only, so a reader deciding whether a dialog fades had no evidence, and the
+      window probe `surface-fade` (23 checks, 0.11.0) was named nowhere on the
+      site. §What the runtime measured gains **The paint a fade leaves**: the
+      level the shipped `Dialog` enters at (`useSurfaceTiming("slow")`, 320 ms),
+      the sample the probe reads (12 px inside the content's own padding over a
+      `#FFFFFF` page, where only the surface paints), the three frames (the page
+      at a stopped clock, a mix strictly between the two `+107` ms in, the dark
+      palette's `popover` `#222730` past the level at `+400` ms) and the reduced
+      row (the surface's own colour under the same frozen clock, so the journey
+      is gone and the resting frame is not). The paragraph that carries the
+      lesson says a fade is read on the **motion clock**, not on wall time: a
+      software paint can outlast the 320 ms tween, so the probe freezes the
+      clock the motion states are computed from and advances it by an exact
+      offset. `motion-page.test.ts` gains `publishes the paint a fade leaves,
+      derived from its probe`: it derives the level, both offsets, the inset and
+      the backing from `apps/playground/src/live/fade.ts` and the timing module,
+      holds the level to the dialog's own call and the two frames to `presence.tsx`,
+      requires the probe's four reading labels in `scenarios.tsx`, takes the
+      check count from the README's own section, and reads every printed number
+      back. Directions measured: the page at `+108` fails by name, and dropping
+      the evidence paragraph (the probe id and its count) fails it at the first
+      sentence; restored, the file is 22/22 and the docs suite 116 files / 1 225
+      tests. Live evidence: `--only surface-fade` twice on 0.11.0 (5 641 ms and
+      6 618 ms, 23 checks, `1/1 scenarios passed`), the second with `--json` to
+      read the check list.
 
 `[x]` Teach the **draft a caller disables mid-edit** on the curated Inline edit
       page — `dc05bb4c` made the component refuse a half-finished rename
