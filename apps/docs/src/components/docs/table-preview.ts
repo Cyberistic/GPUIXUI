@@ -82,7 +82,9 @@ export const valueOf = (row: PreviewTableRow, field: string): string | number =>
     ? row.duration
     : field === "environment"
       ? row.environment
-      : row.service;
+      : field === "status"
+        ? row.status
+        : row.service;
 
 /** A sorted column and its direction, or unsorted. */
 export interface PreviewSort {
@@ -95,16 +97,22 @@ export const INITIAL_SORT: PreviewSort = { field: "service", direction: "asc" };
 
 /**
  * The sort a press produces: the sorted field flips, any other field starts at
- * its own initial direction.
+ * its own initial direction, and a third press on the field returns to none.
+ *
+ * The flip is the package's (`sort/logic.ts` flips the sorted field); the
+ * third, clearing press is the preview's own gesture, because the native
+ * header only ever hands `Option.some(next)` and clears through `setSort`.
  */
 export const nextSort = (
   current: PreviewSort | null,
   field: string,
   initialDirection: "asc" | "desc" = "asc",
-): PreviewSort =>
-  current !== null && current.field === field
-    ? { field, direction: current.direction === "asc" ? "desc" : "asc" }
-    : { field, direction: initialDirection };
+): PreviewSort | null =>
+  current === null || current.field !== field
+    ? { field, direction: initialDirection }
+    : current.direction === "asc"
+      ? { field, direction: "desc" }
+      : null;
 
 /** The query as it is matched: trimmed and lowercased, never a pattern. */
 export const normalizeQuery = (query: string): string =>
@@ -249,12 +257,131 @@ export const sortLabel = (
     ? `${label}, sortable`
     : `${label}, sorted ${sort.direction === "asc" ? "ascending" : "descending"}`;
 
-/** The line the workflow preview prints under its table. */
-export const readout = (
+/* ---- pagination ----
+ *
+ * The preview pages five rows at a time, which the native package does not: it
+ * ships a bounded, scrolling body instead. The slice and its clamp are pure so
+ * a filter that narrows the set can never leave the reader on a page the set no
+ * longer spans. */
+
+/** Rows painted per page. */
+export const PAGE_SIZE = 5;
+
+/** The pages a row set spans; a set always spans at least one page. */
+export const pageCount = (rows: ReadonlyArray<PreviewTableRow>): number =>
+  Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+
+/** Clamp a page index into the pages a set actually spans. */
+export const clampPage = (page: number, count: number): number =>
+  Math.min(Math.max(page, 0), count - 1);
+
+/**
+ * The rows one page paints, with the index clamped to a real page.
+ *
+ * `page` is zero-based. A page past the end clamps to the last page rather than
+ * returning an empty slice, so a filtered set never leaves a blank body while
+ * rows still exist.
+ */
+export const pageSlice = (
   rows: ReadonlyArray<PreviewTableRow>,
-  selection: PreviewSelection,
-  sort: PreviewSort | null,
-): string =>
-  `${rows.length} rows · ${selection.selected.length} selected · ${
-    sort === null ? "unsorted" : `${sort.field} ${sort.direction}`
-  }`;
+  page: number,
+): ReadonlyArray<PreviewTableRow> => {
+  const count = pageCount(rows);
+  const start = clampPage(page, count) * PAGE_SIZE;
+  return rows.slice(start, start + PAGE_SIZE);
+};
+
+/* ---- column visibility ----
+ *
+ * A shadcn-style data table lets the reader hide columns. The select and
+ * actions tracks never hide; the four data columns toggle through a menu and at
+ * least one must stay, because a row with no text paints nothing. */
+
+/** The hideable columns, in the order the header paints them. */
+export const COLUMN_IDS = [
+  "service",
+  "environment",
+  "status",
+  "duration",
+] as const;
+
+/** One hideable column. */
+export type ColumnId = (typeof COLUMN_IDS)[number];
+
+/** The columns shown at first. */
+export const ALL_COLUMNS: ReadonlyArray<ColumnId> = [...COLUMN_IDS];
+
+/**
+ * Toggle one column; hiding the last visible column keeps it, and a re-shown
+ * column returns to its place in the canonical order.
+ *
+ * The "at least one" rule is the same the native `useColumns` enforces: the
+ * reader can narrow the set down to one column but never to none, so every row
+ * keeps a label.
+ */
+export const toggleColumn = (
+  visible: ReadonlyArray<ColumnId>,
+  id: ColumnId,
+): ReadonlyArray<ColumnId> => {
+  const next = visible.includes(id)
+    ? visible.filter((column) => column !== id)
+    : [...visible, id];
+  return next.length === 0
+    ? visible
+    : COLUMN_IDS.filter((column) => next.includes(column));
+};
+
+/* ---- page selection ----
+ *
+ * The header checkbox selects the **page**, never the whole filtered set: the
+ * page is what the reader can see, and a checkbox that reached past it would
+ * claim a record the table does not paint. */
+
+/** Whether every row on the page is chosen — and the page is not empty. */
+export const allPageSelected = (
+  state: PreviewSelection,
+  pageIds: ReadonlyArray<string>,
+): boolean =>
+  pageIds.length > 0 && pageIds.every((id) => state.selected.includes(id));
+
+/** Whether some, but not all, of the page is chosen: the header box's dash. */
+export const somePageSelected = (
+  state: PreviewSelection,
+  pageIds: ReadonlyArray<string>,
+): boolean =>
+  !allPageSelected(state, pageIds) &&
+  pageIds.some((id) => state.selected.includes(id));
+
+/**
+ * Toggle the header checkbox: choose the page's rows when any is unchosen,
+ * otherwise release them. Rows on other pages keep their state.
+ */
+export const togglePageSelection = (
+  state: PreviewSelection,
+  pageIds: ReadonlyArray<string>,
+): PreviewSelection =>
+  allPageSelected(state, pageIds)
+    ? {
+        selected: state.selected.filter((id) => !pageIds.includes(id)),
+        anchor: null,
+      }
+    : {
+        selected: [...new Set([...state.selected, ...pageIds])],
+        anchor: null,
+      };
+
+/**
+ * Toggle one record by its checkbox.
+ *
+ * A checkbox toggles the record it sits on — a plain press is a toggle, not the
+ * row's replace — while a Shift press still extends a range through `pressRow`.
+ */
+export const toggleRow = (
+  state: PreviewSelection,
+  key: string,
+): PreviewSelection => ({
+  selected: state.selected.includes(key)
+    ? state.selected.filter((chosen) => chosen !== key)
+    : [...state.selected, key],
+  anchor: key,
+});

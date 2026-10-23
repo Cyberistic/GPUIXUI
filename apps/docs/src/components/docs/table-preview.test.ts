@@ -2,19 +2,29 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { tableWorkflowSource } from "./table-demo";
 import {
+  ALL_COLUMNS,
+  allPageSelected,
   cellsOf,
+  clampPage,
   filterRows,
   INITIAL_SORT,
-  normalizeQuery,
   nextSort,
+  normalizeQuery,
   NO_SELECTION,
+  pageCount,
+  pageSlice,
+  PAGE_SIZE,
   pressRow,
-  readout,
   retainSelection,
+  somePageSelected,
   sortLabel,
   sortRows,
   TABLE_ROWS,
+  toggleColumn,
+  togglePageSelection,
+  toggleRow,
   visibleRows,
+  type ColumnId,
   type PreviewSelection,
   type PreviewSort,
 } from "./table-preview";
@@ -133,9 +143,11 @@ describe("the preview's filter", () => {
 });
 
 describe("the preview's sort", () => {
-  it("flips the sorted field and starts another at its own direction", () => {
+  it("flips the sorted field, starts another at its own direction, and clears on a third press", () => {
     // `sort/logic.ts`'s `toggleSort`: the same field flips, any other starts at
-    // the direction the header passes.
+    // the direction the header passes. The preview adds a third, clearing press
+    // (`nextSort` returns `null`), which the native header never does — it only
+    // hands `Option.some(next)` and clears through `setSort`.
     expect(sortLogic).toContain('state.direction === "asc" ? "desc" : "asc"');
     expect(sortLogic).toContain("initialDirection");
 
@@ -155,6 +167,10 @@ describe("the preview's sort", () => {
       field: "environment",
       direction: "desc",
     });
+    // The third press returns to "none": the header's `↕` glyph, not a sort.
+    expect(nextSort({ field: "service", direction: "desc" }, "service")).toBe(
+      null,
+    );
   });
 
   it("orders numbers as numbers and keeps the caller's order when unsorted", () => {
@@ -164,6 +180,13 @@ describe("the preview's sort", () => {
     });
     expect(byDuration.map((row) => row.duration)).toEqual([
       211, 148, 129, 92, 74, 36,
+    ]);
+    // Negative control: a lexicographic sort would read the durations as text,
+    // putting "92" before "36" and every "1…" hundred first. The preview's
+    // order must differ from that string order, or a duration column reading
+    // "92 before 36" has sorted digits, not numbers.
+    expect(byDuration.map((row) => row.duration)).not.toEqual([
+      92, 74, 36, 211, 148, 129,
     ]);
 
     const byName: PreviewSort = { field: "service", direction: "asc" };
@@ -275,19 +298,122 @@ describe("the preview's selection", () => {
       anchor: null,
     });
     expect(retainSelection(state, [])).toEqual({ selected: [], anchor: null });
+    // Negative control: a chosen record the narrower set hides must not
+    // survive, or a "delete selected" would reach a row the table no longer
+    // paints.
+    expect(
+      retainSelection(state, ["billing", "search", "media"]).selected,
+    ).not.toContain("gateway");
   });
 });
 
-describe("the preview's readout", () => {
-  it("prints the rows it paints, the chosen count and the sorted column", () => {
-    const sort: PreviewSort = { field: "duration", direction: "asc" };
-    const shown = visibleRows(TABLE_ROWS, "ready", sort);
+describe("the preview's pagination", () => {
+  it("pages five rows and clamps a page the filter no longer spans", () => {
+    expect(PAGE_SIZE).toBe(5);
 
-    expect(
-      readout(shown, { selected: ["billing"], anchor: "billing" }, sort),
-    ).toBe(`${shown.length} rows · 1 selected · duration asc`);
-    expect(readout(TABLE_ROWS, NO_SELECTION, null)).toBe(
-      "6 rows · 0 selected · unsorted",
+    // Six rows → two pages: five on the first, one on the second.
+    expect(pageCount(TABLE_ROWS)).toBe(2);
+    expect(ids(pageSlice(TABLE_ROWS, 0))).toEqual([
+      "billing",
+      "search",
+      "gateway",
+      "reports",
+      "auth",
+    ]);
+    expect(ids(pageSlice(TABLE_ROWS, 1))).toEqual(["media"]);
+
+    // A filter narrows the set to one page; a page past it clamps to the last.
+    const production = filterRows(TABLE_ROWS, "production");
+    expect(ids(production)).toEqual(["billing", "gateway", "auth"]);
+    expect(pageCount(production)).toBe(1);
+    expect(clampPage(3, pageCount(production))).toBe(0);
+    expect(ids(pageSlice(production, 3))).toEqual(ids(production));
+    // An empty set still spans one page, so the footer never reads "of 0".
+    expect(pageCount([])).toBe(1);
+    expect(clampPage(0, pageCount([]))).toBe(0);
+  });
+
+  it("never returns an empty page while rows still exist", () => {
+    // Negative control: an unclamped page 9 would be empty even though two pages
+    // of rows exist. The clamp must return rows, not a blank body.
+    expect(ids(pageSlice(TABLE_ROWS, 9))).not.toEqual([]);
+    expect(ids(pageSlice(TABLE_ROWS, 9))).toEqual(
+      ids(pageSlice(TABLE_ROWS, 1)),
     );
+  });
+});
+
+describe("the preview's column visibility", () => {
+  it("toggles a column and returns a re-shown column to its place", () => {
+    expect(ALL_COLUMNS).toEqual([
+      "service",
+      "environment",
+      "status",
+      "duration",
+    ]);
+
+    const withoutService = toggleColumn(ALL_COLUMNS, "service");
+    expect(withoutService).toEqual(["environment", "status", "duration"]);
+    expect(toggleColumn(withoutService, "service")).toEqual(ALL_COLUMNS);
+  });
+
+  it("keeps the last visible column, so a row never loses its text", () => {
+    // Negative control: a menu that let the reader hide every column would paint
+    // an empty row. The toggle must refuse to empty the set.
+    const only: ReadonlyArray<ColumnId> = ["service"];
+    expect(toggleColumn(only, "service")).toEqual(["service"]);
+    expect(
+      ALL_COLUMNS.reduce(
+        (visible, id) => toggleColumn(visible, id),
+        ALL_COLUMNS,
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("the preview's page selection", () => {
+  const pageOne = ids(pageSlice(TABLE_ROWS, 0));
+  const pageTwo = ids(pageSlice(TABLE_ROWS, 1));
+
+  it("selects and clears the page, and reports the header box's tri-state", () => {
+    const chosen = togglePageSelection(NO_SELECTION, pageOne);
+    expect(chosen.selected).toEqual(pageOne);
+    expect(allPageSelected(chosen, pageOne)).toBe(true);
+    expect(somePageSelected(chosen, pageOne)).toBe(false);
+
+    // Part of the page chosen → indeterminate; a page with nothing → neither.
+    const partial: PreviewSelection = {
+      selected: ["billing"],
+      anchor: "billing",
+    };
+    expect(allPageSelected(partial, pageOne)).toBe(false);
+    expect(somePageSelected(partial, pageOne)).toBe(true);
+
+    // A fully-chosen page toggles off to nothing.
+    expect(togglePageSelection(chosen, pageOne).selected).toEqual([]);
+  });
+
+  it("leaves the rows pagination hides untouched", () => {
+    // Negative control: a header box that reached past the page would select
+    // every filtered row. The page select must not claim a row it does not
+    // paint — page two's `media` stays unchosen.
+    const selected = togglePageSelection(NO_SELECTION, pageOne);
+    expect(selected.selected).not.toContain("media");
+    expect(allPageSelected(selected, pageTwo)).toBe(false);
+  });
+
+  it("toggles one record by its checkbox, without replacing the set", () => {
+    const state: PreviewSelection = {
+      selected: ["billing"],
+      anchor: "billing",
+    };
+    expect(toggleRow(state, "search")).toEqual({
+      selected: ["billing", "search"],
+      anchor: "search",
+    });
+    expect(toggleRow(state, "billing")).toEqual({
+      selected: [],
+      anchor: "billing",
+    });
   });
 });

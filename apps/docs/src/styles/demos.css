@@ -4953,10 +4953,10 @@
   text-transform: uppercase;
 }
 
-/* The Table page's previews: a grid of rows drawn by hand, because the runtime
-   and the browser both refuse a styled `<table>` here. Geometry, type and colour
-   are the theme's, so the platform switch re-heights the rows and repaints the
-   washes the way the native parts do. */
+/* The Table page's previews: a real table under `table-layout: fixed`, so a
+   reader can hide a column without the others reflowing. Geometry, type and
+   colour are the theme's, so the platform switch re-heights the rows and
+   repaints the washes the way the native parts do. */
 
 .gx-demo-table {
   width: 100%;
@@ -4967,7 +4967,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(540px, 100%);
+  width: min(720px, 100%);
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
@@ -5003,19 +5003,20 @@
 .gx-table-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .gx-table-filter {
   flex-grow: 1;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 1px solid var(--border-strong);
+  min-width: 0;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--border);
   border-radius: calc(var(--radius) - 2px);
   background: var(--input);
   color: var(--input-foreground);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 12px;
 }
 
 .gx-table-filter::placeholder {
@@ -5028,54 +5029,125 @@
   outline-offset: -1px;
 }
 
-.gx-table-count {
+/* The Columns menu: a popover anchored under its button. */
+.gx-table-columns {
+  position: relative;
   flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--muted-foreground);
 }
 
-.gx-table {
-  display: flex;
-  flex-direction: column;
+.gx-table-columns-btn {
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) - 2px);
-  overflow: hidden;
-}
-
-.gx-table-head-row {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  background: var(--muted);
-}
-
-.gx-table-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1 1 0;
-  padding: 6px 10px;
-  border: 0;
   background: transparent;
-  color: var(--muted-foreground);
+  color: var(--foreground);
   font: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-align: left;
-}
-
-button.gx-table-head {
+  font-size: 12px;
   cursor: pointer;
 }
 
-button.gx-table-head:hover {
+.gx-table-columns-btn:hover {
+  background: var(--hover);
+}
+
+.gx-table-columns-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 2;
+  min-width: 160px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 18px 44px var(--shadow);
+}
+
+.gx-table-columns-label {
+  margin: 0;
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.gx-table-columns-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-table-columns-item:hover {
+  background: var(--hover);
+}
+
+.gx-table-columns-check {
+  width: 14px;
+  flex: none;
+  text-align: center;
+  color: var(--primary);
+}
+
+/* The bordered table: a wrapper rounds the corners; the table fixes the grid. */
+.gx-table {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+}
+
+.gx-table-el {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.gx-table-head {
+  padding: 12px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.gx-table-sort:hover {
   color: var(--foreground);
 }
 
-button.gx-table-head:focus-visible {
+.gx-table-sort:focus-visible {
   outline: 2px solid var(--ring);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 .gx-table-glyph {
@@ -5083,68 +5155,46 @@ button.gx-table-head:focus-visible {
   font-size: 10px;
 }
 
-.gx-table-head[data-sorted] {
-  color: var(--foreground);
-}
-
-.gx-table-head[data-sorted] .gx-table-glyph {
+.gx-table-sort[data-sorted="asc"] .gx-table-glyph,
+.gx-table-sort[data-sorted="desc"] .gx-table-glyph {
   color: var(--primary);
 }
 
-.gx-table-body {
-  display: flex;
-  flex-direction: column;
-}
-
 .gx-table-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
   height: calc(var(--control-height-sm) + var(--spacing-md));
-  padding: 0;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  text-align: left;
 }
 
-.gx-table-row:last-child {
-  border-bottom: 0;
+.gx-table-row:hover .gx-table-cell {
+  background: var(--muted);
 }
 
-button.gx-table-row {
-  cursor: pointer;
-}
-
-button.gx-table-row:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.gx-table-row[data-selected="true"] {
+.gx-table-row[data-selected="true"] .gx-table-cell {
   background: var(--selected);
   color: var(--selected-foreground);
 }
 
-.gx-table-row[data-selected="true"]:hover {
+.gx-table-row[data-selected="true"]:hover .gx-table-cell {
   background: var(--selected);
   color: var(--selected-foreground);
-}
-
-button.gx-table-row:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
 }
 
 .gx-table-cell {
-  flex: 1 1 0;
-  overflow: hidden;
-  padding: 0 10px;
+  padding: 0 12px;
   font-size: 12px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gx-table-head.gx-table-check-head,
+.gx-table-cell.gx-table-check-cell,
+.gx-table-head.gx-table-actions,
+.gx-table-cell.gx-table-actions {
+  padding: 0;
+  text-align: center;
 }
 
 .gx-table-service {
@@ -5155,6 +5205,7 @@ button.gx-table-row:focus-visible {
   font-family: var(--font-mono);
   font-size: 11px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .gx-table-status {
@@ -5180,11 +5231,75 @@ button.gx-table-row:focus-visible {
   color: var(--destructive-soft-foreground);
 }
 
+/* The trailing row menu: a popover anchored under the row's "…" button. */
+.gx-table-menu-anchor {
+  position: relative;
+}
+
+.gx-table-action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-table-action-btn:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-table-action-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-table-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 2;
+  min-width: 128px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 18px 44px var(--shadow);
+  text-align: left;
+}
+
+.gx-table-menu-item {
+  display: block;
+  width: 100%;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-table-menu-item:hover {
+  background: var(--hover);
+}
+
+.gx-table-menu-item[data-tone="destructive"] {
+  color: var(--destructive-soft-foreground);
+}
+
 .gx-table-empty {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 20px 12px;
+  padding: 24px 12px;
   text-align: center;
 }
 
@@ -5195,7 +5310,7 @@ button.gx-table-row:focus-visible {
 }
 
 .gx-table-empty-meta {
-  margin: 0;
+  margin: 4px 0 0;
   font-size: 11.5px;
   color: var(--muted-foreground);
 }
@@ -5207,16 +5322,61 @@ button.gx-table-row:focus-visible {
   background: var(--skeleton);
 }
 
-.gx-table-readout {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--placeholder);
+/* The footer bar: the selection count left, the page controls right. */
+.gx-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.gx-table-readout b {
-  color: var(--primary);
-  font-weight: 600;
+.gx-table-selected,
+.gx-table-pagesize,
+.gx-table-pageinfo {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-table-pager {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gx-table-pagenav {
+  display: flex;
+  gap: 4px;
+}
+
+.gx-table-pagebtn {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-table-pagebtn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.gx-table-pagebtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-table-caption {
+  padding-top: 8px;
+  caption-side: bottom;
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted-foreground);
 }
 
 /* ---- stepper: mirrors components/src/stepper.tsx ----

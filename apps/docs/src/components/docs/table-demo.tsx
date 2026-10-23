@@ -1,19 +1,23 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
-import {
+  ALL_COLUMNS,
+  allPageSelected,
+  clampPage,
   INITIAL_SORT,
   nextSort,
+  pageCount,
+  pageSlice,
+  PAGE_SIZE,
   pressRow,
-  readout,
   retainSelection,
+  somePageSelected,
   sortLabel,
   TABLE_ROWS,
+  toggleColumn,
+  togglePageSelection,
+  toggleRow,
   visibleRows,
+  type ColumnId,
   type PreviewSelection,
   type PreviewSort,
   type PreviewTableRow,
@@ -24,228 +28,436 @@ import {
  *
  * The shipped table is presentational: `@gpuixui/data`'s parts paint the frame
  * and the controllers own the sort, the selection and the filter. These
- * previews paint the same three decisions in the browser so a reader can press
+ * previews paint the same decisions in the browser so a reader can press
  * them — they are **illustrative approximations** of the native table, labelled
  * on the page, and their rules come from `table-preview.ts`, which the suite
  * holds to the package's own rules.
+ *
+ * The workflow preview borrows a data table's shell from shadcn — a filter
+ * field, a Columns menu, sortable headers, a select column, per-row actions and
+ * a paginated footer — while its sort, selection and filter stay the package's.
  */
 
-/** One row of the preview's grid: the record, the cells and its state. */
-const Row = ({
-  row,
-  selected,
-  tabbable,
-  onPress,
-  register,
+/** The header labels, in the order the columns toggle. */
+const COLUMN_LABELS: Readonly<Record<ColumnId, string>> = {
+  service: "Service",
+  environment: "Environment",
+  status: "Status",
+  duration: "Duration",
+};
+
+/** The direction a header starts a column at, when it is not the sorted one. */
+const COLUMN_INITIAL: Readonly<Record<ColumnId, "asc" | "desc">> = {
+  service: "asc",
+  environment: "asc",
+  status: "asc",
+  duration: "desc",
+};
+
+/** The fixed width a column paints, so hiding one never reflows the rest. */
+const COLUMN_WIDTH: Readonly<Record<ColumnId, number>> = {
+  service: 250,
+  environment: 150,
+  status: 110,
+  duration: 90,
+};
+
+/** The select track and the actions track are fixed; they never hide. */
+const SELECT_WIDTH = 40;
+const ACTIONS_WIDTH = 48;
+
+/** The glyph a sortable header paints: none, ascending or descending. */
+const sortGlyph = (sort: PreviewSort | null, id: ColumnId): string =>
+  sort === null || sort.field !== id
+    ? "↕"
+    : sort.direction === "asc"
+      ? "↑"
+      : "↓";
+
+/** A drawn checkbox in the select column, reusing the checkbox page's parts. */
+const TableCheck = ({
+  label,
+  checked,
+  indeterminate = false,
+  disabled = false,
+  onToggle,
 }: {
-  readonly row: PreviewTableRow;
-  readonly selected: boolean;
-  readonly tabbable: boolean;
-  readonly onPress: (event: MouseEvent<HTMLButtonElement>) => void;
-  readonly register: (element: HTMLButtonElement | null) => void;
-}) => (
-  <button
-    aria-selected={selected}
-    className="gx-table-row"
-    data-selected={selected}
-    onClick={onPress}
-    ref={register}
-    role="row"
-    tabIndex={tabbable ? 0 : -1}
-    type="button"
-  >
-    <span className="gx-table-cell gx-table-service">{row.service}</span>
-    <span className="gx-table-cell">{row.environment}</span>
-    <span className="gx-table-cell">
-      <span className="gx-table-status" data-status={row.status}>
-        {row.status}
+  readonly label: string;
+  readonly checked: boolean;
+  readonly indeterminate?: boolean;
+  readonly disabled?: boolean;
+  readonly onToggle: () => void;
+}) => {
+  const state = indeterminate
+    ? "indeterminate"
+    : checked
+      ? "checked"
+      : "unchecked";
+  const toggle = (): void => {
+    if (!disabled) onToggle();
+  };
+
+  return (
+    <span
+      aria-checked={indeterminate ? "mixed" : checked}
+      aria-label={label}
+      className="gx-check-target"
+      data-disabled={disabled ? "" : undefined}
+      data-state={state}
+      onClick={toggle}
+      onKeyDown={(event) => {
+        if (event.key === " ") event.preventDefault();
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          toggle();
+        }
+      }}
+      role="checkbox"
+      tabIndex={disabled ? -1 : 0}
+    >
+      <span className="gx-check-box">
+        {state === "unchecked" ? null : (
+          <span aria-hidden="true" className="gx-check-mark">
+            {state === "indeterminate" ? "–" : "✓"}
+          </span>
+        )}
       </span>
     </span>
-    <span className="gx-table-cell gx-table-number">{row.duration}s</span>
-  </button>
-);
+  );
+};
 
-const FIELDS = [
-  { id: "service", label: "Service", initial: "asc" as const },
-  { id: "environment", label: "Environment", initial: "asc" as const },
-  { id: "duration", label: "Duration", initial: "desc" as const },
-];
+/** One data cell, painted from the column the row is showing. */
+const DataCell = ({
+  row,
+  id,
+}: {
+  readonly row: PreviewTableRow;
+  readonly id: ColumnId;
+}) => {
+  if (id === "service") {
+    return <td className="gx-table-cell gx-table-service">{row.service}</td>;
+  }
+  if (id === "environment") {
+    return <td className="gx-table-cell">{row.environment}</td>;
+  }
+  if (id === "status") {
+    return (
+      <td className="gx-table-cell">
+        <span className="gx-table-status" data-status={row.status}>
+          {row.status}
+        </span>
+      </td>
+    );
+  }
+  return <td className="gx-table-cell gx-table-number">{row.duration}s</td>;
+};
 
-/** A deploy queue: sort a column, filter the set, choose rows with the chords. */
+/** A deploy queue: filter it, hide a column, sort it, page it, act on a row. */
 export const TableWorkflow = () => {
+  const [rows, setRows] =
+    useState<ReadonlyArray<PreviewTableRow>>(TABLE_ROWS);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<PreviewSort | null>(INITIAL_SORT);
   const [selection, setSelection] = useState<PreviewSelection>({
     selected: ["billing"],
     anchor: "billing",
   });
-  const [active, setActive] = useState<string | null>("billing");
-  const rows = useRef(new Map<string, HTMLButtonElement>());
+  const [columns, setColumns] = useState<ReadonlyArray<ColumnId>>(ALL_COLUMNS);
+  const [page, setPage] = useState(0);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  const visible = visibleRows(TABLE_ROWS, query, sort);
+  const columnsAnchor = useRef<HTMLDivElement>(null);
+  const menuAnchor = useRef<HTMLDivElement>(null);
+
+  // Both menus close on an outside press or Escape, the way the menu preview
+  // does: a menu that stayed open would keep a reader's press hostage.
+  useEffect(() => {
+    const onDown = (event: globalThis.MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (columnsAnchor.current?.contains(target) === true) return;
+      if (menuAnchor.current?.contains(target) === true) return;
+      setColumnsOpen(false);
+      setOpenMenu(null);
+    };
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setColumnsOpen(false);
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  const shown = visibleRows(rows, query, sort);
+  const count = pageCount(shown);
+  const current = clampPage(page, count);
+  const pageRows = pageSlice(shown, current);
+  const pageIds = pageRows.map((row) => row.id);
+  const allSelected = allPageSelected(selection, pageIds);
+  const someSelected = somePageSelected(selection, pageIds);
 
   /** Narrowing the set releases a chosen record it no longer paints. */
   const onQuery = (next: string) => {
     setQuery(next);
+    setPage(0);
     setSelection((state) =>
       retainSelection(
         state,
-        visibleRows(TABLE_ROWS, next, sort).map((row) => row.id),
+        visibleRows(rows, next, sort).map((row) => row.id),
       ),
     );
   };
 
-  const focus = (id: string | null) => {
-    if (id === null) return;
-    setActive(id);
-    rows.current.get(id)?.focus();
+  const onSort = (id: ColumnId) => {
+    setSort((state) => nextSort(state, id, COLUMN_INITIAL[id]));
   };
 
-  const move = (delta: number, extend: boolean) => {
-    if (visible.length === 0) return;
-    const at = visible.findIndex((row) => row.id === active);
-    const next = visible[Math.min(Math.max(at + delta, 0), visible.length - 1)];
-    if (next === undefined) return;
-    focus(next.id);
+  const onToggleRow = (id: string, shift: boolean) => {
     setSelection((state) =>
-      pressRow(
-        state,
-        next.id,
-        extend ? { shift: true } : {},
-        visible.map((row) => row.id),
-      ),
+      shift
+        ? pressRow(state, id, { shift: true }, shown.map((row) => row.id))
+        : toggleRow(state, id),
     );
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (visible.length === 0) return;
+  const onTogglePage = () => {
+    setSelection((state) => togglePageSelection(state, pageIds));
+  };
 
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      move(event.key === "ArrowDown" ? 1 : -1, event.shiftKey);
-      return;
-    }
+  const copyId = (id: string) => {
+    void navigator.clipboard?.writeText(id);
+  };
 
-    if ((event.key === "Enter" || event.key === " ") && active !== null) {
-      event.preventDefault();
-      setSelection((state) =>
-        pressRow(
-          state,
-          active,
-          {},
-          visible.map((row) => row.id),
-        ),
-      );
-    }
+  const deleteRow = (id: string) => {
+    const next = rows.filter((row) => row.id !== id);
+    setRows(next);
+    setSelection((state) =>
+      retainSelection(
+        state,
+        next.map((row) => row.id),
+      ),
+    );
+    setOpenMenu(null);
   };
 
   return (
     <div className="gx-demo-table">
       <div className="gx-table-card">
-        <div>
-          <p className="gx-table-heading">Deploy queue</p>
-          <p className="gx-table-meta">
-            A press selects the record it hit; Cmd toggles, Shift extends. The
-            header sorts, the field narrows.
-          </p>
-        </div>
-
         <div className="gx-table-toolbar">
           <input
             aria-label="Filter deploys"
             className="gx-table-filter"
             onChange={(event) => onQuery(event.target.value)}
-            placeholder="Filter services, environments, status"
+            placeholder="Filter services…"
             value={query}
           />
-          <span className="gx-table-count">
-            {visible.length} of {TABLE_ROWS.length}
-          </span>
+          <div className="gx-table-columns" ref={columnsAnchor}>
+            <button
+              aria-expanded={columnsOpen}
+              className="gx-table-columns-btn"
+              onClick={() => setColumnsOpen((open) => !open)}
+              type="button"
+            >
+              Columns
+            </button>
+            {columnsOpen ? (
+              <div
+                aria-label="Toggle columns"
+                className="gx-table-columns-menu"
+                role="menu"
+              >
+                <p className="gx-table-columns-label">Toggle columns</p>
+                {ALL_COLUMNS.map((id) => (
+                  <button
+                    aria-checked={columns.includes(id)}
+                    className="gx-table-columns-item"
+                    key={id}
+                    onClick={() =>
+                      setColumns((state) => toggleColumn(state, id))
+                    }
+                    role="menuitemcheckbox"
+                    type="button"
+                  >
+                    <span aria-hidden="true" className="gx-table-columns-check">
+                      {columns.includes(id) ? "✓" : ""}
+                    </span>
+                    {COLUMN_LABELS[id]}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        <div
-          aria-label="Deploy queue"
-          className="gx-table"
-          onKeyDown={onKeyDown}
-          role="grid"
-        >
-          <div className="gx-table-head-row" role="row">
-            {FIELDS.map((field) => (
+        <div className="gx-table">
+          <table aria-label="Deploy queue" className="gx-table-el">
+            <caption className="gx-table-caption">
+              A queue of recent deploys across production, staging and
+              development.
+            </caption>
+            <colgroup>
+              <col style={{ width: SELECT_WIDTH }} />
+              {columns.map((id) => (
+                <col key={id} style={{ width: COLUMN_WIDTH[id] }} />
+              ))}
+              <col style={{ width: ACTIONS_WIDTH }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th className="gx-table-head gx-table-check-head" scope="col">
+                  <TableCheck
+                    checked={allSelected}
+                    disabled={shown.length === 0}
+                    indeterminate={someSelected}
+                    label="Select all rows"
+                    onToggle={onTogglePage}
+                  />
+                </th>
+                {columns.map((id) => (
+                  <th className="gx-table-head" key={id} scope="col">
+                    <button
+                      aria-label={sortLabel(COLUMN_LABELS[id], sort, id)}
+                      className="gx-table-sort"
+                      data-sorted={
+                        sort?.field === id ? sort.direction : undefined
+                      }
+                      onClick={() => onSort(id)}
+                      type="button"
+                    >
+                      {COLUMN_LABELS[id]}
+                      <span aria-hidden="true" className="gx-table-glyph">
+                        {sortGlyph(sort, id)}
+                      </span>
+                    </button>
+                  </th>
+                ))}
+                <th
+                  aria-label="Actions"
+                  className="gx-table-head gx-table-actions"
+                  scope="col"
+                />
+              </tr>
+            </thead>
+            <tbody>
+              {pageRows.length === 0 ? (
+                <tr className="gx-table-row">
+                  <td className="gx-table-empty" colSpan={columns.length + 2}>
+                    <p className="gx-table-empty-title">No results.</p>
+                    <p className="gx-table-empty-meta">
+                      Clear the field to see all {rows.length} deploys.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((row) => (
+                  <tr
+                    className="gx-table-row"
+                    data-selected={selection.selected.includes(row.id)}
+                    key={row.id}
+                  >
+                    <td className="gx-table-cell gx-table-check-cell">
+                      <TableCheck
+                        checked={selection.selected.includes(row.id)}
+                        label={`Select ${row.service}`}
+                        onToggle={() => onToggleRow(row.id, false)}
+                      />
+                    </td>
+                    {columns.map((id) => (
+                      <DataCell id={id} key={id} row={row} />
+                    ))}
+                    <td className="gx-table-cell gx-table-actions">
+                      <div
+                        className="gx-table-menu-anchor"
+                        ref={openMenu === row.id ? menuAnchor : undefined}
+                      >
+                        <button
+                          aria-expanded={openMenu === row.id}
+                          aria-label={`Actions for ${row.service}`}
+                          className="gx-table-action-btn"
+                          onClick={() =>
+                            setOpenMenu(openMenu === row.id ? null : row.id)
+                          }
+                          type="button"
+                        >
+                          …
+                        </button>
+                        {openMenu === row.id ? (
+                          <div
+                            aria-label={`Actions for ${row.service}`}
+                            className="gx-table-menu"
+                            role="menu"
+                          >
+                            <button
+                              className="gx-table-menu-item"
+                              onClick={() => {
+                                copyId(row.id);
+                                setOpenMenu(null);
+                              }}
+                              role="menuitem"
+                              type="button"
+                            >
+                              Copy id
+                            </button>
+                            <button
+                              className="gx-table-menu-item"
+                              data-tone="destructive"
+                              onClick={() => deleteRow(row.id)}
+                              role="menuitem"
+                              type="button"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="gx-table-footer">
+          <span className="gx-table-selected">
+            {selection.selected.length} of {shown.length} row(s) selected.
+          </span>
+          <div className="gx-table-pager">
+            <span className="gx-table-pagesize">
+              Rows per page: {PAGE_SIZE}
+            </span>
+            <span className="gx-table-pageinfo">
+              Page {current + 1} of {count}
+            </span>
+            <div className="gx-table-pagenav">
               <button
-                aria-label={sortLabel(field.label, sort, field.id)}
-                className="gx-table-head"
-                data-sorted={
-                  sort?.field === field.id ? sort.direction : undefined
-                }
-                key={field.id}
-                onClick={() =>
-                  setSort((current) =>
-                    nextSort(current, field.id, field.initial),
-                  )
-                }
+                aria-label="Previous page"
+                className="gx-table-pagebtn"
+                disabled={current === 0}
+                onClick={() => setPage(current - 1)}
                 type="button"
               >
-                {field.label}
-                <span aria-hidden="true" className="gx-table-glyph">
-                  {sort?.field !== field.id
-                    ? "↕"
-                    : sort.direction === "asc"
-                      ? "↑"
-                      : "↓"}
-                </span>
+                ‹
               </button>
-            ))}
-          </div>
-
-          <div className="gx-table-body" role="rowgroup">
-            {visible.length === 0 ? (
-              <div className="gx-table-empty" role="row">
-                <p className="gx-table-empty-title">
-                  No deploy matches that filter.
-                </p>
-                <p className="gx-table-empty-meta">
-                  Clear the field to see all {TABLE_ROWS.length} deploys.
-                </p>
-              </div>
-            ) : (
-              visible.map((row) => (
-                <Row
-                  key={row.id}
-                  onPress={(event) =>
-                    setSelection((state) =>
-                      pressRow(
-                        state,
-                        row.id,
-                        {
-                          shift: event.shiftKey,
-                          cmd: event.metaKey,
-                          ctrl: event.ctrlKey,
-                        },
-                        visible.map((entry) => entry.id),
-                      ),
-                    )
-                  }
-                  register={(element) => {
-                    if (element === null) rows.current.delete(row.id);
-                    else rows.current.set(row.id, element);
-                  }}
-                  row={row}
-                  selected={selection.selected.includes(row.id)}
-                  tabbable={active === row.id}
-                />
-              ))
-            )}
+              <button
+                aria-label="Next page"
+                className="gx-table-pagebtn"
+                disabled={current >= count - 1}
+                onClick={() => setPage(current + 1)}
+                type="button"
+              >
+                ›
+              </button>
+            </div>
           </div>
         </div>
-
-        <p className="gx-table-readout">
-          {readout(visible, selection, sort)} · chosen{" "}
-          <b>
-            {selection.selected.length === 0
-              ? "none"
-              : selection.selected.join(", ")}
-          </b>
-        </p>
       </div>
     </div>
   );
@@ -283,31 +495,36 @@ export const TableStates = () => {
         meta="A chosen record paints the selected wash; the sorted column keeps its glyph and its announced name."
         title="Chosen and sorted"
       >
-        <div aria-label="Sorted deploys" className="gx-table" role="grid">
-          <div className="gx-table-head-row" role="row">
-            <span className="gx-table-head" data-sorted="desc">
-              Duration
-              <span aria-hidden="true" className="gx-table-glyph">
-                ↓
-              </span>
-            </span>
-            <span className="gx-table-head">Service</span>
-          </div>
-          <div className="gx-table-body" role="rowgroup">
-            {sorted.slice(0, 3).map((row) => (
-              <div
-                className="gx-table-row"
-                data-selected={row.id === "reports"}
-                key={row.id}
-                role="row"
-              >
-                <span className="gx-table-cell gx-table-number">
-                  {row.duration}s
-                </span>
-                <span className="gx-table-cell">{row.service}</span>
-              </div>
-            ))}
-          </div>
+        <div className="gx-table">
+          <table aria-label="Sorted deploys" className="gx-table-el">
+            <thead>
+              <tr>
+                <th className="gx-table-head" scope="col">
+                  Duration
+                  <span aria-hidden="true" className="gx-table-glyph">
+                    ↓
+                  </span>
+                </th>
+                <th className="gx-table-head" scope="col">
+                  Service
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.slice(0, 3).map((row) => (
+                <tr
+                  className="gx-table-row"
+                  data-selected={row.id === "reports"}
+                  key={row.id}
+                >
+                  <td className="gx-table-cell gx-table-number">
+                    {row.duration}s
+                  </td>
+                  <td className="gx-table-cell">{row.service}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </StateCard>
 
@@ -315,21 +532,31 @@ export const TableStates = () => {
         meta="No row matches: the body paints one full-width row rather than a blank box."
         title="Empty"
       >
-        <div aria-label="Filtered to nothing" className="gx-table" role="grid">
-          <div className="gx-table-head-row" role="row">
-            <span className="gx-table-head">Service</span>
-            <span className="gx-table-head">Status</span>
-          </div>
-          <div className="gx-table-body" role="rowgroup">
-            <div className="gx-table-empty" role="row">
-              <p className="gx-table-empty-title">
-                No deploy matches “eu-west”.
-              </p>
-              <p className="gx-table-empty-meta">
-                Clear the field to see all 6 deploys.
-              </p>
-            </div>
-          </div>
+        <div className="gx-table">
+          <table aria-label="Filtered to nothing" className="gx-table-el">
+            <thead>
+              <tr>
+                <th className="gx-table-head" scope="col">
+                  Service
+                </th>
+                <th className="gx-table-head" scope="col">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="gx-table-row">
+                <td className="gx-table-empty" colSpan={2}>
+                  <p className="gx-table-empty-title">
+                    No deploy matches “eu-west”.
+                  </p>
+                  <p className="gx-table-empty-meta">
+                    Clear the field to see all 6 deploys.
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </StateCard>
 
@@ -337,30 +564,34 @@ export const TableStates = () => {
         meta="Placeholder rows stand in while the first page arrives; they are not a spinner."
         title="Loading"
       >
-        <div aria-label="Loading deploys" className="gx-table" role="grid">
-          <div className="gx-table-head-row" role="row">
-            <span className="gx-table-head">Service</span>
-            <span className="gx-table-head">Duration</span>
-          </div>
-          <div className="gx-table-body" role="rowgroup">
-            {TABLE_ROWS.slice(0, 4).map((row, index) => (
-              <div
-                className="gx-table-row"
-                key={`${row.id}-${index}`}
-                role="row"
-              >
-                <span className="gx-table-cell">
-                  <span
-                    className="gx-table-skeleton"
-                    style={{ width: 96 + index * 14 }}
-                  />
-                </span>
-                <span className="gx-table-cell">
-                  <span className="gx-table-skeleton" style={{ width: 40 }} />
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="gx-table">
+          <table aria-label="Loading deploys" className="gx-table-el">
+            <thead>
+              <tr>
+                <th className="gx-table-head" scope="col">
+                  Service
+                </th>
+                <th className="gx-table-head" scope="col">
+                  Duration
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {TABLE_ROWS.slice(0, 4).map((row, index) => (
+                <tr className="gx-table-row" key={row.id}>
+                  <td className="gx-table-cell">
+                    <span
+                      className="gx-table-skeleton"
+                      style={{ width: 96 + index * 14 }}
+                    />
+                  </td>
+                  <td className="gx-table-cell">
+                    <span className="gx-table-skeleton" style={{ width: 40 }} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </StateCard>
     </div>
