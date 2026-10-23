@@ -1,11 +1,9 @@
 ---
 title: Text
-description: One run of type, named by a theme role and a semantic tone.
+description: One run of type, named by a theme role and a semantic tone
 ---
-<ComponentPreview name="text-demo" />
 
-`Text` names a role from the theme's type scale and a tone that decides its
-colour.
+<ComponentPreview name="text-demo" />
 
 ## Usage
 
@@ -20,32 +18,6 @@ import { Text, Stack } from "@gpuixui/primitives";
   <Text role="code">nub add @gpuixui/primitives</Text>
 </Stack>;
 ```
-
-## Roles
-
-| `role` | Family | Typical use |
-| ------ | ------ | ----------- |
-| `display` | sans | a landing or empty-state headline |
-| `h1`, `h2`, `h3` | sans | page, section and subsection titles |
-| `body` | sans | running text |
-| `bodyStrong` | sans | the lead sentence of a section |
-| `label` | sans | a control's visible name |
-| `caption` | sans | metadata and helper text |
-| `code` | mono | an inline identifier or command |
-| `codeBlock` | mono | a block of code |
-
-Heading roles publish `role="heading"` with their level; `code` roles publish
-`role="code"`. The rest are plain text.
-
-## Tones
-
-| `tone` | Colour role |
-| ------ | ----------- |
-| `default` | `foreground` |
-| `muted` | `mutedForeground` |
-| `primary` | `brandText(theme)` |
-| `destructive` | `destructiveSoftForeground` |
-| `inherit` | none |
 
 ## API
 
@@ -67,4 +39,3 @@ Heading roles publish `role="heading"` with their level; `code` roles publish
 - No paragraph or list semantics: only the heading and code roles are published.
 - No rich text: one run, one role; compose several `Text` nodes in a `Stack`.
 - No responsive type scale or fluid sizing.
-- `truncate` and `clamp` need a bounded width to wrap against.

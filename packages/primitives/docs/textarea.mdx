@@ -1,11 +1,9 @@
 ---
 title: TextArea
-description: A multi-line text field sized in rows.
+description: A multi-line text field sized in rows
 ---
-<ComponentPreview name="textarea-demo" />
 
-`TextArea` is `Input`'s multi-line sibling: the same field contract on the native
-`<textarea>`.
+<ComponentPreview name="textarea-demo" />
 
 ## Usage
 
@@ -55,11 +53,6 @@ const help = "Markdown is not interpreted.";
 
 ## Limitations
 
-- Rows are whole numbers. The runtime drops a fractional `minRows`/`maxRows`
-  rather than flooring it, so the field hands it the whole part: a `2.5` row
-  floor otherwise painted **one** row and a `2.5` row cap did not cap at all
-  (measured on 0.11.0 by `runtime/fields.runtime.test.tsx`).
+- Rows are whole numbers.
 - No `onSubmit`: Enter inserts a newline, never submits.
 - No `maxLength`, filter or mask: the same measured limit as `Input`.
-- No rich text, markdown preview or character counter.
-- No auto-grow beyond `maxRows`; past it the field scrolls.

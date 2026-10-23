@@ -1,11 +1,9 @@
 ---
 title: Box
-description: A surface with tone, padding, radius, border and flex facts.
+description: A surface with tone, padding, radius, border and flex facts
 ---
-<ComponentPreview name="box-demo" />
 
-`Box` is a `<div>` with a resolved surface: tone, padding, radius, border,
-elevation and two flex facts.
+<ComponentPreview name="box-demo" />
 
 ## Usage
 
@@ -16,19 +14,6 @@ import { Box, Text } from "@gpuixui/primitives";
   <Text role="body">A surface with the card role.</Text>
 </Box>;
 ```
-
-## Tones
-
-| `tone` | Background role |
-| ------ | --------------- |
-| `none` | none |
-| `background` | `background` |
-| `card` | `card` |
-| `popover` | `popover` |
-| `muted` | `muted` |
-| `accent` | `accent` |
-| `selected` | `selected` |
-| `skeleton` | `skeleton` |
 
 ## API
 
@@ -49,11 +34,8 @@ import { Box, Text } from "@gpuixui/primitives";
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
 
-The dashed edge is the runtime's `borderStyle`; `dashed` is the one alternate it paints.
-
 ## Limitations
 
 - No `role`, `tabIndex` or event props; compose a host element for semantics.
 - No gradient prop; pass one through `style`.
 - One border style for every side; `dashed` is the only alternate.
-- One shadow per element.

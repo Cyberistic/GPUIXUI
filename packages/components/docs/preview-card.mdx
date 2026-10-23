@@ -1,6 +1,6 @@
 ---
 title: Preview card
-description: A rich, hoverable card shown on hover or on a press.
+description: A rich, hoverable card shown on hover or on a press
 ---
 
 <ComponentPreview name="preview-card-demo" />
@@ -46,11 +46,6 @@ PreviewCard
 
 ## Limitations
 
-- Timers are the component's; pass `0` to disable them. A delay that is not a
-  finite number takes the documented default (300 ms to open, 150 ms to close),
-  so a computed delay cannot open the card in the pointer's frame.
-- Disabling a trigger while its hover open is still waiting cancels the open; the
-  trigger has to be entered again after it is re-enabled.
+- Timers are the component's; pass `0` to disable them.
+- Disabling a trigger while its hover open is still waiting cancels the open; the trigger has to be entered again after it is re-enabled.
 - No pointer-type signal; touch is press-to-toggle.
-- A `Tab` traversal opens nothing; press to open.
-- No anchor arrow, `aria-haspopup` or follow-cursor.

@@ -1,11 +1,9 @@
 ---
 title: Progress
-description: A determinate or indeterminate progress bar.
+description: A determinate or indeterminate progress bar
 ---
-<ComponentPreview name="progress-demo" />
 
-`Progress` paints a track and a fill. With `value` it is determinate; without it,
-a segment advances as an indeterminate bar.
+<ComponentPreview name="progress-demo" />
 
 ## Usage
 
@@ -17,16 +15,6 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
   <Progress value={42} label="Uploading" />
 </Stack>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `Progress` | role, accessible name, announced value |
-| `ProgressTrack` | the bar's background and overflow clip |
-| `ProgressIndicator` | the fill, and the buffer segment after it |
-| `ProgressLabel` | visible task name, defaulting to the root's `label` |
-| `ProgressValue` | the clamped percentage in the caller's words |
 
 ## API
 
@@ -45,23 +33,8 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
 
-`formatValue` and `loadingText` are interface copy, so a **blank answer is
-absence**: a locale table with no row for this bar returns `""`, and the bar
-announces and paints its own words rather than an empty value. A real answer is
-trimmed and used as it is.
-
-## Motion
-
-An indeterminate segment advances one step at `motionLevels.step` (120 ms in the
-shipped timing), the same cadence `Spinner` reads: both take the level from
-`@gpuixui/motion` instead of copying the number, so a busy action and a loading
-bar tick at one speed and a brand that moves the level moves both. A determinate
-bar draws a fixed fill and runs no timer at all.
-
 ## Limitations
 
 - No `aria-valuenow`: the value is announced as `aria-valuetext`.
-- The indeterminate word is the provider's `messages.loading.indeterminate`
-  (`"loading"`); pass `loadingText` to word one bar differently.
+- The indeterminate word is the provider's `messages.loading.indeterminate`; pass `loadingText` to word one bar differently.
 - The indeterminate segment is a discrete step, not a smooth sweep.
-- One buffer, no stacked segments and no in-track label.

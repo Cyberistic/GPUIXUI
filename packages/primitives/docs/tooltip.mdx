@@ -1,12 +1,7 @@
 ---
 title: Tooltip
-description: A short label on hover — a themed wrapper over GPUix's Tooltip.
+description: A short label on hover — a themed wrapper over GPUix's Tooltip
 ---
-
-`Tooltip` reuses `@gpuix/react/tooltip` for the anchored layer, the open delay and
-dismissal, and themes the tip to the popover surface. It is the one primitive that
-floats above the page, so it also moves with the house timing — arriving from the
-edge it is anchored to, and staying painted for its exit.
 
 <ComponentPreview name="tooltip-demo" />
 
@@ -60,43 +55,8 @@ const theme = useTheme();
 | `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger |
 | `children` | `ReactNode` | required | the tips and triggers the timing applies to |
 
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react/tooltip` | the anchored layer, the hover/focus wiring and dismissal, which this wrapper themes |
-| `@gpuixui/motion` | the house presence rule the tip moves with (`@gpuixui/motion/presence`), read through the package's `core/presence.ts` seam |
-| `@gpuixui/icons` | the `info` glyph in the usage snippet |
-
-## Motion
-
-A tip is the smallest floating surface, so it uses the smallest movement: a fade
-plus two pixels along the axis it is anchored to (`side`), over
-`motionLevels.fast` (160 ms) — the `easeOut` entry and the `easeIn` exit every
-other surface uses. The frames, the exit window and the pointer rule are
-`@gpuixui/motion/presence`'s, and the level's two phases come from that module's
-`presenceTiming`, so a change to the house motion reaches the tip with no
-component change and the two packages that float a surface compose one table
-rather than agreeing by hand.
-
-**A dismissed tip keeps its box for the exit.** The runtime publishes no exit
-lifecycle (`TooltipContent` returns nothing when closed), so the wrapper holds
-the open state for the tween's window, paints the exit frame, and releases it
-when the window ends; a leaving tip takes no presses, so it cannot swallow the
-press that dismissed it. Re-opening during the exit retargets the same box.
-
-**`reducedMotion` removes the journey, not the frames.** The resting frame is
-what paints either way; a reduced close is an unmount rather than a held exit.
-The runtime exposes no preference (`docs/gpuix-capabilities.md`), so the
-application states it once — `MotionProvider` from `@gpuixui/motion/react` —
-exactly as it states the theme mode, and the prop overrides it per tip.
-
 ## Limitations
 
-- The trigger must be a focusable element: `Button`, `IconButton`, `Toggle`,
-  `Checkbox` and `Switch` forward `TooltipTriggerProps`.
-- In a window there is no keyboard open path: a `Tab` traversal leaves the tip
-  closed, so hover is the only route.
-- No `aria-describedby`: a non-string tip has no description unless `description`
-  is passed.
-- No arrow/caret, no wrapping content and no touch-long-press.
+- The trigger must be a focusable element: `Button`, `IconButton`, `Toggle`, `Checkbox` and `Switch` forward `TooltipTriggerProps`.
+- In a window there is no keyboard open path: a `Tab` traversal leaves the tip closed, so hover is the only route.
+- No `aria-describedby`: a non-string tip has no description unless `description` is passed.

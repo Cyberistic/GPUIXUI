@@ -1,6 +1,6 @@
 ---
 title: Field and inline validation
-description: A label, control and message block around one input.
+description: A label, control and message block around one input
 ---
 
 <ComponentPreview name="field-states" />
@@ -30,40 +30,6 @@ Field
 └── FieldInput
 ```
 
-## Examples
-
-### Validation
-
-```tsx
-import { validate } from "@gpuixui/components/validation/logic";
-
-const Slug = Schema.NonEmptyString.check(
-  Schema.isPattern(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
-    identifier: "WorkspaceSlugPattern",
-    message: "Use lowercase letters, numbers and single hyphens",
-  }),
-);
-
-const message = Effect.runSync(validate(Slug)(value));
-```
-
-## Undo, and the value you push back
-
-The `<input>` keeps its own undo history, and it recognises the values it
-reported: a controlled field that writes back exactly what `onChange` gave it
-keeps `cmd-z`. A value the field did not produce — a normalised, masked or
-truncated rewrite — arrives as an outside set and **clears both stacks**, so the
-history is gone from the second keystroke while `cmd-z` still looks like it
-works. **Format on commit, or derive the display**, rather than writing a
-rewritten value back while the reader types. A re-render that leaves the value
-unchanged is safe, and the chord stays in the field: an app-level undo handler
-beside it never sees `cmd-z` while the field has focus.
-
-`FieldInput` renders that host. Measured by `text-undo-lifecycle` (15 checks,
-0.11.0): the field restores its snapshot through `onChange`, a pushed value
-clears the history, and an unrelated re-render keeps it. Fixture
-`apps/playground/src/live/text-undo.ts`.
-
 ## API
 
 | Part | Prop | Type | Default |
@@ -82,14 +48,5 @@ clears the history, and an unrelated re-render keeps it. Fixture
 ## Limitations
 
 - The error replaces the description rather than stacking under it.
-- A `Tab` traversal focuses the input **without running its `onFocus`**, because the
-  automation window the probe runs in never becomes active and so delivers no
-  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.
+- A `Tab` traversal focuses the input **without running its `onFocus`**; the ring is declared at rest.
 - No `aria-describedby`, `aria-invalid` or `aria-required`.
-- Not a form library; no value, submit or cross-field rules.
-
-## Related
-
-- **Alert** — a page-level message rather than a field message.
-- **Toast** — feedback after a submit.
-- **Dialog** — a blocking form surface.

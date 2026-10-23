@@ -1,6 +1,6 @@
 ---
 title: Toast
-description: A bounded, auto-dismissing notification stack backed by an Effect store.
+description: A bounded, auto-dismissing notification stack backed by an Effect store
 ---
 
 <ComponentPreview name="toast-workflow" />
@@ -47,63 +47,8 @@ ToastProvider
 | `useToast()` | `dismiss` / `dismissAll` | `(id: string) => void` / `() => void` | — |
 | `useToast()` | `pause` / `resume` | `(id: string) => void` | — |
 
-`max` bounds the queue: a count the store cannot measure — a `NaN` from a width
-calculation that never arrived, or an `Infinity` — reads as the default 3, and a
-finite count below one keeps one card. An unbounded queue would retain a card
-and its auto-dismiss timer for every toast ever pushed.
-
-## Queue and history
-
-The store is the transient half of a notification centre, not its storage. It
-keeps `max` cards (3 by default), and the fourth push expires the oldest —
-so a history panel has to record every title it pushes itself, while the
-viewport paints only what is still live. The playground's
-`notification-centre-lifecycle` measured the composition on 0.11.0 (30 checks):
-three cards
-in one column (356 wide, one right edge, 12px apart, in push order), the fourth
-push leaving `queued=3 ids=2,3,4` while the app's panel still lists the expired
-title, a card action reporting once with the survivors reflowing, the app's
-clear emptying the queue, and a 700 ms transient dismissing itself with no press.
-
-```tsx
-const toast = useToast();
-const [history, setHistory] = useState<ReadonlyArray<string>>([]);
-
-const notify = (title: string) => {
-  setHistory((kept) => [title, ...kept]);
-  toast.push({ title });
-};
-
-<ToastProvider>
-  <App />
-  <NotificationPanel titles={history} />
-  <ToastViewport />
-</ToastProvider>;
-```
-
-The binding publishes no notification API — no OS centre, badge or persistence
-— so the history is the app's to own and this stack is what alerts.
-
-## Motion
-
-The stack moves on its own timing, not a shared level: a card rises 16px into
-place (220 ms) and leaves by fading while it slides 16px to the right (180 ms).
-A dismissed card stays painted for that exit, so the card keeps the content it
-was dismissed with.
-
-Hovering any card fans the stack — each card that is not the newest lifts 8px,
-widening the gap — and holds every auto-dismiss clock; leaving the stack resumes
-each with the time it had left. A card dismissed while the stack is fanned keeps
-the lift it was resting at for its exit, so a ghost slides away from where it
-sat instead of falling back into its slot. `MotionProvider
-preference="reduced"` removes the travel and paints the resting frame at once.
-
 ## Limitations
 
 - No `aria-live` or `aria-atomic`; a status region is the announcement.
 - No progress indicator for the remaining time.
 - A traversal does not hold the clock; use `duration: 0` for an actionable toast.
-- Not portalled; put the viewport at the app root.
-- A dismissed card stays painted for its exit and keeps the content it was
-  dismissed with — its action stays visible but inert, because the seam's
-  `PresenceShield` takes the press rather than the action running after close.

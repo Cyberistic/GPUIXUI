@@ -1,6 +1,6 @@
 ---
 title: Scroll progress
-description: A reading line showing how far through scrollable content the reader is.
+description: A reading line showing how far through scrollable content the reader is
 ---
 
 <ComponentPreview name="scroll-progress-demo" />
@@ -23,13 +23,6 @@ import { ScrollProgress } from "@gpuixui/components/scroll-progress";
 </ScrollProgress>;
 ```
 
-## Keyboard
-
-The viewport is a tab stop that names itself a scroll region, so the same box
-the line reads is the one a keyboard reader moves: arrows scroll a row,
-PageUp/PageDown a page and Home/End the ends. `label` names the region as well
-as the reading line.
-
 ## API
 
 | Prop | Type | Default |
@@ -48,4 +41,3 @@ as the reading line.
 - No tween; the line follows the offset.
 - Vertical only.
 - No `aria-valuenow`; the reading is text.
-- The scrollbar's thumb takes no pointer input; the wheel and the keys are the routes.

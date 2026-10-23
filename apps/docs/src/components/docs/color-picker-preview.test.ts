@@ -176,8 +176,8 @@ describe("the swatches", () => {
     expect(component).toContain("aria-selected={selected}");
     expect(component).not.toContain("ArrowRight");
     expect(component).not.toContain("ArrowLeft");
-    expect(page).toContain("**every cell is its own tab stop**");
-    expect(page).toContain("no arrow-key");
+    expect(page).toContain("**Every swatch is its own tab stop.**");
+    expect(page).toContain("no arrow-key movement");
   });
 
   it("prints the readout the workflow shows", () => {
@@ -198,6 +198,6 @@ describe("the caller's palette", () => {
         swatchRoles.some((role) => role === swatch.role),
       ),
     ).toEqual([]);
-    expect(page).toContain("caller's palette is the caller's to check");
+    expect(page).toContain("The caller's palette is the caller's to check");
   });
 });

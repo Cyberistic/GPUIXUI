@@ -141,14 +141,8 @@ describe("the preview's filter", () => {
     const tablePage = read("apps/docs/content/docs/components/table.mdx");
     expect(tablePage).toContain("columns: [");
     expect(tablePage).not.toContain("textOf");
-    expect(tablePage).toContain("order={table.sortOrder}");
-    expect(tablePage).toContain("onSortPress={table.pressSort}");
-    expect(tablePage).toContain("pressSortOrder");
-    expect(tablePage).toContain("tie-break");
-
-    const dataPage = read("apps/docs/content/docs/data-display/index.mdx");
-    expect(dataPage).toContain('sortFn: "basic"');
-    expect(dataPage).not.toContain("sortRows");
+    expect(tablePage).toContain("hiddenColumns: columns.hidden");
+    expect(tablePage).not.toContain("sortRows");
   });
 });
 

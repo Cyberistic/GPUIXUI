@@ -1,12 +1,9 @@
 ---
 title: MarkdownEditor
-description: Markdown source editing with the runtime's rendered markdown beside it — the honest rich-text alternative.
+description: Markdown source editing with the runtime's rendered markdown beside it — the honest rich-text alternative
 ---
 
-`MarkdownEditor` is the strongest rich-text surface this runtime supports: the
-reader writes **markdown** in a real `<textarea>`, and the same value renders
-through the runtime's `<markdown>` host beside it. It is not WYSIWYG, and it does
-not pretend to be — see [Why not rich text](#why-not-rich-text).
+## Usage
 
 ```tsx
 import { MarkdownEditor } from "@gpuixui/editor";
@@ -19,60 +16,6 @@ import { MarkdownEditor } from "@gpuixui/editor";
   height={300}
 />;
 ```
-
-## Views
-
-| Mode | Paints |
-| ---- | ------ |
-| `split` (default) | source and preview side by side, a draggable divider between |
-| `source` | the source only |
-| `preview` | the rendered document only |
-
-`mode`/`defaultMode`/`onModeChange` is the controlled/uncontrolled contract; the
-three toolbar buttons report a change in both modes. A stored mode that is not
-one of the three reads as `split`.
-
-## The split
-
-A split is the shipped `SplitPane` (`@gpuixui/dock`): its divider is a
-`role="separator"` Tab stop, and a drag or an arrow key changes the source
-pane's size while the preview takes the rest. The size is
-`splitSize`/`defaultSplitSize`/`onSplitSizeChange` — controlled and
-uncontrolled like the other two contracts — and is held to **25–75%** of the
-body, so neither pane can be dragged away. A split restored from storage that
-cannot be laid out (`NaN`, infinity) reads as the **middle** of the body rather
-than painting a pane with no width. A controlled `splitSize` is
-authoritative: a drag reports through `onSplitSizeChange` and the pane moves only
-when the caller renders the new value. A divider drag never edits the document,
-and a disabled editor disables the divider with the rest of its chrome.
-
-## The document
-
-`value`/`defaultValue`/`onValueChange` is the text contract: a controlled editor
-is authoritative, an uncontrolled one keeps its own draft. The status line counts
-**lines, words and Unicode code points** (an emoji counts once, not twice); an
-empty document reads `0 lines · 0 words`.
-
-An **unclosed code fence is closed in the preview only**. A document being
-written mid-block would otherwise swallow every following line into one code
-block; the source keeps exactly the characters the reader typed, and the preview
-appends the missing marker (`markdown/logic.ts`). A closer must be **at least as
-long as the opening run and carry nothing after it** (trailing spaces aside), so
-a three-tick line inside a four-tick block, or a ```` ```js ```` line inside a
-block, stays content instead of ending the preview's block early.
-
-## Keyboard
-
-| Where | Contract |
-| ----- | -------- |
-| source | the runtime's native text editing, including IME, paste and undo |
-| toolbar | the shipped `Button` activation — Enter and Space on release |
-| divider | a `role="separator"`: arrows resize by 16 points, Home/End name the 25%/75% bounds |
-| preview | a focusable `ScrollArea`, so a long document scrolls from the keyboard |
-
-The editor installs no key handler of its own: typing is the textarea's, and the
-runtime has no caret or selection API to build one against. The divider's keys
-are `SplitPane`'s, not a second implementation.
 
 ## API
 
@@ -96,61 +39,8 @@ are `SplitPane`'s, not a second implementation.
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
 
-A `placeholder` is painted by the editor in the theme's `placeholder` role and
-announced as the source field's description, because 0.11.0 shapes a host
-placeholder in a fixed grey (`#8F8F8F`, 2.84:1 on a white field) and a host
-handed no placeholder loses its `aria-placeholder` with it.
-
-## Accessibility
-
-The source is a real text field named `<label> source`; a read-only editor stays
-focusable, and a disabled one leaves the tab order outright — the field, the
-split divider and the preview scroller all drop their stops — and paints at the
-theme's `disabledOpacity`, like a disabled field. The split's divider is a
-`role="separator"` tab stop named `<label> split`, announcing the source pane's
-size (`320 px`) because 0.11.0 has no `aria-valuenow`, so a reader who cannot
-drag can still resize it from the keyboard. The preview is a `ScrollArea` named
-`<label> preview`, so a keyboard reader can scroll a long document. The mode
-buttons are the shipped `Button`s with their own accessible names and activation
-contract. The status line is plain text, not a live region (the runtime has
-none), so a reader who needs the count announced should render it beside the
-editor.
-
-## Why not rich text
-
-The runtime provides **no editable rich-text host**. Measured on 0.11.0:
-
-- `<markdown>` renders a document, `<textarea>` edits plain text, and nothing
-  joins them;
-- a `<textarea>` reports **no caret position and no selection**, so a toolbar
-  cannot wrap the text the reader selected;
-- a transparent field over a `<code>` view paints **no caret** and reports no
-  scroll offset (the `editor-overlay` probe: the two layers are pixel-identical
-  to the code alone, and no caret appears in five frames 120 ms apart).
-
-A WYSIWYG or formatting-toolbar surface would therefore be a decorative
-imitation. Editing source and previewing it is the strongest honest alternative,
-and it is what `CodeEditor` does one tier down.
-
 ## Limitations
 
 - **No formatting toolbar.** It needs a selection API the runtime does not have.
-- **No caret or selection read-back.** `MarkdownEditor` cannot insert at the
-  reader's cursor.
-- **Two panes, horizontal only.** A split divides the editor left/right and the
-  preview takes the rest; there is no stacked split.
-- **Preview is read-only.** Editing happens in the source, by design.
-
-## Evidence
-
-`src/behaviour/markdown-editor.test.tsx` (15 native behaviour tests) types into
-the real field, follows the edit into the preview, switches all three views,
-drags the divider and steps it by keyboard (a controlled size stays put, and a
-stored NaN opens at the middle), holds the read-only and disabled refusals, holds
-the disabled editor out of the tab order (a `Tab` from a control before it lands
-on the control after it, while an editable editor takes that press), and reads
-its `disabledOpacity` paint;
-`src/markdown/logic.test.ts` (17 cases) holds the fence families, the run length
-and the closer's rules, the counts, the stored mode and the split's band;
-`src/behaviour/hints.test.tsx` holds the painted hint in both themes, the help
-sentence the host loses, and the hint's return when the field clears.
+- **No caret or selection read-back.** `MarkdownEditor` cannot insert at the reader's cursor.
+- **Two panes, horizontal only.** A split divides the editor left/right and the preview takes the rest; there is no stacked split.

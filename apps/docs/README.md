@@ -434,9 +434,8 @@ guard's ledger and owned by their package. `## Related` is **generated** rather
 than required: a package page is Markdown the site mounts and cannot resolve its
 siblings, so `src/lib/related.ts` names each page's family and
 `src/components/docs/related-strip.tsx` prints it at the end of every mounted
-package page. `src/lib/related.test.ts` covers each mounted package page exactly
-once or argues it as a solo, and holds every link and label to the page that
-serves it.
+package page. `related-strip.test.tsx` holds the rendered line and the pages
+argued as solos.
 `## Verification`/`## Testing` stays the page author's and is optional: it names
 the suite that proves the component where the package keeps one, and the site
 cannot invent a suite, so a page without the heading is not a defect the site
@@ -591,9 +590,7 @@ link carries one, because the authored styles are library data:
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
 library's roles, radii, families and density, not a docs palette. `/docs/theming`
-documents the parameter under **The look parameter**;
-`src/lib/theming-page.test.ts` holds the page and `docs/preview-strategy.md` to
-the platform-only sidebar.
+documents the parameter under **The look parameter**.
 
 ## The theme editor
 
@@ -626,9 +623,7 @@ Demo renderings and their source strings live in
 `src/components/docs/demos.tsx`. Add a registry entry there, then point a page at
 it. The curated pages — the ones with a preview — are the set named in
 `docs/preview-strategy.md`; every other component page is the package's own and
-adds the API tables, limitations and the example to run. `src/lib/component-page-truth.test.ts` holds the curated pages to the
-runtime version the workspace pins, the inventory row and the test count their
-suite actually runs.
+adds the API tables, limitations and the example to run.
 
 The copies are checked on every page the site mounts, not only the curated ones:
 `src/lib/page-snippets.test.ts` resolves each `@gpuixui/*` import in every `ts`

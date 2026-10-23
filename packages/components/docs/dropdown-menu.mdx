@@ -1,6 +1,6 @@
 ---
 title: Dropdown menu
-description: A list of actions anchored to its trigger.
+description: A list of actions anchored to its trigger
 ---
 
 <ComponentPreview name="dropdown-menu-demo" />
@@ -61,55 +61,8 @@ DropdownMenu
 | `DropdownMenuSub` / `DropdownMenuSubTrigger` / `DropdownMenuSubContent` | one secondary level | `DropdownMenuSubContent` takes the root surface's placement props |
 | `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | `DropdownMenuGroup` takes `label?` — the group's accessible name; a visible `DropdownMenuLabel` is painted text and does not name it |
 
-## Choice rows
-
-Two kinds of row carry state:
-
-- **`DropdownMenuCheckboxItem`** is an on/off setting. It stays open, so a
-  visit can toggle several settings.
-- **`DropdownMenuRadioGroup` + `DropdownMenuRadioItem`** is one exclusive
-  choice. The group is the single truth — `value` decides which row is marked —
-  and choosing a row reports its value and closes the menu. A press on the row
-  that is already chosen reports nothing.
-
-The group is controlled, because the popup unmounts when it closes: a group
-that stored its own choice would forget it on the next open. A track order or
-an appearance menu is app state:
-
-```tsx
-<DropdownMenuRadioGroup value={sort} onValueChange={setSort} label="Sort by">
-  <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
-  <DropdownMenuRadioItem value="date">Date modified</DropdownMenuRadioItem>
-</DropdownMenuRadioGroup>
-```
-
-`label` is what a screen reader announces on entering the group. 0.11.0 has no
-`aria-labelledby`, so a `DropdownMenuLabel` above the rows is painted text — a
-group without `label` is announced as an unnamed group.
-
-Both rows mark their state with a check and `aria-selected`, because 0.11.0 has
-no `aria-checked`. A row's accessible name is its label, so a composed label
-passes `textValue`.
-
-## Highlight
-
-Arrow keys move real focus onto a row, so the highlighted row is the one with
-focus. It tints the `hover` wash and draws a `primary` bar on its leading edge;
-the bar also marks the row whose submenu is open. `primary` is a mark role the
-token contract measures at 3:1 (4.5:1 in a high-contrast theme) on the popover
-and on the `hover` wash the row wears.
-
 ## Limitations
 
 - No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`.
 - One level of submenus is tested.
 - A hover does not preview a highlight; the pointer activates on click.
-- Type-ahead is a prefix match with no fuzzy scoring.
-- A `side` or `align` restored from persisted state that the union does not
-  name opens the house `bottom`/`start`; it never throws out of the render.
-
-## Related
-
-- **Popover** — a floating panel rather than a list of actions.
-- **Context menu** — the same rows, positioned at the pointer.
-- **Command menu** — a searchable action list in a dialog.

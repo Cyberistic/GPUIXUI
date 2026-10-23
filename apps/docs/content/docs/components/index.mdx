@@ -1,93 +1,18 @@
 ---
 title: Components
-description: Every component the library ships, and what its page tells you.
+description: Every component the library ships, and what its page documents.
 ---
 
 import { playgroundCommand } from "@/components/docs/native-run-note";
 
-The Tier 2 components are composed from the [primitives](/docs/primitives):
-dialogs, menus, tabs, pickers and the rest of the feedback layer. The data lane
-ships its own package, `@gpuixui/data`: [Data display](/docs/data-display) is
-its map, and each row's state is the inventory's — read from `COMPONENTS.md` and
-printed on the row — so a page appears here only once it exists. This index
-covers both component lanes, curated and package-shipped, and the filter
-matches a page's name, its purpose, its lane,
-**the parts it documents**, **the props and prop types its API table declares**,
-**the limits it records** and **its inventory verdict**. So
-`DialogFooter` finds the dialog, `onCheckedChange` finds the switch, `StateStyle`
-finds every page whose props take it, `aria-orientation` finds the tabs,
-`preview` finds the pages that open with a browser rendering, and `partial`
-finds every component the runtime supports only in part:
+The Tier 2 components are composed from the [primitives](/docs/primitives); the data lane ships <code>@gpuixui/data</code> and its own [Data display](/docs/data-display) map.
+
+The filter matches a page's name, purpose, lane, parts, props, limitations and inventory verdict. It travels in the URL (<code>?q=partial</code>), so `DialogFooter`, `onCheckedChange`, `StateStyle`, `aria-orientation` and `preview` are linkable queries.
 
 <ComponentIndex />
 
-The filter travels in the URL (`?q=partial`), the way the platform switch
-carries `?platform=win32`: a filtered view can be linked, and a reload opens the
-same rows. Clear the box and the parameter leaves the address bar.
+A component or primitive page mounts its own browser preview, a browser approximation, labelled as one.
 
-The pages come from two places:
+Pages come from `apps/docs/content/docs/components` (curated, with previews) or `packages/components/docs` (the package's own page).
 
-- **A curated page** for the components documented here in depth — Accordion,
-  Alert, Avatar, Badge, Breadcrumb, Button, Card, Carousel, Checkbox, Collapsible,
-  Combobox, Command menu, Confirmation dialog, Context menu, Date picker, Dialog,
-  Drawer, Dropdown menu, Empty state, Field and inline validation, Form,
-  Inline edit, List, Navigation menu, Pagination, Popover, Search input, Select,
-  Stepper, Switch, Color picker, Table, Tag input, Tabs, Time picker, Timeline,
-  Tooltip and Toast — with browser previews, an install block and the copyable
-  source. A page that mounts a preview is marked **Browser preview** in the
-  index above.
-- **The package's own page** for every other component, rendered from
-  `packages/components/docs/`. That file is what the component ships with, so
-  the page and the package cannot disagree. A component or primitive page mounts
-  its own preview too — a browser approximation, labelled as one — while a page
-  with no demo opens with a note naming the command that opens the companion
-  playground.
-
-**What the marks mean.** A **Browser preview** mark is about the page: it opens
-with a rendering you can press. A **partial** mark is about the component:
-`COMPONENTS.md` records that the pinned runtime supports only part of it, and
-the page's own Status section names the missing part. The same rule names a
-`todo` status or an unmeasured `?` if one ever lands on a page, so a mark never
-means "shipped whole" when the inventory says otherwise.
-
-Neither mark is written by hand. The preview is read from the page's own source
-and the verdict from the `COMPONENTS.md` row the status strip already joins, so
-a component that moves to `done` loses its mark in the same commit.
-
-## How to read a page
-
-| Section | What it answers |
-| ------- | --------------- |
-| Installation | the `nub` and manual install, and the copyable source |
-| Usage | a realistic snippet, not a prop dump |
-| Variants / Sizes / States | the table of choices and the roles behind them |
-| Composition | which parts exist, which are required, and what to use instead |
-| Keyboard | the keys the component handles, and what they do |
-| API reference | every prop, its type, its default and its consequence |
-| Theming | which token roles it reads, and what a theme change repaints |
-| Accessibility and limitations | the role and name, and every attribute or behaviour the runtime does not provide |
-| Dependencies | the packages it needs, and why |
-| Related | what to use instead, or alongside |
-| Status | `done` or `partial`, with the runtime evidence |
-
-## The platform looks
-
-Every preview on this site renders through the **Platform** switch at the foot
-of the sidebar: macOS, Linux, Windows or Default. The switch resolves a real
-`@gpuixui/tokens` theme, and the choice travels in the URL
-(`?platform=win32`), so a link shows what you saw. [Theming](/docs/theming#platform-styles)
-documents what each variant changes today.
-
-## Previews are browser renderings
-
-The components render through GPUix, not the DOM. A preview shows geometry,
-palette and states in a browser and says so on the page; it is never the
-authority. To run the real component, open the companion playground with
-<code>{playgroundCommand}</code> — [how to run the
-playground](/docs/installation#run-the-playground) lists what it mounts.
-
-<Callout type="warn" title="Status is per component, not per page">
-  A page existing does not mean the component is finished. `COMPONENTS.md` holds
-  the status, the runtime evidence and the limitations for every row; where a
-  page and that inventory disagree, the inventory wins.
-</Callout>
+To run a real component, open the companion playground with <code>{playgroundCommand}</code>.

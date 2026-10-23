@@ -1,11 +1,7 @@
 ---
 title: Icons
-description: 76 monochrome icons, their size scale and the two accessibility rules.
+description: 76 monochrome icons, their size scale and the two accessibility rules
 ---
-
-`@gpuixui/icons` is the icon set: each icon is a self-contained 24×24 monochrome
-SVG markup string that GPUix tints with `style.color`. Icons are data, not
-component trees.
 
 ## Usage
 
@@ -32,55 +28,8 @@ const theme = useTheme();
 | `label` | `string` | none | accessible name; a non-blank label promotes the icon to an image |
 | `testId` | `string` | — | stable locator |
 
-## Names
-
-**Navigation and layout** — `arrow-down`, `arrow-left`, `arrow-right`, `arrow-up`,
-`chevron-down`, `chevron-left`, `chevron-right`, `chevron-up`, `chevrons-up-down`,
-`external-link`, `home`, `link`, `panel-bottom`, `panel-left`, `panel-right`
-
-**Actions** — `check`, `copy`, `download`, `ellipsis`, `ellipsis-vertical`,
-`filter`, `maximize`, `minimize`, `minus`, `pause`, `pencil`, `play`, `plus`,
-`redo`, `refresh`, `save`, `search`, `sliders-horizontal`, `sort-asc`,
-`sort-desc`, `square`, `trash`, `undo`, `upload`, `x`
-
-**Files and data** — `calendar`, `database`, `file`, `file-text`, `folder`,
-`folder-open`, `git-branch`, `grid`, `grip-vertical`, `list`, `table`
-
-**Surfaces and media** — `clock`, `code`, `image`, `settings`, `terminal`
-
-**People and messaging** — `bell`, `bot`, `mail`, `sparkles`, `user`, `users`
-
-**Status and feedback** — `circle`, `error`, `info`, `loader`, `lock`, `shield`,
-`star`, `star-filled`, `success`, `warning`
-
-**Appearance** — `eye`, `eye-off`, `moon`, `sun`
-
-## Sizes
-
-| Step | Pixels |
-| ---- | ------ |
-| `xs` | 12 |
-| `sm` | 14 |
-| `md` (default) | 16 |
-| `lg` | 20 |
-| `xl` | 24 |
-
-A raw pixel count is for a mark that is not lining up with text. A count the
-runtime cannot paint — `NaN`, an infinity, zero or a negative — and a **name the
-scale does not carry**, such as a size read back from a stored preference, both
-resolve to `md`: a stored value paints the default box rather than a full-width,
-zero-height icon. `iconPixels(size)` is the resolver, and it takes the decoded
-value as `unknown` for exactly that reason.
-
 ## Limitations
 
 - Monochrome only: no two-tone, duotone or brand marks.
 - No rotation or spin animation; use `Spinner`.
 - No icon font and no ligatures.
-- The set is curated; add a name to `registry.ts` and `names.ts` together.
-
-## Provenance
-
-The geometry is taken from [Lucide](https://lucide.dev) `lucide-static@1.61.0`,
-on its 24×24 grid at `stroke-width="2"`. Both the ISC and MIT notices travel
-with the geometry in [`LICENSES/lucide.md`](../../../LICENSES/lucide.md).

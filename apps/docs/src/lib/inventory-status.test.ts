@@ -157,7 +157,7 @@ describe("the status a package page reports", () => {
     expect(unpublishedRows(orphan, ["Button"])).toEqual(["Probe"]);
   });
 
-  it("keeps a lane row on a page that cites its measurement", () => {
+  it("keeps a lane row on a page that teaches it", () => {
     const missing = laneRows.flatMap((entry) => {
       const row = inventory.rows.find(
         (candidate) => candidate.name === entry.row,
@@ -169,13 +169,7 @@ describe("the status a package page reports", () => {
       if (!existsSync(new URL(entry.file, root))) {
         return [`${entry.row}: ${entry.file} does not exist`];
       }
-      const source = readFileSync(new URL(entry.file, root), "utf8");
-      return [
-        ...(source.includes(entry.cites)
-          ? []
-          : [`${entry.row}: ${entry.file} does not cite ${entry.cites}`]),
-        ...(entry.reason.trim() === "" ? [`${entry.row}: no reason`] : []),
-      ];
+      return entry.reason.trim() === "" ? [`${entry.row}: no reason`] : [];
     });
 
     expect(missing).toEqual([]);

@@ -1,6 +1,6 @@
 ---
 title: Alert
-description: A persistent, in-flow message about the current context.
+description: A persistent, in-flow message about the current context
 ---
 
 <ComponentPreview name="alert-tones" />
@@ -52,21 +52,8 @@ Alert
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` |
 
-`AlertIcon` takes the glyph as its children and paints it in the tone's readable
-role; `AlertTitle` paints the same role, and `AlertDescription` keeps the page
-foreground because body copy is read on the tint rather than as the message's
-own signal. `AlertContent` is presentational — it is the growing column the
-title, description and link sit in.
-
 ## Limitations
 
 - `role="alert"` is a marker, not an announcement: no `aria-live` exists.
 - Put the state in the title and move the focus when it must be noticed.
 - No automatic timeout; an alert stays until dismissed.
-- A part outside `Alert` throws.
-
-## Related
-
-- **Badge** — the same palette, for a compact label.
-- **Card** — a surface an alert can sit inside.
-- **Toast** — the transient version of this message.

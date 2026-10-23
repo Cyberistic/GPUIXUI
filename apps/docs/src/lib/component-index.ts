@@ -170,8 +170,14 @@ export const partsOf = (source: string): ReadonlyArray<string> => {
     const headings = [
       ...section.text.matchAll(/^###\s+`?([A-Z][A-Za-z0-9]*)`?\s*$/gm),
     ].map((match) => match[1] ?? "");
+    // A composition tree draws the parts where a table is not worth writing.
+    const tree = [
+      ...(section.text.match(/^```text\n([\s\S]*?)^```/m)?.[1] ?? "").matchAll(
+        /[├└│─\s]*([A-Z][A-Za-z0-9]*)/g,
+      ),
+    ].map((match) => match[1] ?? "");
 
-    return [...rows, ...headings];
+    return [...rows, ...headings, ...tree];
   });
 
   return [...new Set(names.filter((name) => !notAPart.has(name)))];

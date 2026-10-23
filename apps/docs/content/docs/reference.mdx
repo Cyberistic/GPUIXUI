@@ -1,110 +1,20 @@
 ---
 title: API reference
-description: Every import specifier the workspace publishes and every symbol behind it — read from the manifests and the source, so the page cannot drift.
+description: Every import specifier the workspace publishes and every symbol behind it.
 ---
 
 import { ApiReference } from "@/components/docs/api-reference";
 
-The library's public API is its **entry points**, not its files. A package
-declares what a consumer may import in its `exports` map; an import outside
-those subpaths is internal and may move without a major version. This page is
-generated from those maps and from the source behind them, so it cannot
-advertise a subpath a package does not publish, nor a symbol the code does not
-export.
+The public API is each package's `exports` map: an import outside it is internal and may move without a major version.
 
 <ApiReference />
 
-The symbol table's filter travels in the URL — `?q=createTheme` — the way the
-component index carries its own `?q=`: a narrowed view can be linked, a reload
-opens the same rows, and clearing the box removes the parameter rather than
-leaving a bare `?q=` behind. The count above the table is the filter's own: it
-says how many of the published symbols match, so a page that hides a name says
-so.
-
-## How to read it
-
-### Entry points
-
-- **Import** is the exact specifier. `@gpuixui/components/card` resolves through
-  the `./*` pattern to one file per component; `@gpuixui/primitives/core` is a
-  named module.
-- **Resolves to** is the file the subpath maps to. Most packages resolve to
-  workspace source, so a reader can open the file directly; a package that ships
-  a build resolves to `dist/`, and its row says **built module**.
-- **Kind** distinguishes a single module from a pattern: for a pattern, the
-  specifier is the directory plus the file's base name (`accordion.tsx` →
-  `@gpuixui/components/accordion`).
-- A **pattern exposes files, not components.** A `.test.tsx` sitting beside the
-  sources matches the same `./*` rule; importing one is not a supported use and
-  nothing in the library does it.
-
-### Symbols
-
-- **Symbol** is the name a consumer imports, with the file that declares it and
-  the specifiers that publish it. A name published by several specifiers — the
-  package root re-exports every module, and each module is also its own entry
-  point — is one row, not several.
-- **Kind** is how the symbol is declared: a **component** (a PascalCase export
-  of a React element), a **hook**, a **function**, a **class**, an
-  **interface**, a **type**, an **enum**, a **namespace**, a **constant**, or
-  **external** — a name re-exported from outside the workspace, whose own
-  declaration this page cannot read.
-- **Summary** is the first sentence of the symbol's doc comment, so the page
-  says what the name is for without the reader opening the file.
-- A symbol whose package mounts a page is **linked** to it: the page is named
-  after the file that declares the name (`IconButton.tsx` →
-  `/docs/primitives/icon-button`), so every part a compound component exports
-  lands on the page that documents its props. A symbol declared in a helper, or
-  in a package with no docs collection, stays plain text — a link to a page the
-  site does not serve would be worse than none, and the module path beside the
-  name is always the provenance.
+The filter travels in the URL (`?q=createTheme`).
 
 ## Where the signatures live
 
-This page answers *what can I import*; the per-component page answers *what does
-this part accept*:
-
 | Question | Where |
 | -------- | ----- |
-| The props, defaults and consequences of a part | The component's page under Components or Primitives |
-| The compound-part contract every component follows | [Architecture](/docs/architecture) and `docs/component-api.md` |
-| Colour, type, spacing, radius, density and the platform styles | [Theming](/docs/theming) |
-| What the runtime provides, and what it refuses | [Runtime](/docs/runtime) |
-| Where a new export belongs | [Architecture](/docs/architecture) §Where a change goes |
-
-`@gpuixui/config` and `@gpuixui/deploy` are workspace packages with no runtime
-entry point: one is the shared TypeScript and format configuration, the other is
-the Worker that publishes this site. Neither is imported by a component.
-`@gpuixui/testing` is the harness the native suites run on; it publishes a build
-rather than source, which is why its row resolves to `dist/`. Its scenarios,
-assertions and host verbs are on [Testing](/docs/testing).
-
-## How this page stays true
-
-`src/lib/public-api.ts` reads each manifest, keeps only entries that resolve to
-a `.ts`/`.tsx` file and derives the specifier from the package name and subpath.
-`public-api.test.ts` re-reads every manifest from disk and fails when a declared
-entry is missing from this page, when an entry's target file does not exist, when
-a pattern matches no file, when a specifier is duplicated, or when a workspace
-package is neither published here nor listed as not published.
-
-The symbol table is generated the same way, one step further in. A Vite plugin
-(`plugins/public-symbols-plugin.ts`) reads the workspace's source at build time
-and hands the page an index of every published name, its kind, the file that
-declares it and its doc comment; the browser bundle carries that index and not
-the source it came from. `src/lib/public-symbols-source.ts` does the reading —
-it scans each module's export statements, follows the re-exports, and resolves
-a name to the module that declares it — and `public-symbols.test.ts` holds it to
-the workspace: an export statement in a comment, a string or a template is not
-an export, a statement that spans lines is one export, and every published
-module yields the symbols its source declares.
-
-The index is read once, at build time, so the page cannot fall behind the code
-it documents; the trade is that a new export shows up on the next build rather
-than the next edit.
-
-`api-reference.test.tsx` renders the table with and without a query and holds
-both counts to the pure filter's own answer, including the row count of both
-tables, so a view cannot paint a symbol the query rejected. It also reads the
-mount: a filter held in React state alone would fail here, because the URL is
-what makes a narrowed view shareable.
+| The props, defaults and consequences of a part | The component's page under [Components](/docs/components) or [Primitives](/docs/primitives) |
+| Colour, type, spacing, radius, density and platform styles | [Theming](/docs/theming) |
+| What the runtime provides and refuses | [Runtime](/docs/runtime) |

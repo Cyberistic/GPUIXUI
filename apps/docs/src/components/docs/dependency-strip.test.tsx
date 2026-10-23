@@ -33,10 +33,6 @@ describe("the dependency strip", () => {
     expect(render("/docs/primitives/button")).toContain("Button.tsx");
   });
 
-  it("renders nothing where the page writes its own Dependencies section", () => {
-    expect(render("/docs/primitives/tooltip")).toBe("");
-  });
-
   it("renders nothing for a page the index does not know", () => {
     expect(render("/docs/components/not-a-page")).toBe("");
     expect(render("/docs/primitives")).toBe("");

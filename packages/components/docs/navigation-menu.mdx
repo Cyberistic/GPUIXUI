@@ -1,6 +1,6 @@
 ---
 title: Navigation menu
-description: A horizontal nav whose items open one anchored panel at a time.
+description: A horizontal nav whose items open one anchored panel at a time
 ---
 
 <ComponentPreview name="navigation-menu-demo" />
@@ -60,10 +60,5 @@ NavigationMenu
 ## Limitations
 
 - No `href`; `NavigationMenuLink` is a button.
-- Hover is a timer policy; touch opens by press. A delay that is not a finite
-  number takes the documented default (`150` ms), and `0` opens or closes at
-  once, so a computed delay cannot open a panel in the pointer's frame.
-- Disabling a trigger while its hover open is still waiting cancels the open; the
-  trigger has to be entered again after it is re-enabled.
-- `ArrowDown` focuses the panel surface.
-- No `aria-haspopup`.
+- Hover is a timer policy; touch opens by press.
+- Disabling a trigger while its hover open is still waiting cancels the open; the trigger has to be entered again after it is re-enabled.

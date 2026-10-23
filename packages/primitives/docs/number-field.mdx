@@ -1,17 +1,9 @@
 ---
 title: NumberField
-description: A number in a text field, with steps and optional bounds.
+description: A number in a text field, with steps and optional bounds
 ---
+
 <ComponentPreview name="number-field-demo" />
-
-`NumberField` is a numeric text field: parsing, clamping and stepping are this
-package's.
-
-A field paints the number it holds: with no `precision` the box shows the value's
-own decimals, so `step={0.5}` reads `1.5` rather than a rounded `2` and no key can
-paint a number past the bound. `precision` fixes the painted width when a column
-needs one (`precision={2}` paints `1.50`); it rounds and pads the **text**, and
-the value channel keeps the number it was given.
 
 ## Usage
 
@@ -26,14 +18,6 @@ const [copies, setCopies] = useState(1);
   <NumberField label="Copies" value={copies} onValueChange={setCopies} min={1} max={99} />
 </Stack>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `NumberField` | the chrome, state and the accessible name |
-| `NumberFieldInput` | the native `<input>`: draft text, keys, focus, ring |
-| `NumberFieldIncrement` / `NumberFieldDecrement` | the step hit targets (pointer only) |
 
 ## API
 
@@ -64,62 +48,8 @@ const [copies, setCopies] = useState(1);
 | `ref` / `aria-id` / `onLayout` | host props | none | the native `<input>` is the addressed element |
 | `testId` | `string` | — | stable locator on the field's chrome |
 
-`formatValue` paints; it does not teach the field to read. `parseValue` is the
-counterpart and is consulted before the decimal grammar, so a grouped field stays
-editable, and a controlled owner's echo is read through the same path rather than
-reformatting under the caret.
-
-`onValueChange` is every frame the value moved; `onValueCommit` is the end of the
-gesture. A scrub across the spin column reports a value per four pixels and one
-commit on release, with the value the whole drag finished on; a stepper press, an
-arrow and a PageUp/PageDown each commit as they land, because there is no release
-after them to wait for. A typed edit commits when it ends — blur or Enter — if it
-holds a readable number, including text that parses to the value the field already
-held, because the edit happened. Text that is not a number produces no value, and
-an arrow that cannot move the value at its bound is not a gesture that ended on a
-new one, so neither commits. Persist or fetch here instead of debouncing
-`onValueChange`.
-
-## Absence
-
-A field's value channel is a number, so **an empty box is a cancelled edit, not a
-new value**. An edit that ends — blur or Enter — with no readable number leaves
-the field showing the number it already had; a field that never had one stays
-empty instead of painting the zero its internal range starts from. Text that is
-not a number (`abc`) is the same case as no text, and neither reports
-`onValueChange`. A field with `defaultValue={0}` or `value={0}` does hold zero,
-and paints it, because that zero is a value the caller chose.
-
-Starting empty and stepping works: the field's value channel starts at the
-range's floor (`min`, else 0, clamped by `max`), while the box paints empty until
-a gesture produces a number — so the first step moves one `step` from that floor
-(with `min={72}` and `step={12}`, the first increment reports `84`) and is
-reported like any other step.
-
-## Keyboard
-
-| Key | What it does |
-| --- | ------------ |
-| `↑` / `↓` | one `step` up or down, clamped |
-| `PageUp` / `PageDown` | ten steps |
-| `Home` / `End` | the core's bounds jump — **not delivered to a field in a window** |
-| `Enter` | the draft commits — a readable edit reports `onValueCommit`, then `onSubmit` |
-| any other key | left to the form |
-
-A native `<input>` consumes `Home` and `End` for its own caret before React sees
-them: measured on 0.11.0, neither the input's `onKeyDown` nor a wrapper's receives
-them, while `PageDown` arrives. So the bounds jump is the pure contract's
-(`core/number.ts`'s `decideNumberKey`) and the offscreen renderer's, and the keys
-a window delivers are the arrows and the page pair. Bind `Home`/`End` at the
-window level (`@gpuixui/keyboard`) when a form needs them;
-`runtime/number-field.runtime.test.tsx` holds the measurement.
-
 ## Limitations
 
-- Decimal text by default: a grouped or locale display is read through the
-  `formatValue`/`parseValue` pair, never guessed.
-- An inverted pair is the range it means: `min` above `max` is swapped, and the
-  core's `Home`/`End` jump reads the ends of that swapped range — though a
-  window never delivers those two keys to a text field (see Keyboard above).
-- No `type="number"`, `inputMode` or `maxLength`: the runtime applies a value only when it changes, so a refused character stays in the box.
-- `autoFocus` paints no ring; Enter is the runtime's Submit action, not a keydown.
+- Decimal text by default; grouped or locale display goes through `formatValue`/`parseValue`.
+- `min` above `max` is swapped; `Home`/`End` read the swapped range.
+- No `type="number"`, `inputMode` or `maxLength`; a refused character stays in the box.

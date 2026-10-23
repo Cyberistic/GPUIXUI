@@ -1,20 +1,15 @@
 ---
 title: Combobox
-description: A searchable single- or multi-select — GPUix's headless combobox with this package's ranked options, row paint and value semantics.
+description: A searchable single- or multi-select — GPUix's headless combobox with this package's ranked options, row paint and value semantics
 ---
 
-`Combobox` is a field-shaped control that opens a searchable list. It wraps
-GPUix's headless combobox, so focus, the highlighted row and the
-Enter/arrow/Escape handling are the runtime's; what this package owns is the
-option shape, the **ranking**, the row paint and the selection payload. The
-gaps below were measured on `@gpuix/native@0.11.0`.
-
 <ComponentPreview name="combobox-workflow" />
+
+<ComponentPreview name="combobox-multiple" />
 
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="Combobox" />
-
 <ComponentSource name="combobox" file="packages/components/src/combobox.tsx" />
 
 ## Usage
@@ -65,146 +60,17 @@ export const ReviewerField = () => {
 };
 ```
 
-`value` distinguishes controlled from uncontrolled: `undefined` means
-uncontrolled, and `null` (single mode) or `[]` (multiple mode) means nothing is
-chosen.
-
 ## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Combobox` | the root: ranking, selection, open state and focus restore |
-| `ComboboxTrigger` | the field-shaped control — the chosen labels or the placeholder, `aria-expanded` and the caret |
-| `ComboboxContent` | the anchored popup surface |
-| `ComboboxInput` | the search field; `Escape` offers the key to the shared dismiss stack |
-| `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
-| `ComboboxItem` | one row: label, optional description and the selected mark |
-| `ComboboxEmpty` | shown only while no option matches |
-
-The root owns the state because ranking and the selection payload need the whole
-option set; each part owns its own label and place. A part outside the root
-throws with its parent's name, so a misplaced sibling fails where it is written
-rather than painting nothing.
-
-## Values, not labels
-
-`onValueChange` receives the option **value** (`"ada"`), never the label
-(`"Ada Lovelace"`), so renaming a person never rewrites stored data. The trigger
-maps values back to labels for display; a value with no option is shown as
-itself rather than dropped.
-
-| Mode | `value` | `onValueChange` receives |
-| ---- | ------- | ------------------------ |
-| single (default) | `string \| null` | one value, or `null` |
-| `multiple` | `ReadonlyArray<string>` | the values in the order they were chosen |
-
-## Ranking
-
-The filter is this package's `combobox/logic.ts`, not the runtime's
-order-preserving predicate — GPUix's `filter` can only remove rows, so the
-adapter hands it an already-ranked list with `filter={null}` and controls
-`inputValue` itself.
-
-| Rank | Rule |
-| ---- | ---- |
-| 0 | the label starts with the query |
-| 1 | a word inside the label starts with the query |
-| 2 | the label contains the query |
-| 3 | the description contains the query |
-
-Ties keep the order the caller declared. Matching is case-insensitive and
-trimmed, and a blank query shows everything. A disabled option stays **visible**
-— it is unselectable, not hidden — and cannot be chosen by click, arrow or
-`Enter`.
-
-## Remote options
-
-The component never fetches. A list that lives behind a search belongs to the
-caller, and three props hand it over:
-
-- `onQueryChange` reports each search the popup runs — every typed query, and the
-  empty one it opens with, because each open is a new search. A closed popup
-  reports nothing, and neither does one the caller disables: the close path
-  clears the query in the same commit, and that cleared string is not a search.
-- `shouldFilter={false}` paints `options` in the order they are given instead of
-  ranking them locally. Use it whenever the remote search chose the rows: a
-  result that matched on a synonym or a description the query never appears in
-  would be hidden by the local ranking.
-- `loading` says the caller's fetch is in flight. While the list is empty the
-  empty slot paints `Searching…` instead of `No matches`; a `ComboboxEmpty` with
-  children paints the caller's words instead.
-
-```tsx
-const [results, setResults] = useState<ReadonlyArray<ComboboxOption>>([]);
-const [pending, setPending] = useState(false);
-
-<Combobox
-  options={results}
-  shouldFilter={false}
-  loading={pending}
-  onQueryChange={(query) => void search(query)}
-  onValueChange={setReviewer}
->
-  <ComboboxTrigger label="Assign reviewer" />
-  <ComboboxContent>
-    <ComboboxInput label="Search reviewers" />
-    <ComboboxList label="Reviewers" />
-    <ComboboxEmpty />
-  </ComboboxContent>
-</Combobox>;
+```text
+Combobox
+├── ComboboxTrigger
+└── ComboboxContent
+    ├── ComboboxInput
+    ├── ComboboxList
+    │   └── ComboboxItem
+    └── ComboboxEmpty
 ```
-
-Debouncing, cancelling and the loading flag are the caller's, the same division
-`SearchInput` keeps.
-
-## Multiple mode
-
-<ComponentPreview name="combobox-multiple" />
-
-`multiple` keeps the popup open and toggles the pressed row. A pick appends, so
-the reported array is the order the reader chose, and the trigger joins the
-labels with a comma. A disabled row never enters the selection.
-
-## Creating a value
-
-`onCreate` turns the field into a combobox that can mint an option. When the
-query matches **nothing**, the list gains one last row — `Create "…"` by default,
-or whatever `createLabel` returns — and choosing it reports the trimmed query.
-The root does not invent a selection: only the caller can add the option and
-decide whether to select it, so `onCreate` and `onValueChange` are separate
-contracts. The row is offered only when nothing matches, so it never competes
-with a real result.
-
-## Motion
-
-The popup enters on the house entrance: a fade plus **4px of travel out from the
-side it opens at**, at the `normal` timing level (200 ms, ease-out). A popup below
-its trigger starts above its resting place and moves down; one the component flips
-above starts below and moves up, so the travel comes from the side the popup was
-asked to open at, not from the side it settled on.
-
-There is **no exit tween**: GPUix's headless `ComboboxContent` renders nothing
-while the root is closed, so a closing popup has no box left to keep mounted for
-one and leaves with the state that closed it. Under
-`<MotionProvider preference="reduced">` the duration is zero, so the resting frame
-paints in the frame the popup appears.
-
-## Keyboard
-
-| Key | Result |
-| ---- | ------ |
-| `Enter`, `Space`, `ArrowDown` on the trigger | opens the popup on the chosen row, or the first enabled one |
-| `ArrowUp` on the trigger | opens the popup on the last enabled row |
-| typing | filters; the first enabled match is highlighted |
-| `ArrowDown` / `ArrowUp` | moves the highlight, wrapping and skipping disabled rows |
-| `Enter` | selects the highlighted row (or the create row) |
-| `Escape` | closes the popup and returns the focus to the trigger |
-| outside press | closes without restoring the focus, which the press already took |
-
-The search field keeps the focus while the list is open; the highlighted row is
-a visual state. The open popup joins the shared dismiss stack, so with a
-combobox inside a dialog one `Escape` closes the popup and leaves the dialog,
-and the next closes the dialog.
 
 ## API reference
 
@@ -267,108 +133,8 @@ and the next closes the dialog.
 | ---- | ---- | ------- |
 | `children` | `ReactNode` | `No matches` |
 
-`ComboboxItem` is public so a caller can compose the rows of a custom list from
-the same root; `ComboboxList` renders it for the simple case.
+## Limitations
 
-## Theming
-
-| Part | Reads |
-| ---- | ----- |
-| trigger | `background` fill, `borderStrong` edge, `radius.md`, `foreground` text, `mutedForeground` placeholder |
-| trigger hover / open | `hover` fill |
-| trigger, focused | the runtime's `focusVisible` outline in the `ring` role |
-| trigger, disabled | 50% `opacity` and `not-allowed`, with no ring |
-| popup | `popover` fill, `border`, `radius.md`, the `md` elevation |
-| search field | `input` fill, `inputForeground` text, `border` edge, the field's own ring |
-| row, highlighted | `hover` fill |
-| row, selected | `foreground` label, and the `primary` check mark |
-| row, disabled | `disabledForeground` label **and** description, with no highlight wash |
-| description | `mutedForeground` |
-
-A disabled row names its roles instead of fading: an opacity would composite the
-label into the popover fill, which no contrast pair measures. The popup is
-capped at **280px** and scrolls the list itself, because the runtime's content
-sets no maximum height in `0.11.0`.
-
-Two decisions are worth knowing when you edit a theme. The trigger paints
-`background` rather than a field's `input` fill, so it reads as a field over the
-card; and the search field keeps `input`, because it is where a reader types.
-
-## Accessibility and limitations
-
-- The trigger and the search field are named by their `label`; the listbox takes
-  `ComboboxList`'s `label`, and each row reports `aria-selected`. The selected
-  mark is decorative, because the row already reports its state.
-- The search field announces the hint it paints (`Search…`) as its
-  `aria-description` while the query is empty, because the host is handed no
-  `placeholder`. The field takes no `aria-description` prop of its own, so the
-  hint is the only help it speaks; it leaves the description once text is typed.
-- **No `aria-activedescendant`** in `0.11.0`: the highlighted row is a visual
-  state while the input keeps the focus, so assistive technology is not handed
-  the input→row relationship. `aria-selected` is the supported signal.
-- A disabled row is painted `disabledForeground` and refuses every path; it is
-  not faded.
-- A popup the caller **disables** closes with the control, and re-enabling does
-  not reopen it: the pending open request is dropped, so the surface cannot
-  paint rows no press could choose.
-- The popup is an **anchored layer, not a portal**. The runtime snaps it inside
-  the window but does not flip it, so the component flips it once when snapping
-  would cover the trigger. `align="center"` is measured from the trigger rather
-  than the runtime's containing-block centre, and it is clamped by the 8px snap
-  margin near a window edge.
-- A `side` or `align` restored from persisted state that the union does not name
-  opens the house `bottom`/`start`; it never throws out of the render.
-- **No grouping headers, and no fetch of its own.** A grouped list is a select's
-  shape, not a combobox's; a remote list is the caller's, handed over through
-  `onQueryChange`, `shouldFilter` and `loading` (§Remote options).
-- Create-new is single-select and match-nothing only. It reports the query and
-  leaves the selection alone; a controlled combobox sets its value from
-  `onCreate`.
-- The trigger is a `div` with button semantics (the package's own action
-  stand-in), not a native button element.
-
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `this package` | the option shape, the ranking, the trigger and row recipes, and the selection payload |
-| `@gpuixui/primitives/hint` | the published hint seam that paints the field's placeholder role |
-| `@gpuix/react` | the headless combobox parts, the renderer's focus call and the host tree |
-| `@gpuix/react/floating` | `mergeStyles`/`resolveStyle` for the state-aware row and surface styles |
-| `@gpuixui/icons` | the trigger's caret and the selected row's check |
-| `@gpuixui/tw` | the `combobox*` class recipes, compiled through the package registry |
-| `effect` | `Option` for the option lookup and `Array` for the ranked list |
-
-`@gpuixui/tokens` is reached through this package's theme provider, not imported
-directly; the component reads roles, never colours.
-
-## Related
-
-- **Select** — one choice from a short list, with no search and no multi-select.
-- **Search input** — the same field without options.
-- **Command menu** — a searchable list of actions rather than a committed value.
-- **Dropdown menu** — actions, not a value.
-- **List** — a flat selectable collection with no popup.
-
-## Status
-
-`done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix publishes the
-headless combobox, so focus, the active row and the keyboard are supported
-rather than reimplemented, while the ranking, the row paint and the value
-semantics are this package's. The behaviour is held by **27 native behaviour
-tests** in `packages/components/src/behaviour/combobox.test.tsx` — open and input
-focus, both placement cases, ranking, arrow + `Enter`, the empty state, single
-and multiple selection, the disabled row's paint, Escape over a dialog, the
-pointer path, the create row's five rules, a popup the caller disables closing
-with the control, the 4-point travel it enters on from either side and the
-resting frame it paints first under reduced motion — and the
-ranking, toggle and create round trip by
-`packages/components/src/combobox/logic.test.ts`. **A second suite** in
-`packages/components/src/behaviour/combobox-remote.test.tsx` holds the remote
-search: the empty query each open reports, one report per typed query, nothing
-while the popup is closed or disabled, the caller's order under
-`shouldFilter={false}`, the empty slot's `Searching…` and the caller's words in a
-`ComboboxEmpty` with children. Two
-limits are recorded above rather than hidden: there is no
-`aria-activedescendant` and no grouping headers; the async list is the caller's
-(§Remote options), and the create row is single-select only.
+- The trigger and search field are named by `label`; rows report `aria-selected`.
+- An empty query announces the painted hint as `aria-description`.
+- **No `aria-activedescendant`** in 0.11.0: the highlighted row is visual only.

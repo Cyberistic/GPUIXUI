@@ -1,13 +1,7 @@
 ---
 title: Workspace
-description: The desktop-shell lane — the shipped split, panel group and dock tree, the shell pieces they compose with, and where state lives.
+description: The desktop-shell lane — the shipped split, panel group and dock tree, and the shell around them.
 ---
-
-A workspace is the part of a desktop app that is not a form: panels that resize,
-tabs that move, a palette that finds anything, a layout that survives a restart.
-The panels now ship: `@gpuixui/dock` is the split, the group and the dock tree,
-and this page records the rules they were built from, the shell pieces they
-compose with, and the runtime gaps that remain.
 
 ## The lane
 
@@ -15,389 +9,37 @@ Rows and statuses come from `COMPONENTS.md`.
 
 <LaneTable lane="workspace" />
 
-## What composes a window today
-
-| Part of the shell | What to compose it from | Page |
-| ----------------- | ----------------------- | ---- |
-| The frame | `Box` + `Stack` + `Separator` + `ScrollArea` — fixed sidebar, growing content column | [Layouts](/docs/layouts) |
-| Resizable split panes | `SplitPane`: two panes and one divider that drags, steps and clamps | [Split pane](/docs/dock/split-pane) |
-| Panel groups | `PanelGroup`: N panes as fractions, a collapse toggle per pane and one `PanelLayout` | [Panel groups](/docs/dock/panel-group) |
-| A docked arrangement | `DockLayout`: a named tree of splits and tab groups rendered from `DockNode` | [Docking layouts](/docs/dock/dock-layout) |
-| Tabbed panels | `Tabs` with a measured shared indicator, both axes, manual or automatic activation | [Tabs](/docs/components/tabs) |
-| Command palette | `CommandMenu` over a dialog-hosted, ranked, searchable list | [Command menu](/docs/components/command-menu) |
-| Application menus | `AppMenu` in the window, over the runtime's fixed macOS bar | [Application menu](/docs/shell/app-menu) |
-| Breadcrumb navigation | `Breadcrumb` with middle collapsing | [Breadcrumb](/docs/components/breadcrumb) |
-| Toolbars | `Toolbar` with a roving tab stop and an overflow menu | [Toolbar](/docs/shell/toolbar) |
-| Status bars | `StatusBar` with leading/trailing groups and tones | [Status bar](/docs/shell/status-bar) |
-| Notifications | The `Toast` provider and viewport, rendered last in the tree | [Toast](/docs/components/toast) |
-| A whole window | The [Dashboard](/docs/blocks/dashboard) block: sidebar, search, cards and rows | [Blocks](/docs/blocks) |
-
-The application chrome is a package of its own: `@gpuixui/shell` ships the
-`AppMenu` bar, the `Toolbar` strip and the `StatusBar` row in the table above,
-and a window measured all three on 0.11.0 (`app-chrome-lifecycle`, 47 checks) —
-the menu's dropdown paints below its trigger, arrows move the open menu and wrap
-past a disabled entry, Enter runs the highlighted action, and Escape unpaints
-the surface and returns focus to the trigger. The runtime reserves no titlebar,
-so a workspace paints the chrome as its own rows at the window's top and bottom
-edges rather than expecting the desktop to draw them.
-
-<ComponentPreview name="tabs-demo" />
-
-The tab strip is the one workspace-shaped component with a measured behaviour:
-each trigger reports its painted box, the selected surface matches it, and
-arrows, Home and End move by the runtime's real focus. A tabbed panel built from
-it resizes with the window because the indicator re-measures instead of caching
-a pixel offset.
-
-## The split ships, and the divider carries it
-
-`@gpuixui/dock` ships the three panel rows — `SplitPane`, `PanelGroup` and
-`DockLayout` — and everything that nests is a composition over the first. The
-runtime supplies the pieces and the component owns the behaviour:
-
-- **What exists:** pointer events, `col-resize`/`row-resize` cursors, measured
-  layout (`onLayout`), real native focus, and pointer capture — with a rule.
-- **What does not:** no `transform`, so a divider cannot animate and a panel
-  cannot slide; no `flex-basis` per child, so a pane's size is an explicit
-  number in state.
-- **Capture takes two listeners:** the runtime arms capture on a left press only
-  for an element that listens to both `onMouseDown` and `onMouseMove` (measured
-  by `pointer-capture`). A divider that declares both kept all eight moves and
-  its release 120px outside its own box; a move-only divider got the one
-  pre-press move while the sibling received the eight.
-
-That fixes the design: a divider is a **focusable control with a numeric width**
-— arrows resize by a step, Home/End jump to the minimum and maximum, and a
-pointer drag updates the same number while following the pointer outside the
-divider's box, because it declares both listeners. The width is application
-state, because a workspace that cannot persist it is not a workspace. Choosing
-otherwise (animated panels, a transform-based slide) would be a browser promise
-this runtime cannot keep. The shipped parts and their APIs are on
-[Split pane](/docs/dock/split-pane), [Panel groups](/docs/dock/panel-group) and
-[Docking layouts](/docs/dock/dock-layout).
-
-**The shipped divider is a keyboard control today.** A window measured the
-package's own `SplitPane` (`dock-split-lifecycle`): the Tab stop, the ring, one
-16px step per arrow, Home and End at the caller's bounds and the clamp at either
-bound all work, while a **press on its divider focuses nothing and reports
-`resizes=0`** — where the probe-local divider in `split-pane-lifecycle` drags
-normally in the same window. The cause is the divider's own `highlight` layer:
-it is positioned over the whole 6px control, and the runtime's hit test stops at
-a positioned child even when it declares `pointerEvents: "none"` (the rule
-`press-routing-lifecycle` measured). The rule above still holds for a divider
-you compose yourself; it is the shipped one that cannot take the press yet, and
-the fix is tracked in `TODO.md` → Interlocks (*`Divider`'s pointer path*). Until
-it lands, size a pane from the focusable divider with arrows and Home/End, and
-do not ship a dock whose only resize path is a drag.
-
-## A split you can resize
-
 <ComponentPreview name="panel-preview" />
 
-The editor pane is the **sized** one: a drag reports the width the press found
-plus its delta, an arrow steps it **16px**, Home and End take the caller's
-bounds, and the inspector fills the rest. The divider is a `role="separator"`
-tab stop whose value reaches assistive technology as `aria-valuetext`, because
-0.11.0 has no `aria-valuenow`. The drag here is the browser drawing's, not the
-shipped divider's, which takes no press yet (above). The preview is a browser
-drawing of [`SplitPane`](/docs/dock/split-pane) in the platform you picked; the
-Code tab is the shipped native call.
+The split divider is a 16px hit strip whose width is announced through `aria-valuetext`.
 
-## Resize a pane with its menus open
+## What composes a window
 
-A divider drag reflows the panes, and a pane's row menu, column picker or dropdown
-is an anchored surface. `floating-reflow-lifecycle` measured the question a dock
-plan has to answer — whether an open panel is placed again or left on the pixels
-it entered at — with three anchors open at once, each deriving its box from
-`useWindowSize`: the platform's zoom from **900×520** to **1680×923** moved them
-**780** right and **403** down, a raw `FloatingLayer`'s panel kept its **6**-point
-gap and its top alignment through both (`700,120 → 1480,120`, panel
-`554,120 → 1334,120`; `y 440 → 843`), and the shipped `Popover` kept both of its
-own offsets against a trigger that moved the same 780 and 403. The control is the
-absolute pixel: a panel left where it opened reads **1334** against the **554** it
-started on.
+| Part of the shell | Compose it from | Page |
+| ----------------- | --------------- | ---- |
+| The frame | `Box` + `Stack` + `Separator` + `ScrollArea` | [Layouts](/docs/layouts) |
+| Resizable split panes | `SplitPane` | [Split pane](/docs/dock/split-pane) |
+| Panel groups | `PanelGroup` | [Panel groups](/docs/dock/panel-group) |
+| A docked arrangement | `DockLayout` | [Docking layouts](/docs/dock/dock-layout) |
+| Tabbed panels | `Tabs` | [Tabs](/docs/components/tabs) |
+| Command palette | `CommandMenu` | [Command menu](/docs/components/command-menu) |
+| Application menus | `AppMenu` | [Application menu](/docs/shell/app-menu) |
+| Breadcrumb navigation | `Breadcrumb` | [Breadcrumb](/docs/components/breadcrumb) |
+| Toolbars | `Toolbar` | [Toolbar](/docs/shell/toolbar) |
+| Status bars | `StatusBar` | [Status bar](/docs/shell/status-bar) |
+| Notifications | `Toast` provider and viewport | [Toast](/docs/components/toast) |
+| A whole window | The [Dashboard](/docs/blocks/dashboard) block | [Blocks](/docs/blocks) |
 
-Three rules follow:
-
-- **Do not dismiss menus on a resize.** An open surface is laid out again with the
-  box it points at, so closing it from `onLayout` costs the reader the menu they
-  had open for no gain.
-- **A reflow is not a paint offset.** A wheel moves the trigger and its panel
-  together in the same read (`header-menu-lifecycle`); a reflow computes the
-  anchor's box again and the panel follows it. Both axes matter — a horizontal
-  reflow carries the panel sideways, a vertical one down.
-- **The side pins when the surface opens.** A menu that flipped above its trigger
-  at the window's bottom edge keeps that side while it stays open, so a pane near
-  the bottom keeps opening upwards after the window grows; a dock that needs the
-  other side closes and reopens the surface.
-
-The probe drove a **window zoom**, because `zoomWindow()` is the only reflow the
-automation protocol can send without a pointer; a divider drag changes a sibling's
-width, which `dock-reflow` measures. See [Runtime](/docs/runtime) for the row and
-both limits.
-
-## A dock's panes own their scrollers
-
-A wheel does not stop at the pane under the pointer. A window measured
-`nested-scroll-lifecycle`: with a 320×140 list inside a 420×260 page, a `-100`
-wheel over the list moved the list to `-100` **and the page to `-100`**, though
-the list still had 240px of travel left. One wheel moves every scrollable
-ancestor on the hit path; a `-100000` wheel clamped the list at `-340` and the
-page at `-360`, each against its own content. The host props publish no wheel
-handler and no `preventDefault`, so a pane cannot take a wheel from its page.
-
-Two rules follow for a dock:
-
-- **The workspace does not scroll.** Size it to the window and give each pane
-  the `overflow`. A scroll root wrapped around pane scrollers moves the whole
-  layout whenever a reader wheels a list, and a fixed sidebar or status bar
-  cannot hold its place inside it.
-- **Read the scroller's own offset.** An ancestor's `onScroll` hears a wheel
-  aimed inside its descendant (the page counted all three wheels, two of them
-  over the list), so a page listener cannot tell which scroller moved. Each
-  pane reads `onScrollChange`.
-
-A page that genuinely scrolls — a settings form, a dialog body — moves together
-with a list inside it; that is a layout decision, not something a pane can
-guard against. See [Runtime](/docs/runtime) for the measurement.
-
-## A focus past a pane's fold is not revealed
-
-A dock's sidebar or inspector holds forms taller than the pane, and the keyboard
-walks them without moving the glass. `focus-reveal-lifecycle` measured it on two
-200×120 panes of 9 rows at 40px: a `Tab` traversal reached the ninth row
-(`focus-reveal-form-8`) with the pane's offset still **`0`**, so the focused
-control started **200** points below the pane's bottom edge and painted **0**
-pixels of its own marker — a code focus on the first or the last row moved
-nothing either. A **roving** list does reveal what its own key moved onto, through
-the renderer's `scrollIntoView`: three arrows landed `focus-reveal-roving-3` at
-**`-40`** (the minimal move — the row's bottom on the fold, not the `-120` that
-would align its top), five more reached **`-240`** at the content's end, and an
-arrow past the end changed neither the cursor nor the offset.
-
-Two rules follow:
-
-- **A form of plain tab stops must keep its controls visible.** No route in this
-  runtime reveals the control a traversal focused, so a pane tall enough for the
-  form is the only guard.
-- **A roving control reveals itself.** Give a long list the one-stop, arrow-key
-  shape `List`, `Select` and `Tabs` carry, and call `scrollIntoView` from the
-  layout effect that moves onto each row; the reveal clamps at the content's end,
-  so calling it on every move needs no guard.
-
-## A press stops at the first filled child
-
-A dock composes pressable rows inside pressable groups — a document row with a
-trailing close action, a section header with a menu, a pane row that also
-selects. `press-routing-lifecycle` measured where such a press lands: the
-runtime walks the hitboxes from the topmost down to the first element that
-**paints a fill**, so one press on a filled child runs that child's handler and
-not the row's (`control-filled → hits=cell-click`), while an unfilled child runs
-both (`control-unfilled → hits=cell-click,row-click`) and `pointerEvents: "none"`
-on a filled control still runs both — only a drawing that paints nothing lets
-the press through. Three consequences for a dock:
-
-- **A group row cannot be the only handler.** If the row paints and its child
-  paints too, the child's press never reaches the row; give the child the
-  selection, or leave it unfilled. A trailing action therefore lives on the
-  element the press hits, not on the row behind it.
-- **A drag row is not armed by a press its cell takes.** A row that captures
-  through `onMouseDown` never hears a press aimed at a filled child, so a
-  reorder handle must be the pressed element.
-- **A key follows the focus path, not the paint.** A group row's `onKeyDown`
-  hears a key typed in a field inside it (`field-cell → hits=row-key`) while the
-  field keeps the key and the focus, so the row reads the event's own
-  `elementId` before acting on an arrow — and a press on that field also
-  selects the row (`field-in-row`).
-
-The ten cases are the record's `PRESS_CASES` (`apps/playground/src/live/press-routing.ts`),
-measured by `press-routing-lifecycle`; [Data display](/docs/data-display) carries
-the table's half.
-
-## The inspector is a pane, not a page
-
-The property inspector the dock's right side holds is a pane with its own
-`overflow`, measured by `inspector-lifecycle` in a window: a **−200** wheel moved
-its 30 rows to −200 while its own pane and the preview caption beside it kept
-their exact `y`, and the preview reported no scroll offset because it is not a
-scroller. A pane that clips its rows instead reports no scroll handle at all, so
-"it looks contained" is not evidence that it scrolls.
-
-The rest of the measurement is what makes it a composition rather than a form:
-
-- **One row, one gap.** The preview and the inspector share one row with the
-  **6px** divider as their whole gap, both panes start at one `y`, and the
-  group's right edge is the inspector pane's own.
-- **One object, every view.** The preview box, the readout, the key-value rows
-  and the metric all repaint from the same state in the frame an edit lands —
-  typing `ab` reached all four while the field kept the platform text session.
-- **The table scans down.** One label column and one value column derived from
-  it; a per-row label width moved the value column to 649 from 641.
-- **A toolbar is a row in the pane.** Its actions paint above the first property
-  row; the runtime provides no toolbar host.
-- **A size action is not a new object.** **Wide** took the width to 240, the area
-  to 19200 and the preview to 240×80 in that frame; **Reset size** returned the
-  width and kept the typed tag.
-
-A dock that persists the inspector's width therefore persists a **pane**, not a
-form's field state: the object and the arrangement are two different saves. See
-[Data display](/docs/data-display) for the same composition from the data side.
-
-## One text session, one buffer per pane
-
-A window has a single platform text session, so a split's editor area is a
-composition rather than two independent fields. `multi-pane-editor` measured it
-in a window — two real `<textarea>` panes, the divider the shipped `SplitPane`:
-
-- **A press moves the editing session.** Typing after a press on the right pane
-  changed the right buffer and left the left one alone; a press on the left moved
-  the session back. The session follows the pointer, and each pane's buffer stays
-  in app state rather than in the field.
-- **A splitter drag parks the session on the divider.** A +60 drag resized the
-  split to 440 and changed neither buffer, and the focus read `mp-divider`
-  afterwards: the divider is a `role="separator"` tab stop, so the drag's press
-  takes the editing session and no buffer receives a key while the control holds
-  it. A press on the right pane returned the session there, and the next key
-  reached its buffer with the left unchanged. The clamps are the pane's own — a
-  further drag stopped at 460, a −260 drag at 220. A workspace therefore keeps
-  one rule: a pane must be re-pressed before typing continues after a resize.
-- **Closing a pane is a layout change, not data loss.** The closed pane painted
-  nothing, the surviving editor took the whole row, and both buffers were still
-  in the app; reopening painted the split at the width it held, with the right
-  editor taking its share again and accepting a key.
-
-`editor-overlay` settles the other half: a highlighted *editable* surface has no
-caret and reports no scroll offset in 0.11.0, so a pane is a field and a view
-rather than an overlay ([Runtime](/docs/runtime)).
-
-## A find bar counts matches, not rows
-
-A workspace find bar searches a document the runtime never holds: a log viewer,
-a code pane or a table mounts a window of rows. `getPaintedHighlights()` reports
-only that window, so `activeIndex` would mean "the nth match on screen". The
-seam is `matchIndexOffset` — the number of **matches** above the window, not a
-row index, because rows hold different numbers of matches.
-
-`search-virtual-document` measured it across 400 rows: the document holds 676
-matches, 540 of them above row 320, and `scrollToItem(320)` with offset 540
-marks exactly one active wash (the row's second match, document index 541). The
-row index 320 marks none at all, an off-by-one marks the match before the named
-one, and a negative offset drops the whole spec. Only mounted rows wash, so the
-document's count and the paint are different numbers — count with `findRanges`
-over every row and offset with the matches above `windowStart`. A replace-all
-runs over the document too: it cleared all 676 occurrences across unmounted rows
-and left the reader's row where it was.
-
-A find bar therefore keeps three numbers: the document's matches, the matches
-above the window, and the cursor. The last is the app's; the offset is
-arithmetic over the first two, recomputed whenever the window moves.
-
-## A moved tab is a remount
-
-`movable-tabs-lifecycle` measured a tab move inside one window (31 checks on two
-280px strips 24px apart, each with its own selected panel and a draft field).
-Dragging `bravo` out of the left strip and dropping it at the right strip's start
-leaves `alpha,charlie` / `bravo,delta,echo` with `bravo` selected, and the draft
-reads `bravo:abc` — it lives **above** the strips, because the tab changed parent
-and its panel remounted. The app also restores the focus to `movable-tab-bravo`,
-which the runtime lost with the old element. `Cmd+Shift+Right` reorders the
-focused tab inside its strip (`delta,bravo,echo` → `delta,echo,bravo`), stops at
-the end and keeps the focus; a release below both strips is a miss. Two rules
-follow: resolve the destination group from the **painted** strip boxes and the
-slot from the destination tabs' **centres**, and keep a moved tab's state in the
-app. A tab detached into its own OS window stays unavailable — the binding opens
-one window per process.
+The frames themselves are on [Layouts](/docs/layouts), and each part's page is under [Components](/docs/components).
 
 ## State and persistence
 
-There is no renderer storage, so a layout is the app's data. Model it once and
-decode at the boundary — the same rule the rest of the library follows:
+A workspace keeps its own layout state: decode a stored `DockNode` or `PanelLayout` with the package's JSON schema and open the default when the decode fails.
 
-```tsx
-import { Effect } from "effect";
+```ts
+import { DockNodeJson } from "@gpuixui/dock";
 import * as Schema from "effect/Schema";
 
-class WorkspaceLayout extends Schema.Class<WorkspaceLayout>("WorkspaceLayout")({
-  sidebarWidth: Schema.Number,
-  paneWidths: Schema.Array(Schema.Number),
-  activeTab: Schema.String,
-}) {}
-
-const decodeLayout = Schema.decodeUnknownEffect(
-  Schema.fromJsonString(WorkspaceLayout),
-);
+const saved = Schema.encodeUnknownSync(DockNodeJson)(layout);
+const restored = Schema.decodeUnknownSync(DockNodeJson)(saved);
 ```
-
-Keep that decode at the entrypoint, where the persisted string is read; the
-panels then take plain numbers. A workspace does not render from
-`JSON.parse`, and a stale or hand-edited layout becomes a typed decode failure
-the app can reset, not a crash on mount.
-
-`workspace-restore` measured the half a window can prove. A re-mounted workspace
-paints the saved arrangement — widths, the chosen document and the inspector's
-scroll — and its layout pass reports the restored width, so a saved scroll lands
-on the first layout rather than being lost before the pane exists. Two rules come
-from it:
-
-- **A decode failure opens the default, never a partial layout.** A corrupt
-  `not a workspace` restored the default (160 / 240 / explorer / 0) at
-  `source=default`; an app that spread whatever decoded would open a workspace
-  missing the fields it could not read.
-- **Clamp a restored number to the pane's own bounds.** A stored
-  `sidebar:-5 document:9999 scroll:-30` restored **0 / 360 / 0**, because a
-  stale width must not push the inspector off the frame. The pane's caller-owned
-  width is the bound — a split's `max` is the caller's number, not the
-  container's.
-
-Both negative controls were measured: restoring the default instead of the saved
-layout, and skipping the saved-scroll application (`expected -120 ± 1, got 0`).
-
-## The keyboard order a dock carries
-
-A dock is several focusable layers — a sidebar, a rail of documents, the pane —
-and the traversal across them is the app's, measured in a window by
-`dock-focus-lifecycle`:
-
-- **One stop per rail, one per pane.** The traversal from the sidebar toggle
-  visits the sidebar's actions, then a single stop for the whole rail (the
-  selected trigger), then the pane's first field, then the status bar. A stop per
-  trigger puts three rail stops in the same walk.
-- **A closed pane keeps its controls' stops.** A sidebar painted zero wide still
-  keeps its unguarded control in the traversal — with its own 12px box and
-  programmatic focus, while the pointer is clipped away. The dock removes the
-  stop with `tabIndex={-1}`, or the keyboard walks into a pane the reader cannot
-  see; the guard returns the stop when the pane reopens.
-- **A rail step moves focus itself.** The runtime does not move focus when the
-  selection changes, so the rail's key handler calls `renderer.focusElement`;
-  without it the pane repaints while focus stays on the old trigger.
-- **The pane's field owns its arrows.** `left`/`right` inside a field never
-  reach the rail, so the rail moves on its own chords or the arrows stay with the
-  fields.
-
-## Gaps, with the evidence
-
-Every panel row is shipped (`@gpuixui/dock`); what remains is the runtime's own
-limits, and none of them is a component the lane still owes.
-
-| Gap | Evidence | Strongest honest alternative |
-| --- | -------- | ---------------------------- |
-| A pane detached into its own window | The binding opens **one window per process** and has no drag host feature; a portalled surface paints in another layer of the same window (`portal-layer`) | Move a tab to another layer or pane through `createPortal`; a second OS window stays unavailable |
-| Renderer storage | No storage API in the binding; the package ships `PanelLayout` and `DockNode`, which round-trip through a JSON string | `Schema`-encoded app state, decoded at the entrypoint, as §State and persistence shows |
-| Application menus | The macOS menu bar is a renderer API with no API to add an item, so a cross-platform menu is the app's | `AppMenu` from `@gpuixui/shell` draws the bar inside the window, with keyboard traversal and accelerator labels |
-| Terminal surfaces | Rendering the app **into** a terminal is supported and measured: `render(<App />, { terminal: true })` with `isTerminal()`, a 100×40 pty receiving an 800×640 frame, a key repainting it and ctrl-c restoring the terminal ([Runtime capabilities](/docs/runtime#measured-in-a-window)). A pane that hosts a PTY **inside** a window has no PTY host element, so it is not supported | Ship the app as a terminal UI, or put a log viewer in the window: `ScrollArea` + `Text` |
-
-The capability matrix and its evidence are on [Runtime](/docs/runtime).
-
-## Where a workspace change goes
-
-- **A panel model** (sizes, nesting, collapse) → `@gpuixui/dock`, whose
-  `SplitPane`, `PanelGroup` and `DockLayout` own it, with a native behaviour
-  suite and a page under `packages/dock/docs`. A change to the divider's rule
-  also moves §A split you can resize here, because the browser preview restates
-  the arithmetic and `dock-preview.test.ts` holds it to `packages/dock/src`.
-- **A window composition** → a Block while it is one page's recipe; it becomes
-  a component only when a second consumer needs the identical behaviour.
-- **Persistence** → the application. The library ships schemas, not storage.
-- **A new theme role for chrome** → `@gpuixui/tokens`, with the contrast
-  contract updated, so a platform switch repaints the shell too. See
-  [Theming](/docs/theming).

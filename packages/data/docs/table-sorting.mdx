@@ -1,13 +1,7 @@
 ---
 title: Table sorting
-description: The press cycle a sortable header reports, and the order a multi-column sort walks.
+description: The press cycle a sortable header reports, and the order a multi-column sort walks
 ---
-
-A sortable column is a `TableSortHeader`: the primitives' `Button` with the
-runtime's activation contract (Enter on key-down, Space on key-up, a press) and
-an arrow that says the state. The controller that reads it is `useTable`, whose
-sorting is an **order** — the primary field first, then each tie-break — so a
-table can sort by more than one column without a second copy of the rows.
 
 ## Usage
 
@@ -38,32 +32,6 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
 </TableHeader>;
 ```
 
-A **plain press** asks for one sort: the pressed field becomes the primary, and
-pressing it again flips its direction. A **Shift press** keeps the order and
-either flips the field where it already sits or appends it as the next
-tie-break. The readout of the shipped example prints the order it holds —
-`status-asc` for one field, `status-asc+name-desc` for two — and the row model
-walks the entries in turn.
-
-## How the order reads
-
-- The selected record survives a sort: the core keys rows by identity, never by
-  index, so choosing a record and then re-sorting keeps it chosen.
-- A filter narrows **before** the order is applied, so a Shift range is measured
-  over what is painted.
-- A plain press does not toggle a secondary field; it replaces the order. The
-  cycle is the primary field's, which is what a reader pressing one header
-  expects.
-- Hiding a column keeps its sort: a hidden field still orders the records, it
-  only leaves the search (`useTable`'s `hiddenColumns`).
-
-The order is the row model's, not this package's: `constructGrid` registers
-`sortFn_basic`, which compares numbers numerically and text by code unit, and
-`@tanstack/table-core`'s sorted model applies each entry of the sorting state in
-turn. Records the first sort ties keep their source order when no second entry
-decides them. A controlled grid builds the same table with `constructGrid` and
-stores the sorting state itself.
-
 ## API
 
 | Part | Prop | Type | Default | Consequence |
@@ -84,28 +52,8 @@ stores the sorting state itself.
 | `useTable` | `toggleSort` | `(field, additive?) => void` | — | the same cycle without the runtime's modifiers |
 | `useTable` | `setSort` | `(next: Option<SortState>) => void` | — | replace the order with one field, or clear it |
 
-## Accessibility
-
-`@gpuix/native@0.11.0` has no `aria-sort`, so the state travels in the
-control's accessible name: `Name, sortable` before a press, `Name, sorted
-descending` after one, and `Name, sorted descending, sort 2 of 2` in a
-multi-column order. The glyph carries the same information for a sighted
-reader: an arrow alone for one field, and the arrow followed by the field's
-place (`↓1`, `↑2`) when the order has more than one.
-
-A keyboard reader adds a tie-break the same way the pointer does: hold Shift
-while activating the header. The activation contract is the button's — Enter on
-key-down and Space on key-up — and the runtime's key event carries the
-modifier flags.
-
 ## Limitations
 
-- No `aria-sort`: the direction and the place are spoken, not attached to the
-  column header as a state.
-- A multi-column order is not reordered by pressing a field that already sits
-  inside it; the field's place is fixed, and a plain press replaces the order.
-- The header paints one arrow and one numeral; there is no secondary sort
-  editor beyond the press gestures.
-- A category with no second field to break its ties keeps the source order, so
-  the visible result of adding a tie-break can be no change when the data has
-  no ties.
+- No `aria-sort`: direction and place are spoken, not attached to the header.
+- Pressing a field already in the order moves nothing; a plain press replaces the order.
+- No secondary sort editor beyond the press gestures.

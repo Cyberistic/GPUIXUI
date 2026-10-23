@@ -1,12 +1,9 @@
 ---
 title: MultiStepForm
-description: A wizard shell over Stepper — gated steps, one current content pane and a submit only the last step offers.
+description: A wizard shell over Stepper — gated steps, one current content pane and a submit only the last step offers
 ---
 
-`MultiStepForm` is the orchestration a multi-step form would otherwise repeat
-per screen: the current step, a **gate** that may refuse to leave it, the
-shipped `Stepper` indicator, and one submit that only the last step offers. The
-draft stays the caller's — the same contract `Form` has.
+## Usage
 
 ```tsx
 import { MultiStepForm } from "@gpuixui/components";
@@ -43,61 +40,6 @@ import * as Option from "effect/Option";
 />;
 ```
 
-## Two gates, two jobs
-
-A wizard's validation is not one check:
-
-- a **step gate** answers "may the reader leave this step?" — it runs on `Next`
-  and again on the last step's `Submit`, and its message is painted beside the
-  content until the step moves;
-- the **record decode** is `Form`'s: the whole draft (including the review
-  step's acceptance) is decoded once on submit. Wrap the content in a `Form`
-  whose `onSubmit` is this component's `onSubmit`, or pass the decoded call as
-  `onSubmit` yourself.
-
-A gate returns `Option<string>`: `Option.none()` allows the move, `Option.some(message)`
-refuses with that sentence. The refusal is remembered with the step it was
-raised on, so a controlled `step` change never shows one step's message under
-another's content.
-
-## Steps
-
-Only the current step's `content` is mounted. That is the honest trade for a
-wizard whose draft lives above it: a field's own transient state (an IME
-composition, a scroll offset) does not survive a step change, and a hidden step
-never leaves controls in the tab order. Keep the draft in the caller.
-
-`steps` with no entries paints nothing. A `step` outside `1…steps.length` reads
-as the nearest real step — `0` is the first, `99` is the last.
-
-## Controlled or not
-
-| Mode | Props |
-| ---- | ----- |
-| uncontrolled | `defaultStep?` (default `1`) |
-| controlled | `step`, plus `onStepChange` |
-
-`onStepChange` fires in both modes with the accepted step. A controlled `step`
-is authoritative: `Next` reports and repaints only when the caller passes a new
-step.
-
-## Accessibility
-
-The mounted step's content is a named `group`: `<title>, step N of M`. The name
-matters because the runtime publishes an element to the accessibility tree only
-when it has a role, so the same `aria-label` on a plain `div` would reach no
-reader; the group is how a screen reader hears which step it is on when the
-content changes.
-
-## Keyboard and focus
-
-The actions are the shipped `Button`s, so a click and the platform's activation
-keys (Enter, Space on release) both work, and a disabled action leaves the tab
-order. The indicator is read-only: `Stepper` installs no key handler and no tab
-stop. Moving a step unmounts the previous content, so focus returns to the
-document; a wizard that must keep focus on a field should focus it after the
-step's content mounts.
-
 ## API
 
 | Prop | Type | Default |
@@ -115,21 +57,8 @@ step's content mounts.
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
 
-A `MultiStep` is `{ id, title, description?, content, gate? }`, where `gate` is
-`() => Option<string>`.
-
 ## Limitations
 
-- **The draft is the caller's.** The component stores the step index and a
-  refusal; it never reads or copies the record.
-- **No free navigation.** The indicator does not jump; `Back` and the gates are
-  the only moves. That is `Stepper`'s contract.
-- **The last step's gate is not the record decode.** A gate is a cheap "may I
-  leave?" answer; a schema that must see the whole record belongs to `Form`.
-- **A step change unmounts its content.** Field-local state does not survive it.
-
-## Related
-
-- **Stepper** — the read-only indicator this component drives.
-- **Form** — schema validation and the submit lifecycle around the whole record.
-- **Field** — one label, control and message.
+- **The draft is the caller's**: the component stores the step index and refusals.
+- **No free navigation**: `Back` and the gates are the only moves.
+- A step gate is not the record decode; decode the whole draft in `Form`.

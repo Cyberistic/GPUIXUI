@@ -1,6 +1,6 @@
 ---
 title: Date picker
-description: One day, chosen from a month grid in a popover.
+description: One day, chosen from a month grid in a popover
 ---
 
 <ComponentPreview name="date-picker-workflow" />
@@ -52,16 +52,6 @@ DatePicker
 
 ## Limitations
 
-- A picker the consumer disables while its calendar is open closes with it,
-  and neither a day nor `Clear` writes the value (the trigger already refuses to
-  open one that starts disabled).
+- Disabling a picker with its calendar open closes it; neither a day nor `Clear` writes the value.
 - No `aria-current`; today is marked by a border.
 - No `aria-disabled`; an unavailable day leaves the tab order.
-- Fixed English labels; no i18n layer.
-- No adjacent-month days, range selection or time of day.
-
-## Related
-
-- **Popover** — the surface this composes.
-- **Time picker** — the time-of-day half of a scheduling field.
-- **Field** — wrap the trigger when it needs a label and message slot.

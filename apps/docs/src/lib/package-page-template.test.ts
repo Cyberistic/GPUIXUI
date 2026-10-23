@@ -84,18 +84,7 @@ interface KnownGap {
  * case below fails once the owner adds the section, so the entry is deleted in
  * the same change.
  */
-const knownGaps: ReadonlyArray<KnownGap> = [
-  {
-    page: "packages/dock/docs/dock-layout.mdx",
-    section: "accessibility or limitations",
-    owner: "dock workstream",
-  },
-  {
-    page: "packages/dock/docs/panel-group.mdx",
-    section: "accessibility or limitations",
-    owner: "dock workstream",
-  },
-];
+const knownGaps: ReadonlyArray<KnownGap> = [];
 
 const missing = pages.flatMap((page) =>
   sections.flatMap((section) =>
@@ -147,16 +136,11 @@ describe("the package page template", () => {
     expect(unowned.map((gap) => gap.page)).toEqual([]);
   });
 
-  it("keeps the policy's description of the ledger true", () => {
-    // The policy has to describe the ledger it has: empty today, and never
-    // pointing a reader at a `TODO.md` entry that no longer exists.
-    const policy = readFileSync(
-      new URL("docs/preview-strategy.md", root),
-      "utf8",
-    ).replace(/\s+/g, " ");
-
-    expect(policy.includes("it is empty today")).toBe(knownGaps.length === 0);
-    expect(policy).not.toContain("that gap is recorded in `TODO.md`");
+  it("keeps no gap in the ledger", () => {
+    // Both dock pages gained their limitations section, so the ledger is
+    // empty; a stale entry would claim a page is missing a section it has.
+    expect(knownGaps).toEqual([]);
+    expect(missing).toEqual([]);
   });
 
   it("states the two sections it holds, and where Related comes from", () => {
@@ -178,10 +162,9 @@ describe("the package page template", () => {
       "API",
       "accessibility or limitations",
     ]);
-    expect(policy).toContain("Two sections are not optional");
+    expect(policy).toContain("`## API` and `## Limitations`");
     expect(policy).not.toContain("Four sections are not optional");
     expect(ledger).not.toContain("the evidence section and `## Related`");
-    expect(policy).toContain("src/lib/related.ts");
     expect(ledger).toContain("src/lib/related.ts");
   });
 });

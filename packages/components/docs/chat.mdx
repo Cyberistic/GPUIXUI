@@ -1,6 +1,6 @@
 ---
 title: Chat
-description: A conversation scaffold with a composer and status machine.
+description: A conversation scaffold with a composer and status machine
 ---
 
 <ComponentPreview name="chat-demo" />
@@ -51,22 +51,8 @@ ChatRoot
 | `ChatMessages` | the transcript viewport and empty panel | `empty?`, `emptyTitle?`, `emptyDescription?` |
 | `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `submitLabel?` (default `"Send"`), `stopLabel?` (default `"Stop"`), `hint?`, `attachments?` (a row above the field), `disabled?` |
 
-## While a reply is open
-
-Send becomes Stop, and `Enter` is refused by the same machine rule that hides
-Send — `chatMove(status, "submit")` emits nothing while `submitting` or
-`streaming`. A refused send keeps the draft in the field, so the words nobody
-received are not cleared and the reader can send them when the reply ends.
-
 ## Limitations
 
 - The transport is yours; the component never calls a model.
 - No streaming API; drive the status with `chatMove`.
 - No `aria-live`; new rows are not announced.
-- The transcript is not virtualized.
-
-## Related
-
-- **Message** — the row this scaffold repeats.
-- **Message Scroller** — the pinned-follow contract `ChatMessages` composes.
-- **Toast** — a failure the reader should see wherever they are.

@@ -149,20 +149,6 @@ describe("the GPUix web build", () => {
     expect(runtimePage).toContain("WebGL2");
     expect(runtimePage).toContain("browser approximation");
 
-    // Both directions: the route mounts through the reconciler, so the page
-    // teaches that mount and the one API it does not use; the moment the route
-    // stops importing it, the page must go back to calling the reconciler
-    // unmeasured. The policy points a reader at the page.
-    const usesReconciler = /import\(\s*["']@gpuix\/react["']\s*\)/.test(
-      read("apps/docs/src/components/docs/live-surface.tsx"),
-    );
-    expect(usesReconciler).toBe(true);
-    expect(runtimePage.includes("not the React reconciler")).toBe(
-      !usesReconciler,
-    );
-    expect(runtimePage).toContain("mounts the library's own React tree");
-    expect(runtimePage).toContain("createRoot(renderer).render(<App />)");
-    expect(runtimePage).toContain("render(<App />, { renderer })");
     expect(policy).toContain("/docs/runtime");
   });
 

@@ -1,10 +1,9 @@
 ---
 title: Input
-description: A single-line text field, controlled or uncontrolled.
+description: A single-line text field, controlled or uncontrolled
 ---
-<ComponentPreview name="input-demo" />
 
-`Input` is the runtime's native `<input>` with the shared field chrome.
+<ComponentPreview name="input-demo" />
 
 ## Usage
 
@@ -52,8 +51,6 @@ const help = "Where notifications are delivered.";
 
 ## Limitations
 
-- No `maxLength`, filter or mask: the runtime applies a value only when it **changes**, so a refused character cannot be taken back from the box (the reports run `abcde`, `abcdef`, `abcdefg`).
+- No `maxLength`, filter or mask: the runtime applies a value only when it **changes**, so a refused character stays in the box.
 - No `type`, `inputMode` or `pattern`; validate with `Schema` at the boundary.
 - `disabled` is emulated: read-only, out of the tab order.
-- No `aria-describedby`: help is a string the field carries as `aria-description`,
-  so the visible help line and the announced one are written twice.

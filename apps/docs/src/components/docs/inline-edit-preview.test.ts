@@ -154,13 +154,7 @@ describe("the inline edit preview", () => {
 
     expect(source).toContain("if (commit && !disabled && draft !== value)");
     expect(page).toContain(
-      "A caller that **disables the control mid-edit** refuses the edit",
-    );
-    expect(page).toContain(
-      "never when the caller disables the control mid-edit",
-    );
-    expect(page).toContain(
-      "a draft the caller disables before the `Enter` commit",
+      "**disables the control mid-edit** refuses both the edit and the commit",
     );
   });
 

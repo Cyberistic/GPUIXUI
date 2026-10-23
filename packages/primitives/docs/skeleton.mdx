@@ -1,10 +1,9 @@
 ---
 title: Skeleton
-description: A pulsing placeholder for content that has not arrived.
+description: A pulsing placeholder for content that has not arrived
 ---
-<ComponentPreview name="skeleton-demo" />
 
-`Skeleton` paints a block in the skeleton role and pulses its opacity.
+<ComponentPreview name="skeleton-demo" />
 
 ## Usage
 
@@ -30,13 +29,6 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
-
-## Motion
-
-The pulse alternates every 700 ms — its own constant rather than a
-`motionLevels` entry, because the house levels time a transition between two
-states while a placeholder alternates for as long as it is on screen. A pulse
-therefore reads slower than a spinner's step (`motionLevels.step`, 120 ms).
 
 ## Limitations
 

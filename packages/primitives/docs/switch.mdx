@@ -1,10 +1,7 @@
 ---
 title: Switch
-description: An immediate on/off, distinct from a checkbox in intent.
+description: An immediate on/off, distinct from a checkbox in intent
 ---
-
-`Switch` is the "takes effect now" control: a track and a thumb, announced with
-the switch role.
 
 <ComponentPreview name="switch-states" />
 
@@ -19,13 +16,6 @@ import { Switch } from "@gpuixui/primitives";
   label="Pause all notifications"
 />;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `Switch` | the track, state and press target |
-| `SwitchThumb` | the knob; `Switch`'s children are its content |
 
 ## API
 
@@ -63,15 +53,5 @@ import { Switch } from "@gpuixui/primitives";
 ## Limitations
 
 - No `aria-checked`: the state is announced through `aria-valuetext`.
-- A visible `Label` is not associated with the switch — pass `label` or
-  `labelledBy(name)` — and a press on those words focuses the switch
-  (`Label target`) rather than flipping it; the switch's own target is the
-  control, because the runtime publishes no press verb for another element.
+- A visible `Label` is not associated with the switch.
 - No loading or pending state; disable it while a request is in flight.
-- The slide is 150ms; `reducedMotion` lands the thumb. It defaults to the
-  motion provider's preference (`MotionProvider`), so one wrapper covers a tree.
-- A theme restored from storage writes `null` for the paint it did not carry
-  (JSON has no `undefined`): that is no declaration, so the switch paints the
-  accent family in the derived box. A table that lost one of its three slots is
-  no paint either — `switchFailures` from `@gpuixui/tokens` names the slot to
-  repair before the platform's own paint returns.

@@ -1,11 +1,9 @@
 ---
 title: RadioGroup
-description: One choice from a small set, with a roving tab stop and arrow navigation.
+description: One choice from a small set, with a roving tab stop and arrow navigation
 ---
-<ComponentPreview name="radio-group-demo" />
 
-`RadioGroup` is a radio group whose options arrive as data or as
-`<RadioGroupItem>` children; the arrows select and move focus together.
+<ComponentPreview name="radio-group-demo" />
 
 ## Usage
 
@@ -23,13 +21,6 @@ import { RadioGroup } from "@gpuixui/primitives";
   ]}
 />;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `RadioGroup` | the named group, the roving tab stop and the value |
-| `RadioGroupItem` | an option row; the data prop's element form |
 
 ## API
 
@@ -57,10 +48,6 @@ import { RadioGroup } from "@gpuixui/primitives";
 
 ## Limitations
 
-- No `aria-checked`: a row's state is announced through `aria-valuetext`.
-- An option's `description` is a caption beside the name, announced as that
-  row's help through `aria-description` (the runtime has no `aria-describedby`);
-  a blank one paints and announces nothing.
-- `""` is a value like any other: an option whose `value` is the empty string
-  paints checked when the group's value is `""`.
-- Item content must stay presentational; rich content uses `RadioGroupItem`.
+- No `aria-checked`: state is announced through `aria-valuetext`.
+- `description` is announced as `aria-description`; there is no `aria-describedby`.
+- `""` is a value: an empty-string option paints checked when the group is `""`.

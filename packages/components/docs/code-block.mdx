@@ -1,6 +1,6 @@
 ---
 title: Code block
-description: Source or output, tokenized by @tanstack/highlight.
+description: Source or output, tokenized by @tanstack/highlight
 ---
 
 <ComponentPreview name="code-block-demo" />
@@ -16,23 +16,6 @@ import { CodeBlock } from "@gpuixui/components/code-block";
   language="tsx"
   lineNumbers
 />;
-```
-
-## Examples
-
-### Theme the syntax palette
-
-```tsx
-import { ThemeProvider } from "@gpuixui/components";
-import { extendTheme, syntaxColors } from "@gpuixui/tokens";
-
-const brand = extendTheme(theme, {
-  syntax: { ...syntaxColors(theme), keyword: "#7A1F5C", string: "#0B5E4A" },
-});
-
-<ThemeProvider theme={brand}>
-  <CodeBlock code={source} language="ts" />
-</ThemeProvider>;
 ```
 
 ## API
@@ -58,10 +41,3 @@ const brand = extendTheme(theme, {
 - The code text is not exposed to assistive technology.
 - `@tanstack/highlight` decides what a run is; the palette only colours it.
 - A language the tokenizer does not ship falls back to plain text.
-- No clipboard write; `onCopy` hands the source to the caller.
-
-## Related
-
-- [Scroll fade](/docs/components/scroll-fade) — the edges a long block fades.
-- [Reveal](/docs/components/reveal) — the entrance this block shares.
-- [Empty state](/docs/components/empty-state) — the page-level empty case.

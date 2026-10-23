@@ -1,17 +1,10 @@
 ---
 title: Theming
-description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
+description: Semantic colour roles, typography, spacing, radius and density in one theme shape.
 ---
 
-import { colorRoles, contrastFloors, contrastRatio, highlightShares, highlightSurfaces, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, syntaxRoles, syntaxSurfaces, themes } from "@gpuixui/tokens";
+import { contrastFloors, syntaxRoles, syntaxSurfaces } from "@gpuixui/tokens";
 import { TokenList } from "@/components/docs/token-list";
-import { previewMode } from "@/lib/platform";
-import { omarchyAudit, omarchyFile, omarchySample, omarchyTheme } from "@/lib/system-palette";
-
-A GPUIxUI theme is plain data. Components never carry a colour literal; they read
-a semantic role such as `colors.primary`, `spacing.md` or `radius.md` from the
-nearest `ThemeProvider`. Switching the provider restyles the subtree without
-touching component code.
 
 ```tsx
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -22,239 +15,64 @@ import { darkTheme } from "@gpuixui/tokens";
 </ThemeProvider>;
 ```
 
-<Callout type="info" title="No OS appearance query">
-  GPUix 0.11.0 exposes no OS appearance query. The application owns the mode and
-  passes a resolved theme; there is no hidden `prefers-color-scheme` in the
-  library.
-</Callout>
-
 ## Theme shape
-
-Every theme has the same fields:
 
 | Field | What it decides |
 | ----- | --------------- |
-| `colors` | {colorRoles.length} semantic roles: surfaces, text, actions, status, borders, focus |
-| `typography` | display, headings, body, label, caption, code and the font families |
-| `spacing` | the spacing scale components use for gaps and padding |
+| `colors` | semantic roles: surfaces, text, actions, status, borders, focus |
+| `typography` | display, headings, body, label, caption, code and families |
+| `spacing` | the spacing scale for gaps and padding |
 | `radius` | `sm` through `xl` and `full` |
-| `density` | control heights and horizontal padding for `sm`, `md` and `lg` |
+| `density` | control heights and horizontal padding for `sm`, `md`, `lg` |
 | `elevation` | the shadow steps (`sm`, `md`, `lg`) |
 | `borderWidth` | thin and strong boundaries |
-| `iconSize` | the icon sizes paired with each type role |
+| `iconSize` | icon sizes paired with each type role |
 
 ## Colour roles
 
-Roles describe intent, not a ramp shade. There are {colorRoles.length} of them; the families that
-matter most on a page are:
+| Role | Use |
+| ---- | --- |
+| `background` | window and application canvas |
+| `foreground` | default text |
+| `card` | raised content surface |
+| `popover` | menus, popovers and dialogs |
+| `primary` / `primaryForeground` | primary action and its text |
+| `secondary` | secondary action |
+| `mutedForeground` | secondary text |
+| `accent` | tinted emphasis surface |
+| `hover` / `active` / `selected` | pointer, press and chosen-row washes |
+| `destructive` | destructive action |
+| `border` / `borderStrong` | decorative and essential boundaries |
+| `ring` | focus ring |
 
-| Role | Light | Dark | Use |
-| ---- | ----- | ---- | --- |
-| `background` | {themes.light.colors.background} | {themes.dark.colors.background} | window and application canvas |
-| `foreground` | {themes.light.colors.foreground} | {themes.dark.colors.foreground} | default text |
-| `card` | {themes.light.colors.card} | {themes.dark.colors.card} | raised content surface |
-| `popover` | {themes.light.colors.popover} | {themes.dark.colors.popover} | menus, popovers and dialogs |
-| `primary` | {themes.light.colors.primary} | {themes.dark.colors.primary} | primary action |
-| `primaryForeground` | {themes.light.colors.primaryForeground} | {themes.dark.colors.primaryForeground} | text and icons on `primary` |
-| `secondary` | {themes.light.colors.secondary} | {themes.dark.colors.secondary} | secondary action |
-| `mutedForeground` | {themes.light.colors.mutedForeground} | {themes.dark.colors.mutedForeground} | secondary text |
-| `accent` | {themes.light.colors.accent} | {themes.dark.colors.accent} | tinted emphasis surface |
-| `hover` | {themes.light.colors.hover} | {themes.dark.colors.hover} | wash under a pointer |
-| `active` | {themes.light.colors.active} | {themes.dark.colors.active} | wash under a press |
-| `selected` | {themes.light.colors.selected} | {themes.dark.colors.selected} | wash behind a chosen row |
-| `destructive` | {themes.light.colors.destructive} | {themes.dark.colors.destructive} | destructive action |
-| `border` | {themes.light.colors.border} | {themes.dark.colors.border} | decorative borders |
-| `borderStrong` | {themes.light.colors.borderStrong} | {themes.dark.colors.borderStrong} | essential control boundaries |
-| `ring` | {themes.light.colors.ring} | {themes.dark.colors.ring} | focus ring |
-
-The full catalogue, including the four status families and their soft pairs, is
-in [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md).
-`colorRoles` exports the ordered list, so a docs table or a theme editor can
-enumerate it instead of copying names.
-
-<Callout type="warn" title="The site accent is not the token accent">
-  This documentation site uses the landing's Hunter License green for its own
-  chrome. Component previews use the real iris tokens above. The site identity
-  and the library's default `primary` are deliberately separate until the brand
-  token lands.
-</Callout>
+The full catalogue is [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md).
 
 ## Data series
 
-A chart series, a legend swatch or a heat-map region needs colour that carries
-**identity**, not status: reusing `destructive` for a revenue bar would read as a
-warning, and a hex per chart is the scattered literal the system forbids. A theme
-therefore owns one categorical scale of {seriesColors(themes.dark).length}
-colours, `seriesColors(theme)`, designed per mode and contrast variant. Every
-colour is measured against the {seriesSurfaces.length} surfaces a plot is drawn
-on (<TokenList names={seriesSurfaces} />) at the {contrastFloors.boundary}:1
-non-text floor, and no two are closer than
-`seriesDistinctnessFloor` in OKLab — contrast alone cannot tell a blue from a
-violet of the same lightness. Both of those contracts assume full colour vision,
-so every pair is also simulated for each `colorVisionDeficiencies` entry
-(`protanopia`, `deuteranopia`, `tritanopia`) and held to
-`seriesDeficiencyFloor`: two hues can read apart to one reader and collapse for
-another, and only the simulation sees it.
+`seriesColors(theme)` is the categorical scale charts paint; every colour clears the boundary floor on the plot surfaces.
 
 <SeriesSwatches />
 
-A theme that carries `series` replaces the scale whole, and a **look** may
-declare its own per mode: a look that repaints the surfaces a plot is drawn on
-needs one — Luna's beige page swallows the shared light amber — and `applyStyle`
-passes it, so the look is not stuck with a scale designed for another page. A
-mode a look omits, and every style that declares none, resolves the base theme's
-scale; a high-contrast base keeps its own, because a table designed for a look's
-surfaces is not a high-contrast scale. The browser bridge publishes one variable
-per swatch (`--series-1`, `--series-2`, …), so a preview charts in the theme the
-switch is showing.
-`seriesFailures(theme)` reports a broken scale, and `auditTheme` runs it beside
-the contrast and decorative reports.
-
-## Indicator marks
-
-A component that **shows** rather than says something — a progress fill, a
-spinner's lit dot, a slider's filled span, a switch's on-state, an avatar's
-presence dot — paints a mark. A mark is neither text nor a boundary, so no
-contrast pair covers it: `primary` was only ever measured against its own
-on-colour, and a bar painted in a role that matches the page passed every other
-report. `indicatorRoles` is the closed set a mark may use, and
-`indicatorFailures(theme)` holds every one of them to the 3:1 non-text floor
-(`4.5:1` in a high-contrast theme) on the {indicatorSurfaces.length} strips
-`indicatorSurfaces` names
-({indicatorSurfaces.join(", ")}):
-the page, a card, a popover, a muted toolbar, the two
-washes a row tints under the pointer, the `accent` and `selected` fills a menu or
-a combobox row wears with its tick, a field's own fill, which carries its
-caret, and the four soft status tints a message is filled with. The list is
-printed from the array rather than retyped, so a strip the package adds is named
-here without an edit.
-
-A **message's own tint** is the last strip a mark stands on, and the one that
-needed a palette move: an `Alert` fills its tone's `xSoft` role and its
-description is a container, so a filled `primary` action a consumer places there
-paints its face on that tint. macOS dark's system blue failed all four tints
-while every other style cleared them, so the style takes the smallest step
-toward white that clears (`#3B9DFF`, 3.01:1 on the warning tint, the tightest
-placement the sweep finds). `indicator.test.ts` holds the sweep, the pre-fix
-cells and that tightest placement.
-
-A **status** mark does not paint the tone's solid fill. That role is a surface
-designed to carry text — light `warning` is a pale amber with near-black text and
-measures 1.78:1 on the page — so a dot or bar painted in it would be the one mark
-nobody can find. A status mark paints the tone's readable role instead,
-`statusTone(theme, tone).foreground`, which is the role a soft status surface and
-a field error already paint.
-
-## Find highlights
-
-A search that marks what it found paints a **wash behind the glyphs**, not a
-foreground colour: any GPUix text host takes `highlight`, and the text keeps the
-colour it already had. A host handed no colour paints the runtime's own accent —
-every match at {Math.round(highlightShares.match * 100)}%, the active one at
-{Math.round(highlightShares.active * 100)}% with a 2px corner — which is the one
-text surface still painted from a palette this package does not own. It is also
-too strong for the text it marks: at those shares the active wash leaves
-`foreground` under the 7:1 body floor in every shipped style, so a reader who
-pressed Enter on their own query could be shown a result under the reading floor.
-
-`findHighlight(theme)` answers the pair a theme can carry, derived from
-`primary` so a brand's accent family reaches a find bar the way it reaches every
-other mark. It starts from the runtime's two strengths and steps each down to
-the largest share that does its job:
-
-- The **resting** match keeps the theme's {contrastFloors.body}:1 body floor,
-  because it is the text the reader asked for, and stays visible on each of the
-  {highlightSurfaces.length} content tones a search runs over
-  (<TokenList names={highlightSurfaces} />) at the
-  {contrastFloors.boundary}:1 perceptibility floor.
-- The **active** match takes the strongest wash that still keeps body text
-  readable, falling back to the theme's {contrastFloors.secondary}:1 secondary
-  floor only when the accent has no stronger body-safe share — and the two
-  states must still be told apart at 1.05:1.
-- The **corner** is `radius.sm`, the tightest step the scale carries, rather than
-  the runtime's 2px literal, which no authored scale owns.
-
-```tsx
-import { findHighlight, type Theme } from "@gpuixui/tokens";
-
-export const highlightOf = (theme: Theme) => {
-  const { color, activeColor, radius } = findHighlight(theme);
-  return { color, activeColor, radius };
-};
-
-// <text highlight={{ query, ...highlightOf(theme) }}>{line}</text>
-```
-
-Both washes stay translucent, so the strip shows through the way the runtime's
-own do, and the colour a reader sees is the composite. `highlightFailures(theme)`
-measures it and names each of the three jobs a wash can miss — `visibility` (the
-wash against the strip), `legibility` (the text inside it) and `distinct` (an
-active match the surface cannot tell from the resting ones) — with the state, the
-strip and the ratio; a theme restored from storage is read as the absence it is.
-The report is one of `auditTheme`'s fourteen, so the theme editor on this site
-prints it with the gate's other lines rather than beside them.
-
-A window measured what the host paints (`find-highlight`, 19 checks, 0.11.0):
-three blocks holding the same line, where the active wash covers the same area as
-the resting one and is the stronger colour — which is the only difference a host
-can paint between the match a reader is on and the ones around it — while a block
-handed no colour paints the runtime's accent instead.
-
 ## Code colours
 
-A code block is the one surface a reader spends time in, and the runtime paints
-it from the theme's own `syntax` table: a host handed none falls back to the
-palette designed for the runtime's dark default, so a light theme's comments and
-keywords would be chosen for a dark canvas. `syntaxRoles` is the closed set —
-{syntaxRoles.length} token types, from `comment` to `invalid` — and a palette is
-complete rather than partial, so every token type is the theme's own.
-`syntaxColors(theme)` answers one colour per role for the theme's mode and
-contrast variant, and an authored theme or look can replace the table whole.
+A code host paints from the theme's `syntax` table — {syntaxRoles.length} token types from `comment` to `invalid`. `syntaxColors(theme)` answers one colour per role, and `syntaxFailures(theme)` holds each to its floor on the two fills a host paints (<TokenList names={syntaxSurfaces} />): a comment answers {contrastFloors.secondary}:1, a code role {contrastFloors.body}:1.
 
-A syntax colour is **not** a semantic role. `keyword` and `string` mean "a
-category of token", so reusing `danger` for a string literal would make code read
-as a status and a brand's `primary` repaint would recolor it. Nor is it a data
-series: a chart asks whether two categories are distinct, while code asks whether
-a token is readable and can be told from the token beside it.
-
-`syntaxFailures(theme)` reads every role on the two fills a host can paint
-(<TokenList names={syntaxSurfaces} />) at the floor the role names: a comment is
-an annotation about the code and answers the {contrastFloors.secondary}:1
-secondary floor, while every role that names code answers the
-{contrastFloors.body}:1 body floor. The report is one of `auditTheme`'s fourteen,
-so `/docs/themes` prints it in the editor's readout.
-
-This site's code blocks use the same palette: `apps/docs/src/lib/code-theme.ts`
-builds both Shiki schemes from `syntaxColors(themes[mode])`, so a sample in the
-light or dark docs scheme reads in the colours the library's native host paints.
+This site's blocks use the same palette: `apps/docs/src/lib/code-theme.ts` builds both schemes from `syntaxColors(themes[mode])`.
 
 ## Built-in themes
-
-The built-in themes ship with the package, and `getTheme` selects one by mode
-and contrast:
 
 ```tsx
 import { getTheme } from "@gpuixui/tokens";
 
-const theme = getTheme("dark"); // darkTheme
-const accessible = getTheme("dark", "high"); // high-contrast dark
+const theme = getTheme("dark");
+const accessible = getTheme("dark", "high");
 ```
 
 <ThemeMatrix />
 
-Each theme is also published by name:
-
-| Theme | Export |
-| ----- | ------ |
-| Light | `lightTheme`, `themes.light` |
-| Dark | `darkTheme`, `themes.dark` |
-| High contrast light | `highContrastLightTheme`, `highContrastThemes.light` |
-| High contrast dark | `highContrastDarkTheme`, `highContrastThemes.dark` |
-
 ## Override a theme
 
-`extendTheme` merges overrides into a base theme without mutating it;
-`createTheme` starts from a built-in mode.
+`createTheme` starts from a built-in mode; `extendTheme` merges into a base without mutating it.
 
 ```tsx
 import { createTheme } from "@gpuixui/tokens";
@@ -272,436 +90,40 @@ export const acmeDark = createTheme({
 });
 ```
 
-```tsx
-export const acmeLight = createTheme({
-  mode: "light",
-  name: "Acme Light",
-  colors: {
-    primary: "#6A45F0",
-    primaryForeground: "#FFFFFF",
-    ring: "#7A57FA",
-  },
-});
-```
-
-Only what changes is written. Every other role is inherited, so a brand cannot
-accidentally drop a role a component reads.
-
-A brand that overrides a fill owns two things, and it owns them **per mode**
-because two jobs pull in opposite directions. A `primary` is a surface that
-carries text, and it is also the role a progress fill, a spinner's lit dot and a
-slider's filled span paint, so `indicatorFailures` holds it to 3:1 on the page,
-a card, a popover and a muted strip. The saturated violet carries a white label
-at 5.6:1 and measures 2.66:1 as a mark on the dark card — readable, and
-invisible. So the dark brand takes a lighter fill a reader can find, and pairs
-it with the near-black iris that fill can carry; the light brand keeps the
-saturated violet, which is dark enough for both jobs there. The base theme's
-`primaryForeground` was chosen for the base fill, not yours.
-
-The fill is also what a find bar derives its two washes from, and they have to
-stay apart. The resting share is the largest that keeps the marked text at the
-body floor; the active one is the strongest wash that still clears it — or, when
-the body-safe share cannot be told apart from the resting one, the strongest that
-clears the **secondary** floor instead of painting a match a reader cannot find.
-On this brand's `#B49CFF` that derives a resting **30%** and an active **54%**
-share, two shares apart and clear of the 1.05:1 separation. A fill whose shares
-do collapse is reported `distinct` on all four content strips, so a brand that
-changes one owes the wash pair a look too, not only the contrast and indicator
-tables.
-
-`auditTheme(theme)` is how that is caught before it ships: one call reports the
-label pair, every boundary and decorative surface, the series, the code palette,
-the selection wash, the find wash, each mark, the dim the runtime casts while Tab
-is elsewhere, a ladder whose steps no longer separate and a declared switch the
-surface it stands on has swallowed.
-`packages/tokens/src/brand-theme.example.ts` is both themes
-as a working file, type-checked and audited by the package's suite.
+Only what changes is written; every other role is inherited.
 
 ## Density
 
-Density changes control geometry, never type. `compact` is for toolbars and
-data-dense desktop surfaces; `comfortable` is the default.
-
-```tsx
-const compact = createTheme({ mode: "dark", density: "compact" });
-```
+`compact` for toolbars and data-dense surfaces; `comfortable` is the default. Density changes control geometry, never type.
 
 ## Scales
-
-The geometry is data too: spacing, radii, borders, icon sizes and the density
-presets. These specimens read them from the theme the platform switch resolves,
-so macOS, Linux and Windows show their own radii and control heights. Values are
-pixels at the surface; a component names the token, never the number.
 
 <TokenScales />
 
 ## Focus rings
 
-The theme carries one ring colour, `ring`, and the library draws it on two paths
-because the runtime paints two:
-
 | Focus arrives by | Helper | What paints |
 | ---------------- | ------ | ----------- |
-| `Tab`, or a field taking focus | `keyboardFocusRing(theme)` | the `focusVisible` outline — `ring`, `borderWidth.strong` wide, **separated from the control's own fill** by the same width |
-| a press, or code opening a surface | `focusRing(theme)` | a zero-blur box shadow of the same width and colour, because a programmatic focus paints no outline until a key reaches the window |
-
-The separation is what lets a filled action show a ring at all. In both shipped
-base themes `ring` **is** `primary` — measured
-{contrastRatio(themes.light.colors.ring, themes.light.colors.primary)?.toFixed(2)}:1 —
-so a line sitting on a primary action's edge is drawn in that action's own
-colour. Across the shipped, high-contrast, platform and authored styles that
-line never clears the boundary floor on either brand face, and in most styles no
-luminance clears both the page and the face at all: the pair is unsatisfiable
-rather than unmet, so no palette can close it. `ring-fill.test.ts` holds the
-measured premise for every style and its control samples, so the numbers live
-beside the rule instead of on a page that a palette pass would leave behind.
-Offsetting the line by one border width
-({keyboardFocusRing(themes.light).focusVisible.outlineOffset} points in the
-shipped themes) shows the strip behind the control through the gap, so the ring
-is read against that strip rather than the fill it borders, and no single colour
-has to clear both. The playground's `focus-ring-offset` probe measured the
-geometry in a window on `0.11.0`: a two-point offset paints the ring three
-points out with the strip visible in the gap, and the control and its sibling
-keep identical boxes.
-
-A component declares its ring through
-`controlFocusRing(theme, { disabled, invalid })`, which composes the same helper:
-an invalid field repaints the line with the `destructive` role — a theme that
-lost that role keeps the ring's own colour rather than painting no line — and a
-disabled one gets **no ring at all**: the runtime does not move the focus off a
-control that becomes disabled, so a declaration made anyway would stay painted on
-something that refuses every key.
+| `Tab`, or a field taking focus | `keyboardFocusRing(theme)` | the `focusVisible` outline, offset from the control's fill |
+| a press, or code opening a surface | `focusRing(theme)` | a zero-blur box shadow |
 
 ## Platform styles
-
-GPUIxUI ships one theme per platform. `platformTheme` keeps the base theme's
-mode and contrast, and applies the platform's own type families, radius, density
-and colour roles:
 
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";
 
-const windows = platformTheme(themes.dark, "win32"); // "Dark · Windows"
+const windows = platformTheme(themes.dark, "win32");
 ```
 
-A high-contrast base keeps its own colours — contrast wins over platform — and
-takes only the geometry and families. The UI face stays GPUI's `.SystemUIFont`
-sentinel, which the runtime resolves to the operating system's own font, while
-the monospace family is the one the platform installs (`Menlo`,
-`DejaVu Sans Mono`, `Consolas`). `default` is the library's own identity, for a
-platform it does not name.
+A high-contrast base keeps its own colours and takes only geometry and families.
 
-### A window measured the switch
-
-`theme-switch-lifecycle` drove this provider switch in a window (73 checks),
-reading the page and card fills at points inside their own padding and an `md`
-control's height after each press, because a window's renderer reports no style.
-The **palette** axis repaints without reflowing: dark `#11141A` / `#191D25` →
-light `#F6F8FA` / `#FFFFFF` → high contrast `#000000` / `#0D0D0D`, with the
-control at **32** at every step. The **platform** axis re-lays it out: macOS
-**28**, Linux **36**, Windows **32**, Default **32**. Selecting a platform while
-the high-contrast palette is active leaves the page `#000000`, because
-`applyStyle` reserves a high-contrast palette while it takes the look's density,
-and both cycles close on the frame the app opened in. That is what "switching
-restyles the subtree" means in a window: a colour change is a repaint, a density
-change is a reflow.
-
-### The switch on this site
-
-The switch at the foot of the sidebar has a **Platform** group and a **Palette**
-group. The platform picks the theme every preview on this site renders through:
-macOS, Linux, Windows or Default. The choice lives in the page URL, so a link
-carries it:
-
-```text
-https://gpuixui.sudokw.com/docs/components/button?platform=win32
-```
-
-and it is remembered between visits, so navigating does not reset it. A browser
-that refuses site storage — a reader who blocks site data — does not break the
-switch: it keeps the URL's choice and the identity, and simply does not remember
-the choice for the next visit.
-
-The curated component pages carry a live preview, so the switch repaints real
-shapes rather than only a colour swatch: the
-[Accordion](/docs/components/accordion), [Alert](/docs/components/alert),
-[Avatar](/docs/components/avatar), [Badge](/docs/components/badge),
-[Breadcrumb](/docs/components/breadcrumb),
-[Button](/docs/components/button), [Card](/docs/components/card),
-[Carousel](/docs/components/carousel),
-[Checkbox](/docs/components/checkbox),
-[Collapsible](/docs/components/collapsible),
-[Color picker](/docs/components/color-picker),
-[Combobox](/docs/components/combobox),
-[Command menu](/docs/components/command-menu),
-[Confirmation dialog](/docs/components/confirm-dialog),
-[Context menu](/docs/components/context-menu),
-[Date picker](/docs/components/date-picker),
-[Dialog](/docs/components/dialog),
-[Drawer](/docs/components/drawer),
-[Dropdown menu](/docs/components/dropdown-menu),
-[Empty state](/docs/components/empty-state),
-[Field](/docs/components/field), [Form](/docs/components/form),
-[Inline edit](/docs/components/inline-edit),
-[List](/docs/components/list), [Pagination](/docs/components/pagination),
-[Navigation menu](/docs/components/navigation-menu),
-[Popover](/docs/components/popover), [Search input](/docs/components/search-input),
-[Select](/docs/components/select), [Stepper](/docs/components/stepper),
-[Switch](/docs/components/switch),
-[Table](/docs/components/table),
-[Tag input](/docs/components/tag-input),
-[Tabs](/docs/components/tabs), [Time picker](/docs/components/time-picker),
-[Timeline](/docs/components/timeline), [Toast](/docs/components/toast) and
-[Tooltip](/docs/components/tooltip) pages each
-render one, and the menu's open/closed states come from the same rules the
-component ships.
-
-A preview renders the palette the **Palette** switch selected — the library's
-own theme, not a docs style sheet. It opens in **{previewMode}**, the library's
-identity, and `?mode=light` paints the same component in the light theme, so a
-reader can check a control in both. The site's own light/dark switch is the docs
-chrome (Fumadocs' theme provider), and a preview does not follow it: the palette
-a preview shows is the explicit, shareable axis above. Both palettes are on this
-page — [Built-in themes](#built-in-themes) prints every one — and
-[Theme](/docs/themes) edits them side by side.
-
-### The palette parameter
-
-The switch's palette axis is a query parameter of its own, so a link can carry
-one component page's light preview:
-
-```text
-https://gpuixui.sudokw.com/docs/components/button?platform=win32&mode=light
-```
-
-`?mode=light` or `?mode=dark` names one of the two modes `@gpuixui/tokens`
-ships; a value neither the library nor the switch names is rejected rather than
-guessed, and the switch falls back to the remembered palette and then to
-**{previewMode}**. The choice is remembered beside the platform and the look, so
-moving between component pages keeps showing the palette you picked. The surface
-a preview renders on carries the resolved theme's roles through the same bridge
-the theme editor uses, so a light preview is the light theme and not an
-inverted copy of the dark one; the scene's `color-scheme` follows it too, so a
-scrolling preview is framed in the palette it paints.
-
-[Theme](/docs/themes) follows it too: the editor starts from the selected
-style's roles, radii and family, and switching re-bases its preview without
-discarding what you edited — only the roles you touched are pinned. That is the
-[copy-and-own contract](#take-one-and-make-it-yours) with a live output.
+A browser that refuses site storage keeps the URL's choice and the identity, and does not remember the choice.
 
 ### The look parameter
 
-The switch offers the four platform names and **no look**: a look is not a fifth
-platform, `platformNames` stays the persisted key for the operating systems an
-application runs on, and the mission's toggle stays macOS · Linux · Windows ·
-Default. A look is still applied to every preview through the URL, because the
-authored styles are library data a link can carry:
-
-```text
-https://gpuixui.sudokw.com/docs/components/button?platform=win32&look=luna
-```
-
-`?look=luna`, `?look=aero` or `?look=omarchy` names one of the three authored
-styles `@gpuixui/tokens` ships — **Windows XP (Luna)**, **Windows 7 (Aero)** or
-**Omarchy** — over whatever the platform switch resolved, and the choice is
-remembered beside the platform. A look is data of the same shape as a platform
-style (`retroStyles`), applied with `applyStyle`, so the preview paints the
-look's palette, radii, density and monospace family rather than a docs-only
-skin. The Luna and Aero palettes are the eras' own chrome, with dark editions
-invented for this library, while Omarchy's pair is the shell's: Tokyo Night for
-dark and the guide's Flexoki Light reference for light. A look is the extension
-mechanism in practice — the same table a consumer can edit to ship their own
-style.
-
-Both axes resolve through one theme, and the surface a preview renders on
-carries it as CSS variables from the same bridge the theme editor uses. Nothing
-is a docs-only style sheet: the variables are `@gpuixui/tokens` values, and a
-preview cannot paint a colour the library does not have (a test holds the
-preview style sheets to that).
-
-<Callout type="info" title="What a variant changes">
-  The type families, the radii, the density and the platform's colour roles —
-  `primary`, the surfaces, the borders and the focus ring. Switching this page
-  from macOS to Windows changes the surface colours, the corner radius and the
-  monospace face of every preview, because each variant is a real
-  `@gpuixui/tokens` theme.
-</Callout>
-
-<Callout type="warn" title="Browser previews are illustrative">
-  The library renders through GPUix, not the DOM. A preview shows the geometry,
-  palette and states of the native component in a browser; it is not the native
-  surface. The shipped component is the one in the Code tab.
-</Callout>
-
-### Take one and make it yours
-
-A platform style is data, not a compiled preset: `platformStyles` holds each
-platform's colour roles, radius scale, density preset and type families, and
-`platformTheme` applies them to a base theme. A consumer who wants a platform's
-geometry with their own brand edits the values it names and ships the result —
-there is no hidden layer to fight.
-
-```tsx
-import { extendTheme, platformTheme, themes } from "@gpuixui/tokens";
-
-// Windows' controls, your accent and corners.
-export const house = extendTheme(platformTheme(themes.dark, "win32"), {
-  name: "House",
-  colors: {
-    primary: "#B49CFF",
-    primaryForeground: "#1C1547",
-    ring: "#9B8CFF",
-  },
-  radius: { md: 6, lg: 10 },
-});
-```
-
-Only what is written changes: every other role, the density and the type
-families come from the platform style, and the base theme is untouched. Three
-things a brand owns when it overrides a fill:
-
-- **The on-colour.** A fill and the text on it are a pair; the base theme's
-  `primaryForeground` was chosen for the base fill. The snippet sets both.
-- **The mark.** The same `primary` is what a progress fill, a spinner's lit dot
-  and a slider's filled span paint, and `indicatorFailures` holds it to 3:1 on
-  the page, a card, a popover and a muted strip. A fill dark enough to carry
-  white text is often too dark to be found on a dark card — the saturated
-  violet measured 2.44:1 there — so a dark brand lightens the fill and takes the
-  near-black label that fill can carry. The colour a platform you start from
-  paints its own card changes the number, which is why the pairing is yours.
-- **The measurement.** `auditTheme(theme)` runs every contract the package runs
-  on its own themes — roles, shadows, text pairs, decorative surfaces, the
-  series, every token in a code block, the selection wash, the marks and the
-  keyboard dim — and reports each failure by name, so the check a brand runs is
-  the check the library runs on itself.
-
-`packages/tokens/src/platforms.example.ts` is the working version of this
-snippet (`resolveHouseTheme`), executed by the package's suite in both modes.
-`src/lib/platform-page.test.ts` executes this page's snippet against the same
-contract, so a copy from the page is a theme that passes.
-
-### Follow the desktop's palette
-
-A desktop already has a theme. `paletteToTokens` maps a small system palette onto
-the semantic roles, and `watchSystemTheme` re-applies it when the palette
-changes. The pinned runtime has no file watcher, so the follow is a poll the
-caller owns: `every` is its interval, and the timer can be replaced, which is
-what lets the package test a re-apply without a clock.
-
-Omarchy stages its active palette at
-`~/.local/state/omarchy/current/theme/colors.toml`, and `decodeOmarchyPalette`
-reads that file into the shape the mapper takes:
-
-- `background`/`bg`, `foreground`/`fg`, `accent`/`color4`, `muted`/`color8` and
-  `red`/`color1`, plus `selection` and the `mode` the file states. A canonical
-  key wins over its fallback whichever line comes first.
-- `muted` fills two roles — the quiet strip and the decorative border — because
-  it is the one quiet colour the desktop's own templates use for both.
-- A line the reader cannot use, such as an unquoted colour, a duplicate or an
-  unknown mode, is named in `problems` with its line and left out. A typo is
-  reported; it does not become a colour.
-
-Tokyo Night, as Omarchy themes ship it, trimmed to the keys this page maps:
-
-```toml
-mode = "dark"
-background = "#1a1b26"
-foreground = "#a9b1d6"
-accent = "#7aa2f7"
-muted = "#414868"
-red = "#f7768e"
-selection = "#292e42"
-```
-
-Those lines are decoded and mapped by the two functions above on the server, so
-the table is their output rather than a transcription. `problems` is empty for
-this file — `{omarchyFile.problems.length}` unusable lines:
-
-| In the file | Role | Painted |
-| ----------- | ---- | ------- |
-| `background` | `background` | {omarchyTheme.colors.background} |
-| `foreground` | `foreground` | {omarchyTheme.colors.foreground} |
-| `accent` | `primary` | {omarchyTheme.colors.primary} |
-| `muted` | `muted`, `border` | {omarchyTheme.colors.muted} |
-| `red` | `destructive` | {omarchyTheme.colors.destructive} |
-| `selection` | `selection` (wash) | {omarchyTheme.colors.selection} |
-
-The mapper names only what the file names. Every other role stays the base
-theme's, so a palette of two colours is a page and an ink rather than a
-half-built theme, and `mode` picks the base a role-less palette keeps its
-surfaces from. The one choice the mapper makes is the ink on a filled role, and
-it makes it by measurement against the palette's own inks — never by mixing a
-new colour. `selection` arrives from the desktop as an opaque highlight; the
-role is a wash behind text that keeps its own colour, so the mapper restates it
-at the base theme's own share.
-
-The sample is a palette, not a finished theme, and the gate says so. On this
-file `auditTheme` reports {omarchyAudit.contrast.length} text pairs,
-{omarchyAudit.decorative.length} decorative placements and
-{omarchyAudit.selection.length} selection placements: the desktop's one quiet
-colour is also the divider drawn on it, and its ink is measured on the base
-theme's soft strips the file does not name. The colours are the desktop's and
-the surfaces are yours, so run `auditTheme` on the result before shipping it.
-
-An application wires the two halves with one call:
-
-```tsx
-import {
-  decodeOmarchyPalette,
-  getTheme,
-  paletteMode,
-  watchSystemTheme,
-} from "@gpuixui/tokens";
-
-const stop = watchSystemTheme({
-  // Your platform's reader; a missing file, or one that names nothing, is undefined.
-  read: () => readDesktopPalette(),
-  base: getTheme("dark"),
-  // A desktop that switches light and dark moves the base with its palette.
-  baseFor: (palette) => getTheme(paletteMode(palette) ?? "dark"),
-  onChange: setTheme,
-  every: 2000,
-});
-```
-
-`readDesktopPalette` is the boundary the application owns. On Omarchy it is
-`decodeOmarchyPalette(readFileSync(path, "utf8")).palette`, with a missing file
-answering `undefined`; every platform produces the same `SystemPalette`, so the
-poll, the base rule and the provider do not change with it. `watchSystemTheme`
-applies the first read immediately, re-applies only when a watched field
-actually changed, and returns the stop function. `undefined` is not an error:
-it returns the window to `base`, which is how a deleted desktop theme stops
-being a stale one.
-
-The follow is measured in a window, not here. The playground's
-`system-theme-follow` probe paints a page and an accent box, changes the palette
-under a running window, deletes it, and reads every state out of the frame:
-
-| Step | Measured |
-| ---- | -------- |
-| the first read, before any press | the page is the desktop's `#1B1B1F`, the accent its `#B49CFF` |
-| the desktop switches to a paper theme | the poll re-applies without a restart: page `#F4F1EA`, accent `#6A45F0` |
-| the mount count across the change | `mounts=1` before and after — the follow re-renders, it does not remount |
-| the desktop theme is deleted | the application's own theme returns: page `#11141A`, accent `#A7A9FF` |
-
-<Callout type="warn" title="The follow is measured in the native window">
-  A browser preview here cannot show a desktop palette change. The probe runs
-  the same `paletteToTokens` and poll through GPUix in a window; this host is
-  macOS, so `omarchy-theme-set` was not run and the probe stands in for a
-  platform reader at the seam. What it proves is the follow's paint, interval
-  and lifetime; the Linux half is the reader above plus the same poll. Its
-  evidence lives in `apps/playground/README.md` §`system-theme-follow`.
-</Callout>
-
-The palette format is Omarchy's (MIT); `decodeOmarchyPalette` is written from
-the on-disk `colors.toml`, not copied from a theme.
+`?look=` selects an authored style (Luna, Aero, Omarchy); the sidebar offers platforms only.
 
 ## Read the theme
-
-`useTheme` returns the nearest theme, or the light theme when no provider
-exists. Components use it internally; an application can use it for its own
-layout without duplicating a colour.
-
 
 ```tsx
 import { useTheme } from "@gpuixui/tokens/react";

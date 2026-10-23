@@ -1,10 +1,7 @@
 ---
 title: Tree views
-description: Expandable rows of a hierarchy, with one tab stop and arrow keys.
+description: Expandable rows of a hierarchy, with one tab stop and arrow keys
 ---
-
-`TreeView` paints a tree of rows a reader opens, closes and walks; it composes
-with `useExpandedRows`.
 
 ## Usage
 
@@ -44,77 +41,8 @@ const tree = useExpandedRows({
 | `height` | `number` | — | a definite height; the rows scroll inside it |
 | `testId` | `string` | — | the tree's locator |
 
-## The controller
-
-`useExpandedRows({ roots, keyOf, childrenOf, labelOf, initialExpanded, initialActive })`
-returns the rows and the cursor, and the edits an application makes to them:
-`rows`, `cursor`, `expanded`, `active`, `setCursor`, `setActive`, `toggle`,
-`setExpanded(key, open)`, `expandAll`, `collapseAll`, `pressKey(key)`,
-`typeAhead(prefix)` and `reveal(key)`. Every one is a write over the pure model
-in `tree/logic`, so an Effect- or store-driven tree composes the same functions
-without this hook.
-
-`initialActive` moves the cursor without a press; the first paint is the
-baseline, so mounting a tree never steals the window's focus.
-
-## Keyboard
-
-The tree is one Tab stop. Up/Down/Home/End move the cursor and the platform
-focus together; Right opens a closed branch, steps into an open one, and leaves
-a leaf where it is; Left closes an open branch and otherwise steps out to the
-parent, while a **root stays put** — a root has no parent, and an empty cursor
-falls back to the first painted row, which would move a reader standing on a
-later root. Enter and Space toggle the branch under the cursor or activate a
-leaf; a printable character jumps to the first row after the cursor whose label
-starts with the typed prefix.
-
-A key is dispatched along the **focus path**, so a key typed in a control inside
-`renderRow` reaches the row's handler too. The tree answers only while one of
-its **rows** holds native focus: a field keeps its space, its Enter and its
-characters, and the row itself still answers Enter and Space.
-`tree.test.tsx`'s `keeps a key typed in a row's field to that field` holds both
-halves.
-
-## Measured rules
-
-A tree row is a press target, so it inherits the runtime's pointer model
-(`press-routing-lifecycle`, `hover-routing-lifecycle`):
-
-- A press stops at the **first child that paints a fill**, not at the innermost
-  handler. The chevron's `<svg>` declares `pointerEvents: "none"`, so a press on
-  it reaches the row; a control in `renderRow` that must not take the press
-  declares the same.
-- The hover refinement takes that same hit test: an unfilled label leaves the
-  row its wash and its enter event, while a filled child takes both and still
-  hears its own listener.
-- The row answers the pointer in three states. Under the pointer an unchosen row
-  tints `hover` and the cursor's row tints `accent` over its `selected` fill;
-  while the button is down the press is the **derived** wash one step past the
-  hover it replaces (`pointerWash(theme, "active", …)`), because a palette's raw
-  `active` role can sit under the 1.05:1 floor beside that wash. A row that
-  painted its press like its hover would answer only half the pointer —
-  `tree.test.tsx` reads both rows' state records out of a window.
-
-## A reveal lands the focus, not only the cursor
-
-`reveal(key)` opens the path to a node and moves the cursor to it, which is the
-shape a search hit or a "show this file" command needs. The cursor comes from
-the caller, not from the tree's key handler, so the tree tells the two apart: a
-row its own keys reached is focused in the same commit, while a caller-driven
-row is re-taken on the **next tick**, after the runtime has handed the pressed
-control the focus (`data-tree-lifecycle` measured the Reveal button keeping it).
-
-A key that leaves the cursor where it was — Up on the first row, Down on the
-last, Enter on a branch that opens under the active row — has no row to focus,
-so it is not a move the tree made. It cannot leave a mark that makes the next
-reveal look like the tree's own: `tree.test.tsx`'s `takes the focus on a reveal
-after a key that moved nothing` presses Up on the first row, asks for a reveal
-and requires the revealed row to hold native focus after the tick.
-
 ## Limitations
 
 - One active row; a multi-select tree is not shipped.
-- `TreeView` paints every row it is given; `VirtualTree` is the windowed form for
-  thousands of rows.
+- `TreeView` paints every row it is given; `VirtualTree` is the windowed form for thousands of rows.
 - A row that changes height while painted re-measures on the next frame.
-- The docs site cannot render this component live.

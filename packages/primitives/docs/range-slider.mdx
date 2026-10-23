@@ -1,20 +1,9 @@
 ---
 title: RangeSlider
-description: Two values — the ends of one interval — on a single track.
+description: Two values — the ends of one interval — on a single track
 ---
+
 <ComponentPreview name="range-slider-demo" />
-
-`RangeSlider` is a minimum and a maximum on one track; a second component, not a
-mode of `Slider`.
-
-The two ends may sit on the same value — a filter opened at "any price" starts
-that way — and a coincident pair is one point, so a press on it cannot say which
-thumb it grabbed. Such a press is read as a span **around** that point: the end
-the pointer travels towards follows it and the other stays pinned, in either
-direction, so the pair can be pulled apart without aiming beside the thumb. Once
-the ends differ, a drag moves the end it grabbed and stops on the other. The end
-a coincident drag draws takes the focus, so switching to the arrow keys continues
-from the thumb that just moved.
 
 ## Usage
 
@@ -35,15 +24,6 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
   />
 </Stack>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `RangeSlider` | the group, two values and the pointer handling |
-| `SliderTrack` | the rail |
-| `SliderIndicator` | the fill for each end |
-| `SliderThumb` | a thumb per end, one `index` each |
 
 ## API
 
@@ -70,32 +50,8 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `ref` / `aria-id` / `onLayout` | host props | none | land on the track (`role="group"`); each thumb is a `slider` of its own |
 | `testId` | `string` | — | stable locator for the track |
 
-The vertical range is measured in the same window: `slider-vertical-lifecycle`
-moves the nearer end of a `10-90` pair to `50-90` by a press at the centre and
-to `25-90` by a drag to the quarter, the other end staying and the two thumbs'
-ink at **194** and **74.5**. The headless `runtime/value.runtime.test.tsx`
-holds the arithmetic; the probe holds the paint and the runtime's pointer path.
-
-`formatValue` is interface copy, so a **blank answer is absence**: a locale
-table with no row for an end returns `""`, and that thumb announces its own
-number rather than an empty `aria-valuetext` — the only channel it has. A real
-answer is trimmed and used as it is.
-
-`onValueChange` is every frame; `onValueCommit` is the end of the gesture — one
-commit per drag release, with the ordered span the drag finished on, and one per
-key that moved an end. A drag that ends on the span it started with still
-commits once, because the gesture happened; a press the range refuses (a
-non-primary button) ends no gesture and commits nothing.
-
-The group's `label` names both thumbs through the provider's `rangeEnd`
-sentence. **A blank answer is absence there too**: a sentence that says nothing
-falls back to the shipped `<label> minimum` / `<label> maximum`, while a group
-the caller never named names neither end.
-
 ## Limitations
 
-- No `aria-valuenow`/`min`/`max`: each thumb announces its value as
-  `aria-valuetext`.
+- No `aria-valuenow`/`min`/`max`: each thumb announces its value as `aria-valuetext`.
 - No `aria-orientation`: a vertical range is announced without its axis.
 - A vertical track needs a definite height.
-- A composed part cannot answer a press; the root owns the pointer handling.

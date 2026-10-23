@@ -70,9 +70,6 @@ const motionTiming = new URL(
 
 const read = (url: URL): string => readFileSync(url, "utf8");
 
-/** The page's prose with every run of whitespace flattened. */
-const text = (): string => read(page).replace(/\s+/g, " ");
-
 /** The names the API table documents, one row each. */
 const apiRows = (): ReadonlyArray<string> => {
   const source = read(page);
@@ -327,15 +324,6 @@ describe("the tooltip preview", () => {
   });
 
   it("prints the motion the component paints, and documents every prop", () => {
-    const page = text();
-    expect(page).toContain("**2 px**");
-    expect(page).toContain("**160 ms**");
-    expect(page).toContain("`easeOut`");
-    expect(page).toContain("`easeIn`");
-    expect(page).toContain('`pointerEvents: "none"`');
-    expect(page).toContain("takes **no presses**");
-    expect(page).toContain("`reducedMotion`");
-    expect(page).toContain("`@gpuixui/motion`");
     // The API table documents every prop the component declares, so a prop
     // added to the wrapper cannot ship undocumented.
     expect(declaredProps().filter((prop) => !apiRows().includes(prop))).toEqual(

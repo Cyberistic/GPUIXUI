@@ -1,19 +1,16 @@
 ---
 title: Button
-description: The primary action — clickable and keyboard-activatable, with busy and disabled states.
+description: The primary action — clickable and keyboard-activatable, with busy and disabled states
 ---
 
-`Button` is the action primitive. It owns its keyboard contract rather than
-wrapping the runtime's headless button: activation, the busy and disabled rules
-and the resting paint are this package's, and the runtime declares no `aria-busy`
-for it to set. Gaps below were measured on `@gpuix/native@0.11.0`.
-
 <ComponentPreview name="button-variants" />
+
+<ComponentPreview name="button-sizes" />
+<ComponentPreview name="button-states" />
 
 ## Installation
 
 <Install packageName="@gpuixui/primitives" importName="Button" />
-
 <ComponentSource
   name="button"
   file="packages/primitives/src/components/Button.tsx"
@@ -28,68 +25,6 @@ import { Button } from "@gpuixui/primitives";
   Save changes
 </Button>;
 ```
-
-`onActivate` runs for a click or an activating key. `onClick` is the raw pointer
-event and runs first, when a caller needs the event itself.
-
-## Variants
-
-`primary` is the default. One primary action per view is the rule; the
-component cannot enforce it, but the theme makes a second one obvious.
-
-| Variant | Rest |
-| ------- | ---- |
-| `primary` | `primary` fill, `primaryForeground` text |
-| `secondary` | `secondary` fill |
-| `outline` | border only |
-| `ghost` | no chrome at rest |
-| `destructive` | `destructive` fill, for deletes and revokes |
-| `link` | text in `brandText(theme)`, underlined on hover |
-
-The variants come from `core/variants.ts`, the same table the library and this
-page read. A variant maps to colour roles, never to a colour.
-
-## Sizes
-
-Sizes take their height and horizontal padding from the theme's density, so a
-compact theme makes every control smaller without changing component code.
-
-<ComponentPreview name="button-sizes" />
-
-| Size | Height | Horizontal padding |
-| ---- | ------ | ------------------ |
-| `sm` | `density.controlHeight.sm` | `density.controlPaddingX.sm` |
-| `md` (default) | `density.controlHeight.md` | `density.controlPaddingX.md` |
-| `lg` | `density.controlHeight.lg` | `density.controlPaddingX.lg` |
-
-## States
-
-<ComponentPreview name="button-states" />
-
-- `square` — equal width and height, no horizontal padding: an icon-only action.
-  Pair it with `label`, because there is no visible text to name it.
-- `fullWidth` — stretches to the parent.
-- `disabled` — refuses click and keys, dims, and leaves the tab order.
-- `loading` — shows a spinner, announces `Loading`, refuses activation, and
-  **stays focusable** so a keyboard user is not dropped mid-action.
-- `leading` / `trailing` — an icon or element on either side of the label.
-
-## Composition
-
-Button is one control, not a compound part. A row of related actions uses
-`ButtonGroup`; an icon-only action uses `square` plus `label`. The visual table,
-not a wrapper, keeps variants consistent.
-
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| `Enter` | activates on key **down** |
-| `Space` | activates on key **up** |
-| held key | repeat events never activate |
-
-`disabled` and `loading` refuse both. A held key is ignored so an autorepeat
-cannot fire an action twice.
 
 ## API reference
 
@@ -111,71 +46,8 @@ cannot fire an action twice.
 | `testId` | `string` | none | stable locator |
 | `children` | `ReactNode` | none | visible label |
 
-## Theming
-
-A variant maps to colour roles, never to a colour, so the theme is the only place
-a button's paint is decided:
-
-| Part | Reads |
-| ---- | ----- |
-| `primary` | `primary` fill, `primaryForeground` text |
-| `secondary` | `secondary` and `secondaryForeground` |
-| `outline` | `border` at rest, the `hover` fill |
-| `ghost` | `foreground` text, the `hover` fill |
-| `destructive` | `destructive` and `destructiveForeground` |
-| `link` | `brandText(theme)` — the brand moved until it reads as text |
-| every variant | `radius.md` corners, `density` height, the `focusVisible` ring |
-
-Changing `primary`, `radius.md` or the density repaints and resizes every button
-without touching component code; the docs platform switch changes the type face
-and metrics, not the shape.
-
-A `link` is the exception: it does not read `primary` directly, because `primary`
-is a **fill** chosen to carry `primaryForeground`, and as text it is under the
-4.5:1 floor on most styles. It paints `brandText(theme)` instead — the brand kept
-where it already reads and moved toward `foreground` where it does not — which is
-the `text-brand` utility the [recipe layer](/docs/styling) registers.
-
-## Accessibility and limitations
+## Limitations
 
 - Role `button`; the name comes from `label` or the visible text.
-- `loading` sets `aria-description="Loading"` — the runtime declares no
-  `aria-busy`.
-- There is no `aria-disabled`: a disabled button leaves the tab order and drops
-  its handlers instead. That is the strongest truthful alternative, and assistive
-  technology sees a button that does nothing.
-- Focus is the runtime's `focusVisible` outline, declared at rest: Tab paints it
-  and a mouse press does not (the playground's `focus-visible` probe measured
-  both). No shadow ring, so the ring costs no layout space either.
-- There is no button host element: the surface is a `div` with a role and the
-  handlers above.
-
-Gaps measured on `@gpuix/native@0.11.0`.
-
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | host element props, events and `StateStyle` |
-| `@gpuix/react/floating` | `resolveStyle`, so a caller `style` merges last |
-| `@gpuixui/motion/react` | the reduced-motion preference the busy spinner reads; the `reducedMotion` prop still wins on the action |
-| `@gpuixui/tw` | the `buttonClass` recipe and `cn` |
-| `@gpuixui/tokens` | the roles above, through the theme provider |
-
-No overlay, no runtime service and no global state: the component is a leaf.
-
-## Related
-
-- **ButtonGroup** — related actions as one control.
-- **Toggle** — a momentary pressed state rather than an action.
-- **Tooltip** — explain an icon-only action.
-- **Progress** — the long-running form of "working", alongside `loading`.
-
-## Status
-
-`done` in `COMPONENTS.md` with a `partial` runtime verdict: the keyboard contract
-is this package's because the runtime publishes no button host element, and there
-is no `aria-disabled` or `aria-pressed` to set. Native coverage is the shared
-controls suite in `packages/primitives/runtime/controls.runtime.test.tsx` (click,
-Enter, Space, a held key, and the disabled and busy refusals), with the recipe
-equivalence held by `packages/primitives/src/recipe/recipe.test.ts`.
+- `loading` sets `aria-description="Loading"` — the runtime declares no `aria-busy`.
+- There is no `aria-disabled`: a disabled button leaves the tab order and drops its handlers instead.

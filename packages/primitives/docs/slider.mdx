@@ -1,11 +1,9 @@
 ---
 title: Slider
-description: A value on a track, by click, drag or keyboard.
+description: A value on a track, by click, drag or keyboard
 ---
-<ComponentPreview name="slider-demo" />
 
-`Slider` is one value inside a closed range; the track, fill and thumb are this
-package's.
+<ComponentPreview name="slider-demo" />
 
 ## Usage
 
@@ -25,20 +23,6 @@ const [quality, setQuality] = useState(62);
   />
 </Stack>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `Slider` | role, keys, pointer handling and `aria-valuetext` |
-| `SliderTrack` | the rail |
-| `SliderIndicator` | the fill that leads to the thumb |
-| `SliderThumb` | a thumb, with an optional glyph inside it |
-
-A composed part takes the index it draws — `SliderIndicator index` and
-`SliderThumb index`, `0` or `1` (default `0`) — plus `style` and `className`; a
-thumb's `children` are the glyph inside it. The track, the thumb and the
-indicator take no handlers of their own, because the track owns the press.
 
 ## API
 
@@ -65,28 +49,8 @@ indicator take no handlers of their own, because the track owns the press.
 | `ref` / `aria-id` / `onLayout` | host props | none | land on the track, the element that carries the pointer and the value |
 | `testId` | `string` | — | stable locator for the track |
 
-The vertical axis is measured in a real window: `slider-vertical-lifecycle`
-paints a **32 × 200** track (its width is `density.controlHeight.md`) with a
-**4 × 184** rail, and the thumb's ink sits at **240**, **148**, **194** and
-**56** for 0, 50, 25 and 100. The headless `runtime/value.runtime.test.tsx`
-holds the arithmetic; the probe holds the paint and the runtime's pointer path.
-
-`formatValue` is interface copy, so a **blank answer is absence**: a locale
-table with no row for this value returns `""`, and the slider announces its own
-number rather than an empty `aria-valuetext` — the only channel it has. A real
-answer is trimmed and used as it is.
-
-`onValueChange` is every frame; `onValueCommit` is the end of the gesture. A
-drag reports its moves to `onValueChange` and one commit on release, with the
-value the drag finished on; a key commits as it lands, because there is no
-release after it to wait for. A key that could not move the value (an arrow at
-the ceiling, `Home` on the floor) and a press the control refuses (a non-primary
-button) are not gestures that ended in a value, so they commit nothing. Persist
-or fetch there instead of debouncing `onValueChange`.
-
 ## Limitations
 
 - No `aria-valuenow`/`min`/`max`: the value is announced as `aria-valuetext`.
 - No `aria-orientation`: a vertical track is announced without its axis.
 - A vertical track needs a definite height.
-- The thumb cannot rotate or transform.

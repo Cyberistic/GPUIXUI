@@ -1,10 +1,7 @@
 ---
 title: Key-value displays
-description: A two-column list of labels and values.
+description: A two-column list of labels and values
 ---
-
-`KeyValue` is the list an inspector reads: a label on the left, its value on the
-right, with a fixed label column so the values line up.
 
 ## Usage
 
@@ -28,24 +25,8 @@ import { KeyValue } from "@gpuixui/data";
 | `valueWidth` | `number` | — | the value column's width; omitted — or one that cannot paint — and the value fills the row |
 | `testId` | `string` | — | every cell derives from it |
 
-## Accessibility
-
-The list is a `list` of `listitem`s, and every label and every primitive value
-is a `<text>` run — the runtime's `Label` node — so a reader hears the two
-columns in order instead of a silent box (`surface-a11y.test.tsx`). Name the
-list with `aria-label` when its title is painted elsewhere; a role-less node
-never reaches the tree.
-
-A `value` that is a composed node keeps whatever role it paints: a badge is a
-badge, not two words.
-
 ## Limitations
 
 - The label column is fixed, not measured: a long label wraps.
-- A width is a **measurement**: one the layout cannot use (`NaN`, an infinity,
-  zero or a negative) reads as the default rather than reaching a track, because
-  the runtime drops a malformed width and the column would silently become
-  content-sized. `src/behaviour/surfaces.test.tsx` holds the two-column scan for
-  a computed width.
-- The list does not scroll; a panel that owns overflow scrolls it.
-- The docs site cannot render this component live.
+- An unusable `width` reads as the default rather than a malformed track.
+- The list does not scroll; the owning panel scrolls it.
