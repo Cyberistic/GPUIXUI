@@ -340,6 +340,25 @@ describe("MotionValue", () => {
     expect(done.complete).toBe(true);
   });
 
+  it("animates a spring declaration that carries no physics", () => {
+    // `Transition` is structural too: a spring decoded from storage can arrive
+    // as `{ kind: "spring" }` with no physics object at all. Reading `.mass`
+    // off nothing threw a `TypeError` out of the frame loop, so a surface that
+    // retargeted with that declaration never painted or settled. A missing
+    // object is the house spring — the same answer an unreadable field gets.
+    const value = new MotionValue(0);
+    value.animate(1, { kind: "spring" } as Transition);
+
+    const middle = value.sample(90);
+    expect(middle.value).toBeGreaterThan(0);
+    expect(middle.value).toBeLessThan(1);
+
+    const done = value.sample(2000);
+    expect(done.value).toBe(1);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
   it("paints no NaN for a curve that cannot read the frame", () => {
     // `Easing` is a caller's function, so a curve can answer `NaN`. The value
     // used to take it straight into the frame — every sample of the run was

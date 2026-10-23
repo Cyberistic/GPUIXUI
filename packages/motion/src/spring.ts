@@ -79,15 +79,23 @@ const sanitizeNonNegative = (
  * The physics a sample can run with: a field it cannot read takes the house
  * default, and a readable one is left alone.
  *
+ * The declaration may arrive with **no object at all**, because `Transition` is
+ * structural: a spring a caller built by hand or decoded from storage can carry
+ * no physics, and reading `.mass` off nothing threw out of a frame loop. It is
+ * read as `{}` — the house spring — which is the same answer every unreadable
+ * field already gets.
+ *
  * {@link springPhysics} composes this, so the constructor and the samplers
  * cannot drift — a hand-built physics samples as the built one does.
  */
-const physicsOf = (fields: SpringPhysicsParams): SpringPhysics => ({
-  mass: sanitizePositive(fields.mass, DEFAULT_MASS),
-  stiffness: sanitizePositive(fields.stiffness, DEFAULT_STIFFNESS),
-  damping: sanitizeNonNegative(fields.damping, DEFAULT_DAMPING),
-  restDelta: sanitizePositive(fields.restDelta, DEFAULT_REST_DELTA),
-  restSpeed: sanitizePositive(fields.restSpeed, DEFAULT_REST_SPEED),
+const physicsOf = (
+  fields: SpringPhysicsParams | null | undefined,
+): SpringPhysics => ({
+  mass: sanitizePositive(fields?.mass, DEFAULT_MASS),
+  stiffness: sanitizePositive(fields?.stiffness, DEFAULT_STIFFNESS),
+  damping: sanitizeNonNegative(fields?.damping, DEFAULT_DAMPING),
+  restDelta: sanitizePositive(fields?.restDelta, DEFAULT_REST_DELTA),
+  restSpeed: sanitizePositive(fields?.restSpeed, DEFAULT_REST_SPEED),
 });
 
 /** Sanitized spring physics from optional parameters. */

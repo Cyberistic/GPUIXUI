@@ -228,12 +228,15 @@ finish the run at the release frame and jump to the rest at the far end.
 
 The spring physics are repaired the same way, because `SpringPhysics` is
 structural: a mass, stiffness, damping or rest threshold that cannot be read
-takes the house default, and a readable one is left alone. Without that, a
-`NaN` damping made every formula answer `NaN` and the spring jumped to its
-target in a single frame, while a `NaN` rest threshold meant the run never
-settled at all — a driver waiting for rest sampled it forever. The constructor
-and the samplers read the physics the same way, so a hand-built spring samples
-as the built one does.
+takes the house default, and a readable one is left alone. A declaration that
+carries **no physics object at all** — a `{ kind: "spring" }` a caller decoded
+from storage — is the house spring too, because `Transition` is structural as
+well and reading `.mass` off nothing threw a `TypeError` out of the frame loop.
+Without that, a `NaN` damping made every formula answer `NaN` and the spring
+jumped to its target in a single frame, while a `NaN` rest threshold meant the
+run never settled at all — a driver waiting for rest sampled it forever. The
+constructor and the samplers read the physics the same way, so a hand-built
+spring samples as the built one does.
 
 A timeline is repaired at the value the caller supplies: a keyframe whose offset
 or value cannot be read is not a stop (it is dropped, and a set with none answers
