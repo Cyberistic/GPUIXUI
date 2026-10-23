@@ -82,6 +82,20 @@ describe("QrCode", () => {
     });
   });
 
+  it("keeps a box smaller than the module grid at the caller's side", () => {
+    // The bug guarded: a thumbnail grid that reserved 20 points for a 29-cell
+    // symbol was painted a 29-point frame, so the symbol overflowed its box.
+    const root = render({ size: 20 });
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      width: 20,
+      height: 20,
+    });
+    expect(expectSome(hostProp(svgOf(root), "style"))).toMatchObject({
+      width: 20,
+      height: 20,
+    });
+  });
+
   it("paints the level's own symbol, not the smallest one", () => {
     const value = "a".repeat(qrByteCapacity(1, "L"));
     const high = encodeQr(value, { level: "H" });

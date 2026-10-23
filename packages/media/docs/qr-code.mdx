@@ -39,7 +39,10 @@ hold and never larger:
 - the same symbol with `quietZone={0}` is 21 cells; `size={160}` paints **147**;
 - a side that cannot be laid out (`NaN`, zero, negative) reads as the default;
 - a `quietZone` that cannot be read (`NaN`, infinity) reads as the default `4`, so
-  a stored preference never reaches the viewBox as `NaN`.
+  a stored preference never reaches the viewBox as `NaN`;
+- a side **smaller than the module grid** (a 20-point thumbnail of a 29-cell
+  symbol) paints the grid at the asked side, below one point per module, so a
+  reserved box never overflows — the square is never larger than `size`.
 
 Reserve the square the component paints (`side`) rather than `size` when a layout
 depends on it.

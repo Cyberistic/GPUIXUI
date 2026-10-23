@@ -407,6 +407,24 @@ describe("qrPlacement", () => {
     expect(qrPlacement(symbol, -20).side).toBe(145);
   });
 
+  it("keeps a side smaller than the module grid inside the asked box", () => {
+    // The bug guarded: a floor of one point per module painted a 29-point
+    // symbol into a 20-point reserved box, so a thumbnail grid overflowed.
+    const symbol = encodeQr("place", { level: "L" });
+    if (!(symbol instanceof QrSymbol)) return expect.fail("no symbol");
+    const tiny = qrPlacement(symbol, 20);
+    expect(tiny.side).toBe(20);
+    expect(tiny.cells).toBe(29);
+    expect(tiny.module).toBeCloseTo(20 / 29);
+    expect(qrPlacement(symbol, 28).side).toBe(28);
+    expect(qrPlacement(symbol, 29)).toStrictEqual({
+      module: 1,
+      quiet: 4,
+      side: 29,
+      cells: 29,
+    });
+  });
+
   it("reads an unreadable quiet zone as the default, never a NaN field", () => {
     const symbol = encodeQr("place", { level: "L" });
     if (!(symbol instanceof QrSymbol)) return expect.fail("no symbol");

@@ -9992,6 +9992,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` Read a **stored crop minimum and handle side failsafe** — `CropArea` passed `minSize` into `Math.min` and `handleSize` into `Math.max`, and neither guards a non-finite value: a stored `NaN` minimum made `floorOf` return `NaN`, so `clampCrop`/`resizeCrop`/`gestureCrop` produced a rectangle whose four fields were `NaN`, and a `NaN` handle side made `handleBox` a `NaN` box that cannot be grabbed — while the same component already read an unlayable frame as an empty box. `crop/logic.ts` now normalises the minimum once inside `floorOf` (default `CROP_MIN_SIZE`) and reads a non-finite handle side as the newly exported `CROP_HANDLE_SIZE`; `crop-area.tsx` takes its default from that constant. `src/crop/logic.test.ts` gains `reads an unreadable handle side as the default box` and `reads an unreadable minimum as the default side`; `src/crop-area.test.tsx` gains `reads an unreadable handle side and minimum as the defaults`. Directions measured: reverting the two guards fails all three cases (`{ x: NaN, y: NaN, width: NaN, height: NaN }` in both unit cases and the missing 10-point handle in the component case); restored, the two files are 28/28 green and the package 72/72. Docs `packages/media/docs/crop-area.mdx` §Geometry; the `Crop area` row prints the rule and the new counts (20 + 8). No native scenario re-run — the probe's 37 checks on 0.11.0 stand; this is pure clamp arithmetic.
 
+`[x]` Keep a **QR symbol inside a box smaller than its module grid** — `qrPlacement` floored the module side at one point (`Math.max(1, Math.floor(asked / cells))`), so a 20-point thumbnail reserved for a 29-cell version-1 symbol painted a **29**-point frame: the docs and the JSDoc both promised the square was "never larger" than the asked side, and a thumbnail grid overflowed its cell by nine points instead. The placement now keeps whole-point modules where the box can hold them and paints the grid at the asked side (a fraction of a point per module) when it cannot, so `size` is an upper bound as documented. `src/qr/encode.test.ts` gains `keeps a side smaller than the module grid inside the asked box` (20 → `side: 20`, `module: 20/29`, 29 → the whole module, 28 → 28) and `src/qr-code.test.tsx` `keeps a box smaller than the module grid at the caller's side` (the frame and the `<svg>` are 20×20). Directions measured: with the one-point floor restored the unit case reads `expected 29 to be 20` and the component case `expected 29 to be 20`; restored, the two files are 29/29 and the package 96/96, `check-types` clean. Docs `packages/media/docs/qr-code.mdx` §Sizes (the new bullet) and the `QR code` row (rule and the new counts, 20 + 9). No native scenario applies — pure placement arithmetic on the `qr-matrix`-measured markup.
+
 ## Phase E — specialised components
 
 `[x]` `[██████████]` 2/2
@@ -10284,7 +10286,35 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 283/283
+`[x]` `[██████████]` 284/284
+
+`[x]` Put the **API reference's symbol filter on the page URL** — the reference
+      renders every name the workspace publishes (2 148 symbols across 15 packages
+      on 2026-10-23) and its filter was React state alone, so a reader who
+      narrowed that table to `createTheme` could not link the view: a reload or a
+      shared URL painted all 2 199 rows again, while the component index and the
+      icon gallery already carried `?q=` through `useIndexQuery`. The page now
+      mounts `ApiReference` (the URL-backed mount) over `ApiReferenceView` (the
+      markup), the count line became `N of 2 148 symbols match “…”` with a
+      `role="status"` live region, and the parameter is the same one the other two
+      indexes write — clearing the box removes it rather than publishing `?q=`.
+      Because three indexes now share the rule, the helper is `indexQueryParam` /
+      `indexQuerySearch` instead of the component-index names it kept after the
+      second consumer appeared. `reference.mdx` teaches `?q=createTheme` and names
+      the guard; `api-reference.test.tsx` gains four cases: the unfiltered count
+      and the body rows of both tables (`entryCount + 2 148`), the linked view's
+      rows against the pure `filterSymbols` answer (53 body rows for
+      `createTheme` — 51 entry points and the 2 matching symbols — so a view that
+      ignores the query cannot pass), the empty-query sentence, and
+      the mount/page read (the hook, the page's `?q=` and `<ApiReference />`, and
+      no `<ApiReferenceView` in MDX). Directions measured: a mount that held the
+      filter locally fails `to contain 'useIndexQuery()'`, and deleting the page's
+      sentence fails `to contain '`?q=createTheme`'`; restored, the app is 132
+      files / 1 437 tests green with `check-types` clean (`check:tests` stays red
+      only on the data workstream's untracked `scratch-probe.test.tsx`). The two
+      existing render guards in `public-api.test.tsx` and `api-reference.test.tsx`
+      render the view, because the mount needs a router. No native scenario
+      applies — a browser page and its URL.
 
 `[x]` Read the **unmeasured verdict without an unmeasured row** — the lane
       table's support column printed `unmeasured` for the inventory's `?`

@@ -832,9 +832,12 @@ const quietZoneOf = (quiet: number): number =>
 /**
  * Resolve a painted square.
  *
- * Modules are whole points so the grid stays crisp; the square is the largest
- * one the caller's side can hold, never larger. A side that cannot be laid out
- * reads as `fallback`, and so does a quiet zone that cannot be read.
+ * Modules are whole points so the grid stays crisp, and the square is the
+ * largest whole-module grid the caller's side can hold. A side too small for
+ * one point per module paints the grid at the asked side instead — a layout
+ * that reserved the box keeps it, and the symbol is merely tiny. A side that
+ * cannot be laid out reads as `fallback`, and so does a quiet zone that cannot
+ * be read.
  */
 export const qrPlacement = (
   symbol: QrSymbol,
@@ -845,8 +848,10 @@ export const qrPlacement = (
   const zone = quietZoneOf(quiet);
   const cells = symbol.modules + zone * 2;
   const asked = Number.isFinite(side) && side > 0 ? side : fallback;
-  const module = Math.max(1, Math.floor(asked / cells));
-  return { module, quiet: zone, side: module * cells, cells };
+  const whole = Math.floor(asked / cells);
+  return whole >= 1
+    ? { module: whole, quiet: zone, side: whole * cells, cells }
+    : { module: asked / cells, quiet: zone, side: asked, cells };
 };
 
 /** The SVG source string: one path holding every dark module, in module units. */
