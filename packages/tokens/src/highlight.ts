@@ -12,10 +12,10 @@
  * design decision a theme can read.
  *
  * Those default shares are also too strong for the text they mark at this
- * library's floors. Measured over the sixteen shipped, high-contrast, platform
- * and authored styles, the 65% active wash left `foreground` at **3.05:1** on
- * Windows dark's popover and under the 7:1 body floor in **all sixteen**
- * styles, and the resting 30% wash was under it in four dark ones — the worst
+ * library's floors. Measured over the 18 shipped, high-contrast, platform
+ * and authored styles, the 65% active wash left `foreground` at **2.72:1** on
+ * Dark · Omarchy's `muted` strip and under the 7:1 body floor in **all 18**
+ * styles, and the resting 30% wash was under it in 5 dark ones — the worst
  * being Dark · Linux at **6.14:1** on its popover. A reader who typed a query
  * and pressed Enter could be shown a result under the reading floor.
  *

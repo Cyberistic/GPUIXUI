@@ -412,8 +412,8 @@ export const contrastPairs: readonly ContrastPair[] = [
   // floating-row pairs above measured the washes a *menu* row tints, and the
   // list row's own two were measured by nothing: a brand whose status text sat
   // near its selection would erase the failure exactly when the reader picked
-  // the row. All sixteen shipped styles clear the body floor here, the tightest
-  // being Luna dark's chosen row at 7.97:1.
+  // the row. All 18 shipped styles clear the body floor here, the tightest
+  // being Light · Omarchy's chosen row at 7.77:1.
   {
     foreground: "destructiveSoftForeground",
     background: "selected",

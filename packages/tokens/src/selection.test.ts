@@ -505,6 +505,23 @@ describe("the tones the wash is painted on", () => {
     expect(tightestBody.pair).toBe("selectedForeground on selected");
     expect(tightestBody.theme).toBe("Dark");
     expect(tightestBody.washed).toBeCloseTo(5.11, 2);
+
+    // The JSDoc a consumer reads in their editor is a fourth surface, and it
+    // kept the pre-Omarchy sweep after the two pages moved.
+    const seam = read("./selection.ts").replace(/\s+/g, " ");
+    const styles = placements.length / excludedPairs.length;
+
+    expect(seam).toContain(`Measured over the ${styles}`);
+    expect(seam).toContain(
+      `every one of the ${placements.length} placements`,
+    );
+    expect(seam).toContain(`**${under.length} under the floor`);
+    expect(seam).toContain(
+      `Light · Omarchy's secondary line on a selected row at ${tightest.washed.toFixed(2)}:1`,
+    );
+    expect(seam).toContain(
+      `selected row title at ${tightestBody.washed.toFixed(2)}:1`,
+    );
   });
 
   it("states the scope and the numbers on every surface", () => {

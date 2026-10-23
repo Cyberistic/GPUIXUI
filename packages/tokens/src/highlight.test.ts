@@ -9,7 +9,7 @@
  * built-in violet — the one text surface still painted from a palette this
  * package does not own. Measured over the eighteen shipped, high-contrast,
  * platform and authored styles, the 65% active wash left body text under the
- * 7:1 floor in **all of them** (3.05:1 on Windows dark's popover) and the
+ * 7:1 floor in **all of them** (2.72:1 on Dark · Omarchy's `muted` strip) and the
  * resting 30% wash was under it in five dark ones (Dark · Linux 6.14:1 on its
  * popover), so a reader's own query could hide the result they searched for.
  * `findHighlight` derives the pair the theme can carry and
@@ -180,7 +180,7 @@ describe("the pair a theme can carry", () => {
   });
 
   it("steps the resting match down where the runtime's 30% is under the body floor", () => {
-    // The four dark styles the default share left under 7:1, read from the
+    // The five dark styles the default share left under 7:1, read from the
     // runtime's own pair. The worst is Dark · Linux's popover.
     const under = everyStyle
       .map(([name, theme]) => ({
@@ -224,6 +224,60 @@ describe("the pair a theme can carry", () => {
         .map(([name]) => name)
         .filter((name) => !under.some(({ name: stepped }) => stepped === name)),
     );
+
+    // Two prose claims read from the same list: the set the defaults were
+    // measured over, and the share of it each default left under the floor.
+    const seam = read("./highlight.ts").replace(/\s+/g, " ");
+
+    expect(seam).toContain(
+      `Measured over the ${everyStyle.length} shipped, high-contrast, platform`,
+    );
+    expect(seam).toContain(
+      `under the 7:1 body floor in **all ${everyStyle.length}**`,
+    );
+    expect(seam).toContain(
+      `resting 30% wash was under it in ${under.length} dark ones`,
+    );
+  });
+
+  it("measures the runtime's active share under the body floor in every style", () => {
+    // The JSDoc's second claim: the 65% default is unreadable everywhere, not
+    // only in the styles the derived pair steps. The worst cell is printed on
+    // four documents, so it moves with the palette.
+    const cells = everyStyle.flatMap(([name, theme]) =>
+      highlightSurfaces.map((surface) => ({
+        name,
+        surface,
+        ratio:
+          ratioOf(
+            theme.colors.foreground,
+            runtimeDefault(theme, surface, "active"),
+          ) ?? 0,
+        floor: contrastFloorsFor(theme).body,
+      })),
+    );
+    const under = cells.filter(({ ratio, floor }) => ratio < floor);
+    const worst = cells.reduce((low, cell) =>
+      cell.ratio < low.ratio ? cell : low,
+    );
+
+    expect(new Set(under.map(({ name }) => name)).size).toBe(everyStyle.length);
+    expect(`${worst.name} ${worst.surface}`).toBe("Dark · Omarchy muted");
+    expect(worst.ratio.toFixed(2)).toBe("2.72");
+
+    const label = `${worst.name}'s \`${worst.surface}\` strip`;
+    const printed = `${worst.ratio.toFixed(2)}:1`;
+    const surfaces = [
+      read("./highlight.ts"),
+      catalogue,
+      readme,
+      read("../../../COMPONENTS.md"),
+    ];
+
+    surfaces.forEach((page, at) => {
+      expect(page.replace(/\s+/g, " "), `surface ${at}`).toContain(label);
+      expect(page.replace(/\s+/g, " "), `surface ${at}`).toContain(printed);
+    });
   });
 
   it("tells the active match apart from the ones around it", () => {
@@ -390,8 +444,23 @@ describe("what the pages teach", () => {
 
   it("prints the numbers the suite measures", () => {
     // The runtime's own active share on the worst style, and the closest the
-    // derived pair gets to being indistinguishable.
-    expect(page).toContain("3.05");
+    // derived pair gets to being indistinguishable. The first is derived, so a
+    // style that joins the sweep cannot leave the page printing an old cell.
+    const worst = everyStyle
+      .flatMap(([name, theme]) =>
+        highlightSurfaces.map((surface) => ({
+          name,
+          surface,
+          ratio:
+            ratioOf(
+              theme.colors.foreground,
+              runtimeDefault(theme, surface, "active"),
+            ) ?? 0,
+        })),
+      )
+      .reduce((low, cell) => (cell.ratio < low.ratio ? cell : low));
+
+    expect(page).toContain(worst.ratio.toFixed(2));
     expect(page).toContain("6.14");
     expect(page).toContain("1.077");
   });

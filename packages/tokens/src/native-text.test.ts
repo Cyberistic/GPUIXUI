@@ -1182,6 +1182,16 @@ describe("the accent a document host paints", () => {
       "aero light 3.34",
       "omarchy light 3.90",
     ]);
+
+    // The seam's own JSDoc prints the same set and share, so a style that joins
+    // it cannot leave the documentation teaching the previous count.
+    const seam = readFileSync(
+      new URL("./native-text.ts", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(seam).toContain(`Measured over the ${shipped.length} shipped,`);
+    expect(seam).toContain(`in **${under.length} of them**`);
   });
 
   it("keeps the caret a mark on the field, not the document's label", () => {

@@ -38,12 +38,12 @@
  * paints two *saturated* tones, `accent` and `selected`, and a selectable run
  * inside either one is washed too. They are deliberately **not** pairs: a wash
  * is a share of the accent family, and so are those two fills, so the wash moves
- * the fill *toward* the text instead of away from it. Measured over the sixteen
+ * the fill *toward* the text instead of away from it. Measured over the 18
  * shipped, high-contrast, platform and authored styles, that costs contrast in
- * **every one of the eighty placements** — the wash never helps — and leaves
- * **39 under the floor the unwashed pair already met**. The tightest is Windows
- * XP (Luna) dark's secondary line on a selected row at 3.78:1; the tightest
- * **body** placement is the base dark theme's selected row title at 5.33:1
+ * **every one of the 90 placements** — the wash never helps — and leaves
+ * **43 under the floor the unwashed pair already met**. The tightest is
+ * Light · Omarchy's secondary line on a selected row at 3.38:1; the tightest
+ * **body** placement is the base dark theme's selected row title at 5.11:1
  * against 7, because that role is body text (`selectedForeground` on
  * `selected`). No share can serve both jobs: one strong
  * enough to be seen on the page is exactly what erases text on a saturated fill,
@@ -53,7 +53,7 @@
  * The exclusion is measured rather than assumed: `selection.test.ts` reads the
  * tones the primitives resolve, so a tone added to `SURFACE_TONES` fails until
  * the wash is measured on it or it is recorded here with its reason, and it
- * holds the eighty placements and their floors, so a palette that made the wash
+ * holds the 90 placements and their floors, so a palette that made the wash
  * help there would fail until the decision was re-read.
  *
  * **A status message's own tint is a third answer.** An `Alert`'s description is
@@ -102,7 +102,7 @@ import type { Theme, ThemeContrast } from "./theme.js";
  *
  * The two saturated state tones (`accent`, `selected`) are deliberately absent:
  * the wash is drawn from the same accent family as those fills, so it moves them
- * toward the text and costs contrast in all eighty placements (see the module
+ * toward the text and costs contrast in all 90 placements (see the module
  * note). A selectable run belongs on one of the content tones.
  */
 export const selectionPairs: readonly ContrastPair[] = [

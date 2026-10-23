@@ -4013,7 +4013,7 @@ does not own.
 Those shares are also too strong for the text they mark. Measured over the
 eighteen shipped, high-contrast, platform and authored styles, the 65% active
 wash leaves `foreground` under the **7:1** body floor in every one of them — the
-worst is Windows dark's popover at **3.05:1** — and the resting 30% wash is under
+worst is **2.72:1** on Dark · Omarchy's `muted` strip — and the resting 30% wash is under
 it in five dark styles, the worst being Dark · Linux at **6.14:1** on its
 popover. A reader who pressed Enter on their own query could be shown a result
 under the reading floor.

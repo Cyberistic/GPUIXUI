@@ -1327,7 +1327,7 @@ describe("the status label on the wash a list row wears", () => {
     );
   });
 
-  it("clears the body floor in every shipped theme, with Luna's chosen row tightest", () => {
+  it("clears the body floor in every shipped theme, with Omarchy's chosen row tightest", () => {
     const shipped = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -1355,7 +1355,7 @@ describe("the status label on the wash a list row wears", () => {
     expect(measured.filter(({ ratio }) => ratio < contrastFloors.body)).toEqual(
       [],
     );
-    // The authored look's warmer selected wash is the tightest of the sixteen
+    // The authored look's warmer selected wash is the tightest of the eighteen
     // styles; the catalogue prints the same number.
     expect(tightest.name).toBe(
       "Light · Omarchy/destructiveSoftForeground/selected",
@@ -1368,6 +1368,29 @@ describe("the status label on the wash a list row wears", () => {
     ).replace(/\s+/g, " ");
     expect(page).toContain(`at ${printedRatio(tightest.ratio)}`);
     expect(page).toContain("a destructive status label");
+
+    // The comment above the pairs in `contrast.ts` states the same set and the
+    // same tightest cell; the table's own row prints them too.
+    const seam = readFileSync(
+      new URL("./contrast.ts", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const look = tightest.name.split("/")[0];
+
+    expect(seam).toContain(
+      `All ${shipped.length} shipped styles clear the body floor here, the tightest`,
+    );
+    expect(seam).toContain(
+      `being ${look}'s chosen row at ${tightest.ratio.toFixed(2)}:1`,
+    );
+    expect(
+      readFileSync(
+        new URL("../../../COMPONENTS.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(
+      `tightest shipped placement ${tightest.ratio.toFixed(2)}:1, the ${look} look's chosen row`,
+    );
   });
 });
 

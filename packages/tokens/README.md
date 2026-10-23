@@ -516,8 +516,8 @@ for the active one, with a **2px** corner (`packages/native/src/text/search.rs`
 at the pinned `@gpuix/native@0.11.0`). The library's application passes no window
 theme, so that accent is the runtime's built-in violet. Measured over the
 eighteen shipped, high-contrast, platform and authored styles, the 65% active
-wash leaves body text under the 7:1 floor in all of them (Windows dark's popover
-at 3.05:1) and the 30% resting wash is under it in five dark styles (Dark ·
+wash leaves body text under the 7:1 floor in all of them (2.72:1 on Dark ·
+Omarchy's `muted` strip) and the 30% resting wash is under it in five dark styles (Dark ·
 Linux 6.14:1 on its popover).
 
 `findHighlight(theme)` derives the pair a theme can carry from its `primary`:

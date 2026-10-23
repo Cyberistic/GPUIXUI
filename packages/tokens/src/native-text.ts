@@ -356,10 +356,10 @@ const ACCENT_STEPS = 50;
  *
  * The host never paints the accent solid: a list number and a bullet are 85% of
  * it over the document's fill, so the role is read through that composite — and
- * the fill role is not readable there. Measured over the sixteen shipped,
+ * the fill role is not readable there. Measured over the 18 shipped,
  * high-contrast, platform and authored styles, `primary` at the marker share
- * lands under the 4.5:1 label floor in **ten of them** — every light style, plus
- * Dark · macOS (3.14:1) and Dark · Linux (4.10:1) — the tightest being Windows XP
+ * lands under the 4.5:1 label floor in **11 of them** — every light style, plus
+ * Dark · macOS (3.97:1) and Dark · Linux (4.10:1) — the tightest being Windows XP
  * (Luna) light's `muted` strip at **3.09:1** (the base theme's page reads
  * 4.00:1), while the same colour as a solid mark clears the 3:1 floor — which is
  * why no existing contract saw it.
