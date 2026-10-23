@@ -730,6 +730,10 @@ describe("the motion page", () => {
     const readme = readRepo("apps/playground/README.md");
     const dialog = readRepo("packages/components/src/dialog.tsx");
     const presence = readRepo("packages/components/src/internal/presence.tsx");
+    // The frames moved to the motion package's presence table, which the
+    // components module re-publishes: a guard that kept reading the re-export
+    // would pass on the import line alone.
+    const presenceTable = readRepo("packages/motion/src/presence.ts");
 
     const level = /export const FADE_LEVEL = "(\w+)"/.exec(fade)?.[1] ?? "";
     const duration = Number(
@@ -759,8 +763,10 @@ describe("the motion page", () => {
     // The level is the shipped dialog's, and the fade starts at zero: a page
     // that printed another level would describe a surface that does not ship.
     expect(dialog).toContain(`useSurfaceTiming("${level}")`);
-    expect(presence).toContain("initial: { opacity: 0 }");
-    expect(presence).toContain("animate: { opacity: 1 }");
+    expect(presenceTable).toContain("initial: { opacity: 0 }");
+    expect(presenceTable).toContain("animate: { opacity: 1 }");
+    // The components module must still hand the same seam to its surfaces.
+    expect(presence).toContain("presenceStyle,");
 
     // Every reading the page prints is one the window asserts, so the claim
     // cannot outlive its probe.
