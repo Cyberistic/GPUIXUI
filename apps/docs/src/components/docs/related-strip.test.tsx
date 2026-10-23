@@ -111,7 +111,7 @@ describe("the related strip", () => {
 
   it("prints the media player's siblings, not an empty line", () => {
     // The player landed after the families were written, so its page ended with
-    // no related line while every other media page linked back to it.
+    // no related line while the other media pages were its family all along.
     const markup = render("/docs/media/media-player");
 
     expect(markup).toContain("Related · Media surfaces");

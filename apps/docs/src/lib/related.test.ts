@@ -11,8 +11,7 @@ import { relatedFamilies, soloPages } from "./related";
  * `RelatedStrip` renders nothing when `relatedFor` has no answer, which is the
  * right behaviour for an argued solo and a silent hole for a page that simply
  * landed after the families were written: the MediaPlayer page shipped with no
- * family, so every sibling link a reader had on the other media pages was
- * missing from its own page and no suite noticed.
+ * family, so it ended without a related line at all and no suite noticed.
  *
  * The guard reads the mounted collections off disk rather than the Fumadocs
  * loaders (which need the MDX build), so it answers for the pages the site

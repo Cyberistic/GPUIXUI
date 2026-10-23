@@ -10395,13 +10395,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[x]` Give the **MediaPlayer its related line, and hold every page to one** —
       the player landed after `src/lib/related.ts`'s families were written, so
       `/docs/media/media-player` was the one served page `relatedFor` answered
-      `undefined` for: it ended with no sibling links while every other media
-      page linked back to it, and the suite only checked the curated component
-      pages. The player joins **Media surfaces**, the stale solo for the retired
-      `/docs/primitives/tooltip` (a 301 to the curated page, which is in
-      **Overlays**) is gone, and `src/lib/related.test.ts` holds the model to
-      the mounted collections in both directions: every package page the site
-      serves and every curated component page is in a family or an argued solo,
+      `undefined` for: it ended with no related line, and the other media
+      pages did not offer it either, because the family that should have held
+      it did not name the page. The player joins **Media surfaces**; the stale
+      solo for the retired `/docs/primitives/tooltip` (a 301 to the curated
+      page, which is in **Overlays**) is gone; and `src/lib/related.test.ts`
+      holds the model to the mounted collections in both directions: every
+      package page the site serves and every curated component page is in a
+      family or an argued solo,
       every family has a name and two or more distinct pages, every family link
       resolves to an address the site answers (a retired primitive through its
       redirect), and a solo names a served page, a reason, and no family.
