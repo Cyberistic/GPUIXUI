@@ -8779,7 +8779,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | The **design-system `Text selection wash` row** still printed the pre-look sweep — it says `selection.test.ts` holds "the 30/5.21 measurement, the 64-placement sweep", while the suite derives **32 of the 36 dark** placements at Windows dark's **5.21:1** over **72** placements across the 18 styles (`selection.test.ts`'s `states the tint contract and its numbers on every page` requires `32 of the 36 dark` and `All 72 tint placements resolve` on the same row, so the stale pair sits beside the derived one) | tokens-theme (owns the design-system table) | **resolved 2026-10-23 — the row prints the suite's own measurements.** The `Text selection wash` row now reads "the 32-of-36 dark measure at Windows dark's 5.21:1, the 72-placement sweep", so the row names the same pair the paragraph above it and `selection.test.ts` prints. `selection.test.ts`'s `the wash a status message can carry` suite holds the row to the sweep it derives: it refuses the retired `30/5.21` and `64-placement` phrases and requires the row to print `${derived.length}-placement sweep`, so the row cannot outlive the sweep again. Directions measured: restoring the pre-look row fails the case by name (`expected '# COMPONENTS.md …' not to contain '30/5.21'`); restored, `selection.test.ts` is 37/37 green. No native scenario applies — a printed count a suite derives |
 | Give the **two media pages their accessibility budget** — `packages/media/docs/qr-code.mdx` (`## Anatomy`, `## Sizes`, `## Levels and capacity`, `## Colour`, `## API`, `## Encoder`, `## Limits`) and `crop-area.mdx` (`## Geometry`, `## Gestures`, `## The mask`, `## API`, `## Limits`, `## Evidence`) ship no "accessibility or limitations" section, so the package page template's required section is absent. Both are recorded as known gaps with this owner, and the site-side half — their place in **Media surfaces** — is landed. Each has real material: the QR frame is `role="img"` with `label` as its name, and the crop's four veil bars leave the hole a press and a keyboard have to reach | media (`packages/media/docs/qr-code.mdx`, `packages/media/docs/crop-area.mdx`) | open — the docs suite is green with the gaps recorded; delete each `knownGaps` entry when its section lands |
-| Cite the **second-window measurement** in the rows that assume it — the Tier 4 *Detachable / movable tabs*, *Workspace layouts* and *Drag and drop* rows, the capability record's *Portals*, *Movable tabs* and *Drag reorder* rows, and the README's `portal-layer`/`movable-tabs-lifecycle`/`drag-reorder` limits all state "the binding opens one window per process" without a citation. The playground's `second-window-lifecycle` (8 checks, 0.11.0) now measures it: a second `GpuixRenderer.init()` is refused with `A GPUI application already exists on this thread`, the refused renderer reports `isInitialized() === false`, a second attempt is refused the same way, and the running window still reports a size, paints its marker and hears a press; the installed typings publish no other window verb and `WindowOptions` names no parent or child window, so an application cannot side-step it. The rows should cite the probe and keep the honest verdict (`partial` for detachable tabs and drag-and-drop; a second process is the only route for a detached tab) | components (`COMPONENTS.md` Tier 4 rows, `@gpuixui/dock`) and docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | **components half landed 2026-10-23** — the three rows the probe names cite it: *Detachable / movable tabs* records the refusal, the `isInitialized() === false` answer, the retry and the still-live window, and names the second process as the only route for a detached tab; *Workspace layouts* and *Drag and drop* carry the same measured sentence where each used to infer "one window per process" (no `@gpuixui/dock` row carried it). **Still open:** docs-site's *Portals*, *Movable tabs* and *Drag reorder* rows and `/docs/runtime` — the record still states the limit without the probe. Evidence `apps/playground/README.md` §`second-window-lifecycle`, `.artifacts/live/second-window{,-pressed}.png` |
+| Cite the **second-window measurement** in the rows that assume it — the Tier 4 *Detachable / movable tabs*, *Workspace layouts* and *Drag and drop* rows, the capability record's *Portals*, *Movable tabs* and *Drag reorder* rows, and the README's `portal-layer`/`movable-tabs-lifecycle`/`drag-reorder` limits all state "the binding opens one window per process" without a citation. The playground's `second-window-lifecycle` (8 checks, 0.11.0) now measures it: a second `GpuixRenderer.init()` is refused with `A GPUI application already exists on this thread`, the refused renderer reports `isInitialized() === false`, a second attempt is refused the same way, and the running window still reports a size, paints its marker and hears a press; the installed typings publish no other window verb and `WindowOptions` names no parent or child window, so an application cannot side-step it. The rows should cite the probe and keep the honest verdict (`partial` for detachable tabs and drag-and-drop; a second process is the only route for a detached tab) | components (`COMPONENTS.md` Tier 4 rows, `@gpuixui/dock`) and docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | **components half landed 2026-10-23** — the three rows the probe names cite it: *Detachable / movable tabs* records the refusal, the `isInitialized() === false` answer, the retry and the still-live window, and names the second process as the only route for a detached tab; *Workspace layouts* and *Drag and drop* carry the same measured sentence where each used to infer "one window per process" (no `@gpuixui/dock` row carried it). **docs half resolved 2026-10-23** — the record's **Portals** row now carries the measured refusal, its **Movable tabs** row and **Drag reorder** workaround cite the probe, and the **Second OS window** row states the whole attempt (the two `init()` calls, `attempts=2 refused=2 opened=0 started=false`, `isInitialized() === false`, the still-painted marker `#FF3B30` and `after=1`) beside the `window-backdrop` evidence it already had; `/docs/runtime`'s *Second window* row publishes the same readouts and its *Movable tabs*, *Drag reorder* and *Portals* workarounds cite the probe; §5 owes `second-window-lifecycle`. `capability-doc.test.ts` gains `publishes the second window a process is refused, from its fixture`, which derives the refusal text, the marker and the check count from `src/live/second-window.ts` and the readouts from the probe's own README section, then holds the four record rows, the four page rows and §5. Directions measured: on `HEAD` the case fails on the Portals row by name, and restored it is 126/126. No native scenario re-run — the probe's 8-check 0.11.0 run is the window evidence. Evidence `apps/playground/README.md` §`second-window-lifecycle`, `.artifacts/live/second-window{,-pressed}.png` |
 
 ## Phase D — data and workspace components
 
@@ -9943,6 +9943,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
     stop, `Right` expands in place, and a collapse that hides the cursor's row
     keeps a live keyboard stop. Docs `packages/data/docs/virtual-tree.mdx`;
     example `virtual-tree.example.tsx`. Owner: data.
+  - [x] **Multi-step forms** — `@gpuixui/components` ships `MultiStepForm` over
+    the shipped `Stepper`: each step carries `{ id, title, description?,
+    content, gate? }` and a gate answers `Option<string>` before the step moves
+    (and again before the last step submits), separately from the whole-record
+    decode `Form` owns. The draft stays the caller's, only the current step's
+    content is mounted, `step`/`defaultStep`/`onStepChange` is the
+    controlled/uncontrolled contract, and an out-of-range step clamps. The
+    actions are the shipped `Button`s and the indicator is read-only.
+    `src/behaviour/multi-step-form.test.tsx` (8 native behaviour tests) presses
+    the real controls through the renderer — a refusing gate stays put, a
+    passing gate advances, Back returns, Submit appears only last and fires once
+    its gate passes, `pending` refuses, a controlled step drives the paint, and
+    `99` reads as the last step; `src/wizard/logic.test.ts` (6 cases) holds the
+    arithmetic. Measured against the composition the playground's
+    `multi-step-form-lifecycle` probe settled (22 checks, 0.11.0). Docs
+    `packages/components/docs/multi-step-form.mdx`; example
+    `multi-step-form.example.tsx`; inventory record and Tier 5 row `done`.
+    Owner: components.
   - [x] **Crop area** — `@gpuixui/media` ships `CropArea` with the geometry in
     `src/crop/logic.ts`: a controlled `CropRect`, four veil bars as the mask
     (the runtime has no clip path, mask or canvas), each pointer-transparent so
@@ -10180,7 +10198,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 274/274
+`[x]` `[██████████]` 275/275
+
+`[x]` Place the **MultiStepForm page the components lane mounted** — the new
+      `packages/components/docs/multi-step-form.mdx` is a wizard shell over
+      `Stepper`, so it joins **Form composition** beside `Form` rather than the
+      feedback family that holds the indicator alone; `related.test.ts` was red
+      with `expected [ '/docs/components/multi-step-form' ] to deeply equal []`
+      until the family named it, and is 7/7 with it. A page that lands nowhere
+      still fails the same case by name.
 
 `[x]` Print the **wash pair the brand's own fill derives** — `/docs/theming`'s
       brand paragraph said `#B49CFF` gave a resting 30% and an active 31%, "one
