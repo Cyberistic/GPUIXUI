@@ -18640,11 +18640,13 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  * composition has one interaction that nothing had measured: a window has a
  * single platform text session, so a press must move it from one pane's field to
  * the other without either buffer changing, and the splitter between them must
- * resize the panes without taking the session away. The probe drives exactly
- * that: type in one pane, press the other and type there, drag the divider (the
- * shipped `SplitPane`, whose capture contract `split-pane-lifecycle` already
- * measures), then close and reopen a pane. The closed pane keeps its buffer in
- * the app, which is what makes a dock's `close` a layout change rather than data
+ * resize the panes without changing a buffer. The divider is itself a control —
+ * the shipped `SplitPane`'s `role="separator"` tab stop, which
+ * `split-pane-lifecycle` measures — so the drag's press parks the session on the
+ * divider and a press on a pane returns it; the probe drives exactly that: type
+ * in one pane, press the other and type there, drag the divider, press the pane
+ * again, then close and reopen a pane. The closed pane keeps its buffer in the
+ * app, which is what makes a dock's `close` a layout change rather than data
  * loss.
  */
 const MultiPaneEditorProbe = (): ReactNode => {
@@ -18863,7 +18865,10 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiPaneReadout(leftTyped, rightTyped, "both", MULTI_PANE.initial),
     );
 
-    // 4. The splitter resizes the panes, and neither buffer nor the session moves.
+    // 4. The splitter resizes the panes and keeps both buffers. The divider is
+    //    a `role="separator"` control (`split-pane-lifecycle` measures its tab
+    //    stop and ring), so the drag's press parks the one text session on the
+    //    divider; a press on a pane returns it, and no buffer moved.
     const dragged = dragWidth(MULTI_PANE.initial, 60);
     yield* ctx.host.drag("mp-divider", 60, 0);
     yield* Effect.sleep(SETTLE);
@@ -18879,7 +18884,13 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
     yield* ctx.expectEqual(
-      "the drag leaves the text session where the reader left it",
+      "a press on the divider parks the text session on that control",
+      yield* focusedAfterPaint(ctx),
+      "mp-divider",
+    );
+    yield* ctx.host.click(rightInput);
+    yield* ctx.expectEqual(
+      "a press returns the text session to the pane",
       yield* focusedAfterPaint(ctx),
       rightInput,
     );
@@ -18887,7 +18898,7 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     const rightResized = `${rightTyped}c`;
     yield* ctx.expectEqual(
-      "typing after the drag still reaches the pane that held the session",
+      "typing after the drag reaches the pane again, with both buffers intact",
       yield* readout(),
       multiPaneReadout(leftTyped, rightResized, "both", dragged),
     );

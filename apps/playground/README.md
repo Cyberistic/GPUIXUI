@@ -3479,11 +3479,14 @@ row is composition over split panes and editors, and the composition has one
 interaction nothing had measured: a window has a single platform text session,
 so a press has to move it from one pane's field to the other, typing must reach
 only the pane that holds it, and the splitter between them must resize the panes
-without taking it away. Each pane is a real `<textarea>` — `editor-overlay`
+without changing either buffer. Each pane is a real `<textarea>` — `editor-overlay`
 already settled that a highlighted *editable* surface is not available (no caret,
 no offset), so the honest editor is a field and a view, not an overlay — and the
 divider is the shipped `SplitPane` whose pointer-capture contract
-`split-pane-lifecycle` measures.
+`split-pane-lifecycle` measures. That same divider is a `role="separator"` tab
+stop, so a drag's press **parks** the session on the divider (a control, not a
+buffer): nothing is typed into a file, and a press on a pane takes the session
+back.
 
 | Step | Measurement |
 | ---- | ----------- |
@@ -3491,18 +3494,19 @@ divider is the shipped `SplitPane` whose pointer-capture contract
 | left | a press focuses `mp-input-left`; one typed key changes the left buffer and leaves the right |
 | right | a press moves the session to `mp-input-right`; the next key changes the right buffer and leaves the left |
 | resize | a **+60** drag moves the splitter to **440** and both typed buffers are unchanged |
-| session after a drag | focus is still `mp-input-right`, and the next key reaches it: a splitter press does not take the text session |
+| focus after a drag | focus is `mp-divider`: the divider is a `role="separator"` control, so the drag's press takes the session and no buffer receives a key |
+| session returned | a press on `mp-input-right` returns the session there, and the next key reaches the right buffer with the left unchanged |
 | bounds | a further drag stops at **460** with the right editor still painted; a **−260** drag stops at **220** |
 | close | the closed pane paints nothing, the surviving editor takes the whole **row**, and both buffers are still in the app |
 | reopen | the split paints at the width it held, the right editor takes its share of the row again, and a press on it accepts a key |
 
-30 checks, `--only multi-pane-editor`, green on 0.11.0 (~3 s). Fixture:
+31 checks, `--only multi-pane-editor`, green on 0.11.0 (~3 s). Fixture:
 `src/live/multi-pane.ts` — the two files and buffers, the width/divider
 arithmetic, the drag clamp and a counts-only readout; `multi-pane.test.ts` (7
 cases) holds the split arithmetic (a closed pane's space goes to the survivor,
 the widest pane never meets the divider), both clamps, the premise that the
 readout carries counts rather than buffers, and the README check count. The
-count is 22 `ctx.expect*` call sites plus one painted-box check per `paintedBox`
+count is 23 `ctx.expect*` call sites plus one painted-box check per `paintedBox`
 call (8), because that helper asserts the element paints.
 
 Two negative controls were measured, exit `1` each, then restored green:
