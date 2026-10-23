@@ -3444,6 +3444,105 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toContain("hidden-subtree-lifecycle");
   });
 
+  it("records the focus a dialog contains, from both probes", () => {
+    // The runtime moves focus from code and offers `focusNextWithin`, but it
+    // does not trap Tab — the surface cancels it. A plan that reads `role=
+    // "dialog"` as containment ships a modal the traversal walks out of, and a
+    // restore target recorded after the children mount hands the focus to a
+    // child's `autoFocus` instead of the opener. `modal-focus-trap` proves the
+    // trap and `modal-focus-restore` isolates the restore target; the numbers
+    // below are read out of both probes, so the record cannot teach a
+    // traversal neither one measured.
+    const trap = read("apps/playground/src/scenarios/modal.tsx");
+    const restore = read("apps/playground/src/live/scenarios.tsx");
+    const slice = (source: string, block: RegExp): string =>
+      block.exec(source)?.[0] ?? "";
+    const named = (source: string, pattern: RegExp): ReadonlyArray<string> =>
+      [...source.matchAll(pattern)].map((match) => match[1] ?? "");
+
+    const stops = named(
+      slice(trap, /const MODAL_IDS[\s\S]*?\n\];/),
+      /"([a-z-]+)"/g,
+    );
+    const tabPresses = Number(
+      /walk\(ctx, "tab", (\d+), "Tab"\)/.exec(trap)?.[1] ?? Number.NaN,
+    );
+    const trapReadouts = named(
+      slice(trap, /export const modalScenario[\s\S]*/),
+      /"(open=(?:true|false) popover=[^"]*)"/g,
+    );
+    const restoreSteps = slice(
+      restore,
+      /const modalFocusRestoreSteps[\s\S]*?\n  \}\);\n/,
+    );
+    const restoreChecks = [...restoreSteps.matchAll(/ctx\.expectEqual\(/g)]
+      .length;
+    const restored = [...new Set(named(restoreSteps, /"(restore-[a-z-]+)"/g))];
+
+    expect(stops).toEqual([
+      "modal-content",
+      "modal-a",
+      "modal-b",
+      "modal-open-popover",
+      "modal-close",
+    ]);
+    expect(tabPresses).toBe(4);
+    expect(trapReadouts).toEqual([
+      "open=false popover=false last=escape",
+      "open=true popover=false last=popover-escape",
+    ]);
+    expect(restoreSteps).not.toBe("");
+    expect(restoreChecks).toBe(6);
+    expect(restored).toEqual([
+      "restore-control-trigger",
+      "restore-control-content",
+      "restore-manual-trigger",
+      "restore-manual-input",
+      "restore-auto-trigger",
+      "restore-auto-content",
+    ]);
+
+    const row = rowFor("Dialog focus containment");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("modal-focus-trap");
+    expect(row?.evidence).toContain("modal-focus-restore");
+    expect(row?.evidence).toContain(`${restoreChecks} checks`);
+    expect(row?.evidence).toContain("focusNextWithin");
+    expect(row?.evidence).toContain("focusPreviousWithin");
+    expect(row?.evidence).toContain("preventDefault");
+    expect(row?.evidence).toContain("autoFocus");
+    expect(row?.workaround).toContain("getElementBounds");
+    expect(row?.workaround).toContain("dismiss stack");
+
+    const page = measuredRow("Dialog focus containment");
+    expect(
+      page,
+      "the page's measured table has no dialog-focus row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("modal-focus-trap");
+    expect(page?.[1]).toContain("modal-focus-restore");
+    expect(page?.[1]).toContain(`${restoreChecks} checks`);
+    expect(page?.[1]).toContain("autoFocus");
+    expect(page?.[2]).toContain("focusNextWithin");
+
+    const known = registeredProbes();
+    expect(
+      [...known],
+      "the trap probe is not one the playground registers",
+    ).toContain("modal-focus-trap");
+    expect(
+      [...known],
+      "the restore probe is not one the playground registers",
+    ).toContain("modal-focus-restore");
+    const owing = doc.slice(doc.indexOf("## 5. Keeping this document true"));
+    expect(owing, "the record's §5 owes no line for the focus trap").toContain(
+      "modal-focus-trap",
+    );
+    expect(owing, "the record's §5 owes no line for the restore").toContain(
+      "modal-focus-restore",
+    );
+  });
+
   it("records the geometry `motion` animates and the content it clips", () => {
     // Two inventory rows rest on this — Tier 3's expandable rows and Tier 4's
     // collapsible sidebars — and neither had a window measurement, because a

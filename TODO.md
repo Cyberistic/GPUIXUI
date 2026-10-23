@@ -7767,7 +7767,35 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 213/213
+`[x]` `[██████████]` 214/214
+
+`[x]` Publish the **dialog's focus containment** in the capability record — the
+      record's **Headless dialog** row said the headless parts own the Escape
+      layer and the Tab trap and stopped there, so a plan reading §3 could take
+      a `role="dialog"` surface as self-containing. It is not: the runtime moves
+      native focus from code and offers `focusNextWithin`/`focusPreviousWithin`,
+      but the surface's own key handler must `preventDefault` and drive the
+      wrap. §3 gains **Dialog focus containment** (`supported, with limits`,
+      composed rather than provided) with `modal-focus-trap` (focus enters the
+      content, four Tab presses stay inside and wrap back, Shift-Tab is the
+      reverse, `Escape` returns the focus to the trigger, and a nested popover
+      takes the first `Escape` before a second closes the modal) and
+      `modal-focus-restore` (window, 6 checks: the opener is recorded in the
+      render that opens the surface, so a child's `autoFocus` cannot steal the
+      restore — a surface with nothing focusable, an `initialFocus` field and
+      an `autoFocus` field all return the opener), with the workaround the
+      library ships (cancel Tab in `onKeyDown`, restore from a layout-effect
+      cleanup guarded by `getElementBounds`, one dismiss stack).
+      `/docs/runtime` publishes the row and §5 owes both probes.
+      `capability-doc.test.ts` gains `records the focus a dialog contains, from
+      both probes`: it reads `MODAL_IDS`, the Tab walk's budget and both
+      readouts out of `scenarios/modal.tsx`, counts the restore steps'
+      assertions and ids out of `live/scenarios.tsx`, then holds the record,
+      the page, the registry and §5. Directions measured: a stale printed count
+      fails `expected … to contain '6 checks'`, and deleting the page row fails
+      `the page's measured table has no dialog-focus row`; restored, 107/107 in
+      the file with `check-types` clean. No native scenario re-run — both
+      probes' runs stand and this change only publishes them.
 
 `[x]` Publish the **hiding word** the renderer honours — `StyleDesc` accepts any
       `display` and `visibility`, and only one of the two hides a subtree: the
