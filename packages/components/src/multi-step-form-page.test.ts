@@ -66,9 +66,7 @@ const documentedIn = (page: string, heading: string): ReadonlyArray<string> => {
   const end = rest.indexOf("\n## ", 1);
   const section = end < 0 ? rest : rest.slice(0, end);
   return Arr.flatMap(Str.split(section, "\n"), (line) =>
-    Str.startsWith("| `")(line)
-      ? namesIn(Str.split(line, "|")[1] ?? "")
-      : [],
+    Str.startsWith("| `")(line) ? namesIn(Str.split(line, "|")[1] ?? "") : [],
   );
 };
 
