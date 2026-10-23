@@ -29,11 +29,15 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const manifest: unknown = JSON.parse(read("packages/keyboard/package.json"));
 const exportsMap =
-  isRecord(manifest) && isRecord(manifest["exports"]) ? manifest["exports"] : {};
+  isRecord(manifest) && isRecord(manifest["exports"])
+    ? manifest["exports"]
+    : {};
 
 /** `.` → `@gpuixui/keyboard`; `./react` → `@gpuixui/keyboard/react`. */
 const entryPoints = Object.keys(exportsMap)
-  .map((key) => (key === "." ? "@gpuixui/keyboard" : `@gpuixui/keyboard/${key.slice(2)}`))
+  .map((key) =>
+    key === "." ? "@gpuixui/keyboard" : `@gpuixui/keyboard/${key.slice(2)}`,
+  )
   .toSorted();
 
 const reactValues = [
@@ -60,9 +64,7 @@ describe("the keyboard page", () => {
   });
 
   it("names every value the React module declares", () => {
-    const missing = reactValues.filter(
-      (name) => !page.includes(`\`${name}\``),
-    );
+    const missing = reactValues.filter((name) => !page.includes(`\`${name}\``));
 
     expect(reactValues.length).toBeGreaterThanOrEqual(2);
     expect(missing).toEqual([]);

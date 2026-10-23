@@ -30,9 +30,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const manifest: unknown = JSON.parse(read("packages/motion/package.json"));
-const exportsMap = isRecord(manifest) && isRecord(manifest["exports"])
-  ? manifest["exports"]
-  : {};
+const exportsMap =
+  isRecord(manifest) && isRecord(manifest["exports"])
+    ? manifest["exports"]
+    : {};
 
 /** `.` → `@gpuixui/motion`; `./presence` → `@gpuixui/motion/presence`. */
 const specifier = (key: string): string =>
@@ -43,9 +44,7 @@ const entryPoints = Object.keys(exportsMap).map(specifier).toSorted();
 const page = read("apps/docs/content/docs/motion.mdx").replace(/\s+/g, " ");
 
 const presenceValues = [
-  ...read("packages/motion/src/presence.ts").matchAll(
-    /^export const (\w+)/gm,
-  ),
+  ...read("packages/motion/src/presence.ts").matchAll(/^export const (\w+)/gm),
 ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
 interface Level {

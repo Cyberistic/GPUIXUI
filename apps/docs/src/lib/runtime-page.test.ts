@@ -36,9 +36,7 @@ const page = read("apps/docs/content/docs/runtime.mdx").replace(/\s+/g, " ");
 
 describe("the runtime page", () => {
   it("names every value the package publishes", () => {
-    const missing = valueExports.filter(
-      (name) => !page.includes(name),
-    );
+    const missing = valueExports.filter((name) => !page.includes(name));
 
     expect(valueExports).toEqual([
       "capabilities",

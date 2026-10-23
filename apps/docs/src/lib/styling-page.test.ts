@@ -31,7 +31,9 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const manifest: unknown = JSON.parse(read("packages/tw/package.json"));
 const exportsMap =
-  isRecord(manifest) && isRecord(manifest["exports"]) ? manifest["exports"] : {};
+  isRecord(manifest) && isRecord(manifest["exports"])
+    ? manifest["exports"]
+    : {};
 
 /**
  * The JSX transform resolves these two specifiers from `jsxImportSource`; a
@@ -51,9 +53,9 @@ const rootModule = read("packages/tw/src/index.ts");
 
 const twHosts = (() => {
   const block =
-    read("packages/tw/src/react.tsx").split("export const Tw = {")[1]?.split(
-      "} as const",
-    )[0] ?? "";
+    read("packages/tw/src/react.tsx")
+      .split("export const Tw = {")[1]
+      ?.split("} as const")[0] ?? "";
 
   return [...block.matchAll(/^\s+(\w+):/gm)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],

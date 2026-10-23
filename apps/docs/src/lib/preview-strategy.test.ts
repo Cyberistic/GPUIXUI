@@ -68,9 +68,11 @@ const documents = [
 
 /** The two lines a merge writes; `=======` alone is a setext heading. */
 const conflictMarkers = (text: string): ReadonlyArray<number> =>
-  text.split("\n").flatMap((line, index) =>
-    /^(<<<<<<<|>>>>>>>) /.test(line) ? [index + 1] : [],
-  );
+  text
+    .split("\n")
+    .flatMap((line, index) =>
+      /^(<<<<<<<|>>>>>>>) /.test(line) ? [index + 1] : [],
+    );
 
 describe("the preview strategy document", () => {
   it("reads the policy, the site and every package page", () => {
