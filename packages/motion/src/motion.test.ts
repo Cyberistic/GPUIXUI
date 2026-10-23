@@ -3,6 +3,10 @@
  * exact target, reduced motion returns the target immediately, a spring
  * retarget keeps velocity, and an inertial coast decays toward its projected
  * rest. Reverting the sample dispatch fails these assertions.
+ *
+ * It also guards the overflow two finite endpoints can produce: the tween and
+ * the spring both used to lose the journey between them (the tween painted
+ * `NaN`, the spring snapped to its target).
  */
 import { describe, expect, it } from "vitest";
 import { easeOut, linear } from "./easing.js";
@@ -84,6 +88,21 @@ describe("MotionValue", () => {
     const done = value.sample(100);
     expect(done.value).toBe(1e308);
     expect(done.complete).toBe(true);
+  });
+
+  it("springs between two finite endpoints the difference cannot represent", () => {
+    // The spring added its own displacement, so the same overflow made every
+    // formula answer `NaN` and the sanitiser finish the run on the target in
+    // its first sample: a surface that snapped instead of travelling.
+    const value = new MotionValue(-1.7e308);
+    value.animate(1.7e308, springTransition(layoutSpring));
+
+    const middle = value.sample(90);
+    expect(Number.isFinite(middle.value)).toBe(true);
+    expect(middle.value).toBeGreaterThan(-1.7e308);
+    expect(middle.value).toBeLessThan(1.7e308);
+    expect(middle.active).toBe(true);
+    expect(middle.complete).toBe(false);
   });
 
   it("coasts under inertia toward the projected rest position", () => {
