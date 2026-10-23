@@ -8,8 +8,8 @@
  * the old edges.
  *
  * Two things a manifest cannot say are curated here: the table's reading order
- * (lower layers first, not alphabetical) and each package's responsibility
- * sentence. A package missing from either is reported rather than dropped — the
+ * (the layers a component is built from, then the packages that stand alone —
+ * not alphabetical) and each package's responsibility sentence. A package missing from either is reported rather than dropped — the
  * table still prints the manifest's own description and appends the package at
  * the end, so a new package is visible before its row is written.
  */
@@ -41,10 +41,11 @@ export interface PackageGraph {
 }
 
 /**
- * The table's reading order — lower layers first.
+ * The table's reading order.
  *
- * A package is placed here once, by the layer it belongs to; the order is what
- * makes the page a map rather than an alphabetical directory.
+ * The layers a component is built from come first, then the packages that
+ * stand alone; the order is what makes the page a map rather than an
+ * alphabetical directory. A package is placed here once.
  */
 export const packageOrder: ReadonlyArray<string> = [
   "@gpuixui/tokens",
