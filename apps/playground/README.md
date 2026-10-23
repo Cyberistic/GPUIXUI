@@ -6034,13 +6034,15 @@ tall and the end is `-240` — and reads the offset and the paint for both:
 Three rules a plan needs:
 
 1. **A native traversal does not reveal the control it focuses, and nothing in
-   the pane hears it.** The offset stayed `0` across all nine rows and a code
-   focus behaved the same way, so a form whose controls are ordinary tab stops
-   has no route to the control it just focused. Design for it: keep the pane
-   tall enough for its controls, or make the reveal part of a roving list.
+   the pane hears it.** The offset was `0` before the traversal and still `0`
+   with the ninth row focused, and a code focus behaved the same way, so a form
+   whose controls are ordinary tab stops has no route to the control it just
+   focused. Design for it: keep the pane tall enough for its controls, or make
+   the reveal part of a roving list.
 2. **A roving list reveals what its own key moved onto.** The row the cursor
    lands on calls the renderer's `scrollIntoView` from a layout effect, and the
-   move is the minimal one: row 3 asks for `-40`, not for the row's top. This is
+   move is the minimal one: row 3 asks for `-40`, which puts its **bottom** on
+   the fold, not the `-120` that would align its top. This is
    the shape `Select`, `List` and `Tabs` ship, and the reason a keyboard-driven
    list is safe where a plain form is not.
 3. **The reveal clamps at the content's end, and an idempotent key costs
