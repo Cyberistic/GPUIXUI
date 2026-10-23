@@ -33,7 +33,8 @@ import {
   brandText,
   brandTextOn,
   colorRoles,
-  contrastFailures,
+  contrastPairs,
+  contrastRatio,
   controlFocusRing,
   defaultDensity,
   densityNames,
@@ -99,6 +100,23 @@ const shipped: readonly Theme[] = [
     Object.values(themes).map((theme) => retroTheme(theme, look)),
   ),
 ];
+
+/**
+ * One audit per shipped style, read **once**: the styles are constants and the
+ * gate is a pure function, so the five cases below that ask whether every style
+ * passes paid for eighteen audits each — 750 ms per case against a two-second
+ * budget. Reading it at module load keeps each case to its own claim.
+ */
+const shippedAudits = shipped.map((theme) => ({
+  theme,
+  audit: auditTheme(theme),
+}));
+
+/** The names of the styles that do not pass the gate, in shipped order. */
+const unpainted = (): readonly string[] =>
+  shippedAudits
+    .filter(({ audit }) => !audit.passed)
+    .map(({ theme }) => theme.name);
 
 /** The four levels, so a missing one can be named without a cast. */
 const levels = [
@@ -174,21 +192,20 @@ describe("an absent role", () => {
   // and fifteen times the package's two-second budget; nothing about the two
   // claims needs the other nine reports. The gate's own `passed` conjunction is
   // `audit.test.ts`'s, and a theme that lost every role at once — the superset of
-  // losing one in turn — is the absent-group case below.
+  // losing one in turn — is the absent-group case below. The pair half reads only
+  // the pairs that name the role: `contrastFailures` walks every pair in the
+  // table, and a pair the absent role does not sit on cannot change.
   it("is named, and leaves no pair it sits on readable, in every shipped style", () => {
     const wrong = shipped.flatMap((theme) =>
       colorRoles.flatMap((role) => {
-        const colors = colorsWithout(theme, role);
+        const colors = themeColors({ colors: colorsWithout(theme, role) });
         const named = invalidColorRoles({ colors }).map((at) => at.role);
         // The pairs the missing role sits on cannot be measured; the paint
         // report is the line that says why, so none may be reported readable.
-        const readable = contrastFailures({
-          colors,
-          contrast: theme.contrast,
-        }).filter(
-          (pair) =>
-            (pair.foreground === role || pair.background === role) &&
-            pair.ratio !== undefined,
+        const readable = contrastPairs.filter(
+          ({ foreground, background }) =>
+            (foreground === role || background === role) &&
+            contrastRatio(colors[foreground], colors[background]) !== undefined,
         );
         return named.length === 1 && named[0] === role && readable.length === 0
           ? []
@@ -207,17 +224,19 @@ describe("an absent elevation level", () => {
     );
   });
 
-  it("fails the gate by name, for every level of every shipped style", () => {
+  // 18 styles × 4 levels, read from the report that answers it: a whole
+  // `auditTheme` per level took 2.9 s, over the package's two-second budget. The
+  // gate's `passed` conjunction is `audit.test.ts`'s and the placements this
+  // absence makes unmeasurable are the absent-group case's.
+  it("is named once, without a colour, for every level of every shipped style", () => {
     const wrong = shipped.flatMap((theme) =>
       levels.flatMap((level) => {
-        const report = auditTheme({
-          ...theme,
+        const report = invalidShadowColors({
           elevation: elevationWithout(theme, level),
         });
-        return report.invalidShadows.length === 1 &&
-          report.invalidShadows[0]?.level === level &&
-          report.invalidShadows[0]?.color === undefined &&
-          !report.passed
+        return report.length === 1 &&
+          report[0]?.level === level &&
+          report[0]?.color === undefined
           ? []
           : [`${theme.name} · ${level}`];
       }),
@@ -332,7 +351,7 @@ describe("an absent elevation group", () => {
       );
       expect(theme.elevation).toHaveProperty("lg");
     });
-    expect(shipped.filter((theme) => !auditTheme(theme).passed)).toEqual([]);
+    expect(unpainted()).toEqual([]);
   });
 
   it("teaches the group in the pages that state the absence rule", () => {
@@ -435,9 +454,9 @@ describe("an absent colour group", () => {
   });
 
   it("reads every shipped style as whole", () => {
-    shipped.forEach((theme) => {
+    shippedAudits.forEach(({ theme, audit }) => {
       expect(themeColors(theme), theme.name).toBe(theme.colors);
-      expect(auditTheme(theme).passed, theme.name).toBe(true);
+      expect(audit.passed, theme.name).toBe(true);
     });
   });
 
@@ -462,7 +481,7 @@ describe("an absent colour group", () => {
 
 describe("a complete theme", () => {
   it("is still the only passing result", () => {
-    expect(shipped.filter((theme) => !auditTheme(theme).passed)).toEqual([]);
+    expect(unpainted()).toEqual([]);
   });
 });
 
@@ -630,10 +649,17 @@ describe("an absent numeric step", () => {
     const presets = densityNames.map((density) =>
       extendTheme(lightTheme, { density }),
     );
-    const styles = [...shipped, ...presets];
 
-    expect(() => styles.forEach((theme) => auditTheme(theme))).not.toThrow();
-    expect(styles.filter((theme) => !auditTheme(theme).passed)).toEqual([]);
+    // One audit per theme: a second pass only to ask `passed` costs the whole
+    // gate again, and the two questions are one report.
+    const failed = [
+      ...unpainted(),
+      ...presets
+        .filter((theme) => !auditTheme(theme).passed)
+        .map((theme) => theme.name),
+    ];
+
+    expect(failed).toEqual([]);
   });
 
   it("derives its steps from a preset every other preset mirrors", () => {
@@ -915,10 +941,13 @@ describe("an unnamed font family", () => {
     });
 
     expect(refusedWith(brand)).toBeUndefined();
-    // A family is a name, so the face a machine lacks is still a name.
-    expect(shipped.filter((theme) => refusedWith(theme) !== undefined)).toEqual(
-      [],
-    );
+    // A family is a name, so the face a machine lacks is still a name — and the
+    // refusal is the list `missingTokens` reads, so that is the claim.
+    expect(
+      shipped.filter((theme) => missingTokens(theme).length > 0).map(
+        (theme) => theme.name,
+      ),
+    ).toEqual([]);
   });
 
   it("is taught on both token pages", () => {
