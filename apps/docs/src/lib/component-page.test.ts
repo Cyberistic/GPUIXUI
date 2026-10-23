@@ -831,4 +831,18 @@ describe("the component section index", () => {
     expect(taught).toContain("Limitations");
     expect(taught).not.toContain("Accessibility and limitations");
   });
+
+  it("names the limits section the template declares, not the one it replaced", () => {
+    // The policy described a page's shared limits as the **Accessibility and
+    // limitations** row, a heading no template row declares and no page
+    // writes — the same invented name the index taught until it was held to
+    // `policySections()`. A contributor following the policy looked for a
+    // section the page does not have.
+    const declared = policySections();
+
+    expect(declared).toContain("Limitations");
+    expect(declared).not.toContain("Accessibility and limitations");
+    expect(policy).not.toContain("Accessibility and limitations");
+    expect(policy).toContain("The **Limitations** section");
+  });
 });

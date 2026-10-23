@@ -26,10 +26,9 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
   reader can run the real component in `apps/playground` — the companion native
   playground — rather than trust the drawing.
 - Where the runtime lacks a capability (no `aria-checked`, no `transform`, no
-  caret position), the page says so in **Accessibility and limitations**
-  instead of
-  drawing behaviour that does not exist. `COMPONENTS.md` carries the same
-  evidence per row.
+  caret position), the page says so in **Limitations** instead of drawing
+  behaviour that does not exist. `COMPONENTS.md` carries the same evidence per
+  row.
 
 A preview is never the authority. If a preview and the component disagree, the
 component is right and the preview is a bug.
@@ -806,16 +805,17 @@ is how the shared interaction and address props stay readable. A `Member` list �
 `useTable`'s fields, which are values a hook returns rather than props a caller
 passes — is the one table the completeness rule exempts, and the map says so.
 
-The **Accessibility and limitations** row has a shared half as well as a
-per-component one. A page states what its own control does and cannot do; the
-runtime's ARIA budget — the role-required rule, the attributes it publishes, the
-attributes it refuses and the absent live region — is the cross-cutting contract
-on `/docs/accessibility`, so a page does not have to restate the runtime in order
+The **Limitations** section has a shared half as well as a per-component one. A
+page states what its own control does and cannot do; the runtime's ARIA budget —
+the role-required rule, the attributes it publishes, the attributes it refuses
+and the absent live region — is the cross-cutting contract on
+`/docs/accessibility`, so a page does not have to restate the runtime in order
 to be honest. `src/lib/accessibility-page.test.ts` holds that page's attribute
 table and refused list to the capability record's row, so a runtime bump that
 changes the budget fails the page rather than leaving it teaching the previous
-release. `src/lib/package-page-template.test.ts` holds every package page to its
-own `## API` and `## Limitations`.
+release. `src/lib/aria-budget.test.ts` holds the record and every mounted page to
+the installed `@gpuix/native` typings. `src/lib/package-page-template.test.ts`
+holds every package page to its own `## API` and `## Limitations`.
 
 The package's own pages are the component's doc file: a page that ships a demo
 mounts it as a labelled browser approximation (strategy 3), a lane with no demo

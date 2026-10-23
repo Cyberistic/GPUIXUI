@@ -10382,7 +10382,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 325/326
+`[ ]` `[██████████]` 326/327
+
+`[x]` Name the **limits section by the one the template declares** — the policy
+      described a page's shared half twice as the **Accessibility and
+      limitations** row, a heading no template row declares and no page writes:
+      the prune renamed that section to **Limitations**, and the policy is what a
+      contributor opens to write a page. Both passages say **Limitations** now,
+      and the second also names `src/lib/aria-budget.test.ts` beside the guard
+      an author should read. `component-page.test.ts` gains `names the limits
+      section the template declares, not the one it replaced`: it reads the
+      template table and requires `Limitations`, refuses the retired name in the
+      table and in the policy's prose, and requires the shared half to be
+      described under the declared name. Direction measured: restoring
+      `The **Accessibility and limitations** row` fails
+      `expected '# Preview strategy …' not to contain 'Accessibility and limitations'`;
+      restored, the file is 16/16 and `apps/docs` 148 files / 1 289 tests.
+      No native scenario applies — a policy sentence and its guard.
 
 `[x]` Read the runtime's **closed `aria-*` set** instead of trusting the record —
       the pinned `@gpuix/native` publishes exactly seven attributes
