@@ -3105,9 +3105,19 @@ describe("the curated component pages", () => {
     const source = read(page.source);
     const recipes = read("packages/tw/src/recipes.ts");
 
-    // The delays the page prints are the component's defaults.
-    expect(source).toContain("openDelay = 150");
-    expect(source).toContain("closeDelay = 150");
+    // The delays the page prints are the component's defaults, read from the
+    // constants the props default to; a delay that cannot be read falls back to
+    // them through `hoverDelay`, so the fallback is the same number.
+    const openDelay = /const OPEN_DELAY_MS = (\d+);/.exec(source)?.[1];
+    const closeDelay = /const CLOSE_DELAY_MS = (\d+);/.exec(source)?.[1];
+    expect(openDelay, "the nav declares no open delay").toBeDefined();
+    expect(closeDelay, "the nav declares no close delay").toBeDefined();
+    expect(source).toContain("hoverDelay(openDelay, OPEN_DELAY_MS)");
+    expect(source).toContain("hoverDelay(closeDelay, CLOSE_DELAY_MS)");
+    expect(body(page)).toContain(`Both default to ${openDelay} ms`);
+    expect(body(page)).toContain(
+      "a value that is not a finite number takes the default",
+    );
 
     // One panel, a toggle on its own trigger, and the pointer policy's
     // suspension after any explicit route.

@@ -42,11 +42,18 @@ const run = (
 const VALUES = NAV_ITEMS.map((item) => item.value);
 
 describe("the component the preview mirrors", () => {
-  it("waits the delay the preview prints before a hover opens", () => {
-    expect(source).toContain("openDelay = 150");
-    expect(source).toContain("closeDelay = 150");
-    expect(OPEN_DELAY_MS).toBe(150);
-    expect(CLOSE_DELAY_MS).toBe(150);
+  it("waits the delay the source declares before a hover opens", () => {
+    // The component defaults its props to `OPEN_DELAY_MS`/`CLOSE_DELAY_MS`, and
+    // a delay a caller supplies that cannot be read falls back to them, so the
+    // preview's constants are held to the package's own rather than to a copy.
+    const open = /const OPEN_DELAY_MS = (\d+);/.exec(source)?.[1];
+    const close = /const CLOSE_DELAY_MS = (\d+);/.exec(source)?.[1];
+    expect(open, "the component declares no open delay").toBeDefined();
+    expect(close, "the component declares no close delay").toBeDefined();
+    expect(OPEN_DELAY_MS).toBe(Number(open));
+    expect(CLOSE_DELAY_MS).toBe(Number(close));
+    expect(source).toContain("hoverDelay(openDelay, OPEN_DELAY_MS)");
+    expect(source).toContain("hoverDelay(closeDelay, CLOSE_DELAY_MS)");
   });
 
   it("keeps one open item and toggles it shut on its own trigger", () => {

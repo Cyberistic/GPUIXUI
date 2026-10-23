@@ -66,7 +66,10 @@ panel in one gesture.
 
 The pointer is a second route with its own clock: resting on a trigger opens its
 panel after `openDelay`, moving across the row switches panels, and leaving the
-trigger **and** its panel closes after `closeDelay`. Both default to 150 ms. An
+trigger **and** its panel closes after `closeDelay`. Both default to 150 ms. A
+delay a caller derives (a reduced-motion branch, a rate) is read at the gesture:
+a value that is not a finite number takes the default rather than opening at
+once, and a negative one is no delay. An
 explicit press, key, `Escape` or outside press cancels a pending hover timer and
 suspends the pointer policy until the pointer reaches a trigger again, because
 the runtime delivers the pointer's leave *after* the event that opened another

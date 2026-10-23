@@ -9335,6 +9335,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` `[██████████]` 249/249
 
+`[x]` Follow the **navigation menu's delay seam** — the package moved its two
+      hover clocks onto `OPEN_DELAY_MS`/`CLOSE_DELAY_MS` with a `closeDelay` prop
+      and a `hoverDelay` repair, so the curated page's guard and the preview's
+      both failed on `master` looking for `openDelay = 150` in the source. Both
+      now derive the numbers from the constants, require the two `hoverDelay`
+      call sites, and hold the page's "Both default to 150 ms" to the constant;
+      the page's pointer paragraph gains the input rule the repair exists for — a
+      delay a caller derives is read at the gesture, a value that is not a finite
+      number takes the default rather than opening at once, and a negative one is
+      no delay — with `component-page-truth.test.ts` holding that sentence.
+      Directions measured on the pre-fix tree: both files failed with `expected
+      '…NavigationMenu: a horizontal …' to contain 'openDelay = 150'`; after,
+      the two files are 65/65 and the docs app is 120 files / 1303 tests green.
+      No native scenario applies — a source constant, its fallback and the page
+      that teaches them.
+
 `[x]` Print the **icon count the set ships** on the primitives index — the
       section index called it "Forty-seven monochrome icons" while
       `packages/icons/src/names.ts` had grown to **76**, and the page it links
