@@ -30,7 +30,7 @@ const [crop, setCrop] = useState(
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `src` | `string` | required (blank paints no picture) |
+| `src` | `string` | required (blank paints no picture; a non-text value paints none too) |
 | `alt` | `string` | required |
 | `width` | `number` | required |
 | `height` | `number` | required |
@@ -56,3 +56,4 @@ const [crop, setCrop] = useState(
 - A **move** never changes the hole's sides: the caller's `minSize` travels with a pointer drag and with `Alt`+arrow, so a hole allowed below the default does not grow to it.
 - **`fill` is not a choice**: crop coordinates only match a filled frame.
 - A **blank `label`** reads as `"Crop area"` and is trimmed, so a stored empty name cannot publish an unnamed group and four handles called "`nw` handle".
+- **A picture restored from storage that is not text paints no picture**: `src` is read as text once, so a saved record's `null` leaves the frame, its mask and its handles paintable instead of throwing out of the render.

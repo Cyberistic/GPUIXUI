@@ -73,7 +73,7 @@ export interface CropKey {
 
 /** {@link CropArea} props. */
 export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
-  /** A path, data URL or http(s) URL for the picture. */
+  /** A path, data URL or http(s) URL for the picture. A blank or non-text value paints no picture. */
   readonly src: string;
   /** The picture's accessible name. */
   readonly alt: string;
@@ -179,6 +179,10 @@ export const renderCropArea = (
     ...rest
   } = props;
   const name = accessibleName(label, DEFAULT_LABEL);
+  // A record restored from storage writes `null` where it carried no picture;
+  // reading the source as text keeps the frame, its mask and its handles
+  // paintable instead of throwing out of the render on `src.trim()`.
+  const picture = typeof src === "string" ? src.trim() : "";
   const bounds = cropBounds(width, height);
   const crop = clampCrop(value, bounds, minSize, aspectRatio);
   const bars = cropBars(crop, bounds);
@@ -208,9 +212,9 @@ export const renderCropArea = (
         style,
       )}
     >
-      {src.trim().length === 0 ? null : (
+      {picture.length === 0 ? null : (
         <img
-          src={src}
+          src={picture}
           alt={alt}
           objectFit="fill"
           style={{ width: bounds.width, height: bounds.height }}

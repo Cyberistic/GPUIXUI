@@ -306,6 +306,23 @@ describe("renderCropArea", () => {
     expect(images).toStrictEqual([]);
   });
 
+  it("paints no picture for a source that is not text", () => {
+    // The bug guarded: a record restored from storage writes `null` where it
+    // carried no picture, and `src.trim()` threw out of the render — so the
+    // frame, its mask and its handles painted nothing at all.
+    const root = renderCropArea(
+      props({ src: null as unknown as string }),
+      lightTheme,
+      surfaceOf(),
+    );
+    const images = elementChildren(root).filter(
+      (child) => expectSome(hostTag(child)) === "img",
+    );
+    expect(images).toStrictEqual([]);
+    expect(Option.isSome(findByTestId(root, "crop-bar-top"))).toBe(true);
+    expect(Option.isSome(findByTestId(root, "crop-handle-se"))).toBe(true);
+  });
+
   it("repaints the mask when the hole moves", () => {
     const moved = new CropRect({ x: 20, y: 10, width: 50, height: 40 });
     const root = renderCropArea(
