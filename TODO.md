@@ -10079,9 +10079,9 @@ identity, and the forms this package documents build a new one on every render
 coast whose re-declaration guard exists so that second form is safe). Every
 commit re-armed the effect, which sampled at once and published a fresh frame
 object even when nothing had moved: measured 2026-10-23 in the real renderer, a
-spring that had already settled re-rendered **1 089** times on its way to rest
-and ~200 more in the 150 ms after it — a loop that ran for as long as the
-component was mounted. The declaration is retained **by value** now
+spring mounted at rest had painted **1 089** frames by 800 ms and 210 more in the
+next 150 ms — a loop that ran for as long as the component was mounted. The
+declaration is retained **by value** now
 (`src/hook-read.ts`: `retainTransition` by what a sample reads, `retainCoast` by
 the physics and the repaired release velocity) and a frame is published only
 when it differs (`sameFrame`, which counts the one-shot `complete` edge so a

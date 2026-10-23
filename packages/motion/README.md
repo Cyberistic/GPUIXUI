@@ -98,6 +98,17 @@ render does not restart the coast.
 `useMotion(target, transition, options)` is the general hook behind them; a
 re-declared transition is compared the same way.
 
+A declaration is read **by value, not identity**, because the documented forms
+build one on every render: `useSpring(target, springPhysics({ … }))` and
+`useInertia(v, inertia())`. An equal re-declaration keeps the declaration that is
+already running, so a render does not re-arm the hook's effect or its frame loop,
+and a frame is published only when it differs from the one on screen — the
+completion edge counts as a difference, because it is the one report a caller
+get that its run ended. Before that rule a hook kept painting frames for as long
+as it was mounted: measured 2026-10-23 in the real GPUix renderer, a spring
+mounted at rest had painted 1 089 frames by 800 ms and 210 more in the following
+150 ms.
+
 Pass `options.reducedMotion` from your platform's reduced-motion preference; it
 completes at the target, and the **first render** already paints that frame.
 `options.initial` gives the first run a start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts

@@ -19,6 +19,12 @@ import {
   type SetStateAction,
 } from "react";
 import {
+  retainCoast,
+  retainTransition,
+  sameFrame,
+  type CoastDeclaration,
+} from "./hook-read.js";
+import {
   DEFAULT_TWEEN_MS,
   MotionValue,
   easeOut,
@@ -82,17 +88,14 @@ const reduced = (options: MotionOptions): boolean =>
 
 /**
  * Publish a sample taken before a retarget, so the frame on screen moves with
- * it. The sample is only published when it changed the painted value.
+ * it. The sample is only published when it changed the frame the caller holds —
+ * including the completion edge, which is a change even when nothing moved.
  */
 const publish = (
   setFrame: Dispatch<SetStateAction<MotionFrame>>,
   frame: MotionFrame,
 ): void =>
-  setFrame((previous) =>
-    previous.value === frame.value && previous.velocity === frame.velocity
-      ? previous
-      : frame,
-  );
+  setFrame((previous) => (sameFrame(previous, frame) ? previous : frame));
 
 /**
  * Close the gap since the last sample before retargeting.
@@ -162,8 +165,12 @@ const skipsJourney = (
 
 /**
  * The retained-motion hook: animates `target` with `transition` on a monotonic
- * `performance.now()` clock. `transition` must be a stable reference (pass a
- * memoized value or one of {@link useSpring}/{@link useTransition}).
+ * `performance.now()` clock.
+ *
+ * The declaration is read **by value**, so an equal re-declaration — the
+ * `springPhysics({ … })` form builds one on every render — keeps the run and the
+ * frame loop already driving it instead of re-arming them. A declaration that
+ * means another run replaces it and starts from the frame on screen.
  */
 export const useMotion = (
   target: number,
@@ -184,6 +191,15 @@ export const useMotion = (
   });
   /** The mount already paints the resting frame, so there is no run to start. */
   const skipped = useRef(skipsJourney(target, options.initial, reducedMotion));
+  /**
+   * The declaration the loop is running. A render builds a fresh object for the
+   * documented `springPhysics({ … })` form, so identity would re-arm the effect —
+   * and its frame loop — for a run that never changed. Retention reads it by
+   * value, which is the same rule the retained value applies.
+   */
+  const declared = useRef(transition);
+  declared.current = retainTransition(declared.current, transition);
+  const running = declared.current;
 
   useEffect(() => {
     if (skipped.current) {
@@ -191,18 +207,18 @@ export const useMotion = (
       return;
     }
     publish(setFrame, settleBefore(motion, origin, reduced(options)));
-    motion.animate(target, transition);
+    motion.animate(target, running);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
       const next = motion.sample(performance.now() - origin, reduced(options));
-      setFrame(next);
+      publish(setFrame, next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
     };
     handle = setTimeout(tick, 0);
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, target, transition, origin, options.reducedMotion]);
+  }, [motion, target, running, origin, options.reducedMotion]);
 
   return {
     value: frame.value,
@@ -246,7 +262,8 @@ export const useTransition = (
  * Coasts with an initial velocity under inertial decay. The value accumulates
  * from the start of the run across releases; when `velocity` becomes `0` the
  * value holds. The declaration is compared structurally, so an `inertia()`
- * built inline on every render does not restart the coast already in flight.
+ * built inline on every render does not restart the coast already in flight —
+ * nor does it re-arm the frame loop driving it.
  *
  * `options.initial` is the value the first run accumulates from — the offset a
  * gesture released at — and it obeys the family's rule: one it cannot read is no
@@ -272,6 +289,15 @@ export const useInertia = (
   });
   /** The first paint shows the projected rest; the release point is skipped. */
   const skippingStart = useRef(reducedMotion);
+  /**
+   * The coast this hook is running. `inertia()` is documented as safe to build
+   * inline, and identity would re-arm the effect — and its frame loop — on every
+   * render, so the declaration is retained by the physics a sample reads and the
+   * release velocity it was kicked with.
+   */
+  const declared = useRef<CoastDeclaration>({ inertia, velocity });
+  declared.current = retainCoast(declared.current, { inertia, velocity });
+  const running = declared.current;
 
   useEffect(() => {
     const sampled = settleBefore(motion, start, reduced(options));
@@ -282,18 +308,18 @@ export const useInertia = (
       skippingStart.current = false;
       publish(setFrame, sampled);
     }
-    motion.coast(inertia, velocity);
+    motion.coast(running.inertia, running.velocity);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
       const next = motion.sample(performance.now() - start, reduced(options));
-      setFrame(next);
+      publish(setFrame, next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
     };
     handle = setTimeout(tick, 0);
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, velocity, inertia, start, options.reducedMotion]);
+  }, [motion, running, start, options.reducedMotion]);
 
   return {
     value: frame.value,
