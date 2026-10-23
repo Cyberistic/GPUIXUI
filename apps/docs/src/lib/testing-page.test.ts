@@ -248,6 +248,18 @@ describe("the testing page", () => {
     expect(pageText).toContain("`decideActivation`");
     expect(pageText).toContain("packages/primitives/src/core/keyboard.ts");
     expect(pageText).toContain("ignores the flag");
+
+    // The measurement the prose cites: the probe drives an unguarded control
+    // and the shipped Button, and the playground's record names both readouts.
+    const probe = readRepo("apps/playground/src/live/key-hold-probe.tsx");
+    expect(probe).toContain('"a held Enter does not activate again"');
+    expect(probe).toContain('"a second repeat is refused as well"');
+    expect(probe).toContain('"a pointer press runs onClick and onActivate"');
+    expect(readRepo("apps/playground/README.md")).toContain(
+      "### `key-hold-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(pageText).toContain("`key-hold-lifecycle`");
+    expect(pageText).toContain("`activations=3 presses=1`");
   });
 
   it("states the focus pair a live window does not deliver", () => {

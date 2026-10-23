@@ -244,6 +244,14 @@ still activates on its release. A handler that is *meant* to repeat — an arrow
 walking a tree, `PageDown` in a log — ignores the flag and keeps moving. A probe
 therefore drives a held key with `keyDown` and a single press with `key`.
 
+`key-hold-lifecycle` measured both halves in a window: an **unguarded** control
+logged `down=j:false,j:true` for a press and its repeat, the app-level handler
+read the same `window=j:false,j:true`, and the shipped `Button` stayed at
+`activations=1` through two repeats of `Enter` before `Space`'s release made it
+`2` — the count of one is the guard's doing, not a key that never arrived. A
+pointer press is the other route and runs both props
+(`activations=3 presses=1`), which is why `onActivate` is the one a key reaches.
+
 ## The report
 
 `SmokeReport` is the run's machine-readable output: the host label, its timing,
