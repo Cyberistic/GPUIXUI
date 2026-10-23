@@ -265,8 +265,10 @@ export const blurDeliverySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       BLUR_IDS.target,
     );
 
-    // 4. A press on a focusable control while a field holds the focus: the
-    //    order here is what a form that submits on the press depends on.
+    // 4. A press on a focusable control while a field holds the focus. If a
+    //    blur were delivered, this is where its order against the press — the
+    //    one a form that submits on a click depends on — would show: the trace
+    //    holds the press and nothing else.
     yield* ctx.host.click(BLUR_IDS.target);
     yield* Effect.sleep(SETTLE);
 

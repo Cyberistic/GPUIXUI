@@ -5737,9 +5737,10 @@ Every component that commits a draft on blur — `InlineEdit`, a hex field, a fo
 that needs the field's final value — and every surface that follows the focus
 rests on this pair, and the offscreen renderer fires every handler a component
 passes. So no unit or behaviour suite can tell a route that arrives from one that
-never does. The probe mounts two shipped `Input`s, a shipped `Button`, a painted
-surface with no tab stop and the shipped `InlineEdit`, and appends every focus and
-blur to one trace, in the order the window delivers them.
+never does. The probe appends every focus and
+blur to one trace, in the order the window delivers them. The shipped controls
+are two `Input`s, two `Button`s, two painted surfaces that are not tab stops and
+the `InlineEdit`.
 
 | Step | Measured |
 | ---- | -------- |
