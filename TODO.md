@@ -10388,7 +10388,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 330/331
+`[ ]` `[██████████]` 331/332
+
+`[x]` Mount every **preview demo**, not only its name — the registry was held
+      from both sides (`component-preview.test.ts`: every page names a demo,
+      every demo is named by a page), and both directions compare **names**, so
+      a demo that throws while it renders shipped as a page that crashes in the
+      browser with every suite green. `src/lib/preview-demo-render.test.tsx`
+      mounts each of the 144 registered demos in the light and dark palettes
+      through `renderToStaticMarkup`, the way `ComponentPreview` calls
+      `demo.render()`, with `platform-toggle` mocked to the value a preview
+      reads (the real provider needs the router and `window`); 288 cases.
+      Directions measured: throwing from `BadgeStatesBody` fails `mounts
+      badge-states` in both palettes (2 failed / 286 passed); restored, the file
+      is 288/288 and `apps/docs` is **152 files / 1 606 tests** green with
+      `check-types` and `oxlint` clean. `docs/preview-strategy.md` names the
+      mount guard beside the registry's two directions. No native scenario
+      applies — browser previews, rendered offscreen.
 
 `[x]` Give **five primitives one page each** — `Button`, `Checkbox`, `Select`,
       `Switch` and `Tooltip` were live twice: the curated page under

@@ -515,7 +515,10 @@ Table, Tag input, Tabs, Time picker, Timeline, Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the
-browser rather than failing the build).
+browser rather than failing the build). Both directions compare names, so
+`src/lib/preview-demo-render.test.tsx` mounts every registered demo in the light
+and dark palettes: a demo that throws while it renders is a page that crashes in
+the browser, which no name check can see.
 
 **One component, one page.** Five of those curated pages document a primitive —
 Button, Checkbox, Select, Switch and Tooltip — so the package page for each was a
