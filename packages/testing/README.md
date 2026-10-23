@@ -102,6 +102,26 @@ control that activates on release — Space on a button, checkbox or switch,
 which is the platform's own rule — is therefore driven with `keyUp(keystroke)`,
 which releases through the renderer's `simulateKeyUp`.
 
+Focus has four verbs. `focusNext()` runs the window's own traversal and
+`focusElement(testId)` moves native focus from component code. `blur()` is the
+renderer's `blur`, so a probe can clear the focus it moved. `activateWindow()`
+asks the platform for the application's activation. Both are optional because
+they are renderer verbs a synchronous host has no window to answer — and
+`activateWindow()` is the lever a probe reaches for *before* it measures the
+focus pair.
+
+**A window's `onFocus`/`onBlur` are not measurable through this host on every
+machine.** GPUI dispatches element focus listeners only for an **active** window
+(its draw builds the focus event's paths only when `rendered_frame.window_active`
+is true), and an automation window opened from a background session may never
+become one — `apps/playground`'s `blur-delivery-lifecycle` measures exactly that:
+no route (press, traversal, `focusElement`, `blur`, unmount) delivers the pair,
+while the focus id and keys still move. The offscreen renderer fakes activation
+(`set_active_for_tests`), which is why `a11yTree()` and the offscreen focus
+scenarios are the evidence for the focus pair. A probe that reports "no focus
+event" must say which window it measured, and a component may not be called
+verified on a blur commit from a live run alone.
+
 Pointer input is four verbs. `click` presses and releases, `drag` presses and
 travels, and `hover` moves the pointer onto the element's centre **without
 pressing** — the only way to drive the enter/leave pair a tooltip or a

@@ -1023,6 +1023,7 @@ import {
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import { FadedHitboxProbe, fadedHitboxSteps } from "./opacity-hit-probe.js";
 import { EmptyErrorProbe, emptyErrorSteps } from "./empty-error-probe.js";
+import { BlurDeliveryProbe, blurDeliverySteps } from "./blur-delivery-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -3231,8 +3232,8 @@ const TooltipProbe = (): ReactNode => {
           }}
         >
           The shipped Tooltip: a hover opens it above its trigger, and leaving
-          or Escape closes it. A Tab traversal focuses the trigger without
-          running its onFocus, so the tip stays closed.
+          or Escape closes it. This window delivers no focus event at all, so a
+          Tab traversal leaves the tip closed.
         </text>
         {/*
           The white strip the entry is sampled over: the tip floats above the
@@ -5836,10 +5837,12 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     // Measured on 0.11.0, three runs 2026-10-22: the traversal focuses the
     // element but does not run its `onFocus`, so the counter stays 0. The
-    // offscreen host disagrees — `focus-traversal` reads `focusNext` dispatching
-    // the event — which is exactly why this is asserted in a window. The
-    // component's key-origin anchor is what carries the arrow move here; a row
-    // seeded only from `onFocus` would still re-anchor at the first enabled tab.
+    // offscreen host, whose renderer fakes window activation, does dispatch it —
+    // and `blur-delivery-lifecycle` measured why this window does not: GPUI
+    // reports focus paths only for an active window, and this one never becomes
+    // active, on any route. The component's key-origin anchor is what carries
+    // the arrow move here; a row seeded only from `onFocus` would re-anchor at
+    // the first enabled tab in this window.
     yield* ctx.expectEqual(
       "the traversal focuses the trigger without running its onFocus",
       yield* ctx.host.text("tabs-focus-readout"),
@@ -7753,10 +7756,12 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     // The keyboard path, measured on 0.11.0 (three runs 2026-10-22): the
     // traversal focuses the trigger without running its `onFocus`, so the tip
-    // — which the runtime opens on focus — stays closed. Hover is the only open
-    // path in a window; the text still reaches assistive technology as the
-    // trigger's `aria-description`. The offscreen host disagrees, which is why
-    // this is measured in a window.
+    // — which the runtime opens on focus — stays closed. `blur-delivery-lifecycle`
+    // measured the cause: no route delivers the focus pair in this window,
+    // because GPUI reports focus paths only for an active window and this one
+    // never becomes active. Hover is the only open path this probe can measure;
+    // an active app is expected to open the tip on focus, unproven here. The
+    // text still reaches assistive technology as the trigger's `aria-description`.
     yield* ctx.host.key("tab");
     // Wait the whole window the old "it opens" check allowed (~2s), so a
     // delayed delivery cannot pass as "never delivered": the value the
@@ -28523,5 +28528,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "empty-error-states-lifecycle",
     view: () => <EmptyErrorProbe />,
     steps: emptyErrorSteps,
+  },
+  "blur-delivery-lifecycle": {
+    id: "blur-delivery-lifecycle",
+    view: () => <BlurDeliveryProbe />,
+    steps: blurDeliverySteps,
   },
 };

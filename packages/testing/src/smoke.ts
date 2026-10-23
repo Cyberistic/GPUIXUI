@@ -469,6 +469,16 @@ export interface AsyncSmokeHost {
    * in a different window asks the platform rather than the renderer.
    */
   readonly zoomWindow: () => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Brings the window to the front and makes it the application's active window.
+   *
+   * GPUI dispatches element focus listeners only for an **active** window (its
+   * `rendered_frame.window_active`), so a probe that measures `onFocus`/`onBlur`
+   * has to activate the window it opened — a window opened in the background
+   * delivers no focus event at all. Optional because it is a platform verb; the
+   * offscreen host has no window to activate.
+   */
+  readonly activateWindow?: () => Effect.Effect<void, SmokeHostError>;
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**
@@ -594,6 +604,15 @@ export interface AsyncSmokeHost {
   readonly focusElement: (
     testId: string,
   ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Clears the window's focus (`renderer.blur`), leaving nothing focused.
+   *
+   * A component that commits on blur is only correct if the drawer closing or
+   * the app clearing its focus runs the handler, so a probe needs the lever the
+   * runtime's own components use. Optional because it is a renderer verb: a
+   * synchronous host has no window to blur.
+   */
+  readonly blur?: () => Effect.Effect<void, SmokeHostError>;
   /**
    * Installs a font file in the renderer **after** the first paint.
    *

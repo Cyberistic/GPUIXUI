@@ -1621,7 +1621,51 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 141/141
+`[x]` `[██████████]` 142/142
+
+`[x]` Measure the **focus pair a window delivers** — every component that commits
+      a draft on blur (`InlineEdit`, a hex field, a form that needs a field's
+      final value) and every surface that follows the focus rests on React's
+      `onFocus`/`onBlur`, and no live probe had ever driven the pair: the
+      offscreen renderer fires every handler a component passes, so no unit or
+      behaviour suite could tell a route that arrives from one that never does.
+      `blur-delivery-lifecycle` mounts two shipped `Input`s, a shipped `Button`,
+      a painted surface with no tab stop and the shipped `InlineEdit`, and reads
+      one trace of every event in delivery order on 0.11.0: the **focus id moves
+      on every route** (a press focuses `blur-field-a`, a second press
+      `blur-field-b`, the traversal `blur-target`, `blur()` leaves `none`, the
+      traversal out of the edit `blur-after`) and keys and presses arrive, while
+      **no `onFocus` or `onBlur` arrives at all** —
+      `trace=target:press plain:press toggle:press unmount:c edit:change
+      after:press`. **The measured cause is the window, not the traversal**: GPUI
+      dispatches focus listeners only for an `active` window (its draw builds
+      `WindowFocusEvent`'s paths only when `rendered_frame.window_active` is
+      true), and this window never becomes active — the probe asks for
+      `activateWindow()` first, and the same window is the one `editor-overlay`
+      measured with **no caret** after the same request. So the `focuses=0` the
+      tabs and tooltip probes read is a property of the harness, not "a traversal
+      skips the handler": an active app is expected to deliver it, which no live
+      probe here can show and only the offscreen host's faked activation
+      (`set_active_for_tests`) does. Consequence recorded: a draft committed on
+      blur is **unverified in this window** (neither Tab nor a press commits the
+      typed `x`), so a consumer that must not lose a draft needs a route the
+      window can prove. 10 checks, `--only blur-delivery-lifecycle`, green on
+      0.11.0 (~0.7 s, two consecutive runs). Fixture `src/live/blur-delivery.ts`
+      (the ids and the trace codec) + `blur-delivery.test.ts` (12 cases: the
+      trace codec, the view's controls and ids, the routes the steps drive, the
+      focus ids, the exact trace, the count, the registry, the section, the
+      host's two verbs); `focus-delivery.test.ts` now holds the corrected
+      attribution instead of the retracted rule. Negative control measured, exit
+      `1`, restored green: expecting the draft's commit in the trace fails
+      `the window's delivered trace` with the actual sequence.
+      `AsyncSmokeHost` gained two optional verbs — `blur()` (the renderer's own
+      `blur`) and `activateWindow()` (the platform's activation) — documented in
+      `packages/testing/README.md` with the focus-pair limitation. The tabs and
+      tooltip probe comments and captions, the README's two tables and the
+      `focus` row now name the cause. Evidence: `apps/playground/README.md`
+      §`blur-delivery-lifecycle`. The capability record, `/docs/runtime`, the
+      components' Tabs/Tooltip pages, `docs/component-api.md` §3 and the
+      `InlineEdit` page owe the citation (Interlocks)
 
 `[x]` Measure the **two fallback panels a collection shows** — MISSION lists
       **empty and error states** among the interactions tested in the real
@@ -7458,6 +7502,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Announce the **hint the components' hosts paint** — the hinted hosts call the primitives' `fieldHint`/`renderFieldHint` seam and hand the host no `placeholder` (the runtime's is a fixed grey), so the runtime's `aria_placeholder` leaves with the prop and an empty `FieldInput`, `SearchInput`, `TagInputField`, `MentionInput`, `ChatComposer`, `TimePickerSegment`, `CommandMenuInput` or `ComboboxInput` announces no hint at all — the same defect the primitives closed in `fieldHelp`. Pass `fieldHelp({ placeholder, description }, value)` (published from `@gpuixui/primitives/hint` beside the paint) as each host's `aria-description`; a caller's permanent help still wins | components (owns the eight hinted hosts) | **resolved 2026-10-23** — all eight hosts (`FieldInput`, `SearchInput`, `TagInputField`, `MentionInput`, `ChatComposer`'s textarea, `TimePickerSegment`, `CommandMenuInput`, `ComboboxInput`) pass `fieldHelp({ description, placeholder }, value)` as `aria-description`; a caller's `aria-description` is the permanent help and wins, the hint speaks only while the box is empty, and a non-empty draft drops it. `src/behaviour/hints.test.tsx` gains three cases: `says the words it paints, because the host lost its own announcement` (every host in the table, with the painted-hint premise re-read), `keeps a caller's permanent help over the hint, and drops the hint once typed` (the caller's sentence wins; a `value` of `readme` announces no hint) and `says the combobox field's hint once its popup opens`. Directions measured: dropping the `ChatComposer` description and ignoring the caller's help in `SearchInput` fails the two new cases by name; restored, 11/11 in the file. |
 | Correct the **Tables row's divider count** — `COMPONENTS.md`'s Tier 3 `Tables` row says the raw `border` is under the floor "on 20 of the 80 shipped wash placements"; the tokens table now holds eighteen styles (Omarchy added), so the divider contract measures `18 × (3 washes + 2 presses) = 90` placements and the raw role misses **22**. The other two rows the same miss touched (design-system `Decorative surfaces`, `Text selection wash`) were corrected by the tokens workstream with its guards; this one is the data row's | data (owns the Tier 3 `Tables` row) | **resolved 2026-10-23** — the row prints **22 of the 90**, and the same miss sat in the painter it cites and the page beside it: `src/table/table.tsx`'s JSDoc and `docs/table-selection.mdx` both said **17 of the 64**, and `src/behaviour/table.test.tsx`'s premise comment repeated it. `packages/data/src/table/divider-counts.test.ts` (4 cases) derives the style set, the **90** placements and the **22** misses from `@gpuixui/tokens` (`themes`, `highContrastThemes`, the four platforms × two modes, the three looks × two modes, `dividerWashes` + `dividerPresses`, `pointerWash`), pins **18 / 90 / 22**, proves `dividerOn` answers every placement, and holds the **specific** `\| Tables \|` row — found by its own prefix, not a whole-file search — plus the source, the page and the behaviour comment to the count while refusing both retracted numbers. That last part is the reported hole: the tokens guard's `inventory.toContain(…22 of the 90…)` is satisfied by the `Decorative surfaces` row, so the Tier 3 row stayed green while it was stale. Directions measured: with the old text three cases fail by name (`expected '| Tables | …' not to contain '20 of the 80'`, the page's missing `**22 of the 90**`, and the retracted-count sweep); corrected, `nub run --filter @gpuixui/data test` is 19 files / 167 tests green. No native scenario applies — a pure contract and its printed values; the row's paint is `table.test.tsx`'s. |
 | Retract the **stale style and press counts in `dividerOn`'s own documentation** — `packages/tokens/src/decorative.ts` still says the raw rule is measured "over the sixteen shipped, high-contrast, platform and authored styles" and is under the floor on "**20 of the 80** placements", and `dividerPresses`' doc says "seven of the thirty-two press placements", while the contract's guard and `divider.test.ts` measure **eighteen** styles, **90** placements (36 presses) and **22** misses. The tier rows and pages are corrected; the package's own prose is not | tokens (`src/decorative.ts` JSDoc) | open — measured 2026-10-23; the data package's new `divider-counts.test.ts` derives the same 18 / 90 / 22, so the two can move together |
+
+| Publish the **focus pair a window does not deliver** where the capability record and the tab/tooltip pages teach it — the playground's `blur-delivery-lifecycle` measured on 0.11.0 that this automation window delivers **no** `onFocus`/`onBlur` on any route (press, traversal, `focusElement`, `blur`, unmount) while the focus id and keys still move, because GPUI dispatches focus listeners only for an active window and this one never becomes active (`editor-overlay` measured the same window with no caret after `activateWindow()`). The record's focus rows and `/docs/runtime` should carry a **Focus events** row with the verdict (`offline only` / `with limits`: delivered in an active app by the offscreen host's faked activation, unmeasurable in a live automation window), the five routes and the cause, so a plan stops treating `focuses=0` as a traversal rule | docs-site (`docs/gpuix-capabilities.md` §3, `/docs/runtime#measured-in-a-window`) | open — measured 2026-10-23 by `blur-delivery-lifecycle` (10 checks) |
+| Correct the **Tabs and Tooltip pages' focus rule** — `packages/components/docs/tabs.mdx` and `tooltip.mdx`, `docs/component-api.md` §3 and the `api.test.ts` case that holds "the focus a traversal delivers" all teach that a window's traversal skips `onFocus` as a runtime fact, and the playground's `blur-delivery-lifecycle` measured the real cause: the automation window is never active, so **no** route delivers the pair, and an active app is expected to (which only the offscreen host's faked activation proves). The Tabs anchor fix (`moveOrigin` on `event.elementId`) stays the right rule; the prose and the test's stated rule are what mis-attribute it | components (`packages/components/docs/{tabs,tooltip}.mdx`, `src/api.test.ts`) and docs-site (`docs/component-api.md` §3) | open — measured 2026-10-23 |
+| State that **a draft committed on blur is unverified in the window harness** — `packages/components/docs/inline-edit.mdx` and the `Inline edit` inventory row teach "Enter or blur commits" as a behaviour, and the playground's `blur-delivery-lifecycle` measured that in an automation window neither Tab nor a press commits the typed draft (the focus pair never arrives). The component's handler is right for an active app; the page should say which host proves it and that a consumer needing a proof today has Enter or a caller-owned commit | components (`packages/components/docs/inline-edit.mdx`, the `COMPONENTS.md` Inline edit row) | open — measured 2026-10-23 |
+| Add the **two window verbs and the focus-pair caveat** to `/docs/testing` — `AsyncSmokeHost` gained `blur()` (the renderer's `blur`, so a probe can clear the focus it moved) and `activateWindow()` (the platform's activation), and the window verb table lists `focusNext`/`focusElement` only. The page should also carry the measured limitation `blur-delivery-lifecycle` records: this automation window delivers no `onFocus`/`onBlur` on any route, so a live probe cannot prove a blur commit and the offscreen `a11yTree`/`focus-traversal` are the evidence for the pair | docs-site (`apps/docs/content/docs/testing.mdx`) | open — measured 2026-10-23 |
 
 ## Phase D — data and workspace components
 

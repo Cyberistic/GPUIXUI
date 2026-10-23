@@ -25,6 +25,7 @@ export type LiveRenderer = Pick<
   | "getFocusedElementId"
   | "focusElement"
   | "focusNext"
+  | "blur"
   | "getPaintedText"
   | "getSelectedText"
   | "clearSelection"
@@ -34,6 +35,7 @@ export type LiveRenderer = Pick<
   | "getListScrollTop"
   | "getWindowSize"
   | "zoomWindow"
+  | "activateWindow"
 >;
 
 /**
@@ -240,6 +242,11 @@ export const createLiveHost = ({
         "zoomWindow",
         sync(() => renderer.zoomWindow()),
       ),
+    activateWindow: () =>
+      named(
+        "activateWindow",
+        sync(() => renderer.activateWindow()),
+      ),
     focused: () =>
       Effect.gen(function* () {
         const id = yield* named(
@@ -337,6 +344,11 @@ export const createLiveHost = ({
           sync(() => renderer.focusElement(node.id)),
         );
       }),
+    blur: () =>
+      named(
+        "blur",
+        sync(() => renderer.blur()),
+      ),
     registerFont: fontInstaller(renderer),
     waitFor: (testId) =>
       call(`waitFor ${testId}`, () => at(testId).waitFor()).pipe(Effect.asVoid),

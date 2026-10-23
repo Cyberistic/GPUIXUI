@@ -123,7 +123,7 @@ export const liveRegistry = [
   {
     id: "tooltip-lifecycle",
     title:
-      "Overlay: the shipped Tooltip opens on hover above its trigger, fades and rises into place, closes on leave and dismisses on Escape, while a Tab traversal leaves it closed",
+      "Overlay: the shipped Tooltip opens on hover above its trigger, fades and rises into place, closes on leave and dismisses on Escape, while a Tab traversal leaves it closed in this window",
     capability: "overlay",
   },
   {
@@ -647,6 +647,12 @@ export const liveRegistry = [
     title:
       "Layout: a failed load paints its error surface and recovers, an empty panel paints no surface of its own, and both actions are real controls",
     capability: "layout",
+  },
+  {
+    id: "blur-delivery-lifecycle",
+    title:
+      "Focus: a window whose app never activates delivers no onFocus or onBlur on any route — press, traversal, blur or unmount — while the focus id and keys still move",
+    capability: "focus",
   },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-102 probes a real window can prove, of which nineteen mount shipped
+103 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -737,7 +737,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | layout (flex sizing) | a grower takes the leftover (280 of a 400 row beside a fixed 120); two `flexBasis: 0` growers whose content fits split it evenly (140/140) while an auto basis grows from content (70/210); a grower whose content exceeds its share keeps its content and the other takes the rest (200/80); an over-full row shrinks the item that may shrink (180) and leaves `flexShrink: 0` over-wide (320, painted past the row); an item's automatic minimum is its content (300 in a 200 row) unless `minWidth: 0` lifts it (200); `maxWidth` stops a grower (120, row left short); and `alignSelf` places content width at 0/120/240 in a 300 column whose `stretch` item is 300 (`flex-sizing`, and the headless `layout-flex-sizing`) |
 | text selection | `dragSelect` fills `getSelectedText()` for `selectable` text and nothing for chrome; `clearSelection` empties it |
 | accessibility | the offscreen renderer's `getA11yTree()` describes `role` and all seven `aria-*` props (the token mapped to the platform's role name), a node with no role is absent, and a `<text>` is a `Label` with its content (`a11y-tree`) |
-| focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
+| focus | **`onFocus`/`onBlur` fire offscreen** (0.5.1 never delivered them) — and a window delivers neither, on any route, because it never becomes active (`blur-delivery-lifecycle`). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
@@ -1214,28 +1214,32 @@ the pill covers the selected trigger, not that a screenshot looks right.
 | Step | Check |
 | ---- | ----- |
 | mount | `value=overview changes=0`; the pill is within 2px of the trigger's `x`, `width` and `height`; `tabs-panel-reports` has no bounds |
-| `Tab` | focus is `tabs-overview`; the trigger's `onFocus` counter is **0** — a window's traversal moves the focus without running the handler (three runs on 0.11.0, 2026-10-22) |
+| `Tab` | focus is `tabs-overview`; the trigger's `onFocus` counter is **0** — this automation window delivers no focus event at all, on any route (`blur-delivery-lifecycle`; three runs on 0.11.0, 2026-10-22) |
 | first `right` | focus is `tabs-reports`, `value=reports changes=1`, the reports panel paints and the overview panel has no bounds; the pill moved to the reports trigger |
 | second `right` | focus is `tabs-archive` — the disabled `settings` is skipped — `value=archive changes=2` |
 | `Home` / `End` | `value=overview changes=3`, then `value=archive changes=4` |
 | press `tabs-reports` | `value=reports changes=5`, the pill follows the pressed trigger |
 | press `tabs-settings` | the readout does not change — a disabled tab ignores a press |
 
-**The bug this probe found, and the fix it measures.** A window's `Tab`
+**The bug this probe found, and the fix it measures.** In this window a `Tab`
 traversal focuses a trigger **without running React's `onFocus`** (measured at
 `focuses=0`, three runs on 0.11.0 on 2026-10-22), so a row seeded only from
 `onFocus` was empty and the first arrow re-anchored at the first enabled tab.
 `@gpuixui/components` fixed it in `moveOrigin` (`src/tabs/logic.ts`), which
 anchors a move on the trigger that sent the key (`event.elementId`), then the
-recorded row, then the selection. That is why the probe keeps asserting the
-traversal's counter at **0**: the anchor, not the handler, is what makes the
-first arrow move off the traversal's tab. **The two hosts disagree, and only the
-window is authoritative here** — the offscreen `focus-traversal` scenario reads
-`focusNext` dispatching `onFocus` (`traversal dispatched onFocus`), which is a
-`TestRenderer` fact that does not survive into a real window. A component may not
-be held to "it gets an `onFocus`" on the strength of the offscreen suite.
-`src/live/focus-delivery.test.ts` holds this paragraph, the table row and both
-probe assertions to that measurement, and the offscreen scenario to its own.
+recorded row, then the selection. That is the better anchor whatever a host
+delivers, and the probe keeps asserting the traversal's counter at **0**. **The
+counter is a property of the window the probe opened, not of the event**: GPUI
+dispatches focus listeners only for an active window, and this automation window
+never becomes one (`blur-delivery-lifecycle`), so no route — traversal, press,
+programmatic focus or blur — delivers the pair. The offscreen `focus-traversal`
+scenario reads `focusNext` dispatching `onFocus` (`traversal dispatched
+onFocus`) because its renderer fakes activation, which is the only delivery
+measured anywhere. So a component must not be held to "it gets an `onFocus`" on
+this harness's evidence, and a real active app is expected to deliver it — a
+claim no live probe on this host can prove. `src/live/focus-delivery.test.ts`
+holds this paragraph, the table row and both probe assertions to that
+measurement, and the offscreen scenario to its own.
 
 27 checks, `--only tabs-lifecycle`, green on 0.11.0; the paint guards
 `paintedBox` adds are counted in that number. Negative controls measured:
@@ -1322,7 +1326,7 @@ tip's text is painted.
 | Step | Check |
 | ---- | ----- |
 | mount | the tip's text is not painted; `enters=0 leaves=0` |
-| `Tab` | focus lands on `tooltip-trigger` and the tip **stays closed** — a traversal moves the focus without running the trigger's `onFocus` (three runs on 0.11.0, 2026-10-22) |
+| `Tab` | focus lands on `tooltip-trigger` and the tip **stays closed** — this window delivers no focus event at all on any route (`blur-delivery-lifecycle`; three runs on 0.11.0, 2026-10-22) |
 | `Escape` after the traversal | no tip to dismiss; it stays closed and the focus stays on the trigger |
 | hover the trigger | `enters=1`, the tip paints its content, and the layout report puts it **above** the trigger on `side="top"`, overlapping it horizontally |
 | hover a sibling | `leaves=1` and the tip stops painting — leaving closes it (80ms close timer) |
@@ -1373,20 +1377,22 @@ direction measured.
 above its trigger, and leaving or Escape closes it. A Tab traversal focuses the
 trigger without running its onFocus, so the tip stays closed."
 
-**Measured gap: a traversal does not open the tip.** An earlier section of this
-file claimed it did, after one run read the counter at 1. Three runs at HEAD on
-2026-10-22 read the opposite: the traversal focuses `tooltip-trigger`
-(`getFocusedElementId` reports it) and React's `onFocus` never runs, so the
-runtime — which opens the tip on focus — leaves it closed for the whole ~2s the
-poll waits. The earlier read was not a frame too early; the two hosts genuinely
-differ. The offscreen `focus-traversal` scenario proves `focusNext` **does**
-dispatch `onFocus` in the `TestRenderer`, so a headless suite cannot stand in
-for this check. A keyboard user therefore has **no open path** for a tip in a
-window; hover is the only one, and the tip's text still reaches assistive
-technology as the trigger's `aria-description`. The primitives' page and the
-capability record carry the same limitation; `src/live/focus-delivery.test.ts`
-holds this file, both probe assertions and the offscreen scenario to that
-measurement.
+**Measured in this window: a traversal does not open the tip.** An earlier
+section of this file claimed it did, after one run read the counter at 1. Three
+runs at HEAD on 2026-10-22 read the opposite: the traversal focuses
+`tooltip-trigger` (`getFocusedElementId` reports it) and React's `onFocus` never
+runs, so the runtime — which opens the tip on focus — leaves it closed for the
+whole ~2s the poll waits. **The cause is the window, not the traversal**:
+`blur-delivery-lifecycle` measures that no route delivers the focus pair here,
+because GPUI dispatches focus listeners only for an active window and this
+automation window never becomes one. The offscreen `focus-traversal` scenario,
+whose renderer fakes activation, does dispatch `onFocus`. So a headless suite
+cannot stand in for this check, and neither can this window: **whether a keyboard
+focus opens a tip in an active app is unverified on this host** — hover is the
+only open path measured, and the tip's text still reaches assistive technology
+as the trigger's `aria-description`. The primitives' page and the capability
+record carry the same limitation; `src/live/focus-delivery.test.ts` holds this
+file, both probe assertions and the offscreen scenario to that measurement.
 
 `AsyncSmokeHost` gained `hover(testId)` for this: the automation protocol's own
 `hover` moves the pointer onto the element's centre without pressing, which is
@@ -5724,6 +5730,72 @@ What it settles, for a consumer building a list or table fallback:
    the state they came from, so a stale alert or empty panel cannot linger under
    the new content.
 
+### `blur-delivery-lifecycle` — measured on 0.11.0 here
+
+**Does a window deliver the runtime's `onFocus`/`onBlur`, and in what order?**
+Every component that commits a draft on blur — `InlineEdit`, a hex field, a form
+that needs the field's final value — and every surface that follows the focus
+rests on this pair, and the offscreen renderer fires every handler a component
+passes. So no unit or behaviour suite can tell a route that arrives from one that
+never does. The probe mounts two shipped `Input`s, a shipped `Button`, a painted
+surface with no tab stop and the shipped `InlineEdit`, and appends every focus and
+blur to one trace, in the order the window delivers them.
+
+| Step | Measured |
+| ---- | -------- |
+| a press on the first field | `getFocusedElementId` reports `blur-field-a`; **no event is appended** |
+| a press on the second field | the focus id moves to `blur-field-b`; still no event |
+| the window's traversal (`focusNext`) | the focus lands on the button, `blur-target`; still no event |
+| a press on the button, then on a plain painted surface | `target:press` and `plain:press` arrive; the focus stays on the button, because a plain surface is not a stop |
+| the renderer's own `blur()` | nothing is focused (`none`); still no event |
+| a focused field unmounted by a press | `toggle:press` then `unmount:c` arrive; no `c:blur` |
+| the shipped `InlineEdit`: press it, type `x`, then Tab away, then press the control beside it | the typing reaches it (`edit:change`), both routes move the real focus to `blur-after`, and **the draft never commits** |
+
+The whole trace is
+`trace=target:press plain:press toggle:press unmount:c edit:change after:press` —
+the window's only delivered events are pointer ones. The focus **id** moves on
+every route and keys and presses arrive, so the focus model works; the React pair
+never arrives.
+
+**Why, and what it means.** GPUI dispatches focus listeners only for an **active**
+window: its draw builds `WindowFocusEvent` with the focus paths only when
+`rendered_frame.window_active` is true and empty ones otherwise, and the runtime
+subscribes every element's `focus`/`blur` through `cx.on_focus`/`cx.on_blur`. The
+playground's window is opened with `init`'s default `focus: true`, which calls
+`cx.activate(true)`, and the probe calls `activateWindow()` before measuring — yet
+this window never becomes active: it is the same window `editor-overlay` measured
+with **no caret** after the same request. So the pair is inert **in the probe's
+window**, not in the platform: the offscreen `focus-traversal` scenario, which
+fakes activation with `window.set_active_for_tests(true)`, delivers `onFocus`
+through the same mutation path.
+
+Two consequences a component must not miss:
+
+1. **A live probe cannot measure `onFocus`/`onBlur` here.** `tabs-lifecycle` and
+   `tooltip-lifecycle` read `focuses=0`, and this probe says why: the window is
+   not active, so *every* route reads 0. That reading is not "a traversal skips
+   the handler" — an active app is expected to deliver it, which no live probe on
+   this host can show and only the offscreen host's faked activation does.
+2. **A draft committed on blur is unverified in this window.** `InlineEdit` keeps
+   its `onBlur` commit, and that is the right handler for an active app; the probe
+   measures that in this harness neither Tab nor a press commits it. A consumer
+   that must not lose a draft needs a route the window can prove — an Enter
+   commit or a caller-owned commit on the press — because the blur route is
+   unverified here.
+
+10 checks, `--only blur-delivery-lifecycle`, green on 0.11.0 here (~0.7 s, two
+consecutive runs). Fixture `src/live/blur-delivery.ts` (the ids and the trace
+codec) + `blur-delivery.test.ts` (the registry entry, the trace codec, the shipped
+controls the view mounts, the routes the steps drive, this section's table and
+count, and the tests that hold the two claims). Negative control measured, exit
+`1`: expecting the draft's commit (`commit:x`) in the trace fails
+`the window's delivered trace` with the actual sequence.
+
+`AsyncSmokeHost` gained two optional verbs for this: `blur()` — the renderer's own
+`blur`, so a probe can clear the focus it moved — and `activateWindow()` — the
+platform's activation, which the probe asks for before measuring and which this
+host does not honour, which is itself the measurement.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5953,7 +6025,8 @@ narrower. Each deviation is deliberate and measured:
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
   `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
   `faded-hitbox-lifecycle` and `markdown-fence` and
-  `empty-error-states-lifecycle` (forty-four probes, each run alone).
+  `empty-error-states-lifecycle` and `blur-delivery-lifecycle` (forty-five
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
