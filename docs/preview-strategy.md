@@ -539,17 +539,9 @@ generated line answers the package pages.
 - The strip is mounted by the package frame only, so a curated page keeps the
   `## Related` section it writes and no page prints the links twice.
 
-`src/lib/related.test.ts` holds the data to the pages in both directions: every
-mounted package page is in a family or argued as a solo (with a floor, so a walk
-that stopped matching cannot pass), every link names a page the site mounts and
-carries that page's own title, no family has a single member, no page sits in two
-families, and a solo is not also placed; it also counts the pages that write the
-section themselves, which is what the heading check answers. Measured: deleting
-the Ripple button's member fails the coverage case naming
-`/docs/components/ripple-button`, shortening `Liquid button` to `Liquid` fails
-the label case with `reads "Liquid", the page says "Liquid button"`, and
-dropping the heading check prints the generated list under a written one and
-fails the strip's silence case. `related-strip.test.tsx` holds the rendered line
+`related-strip.test.tsx` holds the rendered line (a sibling's href and label,
+the page's own href absent) and the pages argued as solos. No mounted page writes
+`## Related`; the strip is the only source. `related-strip.test.tsx` holds the rendered line
 (a sibling's href and label, the page's own href absent), the silence for a page
 that writes the section, and the argued solos.
 
@@ -734,41 +726,23 @@ this section, so a route added later cannot silently drop the target.
 
 ## The component page template
 
-Every page in `content/docs/components/` follows this order. Sections that do not
-apply (no sizes, no variants) are **omitted, not faked**; the limitation is
-recorded instead. A **Keyboard** section is always present: when a component has
-no keyboard path, it says so rather than leaving the reader to guess.
+Every page in `content/docs/components/` follows this order. Sections that do not apply are omitted, not faked.
 
 | Section | Contents |
 | ------- | -------- |
 | frontmatter | `title`, one-sentence `description` |
-| intro | one paragraph: what it is, what it is not, any runtime gap it absorbs |
-| preview | `<ComponentPreview name="…" />` — the most representative composition |
-| Installation | `<Install packageName importName />` + `<ComponentSource name file />` — a package page gets the generated `<PackageSource>` instead |
-| Usage | a realistic snippet, not a bare prop dump |
-| Variants | table of variants → role mapping; one `ComponentPreview` |
-| Sizes / States | tables that name the token (`density.controlHeight.md`), previews |
-| Composition | which parts compose it, and what to use instead |
-| Keyboard | table: key → contract |
-| API reference | table: prop → type → default → consequence |
-| Theming | which roles it reads, and what a theme change does |
-| Accessibility and limitations | role/name, and every unsupported attribute with the alternative |
-| Dependencies | the packages it needs, and why — curated pages write the table; a package page gets the generated strip |
-| Related | siblings, parents, alternatives — curated pages write it; a package page gets the generated strip |
-| Status | the `done` / `partial` status and the runtime support verdict, with the evidence |
+| preview | `<ComponentPreview name="…" />` |
+| Installation | `<Install packageName importName />` + `<ComponentSource name file />` |
+| Usage | one snippet a reader copies |
+| Composition | a `text` tree of the parts, only for a compound component |
+| API reference | tables: part → prop → type → default |
+| Limitations | at most three one-line runtime facts |
 
-The template is a contract, not a suggestion: a page missing a section is a page
-that hides a decision from the reader, so `src/lib/component-page.test.ts`
-checks every curated page for the required sections and their order, a preview,
-and the package it installs from. It also **resolves the API table**: every
-backticked name in the table's first column must be a prop an interface declares
-or a part an exported component declares, in `packages/primitives` or
-`packages/components`. The snippet walk checks the imports in a fence, not the
-prop names in a row, so a renamed prop would otherwise leave the page teaching a
-name that no longer exists. It is a resolution check rather than a completeness
-one — a prop the page omits is a documentation gap, and inherited `Omit`/`Props`
-types make "every prop" a compiler question rather than a regex one.
+The page is the sentence, the preview, the example, the API and the limits. A
+rationale, a measured story or a section that restates the API belongs in the
+commit or the source comment instead.
 
+<<<<<<< HEAD
 ### The page's own file
 
 The footer of every page — curated or package — names the Markdown that renders
@@ -799,77 +773,22 @@ so a page does not have to restate the runtime in order to be honest.
 the capability record, the primitives' label rule, the tokens' focus helpers and
 the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
 capability row that changes cannot leave the contract teaching the old budget.
+=======
+`src/lib/component-page.test.ts` checks every curated page for the required
+sections and their order, a preview, and the package it installs from. It also
+**resolves the API table**: every backticked name in the table's first column
+must be a prop an interface declares or a part an exported component declares, in
+`packages/primitives` or `packages/components`.
+>>>>>>> origin/agent/docs-prune
 
-The **Theming** section is held the same way, because a page's description of
-how a component paints drifts faster than its props. The curated Tabs page was
-still calling the selected surface a fill "painted per trigger" that "jumps
-between tabs" while the component had shipped one measured `tabs-indicator`
-that slides, and no count or status check could see it.
-`src/lib/component-page-truth.test.ts` derives the description from the painter:
-the indicator's `testId`, its `motion` target and the `selected` role must exist
-in the source, the timing level and duration come from the component's
-`useSurfaceTiming` call and the motion package's table, and the printed contrast
-ratio is computed from the role pair the component's own comment cites — so a
-page that describes a different component fails by name.
-
-A curated page that shares a package page's URL **displaces** it. The site
-serves one page per URL, so `/docs/components/dropdown-menu` is the curated page
-and `packages/components/docs/dropdown-menu.mdx` is mounted nowhere: anything
-only that file documented is documented nowhere on the site. The curated
-Dropdown menu page was missing `DropdownMenuCheckboxItem`'s required `checked`
-and `onCheckedChange`, the action row's `leading`/`trailing`/`closeOnSelect`
-slots, the trigger's button props and the surface's `alignOffset`, so none of
-them could be found from the page a reader lands on.
-`component-page-truth.test.ts` derives the displaced set from the two folders
-(a new collision fails until it is named) and requires every prop the displaced
-page documents to be named in the curated page's API section. A displaced page
-can carry a **rule** as well as a prop: the anchored surfaces read a stored
-`side`/`align` through the house guards, so a name the union no longer carries
-opens `bottom`/`start` instead of throwing out of the render. The package pages
-recorded it and the curated Popover, Dropdown menu and Combobox pages — the
-pages the site actually serves — did not; the case now derives every curated
-page whose API documents both props and whose component's import graph reaches
-`internal/use-placement.ts` (the Date picker forwards into `PopoverContent`) and
-requires the rule on each. The same file
-holds the Status section to **both** words of its inventory row — the status and
-the runtime support verdict — so a page cannot drop `partial` and read as a
-component the runtime covers whole.
-
-One line above every page body is **not** the author's: the site mounts the
-worked-example strip (and, on a package page, the status strip) from the example
-registry and `COMPONENTS.md` respectively. A page cannot claim an example or a
-status it does not have, which is why neither is a table row an author writes.
+The runtime's whole ARIA budget is the cross-cutting contract on
+`/docs/accessibility`; a component page states only its own limits.
+`src/lib/package-page-template.test.ts` holds every package page to `## API` and
+`## Limitations`.
 
 The package's own pages are the component's doc file: a page that ships a demo
 mounts it as a labelled browser approximation (strategy 3), a lane with no demo
-shows none (strategy 4), and a section that does not apply (no sizes, no
-keyboard path) is omitted rather than faked. Two sections are not
-optional on a package page, though — `## API` and an accessibility or
-limitations section — and `src/lib/package-page-template.test.ts` holds every
-page under `packages/*/docs` to them, across every mounted collection. A page
-could otherwise lose its prop table or its accessibility budget while the site
-kept rendering it as the component's documentation. The guard scans 70+ pages
-with a floor, so a walk that stopped matching cannot pass. The guard's
-known-gap ledger is the only place a gap lives. Today it carries the two dock
-pages (`dock-layout.mdx`, `panel-group.mdx`) that have no accessibility or
-limitations section, owned by the dock workstream and recorded in `TODO.md`; a
-gap that is fixed deletes its entry in the same change — the ledger cannot
-outlive a fix.
-
-The other two rows the template asks for are **not** the package page's to
-write, and this file used to claim the guard enforced all four:
-
-- `## Related` is generated. A package page is Markdown the site mounts and
-  cannot resolve its siblings, so `src/lib/related.ts` names each page's
-  family and `<RelatedStrip>` prints it at the end of every mounted package
-  page. `related.test.ts` covers each mounted page exactly once (or argues it
-  as a solo) and holds every link and label to the page that serves it —
-  see §The related line is generated.
-- The evidence section (`## Verification` or `## Testing`) is the **page
-  author's** and is optional: a page names the suite that proves it where the
-  package keeps one — many name the cases inline instead of under a heading —
-  and the site cannot invent a suite. It is not guarded, and this file no
-  longer claims it is.
+shows none (strategy 4).
 
 ## The getting-started page
 
@@ -1065,24 +984,9 @@ negative controls are in `apps/playground/README.md` §The example gallery.
 
 ## A page's claims about the runtime
 
-A curated page names the runtime version its gaps were measured on, how many
-native behaviour tests prove the component, and whether `COMPONENTS.md` calls it
-shipped. All three drifted once, and in opposite directions: the pages still said
-`0.10.0` after the bump, one claimed a shadow focus ring the runtime no longer
-needs, one printed 14 tests for a suite that runs 19, and the Button page
-reported `todo` rows that were `done`. `src/lib/component-page-truth.test.ts`
-holds each claim to its source — the workspace catalogue's pinned
-`@gpuix/native`, `it(` in the named behaviour suite, and the parsed inventory row
-— so a page cannot quietly contradict the code it documents. A version bump
-therefore fails the docs suite until the pages are re-read against the new
-release, which is the truth pass, not a nuisance.
-
-`src/lib/runtime-version.test.ts` applies the same rule to **every** page under
-`content/docs`, not only the curated four: it reads the pin from the workspace
-catalogue and fails any page that names another version, in prose or in a code
-block. That is how the three pages still saying `0.10.0` were found — the claim
-"the runtime exposes no appearance API" was still true, but the version it was
-measured on was not.
+`src/lib/runtime-version.test.ts` reads the pin from the workspace catalogue and
+fails any page under `content/docs` that names another version, in prose or in a
+code block.
 
 ## The reference page is generated, and it says so
 
@@ -1125,28 +1029,7 @@ the scanner's rules are pinned by fixtures that fail when a form is missed.
 
 ## The testing page
 
-[Testing](/docs/testing) documents `@gpuixui/testing`, the harness every native
-scenario is written against. It has no preview and no specimen: the harness is
-not a surface a browser can draw, and its subject is the renderer the page cannot
-mount. The runnable artefacts are the snippets and the commands, so the page is
-held to the package's source instead.
-
-- **Its rows are the interface.** `src/lib/testing-page.test.ts` parses
-  `packages/testing/src/index.ts` for the namespaces the root projects, and the
-  `SmokeHost`, `AsyncSmokeHost` and `Assertions` interfaces for their members. A
-  verb or assertion has to reach a table row — a passing mention in a sentence
-  does not count, so deleting a row fails even when the prose still names it. A
-  verb the package gains is a row the page owes; a verb it loses is a row the
-  page may not keep.
-- **Its exit codes have two owners.** `Report.exitCode` answers `0` or `1`; the
-  `2` that means "no evidence" belongs to `apps/playground`'s runner. The guard
-  reads both files, so moving a code fails whether the report or the page
-  changes.
-- **Its commands are the manifests'.** Every `nub run --filter <package>
-  <script>` on the page resolves against that package's `package.json`, and the
-  smoke command is held to the script that builds and runs
-  `dist/smoke/run.js`.
-- **Its limits follow the package.** The page calls the harness workspace
-  internal only while `packages/testing/package.json` is `private`, so publishing
-  it is a page change rather than a stale footnote.
+[Testing](/docs/testing) documents `@gpuixui/testing`. Its snippets are held to
+the packages' published symbols by `src/lib/page-snippets.test.ts`, like every
+other page's.
 

@@ -1,6 +1,6 @@
 ---
 title: Auto height
-description: A reveal that grows to its content's measured height.
+description: A reveal that grows to its content's measured height
 ---
 
 <ComponentPreview name="auto-height-demo" />
@@ -16,12 +16,6 @@ import { AutoHeight } from "@gpuixui/components/auto-height";
 </AutoHeight>;
 ```
 
-The caller owns `open`; the reveal owns the measurement and the tween. While it
-collapses the box takes no presses: the seam's `PresenceShield` covers the
-content it keeps mounted for the exit, because `pointerEvents` does not inherit
-and the box's own rule cannot reach the controls inside it — so the press that
-closed the section is not run by a control the reader can no longer see.
-
 ## API
 
 | Prop | Type | Default |
@@ -35,13 +29,5 @@ closed the section is not run by a control the reader can no longer see.
 ## Limitations
 
 - The first open paints at zero for one frame.
-- A measurement belongs to the content on screen: a reveal reopened after its
-  body changed grows to the new height, not the one it closed with.
+- A measurement belongs to the content on screen: a reveal reopened after its body changed grows to the new height, not the one it closed with.
 - A closed reveal unmounts its subtree after the collapse.
-- Vertical axis only; no width animation.
-
-## Related
-
-- [Collapsible](/docs/components/collapsible) — a trigger and body on this rule.
-- [Accordion](/docs/components/accordion) — the stacked, one-or-many variant.
-- [Motion](/docs/motion) — the timing levels the reveal uses.

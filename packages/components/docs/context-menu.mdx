@@ -1,6 +1,6 @@
 ---
 title: Context menu
-description: Menu rows positioned at the pointer or from the keyboard.
+description: Menu rows positioned at the pointer or from the keyboard
 ---
 
 <ComponentPreview name="context-menu-states" />
@@ -61,27 +61,8 @@ ContextMenu
 | `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure | `ContextMenuGroup` takes `label?` — the group's accessible name |
 | `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level | `ContextMenuSubContent` takes the root surface's placement props |
 
-## Choice rows
-
-The rows are the dropdown menu's, so an exclusive choice works the same way:
-`ContextMenuRadioGroup` owns the value, one `ContextMenuRadioItem` per choice
-is marked, and choosing a row closes the menu. A `ContextMenuCheckboxItem` is
-the on/off row that stays open. Both mark their state with a check and
-`aria-selected` because 0.11.0 has no `aria-checked`.
-
-Pass the choice's `label` to the group (`label="Group by"`): 0.11.0 has no
-`aria-labelledby`, so a painted `ContextMenuLabel` does not name the group a
-reader enters.
-
 ## Limitations
 
 - No `onContextMenu`; a right click arrives as `onAuxClick`.
 - The surface is not portalled; it is painted at window coordinates.
 - One level of submenus is tested.
-- A pointer-opened menu dismisses with focus `none`.
-
-## Related
-
-- **Dropdown menu** — the same rows anchored to a button.
-- **Command menu** — a searchable action list for the keyboard.
-- **Popover** — a pointer-anchored panel of content.

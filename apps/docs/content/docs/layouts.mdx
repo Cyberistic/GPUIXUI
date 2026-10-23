@@ -1,79 +1,31 @@
 ---
 title: Layouts
-description: How a window is assembled from Stack, Box, Grid and ScrollArea — and the layout facts the runtime does not give you.
+description: How a window is assembled from Stack, Box, Grid and ScrollArea.
 ---
 
-A layout is a tree of native boxes with flex facts. The lane has five
-primitives and no layout *components*: a page, a sidebar, an inspector and a
-split view are compositions you own, because the right composition depends on
-the application. This page is the lane's map and its limits; the split-view and
-docking compositions live on [Workspace](/docs/workspace).
+A layout is a tree of native boxes with flex facts. You own the page frames: there are five layout primitives and no layout components.
+
+Rows and statuses come from `COMPONENTS.md`.
 
 ## The lane
 
-Every row below comes from `COMPONENTS.md`, the inventory that decides what is
-shipped. Notes name what a row is built on and what it cannot do.
-
 <LaneTable lane="layout" />
-
-## A window frame
 
 <ComponentPreview name="layout-shell" />
 
-The frame is the composition the whole library repeats: a `Box` for the surface,
-a `Stack` for each axis, a `Separator` for the regions and `ScrollArea` for the
-one region that grows. The sidebar is `flexShrink: 0` with a fixed width; the
-content column is `grow` with `minWidth: 0`, which is what lets a wide child
-scroll instead of pushing the frame apart.
+The frame repeats: a `Box` for the surface, a `Stack` per axis, `Separator` between regions and `ScrollArea` for the region that grows. The sidebar is `flexShrink: 0` with a fixed width; the content column grows with `minWidth: 0`.
 
-The same shape in the shipped example is
-`packages/primitives/examples/layout.example.tsx`: an inspector with a fixed
-header, a scrolling property list of `Grid` label/value pairs and a footer
-pushed out by `Spacer`. Run it in `apps/playground` — the preview above is a
-browser drawing of it.
-
-## The rules the runtime imposes
-
-These are measured facts of GPUix 0.11.0, not style advice. Each one changes the
-composition, not just the CSS.
+## The runtime's rules
 
 | The runtime has | So |
 | --------------- | -- |
-| Flexbox and a fixed numeric grid | a layout is `Stack` and `Grid`; there is no track template, named area or `minmax()` |
-| No media queries or breakpoints | a layout change is **application state**: render a different composition; there is no `sm:` prop to reach for |
-| `onLayout` reports a **size**, not a position | a surface that stores its box from the last report keeps the box it *used* to occupy after anything above it moves: a panel opened **120** points above a surface and it still reported `originY=88` while painting at `208` (`surface-origin`). Read a fresh origin through a nudged 1px probe, or keep the position in the app's own state |
-| No `transform`, and `position: absolute` only inside an overlay | no sliding panels, no animated widths, no reflow animation; a panel change is a re-render |
-| One shadow per element | hierarchy comes from tone and separators, not stacked shadows |
-| No `zIndex` | paint order is source order; put a floating surface last, or use the shared dismiss stack |
-| A scroll container with no height grows instead of scrolling | give `ScrollArea` a bounded parent (`height`, `flex: 1` inside a sized column) |
-| Grid tracks are equal and numeric | ragged rows wrap in a `Stack`; a spanning cell is not expressible |
-| No direction input | RTL is the app's helper, not a component branch: every edge is physical (`paddingLeft`, `marginLeft`, `borderLeftWidth`) and `AnchoredProps` places by a physical `side`, so one direction-aware helper maps a logical inset to the app's direction and a component stays physical. The platform still **reads** a string's own direction (`rtl-text`): a trailing capital `T` lands **left** in `ייT` and **right** in `nnT`/`aייT` (92/0 vs 0/92 ink in the end bands), and `سلام` measures 58 pt against 79 pt with zero-width non-joiners, so a Hebrew or Arabic run is shaped and ordered for the reader. What you cannot pass is the layout's direction |
+| Flexbox and a fixed numeric grid | use `Stack` and `Grid`; no areas or `minmax()` |
+| No media queries | a layout change is application state |
+| `onLayout` reports a size, not a position | keep positions in app state |
+| No `transform`; absolute only inside an overlay | no sliding panels or animated widths |
+| One shadow per element | hierarchy comes from tone and separators |
+| No `zIndex` | paint order is source order |
+| A scroll container with no height grows | give `ScrollArea` a bounded parent |
+| No direction input | RTL is the app's helper; every edge is physical |
 
-The full capability table, with the evidence for each line, is on
-[Runtime](/docs/runtime).
-
-## What this lane does not include
-
-- **Split panes, docked panels and collapsible sidebars.** They live in
-  `@gpuixui/dock`, not here: `SplitPane` is two panes and a divider, `PanelGroup`
-  is N panes as fractions, and `DockLayout` renders a named tree of splits and
-  tab groups. The rules they follow are on [Workspace](/docs/workspace) and the
-  APIs on [Split pane](/docs/dock/split-pane), [Panel groups](/docs/dock/panel-group)
-  and [Docking layouts](/docs/dock/dock-layout).
-- **Table rows and column grids.** A table is a Tier 3 row; the grid facts it
-  needs are on [Data display](/docs/data-display).
-- **Responsive behaviour.** There is no breakpoint token to add: a window that
-  changes shape owns that decision in state, and the library stays a tree of
-  explicit layouts.
-
-## Where a layout change goes
-
-- A **space, radius or tone** → `@gpuixui/tokens`; a layout reads the scale, it
-  does not carry a pixel gap.
-- A **new visual utility** → `@gpuixui/tw`'s registry, with the recipe oracle
-  extended; never a literal in an app frame.
-- A **new layout primitive** → `@gpuixui/primitives`, with an example, a runtime
-  suite and a page in its `docs/` directory.
-- A **page-level frame** → your app, or a Block if it is reusable enough to
-  document. A frame is a composition, so it does not become a component until a
-  second consumer needs the identical behaviour.
+Split panes, docking and collapsible sidebars live in `@gpuixui/dock` ([Workspace](/docs/workspace)); the runtime's full matrix is on [Runtime](/docs/runtime).

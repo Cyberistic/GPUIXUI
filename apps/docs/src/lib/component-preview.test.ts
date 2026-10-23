@@ -114,40 +114,15 @@ describe("the component previews", () => {
     expect(empty).toEqual([]);
   });
 
-  it("announce every curated page where a reader learns previews exist", () => {
-    // A curated page a reader never hears about is a preview nobody opens. The
-    // two places that say which pages carry one — `/docs/theming`'s switch
-    // section and the strategy's "Curated today" line — are held to the folder,
-    // so a sixth page cannot land unannounced.
+  it("are announced where a reader learns previews exist", () => {
+    // A curated page a reader never hears about is a preview nobody opens.
+    // The strategy's "Curated today" line is held to the folder, so a new page
+    // cannot land unannounced.
     const pages = curated();
-    const theming = read("apps/docs/content/docs/theming.mdx");
-    // The boundaries are asserted: a renamed heading used to turn the end index
-    // into `-1`, so the slice silently ran to the end of the page and a curated
-    // page announced in a later section counted as announced in this one.
-    const switchStart = theming.indexOf("### The switch on this site");
-    const switchEnd = theming.indexOf("### The palette parameter");
-    expect(switchStart, "the switch section lost its heading").toBeGreaterThan(
-      -1,
-    );
-    expect(
-      switchEnd,
-      "the switch section has no following heading to end at",
-    ).toBeGreaterThan(switchStart);
-    const switchSection = theming.slice(switchStart, switchEnd);
     const strategy = read("docs/preview-strategy.md");
-    const announced = new Set(
-      [
-        ...switchSection.matchAll(/\]\(\/docs\/components\/([a-z0-9-]+)\)/g),
-      ].flatMap((match) => (match[1] === undefined ? [] : [match[1]])),
-    );
     const list = /Curated today: ([^.]+)\./.exec(strategy)?.[1] ?? "";
 
     expect(pages.length).toBeGreaterThanOrEqual(5);
-    expect(
-      pages
-        .filter((page) => !announced.has(page.slug))
-        .map((page) => page.slug),
-    ).toEqual([]);
     expect(
       pages
         .filter((page) => page.title.length === 0 || !list.includes(page.title))

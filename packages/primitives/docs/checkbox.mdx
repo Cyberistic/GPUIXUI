@@ -1,9 +1,7 @@
 ---
 title: Checkbox
-description: An independent yes/no, optionally indeterminate.
+description: An independent yes/no, optionally indeterminate
 ---
-
-`Checkbox` is a square selection control for an independent choice.
 
 <ComponentPreview name="checkbox-states" />
 
@@ -18,13 +16,6 @@ import { Checkbox } from "@gpuixui/primitives";
   label="Email notifications"
 />;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `Checkbox` | the box, its state and the press target |
-| `CheckboxIndicator` | the mark; `Checkbox`'s children are its content |
 
 ## API
 
@@ -62,10 +53,5 @@ import { Checkbox } from "@gpuixui/primitives";
 ## Limitations
 
 - No `aria-checked`: the state is announced through `aria-valuetext`.
-- No label-inside-the-control composition: a `Label` beside the box does not name
-  the box — pass `label` or `labelledBy(name)` — and a press on those words
-  focuses it (`Label target`) rather than toggling it, because the runtime
-  publishes no press verb for another element. A row whose words toggle is a
-  `CheckboxGroup`: the row itself is the control, and a group of one is a valid
-  row.
+- No label-inside-the-control composition: a `Label` beside the box does not name the box.
 - No partial-state animation.

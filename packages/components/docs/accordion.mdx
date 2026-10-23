@@ -1,6 +1,6 @@
 ---
 title: Accordion
-description: Stacked sections where one — or several — can be open.
+description: Stacked sections where one — or several — can be open
 ---
 
 <ComponentPreview name="accordion-demo" />
@@ -32,27 +32,6 @@ Accordion
 │   └── AccordionContent
 ```
 
-## Examples
-
-### Multiple
-
-```tsx
-<Accordion type="multiple" defaultValue={["one"]}>
-  <AccordionItem value="one">…</AccordionItem>
-</Accordion>;
-```
-
-### Controlled
-
-```tsx
-<Accordion
-  type="single"
-  collapsible
-  value={openSection}
-  onValueChange={setOpenSection}
-/>;
-```
-
 ## API
 
 | Part | Prop | Type | Default |
@@ -69,14 +48,5 @@ Accordion
 ## Limitations
 
 - No `aria-controls`; the trigger–body relationship is positional.
-- A `Tab` traversal focuses the trigger **without running its `onFocus`**, because the
-  automation window the probe runs in never becomes active and so delivers no
-  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.
+- A `Tab` traversal focuses the trigger **without running its `onFocus`**; the ring is declared at rest.
 - The body grows and collapses through its measured height.
-- The indicator chevron swaps, it does not rotate.
-
-## Related
-
-- **Collapsible** — one section, no shared state.
-- **Tabs** — peers where exactly one is visible.
-- **List** — dense, non-disclosure navigation.

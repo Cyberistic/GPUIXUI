@@ -1,10 +1,7 @@
 ---
 title: Table selection
-description: A checkbox column for a data table.
+description: A checkbox column for a data table
 ---
-
-`TableSelectionHeader` and `TableSelectionCell` are the checkbox column of a data
-table.
 
 ## Usage
 
@@ -63,31 +60,8 @@ const table = useTable({ rows: files, keyOf: (row) => row.id, columns });
 | `disabled` | `boolean` | `false` | refuses the press |
 | `testId` | `string` | — | the box's id; the target is `${testId}-target` and the cell `${testId}-cell` |
 
-## The painted target
-
-A press stops at the first child that paints a fill, and that painted target is
-what keeps a box press from also running its row's press (which would replace
-the set the box toggles). So the target must look like the surface it sits on:
-`card` at rest, `selected` in a chosen row, and the row's `accent` wash under the
-pointer. A target left on `card` reads as a notch inside a chosen row. The
-header's box sits on the card strip and keeps that fill.
-
-## The row's rule
-
-A row paints its thin rule inside its own box, so the line lands on the fill the
-row wears: `selected` when it is chosen, `accent` under the pointer, and the
-derived press wash while it is down. The raw `border` role is below the 1.05:1
-perceptibility floor on **22 of the 90** shipped wash placements — the base
-themes' `accent` at 1.001:1 and 1.004:1, macOS dark's pressed wash at 1.000:1 —
-so the rule is the token package's `dividerOn(theme, fill)`: `border` stepped
-toward `borderStrong` by the smallest 2% that clears the fill it crosses, and
-the authored role where it already clears. `TableHeader` asks the same function
-for the card it sits on.
-
 ## Limitations
 
 - A row box toggles one record; the header box toggles the whole visible set.
 - No `aria-checked`: state is announced through `aria-valuetext`.
-- A filter that hides a chosen record releases it from the painted selection;
-  the grid's row tab stop (`useTable().tabStop`) then moves to the first painted
-  row, so the table stays reachable from the keyboard.
+- A filter that hides a chosen record releases it; the row tab stop moves to the first painted row.

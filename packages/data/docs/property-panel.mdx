@@ -1,10 +1,7 @@
 ---
 title: Property panels
-description: A panel of property rows over one object the caller owns.
+description: A panel of property rows over one object the caller owns
 ---
-
-`PropertyPanel` shows the rows that describe one object; every row is the
-caller's, and an edit is a callback.
 
 ## Usage
 
@@ -27,17 +24,6 @@ import { PropertyPanel } from "@gpuixui/data";
 | `title` | `string` | — | the panel's header |
 | `rows` | `PropertyRow[]` | — | the rows, in the order they paint |
 | `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` (the key-value list's rule) |
-
-A read-only row is `{ kind: "readonly", key, label, value }`; an editable row is
-`{ kind: "editable", key, label, value, onChange }`.
-
-## Accessibility
-
-The panel is a `group` (name it with `aria-label` when its title is painted by a
-sibling), its title is a level-3 `heading` and its rows are the key-value
-list's — a `list` of `listitem`s with each label and read-only value announced
-as text (`surface-a11y.test.tsx`). An editable row's field carries its own
-`label`, so the field is named without borrowing the row's words.
 
 ## Limitations
 

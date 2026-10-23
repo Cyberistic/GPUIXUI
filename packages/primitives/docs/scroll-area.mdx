@@ -1,10 +1,9 @@
 ---
 title: ScrollArea
-description: A bounded container that scrolls on the chosen axes.
+description: A bounded container that scrolls on the chosen axes
 ---
-<ComponentPreview name="scroll-area-demo" />
 
-`ScrollArea` is a frame around the one scroll container the runtime has.
+<ComponentPreview name="scroll-area-demo" />
 
 ## Usage
 
@@ -19,13 +18,6 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
   </Stack>
 </ScrollArea>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `ScrollArea` | the frame: padding, radius, border, bounded size |
-| `ScrollAreaViewport` | the overflow axes, scroll callbacks, keyboard scrolling |
 
 ## API
 
@@ -49,57 +41,12 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 | `viewportTestId` | `string` | — | the implicit viewport's locator |
 | `viewportRef` | `Ref<PublicInstance>` | — | the implicit viewport's element |
 
-A composed `ScrollAreaViewport` takes the scroll props above — `axis`,
-`onScroll`, `onScrollChange`, `onLayout`, `scrollbarColor`, `scrollbarWidth`,
-`focusable` and `label` — each defaulting to the area's; `style`, `className`,
-`children` and `testId` describe the viewport's own element. The one name it adds
-is its handle:
-
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `ref` | `Ref<PublicInstance>` | — | the scroller itself; `scrollTo` and `scrollIntoView` address this element |
-
-`onLayout` is the **scroller's** box, not the frame's: a scroll reading — an edge
-fade, a position bar, a "more below" cue — needs the viewport's own height, and
-the frame is smaller wherever it has padding. It reports on mount and whenever
-the size changes, so a reading re-measures a pane that opened or a window that
-resized. `onScrollChange` names the offset on the same element, which is why the
-two belong together: one says how tall the window is, the other where the
-content sits in it.
-
-## Keyboard
-
-The viewport is one tab stop, and a key only moves the region that already holds
-the focus — the traversal into it is part of the contract. Measured in a window
-by `keyboard-scroll-lifecycle` (62 checks on 0.11.0), the handler stands down
-unless `getFocusedElementId()` is its own id, so the traversal has to reach the
-stop before any key moves anything.
-
-| Key | Move |
-| --- | ---- |
-| `Up` / `Down` | one line, `density.rowHeight` (32px) |
-| `PageUp` / `PageDown` | one painted viewport (160px: `-32` → `-192`); a sideways region pages by the width it shows (320px, `-32` → `-352`) |
-| `Home` / `End` | one end of the content |
-| `Left` / `Right` | one line (32px) on either axis, not one column: the runtime has no column metric, so the probe's 80px columns are not the step |
-
-A `Cmd`/`Ctrl` chord belongs to the platform (`Cmd+Home` moves nothing), a field
-inside keeps its arrows and the region still, an arrow for an axis the region
-does not scroll is left alone, and `focusable={false}` takes the region out of
-the traversal.
-
-**A traversal does not reveal the control it focuses.** A window measured
-(`focus-reveal-lifecycle`, 44 checks on 0.11.0): tabbing into a 200×120 pane of
-nine 40px rows focused the ninth row with the offset still `0` — the row began
-200 points below the pane's bottom edge and painted none of its marker — and a
-code focus on the first or the last row moved nothing either. Only a **roving**
-control reveals what its own key moved onto (three arrows leave the offset at
-`-40`, five more reach `-240` at the content's end). A long form of ordinary tab
-stops in a bounded pane therefore keeps no control in view: keep its rows to the
-pane, or compose a roving list.
 
 ## Limitations
 
 - No `Scrollbar`/`Thumb`/`Corner` parts: the platform paints one native thumb.
 - No fade mask at the edges.
 - No smooth scrolling: a key jumps the offset.
-- No virtualisation: compose `@gpuixui/data`'s `VirtualList` for a long list.

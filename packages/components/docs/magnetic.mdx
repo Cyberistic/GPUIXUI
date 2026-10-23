@@ -1,6 +1,6 @@
 ---
 title: Magnetic
-description: A surface whose content leans toward the pointer while it is over it.
+description: A surface whose content leans toward the pointer while it is over it
 ---
 
 <ComponentPreview name="magnetic-demo" />
@@ -42,7 +42,3 @@ import { Magnetic } from "@gpuixui/components/magnetic";
 - Inset travel only; the runtime has no `transform`.
 - The lean follows the box centre, not the pointer entry.
 - Nothing moves before the first `onLayout`.
-- Reduced motion and keyboard readers get no lean. A lean already on screen
-  lands at rest in the frame the preference turns on, and the pointer that
-  earned it is released with it — turning the preference back on leans from the
-  next move rather than the old point.

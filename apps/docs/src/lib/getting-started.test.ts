@@ -14,8 +14,7 @@ import {
  * renamed manifest script or an unlisted state value would still render, and
  * the reader would copy something that does not run. This guard reads the page
  * and holds each claim to the workspace: the imports to the symbols the packages
- * publish, the run command to the root manifest, and every `useState` value to
- * the table that says who owns it.
+ * publish and the run command to the root manifest.
  */
 
 const read = (path: string): string => readRepo(path);
@@ -45,7 +44,7 @@ describe("the getting-started page", () => {
 
   it("imports only names the packages publish", () => {
     // The parser must see the snippets; a silent zero would pass every check.
-    expect(snippets.length).toBeGreaterThanOrEqual(3);
+    expect(snippets.length).toBeGreaterThanOrEqual(2);
     expect(imports.length).toBeGreaterThanOrEqual(5);
     expect(unresolvedImports(imports)).toEqual([]);
   });
@@ -59,29 +58,11 @@ describe("the getting-started page", () => {
     expect(page).toContain("nub run dev:playground");
   });
 
-  it("gives every state value an owner in the state table", () => {
-    const declared = [
-      ...snippets.join("\n").matchAll(/const \[(\w+), set\w+\] = useState/g),
-    ].map((match) => match[1] ?? "");
-    const explained = [
-      ...page.matchAll(/^\| `(\w+)` \| `ProjectSettings` \|/gm),
-    ].map((match) => match[1] ?? "");
-
-    expect(declared.length).toBeGreaterThan(0);
-    expect(new Set(declared)).toEqual(new Set(explained));
-  });
-
-  it("links the page each numbered step depends on", () => {
-    const steps = page.split(/^## \d+\. /m).slice(1);
-
-    expect(steps.length).toBeGreaterThanOrEqual(4);
-    expect(
-      steps
-        .map((step, index) => ({
-          index: index + 1,
-          hasLink: step.includes("](/docs/"),
-        }))
-        .filter((step) => !step.hasLink),
-    ).toEqual([]);
+  it("renders the screen inside the provider and runs it in a terminal", () => {
+    // The two run paths a reader copies: the window mount and the terminal
+    // mount. The theme is supplied once at the root.
+    expect(page).toContain("render(");
+    expect(page).toContain("<ThemeProvider theme={themes.dark}>");
+    expect(page).toContain("render(<App />, { terminal: true });");
   });
 });

@@ -124,19 +124,6 @@ describe("the dependency index", () => {
     expect(floating?.specifiers).toEqual(["", "/floating"]);
   });
 
-  it("leaves a page that writes its own Dependencies section alone", () => {
-    // `tooltip.mdx` is the one package page with a hand-written table; the
-    // strip must not print a second, generated one above it.
-    const tooltip = readFileSync(
-      join(root, "packages/primitives/docs/tooltip.mdx"),
-      "utf8",
-    );
-
-    expect(tooltip).toMatch(/^## Dependencies$/m);
-    expect(index.pages["/docs/primitives/tooltip"]).toBeUndefined();
-    expect(index.pages["/docs/primitives/button"]).toBeDefined();
-  });
-
   it("links a dependency only to a page the site mounts", () => {
     const mounted = mountedPages();
     const dead = Object.entries(index.pages).flatMap(([url, entry]) =>

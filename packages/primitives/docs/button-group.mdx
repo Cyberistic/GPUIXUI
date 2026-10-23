@@ -1,10 +1,9 @@
 ---
 title: ButtonGroup
-description: A row or column of related actions, attached or separated.
+description: A row or column of related actions, attached or separated
 ---
-<ComponentPreview name="button-group-demo" />
 
-`ButtonGroup` lays buttons out on one axis with `role="group"`.
+<ComponentPreview name="button-group-demo" />
 
 ## Usage
 
@@ -17,13 +16,6 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
   <Button variant="ghost">Right</Button>
 </ButtonGroup>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `ButtonGroup` | the axis, gap, radius and `role="group"` |
-| `Button` / `IconButton` | each action; attached children square their own corners |
 
 ## API
 
@@ -43,4 +35,3 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
 - Only this package's actions are reshaped; other children keep their radius.
 - The name must be passed as `label`.
 - No overflow-to-menu for a group wider than its parent.
-- No responsive axis switch.

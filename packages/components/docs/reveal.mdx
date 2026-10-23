@@ -1,6 +1,6 @@
 ---
 title: Reveal
-description: Content that fades and travels a few pixels into place, on mount or when it opens.
+description: Content that fades and travels a few pixels into place, on mount or when it opens
 ---
 
 <ComponentPreview name="reveal-demo" />
@@ -21,16 +21,6 @@ import { Reveal } from "@gpuixui/components/reveal";
 </Reveal>;
 ```
 
-## Examples
-
-### On a state change
-
-Pass `open` to enter and leave; omit it for a mount reveal.
-
-```tsx
-<Reveal open={showing} from="right">…</Reveal>
-```
-
 ## API
 
 | Prop | Type | Default |
@@ -48,6 +38,3 @@ Pass `open` to enter and leave; omit it for a mount reveal.
 - No zoom or blur; `transform` and `filter` are absent.
 - The offset does not reflow neighbours.
 - One axis; a diagonal arrival is not expressible.
-- A `from` the component does not name paints the house `below` arrival instead
-  of failing: the value can be a stored setting the type never checked.
-- No scroll-triggered reveal.

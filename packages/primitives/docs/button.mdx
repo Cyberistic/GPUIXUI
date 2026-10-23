@@ -1,9 +1,7 @@
 ---
 title: Button
-description: The primary action — clickable and keyboard-activatable, with busy and disabled states.
+description: The primary action — clickable and keyboard-activatable, with busy and disabled states
 ---
-
-`Button` is the action primitive.
 
 <ComponentPreview name="button-variants" />
 
@@ -19,76 +17,6 @@ import { Button, Stack } from "@gpuixui/primitives";
   </Button>
 </Stack>;
 ```
-
-## Variants
-
-| `variant` | Rest |
-| --------- | ---- |
-| `primary` (default) | `primary` fill, `primaryForeground` text |
-| `secondary` | `secondary` fill with the `borderStrong` edge |
-| `outline` | border only |
-| `ghost` | no chrome at rest |
-| `destructive` | `destructive` fill |
-| `link` | text in `brandText(theme)` |
-
-`secondary`'s edge is functional, not decoration: its fill measures under the
-1.05:1 perceptibility floor against a row's `hover`, `active`, `accent` and
-`selected` washes in most shipped styles, so a tonal action in a row's
-`trailing` slot would be a label with no button around it. The edge is
-`borderStrong`, the role the boundary contract holds to 3:1 on every strip a
-control sits on. `Button.test.tsx` measures it against those washes in all 16
-shipped, platform and authored styles and names the fill it replaced.
-
-### Layering over an action
-
-A layer painted on top of an action — a busy loader, a chevron, an effect's
-wash — is the control's label drawn another way, so it takes the action's own
-label role. `actionOnColor(theme, variant)` answers with the role the variant
-table paints from; it is published by `@gpuixui/primitives/button` beside the
-component, so a layered caller does not carry a second map:
-
-```tsx
-import { Button, actionOnColor } from "@gpuixui/primitives/button";
-import { useTheme } from "@gpuixui/primitives";
-import { Icon } from "@gpuixui/icons";
-
-const theme = useTheme();
-
-<Button
-  variant="primary"
-  leading={<Icon name="loader" color={actionOnColor(theme, "primary")} />}
->
-  Saving
-</Button>;
-```
-
-Any other role names a colour picked for a different fill: `secondaryForeground`
-on a `primary` fill measures 1.42:1 in Windows dark, so the chevron would be
-invisible. `button-entry.test.ts` holds the export and its role map, and
-`Button.test.tsx` holds the published role to the label the painter draws for
-every variant in both shipped themes.
-
-## Keyboard
-
-`Enter` activates on the **press** and `Space` on the **release**, the platform's
-rule; a held key is ignored, so a key repeat cannot fire the action twice, and a
-pointer press activates once. A window measured all of it
-(`button-activation-lifecycle`, 18 checks on 0.11.0): the automation's
-`keystrokes` sends a key down with no release, so Space's release is the half a
-probe has to send, and Enter's release adds nothing.
-
-The two routes hand over different events. A pointer press runs the caller's
-host `onClick` **and** `onActivate` with the runtime's click payload — its
-`x`/`y` is the press point a ripple is born at — while a key reaches
-`onActivate` alone with the key payload the button decided on. Wire anything a
-keyboard must reach through `onActivate`.
-
-A `disabled` button refuses all four routes and paints `tabIndex: -1`: the
-traversal skips it, yet `focusElement` still reaches it (a trigger's focus
-target, or a control the app focuses after an error). A `loading` button refuses
-the same four and keeps its stop, so a reader is not dropped mid-action. The
-decision is `core/keyboard.test.ts`'s; the delivery is
-`runtime/controls.runtime.test.tsx`'s.
 
 ## API
 
@@ -115,26 +43,8 @@ decision is `core/keyboard.test.ts`'s; the delivery is
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
 
-A key is the one interaction the button acts on before handing it over: a
-trigger opens in its own `onKeyDown` and records the row its surface must focus,
-so the activation leads and the caller's handler observes it afterwards. A
-click keeps the caller-first order.
-
-`size` is a stored choice as often as a literal — a settings row persists it, and
-`@gpuixui/tokens` publishes `controlSizes` beside `isControlSize` for that read —
-so a name a release renamed arrives as a string this scale does not carry. Every
-control resolves it through `controlSize`, which reads such a name as `md`: the
-action keeps the documented height and padding instead of painting without a
-height class. `theme.test.ts` holds the rule and the set of components that must
-use it; `runtime/controls.runtime.test.tsx` measures the painted box.
-
 ## Limitations
 
 - No `aria-disabled` and no `aria-pressed`.
 - No native button element: a `div` with a role and handlers.
-- The runtime's headless `@gpuix/react/button` is **not adopted**: `buttonProps` would drop the busy description, hand a `style` callback only `disabled`, keep a disabled action in the tab order and lose the held-key guard on the Space release (evaluated and declined).
-- An icon-only button must pass `label`; use `IconButton`.
-- `onClick` is the pointer route: a keyboard activation reaches `onActivate`
-  alone (measured in a window — six key events, no press), so anything a
-  keyboard must reach is wired through `onActivate`.
-- The ring paint is the runtime's.
+- **Not adopting `@gpuix/react/button`**: `buttonProps` drops the busy description, the state style and the held-key guard.

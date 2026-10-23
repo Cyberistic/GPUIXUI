@@ -1,10 +1,7 @@
 ---
 title: Frozen columns
-description: A pinned column beside a grid that pans.
+description: A pinned column beside a grid that pans
 ---
-
-`FrozenTable` pins a column beside a grid that scrolls: it is a second vertical
-scroller beside the data pane, mirrored through `onScrollChange`.
 
 ## Usage
 
@@ -58,20 +55,8 @@ import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data
 | `frozenTestId` / `bodyTestId` / `viewportTestId` | `string` | — | locators for a probe |
 | `style` / `testId` / `ref` / `aria-label` | host props | — | on the grid |
 
-## An empty set
-
-A grid with no `rows` paints the empty state in the data pane: a `TableEmpty`
-row holding one cell, so the message sits inside the table the accessibility
-tree describes. A string `empty` paints as that cell's own text, and omitting it
-paints `No rows`. The body does not fall through to its loading skeleton — a
-grid that says it has no records is not a grid still arriving.
-
-The frozen pane keeps its header and paints no rows; the message belongs to the
-scrolling pane, which is the width it is read against.
-
 ## Limitations
 
 - No sticky pinning: the frozen column is a second scroller.
 - Both panes paint every row; this is not the virtualized composition.
 - One frozen column; several become one wider frozen pane.
-- The docs site cannot render this component live.

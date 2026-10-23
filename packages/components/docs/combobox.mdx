@@ -1,6 +1,6 @@
 ---
 title: Combobox
-description: A searchable single- or multi-select option list.
+description: A searchable single- or multi-select option list
 ---
 
 <ComponentPreview name="combobox-workflow" />
@@ -22,53 +22,6 @@ import {
     { value: "ada", label: "Ada Lovelace", description: "Engineering" },
     { value: "grace", label: "Grace Hopper", description: "Compilers" },
   ]}
-  onValueChange={setReviewer}
->
-  <ComboboxTrigger label="Assign reviewer" />
-  <ComboboxContent>
-    <ComboboxInput label="Search reviewers" />
-    <ComboboxList label="Reviewers" />
-    <ComboboxEmpty />
-  </ComboboxContent>
-</Combobox>;
-```
-
-## Option labels
-
-An option's `label` is the name a reader sees — in the trigger once chosen and on
-the row it picks. A label that is empty or whitespace-only is **absence**, not a
-name, so it falls back to the option's `value`: a list decoded from a table whose
-name column is blank still names the selection instead of painting an empty
-trigger. A label that has text is trimmed.
-
-## Remote options
-
-The component never fetches. A list that lives behind a search belongs to the
-caller, and two props hand it over:
-
-- `onQueryChange` reports each search the popup runs — every typed query, and the
-  empty one it opens with, because each open is a new search. A closed popup
-  reports nothing, and neither does one the caller disables: the close path
-  clears the query in the same commit, and that cleared string is not a search.
-  Debouncing, cancelling and the loading flag are the caller's, the same division
-  `SearchInput` keeps.
-- `shouldFilter={false}` paints `options` in the order they are given instead of
-  ranking them locally. Use it whenever the remote search chose the rows: a
-  result that matched on a synonym, a tag or a description the query never
-  appears in would be hidden by the local ranking.
-- `loading` says the caller's fetch is in flight. While the list is empty the
-  empty slot paints `Searching…` instead of `No matches`; a `ComboboxEmpty` with
-  children paints the caller's words instead.
-
-```tsx
-const [results, setResults] = useState<ReadonlyArray<ComboboxOption>>([]);
-const [pending, setPending] = useState(false);
-
-<Combobox
-  options={results}
-  shouldFilter={false}
-  loading={pending}
-  onQueryChange={(query) => void search(query)}
   onValueChange={setReviewer}
 >
   <ComboboxTrigger label="Assign reviewer" />
@@ -117,18 +70,6 @@ Combobox
 
 ## Limitations
 
-- No group headers, and no fetching: a remote list is the caller's, through
-  `onQueryChange`/`shouldFilter` (§Remote options).
+- No group headers, and no fetching: a remote list is the caller's, through `onQueryChange`/`shouldFilter` (§Remote options).
 - Create-new is single-select and offered only when nothing matches.
 - No `aria-activedescendant`; `aria-selected` is the signal.
-- The popup has an entry tween only.
-- A popup the caller disables closes with the control, and re-enabling does not
-  reopen it.
-- A `side` or `align` restored from persisted state that the union does not
-  name opens the house `bottom`/`start`; it never throws out of the render.
-
-## Related
-
-- **Search input** — the same field without options.
-- **Dropdown menu** — actions, not a value.
-- **List** — a flat selectable collection with no search.

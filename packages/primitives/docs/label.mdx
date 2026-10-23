@@ -1,15 +1,9 @@
 ---
 title: Label
-description: A control's visible name, with a required marker and a description.
+description: A control's visible name, with a required marker and a description
 ---
-<ComponentPreview name="label-demo" />
 
-`Label` renders the **visible** name of a field. It is not associated with the
-control by reference — the runtime has no `aria-labelledby` — so the control
-carries its own `aria-label` through its `label` prop, and `labelledBy(name)`
-builds that prop. Given the control's `target` ref, a press on the label moves
-native focus to it: the `htmlFor` behaviour, through the renderer's
-`focusElement`.
+<ComponentPreview name="label-demo" />
 
 ## Usage
 
@@ -34,15 +28,6 @@ export const NameField = () => {
 };
 ```
 
-A label with no `target` is text only: that is the right form when there is no
-single control to focus, or when the words sit in a legend above a group.
-
-Help that comes from data is often blank rather than absent. A `description`
-with no visible character paints **no line at all** — the same rule the name
-keeps — because an empty `<text>` still pays its column's gap and a run of
-spaces lays out a whole line. The control announces nothing for it either, so
-the visible help and the spoken help cannot disagree.
-
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -59,17 +44,6 @@ the visible help and the spoken help cannot disagree.
 
 ## Limitations
 
-- No association by reference: the runtime has no `aria-labelledby` and no
-  `for`/`htmlFor`, so the name is written in two places when both the visible
-  label and the control's name are needed. `target` moves the focus; it does not
-  name the control — keep spreading `labelledBy(name)`.
-- A press moves the focus; it does not activate the control. The runtime
-  publishes no press verb for another element, so a checkbox or switch whose
-  words must toggle is a `CheckboxGroup` row, where the row itself is the
-  control.
-- A label holds the control's element, not its state. Pass `disabled` with the
-  control's own boolean, or a press focuses a control that refuses every key
-  (measured: without it the disabled field took the focus).
-- The visible description is a second copy: the control announces only its own
-  `description`.
-- `required` does not validate; validate with `Schema` at the boundary.
+- No association by reference: the runtime has no `aria-labelledby` and no `for`/`htmlFor`, so write the name twice.
+- A press moves the focus; it does not activate the control.
+- A label holds the control's element, not its state.

@@ -1,6 +1,6 @@
 ---
 title: Search input
-description: A single-line search field with a clear affordance.
+description: A single-line search field with a clear affordance
 ---
 
 <ComponentPreview name="search-input-states" />
@@ -40,6 +40,4 @@ import { SearchInput } from "@gpuixui/components/search-input";
 
 - No debounce; debouncing is the consumer's.
 - No history, suggestions or shortcut binding.
-- A `Tab` traversal focuses the input **without running its `onFocus`**, because the
-  automation window the probe runs in never becomes active and so delivers no
-  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.
+- A `Tab` traversal focuses the input **without running its `onFocus`**; the ring is declared at rest.

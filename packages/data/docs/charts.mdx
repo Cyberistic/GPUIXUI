@@ -1,10 +1,7 @@
 ---
 title: Charts
-description: Bar, stacked, line, donut and sparkline charts drawn as stacked SVG masks.
+description: Bar, stacked, line, donut and sparkline charts drawn as stacked SVG masks
 ---
-
-GPUix has no chart host, so `@gpuixui/data` draws one `<svg>` per series, each
-tinted through `style.color` and stacked inside one plot.
 
 ## Usage
 
@@ -30,8 +27,6 @@ import { BarChart, DonutChart, LineChart, Sparkline, StackedBar } from "@gpuixui
 
 ## API
 
-The series charts (`BarChart`, `StackedBar`, `LineChart`) share one contract:
-
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `series` | `ChartSeries[]` | — | `{ key, label, values }` per series |
@@ -44,105 +39,8 @@ The series charts (`BarChart`, `StackedBar`, `LineChart`) share one contract:
 | `testId` | `string` | — | the chart's locator; the plot is `-plot`, the axis column `-axis`, a series layer `-layer-<key>` |
 | `aria-label` | `string` | — | the group's name; a sparkline's own image name |
 
-`DonutChart` takes `data: ChartDatum[]`, `size` (`160`) and `legend`. `Sparkline`
-takes `values: number[]`, `width` (`120`), `height` (`32`) and `color`.
-
-## The numbers
-
-A `StackedBar`'s axis and its bars both read the category totals, so a tall stack
-never prints an axis under it.
-
-The axis column reads from the top down: its ceiling is the topmost label and
-its floor sits on the plot's floor — the same edge the bars stand on — so a
-bar's top is read against the number beside it.
-
-A tick's label takes its precision from the **step between ticks**, not from a
-fixed two decimals: a four-step axis over `0.005` prints
-`0, 0.0013, 0.0025, 0.0037, 0.005`, while a whole scale over `100` still prints
-`0, 25, 50, 75, 100`. A fixed two decimals rounded three of those small steps to
-`0`, so a chart of rates or seconds read as a column of zeros and its bars had
-no number to be read against; `tickLabel(tick, step)` is the formatter and is
-exported for a custom axis. The precision is never narrower than whole numbers,
-so a revenue or byte chart whose step is `250` prints `0, 250, 500, 750, 1000`
-rather than asking for `toFixed(-1)`. `ticks` names the steps: a count the axis
-cannot read is four (`NaN`, an infinity), and a count past `AXIS_STEP_LIMIT`
-(20) is capped rather than mounting an unbounded column of labels.
-
-`labels` names the columns: a series with more values than labels paints only
-the labelled slots, and the extra values draw nowhere. A chart with **no** labels
-paints no column at all — no bar, no line and a `1` ceiling — rather than one
-unnamed slot. An extra value cannot
-raise the axis either — the scale is measured over the slots the chart paints, so
-a stray `999` beside two labelled values of `3` and `6` scales the axis to `10`
-instead of flattening both bars under a `1000` ceiling. A line's points sit at
-the centre of their slot, like a bar and the label under it, so a series with
-fewer values than labels stays in the columns it names instead of stretching
-across the plot.
-
-## Sizing
-
-`width` and `height` are the plot's own box; the axis column stands beside it.
-A side is often computed — a share of a pane, a measurement taken before the
-first layout — so `chartBox(width, height, fallback)` reads one the geometry
-cannot lay out (`NaN`, an infinity, zero or a negative) as the component's
-default: 320 × 160 for a series chart, 160 square for a donut and 120 × 32 for a
-sparkline. `Math.max(1, NaN)` is `NaN`, so an unreadable side used to reach the
-viewBox, the plot's box, the axis column and every label's slot width: the plot
-collapsed to `0 × 0` and the tick column lost its track while the group kept its
-name. Every one of those is built from the box now — the axis column takes the
-plot's height, not the caller's raw prop — so a computed size paints a readable
-chart instead of an empty one, and a fractional side is kept as given.
-`src/behaviour/chart.test.tsx` mounts a chart given `width={NaN}` /
-`height={Infinity}` and reads the plot, its viewBox, a label slot and the axis
-column's own height out of the renderer.
-
-## Accessibility
-
-A chart is a **group** named by its `aria-label`, holding one **image** per
-series named by the series' `label`. The numbers travel in the image's
-description, because a picture of numbers is the one thing a role cannot carry:
-
-- a series reads `Q1 32, Q2 48, Q3 41` — the label it stands under and the value
-  it paints, in category order;
-- a series with a labelled slot keeps its image even when nothing draws: a bar
-  chart of zeros paints no bar, and a negative value no geometry can show, yet
-  the series still reads `Q1 0, Q2 -4` rather than disappearing from the tree;
-- a value past the last label draws nowhere and is not described, and one the
-  caller never supplied reads `no value` rather than the `0` the geometry
-  substitutes;
-- a ring slice reads its own value (`Direct 40`), and a datum that draws no
-  slice — a zero, or a value the geometry cannot read — keeps its image too, so
-  `Referral 0` is a reading rather than a legend entry with no number beside it
-  while the ring paints nothing for it;
-- a `Sparkline` is **one image**, not a group of them: the caller's `aria-label`
-  names it (`Trend` when absent) and its values are its description.
-
-The axis ticks and the category labels are ordinary `Label`s beside the plot.
-0.11.0 has no figure or table role, so the series' description is the strongest
-channel the tree has; a reader who needs to compare values across many series
-should also be given the same data as a `Table` (or a `KeyValue` list) next to
-the picture.
-
-## Verification
-
-The geometry is pure and its suite is `src/chart/logic.test.ts`; the shipped
-parts are mounted in the offscreen renderer by `src/behaviour/chart.test.tsx`
-and `src/behaviour/chart-a11y.test.tsx`. The **paint** is measured in a real
-window by the playground's `chart-surface-lifecycle`, which counts each series'
-tint inside its own plot's crop (so a swatch or the page behind cannot stand in
-for a mark), reads a stack from its floor, three ring slices and none of the
-zero datum's colour in the ring, the sparkline in the caller's colour, and a
-widened bar at a point it did not reach before the press — 41 checks on
-`@gpuix/native` 0.11.0:
-
-```sh
-nub run --filter playground build
-nub apps/playground/dist/live/run.js --only chart-surface-lifecycle
-```
-
 ## Limitations
 
 - One tint per layer: two colours inside one series need two layers.
 - No tooltips, hover readouts or zoom.
 - No animation between data sets.
-- Labels are laid out by the chart, not measured; a wide label is clipped.

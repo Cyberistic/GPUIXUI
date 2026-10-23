@@ -1,11 +1,9 @@
 ---
 title: ThemeProvider
-description: Supplies the theme every primitive draws with — and refuses to invent one.
+description: Supplies the theme every primitive draws with — and refuses to invent one
 ---
-<ComponentPreview name="theme-provider-demo" />
 
-`ThemeProvider` puts a `PrimitiveTheme` in context; every primitive reads it
-through `useTheme()`, and a missing provider throws.
+<ComponentPreview name="theme-provider-demo" />
 
 ## Usage
 
@@ -19,64 +17,6 @@ import { darkTheme } from "@gpuixui/tokens";
   </Box>
 </ThemeProvider>;
 ```
-
-## Words
-
-A control's state is announced in words, because this runtime has no
-`aria-checked`, `aria-pressed` or `aria-busy`. The provider carries them as
-`messages`, one complete group per state set: `selection` and `press`, `star` and
-`starName`, `scrollRegion` and `codeDigit`, `loading` and `rangeEnd`.
-
-`loading` is the busy vocabulary: `busy` is what a busy action says instead of
-`aria-busy` (it is the action's description and the busy spinner's name) and
-`indeterminate` is what a `Progress` bar says when it has no percentage to
-report. Those two words are the defaults for `loadingLabel`, a `Spinner`'s `label`
-and `Progress`'s `loadingText`; a prop on one instance still wins, so a tree can
-translate once and still give one action its own wording.
-
-`rangeEnd` is the sentence a `RangeSlider` names its two thumbs with: it receives
-the group's own `label` and the end, so a language that puts the end first owns
-the order rather than receiving an English suffix. The shipped sentence is
-`"<label> minimum"` / `"<label> maximum"`; a blank label names neither thumb.
-
-A **formatter** a caller passes for one measurement is words too, and it follows
-the same rule a blank name does: `Progress`'s `formatValue`/`loadingText`, and
-`Meter`, `Slider` and `RangeSlider`'s `formatValue`, go through `spokenText`, so
-an answer that says nothing — a locale table with no row for this value — leaves
-the component's own words (the clamped percentage, the provider's indeterminate
-word, or the number) standing rather than publishing an empty `aria-valuetext`.
-A real answer is trimmed and used.
-
-The three **sentences** a control calls — `starName`, `codeDigit` and
-`rangeEnd` — are words in the same sense, so a missing row is absence there too:
-a star, a code cell or a range's end that answers `""` is named by the shipped
-sentence (`"1 of 5"`, `"Code digit 1"`, `"<label> minimum"`) rather than
-publishing an empty `aria-label` on a control that still holds a value. A real
-answer is trimmed and used. `rangeEnd` has a second blank: a group the caller
-never named names neither end.
-
-The **state words** — `selection`, `press`, `star`, `scrollRegion` and the two
-`loading` words — are read one state at a time, so a row a translation never
-reached is absence there too: `selection: { checked: "coché", unchecked: "",
-mixed: "" }` still announces `"coché"` and names the other two states with the
-shipped `"unchecked"`/`"mixed"`. A real word is trimmed.
-
-`scrollRegion` has no blank of its own, because a focusable scroller is a tab
-stop and an unnamed one is a stop assistive technology cannot describe: a blank
-row keeps the shipped name, and `focusable={false}` is what adds neither.
-
-That is **not** the same as a busy action's `loadingLabel`, where a blank word is
-a deliberate silence: the action's own text still says what is happening, so
-`Button`, `Toggle` and `IconButton` publish no busy description, and the spinner
-beside the action is decoration in that state too — a blank `label` paints
-`role="presentation"` rather than a `status` node with no name. A bar has no
-other channel — its value text is its only report — so it has no such opt-out.
-
-A group named whole replaces the inherited one; a group left out — or written
-`undefined` — keeps it, so a provider forwarding an optional group it never
-received cannot erase the words around it. That matters most for `starName`,
-`codeDigit` and `rangeEnd`: they are sentences a control calls, so a hole there
-is a render that throws.
 
 ## API
 
@@ -92,4 +32,3 @@ is a render that throws.
 - The density override is a whole group, not a partial patch.
 - No built-in light/dark toggle and no persistence.
 - Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.
-- One vocabulary for the tree; a control that needs a name still takes `label`.

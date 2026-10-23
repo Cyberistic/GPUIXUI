@@ -1,6 +1,6 @@
 ---
 title: Color picker
-description: Discrete swatches and HEX entry — not a saturation square.
+description: Discrete swatches and HEX entry — not a saturation square
 ---
 
 <ComponentPreview name="color-picker-states" />
@@ -35,15 +35,3 @@ import { ColorPicker } from "@gpuixui/components";
 - No saturation/value square; two-stop gradients only.
 - No alpha, HSL/RGB fields or eyedropper.
 - HEX only; named colours are not parsed.
-- Validation runs on commit, not on each keystroke.
-- A `disabled` picker refuses both commit paths (Enter and blur) as well as its
-  swatches, because a read-only host still receives keys — a draft typed before
-  the field was disabled is never written to the caller's value. Its swatches
-  and HEX field also leave the tab order, because a read-only host still takes
-  focus.
-
-## Related
-
-- **Field** — validate a text value with a message slot.
-- **Badge** — show the chosen colour on a real surface.
-- **Slider** — numeric ranges, if a future picker adds HSL.

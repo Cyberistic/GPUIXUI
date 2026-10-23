@@ -210,7 +210,7 @@ describe("the component index", () => {
     expect(hook).toContain('history.replaceState(null, "", url.toString())');
     expect(hook).toContain("indexQuerySearch(next, url.search)");
     // The page teaches the parameter it writes, so a reader can link a view.
-    expect(page).toContain("`?q=partial`");
+    expect(page).toContain("<code>?q=partial</code>");
     // And it mounts the URL-backed component, not the view directly.
     expect(page).toContain("<ComponentIndex />");
   });

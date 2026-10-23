@@ -1,10 +1,9 @@
 ---
 title: Meter
-description: A measurement inside a range — distinct from a task's progress.
+description: A measurement inside a range — distinct from a task's progress
 ---
-<ComponentPreview name="meter-demo" />
 
-`Meter` reports where a measurement sits in a known range. It is not `Progress`.
+<ComponentPreview name="meter-demo" />
 
 ## Usage
 
@@ -16,16 +15,6 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
   <Meter label="Disk usage" value={68} max={100} formatValue={(v) => `${v} GB`} />
 </Stack>;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `Meter` | role, accessible name, announced measurement |
-| `MeterTrack` | the bar's background and overflow clip |
-| `MeterIndicator` | the measurement's share of the track |
-| `MeterLabel` | visible subject, defaulting to the root's `label` |
-| `MeterValue` | the formatted measurement |
 
 ## API
 
@@ -41,11 +30,6 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
-
-`formatValue` is interface copy, so a **blank answer is absence**: a formatter
-whose lookup table has no row for this measurement returns `""`, and the meter
-announces and paints the clamped number rather than an empty value. A real
-answer is trimmed and used as it is.
 
 ## Limitations
 

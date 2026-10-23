@@ -1,20 +1,13 @@
 ---
 title: Search input
-description: A single-line search field with a clear affordance — every edit reported, Escape clearing only text, and matching left to the app.
+description: A single-line search field with a clear affordance — every edit reported, Escape clearing only text, and matching left to the app
 ---
-
-`SearchInput` is the field a filter bar is built from: a leading search mark,
-the text, and a clear control that appears only when there is something to
-clear. It is not a combobox and not a search engine — the component owns the
-text and reports each edit, while matching, ranking and the query itself belong
-to the app. Gaps below were measured on `@gpuix/native@0.11.0`.
 
 <ComponentPreview name="search-input-workflow" />
 
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="SearchInput" />
-
 <ComponentSource
   name="searchInput"
   file="packages/components/src/search-input.tsx"
@@ -47,75 +40,14 @@ export const FileFilter = () => {
 };
 ```
 
-`aria-label` (or a visible [Field](/docs/components/field) label) is the
-field's name: `SearchInput` has no label part of its own, because the same
-field sits in a toolbar, a dialog and a page header. The component reports
-**every** edit; a query that needs a delay debounces its own effect rather than
-asking the field for a timer.
-
-## States
-
-<ComponentPreview name="search-input-states" />
-
-| State | What the field paints |
-| ----- | --------------------- |
-| rest | page-role fill, `border` edge, the hint in the `placeholder` role, no clear control |
-| with text | the hint disappears and the clear control appears at its 24px target |
-| focused | the `ring` outline after a `Tab`; the fill and the edge do not change |
-| disabled | `readOnly`, the whole field at 50% opacity, no keyboard ring, and an inert clear target |
-| on a muted toolbar | the page-role fill, so the field stands apart from the strip |
-
-The field is one part. The clear control is the only conditional element, and
-it exists because an empty field has nothing to clear — an "x" that does
-nothing is a control that has to be learned and then ignored.
-
-A disabled field keeps its value visible while refusing **every** edit path. The
-field and its clear target both leave the tab order, the target answers no press
-and paints no hover wash, `Escape` returns without clearing, and the target's
-cursor is `not-allowed` instead of a press cue. It keeps its paint, so an
-archived query still reads.
-
-The browser preview paints the hint through the input's `placeholder`
-attribute. The native field hands its host **no** `placeholder` and paints the
-hint itself, because the runtime's own hint is a fixed grey no theme value
-reaches; that is why the hint follows the `placeholder` role in both themes.
-
 ## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| field surface | the page-role fill, the `border` edge, the density height and the keyboard ring |
-| leading mark | a decorative search glyph, never interactive |
-| input | the text, the painted hint and every edit the caller hears |
-| clear control | a labelled button that clears, reports and returns the focus |
-
-`SearchInput` is deliberately not a composition of a field and a button: the
-clear control has to sit inside the field's own box, share its ring and leave
-the tab order with it. Reach for a different component when the need is
-different:
-
-- a list of **options** to pick from — [Combobox](/docs/components/combobox),
-  which owns ranking and a create row;
-- a **tag** collection — [Tag input](/docs/components/tag-input);
-- a **command** palette — [Command menu](/docs/components/command-menu), which
-  owns its matcher and its groups;
-- a label and a message around the field — [Field](/docs/components/field).
-
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| any character | updates the text; `onChange` runs first, then `onValueChange` |
-| `Enter` | calls `onSubmit` with the current text, through the input's `submit` event |
-| `Escape` | clears a non-empty field, calls `onClear` and returns the focus; does nothing on an empty or disabled field |
-| `Tab` | reaches the input, then the clear control while it exists and the field is enabled |
-
-`Escape` doing nothing on an empty or disabled field is the decision an
-enclosing surface depends on: a search field in a dialog must not swallow the key
-that closes the dialog when there is nothing to clear, and a disabled field
-refuses every edit path. `Enter` is the host's `submit` event,
-not a key-down — measured in `@gpuix/native@0.11.0` — so a caller's own
-`onKeyDown` also sees the key and can run before or after the submit.
+```text
+SearchInput
+├── leading mark
+├── input
+└── clear control
+```
 
 ## API reference
 
@@ -135,105 +67,8 @@ not a key-down — measured in `@gpuix/native@0.11.0` — so a caller's own
 | `ref` | `Ref<PublicInstance>` | none | the inner `<input>`, composed with the field's own focus ref |
 | `onKeyDown` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
 
-The field forwards the remaining input host props — `aria-*`, `tabIndex`,
-`autoFocus` and the pointer handlers — to the `<input>`, so a caller can name
-it and place it in the tab order. `SearchInputState` carries `{ disabled,
-focused }` to `style`; `focused` reaches a press and a programmatic focus, not
-a `Tab` traversal, because the runtime focuses the element without running its
-`onFocus` on `@gpuix/native@0.11.0`. The ring is declared at rest, so the
-keyboard cue does not depend on that flag.
+## Limitations
 
-## Theming
-
-| Element | Role or metric |
-| ------- | -------------- |
-| field surface | `background` fill, `border` edge at 1px |
-| field height | `density.controlHeight.md` (28 / 32 / 36px across the platform styles) |
-| field padding and radius | 8px horizontal padding and a 6px radius from the default registry |
-| value | `inputForeground`, handed to the native host as its ink |
-| hint | `placeholder`, or `disabledForeground` while the field is disabled |
-| leading mark | `mutedForeground` at the 14px icon step |
-| clear control | `mutedForeground` glyph, `accent` wash on hover (none while disabled), a 24px target with a 4px radius |
-| focus | the `ring` role in the runtime's `focusVisible` outline, `borderWidth.strong` wide |
-| selection | the `selection` wash behind selected text |
-| disabled | the whole field at 50% opacity, with no separate label role; the clear target's cursor is `not-allowed` |
-
-The height is the theme's, so the platform switch re-heights the field (28px on
-macOS, 32px on Windows, 36px on Linux at this density). The 8px padding, 6px
-radius and 14/20 type are the recipe's **fixed** metrics: a platform style
-repaints and re-heights the field but does not round it differently. That is
-the same rule the [Card](/docs/components/card) follows — the components
-compile against shadcn's registry, not the primitives' density scale.
-
-The hint is painted by the field, not shaped by the host's own placeholder. A
-field on a `muted` toolbar is filled with the page role, so the strip behind it
-does not tint the field's own ink; a theme that brings `background` and `muted`
-together makes the field disappear instead of the hint, which the contrast table
-reports as a measured failure rather than a silent one.
-
-## Accessibility and limitations
-
-- The field has **no name of its own**: pass `aria-label`, or wrap it in a
-  `Field` and reuse that label. The runtime has no `aria-labelledby`
-  (`@gpuix/native@0.11.0`), so a visible label cannot point at the input.
-- The clear control is a **labelled button** (`role="button"`,
-  `aria-label="Clear search"`) and a 24px target — the WCAG 2.2 press-target
-  floor — around the 14px `sm` glyph. While the field is disabled the target
-  stays painted but inert: it leaves the tab order, refuses the press, and
-  draws no hover wash.
-- **No debounce.** A query fired on every keystroke is the caller's policy;
-  debouncing here would hide it and make the field's typing feel lagged.
-- **No matching, ranking, history, suggestions or shortcut binding.** The
-  component is the text field; `⌘F` belongs to the app, not the field.
-- The painted hint is **also announced**. The field hands its host no
-  `placeholder`, so the runtime's own announcement leaves with the prop; while
-  the box is empty the hint travels as the host's `aria-description` instead. A
-  caller's `aria-description` is permanent help and wins over the hint, and once
-  the box holds text the hint leaves the description. An instruction that has to
-  stay readable after typing belongs in a `Field` description.
-- The runtime's input role is a text field, not a search landmark: there is no
-  `role="searchbox"` or `aria-autocomplete` in 0.11.0.
-
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `this package` | the field's state, the clear control and the painted hint |
-| `@gpuixui/primitives/hint` | the published seam the painted hint is now composed from |
-| `@gpuix/react` | the host input, its events and the renderer's focus call |
-| `@gpuix/react/floating` | `resolveStyle` for the state-aware `style` callback |
-| `@gpuixui/icons` | the leading search mark and the clear glyph |
-| `@gpuixui/tw` | the `search-input*` class recipes, compiled through the package registry |
-| `effect` | `Option` for the conditional hint |
-
-`@gpuixui/tokens` is reached through the package's theme provider, not imported
-directly; the component reads roles and metrics, never colours.
-
-## Related
-
-- **Combobox** — a query field over a list of options, with ranking and a
-  create row.
-- **Field** — a label, a description and one message slot around any input.
-- **Tag input** — a collection of tokens, with the query inside the field.
-- **Command menu** — search over actions rather than values.
-- **List** — the rows a filter narrows, with one roving tab stop.
-
-## Status
-
-`done` in `COMPONENTS.md` with a `yes` runtime verdict: the runtime publishes
-the input host, its events and the renderer's focus call, so the field, its
-clear control and its focus return are supported rather than reimplemented. The
-behaviour is held by 10 native behaviour tests in
-`packages/components/src/behaviour/search-input.test.tsx` — each keystroke
-reaching `onValueChange`, the clear control appearing only with text, clearing
-and returning the focus, `Enter` submitting, `Escape` clearing once, the
-controlled contract, a caller `ref` composed with the internal one, and the
-three disabled rules: the field and its target out of the tab order, a refused
-clear, and a refused `Escape`. The chrome is held by
-`packages/components/src/recipe/recipe.test.ts` (the compiled `SEARCH_INPUT*`
-values in this page's Theming table).
-
-One limit remains and is recorded above rather than hidden: the field owns no
-matching, ranking, history or debounce. The package page this page displaces
-described the radius and padding as theme tokens; the recipe's fixed metrics are
-the shipped behaviour.
+- The field has **no name of its own**: pass `aria-label` or wrap it in a `Field`.
+- The clear control is a labelled 24px target around a 14px glyph.
+- **No debounce**: a query fires on every keystroke.

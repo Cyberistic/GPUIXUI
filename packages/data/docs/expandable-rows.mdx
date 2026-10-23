@@ -1,10 +1,9 @@
 ---
 title: Expandable rows
-description: A table row that opens a detail panel under itself.
+description: A table row that opens a detail panel under itself
 ---
 
-`TableExpandableRow` is a row that opens a panel under itself; the composition is
-two rows — the row and a `TableDetailRow` sibling.
+`TableExpandableRow` opens a detail panel under its row.
 
 ## Usage
 
@@ -58,28 +57,8 @@ const [open, setOpen] = useState<string | null>(null);
 | `tabIndex` | `number` | `0` | the row's place in the Tab order; a disabled row takes `-1` |
 | `disabled` | `boolean` | `false` | refuses the press and the keys, and paints no pointer state |
 
-## Keyboard
-
-The row is the disclosure's **control**, so it is a stop in the Tab order and
-answers Enter and Space to toggle the panel; a caller's `onKeyDown` still runs.
-A focusable `div` has no activation of its own — only the pointer path runs
-`onClick` — so a row that answered the press alone would leave a keyboard reader
-no way to open a panel.
-
-The key is answered **only while the row itself holds focus**. A key is
-dispatched along the focus path, so a field inside the row's cells still reaches
-the row's handler (`press-routing-lifecycle`'s `field-cell` route) — an
-unguarded row opened its panel while the reader typed a space into the field.
-The runtime builds the payload for the handler's own element, so the row reads
-the renderer's focused element instead.
-
-A disabled row answers neither the pointer nor the key. It takes `tabIndex` `-1`
-rather than leaving the chain entirely: the runtime orders a negative index
-before the zero stops, so programmatic focus can still reach the row.
-
 ## Limitations
 
 - One panel per row; two rows can be open at once.
 - No animation of the panel's height.
 - A windowed table cannot use it; use the plain table or the list's children mode.
-- The docs site cannot render this component live.

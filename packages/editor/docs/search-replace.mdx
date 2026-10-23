@@ -1,13 +1,7 @@
 ---
 title: Search and replace
-description: A find field, a match count, next/previous, and replace / replace-all over a controlled text.
+description: A find field, a match count, next/previous, and replace / replace-all over a controlled text
 ---
-
-`SearchReplace` is a find-and-replace bar over a controlled text. It matches
-with a literal, non-overlapping scan and replaces with the same scan, so the
-match count and a replace-all always agree on what "one match" is. The bar owns
-only the bar: the document text is the caller's `value`, edited through
-`onValueChange`.
 
 ## Usage
 
@@ -16,18 +10,6 @@ import { SearchReplace } from "@gpuixui/editor";
 
 <SearchReplace value={value} onValueChange={setValue} />;
 ```
-
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| F3 (in either field) | next match |
-| Shift+F3 | previous match |
-| Tab, then Enter/Space on `Aa` or `W` | flip the match-case or whole-word toggle |
-
-The toggles are the shipped `Toggle` controls, named `Match case` and `Match
-whole word`, so a reader who does not use a pointer can change how the query is
-matched without leaving the keyboard.
 
 ## API
 
@@ -44,54 +26,8 @@ matched without leaving the keyboard.
 | `disabled` | `boolean` | `false` | Disable the bar. |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 
-## The matcher
-
-`src/search/logic.ts` scans left to right and resumes at a match's end, so
-overlapping matches are skipped: `"aa"` inside `"aaa"` is one match, not two. An
-empty query matches nothing. The scan is a fold rather than a recursion, so a
-large file with a match per character reports every range instead of exhausting
-the call stack. `replaceAll` is built from the same ranges, replaced
-last-to-first so an earlier replacement never shifts a later index.
-
-Two toggles in the bar change the scan, and the count and a replace-all share
-both:
-
-| Toggle | Matching |
-| ------ | -------- |
-| `Aa` (on by default) | match the query's letter case; off folds case |
-| `W` (off by default) | match only where a letter, digit or underscore does not continue on either side, so `cat` skips `concatenate` and `cat_x` |
-
-A case-insensitive scan is the escaped query as a literal pattern, not a lowered
-copy of the text: lowering can change a string's length — and therefore its
-indices — while the engine reports offsets in the text it was given. A query's
-regex characters are escaped, so `a.b` finds `a.b` and not `axb`.
-
 ## Limitations
 
-- **Literal matching.** The query is never a pattern — regex characters are
-  escaped — and there is no regex mode. Match case and whole word are the two
-  toggles the bar carries.
-- **The active match cannot move the editor.** The runtime reports no caret or
-  scroll offset, so the bar reports `n / m` and leaves the jump to a surface that
-  can scroll to it.
-- **The bar does not own the text.** The caller applies every replacement through
-  `onValueChange`.
-
-## Verification
-
-`src/search/logic.test.ts` (13 cases) holds the matcher: overlapping matches
-skipped (with a negative control against an overlapping scan), every
-non-overlapping occurrence found, an empty query returning nothing, case and
-whole-word matching (including `cat_x`/`cat2`), a regex character treated
-literally, replace-all agreeing with the match count under the same options, and
-a 20 000-match document found and replaced without exhausting the stack.
-`src/behaviour/search-replace.test.tsx` (3 native behaviour tests) drives the
-real bar: typing `cat` counts `1 / 2`, the `Aa` toggle raises it to `1 / 3`, `W`
-lowers it to `1 / 2`, and replace-all hands the caller `" concatenate "`; a
-single replacement is read back from the replacement field, and `F3` steps the
-match from that field too.
-
-## Related
-
-- [Code editor](/docs/editor/code-editor) — the surface this bar drives.
-- [Diff viewer](/docs/editor/diff-viewer) — two sources compared.
+- **Literal matching**: no regex mode.
+- **The active match cannot move the editor**: the bar reports `n / m` and the caller jumps.
+- **The bar does not own the text**: replacements arrive through `onValueChange`.

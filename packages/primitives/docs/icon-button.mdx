@@ -1,11 +1,9 @@
 ---
 title: IconButton
-description: A square, icon-only action that carries a required accessible name.
+description: A square, icon-only action that carries a required accessible name
 ---
-<ComponentPreview name="icon-button-demo" />
 
-`IconButton` is `Button` for an action whose only visible content is a glyph; the
-name is required.
+<ComponentPreview name="icon-button-demo" />
 
 ## Usage
 
@@ -56,4 +54,3 @@ const theme = useTheme();
 - No `aria-disabled` and no `aria-pressed`: use `Toggle` for a pressed mode.
 - No tooltip of its own, but it is a `Tooltip` trigger.
 - The glyph is not sized by `size`; pass `icon={<Icon size="sm" … />}`.
-- No native button element: a `div` with a role and handlers.

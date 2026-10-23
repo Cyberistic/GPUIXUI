@@ -1,6 +1,6 @@
 ---
 title: Inline edit
-description: Rename a value where it is displayed.
+description: Rename a value where it is displayed
 ---
 
 <ComponentPreview name="inline-edit-states" />
@@ -27,62 +27,12 @@ import { InlineEdit } from "@gpuixui/components";
 | `onEditingChange` | `(editing: boolean) => void` | — |
 | `style` | `StateStyle<InlineEditState>` | — |
 
-The host input's handlers are composed rather than replaced: `onChange`,
-`onFocus`, `onBlur` and `onSubmit` reach the caller on whichever element is
-focused (the display or the editor), and each runs after the component's own
-decision — so `onSubmit` fires once per Enter, after the commit.
-
-**A disabled control refuses the edit in both phases.** It opens nothing, and a
-control a consumer disables mid-edit discards that draft — on `Enter`, on the
-host's submit, and on blur — so no path writes a value into an inert control.
-The editor stays `readOnly` until the caller frees it, and it leaves the tab
-order while it refuses every key (`tabIndex={-1}`), because the host has no
-`disabled` and a read-only field still takes focus.
-
 ### Blur commits, and the host that proves it
 
-The commit runs from the host's `onBlur`, which is the right handler for an
-active app. The **offscreen renderer** delivers it: the suite's
-`commits a changed draft on blur` case reads `onCommit("blurred")` once the
-field loses focus, and that host can fake window activation
-(`set_active_for_tests`).
-
-A **live** automation window cannot prove it. GPUI dispatches element focus
-listeners only for an **active window**, and the automation window never becomes
-one: `blur-delivery-lifecycle` (10 checks, 0.11.0) types into the shipped
-`InlineEdit`, moves the real focus away with Tab and presses another control —
-the focus id moves to `blur-after`, the typing arrives, and the draft **never
-commits**. That is the harness, not the component; no live route on this host
-delivers `onBlur`.
-
-If a draft must not be lost without a proven route, take one the harness proves:
-`Enter` commits, or the consumer commits on the press that leaves the field
-(a caller-owned commit).
-
 ### An undo history is the field's
-
-The commit is where to format. The editor's draft is the `<input>`'s own text, so
-a normaliser applied on every keystroke writes back a value the field did not
-produce: the host **clears its undo history** for it, and `cmd-z` stops reaching
-earlier text. Format in `onCommit` instead, and let a re-render that leaves the
-value unchanged keep the history. The chord stays in the field while it has
-focus, so an app-level undo must not be the only route.
-
-Measured by `text-undo-lifecycle` (15 checks, 0.11.0); fixture
-`apps/playground/src/live/text-undo.ts`.
 
 ## Limitations
 
 - No rich text; the editor is a single-line `<input>`.
-- Blur commits in an active app; a live window cannot prove it — use `Enter` or a
-  caller-owned commit when the draft must not be lost.
+- Blur commits in an active app; a live window cannot prove it — use `Enter` or a caller-owned commit when the draft must not be lost.
 - A consumer wanting blur-to-cancel must not use this part.
-- A control disabled mid-edit discards the draft instead of committing it.
-- No validation state; `onCommit` is where a caller rejects a value.
-- No multi-line editor.
-
-## Related
-
-- **Field / FieldInput** — inline validation around a normal input.
-- **Form** — submit-time validation and a submit lifecycle.
-- **Tabs** — a whole panel that swaps, rather than one value.

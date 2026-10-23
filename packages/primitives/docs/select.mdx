@@ -1,12 +1,7 @@
 ---
 title: Select
-description: One choice from a list, in a popover.
+description: One choice from a list, in a popover
 ---
-
-`Select` reuses `@gpuix/react/select` for the interaction and themes it to match
-the field chrome. A closed select announces the choice it shows — the chosen
-option's label, in `aria-valuetext` — because 0.11.0's combobox publishes no
-value of its own.
 
 <ComponentPreview name="select-states" />
 
@@ -58,27 +53,8 @@ import { Label, Select } from "@gpuixui/primitives";
 | `triggerTestId` | `string` | — | the trigger's locator |
 | `itemTestId` | `(value: string) => string` | — | per-option locator, derived from its value |
 
-The trigger is the control: it carries `role="combobox"`, the `label` as its
-name, the open state in `aria-expanded`, the chosen option's words in
-`aria-valuetext`, and the caller's `description` as `aria-description`. The same
-element takes the `ref`, the `aria-id` and the `onLayout`, so a form can focus
-the select it failed on, an automation host can address it and a layout can
-measure it; the wrapper around the trigger is not focusable and carries no name.
-`src/components/Select.test.tsx` holds those four props on the trigger (and a
-blank `description` publishing nothing), and
-`runtime/address.runtime.test.tsx` reads the help, author id and ref back off the
-runtime's own accessibility tree and element.
-
 ## Limitations
 
-- No `aria-activedescendant` and no native combobox value: the closed trigger
-  announces its choice through `aria-valuetext`, and an empty select announces
-  nothing — a placeholder is not a choice.
-- The list is not associated with the trigger by an ARIA attribute (0.11.0 has
-  no `aria-controls`); the trigger says `expanded` and the rows announce
-  themselves.
+- No `aria-activedescendant` and no native combobox value: the closed trigger announces its choice through `aria-valuetext`, and an empty select announces nothing.
+- The list is not associated with the trigger by an ARIA attribute (0.11.0 has no `aria-controls`); the trigger says `expanded` and the rows announce themselves.
 - Options are data: no rich options or compound escape hatch.
-- No search, type-ahead or multi-select.
-- A long list caps at 320px and scrolls; the highlighted row reveals itself, and
-  a row taller than the list aligns its top rather than its last line.
-- Open animation, positioning and dismissal are the runtime's.

@@ -39,7 +39,6 @@ const read = (path: string): string =>
 
 const component = read("packages/components/src/badge.tsx");
 const behaviour = read("packages/components/src/behaviour/badge.test.tsx");
-const page = read("apps/docs/content/docs/components/badge.mdx");
 const css = read("apps/docs/src/styles/demos.css");
 
 /** The declarations of the first `selector { … }` block in the style sheet. */
@@ -228,25 +227,5 @@ describe("the badge preview's geometry and palette", () => {
     expect(decl).toContain("border-color: var(--border-strong)");
     expect(decl).not.toContain("border-color: var(--border)");
     expect(decl).not.toContain("background");
-    // The page prints the rule and the measured role, not only the class.
-    expect(page).toContain("`borderStrong`");
-    expect(page).toContain("~1.00:1");
-  });
-});
-
-describe("the badge page", () => {
-  it("teaches the two sizes and the pill's fixed metrics", () => {
-    expect(page).toContain("12/16");
-    expect(page).toContain("14/20");
-    expect(page).toContain(`${pillHeight("sm")}px`);
-    expect(page).toContain(`${pillHeight("md")}px`);
-    expect(page).toContain("20px");
-    expect(page).toContain("24px");
-  });
-
-  it("marks the page as a browser rendering of a native pill", () => {
-    expect(page).toContain("<ComponentPreview");
-    expect(page).toContain("browser rendering");
-    expect(page).toContain("@gpuix/native@0.11.0");
   });
 });

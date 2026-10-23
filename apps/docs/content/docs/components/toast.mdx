@@ -1,26 +1,15 @@
 ---
 title: Toast
-description: A bounded, auto-dismissing notification stack — Effect store, one provider, one viewport.
+description: A bounded, auto-dismissing notification stack — Effect store, one provider, one viewport
 ---
 
-`ToastProvider` creates one Effect runtime and one queue; `useToast()` pushes
-and dismisses; `ToastViewport` paints the stack. React sees only the resulting
-array: the queue is a `SubscriptionRef`, the auto-dismiss timers are a
-`FiberMap`, and the provider is the package's **only** `runtime.run*` boundary.
-
-It is not a modal or an inline message: a toast reports an outcome that happened
-elsewhere, waits a bounded time, and never blocks the page underneath. Render
-the viewport **last** in the app root — the runtime has no `zIndex`, so paint
-order is the layer.
-
-The gaps below were measured on `@gpuix/native@0.11.0`.
-
 <ComponentPreview name="toast-workflow" />
+
+<ComponentPreview name="toast-tones" />
 
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="ToastProvider" />
-
 <ComponentSource name="toast" file="packages/components/src/toast.tsx" />
 
 ## Usage
@@ -65,92 +54,12 @@ export const App = () => (
 );
 ```
 
-The action's **label** is data in the draft; the **handler** is supplied beside
-the draft, because a function cannot cross the store's schema boundary.
-
-## States
-
-<ComponentPreview name="toast-tones" />
-
-| Rule | Value |
-| ---- | ----- |
-| stack size | 3 by default (`max`); pushing a fourth drops the oldest |
-| auto-dismiss | 5 seconds by default (`defaultDuration`) |
-| custom duration | `duration: Duration.seconds(8)` |
-| zero or infinite duration | never auto-dismisses; the card stays until dismissed |
-| ids | monotonic (`"1"`, `"2"`, …), never reused |
-| hovering a card | fans the stack and pauses every clock; leaving resumes with the **remaining** time |
-| focus on a card's control | pauses too, and the last reason to leave resumes |
-| an action | one labelled control; pressing runs the handler once and dismisses |
-
-A dismissed toast's timer is cancelled with it, so a stale timer can never remove
-the next toast. The queue belongs to the provider: any component inside it can
-push, and the viewport is the single place that renders.
-
 ## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `ToastProvider` | the runtime, the store and the React subscription |
-| `useToast()` | `{ toasts, push, dismiss, dismissAll, pause, resume, actionFor }` |
-| `ToastViewport` | the bottom-right stack; `role="status"`, one card per toast |
-
-`ToastInput` decodes a draft at `push`: an empty title or an unknown tone is
-dropped at the store and nothing half-formed reaches the viewport. A toast has at
-most one action; more than one is a composition decision, not a hidden array.
-
-A label with no handler draws nothing — never a dead control. The card's dismiss
-control and its action share one hold count, so moving focus between them does
-not resume the timer.
-
-## Keyboard
-
-| Key | Effect |
-| ---- | ------ |
-| `Tab` | reaches a card's action and its dismiss control, in order |
-| `Enter` / `Space` | runs the focused action or dismisses the card |
-| `Escape` | no toast behaviour: the card is not a dialog and does not trap focus |
-
-**A traversal does not hold the clock.** A window focuses a toast's action on a
-`Tab` traversal without running its `onFocus` (`tabs-lifecycle` measures
-`focuses=0` on 0.11.0), so arriving at a card by keyboard does not pause it. The
-hold begins on the pointer, or on a press that moves focus into a control; a toast
-a keyboard reader must be able to reach carries `duration: 0` (persistent, closed
-by its action) or a long enough duration to read.
-
-## Notification centre
-
-The store is the transient half of a notification centre, not its storage. It
-keeps `max` cards (3 by default), and the fourth push expires the oldest — so a
-history panel records every title it pushes itself, while the viewport paints
-only what is still live. The playground's `notification-centre-lifecycle`
-measured the composition in a window (30 checks, `@gpuix/native@0.11.0`): three
-cards in one column (356 wide, one right edge, 12px apart, in push order), the
-fourth push leaving `queued=3 ids=2,3,4` while the app's panel still lists the
-expired title, a card action reporting once with the survivors reflowing, the
-app's clear emptying the queue, and a 700ms transient dismissing itself with no
-press.
-
-```tsx
-const toast = useToast();
-const [history, setHistory] = useState<ReadonlyArray<string>>([]);
-
-const notify = (title: string) => {
-  setHistory((kept) => [title, ...kept]);
-  toast.push({ title });
-};
-
-<ToastProvider>
-  <App />
-  <NotificationPanel titles={history} />
-  <ToastViewport />
-</ToastProvider>;
+```text
+ToastProvider
+└── ToastViewport
 ```
-
-The binding publishes no notification API — no OS centre, badge or persistence —
-so the history is the app's to own and this stack is what alerts. That limit is
-why the inventory records the centre as `done (composed)` rather than a shipped
-component.
 
 ## API reference
 
@@ -174,82 +83,8 @@ component.
 | `ToastInput` | `duration` | `Duration.Input` | the provider's default |
 | `ToastInput` | `action` | `{ label }` — the handler travels beside the draft | — |
 
-## Theming
+## Limitations
 
-| Element | Role |
-| ------- | ---- |
-| card | `colors.popover` on `colors.popoverForeground` |
-| edge | `borderWidth.thin` in `colors.border` |
-| radius and lift | `radius.md` and the `md` elevation |
-| padding | 14px vertical, 16px horizontal, 10px gap |
-| tone glyph | the tone's own colour, the status palette Alert and Badge share |
-| width | 356px |
-| position | `spacing.xl` from the viewport's right and bottom edges |
-
-The card's surface is neutral on purpose: the tone glyph carries the status, so
-four tones read the same shape and a theme repaints the glyph by moving the
-status roles.
-
-A card rises 16px into place (220 ms, a fade) and leaves by sliding 16px to the
-right (180 ms); it stays painted for that exit tween after it leaves the store.
-Hovering the stack fans the older cards — each lifts a step higher, widening the
-gap — and pauses every clock. `MotionProvider` supplies the reduced-motion
-preference, which paints at rest.
-
-## Accessibility and limitations
-
-- The viewport is `role="status"` with `aria-label="Notifications"`; each card's
-  dismiss control is a labelled button.
-- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.11.0`: a status
-  region is the supported announcement, not a live-region attribute. An
-  announcement that must not be missed needs a different path — an `Alert` in the
-  page, or moving the focus.
-- **No progress indicator** for the remaining time. The store knows the
-  deadline; the card does not paint it.
-- Hovering the stack pauses every card's clock with the remaining time and fans
-  the older cards; focusing a card pauses its own. The preview above reproduces
-  the push, the cap, the fan, the hold and the dismissal.
-- Not portalled: the viewport is an absolutely positioned element in its parent,
-  so it must be the last child of the app root. There is no `zIndex` to raise it.
-- The card's enter and leave are the runtime's motion; the leave is timed by the
-  duration, not by the runtime's clock, so a frozen motion clock cannot strand a
-  card.
-- Disposal is deferred one microtask (`toast/lifecycle.ts`) so a StrictMode
-  mount/unmount/remount does not dispose the runtime the remount keeps using.
-
-## Dependencies
-
-| Package | Used for |
-| ------- | -------- |
-| `this package` | the store, the provider, the hook and the cards |
-| `@gpuix/react` | the host elements and the event types |
-| `@gpuix/react/floating` | `mergeStyles` for the card and viewport |
-| `@gpuixui/tw` | the `TOAST_*` class recipes |
-| `@gpuixui/icons` | the tone glyph and the dismiss control |
-| `effect` | the `SubscriptionRef` queue, the `FiberMap` timers, `ManagedRuntime`, `Option`, `Match` |
-
-`@gpuixui/tokens` is reached through this package's `internal/theme.ts`, which
-re-exports the token helpers; the component imports no token module directly.
-
-## Related
-
-- **Alert** — an inline, permanent message in the page.
-- **Badge** — status as a small read-only marker.
-- **Dialog** — feedback that must block the window.
-- **Message scroller** — a bounded conversation rather than a queue.
-- **Confirm dialog** — an action that needs an answer before it runs.
-
-## Status
-
-`done` · runtime support `yes`.
-
-17 native behaviour tests in `packages/components/src/behaviour/toast.test.tsx`
-prove pushing, stack order, dismissing one and all, the page staying clickable
-through the viewport, both themes, the queue still working after a dismiss, hover
-pausing and resuming a card, a focus event pausing it, that hold surviving the
-pointer leaving, the action running once and dismissing, no control for an
-unhandled label, no control without an action, the action holding focus, and a
-timer that fires while the motion clock is frozen — with a 30-second negative
-control. The store suite covers the queue, ids, `max`, `TestClock` auto-dismiss,
-the stale-timer regression, custom and zero durations, rejected input, pause and
-resume with the remaining time, and action decoding.
+- The viewport is `role="status"` with `aria-label="Notifications"`; each card's dismiss control is a labelled button.
+- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.11.0`: a status region is the supported announcement, not a live-region attribute.
+- **No progress indicator** for the remaining time.

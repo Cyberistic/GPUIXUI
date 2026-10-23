@@ -1,6 +1,6 @@
 ---
 title: Dialog
-description: A modal surface that takes the window until dismissed.
+description: A modal surface that takes the window until dismissed
 ---
 
 <ComponentPreview name="dialog-demo" />
@@ -76,21 +76,8 @@ Dialog
 | `DialogClose` | `disabled` | `boolean` | `false` |
 | `DialogClose` | `onClick` | `(event: EventPayload) => void` | — |
 
-`DialogTrigger` and `DialogClose` are ordinary actions: they take the button's
-variant, size, disabled state and press handler, announce the surface's open
-state through `aria-expanded`, and run the caller's `onClick` before opening or
-closing. `DialogHeader` leaves the room the floating close control needs, and
-`DialogTitle` is a level-2 heading while `DialogDescription` is a paragraph.
-
 ## Limitations
 
 - No `aria-modal` or `aria-labelledby`; the name is `label`.
 - The veil is an anchored layer at window coordinates, not a portal.
 - Not resizable, draggable or multi-window.
-- Focus enters on open and returns to the opener on close.
-
-## Related
-
-- **Confirmation dialog** — the safe default for destructive actions.
-- **Popover** — a non-modal floating surface anchored to a trigger.
-- **Card** — the in-flow surface, when nothing should be blocked.

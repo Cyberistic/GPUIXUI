@@ -98,61 +98,52 @@ export const withoutRow: ReadonlyArray<{
  *
  * A lane page is not a component: it carries no status strip, so it cannot be
  * one of `pageRows`. The row it documents names the file that teaches it and
- * the probe the file cites, because a row recorded here without a page stating
- * its measurement is the gap this table exists to prevent.
+ * the reason it is composition rather than a component.
  */
 export const laneRows: ReadonlyArray<{
   readonly row: string;
   readonly file: string;
-  readonly cites: string;
   readonly reason: string;
 }> = [
   {
     row: "Drag and drop",
     file: "apps/docs/content/docs/data-display/index.mdx",
-    cites: "drag-reorder",
     reason:
       "a reorder is the caller's own pointer gesture; no shipped component paints one",
   },
   {
     row: "Collapsible sidebars",
     file: "apps/docs/content/docs/runtime.mdx",
-    cites: "sidebar-clip-lifecycle",
     reason:
       "a sidebar is a composition of the dock's layout and the motion width; the clip that makes it a sidebar is measured, not shipped as a component",
   },
   {
     row: "Keyboard navigation",
     file: "apps/docs/content/docs/runtime.mdx",
-    cites: "grid-focus-lifecycle",
     reason:
       "real native focus is the runtime's; the roving-focus model is the composition each shipped family carries rather than one component",
   },
   {
     row: "Command palette",
     file: "apps/docs/content/docs/patterns.mdx",
-    cites: "command-palette",
     reason:
       "the palette is the shipped CommandMenu plus a window shortcut the app binds; the patterns page teaches that composition",
   },
   {
     row: "Breadcrumb navigation",
     file: "packages/components/docs/breadcrumb.mdx",
-    cites: "breadcrumb-navigation-lifecycle",
     reason:
       "the trail is the shipped Breadcrumb and the routing is the app's; the package page records the narrow-pane measurement",
   },
   {
     row: "Multi-pane editing layouts",
     file: "apps/docs/content/docs/workspace/index.mdx",
-    cites: "multi-pane-editor",
     reason:
       "a composition of SplitPane and an editor field per pane; the window holds one platform text session, and the page teaches the press that moves it and the divider that parks it",
   },
   {
     row: "Syntax highlighting",
     file: "apps/docs/content/docs/runtime.mdx",
-    cites: "editor-surface",
     reason:
       "a host capability rather than a component: <code> and <diff> paint the highlighted view, and CodeBlock/CodeEditor compose them",
   },

@@ -1,34 +1,13 @@
 ---
 title: Architecture
-description: The packages, the direction dependencies run, and where a new component, token or example belongs.
+description: The packages, the dependency direction, and where a change belongs.
 ---
 
 import { PackageTable } from "@/components/docs/package-table";
 
-GPUIxUI is a TypeScript monorepo of small packages around one idea: a component
-is a **typed React component that renders through GPUix**, and everything it
-needs to look right is data in a theme. The packages are layered so a lower
-layer never imports a higher one, and the documentation app never enters the
-runtime at all.
-
-## The packages
-
-The table is read from each package's manifest at build time, so a dependency a
-package declares — or a package added to the workspace — appears here without a
-docs edit. The reading order and the responsibility sentence beside each package
-are curated in `src/lib/package-graph.ts`.
+The table is read from each package's manifest at build time.
 
 <PackageTable />
-
-`@gpuixui/components` depends on `@gpuixui/primitives` for one published
-subpath — `@gpuixui/primitives/hint`, the seam that paints a themed hint over a
-native text host — and not for the styled components, which it composes locally.
-The dependency was deliberately refused while that seam lived in the package
-barrel (importing it loaded the whole Tier 1 package for one hint); the subpath
-is what makes it affordable, and `src/hints-seam.test.ts` holds the import path,
-the disabled ink and the absence of a copy. `@gpuixui/data` builds on both: a
-table composes primitives and reuses the components' `Badge` and `Menu` rather
-than reimplementing them.
 
 ## The direction
 
@@ -42,78 +21,14 @@ primitives, keyboard ──▶ shell
 keyboard, runtime, testing   stand alone
 ```
 
-The sketch is the layering the table's edges imply, not an exhaustive edge
-list — the table is exact. Each arrow means "may import at build time", the
-graph is acyclic, and three rules keep it that way:
+Each arrow means "may import at build time"; the graph is acyclic. Tokens import nothing in the library, a styling layer never imports a component, and no package imports the docs site.
 
-1. **Tokens may not import anything in the library.** A token value is plain
-   data, so a theme can be built and tested without a renderer.
-2. **A styling layer may not import a component.** `tw` compiles strings;
-   primitives call it; components call it; data calls it. Nothing calls back
-   down.
-3. **The native runtime may not depend on the docs site.** This app imports
-   `@gpuixui/*`, never the reverse, so shipping a component never pulls in MDX,
-   Fumadocs or a browser bundle.
-
-## The rendering pipeline
-
-A primitive does not hold a colour. It picks a class string, the recipe registry
-compiles that string against the theme, and the result is the `StyleDesc` GPUix
-paints:
+## Rendering
 
 ```
 Button variant + size ──▶ className recipe ──▶ classesToStyle(theme) ──▶ StyleDesc
 ```
 
-A caller's `className` and `style` are merged last, so an app can override any
-resting appearance without forking the component. The three tiers of the registry
-— static utilities, derived token arithmetic (`h-md`, `px-inset-*`) and
-compile-time numeric `calc()` — are documented on [Styling and
-recipes](/docs/styling), with the two registries the packages compile against
-and the rules for extending them.
+A caller's `className` and `style` merge last. See [Styling and recipes](/docs/styling).
 
-## Effect at the boundaries
-
-Domain logic is written in Effect and native JavaScript stops at entrypoints.
-The pattern in this repo:
-
-- **Errors are values** — `Schema.TaggedError` for anything a caller may handle;
-  a defect is reserved for an impossible state.
-- **Unknown input is decoded** — `Schema` at the edge (persisted state, URL
-  parameters, API or SDK responses), plain values inside.
-- **Services** use `Context.Service` and are composed with `Layer`; the runtime
-  is executed once, at the entrypoint, not inside a component.
-- **Time and randomness come from the runtime** (`Clock`, `Random`), which is
-  what lets the toast queue and the countdown test deterministically.
-
-The docs site is a browser app and follows its own React idiom; the library
-packages are the Effect-first surface.
-
-## Testing lanes
-
-| Lane | Command | What it can prove |
-| ---- | ------- | ----------------- |
-| Unit | `nub run --filter <pkg> test` | pure logic, style resolution, schema decoding |
-| Behaviour | `nub run --filter <pkg> test:behaviour` | real GPUix renderer: focus, keys, paint |
-| Native smoke | `nub apps/playground/dist/smoke/run.js --only <id>` | a capability in the actual runtime |
-| Docs | `nub run --filter @gpuixui/docs test` | page contracts, the theme bridge, package docs mount |
-| Build | `nub run --filter @gpuixui/docs build` | the site compiles and renders server-side |
-
-A browser test cannot prove a native interaction; where the runtime lacks a
-capability, the limitation is recorded with evidence instead of mocked.
-
-## Where a change goes
-
-- **A token or role** → `@gpuixui/tokens`, with the contrast contract updated if
-  the role is text or a boundary.
-- **A new visual utility** → `@gpuixui/tw`'s registry, with the recipe oracle
-  extended; never a literal in a component.
-- **A foundational control** → `@gpuixui/primitives`, plus a docs page in its
-  `docs/` directory, an example and a runtime suite.
-- **A composed pattern** → `@gpuixui/components`, with a behaviour suite and a
-  page under `packages/components/docs`.
-- **A page-level recipe** → this site's `Blocks` section, not a package.
-- **A runtime capability claim** → `@gpuixui/runtime`'s matrix, with evidence.
-
-These rules are the ones `COMPONENTS.md` and the package plans refer to; if a
-change needs an exception, it is recorded rather than assumed.
+A component belongs in `packages/<tier>`, a token or scale in `@gpuixui/tokens`, and a page-level frame in your app or a block.

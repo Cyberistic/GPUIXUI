@@ -231,9 +231,10 @@ out.
   whose capability is encoded in `@gpuixui/runtime`'s `capabilities` matrix to
   that matrix: a row and the code cannot disagree about whether the runtime
   supports something, and a new matrix key without a row fails by name.
-- The same test holds `/docs/runtime` to this file: the site's *measured in a
-  window* and *measured offscreen* sections must name the probes behind every gap
-  and measured behaviour they list (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
+- The same test holds every cited probe to the playground's registries and to
+  the list below, so a row cannot cite a probe that does not exist or a probe
+  the record does not owe.
+- The probes the record owes: (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
   `tabs-lifecycle`, `scroll-lifecycle`, `nested-scroll-lifecycle`, `pointer-capture`, `content-surfaces`,
   `selection-lifecycle`, `clipboard-lifecycle`, `otp-paste-lifecycle`, `field-ink`, `editor-overlay`, `virtual-tree-lifecycle`,
   `image-fit`, `grid-focus-lifecycle`, `surface-origin`,
@@ -256,12 +257,9 @@ out.
   `terminal-resize`, `terminal-pointer`, `terminal-input`, `inspector-lifecycle`, `text-truncation`,
   `rtl-text`, `modal-focus-trap`, `modal-focus-restore`, `register-font`, `font-registration-late`,
   `box-paint`, `elevation-paint`, `opacity-paint`, `faded-hitbox-lifecycle`, `hidden-subtree-lifecycle`,
-  `markdown-fence`, `toast-lifecycle`, `blur-delivery-lifecycle`, `crop-overlay`, `key-hold-lifecycle`, `document-type`, `find-highlight`), because a
-  measured gap
-  is absent from the typings rather than merely hard to find. Every id a page
-  row cites must be a registered probe in `apps/playground` and appear in this
-  list, so a row cannot cite a probe that does not exist or a probe the record
-  does not owe.
+  `markdown-fence`, `toast-lifecycle`, `blur-delivery-lifecycle`, `crop-overlay`, `key-hold-lifecycle`, `document-type`, `find-highlight`, `aspect-ratio-paint`, `hover-routing-lifecycle`, `image-box`, `table-column-resize`, `text-selection`, `search-highlights`, `file-drop`, `floating-placement`, `table-columns-lifecycle`, `context-menu-lifecycle`)
+  the record does not owe. `/docs/runtime` is a summary of this record, not a
+  second copy of it.
 - The record's own evidence column is held to that registry too: every
   kebab-case token a §3 row names in backticks must be a probe a playground
   registry declares, unless it is a value the row quotes as its measurement (a

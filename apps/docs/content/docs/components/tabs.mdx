@@ -1,18 +1,13 @@
 ---
 title: Tabs
-description: A roving-focus tab list and the panels it switches.
+description: A roving-focus tab list and the panels it switches
 ---
-
-`Tabs` switches between panels that share one region. Selection lives in the tab
-set, focus lives on a trigger, and the two move together unless `activation` says
-otherwise.
 
 <ComponentPreview name="tabs-demo" />
 
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="Tabs" />
-
 <ComponentSource name="tabs" file="packages/components/src/tabs.tsx" />
 
 ## Usage
@@ -37,67 +32,12 @@ import {
 
 ## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Tabs` | the selected value, the trigger registry and the tab stop |
-| `TabsList` | `role="tablist"`, the arrow/Home/End keys and the rail |
-| `TabsTrigger` | one `role="tab"` with `aria-selected` and its own focus |
-| `TabsContent` | one `role="tabpanel"`, mounted only while selected |
-
-`TabsContent` mounts only its matching panel. A value with no matching trigger or
-panel is allowed: the set simply has nothing selected until a trigger is chosen.
-
-## Orientation
-
-`orientation` defaults to `"horizontal"`. A vertical set puts the rail in a
-column beside the panels and maps movement to `Down`/`Up`.
-
-```tsx
-<Tabs defaultValue="general" orientation="vertical">
-  <TabsList label="Workspace sections">
-    <TabsTrigger value="general">General</TabsTrigger>
-    <TabsTrigger value="members" disabled>
-      Members
-    </TabsTrigger>
-    <TabsTrigger value="billing">Billing</TabsTrigger>
-  </TabsList>
-  <TabsContent value="general">…</TabsContent>
-  <TabsContent value="billing">…</TabsContent>
-</Tabs>;
+```text
+Tabs
+├── TabsList
+│   └── TabsTrigger
+└── TabsContent
 ```
-
-Disabled tabs are skipped by every key and cannot be clicked.
-
-## Activation
-
-`activation` decides whether moving focus also selects:
-
-- `"automatic"` (default) — arrow keys move focus **and** the selection.
-- `"manual"` — arrow keys move focus only; `Enter` or `Space` selects.
-
-Manual activation is the right choice when switching panels has a cost, such as
-a network read.
-
-## Controlled and uncontrolled
-
-```tsx
-<Tabs defaultValue="profile">…</Tabs>;               // remembers
-<Tabs value={tab} onValueChange={setTab}>…</Tabs>;   // app remembers
-```
-
-A controlled set reports a click or key but does not switch its panel until the
-consumer re-renders with the new value.
-
-## Keyboard
-
-| Key | Result |
-| --- | ------ |
-| `ArrowRight` / `ArrowLeft` (horizontal) | next/previous enabled tab, wrapping |
-| `ArrowDown` / `ArrowUp` (vertical) | next/previous enabled tab, wrapping |
-| `Home` / `End` | first/last enabled tab |
-| `Enter` / `Space` | select the focused tab (the only way in `manual`) |
-
-Only the selected trigger is in the tab order; every other trigger is `-1`.
 
 ## API reference
 
@@ -125,76 +65,8 @@ Only the selected trigger is in the tab order; every other trigger is `-1`.
 | `disabled` | `boolean` | `false` |
 | `style` | `StyleDesc \| (state) => StyleDesc` | none |
 
-`TabsTriggerState` passed to a style function is
-`{ active, disabled, focused, highlighted, orientation }`.
+## Limitations
 
-## Theming
-
-| Part | Reads |
-| ---- | ----- |
-| rail | `background` with a `border` edge |
-| trigger, selected | `foreground`, on the `selected` wash |
-| trigger, rest | `mutedForeground`, `hover` on hover |
-| indicator | `selected`, painted behind the selected trigger |
-| panel | the body text role |
-| focus | `keyboardRing(theme)` — the `focusVisible` outline, so a press paints none |
-
-Selection is **one measured surface**, not a fill per trigger: the rail renders a
-`tabs-indicator` element and every trigger reports its painted box through
-`onLayout`, while a `tabs-origin` probe fills the box the rail's absolute
-children resolve against — its padding box, borders and padding included — and
-reports it again on every paint where that box changes. The pill is the selected
-trigger's box re-expressed against that origin, which means a longer label or
-another font carries the pill with it. Both boxes are **window coordinates**, so
-they have to come from the same paint: a rail the window moved (a resize, a pane
-opening above it) reports its origin again in the round its triggers re-measure,
-so the pill stays on its tab rather than the place the rail used to start at.
-The suite's `follows the rail when the window moves it, not the origin it first
-reported` holds that.
-
-The pill **slides** between triggers: its `left`/`top`/`width`/`height` are a
-motion target (`normal`, 200 ms) retargeted from the box on screen, so a move
-across three tabs sweeps once rather than jumping. Not a transform — the runtime
-animates the box's own inset and size, and the motion package completes the move
-immediately for a caller that passes its `reducedMotion` preference. The pill
-paints `selected` rather than `card`, because `card` equals the rail's
-`background` in the high-contrast light theme (1.00:1) and the selected tab would
-paint no surface at all.
-
-## Accessibility and limitations
-
-- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
-  exposed; the roving tab index is the single-stop pattern. Give the list a
-  `label` so the set has a name.
-- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in
-  `@gpuix/native@0.11.0`. The panel is named by its value, and the
-  trigger-to-panel relationship is positional.
-- The list owns the keys because a key event on a focused trigger bubbles to the
-  list — measured in the real renderer.
-- Vertical tabs are a layout and keyboard choice, not an ARIA attribute; the
-  attribute is unavailable in this runtime.
-
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | host props, events, `PublicInstance` for the roving tab stop |
-| `@gpuix/react/floating` | `mergeStyles`, `useControllableState` |
-| `@gpuixui/tw` | the `TABS_*` recipes |
-| `effect` | `Match`, `Array` and `Option` for the selection fold |
-
-## Related
-
-- **Accordion** — stacked sections with more than one open.
-- **List** — the same collection arithmetic for selectable rows.
-- **Breadcrumb** — orientation through a hierarchy rather than across peers.
-
-## Status
-
-`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 22 native
-behaviour tests, both themes and both axes. `@gpuix/native@0.11.0` has no
-`aria-orientation` and no `aria-controls`, so a panel is named by its value; the
-selected surface is one measured `tabs-indicator` rather than a fill per trigger,
-and it slides through the motion seam (the runtime interpolates the box's inset
-and size, not a `transform`). There is no `zIndex` in the published API, so the
-pill stays behind the triggers by being their earlier sibling.
+- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are exposed; the roving tab index is the single-stop pattern.
+- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in `@gpuix/native@0.11.0`.
+- The list owns the keys because a key event on a focused trigger bubbles to the list.

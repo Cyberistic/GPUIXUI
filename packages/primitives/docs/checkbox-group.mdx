@@ -1,10 +1,9 @@
 ---
 title: Checkbox group
-description: Several independent choices sharing one tab stop.
+description: Several independent choices sharing one tab stop
 ---
-<ComponentPreview name="checkbox-group-demo" />
 
-`CheckboxGroup` is a set of checkboxes that answer one question with many answers.
+<ComponentPreview name="checkbox-group-demo" />
 
 ## Usage
 
@@ -22,13 +21,6 @@ import { CheckboxGroup } from "@gpuixui/primitives";
   ]}
 />;
 ```
-
-## Composition
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `CheckboxGroup` | the named group, the roving tab stop and the value |
-| `CheckboxGroupItem` | an option row; the data prop's element form |
 
 ## API
 
@@ -71,4 +63,3 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 - No `aria-checked` and no `aria-multiselectable`: state is `aria-valuetext`.
 - One tab stop; an option is not reachable by Tab.
 - No select-all, indeterminate parent or virtualisation.
-- No drag selection.

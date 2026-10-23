@@ -1,6 +1,6 @@
 ---
 title: Pagination
-description: Previous/next controls around a stable-width page window.
+description: Previous/next controls around a stable-width page window
 ---
 
 <ComponentPreview name="pagination-states" />
@@ -58,11 +58,6 @@ Pagination
 | `PaginationEllipsis` | `className` | `string` | — |
 | `PaginationNext` | `children` | `ReactNode` | `Next` and a chevron |
 | `PaginationNext` | `aria-label` | `string` | `"Next page"` |
-
-`PaginationPrevious` and `PaginationNext` are the package's action at `ghost`
-and `sm`, so they take the host props any button does; each leaves the tab order
-and drops its handler at the edge it cannot pass (page 1 and the last page), and
-the name a reader hears is the `aria-label` rather than the visible word.
 
 ## Limitations
 

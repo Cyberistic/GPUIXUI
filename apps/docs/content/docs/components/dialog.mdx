@@ -1,18 +1,13 @@
 ---
 title: Dialog
-description: A modal surface that takes the window until it is dismissed.
+description: A modal surface that takes the window until it is dismissed
 ---
-
-`Dialog` dims and blocks the window, moves focus into its surface, keeps Tab
-inside it, and returns focus to whatever opened it. Compose it from a trigger, a
-content surface and the header, description and footer parts.
 
 <ComponentPreview name="dialog-demo" />
 
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="Dialog" />
-
 <ComponentSource name="dialog" file="packages/components/src/dialog.tsx" />
 
 ## Usage
@@ -49,76 +44,17 @@ import { Button } from "@gpuixui/primitives";
 
 ## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Dialog` | owns `open`/`defaultOpen`/`onOpenChange` and the dismiss layer |
-| `DialogTrigger` | a button that toggles the dialog, with `aria-expanded` |
-| `DialogContent` | the veil and the surface: focus, Tab, Escape and outside press |
-| `DialogHeader` | the title and description block |
-| `DialogTitle` | the heading, announced at level 2 |
-| `DialogDescription` | one paragraph of supporting copy |
-| `DialogFooter` | the right-aligned actions row |
-| `DialogClose` | a button that closes the enclosing dialog |
-
-The parts validate their placement: a `DialogTitle` outside `DialogHeader`, or a
-`DialogContent` outside `Dialog`, fails with a message naming the family. Put
-`DialogTrigger` and `DialogContent` directly inside `Dialog`.
-
-## Controlled and uncontrolled
-
-```tsx
-// Uncontrolled: the dialog remembers.
-<Dialog defaultOpen>…</Dialog>;
-
-// Controlled: the app remembers, which async work needs.
-<Dialog open={open} onOpenChange={setOpen}>…</Dialog>;
+```text
+Dialog
+├── DialogTrigger
+└── DialogContent
+    ├── DialogHeader
+    │   ├── DialogTitle
+    │   └── DialogDescription
+    ├── DialogFooter
+    │   └── DialogClose
+    └── (close control)
 ```
-
-The controlled form is authoritative. `onOpenChange` still fires, but the dialog
-does not change its own state until the consumer re-renders with the new value.
-A dialog doing async work stays open while the work runs and closes only when it
-succeeds.
-
-## Sizes
-
-`DialogContent` takes `size`, a width cap in pixels:
-
-| Size | Width |
-| ---- | ----- |
-| `sm` | 360px |
-| `md` (default) | 480px |
-| `lg` | 640px |
-
-The surface never exceeds the window minus two `spacing["3xl"]`, and its interior
-scrolls, so a long body cannot push the actions off screen.
-
-## Dismissal
-
-`dismissible` (default `true`) controls both Escape and an outside press. A dialog
-doing uninterruptible work sets `dismissible={false}` and re-enables it when the
-work settles.
-
-Open overlays share one dismiss stack: Escape and outside presses are consumed by
-the **topmost** layer only. A popover inside a dialog closes the popover first;
-one event cannot close both.
-
-`nested-overlay-lifecycle` measured that stack on the shipped `Dialog` → `Popover`
-→ `DropdownMenu` tree (41 checks): three `Escape`s leave the menu, the popover
-and the dialog in that order, each returning the focus to the control that opened
-it, while
-a press outside both floating surfaces is **one gesture** that closes one layer
-(`closes=1,1,2`) and the next press closes the popover with the dialog still
-painted. A pointer-opened menu nested in a popover takes the popover's focus, so
-one arrow reaches its first row.
-
-## Keyboard
-
-| Key | Effect |
-| --- | ------ |
-| `Tab` | next focusable inside the surface, wrapping at the end |
-| `Shift+Tab` | previous focusable, wrapping at the start |
-| `Escape` | close when `dismissible`; focus returns to the opener |
-| `Enter` / `Space` | activate the focused action |
 
 ## API reference
 
@@ -142,8 +78,6 @@ one arrow reaches its first row.
 
 ### DialogTrigger and DialogClose
 
-Both are buttons: the dialog's open and close actions.
-
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `disabled` | `boolean` | `false` |
@@ -152,68 +86,8 @@ Both are buttons: the dialog's open and close actions.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
 | `className` | `string` — joined after the button recipe | none |
 
-`DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription` and
-`DialogFooter` each take a `className` (joined after that part's recipe) beside
-the GPUix host props; `DialogTitle` also takes the host props where it renders a
-heading. Every part merges `style` last.
-
-`DialogTrigger` and `DialogClose` run the caller's `onClick` before the
-dialog's own change, so a consumer can keep its own bookkeeping; `disabled`
-leaves the button out of the tab order and drops its handlers, and a disabled
-trigger cannot open the surface.
-
-## Theming
-
-| Part | Reads |
-| ---- | ----- |
-| veil | `overlay` — the theme's scrim, not a literal black |
-| surface | `popover` and `popoverForeground` |
-| edge and lift | two shadows: the theme's `elevation.lg` lift beneath the recipe's 1px `foreground` ring at 5% (`ring-1`). The ring is the recipe's only shadow utility — its `shadow-xl` is superseded — so `overlaySurfaceStyle` restores the level the slot had swallowed |
-| corners | 32px — the recipe's `rounded-4xl`, a fixed shadcn metric rather than the theme's radius scale |
-| heading / copy | `popoverForeground` / `mutedForeground` |
-| close control | the `foreground` glyph on a `mutedForeground` control, the `hover` fill on hover |
-| actions | the button roles |
-
-The scrim being a role is the one deliberate departure from shadcn's
-`bg-black/30`: a literal black cannot follow a high-contrast theme, and the
-`overlay` role does.
-
-## Accessibility and limitations
+## Limitations
 
 - `role="dialog"` with the required `label` as its accessible name.
 - Focus enters the surface on open and returns to the opener on close.
-- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0`. The
-  dialog is named by `label`; its title is a separate heading, not the dialog's
-  accessible name.
-- **The veil is an anchored layer at window coordinates.** `@gpuix/react@0.11.0`
-  ships a headless dialog with a portal part, but this is a styled compound part
-  that deliberately does not wrap it (`src/dialog.tsx` records why), and
-  `position: "absolute"` resolves against the mount parent — so mount a dialog at
-  or near the root of the tree.
-- The top-right close control is an `@gpuixui/icons` `x` glyph inside an
-  `IconButton` named `Close` — an icon and an accessible name, not a text glyph.
-- A dialog is not resizable, draggable or multi-window. One dialog per surface.
-
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuix/react` | `useGpuix`, `useWindowSize`, host props |
-| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
-| `@gpuixui/icons` | the `x` glyph in the close control |
-| `@gpuixui/tw` | the `DIALOG_*` recipes |
-| this package | `internal/modal.ts` (open state, focus, Tab trap) and `internal/dismiss-layer.ts` (Escape layering) |
-
-## Related
-
-- **Confirmation dialog** — the safe default for destructive actions.
-- **Popover** — a non-modal floating surface anchored to a trigger.
-- **Card** — the in-flow surface, when nothing should be blocked.
-
-## Status
-
-`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 15 native
-behaviour tests plus 5 dismiss-stack tests. The headless `@gpuix/react/dialog` is
-not wrapped — the styled compound shape, the dismiss stack and the runtime's
-focus calls are ours — so the veil is an `anchored` element at window coordinates
-and the surface is named by its required `label` (`@gpuix/native@0.11.0`).
+- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0`.

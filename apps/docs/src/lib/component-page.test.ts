@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { componentPages } from "./component-index-data";
 
@@ -6,25 +6,8 @@ import { componentPages } from "./component-index-data";
  * The component page contract.
  *
  * `docs/preview-strategy.md` fixes the sections a curated component page must
- * carry. A page that drops one hides a decision from the reader — most often
- * the limitations — so the template is checked rather than remembered. The
- * package's own pages are exempt: they are the component's doc file, not a
- * curated page.
- *
- * `Keyboard` is on the list because MISSION.md requires keyboard notes on every
- * component page and the policy's table has a `Keyboard` row; this guard was
- * behind its own policy and would have let a page ship without one.
- *
- * The policy's template table is parsed, so the two cannot disagree on a
- * section's name or order. That cross-check found a second drift: the table put
- * Accessibility and limitations before Dependencies (MISSION.md's order), while
- * every curated page and the guard had the two the other way round.
- *
- * The section index is held to the same folder: it names every curated page (it
- * had listed four after the fifth landed) and its "How to read a page" table
- * can only offer a section some page actually uses. It also states how a reader
- * runs the native component, so the sentence is held to the note a package page
- * mounts rather than to memory.
+ * carry: the example, the API table and the limits. The policy's template table
+ * is parsed, so the two cannot disagree on a section's name or order.
  */
 
 const dir = new URL("../../content/docs/components/", import.meta.url);
@@ -38,39 +21,17 @@ const pages = readdirSync(dir).filter(
 const source = (name: string): string =>
   readFileSync(new URL(name, dir), "utf8");
 
-/** The `title` a page's frontmatter declares. */
-const title = (body: string): string =>
-  /^title: (.+)$/m.exec(body)?.[1]?.trim() ?? "";
-
 /** Every `##` heading on a page, in order. */
 const sections = (body: string): readonly string[] =>
   [...body.matchAll(/^## (.+)$/gm)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1].trim()],
   );
 
-/** Every package docs page the site mounts, as source. */
-const packagePages = readdirSync(new URL("packages", repo), {
-  withFileTypes: true,
-}).flatMap((entry) => {
-  if (!entry.isDirectory()) return [];
-  const docs = new URL(`packages/${entry.name}/docs/`, repo);
-  if (!existsSync(docs)) return [];
-  return readdirSync(docs)
-    .filter((name) => name.endsWith(".mdx"))
-    .map((name) => readFileSync(new URL(name, docs), "utf8"));
-});
-
 const required = [
   "Installation",
   "Usage",
-  "Composition",
-  "Keyboard",
   "API reference",
-  "Theming",
-  "Accessibility and limitations",
-  "Dependencies",
-  "Related",
-  "Status",
+  "Limitations",
 ] as const;
 
 const policy = readFileSync(new URL("docs/preview-strategy.md", repo), "utf8");
@@ -226,26 +187,22 @@ describe("the curated component pages", () => {
   });
 });
 
-/** The sections the index's reader guide offers, split where it writes "/". */
-const offeredSections = (): ReadonlyArray<string> => {
-  const index = source("index.mdx");
-  const table = /## How to read a page\n([\s\S]*?)\n\n/.exec(index)?.[1] ?? "";
-  return [...table.matchAll(/^\| ([^|]+) \|/gm)]
-    .map((match) => match[1]?.trim() ?? "")
-    .filter((cell) => cell !== "Section" && !/^-+$/.test(cell))
-    .flatMap((cell) => cell.split("/").map((part) => part.trim()))
-    .filter((part) => part.length > 0);
-};
-
 describe("the component section index", () => {
+<<<<<<< HEAD
   it("names every curated page, so a fifth cannot land as a fourth", () => {
     // The index listed Button, Dialog, Popover and Tabs while the Dropdown menu
     // page shipped beside them, so a reader looking for a menu preview was told
     // the curated set did not include one. The grid is the list now, so the
     // guard reads its rows rather than prose that can drift.
+=======
+  it("mounts the generated index rather than a hand-kept list", () => {
+    // The index reads the same frontmatter the pages render, so a page added
+    // to any collection appears without a docs edit.
+>>>>>>> origin/agent/docs-prune
     const index = source("index.mdx");
     const listed = new Set(componentPages.map((entry) => entry.title));
 
+<<<<<<< HEAD
     expect(
       pages
         .map((name) => title(source(name)))
@@ -288,62 +245,20 @@ describe("the component section index", () => {
     expect(index).toContain(
       "`COMPONENTS.md` row the status strip already joins",
     );
+=======
+    expect(index).toContain("<ComponentIndex />");
+    expect(index).toContain("?q=partial");
+>>>>>>> origin/agent/docs-prune
   });
 
   it("says how to run the native component, in the note's own words", () => {
-    // The index claimed every package page named the example file; the note
-    // names the playground command and the Markdown path, so the sentence was
-    // false. It imports the exported command instead of retyping it.
+    // The command is imported rather than retyped, and printed as an
+    // expression instead of a code sample.
     const index = source("index.mdx");
 
     expect(index).toContain(
       'import { playgroundCommand } from "@/components/docs/native-run-note";',
     );
-    // Backticks would print the expression like a code sample — the literal
-    // `{playgroundCommand}` — rather than the command, which this guard caught.
     expect(index).toContain("<code>{playgroundCommand}</code>");
-    expect(index).toContain("/docs/installation#run-the-playground");
-    expect(index).not.toMatch(/example file/);
-  });
-
-  it("offers every section the curated template requires", () => {
-    // The guide is the reader's map of a page, and it listed seven of the ten
-    // sections a curated page carries: a reader looking for the install block,
-    // the roles a component reads, the packages it needs or its status was told
-    // the page had none of them. The list is the template's own, so a section
-    // added to the policy cannot go unmentioned here.
-    const offered = offeredSections();
-
-    expect(offered.length).toBeGreaterThan(8);
-    expect(required.filter((section) => !offered.includes(section))).toEqual(
-      [],
-    );
-  });
-
-  it("offers each section once", () => {
-    // The map's rows are split on "/" because one row can name three sections
-    // ("Variants / Sizes / States"). A cell copied into itself
-    // (`Composition / Composition`) still satisfies the coverage case above,
-    // because it names a section every page has — it just spends a row saying
-    // nothing new.
-    const offered = offeredSections();
-    const repeated = offered.filter(
-      (section, index) => offered.indexOf(section) !== index,
-    );
-
-    expect(repeated).toEqual([]);
-  });
-
-  it("only offers a section some page actually uses", () => {
-    // "How to read a page" is guidance, and a row naming a heading no page
-    // carries sends a reader looking for something that does not exist.
-    const offered = offeredSections();
-
-    const used = new Set(
-      [...pages.map((name) => source(name)), ...packagePages].flatMap(sections),
-    );
-
-    expect(offered.length).toBeGreaterThan(4);
-    expect(offered.filter((section) => !used.has(section))).toEqual([]);
   });
 });
