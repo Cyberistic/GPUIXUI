@@ -52,6 +52,7 @@ import {
 } from "../core/selection.js";
 import { controlRing } from "../core/focus.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { switchThumbClass, switchTrackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -211,7 +212,7 @@ export const renderSwitch = (
 ): ReactElement => {
   const spec: SelectionSpec = {
     state: state.current ? "checked" : "unchecked",
-    size: props.size ?? "md",
+    size: controlSize(props.size),
     accent: props.accent ?? "primary",
     invalid: props.invalid,
     disabled: props.disabled,

@@ -70,6 +70,7 @@ import {
 } from "../core/value.js";
 import { sliderInset, type SliderOrientation } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   sliderFillClass,
@@ -475,7 +476,7 @@ export const renderSlider = (
 ): ReactElement => {
   const range = sliderRange(props);
   const value = clampValue(state.current, range);
-  const size = props.size ?? "md";
+  const size = controlSize(props.size);
   const invalid = props.invalid === true;
   const orientation = props.orientation ?? "horizontal";
   const resolved = recipeTw.classesToStyle(
@@ -589,7 +590,7 @@ export const renderRangeSlider = (
 ): ReactElement => {
   const range = sliderRange(props);
   const span = spanOf(state.current, range);
-  const size = props.size ?? "md";
+  const size = controlSize(props.size);
   const invalid = props.invalid === true;
   const orientation = props.orientation ?? "horizontal";
   // The group's name is the subject the two ends are derived from, so it takes
@@ -734,7 +735,7 @@ export const Slider = (props: SliderProps): ReactElement => {
     clampValue(props.defaultValue ?? range.min, range),
     valueChange(props),
   );
-  const inset = sliderInset(props.size ?? "md", theme);
+  const inset = sliderInset(controlSize(props.size), theme);
   const orientation = props.orientation ?? "horizontal";
   /** The value the gesture in flight has reached, so its end can report it. */
   const gesture = useRef<Option.Option<number>>(Option.none());
@@ -821,7 +822,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     [initial.start, initial.end],
     valueChange(props),
   );
-  const inset = sliderInset(props.size ?? "md", theme);
+  const inset = sliderInset(controlSize(props.size), theme);
   const orientation = props.orientation ?? "horizontal";
   const focusThumb = (index: 0 | 1): void => {
     Option.match(Option.fromNullishOr(thumbIds.current.get(index)), {

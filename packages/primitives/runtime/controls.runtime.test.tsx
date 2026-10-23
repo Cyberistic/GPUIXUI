@@ -47,6 +47,7 @@ import {
   type Runtime,
 } from "./harness.js";
 import { TYPE_AHEAD_RESET_MS } from "../src/core/keyboard.js";
+import type { ControlSize } from "../src/core/theme.js";
 import { pressWash } from "../src/core/pointer.js";
 import { sleep, Surface, openWindow, testTheme } from "./fixture.js";
 
@@ -1409,4 +1410,20 @@ it("selects a RadioGroup option when its own circle is clicked", async () => {
   runtime.clickElement(circle);
   expect(announced(runtime, "Beta")).toBe("checked");
   expect(announced(runtime, "Alpha")).toBe("unchecked");
+});
+
+it("paints a control whose stored size name the scale no longer carries at the default height", async () => {
+  // The bug this guards: a control size is a persisted choice, so a preference
+  // restored from a release that renamed a step arrives as a string the union no
+  // longer names. Indexing the density scale with it answers `undefined`, and a
+  // control with no height paints as a label with padding — the box the reader
+  // aims at is gone while the element still takes keys. The stored name reads as
+  // `md`, the height every control documents.
+  const stored = "huge" as ControlSize;
+  expect(Object.keys(testTheme.density.controlHeight)).not.toContain(stored);
+  const { runtime, calls } = await renderButton({ size: stored });
+  const box = boundsOf(runtime, "b");
+  expect(box.height).toBe(testTheme.density.controlHeight.md);
+  runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
+  expect(calls()).toBe(1);
 });

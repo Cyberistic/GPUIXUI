@@ -60,6 +60,7 @@ import { accessibleName } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { revealScroll } from "../core/scroll.js";
 import type { ControlSpec } from "../core/style.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import { Icon } from "@gpuixui/icons";
@@ -404,7 +405,7 @@ export const renderSelect = (
     open,
     onOpenChange,
     invalid,
-    size = "md",
+    size: requestedSize,
     fullWidth,
     side,
     label,
@@ -422,7 +423,12 @@ export const renderSelect = (
   theme: PrimitiveTheme,
   scroller: PublicInstanceHolder = { current: null },
 ): ReactElement => {
-  const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
+  const spec: ControlSpec = {
+    variant: fieldVariant,
+    size: controlSize(requestedSize),
+    invalid,
+    fullWidth,
+  };
   const items = Arr.map(selectOptions(options), (option) => ({
     value: option.value,
     label: option.label,

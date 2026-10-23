@@ -19,6 +19,7 @@ import * as Option from "effect/Option";
 import { accessibleName, fieldHelp } from "../core/a11y.js";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { fieldClass } from "../recipe/index.js";
@@ -93,12 +94,12 @@ export interface FieldProps
 
 /** The chrome a field element draws, shared by the input and the textarea. */
 export const fieldChrome = (
-  { size = "md", invalid, disabled, fullWidth, style, className }: FieldProps,
+  { invalid, disabled, fullWidth, style, className, size }: FieldProps,
   theme: PrimitiveTheme,
   focused: boolean,
 ): StyleDesc => {
   const resolved = recipeTw.classesToStyle(
-    cn(fieldClass({ size, invalid, fullWidth }), className),
+    cn(fieldClass({ size: controlSize(size), invalid, fullWidth }), className),
     theme,
   );
   let base = resolved.style;
@@ -192,7 +193,7 @@ export const Input = (props: InputProps): ReactElement => {
     valueChange(props),
   );
   const hint = fieldHint(props, theme, field.value.current, {
-    size: props.size ?? "md",
+    size: controlSize(props.size),
     align: "center",
     origin: "field",
   });

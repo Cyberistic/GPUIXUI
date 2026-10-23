@@ -57,6 +57,7 @@ import {
   isPlainKey,
   swallowKeyDefault,
 } from "../core/keyboard.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   variantSpinnerAccent,
@@ -165,7 +166,7 @@ export const renderButton = (
 ): ReactElement => {
   const {
     variant = "primary",
-    size = "md",
+    size: requestedSize,
     square,
     fullWidth,
     disabled,
@@ -192,6 +193,7 @@ export const renderButton = (
     // `aria-expanded`/`aria-selected`, pointer handlers and layout observers.
     ...host
   } = props;
+  const size = controlSize(requestedSize);
   const busy = isBusy({ disabled, loading });
   // The busy words are the caller's: a localised interface must not announce an
   // English state word. A blank label silences the announcement; a blank table

@@ -38,6 +38,7 @@ import type {
 } from "../core/selection.js";
 import { accessibleName } from "../core/a11y.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   radioDotClass,
@@ -187,7 +188,8 @@ export const renderRadioGroup = (
   handlers: RadioGroupHandlers,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  const { orientation = "vertical", size = "md", accent = "primary" } = props;
+  const { orientation = "vertical", accent = "primary" } = props;
+  const size = controlSize(props.size);
   const invalid = props.invalid === true;
   const options = radioItems(props);
   const count = Arr.length(options);

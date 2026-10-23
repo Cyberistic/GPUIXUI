@@ -38,6 +38,7 @@ import {
   type Theme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ControlSize } from "../core/theme.js";
 import { renderButton, type ButtonState } from "./Button.js";
 import {
   actionOnColor,
@@ -74,6 +75,22 @@ const resting = (props: Parameters<typeof renderButton>[0]): ReactElement =>
   renderButton(props, testTheme, { focused: false });
 
 describe("Button", () => {
+  it("paints a size name the scale does not carry as the default size", () => {
+    // The bug guarded: `size` is one of the choices a consumer stores
+    // (`@gpuixui/tokens` publishes `controlSizes`/`isControlSize` for that
+    // read), so a preference a release renamed reached `BUTTON_SIZE[unknown]`
+    // and painted no height or padding class at all — an action shorter than
+    // the label it holds, next to the controls that kept their height.
+    const stored = resting({ size: "xl" as ControlSize, children: "Save" });
+    const fallback = resting({ size: "md", children: "Save" });
+    expect(expectSome(hostStyleRecord(stored))).toEqual(
+      expectSome(hostStyleRecord(fallback)),
+    );
+    expect(expectSome(hostStyle(stored, "height"))).toBe(
+      testTheme.density.controlHeight.md,
+    );
+  });
+
   it("activates on Enter key down, never on key up", () => {
     const onActivate = vi.fn();
     const element = resting({ onActivate });

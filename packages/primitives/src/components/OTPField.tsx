@@ -63,6 +63,7 @@ import { controlRing, keepContent } from "../core/focus.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldSquareClass, otpGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -197,7 +198,7 @@ export const otpFieldPart = (
   const limit = otpLength(props.length ?? 6);
   const disabled = props.disabled === true;
   const resolved = recipeTw.classesToStyle(
-    fieldSquareClass({ size: props.size ?? "md", invalid: props.invalid }),
+    fieldSquareClass({ size: controlSize(props.size), invalid: props.invalid }),
     theme,
   );
   let cellStyle = mergeStyle(resolved.style, keepContent);

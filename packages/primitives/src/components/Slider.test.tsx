@@ -17,6 +17,7 @@ import * as Schema from "effect/Schema";
 import { Icon } from "@gpuixui/icons";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ControlSize } from "../core/theme.js";
 import {
   renderRangeSlider,
   renderSlider,
@@ -101,6 +102,33 @@ const partsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(railOf(element));
 
 describe("Slider", () => {
+  it("draws a size name the scale does not carry at the default size", () => {
+    // The bug guarded: the rail's height, the thumb's side and the pointer
+    // inset all read the control size, and a stored name the scale no longer
+    // carries resolved each to `undefined`/`NaN` — a slider whose rail and
+    // thumb painted nothing, so there was nowhere to press.
+    const stored = renderSlider(
+      { size: "xl" as ControlSize, value: 40 },
+      testTheme,
+      valueOf(40),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    const fallback = renderSlider(
+      { size: "md", value: 40 },
+      testTheme,
+      valueOf(40),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    expect(expectSome(hostStyleRecord(stored))).toEqual(
+      expectSome(hostStyleRecord(fallback)),
+    );
+    expect(expectSome(hostStyle(stored, "height"))).toBe(
+      testTheme.density.controlHeight.md,
+    );
+  });
+
   it("is a named slider that announces its value instead of aria-valuenow", () => {
     const element = renderSlider(
       { value: 42, label: "Volume" },

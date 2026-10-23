@@ -25,6 +25,7 @@ import { useContext, type ReactElement, type ReactNode } from "react";
 import { useMotionPreference } from "@gpuixui/motion/react";
 import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
@@ -116,7 +117,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
   return {
     ...host,
     variant: variant ?? "ghost",
-    size,
+    size: size === undefined ? undefined : controlSize(size),
     square: true,
     disabled,
     loading,

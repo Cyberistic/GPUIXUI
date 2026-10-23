@@ -39,6 +39,7 @@ import {
   type SelectionSpec,
   type SelectionState,
 } from "../core/selection.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { selectionBoxClass, stackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -160,7 +161,8 @@ export const renderCheckboxGroup = (
   handlers: CheckboxGroupHandlers,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  const { orientation = "vertical", size = "md", accent = "primary" } = props;
+  const { orientation = "vertical", accent = "primary" } = props;
+  const size = controlSize(props.size);
   const options = checkboxGroupItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);

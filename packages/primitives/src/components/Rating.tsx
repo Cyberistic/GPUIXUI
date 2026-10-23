@@ -54,6 +54,7 @@ import {
   ratingStarColor,
 } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { ratingGroupClass, ratingStarClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -242,7 +243,7 @@ export const renderRating = (
   const glyph = (filled: boolean): ReactElement => (
     <Icon
       name={filled ? "star-filled" : "star"}
-      size={props.size ?? "md"}
+      size={controlSize(props.size)}
       color={ratingStarColor(filled, theme, props.invalid)}
     />
   );

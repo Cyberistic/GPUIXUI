@@ -35,6 +35,7 @@ import {
 import { rovingIndex } from "../core/roving.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { toggleSelection } from "../core/selection.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
 import { stackClass, toggleClass } from "../recipe/index.js";
@@ -207,10 +208,10 @@ export const renderToggleGroup = (
 ): ReactElement => {
   const {
     orientation = "horizontal",
-    size = "md",
     variant = "default",
     square = false,
   } = props;
+  const size = controlSize(props.size);
   const options = toggleGroupItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);

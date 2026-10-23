@@ -59,6 +59,7 @@ import { accessibleName, fieldHelp } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   numberFieldClass,
@@ -330,7 +331,7 @@ export const numberFieldPart = (
   const current = clampNumeric(state.current, range);
   return {
     theme,
-    size: props.size ?? "md",
+    size: controlSize(props.size),
     invalid: props.invalid === true,
     disabled,
     text,

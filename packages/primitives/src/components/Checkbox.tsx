@@ -48,6 +48,7 @@ import {
   type SelectionState,
 } from "../core/selection.js";
 import { controlRing } from "../core/focus.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import { selectionBoxClass } from "../recipe/index.js";
@@ -214,7 +215,7 @@ export const renderCheckbox = (
         : "unchecked";
   const spec: SelectionSpec = {
     state: current,
-    size: props.size ?? "md",
+    size: controlSize(props.size),
     accent: props.accent ?? "primary",
     shape: "square",
     invalid: props.invalid,

@@ -14,6 +14,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ControlSize } from "../core/theme.js";
 import { renderInput, type FieldState } from "./Input.js";
 import { renderTextArea } from "./TextArea.js";
 import type { FocusState } from "./internal.js";
@@ -53,6 +54,30 @@ const chromeOf = (element: ReactElement) =>
   );
 
 describe("Input", () => {
+  it("paints a size name the scale does not carry at the default height", () => {
+    // The bug guarded: the field's height comes from the density scale by
+    // control size, so a size restored from another release indexed nothing and
+    // the field painted without a height beside the controls that kept theirs.
+    const stored = renderInput(
+      { size: "xl" as ControlSize },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    const fallback = renderInput(
+      { size: "md" },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expect(heightOf(stored)).toStrictEqual(heightOf(fallback));
+    expect(expectSome(heightOf(stored))).toBe(
+      testTheme.density.controlHeight.md,
+    );
+  });
+
   it("renders the value the state machine resolved, not its own draft", () => {
     const element = renderInput(
       {},

@@ -95,7 +95,7 @@ decision is `core/keyboard.test.ts`'s; the delivery is
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `variant` | `ButtonVariant` | `"primary"` | the paint from `core/variants.ts` |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density; a stored name the scale does not carry reads as `md` |
 | `square` | `boolean` | `false` | icon-only geometry |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation; out of the Tab order (`tabIndex: -1`) |
@@ -119,6 +119,14 @@ A key is the one interaction the button acts on before handing it over: a
 trigger opens in its own `onKeyDown` and records the row its surface must focus,
 so the activation leads and the caller's handler observes it afterwards. A
 click keeps the caller-first order.
+
+`size` is a stored choice as often as a literal — a settings row persists it, and
+`@gpuixui/tokens` publishes `controlSizes` beside `isControlSize` for that read —
+so a name a release renamed arrives as a string this scale does not carry. Every
+control resolves it through `controlSize`, which reads such a name as `md`: the
+action keeps the documented height and padding instead of painting without a
+height class. `theme.test.ts` holds the rule and the set of components that must
+use it; `runtime/controls.runtime.test.tsx` measures the painted box.
 
 ## Limitations
 

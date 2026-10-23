@@ -42,6 +42,18 @@ Density is a multiplier over the theme's metrics, never a second palette:
 only. Building density presets is `@gpuixui/tokens`' job, so this package owns no
 second copy of them.
 
+The **control size** a component is given is a stored choice too — a settings
+row persists it, and `@gpuixui/tokens` publishes `controlSizes` beside
+`isControlSize` for that read — so a preference a release renamed arrives as a
+string the union no longer names. Every control resolves its `size` through
+`controlSize` (`core/theme.ts`), which reads a name the current scale does not
+carry as `md`, the default every control documents: the height, the box side,
+the thumb travel and the recipe class then come from that step instead of
+resolving to `undefined`. Measured in a window, a stored name painted a **17px**
+action with no height class beside the **32px** default it documents;
+`theme.test.ts` holds the rule and derives the components that must take their
+size through it, and `runtime/controls.runtime.test.tsx` proves the painted box.
+
 The **words** a control announces are interface copy, so they ride the provider
 too: `messages={{ selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" } }}`
 names the selection states, `press` the toggle states, `star` a rating star's fill

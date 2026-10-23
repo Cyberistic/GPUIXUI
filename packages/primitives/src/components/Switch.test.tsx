@@ -17,6 +17,7 @@ import { platformTheme, targetSize, themes } from "@gpuixui/tokens";
 import { switchThumbInset, switchThumbTravel } from "../core/selection.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ControlSize } from "../core/theme.js";
 import { renderSwitch, type SwitchState } from "./Switch.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
@@ -77,6 +78,33 @@ const animatedLeft = (element: ReactElement): number =>
   ).left;
 
 describe("Switch", () => {
+  it("draws a size name the scale does not carry at the default size", () => {
+    // The bug guarded: the pill's box and the thumb's travel are derived from
+    // the control size, and a stored size name the scale no longer carries
+    // resolved to no width or height class — a switch with no track, while its
+    // 24px press band stayed behind.
+    const stored = renderSwitch(
+      { size: "xl" as ControlSize },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    const fallback = renderSwitch(
+      { size: "md" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyleRecord(trackOf(stored)))).toEqual(
+      expectSome(hostStyleRecord(trackOf(fallback))),
+    );
+    expect(expectSome(hostStyle(trackOf(stored), "height"))).toBe(
+      testTheme.iconSize.md,
+    );
+  });
+
   it("announces itself as a switch and toggles on Space key up", () => {
     const onValueChange = vi.fn();
     const element = renderSwitch(

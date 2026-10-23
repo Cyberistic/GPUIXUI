@@ -14,6 +14,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { fieldRows } from "../core/layout.js";
 import type { ValueState } from "../core/state.js";
+import { controlSize } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { fieldFrame, fieldHostProps, type FieldProps } from "./Input.js";
 import { fieldHint, renderFieldHint } from "./hint.js";
@@ -56,7 +57,7 @@ export const renderTextArea = (
   onValueChange: (value: string) => void,
 ): ReactElement => {
   const host = fieldHostProps(props, theme, state, focus, onValueChange);
-  const vertical = theme.density.controlPaddingX[props.size ?? "md"];
+  const vertical = theme.density.controlPaddingX[controlSize(props.size)];
   const style: StyleDesc = {
     ...host.style,
     height: undefined,
@@ -84,7 +85,7 @@ export const TextArea = (props: TextAreaProps): ReactElement => {
     valueChange(props),
   );
   const hint = fieldHint(props, theme, field.value.current, {
-    size: props.size ?? "md",
+    size: controlSize(props.size),
     align: "top",
     origin: "field",
   });

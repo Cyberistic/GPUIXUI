@@ -3,12 +3,13 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { keyboardFocusRing } from "@gpuixui/tokens";
 import { controlStyle } from "./style.js";
 import { keyboardRing } from "./focus.js";
 import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
-import type { PrimitiveTheme } from "./theme.js";
+import { controlSize, type PrimitiveTheme } from "./theme.js";
 
 /**
  * Guards the two rules that keep the design system in one place.
@@ -109,6 +110,69 @@ describe("the focus ring has one definition", () => {
     expect(keyboardRing(testTheme).focusVisible).toEqual(
       keyboardFocusRing(testTheme).focusVisible,
     );
+  });
+});
+
+describe("a control size is a stored choice", () => {
+  it("paints the documented default for a name the scale does not carry", () => {
+    // A size a release kept is the size it asked for...
+    expect(controlSize("sm")).toBe("sm");
+    expect(controlSize("md")).toBe("md");
+    expect(controlSize("lg")).toBe("lg");
+    // ...and a preference from another release, a number a caller forwarded or
+    // an absent value is the `md` default every control documents, not a scale
+    // index that answers `undefined` through a height and a box side.
+    expect(controlSize("xl")).toBe("md");
+    expect(controlSize("")).toBe("md");
+    expect(controlSize(2)).toBe("md");
+    expect(controlSize(undefined)).toBe("md");
+    expect(controlSize(null)).toBe("md");
+  });
+
+  it("is the read every component takes its size prop through", () => {
+    const dir = join(sourceDir, "components");
+    const sized = Arr.getSomes(
+      Arr.map(
+        Arr.filter(
+          readdirSync(dir),
+          (name) => name.endsWith(".tsx") && !name.endsWith(".test.tsx"),
+        ),
+        (name) => {
+          const source = readFileSync(join(dir, name), "utf8");
+          return source.includes("size?: ControlSize")
+            ? Option.some({ name, source })
+            : Option.none();
+        },
+      ),
+    );
+    // The walk must reach the controls that accept a size, or the scan proves
+    // nothing: an action, a field and a selection control are the families.
+    expect(Arr.map(sized, (file) => file.name)).toEqual(
+      expect.arrayContaining([
+        "Button.tsx",
+        "Checkbox.tsx",
+        "Input.tsx",
+        "Select.tsx",
+        "Slider.tsx",
+      ]),
+    );
+    expect(
+      Arr.map(
+        Arr.filter(sized, (file) => !file.source.includes("controlSize(")),
+        (file) => file.name,
+      ),
+    ).toEqual([]);
+    // The retracted pattern, both halves: a default written at the prop read
+    // and a destructuring default both bypass the scale's own membership rule.
+    const inline = Arr.flatMap(sized, (file) =>
+      Arr.map(
+        Arr.filter(['props.size ?? "md"', 'size = "md"'], (pattern) =>
+          file.source.includes(pattern),
+        ),
+        (pattern) => `${file.name}: ${pattern}`,
+      ),
+    );
+    expect(inline).toEqual([]);
   });
 });
 

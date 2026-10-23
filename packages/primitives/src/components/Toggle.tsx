@@ -42,6 +42,7 @@ import {
   type PressWords,
   type PrimitiveMessages,
 } from "../core/messages.js";
+import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
@@ -130,7 +131,8 @@ export const renderToggle = (
   onPressedChange: (pressed: boolean) => void,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  const { size = "md", variant = "default" } = props;
+  const { variant = "default" } = props;
+  const size = controlSize(props.size);
   const busy = props.disabled === true || props.loading === true;
   // The prop's blank is a deliberate silence; a blank table row is absence and
   // keeps the shipped word (`busyWord`).

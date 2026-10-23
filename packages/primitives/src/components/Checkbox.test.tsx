@@ -17,6 +17,7 @@ import { Icon } from "@gpuixui/icons";
 import { targetInset, targetSize } from "@gpuixui/tokens";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ControlSize } from "../core/theme.js";
 import {
   checkboxState,
   renderCheckbox,
@@ -64,6 +65,33 @@ const glyphOf = (element: ReactElement): ReactElement =>
   elementChildren(markOf(element))[0] ?? expect.fail("the mark drew no glyph");
 
 describe("Checkbox", () => {
+  it("draws a size name the scale does not carry at the default size", () => {
+    // The bug guarded: the box's side comes from the icon scale through
+    // `size-icon-<size>`, and a stored size from another release is a name the
+    // scale no longer carries — the utility then resolves to no width or
+    // height, so the box vanished while its 24px target stayed clickable.
+    const stored = renderCheckbox(
+      { size: "xl" as ControlSize },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    const fallback = renderCheckbox(
+      { size: "md" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyleRecord(drawingOf(stored)))).toEqual(
+      expectSome(hostStyleRecord(drawingOf(fallback))),
+    );
+    expect(expectSome(hostStyle(drawingOf(stored), "width"))).toBe(
+      testTheme.iconSize.md,
+    );
+  });
+
   it("announces its state as value text, and never invents aria-checked", () => {
     const element = renderCheckbox(
       { checked: true },
