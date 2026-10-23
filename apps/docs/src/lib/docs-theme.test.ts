@@ -54,6 +54,10 @@ const pairs: ReadonlyArray<
   ["--accent-foreground", "--accent", contrastFloors.secondary],
   ["--primary-foreground", "--primary", contrastFloors.secondary],
   ["--secondary-foreground", "--secondary", contrastFloors.secondary],
+  // The theme editor draws a destructive-filled action with this pair; the
+  // variable was never declared, so its label inherited the page's ink.
+  ["--destructive-foreground", "--destructive", contrastFloors.secondary],
+  ["--sidebar-primary-foreground", "--sidebar-primary", contrastFloors.secondary],
   ["--sidebar-accent-foreground", "--sidebar-accent", contrastFloors.secondary],
   // The theme editor prints a broken pair in `--destructive`.
   ["--destructive", "--background", contrastFloors.secondary],
