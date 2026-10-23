@@ -10308,7 +10308,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 302/302
+`[x]` `[██████████]` 303/303
+
+`[x]` Teach the **platform-style extension point the mission's acceptance asks
+      for** — `/docs/theming` showed `platformTheme(base, "win32")`, a name
+      lookup, and stopped: a reader could pick a shipped look and had no shown
+      way to take one, edit it and ship their own, although `applyStyle` takes
+      any `PlatformStyle` object and the two tables (`platformStyles`,
+      `retroStyles`) are the files to copy. The page gains **Author a style** —
+      a compact `PlatformStyle` sample through `applyStyle(themes.light, acme)`,
+      the two source paths, the contrast rule (`applyStyle` ignores a style's
+      colours and series when the base needs another variant) and
+      `auditTheme(brand)` before shipping. `src/lib/theming-page.test.ts` (4
+      cases) reads `PlatformType` + `PlatformStyle`'s required fields from the
+      package and requires each as a sample key, holds the merge rule to
+      `applyStyle`'s own `contrast === style.contrast` term, and holds the
+      audit to the exported gate. Directions measured: against the page before
+      the change the sample case fails with all seven fields missing (`[
+      'label', 'sans', 'mono', 'radius', 'density', 'colors', 'contrast' ]`) and
+      the audit case fails on `auditTheme(brand)`; restored, the file is 4/4 and
+      the app is 129 files / 1 112 tests green with `check-types`, `oxlint` and
+      `oxfmt` clean. No native scenario applies — a site page and the package
+      it documents.
 
 `[x]` Teach **both runner lanes the scoped flags they parse** — `/docs/testing`
       showed the whole headless script and one live scenario as if they were the

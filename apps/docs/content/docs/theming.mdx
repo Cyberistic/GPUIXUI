@@ -123,6 +123,31 @@ A browser that refuses site storage keeps the URL's choice and the identity, and
 
 `?look=` selects an authored style (Luna, Aero, Omarchy); the sidebar offers platforms only.
 
+### Author a style
+
+`platformStyles` and `retroStyles` are ordinary tables — `packages/tokens/src/platforms.ts` and `packages/tokens/src/retro.ts`. Copy one, edit a value, and apply it; a role the style omits keeps the base theme's value.
+
+```tsx
+import { applyStyle, themes, type PlatformStyle } from "@gpuixui/tokens";
+
+const acme: PlatformStyle = {
+  label: "Acme",
+  sans: "sans",
+  mono: "Menlo",
+  radius: { none: 0, sm: 4, md: 6, lg: 8, xl: 12, full: 9999 },
+  density: "compact",
+  contrast: "default",
+  colors: {
+    light: { primary: "#0F5E8C", primaryForeground: "#FFFFFF" },
+    dark: { primary: "#4FA9E0", primaryForeground: "#06222F" },
+  },
+};
+
+const brand = applyStyle(themes.light, acme);
+```
+
+`contrast` names the variant the palette was designed for: a base of another variant ignores the style's colours and data series and takes only its geometry and families. Run `auditTheme(brand)` before shipping; `passed` is true only when every report is empty.
+
 ## Read the theme
 
 ```tsx
