@@ -8,6 +8,45 @@ description: Run the workspace, add a package, and render a native component.
 - **Node.js 24.18.0** (`.node-version`).
 - **[`nub`](https://nub.dev)**, the package manager pinned in the root `package.json`.
 
+## Platform support
+
+The library renders through GPUix's **native binding**, not a browser, so a host
+with no binding for it fails before a component paints: `nub install` succeeds
+and the first render exits `2`. `@gpuix/native@0.11.0` declares prebuilt
+bindings for these targets in its `napi.targets`:
+
+| Host | Target |
+| ---- | ------ |
+| Apple Silicon macOS | `aarch64-apple-darwin` |
+| Linux x64 | `x86_64-unknown-linux-gnu` |
+| Windows x64 | `x86_64-pc-windows-msvc` |
+| Windows arm64 | `aarch64-pc-windows-msvc` |
+
+**Intel macOS (`x86_64-apple-darwin`) is not one of them.** This repository's
+own host is that machine, so the binding is built from the pinned release
+revision instead of downloaded:
+
+```sh
+sh apps/playground/scripts/build-native-binding.sh
+```
+
+The script is idempotent, needs Rust and the Command Line Tools (the `xcrun
+metal` step is not required), and installs `gpuix-native.darwin-x64.node` into
+the installed package. It fetches the revision the installed package was built
+from, because the binding's napi surface is version-specific — a binding from a
+different revision does not satisfy it. The recipe and its measured facts are in
+[the playground README](https://github.com/Cyberistic/GPUIXUI/blob/master/apps/playground/README.md#the-binding-on-this-host)
+and [ADR 0003](https://github.com/Cyberistic/GPUIXUI/blob/master/.agents/adr/0003-darwin-x64-source-build.md).
+
+If `nub install` leaves a supported host's optional binary out of the store,
+`nub install --node-linker hoisted` links it. The **offscreen renderer** the
+behaviour suites use is macOS and Windows only; on Linux x64 the native window
+runs, but the suites that need `TestRenderer` do not — the
+[`@gpuixui/testing`](https://github.com/Cyberistic/GPUIXUI/blob/master/packages/testing/src/runtime.ts)
+preflight reports the reason per host. This project's own suites have run on
+macOS; the other targets are the package's declaration, and
+[Runtime capabilities](/docs/runtime) records what has actually been measured.
+
 ## Install the workspace
 
 ```sh
@@ -48,6 +87,10 @@ const theme = isDark ? darkTheme : lightTheme;
 ```sh
 nub run dev:playground
 ```
+
+The binding is native, so a host with no prebuilt binary — an Intel Mac — builds
+one before the window opens: [Platform support](/docs/installation#platform-support)
+names the targets and the source build.
 
 ## Run it in a terminal
 

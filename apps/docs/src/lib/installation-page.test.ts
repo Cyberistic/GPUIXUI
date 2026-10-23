@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -26,6 +26,8 @@ interface Manifest {
   readonly devEngines?: {
     readonly packageManager?: { readonly name?: string };
   };
+  /** The native package's declared prebuild matrix. */
+  readonly napi?: { readonly targets?: ReadonlyArray<string> };
 }
 
 const manifest = (path: string): Manifest =>
@@ -102,5 +104,45 @@ describe("the installation page", () => {
   it("imports only names the packages publish", () => {
     expect(imports.length).toBeGreaterThanOrEqual(2);
     expect(unresolvedImports(imports)).toEqual([]);
+  });
+
+  it("names every host the native package builds for, and the host it does not", () => {
+    // The binding is native, so a host with no binary for it installs cleanly
+    // and exits `2` before a component paints. Intel macOS is exactly that host
+    // (BLOCKERS B1), and this is the first page a reader follows: the table is
+    // held to the installed package's own target list rather than to memory,
+    // and the workaround is held to the script that exists.
+    const native = manifest(
+      "apps/docs/node_modules/@gpuix/native/package.json",
+    );
+    const targets = native.napi?.targets ?? [];
+
+    expect(targets.length).toBeGreaterThanOrEqual(4);
+    expect(targets.filter((target) => !page.includes(target))).toEqual([]);
+
+    // The premise the source-build note rests on: no prebuilt Intel macOS
+    // binding, so the page names that target and the command that builds it.
+    expect(targets).not.toContain("x86_64-apple-darwin");
+    expect(page).toContain("x86_64-apple-darwin");
+
+    const script = "apps/playground/scripts/build-native-binding.sh";
+    expect(page).toContain(script);
+    expect(existsSync(join(repoRoot, script))).toBe(true);
+    expect(page).toContain(
+      "apps/playground/README.md#the-binding-on-this-host",
+    );
+  });
+
+  it("says which hosts can run the offscreen renderer's suites", () => {
+    // A Linux x64 host loads the binding but cannot run the behaviour suites,
+    // because `TestRenderer` is macOS and Windows only. The page links the
+    // preflight instead of restating a per-host matrix that would drift, and
+    // the claim is read through the concatenated string the source builds.
+    const preflight = readRepo("packages/testing/src/runtime.ts")
+      .replaceAll(/["+]/g, " ")
+      .replaceAll(/\s+/g, " ");
+
+    expect(preflight).toContain("are macOS and Windows only");
+    expect(page).toContain("macOS and Windows only");
   });
 });

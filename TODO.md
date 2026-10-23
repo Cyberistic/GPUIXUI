@@ -10304,7 +10304,41 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 289/289
+`[x]` `[██████████]` 290/290
+
+`[x]` Publish the **hosts the native binding installs on, and the one it does
+      not** — `/docs/installation` listed Node and nub and nothing about the
+      platform, so a reader on Intel macOS followed `nub install` and
+      `nub run dev:playground` to exit `2` with no explanation, which is exactly
+      the wall BLOCKERS B1 measured on this box. `@gpuix/native@0.11.0` declares
+      prebuilds for `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`,
+      `x86_64-pc-windows-msvc` and `aarch64-pc-windows-msvc`; this repository's
+      own host (`x86_64-apple-darwin`) is not one of them. The page gains
+      **Platform support**: the four targets as a host table, the missing Intel
+      row named, the idempotent
+      `sh apps/playground/scripts/build-native-binding.sh` with what it needs
+      (Rust, Command Line Tools, no `xcrun metal`) and why it fetches the pinned
+      revision, links to the playground README section and ADR 0003, the
+      `nub install --node-linker hoisted` fallback for a supported host whose
+      optional binary the isolated linker skipped, and the offscreen renderer's
+      **macOS and Windows only** limit (a Linux x64 host runs the live window
+      only) held to the `@gpuixui/testing` preflight. It says what has actually
+      run here — this project's suites on macOS — and leaves the other targets
+      as the package's declaration, linked to `/docs/runtime`. The
+      getting-started put the same link beside `nub run dev:playground`.
+      Guards: `installation-page.test.ts` gains `names every host the native
+      package builds for, and the host it does not` (the target list read from
+      the installed package's own `napi.targets`, every row required, the absent
+      Intel target, the script path and that it exists on disk, the README
+      anchor) and `says which hosts can run the offscreen renderer's suites`
+      (the preflight's concatenated claim and the page agree). Directions
+      measured: deleting the Windows arm64 row fails
+      `expected [ 'aarch64-pc-windows-msvc' ] to deeply equal []`, renaming the
+      script fails the path, dropping the Intel sentence fails
+      `to contain 'x86_64-apple-darwin'`, and reworking the offscreen claim
+      fails by name; restored, the file is 6/6. The app is 136 files / 1 474
+      tests green, `check-types` and `build` clean. No native scenario applies —
+      a Markdown page and its checks.
 
 `[x]` Hold the component index's **hand-written curated list** to the pages it
       summarizes — the intro names every component the site documents in depth
