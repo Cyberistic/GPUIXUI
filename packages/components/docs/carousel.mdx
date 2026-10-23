@@ -1,6 +1,6 @@
 ---
 title: Carousel
-description: Discrete slide stepping, with every slide kept mounted.
+description: Discrete slide stepping, one mounted slide at a time.
 ---
 
 <ComponentPreview name="carousel-states" />
@@ -37,22 +37,31 @@ Carousel
 └── CarouselIndicators
 ```
 
+Only the slide on screen is mounted. `CarouselSlide` returns `null` for every
+other index, so the track lays out one slide and nothing hidden can paint or take
+a tab stop — the pinned runtime ignores `display: none`, so a mounted spare slide
+would paint beside the active one with its controls still reachable. The cost is
+stated where it is paid: **a slide's local state does not survive a visit** (a
+form on slide two is empty when the reader returns).
+
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Carousel` | `role="group"` named by `label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?` |
 | `CarouselTrack` | the slide row | children (slides must be direct) |
-| `CarouselSlide` | one slide | `style?: StateStyle<CarouselSlideState>` |
+| `CarouselSlide` | one slide, or nothing while another is on screen | `style?: StateStyle<CarouselSlideState>` (`{ index }`) |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
 | `CarouselIndicators` | `role="group"` of named dots | `label?`, `style?: StateStyle<CarouselIndicatorsState>` |
 
 ## Limitations
 
-- The track does not travel; the frame is sized by the visible slide.
+- The track does not travel; the frame is sized by the slide on screen.
 - No swipe, drag or scroll snap.
 - No auto-advance or thumbnails.
-- Inactive slides stay mounted; many heavy slides cost render time.
+- Only the slide on screen is mounted, so its local state is lost when the reader
+  leaves it. That is the honest hiding word: the runtime ignores `display: none`,
+  so a kept slide would paint and keep its tab stops.
 
 ## Related
 

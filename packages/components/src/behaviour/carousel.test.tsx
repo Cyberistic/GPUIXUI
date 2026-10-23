@@ -1,12 +1,13 @@
 /**
  * Carousel behaviour, in the real GPUix renderer.
  *
- * The bugs these guard: every slide painted at once, a step that runs past the
- * last slide, loop ignored, arrow keys that do not move, a controlled carousel
- * that moves on its own, a style callback that cannot see the active slide, an
- * indicator that jumps between its two widths because the state is a style
- * value rather than a motion target, and a reduced-motion reader who is made to
- * watch the dot travel anyway.
+ * The bugs these guard: every slide mounted at once (the runtime ignores
+ * `display: none`, so a spare slide painted beside the active one and kept its
+ * controls as tab stops), a step that runs past the last slide, loop ignored,
+ * arrow keys that do not move, a controlled carousel that moves on its own, a
+ * style callback that cannot see the slide's position, an indicator that jumps
+ * between its two widths because the state is a style value rather than a motion
+ * target, and a reduced-motion reader who is made to watch the dot travel anyway.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -101,10 +102,11 @@ const StatefulGallery = ({
   );
 };
 
-/** Which slides are painted, from their `display` style. */
-const displays = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
-  [0, 1, 2].map(
-    (index) => root.renderer.findByTestId(`slide-${index}`)?.style.display,
+/** Which slides are mounted: a spare slide unmounts rather than paints. */
+const mounted = (root: ComponentTestRoot): ReadonlyArray<number> =>
+  Arr.filter(
+    [0, 1, 2],
+    (index) => root.renderer.findByTestId(`slide-${index}`) !== undefined,
   );
 
 /** The dot a press target draws — its one painted child. */
@@ -137,11 +139,14 @@ const DOT_REST = 6;
 const DOT_ACTIVE = 18;
 
 describe("Carousel", () => {
-  it("mounts every slide and displays only the active one", () => {
+  it("mounts only the slide on screen", () => {
     const gallery = renderComponent(<Gallery value={1} />);
 
-    expect(gallery.renderer.getAllText()).toEqual(["One", "Two", "Three"]);
-    expect(displays(gallery)).toEqual(["none", "flex", "none"]);
+    // The bug this guards: every slide was mounted and hidden with
+    // `display: none`, which the pinned renderer ignores — so all three painted
+    // in one row and the spare slides' controls stayed in the tab order.
+    expect(gallery.renderer.getAllText()).toEqual(["Two"]);
+    expect(mounted(gallery)).toEqual([1]);
 
     gallery.unmount();
   });
@@ -154,7 +159,7 @@ describe("Carousel", () => {
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).toHaveBeenLastCalledWith(1);
-    expect(displays(gallery)).toEqual(["none", "flex", "none"]);
+    expect(mounted(gallery)).toEqual([1]);
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).toHaveBeenLastCalledWith(2);
@@ -242,7 +247,7 @@ describe("Carousel", () => {
     clickCentreOf(gallery, "next");
 
     expect(onValueChange).toHaveBeenCalledWith(2);
-    expect(displays(gallery)).toEqual(["none", "flex", "none"]);
+    expect(mounted(gallery)).toEqual([1]);
 
     gallery.unmount();
 
@@ -254,7 +259,7 @@ describe("Carousel", () => {
       <Gallery value={Number.NaN} onValueChange={onValueChange} />,
     );
 
-    expect(displays(unreadable)).toEqual(["flex", "none", "none"]);
+    expect(mounted(unreadable)).toEqual([0]);
 
     clickCentreOf(unreadable, "next");
     expect(onValueChange).toHaveBeenLastCalledWith(1);
@@ -278,19 +283,19 @@ describe("Carousel", () => {
     gallery.unmount();
   });
 
-  it("hands the active state to a style callback, in both themes", () => {
+  it("hands the slide's position to a style callback, in both themes", () => {
     const gallery = renderComponent(
       <Carousel testId="carousel" label="Screenshots" value={1}>
         <CarouselTrack testId="track">
           <CarouselSlide
             testId="slide-0"
-            style={(state) => ({ opacity: state.active ? 1 : 0.25 })}
+            style={(state) => ({ opacity: state.index + 1 })}
           >
             <text>One</text>
           </CarouselSlide>
           <CarouselSlide
             testId="slide-1"
-            style={(state) => ({ opacity: state.active ? 1 : 0.25 })}
+            style={(state) => ({ opacity: state.index + 1 })}
           >
             <text>Two</text>
           </CarouselSlide>
@@ -299,17 +304,35 @@ describe("Carousel", () => {
       </Carousel>,
     );
 
-    expect(gallery.renderer.findByTestId("slide-0")?.style.opacity).toBe(0.25);
-    expect(gallery.renderer.findByTestId("slide-1")?.style.opacity).toBe(1);
+    // The callback runs for the slide on screen, and its `index` is the position
+    // the track gave it — the one state a mounted slide has left.
+    expect(gallery.renderer.findByTestId("slide-0")).toBeUndefined();
+    expect(gallery.renderer.findByTestId("slide-1")?.style.opacity).toBe(2);
     expect(gallery.renderer.findByTestId("track")?.style.backgroundColor).toBe(
       darkTheme.colors.card,
     );
 
     gallery.unmount();
 
-    const light = renderComponent(<Gallery value={0} />, "light");
+    const light = renderComponent(
+      <Carousel testId="carousel" label="Screenshots" value={0}>
+        <CarouselTrack testId="track">
+          <CarouselSlide
+            testId="slide-0"
+            style={(state) => ({ opacity: state.index + 1 })}
+          >
+            <text>One</text>
+          </CarouselSlide>
+          <CarouselSlide testId="slide-1">
+            <text>Two</text>
+          </CarouselSlide>
+        </CarouselTrack>
+        <CarouselControl direction="next" testId="next" />
+      </Carousel>,
+      "light",
+    );
     expect(light.renderer.findByTestId("carousel")).toBeDefined();
-    expect(light.renderer.findByTestId("slide-0")?.style.display).toBe("flex");
+    expect(light.renderer.findByTestId("slide-0")?.style.opacity).toBe(1);
     light.unmount();
   });
 
@@ -398,7 +421,7 @@ describe("Carousel", () => {
       clickCentreOf(gallery, "dots-2");
 
       expect(onValueChange).toHaveBeenLastCalledWith(2);
-      expect(displays(gallery)).toEqual(["none", "none", "flex"]);
+      expect(mounted(gallery)).toEqual([2]);
     } finally {
       gallery.unmount();
     }

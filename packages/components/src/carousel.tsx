@@ -1,12 +1,16 @@
 /**
  * Carousel: discrete slide stepping, with an animated selection indicator.
  *
- * The frame is sized by the slide on screen: every slide stays mounted and only
- * the active one is laid out (`display`), which keeps each slide's component
- * state — a form on slide two is not reset by visiting slide three — and needs no
- * absolute positioning. A track that travelled between two slides would have to
- * lay all of them out in one box, and the frame would then take its height from
- * the tallest slide rather than the one being read, so the track does not travel.
+ * The frame is sized by the slide on screen because only that slide is mounted.
+ * The pinned renderer's `apply_styles` acts on `display` of `flex` and `grid`
+ * only, so a mounted spare slide hidden with `display: none` still lays out,
+ * paints beside the active one and keeps its controls as tab stops
+ * (`hidden-subtree-lifecycle` measures both). The mount window is the
+ * component's to keep, and its cost is stated where it is paid: a slide's local
+ * state does not survive a visit. A track that travelled between two slides
+ * would have to lay all of them out in one box, and the frame would take its
+ * height from the tallest slide rather than the one being read, so the track
+ * does not travel.
  *
  * What does move is the indicator: the active dot grows from the 6px circle to
  * the 18px pill on the runtime's own clock, because `motion` interpolates
@@ -242,13 +246,12 @@ export interface CarouselSlideProps extends Omit<Props, "children" | "style"> {
   readonly children?: PartChildren;
 }
 
-/** What a slide draws: whether it is on screen and its index. */
+/** What a slide draws: its position in the track. */
 export interface CarouselSlideState {
-  readonly active: boolean;
   readonly index: number;
 }
 
-/** One slide. It stays mounted while inactive and is hidden with `display`. */
+/** One slide. Only the slide on screen is mounted; the rest unmount. */
 export const CarouselSlide = ({
   className,
   style,
@@ -258,16 +261,15 @@ export const CarouselSlide = ({
   const theme = useTheme();
   const { active: activeIndex } = useCarousel();
   const index = useContext(SlideIndexContext) ?? 0;
-  const active = index === activeIndex;
+
+  if (index !== activeIndex) return null;
 
   return (
     <div
       {...rest}
       style={mergeStyles(
-        mergeStyles(recipeStyle(cn(CAROUSEL_SLIDE, className), theme), {
-          display: active ? "flex" : "none",
-        }),
-        resolveStyle(style, { active, index }),
+        recipeStyle(cn(CAROUSEL_SLIDE, className), theme),
+        resolveStyle(style, { index }),
       )}
     >
       {children}
@@ -481,7 +483,7 @@ export const carouselMeta = {
     "the active indicator grows between the 6px dot and the 18px pill on the runtime's clock (`fast`, 160 ms); the two inks change with the selection in the same frame, because `motion` interpolates numbers and has no colour",
     "no swipe gesture (no drag host feature) and no scroll snap",
     "no auto-advance or thumbnails in v1",
-    "inactive slides stay mounted and are hidden with display: none",
+    "only the slide on screen is mounted, so a slide's local state does not survive a visit (the pinned renderer ignores `display: none`, so a mounted spare slide would paint and keep its tab stops)",
   ],
   docs: "docs/carousel.mdx",
   example: "examples/carousel.example.tsx",
