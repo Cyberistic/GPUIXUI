@@ -1551,13 +1551,109 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(image?.workaround).toContain("both");
 
     const page = measuredRow("Image bytes");
-    expect(page, "the page's measured table has no image-box row").toBeDefined();
+    expect(
+      page,
+      "the page's measured table has no image-box row",
+    ).toBeDefined();
     expect(page?.[1]).toContain("image-box");
     expect(page?.[1]).toContain(box(intrinsic, intrinsic));
     expect(page?.[1]).toContain(square);
     expect(page?.[1]).toContain(box(width, height));
     expect(page?.[1]).toContain("replaces");
     expect(page?.[2]).toContain("both");
+  });
+
+  it("records the paint inside an image's box, derived from its fixture", () => {
+    // `image-box` measured the box an `<img>` occupies and `image-fit` measured
+    // what its pixels do inside it: five `objectFit` modes, a smaller bitmap
+    // than its box, and a radius that clips the bitmap. The record taught the
+    // box and nothing about the paint, so a preview that must show everything
+    // could be built with `cover`, and a `none` bitmap was assumed centred. The
+    // placements are derived from the fixture, so a row that teaches a placement
+    // the probe no longer paints fails by name.
+    const fixture = read("apps/playground/src/live/image-fit.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d.]+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const boxOf = (name: string): { width: number; height: number } => {
+      const match = new RegExp(
+        `export const ${name}: FitBox = \\{ width: ([\\d.]+), height: ([\\d.]+) \\};`,
+      ).exec(fixture);
+      return {
+        width: Number(match?.[1] ?? Number.NaN),
+        height: Number(match?.[2] ?? Number.NaN),
+      };
+    };
+
+    const sourceWidth = constant("FIT_SOURCE_WIDTH");
+    const sourceHeight = constant("FIT_SOURCE_HEIGHT");
+    const full = boxOf("FIT_BOX");
+    const small = boxOf("FIT_SMALL_BOX");
+
+    const at = (x: number, y: number, w: number, h: number): string =>
+      `${x},${y} ${w}×${h}`;
+    const scaled = (box: { width: number; height: number }, scale: number): string =>
+      at(
+        (box.width - sourceWidth * scale) / 2,
+        (box.height - sourceHeight * scale) / 2,
+        sourceWidth * scale,
+        sourceHeight * scale,
+      );
+    const fill = at(0, 0, full.width, full.height);
+    const contain = scaled(full, Math.min(full.width / sourceWidth, full.height / sourceHeight));
+    const cover = scaled(full, Math.max(full.width / sourceWidth, full.height / sourceHeight));
+    const coverScale = Math.max(full.width / sourceWidth, full.height / sourceHeight);
+    const cropStart = Math.round(
+      (0 - (full.width - sourceWidth * coverScale) / 2) / coverScale,
+    );
+    const cropEnd = Math.round(
+      (full.width - (full.width - sourceWidth * coverScale) / 2) / coverScale,
+    );
+    const natural = at(0, 0, sourceWidth, sourceHeight);
+    const scaleDownSmall = scaled(
+      small,
+      Math.min(1, small.width / sourceWidth, small.height / sourceHeight),
+    );
+
+    // The premise: the fixture's box is wider than the bitmap, so the five
+    // modes cannot coincide.
+    expect(full.width).toBeGreaterThan(sourceWidth);
+    expect(full.height).toBeGreaterThan(sourceHeight);
+    expect(new Set([fill, contain, cover, natural]).size).toBe(4);
+
+    const image = rowFor("Image painting");
+    expect(image?.verdict).toBe("supported, with limits");
+    expect(image?.evidence).toContain("image-fit");
+    expect(image?.evidence).toContain("161 checks");
+    const placements = [fill, contain, cover, natural, scaleDownSmall];
+    expect(placements.length).toBe(5);
+    const evidence = image?.evidence ?? "";
+    expect(
+      placements.filter((placement) => !evidence.includes(placement)),
+    ).toEqual([]);
+    expect(image?.evidence).toContain(`x=${cropStart}–${cropEnd}`);
+    expect(image?.evidence).toContain("top-left corner");
+    expect(image?.evidence).toContain("clips");
+    expect(image?.workaround).toContain("crops");
+    expect(image?.workaround).toContain("offset");
+
+    const page = measuredRow("Image bytes");
+    expect(
+      page,
+      "the page's measured table has no image-fit row",
+    ).toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("image-fit");
+    expect(
+      [fill, contain, cover, natural].filter(
+        (placement) => !pageEvidence.includes(placement),
+      ),
+    ).toEqual([]);
+    expect(pageEvidence).toContain(`x=${cropStart}–${cropEnd}`);
+    expect(pageEvidence).toContain("top-left corner");
+    expect(page?.[2]).toContain("crops");
   });
 
   it("records the Select reveal gap a window and a runtime suite measured", () => {
