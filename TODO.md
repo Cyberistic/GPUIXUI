@@ -7020,7 +7020,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 200/200
+`[x]` `[██████████]` 201/201
+
+`[x]` Keep the **Table page's printed count** true — `packages/data`'s
+`table.test.tsx` now runs **23** native behaviour cases (the row press landed)
+while the curated page's Status section still said **22**, so the generic count
+case reported `table.mdx: says 22, suite runs 23` on `master`. The page says 23;
+`component-page-truth.test.ts` already derives the number with `nativeCases`, so
+the stale page was the only failure and the fix needs no new guard. Direction
+measured: with the page at 22 the case fails with that exact message, and at 23
+the file is 44/44. `nub run --filter @gpuixui/docs check-types` is clean. No
+native scenario applies — a printed count and its guard have no runtime path.
 
 `[x]` Publish the **focus ring a filled action paints** — `/docs/accessibility`
 taught the ring from the tokens and the typings, while the one case the offset
