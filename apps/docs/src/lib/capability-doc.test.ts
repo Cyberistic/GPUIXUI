@@ -13,6 +13,7 @@ import {
 } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { columnDrag } from "./column-drag.test-util";
+import { reflow } from "./floating-reflow.test-util";
 
 /**
  * The capability record, held to the code that encodes it.
@@ -1652,6 +1653,63 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain("floating-sides");
     expect(page?.[1]).toContain("centre line");
     expect(page?.[2]).toContain('align="start"');
+  });
+
+  it("records the placement an open panel keeps through a reflow, from its fixture", () => {
+    // A dock's menu left open while a divider is dragged, a column menu while a
+    // column hides, a window zoom: the anchor's box is computed again and the
+    // panel was placed against the old one. `floating-reflow-lifecycle` measured
+    // the zoom half on three anchors at once, so the record and the page print
+    // the geometry the fixture derives rather than copying a run.
+    const at = (placement: { readonly x: number; readonly y: number }): string =>
+      `${placement.x},${placement.y}`;
+
+    const row = rowFor("Floating panel reflow");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("floating-reflow-lifecycle");
+    expect(row?.evidence).toContain(`${reflow.checks} checks`);
+    expect(row?.evidence).toContain(at(reflow.right.anchor.rest));
+    expect(row?.evidence).toContain(at(reflow.right.anchor.zoomed));
+    expect(row?.evidence).toContain(at(reflow.right.panel.rest));
+    expect(row?.evidence).toContain(at(reflow.right.panel.zoomed));
+    expect(row?.evidence).toContain(`y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`);
+    expect(row?.evidence).toContain(at(reflow.popoverTrigger.rest));
+    expect(row?.evidence).toContain(at(reflow.popoverTrigger.zoomed));
+    expect(row?.evidence).toContain(`**${reflow.gap}**`);
+    expect(row?.evidence).toContain(`**${reflow.travel.dx}**`);
+    expect(row?.evidence).toContain(`**${reflow.travel.dy}**`);
+    // A panel that stays on its absolute pixels is the failure the control
+    // names, and the side is a source read rather than a measurement.
+    expect(row?.evidence).toContain(
+      `**${reflow.right.panel.rest.x}** reads **${reflow.right.panel.zoomed.x}**`,
+    );
+    expect(row?.evidence).toContain("decided once per open");
+    expect(row?.evidence).toContain("a source read, not a measurement");
+    expect(row?.workaround).toContain("divider drag");
+
+    const page = measuredRow("Floating panel reflow");
+    expect(page, "the page's measured table has no reflow row").toBeDefined();
+    expect(page?.[1]).toContain("floating-reflow-lifecycle");
+    expect(page?.[1]).toContain(`${reflow.checks} checks`);
+    expect(page?.[1]).toContain(at(reflow.right.panel.zoomed));
+    expect(page?.[1]).toContain(`y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`);
+    expect(page?.[2]).toContain("divider drag");
+
+    // The probe's own record is the third surface: the fixture derives the
+    // travel the section prints, so a gap or an inset that moves fails here.
+    const section = read("apps/playground/README.md").slice(
+      read("apps/playground/README.md").indexOf("### `floating-reflow-lifecycle`"),
+    );
+    expect(section).toContain(`${reflow.travel.dx}`);
+    expect(section).toContain(`${reflow.travel.dy}`);
+
+    // The runner opens the window the section prints, and §5 owes the probe.
+    expect(reflow.runnerWindow).toEqual(reflow.window.opened);
+    expect(reflow.minTravel).toBeLessThan(reflow.travel.dy);
+    expect(reflow.minTravel).toBeLessThan(reflow.travel.dx);
+    expect(
+      doc.slice(doc.indexOf("## 5. Keeping this document true")),
+    ).toContain("`floating-reflow-lifecycle`");
   });
 
   it("records what `aspectRatio` fills, derived from its fixture", () => {
@@ -4671,6 +4729,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("data-grid-frozen-column");
     expect(runtimePage).toContain("select-lifecycle");
     expect(runtimePage).toContain("floating-sides");
+    expect(runtimePage).toContain("floating-reflow-lifecycle");
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("a11y-tree");
     expect(runtimePage).toContain("motion-geometry");
