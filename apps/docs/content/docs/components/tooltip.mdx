@@ -231,9 +231,8 @@ tooltip mechanism, so the layer, the delay and the dismissal are supported rathe
 than reimplemented. The wrapper is held by
 `packages/primitives/src/components/Tooltip.test.tsx` and the live
 `tooltip-lifecycle` probe in `apps/playground` (on 0.11.0: hover opens the tip
-above its trigger, the entry fades and rises into place, leaving closes it,
-Escape dismisses it with the focus on the trigger, and a traversal leaves it
-closed). Its motion is measured on the
+above its trigger, leaving closes it, Escape dismisses it with the focus on the
+trigger, and a traversal leaves it closed). Its motion is measured on the
 `TestRenderer`'s motion clock — the tip travels into place, a clicked tip is
 still painted in the click's frame and gone after its window, and the reduced
 preference lands at once. The `partial` verdict is the one measured gap above — a
