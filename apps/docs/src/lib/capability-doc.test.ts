@@ -1656,6 +1656,51 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("crops");
   });
 
+  it("publishes the order a negative tab index gives, not a skip", () => {
+    // The dock's keyboard row said a `tabIndex={-1}` control was "skipped by
+    // the same traversal", which is only true forwards. `grid-focus-lifecycle`
+    // measured a negative cell ordered **before** the zero-index stops: the app
+    // can focus it, and its next Tab leaves to the control before the widget.
+    // The ids are derived from the fixture and the probe's own assertion is
+    // read, so neither document can teach a skip the window did not measure.
+    const fixture = read("apps/playground/src/live/grid-focus.ts");
+    const columns = Number(
+      /export const GRID_COLUMNS = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    const rows = Number(
+      /export const GRID_ROWS = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    expect(columns).toBeGreaterThan(1);
+    expect(rows).toBeGreaterThan(1);
+    expect(fixture).toContain("index === roving ? 0 : -1");
+
+    const excluded = `gridfocus-r${rows - 1}c${columns - 1}`;
+    const before = "grid-focus-before";
+    const probe = read("apps/playground/src/live/scenarios.tsx");
+    expect(probe).toContain("cell(2, 2)");
+    expect(probe).toContain(
+      "a negative tab index is ordered before the grid's stops, not removed from the chain",
+    );
+
+    const dock = rowFor("Dock keyboard navigation");
+    expect(dock?.evidence).toContain("grid-focus-lifecycle");
+    expect(dock?.evidence).toContain(excluded);
+    expect(dock?.evidence).toContain(before);
+    expect(dock?.evidence).toContain("orders it **before**");
+    expect(dock?.evidence).not.toContain("skipped by the same traversal");
+    expect(dock?.workaround).toContain("move focus out");
+
+    const page = measuredRow("Dock keyboard navigation");
+    expect(
+      page,
+      "the page's measured table has no dock keyboard row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("grid-focus-lifecycle");
+    expect(page?.[1]).toContain("the zero stops");
+    expect(page?.[1]).not.toContain("skipped by the same traversal");
+    expect(page?.[2]).toContain("move focus out");
+  });
+
   it("records the Select reveal gap a window and a runtime suite measured", () => {
     // `Select` is named in §2 as provided, so the record read as "a Select is
     // just a wrapper". A window measured the overlay half (`select-lifecycle`)
@@ -2047,6 +2092,9 @@ describe("docs/gpuix-capabilities.md", () => {
       ["wrow-60", "a row marker the windowed list probe checked for"],
       ["row-alpha", "a row marker the reorder probe dragged"],
       ["row-delta", "a row marker the reorder probe dropped onto"],
+      ["gridfocus-r2c2", "a cell id the roving-grid probe focused by hand"],
+      ["grid-focus-before", "a control id the roving grid's next Tab reached"],
+      ["grid-focus-after", "a control id a one-press exit from the grid reached"],
     ]);
 
     const evidenceTokens = rows.flatMap((row) =>
