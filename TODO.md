@@ -4634,6 +4634,39 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 `[x]` `[██████████]` 14/14
 
+`[x]` `packages/primitives`: **a blank state word silenced a control's only
+      announcement** — the provider's `messages` table is filled per state, so a
+      translation that never reached a row leaves `""`, and the *static* words
+      (`selection`, `press`, `star`, `scrollRegion`, the two `loading` words)
+      were published as they arrived while the three *sentences* and every
+      formatter already read a blank answer as absence. This runtime has no
+      `aria-checked`/`aria-pressed`/`aria-busy`, so `aria-valuetext` is the whole
+      channel: `selection: { checked: "coché", unchecked: "", mixed: "" }`
+      announced **nothing** on an unchecked box while it still held a value, and
+      a blank `scrollRegion` published a `group` with an empty name — the exact
+      unnamed tab stop `DEFAULT_SCROLL_NAME` exists to prevent. `core/a11y.ts`'s
+      `spokenWord` is `spokenText` for a static table field (blank is absence, a
+      real word is trimmed); `selectionWord`/`pressWord`/`starWord` resolve per
+      word so a translated row keeps the caller's language, and `busyWord`/
+      `indeterminateWord` are the two loading words. `Button`/`Toggle`/`Spinner`
+      read `busyWord` (a blank **`loadingLabel` prop** stays the documented
+      deliberate silence — the two blanks are different), `Progress` reads
+      `indeterminateWord`, and `ScrollArea` resolves `scrollRegion` through
+      `spokenWord` so the tab stop always has a name. Proof: `messages.test.tsx`
+      gains `a state word a caller's table says nothing for` (3 cases: every
+      helper word, per-row resolution, trimming and the busy-prop distinction,
+      plus every painted control) and `runtime/messages.runtime.test.tsx` gains
+      `keeps the shipped state word when the table's says nothing`, reading the
+      filled words and the named `Group` out of a window's accessibility tree.
+      Directions measured: with `spokenWord` returning the raw field, both unit
+      cases fail `expected '' to be 'checked'` and the window case fails by name;
+      with `ScrollArea` publishing the table directly, `docs.test.ts`'s
+      `keeps a control's own state word when the table's says nothing` fails on
+      the painter it names; restored, `messages.test.tsx` is 22/22 and the
+      window file 8/8. Docs: `docs/theme-provider.mdx` §Words gains the
+      per-state rule and the `scrollRegion` exception, the README names
+      `spokenWord`, and no component page's status changes.
+
 `[x]` `packages/primitives`: **a blank sentence answer named a control with
       nothing** — `PrimitiveMessages`' three *sentences* (`starName`,
       `codeDigit`, `rangeEnd`) are functions a component calls with the caller's
@@ -7584,6 +7617,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Retract the **crop row's "unverified" half** — `COMPONENTS.md`'s Tier 5 **Crop area** row says "the handles, the constraints and any mask stay **unverified**", while the playground's `crop-overlay` (37 checks, 0.11.0) measured all three: four positioned veil bars in the `overlay` role are the only mask the runtime supports (`#12451F` over a `#34C759` bitmap), the bars leave the hole a press (`pointerEvents: "none"`), and a 10×10 corner handle drags the hole from `60,40,24,24` (the 24-point minimum) to `60,40,180,120` (the bitmap's edges) with the bars re-painting. The row should cite the probe and keep only the honest half — the crop is a composition, not a runtime feature | components (`COMPONENTS.md`'s Crop area row, `@gpuixui/media`) | open — measured 2026-10-23; the probe and its section are the playground's |
 | Name the **soft status tints** in the indicator-marks prose — `indicatorSurfaces` gained each status tone's `xSoft` (the surface a filled action or a status mark stands on inside a message), and both theming pages print the strip list from the array, but the sentence that explains the strips still enumerated the nine it had. Both pages now name the four soft tints and the measurement that put them there (macOS dark's system blue failed all four, so the style takes `#3B9DFF` at **3.01:1** on the warning tint, the tightest placement the sweep finds) and cite `indicator.test.ts` | docs-site (`themes.mdx` §The theme audit, `theming.mdx` §Indicator marks) | **resolved 2026-10-23** — the tokens commit (`ed6e9091`) landed the tint and macOS dark's `#3B9DFF`, and both sections teach it; `theming-page.test.ts`'s strip case now requires the tint sentence, the four soft tints and the `indicator.test.ts` citation, so the printed list and the explanation cannot separate. Directions measured: deleting the sentence fails `themes.mdx` and `theming.mdx` by name ("does not explain the tint a mark stands on"), and the file is 1 248 tests with `check-types` clean |
 | Publish the **trail rules a window measured** — Tier 4's *Breadcrumb navigation* row now cites `breadcrumb-navigation-lifecycle` (48 checks, 0.11.0), and `packages/components/docs/breadcrumb.mdx` §Limitations still says only "the collapsing ellipsis is text, not a button": it does not teach that an unbudgeted trail **wraps** (16 → **36** in a 280-wide pane) instead of clipping, that a budget derived from the pane's own `onLayout` keeps it one row (**28**), or that the levels a budget hides are reachable only through a trigger the app composes (the trail's next Tab stop, a real menu whose rows are focus stops; a chosen level leaves the trigger unpainted when the path fits). A consumer reading the page cannot build the trail the window proved | components (`packages/components/docs/breadcrumb.mdx`) | open — measured 2026-10-23; the probe and its README section are the playground's |
+| Land `chart-surface-lifecycle` as one unit — the data workstream's probe (`apps/playground/src/live/chart-surface.ts`, its view and steps in `scenarios.tsx`) was in the shared tree while its **registry entry** was committed alone (`f6f78f6b`), so `liveProbeBodies` lost the body the `Record<LiveProbeId, …>` requires and the playground did not compile; the entry is removed (`f2cf7c80`) until the body and the entry land together. The registry entry, the `liveProbeBodies` body and the README section must be one commit, in registry order (the README is held to the registry by `src/live/registry.test.ts`) | data (`apps/playground/src/live/registry.ts`, `scenarios.tsx`, `README.md`) | open — measured 2026-10-23 |
 
 ## Phase D — data and workspace components
 
