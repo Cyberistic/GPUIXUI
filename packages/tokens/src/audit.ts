@@ -17,8 +17,8 @@
 
 import {
   invalidColorRoles,
+  type ColourSource,
   type InvalidColorRole,
-  type ThemeColors,
 } from "./color.js";
 import {
   contrastFailures,
@@ -296,9 +296,6 @@ const requireTokens = (theme: NumericGroupSource): void => {
   }
 };
 
-/** A theme, or anything shaped like one, for the checks that only read colours. */
-type ColourSource = { readonly colors: Partial<ThemeColors> };
-
 /** A theme's contrast variant, when it has declared one. */
 type ContrastSource = { readonly contrast?: ThemeContrast };
 
@@ -362,7 +359,9 @@ export interface ThemeAudit {
  * predate a colour role, an elevation level or the whole elevation scale the
  * library has added since, so `invalidRoles` and `invalidShadows` name the
  * absence and the contracts that measure a pair report it unmeasurable; `passed`
- * is false either way. A
+ * is false either way. The same answer is one group up: a store that truncated
+ * past the whole `colors` group is read through `themeColors`, so `invalidRoles`
+ * names all 47 roles rather than the first lookup throwing. A
  * **numeric step** is the one absence the reports cannot describe — the
  * components read every step, and `invalidNumbers` walks the steps a theme
  * carries, so it says nothing about one that is not there while the first paint

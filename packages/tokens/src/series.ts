@@ -21,7 +21,7 @@
  * page.
  */
 
-import type { ThemeColors } from "./color.js";
+import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
@@ -384,16 +384,16 @@ export function simulateColorVision(
 }
 
 /** A theme with the fields a series audit reads. */
-type SeriesAuditSource = Omit<SeriesSource, "series"> & {
-  readonly colors: Partial<ThemeColors>;
-  /**
-   * The scale the theme carries. A stored theme can hold a table shorter than
-   * the five positions a chart indexes, or one with a `null` where a colour was
-   * absent when it was saved, so the audit reads it positionally and measures
-   * what each position paints rather than what the type promised.
-   */
-  readonly series?: readonly (string | undefined)[];
-};
+type SeriesAuditSource = Omit<SeriesSource, "series"> &
+  ColourSource & {
+    /**
+     * The scale the theme carries. A stored theme can hold a table shorter than
+     * the five positions a chart indexes, or one with a `null` where a colour was
+     * absent when it was saved, so the audit reads it positionally and measures
+     * what each position paints rather than what the type promised.
+     */
+    readonly series?: readonly (string | undefined)[];
+  };
 
 /**
  * Every way a theme's categorical scale fails its three contracts.
@@ -453,7 +453,7 @@ export function seriesFailures(
   const surfaceFailures = surfaces.flatMap((surface) =>
     seriesPositions.flatMap((index) => {
       const color = at(index);
-      const ratio = contrastRatio(color, theme.colors[surface]);
+      const ratio = contrastRatio(color, themeColors(theme)[surface]);
       return ratio !== undefined && ratio >= surfaceFloor
         ? []
         : [{ index, color, surface, ratio, floor: surfaceFloor }];

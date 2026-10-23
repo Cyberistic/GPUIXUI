@@ -40,13 +40,18 @@
  * measures on that tint at the body floor.
  */
 
-import { blend, type ThemeColors } from "./color.js";
+import {
+  blend,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
   type ContrastFloors,
 } from "./contrast.js";
-import type { Theme } from "./theme.js";
+import type { Theme, ThemeContrast } from "./theme.js";
 
 /**
  * The surfaces a piece of brand-coloured text can sit on: the four page
@@ -76,17 +81,25 @@ export const brandTextSurfaces = [
  */
 const TEXT_STEPS = 50;
 
+/** A source the derivation reads: roles that may be gone, and the variant's floors. */
+type BrandSource = ColourSource & { readonly contrast?: ThemeContrast };
+
 /**
  * The ratio `colour` reaches on the surface it is least readable on, or
  * `undefined` when a value cannot be measured (translucent or not hex).
  */
-const worstRatio = (theme: Theme, colour: string): number | undefined =>
-  brandTextSurfaces.reduce<number | undefined>((worst, surface) => {
-    const ratio = contrastRatio(colour, theme.colors[surface]);
+const worstRatio = (
+  theme: ColourSource,
+  colour: string,
+): number | undefined => {
+  const colors = themeColors(theme);
+  return brandTextSurfaces.reduce<number | undefined>((worst, surface) => {
+    const ratio = contrastRatio(colour, colors[surface]);
     return worst === undefined || ratio === undefined
       ? undefined
       : Math.min(worst, ratio);
   }, Number.POSITIVE_INFINITY);
+};
 
 /**
  * The brand, moved toward the theme's foreground until `legible` accepts it.
@@ -95,10 +108,17 @@ const worstRatio = (theme: Theme, colour: string): number | undefined =>
  * is returned unchanged (`step` 0), and one that never does stops at
  * `foreground`, the most readable text role the theme has.
  */
-const derivedBrandText = (theme: Theme, legible: (colour: string) => boolean) =>
-  Array.from({ length: TEXT_STEPS + 1 }, (_, step) =>
-    blend(theme.colors.primary, theme.colors.foreground, step / TEXT_STEPS),
-  ).find(legible) ?? blend(theme.colors.primary, theme.colors.foreground, 1);
+const derivedBrandText = (
+  theme: ColourSource,
+  legible: (colour: string) => boolean,
+): string | undefined => {
+  const { primary, foreground } = themeColors(theme);
+  return primary === undefined || foreground === undefined
+    ? undefined
+    : (Array.from({ length: TEXT_STEPS + 1 }, (_, step) =>
+        blend(primary, foreground, step / TEXT_STEPS),
+      ).find(legible) ?? blend(primary, foreground, 1));
+};
 
 /**
  * The colour a link, a text action or any brand-coloured run paints.
@@ -113,15 +133,25 @@ const derivedBrandText = (theme: Theme, legible: (colour: string) => boolean) =>
  * theme, 7:1 for a high-contrast one — through `contrastFloorsFor`, the same
  * rule the audit's contrast report uses.
  *
+ * A {@link Theme} carries the group, so the answer is a colour outright. A source
+ * that may have lost it reads through {@link themeColors} and answers `undefined`
+ * when `primary` or `foreground` is gone: there is no brand to move, and the
+ * runtime paints nothing rather than a colour the theme never stated.
+ *
  * @example
  * ```tsx
  * <text style={{ ...textStyle(theme, "body"), color: brandText(theme) }}>Docs</text>
  * ```
  */
+export function brandText(theme: Theme, floors?: ContrastFloors): string;
 export function brandText(
-  theme: Theme,
+  theme: BrandSource,
+  floors?: ContrastFloors,
+): string | undefined;
+export function brandText(
+  theme: BrandSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
-): string {
+): string | undefined {
   const legible = (colour: string): boolean => {
     const ratio = worstRatio(theme, colour);
     return ratio === undefined || ratio >= floors.secondary;
@@ -146,6 +176,9 @@ export function brandText(
  * `foreground`, no step past it, and a brand or surface it cannot measure is
  * returned unchanged rather than replaced by a guess.
  *
+ * A source that has lost the group answers `undefined`, the same absence rule
+ * {@link brandText} follows.
+ *
  * @example
  * ```tsx
  * import { brandTextOn, type Theme } from "@gpuixui/tokens";
@@ -156,10 +189,20 @@ export function brandText(
 export function brandTextOn(
   theme: Theme,
   surface: keyof ThemeColors,
+  floors?: ContrastFloors,
+): string;
+export function brandTextOn(
+  theme: BrandSource,
+  surface: keyof ThemeColors,
+  floors?: ContrastFloors,
+): string | undefined;
+export function brandTextOn(
+  theme: BrandSource,
+  surface: keyof ThemeColors,
   floors: ContrastFloors = contrastFloorsFor(theme),
-): string {
+): string | undefined {
   const legible = (colour: string): boolean => {
-    const ratio = contrastRatio(colour, theme.colors[surface]);
+    const ratio = contrastRatio(colour, themeColors(theme)[surface]);
     return ratio === undefined || ratio >= floors.secondary;
   };
   return derivedBrandText(theme, legible);

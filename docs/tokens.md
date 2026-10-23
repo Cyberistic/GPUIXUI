@@ -1325,7 +1325,9 @@ The gate also audits a theme it cannot fully read: a role or an elevation level
 the theme does not carry — a theme restored from storage that predates it — is
 named by `invalidRoles`/`invalidShadows` and its pairs are reported unmeasurable,
 so `auditTheme` returns a failing report instead of throwing
-(§[Paint-ready values](#paint-ready-values)).
+(§[Paint-ready values](#paint-ready-values)). The whole `colors` group may be
+gone too; the same seam reads it, so every role is named rather than the first
+lookup throwing.
 
 `disabledFade` is the one report those floors do not reach: a fade is a
 mechanism rather than a readability claim, so `disabledFadeFailures` holds every
@@ -1396,6 +1398,18 @@ same absence one level up: every level is named, the decorative table measures
 each raised placement unmeasurable, `elevationShadow` paints nothing, and the
 gate still returns (the scale is additive, so this is a report rather than the
 refusal a numeric group earns).
+
+A theme that lost the whole **`colors` group** is the same absence one group
+further up: a store truncated past it, or a hand-built literal that omitted it.
+`themeColors(theme)` is the read every contract shares — it answers `{}` when the
+group is gone — so `invalidColorRoles` names all 47 roles with `value: undefined`,
+every pair, strip and mark is reported unmeasurable, and `auditTheme` returns a
+failing report with the other groups still measured instead of throwing
+`TypeError: Cannot read properties of undefined (reading 'background')`. The
+paint helpers that derive a colour from roles read the same seam: `brandText`,
+`brandTextOn` and `statusTone` answer `undefined` when the roles they move are
+gone — the absence rule `elevationShadow` follows for a level — while a `Theme`
+still answers a colour outright, because its type carries the group.
 
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the

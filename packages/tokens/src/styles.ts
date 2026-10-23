@@ -1,4 +1,10 @@
-import { alpha, blend, type ThemeColors } from "./color.js";
+import {
+  alpha,
+  blend,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
 import type { ControlSize } from "./scale.js";
@@ -112,6 +118,12 @@ export interface StatusToneStyle {
  * message sits on its soft tint or directly on the page (a field error, an
  * inline warning), with both surfaces held to the body contrast floor.
  *
+ * A {@link Theme} carries the group, so the answer is a tone outright. A source
+ * that may have lost it — a theme restored from storage, read through
+ * {@link themeColors} — answers `undefined` when any of the three roles is gone,
+ * and the runtime paints nothing, the rule {@link elevationShadow} follows for an
+ * absent level.
+ *
  * @example
  * ```tsx
  * const tone = statusTone(theme, "info");
@@ -124,12 +136,24 @@ export interface StatusToneStyle {
  * />
  * ```
  */
-export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
-  return {
-    background: theme.colors[`${tone}Soft`],
-    foreground: theme.colors[`${tone}SoftForeground`],
-    border: alpha(theme.colors[tone], statusEdgeAlpha),
-  };
+export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle;
+export function statusTone(
+  theme: ColourSource,
+  tone: StatusTone,
+): StatusToneStyle | undefined;
+export function statusTone(
+  theme: ColourSource,
+  tone: StatusTone,
+): StatusToneStyle | undefined {
+  const colors = themeColors(theme);
+  const background = colors[`${tone}Soft`];
+  const foreground = colors[`${tone}SoftForeground`];
+  const edge = colors[tone];
+  return background === undefined ||
+    foreground === undefined ||
+    edge === undefined
+    ? undefined
+    : { background, foreground, border: alpha(edge, statusEdgeAlpha) };
 }
 
 /** A focus ring, as the runtime's single-shadow shape. */
@@ -320,9 +344,7 @@ export type FilledFeedbackState = (typeof filledFeedbackStates)[number];
  * roles are optional — the derivation answers `undefined` rather than a colour
  * it could not build.
  */
-export interface FilledFeedbackSource {
-  /** The roles the source carries. */
-  readonly colors: Partial<ThemeColors>;
+export interface FilledFeedbackSource extends ColourSource {
   /** The contrast variant, whose label floor clamps the step. */
   readonly contrast?: ThemeContrast;
 }
@@ -372,12 +394,13 @@ const readableStep = (
   role: FilledRole,
   nominal: number,
 ): number => {
-  const fill = source.colors[role];
-  const foreground = source.colors.foreground;
+  const colors = themeColors(source);
+  const fill = colors[role];
+  const foreground = colors.foreground;
   if (fill === undefined || foreground === undefined) {
     return nominal;
   }
-  const onColour = source.colors[filledOnColour[role]];
+  const onColour = colors[filledOnColour[role]];
   const floor = contrastFloorsFor(source).secondary;
   const reads = (step: number): boolean => {
     const ratio = contrastRatio(onColour, blend(fill, foreground, step));
@@ -411,8 +434,9 @@ export function filledFeedback(
   role: FilledRole,
   state: FilledFeedbackState,
 ): string | undefined {
-  const fill = source.colors[role];
-  const foreground = source.colors.foreground;
+  const colors = themeColors(source);
+  const fill = colors[role];
+  const foreground = colors.foreground;
   if (fill === undefined || foreground === undefined) {
     return undefined;
   }

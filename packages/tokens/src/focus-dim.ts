@@ -28,7 +28,7 @@
  * tuned to the label's dimmed colour erases it (1.00:1), which the report names.
  */
 
-import type { ThemeColors } from "./color.js";
+import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { fadedPair, type FadeFailure, type FadePair } from "./fade.js";
@@ -142,11 +142,12 @@ export type KeyboardDimFailure = FadeFailure;
  * ```
  */
 export function keyboardDimFailures(
-  theme: { readonly colors: Partial<ThemeColors> },
+  theme: ColourSource,
   floor: number = decorativeFloor,
 ): readonly KeyboardDimFailure[] {
+  const colors = themeColors(theme);
   return keyboardDimPairs.flatMap((pair) => {
-    const dimmed = fadedPair(theme.colors, pair, keyboardFocusDimOpacity);
+    const dimmed = fadedPair(colors, pair, keyboardFocusDimOpacity);
     const ratio = contrastRatio(dimmed.label, dimmed.fill);
     return ratio !== undefined && ratio >= floor
       ? []

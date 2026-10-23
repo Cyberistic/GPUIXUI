@@ -30,6 +30,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
+  brandText,
+  brandTextOn,
   colorRoles,
   defaultDensity,
   densityNames,
@@ -48,7 +50,9 @@ import {
   platformTheme,
   retroNames,
   retroTheme,
+  statusTone,
   textStyle,
+  themeColors,
   themes,
   type BoxShadow,
   type Density,
@@ -326,6 +330,105 @@ describe("an absent elevation group", () => {
     expect(designSystem).toContain("or a whole scale");
     expect(catalogue).not.toContain(
       "a theme must carry every numeric group: `elevation`",
+    );
+  });
+});
+
+/**
+ * The bug this holds: the absence rule stopped at a **role**. `invalidColorRoles`
+ * read `theme.colors[role]` through a required group, so a theme a store
+ * truncated past `colors` threw
+ * `TypeError: Cannot read properties of undefined (reading 'background')` on the
+ * first report — the gate's own promise ("an incomplete theme does not crash")
+ * broken by the absence one group up, and every contract that reads a role threw
+ * with it. `brandText` and `statusTone` are those contracts too, so the paint
+ * path lost the window as well.
+ *
+ * The decision: the group is read through `themeColors`, so a theme that lost it
+ * is the **same report** as a role it lost, once per role. Every pair, strip and
+ * mark the theme cannot paint is reported unmeasurable, `passed` is false, and
+ * the two paint seams answer `undefined` — the absence rule `elevationShadow`
+ * already follows for a level.
+ */
+describe("an absent colour group", () => {
+  const absentGroup = () => stored({ colors: undefined });
+
+  it("is every role missing, reported rather than thrown", () => {
+    expect(themeColors({})).toEqual({});
+    expect(invalidColorRoles({})).toEqual(
+      colorRoles.map((role) => ({ role, value: undefined })),
+    );
+
+    const report = auditTheme(absentGroup());
+
+    expect(report.invalidRoles.map(({ role }) => role)).toEqual([
+      ...colorRoles,
+    ]);
+    expect(report.invalidRoles.every(({ value }) => value === undefined)).toBe(
+      true,
+    );
+    expect(report.passed).toBe(false);
+  });
+
+  it("leaves no report that reads a role empty", () => {
+    const report = auditTheme(absentGroup());
+    const unmeasurable = (
+      failures: ReadonlyArray<{ ratio?: number | undefined }>,
+    ) =>
+      failures.length > 0 && failures.every(({ ratio }) => ratio === undefined);
+
+    // A report that walks roles answers with every placement a colourless theme
+    // cannot paint; an empty report would read as a pass.
+    expect(unmeasurable(report.contrast)).toBe(true);
+    expect(unmeasurable(report.decorative)).toBe(true);
+    expect(unmeasurable(report.selection)).toBe(true);
+    expect(unmeasurable(report.indicators)).toBe(true);
+    expect(unmeasurable(report.syntax)).toBe(true);
+    expect(unmeasurable(report.disabledFade)).toBe(true);
+    expect(unmeasurable(report.keyboardDim)).toBe(true);
+    expect(unmeasurable(report.series.surfaces)).toBe(true);
+    // The two groups that are still there keep their own reports empty, so the
+    // absence is the colour group rather than a theme the gate cannot read.
+    expect(report.invalidNumbers).toEqual([]);
+    expect(report.invalidShadows).toEqual([]);
+  });
+
+  it("paints nothing through the seams the reports share, instead of throwing", () => {
+    const theme = absentGroup();
+
+    // A source that may have lost the group has no colour to give: the runtime
+    // drops the property and paints nothing.
+    expect(brandText({})).toBeUndefined();
+    expect(brandTextOn({}, "infoSoft")).toBeUndefined();
+    expect(statusTone({}, "destructive")).toBeUndefined();
+
+    // The `Theme` overload still answers outright for a complete theme.
+    expect(brandText(theme)).toBeUndefined();
+    expect(statusTone(theme, "destructive")).toBeUndefined();
+  });
+
+  it("reads every shipped style as whole", () => {
+    shipped.forEach((theme) => {
+      expect(themeColors(theme), theme.name).toBe(theme.colors);
+      expect(auditTheme(theme).passed, theme.name).toBe(true);
+    });
+  });
+
+  it("teaches the group in the pages and the README", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+
+    expect(catalogue).toContain("lost the whole **`colors` group**");
+    expect(catalogue).toContain("`themeColors(theme)`");
+    expect(designSystem).toContain("lost the whole `colors` group");
+    expect(readme).toContain("whole `colors` group");
+    // The group is additive: it is a report, not the refusal a numeric group
+    // earns, so no page may print it as a gate error.
+    expect(catalogue).not.toContain(
+      "a theme must carry every numeric group: `colors`",
     );
   });
 });

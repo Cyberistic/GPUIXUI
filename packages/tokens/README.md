@@ -805,12 +805,14 @@ than once per field, so
 a caller deciding whether to restore a stored theme reads the absence as data
 instead of catching the gate's error; `auditTheme` builds its messages from the
 same list, so the report and the error cannot drift. An additive absence (a
-colour role, an elevation level, the whole elevation scale) is not in it: that is
+colour role, the whole `colors` group, an elevation level, the whole elevation
+scale) is not in it: that is
 a report and a failing gate, and the paint side resolves it to nothing rather
 than throwing (`elevationShadow` returns `undefined` for a level a theme does not
 carry — or for every level when the scale is gone — and for a level a store wrote
 as anything but a list, or a list holding a `null`, which `invalidShadowColors`
-names at its position with no colour).
+names at its position with no colour; `brandText`/`statusTone` answer `undefined`
+when the roles they derive from are gone).
 
 A store hands back `null` where the theme had no value — JSON has no
 `undefined` — and the suite reads that as the absence it is: a numeric token kept
@@ -850,8 +852,11 @@ Each report is also a function of its own:
   reported with `value: undefined`, which is the shape a theme restored from
   storage has when it predates a role the library added: the source is
   `Partial<ThemeColors>` and `isPaintableColor` takes `unknown`, so absence is a
-  line in the report rather than a `TypeError`. The measurement dialect is the
-  grammar the renderer paints minus the perceptual spaces: every hex length —
+  line in the report rather than a `TypeError`. The whole `colors` group may be
+  gone too, and `themeColors(theme)` is the read every contract shares — it
+  answers `{}` there, so all 47 roles are reported at once. The measurement
+  dialect is the grammar the renderer paints minus the perceptual spaces: every
+  hex length —
   shorthand `#fff` widens, with or without the `#`, and a fully opaque `FF` alpha
   byte is the opaque colour it is rather than a share — the CSS named colours,
   and `rgb`/`hsl`/`hwb`/`hsv` with an optional alpha channel, so a brand written

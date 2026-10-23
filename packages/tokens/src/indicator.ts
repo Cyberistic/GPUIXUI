@@ -18,7 +18,7 @@
  * soft status surface and a field error paint.
  */
 
-import type { ThemeColors } from "./color.js";
+import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -122,15 +122,13 @@ export interface IndicatorFailure {
  * ```
  */
 export function indicatorFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly IndicatorFailure[] {
+  const colors = themeColors(theme);
   return indicatorRoles.flatMap((role) =>
     indicatorSurfaces.flatMap((surface): ReadonlyArray<IndicatorFailure> => {
-      const ratio = contrastRatio(theme.colors[role], theme.colors[surface]);
+      const ratio = contrastRatio(colors[role], colors[surface]);
       return ratio !== undefined && ratio >= floors.boundary
         ? []
         : [{ role, surface, ratio, floor: floors.boundary }];

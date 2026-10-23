@@ -72,7 +72,13 @@
  * cascade that would follow from repainting four tint roles in eight styles.
  */
 
-import { alphaOf, blend, type ThemeColors } from "./color.js";
+import {
+  alphaOf,
+  blend,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -202,16 +208,14 @@ const bodyRoleOn = (surface: keyof ThemeColors): keyof ThemeColors =>
  * ```
  */
 export function selectionFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly SelectionFailure[] {
+  const colors = themeColors(theme);
   return selectionPairs.flatMap(({ foreground, background, floor }) => {
-    const wash = washOver(theme.colors, background);
+    const wash = washOver(colors, background);
     const failures: SelectionFailure[] = [];
-    const visible = contrastRatio(wash, theme.colors[background]);
+    const visible = contrastRatio(wash, colors[background]);
     if (visible === undefined || visible < decorativeFloor) {
       failures.push({
         kind: "visibility",
@@ -222,7 +226,7 @@ export function selectionFailures(
         floor: decorativeFloor,
       });
     }
-    const legible = contrastRatio(theme.colors[foreground], wash);
+    const legible = contrastRatio(colors[foreground], wash);
     if (legible === undefined || legible < floors[floor]) {
       failures.push({
         kind: "legibility",

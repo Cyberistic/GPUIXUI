@@ -24,7 +24,7 @@
  * anywhere else.
  */
 
-import { type ThemeColors } from "./color.js";
+import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
 import { fadedPair, type FadeFailure, type FadePair } from "./fade.js";
 
@@ -119,11 +119,12 @@ export type DisabledFadeFailure = FadeFailure;
  * ```
  */
 export function disabledFadeFailures(
-  theme: { readonly colors: Partial<ThemeColors> },
+  theme: ColourSource,
   floor: number = contrastFloors.disabled,
 ): readonly DisabledFadeFailure[] {
+  const colors = themeColors(theme);
   return disabledFadePairs.flatMap((pair) => {
-    const faded = fadedPair(theme.colors, pair, disabledOpacity);
+    const faded = fadedPair(colors, pair, disabledOpacity);
     const ratio = contrastRatio(faded.label, faded.fill);
     return ratio !== undefined && ratio >= floor
       ? []

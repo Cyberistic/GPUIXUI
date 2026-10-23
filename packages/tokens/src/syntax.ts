@@ -33,7 +33,7 @@
  * with a keyword a step brighter than this identity's.
  */
 
-import type { ThemeColors } from "./color.js";
+import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -267,10 +267,9 @@ const readPalette = (
  * only a **string** is what makes that the missing token it is rather than a
  * value the contract tries to measure.
  */
-export interface SyntaxAuditSource {
+export interface SyntaxAuditSource extends ColourSource {
   readonly mode: "light" | "dark";
   readonly contrast?: "default" | "high";
-  readonly colors: Partial<ThemeColors>;
   readonly syntax?: Readonly<Record<string, unknown>>;
 }
 
@@ -311,13 +310,11 @@ export function syntaxFailures(
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly SyntaxFailure[] {
   const palette = readPalette(theme);
+  const colors = themeColors(theme);
   return syntaxRoles.flatMap((role) =>
     syntaxSurfaces.flatMap((surface): ReadonlyArray<SyntaxFailure> => {
       const floor = floors[syntaxRoleFloors[role]];
-      const ratio = contrastRatio(
-        tokenColour(palette, role),
-        theme.colors[surface],
-      );
+      const ratio = contrastRatio(tokenColour(palette, role), colors[surface]);
       return ratio !== undefined && ratio >= floor
         ? []
         : [{ role, surface, ratio, floor }];

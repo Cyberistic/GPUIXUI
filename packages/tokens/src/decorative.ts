@@ -34,7 +34,13 @@
  * flat. One floor covers all fourteen, 1.05:1.
  */
 
-import { alphaOf, blend, type ThemeColors } from "./color.js";
+import {
+  alphaOf,
+  blend,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import {
   contrastFloorsFor,
   contrastPairs,
@@ -294,14 +300,11 @@ export const actionFeedbackPlacements: readonly ActionFeedbackPlacement[] =
  * ```
  */
 export function actionFeedbackFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   return actionFeedbackPlacements.flatMap(({ role, state }) => {
-    const resting = theme.colors[role];
+    const resting = themeColors(theme)[role];
     const painted = filledFeedback(theme, role, state);
     const ratio =
       resting === undefined || painted === undefined
@@ -428,17 +431,15 @@ const POINTER_STEPS: readonly number[] = [
  * ```
  */
 export function pointerWash(
-  source: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  source: ColourSource & { readonly contrast?: ThemeContrast },
   wash: PointerWashRole,
   replaced: PointerWashSurface,
   floor: number = decorativeFloor,
 ): string | undefined {
-  const base = source.colors[wash];
-  const over = source.colors[replaced];
-  const toward = source.colors.foreground;
+  const colors = themeColors(source);
+  const base = colors[wash];
+  const over = colors[replaced];
+  const toward = colors.foreground;
   if (base === undefined || over === undefined || toward === undefined) {
     return undefined;
   }
@@ -450,7 +451,7 @@ export function pointerWash(
   };
   const readableAt = (step: number): boolean =>
     pointerWashLabels[wash].every(({ foreground, floor: kind }) => {
-      const ratio = contrastRatio(source.colors[foreground], paintedAt(step));
+      const ratio = contrastRatio(colors[foreground], paintedAt(step));
       return ratio !== undefined && ratio >= floors[kind];
     });
   const firstSeen = POINTER_STEPS.find(seenAt);
@@ -480,10 +481,7 @@ export function pointerWash(
  * ```
  */
 export function pointerWashFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   return pointerWashTransitions.flatMap(({ wash, replaced }) => {
@@ -491,7 +489,7 @@ export function pointerWashFailures(
     const ratio =
       painted === undefined
         ? undefined
-        : contrastRatio(painted, theme.colors[replaced]);
+        : contrastRatio(painted, themeColors(theme)[replaced]);
     return ratio !== undefined && ratio >= floor
       ? []
       : [
@@ -595,12 +593,13 @@ const DIVIDER_STEPS = 50;
  * ```
  */
 export function dividerOn(
-  source: { readonly colors: Partial<ThemeColors> },
+  source: ColourSource,
   surface: string | undefined,
   floor: number = decorativeFloor,
 ): string | undefined {
-  const base = source.colors.border;
-  const strongest = source.colors.borderStrong;
+  const colors = themeColors(source);
+  const base = colors.border;
+  const strongest = colors.borderStrong;
   if (base === undefined || strongest === undefined) return undefined;
   if (surface === undefined) return base;
   const seen = (colour: string): boolean => {
@@ -642,10 +641,7 @@ export function dividerOn(
  * ```
  */
 export function dividerFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   const failureOn = (
@@ -672,7 +668,7 @@ export function dividerFailures(
   };
   return [
     ...dividerWashes.flatMap((over) =>
-      failureOn("derivedDivider", over, theme.colors[over]),
+      failureOn("derivedDivider", over, themeColors(theme)[over]),
     ),
     ...dividerPresses.flatMap((replaced) =>
       failureOn(
@@ -1039,8 +1035,7 @@ export interface DecorativeFailure {
  * ```
  */
 export function decorativeFailures(
-  theme: {
-    readonly colors: Partial<ThemeColors>;
+  theme: ColourSource & {
     readonly elevation?: Partial<Elevation>;
     readonly contrast?: ThemeContrast;
   },
@@ -1048,10 +1043,11 @@ export function decorativeFailures(
 ): readonly DecorativeFailure[] {
   const surfaces = decorativeSurfaces.flatMap(
     ({ surface, role, over, alpha, level }) => {
-      const paintedOver = theme.colors[over];
+      const colors = themeColors(theme);
+      const paintedOver = colors[over];
       const paintedRole =
         level === undefined
-          ? theme.colors[role]
+          ? colors[role]
           : theme.elevation?.[level]?.[0]?.color;
       const painted =
         paintedOver === undefined || paintedRole === undefined

@@ -1057,11 +1057,11 @@ and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
 
 A theme restored from storage can be **incomplete**: it may predate a role, an
-elevation level or the whole elevation scale the library has added since, and
-JSON has no `undefined`, so a
+elevation level or the whole elevation scale the library has added since — or have
+lost the whole `colors` group — and JSON has no `undefined`, so a
 value that was absent when the theme was saved comes back as `null`. The reports
 carry the absence rather than throwing — `invalidColorRoles` returns the role with
-`value: undefined`, `invalidShadowColors` returns the level once at position `0`
+`value: undefined` (`themeColors` reads a group the store lost as none), `invalidShadowColors` returns the level once at position `0`
 with no colour (every level, when the scale itself is gone), the measuring seam
 reads any non-colour value as unmeasurable
 (`ratio: undefined`, an opaque share for a composite), and every contract that
@@ -1072,8 +1072,10 @@ carry are measured the same way: every one of the five series positions is read
 even when a stored table is short, and a `syntax` palette that names only some
 tokens is reported token by token rather than left to the host's own colours.
 The paint follows the same rule: a role
-the theme lost paints nothing, and `elevationShadow` returns `undefined` for a
-level — or a whole scale — it does not carry, so no surface throws on the defect
+the theme lost paints nothing, `elevationShadow` returns `undefined` for a
+level — or a whole scale — it does not carry, and `brandText`/`statusTone` answer
+`undefined` when the roles they derive from are gone (a `Theme` still answers a
+colour outright), so no surface throws on the defect
 the report just
 explained (§7). A shape a store wrote is that same absence: a level written as one
 object where the type declares a list, a list holding a `null`, or a shadow colour

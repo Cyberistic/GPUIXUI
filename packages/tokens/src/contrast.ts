@@ -6,7 +6,7 @@
  * test suite.
  */
 
-import type { ThemeColors } from "./color.js";
+import { themeColors, type ThemeColors } from "./color.js";
 import { opaqueRgb } from "./measure.js";
 import type { ThemeContrast } from "./theme.js";
 
@@ -584,7 +584,8 @@ export interface ContrastFailure {
  * to say so, which is the rule `auditTheme` already applied. A pair whose role
  * the theme does not carry is reported unmeasurable (`ratio: undefined`) — the
  * absence is named by `invalidColorRoles`, and a pair nobody can verify is not a
- * pass.
+ * pass. A theme that lost the whole `colors` group is read through
+ * {@link themeColors}, so every pair is unmeasurable rather than a throw.
  *
  * @example
  * ```ts
@@ -596,16 +597,14 @@ export interface ContrastFailure {
  */
 export function contrastFailures(
   theme: {
-    readonly colors: Partial<ThemeColors>;
+    readonly colors?: Partial<ThemeColors>;
     readonly contrast?: ThemeContrast;
   },
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly ContrastFailure[] {
+  const colors = themeColors(theme);
   return contrastPairs.flatMap(({ foreground, background, floor }) => {
-    const ratio = contrastRatio(
-      theme.colors[foreground],
-      theme.colors[background],
-    );
+    const ratio = contrastRatio(colors[foreground], colors[background]);
     return ratio !== undefined && ratio >= floors[floor]
       ? []
       : [{ foreground, background, ratio, floor: floors[floor] }];

@@ -191,6 +191,35 @@ export interface ThemeColors {
   readonly shadow: string;
 }
 
+/**
+ * A theme, or anything shaped like one, as the checks that read colours see it:
+ * the group may be absent, because a store can lose it.
+ */
+export interface ColourSource {
+  readonly colors?: Partial<ThemeColors>;
+}
+
+/**
+ * The semantic roles a theme carries.
+ *
+ * A theme restored from storage can be missing the whole `colors` group — a
+ * store truncated by a release, a hand-built literal that omitted it — and every
+ * contract reads a role through this seam, so the absence reaches the report
+ * (`invalidColorRoles` names every role) instead of throwing a `TypeError` at
+ * the first lookup. A theme that carries the group is returned as it is.
+ *
+ * @example
+ * ```ts
+ * import { lightTheme, themeColors } from "@gpuixui/tokens";
+ *
+ * themeColors(lightTheme).primary; // the brand role
+ * themeColors({ colors: undefined }); // {} — no role to paint
+ * ```
+ */
+export function themeColors(theme: ColourSource): Partial<ThemeColors> {
+  return theme.colors ?? {};
+}
+
 /** Light theme semantic roles. */
 export const lightColors = {
   background: palette.neutral[50],
@@ -771,9 +800,13 @@ export interface InvalidColorRole {
  *
  * **A role the theme does not carry is reported with `value: undefined`**, not
  * thrown on: a theme restored from storage can predate a role the library has
- * added since, and the runtime cannot paint what is not there. The source is
- * therefore `Partial<ThemeColors>`, so a complete theme and a decoded one are
- * both accepted, and the contracts that measure a pair treat the absence as an
+ * added since, and the runtime cannot paint what is not there. **The whole
+ * `colors` group may be gone too** — a store truncated past it, or a literal
+ * that omitted it — in which case every role is reported the same way; the
+ * group is read through {@link themeColors}, so the absence is one report per
+ * role rather than a `TypeError` at the first lookup. The source is therefore
+ * `Partial<ThemeColors>`, so a complete theme and a decoded one are both
+ * accepted, and the contracts that measure a pair treat the absence as an
  * unmeasurable pair rather than a crash. A value a store wrote as `null` — what
  * JSON writes for an absent one — is the same absence and is reported the same
  * way, so the report carries a colour or nothing rather than whatever the
@@ -789,13 +822,17 @@ export interface InvalidColorRole {
  * const { primary: _omitted, ...restored } = lightColors;
  * invalidColorRoles({ colors: restored });
  * // [{ role: "primary", value: undefined }] — a stored theme older than the role
+ *
+ * invalidColorRoles({});
+ * // every one of the 47 roles, with no value — a store that lost the group
  * ```
  */
-export function invalidColorRoles(theme: {
-  readonly colors: Partial<ThemeColors>;
-}): readonly InvalidColorRole[] {
+export function invalidColorRoles(
+  theme: ColourSource,
+): readonly InvalidColorRole[] {
+  const colors = themeColors(theme);
   return colorRoles.flatMap((role) => {
-    const value = theme.colors[role];
+    const value = colors[role];
     return isPaintableColor(value)
       ? []
       : [{ role, value: typeof value === "string" ? value : undefined }];
