@@ -320,6 +320,7 @@ src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve f
 src/lib/page-commands.test-util.ts  The shared `nub run` reader the contributing and installation guards hold to the manifests
 src/lib/column-drag.test-util.ts    The column drag both guards print, derived from the probe
 src/lib/floating-reflow.test-util.ts The panel placement both reflow guards print, derived from the probe
+src/lib/aria-budget.test-util.ts   The runtime's closed `aria-*` set, and the absence a page's limits claim
 src/lib/app-css.test-util.ts       The site palette both measuring guards read from the style sheet
 src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
 src/lib/search-tree.ts              The tree search reads: package sections filled, separators unnamed

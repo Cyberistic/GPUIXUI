@@ -10382,7 +10382,37 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 324/325
+`[ ]` `[██████████]` 325/326
+
+`[x]` Read the runtime's **closed `aria-*` set** instead of trusting the record —
+      the pinned `@gpuix/native` publishes exactly seven attributes
+      (`aria-label`, `aria-description`, `aria-id`, `aria-expanded`,
+      `aria-selected`, `aria-valuetext`, `aria-level`), the capability record
+      states that set, `/docs/accessibility` prints it, and 67 of the site's 178
+      mounted pages repeat the part their control depends on ("**No
+      `aria-current`** in 0.11.0", "there is no `aria-disabled`"). Nothing read
+      the typings, so a
+      bump that published an eighth attribute would leave the record refusing it
+      and a page telling a reader the state cannot be announced — the exact
+      false claim the lane's other passes retracted. `src/lib/aria-budget.test-util.ts`
+      is the one parser (the record's row split at `**No**`, and a page's negated
+      clause, ended where its consequence starts so a name the page uses after it
+      is not read as an absence) and `src/lib/accessibility-page.test.ts` now
+      reads it too rather than keeping its own copy. `src/lib/aria-budget.test.ts`
+      (5 cases) holds the record to `apps/docs/node_modules/@gpuix/native/dist/host.d.ts`
+      in both directions (the seven, and the refused list none of which the
+      typings declare), holds **all 178 curated and mounted pages** to it (117
+      claims read), and holds `/docs/accessibility`'s table to the record's row
+      through the shared parser. Directions measured: planting a bullet that says
+      no `aria-expanded` in `badge.mdx` fails
+      `badge.mdx: claims the runtime has no aria-expanded`, and adding
+      `aria-checked` to the record's published list fails both the record case
+      and the accessibility page's table case by name. `docs/preview-strategy.md`
+      §A page's claims about the runtime names the guard, and the ledger row is
+      in `apps/docs/README.md`. Green: `apps/docs` is 148 files / 1 288 tests
+      with `check-types`, `fmt` and `oxlint` clean; `check:tests` is red only on
+      the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`.
+      No native scenario applies — a typings read and the pages that print it.
 
 `[x]` Stop the **dashboard recipe denying the charts the library ships** — the
       block page said "the library has no chart component yet", so its copyable

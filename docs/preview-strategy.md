@@ -1051,6 +1051,15 @@ negative controls are in `apps/playground/README.md` §The example gallery.
 fails any page under `content/docs` that names another version, in prose or in a
 code block.
 
+The runtime's `aria-*` set is closed — `role` plus seven attributes — and the
+capability record in `docs/gpuix-capabilities.md` is where it is stated.
+`src/lib/aria-budget.test.ts` reads that row beside the installed
+`@gpuix/native` typings, so a bump that publishes an eighth attribute fails the
+record; it then reads every curated page's `## Limitations`, so the same bump
+fails the page that would still tell a reader the control cannot announce it.
+`/docs/accessibility` prints the set and `accessibility-page.test.ts` holds it to
+the record.
+
 ## The reference page is generated, and it says so
 
 `/docs/reference` is the one page that claims to be the workspace's whole

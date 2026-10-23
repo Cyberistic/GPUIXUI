@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { ariaNames, readAriaBudget } from "./aria-budget.test-util";
 
 /**
  * `/docs/accessibility` is the cross-cutting contract every component page
@@ -26,31 +27,14 @@ const page = read("apps/docs/content/docs/accessibility.mdx");
 const record = read("docs/gpuix-capabilities.md");
 const policy = read("docs/preview-strategy.md");
 
-/** The record's row for the `aria-*` subset. */
-const ariaRow =
-  record
-    .split("\n")
-    .find((line) => line.startsWith("| `role` and the `aria-*` subset |")) ??
-  "";
-
-/** The row's detail cell; its workaround cell also names `aria-valuetext`. */
-const ariaDetail = ariaRow.split("|")[3] ?? "";
-
-const [publishedPart = "", refusedPart = ""] = ariaDetail.split("**No**");
-
-const attributes = (text: string): ReadonlyArray<string> =>
-  [...text.matchAll(/`(aria-[a-z]+)`/g)].flatMap((match) =>
-    match[1] === undefined ? [] : [match[1]],
-  );
-
-const published = attributes(publishedPart);
-const refused = attributes(refusedPart);
+/** The record's row for the `aria-*` subset; its workaround cell names `aria-valuetext` too. */
+const { published, refused } = readAriaBudget(record);
 
 /** The page's attribute table, one name per row of its first column. */
 const table = page
   .split("\n")
   .filter((line) => line.startsWith("| `aria-") || /^\|\s*`aria-/.test(line))
-  .flatMap((line) => attributes(line.split("|")[1] ?? ""));
+  .flatMap((line) => ariaNames(line.split("|")[1] ?? ""));
 
 /** The platform role each token becomes, as the record prints the pairs. */
 const rolePairs = [
