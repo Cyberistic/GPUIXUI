@@ -42,16 +42,16 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-95 probes a real window can prove, of which nineteen mount shipped
+96 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the collapsible section, the popover,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack
-and the modal focus rule), seven mount
-`@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
-the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
+and the modal focus rule), eight mount
+`@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
+ScrollArea and the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
@@ -5319,6 +5319,58 @@ the reveal measures rather than the body's own box under another name.
 
 Evidence: `.artifacts/live/collapse-open.png`.
 
+### `scrollbar-drag` — measured on 0.11.0 here
+
+**The runtime's scrollbar thumb takes no pointer input.** `scrollbar-thumb` read
+the paint and `scroll-lifecycle` the wheel; nothing had pressed the thumb. The
+answer decides whether a log pane, an editor or a table body may leave scrolling
+to the runtime's own bar — and the pinned binding says why: `renderer.rs` paints
+the thumbs in a `canvas` overlay (`scrollbar_overlay`) whose own comment is
+"It has no hitbox and takes no input." The window reads the consequence on a
+200×160 scroller with 700 px of content and a 12 px tint:
+
+| Step | What the window reads |
+| --- | --- |
+| at rest | the offset is `x=0 y=0`, and the thumb paints 37 px long from the track's top, in the strip the drag aims at |
+| a drag from the thumb's own centre, 40 px down | nothing: the offset is `x=0 y=0` |
+| a drag from the track 40 px below the thumb | nothing: the offset is `x=0 y=0` — a browser pages on that press |
+| the same drag on a sibling handle that listens for it | `moves=8`, so the press, the eight moves and the release all reach a React element |
+| one `-100` wheel on the same scroller | `y = -100`, and the thumb paints from **23**, its share of the travel |
+
+21 checks, `--only scrollbar-drag`, green on 0.11.0 here (~1.8 s). Fixture:
+`src/live/scrollbar-drag.ts` (`DRAG_IDS`, the box and content constants the
+thumb rule derives its 37 px from, `DRAG_GRAB` and `DRAG_TRACK_GRAB` as offsets
+from the scroller's centre, `DRAG_WHEEL`, `dragThumbAfter`, `DRAG_CHECKS`) +
+`scrollbar-drag.test.ts` (12 cases: both aims, the thumb rule shared with
+`scrollbar.ts`, the locators, the count, the registry entry, the section with
+its finding, mechanism and reads, and the view/host wiring). The view and steps
+live in `src/live/scenarios.tsx`.
+
+Three rules a scrolling surface rests on:
+
+1. **The native thumb is an affordance, not a control.** It shows where in the
+   content the reader is and it follows the wheel, but a pointer press — on the
+   thumb or on the track — moves nothing. A component must not document "drag
+   the bar" or leave a reader with only that route.
+2. **The wheel and the keys are the routes that work.** A wheel on the same
+   scroller lands `y = -100` and the thumb follows to **23**, and `ScrollArea`
+   is a keyboard region (`keyboard-scroll-lifecycle` measured its arrows,
+   PageUp/PageDown, Home and End). So a pointer-free surface is not marooned —
+   but the reader who reaches for the bar gets nothing back.
+3. **A draggable bar has to be composed.** A consumer that needs one paints its
+   own track and thumb from `onScrollChange` and moves the content with
+   `scrollTo` — the frozen-column composition already mirrors a scroller that
+   way — or accepts the wheel. Nothing in a recipe can give the runtime's
+   overlay a hitbox.
+
+The handle is what makes this a runtime fact rather than a harness one: the same
+drag on it ran all eight moves, so the press, the moves and the release reach
+the window; a thumb that does not move is the overlay's missing hitbox, not a
+probe that cannot drag.
+
+Evidence: `.artifacts/live/scrollbar-drag-rest.png`,
+`.artifacts/live/scrollbar-drag-wheeled.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5543,8 +5595,8 @@ narrower. Each deviation is deliberate and measured:
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
-  `scrollbar-thumb-both` and `collapsible-lifecycle` (thirty-seven probes, each
-  run alone).
+  `scrollbar-thumb-both`, `collapsible-lifecycle` and `scrollbar-drag`
+  (thirty-eight probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

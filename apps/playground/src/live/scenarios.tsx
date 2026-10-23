@@ -874,6 +874,21 @@ import {
   FLEX_WIDTH_CASES,
 } from "./flex-sizing.js";
 import {
+  DRAG_BAND,
+  DRAG_BY,
+  DRAG_CONTENT,
+  DRAG_FILL,
+  DRAG_GRAB,
+  DRAG_IDS,
+  DRAG_THICKNESS,
+  DRAG_THUMB,
+  DRAG_TINT,
+  DRAG_TRACK_GRAB,
+  DRAG_VIEWPORT,
+  DRAG_WHEEL,
+  dragThumbAfter,
+} from "./scrollbar-drag.js";
+import {
   COLLAPSE_BODY,
   COLLAPSE_GROW_BEFORE,
   COLLAPSE_GROWN,
@@ -21689,6 +21704,246 @@ const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Whether the **runtime's** scrollbar thumb takes a drag — it does not.
+ *
+ * The thumb is painted by the runtime inside the scroller, on a `canvas` with
+ * no hitbox, so it is not a node a probe can name: the press is aimed from the
+ * scroller's own centre at the strip the rule `scrollbar.ts` measured. A
+ * pointer user either has this gesture or has only the wheel and the keys, and
+ * no recipe can add it.
+ *
+ * The sibling handle is the control: the **same** drag on an element that
+ * listens to `onMouseDown`/`onMouseMove` runs its eight moves, so a thumb that
+ * does not move is the runtime's overlay, not a harness that cannot drag.
+ */
+const ScrollbarDragProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const pressed = useRef(false);
+  const [moves, setMoves] = useState(0);
+  return (
+    <div
+      testId={DRAG_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex" as const,
+        flexDirection: "column" as const,
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The runtime paints this scroller&apos;s thumb. Can a pointer grab it, or
+        is the wheel the only way down? The handle beside it takes the same
+        drag.
+      </text>
+      <div
+        style={{
+          display: "flex" as const,
+          flexDirection: "row" as const,
+          alignItems: "flex-start" as const,
+          gap: theme.spacing.xl,
+        }}
+      >
+        <ScrollArea
+          axis="vertical"
+          viewportTestId={DRAG_IDS.scroller}
+          scrollbarColor={DRAG_TINT}
+          scrollbarWidth={DRAG_THICKNESS}
+          style={{ width: DRAG_VIEWPORT.width, height: DRAG_VIEWPORT.height }}
+        >
+          <div
+            testId={DRAG_IDS.content}
+            style={{
+              width: DRAG_VIEWPORT.width,
+              height: DRAG_CONTENT,
+              flexShrink: 0,
+              backgroundColor: DRAG_FILL,
+            }}
+          />
+        </ScrollArea>
+        <div
+          testId={DRAG_IDS.handle}
+          onMouseDown={() => {
+            pressed.current = true;
+          }}
+          onMouseMove={() => {
+            if (pressed.current) setMoves((count) => count + 1);
+          }}
+          onMouseUp={() => {
+            pressed.current = false;
+          }}
+          style={{
+            width: 160,
+            height: 48,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.card,
+          }}
+        />
+        <text
+          testId={DRAG_IDS.readout}
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`moves=${moves}`}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(DRAG_IDS.probe);
+    yield* ctx.host.capture("scrollbar-drag-rest");
+    const frame = yield* ctx.host.pixels("scrollbar-drag-rest");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const box = yield* paintedBox(ctx, DRAG_IDS.scroller);
+    const tint = yield* ctx.expectSome(
+      "the fixture's tint is a colour",
+      Option.fromNullishOr(Pixels.hexToRgba(DRAG_TINT)),
+    );
+
+    /** The offset the renderer reports, failing by name if it reports none. */
+    const offsetRead = (label: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${label}: the scroller reports an offset`,
+          Option.fromNullishOr(yield* ctx.host.scrollOffset(DRAG_IDS.scroller)),
+        );
+      });
+
+    /** The thumb the right-hand strip paints, in the strip's own pixels. */
+    const thumbIn = (
+      source: Pixels.Pixels,
+    ): Option.Option<Pixels.PixelRegion> =>
+      Option.flatMap(
+        Option.fromNullishOr(
+          Pixels.crop(
+            source,
+            new Pixels.PixelRegion({
+              x: Math.round((box.x + DRAG_BAND.x) * scale),
+              y: Math.round((box.y + DRAG_BAND.y) * scale),
+              width: Math.round(DRAG_BAND.width * scale),
+              height: Math.round(DRAG_BAND.height * scale),
+            }),
+          ),
+        ),
+        (crop) => Option.fromNullishOr(Pixels.boundsOfColour(crop, tint)),
+      );
+
+    // At rest: nothing has moved, and the thumb is where the rule puts it —
+    // which is also the place the drag below aims at.
+    const rest = yield* offsetRead("at rest");
+    yield* ctx.expectNear("the scroller starts at the top", rest.y, 0, 1);
+    yield* ctx.expectNear("the scroller starts at the left", rest.x, 0, 1);
+    const restThumb = yield* ctx.expectSome(
+      "the thumb paints its tint at rest",
+      thumbIn(frame),
+    );
+    yield* ctx.expectNear(
+      "the resting thumb starts at the track's top",
+      restThumb.y / scale,
+      DRAG_THUMB.start,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the resting thumb is the length its content gives it",
+      restThumb.height / scale,
+      DRAG_THUMB.length,
+      1,
+    );
+
+    // The thumb drag: the press lands on the thumb's own centre and travels.
+    yield* ctx.host.drag(DRAG_IDS.scroller, 0, DRAG_BY, {
+      offset: DRAG_GRAB,
+    });
+    yield* Effect.sleep(SETTLE);
+    const dragged = yield* offsetRead("after the thumb drag");
+    yield* ctx.expectNear(
+      "a drag on the thumb scrolls nothing",
+      dragged.y,
+      rest.y,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the thumb drag moves no other axis",
+      dragged.x,
+      rest.x,
+      1,
+    );
+
+    // The track below it: a browser pages on that press, the overlay takes none.
+    yield* ctx.host.drag(DRAG_IDS.scroller, 0, DRAG_BY, {
+      offset: DRAG_TRACK_GRAB,
+    });
+    yield* Effect.sleep(SETTLE);
+    const track = yield* offsetRead("after the track drag");
+    yield* ctx.expectNear(
+      "a drag on the track below the thumb scrolls nothing",
+      track.y,
+      rest.y,
+      1,
+    );
+
+    // The control: the same drag on an element that listens for it.
+    yield* ctx.expectContains(
+      "the handle starts with no moves",
+      yield* ctx.host.text(DRAG_IDS.readout),
+      "moves=0",
+    );
+    yield* ctx.host.drag(DRAG_IDS.handle, 0, DRAG_BY);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the same drag runs the handle's moves",
+      yield* ctx.host.text(DRAG_IDS.readout),
+      "moves=8",
+    );
+
+    // The wheel is the path that works, so the scroller is not inert.
+    yield* ctx.host.wheel(DRAG_IDS.scroller, 0, DRAG_WHEEL);
+    yield* Effect.sleep(SETTLE);
+    const wheeled = yield* offsetRead("after the wheel");
+    yield* ctx.expectNear(
+      "a wheel on the same scroller moves it",
+      wheeled.y,
+      DRAG_WHEEL,
+      1,
+    );
+    yield* ctx.host.capture("scrollbar-drag-wheeled");
+    const wheeledFrame = yield* ctx.host.pixels("scrollbar-drag-wheeled");
+    const wheeledThumb = yield* ctx.expectSome(
+      "the thumb paints after the wheel",
+      thumbIn(wheeledFrame),
+    );
+    yield* ctx.expectNear(
+      "the thumb follows the wheel it cannot be dragged by",
+      wheeledThumb.y / scale,
+      dragThumbAfter(wheeled.y).start,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the thumb keeps its length",
+      wheeledThumb.height / scale,
+      DRAG_THUMB.length,
+      1,
+    );
+  });
+
+/**
  * What box an `<img>` paints, and what a style can make it paint.
  *
  * An image is the one element whose intrinsic ratio the runtime owns: GPUI
@@ -27514,5 +27769,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "collapsible-lifecycle",
     view: () => <CollapsibleProbe />,
     steps: collapsibleSteps,
+  },
+  "scrollbar-drag": {
+    id: "scrollbar-drag",
+    view: () => <ScrollbarDragProbe />,
+    steps: scrollbarDragSteps,
   },
 };

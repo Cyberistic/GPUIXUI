@@ -101,7 +101,11 @@ Pointer input is four verbs. `click` presses and releases, `drag` presses and
 travels, and `hover` moves the pointer onto the element's centre **without
 pressing** — the only way to drive the enter/leave pair a tooltip or a
 hover style listens for, since any press also fires the press handlers.
-`clickWith` holds `cmd`/`ctrl`/`alt`/`shift` for the press, because a desktop
+`drag` also takes an `offset` (`AsyncDragOptions`), the distance from the
+element's centre where the press lands: a surface the **runtime** paints inside
+an element — a scrollbar thumb on a scroller's trailing edge — is not a node a
+probe can name, so the `scrollbar-drag` probe aims from the scroller it belongs
+to. `clickWith` holds `cmd`/`ctrl`/`alt`/`shift` for the press, because a desktop
 list selects by chord: the runtime reports the held set on the click event, and
 `Smoke.formatModifiers` is the one spelling of it (`["shift", "cmd"]` is
 `cmd-shift`, whatever the argument order). The automation protocol always

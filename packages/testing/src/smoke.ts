@@ -415,6 +415,27 @@ export const formatModifiers = (
   );
 
 /**
+ * Where a drag starts, in pixels from the target element's painted centre.
+ *
+ * A locator presses the element's centre, which is what every element-space
+ * gesture wants. A surface the **runtime** paints inside an element — a
+ * scrollbar thumb on a scroller's trailing edge — is not a node a probe can
+ * name, so its drag has to be aimed from the element that carries it.
+ */
+export interface DragStart {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** {@link AsyncSmokeHost.drag}'s options. */
+export interface AsyncDragOptions {
+  /** Where the press lands, from the element's centre. Default: the centre. */
+  readonly offset?: DragStart;
+  /** Move events between the press and the release. Default: the protocol's 8. */
+  readonly steps?: number;
+}
+
+/**
  * The window twin of `SmokeHost`: the same verbs, but effectful.
  *
  * The automation protocol behind a real window is asynchronous, so a live probe
@@ -492,11 +513,16 @@ export interface AsyncSmokeHost {
    * listens to both `mouseDown` and `mouseMove`, so a drag handle keeps its
    * moves after the pointer leaves its box while a move-only element does not —
    * the `pointer-capture` probe measures both cases.
+   *
+   * `options.offset` moves the press away from the element's centre: a
+   * scrollbar thumb is painted by the runtime on a scroller's own edge, so the
+   * scroller is the element and the thumb is a place inside it.
    */
   readonly drag: (
     testId: string,
     deltaX: number,
     deltaY: number,
+    options?: AsyncDragOptions,
   ) => Effect.Effect<void, SmokeHostError>;
   /**
    * Sends one wheel event over `testId`'s painted centre.

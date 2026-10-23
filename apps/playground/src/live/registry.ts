@@ -606,6 +606,12 @@ export const liveRegistry = [
       "Layout: the shipped Collapsible measures its body in a window, clips to it and unmounts it when it closes",
     capability: "layout",
   },
+  {
+    id: "scrollbar-drag",
+    title:
+      "Scroll: the runtime's scrollbar is painted with no hitbox, so its thumb takes no pointer drag and only the wheel moves it",
+    capability: "scroll",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

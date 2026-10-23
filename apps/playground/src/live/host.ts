@@ -258,8 +258,8 @@ export const createLiveHost = ({
     clickWith: (testId, modifiers) =>
       call(`clickWith ${testId}`, () => modifiedPress(at(testId), modifiers)),
     hover: (testId) => call(`hover ${testId}`, () => at(testId).hover()),
-    drag: (testId, deltaX, deltaY) =>
-      call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY)),
+    drag: (testId, deltaX, deltaY, options) =>
+      call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY, options)),
     /**
      * The protocol's locator aims one wheel event at the element's painted
      * centre, which is the hit-tested path a pointer takes. `app.call` would
