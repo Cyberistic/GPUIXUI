@@ -2016,7 +2016,7 @@ high-contrast pair) and every shipped, high-contrast, platform and authored them
 clears it, the tightest placement being the muted line in Windows XP (Luna)
 light's field's own fill at 6.31:1, so no palette moved.
 `contrast.test.ts`'s `the muted text inside a field's own fill` suite reads all
-three painters, reports a role equal to its own fill at 1.00:1 and sweeps the 16
+three painters, reports a role equal to its own fill at 1.00:1 and sweeps the 18
 styles.
 
 A **selected row** carries a **title**, and the table used to read that title as
@@ -2585,8 +2585,8 @@ measured on the paint rather than the role: a context menu, a confirmation dialo
 or a command palette opens from the row the press landed on, so the veil recedes
 the derived wash and every raised level's shadow falls on it — and the derivation
 moves toward `foreground`, the colour a veil is usually built from, which is
-where a veil has the least to work with. All 128 placements (two replaced washes
-per style × the veil and the three raised levels) clear the floor over the 16
+where a veil has the least to work with. All 144 placements (two replaced washes
+per style × the veil and the three raised levels) clear the floor over the 18
 shipped, high-contrast, platform and authored styles; the tightest is High
 contrast dark at **1.08:1**, and `pointer-wash.test.ts` holds it with a brand
 whose `shadow` is its own press as the negative control.
@@ -2764,7 +2764,7 @@ popover, toolbar and wash placements all passed. The tint is now a grey lighter
 than the faces it can fall on (`#4A4A4AB3`), and every raised level clears the
 floor on all sixteen strips: the card's lift reads 1.08–1.82:1, the menu's
 1.13–2.81:1 and the dialog's 1.17–3.75:1. Across every shipped, high-contrast,
-platform and authored style the tightest of the 672 placements is 1.06:1 — the
+platform and authored style the tightest of the 768 placements is 1.06:1 — the
 authored Windows 7 (Aero) dark card lift on a field's own fill. The
 one-shadow-per-level rule and the role-owned tint remain `elevation.test.ts`'s.
 

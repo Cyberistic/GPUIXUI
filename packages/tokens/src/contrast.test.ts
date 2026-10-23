@@ -3049,11 +3049,17 @@ describe("the muted text inside a field's own fill", () => {
     expect(tightest.ratio?.toFixed(2)).toBe("6.31");
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
-    expect(
-      readFileSync(
-        new URL("../../../docs/tokens.md", import.meta.url),
-        "utf8",
-      ).replace(/\s+/g, " "),
-    ).toContain(`field's own fill at ${tightest.ratio?.toFixed(2)}:1`);
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(page).toContain(
+      `field's own fill at ${tightest.ratio?.toFixed(2)}:1`,
+    );
+    // The sweep grew to eighteen when the Omarchy look shipped two styles, and
+    // the sentence kept the sixteen it was written on. The count a page prints
+    // is derived from the list this case walks, never retyped.
+    expect(page).toContain(`sweeps the ${styles.length} styles`);
+    expect(page).not.toContain("sweeps the 16 styles");
   });
 });

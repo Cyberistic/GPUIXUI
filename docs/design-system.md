@@ -520,7 +520,7 @@ collapsible trigger `pressWash(theme, "hover")`; the primitives' ghost/outline/l
 recipes, toggle, empty checkbox/switch and stepper), so no row presses in the
 bare role those six measurements counted as invisible. The veil
 and the raised levels are then measured on the **derived** paint, because a
-surface opens from the row the press landed on: all 128 placements clear the
+surface opens from the row the press landed on: all 144 placements clear the
 floor, the tightest is High contrast dark at **1.08:1**.
 
 A **filled role's pointer feedback** is derived, never a lifted alpha: a

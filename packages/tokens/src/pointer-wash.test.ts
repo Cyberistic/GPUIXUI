@@ -314,10 +314,25 @@ describe("the wash a pointer state paints", () => {
 
     expect(unmeasured).toEqual([]);
     expect(hidden).toEqual([]);
+    // The pages print the cells this case measures. The sweep grew to eighteen
+    // styles when the Omarchy look shipped, and both sentences kept the sixteen
+    // they were written on (128 cells). The count is derived here, not retyped.
+    const cells = measured.flatMap(({ ratios }) => ratios);
+    expect(cells).toHaveLength(everyStyle.length * 2 * (1 + raised.length));
     // The tightest is the high-contrast dark press, where the veil has the least
     // room: the press is already the lightest wash in the palette.
     expect(tightest.name).toBe("High contrast dark");
     expect(tightest.ratio.toFixed(2)).toBe("1.08");
+
+    expect(flat(catalogue)).toContain(`All ${cells.length} placements`);
+    expect(flat(designSystem)).toContain(`all ${cells.length} placements`);
+    const pages: ReadonlyArray<readonly [string, string]> = [
+      ["docs/tokens.md", catalogue],
+      ["docs/design-system.md", designSystem],
+    ];
+    pages.forEach(([name, document]) => {
+      expect(flat(document), name).not.toContain("128 placements");
+    });
 
     // The case can fail: a brand whose shadow *is* the press it falls on casts no
     // shadow there, exactly the defect the placement measures.

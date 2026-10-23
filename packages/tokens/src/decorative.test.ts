@@ -1342,6 +1342,13 @@ describe("decorative surfaces", () => {
     expect(tightest.ratio.toFixed(2)).toBe("1.06");
     expect(read("../../../docs/tokens.md")).toContain("1.06:1");
     expect(read("../README.md")).toContain("1.06:1");
+    // The catalogue prints how many cells the sweep walks. Two strips joined the
+    // elevation half after the sentence was written (the washes a row is pressed
+    // and hovered in), so the retyped 672 outlived its table; the count is
+    // derived from the strips and style entries this case measures.
+    const page = read("../../../docs/tokens.md").replace(/\s+/g, " ");
+    expect(page).toContain(`the tightest of the ${cells.length} placements`);
+    expect(page).not.toContain("the 672 placements");
   });
 
   it("reports the high-contrast dark panel a shadow could not lift", () => {
