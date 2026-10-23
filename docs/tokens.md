@@ -3127,6 +3127,31 @@ check a custom `keyword` against. The suite measures that direction — a brand
 whose page is lifted from the base theme's keeps its keyword readable on the page
 (7.67:1) and loses it on the fence (6.95:1).
 
+**What a window measured.** The derivation above is a read of the runtime's
+source; the playground's `markdown-fence` probe paints three fences from one
+four-line source in a window on 0.11.0 (**50** checks) and counts each block's
+own box:
+
+| Block | Fill behind the host | Fence body | Strip | Keyword |
+| ----- | -------------------- | ---------- | ----- | ------- |
+| base dark | `#11141A` | `#191C22` (**174 776** px) | `#1E2126` (**57 822** px) | `#A7A9FF` (**896** px) |
+| macOS dark | `#1C1C1E` | `#242426` (**174 570** px) | `#28282A` (**57 630** px) | `#B0B2FF` (**896** px) |
+| no theme | the shell's page `#11141A` | `#191C22` | — | the runtime's `#8F96ED` (**988** px) |
+
+Both composites land where `nativeFenceFill`/`nativeFenceHeaderFill` put them,
+each block paints its own palette's keyword, and the unthemed control keeps a
+missing handover visible rather than reading as a pass. **The measured rule: a
+fence composites over the fill behind the host, not over the theme object's
+`bg`.** The first run painted the macOS block on the shell's page, so its fence
+read the base page's `#191C22` and the expected `#242426` survived on six
+rounded-corner pixels; a document inset in a card must derive
+`nativeFenceFill(card)` from the card's fill. The strip is a second wash in both
+blocks (1.057:1 base, 1.053:1 macOS) and the rule the runtime draws under it is
+the boundary. The pixel counts move by a few hundred glyph-edge pixels between
+runs — the floors are what the probe asserts. Evidence:
+[`apps/playground/README.md` §`markdown-fence`](../apps/playground/README.md),
+`.artifacts/live/markdown-fence.png`.
+
 ### What a field's value actually paints
 
 The seam hands `text: inputForeground`, and that role is the ink a `<code>`, a

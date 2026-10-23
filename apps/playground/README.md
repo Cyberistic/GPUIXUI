@@ -42,14 +42,14 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-103 probes a real window can prove, of which nineteen mount shipped
+104 probes a real window can prove, of which twenty mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the collapsible section, the popover,
 the message scroller, the
-combobox, the date picker, the shipped data tables, the nested overlay stack
-and the modal focus rule), eight mount
+combobox, the date picker, the shipped data tables, the nested overlay stack,
+the modal focus rule and the breadcrumb trail), eight mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 ScrollArea and the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one more
@@ -5792,6 +5792,55 @@ count, and the tests that hold the two claims). Negative control measured, exit
 `1`: expecting the draft's commit (`commit:x`) in the trace fails
 `the window's delivered trace` with the actual sequence.
 
+### `breadcrumb-navigation-lifecycle` — measured on 0.11.0 here
+
+**What does a breadcrumb trail owe a pane that narrows?** Tier 4's *Breadcrumb
+navigation* row was `?`: a trail looks like composition, but three decisions in
+it are the runtime's to answer. The probe paints the **shipped** `Breadcrumb`
+twice in one pane — all five levels with no budget, and the app's own trail
+budgeted from the pane's `onLayout` report, whose collapsed middle is the
+shipped `DropdownMenuTrigger` and the shipped menu — then narrows the pane and
+drives the middle from both inputs.
+
+| Step | Measured |
+| ---- | -------- |
+| wide pane (560) | the readout prints `w=560 budget=5`; all five levels paint, no collapsed middle, and both trails are one 16px row |
+| a press on the narrow control | the pane re-lays itself, reports **280**, and the budget follows it: `w=280 budget=3` |
+| the unbudgeted trail at 280 | paints **36** — two 16px rows, because the list is `flex-wrap`; nothing clips |
+| the budgeted trail at 280 | paints **28**, exactly its trigger's height: one row |
+| the trigger's target | **28** high, above the 24px press floor |
+| Tab from the root crumb | the next stop is the trigger — the hidden middle is one press away |
+| a press on the trigger | the shipped menu paints the three hidden levels; choosing **Overlays** sets `page=Overlays selected=Overlays`, the trigger survives (two levels are still hidden) and the focus returns to it |
+| a keyboard open (`Enter`) | lands on the first hidden level (**Design system**); `Down` moves real focus to **Components**; `Enter` chooses it: `page=Components selected=Components` |
+| the path after choosing | three entries is the budget, so the trigger **unpaints**, the trail is one 16px row again, and no control is left holding a vanished surface |
+| the traversal from the middle crumb | continues to the control after the trail, not into a dead end |
+
+The three rules a breadcrumb plan needs:
+
+1. **A trail never clips; it wraps.** The shipped list is `flex-wrap`, so a trail
+   wider than its pane grows a second row (16 → **36**) rather than overflowing.
+   A toolbar, a dock header or a split pane therefore *must* budget the trail:
+   there is no clipping fallback to fall back on.
+2. **The budget is a count, and the app owns the reachable middle.** The count
+   comes from the pane's report, and the shipped `maxItems` ellipsis is
+   decorative by design (not a tab stop, no press): the levels it hides are
+   reachable only through a trigger the app composes around it. A trigger is the
+   trail's second tab stop and a menu row is a real focus stop.
+3. **A selection can remove its own trigger.** When the chosen level leaves a
+   path that fits the budget, the trigger unpaints in the same commit as the
+   close. That is correct — there is nothing left to hide — and it is why the
+   trigger must be a control the app can lose: the trail's remaining crumbs are
+   the stops, and the traversal continues to the next control.
+
+48 checks, `--only breadcrumb-navigation-lifecycle`, green on 0.11.0 here
+(~8–10 s, three captures). Fixture `src/live/breadcrumb-navigation.ts` (the
+levels, the count-to-width arithmetic, the trail view, the ids and the readout) +
+`breadcrumb-navigation.test.ts` (the budget rule, the trail view, the probe's
+mounts and inputs, the registry entry, this section and its printed values).
+Negative control measured, exit `1`: painting a budget of 5 regardless of the
+pane's report fails `the levels the budget hides leave the trail`
+(`expected true, got false`) in 452ms.
+
 `AsyncSmokeHost` gained two optional verbs for this: `blur()` — the renderer's own
 `blur`, so a probe can clear the focus it moved — and `activateWindow()` — the
 platform's activation, which the probe asks for before measuring and which this
@@ -6026,8 +6075,8 @@ narrower. Each deviation is deliberate and measured:
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
   `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
   `faded-hitbox-lifecycle` and `markdown-fence` and
-  `empty-error-states-lifecycle` and `blur-delivery-lifecycle` (forty-five
-  probes, each run alone).
+  `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
+  `breadcrumb-navigation-lifecycle` (forty-six probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

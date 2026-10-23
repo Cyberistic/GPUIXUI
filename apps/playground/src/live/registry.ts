@@ -355,6 +355,12 @@ export const liveRegistry = [
     capability: "content",
   },
   {
+    id: "chart-surface-lifecycle",
+    title:
+      "Content: the shipped data charts paint one tint per series in a window, stack, ring and spark beside their text, and repaint a changed value",
+    capability: "content",
+  },
+  {
     id: "window-chrome",
     title:
       "Window: the app's layout starts at the window's top edge, the reported insets carry no titlebar band in either titlebar mode, and an app insets its own chrome",
@@ -653,6 +659,12 @@ export const liveRegistry = [
     title:
       "Focus: a window whose app never activates delivers no onFocus or onBlur on any route — press, traversal, blur or unmount — while the focus id and keys still move",
     capability: "focus",
+  },
+  {
+    id: "breadcrumb-navigation-lifecycle",
+    title:
+      "Navigation: a trail budgeted from its pane's own width keeps one row where the unbudgeted trail wraps, and the levels a budget hides are reachable through a menu the app composes",
+    capability: "layout",
   },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 

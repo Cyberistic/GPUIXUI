@@ -1443,4 +1443,85 @@ describe("the fence a document host paints", () => {
     expect(inventory).toContain("nativeFenceFill");
     expect(readme).toContain("nativeFenceFill");
   });
+
+  it("prints the fence the window measured, not only the source read", () => {
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const design = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const inventory = readFileSync(
+      new URL("../../../COMPONENTS.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const record = readFileSync(
+      new URL("../../../apps/playground/README.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const probe = readFileSync(
+      new URL(
+        "../../../apps/playground/src/live/markdown-fence.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+
+    const checks = /MARKDOWN_FENCE_CHECKS = (\d+)/.exec(probe)?.[1];
+    expect(checks).toBeDefined();
+    expect(page).toContain(`(**${checks}** checks)`);
+
+    // Every paint the two themed blocks own, derived from the seam the probe
+    // paints through: a palette or wash change moves the page with it.
+    const macOSDark = platformTheme(themes.dark, "darwin");
+    const paints = [themes.dark, macOSDark].flatMap((theme) =>
+      [
+        theme.colors.background,
+        nativeFenceFill(theme.colors.background),
+        nativeFenceHeaderFill(theme.colors.background),
+        syntaxColors(theme).keyword,
+      ].filter((colour): colour is string => colour !== undefined),
+    );
+    expect(paints.length).toBe(8);
+    paints.forEach((colour) => {
+      expect(page).toContain(colour);
+      expect(record).toContain(colour);
+    });
+
+    // The printed rows are the record's rows: the block's page, body, strip and
+    // keyword, and the pixel counts a window counted. The section is sliced so
+    // an unrelated table's `base dark` cell cannot answer for it.
+    const start = page.indexOf("What a window measured");
+    const section = page.slice(start, page.indexOf("### What a field", start));
+    const row = (text: string, block: string) => {
+      const found =
+        new RegExp(`\\| ${block} \\|([^|]*\\|){3}[^|]*\\|`).exec(text)?.[0] ??
+        "";
+      return {
+        hexes: found.match(/#[0-9A-F]{6}/g) ?? [],
+        counts: found.match(/\*\*[\d ]+\*\* px/g) ?? [],
+      };
+    };
+    ["base dark", "macOS dark"].forEach((block) => {
+      expect(row(section, block)).toEqual(row(record, block));
+      expect(row(section, block).hexes.length).toBe(4);
+      expect(row(section, block).counts.length).toBe(3);
+    });
+
+    // The unthemed control is what keeps a missing handover visible.
+    expect(record).toContain("`#8F96ED`");
+    expect(page).toContain("`#8F96ED` (**988** px)");
+
+    // The rule a consumer needs, where they read it.
+    const rule = "a fence composites over the fill behind the host";
+    expect(page).toContain(rule);
+    expect(page).toContain("nativeFenceFill(card)");
+    expect(design).toContain(rule);
+    expect(design).toContain("nativeFenceFill(card)");
+    expect(inventory).toContain(rule);
+    expect(inventory).toContain("nativeFenceFill(card)");
+    expect(page).toContain("markdown-fence");
+  });
 });

@@ -1025,6 +1025,10 @@ import { FadedHitboxProbe, fadedHitboxSteps } from "./opacity-hit-probe.js";
 import { EmptyErrorProbe, emptyErrorSteps } from "./empty-error-probe.js";
 import { BlurDeliveryProbe, blurDeliverySteps } from "./blur-delivery-probe.js";
 import {
+  BreadcrumbNavigationProbe,
+  breadcrumbNavigationSteps,
+} from "./breadcrumb-navigation-probe.js";
+import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
   ACTION_RING_PRIMARY,
@@ -28533,5 +28537,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "blur-delivery-lifecycle",
     view: () => <BlurDeliveryProbe />,
     steps: blurDeliverySteps,
+  },
+  "breadcrumb-navigation-lifecycle": {
+    id: "breadcrumb-navigation-lifecycle",
+    view: () => <BreadcrumbNavigationProbe />,
+    steps: breadcrumbNavigationSteps,
   },
 };

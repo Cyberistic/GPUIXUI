@@ -1171,6 +1171,14 @@ runtime draws under it is what carries the boundary, as it does for a field
 document paints has the shares, the helper a brand checks its page with
 (`nativeFenceFill`, `nativeFenceHeaderFill`) and the full table.
 
+The playground's `markdown-fence` probe measured that composite in a window on
+0.11.0 (50 checks): the base dark body `#191C22`, strip `#1E2126` and keyword
+`#A7A9FF`; the macOS body `#242426`, strip `#28282A` and keyword `#B0B2FF`; and
+an unthemed control on the runtime's own `#8F96ED`. It also measured the rule a
+consumer needs: a fence composites over the fill behind the host, so a
+document inside a card derives `nativeFenceFill(card)` from the card's fill
+rather than from the theme's page.
+
 ### Target sizes
 
 Colour is not the only measured contract. Every pointer target keeps
