@@ -16,6 +16,7 @@ import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PackageSource } from "@/components/docs/package-source";
 import { PageExample } from "@/components/docs/page-example";
+import { RelatedStrip } from "@/components/docs/related-strip";
 import {
   PlatformProvider,
   PlatformToggle,
@@ -193,6 +194,7 @@ function PackageContent({
       />
       <MDX components={mdxComponents} />
       <PackageSource url={url} />
+      <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
     </PageFrame>
   );
 }

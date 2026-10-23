@@ -213,6 +213,7 @@ src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
 src/components/docs/dependency-strip.tsx  The generated "Built on" line: the component's workspace imports
+src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
@@ -314,6 +315,7 @@ src/lib/examples.ts                 The example registry: ids, paths and header 
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
+src/lib/related.ts                  The related-component families a package page's strip prints
 src/lib/patterns.ts                 The one source of the patterns and their parts
 src/lib/licenses.ts                 The LICENSES/*.md parse
 src/lib/licenses-data.ts            The licence records, at build time
@@ -367,11 +369,20 @@ stricter: frontmatter must be valid YAML and prose may not contain a raw
 `<tag>` outside code. `src/lib/package-docs.test.ts` guards that, that every
 `packages/*/docs` directory is mounted, and that the primitives index links every
 page it ships — a violation fails the collection, not just one page.
-`src/lib/package-page-template.test.ts` holds every package page to the
-component-page template's invariant core — `## API`, an accessibility or
-limitations section, the evidence section and `## Related` — so a page cannot
-drop one silently; the one page missing a related list is recorded with its
-owner and the guard fails once it is added.
+`src/lib/package-page-template.test.ts` holds every package page to the two
+sections a component page may never hide — `## API`, and an accessibility or
+limitations section — with the pages still missing the second recorded in the
+guard's ledger and owned by their package. `## Related` is **generated** rather
+than required: a package page is Markdown the site mounts and cannot resolve its
+siblings, so `src/lib/related.ts` names each page's family and
+`src/components/docs/related-strip.tsx` prints it at the end of every mounted
+package page. `src/lib/related.test.ts` covers each mounted package page exactly
+once or argues it as a solo, and holds every link and label to the page that
+serves it.
+`## Verification`/`## Testing` stays the page author's and is optional: it names
+the suite that proves the component where the package keeps one, and the site
+cannot invent a suite, so a page without the heading is not a defect the site
+can fix.
 
 Every package page opens with a **status strip** generated from its
 `COMPONENTS.md` row (`src/components/docs/status-strip.tsx`): the inventory's

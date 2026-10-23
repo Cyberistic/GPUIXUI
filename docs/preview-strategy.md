@@ -451,6 +451,43 @@ workspace import the module makes is listed and nothing invented — and keeps
 every printed link on a mounted page. Deleting the strip's mount fails the
 frame case; emptying the index fails five cases across the two guards.
 
+### The related line is generated, not written
+
+`MISSION.md` asks every component page for its related components, and that row
+was the one the package pages could not satisfy: a page is Markdown the site
+mounts, so it cannot resolve the URL of its siblings, and most of the mounted
+pages shipped without a `## Related` section while this file claimed the
+template guard enforced one. The curated pages write the section themselves; the
+generated line answers the package pages.
+
+- `src/lib/related.ts` is the model: a named **family** per layer — the actions,
+  the text fields, the overlays, the table surfaces, the panels — each family a
+  list of the pages a reader is choosing between, with the page's own
+  frontmatter title as the label. A family may hold a curated page beside a
+  package page, because the curated page is the URL the site serves.
+- `<RelatedStrip url sections>` prints the family at the end of a package page,
+  after the source block, and leaves the page itself out of the list. The
+  sections are the table of contents Fumadocs already built, so a page that
+  writes `## Related` keeps its section and the strip stays silent — 31 of the
+  104 mounted package pages do. It renders nothing for the pages argued as solos
+  in `soloPages`: the provider, the one overlay primitive whose curated page is
+  the same component, and the one-page icon set.
+- The strip is mounted by the package frame only, so a curated page keeps the
+  `## Related` section it writes and no page prints the links twice.
+
+`src/lib/related.test.ts` holds the data to the pages in both directions: every
+mounted package page is in a family or argued as a solo (with a floor, so a walk
+that stopped matching cannot pass), every link names a page the site mounts and
+carries that page's own title, no family has a single member, no page sits in two
+families, and a solo is not also placed; it also counts the pages that write the
+section themselves, which is what the heading check answers. Measured: deleting
+the Ripple button's member fails the coverage case naming
+`/docs/components/ripple-button`, shortening `Liquid button` to `Liquid` fails
+the label case with `reads "Liquid", the page says "Liquid button"`, and
+dropping the heading check prints the generated list under a written one and
+fails the strip's silence case. `related-strip.test.tsx` holds the rendered line
+(a sibling's href and label, the page's own href absent), the silence for a page
+that writes the section, and the argued solos.
 
 ### The source block is generated, not written
 
@@ -634,7 +671,7 @@ no keyboard path, it says so rather than leaving the reader to guess.
 | Theming | which roles it reads, and what a theme change does |
 | Accessibility and limitations | role/name, and every unsupported attribute with the alternative |
 | Dependencies | the packages it needs, and why — curated pages write the table; a package page gets the generated strip |
-| Related | siblings, parents, alternatives |
+| Related | siblings, parents, alternatives — curated pages write it; a package page gets the generated strip |
 | Status | the `done` / `partial` status and the runtime support verdict, with the evidence |
 
 The template is a contract, not a suggestion: a page missing a section is a page
@@ -695,22 +732,33 @@ status it does not have, which is why neither is a table row an author writes.
 The package's own pages are the component's doc file: a page that ships a demo
 mounts it as a labelled browser approximation (strategy 3), a lane with no demo
 shows none (strategy 4), and a section that does not apply (no sizes, no
-keyboard path) is omitted rather than faked. Four sections are not
-optional on any component page, though — `## API`, an accessibility or
-limitations section, the evidence section (`## Verification` or `## Testing`)
-and `## Related` — and `src/lib/package-page-template.test.ts` holds every page
-under `packages/*/docs` to them, across every mounted collection. A page could
-otherwise lose its prop table or its accessibility budget while the site kept
-rendering it as the component's documentation. The guard scans 70+ pages with a
-floor, so a walk that stopped matching cannot pass. It found one page without
-`## Related` (`packages/components/docs/message-scroller.mdx`); the page names
-its siblings now and `packages/components/src/docs.test.ts` holds every
-components page to a `## Related` section, so the defect is closed at its owner
-as well as here. The guard's known-gap ledger is the only place a gap lives.
-Today it carries the two dock pages (`dock-layout.mdx`, `panel-group.mdx`) that
-have no accessibility or limitations section, owned by the dock workstream and
-recorded in `TODO.md`; a gap that is fixed deletes its entry in the same change
-— the ledger cannot outlive a fix.
+keyboard path) is omitted rather than faked. Two sections are not
+optional on a package page, though — `## API` and an accessibility or
+limitations section — and `src/lib/package-page-template.test.ts` holds every
+page under `packages/*/docs` to them, across every mounted collection. A page
+could otherwise lose its prop table or its accessibility budget while the site
+kept rendering it as the component's documentation. The guard scans 70+ pages
+with a floor, so a walk that stopped matching cannot pass. The guard's
+known-gap ledger is the only place a gap lives. Today it carries the two dock
+pages (`dock-layout.mdx`, `panel-group.mdx`) that have no accessibility or
+limitations section, owned by the dock workstream and recorded in `TODO.md`; a
+gap that is fixed deletes its entry in the same change — the ledger cannot
+outlive a fix.
+
+The other two rows the template asks for are **not** the package page's to
+write, and this file used to claim the guard enforced all four:
+
+- `## Related` is generated. A package page is Markdown the site mounts and
+  cannot resolve its siblings, so `src/lib/related.ts` names each page's
+  family and `<RelatedStrip>` prints it at the end of every mounted package
+  page. `related.test.ts` covers each mounted page exactly once (or argues it
+  as a solo) and holds every link and label to the page that serves it —
+  see §The related line is generated.
+- The evidence section (`## Verification` or `## Testing`) is the **page
+  author's** and is optional: a page names the suite that proves it where the
+  package keeps one — many name the cases inline instead of under a heading —
+  and the site cannot invent a suite. It is not guarded, and this file no
+  longer claims it is.
 
 ## The getting-started page
 
