@@ -113,3 +113,35 @@ export const statsLabel = (stats: MarkdownStats): string =>
   `${stats.lines} ${stats.lines === 1 ? "line" : "lines"} · ${stats.words} ${
     stats.words === 1 ? "word" : "words"
   }`;
+
+/**
+ * The share of the split a pane may take. A quarter each way keeps both views
+ * readable and leaves the divider inside the editor at every width.
+ */
+const SPLIT_MIN_SHARE = 0.25;
+const SPLIT_MAX_SHARE = 0.75;
+
+/** The source pane's bounds for a body of `available` points. */
+export const splitBounds = (
+  available: number,
+): { readonly min: number; readonly max: number } => {
+  const width = Math.max(0, available);
+  return {
+    min: Math.floor(width * SPLIT_MIN_SHARE),
+    max: Math.floor(width * SPLIT_MAX_SHARE),
+  };
+};
+
+/**
+ * The source pane a stored split names, held inside the view's band.
+ *
+ * A split restored from storage may be absent, unreadable or outside the band;
+ * it reads as the middle of the body, so a saved NaN cannot paint a pane with
+ * no width. A readable value steps to the nearest half-point and is clamped.
+ */
+export const splitOf = (value: unknown, available: number): number => {
+  const { min, max } = splitBounds(available);
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(Math.max(Math.floor(value), min), max)
+    : Math.floor(Math.max(0, available) / 2);
+};

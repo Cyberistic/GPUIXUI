@@ -14,6 +14,8 @@ import {
   markdownStats,
   modeOf,
   openFence,
+  splitBounds,
+  splitOf,
   statsLabel,
 } from "./logic.js";
 
@@ -107,6 +109,24 @@ describe("modeOf", () => {
     expect(modeOf("wide")).toBe("split");
     expect(modeOf(undefined, "preview")).toBe("preview");
     expect(modeOf(7)).toBe("split");
+  });
+});
+
+describe("splitOf", () => {
+  it("holds a stored split inside the view's band", () => {
+    expect(splitBounds(634)).toStrictEqual({ min: 158, max: 475 });
+    expect(splitOf(200, 634)).toBe(200);
+    expect(splitOf(10, 634)).toBe(158);
+    expect(splitOf(9999, 634)).toBe(475);
+    expect(splitOf(200.9, 634)).toBe(200);
+  });
+
+  it("reads a split it cannot lay out as the middle of the body", () => {
+    // The bug guarded: Math.max(NaN, min) stayed NaN, so a restored split
+    // painted a pane with no width.
+    expect(splitOf(undefined, 634)).toBe(317);
+    expect(splitOf(Number.NaN, 634)).toBe(317);
+    expect(splitOf(Number.POSITIVE_INFINITY, 634)).toBe(317);
   });
 });
 

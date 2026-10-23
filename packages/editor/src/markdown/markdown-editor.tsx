@@ -36,6 +36,8 @@ import {
   MARKDOWN_MODES,
   markdownStats,
   modeOf,
+  splitBounds,
+  splitOf,
   statsLabel,
   type MarkdownMode,
 } from "./logic.js";
@@ -98,24 +100,6 @@ const DEFAULT_WIDTH = 640;
 const bodyHeight = (height: number): number =>
   Number.isFinite(height) && height > 0 ? height : DEFAULT_HEIGHT;
 
-/**
- * The share of the split a pane may take. A quarter each way keeps both views
- * readable and leaves the divider inside the editor at every width.
- */
-const SPLIT_MIN_SHARE = 0.25;
-const SPLIT_MAX_SHARE = 0.75;
-
-/** The source pane's bounds for a body of `available` points. */
-const splitBounds = (
-  available: number,
-): { readonly min: number; readonly max: number } => {
-  const width = Math.max(0, available);
-  return {
-    min: Math.floor(width * SPLIT_MIN_SHARE),
-    max: Math.floor(width * SPLIT_MAX_SHARE),
-  };
-};
-
 /** A source pane: a code-styled `<textarea>` the runtime edits directly. */
 const sourceStyle = (
   theme: ReturnType<typeof useTheme>,
@@ -173,7 +157,7 @@ export const MarkdownEditor = ({
     defaultValue: defaultSplitSize ?? Math.floor(available / 2),
     onChange: onSplitSizeChange,
   });
-  const splitWidth = Math.min(Math.max(splitAt, split.min), split.max);
+  const splitWidth = splitOf(splitAt, available);
   const paneWidth = view === "split" ? splitWidth : total;
   const stats = markdownStats(source);
   const showsSource = view !== "preview";

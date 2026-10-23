@@ -8,7 +8,7 @@
  */
 
 import { useState, type ReactNode } from "react";
-import { DIVIDER_STEP } from "@gpuixui/dock";
+import { DIVIDER_STEP, DIVIDER_WIDTH } from "@gpuixui/dock";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -239,6 +239,14 @@ describe("MarkdownEditor", () => {
     dragDivider(editor, 60);
     expect(sizes.at(-1)).toBe(260);
     expect(boundsOf(editor, "markdown-source").width).toBe(200);
+    editor.unmount();
+  });
+
+  it("reads a stored split size it cannot lay out as the middle", () => {
+    const editor = render(<Controlled splitSize={Number.NaN} />);
+    expect(boundsOf(editor, "markdown-source").width).toBe(
+      Math.floor((640 - DIVIDER_WIDTH) / 2),
+    );
     editor.unmount();
   });
 

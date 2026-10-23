@@ -39,7 +39,9 @@ A split is the shipped `SplitPane` (`@gpuixui/dock`): its divider is a
 pane's size while the preview takes the rest. The size is
 `splitSize`/`defaultSplitSize`/`onSplitSizeChange` — controlled and
 uncontrolled like the other two contracts — and is held to **25–75%** of the
-body, so neither pane can be dragged away. A controlled `splitSize` is
+body, so neither pane can be dragged away. A split restored from storage that
+cannot be laid out (`NaN`, infinity) reads as the **middle** of the body rather
+than painting a pane with no width. A controlled `splitSize` is
 authoritative: a drag reports through `onSplitSizeChange` and the pane moves only
 when the caller renders the new value. A divider drag never edits the document,
 and a disabled editor disables the divider with the rest of its chrome.
@@ -139,11 +141,11 @@ and it is what `CodeEditor` does one tier down.
 
 ## Evidence
 
-`src/behaviour/markdown-editor.test.tsx` (12 native behaviour tests) types into
+`src/behaviour/markdown-editor.test.tsx` (13 native behaviour tests) types into
 the real field, follows the edit into the preview, switches all three views,
-drags the divider and steps it by keyboard (a controlled size stays put), and
-holds the read-only and disabled refusals; `src/markdown/logic.test.ts` (15
-cases) holds the fence families, the run length and the closer's rules, the
-counts and the stored mode;
+drags the divider and steps it by keyboard (a controlled size stays put, and a
+stored NaN opens at the middle), and holds the read-only and disabled refusals;
+`src/markdown/logic.test.ts` (17 cases) holds the fence families, the run length
+and the closer's rules, the counts, the stored mode and the split's band;
 `src/behaviour/hints.test.tsx` holds the painted hint in both themes, the help
 sentence the host loses, and the hint's return when the field clears.
