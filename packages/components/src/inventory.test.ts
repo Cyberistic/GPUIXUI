@@ -689,6 +689,57 @@ describe("the measured target rows", () => {
     );
   });
 
+  it("cites the frame surface a media card composes", () => {
+    const read = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");
+    const fixture = read("apps/playground/src/live/media-frame.ts");
+    const number = (source: string, pattern: RegExp): number =>
+      Number(pattern.exec(source)?.[1] ?? Number.NaN);
+    const checks = number(fixture, /\bMEDIA_CHECKS = (\d+);/);
+    const clip = number(fixture, /\bMEDIA_CLIP_MS = (\d+);/);
+    const tick = number(fixture, /\bMEDIA_TICK_MS = (\d+);/);
+    const poster = /MEDIA_POSTER = \{ width: (\d+), height: (\d+) \}/.exec(
+      fixture,
+    );
+    const width = Number(poster?.[1] ?? Number.NaN);
+    const height = Number(poster?.[2] ?? Number.NaN);
+    expect([checks, clip, tick, width, height].every(Number.isFinite)).toBe(
+      true,
+    );
+
+    const section = readmeSection(
+      "### `media-frame-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(section).toContain(
+      `${checks} checks, \`--only media-frame-lifecycle\``,
+    );
+    // The typings are the evidence for "no playback surface", not a guess.
+    expect(section).toContain("no `video` or `audio`");
+
+    const row = Option.getOrElse(
+      Arr.findFirst(
+        targetRows(),
+        (candidate) => candidate.name === "Video / audio player + waveform",
+      ),
+      () => {
+        throw new Error("COMPONENTS.md: no media row");
+      },
+    );
+    expect(row.support).toContain("not supported");
+    Arr.forEach(
+      [
+        "`media-frame-lifecycle`",
+        `${checks} checks`,
+        "`video`/`audio`",
+        "`setImagePixels`",
+        `${width}×${height}`,
+        `${tick} ms ticks`,
+        "`content-surfaces`",
+      ],
+      (claim) => expect(rowText(row), claim).toContain(claim),
+    );
+  });
+
   it("states the anchored menu measured in a scrolled header", () => {
     const readme = readFileSync(
       fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
