@@ -41,13 +41,20 @@ interface GridState {
   readonly sorting?: SortingState;
   readonly query?: string;
   readonly chosen?: Readonly<Record<string, true>>;
+  readonly hidden?: ReadonlyArray<string>;
 }
 
-const grid = ({ sorting = [], query = "", chosen = {} }: GridState = {}) =>
+const grid = ({
+  sorting = [],
+  query = "",
+  chosen = {},
+  hidden,
+}: GridState = {}) =>
   constructGrid({
     rows,
     keyOf: (row) => row.id,
     columns,
+    hiddenColumns: hidden,
     state: { sorting, globalFilter: query, rowSelection: chosen },
     onSortingChange: () => {},
     onGlobalFilterChange: () => {},
@@ -102,5 +109,25 @@ describe("the filtered row model", () => {
     const narrowed = grid({ query: "readme", chosen: { r1: true } });
     expect(narrowed.getSelectedRowIds()).toEqual(["r1"]);
     expect(narrowed.getRowModel().rows).toHaveLength(1);
+  });
+});
+
+describe("a hidden column", () => {
+  it("leaves the search, so no record is kept by text no cell shows", () => {
+    expect(ids({ query: "modified", hidden: ["status"] })).toEqual([]);
+    expect(ids({ query: "tracked", hidden: ["status"] })).toEqual([]);
+    // The painted columns still match — the hidden one is the only one gone.
+    expect(ids({ query: "auth", hidden: ["status"] })).toEqual(["r3", "r1"]);
+  });
+
+  it("keeps its sort, so hiding the sorted column does not restore the source", () => {
+    expect(ids({ sorting: [{ id: "status", desc: true }] })).toEqual([
+      "r2",
+      "r1",
+      "r3",
+    ]);
+    expect(
+      ids({ sorting: [{ id: "status", desc: true }], hidden: ["status"] }),
+    ).toEqual(["r2", "r1", "r3"]);
   });
 });

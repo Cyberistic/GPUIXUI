@@ -639,6 +639,32 @@ describe("the column menu", () => {
     expect(boundsOf(root, "files-size").x).toBe(sizeBefore.x);
   });
 
+  it("keeps a hidden column's text out of the search", () => {
+    const root = mount();
+    root.renderer.nativeSimulateKeystrokes(
+      findId(root, "files-filter"),
+      "modified",
+    );
+    root.renderer.flush();
+    // Each third file is `modified`, so the status column alone matches 20.
+    expect(readout(root)).toContain("20 rows");
+
+    click(root, "files-columns");
+    root.renderer.flush();
+    click(root, "files-columns-toggle-status");
+    root.renderer.flush();
+
+    // The status cell is gone, so the query has nothing left to match. A row
+    // model that still searched the hidden track would paint 20 records whose
+    // visible cells contain nothing the reader typed.
+    expect(readout(root)).toContain("0 rows");
+    expect(paintedFiles(root)).toEqual([]);
+
+    click(root, "files-columns-toggle-status");
+    root.renderer.flush();
+    expect(readout(root)).toContain("20 rows");
+  });
+
   it("moves a column through the order without changing a width", () => {
     const root = mount();
     const nameBefore = boundsOf(root, "files-name");

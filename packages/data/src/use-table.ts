@@ -22,7 +22,10 @@
  * `src/behaviour/table.test.tsx` through the renderer's own `focusNext`.
  *
  * The order a reader expects: narrow first, then sort the narrowed set, and
- * measure a Shift range over what is painted. A filter that hides a chosen
+ * measure a Shift range over what is painted. The search reads the **painted**
+ * columns: pass the columns a reader has hidden (`useColumns().hidden`) as
+ * `hiddenColumns`, and a record is never kept by text no cell shows — while a
+ * sort on the hidden column still orders the set. A filter that hides a chosen
  * record releases it in the same commit, so no frame shows a selection the
  * table cannot paint — the release is **render-time retention**, not a write:
  * the core still holds the record, so a query that widens back to it paints it
@@ -95,6 +98,16 @@ export interface UseTableOptions<Row extends RowData> {
    * cannot leave the row model on a second copy of the layout.
    */
   readonly columns: ReadonlyArray<GridColumn<Row>>;
+  /**
+   * The ids of columns the caller has hidden — `useColumns`' `hidden` list.
+   *
+   * A hidden column keeps its sort but leaves the search, so the field above
+   * the rows never keeps a record by text no painted cell shows. Pass a list
+   * whose identity changes only when visibility does: the controller's
+   * `hidden` is memoised for exactly that, and a fresh array on every render
+   * rebuilds the core's row models with it.
+   */
+  readonly hiddenColumns?: ReadonlyArray<string>;
   /** Start sorted, for a table whose natural order is not the source order. */
   readonly initialSort?: SortState;
 }
@@ -177,6 +190,7 @@ export const useTable = <Row extends RowData>({
   rows,
   keyOf,
   columns,
+  hiddenColumns,
   initialSort,
 }: UseTableOptions<Row>): TableController<Row> => {
   const [sorting, setSorting] = useState<SortingState>(() =>
@@ -201,12 +215,13 @@ export const useTable = <Row extends RowData>({
         rows,
         keyOf,
         columns,
+        hiddenColumns,
         state: { sorting, globalFilter: query, rowSelection },
         onSortingChange: setSorting,
         onGlobalFilterChange: setQuery,
         onRowSelectionChange: setRowSelection,
       }),
-    [rows, keyOf, columns, sorting, query, rowSelection],
+    [rows, keyOf, columns, hiddenColumns, sorting, query, rowSelection],
   );
 
   const painted = table.getRowModel().rows;

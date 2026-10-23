@@ -198,12 +198,15 @@ const FileRow = ({
 export const TableExample = () => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
+  const columns = useColumns({ columns: FILE_COLUMNS });
   const table = useTable({
     rows: files,
     keyOf: (row) => row.id,
     columns: FILE_COLUMNS,
+    // The search field reads the painted tracks: hiding a column takes its
+    // text out of the query as well as out of the header and the cells.
+    hiddenColumns: columns.hidden,
   });
-  const columns = useColumns({ columns: FILE_COLUMNS });
   const elements = useRef(new Map<string, number>());
 
   const focus = (key: string) => {

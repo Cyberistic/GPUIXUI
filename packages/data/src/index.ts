@@ -178,6 +178,7 @@ export {
   columnWidth,
   contentWidth,
   findColumn,
+  hiddenColumns,
   initialColumns,
   isColumnResizeKey,
   isColumnVisible,

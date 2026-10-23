@@ -18,11 +18,12 @@
  */
 
 import type * as Option from "effect/Option";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   columnOffset,
   columnWidth,
   contentWidth,
+  hiddenColumns,
   initialColumns,
   isColumnVisible,
   moveColumn,
@@ -46,6 +47,13 @@ export interface ColumnController {
   readonly state: ColumnState;
   /** The columns that paint, in order — the one list header and rows share. */
   readonly visible: ReadonlyArray<Column>;
+  /**
+   * The ids of the columns that do not paint, for the row model's filter.
+   *
+   * Memoised on the column state, so a grid can pass it to `useTable` without
+   * rebuilding the core on an unrelated render.
+   */
+  readonly hidden: ReadonlyArray<string>;
   /** The sum of the visible tracks, in pixels. */
   readonly contentWidth: number;
   /** A column's width, visible or not. */
@@ -69,10 +77,12 @@ export const useColumns = ({
   const [state, setState] = useState<ColumnState>(() =>
     initialColumns(columns),
   );
+  const hidden = useMemo(() => hiddenColumns(state), [state]);
 
   return {
     state,
     visible: visibleColumns(state),
+    hidden,
     contentWidth: contentWidth(state),
     widthOf: (id) => columnWidth(state, id),
     offsetOf: (id) => columnOffset(state, id),

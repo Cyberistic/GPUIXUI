@@ -38,6 +38,7 @@ import {
   type Table,
 } from "@tanstack/table-core";
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
+import * as HashSet from "effect/HashSet";
 
 /**
  * The features every grid registers.
@@ -87,6 +88,15 @@ export interface ConstructGridOptions<Row> extends GridChange {
   readonly rows: ReadonlyArray<Row>;
   readonly keyOf: (row: Row) => string;
   readonly columns: ReadonlyArray<GridColumn<Row>>;
+  /**
+   * The ids of columns the caller has hidden.
+   *
+   * A hidden column is still **sorted** — the order belongs to the records, and
+   * hiding the column a reader sorted by must not silently restore the source
+   * order. It is not **searched**: a row kept by text no painted cell shows
+   * reads as a filter that does not work.
+   */
+  readonly hiddenColumns?: ReadonlyArray<string>;
   readonly state: GridState;
 }
 
@@ -96,15 +106,18 @@ export interface ConstructGridOptions<Row> extends GridChange {
  * `sortFn: "basic"` is the registered comparator: numbers numerically, text by
  * code unit — the order the probes measured, not the core's natural-sort
  * default. The global filter reads these same accessors, so the field above the
- * rows searches what the columns show.
+ * rows searches what the columns show: a hidden column opts out of the global
+ * filter while keeping its sort.
  */
 const columnDefs = <Row extends RowData>(
   columns: ReadonlyArray<GridColumn<Row>>,
+  hidden: HashSet.HashSet<string>,
 ): ReadonlyArray<ColumnDef<typeof gridFeatures, Row>> =>
   columns.map((column) => ({
     id: column.id,
     accessorFn: column.valueOf,
     sortFn: "basic" as const,
+    enableGlobalFilter: !HashSet.has(hidden, column.id),
   }));
 
 /**
@@ -118,6 +131,7 @@ export const constructGrid = <Row extends RowData>({
   rows,
   keyOf,
   columns,
+  hiddenColumns,
   state,
   onSortingChange,
   onGlobalFilterChange,
@@ -125,7 +139,7 @@ export const constructGrid = <Row extends RowData>({
 }: ConstructGridOptions<Row>): GridTable<Row> =>
   constructTable({
     features: gridFeatures,
-    columns: columnDefs(columns),
+    columns: columnDefs(columns, HashSet.fromIterable(hiddenColumns ?? [])),
     data: rows,
     getRowId: keyOf,
     /**

@@ -23,6 +23,7 @@ import {
   columnOffset,
   columnWidth,
   contentWidth,
+  hiddenColumns,
   initialColumns,
   isColumnResizeKey,
   isColumnVisible,
@@ -80,6 +81,20 @@ describe("column configuration", () => {
       "name",
       "status",
       "size",
+    ]);
+  });
+
+  it("names the columns a reader cannot see, in paint order", () => {
+    expect(hiddenColumns(opened())).toEqual([]);
+
+    const hidden = setColumnVisible(opened(), "status", false);
+
+    // The row model reads this list to keep a hidden track out of the search,
+    // so it names the hidden columns and nothing else.
+    expect(hiddenColumns(hidden)).toEqual(["status"]);
+    expect(hiddenColumns(setColumnVisible(hidden, "name", false))).toEqual([
+      "name",
+      "status",
     ]);
   });
 

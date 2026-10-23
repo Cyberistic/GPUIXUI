@@ -28,6 +28,7 @@ import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Number from "effect/Number";
 import * as Option from "effect/Option";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 
 /** The narrowest a column may become when its definition names no minimum. */
@@ -147,6 +148,19 @@ export const resizeWidthByKey = (
 /** The columns that paint, in order. */
 export const visibleColumns = (state: ColumnState): ReadonlyArray<Column> =>
   Arr.filter(state.columns, (column) => column.visible);
+
+/**
+ * The columns a reader cannot see, in paint order.
+ *
+ * A grid hands this list to its row model so the search field above the rows
+ * skips a hidden track: a query that matched invisible text kept a row whose
+ * painted cells contained nothing the reader typed, which reads as a filter
+ * that does not work.
+ */
+export const hiddenColumns = (state: ColumnState): ReadonlyArray<string> =>
+  Arr.filterMap(state.columns, (column) =>
+    column.visible ? Result.failVoid : Result.succeed(column.id),
+  );
 
 /** The column a key names, when it is in the list. */
 export const findColumn = (

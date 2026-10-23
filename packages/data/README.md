@@ -189,6 +189,22 @@ const columns = useColumns({ columns: FILE_COLUMNS });
 A resizable column needs a fixed `width`; the divider sits inside its header
 cell therefore, so a body row needs no spacer track.
 
+A hidden column **leaves the search but keeps its sort**. `useTable` takes the
+controller's memoised `hidden` list (`useColumns().hidden`) and the core marks
+those columns out of the global filter, so a query keeps no record by text no
+painted cell shows — while hiding the column a reader sorted by keeps the order
+rather than silently restoring the source order:
+
+```tsx
+const columns = useColumns({ columns: FILE_COLUMNS });
+const table = useTable({
+  rows,
+  keyOf: (row) => row.id,
+  columns: FILE_COLUMNS,
+  hiddenColumns: columns.hidden,
+});
+```
+
 A **pinned column** is `FrozenTable`, not a column attribute: the runtime paints
 no `position: "sticky"`, so the frozen column is its own vertical scroller beside
 the data pane and the two are mirrored through `onScrollChange` →
