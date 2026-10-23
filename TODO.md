@@ -7062,6 +7062,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the window case fails with 20 painted files. README §Usage, the
     **Filtering controls** row and `useTable`/`grid-core`'s JSDoc state the
     rule. Owner: data.
+  - [x] Wait out a **leaving menu's shield** before the divider drag — the
+    `data-table-lifecycle` live probe raced the column menu's exit: it clicked
+    `Reset columns`, slept 40 ms and dragged the divider, and after the
+    components workstream gave a leaving surface a no-press shield the press
+    landed on the fading menu instead of the divider, so the probe failed with
+    `w=260` where the drag's `w=300` was expected (measured on 0.11.0; the same
+    build passed `column-resize-lifecycle`, where no menu precedes the drag).
+    The step now waits for the menu's toggle row to unpaint (`settleGone`)
+    before dragging, which is the rule the product has: a surface takes the
+    press meant for the page behind it until its exit finishes. The probe is
+    **44 checks** and green (`--only data-table-lifecycle`), and the README's
+    §`data-table-lifecycle` records the third harness note. Directions measured:
+    the pre-fix step fails by name with the menu open; the waited step passes
+    three consecutive runs. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
