@@ -8953,7 +8953,7 @@ fails the case by name; restored, the file is 44/44 and
 
 Both are specified in ; each fix starts with a plan under .
 
-- **B3 (new, 2026-10-23 02:0x)** — **`master` carries the deletion of a module it still imports.**
+- **B3 (new, 2026-10-23 02:0x; resolved 2026-10-23)** — **`master` carried the deletion of a module it still imported.**
   The data commit `08c5515c` ("feat(data): ship the table's selection column") swept
   `packages/components/src/internal/typeahead.{ts,test.ts}` out of the index while the
   components workstream had already moved them to `packages/components/src/typeahead.ts`
@@ -8970,6 +8970,12 @@ Both are specified in ; each fix starts with a plan under .
   the module it imports. Recorded rather than fixed here because `packages/components` is
   not this workstream's path. This is the same class as the `swarm-commit.sh` row in the
   Interlocks: a path argument is not a hunk argument, and a rename crosses two owners.
+  **Resolved by `83b3dfe4`** ("feat(components): publish the type-ahead seam"): HEAD now
+  carries `packages/components/src/typeahead.ts` and `typeahead.test.ts`, every import names
+  the new path, and the only remaining `internal/typeahead` mention is the test that asserts
+  the old module is gone (`typeahead.test.ts:239`). Verified on `HEAD` with
+  `git cat-file -e HEAD:packages/components/src/typeahead.ts` (present) and
+  `git grep internal/typeahead HEAD -- packages/components` (one deliberate negative assertion).
 
 - [x] **Docs: platform toggle (macOS / Linux / Windows / Default)** — landed: every preview renders through the resolved `platformTheme`, the switch writes the URL and remembers the choice, and the preview style sheets carry no colour literal. The variants now carry the families, radii, density and the platform's colour roles, and the previews follow because they read the resolved theme.
 
