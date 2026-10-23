@@ -8565,6 +8565,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Publish the **media frame** measurement and retire the `?` on Tier 5's media row — `COMPONENTS.md`'s *Video / audio player + waveform* row reads `todo | ?` and says "Playback needs a platform surface — **unverified**; a waveform can be drawn as one tinted `<svg>` layer per colour (measured by `content-surfaces`; `<canvas>` paints nothing)". The playground's `media-frame-lifecycle` now measures both halves on 0.11.0: the installed `@gpuix/react` `IntrinsicElements` declares twelve elements and **no `video`/`audio`**, so playback is `not supported` rather than unverified; and a media card is a composed player — an `img` whose buffer is re-pushed per frame with `setImagePixels`, an app-owned interval (the playhead walked `playhead=100` → `400` in whole 100 ms ticks), and an app-drawn transport (the shipped `Button`, a track whose fill is the playhead's share, an `m:ss` clock, a Home/End/Left/Right pad). 48 checks; the poster paints its 240×135 box in its frame's own colour, the pause holds the fill at 20 of 200, the seek repaints it to `#047857` with none of the first frame left, and a playhead at the clip's end stops the transport. The row should say `not supported (no playback surface)`, carry the measured workaround (poster + pushed buffers + app clock; audio is unreachable), cite `media-frame-lifecycle` and keep the waveform sentence | components (the Tier 5 row in `COMPONENTS.md`) | **playground half landed 2026-10-23** — `apps/playground/README.md` §`media-frame-lifecycle`, fixture `src/live/media-frame.ts`, probe `src/live/media-frame-probe.tsx`, suite `src/live/media-frame.test.ts`; the task's own TODO row is ticked under §Playground and native smoke |
 
+| The **anchored layer's placement still trusts a stored side** — `packages/components/src/internal/placement.ts`'s `oppositeSide`/`roomOn`/`extentOn`/`alignOffsetOn` and `resolvePlacement` branch on `FloatingSide`/`FloatingAlign` with `Match.exhaustive`, so a `side` or `align` an application reads back from persisted state and passes to `PopoverContent`/`DropdownMenuContent`/a picker throws `effect/match/Match/exhaustive: absurd` out of the render when the surface overlaps its trigger, instead of opening on the house side. `@gpuixui/motion`'s `fadeFromSide` already reads an unnamed side as `bottom`, so the placement is the one half of an anchored overlay that still trusts the union. Repair each reader the way the frame builders now do (`Schema.is` → the house `bottom`/`start`) and add one unit case per reader to `internal/placement.test.ts` | components (overlay placement) | open — found 2026-10-23 while closing the stored direction in the reveal/page frames; the same door, one module away from the motion frames |
+
 
 ## Phase D — data and workspace components
 
@@ -9849,7 +9851,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 258/258
+`[x]` `[██████████]` 259/259
+
+`[x]` Record the **mark an exclusive-choice menu paints** — the playground landed
+      `menu-radio-lifecycle` (31 checks on 0.11.0) the same hour, and the
+      capability record and `/docs/runtime` had no row for it, so a plan building
+      a settings menu could not learn that a radio row's state is one glyph in a
+      **fixed leading slot** (the chosen row's box is identical to an unchecked
+      one, so only a frame proves the choice), that a choice **dismisses** the
+      surface unlike a checkbox row, or that pressing the chosen row closes it
+      and reports nothing. The record's §3 gains **Exclusive-choice menu**
+      (`supported, with limits`) with the measurement (the mark is a 16-point
+      glyph at a 1.33-point stroke, so its closest pixel is **82%** of `primary`
+      — **51** away in RGB against the row text's **67**, hence the reading's
+      **60** tolerance — **41** `primary` pixels on the chosen row and **0**
+      on the others, moving to the newly chosen row on the next open; the
+      readouts `value=system reports=0 opens=0 closes=0`,
+      `value=dark reports=1 opens=2 closes=2` and `opens=4 closes=4`), the
+      three rules and the workaround, and `/docs/runtime#measured-in-a-window`
+      publishes the row. §5's owed-probe list names `menu-radio-lifecycle`
+      beside `header-menu-lifecycle`. `capability-doc.test.ts` gains `records
+      the mark an exclusive-choice row paints, from its fixture`, which derives
+      the check count, the tolerance, the three choices and the initial/next
+      values from the probe's fixture, reads the mark's pixel count, share and
+      both distances out of the probe's README section, rebuilds the three
+      readouts from the fixture's printer and holds both rows to every one.
+      Directions measured: printing **40** for the chosen row's mark fails
+      `expected … to contain 'row 1 paints **41**'`, and deleting the page row
+      fails `the page's measured table has no exclusive-choice row`. No native
+      scenario re-run — the measurement is the playground probe's own 31-check
+      run on 0.11.0; the site publishes it.
 
 `[x]` Follow the **combobox's remote half and the table's grown skeleton suite** —
       `@gpuixui/components` gained `onQueryChange`, `shouldFilter` and `loading`
@@ -14416,6 +14447,8 @@ which the behaviour suite runs in the real renderer.
 `[x]` `@gpuixui/motion`: **a preference that turned back off relaunched the coast it had already ended** — a reduced commit retired the retained value (`motion.set(destination)`), but the hook's effect re-ran on the preference flip and launched the same declaration again from the frame it ended on: measured in the GPUix renderer, a 50 ms coast released at `400` rested at `20` under the preference and then drifted on to `40`, replaying a gesture the reader had already watched finish — while the README, the hook's JSDoc and `/docs/motion` all promised it did not. `useInertia` records the declaration a reduced commit ended (`retired`, compared by `sameCoast`) and holds it in both directions: the animated branch republishes the retained frame without releasing it, and a later reduced commit holds that frame rather than projecting a new rest from it. A genuinely new release forgets the record, so the next gesture still starts from the frame on screen. Proof: `packages/components/src/behaviour/motion-hooks.test.tsx` gains `does not relaunch a coast whose journey the reduced preference ended`, `holds an ended coast rather than projecting it again` and `starts a new release from the frame an ended coast rests on` (the last one is the negative control: the hold must not swallow the next gesture). Directions measured at `HEAD`: `expected '38.72662049526765:25.467590094646898:false' to be '20:0:false'`, `expected '40:0:true' to be '20:0:false'` and the new release never reaching `35:0:true`; restored, the file is 14/14, the motion package 164/164, and `check-types` is clean in both packages. Docs: `packages/motion/README.md` §React hooks states the hold (and `docs.test.ts`'s `holds a gesture the reduced preference already ended` reads `retired`/`sameCoast` and both branches); `/docs/motion` already taught it, so the page needed no change. No native scenario applies — the frame is the hook's render in the real GPUix renderer, which the behaviour suite runs.
 
 `[x]` `@gpuixui/motion`: **the composition entry point was taught only by another package** — `presenceMotion(frames, present, timing)` is the one function that turns the frames and the phase's timing into the runtime's `motion` prop for a consumer painting its own surface, and it was named nowhere in `packages/motion/README.md`: the presence table listed the four frame builders, the timing, both window conversions, the stagger and the pointer rule, so the unit a reader composes last was documented only in `@gpuixui/components`' seam and its page. The README's §presence table now teaches it (first paint, resting or exit frame, that phase's transition), `api.example.ts`'s executed `presenceCompositionExample` composes the real calls, and `docs.test.ts`'s `names every entry point the presence subpath exports` derives the table's ten runtime exports from `presence.ts` and requires each one at the start of a README code span, so a new export cannot ship untaught. Directions measured: deleting the bullet fails the case with `expected [ 'presenceMotion' ] to deeply equal []`; restored, the package is 14 files / 166 tests with `check-types` clean. Docs: `packages/motion/README.md` §The presence table and `src/example.test.ts`'s `composes the frames, the timing and the pointer rule a surface paints` (the enter decelerates at `top: -4 → 0`, the exit retraces it, only the resting surface is a pointer target). No native scenario applies — a README, a subpath's exports and their values.
+
+`[x]` `packages/components`: **a stored direction threw out of the render** — `revealFrames` and `pageFrames` branched on the `RevealFrom`/`PageDirection` unions with `Match.exhaustive`, so a value from persisted UI state (both are props an app reads back) that the union does not name threw `effect/match/Match/exhaustive: absurd` out of the render and took the surface with it — the same door `@gpuixui/motion`'s `fadeFromSide` and `stagger` were repaired through. Both frame builders read the value through a `Schema.is` guard now: an edge the union does not carry is the house `below` arrival and a direction it does not carry is `forward`, so a reveal arrives from below and a page region travels forward instead of painting nothing. Proof: `src/reveal/frames.test.ts`'s `takes the house edge for an edge it does not name` and `src/page-transition/logic.test.ts`'s `travels forward for a direction it does not name`; measured at `HEAD` both fail with `effect/match/Match/exhaustive: absurd` from the frame builder, and after the reader the two files are 18/18 with `check-types` clean. Docs: `docs/reveal.mdx` and `docs/page-transition.mdx` §Limitations state the house default. No native scenario applies — the frames are values a surface merges into its own style.
 
 ## TanStack cores
 
