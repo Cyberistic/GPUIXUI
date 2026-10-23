@@ -605,6 +605,36 @@ describe("the measured target rows", () => {
     ).toBe(true);
   });
 
+  it("says a painted thumb takes no drag, and how a draggable bar is composed", () => {
+    const section = readmeSection(
+      "### `scrollbar-drag` — measured on 0.11.0 here",
+    );
+    expect(section).toContain("21 checks, `--only scrollbar-drag`");
+    // The two reads that make the rule a measurement rather than an opinion:
+    // the drags the overlay ignores, and the same drag on a real handle.
+    Arr.forEach(["`x=0 y=0`", "`moves=8`", "`y = -100`"], (claim) =>
+      expect(section, claim).toContain(claim),
+    );
+
+    const rows = rowsNamed("Scrollable containers");
+    expect(rows.length).toBe(2);
+    // The rule rides both records: which control the paint is, which routes
+    // move the content, and the composition a draggable bar needs.
+    Arr.forEach(rows, (row) =>
+      Arr.forEach(
+        [
+          "`scrollbar-drag`",
+          "affordance",
+          "no pointer input",
+          "`onScrollChange`",
+          "`scrollTo`",
+        ],
+        (claim) =>
+          expect(rowText(row), `${row.name}: ${claim}`).toContain(claim),
+      ),
+    );
+  });
+
   it("cites the roving-focus grid a window measured", () => {
     const section = readmeSection(
       "### `grid-focus-lifecycle` — measured on 0.11.0 here",
