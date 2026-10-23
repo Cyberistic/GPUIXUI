@@ -4238,7 +4238,25 @@ and clause).
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 5/5
+`[x]` `[██████████]` 6/6
+
+`[x]` `packages/components`: **a threshold that measured `NaN` stopped the
+      message scroller following new rows** — `threshold` is a layout token a
+      caller often computes from a measured inset, and `distanceFromEnd <=
+      Math.max(0, NaN)` is false, so an observation at the bottom read as "away
+      from the end": the next row was not followed and the affordance offered a
+      jump. `observeScroll` now treats an unreadable distance or threshold as no
+      observation (the pin and unread state are kept), and `addItems` reads an
+      unreadable count as no arrival instead of adding `NaN` into the number
+      the affordance paints as "N new messages". `message-scroller/logic.test.ts`
+      gains both guards (13 cases) and
+      `behaviour/message-scroller.test.tsx` wheels 10px with `threshold={NaN}`
+      and reads the next row still followed, the end visible and no affordance
+      (11 cases). Directions measured: without the guards the logic cases fail
+      by name and the window case fails `expected -1071 to be less than -1071`
+      — the follow had stopped — while with them 13 / 11 are green. Docs:
+      `docs/message-scroller.mdx` §When a measurement is unreadable, the
+      `threshold` JSDoc and the Message scroller row.
 
 `[x]` `packages/components`: **an unreadable remaining time was painted as the
       word `NaN`** — `Countdown` formatted `remainingMs` straight into the

@@ -96,7 +96,8 @@ export interface MessageScrollerProps extends Omit<Props, "children"> {
   readonly label: string;
   /**
    * Distance from the tail that still counts as "at the end". Defaults to the
-   * theme's `spacing["2xl"]` (24px) — a layout token, not a literal.
+   * theme's `spacing["2xl"]` (24px) — a layout token, not a literal. A value the
+   * scroller cannot read (`NaN`) is no observation: the pin state is kept.
    */
   readonly threshold?: number;
   /** The controlled pinned state. `undefined` means uncontrolled. */
@@ -371,6 +372,7 @@ export const messageScrollerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
+    "a threshold or arrival count it cannot read (NaN) is ignored, so the pin state is kept and the affordance never paints NaN",
     "the viewport renders every row: <virtual-list> takes itemCount rather than compound children, so long histories are not virtualized in v1",
     "the jump affordance sits beneath the viewport, not floating over its corner, because position: absolute resolves against the mount parent in 0.11.0",
     "a row that grows without the scroller re-rendering (internal child state) is not observed; there is no resize observer",
