@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { laneData } from "../../lib/inventory-data";
-import { summarize } from "../../lib/inventory";
+import { summarize, supportLabel } from "../../lib/inventory";
 import { LaneTable } from "./lane-table";
 
 /**
@@ -37,9 +37,19 @@ describe("the lane table", () => {
     expect(markup).toContain(`${pending} to build`);
   });
 
-  it("reads an unmeasured GPUix verdict as unmeasured, not as support", () => {
-    const markup = render("workspace");
+  it.each(["layout", "data-display", "workspace"] as const)(
+    "prints every %s row's GPUix cell through the label rule",
+    (lane) => {
+      // The cell is not a verbatim copy: `?` is "never measured", and a row
+      // that lost its label would print a question mark a reader takes for a
+      // verdict. Derived from the lane's own rows, so a reworded label in
+      // `inventory.ts` fails here instead of leaving the table behind.
+      const markup = render(lane);
+      const missing = laneData(lane).rows.filter(
+        (row) => !markup.includes(supportLabel(row.support)),
+      );
 
-    expect(markup).toContain("unmeasured");
-  });
+      expect(missing.map((row) => `${row.name}: ${row.support}`)).toEqual([]);
+    },
+  );
 });

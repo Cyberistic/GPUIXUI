@@ -507,10 +507,74 @@ describe("docs/gpuix-capabilities.md", () => {
     // …and every other surface that describes the traversal agrees with it.
     const keyboard = read("apps/docs/content/docs/keyboard.mdx");
     expect(keyboard).toContain("A `Tab` traversal runs no `onFocus`");
+    expect(keyboard).toContain("blur-delivery-lifecycle");
     expect(keyboard).not.toContain("traversal runs React's `onFocus`");
     const a11y = read("apps/docs/content/docs/accessibility.mdx");
     expect(a11y).toContain("runs **no** `onFocus`");
+    expect(a11y).toContain("blur-delivery-lifecycle");
     expect(a11y).not.toContain("focus-only surface may open");
+    const spec = read("docs/component-api.md");
+    expect(spec).toContain("blur-delivery-lifecycle");
+    expect(spec).not.toContain("traversal delivers the event");
+  });
+
+  it("records that no route delivers the focus pair in a live window, from the probe", () => {
+    // The focus rows attributed `focuses=0` to the traversal, and the record
+    // taught that a window's traversal simply skips the handler. The window's
+    // own probe measured the real cause: this automation window never becomes
+    // active, so **every** route reads zero — press, traversal, programmatic
+    // focus, blur and unmount — while the ids and keys move. A plan that read
+    // the old row could have built a blur commit on "the traversal skips it"
+    // and expected a press to deliver what a traversal does not.
+    const fixture = read("apps/playground/src/live/blur-delivery.ts");
+    const checks = Number(
+      /export const BLUR_CHECKS = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    const id = (key: string): string =>
+      new RegExp(`${key}: "([^"]+)"`).exec(fixture)?.[1] ?? "";
+    const fieldA = id("fieldA");
+    const fieldB = id("fieldB");
+    const target = id("target");
+
+    expect(checks).toBe(10);
+    expect(fieldA).toBe("blur-field-a");
+    expect(fieldB).toBe("blur-field-b");
+    expect(target).toBe("blur-target");
+
+    const row = rowFor("Focus events");
+    expect(row, "the record has no Focus events row").toBeDefined();
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("blur-delivery-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(fieldA);
+    expect(row?.evidence).toContain(fieldB);
+    expect(row?.evidence).toContain(target);
+    expect(row?.evidence).toContain("`none`");
+    expect(row?.evidence).toContain("window_active");
+    expect(row?.evidence).toContain("activateWindow");
+    expect(row?.evidence).toContain("editor-overlay");
+    expect(row?.workaround).toContain("at **rest**");
+    expect(row?.workaround).toContain("Enter");
+
+    const page = measuredRow("Focus events");
+    expect(
+      page,
+      "the page's measured table has no focus-events row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("blur-delivery-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(fieldA);
+    expect(page?.[1]).toContain(target);
+    expect(page?.[1]).toContain("window_active");
+    expect(page?.[2]).toContain("at **rest**");
+
+    // §5 owes the probe, and the fixture states the activation rule the row
+    // rests on, so the record cannot cite a probe that no longer measures it.
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
+    expect(keeping).toContain("`blur-delivery-lifecycle`");
+    const probe = read("apps/playground/src/live/blur-delivery-probe.tsx");
+    expect(probe).toContain("activateWindow");
+    expect(probe).toContain("the window's delivered trace");
   });
 
   it("records what each scroll event reports, with the probe that measured it", () => {
@@ -3103,6 +3167,9 @@ describe("docs/gpuix-capabilities.md", () => {
         "grid-focus-after",
         "a control id a one-press exit from the grid reached",
       ],
+      ["blur-field-a", "the first field the blur-delivery probe focused"],
+      ["blur-field-b", "the sibling field the blur-delivery probe focused"],
+      ["blur-target", "the button the blur-delivery probe's traversal reached"],
     ]);
 
     const evidenceTokens = rows.flatMap((row) =>

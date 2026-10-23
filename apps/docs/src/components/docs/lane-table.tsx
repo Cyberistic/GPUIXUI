@@ -3,6 +3,7 @@ import {
   groupOf,
   spans,
   summarize,
+  supportLabel,
   type InventoryRow,
   type LaneGroup,
   type LaneName,
@@ -85,10 +86,6 @@ const Status = ({ row }: { readonly row: InventoryRow }) => (
     {row.status}
   </span>
 );
-
-/** `?` means the runtime was never measured for that row; say so. */
-const supportLabel = (support: string): string =>
-  support === "?" ? "unmeasured" : support;
 
 /** A note with its inline code and bold resolved. */
 const Note = ({ text }: { readonly text: string }) => (

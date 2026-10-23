@@ -160,6 +160,7 @@ Four of those are measured facts rather than conveniences:
 | `bounds` | an element's painted box |
 | `windowSize` | the window's paintable size in logical pixels |
 | `zoomWindow` | runs the platform's zoom — the only size lever the binding publishes |
+| `activateWindow` | brings the window to the front and makes it the active app, the call a focus probe makes first |
 | `focused` | the focused element's `testId` |
 | `click` | a left press |
 | `rightClick` | a right press, which is the only route to `onAuxClick` |
@@ -176,6 +177,10 @@ Four of those are measured facts rather than conveniences:
 | `clearSelection` | drops the window's selection |
 | `focusNext` | native focus traversal forwards |
 | `focusElement` | moves native focus from component code |
+| `blur` | clears the window's focus (`renderer.blur`), so a leaving control can be proved |
+| `clockPause` | freezes the motion clock and answers the frozen instant |
+| `clockFastForward` | advances a frozen motion clock by `deltaMs` |
+| `clockResume` | returns the motion clock to live time |
 | `registerFont` | installs a face **after** the first paint |
 | `waitFor` | waits until an element paints, so a probe never races its mount |
 | `capture` | captures the window under a name inside the runner's artifacts |
@@ -186,6 +191,25 @@ the automation protocol, which delivers a key **down and no key up** — a contr
 that activates on release (Space on a button, checkbox or switch, the platform's
 own rule) is only provable with `keyUp`. And a window's renderer reports no
 style, so `paintedStyle` has no twin: a live probe proves paint from `pixels`.
+
+Five verbs are optional because only a window has the surface they drive:
+`activateWindow`, `blur`, `clockPause`, `clockFastForward` and `clockResume`. A
+probe that needs one reads it off `ctx.host` and fails with a `SmokeHostError`
+naming the verb when the runner exposes none, rather than assuming it.
+`clockPause` is what makes a faded or travelling surface measurable: a software
+paint can outlast a 320 ms tween, so a probe freezes the clock, advances it by
+an exact number of milliseconds and captures that frame.
+
+`activateWindow` is the call a focus probe makes first, and this automation
+window shows why it is not enough on its own: `blur-delivery-lifecycle` measured
+that this window delivers **no** `onFocus`/`onBlur` on any route — a press, a
+traversal, `focusElement`, `blur()` and an unmount all left the trace empty of
+focus lines — while the focused ids, keys and presses arrived. GPUI dispatches
+focus listeners only for an active window, and `activateWindow()` did not make
+this one active (the same window `editor-overlay` measured with no caret). A
+live probe therefore cannot prove a blur commit; the offscreen `a11yTree` and
+`focus-traversal` are the evidence for the pair, and a component that must not
+lose a draft needs an `Enter` or caller-owned commit the window can prove.
 
 `clickWith` is the only verb that sends a **modified** press, and its chord is
 spelled through `Smoke.formatModifiers`, so `["shift", "cmd"]` is `cmd-shift`

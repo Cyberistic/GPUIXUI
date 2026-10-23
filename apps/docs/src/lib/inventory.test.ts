@@ -7,6 +7,7 @@ import {
   parseInventory,
   spans,
   summarize,
+  supportLabel,
   type Inventory,
   type LaneName,
 } from "./inventory";
@@ -135,6 +136,32 @@ describe("the real inventory", () => {
 
   it("lists every configured lane, so a new lane is checked too", () => {
     expect(Object.keys(lanes)).toEqual([...laneNames]);
+  });
+});
+
+describe("supportLabel", () => {
+  it("prints an unmeasured verdict as a word, not a question mark", () => {
+    // `?` is the inventory's only non-word verdict, and a lane that copied it
+    // cell-for-cell would show a reader a question mark where the column says
+    // whether GPUix supports the row.
+    expect(supportLabel("?")).toBe("unmeasured");
+  });
+
+  it("leaves every measured verdict exactly as the inventory writes it", () => {
+    expect(supportLabel("yes (measured)")).toBe("yes (measured)");
+    expect(supportLabel("partial (measured)")).toBe("partial (measured)");
+    expect(supportLabel("yes")).toBe("yes");
+  });
+
+  it("has unmeasured rows in the inventory it is printed for", () => {
+    // The mapping exists because real rows carry `?`; if none did, the label
+    // would be dead code and this guard would say so rather than pass empty.
+    const unmeasured = inventory.rows.filter((row) => row.support === "?");
+
+    expect(unmeasured.length).toBeGreaterThan(0);
+    expect(
+      unmeasured.filter((row) => supportLabel(row.support) !== "unmeasured"),
+    ).toEqual([]);
   });
 });
 

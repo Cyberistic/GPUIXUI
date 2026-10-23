@@ -41,10 +41,13 @@ event path has three measured properties (the probes are named on
 - **There is no global or system shortcut.** Keys fire only while the window is
   focused; a background hotkey needs a runtime change, not a different binding.
 - **A `Tab` traversal runs no `onFocus`.** A window focuses the element without
-  running the handler (`focuses=0`), so a tip or hint cannot open on focus and a
-  focus cue belongs at rest; a key *move* that needs its origin reads the key
-  event's own `elementId` or `getFocusedElementId`, because the first arrow after
-  a traversal must move off the tab it reached rather than the selection.
+  running the handler (`focuses=0`), and that is one case of the measured gap: no
+  route in this automation window delivers `onFocus`/`onBlur`, because its app
+  never becomes active (`blur-delivery-lifecycle`). So a tip or hint cannot open
+  on focus here and a focus cue belongs at rest; a key *move* that needs its
+  origin reads the key event's own `elementId` or `getFocusedElementId`, because
+  the first arrow after a traversal must move off the tab it reached rather than
+  the selection.
 
 ## Decode, then match
 

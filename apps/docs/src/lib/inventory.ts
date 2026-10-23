@@ -157,6 +157,16 @@ export type LaneSummary = {
   readonly pending: number;
 };
 
+/**
+ * The GPUix support cell a lane prints.
+ *
+ * `?` is the inventory's "the runtime was never measured for this row", so a
+ * page that printed it raw would read as a verdict; every other cell is the
+ * inventory's own wording and passes through unchanged.
+ */
+export const supportLabel = (support: string): string =>
+  support === "?" ? "unmeasured" : support;
+
 /** Which state a status cell is in. `done (…)` still counts as shipped. */
 export const groupOf = (status: string): LaneGroup =>
   status.startsWith("done")

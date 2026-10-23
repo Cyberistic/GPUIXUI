@@ -265,6 +265,9 @@ card; and the search field keeps `input`, because it is where a reader types.
   the input→row relationship. `aria-selected` is the supported signal.
 - A disabled row is painted `disabledForeground` and refuses every path; it is
   not faded.
+- A popup the caller **disables** closes with the control, and re-enabling does
+  not reopen it: the pending open request is dropped, so the surface cannot
+  paint rows no press could choose.
 - The popup is an **anchored layer, not a portal**. The runtime snaps it inside
   the window but does not flip it, so the component flips it once when snapping
   would cover the trigger. `align="center"` is measured from the trigger rather
@@ -306,12 +309,13 @@ directly; the component reads roles, never colours.
 `done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix publishes the
 headless combobox, so focus, the active row and the keyboard are supported
 rather than reimplemented, while the ranking, the row paint and the value
-semantics are this package's. The behaviour is held by **26 native behaviour
+semantics are this package's. The behaviour is held by **27 native behaviour
 tests** in `packages/components/src/behaviour/combobox.test.tsx` — open and input
 focus, both placement cases, ranking, arrow + `Enter`, the empty state, single
 and multiple selection, the disabled row's paint, Escape over a dialog, the
-pointer path, the create row's five rules, the 4-point travel it enters on from
-either side and the resting frame it paints first under reduced motion — and the
+pointer path, the create row's five rules, a popup the caller disables closing
+with the control, the 4-point travel it enters on from either side and the
+resting frame it paints first under reduced motion — and the
 ranking, toggle and create round trip by
 `packages/components/src/combobox/logic.test.ts`. Three
 limits are recorded above rather than hidden: there is no

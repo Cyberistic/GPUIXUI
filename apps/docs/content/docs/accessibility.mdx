@@ -119,7 +119,9 @@ unconditional shadow — for that path.
   the whole separation. A press focuses the action but paints **no ring**, while
   `Tab` paints it, and the outline changes no box: both actions and a neighbour
   report identical `x, y, width, height` with and without it.
-- A `Tab` traversal runs **no** `onFocus` on this host (`focuses=0`), so a
+- A `Tab` traversal runs **no** `onFocus` on this host (`focuses=0`), and it is
+  not the traversal's rule: no route delivers the focus pair here, because the
+  automation window never becomes active (`blur-delivery-lifecycle`). So a
   focus-only surface cannot open on it; the ring is declared at rest, so the cue
   still paints. A key **move** reads the key event's own element id: the first
   arrow after a traversal must move off the tab it reached.

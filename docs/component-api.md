@@ -85,12 +85,16 @@ a public state object instead:
 - **`focused` is not the cue, and a traversal does not deliver it.** A `Tab`
   traversal focuses the element **without running its `onFocus`** on 0.11.0 —
   re-measured 2026-10-22 by the playground's `tabs-lifecycle` (`focuses=0`) and
-  `tooltip-lifecycle` (the tip does not open on the traversal). An earlier run
-  recorded the counter at one, so the event is not a channel a component may
-  depend on. A `style` callback keyed on `focused` therefore sees a press, a
-  click or a programmatic `focusElement`, not a traversal. The focus **cue** is
-  the ring every part declares at rest (`keyboardRing`), which the runtime paints
-  on the element it focused whether or not a handler ran. Six parts carry the
+  `tooltip-lifecycle` (the tip does not open on the traversal) — and that is one
+  case of the wider measurement: no route in the automation window delivers
+  `onFocus`/`onBlur`, because its app never becomes active
+  (`blur-delivery-lifecycle`), while the offscreen host fakes activation and
+  does dispatch the pair. An earlier run recorded the counter at one, so the
+  event is not a channel a component may depend on. A `style` callback keyed on
+  `focused` therefore sees a press, a click or a programmatic `focusElement`,
+  not a traversal. The focus **cue** is the ring every part declares at rest
+  (`keyboardRing`), which the runtime paints on the element it focused whether
+  or not a handler ran. Six parts carry the
   flag — `AccordionTrigger`, `CollapsibleTrigger`, `TabsTrigger`, `SearchInput`,
   `FieldInput`, `TimePickerSegment` — and `api.test.ts` holds each one to the
   ring, so a part cannot ship the flag as its only focus feedback.

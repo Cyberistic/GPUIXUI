@@ -124,11 +124,17 @@ const namespaces = (): ReadonlyArray<string> =>
     (match) => match[1] ?? "",
   );
 
-/** The members of one interface in `smoke.ts`. */
+/**
+ * The members of one interface in `smoke.ts`.
+ *
+ * Optional (`readonly blur?:`) members count: the window-only verbs are all
+ * optional, and a guard that skipped the `?` let five of them ship with no row
+ * — the hole this case was written for.
+ */
 const interfaceVerbs = (name: string): ReadonlyArray<string> => {
   const start = smoke.indexOf(`export interface ${name}`);
   const body = smoke.slice(start, smoke.indexOf("\n}", start));
-  return [...body.matchAll(/readonly\s+([A-Za-z0-9_]+)\s*:/g)].map(
+  return [...body.matchAll(/readonly\s+([A-Za-z0-9_]+)\??\s*:/g)].map(
     (match) => match[1] ?? "",
   );
 };
@@ -198,6 +204,50 @@ describe("the testing page", () => {
     expect(verbs).toContain("pixels");
 
     expect(verbs.filter((verb) => !hasRow(verb))).toEqual([]);
+  });
+
+  it("names the window-only verbs that are optional in the host", () => {
+    // The five verbs a synchronous host has no surface for are declared with a
+    // `?`, and the guard above read only the required members: a probe author
+    // could not look up the clock, the activation or the renderer's blur.
+    const verbs = interfaceVerbs("AsyncSmokeHost");
+    const optional = [
+      "activateWindow",
+      "blur",
+      "clockPause",
+      "clockFastForward",
+      "clockResume",
+    ];
+
+    expect(optional.filter((verb) => !verbs.includes(verb))).toEqual([]);
+    expect(optional.filter((verb) => !hasRow(verb))).toEqual([]);
+    expect(pageText).toContain("Five verbs are optional");
+  });
+
+  it("states the focus pair a live window does not deliver", () => {
+    // `blur-delivery-lifecycle` measured that no route delivers the pair in
+    // this automation window, because it never becomes active — so a probe
+    // that reads "the traversal skips onFocus" would plan a blur commit the
+    // harness cannot prove.
+    expect(pageText).toContain("`blur-delivery-lifecycle`");
+    expect(pageText).toContain("**no** `onFocus`/`onBlur`");
+    expect(pageText).toContain("`activateWindow()` did not make");
+    expect(pageText).toContain("`editor-overlay`");
+    expect(pageText).toContain("cannot prove a blur commit");
+    expect(pageText).toContain("`a11yTree`");
+    expect(pageText).toContain("`focus-traversal`");
+
+    // The probe and the fixture the sentence rests on still measure it.
+    const fixture = readRepo("apps/playground/src/live/blur-delivery.ts");
+    expect(fixture).toContain(
+      "a window whose app never activates delivers none",
+    );
+    expect(
+      readRepo("apps/playground/src/live/blur-delivery-probe.tsx"),
+    ).toContain("activateWindow");
+    expect(readRepo("apps/playground/README.md")).toContain(
+      "this window never becomes active",
+    );
   });
 
   it("prints every assertion a scenario writes", () => {

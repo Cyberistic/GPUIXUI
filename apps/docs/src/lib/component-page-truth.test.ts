@@ -1419,7 +1419,9 @@ describe("the curated component pages", () => {
     expect(text).toContain("No `aria-live` and no `aria-atomic`");
     expect(text).toContain("No progress indicator");
     expect(text).toContain("356px");
-    expect(text).toContain("16 native behaviour tests");
+    expect(text).toContain(
+      `${nativeCases("packages/components/src/behaviour/toast.test.tsx")} native behaviour tests`,
+    );
     expect(text).toContain("Render the viewport **last**");
     // The clock a traversal cannot hold: a window focuses the card's control
     // without running its `onFocus` (`focuses=0`), so keyboard arrival does not
