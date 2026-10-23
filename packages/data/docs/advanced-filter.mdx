@@ -5,12 +5,13 @@ description: A builder over a typed predicate tree.
 
 `AdvancedFilter` is a **query builder**: the reader composes clauses, and the
 tree combines them with `all`, `any` and `not`. The builder paints the tree it
-is handed and adds clauses to its root group; a nested `any` or `not` group is
-part of the caller's tree (the builder paints and edits it, but does not create
-one). Every group it can extend paints its **own Add control**, so a nested
-`any` gains a clause in place — including one inside a `not`. A `not` itself
-paints none, because it holds one child; a group inside one is a group like any
-other, and its clauses remove individually.
+is handed, adds clauses to any group, and **composes the groups themselves**: a
+group's combinator is a menu (`all of`, `any of`, `Negate`), and **Add group**
+nests a new one where the reader asked. Every group it can extend paints its
+**own Add controls**, so a nested `any` gains a clause or a group in place —
+including one inside a `not`. A `not` itself paints none, because it holds one
+child; a group inside one is a group like any other, and its clauses remove
+individually.
 
 ## Usage
 
@@ -44,8 +45,11 @@ A clause's `slot` is its path joined with `-` (a root clause is `0`), so a
 clause inside a nested group keeps its own locators: `${testId}-${slot}-field`,
 `${testId}-${slot}-comparison`, `${testId}-${slot}-value`,
 `${testId}-${slot}-remove`, and a group's remove is
-`${testId}-${slot}-group-remove`. The root's Add is `${testId}-add`; a nested
-group's Add is `${testId}-${slot}-add`.
+`${testId}-${slot}-group-remove`. A group's combinator control is
+`${testId}-kind` at the root and `${testId}-${slot}-kind` below it, with
+`-kind-all`, `-kind-any` and `-kind-negate` for its menu. The root's Add clause
+is `${testId}-add` and its Add group `${testId}-add-group`; a nested group's own
+are `${testId}-${slot}-add` and `${testId}-${slot}-add-group`.
 
 The tree's own API, exported beside the builder:
 
@@ -94,22 +98,63 @@ built from it keeps no row rather than treating the blank as `0`. A field the
 row does not carry reads as blank too, and text like `wide` never satisfies an
 order.
 
+## Composing groups
+
+The tree holds `all`, `any` and `not`, and the builder writes all three. A
+group's **combinator** is a menu beside its clauses:
+
+- **Match all** keeps the group's children and requires every one.
+- **Match any** keeps them and requires one.
+- **Negate** wraps the group, so `not (any of A, B)` reads "neither A nor B";
+  the same item un-negates it, so a reader who changes their mind gets the group
+  back rather than a second wrapper.
+
+**Add group** appends an `all` group holding one blank clause to the group it
+sits on, and the reader switches that group's combinator afterwards. A new group
+starts with a clause rather than empty because an empty `any` keeps nothing —
+landing a reader in a group whose own explanation is "nothing" would be a trap
+the Add control set.
+
+```tsx
+const tree: FilterTree = {
+  kind: "all",
+  children: [
+    { kind: "predicate", field: "status", comparison: "equals", value: "tracked" },
+    {
+      kind: "any",
+      children: [
+        { kind: "predicate", field: "name", comparison: "contains", value: "readme" },
+        { kind: "predicate", field: "name", comparison: "contains", value: "notes" },
+      ],
+    },
+  ],
+};
+// "tracked AND (readme OR notes)"
+```
+
+The reducers behind those controls are exported for a caller that builds a tree
+outside the component: `setGroupKind(tree, path, "all" | "any")` keeps a group's
+children and changes how they combine, and `negateAt(tree, path)` wraps the
+group (a second call gives it back). Both leave the tree alone when the path
+names nothing.
+
 ## Accessibility
 
 The builder's title is a level-3 `heading`, and the sentence above the clauses,
 each group's combinator (`all of`, `any of`, `not`) and the clause controls are
 all announced (`surface-a11y.test.tsx`): a reader hears the tree's meaning, not a
-row of unlabelled menus. A clause's field and comparison triggers are named
-buttons, and its value is the primitives' `Input`, named by the field it edits.
+row of unlabelled menus. A group's combinator is the **control** that changes
+it, named by the words it shows, so the same node a reader hears is the one they
+press. A clause's field and comparison triggers are named buttons, and its value
+is the primitives' `Input`, named by the field it edits.
 
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.
-- The builder never writes an `any` or a `not` and never changes a group's
-  combinator: a group the caller's tree holds is painted and edited, its Add is
-  offered where the append lands, and a negated group is removed whole. Use
-  `appendAt(tree, path, clause)` directly to build a group the tree does not
-  hold yet.
+- A `not` holds exactly one child, so it paints no Add of its own; a group
+  inside it paints both Adds, and the `not` itself is removed whole when it sits
+  in a group. To negate one clause, add a group holding it and press Negate, or
+  build the `not` with `negateAt` directly.
 - A clause carries a Remove control only where removing it changes the tree: a
   `not` holds one child and cannot be left empty, so the clause it holds
   directly has no Remove of its own — remove the group whole when it sits in a

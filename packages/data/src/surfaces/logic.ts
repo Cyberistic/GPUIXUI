@@ -38,6 +38,9 @@ export type Comparison =
   | "greaterThan"
   | "lessThan";
 
+/** The combinators a group can wear. */
+export type GroupKind = "all" | "any" | "not";
+
 /** The comparisons a builder offers, in the order it lists them. */
 export const comparisons: ReadonlyArray<Comparison> = [
   "equals",
@@ -281,6 +284,40 @@ export type FilterPath = ReadonlyArray<number>;
 export const emptyTree: FilterTree = { kind: "all", children: [] };
 
 /**
+ * The node a path addresses.
+ *
+ * A group holds its children by index; a `not` holds one child, at index `0`.
+ * A path that walks past a clause, or past a `not`'s single child, names
+ * nothing.
+ */
+const nodeAt = (
+  tree: FilterTree,
+  path: FilterPath,
+): Option.Option<FilterTree> => {
+  if (path.length === 0) return Option.some(tree);
+  const [head, ...rest] = path;
+  return Option.flatMap(Option.fromNullishOr(head), (at) =>
+    Match.value(tree).pipe(
+      Match.when(isPredicate, () => Option.none()),
+      Match.when(isAll, (group) => childAt(group.children, at, rest)),
+      Match.when(isAny, (group) => childAt(group.children, at, rest)),
+      Match.when(isNot, (group) =>
+        at === 0 ? nodeAt(group.child, rest) : Option.none(),
+      ),
+      Match.exhaustive,
+    ),
+  );
+};
+
+/** The node at an index of a group's children. */
+const childAt = (
+  children: ReadonlyArray<FilterTree>,
+  at: number,
+  rest: FilterPath,
+): Option.Option<FilterTree> =>
+  Arr.get(children, at).pipe(Option.flatMap((child) => nodeAt(child, rest)));
+
+/**
  * The predicate a path addresses.
  *
  * The builder reads the clause it is about to edit, so a field or a comparison
@@ -290,31 +327,27 @@ export const emptyTree: FilterTree = { kind: "all", children: [] };
 export const clauseAt = (
   tree: FilterTree,
   path: FilterPath,
-): Option.Option<FieldPredicate> => {
-  if (path.length === 0) {
-    return isPredicate(tree) ? Option.some(tree) : Option.none();
-  }
-  const [head, ...rest] = path;
-  return Option.flatMap(Option.fromNullishOr(head), (at) =>
-    Match.value(tree).pipe(
-      Match.when(isPredicate, () => Option.none()),
-      Match.when(isAll, (group) => clauseIn(group.children, at, rest)),
-      Match.when(isAny, (group) => clauseIn(group.children, at, rest)),
-      Match.when(isNot, (group) =>
-        at === 0 ? clauseAt(group.child, rest) : Option.none(),
-      ),
-      Match.exhaustive,
-    ),
-  );
-};
-
-/** The predicate at an index of a group's children. */
-const clauseIn = (
-  children: ReadonlyArray<FilterTree>,
-  at: number,
-  rest: FilterPath,
 ): Option.Option<FieldPredicate> =>
-  Arr.get(children, at).pipe(Option.flatMap((child) => clauseAt(child, rest)));
+  Option.flatMap(nodeAt(tree, path), (node) =>
+    isPredicate(node) ? Option.some(node) : Option.none(),
+  );
+
+/**
+ * The group a node reads as when its children keep their positions.
+ *
+ * A `not` is a negation, not a third combinator: giving it `all`/`any` reads
+ * through it into its child, so a negated `any` becomes an `any` of the same
+ * clauses. A clause becomes a group of one, which is what un-negating a `not`
+ * that holds a clause reads as.
+ */
+const asGroup = (node: FilterTree, kind: "all" | "any"): FilterTree =>
+  Match.value(node).pipe(
+    Match.when(isPredicate, (clause) => ({ kind, children: [clause] })),
+    Match.when(isAll, (group) => ({ kind, children: group.children })),
+    Match.when(isAny, (group) => ({ kind, children: group.children })),
+    Match.when(isNot, (group) => asGroup(group.child, kind)),
+    Match.exhaustive,
+  );
 
 /** Replace the clause at a path. */
 export const updateAt = (
@@ -348,6 +381,42 @@ export const updateAt = (
     Match.exhaustive,
   );
 };
+
+/**
+ * Give the group at `path` a combinator, keeping its children.
+ *
+ * The builder offers "match all" and "match any" on every group, so the reader
+ * can turn a group into a disjunction without rebuilding the clauses it holds.
+ * A path that names nothing leaves the tree alone.
+ */
+export const setGroupKind = (
+  tree: FilterTree,
+  path: FilterPath,
+  kind: "all" | "any",
+): FilterTree =>
+  Option.match(nodeAt(tree, path), {
+    onNone: () => tree,
+    onSome: (node) => updateAt(tree, path, asGroup(node, kind)),
+  });
+
+/**
+ * Negate the group at `path`, or give it back when it is already negated.
+ *
+ * A `not` keeps one child: negating a group wraps the whole group, so
+ * `not (any of A, B)` means "neither A nor B". Negating again removes the
+ * wrapper and changes nothing else, so the control is its own inverse. A path
+ * that names nothing leaves the tree alone.
+ */
+export const negateAt = (tree: FilterTree, path: FilterPath): FilterTree =>
+  Option.match(nodeAt(tree, path), {
+    onNone: () => tree,
+    onSome: (node) =>
+      updateAt(
+        tree,
+        path,
+        isNot(node) ? node.child : { kind: "not", child: node },
+      ),
+  });
 
 /**
  * Remove the clause at a path.
@@ -397,38 +466,47 @@ export const removeAt = (tree: FilterTree, path: FilterPath): FilterTree => {
   );
 };
 
-/** Add a clause to a group, or replace the root's only child. */
-export const appendClause = (
-  tree: FilterTree,
-  clause: FieldPredicate,
-): FilterTree =>
+/**
+ * Add a clause or a group to a tree, keeping the tree's shape.
+ *
+ * A tree that is a single clause becomes an `all` holding both, because a lone
+ * clause has no group to append to; a group gains the node as its last child.
+ */
+const appendNode = (tree: FilterTree, node: FilterTree): FilterTree =>
   Match.value(tree).pipe(
     Match.when(isPredicate, () => ({
       kind: "all" as const,
-      children: [tree, clause],
+      children: [tree, node],
     })),
     Match.when(isAll, (group) => ({
       ...group,
-      children: [...group.children, clause],
+      children: [...group.children, node],
     })),
     Match.when(isAny, (group) => ({
       ...group,
-      children: [...group.children, clause],
+      children: [...group.children, node],
     })),
     Match.when(isNot, (group) => ({
       ...group,
-      child: appendClause(group.child, clause),
+      child: appendNode(group.child, node),
     })),
     Match.exhaustive,
   );
 
+/** Add a clause to a tree, or replace the root's only node. */
+export const appendClause = (
+  tree: FilterTree,
+  clause: FieldPredicate,
+): FilterTree => appendNode(tree, clause);
+
 /**
- * Add a clause to the group at `path` — the root at `[]`.
+ * Add a clause or a group to the group at `path` — the root at `[]`.
  *
  * A builder paints an Add control on every group it can extend, so a clause can
- * join a nested `any` without rebuilding the tree around it. Appending to the
- * root is {@link appendClause}, including its rule that a lone clause becomes an
- * `all` holding both.
+ * join a nested `any` without rebuilding the tree around it, and a group can be
+ * nested where the reader wants it. Appending to the root is
+ * {@link appendClause}'s rule, generalized: a lone node becomes an `all`
+ * holding both.
  *
  * A path that names no group leaves the tree alone: a missing child, a clause, the
  * `not` itself (which holds one child and takes no clause of its own), or an
@@ -441,17 +519,19 @@ export const appendClause = (
 export const appendAt = (
   tree: FilterTree,
   path: FilterPath,
-  clause: FieldPredicate,
+  added: FilterTree,
 ): FilterTree => {
-  // The root keeps `appendClause`'s rule: a lone clause becomes an `all`
-  // holding both, which is what the builder's own Add means.
-  if (path.length === 0) return appendClause(tree, clause);
-  const appendInto = (node: FilterTree, rest: FilterPath): FilterTree => {
-    // Only a group takes a clause. A clause or a `not` at the path is left
-    // alone rather than wrapped, so an append never changes the tree's shape
-    // at a node that does not paint an Add control.
+  // The root keeps `appendClause`'s rule: a lone node becomes an `all` holding
+  // both, which is what the builder's own Add means.
+  if (path.length === 0) return appendNode(tree, added);
+  const appendInto = (current: FilterTree, rest: FilterPath): FilterTree => {
+    // Only a group takes a node. A clause or a `not` at the path is left alone
+    // rather than wrapped, so an append never changes the tree's shape at a
+    // node that does not paint an Add control.
     if (rest.length === 0) {
-      return isAll(node) || isAny(node) ? appendClause(node, clause) : node;
+      return isAll(current) || isAny(current)
+        ? appendNode(current, added)
+        : current;
     }
     const [head, ...tail] = rest;
     const intoChildren = (
@@ -460,12 +540,14 @@ export const appendAt = (
       Arr.map(children, (child, at) =>
         at === head ? appendInto(child, tail) : child,
       );
-    return Match.value(node).pipe(
-      Match.when(isPredicate, () => node),
+    return Match.value(current).pipe(
+      Match.when(isPredicate, () => current),
       Match.when(isNot, (group) =>
-        // A `not` takes no clause of its own; index `0` is the one child it
+        // A `not` takes no node of its own; index `0` is the one child it
         // holds, so a path through it is followed into that child.
-        head === 0 ? { ...group, child: appendInto(group.child, tail) } : node,
+        head === 0
+          ? { ...group, child: appendInto(group.child, tail) }
+          : current,
       ),
       Match.when(isAll, (group) => ({
         ...group,

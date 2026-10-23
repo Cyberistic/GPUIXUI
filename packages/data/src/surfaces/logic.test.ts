@@ -15,10 +15,15 @@
  * - an order that read a blank side as zero, so an unfilled clause kept every
  *   positive row;
  * - an append that could only reach the root, so a nested `any` could never
- *   gain a clause from the builder.
+ *   gain a clause from the builder;
+ * - a builder that could read an `any` or a `not` but never compose one, so
+ *   every saved query it wrote was a flat `all`;
+ * - a combinator or a negation that rebuilt the group around its clauses, so
+ *   switching "all" to "any" dropped the clauses the reader had typed.
  */
 
 import { Match } from "effect";
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -36,7 +41,9 @@ import {
   isPredicate,
   matchesComparison,
   matchesTree,
+  negateAt,
   removeAt,
+  setGroupKind,
   updateAt,
   updatePredicate,
   type FieldPredicate,
@@ -525,5 +532,173 @@ describe("editing a tree", () => {
     // The two clauses now contradict each other, so the group keeps nothing:
     // a row cannot both contain "tracked" and contain "ignored".
     expect(filterByTree(rows, next, valueOf)).toEqual([]);
+  });
+
+  it("adds a group where the reader wants it, not only a clause", () => {
+    const group: FilterTree = {
+      kind: "all",
+      children: [clause("name", "contains", "readme")],
+    };
+
+    // A lone root clause becomes an `all` holding both, so the group has a
+    // parent to combine with; the builder's Add group starts from an empty
+    // tree the same way.
+    const root = appendAt(clause("status", "equals", "tracked"), [], group);
+    expect(root).toEqual({
+      kind: "all",
+      children: [clause("status", "equals", "tracked"), group],
+    });
+
+    const nested = appendAt(root, [1], {
+      kind: "any",
+      children: [clause("size", "lessThan", "1024")],
+    });
+    expect(clauseCount(nested)).toBe(3);
+    // The group is the node the append added; its own clause sits inside it.
+    expect(nested).toEqual({
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        {
+          kind: "all",
+          children: [
+            clause("name", "contains", "readme"),
+            { kind: "any", children: [clause("size", "lessThan", "1024")] },
+          ],
+        },
+      ],
+    });
+    // The group that received it kept its own clause.
+    expect(clauseOf(nested, [1, 0])).toMatchObject({ field: "name" });
+  });
+
+  it("changes a group's combinator and keeps the clauses it holds", () => {
+    const nested: FilterTree = {
+      kind: "all",
+      children: [
+        clause("name", "contains", "readme"),
+        clause("size", "greaterThan", "1024"),
+      ],
+    };
+    const tree: FilterTree = {
+      kind: "all",
+      children: [clause("status", "equals", "tracked"), nested],
+    };
+
+    const any = setGroupKind(tree, [], "any");
+    expect(any.kind).toBe("any");
+    // The clauses are the reader's; a combinator change combines them
+    // differently instead of rebuilding the tree around them.
+    expect(clauseCount(any)).toBe(3);
+    // No row is both tracked and a readme whose size passes 1 KiB…
+    expect(filterByTree(rows, tree, valueOf)).toEqual([]);
+    // …while any one of the three clauses keeps both tracked rows.
+    expect(
+      Arr.map(filterByTree(rows, any, valueOf), (row) => row.name),
+    ).toEqual(["readme.md", "main.ts"]);
+
+    // The named group changed and the root kept its own combinator.
+    expect(setGroupKind(tree, [1], "any")).toEqual({
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        { kind: "any", children: nested.children },
+      ],
+    });
+  });
+
+  it("reads a negated group's combinator through the negation", () => {
+    const negated: FilterTree = {
+      kind: "not",
+      child: {
+        kind: "any",
+        children: [
+          clause("status", "equals", "tracked"),
+          clause("name", "contains", "readme"),
+        ],
+      },
+    };
+
+    // "Not any of" and "all of" are different trees; giving the group a
+    // combinator means the same clauses now combine that way, not a group
+    // holding a `not` as its only child.
+    expect(setGroupKind(negated, [], "all")).toEqual({
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        clause("name", "contains", "readme"),
+      ],
+    });
+  });
+
+  it("negates a group and gives it back unchanged", () => {
+    const tree: FilterTree = {
+      kind: "any",
+      children: [
+        clause("status", "equals", "tracked"),
+        clause("name", "contains", "readme"),
+      ],
+    };
+
+    const negated = negateAt(tree, []);
+    expect(negated).toEqual({ kind: "not", child: tree });
+    // The control is its own inverse, so a reader who changes their mind gets
+    // the tree they had rather than a second wrapper.
+    expect(negateAt(negated, [])).toEqual(tree);
+
+    // A `not` holding a clause gives the clause back, which is what the
+    // builder's "do not negate" offers.
+    const one = negateAt(clause("status", "equals", "tracked"), []);
+    expect(one).toEqual({
+      kind: "not",
+      child: clause("status", "equals", "tracked"),
+    });
+    expect(negateAt(one, [])).toEqual(clause("status", "equals", "tracked"));
+
+    // The negation lands at the path it names: the root's other clause stays.
+    const inner: FilterTree = {
+      kind: "any",
+      children: [
+        clause("name", "contains", "readme"),
+        clause("name", "contains", "notes"),
+      ],
+    };
+    const nestedTree: FilterTree = {
+      kind: "all",
+      children: [clause("status", "equals", "tracked"), inner],
+    };
+    const nested = negateAt(nestedTree, [1]);
+    expect(nested).toEqual({
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        { kind: "not", child: inner },
+      ],
+    });
+    // "Tracked AND (readme or notes)" keeps one row; negating its group keeps
+    // the tracked row whose name holds neither.
+    expect(
+      Arr.map(filterByTree(rows, nestedTree, valueOf), (row) => row.name),
+    ).toEqual(["readme.md"]);
+    expect(
+      Arr.map(filterByTree(rows, nested, valueOf), (row) => row.name),
+    ).toEqual(["main.ts"]);
+  });
+
+  it("leaves the tree alone when a group edit names no group", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [clause("status", "equals", "tracked")],
+    };
+
+    // A missing index, a path past a clause and a path past a `not`'s only
+    // child name nothing; the builder paints these controls on groups only.
+    expect(setGroupKind(tree, [9], "any")).toEqual(tree);
+    expect(negateAt(tree, [0, 0])).toEqual(tree);
+    const negated: FilterTree = {
+      kind: "not",
+      child: clause("status", "equals", "tracked"),
+    };
+    expect(negateAt(negated, [1])).toEqual(negated);
   });
 });

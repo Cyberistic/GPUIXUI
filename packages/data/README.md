@@ -507,15 +507,20 @@ still compare. A side that does not read as a number satisfies no order, the
 blank value a new clause starts with included, so an unfilled clause keeps no
 row rather than reading the blank as `0`. An empty `all` matches everything,
 which is what an empty builder means. The builder adds wherever a reader presses:
-`appendAt(tree, path, clause)` grows the `all`/`any` at a path, so a nested `any`
-gains a clause in place, while a path naming a clause or the `not` itself leaves
-the tree alone. A path through a `not` is followed into its one child, so a group
-a `not` negates is edited like any other — its Add appends there and a clause's
-Remove takes that clause out. A `not` paints no Add and the clause it holds
-directly paints no Remove, because a `not` cannot be left without its child. The
-toolbar's search is the one **debounced** field (the core's `@tanstack/pacer`
-debouncer owns the wait); the table's own filter field is deliberately not,
-because `table-filter-lifecycle` measured the set narrowing as the reader types.
+`appendAt(tree, path, node)` grows the `all`/`any` at a path with a clause or a
+group, so a nested `any` gains a clause in place, while a path naming a clause or
+the `not` itself leaves the tree alone. A path through a `not` is followed into
+its one child, so a group a `not` negates is edited like any other — its Add
+appends there and a clause's Remove takes that clause out. A `not` paints no Add
+and the clause it holds directly paints no Remove, because a `not` cannot be left
+without its child. **The groups are composed in the builder too**: a group's
+combinator is a menu (`Match all`, `Match any`, `Negate`), and `Add group` nests
+a group holding one blank clause, so a reader can write an `any` or a `not`
+without hand-building the tree — `setGroupKind(tree, path, kind)` keeps a
+group's children and `negateAt(tree, path)` is its own inverse. The toolbar's
+search is the one **debounced** field (the core's `@tanstack/pacer` debouncer
+owns the wait); the table's own filter field is deliberately not, because
+`table-filter-lifecycle` measured the set narrowing as the reader types.
 
 ## Styling
 

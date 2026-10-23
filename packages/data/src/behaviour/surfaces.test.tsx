@@ -223,6 +223,63 @@ describe("the data surfaces", () => {
     );
   });
 
+  it("composes a group's combinator and its negation from the builder", () => {
+    // The tree held `all`, `any` and `not` from the first release, but the
+    // builder could only write a flat `all`: a reader who needed "A or B"
+    // built it outside the component. Add group and the group's own
+    // combinator menu are that missing half.
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        {
+          kind: "predicate",
+          field: "status",
+          comparison: "equals",
+          value: "tracked",
+        },
+      ],
+    };
+    root = renderData(<NestedBuilder tree={tree} />);
+    settle(root);
+
+    clickCentreOf(root, "nested-add-group");
+    root.renderer.flush();
+
+    // The group landed where the reader asked and starts as an `all` holding
+    // one blank clause, so it never lands as an empty `any` (which keeps
+    // nothing).
+    expect(paintedText(root)).toContain(
+      "all of (status equals tracked, all of (",
+    );
+    expect(root.renderer.findByTestId("nested-1-0-value")).toBeDefined();
+
+    // Its combinator is a control: switching it keeps the clause the reader
+    // will type into.
+    clickCentreOf(root, "nested-1-kind");
+    root.renderer.flush();
+    clickCentreOf(root, "nested-1-kind-any");
+    root.renderer.flush();
+    expect(paintedText(root)).toContain(
+      "all of (status equals tracked, any of (",
+    );
+
+    // Negating wraps the group, and the sentence says so.
+    clickCentreOf(root, "nested-1-kind");
+    root.renderer.flush();
+    clickCentreOf(root, "nested-1-kind-negate");
+    root.renderer.flush();
+    expect(paintedText(root)).toContain("not (any of (");
+
+    // The same control gives the group back rather than stacking a second
+    // negation.
+    clickCentreOf(root, "nested-1-kind");
+    root.renderer.flush();
+    clickCentreOf(root, "nested-1-kind-negate");
+    root.renderer.flush();
+    expect(paintedText(root)).not.toContain("not (");
+    expect(paintedText(root)).toContain("any of (");
+  });
+
   it("edits a group a not negates, where the builder paints its controls", () => {
     // A `not` holds one child, so it paints no Add or Remove of its own — but a
     // group inside it is a group like any other: its Add appends there and a

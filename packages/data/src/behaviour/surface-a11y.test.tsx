@@ -143,11 +143,16 @@ describe("the data surfaces announce what they paint", () => {
 
     const heading = onlyRole(tree, "Heading");
     expect(tree.nodes[heading]?.aria.value).toBe("Filters");
-    const labels = Arr.map(
-      Object.values(tree.nodes),
-      (node) => node.aria.value ?? "",
-    );
+    const nodes = Object.values(tree.nodes);
+    const labels = Arr.map(nodes, (node) => node.aria.value ?? "");
     expect(labels).toContain("any of (status equals tracked)");
-    expect(labels).toContain("any of");
+
+    // The combinator is the group's own control, not a word beside the tree:
+    // a reader changes it in place, so it has to be a named button.
+    const combinator = Arr.filter(
+      nodes,
+      (node) => node.aria.label === "any of",
+    );
+    expect(Arr.map(combinator, (node) => node.aria.role)).toEqual(["Button"]);
   });
 });

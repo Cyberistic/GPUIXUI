@@ -293,7 +293,9 @@ export {
   isPredicate,
   matchesComparison,
   matchesTree,
+  negateAt,
   removeAt,
+  setGroupKind,
   updateAt,
   updatePredicate,
 } from "./surfaces/logic.js";
@@ -304,6 +306,7 @@ export type {
   FieldPredicate,
   FilterPath,
   FilterTree,
+  GroupKind,
   NotClause,
 } from "./surfaces/logic.js";
 
