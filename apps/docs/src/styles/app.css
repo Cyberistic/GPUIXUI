@@ -89,6 +89,9 @@ body {
   display: inline-block;
   width: 18px;
   height: 18px;
+  background: var(--primary);
+  -webkit-mask: url("/logo-solid.svg") center / contain no-repeat;
+  mask: url("/logo-solid.svg") center / contain no-repeat;
 }
 
 /* Section labels in a sidebar and the uppercase eyebrow used on pages. */

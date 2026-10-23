@@ -1,11 +1,11 @@
 import { useTheme } from "fumadocs-ui/provider/base";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-import { Hero, PlatformWindow } from "./deck";
+import { Hero } from "./deck";
 import { Lineage } from "./lineage";
 import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
 import { DashboardRender } from "../docs/dashboard";
-import { attribution, navLinks, platforms, repo } from "./data";
+import { attribution, navLinks, repo } from "./data";
 
 export function Landing() {
   return (
@@ -29,14 +29,7 @@ function Nav() {
   return (
     <nav className="landing-nav">
       <a className="landing-brand" href="/">
-        <img
-          alt=""
-          aria-hidden="true"
-          className="landing-mark"
-          height={22}
-          src="/logo.svg"
-          width={22}
-        />
+        <span aria-hidden="true" className="landing-mark" />
         GPUIxUI
       </a>
       <div className="landing-nav-links">
@@ -203,21 +196,6 @@ function Defaults() {
         reshape it with <a href="/docs/theming">tokens</a> or in the{" "}
         <a href="/docs/themes">theme editor</a>.
       </p>
-
-      <div className="landing-grid3">
-        {platforms.map((platform) => (
-          <a
-            className="landing-default"
-            href="/docs/components/dialog"
-            key={platform.id}
-          >
-            <PlatformWindow platform={platform} />
-            <span className="landing-default-link">
-              Dialog docs <span aria-hidden="true">→</span>
-            </span>
-          </a>
-        ))}
-      </div>
 
       <div className="landing-recipes">
         {recipes.map((item) => (

@@ -6406,6 +6406,10 @@ button.gx-table-row:focus-visible {
 .gx-empty-state-label {
   margin: 0;
   padding: 8px 12px 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
 /* ---- layout diagrams: Box, Stack, Grid, Spacer, Text, Separator ----
    These primitives are layout, not controls, so their previews are labelled
    diagrams: a dashed outline around the part and a caption naming what it is. */
@@ -6511,6 +6515,10 @@ button.gx-table-row:focus-visible {
 
 .gx-fieldset-legend {
   margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .gx-layout-band {
   display: flex;
   flex-wrap: wrap;
@@ -7017,6 +7025,11 @@ button.gx-table-row:focus-visible {
 }
 
 .gx-hotkey-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
 .gx-label-block[data-invalid] .gx-label-name {
   color: var(--destructive-soft-foreground);
 }
@@ -7051,6 +7064,11 @@ button.gx-table-row:focus-visible {
 }
 
 .gx-hotkey-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .gx-label-note code {
   font-family: var(--font-mono);
   color: var(--primary);
@@ -7107,6 +7125,10 @@ button.gx-table-row:focus-visible {
 
 .gx-hotkey-state-label {
   margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
 .gx-input-label {
   font-size: 13px;
   font-weight: 550;

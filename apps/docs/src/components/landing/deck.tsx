@@ -1,15 +1,30 @@
-import { useEffect, useState } from "react";
+/**
+ * The hero deck: three platform windows, each a miniature of the dashboard and
+ * painted from that platform's own theme (families, roles, radius, density),
+ * so macOS, Windows 11 and Linux look like themselves rather than one skin.
+ *
+ * The shuffle pauses on hover; the stack is a clean fan with no rotation, so
+ * nothing drifts off the baseline.
+ */
+import { useEffect, useState, type CSSProperties } from "react";
+import { darkTheme, platformTheme, type PlatformName } from "@gpuixui/tokens";
+import { toCssVars } from "../../lib/theme-css";
 import { platforms, repo } from "./data";
 import type { Platform } from "./data";
 
 const SHUFFLE_MS = 1600;
 
-/**
- * The hero: a centered headline with actions, then the platform switch as the
- * control for the deck, and the deck as a single dialog window that shuffles
- * between the three platform looks. Owns the shuffle state so the switch and
- * the deck stay in sync.
- */
+/** The library's platform name for a landing card. */
+const platformName = (id: Platform["id"]): PlatformName =>
+  id === "macos" ? "darwin" : id === "windows" ? "win32" : "linux";
+
+/** The UI family each system is recognised by, on any host. */
+const FAMILY: Readonly<Record<Platform["chrome"], string>> = {
+  mac: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
+  win: '"Segoe UI Variable", "Segoe UI", system-ui, sans-serif',
+  lnx: 'Cantarell, "Ubuntu", "Noto Sans", system-ui, sans-serif',
+};
+
 export function Hero() {
   const [top, setTop] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -51,10 +66,7 @@ export function Hero() {
       </p>
 
       <div className="landing-actions">
-        <a
-          className="landing-btn landing-btn-primary"
-          href="/docs/getting-started"
-        >
+        <a className="landing-btn landing-btn-primary" href="/docs/getting-started">
           Get started
         </a>
         <a
@@ -73,13 +85,14 @@ export function Hero() {
 
       <div
         className="landing-deck"
+        data-paused={paused}
         onBlur={() => setPaused(false)}
         onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         {platforms.map((platform, index) => (
-          <PlatformWindow
+          <PlatformMini
             key={platform.id}
             platform={platform}
             position={(index - top + platforms.length) % platforms.length}
@@ -90,35 +103,62 @@ export function Hero() {
   );
 }
 
-/**
- * One dialog window in a platform's chrome. The dialog itself is the window —
- * no outer shell. Used by the hero deck (shuffled) and the defaults section
- * (side by side).
- */
-export function PlatformWindow({
+/** One mini dashboard in a platform's chrome and palette. */
+function PlatformMini({
   platform,
   position,
 }: {
   platform: Platform;
-  position?: number;
+  position: number;
 }) {
+  const theme = platformTheme(darkTheme, platformName(platform.id));
+  const style = {
+    ...toCssVars(theme),
+    "--font-sans": FAMILY[platform.chrome],
+    "--radius-window": `${theme.radius.lg}px`,
+  } as CSSProperties;
+
   return (
     <div
       className={`landing-window landing-window-${platform.chrome}`}
       data-pos={position}
+      style={style}
     >
       <Bar platform={platform} />
-      <div className="landing-dialog">
-        <p className="landing-dialog-title">Rename component</p>
-        <p className="landing-dialog-desc">
-          This name is shown in the component tree.
-        </p>
-        <div className="landing-field">ComponentName</div>
-        <div className="landing-dialog-actions">
-          <span className="landing-dialog-btn">Cancel</span>
-          <span className="landing-dialog-btn landing-dialog-btn-primary">
-            Rename
-          </span>
+      <div className="landing-mini">
+        <aside className="landing-mini-side">
+          <span className="landing-mini-brand">HA</span>
+          {["Overview", "Projects", "Nen", "Reports"].map((item, index) => (
+            <span
+              className="landing-mini-nav"
+              data-active={index === 0}
+              key={item}
+            >
+              {item}
+            </span>
+          ))}
+        </aside>
+        <div className="landing-mini-main">
+          <div className="landing-mini-head">
+            <span className="landing-mini-name">Hunter Association</span>
+            <span className="landing-mini-pill">7h 42m</span>
+          </div>
+          <div className="landing-mini-grid">
+            <div className="landing-mini-card">
+              <span className="landing-mini-label">Total time</span>
+              <span className="landing-mini-value">7h 42m</span>
+              <div className="landing-mini-bars" aria-hidden="true">
+                {[9, 14, 11, 18, 22, 13, 16].map((height, index) => (
+                  <i key={index} style={{ height }} />
+                ))}
+              </div>
+            </div>
+            <div className="landing-mini-card">
+              <span className="landing-mini-label">Token usage</span>
+              <span className="landing-mini-value">1.24M</span>
+              <div className="landing-mini-donut" aria-hidden="true" />
+            </div>
+          </div>
         </div>
       </div>
       <span className="landing-badge">{platform.label} · default</span>
@@ -127,7 +167,7 @@ export function PlatformWindow({
 }
 
 function Bar({ platform }: { platform: Platform }) {
-  const title = <span className="landing-bar-title">Rename component</span>;
+  const title = <span className="landing-bar-title">Hunter Association</span>;
   const chrome = <Chrome kind={platform.chrome} />;
 
   return platform.chrome === "mac" ? (
