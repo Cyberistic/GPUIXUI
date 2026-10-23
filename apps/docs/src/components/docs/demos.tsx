@@ -8,6 +8,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { CountingNumberDemo, countingNumberDemoSource } from "./counting-number-demo";
 import {
   AvatarStates,
   AvatarWorkflow,
@@ -3003,4 +3004,8 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "topography-demo": { render: TopographyDemo, source: topographyDemoSource },
   "typing-text-demo": { render: TypingTextDemo, source: typingTextDemoSource },
+  "counting-number-demo": {
+    render: CountingNumberDemo,
+    source: countingNumberDemoSource,
+  },
 };
