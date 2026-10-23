@@ -8709,6 +8709,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
     with it the unit suite is 143 and the behaviour suite 92. Docs:
     `docs/charts.mdx` §Accessibility, the `Charts` inventory row and the
     README's chart rule. Owner: data.
+  - [x] Announce a **ring datum that draws no slice** — `DonutChart` rendered a
+    layer only when `donutSegments` gave it geometry, so a zero (or a value the
+    geometry cannot read) painted nothing **and** left the tree while its legend
+    entry still named it: a reader heard every category and one number fewer
+    than the ring holds data for, and could not tell a zero from a datum whose
+    value was lost. A datum keeps its image and only the geometry is skipped —
+    the rule the series charts already follow for a bar of zeros.
+    `src/behaviour/chart-a11y.test.tsx` gains `announces a ring datum that draws
+    no slice` (a zero reads `Referral 0`, a `NaN` reads `no value`; measured
+    before the fix, the tree held `Direct` alone) and
+    `src/behaviour/chart.test.tsx` reads the layers' own sources (the zero
+    datum's mask carries no `<path>`, the painted ones do). The live
+    `chart-surface-lifecycle` now counts the zero source's colour inside the
+    ring (0 pixels) and reads its image back — 41 checks; the headless
+    `data-charts-core` reads the announced value off the accessibility tree.
+    Docs: `docs/charts.mdx` §Accessibility/§Verification, the package README
+    and the Charts row. Verified: `nub run --filter @gpuixui/data test` (195)
+    and `test:behaviour` (114), headless `--only data-charts-core` (1/1) and
+    live `--only chart-surface-lifecycle` (1/1); `check-types` clean. Owner:
+    data.
   - [x] Paint an **empty windowed set as empty, not as loading** — `VirtualTable`
     with `count={0}` and no `empty` node passed `undefined` into `TableBody`,
     whose no-children branch is the **loading skeleton**: a caller who said there
