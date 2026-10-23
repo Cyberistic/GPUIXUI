@@ -37,6 +37,19 @@ import * as Option from "effect/Option";
 /** Rows mounted beyond the viewport on each side, against the range's lag. */
 export const DEFAULT_OVERDRAW = 4;
 
+/**
+ * The row height a window estimates with when the caller's cannot be read.
+ *
+ * A row height is often computed — the density's step, a viewport divided by
+ * the rows it should show, a measurement taken before the first layout — and a
+ * value the runtime cannot divide is not a height. Thirty-seven is what this
+ * package's own row paints at the default text step: the cell recipe's `text-sm`
+ * line (20px) inside `py-2`'s 16px, plus the row's 1px rule. A behaviour case
+ * mounts that row and holds the number to its painted box
+ * (`src/behaviour/rowheight.test.tsx`).
+ */
+export const DEFAULT_ROW_HEIGHT = 37;
+
 /** The rows a window holds: `start` inclusive, `end` exclusive. */
 export interface VirtualWindow {
   readonly start: number;
@@ -70,15 +83,31 @@ export interface WindowCalculator {
   readonly around: (index: number) => VirtualWindow;
 }
 
-/** A row height that can divide. */
-const rowHeightOf = (spec: WindowSpec): number =>
-  Number.isFinite(spec.rowHeight) && spec.rowHeight > 0 ? spec.rowHeight : 1;
+/**
+ * A row height the window can divide: a finite height above zero, else
+ * `fallback`.
+ *
+ * Every offset in this module is a multiple of this number, and the runtime's
+ * `estimatedItemHeight` is handed the same one. A height nothing could be read
+ * from therefore used to reach all four places at once: the calculator mounted a
+ * whole viewport's worth of rows per pixel, and the scroll anchor multiplied the
+ * row index by `NaN`, which clamps to offset `0` — so a thousand-row table
+ * followed no gesture past the first window and painted blank rows below it
+ * (`src/behaviour/rowheight.test.tsx`).
+ */
+export const rowHeightOf = (
+  height: number | undefined,
+  fallback: number = DEFAULT_ROW_HEIGHT,
+): number =>
+  height !== undefined && Number.isFinite(height) && height > 0
+    ? height
+    : fallback;
 
 /** A viewport that can hold a row. */
 const viewportOf = (spec: WindowSpec): number =>
   Number.isFinite(spec.viewportHeight) && spec.viewportHeight > 0
     ? spec.viewportHeight
-    : rowHeightOf(spec);
+    : rowHeightOf(spec.rowHeight);
 
 /**
  * The row count the window can hold.
@@ -104,7 +133,10 @@ export const rowCount = (count: number): number =>
  * still reported its box until the next gesture moved the window).
  */
 export const maxScrollOffset = (spec: WindowSpec): number =>
-  Math.max(0, rowCount(spec.count) * rowHeightOf(spec) - viewportOf(spec));
+  Math.max(
+    0,
+    rowCount(spec.count) * rowHeightOf(spec.rowHeight) - viewportOf(spec),
+  );
 
 /** An offset clamped into the rows a spec holds. */
 export const clampScrollOffset = (
@@ -122,7 +154,7 @@ export const clampScrollOffset = (
  * DOM: the scroll offset and the viewport are the two numbers it is given.
  */
 export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
-  const rowHeight = rowHeightOf(spec);
+  const rowHeight = rowHeightOf(spec.rowHeight);
   const virtualizer = new Virtualizer<never, never>({
     count: rowCount(spec.count),
     estimateSize: () => rowHeight,
@@ -154,12 +186,21 @@ export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
   return {
     indicesAt,
     at,
-    around: (index) =>
-      at(
-        Math.max(0, Math.floor(Number.isFinite(index) ? index : 0)) * rowHeight,
-      ),
+    around: (index) => at(rowIndex(index) * rowHeight),
   };
 };
+
+/**
+ * A row index a window can position: finite, whole, never negative.
+ *
+ * An index is often computed — a reveal from a saved view, a page's first row,
+ * a measurement — and `Math.floor(NaN)` would reach the offset arithmetic as
+ * `NaN`, which clamps to `0`: a reveal of a row nothing could be read from moved
+ * the window to the top instead of refusing. Zero is the row a reader is on
+ * before any index was declared.
+ */
+export const rowIndex = (index: number): number =>
+  Number.isFinite(index) ? Math.max(0, Math.floor(index)) : 0;
 
 /**
  * The scroll offset a runtime list is at, in pixels.
@@ -176,7 +217,7 @@ export const anchorOffset = (
   Option.flatMap(anchor, (values) => {
     const index = values[0];
     const offsetInItem = values[1];
-    return index === undefined || offsetInItem === undefined
-      ? Option.none()
-      : Option.some(Math.max(0, index * rowHeight + offsetInItem));
+    if (index === undefined || offsetInItem === undefined) return Option.none();
+    const into = Number.isFinite(offsetInItem) ? Math.max(0, offsetInItem) : 0;
+    return Option.some(rowIndex(index) * rowHeightOf(rowHeight) + into);
   });

@@ -450,6 +450,18 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   README's chart paragraph and the Tier 3 Charts row; headless
   `--only data-charts-core` (1/1) and live `--only chart-surface-lifecycle`
   (1/1) on 0.11.0.
+- **A row height is read once, as a height the window can divide**: `rowHeight`
+  is often computed, and a `NaN` reached the estimate, the anchor and the reveal
+  at once — the calculator mounted a row per pixel (204 of a thousand), the
+  anchor's `index × NaN` clamped the offset to `0`, so the paint stalled at row
+  203 and a reveal of row 900 painted the first window. `virtual/window.ts`'s
+  `rowHeightOf` (finite above zero, else `DEFAULT_ROW_HEIGHT` = 37, the box the
+  shipped row paints) and `rowIndex` are read by `VirtualTable`, `VirtualTree`,
+  `VirtualList` and `useVirtualRows`; `behaviour/rowheight.test.tsx` (5 cases)
+  and `virtual/window.test.ts` (6) hold them. Directions measured: 204 retained,
+  203 for the last row, `194..200` for the reveal, the tree's active row absent.
+  Docs `docs/virtualization.mdx`, `docs/virtual-tree.mdx`, the README and the
+  two virtualized rows.
 - **The charts' paint is window-verified**: the status row said
   *shipped, window-verified* while the five charts had only the offscreen
   behaviour suite and the headless `data-charts-core` scenario. The live

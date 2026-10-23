@@ -9705,6 +9705,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
     case fails `expected 'Name' to contain 'No rows'`; with it the file is 9/9.
     `docs/virtualization.mdx` §API, the README's `VirtualTable` paragraph and
     the Virtualized tables row teach the rule. Owner: data.
+  - [x] Read a **windowed row's height once**, as a height the window can divide
+    — `rowHeight` is often computed (the density's step, a viewport divided by
+    the rows it should show, a measurement taken before the first layout) and a
+    `NaN`/an infinity/zero reached three consumers at once. The window's
+    calculator normalised it to **one pixel** (204 rows of a thousand retained
+    in a 240px body), the **scroll anchor** multiplied the runtime's row index
+    by `NaN` and the offset clamp read that as `0`, so the window never followed
+    a gesture again — measured, the paint stalled at row 203 and the rest of the
+    set stayed blank for ever — and a reveal of row 900 scrolled to a row the
+    window never held. `virtual/window.ts` exports `rowHeightOf` (a finite
+    height above zero, else `DEFAULT_ROW_HEIGHT` — 37, the box this package's
+    own row paints: its `text-sm` line inside `py-2` plus the row's rule) and
+    `rowIndex` (finite, whole, never negative); the runtime's estimate, the
+    anchor, a reveal and the tree's two cursor walks all read those numbers, and
+    `VirtualList` reads a computed `estimatedItemHeight`/`windowStart` before
+    native sees them. `VirtualTable`'s fixed estimate is the shipped row's; the
+    tree's is the density's step its rows are built at. `virtual/window.test.ts`
+    gains six cases (`23`) and `behaviour/rowheight.test.tsx` five: the shipped
+    row's painted box is `DEFAULT_ROW_HEIGHT`, the table retains a window and
+    not 204 rows, 100 wheels reach row 999 contiguously, a reveal paints row
+    900, and a windowed tree keeps its cursor's row mounted. Directions
+    measured against the committed arithmetic: `204` retained, `203` for the
+    last row, the reveal painting `194..200`, and the tree's active `node 0`
+    absent from the frame. `docs/virtualization.mdx` §A row height is read once
+    too, `docs/virtual-tree.mdx` §Limitations, the README and the Virtualized
+    tables and Virtualized hierarchical data rows state the rule. Package suite
+    205/205, behaviour green, `check-types` clean. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

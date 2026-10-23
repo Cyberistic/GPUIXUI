@@ -64,7 +64,7 @@ import {
   type VirtualReveal,
   type VirtualRowsController,
 } from "./use-virtual-rows.js";
-import { anchorOffset, rowCount } from "./window.js";
+import { anchorOffset, rowCount, rowHeightOf } from "./window.js";
 
 /** {@link VirtualTableBody} props. */
 export interface VirtualTableBodyProps extends Omit<
@@ -73,7 +73,13 @@ export interface VirtualTableBodyProps extends Omit<
 > {
   /** The logical row count — the table's whole data set, not the slice. */
   readonly count: number;
-  /** The painted height of one row, in pixels. */
+  /**
+   * The painted height of one row, in pixels.
+   *
+   * A height the window cannot divide — `NaN`, an infinity, zero — is read as
+   * the shipped row's own (`DEFAULT_ROW_HEIGHT`), so a computed value cannot
+   * disable the window; it must still match what `renderRow` paints.
+   */
   readonly rowHeight: number;
   /** Paint one absolute row index. Must return a row of exactly `rowHeight`. */
   readonly renderRow: (index: number) => ReactNode;
@@ -96,7 +102,7 @@ export interface VirtualTableBodyProps extends Omit<
 /** The windowed row scroller: only the mounted window is retained. */
 export const VirtualTableBody = ({
   count,
-  rowHeight,
+  rowHeight: namedRowHeight,
   renderRow,
   height,
   overdraw,
@@ -110,9 +116,13 @@ export const VirtualTableBody = ({
   const renderer = useGpuix().renderer;
   const measured = useMeasuredBodyHeight();
   const definite = height ?? Option.getOrUndefined(measured);
-  // The count the window can hold, so the runtime list, the window and the
-  // reveal arithmetic are given one number (`rowCount`).
+  // The count the window can hold and the height it divides by, so the runtime
+  // list, the window, the anchor and the reveal arithmetic are given one pair
+  // of numbers (`rowCount`, `rowHeightOf`): a computed height nothing could be
+  // read from estimates at the shipped row's own instead of mounting a
+  // viewport per pixel and pinning the window at the offset `NaN` clamps to.
   const total = rowCount(count);
+  const rowHeight = rowHeightOf(namedRowHeight);
   const rows = useVirtualRows({
     count: total,
     rowHeight,
@@ -191,7 +201,14 @@ export interface VirtualTableProps extends Omit<
   readonly count: number;
   /** A definite table height, in pixels. */
   readonly height: number;
-  /** The painted height of every row, in pixels. */
+  /**
+   * The painted height of every row, in pixels.
+   *
+   * It is also the runtime's positioning estimate, so it must match what `row`
+   * paints. A value the window cannot divide is read as the shipped row's own
+   * (`DEFAULT_ROW_HEIGHT`); a caller whose rows paint another height declares
+   * it here.
+   */
   readonly rowHeight: number;
   /** The header row's cells. */
   readonly header: ReactNode;

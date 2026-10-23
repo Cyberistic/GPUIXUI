@@ -18,6 +18,9 @@ import { useCallback, useMemo, useState } from "react";
 import {
   clampScrollOffset,
   createWindowCalculator,
+  rowCount,
+  rowHeightOf,
+  rowIndex,
   type VirtualWindow,
   type WindowSpec,
 } from "./window.js";
@@ -85,10 +88,20 @@ export const useVirtualRows = ({
   initialOffset,
   reveal,
 }: UseVirtualRowsOptions): VirtualRowsController => {
+  // One number for the estimate, the offsets and the reveal: a height the
+  // window cannot divide reads as the shipped row's own (`rowHeightOf`), so a
+  // computed `NaN` cannot mount a viewport per pixel or pin the window at the
+  // top.
+  const height = rowHeightOf(rowHeight);
   const calculator = useMemo(
     () =>
-      createWindowCalculator({ count, rowHeight, viewportHeight, overdraw }),
-    [count, rowHeight, viewportHeight, overdraw],
+      createWindowCalculator({
+        count,
+        rowHeight: height,
+        viewportHeight,
+        overdraw,
+      }),
+    [count, height, viewportHeight, overdraw],
   );
   const [scrollOffset, setScrollOffset] = useState(initialOffset ?? 0);
   const [lastReveal, setLastReveal] = useState<VirtualReveal | undefined>(
@@ -98,7 +111,7 @@ export const useVirtualRows = ({
     Option.none(),
   );
 
-  const spec = { count, rowHeight, viewportHeight, overdraw };
+  const spec = { count, rowHeight: height, viewportHeight, overdraw };
   const offset = clampScrollOffset(spec, scrollOffset);
   // A narrowed set makes the offset the reader left unreachable. The runtime
   // clamps its own scroll to the new content, so the window commits that clamp
@@ -113,16 +126,19 @@ export const useVirtualRows = ({
       const target = calculator.around(index);
       // The window moves to the row's own position, so the scroll that follows
       // lands on the offset the window was computed from.
-      setScrollOffset(Math.max(0, Math.floor(index)) * rowHeight);
+      setScrollOffset(rowIndex(index) * height);
       return target;
     },
-    [calculator, rowHeight],
+    [calculator, height],
   );
 
   if (reveal !== undefined && reveal !== lastReveal) {
     setLastReveal(reveal);
     revealTo(reveal.index);
-    setScrollTarget(Option.some(reveal.index));
+    // A request for a row the set does not hold asks the runtime for nothing:
+    // the last row is the one a reveal past the end can name.
+    const row = Math.min(rowCount(count) - 1, rowIndex(reveal.index));
+    if (row >= 0) setScrollTarget(Option.some(row));
   }
 
   return {

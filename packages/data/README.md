@@ -50,6 +50,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A shrinking set re-clamps the window | `virtual-table-lifecycle` | A scroll offset belongs to the set it was measured against. `useVirtualRows` clamps it to `count × rowHeight − viewport` before the window is computed, so a filter that narrows the set under a reader at row 900 lands on the narrowed set's end with the viewport still full — the core alone clamps the stale offset to the content's end and mounts five rows in a nine-row viewport. |
 | `onVisibleRange` lags the paint | `virtual-list-windowed` | The reported range is **not** the window's source: the window follows the runtime's **scroll anchor** (`getListScrollTop`), which is exact even while the row heights are estimates. A window built from the reported range paints blank rows. |
 | A reveal moves the window first | `virtual-list-windowed` | `useVirtualRows` moves the window to the row's own position in the same render, and the body scrolls to it in the layout effect after that commit. |
+| A row height the window can divide | `rowheight.test.tsx`, `window.test.ts` | `rowHeightOf` reads a computed row height once — a finite height above zero, else `DEFAULT_ROW_HEIGHT` (37, what the shipped row paints) — and the runtime's estimate, the anchor, a reveal and the tree's cursor walks all read it. A height nothing could be read from used to mount a row per pixel and to clamp the anchor's offset to `0`, so a thousand-row table painted nothing past its first window. |
 
 ## Shape
 
@@ -325,6 +326,18 @@ viewport still full rather than on the old offset's tail.
 The row must paint exactly `rowHeight`: the window's positions come from the
 runtime's estimate, so a taller row would push the rows below it out of place.
 A row of a different height uses `VirtualList` in children mode instead.
+
+**A row height the window cannot divide is the row this package paints.**
+`rowHeight` (and the list's `estimatedItemHeight`) is often computed, and a
+value that is not a finite height above zero used to reach the estimate, the
+anchor and every offset at once: the calculator divided the viewport by one
+pixel — 204 rows of a thousand in a 240px body — and the anchor's `index × NaN`
+clamped the offset to `0`, so a table painted its first window and then nothing,
+for ever, while a reveal scrolled to a row the window never held. `rowHeightOf` reads a height the window can divide — a finite height above zero,
+else `DEFAULT_ROW_HEIGHT` (37), which is what the shipped row paints: a
+`text-sm` line inside `py-2` plus the row's rule, measured by
+`behaviour/rowheight.test.tsx`. The estimate, the anchor, the reveal and the
+tree's cursor walks all read that one number.
 
 `count` is read **once**, as the whole non-negative number of rows the table
 holds — a fraction of a row cannot exist, and a count the table cannot read

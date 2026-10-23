@@ -229,8 +229,11 @@ export type { VirtualListProps, VisibleRange } from "./virtual/list.js";
 
 export {
   DEFAULT_OVERDRAW,
+  DEFAULT_ROW_HEIGHT,
   anchorOffset,
   createWindowCalculator,
+  rowHeightOf,
+  rowIndex,
 } from "./virtual/window.js";
 export type {
   VirtualWindow,

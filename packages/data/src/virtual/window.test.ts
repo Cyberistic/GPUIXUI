@@ -22,8 +22,11 @@ import {
   anchorOffset,
   clampScrollOffset,
   createWindowCalculator,
+  DEFAULT_ROW_HEIGHT,
   maxScrollOffset,
   rowCount,
+  rowHeightOf,
+  rowIndex,
   type WindowSpec,
 } from "./window.js";
 
@@ -153,14 +156,15 @@ describe("a set that shrinks under the window", () => {
 });
 
 describe("degenerate sizes", () => {
-  it("treats a zero row height as one pixel rather than dividing by zero", () => {
+  it("reads a zero row height as the row this package paints", () => {
     const calculator = createWindowCalculator({
       count: 100,
       rowHeight: 0,
       viewportHeight: 10,
     });
-    // Ten one-pixel rows fit, plus four overdraw rows.
-    expect(calculator.at(0).end).toBe(14);
+    // Ten pixels hold one row of the shipped height, plus four overdraw rows;
+    // a one-pixel fallback would have mounted fourteen rows in a ten-pixel box.
+    expect(calculator.at(0).end).toBe(5);
   });
 
   it("keeps a negative overdraw at zero", () => {
@@ -170,6 +174,98 @@ describe("degenerate sizes", () => {
     });
     // The nine rows in view and nothing around them.
     expect(calculator.at(0).end).toBe(9);
+  });
+});
+
+describe("a row height the window can divide", () => {
+  it("keeps a height the runtime can lay out", () => {
+    expect(rowHeightOf(36)).toBe(36);
+    // A fractional row is a real measurement, not a broken one.
+    expect(rowHeightOf(36.5)).toBe(36.5);
+  });
+
+  it("reads a height nothing could be read from as the row this package paints", () => {
+    // A row height is often computed — the density's step, a viewport divided
+    // by the rows it should show, a measurement taken before the first layout
+    // — and a value the runtime cannot divide reached the estimate, the anchor
+    // and every offset at once (the defect `behaviour/rowheight.test.tsx`
+    // holds in a window).
+    [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      0,
+      -8,
+    ].forEach((height) => {
+      expect(rowHeightOf(height), `${height}`).toBe(DEFAULT_ROW_HEIGHT);
+    });
+    expect(rowHeightOf(undefined)).toBe(DEFAULT_ROW_HEIGHT);
+  });
+
+  it("takes the fallback the caller's own rows paint", () => {
+    // The tree's rows are built at the density's step, so it passes that step.
+    expect(rowHeightOf(Number.NaN, 28)).toBe(28);
+    expect(rowHeightOf(28, 32)).toBe(28);
+  });
+
+  it("mounts a viewport of rows, not a row per pixel", () => {
+    // Measured before the fallback: a `NaN` height mounted 204 rows of a
+    // thousand in a 240px viewport, because the window's own normaliser read
+    // the height as one pixel.
+    const calculator = createWindowCalculator({
+      count: 1_000,
+      rowHeight: Number.NaN,
+      viewportHeight: 240,
+    });
+    const rows = calculator.indicesAt(0);
+    expect(rows.length).toBeLessThan(20);
+    expect(rows.length).toBeGreaterThanOrEqual(
+      Math.floor(240 / DEFAULT_ROW_HEIGHT),
+    );
+    expect(calculator.at(0).start).toBe(0);
+  });
+
+  it("follows the anchor at the height it divides by", () => {
+    // The pinned window: `16 * NaN` is `NaN`, which the offset clamp read as
+    // `0`, so no gesture moved the window past the first one it mounted.
+    expect(anchorOffset(Option.some([16, 24, 272]), Number.NaN)).toStrictEqual(
+      Option.some(16 * DEFAULT_ROW_HEIGHT + 24),
+    );
+  });
+});
+
+describe("a row index the window can position", () => {
+  it("reads an index as a whole, non-negative row", () => {
+    expect(rowIndex(2.7)).toBe(2);
+    expect(rowIndex(0)).toBe(0);
+    expect(rowIndex(-3)).toBe(0);
+    expect(rowIndex(Number.NaN)).toBe(0);
+    expect(rowIndex(Number.POSITIVE_INFINITY)).toBe(0);
+  });
+
+  it("positions an anchor at the row it names", () => {
+    expect(anchorOffset(Option.some([16.4, 0, 272]), 36)).toStrictEqual(
+      Option.some(16 * 36),
+    );
+    // An index nothing could be read from is the first row, and the pixel into
+    // it stays a measurement.
+    expect(anchorOffset(Option.some([Number.NaN, 8, 272]), 36)).toStrictEqual(
+      Option.some(8),
+    );
+    expect(anchorOffset(Option.some([4, Number.NaN, 272]), 36)).toStrictEqual(
+      Option.some(4 * 36),
+    );
+  });
+
+  it("reveals a row the window can find", () => {
+    const calculator = createWindowCalculator({
+      count: 1_000,
+      rowHeight: Number.NaN,
+      viewportHeight: 240,
+    });
+    // The reveal's own window: the first row, not a window computed from `NaN`.
+    expect(calculator.around(Number.NaN).start).toBe(0);
+    expect(calculator.around(900).start).toBeLessThanOrEqual(900);
   });
 });
 

@@ -62,7 +62,7 @@ import { TreeRowView } from "../tree/row.js";
 import { useTree } from "../tree/use-tree.js";
 import { VirtualList, type VisibleRange } from "./list.js";
 import { useVirtualRows } from "./use-virtual-rows.js";
-import { anchorOffset } from "./window.js";
+import { anchorOffset, rowHeightOf } from "./window.js";
 
 /** {@link VirtualTree} props. */
 export interface VirtualTreeProps<T> extends Omit<
@@ -85,7 +85,11 @@ export interface VirtualTreeProps<T> extends Omit<
   readonly renderRow?: (row: TreeRow<T>) => ReactNode;
   /** A definite viewport height, in pixels. */
   readonly height: number;
-  /** The painted height of every row. Defaults to the density's `rowHeight`. */
+  /**
+   * The painted height of every row. Defaults to the density's `rowHeight`; a
+   * value the window cannot divide is read as that step (`rowHeightOf`), so the
+   * cursor walks and the runtime's estimate still land on rows.
+   */
   readonly rowHeight?: number;
   /** Rows mounted beyond the viewport on each side. Defaults to `4`. */
   readonly overdraw?: number;
@@ -119,7 +123,10 @@ export const VirtualTree = <T,>({
 }: VirtualTreeProps<T>) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
-  const rowHeight = namedRowHeight ?? theme.density.rowHeight;
+  // The tree's rows are built at the density's step, so a declaration the
+  // window cannot divide falls back to it rather than to `NaN`: the two cursor
+  // walks below divide by this number, and a `NaN` index reaches no row at all.
+  const rowHeight = rowHeightOf(namedRowHeight, theme.density.rowHeight);
   const window = useVirtualRows({
     count: dataRows.length,
     rowHeight,

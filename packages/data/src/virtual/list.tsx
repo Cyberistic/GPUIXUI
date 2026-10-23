@@ -45,7 +45,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
-import { rowCount } from "./window.js";
+import { rowCount, rowHeightOf, rowIndex } from "./window.js";
 
 /** The window the runtime built, in absolute logical-row indices. */
 export interface VisibleRange {
@@ -106,6 +106,12 @@ export type VirtualListProps =
     })
   | (VirtualListShared & {
       readonly itemCount: number;
+      /**
+       * The runtime's positioning estimate for one row, in pixels.
+       *
+       * A value the runtime cannot lay out is read as the shipped row's own
+       * (`rowHeightOf`), so a computed estimate cannot reach native as `NaN`.
+       */
       readonly estimatedItemHeight: number;
       readonly windowStart?: number;
     });
@@ -154,8 +160,14 @@ export const VirtualList = (props: VirtualListProps) => {
       ? undefined
       : {
           itemCount: rowCount(props.itemCount),
-          estimatedItemHeight: props.estimatedItemHeight,
-          windowStart: props.windowStart,
+          // The runtime positions the rows from these two numbers, so a
+          // computed height it cannot divide or an index that is not whole is
+          // read here rather than handed to native (`rowHeightOf`, `rowIndex`).
+          estimatedItemHeight: rowHeightOf(props.estimatedItemHeight),
+          windowStart:
+            props.windowStart === undefined
+              ? undefined
+              : rowIndex(props.windowStart),
         };
   return windowed === undefined ? (
     <virtual-list {...shared}>{children}</virtual-list>

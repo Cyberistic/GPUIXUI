@@ -115,7 +115,10 @@ and adds the one rule a window needs: a cursor move can mount its row.
 
 - **One row height.** The windowed mode positions rows from `rowHeight`; a tree
   whose rows vary in height uses `VirtualList` in children mode, where the
-  runtime measures each row (`virtual-list-rows`).
+  runtime measures each row (`virtual-list-rows`). A `rowHeight` the window
+  cannot divide is the density's step (`rowHeightOf`), the height the tree's rows
+  paint: the cursor walks divide by that number, so a computed `NaN` used to
+  leave the cursor on a row no window held.
 - **A scrolling window moves the cursor.** The runtime unmounts the focused row,
   and a tree without a mounted tab stop cannot take the next key. The cursor
   follows the viewport's top row when the window leaves it; a consumer that
