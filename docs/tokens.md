@@ -572,8 +572,8 @@ tail into "Other"; the scale is not a cycle.
 | `5` | `#A5262B` | `#FF9E9E` | `#CC3439` | `#FFC6C6` |
 
 The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
-`highContrastDarkSeries`. An authored look may
-carry its own (`omarchySeries`). Three contracts are measured:
+`highContrastDarkSeries`. An authored look may carry its own — `lunaSeries` and
+`omarchySeries` are the two the package ships. Three contracts are measured:
 
 - **On the plot.** Every swatch is held to the theme's own boundary floor
   against every surface a plot is drawn on — `seriesSurfaces` is `background`,
@@ -990,8 +990,8 @@ These facts about the authored looks:
 - **The chrome is the look's; the artwork is not.** Luna's `#ECE9D8` face, its
   blue title-bar accent, the `#7F9DB9` field edge and the `#316AC5` selection,
   Aero's glass-blue greys and `#3399FF` highlight, and Omarchy's Tokyo Night
-  ink and Flexoki paper are colour values, decoded from the palettes the shells
-  document (`colors.toml` for Omarchy). No gradient, bitmap, icon, cursor or
+  ink and Flexoki paper are colour values, drawn from the palettes those
+  designs publish (Omarchy stages its own in `colors.toml`). No gradient, bitmap, icon, cursor or
   logo is copied, so there is no redistributable asset and no trademark in the
   library's identity.
 - **Two provenances for the dark editions.** Neither Windows era had a dark
@@ -1016,7 +1016,10 @@ These facts about the authored looks:
   the red under deuteranopia — which clears the look's page, card, popover and
   toolbar (tightest **3.30:1**, the green on the toolbar) and keeps every pair
   apart for a dichromat. Its dark edition needs no table: its navy page
-  separates the shared dark scale already. A house that wants other hues copies
+  separates the shared dark scale already. Omarchy's light inset (`#E6E4D9`)
+  needs one for the same reason (the shared amber reads **2.96:1** there), so
+  the look carries `omarchySeries`; its dark edition keeps the shared table. A
+  house that wants other hues copies
   the style and replaces the five positions — `houseLook` in
   [`src/series.example.ts`](../packages/tokens/src/series.example.ts) is that
   copy. See [Data series](#data-series).
