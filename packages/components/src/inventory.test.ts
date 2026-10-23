@@ -638,6 +638,28 @@ describe("the measured target rows", () => {
     );
   });
 
+  it("records the drop a file upload composes", () => {
+    const found = Option.getOrElse(
+      Arr.findFirst(allRows(), (row) => row.name === "File upload"),
+      () => expect.fail("the File upload row is missing"),
+    );
+    const section = readmeSection("## File drops");
+    const registry = readFileSync(
+      fileURLToPath(
+        new URL("apps/playground/src/scenarios/registry.ts", repoRoot),
+      ),
+      "utf8",
+    );
+
+    expect(found.support).not.toBe("?");
+    expect(found.support).toContain("drop");
+    expect(found.notes).toContain("`file-drop`");
+    expect(found.notes).toContain("paths=/tmp/alpha.txt,/tmp/beta.txt");
+    expect(section).toContain("nativeSimulateFileDrop");
+    expect(section).toContain("paths=/tmp/alpha.txt,/tmp/beta.txt");
+    expect(registry).toContain('id: "file-drop"');
+  });
+
   it("cites the clip a collapsing sidebar really paints", () => {
     const read = (path: string): string =>
       readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");

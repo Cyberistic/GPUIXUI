@@ -9,6 +9,12 @@ done | error` — but **not** the transfer: the caller supplies
 component adds files from the controlled `files` prop, auto-starts them, and
 exposes **retry** (errored only) and **remove** per row.
 
+Files arrive from the caller. `DropZone` is the measured path: a drop reaches
+`onFileDrop` with absolute paths in order (the playground's `file-drop` probe
+drives the renderer's own `FileDrop::Entered`/`Submit` pair), and the picker is
+the app's — pass `GpuixRenderer.promptForPaths` as `DropZone`'s `onPick`, because
+a window's automation protocol has no picker verb.
+
 ```tsx
 import { FileUpload, type UploadFunction } from "@gpuixui/media";
 
