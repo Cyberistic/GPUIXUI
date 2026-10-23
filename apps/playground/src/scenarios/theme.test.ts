@@ -59,10 +59,7 @@ describe("the theme-look probe's samples", () => {
     // A look that fell back to the base would drop a step the styles' own table
     // authors; two looks sharing one is a design choice (Luna and Omarchy both
     // author 3), so the comparison is against that table, not the look count.
-    const authored = Arr.map(
-      retroNames,
-      (look) => retroStyles[look].radius.lg,
-    );
+    const authored = Arr.map(retroNames, (look) => retroStyles[look].radius.lg);
     expect(Arr.dedupe(authored).length).toBeGreaterThan(1);
     expect(Arr.dedupe(radii)).toHaveLength(Arr.dedupe(authored).length);
   });
