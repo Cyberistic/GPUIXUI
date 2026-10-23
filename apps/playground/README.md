@@ -185,7 +185,7 @@ preview source for the docs' Theming page.
 `theme-platform` paints the three non-default platforms because `default` is the
 house identity the other two scenarios already cover. Its negative control,
 measured: painting `base.radius.lg` (8) instead of the platform's own `lg` fails
-`darwin large radius: expected 10, got 8`, exit `1`; restored, green. The
+`darwin large radius: expected 14, got 8`, exit `1`; restored, green. The
 `primary` fill and the `md` control height are asserted the same way, so a
 `platformTheme` that returned its base would fail all three platforms on colour
 and two on density.

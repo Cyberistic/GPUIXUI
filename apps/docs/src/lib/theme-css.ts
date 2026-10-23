@@ -1,9 +1,11 @@
 import {
   dividerOn,
+  elevationShadow,
   filledHover,
   filledPressed,
   seriesColors,
   targetSize,
+  type BoxShadow,
   type Theme,
 } from "@gpuixui/tokens";
 import type { CSSProperties } from "react";
@@ -25,6 +27,28 @@ export type CssVars = CSSProperties & Record<`--${string}`, string>;
 /** `primaryForeground` → `primary-foreground`: the variable a role maps to. */
 const toKebab = (name: string): string =>
   name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+
+/** A theme shadow as the CSS `box-shadow` value it stands for. */
+const cssShadow = (shadow: BoxShadow): string =>
+  `${shadow.offsetX}px ${shadow.offsetY}px ${shadow.blurRadius}px ${shadow.spreadRadius}px ${shadow.color}`;
+
+/**
+ * The paint a platform's own switch hands a preview, and the knob's lift. A
+ * theme that declares no switch writes nothing, and every preview rule falls
+ * back to the accent recipe.
+ */
+const switchVars = (theme: Theme): CssVars => {
+  if (theme.switch === undefined) return {};
+  const shadow = elevationShadow(theme, "sm");
+  return {
+    "--switch-on": theme.switch.on,
+    "--switch-off": theme.switch.off,
+    "--switch-knob": theme.switch.knob,
+    ...(shadow === undefined
+      ? {}
+      : { "--switch-knob-shadow": cssShadow(shadow) }),
+  };
+};
 
 /**
  * The variables a preview reads from a theme: every colour role as
@@ -68,6 +92,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--icon-size-md": `${theme.iconSize.md}px`,
   "--icon-size-lg": `${theme.iconSize.lg}px`,
   "--target-size": `${targetSize.minimum}px`,
+  ...switchVars(theme),
   // A filled box's hover and press are the theme's derived opaque fills, not an
   // alpha lift, so a preview shadowing a checked control must take them here.
   "--primary-hover": filledHover(theme, "primary"),

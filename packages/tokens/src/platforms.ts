@@ -17,7 +17,7 @@ import {
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
 import { darkSyntax, type SyntaxColors } from "./syntax.js";
-import type { ThemeContrast, ThemeMode } from "./theme.js";
+import type { SwitchColors, ThemeContrast, ThemeMode } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
 export const systemUiFont = ".SystemUIFont";
@@ -66,6 +66,14 @@ export interface PlatformStyle extends PlatformType {
   readonly density: DensityName;
   /** The roles the platform repaints, in each mode. */
   readonly colors: PlatformColors;
+  /**
+   * The paint the platform's own switch uses, per mode. Apple's switch is green
+   * on and grey off — the system blue never paints a toggle — so the fill is
+   * not a role the accent family can carry. A style that declares none keeps
+   * the library's switch: the accent fill, the muted track and the foreground
+   * knob.
+   */
+  readonly switch?: Readonly<Partial<Record<ThemeMode, SwitchColors>>>;
   /**
    * The categorical scale the look paints its data marks in, per mode. A mode it
    * omits — and every style that declares none — resolves the base theme's scale
@@ -151,10 +159,18 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     label: "macOS",
     sans: systemUiFont,
     mono: "Menlo",
-    radius: { none: 0, sm: 4, md: 6, lg: 10, xl: 14, full: 9999 },
+    // Apple's corner scale: a control at 6, the window's own 10, then one step
+    // for each larger surface — a card at 14 and a sheet at 18.
+    radius: { none: 0, sm: 6, md: 10, lg: 14, xl: 18, full: 9999 },
     density: "compact",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
+    // Apple's switch: 51×31pt with a 27pt knob, green on and grey off. The
+    // values are the system palette's own, published on the HIG's colour page.
+    switch: {
+      light: { on: "#34C759", off: "#E9E9EA", knob: "#FFFFFF" },
+      dark: { on: "#30D158", off: "#39393D", knob: "#FFFFFF" },
+    },
     colors: {
       light: {
         background: "#F2F2F7",

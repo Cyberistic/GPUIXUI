@@ -119,6 +119,9 @@ describe("the styling page", () => {
     expect(compiled("switch-track-md")).toEqual({
       width: Math.round(theme.iconSize.md * 1.75),
       height: theme.iconSize.md,
+      // The edge is part of the box: a theme that declares a switch paints
+      // none, and the utility carries that thickness with the width and height.
+      borderWidth: theme.borderWidth.thin,
     });
     expect(compiled("text-brand").color).toBe(brandText(theme));
     expect(compiled("fill-primary").backgroundColor).toBe(

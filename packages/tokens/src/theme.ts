@@ -115,6 +115,23 @@ export interface Theme {
    * that carries one replaces the table whole.
    */
   readonly syntax?: SyntaxColors;
+  /**
+   * The paint a platform's own switch declares. Absent on every base theme,
+   * which paints a switch from the accent family; a style that carries one
+   * hands the component the native control's own colours — Apple's green on,
+   * grey off and white knob — which are not roles the accent can derive.
+   */
+  readonly switch?: SwitchColors;
+}
+
+/** The colours a platform's own switch paints, in one mode. */
+export interface SwitchColors {
+  /** The track of an on switch. */
+  readonly on: string;
+  /** The track of an off switch. */
+  readonly off: string;
+  /** The knob that slides between the two tracks. */
+  readonly knob: string;
 }
 
 /**
@@ -382,6 +399,9 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     // runtime reads, so a partial one would leave a token on the runtime's own
     // colour. A brand edits one token by spreading the table it keeps.
     syntax: overrides.syntax ?? base.syntax,
+    // A look's own declaration, not an editable role: `applyStyle` replaces it
+    // whole (or clears it), and an override that names no switch keeps it.
+    switch: base.switch,
   };
 }
 
@@ -431,7 +451,7 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
   // A palette — and the scale its plots are drawn in — is designed against the
   // floors of one contrast variant; a base that needs more keeps its own.
   const applies = contrast === style.contrast;
-  return extendTheme(base, {
+  const themed = extendTheme(base, {
     name: `${base.name} · ${style.label}`,
     typography: { sans: style.sans, mono: style.mono },
     radius: style.radius,
@@ -440,6 +460,13 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
     series: applies ? style.series?.[base.mode] : undefined,
     syntax: applies ? style.syntax?.[base.mode] : undefined,
   });
+  // A switch paint belongs to the look, not to the base: an authored look
+  // declares none, so applying it over a platform's theme clears the platform's
+  // toggle instead of leaving a green Apple switch in Luna's chrome.
+  return {
+    ...themed,
+    switch: applies ? style.switch?.[base.mode] : base.switch,
+  };
 }
 
 /**

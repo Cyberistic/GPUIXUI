@@ -44,6 +44,8 @@ import { stillTransition } from "../core/motion.js";
 import {
   switchTargetStyle,
   switchThumbInset,
+  switchThumbPaint,
+  switchTrackPaint,
   type SelectionAccent,
   type SelectionSpec,
 } from "../core/selection.js";
@@ -162,12 +164,17 @@ export const renderSwitchThumb = (
     theme,
   ).style;
   const style = mergeStyle(
-    {
-      ...thumb,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
+    mergeStyle(
+      {
+        ...thumb,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      },
+      // A platform's own knob paint is a colour, not a class: the recipe's
+      // accent fill stays the resting paint for every other theme.
+      switchThumbPaint(theme),
+    ),
     props.style,
   );
   const left = P.isNumber(style.left) ? style.left : switchThumbInset(theme);
@@ -223,10 +230,13 @@ export const renderSwitch = (
     cn(switchTrackClass(spec), props.className),
     theme,
   );
+  // A platform's own switch paint replaces the accent recipe's fill, edge and
+  // pointer feedback in one declaration; a disabled track keeps suppressing it.
+  const painted = mergeStyle(resolved.style, switchTrackPaint(spec, theme));
   const drawn =
     spec.disabled === true
-      ? suppressSelectionFeedback(mergeStyle(resolved.style, resolved.disabled))
-      : resolved.style;
+      ? suppressSelectionFeedback(mergeStyle(painted, resolved.disabled))
+      : painted;
   const track = decorative(
     mergeStyle(
       drawn,

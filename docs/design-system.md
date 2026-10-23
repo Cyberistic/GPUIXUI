@@ -174,7 +174,8 @@ the library's own look, and the three platform variants are edits of it.
 That is measured rather than asserted: `theme-platform` paints one row per
 platform through `platformTheme` and reads the family, `primary` fill, `lg`
 radius and `md` control height back from the runtime (28 / 36 / 32px), with the
-base radius as its negative control (`expected 10, got 8`).
+base radius as its negative control, which read `expected 10, got 8` at the
+pre-HIG scale and reads `expected 14, got 8` now that this style's `lg` is 14.
 
 **A look is not a platform.** The four platform names are the operating systems a
 window runs on, and the persisted choice the docs toggle offers; a look is a
@@ -217,7 +218,7 @@ Density is a **theme** property, not a component prop:
 
 The default is `comfortable`; a platform style carries the preset its native
 windows use — macOS `compact`, Windows `comfortable`, GNOME `spacious`. Radius
-scales follow the same rule: macOS 4/6/10/14, Linux 4/6/9/12, Windows 4/4/8/8,
+scales follow the same rule: macOS 6/10/14/18, Linux 4/6/9/12, Windows 4/4/8/8,
 against the default 4/6/8/12.
 
 It changes control height, horizontal padding and row height only. Type sizes

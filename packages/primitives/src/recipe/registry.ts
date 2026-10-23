@@ -23,7 +23,7 @@ import { createTw } from "@gpuixui/tw";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
-import { switchThumbOffset } from "../core/selection.js";
+import { switchBox, switchThumbOffset } from "../core/selection.js";
 import { pressWash } from "../core/pointer.js";
 import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
@@ -367,15 +367,20 @@ export const recipeTw = createTw({
     // override exactly as the pre-migration `core/` resolvers did.
     "size-icon": (theme, value) => iconSide(theme, value),
     "size-dot": (theme, value) => halfIconSide(theme, value),
+    // The switch's own box, from the platform's paint and the icon step. The
+    // thumb is the box less its two insets; the track is the box whole, so a
+    // platform that declares a switch replaces both from one declaration.
     "size-thumb": (theme, value) => {
-      const side = iconSide(theme, value);
-      return side === undefined ? undefined : side - 2 * theme.spacing["2xs"];
+      const size = controlSize(value);
+      return size === undefined
+        ? undefined
+        : switchBox(size, theme).height - 2 * theme.spacing["2xs"];
     },
     "switch-track": (theme, value) => {
-      const side = iconSide(theme, value);
-      return side === undefined
-        ? undefined
-        : { width: Math.round(side * 1.75), height: side };
+      const size = controlSize(value);
+      if (size === undefined) return undefined;
+      const box = switchBox(size, theme);
+      return { width: box.width, height: box.height, borderWidth: box.border };
     },
     "switch-thumb-on": (theme, value) => {
       const size = controlSize(value);

@@ -66,8 +66,14 @@ const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   ),
 ];
 
-/** The fill a control's press paints, read off a painter's own answer. */
-const painters: ReadonlyArray<readonly [string, (theme: Theme) => string]> = [
+/**
+ * The fill a control's press paints, read off a painter's own answer. The third
+ * entry is `false` for a control that declares its own paint: a platform's
+ * switch keeps its fill under the pointer rather than washing it.
+ */
+const painters: ReadonlyArray<
+  readonly [string, (theme: Theme) => string, boolean?]
+> = [
   [
     "Button ghost",
     (theme) => buttonVariants.ghost.active(theme).backgroundColor ?? "",
@@ -95,10 +101,15 @@ const painters: ReadonlyArray<readonly [string, (theme: Theme) => string]> = [
   [
     "an empty switch",
     (theme) =>
+      // A theme whose style declares a switch paints the native toggle, which
+      // answers a press by changing state rather than by washing the track.
+      theme.switch?.off ??
       switchTrackStyle(
         { state: "unchecked", size: "md", accent: "primary" },
         theme,
-      ).active?.backgroundColor ?? "",
+      ).active?.backgroundColor ??
+      "",
+    false,
   ],
   [
     "a number field's stepper",
@@ -166,10 +177,15 @@ describe("the wash a control's press paints", () => {
   it("is the one seam every painter reads", () => {
     // A painter that asks for the raw role again would look right in every
     // style but Light · macOS, so the seam is read from each painter's own
-    // answer rather than from the recipes.
+    // answer rather than from the recipes. A platform's own switch is the one
+    // painter that declares its fill: a native toggle does not wash its track
+    // under the pointer.
     everyStyle.forEach(([name, theme]) => {
-      painters.forEach(([label, paint]) => {
-        expect(paint(theme), `${name}: ${label}`).toBe(pressWash(theme));
+      painters.forEach(([label, paint, washes = true]) => {
+        const declared = !washes && theme.switch !== undefined;
+        expect(paint(theme), `${name}: ${label}`).toBe(
+          declared ? theme.switch?.off : pressWash(theme),
+        );
       });
     });
   });

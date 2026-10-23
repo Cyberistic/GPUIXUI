@@ -28,6 +28,7 @@ import {
   systemMonoFamily,
   systemUiFont,
 } from "./platforms.js";
+import { retroStyles } from "./retro.js";
 import {
   platformAccent,
   resolveDensePlatformTheme,
@@ -36,6 +37,7 @@ import {
 import { densityPresets } from "./scale.js";
 import { textStyle } from "./styles.js";
 import {
+  applyStyle,
   darkTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
@@ -135,6 +137,86 @@ describe("platformStyles", () => {
         99,
       );
     });
+  });
+});
+
+/**
+ * The Apple style's own numbers, from the Human Interface Guidelines.
+ *
+ * These are the rules a reader can check against Apple's pages rather than the
+ * library's opinion: the corner scale, the control density, the system blue and
+ * the switch's own paint. Each is pinned, so a repaint that drifts from the HIG
+ * fails here instead of shipping as a look that only resembles macOS.
+ */
+describe("the Apple platform style", () => {
+  const darwin = platformStyles.darwin;
+
+  it("uses Apple's corner scale, a 10px control and window corner", () => {
+    expect(darwin.radius).toEqual({
+      none: 0,
+      sm: 6,
+      md: 10,
+      lg: 14,
+      xl: 18,
+      full: 9999,
+    });
+  });
+
+  it("sits on the 28px compact control, 24/28/32 with 6/8/10 padding", () => {
+    const density = densityPresets[darwin.density];
+
+    expect(darwin.density).toBe("compact");
+    expect(density.controlHeight).toEqual({ sm: 24, md: 28, lg: 32 });
+    expect(density.controlPaddingX).toEqual({ sm: 6, md: 8, lg: 10 });
+  });
+
+  it("paints the system blue, deepening light only where a label must read", () => {
+    // `#0A84FF` is Apple's dark system blue, and carries its own dark label.
+    expect(darwin.colors.dark.primary).toBe("#0A84FF");
+    // `#007AFF` with a white label measures 4.02:1 — under the 4.5:1 the
+    // library's own contract puts under text on a coloured fill. The light fill
+    // is the measured step; the deviation is this test's premise, not a drift.
+    expect(contrastRatio("#FFFFFF", "#007AFF")).toBeLessThan(
+      contrastFloors.secondary,
+    );
+    expect(darwin.colors.light.primary).toBe("#0A6CD6");
+    expect(
+      contrastRatio("#FFFFFF", darwin.colors.light.primary),
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+  });
+
+  it("switches green on and grey off, which the accent cannot derive", () => {
+    expect(darwin.switch).toEqual({
+      light: { on: "#34C759", off: "#E9E9EA", knob: "#FFFFFF" },
+      dark: { on: "#30D158", off: "#39393D", knob: "#FFFFFF" },
+    });
+    // The resolved theme carries the mode's half, and a high-contrast base —
+    // which keeps its own palette — keeps the library's switch too.
+    expect(platformTheme(lightTheme, "darwin").switch).toEqual(
+      darwin.switch?.light,
+    );
+    expect(platformTheme(darkTheme, "darwin").switch).toEqual(
+      darwin.switch?.dark,
+    );
+    expect(platformTheme(highContrastLightTheme, "darwin").switch).toBe(
+      undefined,
+    );
+    // Windows and Linux paint the accent switch: the HIG's green is Apple's.
+    styled
+      .filter((platform) => platform !== "darwin")
+      .forEach((platform) => {
+        expect(platformStyles[platform].switch, platform).toBeUndefined();
+      });
+  });
+
+  it("clears the switch when an authored look is applied over the platform", () => {
+    // Luna recolours the chrome; leaving Apple's green toggle in its window
+    // would paint a control the look does not ship.
+    const luna = applyStyle(
+      platformTheme(lightTheme, "darwin"),
+      retroStyles.luna,
+    );
+    expect(luna.switch).toBeUndefined();
   });
 });
 

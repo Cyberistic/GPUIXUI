@@ -13,7 +13,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Icon } from "@gpuixui/icons";
-import { targetSize } from "@gpuixui/tokens";
+import { platformTheme, targetSize, themes } from "@gpuixui/tokens";
 import { switchThumbInset, switchThumbTravel } from "../core/selection.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -329,5 +329,50 @@ describe("a switch's address and help", () => {
     expect(expectSome(hostProp(element, "aria-description"))).toBe(
       "Sends a digest every morning.",
     );
+  });
+});
+
+/**
+ * The Apple platform's switch.
+ *
+ * The bug this guards: a theme whose style declares the platform's own switch
+ * (Apple's green on, grey off) still drew the library's icon-derived pill, so
+ * macOS shipped a 28×16 accent toggle in a theme that names a 51×31 native one.
+ * The paint and the box come from the one declaration, and the knob's travel
+ * stays the track width less the knob and its two insets.
+ */
+describe("Switch under the Apple platform", () => {
+  const apple = platformTheme(themes.light, "darwin");
+
+  it("draws the 51×31 track with a 27pt knob and no edge", () => {
+    const element = renderSwitch({}, apple, checked(false), idle, vi.fn());
+    const track = trackOf(element);
+    const thumb = thumbOf(element);
+
+    expect(numberAt(track, "width")).toBe(51);
+    expect(numberAt(track, "height")).toBe(31);
+    expect(numberAt(track, "borderWidth")).toBe(0);
+    expect(expectSome(hostStyleString(track, "backgroundColor"))).toBe(
+      apple.switch?.off,
+    );
+    expect(numberAt(thumb, "width")).toBe(27);
+    expect(styleOf(thumb)["backgroundColor"]).toBe(apple.switch?.knob);
+  });
+
+  it("paints the platform's green when on, and lands the knob at the far edge", () => {
+    const element = renderSwitch(
+      { checked: true },
+      apple,
+      checked(true),
+      idle,
+      vi.fn(),
+    );
+    const thumb = thumbOf(element);
+
+    expect(
+      expectSome(hostStyleString(trackOf(element), "backgroundColor")),
+    ).toBe(apple.switch?.on);
+    // 51 − 27 − 2 × 2 = 22, the same two-point inset at both ends.
+    expect(animatedLeft(thumb)).toBe(22);
   });
 });

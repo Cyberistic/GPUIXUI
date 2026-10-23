@@ -520,6 +520,16 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
 }
 
+/* A macOS control: 28pt tall (density compact), a 10px corner (`radius.md`) and
+   the 13pt SF control label the preview already paints. The other platforms'
+   previews add a step to `--radius`; Apple's control takes the token itself, as
+   the primitives do. Hover and focus move paint only — never an edge or a
+   padding — so the box cannot shift under the pointer. */
+.gx-demo[data-platform="darwin"] .gx-btn,
+.gx-demo[data-platform="darwin"] .gx-field {
+  border-radius: var(--radius);
+}
+
 .gx-dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -3060,11 +3070,11 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: calc(var(--icon-size-md) * 1.75);
-  height: var(--icon-size-md);
+  width: var(--switch-track-width, calc(var(--icon-size-md) * 1.75));
+  height: var(--switch-track-height, var(--icon-size-md));
   border: 1px solid var(--border-strong);
   border-radius: 9999px;
-  background: var(--muted);
+  background: var(--switch-off, var(--muted));
   pointer-events: none;
 }
 
@@ -3083,17 +3093,17 @@
 }
 
 .gx-switch[data-state="unchecked"]:not([data-disabled]):hover .gx-switch-track {
-  background: var(--hover);
+  background: var(--switch-off, var(--hover));
 }
 
 .gx-switch[data-state="unchecked"]:not([data-disabled]):active
   .gx-switch-track {
-  background: var(--active);
+  background: var(--switch-off, var(--active));
 }
 
 .gx-switch-track[data-state="checked"] {
   border-color: transparent;
-  background: var(--primary);
+  background: var(--switch-on, var(--primary));
 }
 
 .gx-switch[data-accent="destructive"] .gx-switch-track[data-state="checked"] {
@@ -3101,11 +3111,11 @@
 }
 
 .gx-switch[data-state="checked"]:not([data-disabled]):hover .gx-switch-track {
-  background: var(--primary-hover);
+  background: var(--switch-on, var(--primary-hover));
 }
 
 .gx-switch[data-state="checked"]:not([data-disabled]):active .gx-switch-track {
-  background: var(--primary-pressed);
+  background: var(--switch-on, var(--primary-pressed));
 }
 
 .gx-switch[data-accent="destructive"][data-state="checked"]:not(
@@ -3129,11 +3139,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(var(--icon-size-md) - 4px);
-  height: calc(var(--icon-size-md) - 4px);
+  width: var(--switch-knob-size, calc(var(--icon-size-md) - 4px));
+  height: var(--switch-knob-size, calc(var(--icon-size-md) - 4px));
   border-radius: 9999px;
-  background: var(--foreground);
+  background: var(--switch-knob, var(--foreground));
   color: var(--background);
+  box-shadow: var(--switch-knob-shadow, none);
   pointer-events: none;
   transition: left 150ms ease-out;
 }
@@ -3149,8 +3160,10 @@
 }
 
 .gx-switch-track[data-state="checked"] .gx-switch-thumb {
-  left: calc(100% - (var(--icon-size-md) - 4px) - 2px);
-  background: var(--primary-foreground);
+  left: calc(
+    100% - var(--switch-knob-size, calc(var(--icon-size-md) - 4px)) - 2px
+  );
+  background: var(--switch-knob, var(--primary-foreground));
   color: var(--primary);
 }
 
@@ -3176,6 +3189,28 @@
 .gx-switch-glyph {
   font-size: 8px;
   line-height: 1;
+}
+
+/* Apple's switch: 51×31pt with a 27pt knob at a 2pt inset and no edge, green on
+   and grey off. The colours ride the bridge from `platformStyles.darwin.switch`
+   (`--switch-on`, `--switch-off`, `--switch-knob`); the box is the one value a
+   theme does not carry. Only `md` takes it: the HIG publishes one switch, so
+   `sm` and `lg` keep the library's derived steps. The knob's lift is the
+   theme's `elevation.sm`, which the primitive paints too. */
+.gx-demo[data-platform="darwin"] .gx-switch {
+  --switch-track-width: 51px;
+  --switch-track-height: 31px;
+  --switch-knob-size: 27px;
+}
+
+.gx-demo[data-platform="darwin"] .gx-switch[data-size="md"] .gx-switch-track {
+  border-width: 0;
+}
+
+.gx-demo[data-platform="darwin"]
+  .gx-switch[data-invalid]
+  .gx-switch-track[data-state="unchecked"] {
+  background: var(--destructive);
 }
 
 /* ---- tooltip: mirrors primitives/src/components/Tooltip.tsx's recipe ----
