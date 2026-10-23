@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 184/184
+`[x]` `[██████████]` 185/185
 
 `[x]` Record a **followed palette only once the change was delivered** — `watchSystemTheme` stored a palette's key before calling `onChange`, so a callback that threw (a render error at the boundary) left the poll believing the theme had been applied: the next tick read the same file, matched the key and returned, and the window kept the previous palette until the desktop moved again — no further attempt, nothing reported. The key is written after `onChange` returns now; the defect still reaches the caller (the seam does not swallow it) and the next tick offers the same palette again. `system-theme.test.ts` gains `offers a palette again when the change that delivered it threw` (the callback throws once, the next tick re-applies) and `teaches that a change is recorded only once it was delivered` (both pages); directions measured: restoring the write-before-delivery fails the retry case by name (`expected [ … ] to have a length of 2 but got 1`). Docs in `docs/tokens.md` §Following a change and the package README.
 
