@@ -56,17 +56,22 @@ The mark is not written by hand: the verdict comes from the `COMPONENTS.md` row 
 
 | Section | What it answers |
 | ------- | --------------- |
+| preview | the states at a glance — a browser drawing, labelled as one |
 | Installation | the `nub` and manual install, and the copyable source |
 | Usage | a realistic snippet, not a prop dump |
-| Variants / Sizes / States | the table of choices and the roles behind them |
-| Composition | which parts exist, which are required, and what to use instead |
-| Keyboard | the keys the component handles, and what they do |
+| Composition | the parts, which are required, and what to use instead |
 | API reference | every prop, its type, its default and its consequence |
-| Theming | which token roles it reads, and what a theme change repaints |
-| Accessibility and limitations | the role and name, and every attribute or behaviour the runtime does not provide |
-| Dependencies | the packages it needs, and why |
-| Related | what to use instead, or alongside |
-| Status | `done` or `partial`, with the runtime evidence |
+| Limitations | the role and name it publishes, and what the runtime does not provide |
+| Status | `done` or `partial`, with the runtime evidence (generated) |
+| Dependencies | the workspace packages the component imports (generated) |
+| Related | what to use instead, or alongside (generated) |
+
+A section that does not apply is left out rather than faked: a leaf component has
+no Composition, and a page whose runtime facts are all measured elsewhere still
+states its own limits. The facts a page does not repeat are shared:
+[Accessibility](/docs/accessibility) carries the runtime's ARIA budget and the
+pressable-target floors, and [Theming](/docs/theming) carries the token roles and
+the platform switch.
 
 ## The platform looks
 

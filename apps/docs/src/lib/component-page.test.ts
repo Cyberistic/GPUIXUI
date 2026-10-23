@@ -801,4 +801,34 @@ describe("the component section index", () => {
     );
     expect(index).toContain("<code>{playgroundCommand}</code>");
   });
+
+  it("teaches only the sections a page can actually have", () => {
+    // The index described a page from memory — Variants / Sizes / States,
+    // Keyboard, Theming, "Accessibility and limitations" — while the template
+    // the pages follow has none of those headings, so a reader arrived at
+    // Button looking for a Keyboard section that no page carries. The rows are
+    // the policy's own section names plus the three generated strips, held to
+    // the template table rather than to this comment.
+    const generated = ["Status", "Dependencies", "Related"] as const;
+    const allowed = [
+      ...policySections().filter((section) => section !== "frontmatter"),
+      ...generated,
+    ];
+    const index = source("index.mdx");
+    const start = index.indexOf("## How to read a page");
+    const end = index.indexOf("\n## ", start + 1);
+    const taught = index
+      .slice(start, end === -1 ? undefined : end)
+      .split("\n")
+      .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
+      .slice(1)
+      .map((line) => line.replace(/^\|/, "").split("|")[0]?.trim() ?? "")
+      .filter((label) => label !== "");
+
+    expect(taught.length).toBeGreaterThanOrEqual(6);
+    expect(taught.filter((label) => !allowed.includes(label))).toEqual([]);
+    // The template's own name, not the old invented one.
+    expect(taught).toContain("Limitations");
+    expect(taught).not.toContain("Accessibility and limitations");
+  });
 });

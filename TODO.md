@@ -10377,7 +10377,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 311/312
+`[ ]` `[█████████░]` 312/313
+
+`[x]` Stop the **component index teaching sections the pages do not have** — its
+      "How to read a page" table was written from memory and read as a promise:
+      it listed *Variants / Sizes / States*, *Keyboard*, *Theming*,
+      *Accessibility and limitations* and *Dependencies*, while the curated
+      template in `docs/preview-strategy.md` defines only preview, Installation,
+      Usage, Composition, API reference and Limitations (plus the generated
+      Status, Dependencies and Related strips). A reader arriving from the grid
+      at `/docs/components/button` looked for a Keyboard section no page carries.
+      The table now uses the template's own names, marks the three generated
+      strips, says an inapplicable section is omitted rather than faked, and
+      points the runtime-wide facts at `/docs/accessibility` and `/docs/theming`
+      instead of implying every page restates them. `component-page.test.ts`
+      gains `teaches only the sections a page can actually have`: it parses the
+      policy's template table and requires every row the index teaches to be one
+      of those names or a generated strip, with `Limitations` present and the
+      invented `Accessibility and limitations` refused. Direction measured:
+      renaming the row back fails the case by name; restored, the file is 15/15
+      and the docs suite **137 files / 1 176 tests** green with `check-types`
+      clean. No native scenario applies — a docs page and its guard have no
+      runtime path.
 
 `[x]` Publish the **companion playground's catalogue**, generated from its three
       registries — the preview policy calls the native playground the runtime half
