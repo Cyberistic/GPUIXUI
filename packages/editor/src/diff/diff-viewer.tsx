@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import {
   statusTone,
@@ -29,6 +30,9 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { diffStrings, numberDiff, splitPairs, type DiffRow } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
+
+/** The name a blank `label` falls back to. */
+const DIFF_NAME = "Diff";
 
 /** The viewer's resting surface. */
 const DIFF_ROOT =
@@ -52,7 +56,7 @@ export interface DiffViewerProps {
   readonly mode?: DiffMode;
   /** Number the rows on both sides. Default `true`. */
   readonly lineNumbers?: boolean;
-  /** The accessible name. Default `"Diff"`. */
+  /** The accessible name. Default `"Diff"`; a blank name reads as the default. */
   readonly label?: string;
   /** A Tailwind class string for the surface, joined after the recipe so it wins. */
   readonly className?: string;
@@ -109,12 +113,16 @@ export const DiffViewer = ({
   after,
   mode = "unified",
   lineNumbers = true,
-  label = "Diff",
+  label,
   className,
   style,
   testId = "diff-viewer",
 }: DiffViewerProps) => {
   const theme = useTheme();
+  // The rows are presentational, so the group's name is the whole surface's
+  // name: a blank one would publish a silent diff (a default covers only
+  // `undefined`, and a saved or i18n label arrives empty).
+  const name = accessibleName(label) ?? DIFF_NAME;
   const metrics = textStyle(theme, "codeBlock");
   const rows = numberDiff(diffStrings(before, after));
   const changed = Arr.some(rows, (row) => row.kind !== "context");
@@ -124,7 +132,7 @@ export const DiffViewer = ({
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={name}
       aria-description={changed ? "Changes were found" : "No changes"}
       testId={testId}
       style={mergeStyles(

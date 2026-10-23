@@ -156,6 +156,40 @@ describe("SearchReplace", () => {
     search.unmount();
   });
 
+  it("reads a blank name as the default, never an unnamed control", () => {
+    // The bug guarded: a destructuring default covers only `undefined`, so a
+    // name a table or a saved record handed over blank reached `aria-label`
+    // untouched — the two fields announced nothing and the four actions were
+    // named by their arrow glyph or by no words at all.
+    const search = render(
+      <SearchReplace
+        value="cat cat"
+        onValueChange={() => undefined}
+        findLabel=""
+        replaceFieldLabel="   "
+        replaceLabel=""
+        replaceAllLabel="  "
+        nextLabel=""
+        previousLabel="   "
+      />,
+    );
+    const nameOf = (testId: string): unknown =>
+      search.renderer.findByTestId(testId)?.customProps?.["aria-label"];
+    expect(nameOf("search-replace-find")).toBe("Find");
+    expect(nameOf("search-replace-replace")).toBe("Replace with");
+    const actions = Object.values(
+      search.renderer.getA11yTree().nodes ?? {},
+    ).flatMap((node) =>
+      node.aria?.role === "Button" && node.aria.label !== undefined
+        ? [node.aria.label]
+        : [],
+    );
+    ["Previous match", "Next match", "Replace", "Replace all"].forEach((name) =>
+      expect(actions).toContain(name),
+    );
+    search.unmount();
+  });
+
   it("replaces the active match with the replacement field's text", () => {
     const changes: string[] = [];
     const search = render(

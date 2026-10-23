@@ -21,10 +21,10 @@ import { SearchReplace } from "@gpuixui/editor";
 | `onValueChange` | `(value: string) => void` | — | Reports a single replace and a replace-all. |
 | `placeholder` | `string` | `"Find"` | The find field's hint. |
 | `replacePlaceholder` | `string` | `"Replace with"` | The replacement field's hint. |
-| `findLabel` | `string` | `"Find"` | The find field's accessible name. |
-| `replaceFieldLabel` | `string` | `"Replace with"` | The replacement field's accessible name. |
-| `replaceLabel` / `replaceAllLabel` | `string` | `"Replace"` / `"Replace all"` | The actions' names. |
-| `nextLabel` / `previousLabel` | `string` | `"Next match"` / `"Previous match"` | The navigation names. |
+| `findLabel` | `string` | `"Find"` | The find field's accessible name; a blank name reads as the default. |
+| `replaceFieldLabel` | `string` | `"Replace with"` | The replacement field's accessible name; a blank name reads as the default. |
+| `replaceLabel` / `replaceAllLabel` | `string` | `"Replace"` / `"Replace all"` | The actions' names; a blank one reads as its default. |
+| `nextLabel` / `previousLabel` | `string` | `"Next match"` / `"Previous match"` | The navigation names; a blank one reads as its default. |
 | `disabled` | `boolean` | `false` | Refuse every route, `F3` included: a read-only host still receives keys. |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `testId` | `string` | `"search-replace"` | The address an automation host locates the bar by; its parts append their own suffix. |
@@ -54,3 +54,7 @@ occurrence the rule rejects is still found.
 - **A disabled bar is inert**: fields, toggles and actions disable, and `F3` no
   longer steps the match — the field is read-only, not silent, so the key handler
   refuses it. `src/behaviour/search-replace.test.tsx` holds the reading.
+- **A blank name reads as its default**: the two fields and the four actions are
+  copy from an i18n table or a saved record as often as literals, so an empty or
+  whitespace-only name is an absence — never an unnamed control — and a name
+  given is trimmed.

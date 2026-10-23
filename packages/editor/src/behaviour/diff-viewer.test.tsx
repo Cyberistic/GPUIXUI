@@ -79,6 +79,19 @@ describe("DiffViewer in split mode", () => {
     expect(root.renderer.findByTestId("diff-viewer-row-3")).toBeUndefined();
   });
 
+  it("names the surface when the stored label is blank", () => {
+    // The bug guarded: the rows are presentational, so the group's name is the
+    // whole surface's name — a blank label published a silent diff, while a
+    // default covers only `undefined`.
+    const root = render(
+      <DiffViewer before={"alpha"} after={"beta"} label="   " />,
+    );
+    expect(
+      root.renderer.findByTestId("diff-viewer")?.customProps?.["aria-label"],
+    ).toBe("Diff");
+    root.unmount();
+  });
+
   it("leaves the side blank when a run only adds lines", () => {
     const root = render(
       <DiffViewer

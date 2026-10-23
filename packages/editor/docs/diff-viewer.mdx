@@ -21,7 +21,7 @@ import { DiffViewer } from "@gpuixui/editor";
 | `after` | `string` | — | The after source. |
 | `mode` | `"unified" \| "split"` | `"unified"` | One merged column, or two. |
 | `lineNumbers` | `boolean` | `true` | Number the rows on both sides. |
-| `label` | `string` | `"Diff"` | The accessible name. |
+| `label` | `string` | `"Diff"` | The accessible name; a blank name reads as the default (the rows are presentational, so this is the whole surface's name). |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `style` | `StateStyle<DiffViewerState>` | — | The surface, or a function of `{ changed }`. |
 | `testId` | `string` | `"diff-viewer"` | The address an automation host locates the diff by; each pair appends `-row-<index>`. |
@@ -39,3 +39,4 @@ pair with themselves and keep both line numbers.
 - **`O(n·m)` time and space.** The LCS table is the size of the two files, so very large files are slow.
 - **No word-level diff.** A changed line is a whole line, not the words inside it.
 - **The diff text is presentational.** The rows are `role="presentation"` runs, so a reader hears whether anything changed, not the diffed text itself.
+- **A blank `label` reads as `"Diff"`.** The rows carry no words of their own, so the group's name is the whole surface's name: an empty or whitespace-only one from a table or a saved record is an absence, not a silent diff.

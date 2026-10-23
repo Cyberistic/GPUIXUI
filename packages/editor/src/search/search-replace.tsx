@@ -16,7 +16,7 @@
  */
 
 import type { KeyEvent } from "@gpuix/react";
-import { Button, Input, Toggle } from "@gpuixui/primitives";
+import { accessibleName, Button, Input, Toggle } from "@gpuixui/primitives";
 import { cn } from "@gpuixui/tw";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
@@ -26,6 +26,14 @@ import { recipeStyle } from "../internal/recipe.js";
 
 /** The bar's resting surface. */
 const SEARCH_ROOT = "flex flex-row items-center gap-2 flex-wrap";
+
+/** The names a blank prop falls back to — the documented defaults. */
+const FIND_NAME = "Find";
+const REPLACE_FIELD_NAME = "Replace with";
+const REPLACE_NAME = "Replace";
+const REPLACE_ALL_NAME = "Replace all";
+const NEXT_NAME = "Next match";
+const PREVIOUS_NAME = "Previous match";
 
 /** {@link SearchReplace} props. */
 export interface SearchReplaceProps {
@@ -37,17 +45,17 @@ export interface SearchReplaceProps {
   readonly placeholder?: string;
   /** The replacement field's placeholder. Default `"Replace with"`. */
   readonly replacePlaceholder?: string;
-  /** The find field's accessible name. Default `"Find"`. */
+  /** The find field's accessible name. Default `"Find"`; a blank name reads as the default. */
   readonly findLabel?: string;
-  /** The replacement field's accessible name. Default `"Replace with"`. */
+  /** The replacement field's accessible name. Default `"Replace with"`; a blank name reads as the default. */
   readonly replaceFieldLabel?: string;
-  /** The replace action's name. Default `"Replace"`. */
+  /** The replace action's name. Default `"Replace"`; a blank name reads as the default. */
   readonly replaceLabel?: string;
-  /** The replace-all action's name. Default `"Replace all"`. */
+  /** The replace-all action's name. Default `"Replace all"`; a blank name reads as the default. */
   readonly replaceAllLabel?: string;
-  /** The next-match action's name. Default `"Next match"`. */
+  /** The next-match action's name. Default `"Next match"`; a blank name reads as the default. */
   readonly nextLabel?: string;
-  /** The previous-match action's name. Default `"Previous match"`. */
+  /** The previous-match action's name. Default `"Previous match"`; a blank name reads as the default. */
   readonly previousLabel?: string;
   /** Refuse every route, key included: a read-only host still receives keys. */
   readonly disabled?: boolean;
@@ -68,17 +76,27 @@ export const SearchReplace = ({
   onValueChange,
   placeholder = "Find",
   replacePlaceholder = "Replace with",
-  findLabel = "Find",
-  replaceFieldLabel = "Replace with",
-  replaceLabel = "Replace",
-  replaceAllLabel = "Replace all",
-  nextLabel = "Next match",
-  previousLabel = "Previous match",
+  findLabel,
+  replaceFieldLabel,
+  replaceLabel,
+  replaceAllLabel,
+  nextLabel,
+  previousLabel,
   disabled = false,
   className,
   testId = "search-replace",
 }: SearchReplaceProps) => {
   const theme = useTheme();
+  // A name is copy from an i18n table or a saved record as often as a literal,
+  // and a destructuring default covers only `undefined`: a blank one published
+  // an unnamed field or an action named by its arrow glyph.
+  const findName = accessibleName(findLabel) ?? FIND_NAME;
+  const replaceFieldName =
+    accessibleName(replaceFieldLabel) ?? REPLACE_FIELD_NAME;
+  const replaceName = accessibleName(replaceLabel) ?? REPLACE_NAME;
+  const replaceAllName = accessibleName(replaceAllLabel) ?? REPLACE_ALL_NAME;
+  const nextName = accessibleName(nextLabel) ?? NEXT_NAME;
+  const previousName = accessibleName(previousLabel) ?? PREVIOUS_NAME;
   const [query, setQuery] = useState("");
   const [replacement, setReplacement] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -125,7 +143,7 @@ export const SearchReplace = ({
         onValueChange={setQuery}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        label={findLabel}
+        label={findName}
         disabled={disabled}
         testId={`${testId}-find`}
         style={{ flexGrow: 1 }}
@@ -160,7 +178,7 @@ export const SearchReplace = ({
       <Button
         variant="outline"
         size="sm"
-        label={previousLabel}
+        label={previousName}
         disabled={disabled || count === 0}
         onActivate={() => go(-1)}
       >
@@ -169,7 +187,7 @@ export const SearchReplace = ({
       <Button
         variant="outline"
         size="sm"
-        label={nextLabel}
+        label={nextName}
         disabled={disabled || count === 0}
         onActivate={() => go(1)}
       >
@@ -180,7 +198,7 @@ export const SearchReplace = ({
         onValueChange={setReplacement}
         onKeyDown={onKeyDown}
         placeholder={replacePlaceholder}
-        label={replaceFieldLabel}
+        label={replaceFieldName}
         disabled={disabled}
         testId={`${testId}-replace`}
         style={{ flexGrow: 1 }}
@@ -188,22 +206,22 @@ export const SearchReplace = ({
       <Button
         variant="secondary"
         size="sm"
-        label={replaceLabel}
+        label={replaceName}
         disabled={disabled || count === 0}
         testId={`${testId}-replace-one`}
         onActivate={replaceOne}
       >
-        {replaceLabel}
+        {replaceName}
       </Button>
       <Button
         variant="outline"
         size="sm"
-        label={replaceAllLabel}
+        label={replaceAllName}
         disabled={disabled || count === 0}
         testId={`${testId}-replace-all`}
         onActivate={replaceEvery}
       >
-        {replaceAllLabel}
+        {replaceAllName}
       </Button>
     </div>
   );
