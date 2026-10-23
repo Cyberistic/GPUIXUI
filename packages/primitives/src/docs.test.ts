@@ -580,6 +580,74 @@ describe("the primitives docs page contract", () => {
     ).toEqual([]);
   });
 
+  it("says what a press on the words does to the control beside them", () => {
+    // The bug guarded: `Label` gained `target`, so a press on the words focuses
+    // the control — and both box pages still called the visible label "text
+    // only", which after that change reads as inert. The other direction is
+    // just as wrong: the runtime publishes no press verb for another element,
+    // so a page must not promise that the words toggle the box either. The
+    // truth is focus-only, and a row whose words toggle is the group's row.
+    const limitationsOf = (page: string): string =>
+      Option.getOrElse(bodyOf(read(page), "Limitations"), () => "");
+    const checkbox = limitationsOf("checkbox.mdx");
+    expect(checkbox).toContain("`Label target`");
+    expect(checkbox).toContain("CheckboxGroup");
+    expect(checkbox).not.toMatch(/visible\s+text only/);
+    const toggle = limitationsOf("switch.mdx");
+    expect(toggle).toContain("`Label target`");
+    expect(toggle).not.toMatch(/paints text only/);
+    const label = limitationsOf("label.mdx");
+    expect(label).toContain("does not activate");
+    expect(label).toContain("CheckboxGroup");
+
+    // The premise, read off the painter: the press is `focusElement` and
+    // nothing else. A label that learned to activate its target would make both
+    // pages wrong in the other direction.
+    const source = readFileSync(
+      fileURLToPath(new URL("src/components/Label.tsx", packageRoot)),
+      "utf8",
+    );
+    expect(source).toContain("renderer.focusElement?.(instance.id)");
+    expect(source).not.toMatch(/\bdispatch\b|\.activate\b|\.toggle\b/);
+  });
+
+  it("moves the one floating tip on the house timing, and says so", () => {
+    // The bug guarded: `Tooltip` rendered the runtime's content with no
+    // `motion`, so a tip appeared at rest beside every popover, menu and preview
+    // card that fades. The seam is in `core/presence.ts` (the frames and the
+    // hold), `Tooltip` composes it, and the page teaches what the reader will
+    // see — so a page that stops naming the timing, a painter that stops using
+    // the seam, or a manifest that drops the timing package all fail here.
+    const page = read("tooltip.mdx");
+    const motion = Option.getOrElse(bodyOf(page, "Motion"), () => "");
+    expect(motion).toContain("motionLevels.fast");
+    expect(motion).toContain("160");
+    expect(motion).toContain("`reducedMotion`");
+    expect(page).toContain("| `reducedMotion` |");
+    const sourceOf = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8");
+    expect(sourceOf("src/core/presence.ts")).toContain('motionTiming("fast"');
+    const tooltip = sourceOf("src/components/Tooltip.tsx");
+    expect(tooltip).toContain("surfaceMotion(");
+    expect(tooltip).toContain("useHeldOpen(");
+    expect(sourceOf("package.json")).toContain(
+      '"@gpuixui/motion": "workspace:*"',
+    );
+    // The record a reader finds without the page says the tip is not static
+    // either, and names the seam's suite.
+    const row = Arr.findFirst(
+      inventory,
+      (record) => record.name === "Tooltips",
+    );
+    const record = Option.getOrElse(row, () =>
+      expect.fail("the inventory carries no Tooltips record"),
+    );
+    expect(
+      Arr.some(record.limitations, Str.includes("motionLevels.fast")),
+    ).toBe(true);
+    expect(record.tests).toContain("src/core/presence.test.ts");
+  });
+
   Arr.forEach(contract, ({ it: title, check }) => {
     it(title, () => {
       expect(Arr.flatMap(pages, (page) => problemsFor(page, check))).toEqual(

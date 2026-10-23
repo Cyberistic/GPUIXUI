@@ -63,7 +63,9 @@ import { Switch } from "@gpuixui/primitives";
 ## Limitations
 
 - No `aria-checked`: the state is announced through `aria-valuetext`.
-- A visible `Label` paints text only; it does not name the switch. Pass `label`
-  or `labelledBy(name)`.
+- A visible `Label` is not associated with the switch — pass `label` or
+  `labelledBy(name)` — and a press on those words focuses the switch
+  (`Label target`) rather than flipping it; the switch's own target is the
+  control, because the runtime publishes no press verb for another element.
 - No loading or pending state; disable it while a request is in flight.
 - The slide is 150ms; `reducedMotion` lands the thumb.

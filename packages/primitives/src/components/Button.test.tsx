@@ -187,8 +187,9 @@ describe("Button", () => {
     // content strips a control rests on and passes there, but the documented
     // place for an explicit action is a list row's trailing slot, where the row
     // is wearing a wash — it measures under the 1.05:1 perceptibility floor in
-    // 32 of its 64 wash placements over the 16 styles, as low as 1.000:1 in the
-    // High contrast pair and Light · macOS hovered. A tonal action there was
+    // 36 of its 64 wash placements over the 16 styles, as low as 1.000:1 in the
+    // High contrast pair, Light · macOS and the Omarchy look's hovered fills. A
+    // tonal action there was
     // a label with no button around it. The edge is the same measured
     // `borderStrong` boundary the components package paints, held against the
     // washes it can sit on as well as the strips the pair table already names.
@@ -234,7 +235,7 @@ describe("Button", () => {
     });
 
     // The premise: no fill the palette can carry answers the washes. `secondary`
-    // is under the perceptibility floor in 32 of its 64 wash placements, and a
+    // is under the perceptibility floor in 36 of its 64 wash placements, and a
     // row's `accent` is one of them on each base theme, so "the fill is the
     // whole button" cannot hold there.
     const swallowed = Arr.flatMap(styled, ([name, theme]) =>
@@ -245,7 +246,7 @@ describe("Button", () => {
           : [],
       ),
     );
-    expect(swallowed.length).toBe(32);
+    expect(swallowed.length).toBe(36);
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       expect(
         contrastRatio(theme.colors.secondary, theme.colors.accent) ?? Infinity,

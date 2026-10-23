@@ -6493,6 +6493,41 @@ and clause).
       form example hands its first two fields' refs to both the label and the
       control, and the examples runtime suite mounts it.
 
+`[x]` `packages/primitives`: **the one floating tip was the one surface that did
+      not move** — `Tooltip` rendered `TooltipContent` with no `motion`, so a tip
+      appeared at rest beside every popover, menu and preview card that fades,
+      while the runtime's `FloatingLayer` spreads its remaining props (including
+      `motion`) onto the host `div` it paints. `@gpuixui/motion` is a dependency
+      now and `src/core/presence.ts` is the seam: `fadeFromAnchor` (the frames,
+      two pixels from the edge the tip hangs on), `surfaceTiming` (the `fast`
+      level, `easeOut` in and `easeIn` out), `exitWindowMs` (the tween plus any
+      wait), `surfaceMotion` (the frame a presence paints) and `presenceStyle`
+      (a leaving surface takes no presses). The runtime publishes **no** exit
+      lifecycle — `TooltipContent` returns nothing when closed — so the wrapper
+      owns the open state: a close flips the target to the exit frame at once and
+      releases the runtime's `open` when the window has run, which is the
+      component seam's held presence expressed through the runtime's own prop.
+      `reducedMotion` (the runtime exposes no preference, so the caller states
+      it) zeroes the duration: every frame still paints and a close unmounts at
+      once. Proof: `src/core/presence.test.ts` (8 cases: the four frames and the
+      single axis, both timings, the window, the present/leaving frame and the
+      pointer rule), `src/components/Tooltip.test.tsx` (the resolved view the
+      pure tree paints — motion, side, mounted open, handler and the leaving
+      pointer rule — and the untouched path when no view is given), and
+      `runtime/fields.runtime.test.tsx` on the real motion clock: the tip moves
+      1.5–2px into place between its first frame and `settleMotion()`, a click
+      leaves it painted in the click's frame and gone after the window, a
+      controlled close is held the same way, and `reducedMotion` lands at once.
+      Directions measured: with `motion` dropped from the tree the move case
+      fails; with the hold replaced by the wanted state the hover case and the
+      controlled close fail. `src/docs.test.ts` holds the page's `## Motion`
+      section, the API row, the seam and the dependency together. Docs:
+      `docs/tooltip.mdx` §Motion/§API/§Limitations, the `Tooltips` record and the
+      `COMPONENTS.md` row. `nub run --filter @gpuixui/primitives test`: 55 files
+      / 1 019 tests; `test:runtime`: 21 files / 302 tests; `check-types`, lint and
+      the repo formatter clean on these files. The live offset/fade read stays
+      with the playground (the interlock row above).
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21

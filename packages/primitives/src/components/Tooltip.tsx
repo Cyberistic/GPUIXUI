@@ -23,10 +23,14 @@
  * reports focus without saying how it arrived, so a mouse-opened and a
  * keyboard-opened tip would look the same.
  *
- * The open state is the runtime's unless the caller takes it: `open` makes the
- * tip paint only while it is `true`, and `onOpenChange` reports every request
- * the trigger makes in both modes, so a guided hint can be held open or opened
- * from code. `TooltipProvider` is the group timing: a toolbar gives one
+ * The open state is the caller's, or the wrapper's mirror of the trigger's own
+ * requests: `open` makes the tip paint only while it is `true`, and
+ * `onOpenChange` reports every request the trigger makes in both modes, so a
+ * guided hint can be held open or opened from code. The wrapper mirrors the
+ * runtime's state because a dismissed tip is held for its exit tween (see
+ * `core/presence.ts`); the mirror is not a second source of truth — it reports
+ * what the trigger asked for and adds only the exit window. `TooltipProvider` is
+ * the group timing: a toolbar gives one
  * `delay`/`skipDelay`/`disableHoverableContent` to every tip below it, and a
  * tip's own `delay` still wins.
  *
@@ -38,10 +42,13 @@ import {
   Fragment,
   cloneElement,
   isValidElement,
+  useEffect,
+  useLayoutEffect,
+  useState,
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { StyleDesc } from "@gpuix/react";
+import type { MotionProps, StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import {
@@ -51,6 +58,15 @@ import {
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
 import { accessibleName } from "../core/a11y.js";
+import {
+  exitWindowMs,
+  fadeFromAnchor,
+  presenceStyle,
+  surfaceMotion,
+  surfaceTiming,
+  type AnchorSide,
+  type SurfaceTiming,
+} from "../core/presence.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { tooltipClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -142,6 +158,15 @@ export interface TooltipProps {
    */
   readonly disableHoverableContent?: boolean;
   /**
+   * The reader asked for less motion. Default `false`.
+   *
+   * The runtime exposes no preference of its own, so the application owns it,
+   * exactly as it owns the theme mode: a reduced tip still paints every frame —
+   * the resting one arrives without a journey, and a close unmounts at once
+   * instead of holding the exit.
+   */
+  readonly reducedMotion?: boolean;
+  /**
    * Extra style on the tip's surface, merged after the recipe and after
    * `className`, so a caller's value is the last word.
    */
@@ -201,6 +226,25 @@ const describedTrigger = (
     : children;
 };
 
+/**
+ * What the stateful `Tooltip` decides and the pure tree paints.
+ *
+ * The presence is resolved by the component because it needs a clock and a
+ * caller-owned preference; `renderTooltip` stays pure so a suite can read the
+ * tree it produces.
+ */
+export interface TooltipView {
+  /** What the runtime paints: true from the open request until the exit ends. */
+  readonly mounted: boolean;
+  /** The resting target: true while open, false while leaving. */
+  readonly present: boolean;
+  /** Where the tip sits: away from the edge it is anchored to. */
+  readonly side: AnchorSide;
+  readonly motion: MotionProps;
+  /** Every open request the trigger makes, held or released. */
+  readonly onOpenChange: (open: boolean) => void;
+}
+
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (
   {
@@ -219,12 +263,13 @@ export const renderTooltip = (
     testId,
   }: TooltipProps,
   theme: PrimitiveTheme,
+  view?: TooltipView,
 ): ReactElement => (
   <GpuixTooltip
     delayDuration={delay}
-    open={open}
+    open={view === undefined ? open : view.mounted}
     defaultOpen={defaultOpen}
-    onOpenChange={onOpenChange}
+    onOpenChange={view === undefined ? onOpenChange : view.onOpenChange}
     disableHoverableContent={disableHoverableContent}
   >
     <TooltipTrigger asChild>
@@ -235,9 +280,13 @@ export const renderTooltip = (
       )}
     </TooltipTrigger>
     <TooltipContent
-      side={side}
+      side={view === undefined ? side : view.side}
       align={align}
-      style={tooltipStyle(theme, className, style)}
+      motion={view?.motion}
+      style={mergeStyle(
+        tooltipStyle(theme, className, style),
+        view === undefined ? undefined : presenceStyle(view.present),
+      )}
       testId={testId}
     >
       {content}
@@ -245,6 +294,61 @@ export const renderTooltip = (
   </GpuixTooltip>
 );
 
+/**
+ * How far the tip travels while it arrives, in pixels.
+ *
+ * A tip is the smallest floating surface, so its movement is the smallest: two
+ * pixels read as "it came from the trigger", where the eight a popover uses
+ * would read as a slide.
+ */
+const TOOLTIP_OFFSET = 2;
+
+/**
+ * Keep the runtime mounted for the tip's exit tween.
+ *
+ * `wanted` is the caller's or the trigger's intent. A close flips the resting
+ * frame at once — the runtime tweens to it — and the box unmounts when the exit
+ * window has run, so a leaving tip fades instead of disappearing. Re-opening
+ * during the exit keeps the same instance and retargets it.
+ */
+const useHeldOpen = (wanted: boolean, timing: SurfaceTiming): boolean => {
+  const [mounted, setMounted] = useState(wanted);
+  const windowMs = exitWindowMs(timing);
+
+  useLayoutEffect(() => {
+    if (wanted) setMounted(true);
+  }, [wanted]);
+
+  useEffect(() => {
+    if (wanted || !mounted) return;
+    if (windowMs === 0) {
+      setMounted(false);
+      return;
+    }
+    const handle = setTimeout(() => setMounted(false), windowMs);
+    return () => clearTimeout(handle);
+  }, [mounted, wanted, windowMs]);
+
+  return mounted;
+};
+
 /** A short label shown when its trigger is hovered. */
-export const Tooltip = (props: TooltipProps): ReactElement =>
-  renderTooltip(props, useTheme());
+export const Tooltip = (props: TooltipProps): ReactElement => {
+  const theme = useTheme();
+  const timing = surfaceTiming(props.reducedMotion === true);
+  const [requested, setRequested] = useState(props.defaultOpen === true);
+  const wanted = props.open ?? requested;
+  const mounted = useHeldOpen(wanted, timing);
+  const requestOpen = (next: boolean): void => {
+    props.onOpenChange?.(next);
+    if (props.open === undefined) setRequested(next);
+  };
+  const side = props.side ?? "top";
+  return renderTooltip(props, theme, {
+    mounted,
+    present: wanted,
+    side,
+    motion: surfaceMotion(fadeFromAnchor(side, TOOLTIP_OFFSET), wanted, timing),
+    onOpenChange: requestOpen,
+  });
+};

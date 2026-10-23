@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@gpuixui/icons": "workspace:*",
+    "@gpuixui/motion": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*"
   },

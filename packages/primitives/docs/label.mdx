@@ -57,6 +57,10 @@ single control to focus, or when the words sit in a legend above a group.
   `for`/`htmlFor`, so the name is written in two places when both the visible
   label and the control's name are needed. `target` moves the focus; it does not
   name the control — keep spreading `labelledBy(name)`.
+- A press moves the focus; it does not activate the control. The runtime
+  publishes no press verb for another element, so a checkbox or switch whose
+  words must toggle is a `CheckboxGroup` row, where the row itself is the
+  control.
 - A label holds the control's element, not its state. Pass `disabled` with the
   control's own boolean, or a press focuses a control that refuses every key
   (measured: without it the disabled field took the focus).

@@ -676,6 +676,9 @@ importers:
       '@gpuixui/icons':
         specifier: workspace:*
         version: link:../icons
+      '@gpuixui/motion':
+        specifier: workspace:*
+        version: link:../motion
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens

@@ -4,7 +4,9 @@ description: A short label on hover — a themed wrapper over GPUix's Tooltip.
 ---
 
 `Tooltip` reuses `@gpuix/react/tooltip` for the anchored layer, the open delay and
-dismissal, and themes the tip to the popover surface.
+dismissal, and themes the tip to the popover surface. It is the one primitive that
+floats above the page, so it also moves with the house timing — arriving from the
+edge it is anchored to, and staying painted for its exit.
 
 <ComponentPreview name="tooltip-demo" />
 
@@ -44,6 +46,7 @@ const theme = useTheme();
 | `defaultOpen` | `boolean` | `false` | starts open before any interaction |
 | `onOpenChange` | `(open: boolean) => void` | — | the state the runtime asked for |
 | `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger |
+| `reducedMotion` | `boolean` | `false` | removes the journey: the tip lands at once and unmounts at once |
 | `style` | `StyleDesc` | — | extra style on the tip's surface, merged last |
 | `className` | `string` | — | a Tailwind string joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | locator on the tip |
@@ -55,6 +58,7 @@ const theme = useTheme();
 | `delay` | `number` | `0` | milliseconds before a hovered tip opens |
 | `skipDelay` | `number` | `300` | the window in which the next tip opens with no wait |
 | `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger |
+| `reducedMotion` | `boolean` | `false` | removes the journey: the tip lands at once and unmounts at once |
 | `children` | `ReactNode` | required | the tips and triggers the timing applies to |
 
 ## Dependencies
@@ -63,6 +67,25 @@ const theme = useTheme();
 | ------- | --- |
 | `@gpuix/react/tooltip` | the anchored layer, the hover/focus wiring and dismissal, which this wrapper themes |
 | `@gpuixui/icons` | the `info` glyph in the usage snippet |
+
+## Motion
+
+A tip is the smallest floating surface, so it uses the smallest movement: a fade
+plus two pixels along the axis it is anchored to (`side`), over
+`motionLevels.fast` (160 ms) — the `easeOut` entry and the `easeIn` exit every
+other surface uses. Both frames come from `@gpuixui/motion/timing`, so a change
+to the house timing reaches the tip with no component change.
+
+**A dismissed tip keeps its box for the exit.** The runtime publishes no exit
+lifecycle (`TooltipContent` returns nothing when closed), so the wrapper holds
+the open state for the tween's window, paints the exit frame, and releases it
+when the window ends; a leaving tip takes no presses, so it cannot swallow the
+press that dismissed it. Re-opening during the exit retargets the same box.
+
+**`reducedMotion` removes the journey, not the frames.** The resting frame is
+what paints either way; a reduced close is an unmount rather than a held exit.
+The runtime exposes no preference (`docs/gpuix-capabilities.md`), so the
+application states it, exactly as it states the theme mode.
 
 ## Limitations
 

@@ -134,8 +134,16 @@ export interface Runtime {
   readonly scrollOffset: (
     testId: string,
   ) => Option.Option<{ readonly x: number; readonly y: number }>;
-  /** Run due timers and the motion clock, for the loading indicators. */
+  /** Run due timers and the test dispatcher. This is not the motion clock. */
   readonly advance: (milliseconds: number) => void;
+  /**
+   * Let a tween finish: move the motion clock and paint the settled frame.
+   *
+   * `advance` runs the dispatcher and timers, which is what a JS interval needs;
+   * the motion clock is separate, so a surface's entry or exit is settled here
+   * before its painted box is read.
+   */
+  readonly settleMotion: (milliseconds?: number) => void;
   /** Re-run the layout and paint pipeline over what is mounted. */
   readonly flush: () => void;
   /** A real hit-tested click on an element found by `all()`. */
@@ -346,6 +354,10 @@ export const createRuntime = (
           ),
         ),
       advance: (milliseconds) => renderer.advanceTime(milliseconds),
+      settleMotion: (milliseconds = 1_000) => {
+        renderer.clockFastForward(milliseconds);
+        renderer.flush();
+      },
       flush: () => renderer.flush(),
       clickElement: (element) =>
         Option.match(boundsOf(renderer, element.id), {

@@ -28,6 +28,7 @@ import {
   renderTooltipProvider,
   type TooltipProps,
   type TooltipProviderProps,
+  type TooltipView,
 } from "./Tooltip.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -245,6 +246,71 @@ describe("Tooltip theming", () => {
       children: <div tabIndex={0} />,
     });
     expect(overridden["backgroundColor"]).toBe(testTheme.colors.muted);
+  });
+});
+
+describe("Tooltip presence", () => {
+  const props: TooltipProps = {
+    content: "Revenue definition",
+    side: "right",
+    children: <div tabIndex={0} />,
+  };
+  const view: TooltipView = {
+    mounted: true,
+    present: false,
+    side: "bottom",
+    motion: {
+      initial: { opacity: 0, top: -2 },
+      animate: { opacity: 0, top: -2 },
+      transition: { duration: 0.16, ease: "easeIn" },
+    },
+    onOpenChange: () => {},
+  };
+  const rendered = renderTooltip(props, testTheme, view);
+
+  it("paints the frame the presence resolved, and nothing of its own", () => {
+    // The bug guarded: the tip carried no `motion`, so it appeared at rest
+    // beside every surface that fades. The pure tree takes the resolved view —
+    // it does not invent a timing of its own — so this case holds the exact
+    // frame, the resting target and the handler the component decided.
+    const content = contentOf(rendered);
+    expect(elementProp(content, "motion")).toStrictEqual(
+      Option.some(view.motion),
+    );
+    // The anchor is the side the view names: a leaving tip returns the way it
+    // came even if the caller changed the prop mid-flight.
+    expect(elementProp(content, "side")).toStrictEqual(Option.some(view.side));
+    expect(elementProp(rendered, "open")).toStrictEqual(
+      Option.some(view.mounted),
+    );
+    expect(elementProp(rendered, "onOpenChange")).toStrictEqual(
+      Option.some(view.onOpenChange),
+    );
+  });
+
+  it("takes no presses while the tip leaves", () => {
+    // The box is still mounted for its exit, so it would otherwise stay a press
+    // target over whatever the dismiss revealed.
+    const leaving = expectSome(
+      Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(
+        expectSome(elementProp(contentOf(rendered), "style")),
+      ),
+    );
+    expect(leaving["pointerEvents"]).toBe("none");
+    const resting = expectSome(
+      Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(
+        expectSome(elementProp(contentOf(render(props)), "style")),
+      ),
+    );
+    // No view means the pure tree the suite reads everywhere else: the tip
+    // carries no pointer rule of its own, exactly as before the seam.
+    expect(Object.hasOwn(resting, "pointerEvents")).toBe(false);
+  });
+
+  it("leaves the motion to the runtime when no view is resolved", () => {
+    const content = contentOf(render(props));
+    expect(elementProp(content, "motion")).toStrictEqual(Option.none());
+    expect(elementProp(content, "side")).toStrictEqual(Option.some("right"));
   });
 });
 

@@ -20,6 +20,7 @@ import * as Schema from "effect/Schema";
 import { createRef, useState } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
+import { motionLevels } from "@gpuixui/motion/timing";
 import { Box } from "../src/components/Box.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { IconButton } from "../src/components/IconButton.js";
@@ -1234,6 +1235,7 @@ it("opens a Tooltip on hover and dismisses it on click", async () => {
   expect(runtime.allText()).not.toContain("A hint");
   runtime.hover("target");
   expect(runtime.allText()).toContain("A hint");
+  runtime.settleMotion();
   const tip = boundsOf(runtime, "tip");
   const target = boundsOf(runtime, "target");
   expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height);
@@ -1242,6 +1244,55 @@ it("opens a Tooltip on hover and dismisses it on click", async () => {
   );
   expect(Option.getOrUndefined(fill)).toBe(testTheme.colors.popover);
   runtime.click("target");
+  // A dismissed tip keeps its box for the exit tween, so the paint is still
+  // there in the click's frame; the journey, not the state, is what is timed.
+  expect(runtime.allText()).toContain("A hint");
+  await sleep(motionLevels.fast + 40);
+  expect(runtime.allText()).not.toContain("A hint");
+});
+
+it("moves the tip from the edge it is anchored to", async () => {
+  // The gap guarded: the tip carried no `motion`, so it appeared at rest. The
+  // runtime applies the frame as a movement relative to the anchored position,
+  // which is what makes the entry readable in element bounds: a tip below its
+  // trigger starts its two pixels low and rises into place.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="bottom" testId="tip">
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  // The first painted frame is the entry: a tip below its trigger starts its
+  // two pixels low, and the motion clock is what lands it.
+  const entering = boundsOf(runtime, "tip");
+  runtime.settleMotion();
+  const resting = boundsOf(runtime, "tip");
+  expect(entering.y).toBeLessThan(resting.y);
+  expect(resting.y - entering.y).toBeLessThanOrEqual(2);
+});
+
+it("lands the tip at once when the reader asked for less motion", async () => {
+  // The preference removes the journey, not the frames: the tip still opens and
+  // still closes, but a close is an unmount rather than a held exit.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" reducedMotion testId="tip">
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("A hint");
+  runtime.click("target");
+  await sleep(10);
   expect(runtime.allText()).not.toContain("A hint");
 });
 
@@ -1333,6 +1384,7 @@ it("opens a Tooltip from the IconButton it wraps and announces its text", async 
   );
   expect(node.aria?.description).toBe("Booked revenue, net of refunds.");
   runtime.click("target");
+  await sleep(motionLevels.fast + 40);
   expect(runtime.allText()).not.toContain("Booked revenue, net of refunds.");
 });
 
@@ -1357,6 +1409,7 @@ it("opens a Tooltip from the Checkbox it wraps and announces its text", async ()
   );
   expect(node.aria?.description).toBe("Draws a grid over the canvas");
   runtime.click("target");
+  await sleep(motionLevels.fast + 40);
   expect(runtime.allText()).not.toContain("Draws a grid over the canvas");
 });
 
@@ -1380,6 +1433,7 @@ it("opens a Tooltip from the Switch it wraps and announces its text", async () =
   );
   expect(node.aria?.description).toBe("Sends a digest every morning");
   runtime.click("target");
+  await sleep(motionLevels.fast + 40);
   expect(runtime.allText()).not.toContain("Sends a digest every morning");
 });
 
@@ -1395,6 +1449,7 @@ it("keeps the Tooltip's content inside the frame it is anchored to", async () =>
     </Surface>,
   );
   runtime.hover("target");
+  runtime.settleMotion();
   const frame = boundsOf(runtime, SURFACE);
   const tip = boundsOf(runtime, "tip");
   expect(tip.x).toBeGreaterThanOrEqual(frame.x);
@@ -1431,6 +1486,9 @@ it("paints a controlled Tooltip only while its owner says open", async () => {
   expect(requests.every((next) => next === false)).toBe(true);
   expect(runtime.allText()).toContain("A hint");
   runtime.render(tree(false));
+  // The owner's close is a leave like any other: the box stays for its tween.
+  expect(runtime.allText()).toContain("A hint");
+  await sleep(motionLevels.fast + 40);
   expect(runtime.allText()).not.toContain("A hint");
 });
 
