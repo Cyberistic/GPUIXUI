@@ -293,7 +293,7 @@ duration: `docs/component-api.md` §11.
 | `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay — a keystroke by its `keystrokeId` and a press by the type, point, button and click count every handler of it shares, because the runtime rebuilds the payload per handler; the scope gives each surface its containment depth |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |
-| `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323) |
+| `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323), with a stored `side`/`align` read through the house guards (`bottom`/`start`) instead of throwing |
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
 | `src/internal/measure.ts` | the one reader of an `onLayout` box (four sides, or nothing) and of a pointer's point, for the components that measure themselves |
 | `src/internal/recipe.ts` | the one seam over `@gpuixui/tw`: compiles a class-string recipe to the resting `StyleDesc` (ADR 0006) |

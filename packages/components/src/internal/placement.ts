@@ -13,10 +13,16 @@
  * The rules here are pure: the caller measures, this module decides. They are
  * intentionally one-shot — a caller applies the result once per open so a flip
  * can never oscillate.
+ *
+ * `side` and `align` are named by the caller but can arrive from persisted UI
+ * state the library never type-checked, so every rule reads them through the
+ * house guards below: an unknown name is the house `bottom`/`start` rather than
+ * a `Match.exhaustive` that throws out of the render.
  */
 
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import { Match } from "effect";
+import * as Schema from "effect/Schema";
 
 /** A box in window coordinates, as `getElementBounds` reports it. */
 export interface FloatingBounds {
@@ -34,8 +40,17 @@ export interface WindowBounds {
 
 /** Everything the rule needs; `surface` is the already-snapped box. */
 export interface PlacementInput {
-  readonly side: FloatingSide;
-  readonly align: FloatingAlign;
+  /**
+   * The requested side. `FloatingSide` is a compile-time guarantee, but a
+   * persisted setting is not: a name the union does not carry opens the house
+   * `bottom` side instead of throwing out of the render.
+   */
+  readonly side: unknown;
+  /**
+   * The requested alignment, read the same way: an unknown name is the house
+   * `start`, never a `Match.exhaustive` failure.
+   */
+  readonly align: unknown;
   readonly trigger: FloatingBounds;
   readonly surface: FloatingBounds;
   readonly window: WindowBounds;
@@ -49,8 +64,30 @@ export interface Placement {
   readonly alignOffset: number;
 }
 
-const oppositeSide = (side: FloatingSide): FloatingSide =>
-  Match.value(side).pipe(
+/** The four sides the anchored layer paints. */
+const PlacementSide = Schema.Literals(["top", "right", "bottom", "left"]);
+
+/** The three alignments the anchored layer paints. */
+const PlacementAlign = Schema.Literals(["start", "center", "end"]);
+
+/**
+ * The side a stored choice asks for, or the house `bottom`.
+ *
+ * `side` is a prop a surface takes, and a surface can be opened with a value an
+ * application restored from persisted UI state — a value the library never
+ * type-checked. Reading it through the schema keeps that door closed: an
+ * unknown name opens the house side rather than reaching a `Match.exhaustive`
+ * that throws out of the render.
+ */
+const sideOf = (side: unknown): FloatingSide =>
+  Schema.is(PlacementSide)(side) ? side : "bottom";
+
+/** The alignment a stored choice asks for, or the house `start`. */
+const alignOf = (align: unknown): FloatingAlign =>
+  Schema.is(PlacementAlign)(align) ? align : "start";
+
+const oppositeSide = (side: unknown): FloatingSide =>
+  Match.value(sideOf(side)).pipe(
     Match.when("top", () => "bottom" as const),
     Match.when("bottom", () => "top" as const),
     Match.when("left", () => "right" as const),
@@ -59,8 +96,8 @@ const oppositeSide = (side: FloatingSide): FloatingSide =>
   );
 
 /** The room a side offers, measured from the trigger to the window edge. */
-const roomOn = (side: FloatingSide, input: PlacementInput): number =>
-  Match.value(side).pipe(
+const roomOn = (side: unknown, input: PlacementInput): number =>
+  Match.value(sideOf(side)).pipe(
     Match.when("top", () => input.trigger.y - input.margin),
     Match.when(
       "bottom",
@@ -81,8 +118,8 @@ const roomOn = (side: FloatingSide, input: PlacementInput): number =>
   );
 
 /** The surface extent that has to fit along the side's axis. */
-const extentOn = (side: FloatingSide, surface: FloatingBounds): number =>
-  Match.value(side).pipe(
+const extentOn = (side: unknown, surface: FloatingBounds): number =>
+  Match.value(sideOf(side)).pipe(
     Match.when("top", () => surface.height),
     Match.when("bottom", () => surface.height),
     Match.when("left", () => surface.width),
@@ -102,13 +139,14 @@ const overlaps = (a: FloatingBounds, b: FloatingBounds): boolean =>
  * the roomier of the two otherwise.
  */
 export const resolveSide = (input: PlacementInput): FloatingSide => {
-  if (!overlaps(input.surface, input.trigger)) return input.side;
+  const side = sideOf(input.side);
+  if (!overlaps(input.surface, input.trigger)) return side;
 
-  const opposite = oppositeSide(input.side);
+  const opposite = oppositeSide(side);
   const oppositeRoom = roomOn(opposite, input);
   if (oppositeRoom >= extentOn(opposite, input.surface)) return opposite;
 
-  return oppositeRoom > roomOn(input.side, input) ? opposite : input.side;
+  return oppositeRoom > roomOn(side, input) ? opposite : side;
 };
 
 /**
@@ -118,14 +156,14 @@ export const resolveSide = (input: PlacementInput): FloatingSide => {
  * half the difference between the trigger and the surface.
  */
 const alignOffsetOn = (
-  side: FloatingSide,
-  align: FloatingAlign,
+  side: unknown,
+  align: unknown,
   trigger: FloatingBounds,
   surface: FloatingBounds,
 ): number =>
-  Match.value(align).pipe(
+  Match.value(alignOf(align)).pipe(
     Match.when("center", () =>
-      Match.value(side).pipe(
+      Match.value(sideOf(side)).pipe(
         Match.when("top", () => (trigger.width - surface.width) / 2),
         Match.when("bottom", () => (trigger.width - surface.width) / 2),
         Match.when("left", () => (trigger.height - surface.height) / 2),
@@ -138,6 +176,28 @@ const alignOffsetOn = (
     Match.exhaustive,
   );
 
+/** The host alignment: GPUix's own `center` is not usable (see above). */
+const hostAlign = (align: FloatingAlign): "start" | "end" =>
+  align === "end" ? "end" : "start";
+
+/**
+ * The placement a surface asks for before it has been measured.
+ *
+ * A first render has no boxes yet, so it paints the requested side and a
+ * `start`/`end` alignment with no offset; `center` becomes `start` here for the
+ * same reason {@link resolvePlacement} maps it. The values are read through the
+ * house guards, so a stored name the union does not carry never reaches the
+ * anchored layer.
+ */
+export const requestedPlacement = (
+  side: unknown,
+  align: unknown,
+): Placement => ({
+  side: sideOf(side),
+  align: hostAlign(alignOf(align)),
+  alignOffset: 0,
+});
+
 /**
  * The placement to render, resolved once per open. `center` becomes `start` plus
  * an offset because the host's `center` centres on the containing block.
@@ -146,12 +206,7 @@ export const resolvePlacement = (input: PlacementInput): Placement => {
   const side = resolveSide(input);
   return {
     side,
-    align: Match.value(input.align).pipe(
-      Match.when("center", () => "start" as const),
-      Match.when("start", () => "start" as const),
-      Match.when("end", () => "end" as const),
-      Match.exhaustive,
-    ),
+    align: hostAlign(alignOf(input.align)),
     alignOffset: alignOffsetOn(side, input.align, input.trigger, input.surface),
   };
 };

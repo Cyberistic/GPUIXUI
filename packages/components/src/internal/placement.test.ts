@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  requestedPlacement,
   resolvePlacement,
   resolveSide,
   type PlacementInput,
@@ -113,6 +114,68 @@ describe("resolvePlacement", () => {
       side: "top",
       align: "start",
       alignOffset: -20,
+    });
+  });
+});
+
+/**
+ * A `side` or `align` can be a persisted setting, so it reaches these rules as a
+ * value the unions never checked. Before the house guards, the readers branched
+ * with `Match.exhaustive`: an unknown name threw `absurd` out of the render (and
+ * the unmeasured path handed it to the anchored host).
+ */
+describe("a stored placement the unions do not name", () => {
+  it("opens on the house side", () => {
+    expect(resolvePlacement(input({ side: "over" }))).toEqual({
+      side: "bottom",
+      align: "start",
+      alignOffset: 0,
+    });
+  });
+
+  it("mirrors the house side when the surface covers its trigger", () => {
+    const snapped = input({
+      side: "diagonal",
+      trigger: { x: 200, y: 730, width: 120, height: 40 },
+      surface: { x: 200, y: 712, width: 160, height: 80 },
+    });
+
+    expect(resolveSide(snapped)).toBe("top");
+  });
+
+  it("weighs the room on the house side against the other", () => {
+    const tall = input({
+      side: "diagonal",
+      trigger: { x: 200, y: 400, width: 120, height: 40 },
+      surface: { x: 200, y: 52, width: 160, height: 740 },
+    });
+
+    expect(resolveSide(tall)).toBe("top");
+  });
+
+  it("aligns host-start and shifts nothing", () => {
+    expect(resolvePlacement(input({ align: "middle" }))).toEqual({
+      side: "bottom",
+      align: "start",
+      alignOffset: 0,
+    });
+  });
+
+  it("asks for the house pair before the surface is measured", () => {
+    expect(requestedPlacement("over", "middle")).toEqual({
+      side: "bottom",
+      align: "start",
+      alignOffset: 0,
+    });
+    expect(requestedPlacement("left", "center")).toEqual({
+      side: "left",
+      align: "start",
+      alignOffset: 0,
+    });
+    expect(requestedPlacement("top", "end")).toEqual({
+      side: "top",
+      align: "end",
+      alignOffset: 0,
     });
   });
 });

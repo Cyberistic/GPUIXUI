@@ -11,7 +11,11 @@ import { useGpuix, type PublicInstance } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { resolvePlacement, type Placement } from "./placement.js";
+import {
+  requestedPlacement,
+  resolvePlacement,
+  type Placement,
+} from "./placement.js";
 
 /** What the hook needs from the open surface and its trigger. */
 export interface UsePlacementInput {
@@ -34,7 +38,9 @@ const boundsOf = (
 /**
  * The placement to render. The requested `side`/`align` are used until the first
  * measurement, then the resolved placement; closing resets the measurement so the
- * next open re-decides.
+ * next open re-decides. The requested pair goes through
+ * `requestedPlacement`, so a stored value the unions do not name is the house
+ * `bottom`/`start` before the first measurement too.
  */
 export const usePlacement = ({
   open,
@@ -72,9 +78,5 @@ export const usePlacement = ({
     );
   }, [align, key, margin, open, renderer, side, surface, trigger]);
 
-  return Option.getOrElse(placement, () => ({
-    side,
-    align,
-    alignOffset: 0,
-  }));
+  return Option.getOrElse(placement, () => requestedPlacement(side, align));
 };
