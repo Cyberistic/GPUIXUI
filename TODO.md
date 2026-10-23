@@ -10305,7 +10305,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 291/291
+`[x]` `[██████████]` 292/292
+
+`[x]` Restore the **three index guards** a merge resolution deleted — `648e90e2`
+      ("reconcile the pruned pages with the tiled index") resolved
+      `component-page.test.ts` by keeping the prune side of a conflict, which
+      removed the tiled index's three cases: every curated page in the grid, each
+      page's demo in its tile, and the verdict mark's provenance. The page and the
+      grid were unchanged and correct, so the loss was silent — a curated page the
+      index's data dropped, a tile without its demo, or a `partial` mark with no
+      explanation would have shipped unguarded. The three cases are back with the
+      same claims: `lists every curated page in the generated grid` (the
+      `componentPages` titles against the folder's frontmatter),
+      `renders each page's demo in its grid tile` (the grid's `<Scene />` and
+      `data-preview` plus the page's sentence) and `teaches the verdict mark a row
+      wears, and where it comes from` (`verdictMark` and both page sentences),
+      with the `title` helper the merge had dropped. Directions measured:
+      `.slice(1)` on `componentPages` fails
+      `expected [ 'Accordion' ] to deeply equal []`, deleting `data-preview` fails
+      by name, and dropping the page's "status strip already joins" clause or the
+      component's `verdictMark` each fail by name; restored, the file is 11/11.
 
 `[x]` Read the **Components index's filter examples** where the page writes them —
       two guards went red on the tiled index (`5cc3fa20`, reconciled by

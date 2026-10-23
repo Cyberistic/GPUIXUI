@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { componentPages } from "./component-index-data";
 
 /**
  * The component page contract.
@@ -19,6 +20,10 @@ const pages = readdirSync(dir).filter(
 
 const source = (name: string): string =>
   readFileSync(new URL(name, dir), "utf8");
+
+/** A page's frontmatter title, as the index's data reads it. */
+const title = (body: string): string =>
+  (/^title:\s*(.+)$/m.exec(body)?.[1] ?? "").trim().replace(/^["']|["']$/g, "");
 
 /** Every `##` heading on a page, in order. */
 const sections = (body: string): readonly string[] =>
@@ -194,6 +199,57 @@ describe("the component section index", () => {
 
     expect(index).toContain("<ComponentIndex />");
     expect(index).toContain("?q=partial");
+  });
+
+  it("lists every curated page in the generated grid", () => {
+    // The index listed Button, Dialog, Popover and Tabs while the Dropdown
+    // menu page shipped beside them, so a reader looking for a menu preview was
+    // told the curated set did not include one. The grid is the list now, so
+    // the guard reads the rows the site generates rather than prose that can
+    // drift: a page the index's data drops is a card no reader can reach.
+    const listed = new Set(componentPages.map((entry) => entry.title));
+
+    expect(
+      pages
+        .map((name) => title(source(name)))
+        .filter((pageTitle) => !listed.has(pageTitle)),
+    ).toEqual([]);
+  });
+
+  it("renders each page's demo in its grid tile", () => {
+    // The index offers `preview` as a query and says a page that mounts a
+    // preview renders it; a tile that dropped the demo would leave the claim
+    // false and the grid a wall of names.
+    const index = source("index.mdx");
+    const grid = readFileSync(
+      new URL("../components/docs/component-index.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(grid).toContain("<Scene />");
+    expect(grid).toContain("data-preview");
+    expect(index).toContain("renders it in its grid tile");
+    expect(index).toContain("`preview` finds");
+  });
+
+  it("teaches the verdict mark a row wears, and where it comes from", () => {
+    // The index marks the rows the inventory does not call whole; an
+    // unexplained `partial` beside a component's name reads as a docs bug, and
+    // a hand-written verdict would drift from the row the page prints.
+    const index = source("index.mdx");
+    const component = readFileSync(
+      new URL("../components/docs/component-index.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(component).toContain("verdictMark");
+    expect(index).toContain("**partial**");
+    expect(index).toContain(
+      "finds every component the runtime supports only in part",
+    );
+    expect(index).toContain(
+      "`COMPONENTS.md` row the status strip already joins",
+    );
   });
 
   it("says how to run the native component, in the note's own words", () => {
