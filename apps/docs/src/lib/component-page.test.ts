@@ -98,11 +98,12 @@ const documentedPackages = [
  *
  * `readonly` is the prop convention, the two-space form covers the shared
  * `Props` object types, and an exported declaration is what a part row
- * (`CommandMenuInput`) names.
+ * (`CommandMenuInput`) names. A name the platform spells with a hyphen is
+ * quoted at its declaration (`"aria-id"`), so the prop forms read the quotes.
  */
 const declarationForms = [
-  /^\s*readonly ([A-Za-z_][A-Za-z0-9_]*)\??:/gm,
-  /^  ([A-Za-z_][A-Za-z0-9_]*)\??:/gm,
+  /^\s*readonly "?([A-Za-z_][A-Za-z0-9_-]*)"?\??:/gm,
+  /^  "?([A-Za-z_][A-Za-z0-9_-]*)"?\??:/gm,
   /^export (?:interface|type|const|function|class) ([A-Za-z_][A-Za-z0-9_]*)/gm,
 ];
 

@@ -1663,7 +1663,7 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 150/150
+`[x]` `[██████████]` 151/151
 
 `[x]` Measure a **notification centre** the window composes — Tier 5's
       *Notification centre* row was `?` ("composition over toasts + panels"),
@@ -4872,6 +4872,43 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       the capability record is the Interlocks row below.
 
 `[x]` Report a theme that **lost the whole elevation scale** instead of throwing — the gate's absence rule named "a colour role or an elevation level", and `invalidShadowColors` read `theme.elevation[level]` with `elevation` typed required, so `auditTheme` on a theme whose `elevation` key a store dropped threw `TypeError: Cannot read properties of undefined (reading 'sm')` — the crash the level rule closed one level down — while `elevationShadow` threw on the first raised surface, `invalidNumbers` on `Object.entries(undefined)` and `invalidScales` on `elevation[level]`. Every reader now takes an optional group (`elevation?.[level]`), so an absent scale is every level missing: `invalidShadows` names all four, the decorative table reports each raised placement unmeasurable, the paint is flat, and `passed` is false — a report, because the scale is additive rather than a breaking numeric group. `incomplete.test.ts` gains `an absent elevation group` (5 cases: the four levels by name and the unmeasurable placements, the flat paint, the two numeric audits, the shipped styles whole, and both pages); directions measured: reverting the three optional reads fails three cases with the exact `TypeError`s (`reading 'sm'` twice, `Cannot convert undefined or null to object` once), green after at 49 files / 2 865 tests. Docs in `docs/tokens.md` §Paint-ready values, `docs/design-system.md` §9, the package README and the `Elevation` row. No native scenario applies — a pure report and its paint, no runtime path.
+
+`[x]` Measure **whether a collapsing sidebar's clip hides its content** — Tier
+      4's *Collapsible sidebars* row names `motion` width on an "outer clipping
+      container, not inner reflow", and every proof behind it was layout
+      arithmetic (`motion-geometry`'s sampled box, `docking-nested`'s width → 0).
+      A clipped child still **reports** its full box (`dock-focus-lifecycle` kept
+      a 12px box inside a zero-width parent), so no layout read says what the
+      glass shows: a 120pt sidebar that still paints its 240pt content covers the
+      document beside it, and a hit test that follows the paint keeps the hidden
+      half's controls taking presses. The `sidebar-clip-lifecycle` live probe
+      mounts a fixed 240pt content (a 200pt spacer and a 40pt red marker) in a
+      width-tweened box with `overflow: hidden`, over a document pane that is
+      **absolutely positioned and painted first** — laid out after the sidebar, an
+      overflowing marker is simply covered by the next sibling's fill and the
+      probe passes with no clip at all. The travelling frame is found on the
+      **motion clock** (frozen before the press, stepped 10ms until the sidebar is
+      below the marker's start) and read three ways: the marker's band crop, the
+      strips inside and outside the clip, and a press aimed at the marker's
+      centre. Measured on 0.11.0: the open clip is **240** and the marker paints;
+      a travelling frame **≤176** paints **0** of the marker in the hidden 40×160
+      band while the content still reports 240 (no inner reflow) and the strip
+      inside the clip is the content's fill; a press at the marker's centre runs
+      the **document** (`main=1`), not the marker; closed (**0**) keeps the
+      content at 240, paints no marker and routes the press to the document
+      (`main=2`); reopened paints the marker and runs it (`marker=1`). **47
+      checks**, `--only sidebar-clip-lifecycle`, green (three runs, ~9.3–11.2 s).
+      Fixture `src/live/sidebar-clip.ts` + `sidebar-clip.test.ts` (17 cases: the
+      band arithmetic at open/mid/closed, the travelling bounds, the two sample
+      sides, the probe's clip and fixed content, the document painted first, the
+      freeze-before-press route, the count and this section). Negative control
+      measured, exit `1`, restored green: dropping `overflow: "hidden"` paints
+      the whole band (25 600 red pixels at this capture's 2× scale) and fails
+      `the band the clip hides paints none of the marker over the document`
+      (`expected 0, got 25600`). Evidence: `apps/playground/README.md`
+      §`sidebar-clip-lifecycle`,
+      `.artifacts/live/sidebar-{open,mid,closed,again}.png`. Publishing it in the
+      capability record and the Tier 4 row is the Interlocks row below.
 
 ## Phase C — Tier 1–2 components
 
@@ -8180,6 +8217,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Hoist the **props reader the two page contracts share** — `packages/components/src/api.test.ts`'s `declaredTypes`/`propsOf` (a props type through `extends`, a parenthesised alias union, a local `Omit`) is the same reader `packages/primitives/src/docs.test.ts` carries: both hold a page's `## API` tables to what its source declares, so the type resolution and the brace scans now exist twice and can drift one fix at a time | testing (a test-time helper beside `createTestHost`) | open — the second copy landed with the components guard; no runtime code reads either |
 
 | Add the **address and help** `Select` now carries to the curated page — the primitive's `Select` takes `description`, `ref`, `aria-id` and `onLayout` on its trigger, so a form can focus the select it failed on, an automation host can address it, a layout can measure it and a `Label`'s help line reaches a reader (`packages/primitives/docs/select.mdx` and `runtime/address.runtime.test.tsx` hold it), while `apps/docs/content/docs/components/select.mdx`'s API table lists neither and §Accessibility says only that the name comes from `label` | docs-site (`apps/docs/content/docs/components/select.mdx`) | **resolved 2026-10-23** — the API table carries the five props it lacked (`selectedValue`, `open`, `defaultOpen`, `onOpenChange`, `description`) and the host row (`ref` / `aria-id` / `onLayout`), and §Accessibility says the trigger is the control: it carries the combobox role, the open state, the chosen words, `description` as `aria-description`, and the caller's `ref` / `aria-id` / `onLayout` on the same element, while the wrapper names nothing. §Status drops the retired "a group caption is painted but not announced" limit. `component-page-truth.test.ts` gains `documents the help and address the select's trigger carries`, which reads the primitive's package page and requires every prop it documents in the curated `## API reference` (the premise reads `description`, `ref`, `onLayout` and the quoted `aria-id`), and `component-page.test.ts`'s declaration scan reads a quoted prop (`"aria-id"?: string`) after the address row first failed it with `select.mdx: aria-id`. Directions measured: restoring the page fails the new case with `selectedValue`, `defaultOpen`, `onOpenChange`, `description`, `ref`, `onLayout`; reverting the quoted declaration form fails `select.mdx: aria-id` |
+| Publish the **sidebar clip** measurement in the capability record and the Tier 4 row — the playground's `sidebar-clip-lifecycle` (47 checks, 0.11.0) measured what the *Collapsible sidebars* row's layout evidence could not: the outer box is a real **paint and hit clip** (a travelling frame ≤176 paints none of the 240pt content's trailing 40pt band over the document, and a press at the clipped marker's centre runs the document), while the content keeps its declared 240 in every state and the hidden controls keep their **tab stops** (`dock-focus-lifecycle`), so an app guards them itself. The document is painted first in the probe, because painted after the sidebar its fill would cover the overflow and the check would pass with no clip. Negative control: dropping `overflow: "hidden"` leaks the whole band (25 600 red pixels at 2×). Evidence: `apps/playground/README.md` §`sidebar-clip-lifecycle` | docs-site (capability record + `/docs/runtime`) and components (the Tier 4 *Collapsible sidebars* row, `todo`) | open — the record has no sidebar row, the page publishes no clip measurement, and the row still rests on `motion-geometry` + `docking-nested` |
 
 ## Phase D — data and workspace components
 

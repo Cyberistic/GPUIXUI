@@ -1178,6 +1178,50 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("does not scroll the highlight");
   });
 
+  it("documents the help and address the select's trigger carries", () => {
+    // The trigger is the control: it takes `ref`, `aria-id`, `onLayout` and the
+    // announced `description`, so a form can focus the select it failed on, an
+    // automation host can address it and a layout can measure it. The package
+    // page holds its own rows to `SelectProps`; the curated page reproduced the
+    // table without them, so the one address surface a reader plans against was
+    // documented nowhere on `/docs/components/select`.
+    const select = pages.find((page) => page.file === "select.mdx");
+    expect(select, "the select page is not in the curated set").toBeDefined();
+    if (select === undefined) return;
+
+    const documented = apiSection(body(select)).replaceAll("`", "");
+    const named = (prop: string): boolean =>
+      new RegExp(`(^|[^A-Za-z0-9_$])${prop}([^A-Za-z0-9_$]|$)`).test(
+        documented,
+      );
+
+    // The premise: the package page prints the props the type declares. Its
+    // reader drops a hyphenated name, so `aria-id` is checked on its own.
+    const packageProps = propsOf(
+      read("packages/primitives/docs/select.mdx"),
+    ).props;
+    expect(packageProps.length).toBeGreaterThan(20);
+    expect(packageProps).toContain("description");
+    expect(packageProps).toContain("ref");
+    expect(packageProps).toContain("onLayout");
+    expect(read("packages/primitives/docs/select.mdx")).toContain("`aria-id`");
+
+    const gaps = packageProps.filter((prop) => !named(prop));
+    expect(gaps).toEqual([]);
+    expect(named("aria-id")).toBe(true);
+    expect(
+      read("packages/primitives/src/components/Select.tsx"),
+    ).toContain('aria-description={accessibleName(description)}');
+
+    const text = body(select).replace(/\s+/g, " ");
+    expect(text).toContain("`aria-description`");
+    expect(text).toContain("`ref`");
+    expect(text).toContain("`aria-id`");
+    expect(text).toContain("`onLayout`");
+    // The retracted status line: the group caption ships announced.
+    expect(text).not.toContain("painted but not announced");
+  });
+
   it("hold the combobox's ranking and its create row to the source", () => {
     // A combobox looks like a select with a search field, so the rules that
     // matter are the ones the drawing cannot show: the ranking is ours (GPUix's

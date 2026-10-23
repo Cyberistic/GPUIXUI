@@ -151,6 +151,10 @@ directions because of this, not because of the runtime.
 | `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | required | the rows, or named groups of them, in render order |
 | `value` | `string` | none | controlled selection |
 | `defaultValue` | `string` | none | initial selection when uncontrolled |
+| `selectedValue` | `string` | `value ?? defaultValue` | the choice a closed trigger announces — a parent's mirror of an uncontrolled select's value |
+| `open` | `boolean` | none | controlled open state |
+| `defaultOpen` | `boolean` | `false` | the list's initial state while `open` is omitted |
+| `onOpenChange` | `(open: boolean) => void` | none | the open state the runtime reported |
 | `onValueChange` | `(value: string) => void` | none | the committed value |
 | `onChange` | `(value: string) => void` | none | deprecated alias; `onValueChange` wins when both are passed |
 | `placeholder` | `string` | none | the trigger's text before a choice |
@@ -160,6 +164,8 @@ directions because of this, not because of the runtime.
 | `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
 | `side` | `FloatingSide` | the runtime's choice | which side the list opens on |
 | `label` | `string` | none | the accessible name — put a visible `Label` beside it |
+| `description` | `string` | none | announced help after the name; a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host props | none | the trigger is the addressed element — the one a form focuses, an automation host names and a layout measures |
 | `style` | `StyleDesc` | none | merged last on the wrapper, which paints only its width |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | none | resolved against the trigger's live state, merged last |
 | `itemStyle` | `StateStyle<SelectItemState>` | none | resolved per row against that row's state, merged last |
@@ -202,6 +208,15 @@ sets no maximum height and its scroll-button parts are empty in 0.11.0.
   The open list is announced as a `ListBox` of `option` rows, each with its
   accessible name and the selected state the runtime reports — the check mark is
   decorative, because the row already reports its state.
+- The **trigger is the control**: it carries the runtime's combobox role, the
+  open state, the chosen option's words and the caller's `description` as
+  `aria-description`, and the same element takes the `ref`, the `aria-id` and the
+  `onLayout`. A form can focus the select it failed on, an automation host can
+  address it and a layout can measure it; the wrapper around the trigger is not
+  focusable and carries no name. A blank `description` publishes nothing.
+  `Select.test.tsx` holds the four props on the trigger and
+  `runtime/address.runtime.test.tsx` reads the help, the author id and the ref
+  back off the runtime's accessibility tree and element.
 - A group caption announces the run it heads: `SelectGroup` is a plain `div` in
   0.11.0, so the wrapper carries `role="group"` and the caption as its accessible
   name, and the list announces a `Group` node beside its `option` rows. Read off
@@ -249,9 +264,9 @@ directly; the component reads roles, never colours.
 `done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix publishes the
 Select parts this wrapper themes, so open state, positioning and dismissal are
 supported rather than reimplemented. The row is `partial` rather than `yes`
-because three measured limits remain below — a group caption is painted but not
-announced, there is no type-ahead, and the highlight reveal is the wrapper's
-arithmetic over painted boxes. The paint and data mapping are held by
+because two measured limits remain below — there is no type-ahead, and the
+highlight reveal is the wrapper's arithmetic over painted boxes. The paint and
+data mapping are held by
 `packages/primitives/src/components/Select.test.tsx`; the reveal arithmetic by
 `packages/primitives/src/core/scroll.test.ts`; and the 320px box, the wheel
 offset, both placement cases and the keyboard reveal by
