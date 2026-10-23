@@ -3,6 +3,7 @@ import {
   alphaOf,
   blend,
   contrastRatio,
+  findHighlight,
   getTheme,
   nativeFenceFill,
   nativeFenceHeaderFill,
@@ -3063,6 +3064,86 @@ describe("docs/gpuix-capabilities.md", () => {
       doc.indexOf("## 5. Keeping this document true"),
     );
     expect(keeping).toContain("`document-type`");
+  });
+
+  it("records the find wash a window paints, derived from the theme", () => {
+    // A find highlight is the one text surface the library handed back to the
+    // runtime's palette: a host given no colour paints its own accent at 30% and
+    // 65%, and `findHighlight(theme)` replaces both with the theme's `primary`
+    // at a readable share. The record named the spec keys and no colour at all,
+    // so a plan could read the API and still ship the runtime's violet. The two
+    // composites are derived from the theme and the tokens contract, and the
+    // probe's count from its fixture.
+    const fixture = read("apps/playground/src/live/find-highlight.ts");
+    const tokens = read("packages/tokens/src/highlight.ts");
+    const checks = Number(
+      /export const FIND_CHECKS = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    const shares = /export const highlightShares = \{([^}]*)\} as const;/.exec(
+      tokens,
+    )?.[1];
+    const share = (name: string): number =>
+      Number(new RegExp(`${name}: ([\\d.]+)`).exec(shares ?? "")?.[1] ?? Number.NaN);
+
+    const defaults = { match: share("match"), active: share("active") };
+    const theme = themes.dark;
+    const highlight = findHighlight(theme);
+    const composite = (wash: string): string =>
+      blend(theme.colors.card, wash, alphaOf(wash));
+    const resting = composite(highlight.color);
+    const active = composite(highlight.activeColor);
+
+    // The premise: the derived pair differs from the runtime's defaults in both
+    // hue and share, so a default paint cannot pass as the theme's.
+    expect(defaults.match).toBeGreaterThan(0);
+    expect(defaults.active).toBeGreaterThan(defaults.match);
+    expect(alphaOf(highlight.color)).toBeLessThan(defaults.match + 0.01);
+    expect(highlight.color).not.toBe(highlight.activeColor);
+    expect(resting).not.toBe(active);
+    expect(highlight.radius).toBe(theme.radius.sm);
+
+    // The probe reads a composite the same way, so the documents' colours are
+    // the ones the window compares against.
+    expect(fixture).toContain("blend(");
+    expect(fixture).toContain("alphaOf(");
+    expect(fixture).toContain("findHighlight");
+
+    const row = rowFor("Find-in-content highlights");
+    expect(row?.verdict).toBe("supported");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("find-highlight");
+    expect(evidence).toContain(`${checks} checks`);
+    expect(evidence).toContain(`${Math.round(defaults.match * 100)}%`);
+    expect(evidence).toContain(`${Math.round(defaults.active * 100)}%`);
+    expect(evidence).toContain(highlight.color);
+    expect(evidence).toContain(highlight.activeColor);
+    expect(evidence).toContain(resting);
+    expect(evidence).toContain(active);
+    expect(evidence).toContain("blend(card, wash, alphaOf(wash))");
+    expect(evidence).toContain("negative control");
+    expect(row?.workaround).toContain("findHighlight(theme)");
+
+    const page = measuredRow("Find-in-content highlights");
+    expect(
+      page,
+      "the page's measured table has no find-highlight row",
+    ).toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("find-highlight");
+    expect(pageEvidence).toContain(`${checks} checks`);
+    expect(pageEvidence).toContain(`${Math.round(defaults.match * 100)}%`);
+    expect(pageEvidence).toContain(`${Math.round(defaults.active * 100)}%`);
+    expect(pageEvidence).toContain(highlight.color);
+    expect(pageEvidence).toContain(highlight.activeColor);
+    expect(pageEvidence).toContain(resting);
+    expect(pageEvidence).toContain(active);
+    expect(page?.[2]).toContain("findHighlight(theme)");
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const keeping = doc.slice(
+      doc.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`find-highlight`");
   });
 
   it("publishes the order a negative tab index gives, not a skip", () => {
