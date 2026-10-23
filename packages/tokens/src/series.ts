@@ -159,6 +159,16 @@ const deficiencyMatrices: Readonly<
   ],
 };
 
+/**
+ * The positions a categorical scale names, in the order a chart assigns them.
+ *
+ * The contract walks these five, not the length of the table a theme carries: a
+ * scale is a fixed vocabulary (`series 1` … `series 5`, a legend of five at
+ * most), so a table with four colours is a table whose fifth position paints
+ * nothing — which a chart indexing by position cannot tell from a failure.
+ */
+const seriesPositions = [0, 1, 2, 3, 4] as const;
+
 /** A theme's mode, contrast variant and optional authored series. */
 export interface SeriesSource {
   readonly mode: ThemeMode;
@@ -196,8 +206,12 @@ export function seriesColors(theme: SeriesSource): SeriesColors {
 export interface SeriesSurfaceFailure {
   /** Its position in the scale, zero-based. */
   readonly index: number;
-  /** The colour that failed. */
-  readonly color: string;
+  /**
+   * The colour that failed, or `undefined` when the scale does not carry that
+   * position — a theme restored from storage can hold a table short of the five
+   * a chart indexes, and the position then paints no colour at all.
+   */
+  readonly color: string | undefined;
   /** The surface it was measured against. */
   readonly surface: SeriesSurface;
   /** The measured ratio, or `undefined` when the colour is not opaque hex. */
@@ -269,7 +283,7 @@ const clamp = (channel: number): number => Math.min(1, Math.max(0, channel));
 
 /** Linear-light sRGB channels of an opaque hex colour, in any painted length. */
 const linearRgb = (
-  color: string,
+  color: string | undefined,
 ): readonly [number, number, number] | undefined => {
   const rgb = opaqueRgb(color);
   return rgb === undefined
@@ -294,7 +308,7 @@ const hexFromLinear = (channels: readonly [number, number, number]): string =>
 
 /** OKLab coordinates of an opaque `#RRGGBB` colour, or `undefined` otherwise. */
 const oklab = (
-  color: string,
+  color: string | undefined,
 ): readonly [number, number, number] | undefined => {
   const rgb = linearRgb(color);
   if (rgb === undefined) {
@@ -321,7 +335,10 @@ const oklab = (
  * The perceived distance between two colours — Euclidean distance in OKLab,
  * where 0 is identical and 1 is black against white.
  */
-const colorDistance = (first: string, second: string): number | undefined => {
+const colorDistance = (
+  first: string | undefined,
+  second: string | undefined,
+): number | undefined => {
   const left = oklab(first);
   const right = oklab(second);
   if (left === undefined || right === undefined) {
@@ -349,7 +366,7 @@ const colorDistance = (first: string, second: string): number | undefined => {
  * ```
  */
 export function simulateColorVision(
-  color: string,
+  color: string | undefined,
   deficiency: ColorVisionDeficiency,
 ): string | undefined {
   const rgb = linearRgb(color);
@@ -367,8 +384,15 @@ export function simulateColorVision(
 }
 
 /** A theme with the fields a series audit reads. */
-type SeriesAuditSource = SeriesSource & {
+type SeriesAuditSource = Omit<SeriesSource, "series"> & {
   readonly colors: Partial<ThemeColors>;
+  /**
+   * The scale the theme carries. A stored theme can hold a table shorter than
+   * the five positions a chart indexes, or one with a `null` where a colour was
+   * absent when it was saved, so the audit reads it positionally and measures
+   * what each position paints rather than what the type promised.
+   */
+  readonly series?: readonly (string | undefined)[];
 };
 
 /**
@@ -385,6 +409,14 @@ type SeriesAuditSource = SeriesSource & {
  * asks for; the variant still decides the surface default. The surfaces are the
  * four the library paints a plot on unless the caller names its own, so a chart
  * drawn on a quiet strip is measured on the strip it is drawn on.
+ *
+ * **Every position of the scale is measured, not every entry the table
+ * happens to hold.** A theme stored by an older release, or one hand-written in
+ * a JSON config, can carry fewer than five colours — and a chart assigns series
+ * 2 to its second category by position, so a short table paints an absent
+ * colour with no report at all. Such a position is measured as unmeasurable on
+ * every surface and in every pair, the same answer an unparseable colour gets,
+ * so `passed` is false as soon as the scale names a colour it does not carry.
  *
  * @example
  * ```ts
@@ -406,51 +438,60 @@ export function seriesFailures(
   const surfaceFloor = contract.surface ?? variant.boundary;
   const distinctnessFloor = contract.distinctness ?? seriesDistinctnessFloor;
   const deficiencyFloor = contract.deficiency ?? seriesDeficiencyFloor;
-  const series = seriesColors(theme);
+  const series: ReadonlyArray<string | undefined> =
+    theme.series ??
+    seriesColors({ mode: theme.mode, contrast: theme.contrast });
+  /**
+   * The colour a position paints, read as the value a store hands back: a short
+   * table has no entry there and a holed one has `null`, and neither is a colour
+   * the report can carry, so both are the same absence.
+   */
+  const at = (position: number): string | undefined => {
+    const color = series[position];
+    return typeof color === "string" ? color : undefined;
+  };
   const surfaceFailures = surfaces.flatMap((surface) =>
-    series.flatMap((color, index) => {
+    seriesPositions.flatMap((index) => {
+      const color = at(index);
       const ratio = contrastRatio(color, theme.colors[surface]);
       return ratio !== undefined && ratio >= surfaceFloor
         ? []
         : [{ index, color, surface, ratio, floor: surfaceFloor }];
     }),
   );
-  const distinctness = series.flatMap((color, index) =>
-    series.slice(index + 1).flatMap((other, offset) => {
-      const distance = colorDistance(color, other);
-      return distance !== undefined && distance >= distinctnessFloor
-        ? []
-        : [
-            {
-              index,
-              other: index + 1 + offset,
-              distance,
-              floor: distinctnessFloor,
-            },
-          ];
-    }),
+  const distinctness = seriesPositions.flatMap((index) =>
+    seriesPositions
+      .filter((other) => other > index)
+      .flatMap((other) => {
+        const distance = colorDistance(at(index), at(other));
+        return distance !== undefined && distance >= distinctnessFloor
+          ? []
+          : [{ index, other, distance, floor: distinctnessFloor }];
+      }),
   );
   const deficiencies = colorVisionDeficiencies.flatMap((deficiency) =>
-    series.flatMap((color, index) =>
-      series.slice(index + 1).flatMap((other, offset) => {
-        const simulated = simulateColorVision(color, deficiency);
-        const simulatedOther = simulateColorVision(other, deficiency);
-        const distance =
-          simulated === undefined || simulatedOther === undefined
-            ? undefined
-            : colorDistance(simulated, simulatedOther);
-        return distance !== undefined && distance >= deficiencyFloor
-          ? []
-          : [
-              {
-                deficiency,
-                index,
-                other: index + 1 + offset,
-                distance,
-                floor: deficiencyFloor,
-              },
-            ];
-      }),
+    seriesPositions.flatMap((index) =>
+      seriesPositions
+        .filter((other) => other > index)
+        .flatMap((other) => {
+          const color = at(index);
+          const otherColor = at(other);
+          const simulated =
+            color === undefined
+              ? undefined
+              : simulateColorVision(color, deficiency);
+          const simulatedOther =
+            otherColor === undefined
+              ? undefined
+              : simulateColorVision(otherColor, deficiency);
+          const distance =
+            simulated === undefined || simulatedOther === undefined
+              ? undefined
+              : colorDistance(simulated, simulatedOther);
+          return distance !== undefined && distance >= deficiencyFloor
+            ? []
+            : [{ deficiency, index, other, distance, floor: deficiencyFloor }];
+        }),
     ),
   );
   return { surfaces: surfaceFailures, distinctness, deficiencies };

@@ -24,7 +24,12 @@ import {
   type ThemeColors,
 } from "./color.js";
 import { contrastPairs, contrastRatio } from "./contrast.js";
-import { isNamedColour, measuredColour, namedColours } from "./measure.js";
+import {
+  isNamedColour,
+  measuredColour,
+  namedColours,
+  opaqueRgb,
+} from "./measure.js";
 import { seriesColors, seriesFailures } from "./series.js";
 import {
   darkTheme,
@@ -181,6 +186,20 @@ describe("the functional families whose channels are sRGB arithmetic", () => {
     expect(alphaOf("rgb(0 0 0 / 50%)")).toBeCloseTo(128 / 255, 10);
     expect(alphaOf("hsl(0 0% 0%)")).toBe(1);
     expect(alphaOf("transparent")).toBe(0);
+  });
+
+  it("resolves a value a store hands back as unmeasurable, not a crash", () => {
+    // JSON has no `undefined`, so a role absent when a theme was saved returns
+    // as `null`; a hand-written palette can inherit a function instead of a
+    // colour. The seam answers both the way it answers a perceptual space.
+    expect(measuredColour(null)).toBeUndefined();
+    expect(measuredColour(undefined)).toBeUndefined();
+    expect(measuredColour(42)).toBeUndefined();
+    expect(measuredColour({})).toBeUndefined();
+    expect(opaqueRgb(null)).toBeUndefined();
+    expect(alphaOf(null)).toBe(1);
+    // A blank value is a string the grammar cannot read, the same absence.
+    expect(measuredColour("")).toBeUndefined();
   });
 });
 

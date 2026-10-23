@@ -59,6 +59,8 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
 } from "./theme.js";
+import { lightSeries, seriesFailures } from "./series.js";
+import { darkSyntax, syntaxFailures, syntaxRoles } from "./syntax.js";
 
 /** Every style the library ships, as the gate would be run over them. */
 const shipped: readonly Theme[] = [
@@ -513,5 +515,165 @@ describe("an unnamed font family", () => {
     expect(catalogue).toContain("`typography.sans`");
     expect(designSystem).toContain("every font family");
     expect(readme).toContain("every font family");
+  });
+});
+
+/**
+ * The bug this holds: the incomplete-theme rule stopped at the roles, the
+ * levels and the numeric groups, and the two **nested tables** a theme may carry
+ * were read as if the type were the value.
+ *
+ * A theme comes back from a store, and JSON has no `undefined`: a role that was
+ * absent when the theme was saved returns `null`, and `measuredColour` called
+ * `.trim()` on it, so the gate a stored theme is told to run threw
+ * `TypeError: Cannot read properties of null (reading 'trim')` from
+ * `invalidColorRoles`, every contrast pair and the decorative composite — the
+ * one report that exists to describe a theme it does not own.
+ *
+ * `series` had the opposite failure. `seriesFailures` walked the entries the
+ * table held rather than the five positions a chart indexes, so
+ * `{ series: ["#5F4BDB"] }` reported nothing at all and `auditTheme` returned
+ * `passed: true` while series 2 to 5 painted no colour: `seriesColour` assigns
+ * by position, so four categories of a five-category chart were empty bars with
+ * every report clean.
+ *
+ * `syntax` had both. A palette is a table of token names, and one is
+ * `constructor`: `palette[role]` answered `Object.prototype.constructor` — a
+ * function — for every token a hand-written palette omitted, so
+ * `{ syntax: { keyword: "#3B2C8F" } }` failed with `value.trim is not a
+ * function`. A token a store wrote as `null` threw the same way.
+ *
+ * The decision is the same one the suites above follow, one level down: absence
+ * is a **value the report carries**, never an exception and never a skip. The
+ * measuring seam accepts what a store hands back and resolves a non-string to
+ * unmeasurable, the series contract measures every position the scale names, and
+ * the syntax contract reads the palette's own tokens only — so a theme that lost
+ * one paints one audit line rather than a crash or a false pass.
+ */
+describe("a scale a store wrote", () => {
+  it("reports a role a store wrote as null, instead of throwing", () => {
+    // What `JSON.stringify({ ...colors, primary: undefined })` writes back.
+    const nullRole = stored({
+      colors: { ...lightTheme.colors, foreground: null },
+    });
+
+    expect(invalidColorRoles(nullRole)).toEqual([
+      { role: "foreground", value: undefined },
+    ]);
+    // The pair it carries is unmeasurable, not a ratio read from a crash.
+    const report = auditTheme(nullRole);
+    expect(
+      report.contrast.filter(
+        (pair) => pair.foreground === "foreground" && pair.ratio === undefined,
+      ).length,
+    ).toBeGreaterThan(0);
+    expect(report.passed).toBe(false);
+  });
+
+  it("measures every position a series names, not the entries it carries", () => {
+    const short = stored({ series: lightSeries.slice(0, 1) });
+
+    // The one colour it carries is the only position that can be measured.
+    const report = seriesFailures(short);
+    const lost = report.surfaces.filter(({ index }) => index > 0);
+
+    // Four surfaces, each walking the five positions in the order it measures.
+    expect(lost.map(({ index }) => index)).toEqual([
+      1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4,
+    ]);
+    expect(
+      lost.every(
+        ({ color, ratio }) => color === undefined && ratio === undefined,
+      ),
+    ).toBe(true);
+    // The pairs a lost position joins cannot be verified either.
+    expect(
+      report.distinctness.filter(({ distance }) => distance === undefined),
+    ).toHaveLength(10);
+    expect(
+      report.deficiencies.filter(({ distance }) => distance === undefined),
+    ).toHaveLength(30);
+    expect(auditTheme(short).passed).toBe(false);
+  });
+
+  it("reports a series colour a store wrote as null, instead of throwing", () => {
+    const holed = stored({
+      series: [
+        lightSeries[0],
+        null,
+        lightSeries[2],
+        lightSeries[3],
+        lightSeries[4],
+      ],
+    });
+
+    // Only the null position is a report: the four colours it kept are sound.
+    const surfaces = seriesFailures(holed).surfaces;
+    expect(new Set(surfaces.map(({ index }) => index))).toEqual(new Set([1]));
+    expect(surfaces.every(({ color }) => color === undefined)).toBe(true);
+  });
+
+  it("reports a syntax palette that names only some tokens", () => {
+    // A hand-written literal, so `constructor` is inherited rather than own.
+    const partial = stored({ syntax: { keyword: "#3B2C8F" } });
+
+    const failures = syntaxFailures(partial);
+    const named = failures.filter(({ role }) => role !== "keyword");
+
+    // Every token the palette does not carry is unmeasurable, on both fills.
+    expect(named).toHaveLength((syntaxRoles.length - 1) * 2);
+    expect(named.every(({ ratio }) => ratio === undefined)).toBe(true);
+    // `constructor` is reported as missing, not read as the function it inherits.
+    expect(failures.filter(({ role }) => role === "constructor")).toHaveLength(
+      2,
+    );
+    expect(auditTheme(partial).passed).toBe(false);
+  });
+
+  it("reports a syntax token a store wrote as null, instead of throwing", () => {
+    // The dark table on the dark theme, so only the null token is reported.
+    const nullToken = {
+      ...darkTheme,
+      syntax: { ...darkSyntax, keyword: null },
+    } as unknown as Theme;
+
+    const failures = syntaxFailures(nullToken);
+
+    expect(failures).toHaveLength(2);
+    expect(
+      failures.every(
+        ({ role, ratio }) => role === "keyword" && ratio === undefined,
+      ),
+    ).toBe(true);
+  });
+
+  it("is taught on both token pages and the package README", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+
+    // The series contract measures positions, and the syntax one tokens.
+    expect(catalogue).toContain("every position the scale names");
+    expect(catalogue).toContain("A **token the palette does not name**");
+    expect(catalogue).toContain("the `null` JSON writes");
+    expect(designSystem).toContain("every one of the five series positions");
+    expect(designSystem).toContain("replaces the table whole");
+    // The measurement seam and both nested tables, from the package's side.
+    expect(readme).toContain("`measuredColour`/`opaqueRgb`/`alphaOf`");
+    expect(readme).toContain("every one of the five");
+  });
+
+  it("reads every shipped style's own tables, which are complete", () => {
+    const incomplete = shipped.filter(
+      (theme) =>
+        seriesFailures(theme).surfaces.length > 0 ||
+        seriesFailures(theme).distinctness.length > 0 ||
+        seriesFailures(theme).deficiencies.length > 0 ||
+        syntaxFailures(theme).length > 0,
+    );
+
+    expect(incomplete.map(({ name }) => name)).toEqual([]);
   });
 });

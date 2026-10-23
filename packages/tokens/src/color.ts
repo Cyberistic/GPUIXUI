@@ -623,7 +623,9 @@ export function alpha(color: string, amount: number): string {
  * length, a named colour, and a colour function without an alpha channel — and
  * an explicit alpha channel reads its share, whether it is a byte, a number or a
  * percentage. A value no colour grammar reads reads as `1`: it was never a
- * translucent colour this could measure.
+ * translucent colour this could measure — including the `null` a store writes
+ * for a role that was absent when the theme was saved, so a decorative
+ * contract composites it rather than throwing on a value it does not own.
  *
  * @example
  * ```ts
@@ -631,9 +633,10 @@ export function alpha(color: string, amount: number): string {
  * alphaOf("#191D25"); // 1
  * alphaOf("#fff8"); // 0.533 — shorthand's own share
  * alphaOf("rgb(0 0 0 / 50%)"); // 0.502
+ * alphaOf(null); // 1
  * ```
  */
-export function alphaOf(color: string): number {
+export function alphaOf(color: unknown): number {
   const alphaByte = measuredColour(color)?.alpha;
   return alphaByte === undefined ? 1 : Number.parseInt(alphaByte, 16) / 255;
 }
@@ -771,7 +774,10 @@ export interface InvalidColorRole {
  * added since, and the runtime cannot paint what is not there. The source is
  * therefore `Partial<ThemeColors>`, so a complete theme and a decoded one are
  * both accepted, and the contracts that measure a pair treat the absence as an
- * unmeasurable pair rather than a crash.
+ * unmeasurable pair rather than a crash. A value a store wrote as `null` — what
+ * JSON writes for an absent one — is the same absence and is reported the same
+ * way, so the report carries a colour or nothing rather than whatever the
+ * decoder happened to hand over.
  *
  * @example
  * ```ts
@@ -790,6 +796,8 @@ export function invalidColorRoles(theme: {
 }): readonly InvalidColorRole[] {
   return colorRoles.flatMap((role) => {
     const value = theme.colors[role];
-    return isPaintableColor(value) ? [] : [{ role, value }];
+    return isPaintableColor(value)
+      ? []
+      : [{ role, value: typeof value === "string" ? value : undefined }];
   });
 }

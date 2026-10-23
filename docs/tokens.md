@@ -624,7 +624,12 @@ auditTheme(brand).passed; // measured on the plot, against itself and for every 
 
 The array replaces the shipped table whole, like an elevation level: the five
 positions are an order the chart and its legend both read, so a partial array is
-not a merge. A **look** owns one the same way, in the `PlatformStyle` shape: a
+not a merge. A theme decoded from storage can still carry one — JSON has no
+`undefined`, so a position that was absent when the theme was saved comes back as
+`null` — and the contract measures **every position the scale names**, not the
+entries the table happens to hold: a position it cannot read is reported on every
+plot surface and in every pair, so a short table fails the gate instead of
+painting series 2 to 5 with no colour and no report. A **look** owns one the same way, in the `PlatformStyle` shape: a
 style may declare `series` per mode, `applyStyle` hands it to the base theme
 under the rule its palette follows (a high-contrast base keeps its own scale),
 and a mode a look does not name — and every style that declares none —
@@ -1202,7 +1207,15 @@ contracts that measure a pair or a placement take the same colour source: a pair
 whose role is absent is reported **unmeasurable** (`ratio: undefined`) rather
 than skipped — a pair nobody can verify is not a pass — so `auditTheme` on a
 theme restored from storage returns a line naming the role and a failing gate,
-never a `TypeError`. A numeric group is the exception, and so is a **step**
+never a `TypeError`. The seam every one of those measurements resolves through
+takes the value a store hands back, so the `null` JSON writes for a role that was
+absent when the theme was saved is **unmeasurable** rather than a crash: its
+pairs report `ratio: undefined`, `alphaOf` reads it as opaque so a composite is
+reported rather than guessed, and `blend` returns what it was given. The two
+**nested tables** a theme may carry follow the same rule — a `series` short of
+its five positions and a `syntax` palette that names only some of its tokens are
+reported, not skipped and not thrown on (§Data series, §Syntax palette). A
+numeric group is the exception, and so is a **step**
 inside one: adding either is a breaking change rather than an additive one, so
 the gate **refuses** the theme and names it —
 
@@ -2802,11 +2815,14 @@ measured:
 
 `syntaxFailures(theme, floors?)` reports every token that misses its floor,
 naming the token, the fill and the measured ratio, and reporting a colour it
-cannot measure rather than skipping it. `auditTheme` includes that report, so a
-brand is held to it. A theme owns a palette by carrying `syntax`, which
-**replaces the table whole** — the host reads all twenty-four keys, so a partial
-palette would leave the rest on the runtime's own colours. Recolor one token by
-spreading the table the theme resolves:
+cannot measure rather than skipping it. A **token the palette does not name** is
+one of those unmeasurable values: a theme that carries `syntax` replaces the
+table whole, so a stored palette with a token missing would otherwise leave the
+host on its own colour for that token while the audit passed. `auditTheme`
+includes that report, so a brand is held to it. A theme owns a palette by
+carrying `syntax`, which **replaces the table whole** — the host reads all
+twenty-four keys, so a partial palette would leave the rest on the runtime's own
+colours. Recolor one token by spreading the table the theme resolves:
 
 ```ts
 import { auditTheme, extendTheme, syntaxColors } from "@gpuixui/tokens";

@@ -695,6 +695,21 @@ the renderer's fallback for every text role instead of the face the theme states
 The required steps are derived from the scales the package ships, so a role or
 metric added to one is required on the next release.
 
+A store hands back `null` where the theme had no value — JSON has no
+`undefined` — and the suite reads that as the absence it is: the measuring seam
+`measuredColour`/`opaqueRgb`/`alphaOf` takes `unknown` and resolves any non-string
+to unmeasurable, so a `null` role is a report line rather than
+`TypeError: Cannot read properties of null (reading 'trim')`. The two **nested
+tables** follow the same rule. `seriesFailures` measures every one of the five
+positions a chart indexes, so a stored table shorter than that — or with a `null`
+position — is reported on every surface and in every pair instead of passing
+while series 2 to 5 paint nothing. `syntaxFailures` reports every token a stored
+palette does not name, because carrying `syntax` replaces the shipped table whole
+and the host would otherwise paint its own colour for that token; the palette is
+read as a colour per token, so the `constructor` key a hand-written literal
+inherits from `Object.prototype` is the missing token it is, not a function the
+contract tries to measure.
+
 `keyboardDimFailures(theme, floor?)` is the eleventh report (`audit.keyboardDim`):
 it measures the dim the runtime paints on every other focusable while one has
 keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). The dim and the

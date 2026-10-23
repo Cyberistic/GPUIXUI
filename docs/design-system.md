@@ -961,12 +961,19 @@ and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
 
 A theme restored from storage can be **incomplete**: it may predate a role or an
-elevation level the library has added since. The reports carry the absence rather
-than throwing — `invalidColorRoles` returns the role with `value: undefined`,
-`invalidShadowColors` returns the level once at position `0` with no colour, and
-every contract that measures a pair reports it unmeasurable — so the gate returns
+elevation level the library has added since, and JSON has no `undefined`, so a
+value that was absent when the theme was saved comes back as `null`. The reports
+carry the absence rather than throwing — `invalidColorRoles` returns the role with
+`value: undefined`, `invalidShadowColors` returns the level once at position `0`
+with no colour, the measuring seam reads any non-colour value as unmeasurable
+(`ratio: undefined`, an opaque share for a composite), and every contract that
+measures a pair reports it unmeasurable — so the gate returns
 a failing report that names the role instead of a `TypeError`
-(`docs/tokens.md` §Paint-ready values). The paint follows the same rule: a role
+(`docs/tokens.md` §Paint-ready values). The two **nested tables** a theme may
+carry are measured the same way: every one of the five series positions is read
+even when a stored table is short, and a `syntax` palette that names only some
+tokens is reported token by token rather than left to the host's own colours.
+The paint follows the same rule: a role
 the theme lost paints nothing, and `elevationShadow` returns `undefined` for a
 level it does not carry, so no surface throws on the defect the report just
 explained (§7). A numeric group — and every numeric step
@@ -1047,8 +1054,11 @@ number, type, comment — because "this is a keyword" is not "this is a warning"
 Every token that names code is held to the body floor on both fills a native
 host paints, and a comment to the secondary floor (AAA in a high-contrast
 theme); `docs/tokens.md` §Syntax palette has the tables and the measured
-tightest cell. A brand owns the palette by carrying `syntax`, which merges token
-by token.
+tightest cell. A brand owns the palette by carrying `syntax`, which **replaces
+the table whole** — the host reads all twenty-four keys — so recolouring one
+token means spreading `syntaxColors(theme)`, and a stored palette that names
+only some tokens is reported by `syntaxFailures` rather than painted from the
+host's own defaults.
 
 ### Target sizes
 

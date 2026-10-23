@@ -239,6 +239,43 @@ export interface SyntaxFailure {
 }
 
 /**
+ * The palette a syntax audit reads: the theme's own, or the shipped table for
+ * its mode and variant.
+ *
+ * It is an open record rather than `SyntaxColors` because a decoded palette is
+ * not the tuple the paint path promises: it can hold a subset of the tokens, or
+ * a token a store wrote as `null` — the value JSON writes for an absent one.
+ */
+const readPalette = (
+  theme: SyntaxAuditSource,
+): Readonly<Record<string, unknown>> =>
+  theme.syntax ?? syntaxColors({ mode: theme.mode, contrast: theme.contrast });
+
+/**
+ * A theme with the fields a syntax audit reads.
+ *
+ * One token name is `constructor`, so a hand-written palette that omits it
+ * answers `Object.prototype.constructor` — a function, not a colour. Reading
+ * only a **string** is what makes that the missing token it is rather than a
+ * value the contract tries to measure.
+ */
+export interface SyntaxAuditSource {
+  readonly mode: "light" | "dark";
+  readonly contrast?: "default" | "high";
+  readonly colors: Partial<ThemeColors>;
+  readonly syntax?: Readonly<Record<string, unknown>>;
+}
+
+/** The colour a palette names for a token, or `undefined` when it names none. */
+const tokenColour = (
+  palette: Readonly<Record<string, unknown>>,
+  role: SyntaxRole,
+): string | undefined => {
+  const value = palette[role];
+  return typeof value === "string" ? value : undefined;
+};
+
+/**
  * Every token colour in a theme's syntax palette that misses its floor.
  *
  * An empty array means a code block is readable in the theme: every role that
@@ -248,6 +285,12 @@ export interface SyntaxFailure {
  * cannot measure — a translucent or non-hex colour — is reported unmeasurable
  * rather than counted as a pass.
  *
+ * **A token the palette does not carry is one of those unmeasurable values**, so
+ * every one of {@link syntaxRoles} is reported: a theme that carries `syntax`
+ * replaces the shipped table whole, and a palette that names only some tokens
+ * would otherwise paint the runtime's own defaults for the rest while the audit
+ * passed.
+ *
  * @example
  * ```ts
  * import { syntaxFailures, themes } from "@gpuixui/tokens";
@@ -256,17 +299,17 @@ export interface SyntaxFailure {
  * ```
  */
 export function syntaxFailures(
-  theme: SyntaxSource & {
-    readonly colors: Partial<ThemeColors>;
-    readonly contrast?: "default" | "high";
-  },
+  theme: SyntaxAuditSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly SyntaxFailure[] {
-  const syntax = syntaxColors(theme);
+  const palette = readPalette(theme);
   return syntaxRoles.flatMap((role) =>
     syntaxSurfaces.flatMap((surface): ReadonlyArray<SyntaxFailure> => {
       const floor = floors[syntaxRoleFloors[role]];
-      const ratio = contrastRatio(syntax[role], theme.colors[surface]);
+      const ratio = contrastRatio(
+        tokenColour(palette, role),
+        theme.colors[surface],
+      );
       return ratio !== undefined && ratio >= floor
         ? []
         : [{ role, surface, ratio, floor }];

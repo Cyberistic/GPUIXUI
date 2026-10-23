@@ -302,7 +302,42 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 162/162
+`[x]` `[██████████]` 163/163
+
+`[x]` Read a **stored value as absence, not a crash** — the incomplete-theme rule
+stopped at roles, levels and numeric groups, and the two nested tables a theme may
+carry were read as if the type were the value. JSON has no `undefined`, so a role
+or a token that was absent when the theme was saved comes back as `null`, and
+`measuredColour` called `.trim()` on it: the gate a stored theme is told to run
+threw `TypeError: Cannot read properties of null (reading 'trim')` from
+`invalidColorRoles`, from every contrast pair and from the decorative composite.
+`series` failed the opposite way — `seriesFailures` walked the entries the table
+held rather than the five positions a chart indexes, so `{ series: ["#5F4BDB"] }`
+reported nothing and `auditTheme(...).passed` was **true** while series 2–5
+painted no colour. `syntax` had both: a palette is a table of token names and one
+is `constructor`, so `{ syntax: { keyword: "#3B2C8F" } }` read
+`Object.prototype.constructor` and failed with `value.trim is not a function`.
+One seam now answers all three: `measuredColour`/`opaqueRgb`/`alphaOf` take
+`unknown` and resolve a non-string to unmeasurable (opaque for `alphaOf`, unchanged
+for `blend`), `invalidColorRoles` reports a decoded non-string as the absence it
+is, `seriesFailures` walks the five positions (`SeriesSurfaceFailure.color` says
+`string | undefined`, a lost position reports 4 surface lines plus its 10
+distinctness and 30 deficiency pairs) and `syntaxFailures` reads a colour per
+token, so every token a palette does not name is reported unmeasurable. No palette
+moved and the gate's shape is unchanged. `incomplete.test.ts`'s `a scale a store
+wrote` (7 cases) holds the null role, the short table, the holed table, the
+partial palette, the null token, every shipped table and the four documents, and
+`measure.test.ts` gains `resolves a value a store hands back as unmeasurable, not
+a crash` for the seam itself.
+Directions measured: reverting the seam fails 3 cases with the exact `TypeError`,
+reverting the positional walk fails the short table as a silent pass
+(`expected [] to deeply equal [ 1, 2, … ]`), and with both the seam and the
+token read reverted all five stored-value cases fail. `nub run --filter
+@gpuixui/tokens test`: 43 files / 2 487 tests green. Docs in `docs/tokens.md`
+§Data series/§Syntax palette/§Paint-ready values, `docs/design-system.md`
+§9/§11, the package README and the **Data series**/**Syntax palette** rows. It
+also retracted §9's "merges token by token" — `extendTheme` replaces the palette
+whole, which is what the new report enforces.
 
 `[x]` Retract the **status-text TODO pointer and its three-strip claim** — `docs/tokens.md`
 §A brand run inside a message said a status tone's readable role is "measured as page text

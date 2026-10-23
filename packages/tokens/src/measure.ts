@@ -499,6 +499,14 @@ const fromFunction = (
  * A colour's channels and share, or `undefined` when the contracts cannot
  * resolve it.
  *
+ * The value is `unknown` because a theme can come back from a store: JSON has
+ * no `undefined`, so a role that was absent when the theme was written returns
+ * `null`, and a hand-authored export can hand back a number or an inherited
+ * member where a colour should be. A value that is not a string is
+ * **unmeasurable**, the same answer this seam gives a perceptual space and the
+ * one `isPaintableColor` gives a value the renderer cannot paint — a report,
+ * never a `TypeError` from the contract that was asked to check it.
+ *
  * @example
  * ```ts
  * measuredColour("#fff"); // { rgb: "#FFFFFF" }
@@ -506,9 +514,13 @@ const fromFunction = (
  * measuredColour("rebeccapurple"); // { rgb: "#663399" }
  * measuredColour("hsl(120 100% 50%)"); // { rgb: "#00FF00" }
  * measuredColour("oklch(0.62 0.26 29.2)"); // undefined — a perceptual space
+ * measuredColour(null); // undefined — a value a store wrote for an absent one
  * ```
  */
-export const measuredColour = (value: string): MeasuredColour | undefined => {
+export const measuredColour = (value: unknown): MeasuredColour | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
   const colour = value.trim();
   const hex = fromHex(colour);
   if (hex !== undefined) {
@@ -527,16 +539,19 @@ export const measuredColour = (value: string): MeasuredColour | undefined => {
 /**
  * The channels of an opaque colour, or `undefined` for a translucent one — whose
  * contrast depends on the surface behind it, so a single ratio would be a guess.
- * A fully opaque alpha byte is opaque.
+ * A fully opaque alpha byte is opaque, and a value no colour grammar reads —
+ * including a stored `null` — is unmeasurable rather than a throw, the rule
+ * {@link measuredColour} states.
  *
  * @example
  * ```ts
  * opaqueRgb("#fff"); // "#FFFFFF"
  * opaqueRgb("rgb(255 0 0)"); // "#FF0000"
  * opaqueRgb("#ffffff80"); // undefined
+ * opaqueRgb(null); // undefined
  * ```
  */
-export const opaqueRgb = (value: string): string | undefined => {
+export const opaqueRgb = (value: unknown): string | undefined => {
   const measured = measuredColour(value);
   return measured !== undefined && measured.alpha === undefined
     ? measured.rgb
