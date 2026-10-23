@@ -4746,29 +4746,26 @@ drives it through a window.
 | draft | `Back` from the review, then `Next` again | `desk` and `3000` are still there both ways |
 | form accept | accept the review, press `Create workspace` | `onSubmit` receives `WorkspaceSetup`'s own values (`applied=desk:3000`, one submit) |
 | form refuse | un-accept the review | the summary paints `` `Accept the checklist before creating the workspace` `` and no second value reaches the caller |
+| retry | re-accept the review and press the same control again | the recovered submit reaches the caller (`submits=2`, `applied=desk:3000`) |
 
 The two layers are separate on purpose: a step gate refuses to move the wizard,
 while the review's acceptance is part of the record only `Form` decodes. A wizard
 that trusted its step gate would carry an unaccepted record.
 
-**The measured limit: a form cannot submit again after a schema failure.** Once
-the review is un-accepted and submitted, re-accepting it and pressing the same
-control never reaches the caller (`submits=1` stays, `applied` stays the first
-value). Measured state after the third press: `attempts=3 valid=false
-submitting=false can=false fieldsValid=false errors=0`, while the core's own
-values decode with the class (`desk:3000:true`). The cause is the seam between
-this package and form-core: the schema failure is returned on the field path it
-names (`{ fields: { accepted: [message] } }`), form-core writes it into that
-field's meta, and the next submit's `validateAllFields` runs no field validator
-for it — so `isFieldsValid` stays false and `_handleSubmit` returns **before**
-re-running the schema. The probe asserts that limit beside the working path, so
-a components-side repair fails a named check rather than leaving this paragraph
-stale; the diagnosis and the fix are recorded in `TODO.md` → Interlocks under
-the components owner.
+**The retry is part of the contract.** A form whose first submit succeeded and
+whose next one fails must still reach the caller once the reader corrects the
+input: `Form` clears the per-field `onSubmit` errors its **own** validator owns,
+so the next `validateAllFields` no longer sees a stale failure and `_handleSubmit`
+re-runs the schema. The probe holds both directions — a refused review records
+no submit, and the corrected one records the second (`submits=2`) and hands the
+caller `WorkspaceSetup`'s decoded values again. The components half is
+`packages/components/src/behaviour/form.test.tsx`'s `submits a corrected value
+after a schema failure`; this window case is the re-measurement in the composed
+wizard.
 
-21 checks, `--only multi-step-form-lifecycle`, green on 0.11.0 here (~5 s,
+22 checks, `--only multi-step-form-lifecycle`, green on 0.11.0 here (~5 s,
 three captures). Fixture: `src/live/multi-step.ts` (the ids, the two schemas, the
-step gate, the movement and the readout codecs) + `multi-step.test.ts` (13 cases:
+step gate, the movement and the readout codecs) + `multi-step.test.ts` (14 cases:
 the gate over both fields, the schemas' own messages, the accepted record, the
 clamps, both readouts, the ids, the view held to the fixture, the registry entry,
 the README section and the printed check count). The view and steps live in
@@ -4779,7 +4776,11 @@ The negative controls are the two step gates themselves: making `stepError`
 accept every name advances the wizard on the empty field, and dropping the
 port's range check advances on `70000` — each fails its refusal by name
 (`expected "step=1 …", got "step=2 …"` and `expected "step=2 …", got
-"step=3 …"`), exit `1`, and both were restored green.
+"step=3 …"`), exit `1`, and both were restored green. The retry has its own:
+dropping the re-accept press before the third submit leaves the review refused,
+so `a corrected review submits again once the failure it carried is cleared`
+fails (`expected "… accepted=true submits=2", got "… accepted=false
+submits=1"`), exit `1`; restored, green.
 
 ### `image-fit` — measured on 0.11.0 here
 

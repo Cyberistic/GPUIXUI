@@ -6,11 +6,13 @@
  * wizard is composition — the shipped `Form`, `Stepper`, `Field` and `Checkbox`
  * — and nothing had measured the layers a caller writes between them. The
  * first measured pass found that a `Form` whose schema failure is reported on a
- * field path cannot be submitted again: form-core keeps that error in the
- * field's meta, its next field-validation pass never clears it, and the form
- * returns before re-running the schema. The probe asserts that limit beside the
- * working path so a components-side fix fails a named check instead of leaving
- * the claim stale.
+ * field path could not be submitted again: form-core kept that error in the
+ * field's meta, the next field-validation pass never cleared it, and the form
+ * returned before re-running the schema. The components half fixed it (a `Form`
+ * clears the per-field `onSubmit` errors its own validator owns), so the probe
+ * now asserts the recovery: a refused review records no submit, and the
+ * re-accepted one reaches the caller a second time. The README must not return
+ * to the measured-limit wording.
  *
  * `node:fs` is deliberate, as in the other live fixtures: this reads the
  * repository's own probe and prose, never a runtime path.
@@ -157,7 +159,20 @@ describe("the README", () => {
       "### `multi-step-form-lifecycle` — measured on 0.11.0 here",
     );
     expect(readme).toContain(MULTI_STEP_TERMS_MESSAGE);
-    expect(readme).toContain("field's meta");
+    // The fix's own proof is named so the window case cannot drift from it.
+    // Prose wraps, so the sentences are read from one flat line.
+    const flat = readme.replace(/\s+/g, " ");
+    expect(flat).toContain("submits a corrected value after a schema failure");
+    expect(flat).toContain("submits=2");
+  });
+
+  it("does not report the repaired retry as a measured limit", () => {
+    // The retracted claim: a reader was told a wizard could never submit again
+    // after one schema failure. Either sentence returning fails this case.
+    const flat = readme.replace(/\s+/g, " ");
+    expect(flat).not.toContain("cannot submit again after a schema failure");
+    expect(flat).not.toContain("never reaches the caller");
+    expect(flat).toContain("clears the per-field `onSubmit` errors");
   });
 
   it("prints the checks the probe actually asserts", () => {

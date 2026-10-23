@@ -5539,10 +5539,10 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("multi-step-submitted");
 
-    // The measured limit: a form whose first submit succeeded and whose next
-    // one fails keeps the failure in its field meta, so the correction below
-    // paints no message and never reaches the caller. Recorded in TODO.md for
-    // the components owner; this check flips when the retry is repaired.
+    // A refused review still records no submit, and the recovery is the gate's
+    // own: re-accepting and pressing the same control reaches the caller
+    // again. The `Form` clears the field errors its own submit validator owned,
+    // so the second attempt is not stuck behind the first failure.
     yield* ctx.host.click(MULTI_STEP_IDS.terms);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -5564,9 +5564,14 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.click(MULTI_STEP_IDS.submit);
     yield* Effect.sleep(Duration.millis(200));
     yield* ctx.expectEqual(
-      "the corrected review is not revalidated: the submit still does not reach the caller",
+      "a corrected review submits again once the failure it carried is cleared",
       yield* ctx.host.text(MULTI_STEP_IDS.readout),
-      multiStepReadout(3, { name: "desk", port: "3000" }, true, 1),
+      multiStepReadout(3, { name: "desk", port: "3000" }, true, 2),
+    );
+    yield* ctx.expectEqual(
+      "the retried submit hands the caller the decoded record",
+      yield* ctx.host.text(MULTI_STEP_IDS.applied),
+      "applied=desk:3000",
     );
     yield* ctx.host.capture("multi-step-retry");
   });
