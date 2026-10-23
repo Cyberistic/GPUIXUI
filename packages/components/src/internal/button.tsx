@@ -12,8 +12,9 @@
  *
  * - `danger` is the token palette's `destructive`, and this package's `secondary`
  *   carries a `borderStrong` edge — the role `contrastPairs` holds to the 3:1 a
- *   control's boundary needs. The primitive's `secondary` has no border, so the
- *   edge is one `@gpuixui/tw` class.
+ *   control's boundary needs. The primitive's `secondary` recipe paints
+ *   `border border-strong` as well; the class below is this package's copy of
+ *   that measured role, held to the recipe by `button-edge.test.ts`.
  * - A caller's `aria-label` is the primitive's `label`, which is the accessible
  *   name it announces in place of the text children.
  * - An `IconButton` is a square ghost action: its glyph is the `icon` slot and
@@ -72,9 +73,11 @@ const PRIMITIVE_VARIANT: Readonly<
 /**
  * The classes a look carries besides the primitive's recipe.
  *
- * `secondary` is the one action with an edge: the primitive's recipe paints
- * `border-0`, and `borderStrong` is the role a control's boundary is measured
- * in on every strip it sits on.
+ * `secondary` is the one action with an edge. The primitive's recipe paints
+ * `border border-strong` already; the copy here keeps this package's action on
+ * the same measured role if that recipe line moves. `button-edge.test.ts`
+ * requires both painters to name it, so the copy cannot become the only one
+ * without a reader seeing the recipe change.
  */
 const VARIANT_CLASS: Readonly<Record<ButtonVariant, string>> = {
   primary: "",
