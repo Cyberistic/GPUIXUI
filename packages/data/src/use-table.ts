@@ -22,7 +22,10 @@
  * `src/behaviour/table.test.tsx` through the renderer's own `focusNext`.
  *
  * The order a reader expects: narrow first, then sort the narrowed set, and
- * measure a Shift range over what is painted. The search reads the **painted**
+ * measure a Shift range over what is painted. Sorting is an **order**, not a
+ * field: a plain header press replaces it and a Shift press adds the column as
+ * the next tie-break (or flips it where it sits), so records the primary sort
+ * ties are decided by the second. The search reads the **painted**
  * columns: pass the columns a reader has hidden (`useColumns().hidden`) as
  * `hiddenColumns`, and a record is never kept by text no cell shows — while a
  * sort on the hidden column still orders the set. A filter that hides a chosen
@@ -85,7 +88,12 @@ import {
   someSelected,
   type SelectionState,
 } from "./selection/logic.js";
-import { toggleSort as nextSort, type SortState } from "./sort/logic.js";
+import {
+  pressSortOrder,
+  type SortDirection,
+  type SortOrder,
+  type SortState,
+} from "./sort/logic.js";
 
 /** What the hook needs to know about a row. */
 export interface UseTableOptions<Row extends RowData> {
@@ -114,11 +122,21 @@ export interface UseTableOptions<Row extends RowData> {
 
 /** Everything a table's parts read from {@link useTable}. */
 export interface TableController<Row extends RowData> {
-  /** The painted rows: narrowed, then sorted. */
+  /** The painted rows, narrowed, then sorted by every field in the order. */
   readonly rows: ReadonlyArray<Row>;
   /** The visible keys, in paint order — what a Shift range spans. */
   readonly keys: ReadonlyArray<string>;
+  /** The primary sort, for a single-sort header or a readout. */
   readonly sort: Option.Option<SortState>;
+  /**
+   * The whole order, primary first.
+   *
+   * One entry is the ordinary sort. A Shift press on a header appends a
+   * tie-break (or flips the field where it already sits), and the row model
+   * walks the entries in turn, so records the first sort ties are ordered by
+   * the second.
+   */
+  readonly sortOrder: SortOrder;
   readonly query: string;
   readonly selection: SelectionState;
   /** The rows the current query keeps, before sorting. */
@@ -144,7 +162,25 @@ export interface TableController<Row extends RowData> {
   /** The core table the controller runs on, for a consumer that needs more. */
   readonly table: GridTable<Row>;
   readonly setSort: (next: Option.Option<SortState>) => void;
-  readonly toggleSort: (field: string) => void;
+  /**
+   * The next sort for one field.
+   *
+   * `additive` is the Shift gesture: keep the order and flip the field where
+   * it sits, or append it as the next tie-break.
+   */
+  readonly toggleSort: (field: string, additive?: boolean) => void;
+  /**
+   * The order a header press reports.
+   *
+   * The header hands over the field, its first-press direction and the
+   * runtime's modifiers; a Shift press composes a multi-column order. This is
+   * the callback {@link TableSortHeader}`'s` `onSortPress` receives.
+   */
+  readonly pressSort: (
+    field: string,
+    initialDirection: SortDirection,
+    modifiers?: EventModifiers,
+  ) => void;
   readonly setQuery: (query: string) => void;
   readonly press: (key: string, modifiers?: EventModifiers) => void;
   readonly pressRow: (row: Row, modifiers?: EventModifiers) => void;
@@ -158,16 +194,27 @@ export interface TableController<Row extends RowData> {
   readonly isSelected: (key: string) => boolean;
 }
 
+/** The core's sorting state for an order, primary first. */
+const sortingOfOrder = (order: SortOrder): SortingState =>
+  Arr.map(order, (state) => ({
+    id: state.field,
+    desc: state.direction === "desc",
+  }));
+
 /** The core's sorting state for the press cycle's single sort. */
 const sortingOf = (sort: Option.Option<SortState>): SortingState =>
-  Option.match(sort, {
-    onNone: () => [],
-    onSome: (state) => [{ id: state.field, desc: state.direction === "desc" }],
-  });
+  sortingOfOrder(Option.toArray(sort));
 
-/** The press cycle's sort, read back off the core's state. */
+/** The press cycle's primary sort, read back off the core's state. */
 const sortOf = (sorting: SortingState): Option.Option<SortState> =>
   Option.map(Option.fromNullishOr(sorting[0]), (column) => ({
+    field: column.id,
+    direction: column.desc ? "desc" : "asc",
+  }));
+
+/** The whole order, read back off the core's state. */
+const sortOrderOf = (sorting: SortingState): SortOrder =>
+  Arr.map(sorting, (column) => ({
     field: column.id,
     direction: column.desc ? "desc" : "asc",
   }));
@@ -262,12 +309,19 @@ export const useTable = <Row extends RowData>({
     setAnchor(next.anchor);
   }, []);
 
+  const sortOrder = sortOrderOf(sorting);
+  const writeSort = useCallback(
+    (order: SortOrder) => setSorting(sortingOfOrder(order)),
+    [],
+  );
+
   return {
     rows: visible,
     keys,
     kept,
     table,
     sort: sortOf(sorting),
+    sortOrder,
     query,
     selection,
     selectedCount: selectionSize(selection),
@@ -276,8 +330,17 @@ export const useTable = <Row extends RowData>({
     activeKey: currentKey(selection),
     tabStop: Option.orElse(currentKey(selection), () => Arr.head(keys)),
     setSort: (next) => setSorting(sortingOf(next)),
-    toggleSort: (field) =>
-      setSorting(sortingOf(Option.some(nextSort(sortOf(sorting), field)))),
+    toggleSort: (field, additive = false) =>
+      writeSort(pressSortOrder(sortOrder, field, "asc", additive)),
+    pressSort: (field, initialDirection, modifiers) =>
+      writeSort(
+        pressSortOrder(
+          sortOrder,
+          field,
+          initialDirection,
+          modifiers?.shift === true,
+        ),
+      ),
     setQuery,
     press: (key, modifiers) =>
       write(pressSelection(chosen, key, pressMode(modifiers), keys)),

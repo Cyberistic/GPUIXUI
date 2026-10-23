@@ -81,13 +81,17 @@ describe("the data-table fixture", () => {
   it("prints the readout the example interpolates", () => {
     // The example's own template, in its own order, read from the source.
     const template =
-      /`\$\{table\.rows\.length\} rows · \$\{selectionSize\(table\.selection\)\} selected · cols=\$\{Arr\.join\(([\s\S]*?)\)\} · w=\$\{nameWidth\} · content=\$\{columns\.contentWidth\} · \$\{Option\.match\(/.exec(
+      /`\$\{table\.rows\.length\} rows · \$\{selectionSize\(table\.selection\)\} selected · cols=\$\{Arr\.join\(([\s\S]*?)\)\} · w=\$\{nameWidth\} · content=\$\{columns\.contentWidth\} · \$\{sortToken\}`/.exec(
         example,
       );
     expect(template).not.toBeNull();
     expect(example).toContain(
       'Arr.map(columns.visible, (column) => column.id),\n          ","',
     );
+    // The order the press composition produces, not only the primary field: a
+    // Shift press prints both entries (`name-asc+size-desc`) in this segment.
+    expect(example).toContain("onSortPress={table.pressSort}");
+    expect(example).toContain("order={table.sortOrder}");
     expect(DATA_TABLE_INITIAL).toBe(
       "60 rows · 0 selected · cols=name,status,size · w=260 · content=460 · unsorted",
     );

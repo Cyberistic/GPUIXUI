@@ -7,7 +7,9 @@
  *
  * - the header is a sibling of the row scroller inside one horizontal scroller,
  *   which is how 0.11.0 gets a fixed header without `position: "sticky"`;
- * - a `TableSortHeader` reports the next `SortState`, and the controller sorts;
+ * - a `TableSortHeader` reports its press and the runtime's modifier flags, so
+ *   a Shift press keeps the primary sort and adds the column as a tie-break —
+ *   the readout prints the order (`status-asc+name-desc`) the row model walks;
  * - a row press reports the record and the runtime's modifier flags, so a plain
  *   press replaces, Cmd/Ctrl toggles and Shift extends;
  * - a selection box toggles one record without replacing the set, because the
@@ -42,7 +44,6 @@ import * as Option from "effect/Option";
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { Button } from "@gpuixui/primitives/button";
 import { ColumnMenu } from "../src/columns/menu.js";
-import { TableColumnDivider } from "../src/columns/divider.js";
 import type { ColumnDef } from "../src/columns/logic.js";
 import type { GridColumn } from "../src/grid-core.js";
 import { useColumns } from "../src/columns/use-columns.js";
@@ -244,6 +245,18 @@ export const TableExample = () => {
   }, [table.activeKey]);
 
   const nameWidth = Option.getOrElse(columns.widthOf("name"), () => 0);
+  /**
+   * The order the readout and the caption print: `name-asc`, or
+   * `status-asc+name-desc` for a multi-column sort, primary first.
+   */
+  const sortToken = Arr.match(table.sortOrder, {
+    onEmpty: () => "unsorted",
+    onNonEmpty: (order) =>
+      Arr.join(
+        Arr.map(order, (entry) => `${entry.field}-${entry.direction}`),
+        "+",
+      ),
+  });
 
   return (
     <div
@@ -294,13 +307,7 @@ export const TableExample = () => {
         {`${table.rows.length} rows · ${selectionSize(table.selection)} selected · cols=${Arr.join(
           Arr.map(columns.visible, (column) => column.id),
           ",",
-        )} · w=${nameWidth} · content=${columns.contentWidth} · ${Option.match(
-          table.sort,
-          {
-            onNone: () => "unsorted",
-            onSome: (sort) => `${sort.field}-${sort.direction}`,
-          },
-        )}`}
+        )} · w=${nameWidth} · content=${columns.contentWidth} · ${sortToken}`}
       </text>
 
       <Table height={320} aria-label="Files" testId="files-table">
@@ -329,28 +336,25 @@ export const TableExample = () => {
                       field="name"
                       label={column.label}
                       sort={table.sort}
-                      onSort={(next) => table.setSort(Option.some(next))}
+                      order={table.sortOrder}
+                      onSortPress={table.pressSort}
                       width={column.width}
                       resize={resize}
                       testId="files-name"
                     />
                   )),
                   Match.when("status", () => (
-                    <TableHeaderCell
+                    <TableSortHeader
                       key={column.id}
+                      field="status"
+                      label={column.label}
+                      sort={table.sort}
+                      order={table.sortOrder}
+                      onSortPress={table.pressSort}
                       width={column.width}
+                      resize={resize}
                       testId="files-status"
-                    >
-                      <text
-                        style={{
-                          ...textStyle(theme, "caption"),
-                          color: theme.colors.mutedForeground,
-                        }}
-                      >
-                        {column.label}
-                      </text>
-                      <TableColumnDivider width={column.width} {...resize} />
-                    </TableHeaderCell>
+                    />
                   )),
                   Match.when("size", () => (
                     <TableSortHeader
@@ -358,7 +362,8 @@ export const TableExample = () => {
                       field="size"
                       label={column.label}
                       sort={table.sort}
-                      onSort={(next) => table.setSort(Option.some(next))}
+                      order={table.sortOrder}
+                      onSortPress={table.pressSort}
                       align="right"
                       width={column.width}
                       resize={resize}
@@ -426,7 +431,7 @@ export const TableExample = () => {
               color: theme.colors.mutedForeground,
             }}
           >
-            {`Sorted ${Option.match(table.sort, { onNone: () => "by source order", onSome: (sort) => `by ${sort.field} ${sort.direction}` })}`}
+            {`Sort: ${sortToken}`}
           </text>
         </TableCaption>
       </Table>

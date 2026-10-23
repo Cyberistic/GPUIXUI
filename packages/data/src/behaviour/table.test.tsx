@@ -381,6 +381,35 @@ describe("the example table", () => {
     expect(paintedFiles(root)[0]).toBe("file-060.ts");
   });
 
+  it("adds a Shift press as the tie-break, and flips it in place", () => {
+    const root = mount();
+
+    // Status is the primary: three records per group, so only a second sort can
+    // decide the order inside one. The example's statuses cycle with the row
+    // number, which is why the modified group's greatest name is file-058.
+    click(root, "files-status-sort");
+    root.renderer.flush();
+    expect(readout(root)).toContain("status-asc");
+    expect(paintedFiles(root)[0]).toBe("file-001.ts");
+
+    click(root, "files-name-sort", "shift");
+    root.renderer.flush();
+    expect(readout(root)).toContain("status-asc+name-asc");
+    expect(paintedFiles(root)[0]).toBe("file-001.ts");
+
+    click(root, "files-name-sort", "shift");
+    root.renderer.flush();
+    expect(readout(root)).toContain("status-asc+name-desc");
+    expect(paintedFiles(root)[0]).toBe("file-058.ts");
+
+    // A plain press asks for one sort: the order replaces, it does not grow.
+    click(root, "files-size-sort");
+    root.renderer.flush();
+    expect(readout(root)).toContain("size-desc");
+    expect(readout(root)).not.toContain("+");
+    expect(paintedFiles(root)[0]).toBe("file-060.ts");
+  });
+
   it("narrows the rows and releases a selection the set hides", () => {
     const root = mount();
 

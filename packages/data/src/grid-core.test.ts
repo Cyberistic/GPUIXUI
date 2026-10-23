@@ -90,6 +90,40 @@ describe("the sorted row model", () => {
       "r1",
     ]);
   });
+
+  it("orders the records the first sort ties by the next entry", () => {
+    // The first sort ties every pair in a group, so only the second entry can
+    // decide the order inside it. A controller that wrote one entry — or a
+    // core that read one — leaves each group in source order.
+    const tieRows: ReadonlyArray<Row> = [
+      { id: "a", name: "beta", status: "x", size: 1 },
+      { id: "b", name: "alpha", status: "y", size: 1 },
+      { id: "c", name: "alpha", status: "x", size: 1 },
+      { id: "d", name: "beta", status: "y", size: 1 },
+    ];
+    const tieGrid = constructGrid({
+      rows: tieRows,
+      keyOf: (row) => row.id,
+      columns,
+      state: {
+        sorting: [
+          { id: "status", desc: false },
+          { id: "name", desc: true },
+        ],
+        globalFilter: "",
+        rowSelection: {},
+      },
+      onSortingChange: () => {},
+      onGlobalFilterChange: () => {},
+      onRowSelectionChange: () => {},
+    });
+    expect(Arr.map(tieGrid.getRowModel().rows, (row) => row.id)).toEqual([
+      "a",
+      "c",
+      "d",
+      "b",
+    ]);
+  });
 });
 
 describe("the filtered row model", () => {
