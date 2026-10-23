@@ -1063,7 +1063,9 @@ inside one — is not treated this way: adding either is a breaking change rathe
 than an additive one, because the components read every step, so the gate refuses
 a theme missing one and names the group or the path (`typography.codeBlock`,
 `density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
-`extendTheme`. A **font family** is refused the same way when it is blank: the
+`extendTheme`. A key a store **kept without a value** is that same absence: a
+`null` token is not a number the renderer can lay out, so it is refused by its
+path rather than read as present, while the number report would skip it. A **font family** is refused the same way when it is blank: the
 gate asks every font family to name a face, and `sans: ""` is present but says
 nothing, so every text role paints the renderer's fallback instead of the face
 the theme states (§5). The three refusals are also **readable before they are

@@ -145,6 +145,14 @@ const readPath = (source: unknown, path: string): unknown =>
     );
 
 /**
+ * Whether a stored value is the absence it is rather than a token: a key a store
+ * dropped reads as `undefined`, and one it kept without a value reads as `null`.
+ * A token is never nullable, so both are the same absence to the gate.
+ */
+const isAbsent = (value: unknown): boolean =>
+  value === undefined || value === null;
+
+/**
  * Why a numeric part of a theme is absent: a whole group, a step inside one, or
  * a family that is present but names no face.
  */
@@ -180,7 +188,11 @@ export interface MissingToken {
  * catching the gate's error. A group the theme does not carry is named **once**:
  * none of its steps exists to name, so listing them would bury the one decision
  * the reader has to make. A step is named once too, rather than once per field
- * it would have carried.
+ * it would have carried. **Absence is both of the shapes a store writes**: a key
+ * it dropped (`undefined`) and a key it kept without a value (`null`). A token is
+ * never nullable, so both are the step the gate must refuse — reading only
+ * `undefined` let `{ spacing: { md: null } }` pass the gate while the runtime
+ * dropped the length and the gap painted as nothing.
  *
  * An **additive** absence is not here: a colour role or an elevation level a
  * theme lost is a report (`invalidColorRoles`, `invalidShadowColors`) and a
@@ -205,7 +217,7 @@ export function missingTokens(
   theme: NumericGroupSource,
 ): readonly MissingToken[] {
   const carries = (group: MissingToken["group"]): boolean =>
-    theme[group] !== undefined;
+    !isAbsent(theme[group]);
   const groups = numericGroups
     .filter((group) => !carries(group))
     .map((group): MissingToken => ({ group, path: "", kind: "group" }));
@@ -214,11 +226,11 @@ export function missingTokens(
       return [];
     }
     const step = readPath(theme[group], path);
-    if (step === undefined) {
+    if (isAbsent(step)) {
       return [{ group, path, kind: "step" as const }];
     }
     return (fields ?? [])
-      .filter((field) => readPath(step, field) === undefined)
+      .filter((field) => isAbsent(readPath(step, field)))
       .map((field) => ({
         group,
         path: `${path}.${field}`,
@@ -232,8 +244,7 @@ export function missingTokens(
     const value = readPath(theme[group], path);
     // An absent family is the step rule's; this is the one a store wrote as a
     // present but empty name.
-    return value === undefined ||
-      (typeof value === "string" && value.trim() !== "")
+    return isAbsent(value) || (typeof value === "string" && value.trim() !== "")
       ? []
       : [{ group, path, kind: "family" as const }];
   });

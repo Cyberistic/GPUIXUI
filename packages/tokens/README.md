@@ -801,7 +801,10 @@ colour role, an elevation level) is not in it: that is a report and a failing
 gate.
 
 A store hands back `null` where the theme had no value — JSON has no
-`undefined` — and the suite reads that as the absence it is: the measuring seam
+`undefined` — and the suite reads that as the absence it is: a numeric token kept
+as a key without a value is refused by its path exactly like a missing step,
+because a token is never nullable and `invalidNumbers` skips a value that is not a
+number; the measuring seam
 `measuredColour`/`opaqueRgb`/`alphaOf` takes `unknown` and resolves any non-string
 to unmeasurable, so a `null` role is a report line rather than
 `TypeError: Cannot read properties of null (reading 'trim')`. The two **nested

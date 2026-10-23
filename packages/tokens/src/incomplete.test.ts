@@ -471,6 +471,15 @@ describe("an absent numeric step", () => {
  * but blank — and `auditTheme` builds its three messages from the same list, so
  * the report and the error cannot drift. An additive absence (a colour role, an
  * elevation level) stays out: it is a report and a failing gate, not a refusal.
+ *
+ * **The bug this suite's null cases hold:** the walk asked only for `undefined`,
+ * the key a store *drops*. A key it **keeps without a value** comes back as
+ * `null`, and a token is never nullable: `{ spacing: { md: null } }` read as
+ * present, `invalidNumbers` skips a value that is not a number, so
+ * `auditTheme(...).passed` was `true` while the runtime dropped the length and
+ * every gap painted as nothing. A null group is one missing group, a null role
+ * field is that field's step, and a null family is the step rule's rather than a
+ * blank name.
  */
 describe("the parts a theme lost, as data", () => {
   it("names a whole group once, without the steps inside it", () => {
@@ -525,6 +534,55 @@ describe("the parts a theme lost, as data", () => {
     ]);
   });
 
+  it("reads a scale token a store wrote as null as one it lost", () => {
+    // JSON keeps a key a caller set to null, and a token is never nullable: the
+    // runtime drops the length, so the gap or the glyph paints as nothing while
+    // the number report walks the entries it has and says nothing.
+    const nulled = stored({
+      spacing: { ...lightTheme.spacing, md: null },
+      radius: { ...lightTheme.radius, md: null },
+      iconSize: { ...lightTheme.iconSize, xs: null },
+      density: {
+        ...lightTheme.density,
+        controlPaddingX: { ...lightTheme.density.controlPaddingX, sm: null },
+      },
+    });
+
+    expect(invalidNumbers(nulled)).toEqual([]);
+    expect(missingTokens(nulled)).toEqual([
+      { group: "spacing", path: "md", kind: "step" },
+      { group: "radius", path: "md", kind: "step" },
+      { group: "iconSize", path: "xs", kind: "step" },
+      { group: "density", path: "controlPaddingX.sm", kind: "step" },
+    ]);
+    expect(refusedWith(nulled)).toContain("`spacing.md`");
+  });
+
+  it("reads a group a store nulled as the group, not its steps", () => {
+    const nulled = stored({ spacing: null });
+
+    expect(missingTokens(nulled)).toEqual([
+      { group: "spacing", path: "", kind: "group" },
+    ]);
+    expect(refusedWith(nulled)).toContain("`spacing` is missing");
+  });
+
+  it("reads a type role field a store nulled as the step it lost", () => {
+    const nulled = stored({
+      typography: {
+        ...lightTheme.typography,
+        body: { ...lightTheme.typography.body, lineHeight: null },
+      },
+    });
+
+    // The number report does name this one; the data report must agree with the
+    // gate rather than call the theme whole while the gate refuses it.
+    expect(missingTokens(nulled)).toEqual([
+      { group: "typography", path: "body.lineHeight", kind: "step" },
+    ]);
+    expect(refusedWith(nulled)).toContain("`typography.body.lineHeight`");
+  });
+
   it("reads every shipped style and preset as whole", () => {
     const presets = densityNames.map((density) =>
       extendTheme(lightTheme, { density }),
@@ -554,6 +612,10 @@ describe("the parts a theme lost, as data", () => {
       ["a group", stored({ typography: undefined })],
       ["two groups", stored({ radius: undefined, iconSize: undefined })],
       ["a step", stored({ spacing: omit(lightTheme.spacing, "2xs") })],
+      [
+        "a step a store nulled",
+        stored({ radius: { ...lightTheme.radius, lg: null } }),
+      ],
       [
         "a field",
         stored({
@@ -592,8 +654,11 @@ describe("the parts a theme lost, as data", () => {
 
     expect(catalogue).toContain("`missingTokens(theme)`");
     expect(catalogue).toContain("names a group once");
+    expect(catalogue).toContain("a key it kept without a value");
     expect(designSystem).toContain("`missingTokens`");
+    expect(designSystem).toContain("**kept without a value**");
     expect(readme).toContain("`missingTokens`");
+    expect(readme).toContain("a key without a value");
   });
 });
 

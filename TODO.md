@@ -1593,6 +1593,28 @@ surfaces`/`Text selection wash` rows. No native scenario applies — printed cou
 and their guards. The Tier 3 `Tables` row carries the same stale pair; it is the
 data workstream's, recorded in `TODO.md` → Interlocks.
 
+`[x]` Read a **token a store kept without a value** as the absence it is — the
+three refusals asked only for `undefined`, the key a store **drops**, while a key
+it **keeps without a value** comes back as `null`: `{ spacing: { md: null } }`
+counted as present, and `invalidNumbers` walks the entries a scale carries and
+skips a value that is not a number, so `auditTheme(...).passed` was **true** while
+the runtime dropped the length and every gap, radius, glyph and control padding
+painted as nothing. One `isAbsent` now answers all four readers: a null group is
+the group named once, a null step is that step, a null type-role field is the
+field's step, and a null family is the step rule's rather than a blank name (a
+name that is not there cannot be blank). `incomplete.test.ts`'s `the parts a
+theme lost, as data` gains 3 cases — the four silent scales with
+`invalidNumbers(...)` empty as the premise, a nulled group, a nulled role field —
+and its path-for-path agreement case gains a nulled step; the suite's docs case
+now requires the sentence on both token pages and the README. Directions
+measured: with `value === undefined` alone restored, the three cases and the
+agreement case fail by name (4 failed / 37 passed) — `expected [] to deeply equal
+[{ group: 'spacing', … }]` — and with the rule the file is 41/41 and the package
+49 files / 2 844 tests green, `check-types`, `lint`, `fmt` and `check:tests`
+clean. Docs in `docs/tokens.md` §Paint-ready values,
+`docs/design-system.md` §9 and the package README §Checking a theme. No native
+scenario applies — a stored-data contract; no pointer or paint path changed.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 141/141

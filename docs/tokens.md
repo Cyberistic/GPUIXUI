@@ -1430,6 +1430,17 @@ the gate reads a non-blank string, not a registered one — so a custom family
 passes, and an uninstalled face is the font limitation in §Limitations rather
 than a theme defect.
 
+A token a store wrote as `null` is the same absence, not a value: a key it kept
+without a value is a token that is not there. `{ spacing: { md: null } }` is a
+theme that lost `spacing.md` — the runtime drops the length, so the gap paints as
+nothing — and the gate refuses it by that path instead of reading the key as
+present. A whole group nulled is one missing group, a type role's field nulled is
+that field's step, and a family nulled is the step rule's rather than a blank
+name, because a name that is not there cannot be blank. Only this walk can see
+it: `invalidNumbers` reads the entries a scale carries and skips a value that is
+not a number, so without the rule the gate passed a theme whose gaps and glyphs
+painted nothing.
+
 **The three refusals are readable before they are thrown.** A caller holding a
 theme a store handed back — deciding whether to restore it, or which release it
 predates — should not have to call `auditTheme` and catch its error, so
