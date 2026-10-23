@@ -50,7 +50,12 @@ const uneven = (): PanelLayout =>
   new PanelLayout({
     orientation: "horizontal",
     panels: [
-      new Panel({ id: "sidebar", label: "Sidebar", size: 0.4, collapsible: true }),
+      new Panel({
+        id: "sidebar",
+        label: "Sidebar",
+        size: 0.4,
+        collapsible: true,
+      }),
       new Panel({ id: "editor", label: "Editor", size: 1 }),
       new Panel({ id: "inspector", label: "Inspector", size: 0.6 }),
     ],
@@ -67,7 +72,9 @@ describe("the PanelGroup preview", () => {
     // A preview that painted a fixed two-column box would agree with the
     // picture and not with a group that takes N panels.
     expect(html.match(/data-panel="/g)).toHaveLength(start.panels.length);
-    expect(html.match(/role="separator"/g)).toHaveLength(start.panels.length - 1);
+    expect(html.match(/role="separator"/g)).toHaveLength(
+      start.panels.length - 1,
+    );
     expect(html).toContain(`width:${DIVIDER_WIDTH}px`);
   });
 
@@ -103,12 +110,9 @@ describe("the PanelGroup preview", () => {
     // The same call the shipped group makes for a key: the preview adds no
     // rule of its own, only the pixel-to-fraction conversion.
     expect(next.panels.map((panel) => panel.size)).toEqual(
-      resizePanelsByKey(
-        normalizePanels(start.panels),
-        0,
-        "right",
-        step,
-      ).map((panel) => panel.size),
+      resizePanelsByKey(normalizePanels(start.panels), 0, "right", step).map(
+        (panel) => panel.size,
+      ),
     );
 
     // Home and End name the pair's bounds, as the component's do.

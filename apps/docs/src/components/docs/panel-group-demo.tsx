@@ -117,7 +117,10 @@ export const browserDividerKey = (key: string): DividerKey | undefined => {
 /** The readout under the frame: each pane's share of the group. */
 export const shareLabel = (layout: PanelLayout): string =>
   normalizePanels(layout.panels)
-    .map((panel) => `${panel.label.toLowerCase()} ${Math.round(panel.size * 100)}%`)
+    .map(
+      (panel) =>
+        `${panel.label.toLowerCase()} ${Math.round(panel.size * 100)}%`,
+    )
     .join(" · ");
 
 const files = ["split-pane.tsx", "panel-group.tsx", "dock-layout.tsx"];
@@ -174,10 +177,7 @@ export interface PanelGroupFrameProps {
 }
 
 /** The drawing itself: `PanelGroup`'s parts, over the package's reducers. */
-export const PanelGroupFrame = ({
-  layout,
-  onChange,
-}: PanelGroupFrameProps) => {
+export const PanelGroupFrame = ({ layout, onChange }: PanelGroupFrameProps) => {
   const panels = normalizePanels(layout.panels);
   const drag = useRef<
     | {
@@ -217,7 +217,10 @@ export const PanelGroupFrame = ({
 
   const onPointerEnd =
     (index: number) => (event: PointerEvent<HTMLDivElement>) => {
-      if (drag.current?.index === index && drag.current.pointerId === event.pointerId) {
+      if (
+        drag.current?.index === index &&
+        drag.current.pointerId === event.pointerId
+      ) {
         drag.current = undefined;
       }
     };
