@@ -150,6 +150,12 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `role="row"` holding one `role="cell"` box with the recipe's centred column;
   `src/behaviour/table-empty-a11y.test.tsx` (2 cases) decodes the rendered tree
   and fails with `the tree has no Cell node` when the role-less box returns.
+- **The windowed table's empty state is a row and cell too**: `VirtualTable`
+  passed its `empty` node straight into the body's row group, the same
+  role-less shape the plain table had lost; the count-0 branch wraps it in
+  `TableEmpty`, and the same suite's windowed case holds the message's `Label`
+  under a `Cell` whose parent is a `Row` (removing the wrap fails with `the
+  tree has no Cell node`).
 - **Phase 3 (columns and resizing) landed**: `columns/logic` (visibility,
   visible-order moves, per-column resize bounds, keyboard steps), `useColumns`,
   `ColumnMenu` (the component package's measured DropdownMenu) and
