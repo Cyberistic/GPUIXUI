@@ -9782,7 +9782,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `skip=true|12|true|true|ARTICLE` — the link takes focus 12px from the top
       and the fragment leaves focus on the article, in view. Docs:
       `docs/preview-strategy.md` §The site's own keyboard path and the site
-      README ledger; the docs app is 121 files / 1 312 tests green with
+      README ledger; the docs app is 121 files / 1 311 tests green with
       `check-types` and the build clean. No native scenario applies — site
       chrome, not a GPUix component.
 
