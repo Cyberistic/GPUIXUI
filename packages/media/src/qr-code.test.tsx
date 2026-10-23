@@ -175,6 +175,33 @@ describe("QrCode", () => {
     });
   });
 
+  it("keeps the square the caller asked for in the overflow state", () => {
+    // The bug guarded: `size` is how a thumbnail grid reserves a cell, and the
+    // refusal ignored it, so the box collapsed to its message while the symbol
+    // it replaced had held a square. The refusal reserves the same square.
+    const capacity = qrByteCapacity(10, "M");
+    const root = render({
+      value: "y".repeat(capacity + 1),
+      size: 240,
+    });
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      minWidth: 240,
+      minHeight: 240,
+    });
+  });
+
+  it("reads a size it cannot lay out as the default in the overflow state", () => {
+    const capacity = qrByteCapacity(10, "M");
+    const root = render({
+      value: "y".repeat(capacity + 1),
+      size: Number.NaN,
+    });
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      minWidth: 160,
+      minHeight: 160,
+    });
+  });
+
   it("reads a stored quiet zone it cannot lay out as the default", () => {
     const root = render({ quietZone: Number.NaN });
     expect(sourceOf(root)).toContain('viewBox="0 0 29 29"');

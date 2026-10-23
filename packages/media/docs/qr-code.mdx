@@ -33,7 +33,7 @@ import { QrCode } from "@gpuixui/media";
 
 - **Versions 1–10.** The largest symbol holds 271 bytes at `L`.
 - A `quietZone` that is not finite and non-negative reads as the default `4`; `0` asks for no quiet zone, while a stored `-4` cannot mean one.
-- **A value that does not fit is an alert, not an image**: the box announces the capacity sentence, keeps the caller's reserved square and never paints a partial symbol; `label` names the painted symbol only.
+- **A value that does not fit is an alert, not an image**: the box announces the capacity sentence, keeps the caller's reserved square (`size`, or an explicit `style` box) and never paints a partial symbol; `label` names the painted symbol only.
 - A **blank `label`** reads as the default `"QR code"`; a symbol that names nothing would be an unnamed image to assistive technology.
 - **Byte mode only.** Numeric and alphanumeric payloads would pack more tightly; the encoder always declares byte mode, which every scanner reads.
 - **No logo or artwork overlay**: a mask is a path, not a composited image.

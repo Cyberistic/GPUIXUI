@@ -47,7 +47,11 @@ export interface QrCodeProps extends Omit<Props, "children"> {
   readonly value: string;
   /** The error correction level. Default `"M"`. */
   readonly level?: QrLevel;
-  /** The painted side in points, quiet zone included. Default `160`. */
+  /**
+   * The painted side in points, quiet zone included. Default `160`; a value
+   * that is not a positive number reads as the default. The refusal an
+   * over-long value paints reserves the same square.
+   */
   readonly size?: number;
   /** The quiet zone in modules. Default `4`. */
   readonly quietZone?: number;
@@ -62,6 +66,14 @@ export interface QrCodeProps extends Omit<Props, "children"> {
 
 const DEFAULT_SIZE = 160;
 const DEFAULT_LABEL = "QR code";
+
+/**
+ * The square a caller reserved, read the way the symbol's placement reads it: a
+ * side the runtime cannot lay out is the default. The refusal paints into this
+ * box, so a thumbnail grid that reserved a cell does not jump as a value grows.
+ */
+const frameSide = (size: number): number =>
+  Number.isFinite(size) && size > 0 ? size : DEFAULT_SIZE;
 
 const errorStyle = (theme: Theme): StyleDesc => ({
   display: "flex",
@@ -120,8 +132,11 @@ export const renderQrCode = (
         role="alert"
         style={mergeStyles(
           mergeStyles(
-            recipeStyle(cn("rounded-sm", className), theme),
-            errorStyle(theme),
+            mergeStyles(
+              recipeStyle(cn("rounded-sm", className), theme),
+              errorStyle(theme),
+            ),
+            { minWidth: frameSide(size), minHeight: frameSide(size) },
           ),
           style,
         )}
