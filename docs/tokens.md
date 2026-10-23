@@ -339,7 +339,7 @@ stops where that label would lose the floor its theme declares
 accent face is the one that needs the clamp: at the full press step its label
 lands at **4.42:1** in macOS dark, under 4.5, and at **6.90:1** and **6.94:1** in
 the two high-contrast themes, under 7, so those three styles press at 17%. Every
-action keeps the full 18% in all 16 shipped, high-contrast, platform
+action keeps the full 18% in all 18 shipped, high-contrast, platform
 and authored styles, so no shipped fill moved. A theme whose *resting* pair
 already misses its floor cannot be protected — the gate reports it — so the
 helpers keep the nominal step rather than removing the pointer cue as well.
@@ -389,7 +389,7 @@ hovers to exactly the fill it replaces, and the gate reports it. One shipped ste
 sat on the floor: Windows dark's `#60CDFF` primary hovered to **1.05:1**, a
 primary button that never answered the pointer, so the platform carries
 `#4CC2FF` (1.068:1 hover, 1.095:1 press) and you can see the change in the
-[platform chrome table](#platform-styles). The tightest placement over all 16
+[platform chrome table](#platform-styles). The tightest placement over all 18
 shipped, high-contrast, platform and authored styles is **1.06:1** (Dark ·
 Omarchy's destructive hover).
 
@@ -543,7 +543,7 @@ copyable `FIELD_ERROR`, `FIELD_REQUIRED` and `FORM_ERROR` recipes still name
 components compile — a consumer who hand-writes one swaps in the readable role
 the same way.
 
-`packages/tokens/src/brand-text.test.ts` holds all 16 shipped, high-contrast,
+`packages/tokens/src/brand-text.test.ts` holds all 18 shipped, high-contrast,
 platform and authored themes to the floor on all eight surfaces, reads the
 painters that put a brand run on a row (a box's `accent`/`selected` tones, the
 `text-brand` recipe and the row's two washes), proves the derivation is minimal
@@ -1766,7 +1766,7 @@ scale flattened `bodyStrong` into `body`, one that zeroed the strong border
 and so left the focus ring nothing to paint, and one restored from storage with
 a heading weight the batch drops. `numbers.test.ts` runs all eight
 audits, proves none of the
-colour reports can see their defects, and holds all 16 shipped, platform and
+colour reports can see their defects, and holds all 18 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the
 display step at 28/36, well clear of the floor, and its control glyph is 16px
 against a 24px smallest box.
@@ -2023,7 +2023,7 @@ pressed wash at 7.12:1, so no palette moved: what the pairs close is the gap a
 brand could fall into, where a `selected` close to its page — or a wash close to
 `selectedForeground` — erases the label it just selected with every other report
 empty. `contrast.test.ts`'s `the text a selected row keeps` suite reads both
-painters, reports a title held at 5:1 that the old floor passed, and holds all 16
+painters, reports a title held at 5:1 that the old floor passed, and holds all 18
 styles to the body floor.
 
 A **focused control's ring** is drawn **one line's width outside the border
@@ -2082,7 +2082,7 @@ number this page prints is the one the whole ring contract measures.
 `contrast.test.ts`'s `the ring on a message's own tint` suite holds the
 coverage, reads the alert's composer and the button's ring, reports a ring
 painted in the tint it sits on at 1.00:1, and sweeps every ring placement in
-all 16 styles.
+all 18 styles.
 
 A **trailing action** is the boundary's last strip — and the same two washes the
 ring already had. A list row hands its `trailing` slot to an explicit action,
@@ -2097,7 +2097,7 @@ passing. Both washes joined the boundary pairs, and every shipped, high-contrast
 platform and authored style clears the floor, the tightest being Linux light's
 selected row at 3.96:1. `contrast.test.ts`'s `the edge of a control inside a row's wash` suite
 reads the slot, both washes and the default action's edge, reports an edge equal
-to its wash at 1.00:1 and sweeps all 16 styles.
+to its wash at 1.00:1 and sweeps all 18 styles.
 
 A **message's own tint** is the boundary's last strip. An alert fills its tone's
 soft role — `ALERT_TONES` paints `bg-infoSoft`, `bg-successSoft`,
@@ -2116,7 +2116,7 @@ smallest step that clears all four tints, and the tightest shipped placement is
 the base dark theme's warning tint at 3.29:1. `contrast.test.ts`'s `a control's edge
 on a message's own tint` suite reads the alert's tones, its description and the
 default action's edge, reports an edge painted in the tint it sits on at
-1.00:1, and sweeps all 16 styles.
+1.00:1, and sweeps all 18 styles.
 
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
@@ -2534,7 +2534,7 @@ repaints `active` under the press (`menu/item.tsx`, the primitives' recipe,
 `packages/data`'s `table/table.tsx` and `tree/row.tsx`). So
 the step is the wash against the wash, not a wash on a strip — and the strips are
 the page under a row, the one surface every wash passes. Measured over the
-sixteen shipped, high-contrast, platform and authored styles, the press was
+18 shipped, high-contrast, platform and authored styles, the press was
 invisible in **six** of them: macOS light's `active` sat 1.026:1 from its
 `accent` and macOS dark's 1.011:1, Linux dark's 1.015:1, Windows dark's 1.044:1,
 Luna light's 1.016:1 and Aero light's 1.020:1 — and macOS light's press in its
@@ -4672,7 +4672,7 @@ cannot go untested. Evidence:
   contrast light, High contrast dark and Light · macOS, pressed 1.000:1 in
   Dark · Windows — because a wash is often the fill it replaces. It derives
   `filledHover`/`filledPressed` from its own fill now and clears the floor in
-  all 16 styles.
+  all 18 styles.
   The `@gpuixui/tw` `button` recipe still lifts the fill's alpha
   (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`) — it is the copyable
   upstream recipe rather than the library's action, which the primitives own —

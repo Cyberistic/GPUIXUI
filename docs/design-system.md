@@ -539,7 +539,7 @@ its **`secondary` variant** does too: it swapped in the `hover` / `active` washe
 until the contract measured **15 of its 32 pointer placements** under the floor —
 hovered **1.000:1** in High contrast light, High contrast dark and Light · macOS,
 pressed **1.000:1** in Dark · Windows — because a wash is often the fill it
-replaces. The derived step clears the floor in all 16 shipped styles.
+replaces. The derived step clears the floor in all 18 shipped styles.
 
 A **selected row** is the fourth wash, and the one a row's *title* is painted on.
 `ListItemTitle` overrides its recipe's colour with the row's own role
@@ -1027,7 +1027,7 @@ the role-owned tint stay
 One pair class is measured by a helper rather than by the table, because it is
 **derived** rather than stored: a link's colour. `primary` is a fill, so
 `brandText(theme)` returns the brand where it already reads and steps it toward
-the theme's foreground where it does not, and `brand-text.test.ts` holds all 16
+the theme's foreground where it does not, and `brand-text.test.ts` holds all 18
 shipped styles to the floor on the eight surfaces a link can sit on (§3).
 
 Nothing else escapes: `coverage.test.ts` holds every role in `colorRoles` to at

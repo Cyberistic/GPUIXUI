@@ -230,7 +230,7 @@ control. A brand's `primary` carries its own states with no second edit.
 is a ceiling: it stops where the role's on-colour would lose the floor the theme
 declares, which the accent face does in macOS dark (4.42:1 pressed at the full
 step, under 4.5) and both high-contrast themes (6.90/6.94:1, under 7). Every
-action keeps the full 12% hover and 18% press in all 16 shipped styles.
+action keeps the full 12% hover and 18% press in all 18 shipped styles.
 
 ```ts
 import { filledHover, filledPressed } from "@gpuixui/tokens";
@@ -291,7 +291,7 @@ const menuPress = pointerWash(theme, "active", "hover");
 `selected` (the pointer arriving on a chosen row), `active` over `accent` (the
 list row's press) and `active` over `hover` (the menu row's press) — and
 `pointerWashFailures` reports the ones a palette cannot answer, inside the
-`decorative` report of the gate. Measured over the 16 shipped, high-contrast,
+`decorative` report of the gate. Measured over the 18 shipped, high-contrast,
 platform and authored styles, the raw press was invisible in **six**: macOS
 light's `active` sat 1.026:1 from its `accent` and macOS dark's 1.011:1, Linux
 dark's 1.015:1, Windows dark's 1.044:1, Luna light's 1.016:1 and Aero light's

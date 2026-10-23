@@ -157,6 +157,82 @@ describe("token catalogue", () => {
 });
 
 /**
+ * Guards the denominator every sweep shares. Each contract measures one list —
+ * the four built-in themes, a light and a dark theme per platform style and per
+ * authored look — and a page that claims the whole set is clean prints how many
+ * that is. The Omarchy look made it eighteen while sixteen places across the
+ * four documents still printed sixteen, two of them beside a tightest placement
+ * the look itself owned, which is the kind of claim a reader checks by counting.
+ * The number is the list's length here, so a new style fails until the pages
+ * count it.
+ */
+describe("the styles a sweep walks", () => {
+  const styles = [
+    ...Object.values(Tokens.themes),
+    ...Object.values(Tokens.highContrastThemes),
+    ...Tokens.platformNames.flatMap((name) => [
+      Tokens.platformTheme(Tokens.themes.light, name),
+      Tokens.platformTheme(Tokens.themes.dark, name),
+    ]),
+    ...Tokens.retroNames.flatMap((look) => [
+      Tokens.retroTheme(Tokens.themes.light, look),
+      Tokens.retroTheme(Tokens.themes.dark, look),
+    ]),
+  ];
+  const all = styles.length;
+  const prose = (text: string): string => text.replace(/\s+/g, " ");
+
+  it("counts the set its lists name, once per style", () => {
+    // A list that stopped iterating would make every printed count agree on a
+    // number nobody measures, and two styles sharing a name would let one row
+    // stand for two results.
+    expect(all).toBe(
+      4 + Tokens.platformNames.length * 2 + Tokens.retroNames.length * 2,
+    );
+    expect(new Set(styles.map((style) => style.name)).size).toBe(all);
+  });
+
+  it("is the count each page prints where it claims the set is clean", () => {
+    const page = prose(catalogue);
+    const guide = prose(designSystem);
+    const readmeProse = prose(readme);
+
+    expect(page).toContain(
+      `in all ${all} shipped, high-contrast, platform and authored styles`,
+    );
+    expect(page).toContain(
+      `over all ${all} shipped, high-contrast, platform and authored styles`,
+    );
+    expect(page).toContain(
+      `holds all ${all} shipped, high-contrast, platform and authored themes`,
+    );
+    expect(page).toContain(
+      `holds all ${all} shipped, platform and authored themes`,
+    );
+    expect(page).toContain(`holds all ${all} styles to the body floor`);
+    expect(page).toContain(`every ring placement in all ${all} styles`);
+    expect(
+      page.match(new RegExp(`sweeps all ${all} styles`, "g"))?.length,
+    ).toBe(2);
+    expect(page).toContain(`clears the floor in all ${all} styles`);
+    expect(page).toContain(
+      `${all} shipped, high-contrast, platform and authored styles, the press was invisible`,
+    );
+
+    expect(guide).toContain(`clears the floor in all ${all} shipped styles`);
+    expect(guide).toContain(`holds all ${all} shipped styles to the floor`);
+
+    expect(readmeProse).toContain(`in all ${all} shipped styles`);
+    expect(readmeProse).toContain(
+      `over the ${all} shipped, high-contrast, platform and authored styles`,
+    );
+
+    expect(prose(inventory)).toContain(`in all ${all} shipped styles`);
+    expect(prose(inventory)).toContain(`across the ${all} styles`);
+  });
+});
+
+/**
  * Guards the audit's report list. `auditTheme` grows a report whenever a
  * contract lands, and the three pages that list them are how a consumer learns
  * what `passed` actually covers: a report with no line is a check the reader
