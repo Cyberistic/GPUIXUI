@@ -740,6 +740,63 @@ describe("the measured target rows", () => {
     );
   });
 
+  it("cites the hover a filled child takes from its row", () => {
+    const read = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");
+    const fixture = read("apps/playground/src/live/hover-routing.ts");
+    const nestings = /HOVER_NESTINGS = \[([^\]]*)\]/.exec(fixture);
+    const shapes = Arr.filter(
+      Arr.map((nestings?.[1] ?? "").split(","), (entry) =>
+        entry.trim().replace(/"/g, ""),
+      ),
+      (entry) => entry !== "",
+    );
+    expect(shapes).toHaveLength(4);
+
+    const section = readmeSection(
+      "### `hover-routing-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(section).toContain("56 checks, `--only hover-routing-lifecycle`");
+
+    const page = read("packages/components/docs/list.mdx");
+    const row = Option.getOrElse(
+      Arr.head(rowsNamed("Lists / list items")),
+      () => {
+        throw new Error("COMPONENTS.md: no Lists row");
+      },
+    );
+    Arr.forEach(
+      [
+        "`hover-routing-lifecycle`",
+        "56 checks",
+        'pointerEvents: "none"',
+        "the press's own hit test",
+        "the page teaches the four readings",
+      ],
+      (claim) => expect(rowText(row), claim).toContain(claim),
+    );
+    // The page teaches every shape the fixture paints, in its own table.
+    Arr.forEach(
+      [
+        "## Hover",
+        "`hover-routing-lifecycle`",
+        "56 checks",
+        'pointerEvents: "none"',
+        "an unfilled `<text>` label",
+        "a `<text>` label that paints a fill",
+        "a `<div>` that paints a fill",
+        'a filled `<div>` with `pointerEvents: "none"`',
+      ],
+      (claim) => expect(page, claim).toContain(claim),
+    );
+    expect(shapes).toEqual([
+      "text-unfilled",
+      "text-filled",
+      "div-filled",
+      "inert-div",
+    ]);
+  });
+
   it("states the anchored menu measured in a scrolled header", () => {
     const readme = readFileSync(
       fileURLToPath(new URL("apps/playground/README.md", repoRoot)),

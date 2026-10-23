@@ -69,6 +69,28 @@ A range press keeps the anchor; a plain or toggle press moves it
 
 The type-ahead rule is published at `@gpuixui/components/typeahead`.
 
+## Hover
+
+A row's pointer feedback is the runtime's **native `hover` refinement**, and its
+hovered set is the same hit test the press takes — so a **filled child takes the
+row's hover**. `hover-routing-lifecycle` (56 checks, 0.11.0) mounted one row per
+child shape:
+
+| Child at the pointer | Row `onMouseEnter` | Child `onMouseEnter` | Row paints `hover` |
+| -------------------- | ------------------ | -------------------- | ------------------ |
+| an unfilled `<text>` label | **1** | 1 | **yes** |
+| a `<text>` label that paints a fill | **0** | 1 | **no** |
+| a `<div>` that paints a fill | **0** | 1 | **no** |
+| a filled `<div>` with `pointerEvents: "none"` | **1** | 1 | **yes** |
+
+An unfilled label leaves the row both its enter event and its wash; a filled
+one takes both. `pointerEvents: "none"` puts the row back in the pointer's path
+while the child still hears its own listener, because opting out removes the
+fill's hitbox rather than the handler — the shipped `Badge` declares it for this
+reason. A row that wants feedback while the pointer is over a badge, a status
+marker or a control therefore gives that child `pointerEvents: "none"` when it
+is decorative, or the child owns a `hover` paint of its own when it is not.
+
 ## API
 
 | `List` prop | Type | Default |
