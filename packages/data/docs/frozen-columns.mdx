@@ -54,9 +54,20 @@ import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data
 | `frozenRow` | `(row: Row) => ReactNode` | — | the frozen column's row |
 | `header` | `ReactNode` | — | the scrolling columns' header cells |
 | `row` | `(row: Row) => ReactNode` | — | the scrolling columns' row |
-| `empty` | `ReactNode` | — | painted when `rows` is empty |
+| `empty` | `ReactNode` | `No rows` | the data pane's empty message, wrapped in a `TableEmpty` row |
 | `frozenTestId` / `bodyTestId` / `viewportTestId` | `string` | — | locators for a probe |
 | `style` / `testId` / `ref` / `aria-label` | host props | — | on the grid |
+
+## An empty set
+
+A grid with no `rows` paints the empty state in the data pane: a `TableEmpty`
+row holding one cell, so the message sits inside the table the accessibility
+tree describes. A string `empty` paints as that cell's own text, and omitting it
+paints `No rows`. The body does not fall through to its loading skeleton — a
+grid that says it has no records is not a grid still arriving.
+
+The frozen pane keeps its header and paints no rows; the message belongs to the
+scrolling pane, which is the width it is read against.
 
 ## Limitations
 

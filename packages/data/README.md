@@ -26,7 +26,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | Rule | Evidence | What this package does |
 | ---- | -------- | ---------------------- |
 | No `position: "sticky"` | `data-grid-fixed-header`, `table-lifecycle` | The header is a **sibling** of the row scroller, and both sit inside **one** horizontal scroller. A header moved into the row scroller painted at `y = -36`. |
-| A frozen column is two scrollers | `data-grid-frozen-column`, `frozen-column-lifecycle` | `FrozenTable` puts the frozen column in its own vertical scroller beside the data pane and mirrors both ways through `onScrollChange` → `renderer.scrollTo`, guarded by a ref. The sideways pan is the data pane's alone, and a pressed frozen cell chooses the record for the whole grid. |
+| A frozen column is two scrollers | `data-grid-frozen-column`, `frozen-column-lifecycle` | `FrozenTable` puts the frozen column in its own vertical scroller beside the data pane and mirrors both ways through `onScrollChange` → `renderer.scrollTo`, guarded by a ref. The sideways pan is the data pane's alone, and a pressed frozen cell chooses the record for the whole grid. A zero-row grid paints `TableEmpty` (`No rows` by default) in the data pane instead of the body's loading skeleton. |
 | No `transform` | upstream issue #102 | Column resize and row moves change `left`/`width`, never a transform. |
 | No canvas drawing | `chart-raster` | A chart is stacked `<svg>` (one tint each) or an `<img>` pixel buffer; see §Charts in plan 610. |
 | Wheel moves every scrollable ancestor | `nested-scroll-lifecycle` | The table's `height` bounds the table; the body owns the vertical wheel. |
@@ -240,7 +240,11 @@ no `position: "sticky"`, so the frozen column is its own vertical scroller besid
 the data pane and the two are mirrored through `onScrollChange` →
 `renderer.scrollTo` with a re-entrancy guard (`data-grid-frozen-column`,
 `frozen-column-lifecycle`). The sideways pan is the data pane's alone, and a
-press on a frozen cell chooses the record for the whole grid. `ColumnMenu`
+press on a frozen cell chooses the record for the whole grid. An empty set is
+the grid's too: the data pane paints `TableEmpty` — `No rows` when the caller
+names no `empty`, a string as that cell's own text — because a body with no
+child would paint the loading skeleton and a role-less message would sit outside
+the grid the tree describes. `ColumnMenu`
 therefore offers no pin row — a pin is a different layout, not something the
 column list can express. The page is `docs/frozen-columns.mdx`; the shipped
 screen is `examples/frozen-table.example.tsx`.

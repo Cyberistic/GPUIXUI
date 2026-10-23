@@ -24,6 +24,11 @@
  * a record from the frozen pane selects it for the whole grid
  * (`frozen-column-lifecycle`).
  *
+ * An empty set is the grid's, not the body's: the data pane paints
+ * {@link TableEmpty} (a `No rows` default), because a body with no child falls
+ * through to its loading skeleton and a role-less message sits outside the grid
+ * the accessibility tree describes.
+ *
  * ```tsx
  * <FrozenTable
  *   height={320}
@@ -55,7 +60,13 @@ import {
 import { mergeStyles } from "@gpuix/react/floating";
 import { Fragment, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_HEADER_HEIGHT } from "./frame.js";
-import { TableBody, TableHeader, TableViewport } from "./table.js";
+import {
+  DEFAULT_EMPTY_MESSAGE,
+  TableBody,
+  TableEmpty,
+  TableHeader,
+  TableViewport,
+} from "./table.js";
 
 /** {@link FrozenTable} props. Generics are per row, like `useTable`'s. */
 export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
@@ -88,7 +99,14 @@ export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
   readonly header: ReactNode;
   /** The scrolling columns' row: a `TableRow` of cells. */
   readonly row: (row: Row) => ReactNode;
-  /** Painted in the data pane when `rows` is empty. */
+  /**
+   * Painted in the data pane when `rows` is empty.
+   *
+   * It is wrapped in a `TableEmpty` row, so the message sits inside the grid
+   * the accessibility tree describes and a string paints as that cell's own
+   * text. Defaults to `No rows`: an empty set is not a load, and a body with
+   * no child paints the loading skeleton.
+   */
   readonly empty?: ReactNode;
   /** The frozen pane's test id, for a probe that reads its scroller. */
   readonly frozenTestId?: string;
@@ -238,11 +256,13 @@ export const FrozenTable = <Row,>({
               ref={body}
               onScrollChange={mirror("body")}
             >
-              {rows.length === 0
-                ? empty
-                : rows.map((record) => (
-                    <Fragment key={rowKey(record)}>{row(record)}</Fragment>
-                  ))}
+              {rows.length === 0 ? (
+                <TableEmpty>{empty ?? DEFAULT_EMPTY_MESSAGE}</TableEmpty>
+              ) : (
+                rows.map((record) => (
+                  <Fragment key={rowKey(record)}>{row(record)}</Fragment>
+                ))
+              )}
             </TableBody>
           </div>
         </TableViewport>
