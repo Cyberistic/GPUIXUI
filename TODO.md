@@ -7724,7 +7724,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 212/212
+`[x]` `[██████████]` 213/213
+
+`[x]` Publish the **hiding word** the renderer honours — `StyleDesc` accepts any
+      `display` and `visibility`, and only one of the two hides a subtree: the
+      renderer's `apply_styles` matches `display` against `"flex"` and `"grid"`
+      only, so `display: "none"` paints, lays out and keeps its tab stop, while
+      `visibility: "hidden"` is the renderer's `invisible()`. The record's §3
+      gains **Hiding a subtree** (`supported, with limits`) with the
+      `hidden-subtree-lifecycle` measurement — the display-hidden control reports
+      its **200×32** box and paints its own fill, the invisible one reports no
+      box while its **32**-point row paints the page, the Tab walk stops on the
+      first and skips the second, and a code focus on the invisible control
+      reports its id yet delivers no key (`invisibleKeys=0`) — with the rule to
+      hide with `visibility: "hidden"` or unmount, never `display: "none"`.
+      `/docs/runtime` publishes the same row and §5 owes the probe.
+      `capability-doc.test.ts` gains `records the hiding word the renderer
+      honours, derived from its probe`: it parses the two words out of
+      `HIDING_CASES`, the stop list out of `HIDDEN_STOPS` (the display control
+      belongs, the invisible one does not), the walk budget, the probe's control
+      box and both readouts, then holds the record, the page, the registry and
+      §5. Directions measured: dropping the id from §5 fails the generic
+      `owes no line` case and the new one, and deleting the page row fails
+      `the page's measured table has no hiding-a-subtree row`; restored, 106/106
+      in the file with `check-types` clean. No native scenario applies — the
+      probe's 23-check run on 0.11.0 stands and this change only publishes it.
+      The component fix (the shipped `Carousel` trusts the ignored word) stays
+      the components workstream's open interlock row.
 
 `[x]` Publish the **faded hitbox** in the capability record — the record's
       **Opacity** row measured what a share paints and stopped there, so a plan
