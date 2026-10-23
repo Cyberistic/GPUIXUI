@@ -422,11 +422,18 @@ last label draws nowhere, so it cannot raise the axis either, and a chart with n
 label paints no column (no mark, a `1` ceiling) rather than one unnamed slot. The
 axis column
 paints its ceiling at the plot's top and its floor on the plot's floor, so a
-bar's top reads against the value beside it. Every mark sits at the centre of
-its category slot — a bar, a line's point and the label under it share one `x`
-— so a series with fewer values than labels stays in the columns it names. A
-plot's side is often computed, so `chartBox` reads one the geometry cannot lay
-out (`NaN`, an infinity, zero or a negative) as the component's default: the
+bar's top reads against the value beside it. A tick's **label takes its
+precision from the step between ticks** (`tickLabel`): a four-step axis over
+`0.005` prints `0, 0.0013, 0.0025, 0.0037, 0.005`, while `100` still prints
+`0, 25, 50, 75, 100` — a fixed two decimals rounded three of the small steps
+away and left a column of zeros for a chart of rates or seconds. `ticks` names
+the steps: a count the axis cannot read is four and a count past
+`AXIS_STEP_LIMIT` (20) is capped, so a computed count cannot empty the axis or
+mount an unbounded column of labels. Every mark sits at the centre of its
+category slot — a bar, a line's point and the label under it share one `x` — so
+a series with fewer values than labels stays in the columns it names. A plot's
+side is often computed, so `chartBox` reads one the geometry cannot lay out
+(`NaN`, an infinity, zero or a negative) as the component's default: the
 viewBox, the axis column's height, the plot's box and every label's slot width
 are built from it, and a `NaN` would have reached all four as `0`.
 

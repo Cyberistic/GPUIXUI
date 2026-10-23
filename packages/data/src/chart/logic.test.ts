@@ -23,6 +23,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  AXIS_STEP_LIMIT,
   axisTicks,
   barMarks,
   barSlot,
@@ -38,6 +39,7 @@ import {
   seriesDescription,
   stackedBarMarks,
   stackedScale,
+  tickLabel,
   type ChartBox,
   type ChartMark,
   type ChartSeries,
@@ -79,6 +81,47 @@ describe("the chart scale", () => {
     expect(chartScale([series("a", [10, 50]), series("b", [93])])).toBe(100);
     expect(axisTicks(100, 4)).toEqual([0, 25, 50, 75, 100]);
     expect(axisTicks(100, 0)).toEqual([0, 100]);
+  });
+
+  it("keeps a tick's label as precise as its step", () => {
+    // A chart of rates over `0.005` used to print 0, 0, 0, 0, 0.01: the fixed
+    // two decimals rounded three of the four steps away, so the bars had no
+    // number to be read against.
+    const small = axisTicks(0.005, 4);
+    const smallStep = 0.005 / 4;
+    expect(Arr.map(small, (tick) => tickLabel(tick, smallStep))).toEqual([
+      "0",
+      "0.0013",
+      "0.0025",
+      "0.0037",
+      "0.005",
+    ]);
+    // The ordinary scale is unchanged: the guard digit is dropped when the
+    // step is a whole number and trailing zeros never paint.
+    expect(Arr.map(axisTicks(100, 4), (tick) => tickLabel(tick, 25))).toEqual([
+      "0",
+      "25",
+      "50",
+      "75",
+      "100",
+    ]);
+    expect(tickLabel(0.5, 0.25)).toBe("0.5");
+    // A step below the last finite decimal keeps a readable exponential label
+    // rather than rounding every tick to zero.
+    expect(tickLabel(2.5e-22, 1e-22)).toBe("2.50e-22");
+    // An unreadable tick never paints `NaN`.
+    expect(tickLabel(Number.NaN, 1)).toBe("0");
+  });
+
+  it("reads an unreadable or unbounded tick count as a chart can paint it", () => {
+    // `ticks` is often computed. `NaN` used to mount no tick at all and a huge
+    // count mounted one text host per step.
+    expect(axisTicks(100, Number.NaN)).toEqual([0, 25, 50, 75, 100]);
+    expect(axisTicks(100, Number.POSITIVE_INFINITY)).toEqual([
+      0, 25, 50, 75, 100,
+    ]);
+    expect(axisTicks(100, 1_000_000_000)).toHaveLength(AXIS_STEP_LIMIT + 1);
+    expect(axisTicks(100, 3.7)).toEqual([0, 100 / 3, 200 / 3, 100]);
   });
 
   it("measures only the slots the chart paints", () => {

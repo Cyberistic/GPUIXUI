@@ -190,10 +190,56 @@ export const stackedScale = (
     ),
   );
 
-/** Evenly spaced axis values from `0` to `scale`, inclusive. */
+/** The most steps an axis divides its scale into. */
+export const AXIS_STEP_LIMIT = 20;
+
+/**
+ * The steps an axis divides its scale into.
+ *
+ * `ticks` is often computed, so a count the geometry cannot read is the
+ * default four rather than `NaN` (which mounts no tick at all) and a finite
+ * count is bounded: an axis of a million labels is not a chart, it is a way to
+ * mount a million text hosts.
+ */
+const axisSteps = (count: number): number =>
+  Number.isFinite(count)
+    ? Math.min(AXIS_STEP_LIMIT, Math.max(1, Math.floor(count)))
+    : 4;
+
+/**
+ * Evenly spaced axis values from `0` to `scale`, inclusive.
+ *
+ * A count the axis cannot read reads as four steps and a count past
+ * {@link AXIS_STEP_LIMIT} is capped, so a computed `ticks` cannot empty the
+ * axis or mount an unbounded column of labels.
+ */
 export const axisTicks = (scale: number, count = 4): ReadonlyArray<number> => {
-  const steps = Math.max(1, Math.floor(count));
+  const steps = axisSteps(count);
   return Arr.makeBy(steps + 1, (index) => (scale / steps) * index);
+};
+
+/**
+ * A tick's label, with the precision its own step needs.
+ *
+ * A fixed two decimals is only right for a scale measured in whole units: a
+ * step of `0.00125` printed `0, 0, 0, 0, 0.01`, so a chart of rates or seconds
+ * read as a column of zeros and its bars had no number to be read against. The
+ * label keeps one guard digit past the step's magnitude (`0.0013`, `0.0025`,
+ * `0.0037`, `0.005`), and a step too small for a finite decimal falls back to
+ * exponential notation rather than rounding every tick away. Trailing zeros
+ * are dropped, so a whole scale still reads `0, 25, 50, 75, 100`.
+ *
+ * `step` is the distance between adjacent ticks (`scale / steps`), not the
+ * scale: the precision a label needs is the precision of its neighbour.
+ */
+export const tickLabel = (tick: number, step: number): string => {
+  if (!Number.isFinite(tick)) return "0";
+  if (!Number.isFinite(step) || step <= 0) return `${tick}`;
+  // One guard digit past the step's magnitude keeps adjacent labels distinct
+  // when a step is not a power of ten.
+  const decimals = Math.ceil(-Math.log10(step)) + 1;
+  if (decimals > 20) return tick === 0 ? "0" : tick.toExponential(2);
+  return `${Number(tick.toFixed(decimals))}`;
 };
 
 /** The width of one category's slot and of the bar inside it. */

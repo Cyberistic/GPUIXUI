@@ -43,6 +43,7 @@ import {
   seriesDescription,
   stackedBarMarks,
   stackedScale,
+  tickLabel,
   type ChartBox,
   type ChartMark,
   type ChartSeries,
@@ -254,6 +255,12 @@ const ChartFrame = ({
   const palette = seriesColors(theme);
   const layers = marks(box, scale);
   const slot = barSlot(labels.length, box.width).slot;
+  const tickValues = axisTicks(scale, ticks);
+  // The labels take their precision from the distance between neighbours, not
+  // from the plot's scale: a four-step axis over `0.005` has a `0.00125` step
+  // and prints `0.0013`, while `100` still prints `25`.
+  const tickStep =
+    tickValues.length > 1 ? scale / (tickValues.length - 1) : scale;
   const showLegend = legend ?? series.length > 1;
   return (
     <div
@@ -276,7 +283,7 @@ const ChartFrame = ({
              * A column reads top to bottom, so the ceiling paints first: the
              * axis and the bars then share one floor.
              */}
-            {Arr.map(Arr.reverse(axisTicks(scale, ticks)), (tick) => (
+            {Arr.map(Arr.reverse(tickValues), (tick) => (
               <text
                 key={`tick-${tick}`}
                 testId={
@@ -287,7 +294,7 @@ const ChartFrame = ({
                   textAlign: "right",
                 }}
               >
-                {`${Math.round(tick * 100) / 100}`}
+                {tickLabel(tick, tickStep)}
               </text>
             ))}
           </div>

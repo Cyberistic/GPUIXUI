@@ -152,6 +152,31 @@ describe("the charts", () => {
     expect(floor.y - ceiling.y).toBeGreaterThan(plot.height / 2);
   });
 
+  it("labels a small scale with the precision its ticks need", () => {
+    // A chart of rates over 0.005 used to print 0, 0, 0, 0, 0.01: a fixed two
+    // decimals rounded the axis away, so the bars had no number to be read
+    // against. The labels take their precision from the step between them.
+    root = renderData(
+      <BarChart
+        aria-label="Fractional rates"
+        labels={["one", "two", "three"]}
+        series={[
+          { key: "rate", label: "Rate", values: [0.0012, 0.0034, 0.0021] },
+        ]}
+        width={200}
+        height={100}
+        testId="chart-small"
+      />,
+    );
+    settle(root);
+
+    const text = paintedText(root);
+    expect(text).toContain("0.0013");
+    expect(text).toContain("0.0025");
+    expect(text).toContain("0.0037");
+    expect(text).toContain("0.005");
+  });
+
   it("paints one slice per datum and skips a value of zero", () => {
     const root = mount();
 

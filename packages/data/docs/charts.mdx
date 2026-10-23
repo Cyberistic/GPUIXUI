@@ -54,6 +54,16 @@ The axis column reads from the top down: its ceiling is the topmost label and
 its floor sits on the plot's floor — the same edge the bars stand on — so a
 bar's top is read against the number beside it.
 
+A tick's label takes its precision from the **step between ticks**, not from a
+fixed two decimals: a four-step axis over `0.005` prints
+`0, 0.0013, 0.0025, 0.0037, 0.005`, while a whole scale over `100` still prints
+`0, 25, 50, 75, 100`. A fixed two decimals rounded three of those small steps to
+`0`, so a chart of rates or seconds read as a column of zeros and its bars had
+no number to be read against; `tickLabel(tick, step)` is the formatter and is
+exported for a custom axis. `ticks` names the steps: a count the axis cannot
+read is four (`NaN`, an infinity), and a count past `AXIS_STEP_LIMIT` (20) is
+capped rather than mounting an unbounded column of labels.
+
 `labels` names the columns: a series with more values than labels paints only
 the labelled slots, and the extra values draw nowhere. A chart with **no** labels
 paints no column at all — no bar, no line and a `1` ceiling — rather than one

@@ -87,6 +87,7 @@ export type {
 } from "./chart/chart.js";
 
 export {
+  AXIS_STEP_LIMIT,
   axisTicks,
   barMarks,
   barSlot,
@@ -105,6 +106,7 @@ export {
   seriesMax,
   stackedBarMarks,
   stackedScale,
+  tickLabel,
 } from "./chart/logic.js";
 export type {
   BarSlot,
