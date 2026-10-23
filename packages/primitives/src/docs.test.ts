@@ -596,15 +596,22 @@ describe("the primitives docs page contract", () => {
     // abandoned. The contract is a table now: a required row is on every page,
     // an optional row is on at least one, and a page carries no section the
     // table does not name.
-    const rows = Arr.filterMap(read("README.md").split("\n"), (line) => {
-      const match = /^\| `## (.+?)` \| (yes|no) \|/.exec(line);
-      return match === null
-        ? Result.failVoid
-        : Result.succeed({
-            heading: match[1] ?? "",
-            required: match[2] === "yes",
-          });
-    });
+    interface ContractRow {
+      readonly heading: string;
+      readonly required: boolean;
+    }
+    const rows: ReadonlyArray<ContractRow> = Arr.filterMap(
+      read("README.md").split("\n"),
+      (line): Result.Result<ContractRow, void> => {
+        const match = /^\| `## (.+?)` \| (yes|no) \|/.exec(line);
+        return match === null
+          ? Result.failVoid
+          : Result.succeed({
+              heading: match[1] ?? "",
+              required: match[2] === "yes",
+            });
+      },
+    );
     const headingsOf = (page: string): ReadonlyArray<string> =>
       Arr.map(sections(read(page)), (section) => section.heading);
     const carried = Arr.map(pages, (page) => ({
@@ -613,14 +620,14 @@ describe("the primitives docs page contract", () => {
     }));
     expect(Arr.length(rows)).toBeGreaterThanOrEqual(5);
     expect(
-      Arr.flatMap(
-        Arr.filter(rows, (row) => row.required),
-        (row) =>
-          Arr.filterMap(carried, ({ page, headings }) =>
-            Arr.contains(headings, row.heading)
-              ? Result.failVoid
-              : Result.succeed(`${page}: no ## ${row.heading}`),
-          ),
+      Arr.flatMap(rows, (row) =>
+        row.required
+          ? Arr.filterMap(carried, ({ page, headings }) =>
+              Arr.contains(headings, row.heading)
+                ? Result.failVoid
+                : Result.succeed(`${page}: no ## ${row.heading}`),
+            )
+          : [],
       ),
     ).toEqual([]);
     expect(
