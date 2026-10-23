@@ -3288,6 +3288,86 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("keyboardFocusDim: false");
   });
 
+  it("records the hitbox a faded surface keeps, derived from its fixture", () => {
+    // Every leaving surface fades to zero and stays mounted for its exit, and two
+    // guards rest on what the pointer does next: `presenceStyle` writes
+    // `pointerEvents: "none"` and `PresenceShield` covers the controls a
+    // dismissed shell keeps mounted. If a share of zero removed the hitbox both
+    // would be ceremony; if it does not, a ghost swallows the press meant for the
+    // screen behind it. `faded-hitbox-lifecycle` measured which it is, and every
+    // number below is derived from the fixture and the probe's own assertions, so
+    // neither file can teach a reading the window no longer takes.
+    const fixture = read("apps/playground/src/live/opacity-hit.ts");
+    const probe = read("apps/playground/src/live/opacity-hit-probe.tsx");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+
+    const width = constant("FADED_WIDTH");
+    const height = constant("FADED_HEIGHT");
+    const opacity = constant("FADED_OPACITY");
+    const terms =
+      /export const FADED_CHECKS = ([\d +]+);/.exec(fixture)?.[1] ?? "";
+    const checks = terms
+      .split("+")
+      .map((term) => Number(term.trim()))
+      .reduce((total, term) => total + term, 0);
+
+    expect(width).toBeGreaterThan(0);
+    expect(height).toBeGreaterThan(0);
+    expect(opacity).toBe(0);
+    expect(checks).toBeGreaterThan(0);
+
+    // The probe's four readouts, in the order it asserts them — the press, the
+    // key, the cover, then the opt-out — so a changed probe fails here rather
+    // than leaving the record quoting a previous run.
+    const readouts = [
+      ...probe.matchAll(
+        /ctx\.expectContains\(\s*"[^"]+",\s*yield\* ctx\.host\.text\(FADED_IDS\.readout\),\s*"([^"]+)"/g,
+      ),
+    ].map((match) => match[1] ?? "");
+    expect(readouts).toEqual([
+      "faded=1",
+      "keys=1",
+      "cover=1 target=0",
+      "inertCover=1 inertTarget=1",
+    ]);
+
+    const box = `${width}×${height}`;
+    const row = rowFor("Opacity");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("faded-hitbox-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(`**${box}**`);
+    expect(row?.evidence).toContain(`\`opacity: ${opacity}\``);
+    readouts.forEach((readout) => expect(row?.evidence).toContain(readout));
+    expect(row?.workaround).toContain('pointerEvents: "none"');
+
+    const page = measuredRow("Faded hitbox");
+    expect(
+      page,
+      "the page's measured table has no faded-hitbox row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("faded-hitbox-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`**${box}**`);
+    expect(page?.[1]).toContain(`\`opacity: ${opacity}\``);
+    readouts.forEach((readout) => expect(page?.[1]).toContain(readout));
+    expect(page?.[2]).toContain('pointerEvents: "none"');
+
+    expect(
+      [...registeredProbes()],
+      "the cited probe is not one the playground registers",
+    ).toContain("faded-hitbox-lifecycle");
+    expect(
+      doc.slice(doc.indexOf("## 5. Keeping this document true")),
+      "the record's §5 owes no line for the faded hitbox",
+    ).toContain("faded-hitbox-lifecycle");
+  });
+
   it("records the geometry `motion` animates and the content it clips", () => {
     // Two inventory rows rest on this — Tier 3's expandable rows and Tier 4's
     // collapsible sidebars — and neither had a window measurement, because a
