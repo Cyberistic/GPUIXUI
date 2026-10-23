@@ -1062,6 +1062,7 @@ import {
 import { KeyHoldProbe, keyHoldSteps } from "./key-hold-probe.js";
 import { TextUndoProbe, textUndoSteps } from "./text-undo-probe.js";
 import { FocusRevealProbe, focusRevealSteps } from "./focus-reveal-probe.js";
+import { ZIndexProbe, zIndexSteps } from "./z-index-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -28980,5 +28981,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "focus-reveal-lifecycle",
     view: () => <FocusRevealProbe />,
     steps: focusRevealSteps,
+  },
+  "z-index-lifecycle": {
+    id: "z-index-lifecycle",
+    view: () => <ZIndexProbe />,
+    steps: zIndexSteps,
   },
 };

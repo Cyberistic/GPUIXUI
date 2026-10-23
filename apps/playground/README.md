@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-108 probes a real window can prove, of which twenty mount shipped
+109 probes a real window can prove, of which twenty mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6065,6 +6065,73 @@ exit `1`, restored green: dropping the reveal leaves the roving row clipped, so
 the run stops at `the reveal lands where a minimal reveal puts it (y=0)` with
 `expected -40 ± 1, got 0` after 28 of the 44 checks; restored, 44/44.
 
+### `z-index-lifecycle` — measured on 0.11.0 here
+
+**Does the local `zIndex` extension actually order siblings?** The published
+`@gpuix/native@0.11.0` has no stacking field: siblings paint in tree order, so a
+surface has to be the last child of its parent. This repository builds its own
+darwin-x64 binding with `apps/playground/patches/gpuix-zindex.patch` applied, and
+the patch has Rust tests over the retained tree — but no app code had ever set
+the field, so a rebuild that dropped the patch would leave every existing probe
+green: every shipped surface already renders last in its parent. The local type
+is declared in `src/gpuix-zindex.d.ts` and is scoped to this app; nothing in
+`packages/` may depend on it.
+
+Three arrangements of one 160×90 box share a stack:
+
+| Arrangement | Mount order | Expected |
+| ----------- | ----------- | -------- |
+| levelled | red (`3`), green (`1`), blue (`2`) | red paints and hit-tests on top |
+| no level | red, green, blue | blue stays on top — tree order, untouched |
+| in-flow with a level | yellow (`9`) under a purple absolute cover (`1`) | purple paints above yellow |
+
+The probe reads three channels in one run: the renderer's own `getElementsAt` at
+each stack's centre, the capture's colour at the same point, and the box whose
+`onClick` ran.
+
+| Step | Measured |
+| ---- | -------- |
+| the hit test at the levelled stack's centre | `stack=high,mid,low` — highest level first |
+| the hit test at the control stack's centre | `plain=plain-mid,plain-low,plain-high` — reverse tree order, no reorder |
+| the hit test over the in-flow pair | `flow=flow-cover,flow-base` — the positioned cover above the in-flow child |
+| the painted top of the levelled stack | `#FF3B30` (the level-3 box) |
+| the painted top of the control stack | `#0A84FF` (the third child, tree order) |
+| the painted top of the in-flow pair | `#AF52DE` (the positioned cover, despite the child's level `9`) |
+| a press at the levelled stack's centre | `presses=high` — the paint and the hit test agree |
+| a press at the control stack's centre | `presses=high,plain-mid` — tree order again |
+
+Three rules a plan can use:
+
+1. **A level orders paint and hit testing together.** The levelled stack's press
+   reached the box the capture put on top, so a consumer cannot get a surface
+   that paints above another but takes presses beneath it.
+2. **No level is the old behaviour, not level 0.** The control stack kept its
+   tree order exactly, which is the gate's whole promise: a tree that never
+   declares a level pays no reorder and paints as it always did.
+3. **An in-flow child's level is inert.** Yellow declared `9` and stayed under
+   the level-1 cover, so a layout-stable box cannot be lifted by this field; only
+   `absolute`/`fixed` siblings move.
+
+Two honest limits: this is a **repository-local extension**, not a published
+capability, so the library ships tree order and the capability record keeps its
+`not supported in the published API` verdict; and the probe's negative control
+is a level that collapses to `0`, which reads `stack=mid,low,high` — exactly the
+readout a binding without the patch produces, because an ignored style key and a
+zero level are the same order.
+
+16 checks, `--only z-index-lifecycle`, green on 0.11.0 here (~0.5 s). Fixture
+`src/live/z-index.ts` (the ids, geometry, levels, hit-name mapping and readout) +
+`z-index.test.ts` (the orders disagreeing with tree order, the unique fills and
+ids, the shared centre, the in-flow level above every positioned one, the
+readout, the count, the probe's three channels, the local type and this section).
+Negative controls measured, exit `1`, restored green: a level of `0` on every
+positioned box fails `the levelled stack hit-tests highest first` with
+`expected a string containing "stack=high,mid,low", got "stack=mid,low,high
+plain=plain-mid,plain-low,plain-high flow=flow-cover,flow-base presses=none"`,
+and expecting the in-flow base's fill at the flow centre fails
+`the positioned cover paints over the in-flow child` with `expected true, got
+false`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6297,7 +6364,7 @@ narrower. Each deviation is deliberate and measured:
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
-  (fifty probes, each run alone).
+  and `z-index-lifecycle` (fifty-one probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

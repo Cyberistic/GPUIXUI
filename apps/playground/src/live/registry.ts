@@ -684,6 +684,12 @@ export const liveRegistry = [
       "Focus: a traversal focuses a control past its pane's fold without revealing it, while a roving list reveals the row its own key moved onto",
     capability: "focus",
   },
+  {
+    id: "z-index-lifecycle",
+    title:
+      "Layout: a local zIndex orders positioned siblings for paint and hit testing, no level keeps tree order, and a level on an in-flow child is inert",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
