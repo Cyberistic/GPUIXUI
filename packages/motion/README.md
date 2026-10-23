@@ -261,6 +261,15 @@ run never settled at all — a driver waiting for rest sampled it forever. The
 constructor and the samplers read the physics the same way, so a hand-built
 spring samples as the built one does.
 
+A **transition** itself is read the same way, because `Transition` is exported
+and structural: a declaration decoded from storage can arrive with no object at
+all — JSON has no `undefined`, so a field a config never carried comes back as
+`null` — or name a run a release no longer ships. `MotionValue.animate` and
+`transitionEquals` read that as the declaration a caller who names none gets,
+the house `tween()` (300 ms, ease-out): storing it and reading `.kind` off
+nothing threw `TypeError` out of a frame loop, and the equality rule a re-render
+runs to decide whether the run changed threw before the run could start.
+
 A timeline is repaired at the value the caller supplies: a keyframe whose offset
 or value cannot be read is not a stop (it is dropped, and a set with none answers
 `0`), a set is read by the offsets its frames name rather than by the order they

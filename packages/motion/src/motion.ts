@@ -74,6 +74,33 @@ export const springTransition = (physics: SpringPhysics): Transition => ({
   physics,
 });
 
+/** The run a caller who names no transition gets: the house tween. */
+const houseTransition: Transition = tween();
+
+/** Whether a value names one of the three runs this package samples. */
+const isTransition = (value: unknown): value is Transition => {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("kind" in value)) return false;
+  return (
+    value.kind === "instant" ||
+    value.kind === "tween" ||
+    value.kind === "spring"
+  );
+};
+
+/**
+ * The declaration a sampler runs, read from a value a caller may have stored.
+ *
+ * `Transition` is exported and structural, so a config decoded from storage can
+ * arrive with **no object at all** — JSON has no `undefined`, so a field the
+ * config never carried comes back as `null` — and a hand-built release can name
+ * a run the package does not know. `animate` stored it and the frame loop read
+ * `.kind` off nothing, throwing `TypeError` out of a sampler. It is read as the
+ * declaration a caller who names none gets: the house {@link tween}.
+ */
+const transitionOf = (declaration: Transition | null | undefined): Transition =>
+  isTransition(declaration) ? declaration : houseTransition;
+
 const easingEquals = (left: Easing, right: Easing): boolean => left === right;
 
 /**
@@ -101,25 +128,29 @@ const physicsEquals = (left: SpringPhysics, right: SpringPhysics): boolean => {
  *
  * A tween is compared by the duration the sampler runs and a spring by the
  * physics it samples, so a hand-built declaration whose unreadable field the
- * sampler repairs reads equal to the repair it performs. `Easing` is a caller's
- * function, so its identity is the only rule available for it.
+ * sampler repairs reads equal to the repair it performs. A declaration that
+ * carries no run at all is read as the one `animate` runs by default, so it
+ * compares equal to that instead of throwing. `Easing` is a caller's function,
+ * so its identity is the only rule available for it.
  */
 export const transitionEquals = (
   left: Transition,
   right: Transition,
 ): boolean => {
-  if (left.kind !== right.kind) return false;
-  if (left.kind === "instant") return true;
-  if (left.kind === "tween" && right.kind === "tween") {
+  const a = transitionOf(left);
+  const b = transitionOf(right);
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "instant") return true;
+  if (a.kind === "tween" && b.kind === "tween") {
     return (
-      runDurationMs(left.durationMs) === runDurationMs(right.durationMs) &&
-      easingEquals(left.easing, right.easing)
+      runDurationMs(a.durationMs) === runDurationMs(b.durationMs) &&
+      easingEquals(a.easing, b.easing)
     );
   }
   return (
-    left.kind === "spring" &&
-    right.kind === "spring" &&
-    physicsEquals(left.physics, right.physics)
+    a.kind === "spring" &&
+    b.kind === "spring" &&
+    physicsEquals(a.physics, b.physics)
   );
 };
 
@@ -186,20 +217,28 @@ export class MotionValue {
     this.completed = false;
   }
 
-  /** Retargets from the current presentation; identical declarations are a no-op. */
+  /**
+   * Retargets from the current presentation; identical declarations are a no-op.
+   *
+   * A declaration the caller cannot read — a stored one the config did not
+   * carry, or a kind this package does not sample — is the run a caller who
+   * names none gets ({@link tween}), so it cannot reach the frame loop as
+   * `.kind` on nothing.
+   */
   animate(target: number, transition: Transition = tween()): void {
     const safeTarget = finite(target, this.target);
+    const declared = transitionOf(transition);
     if (
       this.mode.kind === "transition" &&
       this.target === safeTarget &&
-      transitionEquals(this.mode.transition, transition)
+      transitionEquals(this.mode.transition, declared)
     ) {
       return;
     }
     this.from = this.value;
     this.initialVelocity = this.velocity;
     this.target = safeTarget;
-    this.mode = { kind: "transition", transition };
+    this.mode = { kind: "transition", transition: declared };
     this.startedMs = this.lastMs;
     this.active = this.from !== safeTarget || this.velocity !== 0;
     this.completed = false;

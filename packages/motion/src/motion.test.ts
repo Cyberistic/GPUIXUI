@@ -248,6 +248,45 @@ describe("MotionValue", () => {
     expect(done.complete).toBe(true);
   });
 
+  it("animates from a declaration that carries no transition", () => {
+    // `Transition` is exported and structural, so a transition decoded from
+    // storage can arrive with **no object at all**: JSON has no `undefined`, so
+    // a field a config never carried comes back as `null`. `animate` stored it
+    // and `sample` read `.kind` off nothing, so the frame loop threw
+    // `TypeError` and the surface never moved. An unreadable declaration is the
+    // run a caller who names none gets — the house tween — not a crash.
+    // @ts-expect-error — a stored declaration can arrive as `null`.
+    const absent: Transition = null;
+    const value = new MotionValue(0);
+    value.animate(1, absent);
+
+    expect(value.sample(DEFAULT_TWEEN_MS / 2).value).toBeCloseTo(
+      easeOut(0.5),
+      5,
+    );
+    const done = value.sample(DEFAULT_TWEEN_MS);
+    expect(done.value).toBe(1);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
+  it("runs a declaration whose kind the package does not name as the house tween", () => {
+    // A release that renamed a run leaves a discriminant this package cannot
+    // sample. Reading it as a spring (the branch the unknown kind used to fall
+    // through to) is a run the caller never asked for; the declaration a caller
+    // cannot read is the one they get for naming none.
+    // @ts-expect-error — a stored kind the library did not type-check.
+    const unknown: Transition = { kind: "decoded" };
+    const value = new MotionValue(0);
+    value.animate(1, unknown);
+
+    expect(value.sample(DEFAULT_TWEEN_MS / 2).value).toBeCloseTo(
+      easeOut(0.5),
+      5,
+    );
+    expect(value.sample(DEFAULT_TWEEN_MS).value).toBe(1);
+  });
+
   it("does not restart a coast for a re-declared inertia", () => {
     // `useInertia(velocity, inertia())` builds its inertia inline, so every
     // render re-declares the same coast. Without the guard the run restarted
@@ -442,6 +481,24 @@ describe("transitionEquals", () => {
     expect(transitionEquals(tween(300, linear), tween(200, linear))).toBe(
       false,
     );
+  });
+
+  it("compares a declaration that carries no transition as the house run", () => {
+    // The equality check read `.kind` off whatever it was handed, so a stored
+    // declaration that came back as `null` (JSON has no `undefined`) threw
+    // `TypeError` from the rule a re-render runs to decide whether the run
+    // changed. It is compared as the run `animate` takes for no declaration at
+    // all, so an absent one neither crashes nor restarts a live tween.
+    // @ts-expect-error — a stored declaration can arrive as `null`.
+    const absent: Transition = null;
+    // @ts-expect-error — the same absence, from a missing field.
+    const missing: Transition = undefined;
+
+    expect(transitionEquals(tween(), absent)).toBe(true);
+    expect(transitionEquals(absent, tween())).toBe(true);
+    expect(transitionEquals(absent, missing)).toBe(true);
+    // It is the house tween, not an acknowledgement of any declaration.
+    expect(transitionEquals(instant, absent)).toBe(false);
   });
 
   it("compares a spring by every physics field", () => {
