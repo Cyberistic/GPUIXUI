@@ -22,9 +22,13 @@
  * smallest move toward the theme's `foreground` that clears the perceptibility
  * floor against the wash the row already wears, and never one that costs a
  * label the floor it holds on the role the wash plays.
+ *
+ * The pages are read synchronously, like every guard in this package: the core
+ * is deliberately dependency-free (no `effect` here), so the sources and the
+ * documents a claim lives in are read from disk rather than through a service.
  */
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -355,15 +359,18 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("reads the painters that wear the washes", () => {
-    // The placements exist because three painters wear them: the components'
-    // list row tints `accent` and presses `active`, the components' menu row
-    // tints `hover` and presses `active`, and the primitives' recipe hands the
-    // same two washes to a ghost action. The two component painters ask the
-    // derivation for the press rather than the raw role, so the wash they
-    // replace is named at the call site.
+    // The placements exist because every row the library paints wears them: the
+    // components' list row tints `accent` and presses past it, its menu row and
+    // `Collapsible` trigger tint `hover` and press past that, and the data
+    // package's table and tree rows wear both transitions — a chosen row derives
+    // over `accent`, a pointed one over `hover`. Every one of them asks the
+    // derivation rather than painting the raw `active` role.
     const list = read("../../components/src/list.tsx");
     const menu = read("../../components/src/menu/item.tsx");
+    const collapsible = read("../../components/src/collapsible.tsx");
     const recipe = read("../../primitives/src/recipe/index.ts");
+    const table = read("../../data/src/table/table.tsx");
+    const tree = read("../../data/src/tree/row.tsx");
 
     expect(list).toContain("backgroundColor: theme.colors.accent");
     expect(list).toContain('pressWash(theme, "accent")');
@@ -371,7 +378,97 @@ describe("the wash a pointer state paints", () => {
     expect(menu).toContain("theme.colors.hover");
     expect(menu).toContain('pressWash(theme, "hover")');
     expect(menu).not.toContain("backgroundColor: theme.colors.active");
+    expect(collapsible).toContain('pressWash(theme, "hover")');
     expect(recipe).toContain("hover:bg-hover active:bg-active");
+    // The data package's two workspace rows read the helper directly: a chosen
+    // row repaints over the `accent` it hovers with and a pointed one over
+    // `hover`, and neither falls back to the raw role while it can derive.
+    [table, tree].forEach((source, index) => {
+      const name = index === 0 ? "table/table.tsx" : "tree/row.tsx";
+
+      expect(source, name).toContain('pointerWash(theme, "active", "accent")');
+      expect(source, name).toContain('pointerWash(theme, "active", "hover")');
+      expect(source, name).toContain("?? theme.colors.active");
+    });
+  });
+
+  it("names every package whose rows derive the press", () => {
+    // The adopters are what makes the placements live, and both pages taught them
+    // as two packages' work long after the data package's table and tree rows
+    // asked for the helper — the README even said the raw roles were what a row
+    // painted "until a row asks". The set is derived from the sources, so a
+    // fourth package adopting the helper has to be named, and the two workspace
+    // rows are required by name because they are the newest adopters.
+    const packageSources = (name: string): ReadonlyArray<[string, string]> => {
+      const root = new URL(`../../${name}/src/`, import.meta.url).pathname;
+      return readdirSync(root, { recursive: true, withFileTypes: true })
+        .filter(
+          (entry) =>
+            entry.isFile() &&
+            /\.(ts|tsx)$/.test(entry.name) &&
+            !/\.(test|example)\./.test(entry.name),
+        )
+        .map((entry) => {
+          const file = `${entry.parentPath}/${entry.name}`;
+          return [file.slice(root.length), readFileSync(file, "utf8")] as const;
+        });
+    };
+    const packages = ["components", "primitives", "data"] as const;
+    const adopters = packages.flatMap((name) => {
+      const calls = packageSources(name).filter(([, source]) =>
+        /pointerWash\(|pressWash\(/.test(source),
+      );
+      return calls.length === 0 ? [] : [{ name, calls }];
+    });
+
+    // The premise: each package paints a row and asks for the derivation.
+    expect(adopters.map(({ name }) => name)).toEqual([...packages]);
+
+    // The catalogue names a file from each adopter's own tree, so a package
+    // cannot adopt the helper while the page describes two packages' work.
+    adopters.forEach(({ name, calls }) => {
+      const named = calls.some(([path]) =>
+        catalogue.replace(/\s+/g, " ").includes(path),
+      );
+
+      expect(named, `docs/tokens.md does not name a ${name} painter`).toBe(
+        true,
+      );
+    });
+
+    // The README and the inventory name the two workspace rows — the adopters
+    // that were missing — and no page returns to the claim that none asks.
+    [readme, inventory, catalogue, designSystem].forEach((document, index) => {
+      const page = [
+        "packages/tokens/README.md",
+        "COMPONENTS.md",
+        "docs/tokens.md",
+        "docs/design-system.md",
+      ][index];
+      const text = document.replace(/\s+/g, " ");
+
+      expect(
+        text.includes("until a row asks for the helper"),
+        `${page} still says no row asks`,
+      ).toBe(false);
+    });
+
+    [readme, inventory].forEach((document, index) => {
+      const page = ["packages/tokens/README.md", "COMPONENTS.md"][index];
+      const text = document.replace(/\s+/g, " ");
+
+      expect(text.includes("`TableRow`"), `${page} TableRow`).toBe(true);
+      expect(text.includes("`TreeRow`"), `${page} TreeRow`).toBe(true);
+    });
+
+    expect(
+      inventory.replace(/\s+/g, " ").includes("still the open half"),
+      "COMPONENTS.md still calls a primitives recipe the open half",
+    ).toBe(false);
+    expect(
+      designSystem.replace(/\s+/g, " ").includes("both packages derive it"),
+      "docs/design-system.md still says two packages derive the press",
+    ).toBe(false);
   });
 });
 

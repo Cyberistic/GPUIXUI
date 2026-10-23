@@ -2437,8 +2437,9 @@ needed a derivation rather than a palette edit.
 
 A **pointer state** replaces the wash the row is already wearing: a list row
 tints `accent` under the pointer and paints `active` while the press is down
-(`list.tsx`), a menu row, a ghost action or a table row tints `hover` and
-repaints `active` under the press (`menu/item.tsx`, the primitives' recipe). So
+(`list.tsx`), a menu row, a ghost action or a table or tree row tints `hover` and
+repaints `active` under the press (`menu/item.tsx`, the primitives' recipe,
+`packages/data`'s `table/table.tsx` and `tree/row.tsx`). So
 the step is the wash against the wash, not a wash on a strip — and the strips are
 the page under a row, the one surface every wash passes. Measured over the
 sixteen shipped, high-contrast, platform and authored styles, the press was
@@ -2466,9 +2467,12 @@ it without a twelfth contract. The derivation repairs all six shipped styles
 over every style is the macOS dark press at **1.052:1**. The painters ask for the
 helper and name the wash they replace: the components' list row
 (`pressWash(theme, "accent")`), menu row and `Collapsible` trigger
-(`pressWash(theme, "hover")`), and the primitives' ghost/outline/link recipes,
-toggle, empty checkbox/switch and number-field stepper (`core/pointer.ts`) — so
-no row presses in the bare role the six measurements above counted as invisible.
+(`pressWash(theme, "hover")`), the primitives' ghost/outline/link recipes,
+toggle, empty checkbox/switch and number-field stepper (`core/pointer.ts`), and
+the data package's workspace rows — `TableRow` (`table/table.tsx`) and `TreeRow`
+(`tree/row.tsx`) derive over `accent` for a chosen row and over `hover` for a
+pointed one — so no row presses in the bare role the six measurements above
+counted as invisible.
 
 Because the press is a derived paint, the surfaces that sit **on** it are
 measured on the paint rather than the role: a context menu, a confirmation dialog

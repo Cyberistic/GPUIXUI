@@ -43,7 +43,8 @@ export const ruleSeparation = (
 /**
  * The rule a **pressed** row paints, over the wash the press derives.
  *
- * A press is not the `active` role: both packages derive it with `pointerWash`
+ * A press is not the `active` role: the packages that paint a row derive it with
+ * `pointerWash`
  * over the wash the row was wearing, and seven of the thirty-two press
  * placements in the shipped styles paint a colour that role does not name. The
  * rule is read against that wash, so the call site names the wash it replaces

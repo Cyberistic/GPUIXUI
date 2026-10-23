@@ -296,9 +296,16 @@ dark's 1.015:1, Windows dark's 1.044:1, Luna light's 1.016:1 and Aero light's
 1.020:1. No palette can close it — macOS dark's `accent` carries a 7:1 label and
 a 3:1 primary tick, and `selectedForeground` on the lightened `active` is pinned
 at 7:1 — so the step is derived; the derivation repairs all six, and the
-tightest placement over every style is the macOS dark press at **1.052:1**. The
-painters are the components' and the primitives' work: until a row asks for the
-helper, the raw roles are what it paints.
+tightest placement over every style is the macOS dark press at **1.052:1**.
+
+Every row the library ships asks for the helper: the components' list row (over
+`accent`) and menu row and `Collapsible` trigger (over `hover`); the primitives'
+ghost/outline/link recipes, toggle, checkbox and switch and number-field stepper
+(`core/pointer.ts`); and the data package's workspace rows — `TableRow` and
+`TreeRow` derive over `accent` for the chosen row and over `hover` for the
+pointed one. A row a consumer writes gets the same rule: `pointerWash` is the
+paint, and the bare `active` role is the one the six measurements above counted
+as invisible.
 
 ## Brand text
 

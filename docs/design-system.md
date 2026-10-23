@@ -314,7 +314,8 @@ A **rule drawn on a row** is not a state, and it is measured against the state
 the row is in. A table row paints its own rule inside the row — the thin
 `border` role, on the row's own fill — so a selected row fills `selected`, a
 pointed one tints `hover`/`accent` under it, and a pressed one repaints the wash
-`pointerWash` derives. The press is not the `active` role: both packages derive it
+`pointerWash` derives. The press is not the `active` role: all three packages
+that paint a row — components, primitives and data — derive it
 over the wash the row was wearing, and seven of the thirty-two press placements
 paint a colour the role does not name. Measured over the shipped styles, the raw
 `border` is under the 1.05:1 perceptibility floor on **22 of the 88** placements —

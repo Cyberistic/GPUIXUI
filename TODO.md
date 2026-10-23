@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 177/177
+`[x]` `[██████████]` 178/178
 
 `[x]` Measure the **rule a menu draws at half the border role** — `@gpuixui/tw`'s
 `MENU_SEPARATOR` is `bg-border/50` and `MenuSeparator` draws it inside the menu
@@ -1533,6 +1533,36 @@ Docs in `docs/tokens.md` §Authored looks/§Verification/§Limitations,
 `docs/design-system.md` §3, the package README and the `Retro looks` row. The
 docs site still offers only Luna and Aero in its platform toggle and theming
 page — recorded in `TODO.md` → Interlocks as the docs-site half.
+
+`[x]` Name the **third package that derives a row's press**, and retire the two
+open halves the pages still claimed — `pointerWash`'s adopters were written as
+"the components' and the primitives' work: until a row asks for the helper, the
+raw roles are what it paints", and `docs/design-system.md` said "both packages
+derive it", while the data package's `TableRow` (`table/table.tsx`) and `TreeRow`
+(`tree/row.tsx`) had already replaced the raw `active` role with
+`pointerWash(theme, "active", …)` over the wash they wear (`accent` for a chosen
+row, `hover` for a pointed one). The inventory row went further the other way and
+still called the primitives' ghost recipe "the open half (`TODO.md` →
+Interlocks)" after `core/pointer.ts` had adopted the helper. Three pages now name
+all three packages and the two workspace rows, and `pointer-wash.test.ts` derives
+the adopters from the sources: it walks `packages/{components,primitives,data}/src`
+for every non-test file that calls `pointerWash`/`pressWash`, requires all three
+packages to be found, requires the catalogue to name a painter from each adopter's
+own tree (so a fourth package cannot adopt the helper while the page describes
+fewer), requires the README and the inventory to name `TableRow` and `TreeRow`,
+and refuses the retracted "until a row asks", "both packages derive it" and
+"still the open half" sentences. `reads the painters that wear the washes` gained
+the `Collapsible` trigger and both data rows (the derived `accent`/`hover`
+presses and the `?? theme.colors.active` fallback). Directions measured: restoring
+the README sentence fails `packages/tokens/README.md still says no row asks`,
+restoring "both packages derive it" fails `docs/design-system.md still says two
+packages derive the press`, dropping `TreeRow` from the inventory fails
+`COMPONENTS.md TreeRow`; with the pages restored
+`nub run --filter @gpuixui/tokens test src/pointer-wash.test.ts` is 16/16 and the
+package is 49 files / 2 841 tests. Docs in `packages/tokens/README.md` §Pointer
+states, `docs/tokens.md` §Decorative surfaces, `docs/design-system.md` §7 and the
+`Decorative surfaces` row. No native scenario applies — a page and painter
+contract; the rows' own presses are `tree.test.tsx`/`table` behaviour suites'.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

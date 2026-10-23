@@ -7,7 +7,8 @@
  * `hover`, a chosen one tints `accent` under the pointer and every row repaints
  * the **derived** press wash while the button is down. The divider placements
  * measured `border` on the raw `active` role, and that role is not what a
- * pressed row paints: both packages derive the press with
+ * pressed row paints: all three packages that paint a row (components,
+ * primitives and data) derive the press with
  * `pointerWash(theme, "active", replaced)`, so seven of the thirty-two press
  * placements in the shipped styles are a colour the role does not name (macOS
  * light's press over `accent` is `#D6D6DE` against a `#DEDEE6` role, macOS
