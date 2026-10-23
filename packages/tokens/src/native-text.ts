@@ -70,7 +70,7 @@
  * instead of handing the host one.
  */
 
-import { blend } from "./color.js";
+import { blend, themeColors } from "./color.js";
 import { opaqueRgb } from "./measure.js";
 import {
   contrastFloorsFor,
@@ -257,56 +257,68 @@ export interface NativeTextMetrics {
 /**
  * The subset of GPUix's `GpuixTheme` this package fills in. Structurally
  * compatible with the runtime's type, whose fields are all optional.
+ *
+ * The colour fields are optional for the same reason the runtime's are: a role
+ * a stored theme lost is a property the host is not handed, and it paints its
+ * own default for it. The type scale and the syntax palette are complete — a
+ * theme that lost a numeric group is refused by `auditTheme`, and the palette
+ * resolves from the shipped table when the theme carries none.
  */
 export interface NativeTextTheme {
   /** The appearance the host's own defaults follow. */
   readonly appearance: ThemeMode;
   /** The fill behind the value, from the field's own fill role. */
-  readonly bg: string;
+  readonly bg?: string;
   /**
    * The ink a `<code>`, `<diff>` and `<markdown>` host paints. A field does not
    * read it: an `<input>`/`<textarea>` paints its value from the element's
    * `color`, which a field hands over beside this object (see the example).
    */
-  readonly text: string;
+  readonly text?: string;
   /** Secondary text inside the host, from `mutedForeground`. */
-  readonly textMuted: string;
+  readonly textMuted?: string;
   /**
    * The faint role, measured on {@link bg}. It reaches a `<code>`'s gutter
    * numbers and a `<diff>`'s meta rows; an `<input>`'s placeholder is fixed by
    * the runtime and does not read it (see the module comment).
    */
-  readonly textFaint: string;
+  readonly textFaint?: string;
   /**
    * The accent a document host paints its own marks in, from `primary` and
    * derived for the 85% composite a list number is drawn at ({@link nativeAccent}).
    */
-  readonly accent: string;
+  readonly accent?: string;
   /** Caret colour, the `primary` mark on {@link bg}. */
-  readonly caret: string;
+  readonly caret?: string;
   /** UI family, from `typography.sans`. */
   readonly fontSans: string;
   /** Monospace family, from `typography.mono`. */
   readonly fontMono: string;
   /** Code block type, from {@link NativeTextMetrics}. */
   readonly metrics: NativeTextMetrics;
-  /** The added-line ink and the hue of its row wash, from the `success` tone. */
-  readonly diffAdd: string;
-  /** The removed-line ink and the hue of its row wash, from `destructive`. */
-  readonly diffDel: string;
+  /**
+   * The added-line ink and the hue of its row wash, from the `success` tone's
+   * three roles. Absent when the theme lost one of them.
+   */
+  readonly diffAdd?: string;
+  /**
+   * The removed-line ink and the hue of its row wash, from `destructive`'s three
+   * roles. Absent when the theme lost one of them.
+   */
+  readonly diffDel?: string;
   /** The hunk header's fill: the `muted` role, the chrome stripe. */
-  readonly diffHunkBg: string;
+  readonly diffHunkBg?: string;
   /** The diff's file-path chrome, from `mutedForeground`. */
-  readonly textDim: string;
+  readonly textDim?: string;
   /**
    * An inline code run's ink: the page's own `foreground`, so a document's code
    * reads as prose in a chip rather than as a second syntax palette.
    */
-  readonly codeText: string;
+  readonly codeText?: string;
   /** The chip behind an inline code run, from `muted`. */
-  readonly codeWash: string;
+  readonly codeWash?: string;
   /** Table rules and dividers a rendered document draws, from `border`. */
-  readonly border: string;
+  readonly border?: string;
   /**
    * The token colours a `<code>` host highlights with, from
    * {@link syntaxColors}: the runtime reads them from this field and paints its
@@ -369,7 +381,10 @@ const ACCENT_STEPS = 50;
  * document can sit on, and whose rail composite stays visible (1.05:1). A theme
  * whose brand already reads returns it unchanged; one the renderer cannot
  * measure is returned unchanged rather than guessed at, the rule the other
- * derived text colours follow.
+ * derived text colours follow. A theme that lost its `primary` answers
+ * `undefined`, so the host paints its own mark colour rather than a guess; a
+ * fill a stored theme lost does not constrain the step, because nothing is
+ * painted there to measure.
  *
  * @example
  * ```ts
@@ -381,10 +396,23 @@ const ACCENT_STEPS = 50;
 export function nativeAccent(
   theme: Theme,
   floors: ContrastFloors = contrastFloorsFor(theme),
-): string {
+): string | undefined {
+  const colors = themeColors(theme);
+  const primary = colors.primary;
+  // A theme that lost its brand has no accent to derive: the host paints its own
+  // mark colour, the rule every absent role follows.
+  if (primary === undefined) {
+    return undefined;
+  }
+  const rest = colors.foreground ?? primary;
   const carries = (colour: string): boolean =>
     nativeAccentSurfaces.every((surface) => {
-      const fill = theme.colors[surface];
+      const fill = colors[surface];
+      // A surface the theme lost cannot constrain the derivation: the host
+      // paints its own fill there, and the rule is not to guess a role.
+      if (fill === undefined) {
+        return true;
+      }
       const label = contrastRatio(
         blend(fill, colour, nativeAccentShares.marker),
         fill,
@@ -400,8 +428,8 @@ export function nativeAccent(
     });
   return (
     Array.from({ length: ACCENT_STEPS + 1 }, (_, step) =>
-      blend(theme.colors.primary, theme.colors.foreground, step / ACCENT_STEPS),
-    ).find(carries) ?? theme.colors.foreground
+      blend(primary, rest, step / ACCENT_STEPS),
+    ).find(carries) ?? rest
   );
 }
 
@@ -410,6 +438,15 @@ export function nativeAccent(
  *
  * The object does not paint a field's value on its own: pass the role as the
  * element's `color` beside it, the pair the contrast table measures on the fill.
+ *
+ * **A role the theme lost is dropped, not read.** A theme restored from storage
+ * can predate a role this release added, and `auditTheme` reports that absence
+ * (it does not refuse the theme), so a consumer that runs the gate and paints
+ * anyway must not crash here: `statusTone` answers `undefined` for a tone whose
+ * three roles are not all there, and the seam reads every role through
+ * {@link themeColors} — so a field the theme cannot fill is absent and the host
+ * paints its own default, the rule {@link statusTone} and {@link brandText}
+ * already follow. The host theme's colour fields are therefore optional.
  *
  * @example
  * ```tsx
@@ -437,16 +474,21 @@ export function nativeTextTheme(
   theme: Theme,
   fill: NativeTextFill = "input",
 ): NativeTextTheme {
+  const colors = themeColors(theme);
+  // A tone is three roles; one a store lost is a tone the host has no ink for,
+  // and the runtime paints its own green or red rather than a guessed role.
+  const added = statusTone({ colors }, "success");
+  const removed = statusTone({ colors }, "destructive");
   return {
     appearance: theme.mode,
-    bg: theme.colors[fill],
-    text: theme.colors.inputForeground,
-    textMuted: theme.colors.mutedForeground,
-    textFaint: theme.colors.placeholder,
+    bg: colors[fill],
+    text: colors.inputForeground,
+    textMuted: colors.mutedForeground,
+    textFaint: colors.placeholder,
     // A document host paints this at 85% behind its list numbers and bullets, so
     // the role is derived for that composite rather than handed over raw.
     accent: nativeAccent(theme),
-    caret: theme.colors.primary,
+    caret: colors.primary,
     fontSans: theme.typography.sans,
     fontMono: theme.typography.mono,
     // A `<code>` host sizes its block from the runtime theme, not from a style
@@ -500,16 +542,16 @@ export function nativeTextTheme(
     // (a file's `+12`, a line's marker and number) and the same value is the
     // wash's hue. A fill role is designed to carry `xForeground`, so it is the
     // wrong role to read — light `warning` measures 1.78:1 on the page.
-    diffAdd: statusTone(theme, "success").foreground,
-    diffDel: statusTone(theme, "destructive").foreground,
-    diffHunkBg: theme.colors.muted,
-    textDim: theme.colors.mutedForeground,
+    diffAdd: added?.foreground,
+    diffDel: removed?.foreground,
+    diffHunkBg: colors.muted,
+    textDim: colors.mutedForeground,
     // Inline code is prose in a chip: the runtime's own violet ink and 10% wash
     // are a second syntax palette no token owns, while the page ink on the muted
     // surface is the pair the contrast table already measures at the body floor.
-    codeText: theme.colors.foreground,
-    codeWash: theme.colors.muted,
-    border: theme.colors.border,
+    codeText: colors.foreground,
+    codeWash: colors.muted,
+    border: colors.border,
     syntax: syntaxColors(theme),
     // The runtime reads a code block's token colours from here and paints its
     // own dark-default palette when the field is absent, so a light theme's

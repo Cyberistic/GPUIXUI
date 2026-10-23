@@ -694,9 +694,16 @@ describe("the secondary action's label on the fill it paints", () => {
     // variants share names it, so a glyph can inherit the label instead of
     // naming a colour from another fill. Both pointer states are the derivation
     // from that fill — a role wash is the fill it replaces in several styles.
-    expect(button).toContain(
-      'Match.when("secondary", () => theme.colors.secondaryForeground)',
-    );
+    // The components package resolves it through the primitive's table now
+    // (`actionOnColor`), so either form counts; the role is the claim.
+    expect(secondary).toContain("theme.colors.secondaryForeground");
+    expect(
+      [
+        "primitiveActionOnColor",
+        'Match.when("secondary", () => theme.colors.secondaryForeground)',
+      ].some((form) => button.includes(form)),
+      "the components' action resolves its label from the variant's own fill",
+    ).toBe(true);
     expect(button).toContain("@gpuixui/primitives/button");
     expect(secondary).toContain('...filled("secondary")');
     expect(variants).toContain("filledHover(theme, action)");
@@ -2946,13 +2953,16 @@ describe("the muted text inside a field's own fill", () => {
 
     // The native host's muted slot is the same role over the same fill, in the
     // package's own seam: `nativeTextTheme(theme)` defaults to a plain field's
-    // `input` fill and hands the host `mutedForeground` as its muted text.
+    // `input` fill and hands the host `mutedForeground` as its muted text. The
+    // roles are read through `themeColors`, so a stored theme that lost one
+    // drops the field instead of throwing.
     const seam = readFileSync(
       new URL("./native-text.ts", import.meta.url),
       "utf8",
     );
-    expect(seam).toContain("bg: theme.colors[fill]");
-    expect(seam).toContain("textMuted: theme.colors.mutedForeground");
+    expect(seam).toContain("const colors = themeColors(theme)");
+    expect(seam).toContain("bg: colors[fill]");
+    expect(seam).toContain("textMuted: colors.mutedForeground");
     expect(seam).toContain(`fill: NativeTextFill = "input"`);
   });
 

@@ -2998,6 +2998,21 @@ property beside the object (§What a field's value actually paints):
 | `metrics.diffRowPaddingX` / `diffBodyBottomPad` | `spacing.xl` / `spacing.md` |
 | `metrics.codeGutterPaddingRight` | `spacing.lg` — the gutter's gap |
 
+**A role a stored theme lost is dropped, not thrown on.** `auditTheme` *reports*
+a missing colour role rather than refusing the theme, so a consumer that ran the
+gate and painted anyway must not lose the host: the seam reads every role through
+`themeColors`, and a field whose role is absent is left out of the object — the
+host paints its own default for a property it was not handed. The sharpest case
+is the diff's two inks: `statusTone` answers `undefined` when a tone has lost any
+of its three roles, and reading `.foreground` off that answer threw
+`TypeError: Cannot read properties of undefined (reading 'foreground')` at a
+`<diff>`'s first paint; `diffAdd`/`diffDel` are absent now instead. A theme that
+lost the whole `colors` group hands the host no colour at all, and
+`nativeAccent(theme)` answers `undefined` when there is no `primary` to derive
+from. The type scale and the palette are not part of that absence: a theme that
+lost a numeric group is refused by the gate, and `syntax` resolves from the
+shipped table when the theme carries none.
+
 ### The document's own marks
 
 A `<markdown>` host paints three things in the theme's accent, never solid

@@ -368,6 +368,10 @@ an accent derived for that composite (`nativeAccent`) rather than the fill role:
 measured, the fill role leaves a numbered list's digits under the 4.5:1 label
 floor in 11 of the 18 styles — every light one, plus Dark · macOS (3.97:1) and
 Dark · Linux (4.10:1) — the tightest Windows XP (Luna) light at 3.09:1.
+The seam is also where a **stored theme's absence** reaches the host without a
+crash: a role the theme lost is a field left out of the object (the diff's two
+inks included — the tone they read answers `undefined` when it lost a role), and
+`nativeAccent` answers `undefined` with no `primary`.
 **The runtime does not let the
 theme colour an empty field's placeholder** — at the pinned release it shapes the
 hint with a fixed `#8F8F8F` (`custom_elements/input.rs`), so no token can move it

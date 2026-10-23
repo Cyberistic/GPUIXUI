@@ -787,7 +787,11 @@ describe("decorative surfaces", () => {
       "bg-secondary text-secondary-foreground border border-strong",
     );
     expect(variants).toContain("border: (theme) => theme.colors.borderStrong");
-    expect(components).toContain('secondary: "border border-strong"');
+    // The components' arm is a class string today and was a recipe object a
+    // release ago; the claim is the `secondary` action carrying the edge.
+    expect(components).toMatch(
+      /secondary:\s*(?:"[^"]*border border-strong[^"]*"|\{[^}]*border border-strong[^}]*\})/,
+    );
     expect(
       decorativeSurfaces.filter(
         ({ surface, over }) =>

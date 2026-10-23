@@ -1132,6 +1132,16 @@ measured on that fill too: the same pair covers the separator and clear glyph a
 time picker paints inside a field's `input` root and a number field's stepper
 chevrons, so a brand with a tinted fill cannot bury either in silence.
 
+**A role a stored theme lost is dropped, not thrown on.** The gate reports that
+absence rather than refusing the theme, so the seam drops the field whose role is
+gone and the host paints its own default: `statusTone` answers `undefined` when a
+tone lost one of its three roles, so `diffAdd`/`diffDel` are absent instead of
+the seam throwing on `.foreground`; a theme that lost the whole `colors` group
+hands the host no colour field at all; and `nativeAccent` answers `undefined`
+when there is no `primary` to derive from. The type scale and the palette are not
+part of that rule — a lost numeric group is refused by the gate, and `syntax`
+resolves from the shipped table.
+
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own `metrics` when an element's
 `style` does not set the size, so the seam hands over `typography.codeBlock`'s

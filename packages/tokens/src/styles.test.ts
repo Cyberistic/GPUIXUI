@@ -374,7 +374,11 @@ describe("the edge a filled action keeps", () => {
   );
 
   it("reads the one variant that paints an edge, and the default it is", () => {
-    expect(painter).toContain('secondary: "border border-strong"');
+    // The arm has been a class string and a recipe object; the claim is the
+    // `secondary` action carrying the edge, not the form the file spells it in.
+    expect(painter).toMatch(
+      /secondary:\s*(?:"[^"]*border border-strong[^"]*"|\{[^}]*border border-strong[^}]*\})/,
+    );
     expect(painter).toContain('variant = "secondary"');
     ["primary", "ghost", "danger"].forEach((variant) => {
       expect(painter, variant).not.toContain(`${variant}: "border`);

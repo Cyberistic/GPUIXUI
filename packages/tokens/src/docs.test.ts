@@ -609,7 +609,11 @@ describe("the tonal action's edge", () => {
     expect(recipe).toContain(
       "bg-secondary text-secondary-foreground border border-strong",
     );
-    expect(components).toContain('secondary: "border border-strong"');
+    // The components' arm is a class string today and was a recipe object a
+    // release ago; the claim is the `secondary` action carrying the edge.
+    expect(components).toMatch(
+      /secondary:\s*(?:"[^"]*border border-strong[^"]*"|\{[^}]*border border-strong[^}]*\})/,
+    );
     expect(catalogue).toContain(
       "`packages/primitives`' recipe and the components package's `Button` both add",
     );

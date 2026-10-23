@@ -22,7 +22,8 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { blend, darkColors } from "./color.js";
+import { auditTheme } from "./audit.js";
+import { blend, colorRoles, darkColors, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { diffHostTheme } from "./native-diff.example.js";
@@ -760,6 +761,12 @@ describe("nativeTextTheme", () => {
  * matches the pane hides that the line changed at all.
  */
 describe("the diff host's colours", () => {
+  /**
+   * A field the shipped themes all carry; `""` is a role the seam dropped, and
+   * the placements below then measure nothing, so the sweep fails by name.
+   */
+  const ink = (value: string | undefined): string => value ?? "";
+
   /** The wash the runtime paints under a changed line: its own ink at 5.5%. */
   const rowWash = (ink: string, fill: string) =>
     blend(ink, fill, 1 - nativeDiffWash);
@@ -769,7 +776,8 @@ describe("the diff host's colours", () => {
     nativeTextFills.flatMap((fill) => {
       const host = nativeTextTheme(theme, fill);
       const floors = contrastFloorsFor(theme);
-      const wash = (ink: string) => rowWash(ink, host.bg);
+      const wash = (line: string | undefined) =>
+        rowWash(ink(line), ink(host.bg));
       return [
         {
           claim: `added ink on ${fill}`,
@@ -1098,8 +1106,8 @@ describe("the accent a document host paints", () => {
       const accent = nativeTextTheme(theme).accent;
       return nativeAccentSurfaces.flatMap((surface) => {
         const fill = theme.colors[surface];
-        const marker = blend(fill, accent, nativeAccentShares.marker);
-        const rail = blend(fill, accent, nativeAccentShares.rail);
+        const marker = blend(fill, accent ?? "", nativeAccentShares.marker);
+        const rail = blend(fill, accent ?? "", nativeAccentShares.rail);
         const checks: ReadonlyArray<
           readonly [string, number | undefined, number]
         > = [
@@ -1123,9 +1131,7 @@ describe("the accent a document host paints", () => {
     expect(under).toEqual([]);
     // Every style resolves, and the derivation returns an opaque colour.
     expect(
-      shipped.every(
-        ({ theme }) => !nativeAccent(theme).includes("#") === false,
-      ),
+      shipped.every(({ theme }) => (nativeAccent(theme) ?? "").startsWith("#")),
     ).toBe(true);
     expect(
       shipped.filter(
@@ -1557,5 +1563,196 @@ describe("the fence a document host paints", () => {
     expect(inventory).toContain(rule);
     expect(inventory).toContain("nativeFenceFill(card)");
     expect(page).toContain("markdown-fence");
+  });
+});
+
+/**
+ * Guards the seam against the theme a store gives back.
+ *
+ * The bug this holds: `nativeTextTheme` read `statusTone(theme, "success")
+ * .foreground` and `theme.colors[fill]` directly. `auditTheme` **reports** a
+ * colour role a stored theme lost rather than refusing the theme, so a consumer
+ * that ran the gate and painted anyway reached a crash: `statusTone` answers
+ * `undefined` when a tone has lost any of its three roles, and the seam read
+ * `.foreground` off that answer — `TypeError: Cannot read properties of
+ * undefined (reading 'foreground')` at a `<diff>`'s first paint — while a theme
+ * that lost the whole `colors` group threw on `theme.colors[fill]` before the
+ * host was built. Measured on the shipped light theme with one role removed.
+ *
+ * The decision is the absence rule the other paint seams follow: every role is
+ * read through `themeColors`, a field whose role is gone is left out of the
+ * object, and the host paints its own default for a property it was not handed.
+ * `nativeAccent` answers `undefined` when there is no `primary`. The type scale
+ * is not part of the rule — the gate refuses a lost numeric group — and neither
+ * is the palette, which resolves from the shipped table.
+ */
+describe("a theme a store gave back", () => {
+  /** `record` without `key` — the shape a stored theme older than a key has. */
+  const without = <Record_ extends object>(
+    record: Record_,
+    key: keyof Record_,
+  ): Partial<Record_> => {
+    const partial: Partial<Record_> = { ...record };
+    delete partial[key];
+    return partial;
+  };
+
+  /** A theme as storage hands it back: the type says complete, the value is not. */
+  const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
+    ({ ...lightTheme, ...overrides }) as Theme;
+
+  const colorsWithout = (role: keyof ThemeColors) =>
+    stored({ colors: without(lightTheme.colors, role) });
+
+  it("is a theme the gate reports, not one it refuses", () => {
+    const report = auditTheme(colorsWithout("success"));
+
+    expect(report.invalidRoles).toEqual([
+      { role: "success", value: undefined },
+    ]);
+    expect(report.passed).toBe(false);
+  });
+
+  it("drops a diff ink the tone it reads lost, instead of throwing", () => {
+    // A tone is three roles, and the ink is the readable one: losing any of them
+    // is a tone the host has no ink for.
+    const tones = (["success", "destructive"] as const).flatMap((tone) =>
+      [tone, `${tone}Soft`, `${tone}SoftForeground`].map((role) => ({
+        tone,
+        role: role as keyof ThemeColors,
+      })),
+    );
+
+    const wrong = tones.flatMap(({ tone, role }) => {
+      const host = nativeTextTheme(colorsWithout(role), "background");
+      const ink = tone === "success" ? host.diffAdd : host.diffDel;
+      // The other tone's ink is untouched: one tone is not the pair.
+      const other = tone === "success" ? host.diffDel : host.diffAdd;
+      return ink === undefined && typeof other === "string"
+        ? []
+        : [
+            `${role}: diff ${tone} ink ${String(ink)}, sibling ${String(other)}`,
+          ];
+    });
+
+    expect(wrong).toEqual([]);
+  });
+
+  it("drops the field a role feeds, and keeps the ones the theme still has", () => {
+    const noValueInk = nativeTextTheme(colorsWithout("inputForeground"));
+    expect(noValueInk.text).toBeUndefined();
+    expect(noValueInk.bg).toBe(lightTheme.colors.input);
+    expect(noValueInk.codeText).toBe(lightTheme.colors.foreground);
+
+    const noBrand = nativeTextTheme(colorsWithout("primary"));
+    expect(noBrand.caret).toBeUndefined();
+    expect(noBrand.accent).toBeUndefined();
+    expect(nativeAccent(colorsWithout("primary"))).toBeUndefined();
+
+    const noChrome = nativeTextTheme(colorsWithout("muted"));
+    expect(noChrome.codeWash).toBeUndefined();
+    expect(noChrome.diffHunkBg).toBeUndefined();
+
+    expect(nativeTextTheme(colorsWithout("border")).border).toBeUndefined();
+  });
+
+  it("answers a theme that lost the whole colour group", () => {
+    const theme = stored({ colors: undefined });
+    const host = nativeTextTheme(theme);
+
+    expect(auditTheme(theme).passed).toBe(false);
+    expect(host.bg).toBeUndefined();
+    expect(host.text).toBeUndefined();
+    expect(host.diffAdd).toBeUndefined();
+    expect(host.accent).toBeUndefined();
+    // Not the colour group: the type scale is refused by the gate, and the
+    // palette resolves from the shipped table.
+    expect(host.appearance).toBe("light");
+    expect(host.metrics.codeTextSize).toBe(
+      lightTheme.typography.codeBlock.fontSize,
+    );
+    expect(host.syntax).toBe(lightSyntax);
+  });
+
+  // 18 styles × 47 roles × both fills: the broad guard a role added to the
+  // colour group must pass without a new case.
+  it(
+    "never throws for a role any shipped style lost",
+    { timeout: 20_000 },
+    () => {
+      const wrong = shipped.flatMap(({ label, theme }) =>
+        colorRoles.flatMap((role) => {
+          const broken = {
+            ...theme,
+            colors: without(theme.colors, role),
+          } as Theme;
+          const report = auditTheme(broken);
+          const named = report.invalidRoles.map(({ role: at }) => at);
+          nativeTextFills.forEach((fill) => nativeTextTheme(broken, fill));
+          return named.length === 1 && named[0] === role && !report.passed
+            ? []
+            : [`${label} · ${role}`];
+        }),
+      );
+
+      expect(wrong).toEqual([]);
+    },
+  );
+
+  it("still hands a complete theme every field, in every style", () => {
+    const lossy = shipped.flatMap(({ label, theme }) =>
+      nativeTextFills.flatMap((fill) => {
+        const host = nativeTextTheme(theme, fill);
+        const colours = [
+          host.bg,
+          host.text,
+          host.textMuted,
+          host.textFaint,
+          host.accent,
+          host.caret,
+          host.diffAdd,
+          host.diffDel,
+          host.diffHunkBg,
+          host.textDim,
+          host.codeText,
+          host.codeWash,
+          host.border,
+        ];
+        return colours.every((value) => typeof value === "string")
+          ? []
+          : [`${label} · ${fill}`];
+      }),
+    );
+
+    expect(lossy).toEqual([]);
+    expect(nativeTextTheme(lightTheme)).toMatchObject({
+      text: lightTheme.colors.inputForeground,
+      diffAdd: lightTheme.colors.successSoftForeground,
+      diffDel: lightTheme.colors.destructiveSoftForeground,
+    });
+  });
+
+  it("is taught on both token pages, the README and the inventory", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+
+    expect(catalogue).toContain(
+      "**A role a stored theme lost is dropped, not thrown on.**",
+    );
+    expect(catalogue).toContain(
+      "Cannot read properties of undefined (reading 'foreground')",
+    );
+    expect(catalogue).toContain("`nativeAccent(theme)` answers `undefined`");
+    expect(designSystem).toContain("**stored theme's absence**");
+    expect(readme).toContain(
+      "**A role a stored theme lost is dropped, not thrown on.**",
+    );
+    expect(inventory).toContain(
+      "A role a stored theme lost is dropped, not thrown on",
+    );
   });
 });
