@@ -6182,7 +6182,7 @@ per open (`packages/components/src/internal/use-placement.ts`), so a menu that
 flipped above its trigger at the window's bottom edge keeps that side while it
 stays open; that is a source read, not a measurement this probe makes.
 
-27 checks, `--only floating-reflow-lifecycle`, green on 0.11.0 here (~3.5–3.9 s,
+27 checks, `--only floating-reflow-lifecycle`, green on 0.11.0 here (~2.7–3.9 s,
 three runs). Fixture `src/live/floating-reflow.ts` (the ids, the anchor
 arithmetic, the offset rule and the check count) + `floating-reflow.test.ts`
 (the arithmetic against both window sizes, the unique ids, the check count, the

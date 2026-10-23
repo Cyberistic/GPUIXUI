@@ -504,7 +504,9 @@ import {
   reflowAnchorLeft,
   reflowAnchorTop,
   reflowOffset,
+  sameOffset,
   trailingGap,
+  type ReflowOffset,
 } from "./floating-reflow.js";
 import {
   FIELD_INK_IDS,
@@ -5286,23 +5288,28 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         ([anchor, panel]) => Option.all([anchor, panel]),
       );
 
-    /** The same pair, polled until `holds` — a poll must not record a check. */
-    const settledPair = (
+    /**
+     * Both boxes painted — and, when a placement is given, resting on it.
+     *
+     * A panel follows its anchor within a frame or two, so a check that names a
+     * placement polls for it and then asserts the value it settled on; a panel
+     * that never arrives reports the pixels it kept instead.
+     */
+    const paintedPair = (
       anchorId: string,
       panelId: string,
-      holds: (pair: readonly [Smoke.Bounds, Smoke.Bounds]) => boolean,
+      when: string,
+      placement?: ReflowOffset,
     ) =>
-      settleUntil(optionalPair(anchorId, panelId), (pair) =>
-        Option.match(pair, {
-          onNone: () => false,
-          onSome: holds,
-        }),
-      );
-
-    /** Both boxes painted, or a check that names the pair and the moment. */
-    const paintedPair = (anchorId: string, panelId: string, when: string) =>
       Effect.flatMap(
-        settledPair(anchorId, panelId, () => true),
+        settleUntil(optionalPair(anchorId, panelId), (pair) =>
+          Option.match(pair, {
+            onNone: () => false,
+            onSome: ([anchor, panel]) =>
+              placement === undefined ||
+              sameOffset(reflowOffset(anchor, panel), placement),
+          }),
+        ),
         (pair) =>
           ctx.expectSome(
             `the window paints ${anchorId} and ${panelId} ${when}`,
@@ -5373,6 +5380,7 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "at rest",
     );
     const [bottomAnchorRest, bottomPanelRest] = bottom;
+    const bottomOffset = reflowOffset(bottomAnchorRest, bottomPanelRest);
     yield* ctx.expectNear(
       "the bottom panel ends one gap left of its anchor",
       trailingGap(bottomAnchorRest, bottomPanelRest),
@@ -5429,6 +5437,7 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       REFLOW_IDS.rightAnchor,
       REFLOW_IDS.rightPanel,
       "after the zoom",
+      rightOffset,
     );
     const [rightAnchorZoomed, rightPanelZoomed] = rightAfter;
     yield* ctx.expectEqual(
@@ -5459,6 +5468,7 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       REFLOW_IDS.bottomAnchor,
       REFLOW_IDS.bottomPanel,
       "after the zoom",
+      bottomOffset,
     );
     const [bottomAnchorZoomed, bottomPanelZoomed] = bottomAfter;
     yield* ctx.expectEqual(
@@ -5483,6 +5493,7 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       REFLOW_IDS.popoverTrigger,
       REFLOW_IDS.popoverPanel,
       "after the zoom",
+      popoverOffset,
     );
     const [triggerZoomed, popoverPanelZoomed] = popoverAfter;
     yield* ctx.expectEqual(
@@ -5518,6 +5529,7 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       REFLOW_IDS.rightAnchor,
       REFLOW_IDS.rightPanel,
       "on the way back",
+      rightOffset,
     );
     yield* ctx.expectNear(
       "the right panel follows the anchor back",

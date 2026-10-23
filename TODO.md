@@ -4808,7 +4808,7 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       trigger that moved 780 right and 403 down (its panel 382 → 785). A
       second zoom puts the window back, so the probes after it see the size they
       expect. 27 checks, `--only floating-reflow-lifecycle`, green on 0.11.0
-      here (~2.7–3.1 s, three runs). Fixture `src/live/floating-reflow.ts` (the
+      here (~2.7–3.9 s, three runs). Fixture `src/live/floating-reflow.ts` (the
       ids, the anchor arithmetic, the offset rule and the count) +
       `floating-reflow.test.ts` (7 cases: the arithmetic against both window
       sizes, the offset rule and its slack, the unique ids and the registry
@@ -9183,7 +9183,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 247/247
+`[x]` `[██████████]` 248/248
 
 `[x]` Follow the **preference the primitives now read from the provider** — the
       primitives' `Button`, `Switch` and `Tooltip` gained `useMotionPreference`
@@ -9441,6 +9441,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
       measured: the record at `**49** tall` fails by name
       (`expected … to contain '**48** tall'`); restored, the file is 120/120
       with `check-types` green.
+
+`[x]` Publish the **wash a find paints** in the capability record — a find
+      highlight is the one text surface whose paint came from the runtime's own
+      palette: a host handed no colour marks a match with its accent at **30%**
+      and the active one at **65%** with a **2px** corner, and
+      `findHighlight(theme)` answers the theme's `primary` at a readable share
+      instead. The record's row listed the spec keys and no colour at all, and
+      the page had no row, so a plan could read the API and still ship the
+      runtime's violet. §3's **Find-in-content highlights** now carries the
+      measured composite (`find-highlight`, 19 checks on 0.11.0): the dark
+      theme's resting wash `#A7A9FF4D` paints `#444767` and its active
+      `#A7A9FF82` paints `#616494` over the same card area, while the unthemed
+      block paints the runtime's own accent — a different hue at a different
+      share — with the negative control (the resting block handed the active
+      pair) and the rule (`blend(card, wash, alphaOf(wash))`, the active wash
+      stronger). `/docs/runtime#measured-in-a-window` gains the same row and §5
+      owes `find-highlight`. `capability-doc.test.ts` gains `records the find
+      wash a window paints, derived from the theme`: it parses
+      `highlightShares` and `FIND_CHECKS`, derives the two washes and their
+      composites through `findHighlight(themes.dark)`/`blend`/`alphaOf`, holds
+      the radius to `theme.radius.sm`, reads the fixture's own composite route,
+      and requires both documents to print every value. Directions measured: the
+      record at `#444768` fails by name (`expected … to contain '#444767'`);
+      restored, the file is 121/121.
 
 `[x]` Publish the **undo a field's own chord delivers** — the capability record's
       input rows stopped at keystrokes, clipboard and selection, so the site said
