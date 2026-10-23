@@ -30,6 +30,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { diffStrings, numberDiff, splitPairs, type DiffRow } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
+import { draftOf } from "../internal/text.js";
 
 /** The name a blank `label` falls back to. */
 const DIFF_NAME = "Diff";
@@ -124,7 +125,10 @@ export const DiffViewer = ({
   // `undefined`, and a saved or i18n label arrives empty).
   const name = accessibleName(label) ?? DIFF_NAME;
   const metrics = textStyle(theme, "codeBlock");
-  const rows = numberDiff(diffStrings(before, after));
+  // A side restored from a saved record may not be text at all; it reads as an
+  // empty source, the rule the other editor surfaces follow through `draftOf`,
+  // rather than throwing out of the line split before a row paints.
+  const rows = numberDiff(diffStrings(draftOf(before), draftOf(after)));
   const changed = Arr.some(rows, (row) => row.kind !== "context");
   const state: DiffViewerState = { changed };
   const quiet = { ...metrics, color: theme.colors.mutedForeground };

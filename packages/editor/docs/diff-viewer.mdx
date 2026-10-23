@@ -40,3 +40,4 @@ pair with themselves and keep both line numbers.
 - **No word-level diff.** A changed line is a whole line, not the words inside it.
 - **The diff text is presentational.** The rows are `role="presentation"` runs, so a reader hears whether anything changed, not the diffed text itself.
 - **A blank `label` reads as `"Diff"`.** The rows carry no words of their own, so the group's name is the whole surface's name: an empty or whitespace-only one from a table or a saved record is an absence, not a silent diff.
+- **A side that carried no document reads as an empty source.** `before` and `after` are read as text at the boundary, so a diff restored from a saved record whose side is not a string paints the other side against nothing instead of throwing out of the line split — the rule `CodeEditor` and `MarkdownEditor` follow for a stored draft.

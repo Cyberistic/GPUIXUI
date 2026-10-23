@@ -92,6 +92,22 @@ describe("DiffViewer in split mode", () => {
     root.unmount();
   });
 
+  it("reads a side that carried no document as an empty source", () => {
+    // The bug guarded: `before` and `after` were split as strings, so a diff
+    // restored from a saved record whose side carried no document (`null`)
+    // threw out of `splitLines` before a row painted, while every sibling
+    // surface reads a stored draft through `draftOf`.
+    const root = render(
+      <DiffViewer
+        before={null as unknown as string}
+        after={"beta"}
+        lineNumbers={false}
+      />,
+    );
+    expect(rowText(root, "diff-viewer-row-0")).toEqual(["+", "beta"]);
+    root.unmount();
+  });
+
   it("leaves the side blank when a run only adds lines", () => {
     const root = render(
       <DiffViewer
