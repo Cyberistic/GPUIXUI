@@ -448,13 +448,15 @@ when it is crossed.
 
 ## Theming: a preview paints the library's theme, not the site's
 
-The site has its own identity (Hunter License green); the components have the
-library's tokens (iris). A preview must show the latter, and it must follow the
-platform switch and the look picker. Both are library values: the platform names
-come from `platformStyles`, and the looks are the authored `retroStyles` — Luna
-and Aero — which are styles of the same shape, not a fifth platform (the
-mission's toggle stays macOS · Linux · Windows · Default). Each is written to the
-URL (`?platform=…&look=…`) so a link carries what the reader saw.
+The site has its own identity (a neutral shadcn palette on `/docs` and the
+landing's own vocabulary); the components have the library's tokens (iris). A
+preview must show the latter, and it must follow the platform switch and the
+look parameter. Both are library values: the platform names come from
+`platformStyles`, and the looks are the authored `retroStyles` — Luna and Aero —
+which are styles of the same shape, not a fifth platform (the mission's toggle
+stays macOS · Linux · Windows · Default, and the sidebar offers platforms only).
+Each is written to the URL (`?platform=…&look=…`) so a link carries what the
+reader saw.
 
 One axis is deliberately fixed: a preview paints the library's own dark identity
 (`previewMode` in `src/lib/platform.ts`), not the docs site's light/dark mode.

@@ -335,24 +335,26 @@ style's roles, radii and family, and switching re-bases its preview without
 discarding what you edited — only the roles you touched are pinned. That is the
 [copy-and-own contract](#take-one-and-make-it-yours) with a live output.
 
-### The look picker
+### The look parameter
 
-Beside it, **Look** applies one of the authored styles `@gpuixui/tokens` ships —
-**Platform** (the platform's own style), **Windows XP (Luna)** or **Windows 7
-(Aero)** — over whatever the platform switch resolved. A look is data of the
-same shape as a platform style (`retroStyles`), applied with `applyStyle`, so
-the preview paints the look's palette, radii, density and monospace family
-rather than a docs-only skin. It is remembered the same way and written to the
-URL as a second parameter:
+The switch offers the four platform names and **no look**: a look is not a fifth
+platform, `platformNames` stays the persisted key for the operating systems an
+application runs on, and the mission's toggle stays macOS · Linux · Windows ·
+Default. A look is still applied to every preview through the URL, because the
+authored styles are library data a link can carry:
 
 ```text
 https://gpuixui.sudokw.com/docs/components/button?platform=win32&look=luna
 ```
 
-A look is **not a fifth platform**: `platformNames` stays the persisted key for
-the operating systems an application runs on, and the mission's toggle stays
-macOS · Linux · Windows · Default. A look is the extension mechanism in
-practice — the same table a consumer can edit to ship their own style.
+`?look=luna` or `?look=aero` names one of the authored styles
+`@gpuixui/tokens` ships — **Windows XP (Luna)** or **Windows 7 (Aero)** — over
+whatever the platform switch resolved, and the choice is remembered beside the
+platform. A look is data of the same shape as a platform style (`retroStyles`),
+applied with `applyStyle`, so the preview paints the look's palette, radii,
+density and monospace family rather than a docs-only skin. A look is the
+extension mechanism in practice — the same table a consumer can edit to ship
+their own style.
 
 Both axes resolve through one theme, and the surface a preview renders on
 carries it as CSS variables from the same bridge the theme editor uses. Nothing

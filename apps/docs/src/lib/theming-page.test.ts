@@ -831,26 +831,49 @@ describe("the palette a preview paints", () => {
   });
 });
 
-describe("the theming page's look picker", () => {
-  const picker = section(page("theming.mdx"), "The look picker");
+describe("the theming page's look parameter", () => {
+  const picker = section(page("theming.mdx"), "The look parameter");
 
   /** The prose with its line wrapping flattened: a label is one sentence, not two lines. */
   const flat = (text: string): string => text.replace(/\s+/g, " ");
 
-  it("offers every look the switch offers, by the library's label", () => {
-    // The page names the control the reader sees; a look added to the library
-    // without a sentence here would be a switch position the docs never
-    // explain.
+  it("names every look the query accepts, by the library's label", () => {
+    // The sidebar switch offers platforms only, so the page names the looks a
+    // `?look=` link can carry; a look added to the library without a sentence
+    // here would be a value the docs never explain.
+    // `native` is not a look the page names: it is the switch's own style, and
+    // the page has no control offering it.
     expect(
-      lookOrder.filter((look) => !flat(picker).includes(lookLabel(look))),
+      lookOrder
+        .filter((look) => look !== "native")
+        .filter((look) => !flat(picker).includes(lookLabel(look))),
     ).toEqual([]);
   });
 
-  it("writes the look to the URL and says it is not a platform", () => {
+  it("writes the look to the URL, says it is no control, and not a platform", () => {
     expect(picker).toContain("look=luna");
     expect(flat(picker)).toContain("not a fifth platform");
+    expect(flat(picker)).toContain("no look");
     expect(picker).toContain("retroStyles");
     expect(picker).toContain("applyStyle");
+    // The retired section sent the reader to a **Look** group the sidebar no
+    // longer has (`8c180a9f`), so a page that reads as a control fails here.
+    expect(picker).not.toContain("Beside it, **Look** applies");
+  });
+
+  it("keeps the preview policy on the parameter, not a retired control", () => {
+    // `docs/preview-strategy.md` taught the same control and the landing's
+    // retired green identity. Both are read here so the page and the policy
+    // fail together.
+    const policy = readFileSync(
+      new URL("../../../../docs/preview-strategy.md", import.meta.url),
+      "utf8",
+    );
+
+    expect(policy).toContain("look parameter");
+    expect(policy).toContain("the sidebar offers platforms only");
+    expect(policy).not.toContain("look picker");
+    expect(policy).not.toContain("Hunter License green");
   });
 
   it("describes the styles the library ships, not ones the site invented", () => {
