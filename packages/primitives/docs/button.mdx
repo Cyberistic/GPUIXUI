@@ -60,5 +60,6 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 - No `aria-disabled` and no `aria-pressed`.
 - No native button element: a `div` with a role and handlers.
+- The runtime's headless `@gpuix/react/button` is **not adopted**: `buttonProps` would drop the busy description, hand a `style` callback only `disabled`, keep a disabled action in the tab order and lose the held-key guard on the Space release (evaluated and declined).
 - An icon-only button must pass `label`; use `IconButton`.
 - The ring paint is the runtime's.

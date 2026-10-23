@@ -352,6 +352,35 @@ describe("Tier 1 inventory", () => {
     expect(tooltipProblems()).toEqual([]);
   });
 
+  it("records the headless action the runtime publishes, and the decline", () => {
+    // The bug guarded: the Buttons row said "the runtime publishes no `Button`"
+    // while `@gpuix/react` 0.11.0 publishes `./button` and the package's README,
+    // source header and page record the evaluated-and-declined adoption — the
+    // ledger told a reader the part did not exist, so the declined decision was
+    // invisible to the one document the release gate trusts. The row and the page
+    // now name the published part and why this package keeps its own contract.
+    const notes = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(tier1Rows(), (candidate) => candidate.name === "Buttons"),
+        (row) => row.notes,
+      ),
+      () => "",
+    );
+    expect(notes).not.toContain("publishes no `Button`");
+    expect(notes).toContain("@gpuix/react/button");
+    expect(notes).toContain("evaluated and declined");
+    const page = sourceOf("docs/button.mdx");
+    expect(page).toContain("@gpuix/react/button");
+    expect(page).toContain("not adopted");
+    // The premise: the runtime really publishes it, and the source records the
+    // decision the documents must not forget.
+    const readme = sourceOf("README.md");
+    expect(readme).toContain("./button");
+    expect(readme).toContain("published (headless)");
+    expect(readme).toContain("declined");
+    expect(sourceOf("src/components/Button.tsx")).toContain("declined");
+  });
+
   it("agrees with its COMPONENTS.md row", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
       Option.match(rowFor(meta), {
