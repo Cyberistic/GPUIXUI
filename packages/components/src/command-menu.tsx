@@ -2,7 +2,7 @@
  * CommandMenu: a searchable action list inside the dialog.
  *
  * This composes the parts rather than reinventing them: `Dialog` owns the modal
- * surface and Escape, `<input>` (the `@gpuixui/primitives` stand-in) owns typing,
+ * surface and Escape, the palette's own `<input>` owns typing,
  * and `menu/logic.ts` owns which row is active. The active row is **highlighted,
  * not focused** — the input must keep focus or typing would stop after the first
  * arrow key. `Tab`/`Escape` follow the dialog; Enter runs the active action.
@@ -524,7 +524,7 @@ export const commandMenuMeta = {
   limitations: [
     "ranking is per group, not global, so a group's heading never repeats; a custom filter opts out and keeps declaration order",
     "recents are caller-owned data (`recents` action ids) shown only for an empty query with the default filter; the component records nothing itself",
-    "the input is the GPUix <input> host element until @gpuixui/primitives lands",
+    "the input is a GPUix <input> painted by this palette's fixed recipe; @gpuixui/primitives' Input paints its own density-scaled chrome (ADR 0006), so it is not adopted here",
     "the active row is highlighted, not focused, so typing keeps working; screen readers get aria-selected but no aria-activedescendant",
   ],
   docs: "docs/command-menu.mdx",

@@ -354,7 +354,7 @@ export const alertMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "the dismiss control is this package's local button until @gpuixui/primitives lands",
+    "a message that appears is not announced by a live region: 0.11.0 has no aria-live, so only the root's alert role reaches assistive technology",
   ],
   docs: "docs/alert.mdx",
   example: "examples/alert.example.tsx",

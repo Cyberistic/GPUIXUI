@@ -7,7 +7,8 @@
  *
  * Measured limitation: `@gpuix/native@0.11.0` has no `aria-describedby`, so the
  * message is passed to the control as `aria-description` (a description, not an
- * id reference). The input itself is the `@gpuixui/primitives` stand-in.
+ * id reference). The control is the package's own host field, painted by the
+ * fixed field recipe; the primitives' `Input` is density-scaled (ADR 0006).
  */
 
 import type { InputProps, Props } from "@gpuix/react";
@@ -348,7 +349,7 @@ export const fieldMeta = {
   gpuixSupport: "partial",
   limitations: [
     "no aria-describedby in 0.11.0: the message is an aria-description, not an id reference",
-    "the control is the GPUix <input> host element until @gpuixui/primitives lands",
+    "the control is a GPUix <input> painted by this package's fixed field recipe; @gpuixui/primitives' Input paints its own density-scaled chrome (ADR 0006), so it is not adopted here",
     "not a form library: the caller owns the value and when validation runs",
   ],
   docs: "docs/field.mdx",

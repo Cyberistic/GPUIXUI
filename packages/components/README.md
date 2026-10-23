@@ -296,7 +296,7 @@ duration: `docs/component-api.md` §11.
 | `src/internal/measure.ts` | the one reader of an `onLayout` box (four sides, or nothing) and of a pointer's point, for the components that measure themselves |
 | `src/internal/recipe.ts` | the one seam over `@gpuixui/tw`: compiles a class-string recipe to the resting `StyleDesc` (ADR 0006) |
 | `src/internal/text-swap.ts` | the two-phase swap `RollingText` and `SlidingText` share: which phase, what a mid-run value does, and the frames a travel on `top` or `left` paints |
-| `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
+| `src/internal/button.tsx` | `Button`/`IconButton` — this package's names over `@gpuixui/primitives`' action (the paint, derived fills and disabled rules are the primitive's) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
 | `src/surface.ts`, `src/surface.budget.ts`, `scripts/surface*.ts` | the entry's import graph: the walker, the recorded budget and the report command |

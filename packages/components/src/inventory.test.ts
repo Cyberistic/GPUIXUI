@@ -228,6 +228,74 @@ describe("inventory", () => {
   });
 });
 
+/**
+ * A limitation is a promise about what the library does today.
+ *
+ * Three records still justified a control with "until `@gpuixui/primitives`
+ * lands" after the package had shipped and two of those controls had moved onto
+ * it — a reader was told to wait for a capability that already existed. The
+ * remaining host fields stay host fields for a reason that outlives the
+ * package: this package compiles shadcn's fixed metrics while the primitives'
+ * fields are density-scaled (ADR 0006).
+ */
+describe("the records' limitations", () => {
+  const stale = /until @gpuixui\/primitives lands/;
+
+  /** The limitations a record declares, or none when no record claims it. */
+  const limitationsOf = (name: string): ReadonlyArray<string> =>
+    Option.match(
+      Arr.findFirst(inventory, (meta) => meta.name === name),
+      {
+        onNone: () => [],
+        onSome: (meta) => meta.limitations,
+      },
+    );
+
+  it("does not promise a package that has already shipped", () => {
+    const problems = Arr.flatMap(inventory, (meta) =>
+      Arr.filter(meta.limitations, (text) => stale.test(text)).map(
+        (text) => `${meta.name}: ${text}`,
+      ),
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("says why a control stays on the GPUix host", () => {
+    Arr.forEach(["Inline validation", "Command menus"], (name) => {
+      const limitations = limitationsOf(name);
+
+      expect(
+        Arr.some(
+          limitations,
+          (text) => text.includes("fixed") && text.includes("ADR 0006"),
+        ),
+        name,
+      ).toBe(true);
+      expect(
+        Arr.some(limitations, (text) => text.includes("density-scaled")),
+        name,
+      ).toBe(true);
+    });
+  });
+
+  it("names the live-region gap the alert really has", () => {
+    expect(
+      Arr.some(limitationsOf("Alerts"), (text) => text.includes("aria-live")),
+    ).toBe(true);
+  });
+
+  it("calls the shared action an adapter, not a stand-in for the primitives", () => {
+    const readme = readFileSync(
+      fileURLToPath(new URL("README.md", packageRoot)),
+      "utf8",
+    );
+
+    expect(readme).not.toContain("local stand-in for `@gpuixui/primitives`");
+    expect(readme).toContain("over `@gpuixui/primitives`' action");
+  });
+});
+
 describe("component API contract", () => {
   const contract = (): string =>
     readFileSync(
