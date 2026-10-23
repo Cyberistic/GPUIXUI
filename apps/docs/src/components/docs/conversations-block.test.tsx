@@ -99,6 +99,14 @@ const variants: ReadonlyArray<{
     lights: false,
     wincontrols: true,
   },
+  {
+    platform: "omarchy",
+    tone: "primary",
+    placeholder: "Type a message...",
+    rail: true,
+    lights: false,
+    wincontrols: true,
+  },
 ];
 
 describe("the conversations window", () => {
@@ -187,7 +195,7 @@ describe("the conversations window", () => {
   });
 });
 
-describe("the three platform dresses", () => {
+describe("the four platform dresses", () => {
   it.each(variants)(
     "renders $platform with its own $tone outgoing bubbles",
     ({ platform, tone, placeholder, rail, lights, wincontrols }) => {
@@ -204,7 +212,7 @@ describe("the three platform dresses", () => {
     },
   );
 
-  it("gives all three the same actions, only restyled", () => {
+  it("gives every dress the same actions, only restyled", () => {
     const actions = [
       "New message",
       "Start video call",
@@ -225,7 +233,12 @@ describe("the three platform dresses", () => {
   });
 
   it("paints each outgoing role from the sheet, not a literal", () => {
-    const roles = { macos: "success", windows: "primary", linux: "info" };
+    const roles = {
+      macos: "success",
+      windows: "primary",
+      linux: "info",
+      omarchy: "primary",
+    };
     for (const { platform, tone } of variants) {
       const bubble = rule(`.gx-conv-bubble[data-tone="${tone}"]`);
       expect(bubble).toContain(`background: var(--${roles[platform]})`);

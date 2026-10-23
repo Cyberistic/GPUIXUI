@@ -62,11 +62,11 @@ const socialMeta = [
  * so the guard can read it: the route module imports `@/` components, which a
  * unit test cannot load.
  */
-export const landingTitle = "GPUIxUI — one library, three native looks";
+export const landingTitle = "GPUIxUI — one library, four native looks";
 
 /** What the landing page tells a search engine and a share card. */
 export const landingDescription =
-  "GPUIxUI is a native UI component library for GPUix + React — one component set that looks at home on macOS, Windows 11 and Linux.";
+  "GPUIxUI is a native UI component library for GPUix + React — one component set that looks at home on macOS, Windows 11, Linux and Omarchy.";
 
 export const landingMeta = () => {
   const url = absoluteUrl("/");
