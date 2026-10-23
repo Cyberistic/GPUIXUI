@@ -579,20 +579,17 @@ describe("component API contract", () => {
       (meta) => meta.tier === 2,
     );
     let checked = 0;
-    const problems = Arr.flatMap(
-      tier2,
-      (meta) => {
-        const documented = documentedProps(pageOf(meta.docs));
-        return Arr.flatMap(pageTypes(meta, types), (name) => {
-          const props = Arr.dedupe(propsOf(name, types));
-          checked += Arr.length(props);
-          return Arr.filter(
-            props,
-            (prop) => !SHAPE_PROPS.has(prop) && !documented.has(prop),
-          ).map((prop) => `${meta.docs}: ${name}.${prop} has no API row`);
-        });
-      },
-    );
+    const problems = Arr.flatMap(tier2, (meta) => {
+      const documented = documentedProps(pageOf(meta.docs));
+      return Arr.flatMap(pageTypes(meta, types), (name) => {
+        const props = Arr.dedupe(propsOf(name, types));
+        checked += Arr.length(props);
+        return Arr.filter(
+          props,
+          (prop) => !SHAPE_PROPS.has(prop) && !documented.has(prop),
+        ).map((prop) => `${meta.docs}: ${name}.${prop} has no API row`);
+      });
+    });
 
     expect(problems).toEqual([]);
     // A reader that resolved nothing would pass vacuously: every Tier 2 page

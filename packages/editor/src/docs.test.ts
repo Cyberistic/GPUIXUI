@@ -24,9 +24,7 @@ const declaredProps = (): ReadonlyArray<string> => {
   if (start < 0 || end < 0) return [];
   return Arr.map(
     Arr.fromIterable(
-      source
-        .slice(start, end)
-        .matchAll(/^ {2}readonly ([A-Za-z]+)\??:/gm),
+      source.slice(start, end).matchAll(/^ {2}readonly ([A-Za-z]+)\??:/gm),
     ),
     (match) => match[1] ?? "",
   );
