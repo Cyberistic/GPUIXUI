@@ -6295,7 +6295,7 @@ it measures the paint on this host's software renderer: the crop compares an
 exact colour, so a brand that gives its content a translucent fill is not
 measured by it.
 
-47 checks, `--only sidebar-clip-lifecycle`, green on 0.11.0 here (~9.3–11.2 s,
+47 checks, `--only sidebar-clip-lifecycle`, green on 0.11.0 here (~8.1–11.2 s,
 three runs). Fixture `src/live/sidebar-clip.ts` (the ids, the fills, the hidden
 band arithmetic, the travelling rule and the readout) + `sidebar-clip.test.ts`
 (the band arithmetic at each width, the travelling bounds, the probe's clip and
