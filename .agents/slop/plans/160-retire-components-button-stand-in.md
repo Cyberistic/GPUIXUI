@@ -11,8 +11,9 @@ primitive action (`PopoverTrigger` no longer draws through the adapter).
 no-double-press rule and the three pages, measured 6 of 11 failing on the
 previous tree; behaviour cases drive Enter through each part (date picker 18 →
 20, popover 12 → 14, navigation menu 21 → 23). **Phase 4 remains**: delete the
-adapter and rewrite the 15 call sites that still use it (the ripple component
-belongs to another workstream). See §Adapter landed for the measured deltas.
+adapter and rewrite the 15 call sites that still use it (the three effects in
+the motion workstream still import its `actionOnColor` — see §What Phase 4 still
+waits on). See §Adapter landed for the measured deltas.
 
 **Phase 2 landed 2026-10-23** — `internal/button.tsx` is a thin adapter over
 `@gpuixui/primitives/button`; every STOP below is closed (the disabled stop
@@ -340,6 +341,35 @@ alias rule, `docs/component-api.md` §2). Update both docs pages' API tables and
 - Update `COMPONENTS.md`'s trigger notes that say "the local button stand-in"
   (`Rows`, `Dialogs`, `Dropdown menus`, `Context menus`, `Command menus`) and
   `docs/component-api.md` §7.
+
+### What Phase 4 still waits on (measured 2026-10-23)
+
+The adapter has **five** importers outside the triggers' reach, all in the
+motion workstream's files, and each imports the same three things:
+
+```text
+packages/components/src/ripple-button.tsx   Button, actionOnColor, ButtonProps
+packages/components/src/shine-button.tsx    Button, actionOnColor, ButtonProps
+packages/components/src/liquid-button.tsx   Button, actionOnColor, ButtonProps
+```
+
+`Button` and `ButtonProps` already exist on `@gpuixui/primitives/button`, so the
+only missing route is `actionOnColor` — the variant → label-role helper the
+three effects read to tint their own layer (`ripple`, `sheen`, `liquid`) and
+that `confirm-dialog.tsx`/`carousel.tsx` read for a busy mark and a chevron.
+Two honest routes, in order of preference:
+
+1. The primitives publish `actionOnColor` on the `./button` subpath (it is the
+   same map `variantStyle` paints its label from, so one implementation).
+2. The three effects stop importing it: they read the primitive's
+   `ButtonState`/variant and paint their layer in the same role the button's
+   label uses.
+
+Either way the three files are another workstream's, so Phase 4's deletion (and
+the `grep` above) cannot land before they move. A partial migration that leaves
+the adapter for three callers only is **not** an acceptable intermediate: it
+keeps the two activation contracts this plan exists to delete. Until then, the
+triggers are migrated (Phases 2–3) and the adapter is a shim for the effects.
 
 ## Commands and expected results
 
