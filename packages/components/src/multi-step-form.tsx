@@ -73,9 +73,9 @@ export interface MultiStepFormProps extends Omit<
   readonly className?: string;
 }
 
-/** A refusal, remembered with the step it was raised on. */
+/** A refusal, remembered with the step that raised it. */
 interface Refusal {
-  readonly step: number;
+  readonly id: string;
   readonly message: string;
 }
 
@@ -114,14 +114,15 @@ export const MultiStepForm = ({
   });
   const current = stepOf(value, count);
   const [refusal, setRefusal] = useState<Option.Option<Refusal>>(Option.none());
-  const message = Option.flatMap(refusal, (held) =>
-    held.step === current ? Option.some(held.message) : Option.none(),
-  );
 
   if (count === 0) return null;
 
   const step = steps[current - 1];
+  if (step === undefined) return null;
   const last = isLastStep(current, count);
+  const message = Option.flatMap(refusal, (held) =>
+    held.id === step.id ? Option.some(held.message) : Option.none(),
+  );
 
   const advance = (): void => {
     Option.match(guard(step), {
@@ -129,8 +130,7 @@ export const MultiStepForm = ({
         setRefusal(Option.none());
         setStep(nextStep(current, count));
       },
-      onSome: (next) =>
-        setRefusal(Option.some({ step: current, message: next })),
+      onSome: (next) => setRefusal(Option.some({ id: step.id, message: next })),
     });
   };
 
@@ -145,8 +145,7 @@ export const MultiStepForm = ({
         setRefusal(Option.none());
         onSubmit();
       },
-      onSome: (next) =>
-        setRefusal(Option.some({ step: current, message: next })),
+      onSome: (next) => setRefusal(Option.some({ id: step.id, message: next })),
     });
   };
 

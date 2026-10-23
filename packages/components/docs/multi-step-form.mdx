@@ -73,6 +73,8 @@ Each entry of `steps` is a `MultiStep`:
 
 ## Limitations
 
-- **The draft is the caller's**: the component stores the step index and refusals.
+- **The draft is the caller's**: the component stores the step index and a
+  refusal per step `id`, so a caller that reorders `steps` never paints one
+  step's message under another.
 - **No free navigation**: `Back` and the gates are the only moves.
 - A step gate is not the record decode; decode the whole draft in `Form`.

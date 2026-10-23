@@ -4,8 +4,9 @@
  * The bugs these guard: a gate that is checked after the step moves instead of
  * before; a wizard that paints another step's content under the current one; a
  * submit reachable before the last step; a refusal that survives the step it
- * belongs to; a pending wizard that advances or submits again; and a controlled
- * `step` that does not drive the paint.
+ * belongs to (including through a caller's reorder of `steps`); a pending
+ * wizard that advances or submits again; and a controlled `step` that does not
+ * drive the paint.
  */
 
 import { useState } from "react";
@@ -84,6 +85,28 @@ const Harness = ({
           ),
         },
       ]}
+    />
+  );
+};
+
+/** Two named steps the caller can reorder without changing the current index. */
+const Ordered = ({ reordered }: { readonly reordered: boolean }) => {
+  const name = {
+    id: "name",
+    title: "Name",
+    gate: () => Option.some("Enter a workspace name"),
+    content: <text testId="step-name">Name step</text>,
+  };
+  const review = {
+    id: "review",
+    title: "Review",
+    content: <text testId="step-review">Review step</text>,
+  };
+  return (
+    <MultiStepForm
+      testId="wizard"
+      onSubmit={() => undefined}
+      steps={reordered ? [review, name] : [name, review]}
     />
   );
 };
@@ -206,6 +229,18 @@ describe("MultiStepForm", () => {
     clickCentreOf(wizard, "multi-step-back");
     expect(onStepChange).toHaveBeenCalledWith(1);
     expect(text(wizard)).toContain("Review step");
+    wizard.unmount();
+  });
+
+  it("keeps a refusal with the step it was raised on when the caller reorders", () => {
+    // The bug guarded: a refusal remembered by its index paints on whichever
+    // step the caller later moves into that slot.
+    const wizard = renderComponent(<Ordered reordered={false} />);
+    clickCentreOf(wizard, "multi-step-next");
+    expect(text(wizard)).toContain("Enter a workspace name");
+    wizard.rerender(<Ordered reordered />);
+    expect(text(wizard)).toContain("Review step");
+    expect(text(wizard)).not.toContain("Enter a workspace name");
     wizard.unmount();
   });
 
