@@ -1,4 +1,12 @@
 {
   "title": "Blocks",
-  "pages": ["index", "dashboard", "login", "settings"]
+  "pages": [
+    "index",
+    "dashboard",
+    "login",
+    "signup",
+    "forgot-password",
+    "otp",
+    "settings"
+  ]
 }

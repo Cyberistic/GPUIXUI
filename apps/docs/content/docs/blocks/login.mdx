@@ -1,13 +1,17 @@
 ---
 title: Login
-description: A centered sign-in card — email, password, remember me and a secondary action.
+description: A centered sign-in card — email, password, a forgot-password link, two OAuth buttons and a sign-up footer.
 ---
 
-A sign-in recipe: a `Card` with email and password fields, a `Checkbox`, and a
-primary action in the footer. Copy the recipe; it is composed from the library,
-not a new component.
+A sign-in recipe: a `Card` with email and password fields, a link to reset the
+password, a primary action, a divider, two OAuth buttons and a footer that opens
+sign-up. Copy the recipe; it is composed from the library, not a new component.
 
 <BlockPreview name="login-01" />
+
+The preview is interactive: submit empty fields for the error state, or a
+well-formed address and password to watch the button go busy and the form
+resolve. The status row is reserved, so the card never moves between states.
 
 ## Composition
 
@@ -15,9 +19,10 @@ The block composes:
 
 - `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` and
   `CardFooter` from `@gpuixui/components/card`
-- `Button`, `Checkbox`, `Input`, `Label`, `Separator`, `Stack` and `Text` from
+- `Button`, `Input`, `Label`, `Separator`, `Stack` and `Text` from
   `@gpuixui/primitives`
 
 Both are workspace packages already on the component page; the recipe adds no
-new dependency. Wire `signIn` to your own handler and `fullWidth` keeps the
-primary action on the card's edge.
+new dependency. `Button`'s `loading` prop is the busy state, and `fullWidth`
+keeps the primary action on the card's edge. Wire `signIn`, `signInWithGitHub`,
+`signInWithGoogle`, `forgotPassword` and `openSignUp` to your own handlers.

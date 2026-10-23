@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
 import {
+  ForgotPasswordRender,
+  LoginRender,
+  OtpRender,
+  SignupRender,
+  forgotPasswordSource,
+  loginSource,
+  otpSource,
+  signupSource,
+} from "./auth-blocks";
+import {
   DashboardRender,
   dashboardPackages,
   dashboardSource,
@@ -25,44 +35,6 @@ export interface Block {
   readonly render: () => ReactNode;
   readonly source: string;
 }
-
-const LoginRender = () => (
-  <div className="gx-block-login">
-    <div className="gx-block-card">
-      <div aria-hidden="true" className="gx-block-mark" />
-      <h3 className="gx-block-title">Sign in</h3>
-      <p className="gx-block-desc">Enter your email to continue.</p>
-      <label className="gx-block-label" htmlFor="gx-login-email">
-        Email
-      </label>
-      <input
-        className="gx-field gx-block-field"
-        id="gx-login-email"
-        placeholder="you@example.com"
-      />
-      <label className="gx-block-label" htmlFor="gx-login-password">
-        Password
-      </label>
-      <input
-        className="gx-field gx-block-field"
-        id="gx-login-password"
-        placeholder="••••••••"
-        type="password"
-      />
-      <div className="gx-block-remember">
-        <span aria-checked="true" className="gx-block-check" role="checkbox" />
-        <span>Remember me</span>
-      </div>
-      <button className="gx-btn gx-btn-primary gx-block-submit" type="button">
-        Sign in
-      </button>
-      <div className="gx-block-divider">or continue with</div>
-      <button className="gx-btn gx-btn-secondary gx-block-submit" type="button">
-        GitHub
-      </button>
-    </div>
-  </div>
-);
 
 const SettingsRender = () => (
   <div className="gx-block-settings">
@@ -135,41 +107,6 @@ const SettingsRender = () => (
     </div>
   </div>
 );
-
-const loginSource = `import { Button, Checkbox, Input, Label, Separator, Stack, Text } from "@gpuixui/primitives";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@gpuixui/components/card";
-
-export function LoginPage() {
-  return (
-    <Stack direction="column" gap="xl" align="center" style={{ padding: 48 }}>
-      <Card variant="outline" style={{ width: 360 }}>
-        <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>Enter your email to continue.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Label>Email</Label>
-          <Input label="Email" placeholder="you@example.com" fullWidth />
-          <Label>Password</Label>
-          <Input label="Password" placeholder="••••••••" fullWidth />
-          <Stack direction="row" gap="sm" align="center">
-            <Checkbox label="Remember me" defaultChecked />
-            <Text role="label">Remember me</Text>
-          </Stack>
-        </CardContent>
-        <CardFooter>
-          <Button variant="primary" fullWidth onActivate={signIn}>
-            Sign in
-          </Button>
-        </CardFooter>
-      </Card>
-      <Separator label="or continue with" style={{ width: 360 }} />
-      <Button variant="secondary" fullWidth style={{ width: 360 }}>
-        GitHub
-      </Button>
-    </Stack>
-  );
-}`;
 
 const settingsSource = `import { Avatar } from "@gpuixui/components/avatar";
 import { Badge } from "@gpuixui/components/badge";
@@ -249,10 +186,40 @@ export const blocks: Readonly<Record<string, Block>> = {
     slug: "login",
     title: "Login",
     description:
-      "A centered sign-in card: email, password and a secondary action.",
+      "A centered sign-in card: email and password, a forgot-password link, two OAuth buttons and a sign-up footer.",
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: LoginRender,
     source: loginSource,
+  },
+  "signup-01": {
+    name: "signup-01",
+    slug: "signup",
+    title: "Sign up",
+    description:
+      "A centered registration card: name, email, password and confirmation, a terms checkbox and an account footer.",
+    packages: ["@gpuixui/primitives", "@gpuixui/components"],
+    render: SignupRender,
+    source: signupSource,
+  },
+  "forgot-password-01": {
+    name: "forgot-password-01",
+    slug: "forgot-password",
+    title: "Forgot password",
+    description:
+      "A centered reset card: one email field, a send-reset-link action, an inline success note and a way back to sign in.",
+    packages: ["@gpuixui/primitives", "@gpuixui/components"],
+    render: ForgotPasswordRender,
+    source: forgotPasswordSource,
+  },
+  "otp-01": {
+    name: "otp-01",
+    slug: "otp",
+    title: "One-time code",
+    description:
+      "A centered verification card: six code cells, a verify action, a resend countdown and an inline error state.",
+    packages: ["@gpuixui/primitives", "@gpuixui/components"],
+    render: OtpRender,
+    source: otpSource,
   },
   "settings-01": {
     name: "settings-01",

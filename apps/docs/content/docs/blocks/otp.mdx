@@ -1,0 +1,30 @@
+---
+title: One-time code
+description: A centered verification card — six code cells, a verify action, a resend countdown and an inline error state.
+---
+
+A one-time-code recipe: a `Card` with an `OTPField`, a primary verify action and
+a resend action that counts down before it is available again. Copy the recipe;
+it is composed from the library, not a new component.
+
+<BlockPreview name="otp-01" />
+
+The preview is interactive: the six cells take focus and typing, the countdown
+ticks down to a live resend action, and `123456` verifies while any other
+complete code shows the error state. Verifying with too few digits asks for the
+rest. The status row is reserved, so the card never moves between states.
+
+## Composition
+
+The block composes:
+
+- `Card`, `CardHeader`, `CardTitle`, `CardDescription` and `CardContent` from
+  `@gpuixui/components/card`
+- `Button`, `OTPField`, `Stack` and `Text` from `@gpuixui/primitives`
+
+Both are workspace packages already on the component page; the recipe adds no
+new dependency. `OTPField` holds the code as one string and moves focus cell to
+cell, so the recipe never juggles six values. `invalid` paints every cell with
+the destructive border and the note below says what went wrong. Wire
+`openDashboard` and `resendCode`, and keep the countdown in the page that owns
+the request.
