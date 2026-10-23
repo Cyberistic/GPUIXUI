@@ -174,7 +174,7 @@ the runtime**. Four scenarios:
 | `theme-color-roles` | every one of the 47 roles in `colorRoles` paints its exact value; the palette switch (dark → light → high contrast) re-paints every swatch and the three colour sets differ |
 | `theme-type-and-shadow` | every type role in `typography` reaches the runtime through `textStyle` (size and family, with `code` on the mono family); `focusRing` paints the zero-blur spread ring; `elevationShadow(theme, "md")` paints its blur, offset and colour |
 | `theme-platform` | one row per platform through `platformTheme`: the runtime reports each platform's mono family (`Menlo`, `DejaVu Sans Mono`, `Consolas` — three distinct families) while every platform keeps `.SystemUIFont` for UI text, plus that platform's `primary` fill, its own `lg` radius and an `md` control at its density (28 / 36 / 32px) |
-| `theme-look` | one row per authored look through `retroTheme`: Luna and Aero each paint their own mono family (`Lucida Console`, `Consolas`), `primary` fill, `lg` radius (3 and 6 against the base's 8) and an `md` control at their density (28 / 32px) |
+| `theme-look` | one row per authored look through `retroTheme`: Luna, Aero and Omarchy each paint their own mono family (`Lucida Console`, `Consolas`, `JetBrains Mono`), `primary` fill, the `lg` step their style authors (3 / 6 / 3 against the base's 8) and an `md` control at their density (28 / 32 / 28px) |
 
 The checks read the **runtime's own style report** (`SmokeHost.paintedStyle`,
 decoded at the adapter boundary), not a screenshot, so a token that never
@@ -192,10 +192,13 @@ and two on density.
 
 `theme-look` holds the authored looks to the same bar. Its negative control is
 the base `lg` radius: painting `base.radius.lg` fails
-`luna large radius: expected 3, got 8`, exit `1`. Both looks are sampled, so a
-`retroTheme` that returned its base would fail on the radius, the `primary` fill
-and the mono family; Luna's compact density (28) also separates its control
-height from the base's comfortable 32.
+`luna large radius: expected 3, got 8`, exit `1`. All three looks are sampled, so
+a `retroTheme` that returned its base would fail on the radius, the `primary`
+fill and the mono family. Two looks may share an `lg` step — Luna and Omarchy
+both author 3 — so the aggregate holds the painted distinct steps to
+`retroStyles`' own table rather than to the look count, and the compact density
+Luna and Omarchy share (28) separates their control height from Aero's and the
+base's comfortable 32.
 
 Two honest notes:
 

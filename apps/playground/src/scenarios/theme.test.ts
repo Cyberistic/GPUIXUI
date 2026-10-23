@@ -7,18 +7,50 @@
  * base would make the probe pass while `applyStyle` did nothing. The bug this
  * catches: a look collapsed onto the house identity, or every look collapsed
  * onto one value. Two looks may share a radius (the Omarchy and Luna looks both
- * use 3), so the radius rule is "none paints the base's, and not all are one"
- * while the mono family and the fill carry the per-look distinctness.
+ * use 3), so the radius rule is "none paints the base's, and as many steps as the
+ * styles author" while the mono family and the fill carry the per-look
+ * distinctness. The README's `theme-look` row is held to the same samples, so the
+ * prose cannot list a set of looks the gallery no longer paints.
+ *
+ * `node:fs` is deliberate, as in the other fixtures: this reads the repository's
+ * own README, never a runtime path.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
-import { getTheme, retroNames, retroStyles, retroTheme } from "@gpuixui/tokens";
+import * as Option from "effect/Option";
+import * as Str from "effect/String";
+import {
+  getTheme,
+  retroNames,
+  retroStyles,
+  retroTheme,
+  type Theme,
+} from "@gpuixui/tokens";
 
 const base = getTheme("dark");
 const looks = Arr.map(retroNames, (look) => ({
   look,
   theme: retroTheme(base, look),
 }));
+
+const readme = readFileSync(
+  new URL("../../README.md", import.meta.url),
+  "utf8",
+);
+
+/** The README's `theme-look` table row, or `""` when it is gone. */
+const row = Option.getOrElse(
+  Arr.findFirst(Str.split(readme, "\n"), Str.includes("| `theme-look` |")),
+  () => "",
+);
+
+/** The row's `a / b / c` list of `pick` for every look, in registry order. */
+const listOf = (pick: (theme: Theme) => number): string =>
+  Arr.join(
+    Arr.map(looks, ({ theme }) => `${pick(theme)}`),
+    " / ",
+  );
 
 describe("the theme-look probe's samples", () => {
   it("paints as many distinct lg steps as the looks author", () => {
@@ -54,5 +86,16 @@ describe("the theme-look probe's samples", () => {
     expect(heights).not.toEqual(
       Arr.map(looks, () => base.density.controlHeight.md),
     );
+  });
+
+  it("names every look, its mono family and its own samples in the README", () => {
+    // The row listed two looks and their two radii long after `omarchy` shipped,
+    // so a reader was told the gallery paints a set it no longer paints.
+    expect(row).not.toBe("");
+    Arr.forEach(looks, ({ theme }) =>
+      expect(row).toContain(theme.typography.mono),
+    );
+    expect(row).toContain(listOf((theme) => theme.radius.lg));
+    expect(row).toContain(listOf((theme) => theme.density.controlHeight.md));
   });
 });
