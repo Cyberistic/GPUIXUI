@@ -408,6 +408,21 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   and reads `docs/virtual-tree.mdx`'s `7 tests`. Directions measured: three cases
   fail on the old text (`7 native behaviour cases`, `(13 cases)`, `(6 cases)`);
   with the rows corrected, 4/4 and the package is 20 files / 171 tests.
+- **A table runs the advanced filter's tree**: the builder said a saved query,
+  a builder and a table's filter read one shape, but `useTable` narrowed by a
+  text query only, so the tree could not reach a grid without the caller copying
+  the column lookup. `useTable` takes `filterTree` and narrows the records
+  before the query; `fieldValueOf(columns)` is the exported seam that resolves a
+  clause's field through the column whose `id` it names (a field no column names
+  reads blank, so a saved tree that mentions a removed column narrows instead of
+  throwing). Selection retention already covers the tree: a chosen record the
+  tree hides is released in that commit and painted again when a wider tree
+  keeps it. 5 unit cases (`src/use-table-filter.test.ts`) and 2 native cases
+  (`src/behaviour/table-tree-filter.test.tsx`); directions measured: a missing
+  field read as its own name fails the seam case, and dropping the narrowing
+  fails both window cases (`expected '3 rows · 1 selected' to be '2 rows · 1
+  selected'`). README §The data surfaces and `docs/advanced-filter.mdx`
+  §Narrowing a table teach it. 176 unit / 106 behaviour green.
 
 
 ## 5. Acceptance

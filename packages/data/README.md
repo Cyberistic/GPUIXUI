@@ -476,6 +476,23 @@ and the evaluation is a pure function:
 const kept = filterByTree(rows, tree, (row, field) => row[field]);
 ```
 
+A tree narrows a **table** through the same columns it paints: `useTable` takes
+the tree as `filterTree` and resolves each clause's field through the column
+whose `id` it names, so the builder that composes the tree and the grid that
+runs it agree on what a field means. The tree narrows the records before the
+text query does, so the field above the rows searches the set the tree kept and
+the sort orders that same set. A chosen record the tree hides is released in
+the same commit a query releases it, and a tree that keeps it again paints it
+chosen; a field no column names reads blank, so a saved tree that mentions a
+removed column narrows instead of failing. A controlled consumer building the
+table with `constructGrid` reads the same seam:
+
+```ts
+import { fieldValueOf, filterByTree } from "@gpuixui/data";
+
+const kept = filterByTree(rows, tree, fieldValueOf(columns));
+```
+
 The comparisons are literal — a value is never a pattern — and an order reads
 both sides as numbers, so a field stored as a number and a clause typed as text
 still compare. A side that does not read as a number satisfies no order, the

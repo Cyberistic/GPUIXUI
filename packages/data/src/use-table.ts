@@ -33,7 +33,10 @@
  * table cannot paint — the release is **render-time retention**, not a write:
  * the core still holds the record, so a query that widens back to it paints it
  * chosen again. A grid that needs a permanent clear calls `clear()` on the
- * change.
+ * change. An **advanced filter's predicate tree** narrows the same set before
+ * the query does (`filterTree`), read through the columns the grid paints via
+ * {@link fieldValueOf}: one tree shape serves the builder, a saved query and
+ * the table.
  *
  * ```tsx
  * const columns = [
@@ -74,6 +77,7 @@ import * as R from "effect/Record";
 import { useCallback, useMemo, useState } from "react";
 import type { RowData, SortingState } from "@tanstack/table-core";
 import { constructGrid, type GridColumn, type GridTable } from "./grid-core.js";
+import { filterByTree, type FilterTree } from "./surfaces/logic.js";
 import {
   allSelected,
   clearSelection,
@@ -116,6 +120,18 @@ export interface UseTableOptions<Row extends RowData> {
    * rebuilds the core's row models with it.
    */
   readonly hiddenColumns?: ReadonlyArray<string>;
+  /**
+   * A predicate tree that narrows the records before the text query does —
+   * `AdvancedFilter`'s tree, read through the same columns the grid paints.
+   *
+   * The tree is the caller's, so the builder that composes it and the grid that
+   * runs it read one shape. A chosen record the tree hides is released during
+   * render by the retention a query already gets, and a tree that keeps it
+   * again paints it chosen (the core keeps the id). Pass a tree whose identity
+   * changes only when the query does: a fresh object on every render rebuilds
+   * the row models.
+   */
+  readonly filterTree?: FilterTree;
   /** Start sorted, for a table whose natural order is not the source order. */
   readonly initialSort?: SortState;
 }
@@ -219,6 +235,26 @@ const sortOrderOf = (sorting: SortingState): SortOrder =>
     direction: column.desc ? "desc" : "asc",
   }));
 
+/**
+ * Read a row's field through the column that owns it.
+ *
+ * A predicate tree names fields by column id while the grid keeps one column
+ * list, so this is the seam both read: `AdvancedFilter`'s tree, a saved query
+ * and the grid's row model resolve a field the same way. A field no column
+ * names reads as blank rather than throwing, so a saved tree that mentions a
+ * column the caller has since removed narrows to the records it can decide.
+ */
+export const fieldValueOf =
+  <Row>(columns: ReadonlyArray<GridColumn<Row>>) =>
+  (row: Row, field: string): string | number =>
+    Option.match(
+      Arr.findFirst(columns, (column) => column.id === field),
+      {
+        onNone: () => "",
+        onSome: (column) => column.valueOf(row),
+      },
+    );
+
 /** A chosen set in the core's record shape. */
 const rowSelectionOf = (
   state: SelectionState,
@@ -238,6 +274,7 @@ export const useTable = <Row extends RowData>({
   keyOf,
   columns,
   hiddenColumns,
+  filterTree,
   initialSort,
 }: UseTableOptions<Row>): TableController<Row> => {
   const [sorting, setSorting] = useState<SortingState>(() =>
@@ -256,10 +293,20 @@ export const useTable = <Row extends RowData>({
    */
   const [anchor, setAnchor] = useState<Option.Option<string>>(Option.none());
 
+  // The tree narrows the records before the core builds its row models, so the
+  // text query searches the set the tree kept and the sort orders that same set.
+  const source = useMemo(
+    () =>
+      filterTree === undefined
+        ? rows
+        : filterByTree(rows, filterTree, fieldValueOf(columns)),
+    [rows, filterTree, columns],
+  );
+
   const table = useMemo(
     () =>
       constructGrid({
-        rows,
+        rows: source,
         keyOf,
         columns,
         hiddenColumns,
@@ -268,7 +315,7 @@ export const useTable = <Row extends RowData>({
         onGlobalFilterChange: setQuery,
         onRowSelectionChange: setRowSelection,
       }),
-    [rows, keyOf, columns, hiddenColumns, sorting, query, rowSelection],
+    [source, keyOf, columns, hiddenColumns, sorting, query, rowSelection],
   );
 
   const painted = table.getRowModel().rows;

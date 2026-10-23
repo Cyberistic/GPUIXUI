@@ -56,6 +56,31 @@ The tree's own API, exported beside the builder:
 | `matchesTree(tree, row, valueOf)` | whether one row matches |
 | `describeTree(tree)` | the sentence a tree reads as |
 
+## Narrowing a table
+
+The tree is the same one a table runs: `useTable` takes it as `filterTree` and
+reads each clause's field through the column whose `id` it names. The tree
+narrows the records before the text query does, so the filter field searches the
+set the tree kept and a sort orders that same set.
+
+```tsx
+const columns = [
+  { id: "status", label: "Status", width: 120, valueOf: (row) => row.status },
+  { id: "size", label: "Size", width: 90, valueOf: (row) => row.size },
+];
+const table = useTable({ rows, keyOf: (row) => row.id, columns, filterTree: tree });
+
+<AdvancedFilter fields={FIELDS} tree={tree} onChange={setTree} />;
+```
+
+A chosen record the tree hides is released in the same commit (the rule the
+text query already follows), and the core keeps the id, so a tree that keeps it
+again paints it chosen. A field no column names reads blank, so a saved tree
+that mentions a column the caller has since removed narrows to the records it
+can decide instead of failing. A controlled consumer that builds the table with
+`constructGrid` reads the same seam:
+`filterByTree(rows, tree, fieldValueOf(columns))`.
+
 ## How a comparison reads a value
 
 The comparisons are literal — a clause's value is never treated as a pattern.

@@ -16,9 +16,10 @@
  *
  * Pinned columns are **not** here. The runtime paints no `position: "sticky"`,
  * so a frozen column is the measured two-pane composition
- * (`data-grid-frozen-column`) rather than an order flag; plan 610's remaining
- * frozen-column row owns it. Ordering a column to an edge is not the same
- * feature and is not offered here as one.
+ * (`data-grid-frozen-column`): `FrozenTable` puts the frozen column in its own
+ * vertical scroller beside the data pane and mirrors the two, rather than
+ * carrying a pin flag through this order. Ordering a column to an edge is not
+ * the same feature and is not offered here as one.
  *
  * Nothing in this module imports React: an Effect-driven or store-driven grid
  * reads the same reducers the `useColumns` hook does.
