@@ -27,8 +27,8 @@ import { Avatar } from "@gpuixui/components/avatar";
 | ---- | ---- | ------- | ----------- |
 | `name` | `string` | — (required) | the accessible label **and** the initials' source |
 | `src` | `string` | — | a path, data URL or `http(s)` URL; without it the initials paint |
-| `size` | `"xs" \| "sm" \| "md" \| "lg"` | `"md"` | the diameter from `avatarSize` |
-| `status` | `"online" \| "away" \| "busy" \| "offline"` | — | paints the dot and becomes the node's description |
+| `size` | `"xs" \| "sm" \| "md" \| "lg"` | `"md"` | the diameter from `avatarSize`; a stored name the scale does not carry falls back to `md` |
+| `status` | `"online" \| "away" \| "busy" \| "offline"` | — | paints the dot and becomes the node's description; a stored name the union does not carry paints no dot |
 | `className` | `string` | — | joined after the root recipe |
 | `style` | `StyleDesc \| (state) => StyleDesc` | — | merged last |
 
@@ -37,3 +37,4 @@ import { Avatar } from "@gpuixui/components/avatar";
 - The root is one `role="img"` named `name`.
 - The presence dot is colour only, so `status` is the description.
 - **No load or error state**: a missing `src` paints nothing and initials do not return.
+- **Stored values are read failsafe**: a `size` the scale does not carry paints `md`, and a `status` the union does not name paints no dot.

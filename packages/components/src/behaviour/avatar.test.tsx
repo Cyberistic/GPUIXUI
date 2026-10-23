@@ -160,6 +160,23 @@ describe("Avatar", () => {
     avatar.unmount();
   });
 
+  it("paints no dot for a status the union does not name", () => {
+    // A stored presence state from another release is not a name this union
+    // carries: the dot is optional content, so the honest answer is no dot and
+    // no announced state, not a thrown `Match.exhaustive` out of the render.
+    const avatar = renderComponent(
+      <Avatar testId="avatar" name="Ada" status={"unknown" as AvatarStatus} />,
+    );
+
+    expect(backgrounds(avatar)).toEqual([undefined, darkTheme.colors.muted]);
+    const node = nodesWithRole(avatar.renderer, "image")[0];
+    expect(Option.getOrUndefined(node?.description ?? Option.none())).toBe(
+      undefined,
+    );
+
+    avatar.unmount();
+  });
+
   it("paints every dot in a role the token contract measures as a mark", () => {
     // `warning`'s solid fill is a text surface, not a mark: it is absent from
     // `indicatorRoles`, so a dot painted in it has no measured floor at all.
@@ -192,6 +209,21 @@ describe("Avatar", () => {
 
       avatar.unmount();
     });
+  });
+
+  it("reads a stored size the scale does not carry as the default step", () => {
+    // `size` is a preference an app reads back, not a literal the compiler
+    // checked: the record once answered `undefined` and the fallback's font
+    // size became `NaN`, so the avatar painted a box with no side.
+    const avatar = renderComponent(
+      <Avatar testId="avatar" name="Ada" size={"xl" as AvatarSize} />,
+    );
+
+    expect(sizeOf(avatar, "avatar")).toEqual(
+      Option.some({ width: avatarSize.md, height: avatarSize.md }),
+    );
+
+    avatar.unmount();
   });
 
   it("lets a consumer's style win", () => {

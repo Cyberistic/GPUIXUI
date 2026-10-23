@@ -89,6 +89,21 @@ export type {
 };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
+/** Whether a stored value is a step the avatar scale carries. */
+const isAvatarSize = (value: unknown): value is keyof typeof avatarSize =>
+  typeof value === "string" && value in avatarSize;
+
+/**
+ * The diameter a stored avatar size names.
+ *
+ * `size` is as often a saved preference as a literal, so a name from a release
+ * that renamed or dropped a step reads as the default `md` — the rule `Icon`'s
+ * `iconPixels` follows. A bare lookup answered `undefined`, which painted a box
+ * with no side and a `NaN` fallback font.
+ */
+export const avatarPixels = (size: unknown): number =>
+  isAvatarSize(size) ? avatarSize[size] : avatarSize.md;
+
 /**
  * The focus ring every interactive part declares **at rest**.
  *

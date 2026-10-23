@@ -43,7 +43,7 @@ import {
 } from "./avatar-group/logic.js";
 import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { avatarSize, textStyle, useTheme } from "./internal/theme.js";
+import { avatarPixels, textStyle, useTheme } from "./internal/theme.js";
 
 /** One face in a group. */
 export interface AvatarGroupMember {
@@ -123,7 +123,7 @@ export const AvatarGroup = ({
 }: AvatarGroupProps) => {
   const theme = useTheme();
   const timing = useSurfaceTiming(level).enter;
-  const diameter = avatarSize[size];
+  const diameter = avatarPixels(size);
   const step = avatarStep(
     diameter,
     avatarOverlap(diameter, Option.fromNullishOr(overlap)),

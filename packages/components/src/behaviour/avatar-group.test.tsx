@@ -24,6 +24,7 @@ import { requireBounds, sizeOf } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { MotionProvider } from "../motion.js";
 import { AvatarGroup, type AvatarGroupMember } from "../avatar-group.js";
+import type { AvatarSize } from "../avatar.js";
 import {
   avatarGroupRise,
   avatarOverlap,
@@ -91,6 +92,26 @@ describe("AvatarGroup", () => {
       expect(last.x - first.x).toBe(step * 3);
       // The row reserves exactly the discs plus the advances between them, so an
       // absolutely positioned arrival cannot reflow the page.
+      expect(row.width).toBe(diameter + step * 3);
+      expect(row.height).toBe(diameter);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("reads a stored size the scale does not carry as the default row", () => {
+    // The group's own `size` is a preference an app reads back: the record once
+    // answered `undefined`, so every disc step was `NaN` and the row had no
+    // width to reserve.
+    const page = renderComponent(
+      <AvatarGroup
+        testId="group"
+        members={members.slice(0, 4)}
+        size={"xl" as AvatarSize}
+      />,
+    );
+    try {
+      const row = requireBounds(page, "group");
       expect(row.width).toBe(diameter + step * 3);
       expect(row.height).toBe(diameter);
     } finally {

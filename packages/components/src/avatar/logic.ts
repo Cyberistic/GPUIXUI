@@ -1,16 +1,35 @@
 /**
- * Avatar initials: the two letters an avatar shows when it has no picture.
+ * Avatar initials and presence state: the two letters an avatar shows when it
+ * has no picture, and the dot's finite set of names.
  *
  * Pure and unicode-safe. Every rule here is asserted in `logic.test.ts`; the
  * bugs they guard are a code-unit split (which tears an emoji or a surrogate
- * pair in half), a dropped second initial in a hyphenated name, and an empty
- * avatar instead of a visible placeholder.
+ * pair in half), a dropped second initial in a hyphenated name, an empty
+ * avatar instead of a visible placeholder, and a stored presence state the
+ * union does not name reaching an exhaustive match.
  */
 
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
+
+/** The presence states an avatar announces. */
+export const AVATAR_STATUSES = ["online", "away", "busy", "offline"] as const;
+
+/** The presence states an avatar announces. */
+export const AvatarStatus = Schema.Literals(AVATAR_STATUSES);
+/** The presence states an avatar announces. */
+export type AvatarStatus = typeof AvatarStatus.Type;
+
+/**
+ * Whether a stored value is a presence state this avatar paints.
+ *
+ * `status` can arrive from persisted UI state, so a name a later release
+ * dropped must read as no dot rather than throwing out of the render.
+ */
+export const isAvatarStatus = Schema.is(AvatarStatus);
 
 /** Whitespace or a hyphen separates the parts of a name. */
 const SEPARATORS = /[\s-]+/;

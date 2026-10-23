@@ -7,8 +7,9 @@
  * fails the test rather than moving with it.
  */
 
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
-import { initials } from "./logic.js";
+import { AVATAR_STATUSES, initials, isAvatarStatus } from "./logic.js";
 
 describe("initials", () => {
   it("takes the first letter of the first and last part", () => {
@@ -41,5 +42,16 @@ describe("initials", () => {
 
   it("uses the last part, not the second", () => {
     expect(initials("J. Robert Oppenheimer")).toBe("JO");
+  });
+});
+
+describe("isAvatarStatus", () => {
+  it("recognises the four states a dot paints, and nothing else", () => {
+    expect(Arr.every(AVATAR_STATUSES, isAvatarStatus)).toBe(true);
+    expect(
+      Arr.map(["unknown", "", "Online", "online "], isAvatarStatus),
+    ).toEqual([false, false, false, false]);
+    expect(isAvatarStatus(undefined)).toBe(false);
+    expect(isAvatarStatus(null)).toBe(false);
   });
 });

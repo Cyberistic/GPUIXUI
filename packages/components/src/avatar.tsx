@@ -22,9 +22,11 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { AVATAR_DISC, AVATAR_FALLBACK, AVATAR_ROOT, cn } from "@gpuixui/tw";
 import { Match } from "effect";
-import { initials } from "./avatar/logic.js";
+import { initials, isAvatarStatus } from "./avatar/logic.js";
+import type { AvatarStatus } from "./avatar/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
+  avatarPixels,
   avatarSize,
   statusTone,
   useTheme,
@@ -35,7 +37,7 @@ import {
 export type AvatarSize = keyof typeof avatarSize;
 
 /** The presence dot's state. */
-export type AvatarStatus = "online" | "away" | "busy" | "offline";
+export type { AvatarStatus };
 
 /** {@link Avatar} props. */
 export interface AvatarProps extends Props {
@@ -76,13 +78,17 @@ export const Avatar = ({
   name,
   src,
   size = "md",
-  status,
+  status: statusProp,
   className,
   style,
   ...rest
 }: AvatarProps) => {
   const theme = useTheme();
-  const diameter = avatarSize[size];
+  const diameter = avatarPixels(size);
+  // A stored presence state the union does not name is no dot, not a thrown
+  // exhaustive match: the dot is optional content, and announcing a state the
+  // data no longer carries would be worse than saying nothing.
+  const status = isAvatarStatus(statusProp) ? statusProp : undefined;
 
   return (
     <div
