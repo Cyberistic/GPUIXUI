@@ -16,6 +16,8 @@
  *   (the readout must fall to zero);
  * - an arrow key that moves the selection without moving native focus, so the
  *   next key goes to the old row.
+ * - a computed cell width the layout cannot paint, so a column's header and its
+ *   cells stop sharing a track and the rows drift under their own headings.
  */
 
 import * as Arr from "effect/Array";
@@ -32,7 +34,17 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
-import { SKELETON_TRACK_LIMIT, TableSkeleton } from "../table/table.js";
+import {
+  SKELETON_TRACK_LIMIT,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  TableSkeleton,
+  TableViewport,
+} from "../table/table.js";
 
 interface Bounds {
   readonly x: number;
@@ -796,5 +808,76 @@ describe("the loading skeleton", () => {
     settle(root);
     expect(countRoles("Row")).toBe(1);
     expect(countRoles("Cell")).toBe(1);
+  });
+});
+
+describe("the cell track", () => {
+  /**
+   * One table whose first column is handed a computed width.
+   *
+   * The column paints a short header over a long cell, which is what a drifted
+   * track looks like: each box sizes from its own content instead of sharing the
+   * column's width.
+   */
+  const withTrack = (width: number) => (
+    <Table height={200} aria-label="Files">
+      <TableViewport>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell width={width} testId="track-header">
+              Name
+            </TableHeaderCell>
+            <TableHeaderCell testId="track-header-status">
+              Status
+            </TableHeaderCell>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell width={width} testId="track-cell">
+              a-much-longer-file-name.ts
+            </TableCell>
+            <TableCell testId="track-cell-status">tracked</TableCell>
+          </TableRow>
+        </TableBody>
+      </TableViewport>
+    </Table>
+  );
+
+  it("keeps a width that cannot paint on the column's one track", () => {
+    // A cell's width is often computed — a share of a pane, a stored size, a
+    // measurement taken before the first layout. The runtime drops `NaN` and the
+    // infinities, and a negative width paints nothing usable, so the cell fell
+    // back to its own content: measured before the guard, the 62px `Name`
+    // header sat above a 204px cell and the column had no track at all.
+    const unreadable = [Number.NaN, Number.POSITIVE_INFINITY, -20];
+    root = renderData(withTrack(Number.NaN));
+    settle(root);
+    for (const width of unreadable) {
+      root.rerender(withTrack(width));
+      settle(root);
+      const header = boundsOf(root, "track-header");
+      const cell = boundsOf(root, "track-cell");
+      expect(header.width).toBe(cell.width);
+      expect(header.x).toBe(cell.x);
+      expect(cell.width).toBeGreaterThan(0);
+      // The column after it starts at the same edge in both rows, so the drift
+      // did not reach the rest of the table either.
+      expect(boundsOf(root, "track-header-status").x).toBe(
+        boundsOf(root, "track-cell-status").x,
+      );
+    }
+  });
+
+  it("keeps the width a caller can paint", () => {
+    // The guard reads an unreadable width as *no* width; a finite one is the
+    // caller's track, so a resized or authored column keeps its number.
+    root = renderData(withTrack(160));
+    settle(root);
+    expect(boundsOf(root, "track-header").width).toBe(160);
+    expect(boundsOf(root, "track-cell").width).toBe(160);
+    expect(boundsOf(root, "track-header").x).toBe(
+      boundsOf(root, "track-cell").x,
+    );
   });
 });

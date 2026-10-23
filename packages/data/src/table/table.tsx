@@ -75,8 +75,9 @@ const JUSTIFY: Readonly<Record<CellAlign, string>> = {
 /** The geometry a header cell and a body cell share. */
 export interface CellLayoutProps {
   /**
-   * A fixed track width, in pixels. Omit it and the cell shares the leftover
-   * width with every other flexible cell.
+   * A fixed track width, in pixels. Omit it — or pass a number the layout
+   * cannot paint — and the cell shares the leftover width with every other
+   * flexible cell.
    */
   readonly width?: number;
   /** Defaults to `left`. */
@@ -86,17 +87,38 @@ export interface CellLayoutProps {
 }
 
 /**
+ * The width a cell can be laid out at, when the caller names one.
+ *
+ * A cell's width is often computed — a share of a pane, a stored column size, a
+ * measurement taken before the first layout — and the runtime drops a value it
+ * cannot lay out: `NaN` and the infinities reach native as `null`, and a
+ * negative width paints nothing usable. The cell then sizes to its own content,
+ * so a column's header and its cells stop sharing a track (measured: a `Name`
+ * header 62px wide above a 204px body cell, the drift a key-value list was
+ * fixed for). A width that cannot paint is **no width**, the reading `width`
+ * already has when it is omitted: the cell shares the leftover track, so the
+ * header and every cell of one column stay aligned.
+ */
+const cellWidth = (width: number | undefined): number | undefined =>
+  width === undefined || (Number.isFinite(width) && width >= 0)
+    ? width
+    : undefined;
+
+/**
  * A cell's track, and where its content sits across it.
  *
  * `justifyContent` is one decision with the track: both cell parts are flex
  * rows, so the alignment belongs here rather than in a class.
  */
-const cellLayout = ({ width, align = "left" }: CellLayoutProps): StyleDesc => ({
-  ...(width === undefined
-    ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
-    : { width, flexGrow: 0, flexShrink: 0, flexBasis: width }),
-  justifyContent: JUSTIFY[align],
-});
+const cellLayout = ({ width, align = "left" }: CellLayoutProps): StyleDesc => {
+  const track = cellWidth(width);
+  return {
+    ...(track === undefined
+      ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
+      : { width: track, flexGrow: 0, flexShrink: 0, flexBasis: track }),
+    justifyContent: JUSTIFY[align],
+  };
+};
 
 /** {@link Table} props. */
 export interface TableProps extends Omit<Props, "children"> {
