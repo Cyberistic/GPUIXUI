@@ -55,6 +55,32 @@ describe("DropZone", () => {
     });
   });
 
+  it("reads a Windows path's own name, not the whole path", () => {
+    let dropped: DropPayload | undefined;
+    const root = renderDropZone(
+      {
+        label: "Drop files",
+        onDrop: (payload) => {
+          dropped = payload;
+        },
+      },
+      lightTheme,
+      surface(false),
+    );
+    const handler = expectSome(hostHandler(root, "onFileDrop"));
+    handler({
+      paths: ["C:\\Users\\ada\\notes.txt", "C:\\Users\\ada\\photos\\"],
+      elementId: 1,
+      eventType: "fileDrop",
+    });
+    expect(dropped).toStrictEqual({
+      files: [
+        { path: "C:\\Users\\ada\\notes.txt", name: "notes.txt" },
+        { path: "C:\\Users\\ada\\photos\\", name: "photos" },
+      ],
+    });
+  });
+
   it("highlights the zone while the pointer is over it", () => {
     const resting = renderDropZone(
       { label: "Drop files", onDrop: noop },

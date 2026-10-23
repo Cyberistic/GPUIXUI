@@ -7,7 +7,9 @@ description: A labelled drop target that reports dropped files and offers a pick
 button wired to the caller's file picker. The drop rides the runtime's
 `onFileDrop` (the `FileDrop::Entered` then `Submit` pair a Finder drag produces),
 whose payload is absolute paths — so the zone maps each path to `{ name, path }`
-and hands `onDrop({ files })`.
+and hands `onDrop({ files })`. The name is the last segment of either separator,
+so a Windows drop (`C:\Users\ada\notes.txt`) reports `notes.txt` rather than the
+whole path, and a trailing separator resolves to the directory's own name.
 
 ```tsx
 import { DropZone } from "@gpuixui/media";
@@ -65,9 +67,10 @@ highlight swaps to `colors.accent` and `colors.ring`. No literal colours.
 
 ## Verification
 
-`src/drop-zone.test.tsx` (4 tests): `onFileDrop` reports `{ files }` with
-basenames; the highlight swaps the border role; the pick button routes to the
-caller; and a disabled zone refuses a drop (the negative control).
+`src/drop-zone.test.tsx` (5 tests): `onFileDrop` reports `{ files }` with
+basenames from either separator; the highlight swaps the border role; the pick
+button routes to the caller; and a disabled zone refuses a drop (the negative
+control).
 
 ```sh
 nub run --filter @gpuixui/media test

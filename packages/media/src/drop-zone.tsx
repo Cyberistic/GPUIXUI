@@ -52,9 +52,12 @@ export interface DropZoneProps extends Omit<Props, "children"> {
   readonly className?: string;
 }
 
+/** Both separators: a drop on Windows arrives as `C:\Users\ada\notes.txt`. */
+const SEPARATORS = /[\\/]/;
+
 const basename = (path: string): string =>
   Option.getOrElse(
-    Arr.last(Arr.filter(Str.split("/")(path), Str.isNonEmpty)),
+    Arr.last(Arr.filter(Str.split(SEPARATORS)(path), Str.isNonEmpty)),
     () => path,
   );
 
