@@ -7020,7 +7020,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 197/197
+`[x]` `[██████████]` 198/198
+
+`[x]` Publish the **movable tabs** a window measured — Tier 4's
+detachable/movable tabs row is `partial` (the binding opens one window per
+process), and no docs page cited the half a window proves:
+`movable-tabs-lifecycle` (31 checks) dragged `bravo` between two 280px strips
+**24**px apart and stepped it by keyboard. §3 gains **Movable tabs**
+(`supported, with limits`, composed) with the measured orders
+(`alpha,charlie` / `bravo,delta,echo`), the draft `bravo:abc` surviving above the
+strips because the panel **remounts**, the app re-focusing `movable-tab-bravo`,
+`delta,bravo,echo` → `delta,echo,bravo`, the miss below both strips, and `echo`
+landing at the centre-derived slot as `alpha,echo,charlie`; `/docs/runtime`
+publishes the same row, §5 owes the probe, and `/docs/workspace` gains **A moved
+tab is a remount** with the painted-box and tab-centre rules.
+`capability-doc.test.ts` gains `publishes the tab move a window measured`: it
+parses the fixture's two starting strips, derives the drag order, the two
+keyboard steps and the return move, reads the check count out of the README, and
+holds the record, the page and the lane page to each value; `movable-tab-bravo`
+joins the evidence map as an element id. Directions measured: with the row absent
+the case fails `expected undefined to be 'supported, with limits'`, and the
+workspace page at `alpha,delta` fails `to contain 'alpha,charlie'`; restored, the
+case is 98/98, the lane and capability files are 145/145, and `check-types` is
+clean. No native scenario applies — a docs page and its guard have no runtime
+path.
 
 `[x]` Publish the **theme switch a window measured** — MISSION lists theme
 switching among the critical interactions, and `/docs/theming` taught the token

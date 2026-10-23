@@ -206,6 +206,22 @@ A find bar therefore keeps three numbers: the document's matches, the matches
 above the window, and the cursor. The last is the app's; the offset is
 arithmetic over the first two, recomputed whenever the window moves.
 
+## A moved tab is a remount
+
+`movable-tabs-lifecycle` measured a tab move inside one window (31 checks on two
+280px strips 24px apart, each with its own selected panel and a draft field).
+Dragging `bravo` out of the left strip and dropping it at the right strip's start
+leaves `alpha,charlie` / `bravo,delta,echo` with `bravo` selected, and the draft
+reads `bravo:abc` — it lives **above** the strips, because the tab changed parent
+and its panel remounted. The app also restores the focus to `movable-tab-bravo`,
+which the runtime lost with the old element. `Cmd+Shift+Right` reorders the
+focused tab inside its strip (`delta,bravo,echo` → `delta,echo,bravo`), stops at
+the end and keeps the focus; a release below both strips is a miss. Two rules
+follow: resolve the destination group from the **painted** strip boxes and the
+slot from the destination tabs' **centres**, and keep a moved tab's state in the
+app. A tab detached into its own OS window stays unavailable — the binding opens
+one window per process.
+
 ## State and persistence
 
 There is no renderer storage, so a layout is the app's data. Model it once and

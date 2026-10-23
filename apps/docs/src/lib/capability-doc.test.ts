@@ -1592,6 +1592,92 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("maxWidth");
   });
 
+  it("publishes the tab move a window measured", () => {
+    // Tier 4's movable tabs are `partial` because the binding opens one window
+    // per process, and the half a window can prove is the move inside it.
+    // `movable-tabs-lifecycle` drove a drag and a keyboard step, and the orders
+    // below are derived from the fixture's own starting strips, so the record,
+    // the page and the workspace lane cannot teach an order the window no
+    // longer measured. The bug this guards: a move remounts the tab's panel,
+    // so the draft and the focus have to live above the strips.
+    const fixture = read("apps/playground/src/live/tabs-drag.ts");
+    const initial = (group: string): ReadonlyArray<string> => {
+      const block =
+        new RegExp(`${group}: \\{[\\s\\S]*?tabs: \\[([^\\]]*)\\]`).exec(
+          fixture,
+        )?.[1] ?? "";
+      return [...block.matchAll(/"([a-z]+)"/g)].map(
+        (match) => match[1] ?? "",
+      );
+    };
+    const left = initial("left");
+    const right = initial("right");
+    const gap = Number(/TAB_GROUP_GAP = ([\d_]+)/.exec(fixture)?.[1] ?? NaN);
+    expect(left.length).toBe(3);
+    expect(right.length).toBe(2);
+    expect(gap).toBeGreaterThan(0);
+
+    // `bravo` (left's second tab) is dragged to the right strip's start.
+    const movedLeft = left.filter((tab) => tab !== "bravo");
+    const movedRight = ["bravo", ...right];
+    expect(movedLeft).toEqual(["alpha", "charlie"]);
+    expect(movedRight).toEqual(["bravo", "delta", "echo"]);
+    // The keyboard steps the moved `bravo` to the end of the right strip.
+    const rightwards = (
+      tabs: ReadonlyArray<string>,
+      index: number,
+    ): ReadonlyArray<string> => {
+      const copy = [...tabs];
+      const [held] = copy.splice(index, 1);
+      copy.splice(index + 1, 0, held ?? "");
+      return copy;
+    };
+    const stepped = rightwards(movedRight, 0);
+    const clamped = rightwards(stepped, 1);
+    // `echo` is dragged back into the left strip at `charlie`'s slot.
+    const returnedLeft = [left.at(0) ?? "", "echo", left.at(2) ?? ""];
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `movable-tabs-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
+      "";
+    const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
+    expect(checks).toBeGreaterThan(20);
+
+    const row = rowFor("Movable tabs");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("movable-tabs-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(`**${gap}**`);
+    expect(row?.evidence).toContain(movedLeft.join(","));
+    expect(row?.evidence).toContain(movedRight.join(","));
+    expect(row?.evidence).toContain(stepped.join(","));
+    expect(row?.evidence).toContain(clamped.join(","));
+    expect(row?.evidence).toContain(returnedLeft.join(","));
+    expect(row?.evidence).toContain("remount");
+    expect(row?.workaround).toContain("centre");
+
+    const page = measuredRow("Movable tabs");
+    expect(
+      page,
+      "the page's measured table has no movable-tabs row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("movable-tabs-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`**${gap}**`);
+    expect(page?.[1]).toContain(movedLeft.join(","));
+    expect(page?.[1]).toContain(movedRight.join(","));
+    expect(page?.[1]).toContain(stepped.join(","));
+    expect(page?.[1]).toContain(returnedLeft.join(","));
+
+    const workspace = read("apps/docs/content/docs/workspace/index.mdx");
+    expect(workspace).toContain("movable-tabs-lifecycle");
+    expect(workspace).toContain(`${checks} checks`);
+    expect(workspace).toContain(movedLeft.join(","));
+    expect(workspace).toContain(stepped.join(","));
+    expect(workspace).toContain("remount");
+  });
+
   it("publishes the theme switch a window measured", () => {
     // MISSION lists theme switching among the critical interactions, and the
     // theming page taught the token layer without saying what a window does
@@ -2443,6 +2529,7 @@ describe("docs/gpuix-capabilities.md", () => {
       ["row-delta", "a row marker the reorder probe dropped onto"],
       ["gridfocus-r2c2", "a cell id the roving-grid probe focused by hand"],
       ["grid-focus-before", "a control id the roving grid's next Tab reached"],
+      ["movable-tab-bravo", "a tab id the movable-tab probe focuses after a move"],
       [
         "grid-focus-after",
         "a control id a one-press exit from the grid reached",
