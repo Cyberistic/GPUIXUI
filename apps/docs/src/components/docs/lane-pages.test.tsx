@@ -118,7 +118,7 @@ describe("the lane page list", () => {
       );
 
       expect(markup).toContain(
-        `${shippedPages(lane).length} pages in ${packs.length} packages`,
+        `${shippedPages(lane).length} pages in ${packs.length} ${packs.length === 1 ? "package" : "packages"}`,
       );
     },
   );

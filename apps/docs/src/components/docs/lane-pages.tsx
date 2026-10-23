@@ -24,7 +24,8 @@ export function LanePages({ lane }: { readonly lane: PackageLane }) {
   return (
     <div className="not-prose my-6 space-y-6">
       <p className="m-0 font-mono text-xs text-muted-foreground">
-        {total} pages in {groups.length} packages · generated from each
+        {total} pages in {groups.length}{" "}
+        {groups.length === 1 ? "package" : "packages"} · generated from each
         package's docs folder
       </p>
       {groups.map(({ collection, pages }) => (
