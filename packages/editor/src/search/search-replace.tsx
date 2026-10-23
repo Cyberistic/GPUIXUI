@@ -14,7 +14,7 @@
  */
 
 import type { KeyEvent } from "@gpuix/react";
-import { Button, Input } from "@gpuixui/primitives";
+import { Button, Input, Toggle } from "@gpuixui/primitives";
 import { cn } from "@gpuixui/tw";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
@@ -79,8 +79,11 @@ export const SearchReplace = ({
   const [query, setQuery] = useState("");
   const [replacement, setReplacement] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [matchCase, setMatchCase] = useState(true);
+  const [wholeWord, setWholeWord] = useState(false);
 
-  const ranges = findRanges(value, query);
+  const options = { caseSensitive: matchCase, wholeWord };
+  const ranges = findRanges(value, query, options);
   const count = ranges.length;
   const active = count === 0 ? 0 : Math.min(activeIndex, count - 1);
 
@@ -99,7 +102,7 @@ export const SearchReplace = ({
 
   const replaceEvery = (): void => {
     if (count === 0) return;
-    onValueChange(replaceAll(value, query, replacement));
+    onValueChange(replaceAll(value, query, replacement, options));
   };
 
   const onKeyDown = (event: KeyEvent): void => {
@@ -118,8 +121,33 @@ export const SearchReplace = ({
         placeholder={placeholder}
         label={findLabel}
         disabled={disabled}
+        testId={`${testId}-find`}
         style={{ flexGrow: 1 }}
       />
+      <Toggle
+        variant="outline"
+        size="sm"
+        square
+        pressed={matchCase}
+        onPressedChange={setMatchCase}
+        label="Match case"
+        disabled={disabled}
+        testId={`${testId}-case`}
+      >
+        Aa
+      </Toggle>
+      <Toggle
+        variant="outline"
+        size="sm"
+        square
+        pressed={wholeWord}
+        onPressedChange={setWholeWord}
+        label="Match whole word"
+        disabled={disabled}
+        testId={`${testId}-word`}
+      >
+        W
+      </Toggle>
       <text role="presentation" testId={`${testId}-count`}>
         {count === 0 ? "No matches" : `${active + 1} / ${count}`}
       </text>
@@ -147,6 +175,7 @@ export const SearchReplace = ({
         placeholder={replacePlaceholder}
         label={replaceFieldLabel}
         disabled={disabled}
+        testId={`${testId}-replace`}
         style={{ flexGrow: 1 }}
       />
       <Button
@@ -154,6 +183,7 @@ export const SearchReplace = ({
         size="sm"
         label={replaceLabel}
         disabled={disabled || count === 0}
+        testId={`${testId}-replace-one`}
         onActivate={replaceOne}
       >
         {replaceLabel}
@@ -163,6 +193,7 @@ export const SearchReplace = ({
         size="sm"
         label={replaceAllLabel}
         disabled={disabled || count === 0}
+        testId={`${testId}-replace-all`}
         onActivate={replaceEvery}
       >
         {replaceAllLabel}

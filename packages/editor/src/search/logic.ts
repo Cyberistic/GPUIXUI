@@ -17,13 +17,39 @@ export interface MatchRange {
   readonly end: number;
 }
 
+/** How a query is matched. The defaults are the bar's documented literal scan. */
+export interface FindOptions {
+  /** Match the query's letter case. Default `true`. */
+  readonly caseSensitive?: boolean;
+  /** Match only where the word does not continue on either side. Default `false`. */
+  readonly wholeWord?: boolean;
+}
+
+/** A letter, digit or underscore: the run a whole-word match must not touch. */
+const WordCharacter = /[\p{L}\p{N}_]/u;
+
+const isWordCharacter = (character: string | undefined): boolean =>
+  character !== undefined && WordCharacter.test(character);
+
+/** A whole-word range sits between non-word characters, or the text's ends. */
+const isWholeWord = (text: string, range: MatchRange): boolean =>
+  !isWordCharacter(text[range.start - 1]) &&
+  !isWordCharacter(text[range.end]);
+
+/** Escape a literal query so a case-insensitive scan can use it as a pattern. */
+const escapePattern = (query: string): string =>
+  query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
  * Every non-overlapping occurrence of `query` in `text`, left to right.
  *
  * An empty query matches nothing — the bar has nothing to find, and a zero-
  * length needle would otherwise match at every position. Overlapping matches
  * are skipped: the scan resumes at a match's `end`, so `"aa"` inside `"aaa"`
- * yields one range, not two.
+ * yields one range, not two. A case-insensitive scan is a literal escaped
+ * pattern, not a lowered copy of the text: lowering can change a string's
+ * length (and therefore its indices), while the regex engine reports the
+ * offsets of the text it was given.
  *
  * The scan is a fold rather than a recursion: a document can hold a match per
  * character, and one call frame per match exhausted the stack on a large file.
@@ -31,21 +57,52 @@ export interface MatchRange {
 export const findRanges = (
   text: string,
   query: string,
-): ReadonlyArray<MatchRange> =>
-  query.length === 0
-    ? []
-    : Arr.unfold(
-        0,
-        (from: number): Option.Option<readonly [MatchRange, number]> => {
-          const index = text.indexOf(query, from);
-          return index === -1
-            ? Option.none()
-            : Option.some([
-                { start: index, end: index + query.length },
-                index + query.length,
-              ] as const);
-        },
-      );
+  options: FindOptions = {},
+): ReadonlyArray<MatchRange> => {
+  if (query.length === 0) return [];
+  const wholeWord = options.wholeWord === true;
+  const ranges =
+    options.caseSensitive === false
+      ? findCaseInsensitive(text, query)
+      : findExact(text, query);
+  return wholeWord
+    ? Arr.filter(ranges, (range) => isWholeWord(text, range))
+    : ranges;
+};
+
+const findExact = (text: string, query: string): ReadonlyArray<MatchRange> =>
+  Arr.unfold(
+    0,
+    (from: number): Option.Option<readonly [MatchRange, number]> => {
+      const index = text.indexOf(query, from);
+      return index === -1
+        ? Option.none()
+        : Option.some([
+            { start: index, end: index + query.length },
+            index + query.length,
+          ] as const);
+    },
+  );
+
+const findCaseInsensitive = (
+  text: string,
+  query: string,
+): ReadonlyArray<MatchRange> => {
+  const pattern = new RegExp(escapePattern(query), "gi");
+  return Arr.unfold(
+    0,
+    (from: number): Option.Option<readonly [MatchRange, number]> => {
+      pattern.lastIndex = from;
+      const found = pattern.exec(text);
+      return found === null
+        ? Option.none()
+        : Option.some([
+            { start: found.index, end: found.index + found[0].length },
+            pattern.lastIndex,
+          ] as const);
+    },
+  );
+};
 
 /**
  * The text with every non-overlapping occurrence of `query` replaced.
@@ -58,8 +115,9 @@ export const replaceAll = (
   text: string,
   query: string,
   replacement: string,
+  options: FindOptions = {},
 ): string => {
-  const ranges = findRanges(text, query);
+  const ranges = findRanges(text, query, options);
   return Arr.length(ranges) === 0
     ? text
     : Arr.reduce(

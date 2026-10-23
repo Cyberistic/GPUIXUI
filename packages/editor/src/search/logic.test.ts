@@ -36,6 +36,32 @@ describe("findRanges", () => {
     ]);
   });
 
+  it("matches case-insensitively only when asked", () => {
+    expect(findRanges("Cat cat", "cat")).toEqual([{ start: 4, end: 7 }]);
+    expect(findRanges("Cat cat", "cat", { caseSensitive: false })).toEqual([
+      { start: 0, end: 3 },
+      { start: 4, end: 7 },
+    ]);
+  });
+
+  it("matches whole words only when asked", () => {
+    expect(findRanges("cat concatenate cat", "cat", { wholeWord: true })).toEqual(
+      [
+        { start: 0, end: 3 },
+        { start: 16, end: 19 },
+      ],
+    );
+    expect(
+      findRanges("cat_x cat2 cat", "cat", { wholeWord: true }),
+    ).toEqual([{ start: 11, end: 14 }]);
+  });
+
+  it("treats a regex character as a literal", () => {
+    expect(findRanges("a.b axb", "a.b", { caseSensitive: false })).toEqual([
+      { start: 0, end: 3 },
+    ]);
+  });
+
   it("finds every match in a document larger than the call stack", () => {
     // The scan used to recurse once per match, so a 20 000-match file threw
     // `RangeError: Maximum call stack size exceeded` instead of reporting them.
@@ -61,6 +87,15 @@ describe("replaceAll", () => {
     // The same text, but with a match present, must differ — so the no-match
     // path above is genuinely the "nothing to do" branch, not a no-op bug.
     expect(replaceAll("abc", "a", "x")).toBe("xbc");
+  });
+
+  it("replaces with the options the count used", () => {
+    expect(
+      replaceAll("Cat cat", "cat", "dog", { caseSensitive: false }),
+    ).toBe("dog dog");
+    expect(
+      replaceAll("cat concatenate", "cat", "fox", { wholeWord: true }),
+    ).toBe("fox concatenate");
   });
 
   it("replaces every match in a document larger than the call stack", () => {
