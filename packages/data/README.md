@@ -561,7 +561,11 @@ without hand-building the tree — `setGroupKind(tree, path, kind)` keeps a
 group's children and `negateAt(tree, path)` is its own inverse. The toolbar's
 search is the one **debounced** field (the core's `@tanstack/pacer` debouncer
 owns the wait); the table's own filter field is deliberately not, because
-`table-filter-lifecycle` measured the set narrowing as the reader types.
+`table-filter-lifecycle` measured the set narrowing as the reader types. The
+wait is a reporting delay (`150` ms by default) that `debounceMs: 0` turns off;
+a wait the toolbar cannot read — `NaN`, an infinity, a negative — is the
+default rather than the immediate timer `setTimeout` makes of it, because a
+`debounceMs` read from a setting is often not a number.
 
 ## Styling
 

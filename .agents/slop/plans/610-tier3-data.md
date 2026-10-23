@@ -490,6 +490,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   nodes; direction measured: the old `Math.max(1, count)` fails on the
   `RangeError`. Green: 196 unit / 116 behaviour. The README and the Tables row
   teach the rule.
+- **A toolbar wait the core cannot read is the documented default**:
+  `DataToolbar` passed `search.debounceMs` straight into `@tanstack/pacer`,
+  which hands it to `setTimeout`; Node reads `NaN` and an infinity as an
+  immediate timer (measured: `TimeoutNaNWarning`, duration set to `1`), so a
+  delay computed from a setting reported the query in the next tick and the
+  debounce existed only on paper. A finite non-negative wait is the caller's,
+  `0` still reports every edit at once, and a non-finite or negative one takes
+  the documented `150` ms. `behaviour/surfaces.test.tsx` gains two cases (13
+  in the file): a `NaN` wait leaves the query unreported 40 ms in and reports it
+  afterwards, and the zero wait reports in the same frame. Direction measured:
+  with the raw wait restored the first case fails `expected 'logo' to be
+  'none'`; with the guard it is 13/13. The toolbar page, the README paragraph
+  and the Data toolbars row teach the rule.
 - **A cell width the layout cannot paint is no width**: `cellLayout` wrote a
   caller's `width` into `width` and `flexBasis` verbatim, so a computed track —
   a share of a pane, a stored size, a measurement taken before the first layout

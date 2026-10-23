@@ -26,7 +26,11 @@ import { DataToolbar } from "@gpuixui/data";
 | `testId` | `string` | — | the field derives from it: `${testId}-search` |
 
 A `ToolbarSearch` is `{ value, onValueChange, placeholder?, label?, debounceMs? }`;
-`debounceMs` defaults to `150`.
+`debounceMs` defaults to `150`. `0` reports every edit at once, and a wait the
+toolbar cannot read — `NaN`, an infinity, a negative — is the **default**: the
+value is often computed (a setting read from storage), and `setTimeout` reads an
+unreadable delay as an immediate timer, so the query would be reported in the
+next tick and the debounce would exist only on paper.
 
 ## Limitations
 
