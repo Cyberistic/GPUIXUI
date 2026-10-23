@@ -267,9 +267,9 @@ describe("the registry and the README", () => {
     const flat = sectionOf().replace(/\s+/g, " ");
     // The pane reports 280 and the budget follows it; the unbudgeted trail is
     // two 16px rows (36) and the budgeted one is its 28px trigger's row.
-    for (const measured of ["280", "w=280 budget=3", "**36**", "**28**"]) {
+    Arr.forEach(["280", "w=280 budget=3", "**36**", "**28**"], (measured) => {
       expect(flat).toContain(measured);
-    }
+    });
     expect(flat).toContain("flex-wrap");
     expect(flat).toContain("A trail never clips; it wraps");
     expect(flat).toContain("decorative by design");
