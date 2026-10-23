@@ -89,9 +89,16 @@ export type {
 };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
-/** Whether a stored value is a step the avatar scale carries. */
+/**
+ * Whether a stored value is a step the avatar scale carries.
+ *
+ * The scale is looked up by its **own** keys: `key in avatarSize` also answers
+ * true for every name `Object.prototype` carries (`toString`, `constructor`),
+ * so a persisted name would pass the guard and the lookup would hand the
+ * runtime a method where a diameter belongs.
+ */
 const isAvatarSize = (value: unknown): value is keyof typeof avatarSize =>
-  typeof value === "string" && value in avatarSize;
+  typeof value === "string" && Object.hasOwn(avatarSize, value);
 
 /**
  * The diameter a stored avatar size names.

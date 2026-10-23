@@ -214,16 +214,19 @@ describe("Avatar", () => {
   it("reads a stored size the scale does not carry as the default step", () => {
     // `size` is a preference an app reads back, not a literal the compiler
     // checked: the record once answered `undefined` and the fallback's font
-    // size became `NaN`, so the avatar painted a box with no side.
-    const avatar = renderComponent(
-      <Avatar testId="avatar" name="Ada" size={"xl" as AvatarSize} />,
-    );
+    // size became `NaN`, so the avatar painted a box with no side. The two
+    // prototype names prove the lookup is the scale's own keys, not `in`.
+    Arr.forEach(["xl", "constructor", "hasOwnProperty"], (stored) => {
+      const avatar = renderComponent(
+        <Avatar testId="avatar" name="Ada" size={stored as AvatarSize} />,
+      );
 
-    expect(sizeOf(avatar, "avatar")).toEqual(
-      Option.some({ width: avatarSize.md, height: avatarSize.md }),
-    );
+      expect(sizeOf(avatar, "avatar"), stored).toEqual(
+        Option.some({ width: avatarSize.md, height: avatarSize.md }),
+      );
 
-    avatar.unmount();
+      avatar.unmount();
+    });
   });
 
   it("lets a consumer's style win", () => {
