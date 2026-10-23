@@ -132,13 +132,31 @@ export interface SwitchReport {
   readonly placements: readonly SwitchPlacementFailure[];
 }
 
-/** The switch-shaped part of a theme the contract reads. */
+/**
+ * The switch-shaped part of a theme the contract reads.
+ *
+ * A theme restored from storage writes `null` where it declares no paint — JSON
+ * has no `undefined` — so the declaration is read through {@link declaredSwitch}
+ * rather than compared to `undefined`.
+ */
 export interface SwitchAuditSource extends ColourSource {
   /** The roles a track is measured against; a strip the theme lost is reported. */
   readonly colors?: Partial<ThemeColors>;
   /** The declared paint, or nothing for the accent switch. */
   readonly switch?: Partial<SwitchColors>;
 }
+
+/**
+ * The paint a theme declares, or `undefined` for the accent switch.
+ *
+ * A value a store wrote as `null` is the absence it is: the theme declares no
+ * paint, so its toggle is the accent family's — the state every shipped base
+ * theme is in — rather than a set of slots to measure. Reading it by
+ * `=== undefined` handed `null` to the report, which read its first slot off it.
+ */
+const declaredSwitch = (
+  theme: Pick<SwitchAuditSource, "switch">,
+): Partial<SwitchColors> | undefined => theme.switch ?? undefined;
 
 /**
  * One declared value, read as the shape a store hands back: JSON has no
@@ -187,7 +205,7 @@ export function switchFailures(
   theme: SwitchAuditSource,
   floor: number = decorativeFloor,
 ): SwitchReport {
-  const paint = theme.switch;
+  const paint = declaredSwitch(theme);
   if (paint === undefined) {
     return { paint: [], placements: [] };
   }
@@ -233,5 +251,6 @@ export function switchFailures(
 export function invalidSwitchColors(
   theme: Pick<SwitchAuditSource, "switch">,
 ): readonly InvalidSwitchColor[] {
-  return theme.switch === undefined ? [] : paintFailures(theme.switch);
+  const paint = declaredSwitch(theme);
+  return paint === undefined ? [] : paintFailures(paint);
 }

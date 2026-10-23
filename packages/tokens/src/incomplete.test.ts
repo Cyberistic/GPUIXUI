@@ -43,10 +43,12 @@ import {
   invalidNumbers,
   invalidScales,
   invalidShadowColors,
+  invalidSwitchColors,
   isPaintableColor,
   lightElevation,
   lightTheme,
   missingTokens,
+  nativeTextTheme,
   platformNames,
   platformTheme,
   retroNames,
@@ -67,8 +69,19 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
 } from "./theme.js";
-import { lightSeries, seriesFailures } from "./series.js";
-import { darkSyntax, syntaxFailures, syntaxRoles } from "./syntax.js";
+import {
+  lightSeries,
+  darkSeries,
+  seriesColors,
+  seriesFailures,
+} from "./series.js";
+import {
+  darkSyntax,
+  lightSyntax,
+  syntaxColors,
+  syntaxFailures,
+  syntaxRoles,
+} from "./syntax.js";
 
 /** Every style the library ships, as the gate would be run over them. */
 const shipped: readonly Theme[] = [
@@ -1173,5 +1186,125 @@ describe("a shadow a store wrote", () => {
     expect(system).toContain("A shape a store wrote is that same absence");
     expect(inventory).toContain("a shape a store wrote");
     expect(readme).toContain("a level a store wrote as anything but a list");
+  });
+});
+
+/**
+ * The bug this holds: a theme's three **optional tables** were read with
+ * `!== undefined`, and JSON has no `undefined` — a theme a store saved comes back
+ * with `null` where it carried none. `switchFailures` then read its first slot
+ * off that `null` (`TypeError: Cannot read properties of null (reading 'on')`),
+ * and `seriesColors`/`syntaxColors` returned the `null` itself in a type that
+ * promises a table: a chart indexed it, and a code host was handed no palette and
+ * painted the runtime's dark default instead of the theme's.
+ *
+ * The decision is the absence rule the suites above follow. A `null` table is the
+ * state every shipped theme is in — no declared switch, so the accent toggle; no
+ * authored scale or palette, so the shipped table for the mode and variant — not
+ * a table with no entries. An authored table is still the theme's own, whole.
+ */
+describe("an optional table a store nulled", () => {
+  /** The shape a store writes for a theme that declared none: `null`, not absent. */
+  const nulled = (theme: Theme): Theme =>
+    ({
+      ...theme,
+      series: null,
+      syntax: null,
+      switch: null,
+    }) as unknown as Theme;
+
+  it("resolves the shipped scale, instead of handing a chart null", () => {
+    const light = nulled(lightTheme);
+
+    expect(seriesColors(light)).toBe(lightSeries);
+    expect(seriesColors(nulled(darkTheme))).toBe(darkSeries);
+    // The report and the paint read one table, so an absent table is no finding.
+    const report = seriesFailures(light);
+    expect(report.surfaces).toEqual([]);
+    expect(report.distinctness).toEqual([]);
+    expect(report.deficiencies).toEqual([]);
+    expect(auditTheme(light).passed).toBe(true);
+  });
+
+  it("resolves the shipped palette, and hands it to the native host", () => {
+    const light = nulled(lightTheme);
+
+    expect(syntaxColors(light)).toBe(lightSyntax);
+    expect(syntaxColors(nulled(darkTheme))).toBe(darkSyntax);
+    // The host seam is the paint path: a null palette here is the runtime default.
+    expect(nativeTextTheme(light).syntax).toBe(lightSyntax);
+    expect(syntaxFailures(light)).toEqual([]);
+    expect(auditTheme(light).passed).toBe(true);
+  });
+
+  it("reads a nulled switch as the accent toggle, instead of throwing", () => {
+    const light = nulled(lightTheme);
+
+    expect(switchFailures(light)).toEqual({ paint: [], placements: [] });
+    expect(invalidSwitchColors(light)).toEqual([]);
+    expect(() => auditTheme(light)).not.toThrow();
+    expect(auditTheme(light).passed).toBe(true);
+  });
+
+  it("still measures a switch the theme declares", () => {
+    // The counterweight: the null rule must not silence a declared paint.
+    const typo = stored({
+      switch: { on: "#30D158", off: "#E9E9E", knob: "#FFFFFF" },
+    });
+
+    expect(invalidSwitchColors(typo)).toEqual([
+      { slot: "off", value: "#E9E9E" },
+    ]);
+    expect(switchFailures(typo).paint).toHaveLength(1);
+  });
+
+  it("keeps a table the theme does carry, whole", () => {
+    const short = lightSeries.slice(0, 2);
+    const partial = { keyword: "#3B2C8F" };
+    const declared = stored({
+      switch: { on: "#30D158", off: "#DCDCE1", knob: "#FFFFFF" },
+    });
+
+    expect(seriesColors(stored({ series: short }))).toBe(short);
+    expect(syntaxColors(stored({ syntax: partial }))).toBe(partial);
+    expect(switchFailures(declared)).toEqual({ paint: [], placements: [] });
+  });
+
+  it("reads every shipped style's nulled tables as the shipped ones", () => {
+    const wrong = shipped.filter((theme) => {
+      const stored = nulled(theme);
+      const report = switchFailures(stored);
+      return (
+        seriesColors(stored).length !== 5 ||
+        syntaxRoles.some((role) => syntaxColors(stored)[role] === undefined) ||
+        report.paint.length > 0 ||
+        report.placements.length > 0
+      );
+    });
+
+    expect(wrong.map(({ name }) => name)).toEqual([]);
+  });
+
+  it("is taught on both token pages, the README and the inventory", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+
+    // The rule where each table is taught, and the mechanism where it is described.
+    expect(catalogue).toContain(
+      "A table a store wrote as `null` is the absence it is",
+    );
+    expect(catalogue).toContain(
+      "A palette a store wrote as `null` is the absence it is",
+    );
+    expect(catalogue).toContain(
+      'A switch a store wrote as `null` is that same "declares none"',
+    );
+    expect(designSystem).toContain("A switch a store wrote as `null`");
+    expect(readme).toContain("A switch a store wrote as `null`");
+    expect(inventory).toContain("A table a store nulled is absence");
   });
 });

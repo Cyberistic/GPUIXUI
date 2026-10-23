@@ -183,6 +183,12 @@ export interface SeriesSource {
  * whole, like an elevation level — and every other theme resolves the table for
  * its mode and contrast variant.
  *
+ * **A table a store wrote as `null` is the absence it is**: JSON has no
+ * `undefined`, so a saved theme comes back with `null` where it carried no
+ * table, and handing that to a chart is a painter indexing `null`. The value is
+ * the theme's own when it holds one, and the shipped table for its mode and
+ * variant otherwise — the state every shipped theme is in.
+ *
  * @example
  * ```ts
  * import { seriesColors, themes } from "@gpuixui/tokens";
@@ -191,7 +197,7 @@ export interface SeriesSource {
  * ```
  */
 export function seriesColors(theme: SeriesSource): SeriesColors {
-  if (theme.series !== undefined) {
+  if (theme.series != null) {
     return theme.series;
   }
   if (theme.contrast === "high") {

@@ -212,6 +212,12 @@ export interface SyntaxSource {
  * shipped table whole — and every other theme resolves the table for its mode
  * and contrast variant.
  *
+ * **A table a store wrote as `null` is the absence it is**: JSON has no
+ * `undefined`, so a saved theme comes back with `null` where it carried no
+ * palette, and handing that to a code host is a painter reading a token off
+ * `null`. The palette is the theme's own when it holds one, and the shipped
+ * table for its mode and variant otherwise.
+ *
  * @example
  * ```ts
  * import { syntaxColors, themes } from "@gpuixui/tokens";
@@ -220,7 +226,7 @@ export interface SyntaxSource {
  * ```
  */
 export function syntaxColors(theme: SyntaxSource): SyntaxColors {
-  if (theme.syntax !== undefined) {
+  if (theme.syntax != null) {
     return theme.syntax;
   }
   if (theme.contrast === "high") {

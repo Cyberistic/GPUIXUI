@@ -585,7 +585,11 @@ declared switch draws no edge — so it ships the smallest step that clears
 (`#E3E3E8`, 1.058:1). The floor is the perceptibility one, not the 3:1 a state
 indicator needs, because the platform's own values sit under it: Apple's green is
 1.98:1 on its page and its knob 1.24:1 on the off track, with the HIG's shadow
-carrying the knob.
+carrying the knob. A switch a store wrote as `null` is the "declares none" its
+accent toggle answers — a saved theme writes `null` for the paint it never
+carried — and the same rule covers the other two optional tables: a `null`
+`series` or `syntax` resolves the shipped table for the theme's mode and variant
+(`seriesColors`/`syntaxColors`), so no painter is handed one.
 
 All three axes are measured as painted: the playground's `theme-platform` probe
 reads each platform's mono family, `primary` fill, `lg` radius and `md` control

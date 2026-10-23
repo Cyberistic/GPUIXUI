@@ -776,7 +776,10 @@ role this library designed. A theme that needs the stronger cue paints the accen
 switch instead of declaring one. The paint is a theme value like any other: a
 consumer that starts from a platform style and owns its toggle replaces all three
 slots through `extendTheme` (§11), and the report holds the brand's paint to the
-same floor.
+same floor. A switch a store wrote as `null` is the "declares none" the accent
+switch answers: a saved theme carries `null` where it declared no paint, and the
+report measures the toggle the theme actually paints rather than reading a slot
+off `null`.
 
 Components that cannot express hover or active in the runtime (for example
 `virtual-list`, whose GPUI list has no pressed or hovered style) put the state

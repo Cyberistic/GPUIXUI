@@ -561,7 +561,11 @@ role or a chart-local hex — the dashboard recipe's hand-coded palette
 `seriesColors(theme)` returns the scale for the theme's mode and contrast
 variant: **five** colours as a tuple, in the order a chart assigns them, so a
 legend cannot come up short. A chart with more than five categories folds the
-tail into "Other"; the scale is not a cycle.
+tail into "Other"; the scale is not a cycle. **A table a store wrote as `null`
+is the absence it is**: JSON has no `undefined`, so a saved theme comes back
+with `null` where it carried no table, and the scale is the shipped one for the
+theme's mode and variant — the same answer a theme that never carried a table
+gets — rather than `null` handed to a painter that indexes it.
 
 | Series | Light | Dark | HC light | HC dark |
 | ------ | ----- | ---- | -------- | ------- |
@@ -824,7 +828,10 @@ is the grammar half on its own, beside `invalidColorRoles` and
 `invalidShadowColors` for the other two authored colour tables. A theme that
 declares no switch answers with an empty report: its toggle is painted from
 `primary`, `muted` and `foreground`, which the mark, contrast and decorative
-tables already hold where a switch stands.
+tables already hold where a switch stands. **A switch a store wrote as `null` is
+that same "declares none"**: JSON has no `undefined`, so a saved theme comes
+back with `null` where it declared no paint, and the report measures the accent
+switch the theme actually paints rather than reading its first slot off `null`.
 
 The floor is the **perceptibility** one (`1.05:1`), not the `3:1` a state
 indicator needs, and the difference is measured rather than assumed: a declared
@@ -3293,7 +3300,11 @@ spends time in was also the only themed surface with a foreign palette.
 
 `syntaxColors(theme)` returns the palette for a theme's mode and contrast
 variant: **twenty-four** token types, every key the runtime reads, so a host
-never falls back to its own colour for a token this package forgot.
+never falls back to its own colour for a token this package forgot. **A palette
+a store wrote as `null` is the absence it is**: a saved theme comes back with
+`null` where it carried no palette, and the host is handed the shipped table for
+the theme's mode and variant — the state every shipped theme is in — rather than
+a `null` it would read a token off.
 
 | Token | Light | Dark |
 | ----- | ----- | ---- |
