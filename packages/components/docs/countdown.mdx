@@ -18,13 +18,17 @@ import { Countdown } from "@gpuixui/components";
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `remainingMs` | `number` (required) | — |
+| `remainingMs` | `number` (required) | — (negative or unreadable renders `00:00`, expired) |
 | `label` | `string` | — |
 | `showDays` | `boolean` | `false` |
 | `style` | `StateStyle<CountdownState>` | — |
 
 ## Limitations
 
+- A remaining time the clock cannot read — `NaN` from a deadline that never
+  decoded, or an infinity — is no time left: it paints `00:00` in the expired
+  role and reports `expired`, rather than painting the word `NaN` while
+  presenting the countdown as live.
 - No timer inside the component; the application ticks and re-renders.
 - Fixed locale-free format; no localised units.
 - No `aria-live`, so a change is read when focused, not pushed.

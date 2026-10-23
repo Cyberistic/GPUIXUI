@@ -17,9 +17,20 @@ const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
 const SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
 
+/**
+ * The remaining time a clock can paint: a finite duration, floored at zero.
+ *
+ * A remaining time is usually arithmetic over a deadline the application
+ * decoded, so a timestamp that never arrived reaches the clock as `NaN`, and an
+ * absent bound as an infinity. Neither is a duration the label can draw, so an
+ * unreadable one reads as no time left rather than as the word `NaN`.
+ */
+export const readableRemaining = (remainingMs: number): number =>
+  Number.isFinite(remainingMs) ? Math.max(0, remainingMs) : 0;
+
 /** Whole seconds remaining, floored and never negative. */
 const wholeSeconds = (remainingMs: number): number =>
-  Math.max(0, Math.floor(remainingMs / 1000));
+  Math.floor(readableRemaining(remainingMs) / 1000);
 
 /** Split a remaining duration into days, hours, minutes and seconds. */
 export const breakdown = (remainingMs: number): CountdownParts => {

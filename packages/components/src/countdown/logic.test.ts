@@ -2,12 +2,13 @@
  * Countdown formatting.
  *
  * The bug these guard: a countdown that rounds a partial second up, a negative
- * remainder that renders "-1:59", capped hours after a day, and days appearing
- * when they were not asked for.
+ * remainder that renders "-1:59", capped hours after a day, days appearing when
+ * they were not asked for, and a remainder the clock cannot read (`NaN` from a
+ * deadline that never decoded, an infinity) painted as the literal word `NaN`.
  */
 
 import { describe, expect, it } from "vitest";
-import { breakdown, formatCountdown } from "./logic.js";
+import { breakdown, formatCountdown, readableRemaining } from "./logic.js";
 
 describe("breakdown", () => {
   it("splits a duration into whole units", () => {
@@ -58,5 +59,35 @@ describe("formatCountdown", () => {
 
   it("renders the last second of a day", () => {
     expect(formatCountdown(86_399_000)).toBe("23:59:59");
+  });
+
+  it("reads a remaining time it cannot paint as no time left", () => {
+    // A deadline is arithmetic over a timestamp the application decoded, so a
+    // field that never arrived reaches the clock as `NaN`, and an absent bound
+    // as an infinity. None of them can be laid out as clock text.
+    expect(breakdown(Number.NaN)).toEqual({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+    expect(formatCountdown(Number.NaN)).toBe("00:00");
+    expect(formatCountdown(Number.POSITIVE_INFINITY)).toBe("00:00");
+    expect(formatCountdown(Number.NEGATIVE_INFINITY)).toBe("00:00");
+    expect(formatCountdown(Number.NaN, { showDays: true })).toBe("00:00");
+  });
+});
+
+describe("readableRemaining", () => {
+  it("keeps a finite duration and floors it at zero", () => {
+    expect(readableRemaining(90_000)).toBe(90_000);
+    expect(readableRemaining(0)).toBe(0);
+    expect(readableRemaining(-5)).toBe(0);
+  });
+
+  it("reads an unreadable duration as no time left", () => {
+    expect(readableRemaining(Number.NaN)).toBe(0);
+    expect(readableRemaining(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(readableRemaining(Number.NEGATIVE_INFINITY)).toBe(0);
   });
 });
