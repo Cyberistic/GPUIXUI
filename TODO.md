@@ -10408,7 +10408,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 367/367
+`[x]` `[██████████]` 367/368
+
+`[ ]` Draw the **files and shell lanes** — six pages still ship no preview and
+      are strategy 4 for lack of a drawing, not for lack of a reproducible
+      interaction: `packages/files/docs/{file-tree,log-viewer,property-panel}.mdx`
+      and `packages/shell/docs/{toolbar,status-bar,app-menu}.mdx`. The files
+      package's pure halves are already public and import cleanly through the
+      wildcard subpaths (`buildFileTree`/`fileKindOf`/`fileIcon` at
+      `@gpuixui/files/tree/logic`, `parseLogLine`/`filterByLevel`/`LOG_LEVELS`/
+      `levelTone` at `@gpuixui/files/log/logic`), and the shell's reducers are
+      pure (`splitOverflow`/`moveRoving`, `step`/`hoverOpen`/`dismiss`,
+      `statusToneOf`/`toneForeground`) but import `@gpuixui/primitives`' root,
+      which pulls the native component tree into a browser bundle — a
+      `@gpuixui/shell/logic` subpath (the shape `@gpuixui/dock/logic` already
+      uses) is the route. Owner: **files/shell** for that subpath and for
+      mounting `<ComponentPreview>` on the six pages (this workstream may not
+      edit another package's docs); **docs-site** then adds the `apps/docs`
+      dependencies, the demo modules, their CSS and the registry guard, as the
+      media and editor lanes already do. No invented drawing: the files tree and
+      log viewer run the package's own construction, parsing and filter; the
+      shell strip runs the package's roving and menu reducers, and only the paint
+      is the browser's.
 
 `[x]` Generate the **theme editor's passing readout** from the gate — the
       editor told a reader what a theme had cleared in a hand-written paragraph,
