@@ -14,6 +14,7 @@
  * compiled `StyleDesc` drifts from the oracle.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -233,6 +234,24 @@ import { alpha, darkTheme, elevationShadow } from "../internal/theme.js";
 
 const style = (className: string): StyleDesc =>
   classesToStyle(className, darkTheme).style;
+
+describe("The recipe seam", () => {
+  it("teaches the height h-9 compiles to, not Tailwind's 36", () => {
+    // The seam's header described the registry as shadcn's fixed metrics and
+    // named `h-9` = 36, while `classesToStyle` maps `h-8`/`h-9`/`h-10` onto
+    // the theme's density: a reader planning a control around the comment got
+    // a box four points shorter than the recipe paints.
+    const source = readFileSync(
+      new URL("../internal/recipe.ts", import.meta.url),
+      "utf8",
+    );
+    const height = classesToStyle("h-9", darkTheme).style.height;
+    expect(height).toBe(darkTheme.density.controlHeight.md);
+    expect(height).not.toBe(36);
+    expect(source).not.toContain("h-9` = 36");
+    expect(source).toContain(`\`h-9\` is \`md\` (${height} in the default theme)`);
+  });
+});
 
 describe("Card recipe", () => {
   it("resolves the surface and its three treatments", () => {
