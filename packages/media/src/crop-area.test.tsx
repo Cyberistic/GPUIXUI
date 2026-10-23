@@ -139,6 +139,18 @@ describe("renderCropArea", () => {
     expect(handleOf(root, "sw")).toBeDefined();
   });
 
+  it("paints the resize cursor along each corner's own diagonal", () => {
+    // The bug guarded: every handle painted `nwse-resize`, so the top-right and
+    // bottom-left handles pointed across the diagonal they drag on.
+    const root = renderCropArea(props(), lightTheme, surfaceOf());
+    const cursorOf = (corner: "nw" | "ne" | "sw" | "se") =>
+      expectSome(hostProp(handleOf(root, corner), "style"));
+    expect(cursorOf("nw")).toMatchObject({ cursor: "nwse-resize" });
+    expect(cursorOf("se")).toMatchObject({ cursor: "nwse-resize" });
+    expect(cursorOf("ne")).toMatchObject({ cursor: "nesw-resize" });
+    expect(cursorOf("sw")).toMatchObject({ cursor: "nesw-resize" });
+  });
+
   it("reads an unreadable handle side and minimum as the defaults", () => {
     const tiny = new CropRect({ x: 60, y: 40, width: 10, height: 10 });
     const root = renderCropArea(

@@ -530,3 +530,22 @@ export const cornerLabel = (corner: CropCorner): string =>
     Match.when("se", () => "bottom right"),
     Match.exhaustive,
   );
+
+/**
+ * The resize cursor a corner points along.
+ *
+ * A double arrow names the diagonal a corner drags on, so the two corners on
+ * one diagonal share it: `nw`/`se` drag the top-left-to-bottom-right axis and
+ * `ne`/`sw` the other. One cursor for all four points across the wrong diagonal
+ * on half of them.
+ */
+export const cornerCursor = (
+  corner: CropCorner,
+): "nwse-resize" | "nesw-resize" =>
+  Match.value(corner).pipe(
+    Match.when("nw", () => "nwse-resize" as const),
+    Match.when("se", () => "nwse-resize" as const),
+    Match.when("ne", () => "nesw-resize" as const),
+    Match.when("sw", () => "nesw-resize" as const),
+    Match.exhaustive,
+  );

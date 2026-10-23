@@ -13,6 +13,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   clampCrop,
+  cornerCursor,
   cornerLabel,
   cropBars,
   cropGuides,
@@ -477,6 +478,13 @@ describe("labels", () => {
     expect(cropLabel(opening)).toBe("60, 40, 100 × 70");
     expect(cornerLabel("nw")).toBe("top left");
     expect(cornerLabel("se")).toBe("bottom right");
+  });
+
+  it("points each corner's resize cursor along its own diagonal", () => {
+    expect(cornerCursor("nw")).toBe("nwse-resize");
+    expect(cornerCursor("se")).toBe("nwse-resize");
+    expect(cornerCursor("ne")).toBe("nesw-resize");
+    expect(cornerCursor("sw")).toBe("nesw-resize");
   });
 });
 

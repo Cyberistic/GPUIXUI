@@ -25,6 +25,7 @@ import * as Option from "effect/Option";
 import { useRef, type ReactElement } from "react";
 import {
   clampCrop,
+  cornerCursor,
   cornerLabel,
   cropBars,
   cropGuides,
@@ -138,6 +139,7 @@ const guideStyle = (theme: Theme, box: CropRect): StyleDesc => ({
 const handleStyle = (
   theme: Theme,
   box: CropRect,
+  corner: CropCorner,
   disabled: boolean,
 ): StyleDesc => ({
   ...absolute(box),
@@ -146,7 +148,7 @@ const handleStyle = (
   borderStyle: "solid",
   borderColor: theme.colors.background,
   borderRadius: theme.radius.sm,
-  cursor: disabled ? "default" : "nwse-resize",
+  cursor: disabled ? "default" : cornerCursor(corner),
   ...(disabled ? {} : keyboardFocusRing(theme)),
 });
 
@@ -257,6 +259,7 @@ export const renderCropArea = (
             style={handleStyle(
               theme,
               handleBox(crop, corner, handleSize),
+              corner,
               disabled,
             )}
           />
