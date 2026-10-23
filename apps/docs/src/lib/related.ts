@@ -1,10 +1,10 @@
 /**
  * The related components a page points at.
  *
- * `MISSION.md` asks every component page for its related components, and a
- * curated page writes that section itself. A package page is Markdown the site
- * mounts, so it cannot resolve its siblings: the site answers it here and
- * `RelatedStrip` prints the answer at the end of the page.
+ * `MISSION.md` asks every component page for its related components. Neither
+ * frame writes that list itself — a curated page would have to retype it, and a
+ * package page is Markdown the site mounts — so the site answers it here and
+ * `RelatedStrip` prints the answer at the end of both.
  *
  * A family is one layer's working set, not a taxonomy of the whole library —
  * a reader on the Ripple button page is choosing between the other actions,

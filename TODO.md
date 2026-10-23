@@ -10347,7 +10347,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 308/308
+`[x]` `[██████████]` 309/309
+
+`[x]` Send the **curated component pages their related links back** — the page
+      prune removed the hand-written `## Related` section from all 39 curated
+      pages, and the generated `RelatedStrip` was mounted by the package frame
+      only (`docs-view.tsx`'s `PackageContent`), so the URL a reader actually
+      lands on for Dialog, Button, Table and the rest linked no sibling at all
+      while `relatedFor("/docs/components/dialog")` resolved a family nothing
+      printed. `SiteContent` mounts the strip after the prose with the page's own
+      TOC anchors, so a page that ever writes `## Related` keeps its section and
+      nothing prints the links twice; `docs/preview-strategy.md`,
+      `apps/docs/README.md` and the model's comments now say both frames mount it
+      instead of the false "the curated pages write the section themselves".
+      `related-strip.test.tsx` gains three cases — the curated frame's mount in
+      `docs-view.tsx`, every curated slug resolving a family that does not list
+      itself (floor 30), and Dialog rendering `Related · Overlays` with the
+      drawer and popover links and without its own. The mount case was measured
+      failing before the change (`expected 'function SiteContent({ path, url }:
+      {…' to contain '<RelatedStrip'`); restored, the file is 8/8 and the docs
+      suite **135 files / 1 160 tests** green, `check-types` and `build` clean.
+      Verified on the built site: `/docs/components/dialog` serves
+      `data-related="Overlays"` with three links to `/docs/components/drawer`,
+      and `/docs/theming` carries no strip. No native scenario applies — a site
+      page's navigation links.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

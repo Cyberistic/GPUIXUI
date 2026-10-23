@@ -525,27 +525,28 @@ frame case; emptying the index fails five cases across the two guards.
 was the one the package pages could not satisfy: a page is Markdown the site
 mounts, so it cannot resolve the URL of its siblings, and when the strip landed
 most of the mounted pages had no `## Related` section while this file claimed the
-template guard enforced one. The curated pages write the section themselves; the
-generated line answers the package pages.
+template guard enforced one. Both frames mount the generated line, so the curated
+page a reader lands on carries the same siblings as the package page it shadows.
 
 - `src/lib/related.ts` is the model: a named **family** per layer — the actions,
   the text fields, the overlays, the table surfaces, the panels — each family a
   list of the pages a reader is choosing between, with the page's own
   frontmatter title as the label. A family may hold a curated page beside a
   package page, because the curated page is the URL the site serves.
-- `<RelatedStrip url sections>` prints the family at the end of a package page,
-  after the source block, and leaves the page itself out of the list. The
+- `<RelatedStrip url sections>` prints the family at the end of every page — after
+  the prose on a curated page, after the source block on a package page — and
+  leaves the page itself out of the list. The
   sections are the table of contents Fumadocs already built, so a page that
   writes `## Related` keeps its section and the strip stays silent. It renders
   nothing for the pages argued as solos in `soloPages`: the provider, the one
   overlay primitive whose curated page is the same component, and the one-page
   icon set.
-- The strip is mounted by the package frame only, so a curated page keeps the
-  `## Related` section it writes and no page prints the links twice.
+- Both frames mount the strip with the page's table of contents, so a page that
+  writes `## Related` keeps its section and no page prints the links twice.
 
 `related-strip.test.tsx` holds the rendered line (a sibling's href and label,
-the page's own href absent), the silence for a page that writes the section, and
-the argued solos.
+the page's own href absent), the curated frame's mount, the silence for a page
+that writes the section, and the argued solos.
 
 ### The source block is generated, not written
 

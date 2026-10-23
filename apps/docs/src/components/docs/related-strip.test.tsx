@@ -1,6 +1,7 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { relatedFor } from "../../lib/related";
 import { RelatedStrip } from "./related-strip";
 
 /**
@@ -30,6 +31,53 @@ describe("the related strip", () => {
 
     expect(markup).toContain('href="/docs/components/dialog"');
     expect(markup).toContain(">Dialog</a>");
+  });
+
+  it("prints a curated page's siblings too, from the same family", () => {
+    // The curated page keeps its URL, so it is the page a reader lands on; a
+    // strip mounted only on the package frame left all thirty-nine curated
+    // components with no sibling links at all.
+    const markup = render("/docs/components/dialog");
+
+    expect(markup).toContain("Related · Overlays");
+    expect(markup).toContain('href="/docs/components/drawer"');
+    expect(markup).toContain('href="/docs/components/popover"');
+    expect(markup).not.toContain('href="/docs/components/dialog"');
+  });
+
+  it("is mounted on the curated frame, not only the package frame", () => {
+    const view = readFileSync(
+      new URL("../../lib/docs-view.tsx", import.meta.url),
+      "utf8",
+    );
+    const site = view.slice(
+      view.indexOf("function SiteContent"),
+      view.indexOf("function PackageContent"),
+    );
+
+    expect(site).toContain("<RelatedStrip");
+    expect(site).toContain("sections={toc.map((entry) => entry.url)}");
+    expect(site).toContain("url={url}");
+  });
+
+  it("gives every curated page a family, so the mount never prints nothing", () => {
+    const slugs = readdirSync(
+      new URL("../../../content/docs/components/", import.meta.url),
+    )
+      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+      .map((name) => name.replace(/\.mdx$/, ""));
+
+    const missing = slugs.flatMap((slug) => {
+      const url = `/docs/components/${slug}`;
+      const related = relatedFor(url);
+      if (related === undefined) return [`${url}: no family`];
+      return related.pages.some((member) => member.href === url)
+        ? [`${url}: links to itself`]
+        : [];
+    });
+
+    expect(slugs.length).toBeGreaterThanOrEqual(30);
+    expect(missing).toEqual([]);
   });
 
   it("stays silent where the page writes its own Related section", () => {

@@ -1,18 +1,17 @@
 import { relatedFor, type RelatedPage } from "../../lib/related";
 
 /**
- * The related components a package page cannot link itself.
+ * The related components a page cannot link itself.
  *
  * `MISSION.md` asks every component page for its related components. A curated
- * page writes the section; a package page is Markdown the site mounts and has no
- * way to resolve its siblings, so the site prints the family from
- * `src/lib/related.ts` at the end of the page.
+ * page would have to retype the list and a package page is Markdown the site
+ * mounts, so the site prints the family from `src/lib/related.ts` at the end of
+ * both frames.
  *
- * Thirty-one package pages already write `## Related` themselves, so the strip
- * takes the anchors of the page's own headings — the `#related` anchor a written
- * section produces — and stays silent where the author did the work. A page with
- * no family (`related.ts`'s argued solos) renders nothing rather than an empty
- * box.
+ * The strip takes the anchors of the page's own headings — the `#related` anchor
+ * a written section produces — and stays silent where the author did the work. A
+ * page with no family (`related.ts`'s argued solos) renders nothing rather than
+ * an empty box.
  */
 export function RelatedStrip({
   url,

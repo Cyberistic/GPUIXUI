@@ -439,11 +439,11 @@ page it ships — a violation fails the collection, not just one page.
 sections a component page may never hide — `## API`, and an accessibility or
 limitations section — with the pages still missing the second recorded in the
 guard's ledger and owned by their package. `## Related` is **generated** rather
-than required: a package page is Markdown the site mounts and cannot resolve its
-siblings, so `src/lib/related.ts` names each page's family and
-`src/components/docs/related-strip.tsx` prints it at the end of every mounted
-package page. `related-strip.test.tsx` holds the rendered line and the pages
-argued as solos.
+than required: neither frame can resolve its siblings, so `src/lib/related.ts`
+names each page's family and `src/components/docs/related-strip.tsx` prints it at
+the end of every page the site serves — curated and package alike.
+`related-strip.test.tsx` holds the rendered line, the curated frame's mount and
+the pages argued as solos.
 `## Verification`/`## Testing` stays the page author's and is optional: it names
 the suite that proves the component where the package keeps one, and the site
 cannot invent a suite, so a page without the heading is not a defect the site

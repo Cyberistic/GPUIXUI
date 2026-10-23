@@ -149,6 +149,7 @@ function SiteContent({ path, url }: { path: string; url: string }) {
       url={url}
     >
       <MDX components={mdxComponents} />
+      <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
     </PageFrame>
   );
 }
