@@ -41,7 +41,7 @@ The series charts (`BarChart`, `StackedBar`, `LineChart`) share one contract:
 | `legend` | `boolean` | `series.length > 1` | paints the legend under the labels |
 | `axis` | `boolean` | `true` | paints the y-axis tick column |
 | `ticks` | `number` | `4` | how many steps the y axis divides into |
-| `testId` | `string` | — | the chart's locator |
+| `testId` | `string` | — | the chart's locator; the plot is `-plot`, the axis column `-axis`, a series layer `-layer-<key>` |
 | `aria-label` | `string` | — | the group's name; a sparkline's own image name |
 
 `DonutChart` takes `data: ChartDatum[]`, `size` (`160`) and `legend`. `Sparkline`
@@ -72,10 +72,15 @@ A side is often computed — a share of a pane, a measurement taken before the
 first layout — so `chartBox(width, height, fallback)` reads one the geometry
 cannot lay out (`NaN`, an infinity, zero or a negative) as the component's
 default: 320 × 160 for a series chart, 160 square for a donut and 120 × 32 for a
-sparkline. `Math.max(1, NaN)` is `NaN`, and that number reaches the viewBox, the
-axis column and every label's slot width, so the plot collapsed to `0 × 0` while
-the group kept its name. A computed size therefore paints a readable chart
-instead of an empty one, and a fractional side is kept as given.
+sparkline. `Math.max(1, NaN)` is `NaN`, so an unreadable side used to reach the
+viewBox, the plot's box, the axis column and every label's slot width: the plot
+collapsed to `0 × 0` and the tick column lost its track while the group kept its
+name. Every one of those is built from the box now — the axis column takes the
+plot's height, not the caller's raw prop — so a computed size paints a readable
+chart instead of an empty one, and a fractional side is kept as given.
+`src/behaviour/chart.test.tsx` mounts a chart given `width={NaN}` /
+`height={Infinity}` and reads the plot, its viewBox, a label slot and the axis
+column's own height out of the renderer.
 
 ## Accessibility
 

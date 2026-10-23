@@ -265,10 +265,11 @@ const ChartFrame = ({
       <div style={{ display: "flex", flexDirection: "row" }}>
         {axis ? (
           <div
+            testId={testId === undefined ? undefined : `${testId}-axis`}
             style={{
               ...recipeStyle(CHART_AXIS, theme),
               width: CHART_AXIS_WIDTH,
-              height,
+              height: box.height,
             }}
           >
             {/**

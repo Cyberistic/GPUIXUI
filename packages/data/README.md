@@ -427,8 +427,8 @@ its category slot — a bar, a line's point and the label under it share one `x`
 — so a series with fewer values than labels stays in the columns it names. A
 plot's side is often computed, so `chartBox` reads one the geometry cannot lay
 out (`NaN`, an infinity, zero or a negative) as the component's default: the
-viewBox, the axis and every label's slot width are built from it, and a `NaN`
-would have reached all three as `0`.
+viewBox, the axis column's height, the plot's box and every label's slot width
+are built from it, and a `NaN` would have reached all four as `0`.
 
 The picture announces its numbers: the chart is a group named by `aria-label`,
 each series is an image named by its label, and the values travel in

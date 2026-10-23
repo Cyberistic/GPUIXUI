@@ -1671,9 +1671,11 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       30 checks, `--only panel-group-core`, green. Fixture
       `src/scenarios/panel-group-fixture.ts` + `panel-group-fixture.test.ts` (4
       cases: the derived widths, the readout, the step's shares and the
-      collapsible sides). Direction measured: changing the first fraction to
-      0.3 fails the initial readout and the sidebar's width by name; restored,
-      green.
+      collapsible sides). Two directions measured, exit `1` each, restored
+      green: changing the first fraction to 0.3 fails `the group paints its
+      initial layout` (`panes=sidebar:30,…`), and claiming an 8px step fails
+      `the right arrow moves the split by one step`
+      (`expected "panes=sidebar:21,…", got "panes=sidebar:23,…"`).
 
 `[x]` Measure **the local `zIndex` extension end to end** — the repository builds
       its own darwin-x64 binding with `apps/playground/patches/gpuix-zindex.patch`
@@ -4806,7 +4808,7 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       trigger that moved 780 right and 403 down (its panel 382 → 785). A
       second zoom puts the window back, so the probes after it see the size they
       expect. 27 checks, `--only floating-reflow-lifecycle`, green on 0.11.0
-      here (~3.5–3.9 s, three runs). Fixture `src/live/floating-reflow.ts` (the
+      here (~2.7–3.1 s, three runs). Fixture `src/live/floating-reflow.ts` (the
       ids, the anchor arithmetic, the offset rule and the count) +
       `floating-reflow.test.ts` (7 cases: the arithmetic against both window
       sizes, the offset rule and its slack, the unique ids and the registry
@@ -8948,6 +8950,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     test` 188/188, `test:behaviour` 110/110, `check-types` clean. Docs:
     `docs/advanced-filter.mdx` §Composing groups, the README §The data surfaces
     and the Tier 3 Advanced filtering row. Owner: data.
+  - [x] Lay the **axis column out of the chart's box, not the raw prop** —
+    `ChartFrame` built the plot, the viewBox and every label slot from
+    `chartBox(width, height, …)` while the tick column still took the caller's
+    `height`, so the guard the docs promised did not cover one of the three parts
+    they named: a chart given `height={Infinity}` painted a 160px plot beside a
+    tick column whose height the renderer dropped (measured `undefined`), and a
+    `NaN` did the same — the numbers a bar is read against spread over a box the
+    plot does not have, which is exactly the collapse the earlier fix exists to
+    prevent. The column takes `box.height` and carries `${testId}-axis`, so a
+    probe can read it. `src/behaviour/chart.test.tsx`'s `lays out the default
+    plot when a computed size cannot paint` adds the axis column's style and
+    measured height beside the plot's: with the raw prop it fails
+    `expected undefined to be 160`, and with the box it is 111 behaviour cases
+    green. `docs/charts.mdx` §Sizing/§API, the README's chart paragraph and the
+    Tier 3 Charts row state the axis height and the id. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

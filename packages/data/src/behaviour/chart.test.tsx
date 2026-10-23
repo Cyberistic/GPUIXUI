@@ -303,6 +303,16 @@ describe("the charts", () => {
     expect(source).toContain('viewBox="0 0 320 160"');
     // The labels keep their slots: 320 / two categories.
     expect(requireBounds(root, "chart-unreadable-label-0").width).toBe(160);
+    // The axis column is laid out from the same box as the plot. It used to
+    // take the caller's raw `height`, so a computed infinity made the plot
+    // 160px tall and its tick column infinite — the numbers a reader compares
+    // a bar against were spread over a box the plot does not have.
+    expect(requireStyle(root, "chart-unreadable-axis").height).toBe(
+      plot.height,
+    );
+    expect(requireBounds(root, "chart-unreadable-axis").height).toBe(
+      plot.height,
+    );
   });
 
   it("puts a line's points over the labels it draws under", () => {
