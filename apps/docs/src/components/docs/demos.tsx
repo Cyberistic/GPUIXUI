@@ -165,6 +165,28 @@ import {
   timePickerStatesSource,
   timePickerWorkflowSource,
 } from "./time-picker-demo";
+import { ChatDemo, chatDemoSource } from "./chat-demo";
+import { EmptyStateDemo, emptyStateDemoSource } from "./empty-state-demo";
+import { FieldsetDemo, fieldsetDemoSource } from "./fieldset-demo";
+import {
+  HotkeyRecorderDemo,
+  hotkeyRecorderDemoSource,
+} from "./hotkey-recorder-demo";
+import {
+  KeyboardShortcutsDemo,
+  keyboardShortcutsDemoSource,
+} from "./keyboard-shortcuts-demo";
+import { MentionInputDemo, mentionInputDemoSource } from "./mention-input-demo";
+import { MessageDemo, messageDemoSource } from "./message-demo";
+import {
+  MessageScrollerDemo,
+  messageScrollerDemoSource,
+} from "./message-scroller-demo";
+import {
+  NavigationMenuDemo,
+  navigationMenuDemoSource,
+} from "./navigation-menu-demo";
+import { PreviewCardDemo, previewCardDemoSource } from "./preview-card-demo";
 
 /**
  * Browser previews for the docs pages.
@@ -2724,5 +2746,33 @@ export const demos: Readonly<Record<string, Demo>> = {
   "time-picker-workflow": {
     render: TimePickerWorkflow,
     source: timePickerWorkflowSource,
+  },
+  "chat-demo": { render: ChatDemo, source: chatDemoSource },
+  "empty-state-demo": { render: EmptyStateDemo, source: emptyStateDemoSource },
+  "fieldset-demo": { render: FieldsetDemo, source: fieldsetDemoSource },
+  "hotkey-recorder-demo": {
+    render: HotkeyRecorderDemo,
+    source: hotkeyRecorderDemoSource,
+  },
+  "keyboard-shortcuts-demo": {
+    render: KeyboardShortcutsDemo,
+    source: keyboardShortcutsDemoSource,
+  },
+  "mention-input-demo": {
+    render: MentionInputDemo,
+    source: mentionInputDemoSource,
+  },
+  "message-demo": { render: MessageDemo, source: messageDemoSource },
+  "message-scroller-demo": {
+    render: MessageScrollerDemo,
+    source: messageScrollerDemoSource,
+  },
+  "navigation-menu-demo": {
+    render: NavigationMenuDemo,
+    source: navigationMenuDemoSource,
+  },
+  "preview-card-demo": {
+    render: PreviewCardDemo,
+    source: previewCardDemoSource,
   },
 };

@@ -6352,3 +6352,1204 @@ button.gx-table-row:focus-visible {
 .gx-badge-stage[data-wash="selected"] {
   background: var(--selected);
 }
+
+/* ---- keycap: the shared cap the recorder and the cheat sheet draw ----
+   `KEYCAP` is `min-w-5 h-5 px-1.5 bg-muted rounded-sm border border-input` with
+   `text-xs`; the preview takes its corner from the theme's radius and its text
+   from the muted role. The cap is display-only: it paints a fill, so it takes
+   no pointer. */
+.gx-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ---- empty state: mirrors components/src/empty-state.tsx's EMPTY_STATE_* ----
+   A panel, not a surface: centred, no background or border of its own, so it
+   sits inside the caller's card. The description wraps at a fixed 360px and an
+   icon paints muted. */
+.gx-empty-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.gx-empty-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 180px;
+  min-width: 180px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-empty-state-label {
+  margin: 0;
+  padding: 8px 12px 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+.gx-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.gx-empty-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-empty-desc {
+  margin: 0;
+  max-width: 360px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted-foreground);
+}
+
+.gx-empty-action {
+  display: flex;
+  flex-direction: row;
+}
+
+.gx-empty-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+/* ---- fieldset: mirrors components/src/fieldset.tsx ----
+   A `div role="group"` named by its legend. Only the legend dims when the group
+   is disabled; a control that reads the context paints its own disabled roles,
+   so the subtree is not dimmed whole. */
+.gx-fieldset-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: min(380px, 100%);
+}
+
+.gx-fieldset-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.gx-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 1px);
+}
+
+.gx-fieldset-legend {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--foreground);
+}
+
+.gx-fieldset[data-disabled] .gx-fieldset-legend {
+  color: var(--disabled-foreground);
+}
+
+.gx-fieldset[data-disabled] .gx-field {
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+}
+
+.gx-fieldset[data-disabled] .gx-field-label,
+.gx-fieldset[data-disabled] .gx-field-desc {
+  color: var(--disabled-foreground);
+}
+
+.gx-fieldset-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-fieldset-toggle input {
+  accent-color: var(--primary);
+}
+
+.gx-fieldset-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+/* ---- hotkey recorder: mirrors components/src/hotkey-recorder.tsx ----
+   The control is `bg-background border border-input rounded-md` with a `md`
+   minimum height; the recorded chord is a run of keycaps and the clear control
+   is a 24px target. Recording is colour-only, so the box never moves. */
+.gx-hotkey-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: min(420px, 100%);
+}
+
+.gx-hotkey-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-hotkey-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.gx-hotkey {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+  cursor: pointer;
+}
+
+.gx-hotkey[data-recording] {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.gx-hotkey:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-hotkey-text {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.gx-hotkey-keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-hotkey-clear {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-hotkey-clear:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-hotkey-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--placeholder);
+}
+
+.gx-hotkey-states {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-hotkey-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-hotkey-state-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.gx-hotkey-state .gx-hotkey {
+  cursor: default;
+}
+
+/* ---- keyboard shortcuts: mirrors components/src/keyboard-shortcuts.tsx ----
+   A display-only `role="list"` of groups; a row is a label and a run of
+   keycaps, separated by 1px elements because 0.11.0 has one border colour per
+   element. */
+.gx-shortcuts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(360px, 100%);
+}
+
+.gx-shortcuts-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-shortcuts-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-shortcuts-heading {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-shortcuts-row-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-shortcuts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.gx-shortcuts-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.gx-shortcuts-keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-shortcuts-separator {
+  height: 1px;
+  background: var(--border);
+}
+
+.gx-shortcuts-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+/* ---- mention input: mirrors components/src/mention-input.tsx ----
+   The field is `bg-background rounded-md border border-input` at the `md`
+   height, and the list is a `popover` surface anchored below it; a highlighted
+   row paints `accent`. The query comes from the text, not the caret. */
+.gx-mention {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(420px, 100%);
+}
+
+.gx-mention-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-mention-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.gx-mention-field {
+  display: flex;
+  align-items: center;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.gx-mention-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.gx-mention-input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-mention-field:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.gx-mention-list {
+  position: absolute;
+  top: calc(100% - 8px);
+  left: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--popover);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.gx-mention-item {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height-sm);
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--popover-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-mention-item[data-highlighted] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-mention-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-mention-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+.gx-mention-note code {
+  color: var(--primary);
+}
+
+/* ---- message: mirrors components/src/message.tsx's MESSAGE_* recipes ----
+   A row is a variant (`user` on the right, `assistant` on the left) plus the
+   data slots — reasoning, tool calls, citations, a streaming marker and the
+   action row. A user message is a soft bubble; an assistant's is plain prose. */
+.gx-message-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(520px, 100%);
+}
+
+.gx-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.gx-message[data-variant="user"] {
+  flex-direction: row-reverse;
+}
+
+.gx-message-avatar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gx-message-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.gx-message-content[data-variant="user"] {
+  align-items: flex-end;
+}
+
+.gx-message-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: var(--radius-lg);
+}
+
+.gx-message-bubble[data-variant="assistant"] {
+  padding: 0;
+  background: transparent;
+}
+
+.gx-message-bubble[data-variant="user"] {
+  background: var(--muted);
+}
+
+.gx-message-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--foreground);
+}
+
+.gx-message-reasoning {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-message-reasoning-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-message-chevron {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-message-reasoning-content {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted-foreground);
+}
+
+.gx-message-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-message-tool-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gx-message-tool-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.gx-message-tool-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-message-tool-status[data-status="failed"] {
+  color: var(--destructive);
+}
+
+.gx-message-tool-result {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted-foreground);
+}
+
+.gx-message-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-message-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-message-source-mark {
+  color: var(--muted-foreground);
+}
+
+.gx-message-streaming {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-message-streaming-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.gx-message-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-message-copied {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-message-note {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+/* ---- message scroller: mirrors components/src/message-scroller.tsx ----
+   The viewport is a bounded scroll container; the pin is a 1px tail sentinel's
+   position, and `JumpToLatest` renders beneath it only while unpinned, with the
+   unread count. */
+.gx-scroller {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(460px, 100%);
+}
+
+.gx-scroller-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-scroller-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.gx-scroller-viewport {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 152px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.gx-scroller-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--row-height);
+  padding: 0 10px;
+}
+
+.gx-scroller-row-meta {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-scroller-row-body {
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.gx-scroller-jump {
+  align-self: flex-end;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-scroller-jump:hover {
+  background: var(--secondary-hover);
+}
+
+.gx-scroller-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-scroller-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-scroller-readout b {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.gx-scroller-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+/* ---- navigation menu: mirrors components/src/navigation-menu.tsx ----
+   One anchored panel open at a time; a trigger's resting box paints the accent
+   wash on hover, and a link is a full-width button. State is colour-only. */
+.gx-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: min(520px, 100%);
+}
+
+.gx-nav-bar {
+  position: relative;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-nav-list {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+}
+
+.gx-nav-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gx-nav-trigger:hover {
+  color: var(--foreground);
+}
+
+.gx-nav-trigger[data-open] {
+  color: var(--foreground);
+}
+
+.gx-nav-caret {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-nav-content {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--popover);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.gx-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: var(--control-height-sm);
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--popover-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-nav-link:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-nav-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+/* ---- preview card: mirrors components/src/preview-card.tsx ----
+   A hoverable popover surface (`bg-popover … rounded-lg border shadow-md`):
+   it may hold a link, which is what separates it from a tooltip. Opens on
+   hover after a delay or on a press. */
+.gx-preview-card-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: min(360px, 100%);
+}
+
+.gx-preview-card-anchor {
+  position: relative;
+}
+
+.gx-preview-card-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.gx-preview-card-trigger:hover {
+  background: var(--hover);
+}
+
+.gx-preview-card {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+  max-width: 360px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--popover);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.gx-preview-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--popover-foreground);
+}
+
+.gx-preview-card-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted-foreground);
+}
+
+.gx-preview-card-link {
+  align-self: flex-start;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-preview-card-link:hover {
+  background: var(--hover);
+}
+
+.gx-preview-card-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--placeholder);
+}
+
+.gx-preview-card-note code {
+  color: var(--primary);
+}
+
+/* ---- chat: mirrors components/src/chat.tsx's CHAT_* recipes ----
+   A `ChatRoot` column: the transcript is a scroller that owns the empty and
+   failed-reply panels, and the composer swaps Send for Stop while a reply is
+   open. The status machine is the one authority. */
+.gx-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(460px, 100%);
+}
+
+.gx-chat-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-chat-head-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-chat-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.gx-chat-status {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-chat-status b {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.gx-chat-switch {
+  display: flex;
+  gap: 4px;
+}
+
+.gx-chat-choice {
+  min-height: var(--target-size);
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--card);
+  color: var(--card-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-chat-choice[data-chosen] {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-chat-choice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--background);
+}
+
+.gx-chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gx-chat-row[data-role="user"] {
+  flex-direction: row-reverse;
+}
+
+.gx-chat-avatar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gx-chat-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 78%;
+}
+
+.gx-chat-bubble[data-role="user"] {
+  align-items: flex-end;
+  padding: 8px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--muted);
+}
+
+.gx-chat-author {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-chat-body {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--foreground);
+}
+
+.gx-chat-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-chat-error-text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--background);
+}
+
+.gx-chat-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.gx-chat-field {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--control-height-md);
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 20px;
+  outline: none;
+  resize: vertical;
+}
+
+.gx-chat-field::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-chat-field:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-chat-hint {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}

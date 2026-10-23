@@ -111,6 +111,16 @@ src/components/not-found.tsx        The 404 inside the docs chrome
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
 src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/chat-demo.tsx          The chat scaffold's status machine, error row and composer
+src/components/docs/empty-state-demo.tsx   The empty panel's three shapes
+src/components/docs/fieldset-demo.tsx      The named group's enabled and disabled states
+src/components/docs/hotkey-recorder-demo.tsx The chord recorder's three states
+src/components/docs/keyboard-shortcuts-demo.tsx The cheat sheet's groups and keycaps
+src/components/docs/mention-input-demo.tsx The mention field's query and ranked list
+src/components/docs/message-demo.tsx       The conversation row's variants and slots
+src/components/docs/message-scroller-demo.tsx The scroller's pin, unread and jump
+src/components/docs/navigation-menu-demo.tsx The nav's one-panel contract
+src/components/docs/preview-card-demo.tsx  The hoverable card's open and close
 src/components/docs/breadcrumb-preview.ts The breadcrumb preview's collapse rule and separator count
 src/components/docs/breadcrumb-demo.tsx  The breadcrumb's two browser renderings and their source strings
 src/components/docs/checkbox-preview.ts  The checkbox preview's group arithmetic and keyboard edges
