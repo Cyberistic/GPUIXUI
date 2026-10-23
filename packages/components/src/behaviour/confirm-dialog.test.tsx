@@ -125,6 +125,32 @@ describe("ConfirmDialog", () => {
     }
   });
 
+  it("reads a blank action label as the default, never an unnamed action", () => {
+    // The bug guarded: a default covers only `undefined`, so an i18n table's
+    // missing key painted both actions nameless — one of them the action that
+    // cannot be undone.
+    const confirm = renderComponent(
+      <ConfirmDialog
+        open
+        onOpenChange={() => undefined}
+        title="Delete workspace"
+        description="The workspace and its 42 files are removed permanently."
+        confirmLabel="  "
+        cancelLabel=""
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    try {
+      const names = nodesWithRole(confirm.renderer, "button").map(
+        (node) => node.name,
+      );
+      expect(names).toEqual(expect.arrayContaining(["Cancel", "Confirm"]));
+    } finally {
+      confirm.unmount();
+    }
+  });
+
   it("paints the busy mark in the destructive tone's own label role", () => {
     const confirm = renderComponent(
       <Harness onConfirm={vi.fn()} loading tone="danger" />,

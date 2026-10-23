@@ -21,6 +21,7 @@ import { Match } from "effect";
 import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
+import { accessibleName } from "@gpuixui/primitives/core";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,10 @@ import {
 import type { PartChildren } from "./internal/parts.js";
 import { Button, actionOnColor } from "./internal/button.js";
 import { useTheme } from "./internal/theme.js";
+
+/** The words a blank action label falls back to. */
+const DEFAULT_CONFIRM_LABEL = "Confirm";
+const DEFAULT_CANCEL_LABEL = "Cancel";
 
 /** How much emphasis the confirm action carries. */
 export type ConfirmTone = "default" | "danger";
@@ -45,9 +50,9 @@ export interface ConfirmDialogProps {
   readonly title: string;
   /** What the action does, including what cannot be undone. */
   readonly description: string;
-  /** Default `"Confirm"`. */
+  /** Default `"Confirm"`; a blank label reads as the default. */
   readonly confirmLabel?: string;
-  /** Default `"Cancel"`. */
+  /** Default `"Cancel"`; a blank label reads as the default. */
   readonly cancelLabel?: string;
   /** Default `"default"`. `"danger"` paints the destructive button variant. */
   readonly tone?: ConfirmTone;
@@ -70,14 +75,18 @@ export const ConfirmDialog = ({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   tone = "default",
   loading = false,
   onConfirm,
   children,
 }: ConfirmDialogProps) => {
   const theme = useTheme();
+  // A default covers only an absent prop, so a label table's missing key would
+  // paint both actions nameless — including the one that cannot be undone.
+  const confirmWord = accessibleName(confirmLabel) ?? DEFAULT_CONFIRM_LABEL;
+  const cancelWord = accessibleName(cancelLabel) ?? DEFAULT_CANCEL_LABEL;
   const cancel = useRef<PublicInstance | null>(null);
   const variant = Match.value(tone).pipe(
     Match.when("danger", () => "danger" as const),
@@ -107,7 +116,7 @@ export const ConfirmDialog = ({
             disabled={loading}
             onClick={() => onOpenChange(false)}
           >
-            {cancelLabel}
+            {cancelWord}
           </Button>
           <Button
             testId="confirm-accept"
@@ -124,7 +133,7 @@ export const ConfirmDialog = ({
                 testId="confirm-busy"
               />
             ) : null}
-            {confirmLabel}
+            {confirmWord}
           </Button>
         </DialogFooter>
       </DialogContent>

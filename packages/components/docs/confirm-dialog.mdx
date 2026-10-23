@@ -30,8 +30,8 @@ import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
 | `onOpenChange` | `(open: boolean) => void` (required) | — |
 | `title` | `string` (required) | — |
 | `description` | `string` (required) | — |
-| `confirmLabel` | `string` | `"Confirm"` |
-| `cancelLabel` | `string` | `"Cancel"` |
+| `confirmLabel` | `string` | `"Confirm"` (a blank label reads as the default) |
+| `cancelLabel` | `string` | `"Cancel"` (a blank label reads as the default) |
 | `tone` | `"default" \| "danger"` | `"default"` |
 | `loading` | `boolean` | `false` |
 | `onConfirm` | `() => void` (required) | — |
@@ -42,3 +42,7 @@ import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
 - Cancel holds the initial focus; Enter on an untouched dialog cancels.
 - Confirm does not close; the caller runs the work and closes it.
 - Controlled only; there is no uncontrolled mode.
+- **A blank action label reads as its default**: `confirmLabel` and `cancelLabel`
+  are copy from an i18n table or a saved record as often as literals, so an
+  empty or whitespace-only one is an absence — the two actions are announced as
+  "Confirm" and "Cancel", never as nameless buttons.
