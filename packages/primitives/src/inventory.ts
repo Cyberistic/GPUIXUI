@@ -349,6 +349,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
+      "No aria-activedescendant: the closed trigger announces its choice through aria-valuetext, and an empty select announces nothing",
       "Options are data: grouped, but no rich options or compound escape hatch",
       "No search or type-ahead and no multi-select",
       "A long list is capped at 320px and scrolls on the wheel; the highlighted row reveals itself by painted-box arithmetic (the runtime never does)",

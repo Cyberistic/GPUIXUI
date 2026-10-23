@@ -11,6 +11,15 @@
  * their labels, and an option is a value, a label and a disabled flag: there is
  * no richer row content and no compound `SelectItem` escape hatch.
  *
+ * **The choice is announced while the list is closed.** A trigger paints the
+ * chosen label, and paint is not a value an assistive technology can read, so
+ * the trigger carries that label in `aria-valuetext` — 0.11.0's value channel,
+ * because a combobox publishes no value of its own. An unchosen select
+ * announces nothing (a placeholder is not a choice) and a value no option names
+ * announces nothing rather than a stale label. `Select` mirrors an uncontrolled
+ * choice only to feed that announcement; the rows still read the runtime's own
+ * per-row state.
+ *
  * The resting appearance is a Tailwind recipe (`recipe/selectTriggerClass`,
  * `recipe/selectContentClass`, `recipe/selectItemClass`), compiled through
  * `@gpuixui/tw`.
@@ -34,6 +43,7 @@ import {
 } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { pipe } from "effect";
 import {
   Select as GpuixSelect,
   SelectContent,
@@ -110,6 +120,35 @@ export const selectOptions = (
     isSelectGroup(entry) ? entry.options : [entry],
   );
 
+/**
+ * The words a chosen value stands for, or `None`.
+ *
+ * A closed `Select` paints its choice inside the trigger, and paint is not a
+ * value an assistive technology can read: 0.11.0 has no `aria-activedescendant`
+ * and the runtime exposes no state for a combobox, so the trigger announces the
+ * option's own label through `aria-valuetext` (the value channel the runtime
+ * does publish). An unchosen select announces nothing — a placeholder is not a
+ * choice — and a value no option names announces nothing rather than a stale
+ * or invented label, because an option list loaded later can leave a stored
+ * value behind.
+ */
+export const selectValueLabel = (
+  entries: ReadonlyArray<SelectEntry>,
+  value: Option.Option<string>,
+): Option.Option<string> =>
+  pipe(
+    value,
+    Option.flatMap((chosen) =>
+      Arr.findFirst(
+        selectOptions(entries),
+        (option) => option.value === chosen,
+      ),
+    ),
+    Option.flatMap((option) =>
+      Option.fromNullishOr(accessibleName(option.label)),
+    ),
+  );
+
 export interface SelectProps extends ValueChangeProps<string> {
   /**
    * The list: options, or named groups of them. A group's caption names the
@@ -119,6 +158,13 @@ export interface SelectProps extends ValueChangeProps<string> {
   /** Controlled selection. Omit to let the select hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
+  /**
+   * The value the trigger announces when it is not the one in `value` or
+   * `defaultValue` — the mirror a parent keeps of an uncontrolled select's
+   * choice, so a closed trigger can say what it shows. Defaults to
+   * `value ?? defaultValue`.
+   */
+  readonly selectedValue?: string;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   /** Controlled open state of the list. Omit to let the Select hold its own. */
@@ -347,6 +393,7 @@ export const renderSelect = (
     options,
     value,
     defaultValue,
+    selectedValue,
     onValueChange,
     onChange,
     placeholder,
@@ -385,6 +432,14 @@ export const renderSelect = (
       scroller={scroller}
     />
   );
+  // The trigger is what a reader lands on when the list is closed, so its
+  // announcement is the choice the control is showing.
+  const announced = Option.getOrUndefined(
+    selectValueLabel(
+      options,
+      Option.fromNullishOr(selectedValue ?? value ?? defaultValue),
+    ),
+  );
   return (
     <GpuixSelect
       items={items}
@@ -417,6 +472,10 @@ export const renderSelect = (
         // this is the one it just rendered. A render without it (the pure
         // `renderSelect`) publishes no expanded state rather than a guess.
         aria-expanded={open}
+        // What the control holds, in the option's own words: the trigger is
+        // the node a reader lands on while the list is closed, so paint is not
+        // enough. `aria-valuetext` is the value channel 0.11.0 publishes.
+        aria-valuetext={announced}
         style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
@@ -476,11 +535,26 @@ export const Select = (props: SelectProps): ReactElement => {
   // state to read. GPUix still decides when it changes — this only mirrors what
   // it reports, and a caller may take the state over with `open`.
   const [held, setHeld] = useState(props.defaultOpen === true);
+  // The same rule for the choice: an uncontrolled select's value lives inside
+  // GPUix, and a closed trigger has to announce it. The mirror only moves an
+  // uncontrolled select — with `value` set, the caller's prop is the truth.
+  const [heldValue, setHeldValue] = useState<string | undefined>(
+    props.defaultValue,
+  );
   const open = props.open ?? held;
+  const notify = valueChange(props);
   return renderSelect(
     {
       ...props,
       open,
+      selectedValue: props.value ?? heldValue,
+      onValueChange: (next) => {
+        if (props.value === undefined) setHeldValue(next);
+        notify?.(next);
+      },
+      // The legacy alias ran inside `renderSelect`; the wrapper now reports the
+      // one value through `valueChange`, so handing both down would fire twice.
+      onChange: undefined,
       onOpenChange: (next) => {
         if (props.open === undefined) setHeld(next);
         props.onOpenChange?.(next);

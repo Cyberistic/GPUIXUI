@@ -202,6 +202,7 @@ export {
   selectOptions,
   selectSeparatorStyle,
   selectTriggerStyle,
+  selectValueLabel,
 } from "./Select.js";
 export type {
   SelectEntry,

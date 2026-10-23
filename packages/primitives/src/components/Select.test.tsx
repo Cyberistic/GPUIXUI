@@ -35,6 +35,7 @@ import {
   selectOptions,
   selectSeparatorStyle,
   selectTriggerStyle,
+  selectValueLabel,
   type SelectEntry,
   type SelectItemState,
   type SelectOption,
@@ -184,6 +185,69 @@ describe("Select", () => {
       ),
     ).toStrictEqual(Option.some("Fruit"));
     expect(elementProp(select, "aria-label")).toStrictEqual(Option.none());
+  });
+
+  it("announces the choice the trigger shows, and nothing when there is none", () => {
+    // The bug guarded: a closed Select published its name and its expanded
+    // state only, so the one fact the trigger was showing — what is chosen —
+    // reached assistive technology nowhere. Paint is not a value; 0.11.0's
+    // value channel is `aria-valuetext`, fed here from the option's own label.
+    const triggerOf = (props: {
+      readonly value?: string;
+      readonly defaultValue?: string;
+      readonly selectedValue?: string;
+      readonly placeholder?: string;
+    }) =>
+      expectSome(
+        Arr.head(
+          elementChildren(
+            renderSelect(
+              {
+                options: grouped,
+                label: "Produce",
+                ...props,
+              },
+              testTheme,
+            ),
+          ),
+        ),
+      );
+    const announced = (
+      props: Parameters<typeof triggerOf>[0],
+    ): Option.Option<unknown> =>
+      elementProp(triggerOf(props), "aria-valuetext");
+    // A choice is the option's words, whichever group holds it.
+    expect(announced({ defaultValue: "yam" })).toStrictEqual(
+      Option.some("Yam"),
+    );
+    expect(announced({ value: "leek" })).toStrictEqual(Option.some("Leek"));
+    // The mirror an uncontrolled parent keeps outranks the initial value.
+    expect(
+      announced({ defaultValue: "apple", selectedValue: "peer" }),
+    ).toStrictEqual(Option.none());
+    expect(
+      announced({ defaultValue: "apple", selectedValue: "pear" }),
+    ).toStrictEqual(Option.some("Pear"));
+    // An empty select is empty: a placeholder is not a choice, and a value the
+    // options no longer offer announces nothing rather than a stale label.
+    expect(announced({ placeholder: "Pick one" })).toStrictEqual(Option.none());
+    expect(announced({ value: "gone" })).toStrictEqual(Option.none());
+  });
+
+  it("resolves a value's label, refusing a blank one", () => {
+    const label = (value?: string) =>
+      selectValueLabel(grouped, Option.fromNullishOr(value));
+    expect(label("apple")).toStrictEqual(Option.some("Apple"));
+    expect(label(undefined)).toStrictEqual(Option.none());
+    expect(label("")).toStrictEqual(Option.none());
+    expect(label("gone")).toStrictEqual(Option.none());
+    // A label that is only padding names nothing, like every other name here.
+    expect(
+      selectValueLabel(
+        [{ value: "blank", label: "   " }],
+        Option.some("blank"),
+      ),
+    ).toStrictEqual(Option.none());
   });
 
   it("publishes the open state the trigger was rendered with", () => {

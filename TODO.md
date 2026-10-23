@@ -5919,6 +5919,36 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       switch, rating, otp-field, number-field, slider, range-slider,
       scroll-area) and `docs/README.md` §Cross-component guards.
 
+`[x]` `packages/primitives`: a **closed `Select` never said what it held** — the
+      trigger published its name and (since the open-state pass)
+      `aria-expanded`, and nothing published the choice the control was showing:
+      a reader heard "Fruit, combo box, collapsed" and had to open the list to
+      learn the answer already painted inside the trigger. 0.11.0's combobox
+      publishes no value of its own and has no `aria-activedescendant`; the one
+      value channel the runtime does map (`aria-valuetext` → AccessKit `value`,
+      `references/gpuix/packages/native/src/accessibility.rs`) was empty. The
+      trigger now carries the chosen option's label, resolved by the new
+      `selectValueLabel` helper: an unchosen select announces nothing (a
+      placeholder is not a choice) and a value no option names announces nothing
+      rather than a stale label, because an option list loaded from a server can
+      leave a stored value behind. An uncontrolled select's choice lives inside
+      GPUix, so `Select` mirrors the value it commits — for the announcement
+      only (the rows still read the runtime's per-row state) — and a caller that
+      keeps its own may pass `selectedValue`. Proof: `runtime/fields.runtime.test.tsx`'s
+      `announces the choice a closed Select holds` (no value at rest, "Pear"
+      after the list commits an option) and `announces a choice the caller owns,
+      and drops one the options no longer offer` (a controlled value follows its
+      prop; the same value with the option gone reports none), plus
+      `Select.test.tsx`'s `announces the choice the trigger shows, and nothing
+      when there is none` and `resolves a value's label, refusing a blank one`.
+      Directions measured: before the paint the two window cases read
+      `Option.none()` where `Some("Pear")` is required, and removing the
+      `aria-valuetext` line fails the unit case by name; restored, 53 files /
+      989 unit and 21 files / 294 runtime tests green. The inventory's announced-
+      state guard now covers `Selects`, so the record and the `COMPONENTS.md`
+      row must keep naming the channel. Docs: `docs/select.mdx`
+      §intro/§API/§Limitations and the `COMPONENTS.md` Selects row.
+
 `[x]` `packages/icons`: an **icon given a measure it cannot paint vanished** —
       `size` takes a named step *or* the raw number a caller measured (a
       collapsed panel's width, a row's height), and `iconPixels` passed that

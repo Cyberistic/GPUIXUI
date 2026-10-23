@@ -31,7 +31,7 @@ import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip, TooltipProvider } from "../src/components/Tooltip.js";
-import { a11yNode, type Bounds, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Bounds, type Runtime } from "./harness.js";
 import {
   SURFACE,
   Surface,
@@ -494,6 +494,75 @@ it("announces a Select's trigger as its named control", async () => {
   );
   expect(Arr.contains(actions, "Click")).toBe(true);
   expect(Arr.contains(actions, "Focus")).toBe(true);
+});
+
+it("announces the choice a closed Select holds", async () => {
+  // The bug guarded: the trigger said its name ("Fruit") and whether the list
+  // was open, and nothing said **what was chosen** once the list closed. A
+  // reader heard "Fruit, combo box, collapsed" and had to open the list to
+  // learn the answer the closed control was already showing; a value that only
+  // paints cannot be read. `aria-valuetext` is the value channel 0.11.0
+  // publishes, so the trigger now carries the chosen option's label — an
+  // unchosen select carries none, because a placeholder is not a choice.
+  const runtime = await openWindow();
+  const valueOf = () =>
+    a11yValueOf(runtime.a11y(), { role: "ComboBox", label: "Fruit" });
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        placeholder="Pick one"
+        triggerTestId="fruit-trigger"
+        itemTestId={(value) => `fruit-${value}`}
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(valueOf()).toStrictEqual(Option.none());
+  // An uncontrolled Select has no value prop to read, so the wrapper has to
+  // keep the choice the runtime committed — the one it repaints in the trigger.
+  runtime.click("fruit-trigger");
+  runtime.flush();
+  runtime.click("fruit-pear");
+  runtime.flush();
+  expect(valueOf()).toStrictEqual(Option.some("Pear"));
+});
+
+it("announces a choice the caller owns, and drops one the options no longer offer", async () => {
+  // The controlled half: the trigger follows the value the caller renders, and
+  // a value no option names announces nothing rather than a stale label — an
+  // option list loaded from a server can leave a stored value behind.
+  const runtime = await openWindow();
+  const valueOf = () =>
+    a11yValueOf(runtime.a11y(), { role: "ComboBox", label: "Fruit" });
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        value="pear"
+        triggerTestId="fruit-trigger"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(valueOf()).toStrictEqual(Option.some("Pear"));
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        value="pear"
+        triggerTestId="fruit-trigger"
+        options={[{ value: "apple", label: "Apple" }]}
+      />
+    </Surface>,
+  );
+  expect(valueOf()).toStrictEqual(Option.none());
 });
 
 it("announces a Select's options, their selection and their group", async () => {

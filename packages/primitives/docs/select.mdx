@@ -4,7 +4,9 @@ description: One choice from a list, in a popover.
 ---
 
 `Select` reuses `@gpuix/react/select` for the interaction and themes it to match
-the field chrome.
+the field chrome. A closed select announces the choice it shows — the chosen
+option's label, in `aria-valuetext` — because 0.11.0's combobox publishes no
+value of its own.
 
 <ComponentPreview name="select-states" />
 
@@ -34,6 +36,7 @@ import { Label, Select } from "@gpuixui/primitives";
 | `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | required | `{ value, label, disabled? }` items, or `{ label, options }` groups |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
+| `selectedValue` | `string` | `value ?? defaultValue` | the choice the trigger announces; a parent's mirror of an uncontrolled select's value |
 | `open` | `boolean` | — | controlled open state |
 | `defaultOpen` | `boolean` | `false` | the list's initial state |
 | `onOpenChange` | `(open: boolean) => void` | none | the open state GPUix reported |
@@ -55,6 +58,12 @@ import { Label, Select } from "@gpuixui/primitives";
 
 ## Limitations
 
+- No `aria-activedescendant` and no native combobox value: the closed trigger
+  announces its choice through `aria-valuetext`, and an empty select announces
+  nothing — a placeholder is not a choice.
+- The list is not associated with the trigger by an ARIA attribute (0.11.0 has
+  no `aria-controls`); the trigger says `expanded` and the rows announce
+  themselves.
 - Options are data: no rich options or compound escape hatch.
 - No search, type-ahead or multi-select.
 - A long list caps at 320px and scrolls; the highlighted row reveals itself.

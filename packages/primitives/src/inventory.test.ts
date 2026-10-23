@@ -87,6 +87,7 @@ const ANNOUNCED_STATES: ReadonlyArray<{
   readonly name: string;
   readonly source: string;
 }> = [
+  { name: "Selects", source: "src/components/Select.tsx" },
   { name: "Slider", source: "src/components/Slider.tsx" },
   { name: "Range slider", source: "src/components/Slider.tsx" },
   { name: "Meter", source: "src/components/Meter.tsx" },
