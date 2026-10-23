@@ -171,6 +171,23 @@ describe("cropGuides", () => {
       ),
     ).toBe(true);
   });
+
+  it("keeps every guide inside a hole too narrow for a one-point line", () => {
+    // The bug guarded: a guide sits at the hole's third and is one point wide,
+    // so a hole narrower than three points pushed the box past the edge it
+    // divides — the invariant above, false at exactly the smallest hole a
+    // caller's `minSize` can admit.
+    const sliver = new CropRect({ x: 10, y: 20, width: 2, height: 2 });
+    expect(
+      cropGuides(sliver).every(
+        (guide) =>
+          guide.box.x >= sliver.x &&
+          guide.box.y >= sliver.y &&
+          guide.box.right <= sliver.right &&
+          guide.box.bottom <= sliver.bottom,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("handleBox", () => {

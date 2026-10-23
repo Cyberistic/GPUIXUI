@@ -261,47 +261,34 @@ export interface CropGuide {
  *
  * They are thin boxes inside the crop, not lines the runtime draws: the mask's
  * bars sit around the hole, and a guide is the same absolute box one point wide.
+ * A hole narrower than the line cannot hold one at its third, so the line is
+ * capped at the hole's own side and its origin held inside: the box never spills
+ * past the edge it divides.
  */
 export const cropGuides = (crop: CropRect): ReadonlyArray<CropGuide> => {
   const thirdW = crop.width / 3;
   const thirdH = crop.height / 3;
+  const lineW = Math.min(1, Math.max(0, crop.width));
+  const lineH = Math.min(1, Math.max(0, crop.height));
+  const vertical = (x: number): CropRect =>
+    new CropRect({
+      x: Math.min(crop.x + x, crop.right - lineW),
+      y: crop.y,
+      width: lineW,
+      height: crop.height,
+    });
+  const horizontal = (y: number): CropRect =>
+    new CropRect({
+      x: crop.x,
+      y: Math.min(crop.y + y, crop.bottom - lineH),
+      width: crop.width,
+      height: lineH,
+    });
   return [
-    {
-      name: "v1",
-      box: new CropRect({
-        x: crop.x + thirdW,
-        y: crop.y,
-        width: 1,
-        height: crop.height,
-      }),
-    },
-    {
-      name: "v2",
-      box: new CropRect({
-        x: crop.x + thirdW * 2,
-        y: crop.y,
-        width: 1,
-        height: crop.height,
-      }),
-    },
-    {
-      name: "h1",
-      box: new CropRect({
-        x: crop.x,
-        y: crop.y + thirdH,
-        width: crop.width,
-        height: 1,
-      }),
-    },
-    {
-      name: "h2",
-      box: new CropRect({
-        x: crop.x,
-        y: crop.y + thirdH * 2,
-        width: crop.width,
-        height: 1,
-      }),
-    },
+    { name: "v1", box: vertical(thirdW) },
+    { name: "v2", box: vertical(thirdW * 2) },
+    { name: "h1", box: horizontal(thirdH) },
+    { name: "h2", box: horizontal(thirdH * 2) },
   ];
 };
 
