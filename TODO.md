@@ -1619,6 +1619,8 @@ clean. Docs in `docs/tokens.md` §Paint-ready values,
 `docs/design-system.md` §9 and the package README §Checking a theme. No native
 scenario applies — a stored-data contract; no pointer or paint path changed.
 
+`[x]` Retract the **pre-fix find-highlight adoption** and the counts beside it — `docs/tokens.md` §Find highlights, `docs/design-system.md` §9 and the inventory row all still taught that `HighlightText`'s default wash was the `selection` role and that "passing `findHighlight(theme)` from a search surface is the interlock row in `TODO.md`", while the shipped component had taken the derived pair as its default (`packages/components/src/highlight-text/wash.ts`: `input.color ?? derived.color`) and both playground search scenarios spread it into every host spec. A reader following the page wired a colour the component already supplies and waited on an adoption that had landed. The same section undercounted twice: its step sentence named **four** dark styles while the derivation steps **five** — the authored Omarchy look takes **13%**, and the inventory row's "(Linux 22%, Luna 23%, Windows and Aero 26%)" had Windows at 26 where it is **27%** — and both the section and the test header called the sweep sixteen/fourteen styles where it measures **eighteen** (2 base + 2 high-contrast + 4 platforms × 2 + 3 authored looks × 2). The Adoption paragraph now states the default pair, the two scenarios and the `find-highlight` probe's three measured states, and keeps the split (`selection` is a reader's own run, not a match). `highlight.test.ts` gains 2 cases: `names every style whose resting share the derivation steps` derives the stepped list from `everyStyle` and `findHighlight`, requires each name and share on both pages and the `Five dark styles step` count, and `tracks the adoption the component and the playground carry` reads the painter, both scenarios and the probe's `FIND_CHECKS`, refuses the retracted sentences on three pages and requires the adoption on all four. Directions measured: with HEAD's pages restored both cases fail by name (`expected '## Find highlights …' to contain 'Five dark styles step'` and `… 'The shipped \`HighlightText\` takes the derived…'`), 16/16 green with them, and the package is 49 files / 2 854 tests. Docs in `docs/tokens.md` §Find highlights, `docs/design-system.md` §9, the package README §Find highlights and the `Find highlights` inventory row. No native scenario applies — a docs truth pass over a paint the `find-highlight` probe already measured (19 checks, 0.11.0); this workstream's guards read that record rather than re-running it.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 142/142
@@ -1651,7 +1653,7 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       typed `x`), so a consumer that must not lose a draft needs a route the
       window can prove. 10 checks, `--only blur-delivery-lifecycle`, green on
       0.11.0 (~0.7 s, two consecutive runs). Fixture `src/live/blur-delivery.ts`
-      (the ids and the trace codec) + `blur-delivery.test.ts` (12 cases: the
+      (the ids and the trace codec) + `blur-delivery.test.ts` (16 cases: the
       trace codec, the view's controls and ids, the routes the steps drive, the
       focus ids, the exact trace, the count, the registry, the section, the
       host's two verbs); `focus-delivery.test.ts` now holds the corrected
