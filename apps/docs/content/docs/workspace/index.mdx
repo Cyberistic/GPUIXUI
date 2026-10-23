@@ -66,6 +66,20 @@ this runtime cannot keep. The shipped parts and their APIs are on
 [Split pane](/docs/dock/split-pane), [Panel groups](/docs/dock/panel-group) and
 [Docking layouts](/docs/dock/dock-layout).
 
+**The shipped divider is a keyboard control today.** A window measured the
+package's own `SplitPane` (`dock-split-lifecycle`): the Tab stop, the ring, one
+16px step per arrow, Home and End at the caller's bounds and the clamp at either
+bound all work, while a **press on its divider focuses nothing and reports
+`resizes=0`** — where the probe-local divider in `split-pane-lifecycle` drags
+normally in the same window. The cause is the divider's own `highlight` layer:
+it is positioned over the whole 6px control, and the runtime's hit test stops at
+a positioned child even when it declares `pointerEvents: "none"` (the rule
+`press-routing-lifecycle` measured). The rule above still holds for a divider
+you compose yourself; it is the shipped one that cannot take the press yet, and
+the fix is tracked in `TODO.md` → Interlocks (*`Divider`'s pointer path*). Until
+it lands, size a pane from the focusable divider with arrows and Home/End, and
+do not ship a dock whose only resize path is a drag.
+
 ## A split you can resize
 
 <ComponentPreview name="panel-preview" />
@@ -74,9 +88,10 @@ The editor pane is the **sized** one: a drag reports the width the press found
 plus its delta, an arrow steps it **16px**, Home and End take the caller's
 bounds, and the inspector fills the rest. The divider is a `role="separator"`
 tab stop whose value reaches assistive technology as `aria-valuetext`, because
-0.11.0 has no `aria-valuenow`. The preview is a browser drawing of
-[`SplitPane`](/docs/dock/split-pane) in the platform you picked; the Code tab is
-the shipped native call.
+0.11.0 has no `aria-valuenow`. The drag here is the browser drawing's, not the
+shipped divider's, which takes no press yet (above). The preview is a browser
+drawing of [`SplitPane`](/docs/dock/split-pane) in the platform you picked; the
+Code tab is the shipped native call.
 
 ## A dock's panes own their scrollers
 

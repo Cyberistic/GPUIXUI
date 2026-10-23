@@ -460,6 +460,58 @@ describe("the data-display page's drawing claims", () => {
   });
 });
 
+describe("the workspace page's split claims", () => {
+  // The page taught the divider as a control that "drags": the runtime rules,
+  // the capture pair and the preview all read as a shipped drag. The window
+  // measured the opposite for the package's own `SplitPane` — a press on its
+  // divider focuses nothing and reports `resizes=0`, because its positioned
+  // `highlight` layer takes the hit test (`dock-split-lifecycle`) — so a reader
+  // designed a dock whose only resize path could not work. The limitation is the
+  // playground's record and the dock workstream's fix; the page's job is to say
+  // it until it is fixed.
+  const repo = (path: string): string =>
+    readFileSync(new URL(`../../../../${path}`, import.meta.url), "utf8");
+
+  it("states the press the shipped divider cannot take", () => {
+    const page = read(workspacePage).replace(/\s+/g, " ");
+    const readme = repo("apps/playground/README.md");
+    const probe = repo("apps/playground/src/live/scenarios.tsx");
+
+    // The record the page cites, and the probe's own header, agree.
+    const blocked = readme.includes(
+      "**The pointer half is blocked in the component, and this probe records it",
+    );
+    expect(blocked).toBe(true);
+    expect(readme).toContain("reports no resize (`resizes=0`)");
+    expect(probe.replace(/\s+/g, " ")).toContain(
+      "on the shipped divider focuses nothing and reports no resize",
+    );
+
+    expect(page).toContain("The shipped divider is a keyboard control today");
+    expect(page).toContain("press on its divider focuses nothing");
+    expect(page).toContain("`resizes=0`");
+    expect(page).toContain("`dock-split-lifecycle`");
+    expect(page).toContain("`highlight`");
+    expect(page).toContain("hit test stops at a positioned child");
+    expect(page).toContain("`Divider`'s pointer path");
+    expect(page).toContain("only resize path is a drag");
+    // The preview's drag is the browser's, not the shipped control's.
+    expect(page).toContain("The drag here is the browser drawing's");
+  });
+
+  it("keeps the limitation only while the probe still records it", () => {
+    // The end date: the playground rewrites the paragraph and adds the drag rows
+    // when the fix lands, and this page has to change in the same pass instead
+    // of warning a reader about a control that now works.
+    const page = read(workspacePage).replace(/\s+/g, " ");
+    const readme = repo("apps/playground/README.md");
+
+    expect(page.includes("keyboard control today")).toBe(
+      readme.includes("The pointer half is blocked in the component"),
+    );
+  });
+});
+
 describe("the layouts page's direction claim", () => {
   const layouts = read("layouts.mdx");
 

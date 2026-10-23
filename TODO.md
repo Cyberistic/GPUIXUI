@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 179/179
+`[x]` `[██████████]` 180/180
 
 `[x]` Measure the **rule a menu draws at half the border role** — `@gpuixui/tw`'s
 `MENU_SEPARATOR` is `bg-border/50` and `MenuSeparator` draws it inside the menu
@@ -8278,7 +8278,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 226/226
+`[x]` `[██████████]` 227/227
+
+`[x]` Publish the **press the shipped dock divider cannot take** on
+      `/docs/workspace` — the page taught the divider as a control that drags:
+      the runtime rules, the capture pair and the preview all read as a shipped
+      drag, and the preview line said "a drag reports the width the press found
+      plus its delta". A window measured the opposite for the package's own
+      `SplitPane` (`dock-split-lifecycle`, 19 checks on 0.11.0): the Tab stop,
+      the ring, one 16px arrow step, Home/End and the clamp all work, while a
+      press on its divider focuses nothing and reports `resizes=0` — the
+      probe-local divider in `split-pane-lifecycle` drags normally in the same
+      window. The cause is the divider's own `highlight` layer, positioned over
+      the whole 6px control while the runtime's hit test stops at a positioned
+      child (`press-routing-lifecycle`). §The split ships gains the measured
+      limitation, its cause, the rule that still holds for a divider a caller
+      composes, the `TODO.md` interlock (`Divider`'s pointer path) and the
+      consequence; the preview section says its drag is the browser drawing's,
+      not the shipped divider's. `lane-page.test.ts` gains `the workspace
+      page's split claims` (2 cases): the page and the playground's record agree
+      (the README's blocked paragraph and `resizes=0`, the probe's own header),
+      every claim is on the page, and the limitation exists **only while** the
+      record still carries it — the playground rewrites that paragraph when the
+      dock fix lands, and the page must change in the same pass. Directions
+      measured: the previous page sentence fails both cases (`expected … to
+      contain 'The shipped divider is a keyboard control today'` and the
+      agreement), and `resizes=1` on the page fails the press case; restored,
+      the file is 49/49 and the docs suite 117 files / 1 237 tests,
+      `check-types`, `build` and the formatter clean on both files. No live
+      re-run: the probe's 19-check run and its manual press reading are the
+      playground's, recorded in `apps/playground/README.md` §`dock-split-lifecycle`.
 
 `[x]` Publish the **find wash** on `/docs/theming` — the runtime marks what a
       search found with a wash behind the glyphs, and a host handed no colour
