@@ -4691,6 +4691,41 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 `[x]` `[██████████]` 19/19
 
+`[x]` `packages/primitives`: **a silent spinner was an unnamed status node** —
+      `Spinner` resolved `aria-label={accessibleName(label ?? busyWord(...))}`
+      while its role was a fixed `status`, so an explicit blank `label` — the
+      silence `Button`'s blank `loadingLabel` composes, and the shape a
+      translation table that answered nothing takes — painted
+      `role="status"` with no name. Measured in the pinned window: the tree
+      carried `{ role: "Status" }` with no `label`, a node an assistive
+      technology walks into with nothing to announce; a named spinner and the
+      provider's default word were fine, which is why no report saw it. Silence
+      is decoration, the rule `Icon` already follows for a blank label: the
+      painter resolves one `name` and takes its role from it
+      (`presentation` when the name is absent, `status` when it is not), so the
+      explicit blank opts out of the tree entirely while an unnamed indicator
+      still hears the shipped `"Loading"`. Proof:
+      `presentational.test.tsx`'s `paints a blank spinner label as decoration,
+      not an unnamed status` (blank and whitespace-only, plus the named/default
+      control), the `Button` busy-word case now names the same rule, and
+      `runtime/loading.runtime.test.tsx`'s `leaves no unnamed status node for a
+      silent spinner` reads the window's accessibility tree in three states —
+      a named spinner `["Working"]`, a silent one `[]`, and a silent busy
+      button `[]` with no description — then the default busy button
+      `["Loading"]`. Directions measured: restoring the fixed role fails
+      `expected 'status' to be 'presentation'` and the window case
+      `expected [ undefined ] to deeply equal []`. Docs: `spinner.mdx` §API and
+      §Limitations state the rule, `theme-provider.mdx` §Words adds it beside
+      the blank-`loadingLabel` distinction, the README's rotation row and the
+      `Loading indicators` inventory record carry it, and `docs.test.ts`'s
+      `paints a silent spinner as decoration, not an unnamed status` holds the
+      painter's role expression and both pages (measured: the old role fails
+      `… to match /role=\{name === undefined …/`; deleting the limitations bullet
+      fails `… to contain 'role="presentation"'`). Green: 55 files / 1 048 tests,
+      runtime 21 files / 308 tests, `check-types` and `check:tests` clean. No
+      playground scenario applies — the tree is read in the native
+      `TestRenderer`, whose a11y dump is the measured channel.
+
 `[x]` `packages/primitives`: **the step indicators copied the house timing
       instead of reading it** — `@gpuixui/motion` publishes `motionLevels.step`
       ("a step indicator's tick") and **nothing read it**: `Spinner` and an
