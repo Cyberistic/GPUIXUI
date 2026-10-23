@@ -143,21 +143,17 @@ describe("the preview strategy document", () => {
     // Bug guarded: the policy said "A page that ships a demo — every component
     // and primitive page does". `MultiStepForm` ships none: its state belongs
     // to the caller and the page has only usage, API and limitations, which is
-    // strategy 4. The claim is measured rather than repeated, and the floor
-    // doubles as the reminder to revisit the sentence once the last page gains
-    // a demo.
-    const visualPages = [
-      ...markdownUnder("packages/components/docs"),
-      ...markdownUnder("packages/primitives/docs"),
-    ];
-    const withoutDemo = visualPages.filter(
-      (path) => !read(path).includes("<ComponentPreview"),
-    );
+    // strategy 4. The pages that do mount one are measured by
+    // `native-run-note.test.ts`; this case keeps the sentence from promising
+    // the rest.
+    const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
 
-    expect(visualPages.length).toBeGreaterThanOrEqual(100);
-    expect(withoutDemo).toContain("packages/components/docs/multi-step-form.mdx");
-    expect(read("docs/preview-strategy.md")).not.toContain(
-      "every component and primitive page does",
+    expect(policy).not.toContain("every component and primitive page does");
+    expect(policy).toContain(
+      "A page that ships a demo mounts it exactly as a curated page does",
+    );
+    expect(policy).toContain(
+      "A page that ships none has only its source and limitations",
     );
   });
 
