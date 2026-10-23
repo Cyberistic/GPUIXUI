@@ -19,6 +19,7 @@ import { DropZoneDemo, dropZoneDemoSource } from "./drop-zone-demo";
 import { FileUploadDemo, fileUploadDemoSource } from "./file-upload-demo";
 import { ImagePreviewDemo, imagePreviewDemoSource } from "./image-preview-demo";
 import { MediaPlayerDemo, mediaPlayerDemoSource } from "./media-player-demo";
+import { DockLayoutDemo, dockLayoutDemoSource } from "./dock-layout-demo";
 import { PanelGroupDemo, panelGroupDemoSource } from "./panel-group-demo";
 import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
 import {
@@ -3237,6 +3238,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "panel-group-demo": {
     render: PanelGroupDemo,
     source: panelGroupDemoSource,
+    composition: true,
+  },
+  "dock-layout-demo": {
+    render: DockLayoutDemo,
+    source: dockLayoutDemoSource,
     composition: true,
   },
 };

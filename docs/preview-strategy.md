@@ -459,14 +459,15 @@ that page's preview is **strategy 3**: a browser approximation, labelled, with
 the real API tables and limitations beside it. A page that ships none has only
 its source and limitations: **strategy 4**. A component page ships none when the
 interaction has no honest browser reproduction to draw; today the files and
-shell lanes still ship none, the dock lane draws its split and its panel group
-(`split-pane` through `panel-preview`, `panel-group`), while the media lane
-draws all six of its surfaces
+shell lanes still ship none, the dock lane draws all three of its surfaces
+(`split-pane` through `panel-preview`, `panel-group`, `dock-layout`), while the
+media lane draws all six of its surfaces
 (`crop-area`, `qr-code`, `image-preview`, `file-upload`, `drop-zone`,
 `media-player`)
 and the editor lane draws all four of its own (`code-editor`, `diff-viewer`,
 `markdown-editor`, `search-replace`). Those drawings run the packages' own
 **logic** — `@gpuixui/dock`'s `logic` (`clampSize`, `dragSize`, `resizeByKey`,
+`resizeSplit`, `resizeSplitByKey`, `setActiveTab`,
 `normalizePanels`, `resizePanels`, `resizePanelsByKey`,
 `togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
 `qr/encode` and `upload/queue`, and `@gpuixui/editor`'s `diff/logic`,
@@ -476,8 +477,9 @@ the queue's lifecycle, the diff's edit script, the fence a preview must close
 and the matches a replace-all removes are the components', and only the paint is
 the browser's. The panel group's preview is a fixed 620px frame where the shipped group
 measures its own pane space in `onLayout`, so the two convert a pixel gesture
-against the same rule and different numbers; the page prints that difference,
-and its split sibling prints the 220–380px bounds its drawing owns.
+against the same rule and different numbers; the docking layout's divider does
+the same against its own 620px frame. The pages print that difference, and the
+split page prints the 220–380px bounds its drawing owns.
 The data lane's Property panels page was the first drawer outside the component and
 primitive lanes — one object read by a preview, a field, a table and a metric
 card, every one of which the browser can draw honestly. Either way

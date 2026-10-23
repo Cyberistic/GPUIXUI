@@ -3,6 +3,8 @@ title: Docking layouts
 description: A named tree of split and tab groups, rendered from a schema
 ---
 
+<ComponentPreview name="dock-layout-demo" />
+
 ## Usage
 
 ```tsx
@@ -51,3 +53,4 @@ const [layout, setLayout] = useState(initial);
 - The tree is **controlled**: every change arrives through `onLayoutChange`.
 - A layout string that is not a tree is a decode failure; open the default.
 - A split holds exactly two children; a tab press rewrites its group's `activeTab`.
+- The preview draws the page's one-level tree and its tabs are real `<button>`s; the shipped tab is a `div role="tab"` with one tab stop. Its divider converts pixels against a fixed 620px frame, where the shipped split measures its own pane space in `onLayout`.
