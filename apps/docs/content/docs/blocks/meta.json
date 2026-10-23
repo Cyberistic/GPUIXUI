@@ -9,6 +9,8 @@
     "otp",
     "settings",
     "kanban",
-    "settings-dialog"
+    "settings-dialog",
+    "file-manager",
+    "email-inbox"
   ]
 }
