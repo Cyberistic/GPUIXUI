@@ -23,11 +23,11 @@ import { ImageZoom } from "@gpuixui/components/image-zoom";
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `src` | `string` | — |
-| `alt` | `string` (required) | — |
+| `alt` | `string` (required) | — (a blank value reads as `"Picture"`) |
 | `width` | `number` | `240` |
 | `height` | `number` | `160` |
 | `scale` | `number` | `1.6` |
-| `radius` | `number` | `theme.radius.md` |
+| `radius` | `number` | `theme.radius.md` (a value that cannot be painted reads as the default; `0` stays square) |
 | `level` | `MotionLevel` | `"normal"` |
 | `className` | `string` | — |
 | `style` | `StateStyle<ImageZoomState>` | — |
@@ -37,3 +37,9 @@ import { ImageZoom } from "@gpuixui/components/image-zoom";
 - No wheel, pinch or drag-to-pan; the pointer is the only lens.
 - The source is what gets magnified; ship one large enough for `scale`.
 - One image per frame; compose a Carousel for a gallery.
+- **A stored radius is read failsafe**: a `radius` restored as `NaN`, an
+  infinity or a negative number paints the theme's corner instead of a side the
+  renderer drops, while a `0` the caller asked for stays square.
+- **A blank picture name reads as `"Picture"`**: the runtime publishes an
+  `<img>` as an `Image` node named by its `alt`, so an empty name — an i18n row,
+  or a saved record's `null` — would otherwise be announced with no name at all.

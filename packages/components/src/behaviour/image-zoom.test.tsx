@@ -12,11 +12,13 @@
  * runtime was handed rather than wherever real time had got.
  */
 
+import * as Arr from "effect/Array";
 import { describe, expect, it, vi } from "vitest";
 import { ImageZoom, type ImageZoomProps } from "../image-zoom.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { requireBounds, settle } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+import { darkTheme } from "../internal/theme.js";
 import { MotionProvider } from "../motion.js";
 
 /** A 200 × 120 frame: at 1.6× the picture is 320 × 192, so 120 px and 72 px pan. */
@@ -276,6 +278,48 @@ describe("ImageZoom", () => {
       );
 
       expect(images).toEqual(["The harbour at dusk"]);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("names a picture whose stored alternative text is blank", () => {
+    const page = render({ alt: "   " });
+    try {
+      const images = nodesWithRole(page.renderer, "image").map(
+        (node) => node.name,
+      );
+
+      expect(images).toEqual(["Picture"]);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints a stored radius it cannot lay out as the theme's", () => {
+    Arr.forEach([Number.NaN, Number.NEGATIVE_INFINITY, -4], (radius) => {
+      const page = render({ radius });
+      try {
+        expect({
+          radius,
+          frame: page.renderer.findByTestId("frame")?.style.borderRadius,
+          picture:
+            page.renderer.findByTestId("image-zoom-image")?.style.borderRadius,
+        }).toEqual({
+          radius,
+          frame: darkTheme.radius.md,
+          picture: darkTheme.radius.md,
+        });
+      } finally {
+        page.unmount();
+      }
+    });
+  });
+
+  it("keeps a square corner the caller asked for", () => {
+    const page = render({ radius: 0 });
+    try {
+      expect(page.renderer.findByTestId("frame")?.style.borderRadius).toBe(0);
     } finally {
       page.unmount();
     }

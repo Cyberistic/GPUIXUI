@@ -27,6 +27,7 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import type { MotionLevel } from "@gpuixui/motion/timing";
+import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -41,7 +42,24 @@ import { measuredPoint } from "./internal/measure.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { surfaceOriginStyle, useSurfaceBox } from "./internal/surface-box.js";
-import { useTheme } from "./internal/theme.js";
+import { useTheme, type Theme } from "./internal/theme.js";
+
+/** The name a picture publishes when the caller gave it none. */
+const PICTURE_NAME = "Picture";
+
+/**
+ * The corner a frame paints.
+ *
+ * A radius restored from storage may be a number the renderer cannot paint: the
+ * batch drops a `NaN` and accepts a negative one that paints nothing usable, so
+ * both read as the theme's corner. Zero is a real request and stays square.
+ */
+const cornerOf = (radius: Option.Option<number>, theme: Theme): number =>
+  Option.match(radius, {
+    onNone: () => theme.radius.md,
+    onSome: (value) =>
+      Number.isFinite(value) && value >= 0 ? value : theme.radius.md,
+  });
 
 /** What an image zoom paints at one frame. */
 export interface ImageZoomState {
@@ -56,7 +74,7 @@ export interface ImageZoomProps extends Omit<Props, "children" | "style"> {
   readonly src: string;
   /**
    * The picture's accessible name. Required: the image is the content, and the
-   * frame publishes no name of its own.
+   * frame publishes no name of its own. A blank name reads as `"Picture"`.
    */
   readonly alt: string;
   /** The frame's width in pixels. Default `240`; a value below 1 falls back. */
@@ -68,7 +86,11 @@ export interface ImageZoomProps extends Omit<Props, "children" | "style"> {
    * held to `1…4`; `1` turns the zoom off.
    */
   readonly scale?: number;
-  /** The frame's corner radius. Default `theme.radius.md`. */
+  /**
+   * The frame's corner radius. Default `theme.radius.md`; a value that cannot
+   * be painted (not finite, or negative) reads as that default, and `0` stays
+   * square.
+   */
   readonly radius?: number;
   /** The retarget's duration. Default `"normal"` (200 ms) — it follows a pointer. */
   readonly level?: MotionLevel;
@@ -147,7 +169,8 @@ export const ImageZoom = ({
     setPointer(Option.none());
   };
 
-  const corner = radius ?? theme.radius.md;
+  const corner = cornerOf(Option.fromNullishOr(radius), theme);
+  const pictureName = accessibleName(alt) ?? PICTURE_NAME;
   const state: ImageZoomState = {
     zoomed: Option.isSome(pointer) && geometry.scale > 1,
     reducedMotion: preference === "reduced",
@@ -180,7 +203,7 @@ export const ImageZoom = ({
       <img
         testId="image-zoom-image"
         src={src}
-        alt={alt}
+        alt={pictureName}
         objectFit="cover"
         motion={{
           initial: false,

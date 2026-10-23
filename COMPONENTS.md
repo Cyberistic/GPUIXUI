@@ -360,7 +360,7 @@ same contract as the Tier 2 table.
 | Page transition | done | partial | blocked by `aria-hidden` and `transform` (unfiled, #102) — one view mounts at a time and the travel is a relative `left`. |
 | Glyph | done | partial | blocked by text patterns and canvas (unfiled) — one text host per painted cell; the content above carries the name. |
 | Sliding number | done | partial | blocked by `transform` (#102) — each digit is a clipped column whose plate tweens one line. |
-| Image zoom | done | partial | blocked by `transform` (#102) — the image box grows and pans while the frame stays fixed. |
+| Image zoom | done | partial | blocked by `transform` (#102) — the image box grows and pans while the frame stays fixed. **A stored radius and a blank name are read failsafe**: a `radius` restored as `NaN`, an infinity or a negative paints the theme's corner instead of a side the renderer drops, while a `0` stays square, and a blank `alt` publishes `Picture` rather than an unnamed `Image` node (`src/behaviour/image-zoom.test.tsx`, 13 native cases). |
 | Motion grid | done | partial | blocked by `transform` (#102) — absolutely positioned cells tween `left`/`top` to their new slots. |
 | Sliding text | done | partial | blocked by `transform` (#102) — a relative `left` inside a clipped box; only one value mounts. |
 
