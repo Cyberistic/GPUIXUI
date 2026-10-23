@@ -72,6 +72,7 @@ const variants: ReadonlyArray<{
   readonly tone: string;
   readonly placeholder: string;
   readonly rail: boolean;
+  readonly lights: boolean;
   readonly wincontrols: boolean;
 }> = [
   {
@@ -79,6 +80,7 @@ const variants: ReadonlyArray<{
     tone: "success",
     placeholder: "iMessage",
     rail: false,
+    lights: true,
     wincontrols: false,
   },
   {
@@ -86,6 +88,7 @@ const variants: ReadonlyArray<{
     tone: "primary",
     placeholder: "Type a message...",
     rail: true,
+    lights: false,
     wincontrols: true,
   },
   {
@@ -93,6 +96,7 @@ const variants: ReadonlyArray<{
     tone: "info",
     placeholder: "Type a message...",
     rail: true,
+    lights: false,
     wincontrols: true,
   },
 ];
@@ -186,21 +190,39 @@ describe("the conversations window", () => {
 describe("the three platform dresses", () => {
   it.each(variants)(
     "renders $platform with its own $tone outgoing bubbles",
-    ({ platform, tone, placeholder, rail, wincontrols }) => {
+    ({ platform, tone, placeholder, rail, lights, wincontrols }) => {
       const markup = render(initialConversationsState, platform);
       expect(markup).toContain(`data-platform="${platform}"`);
       expect(count(markup, new RegExp(`data-tone="${tone}"`, "g"))).toBe(5);
       expect(markup).toContain(`placeholder="${placeholder}"`);
       expect(markup.includes('class="gx-conv-rail"')).toBe(rail);
+      expect(markup.includes('class="gx-conv-lights"')).toBe(lights);
       expect(markup.includes('class="gx-conv-wincontrols"')).toBe(wincontrols);
       expect(markup.includes('aria-label="Show sidebar"')).toBe(
         platform === "macos",
       );
-      expect(markup.includes('aria-label="Send message"')).toBe(
-        platform !== "macos",
-      );
     },
   );
+
+  it("gives all three the same actions, only restyled", () => {
+    const actions = [
+      "New message",
+      "Start video call",
+      "Start voice call",
+      "Send with an emoji",
+      "Attach a file",
+      "Send message",
+    ];
+    for (const { platform } of variants) {
+      const markup = render(initialConversationsState, platform);
+      for (const action of actions) {
+        expect(markup, `${platform} lacks ${action}`).toContain(
+          `aria-label="${action}"`,
+        );
+      }
+      expect(markup).not.toContain('aria-label="Record an audio message"');
+    }
+  });
 
   it("paints each outgoing role from the sheet, not a literal", () => {
     const roles = { macos: "success", windows: "primary", linux: "info" };
@@ -232,6 +254,13 @@ describe("the three platform dresses", () => {
     );
     expect(linux.slice(0, linux.indexOf("\n}\n"))).toContain(
       "background: var(--success-soft)",
+    );
+  });
+
+  it("gives every dress the same send control, in its own role", () => {
+    expect(rule(".gx-conv-send")).toContain("background: var(--primary)");
+    expect(rule('.gx-conv[data-platform="linux"] .gx-conv-send')).toContain(
+      "background: var(--info)",
     );
   });
 

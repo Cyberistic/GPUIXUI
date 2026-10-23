@@ -4,7 +4,13 @@ The block is one Messages-style window in three platform dresses. This file is
 the reference the implementation and the visual passes are held to. The roles
 are the library's; a literal below is the reference's own value, and the "role"
 line is what ships so light and dark both work. The cast and copy are
-**Hunter × Hunter**; only the skins change between variants.
+**Hunter × Hunter**.
+
+**The control set is identical across platforms; only the skin changes.** A
+reader comparing the three windows sees the same actions — compose, video,
+phone, search, select, send, emoji, attach — in the same places. No platform may
+drop an action another has; the rail on Windows and Linux is the skin's
+replacement for the macOS sidebar toggle, not a different feature set.
 
 ## Shared anatomy
 
@@ -14,6 +20,9 @@ line is what ships so light and dark both work. The cast and copy are
 - The right thread: a contact header (avatar, name, "Online" with a green dot),
   incoming bubbles left, outgoing right, timestamps with a double tick, a photo,
   and a composer.
+- Every variant carries the same controls: a compose glyph at the thread's top
+  left, video and phone at its top right, and a composer of `+`, the field,
+  emoji, attach and send.
 - No layout shift on state: the window keeps its height, the log scrolls, the
   list scrolls, the thread is dropped under 760px of viewport (list only).
 - 330px list pane in every variant; the Windows and Linux variants add a 72px
@@ -66,17 +75,20 @@ incoming timestamps sit under the bubble. The four outgoing times are 10:24,
 | --- | --- | --- |
 | Window | white, 1px border, 12px radius, soft shadow | `--card`, `--border`, `--shadow` |
 | Title bar | traffic lights `#FF5F57` `#FEBC2E` `#28C840`, top-left, no text | literals (the window controls) |
+| Controls | compose left, video + phone right; sidebar toggle at the list's top right | `--muted-foreground` |
 | List pane | `#F5F5F7` | `--muted` |
 | Search | white, rounded, magnifier | `--card`, `--placeholder` |
 | Selected row | filled `#3478F6`, white text | `--primary` / `--primary-foreground` |
 | Incoming | `#E9E9EB`, left, 18px radius | `--secondary` / `--secondary-foreground` |
 | Outgoing | green `#3DDC5A`, right, white text | `--success` / `--success-foreground` |
 | Thread | white | `--card` |
-| Composer | `+` circle, field "iMessage", waveform, smiley circle | `--secondary`, `--card` |
+| Composer | `+` circle, field "iMessage", emoji, attach, circular send | `--secondary`, `--card`, `--primary` |
 
 Chrome: sidebar toggle at the top-right of the **left** pane; compose at the
 top-left of the **right** pane; video and phone at its top-right. The contact
-header is a small pill, centred, with the online dot in `--success`.
+header is a small pill, centred, with the online dot in `--success`. The send
+button is the primary circle; the emoji and attach glyphs sit beside the
+field.
 
 ## Windows — Fluent 2
 
@@ -84,6 +96,7 @@ header is a small pill, centred, with the online dot in `--success`.
 | --- | --- | --- |
 | Window | light `#F3F3F3`, 8px radius, `1px #E5E5E5` | `--muted`, `--border` |
 | Title bar | `− □ ×` at the **right**, no title text | `--muted-foreground` |
+| Controls | compose left, video + phone right; the rail replaces the sidebar toggle | `--muted-foreground` |
 | Icon rail | 72px; chat selected as a blue square, people, settings | `--primary` / `--primary-foreground` |
 | List pane | 330px, white; separators `#EDEDED` | `--card`, `--border` |
 | Search | `#F3F3F3`, 4px radius | `--muted` |
@@ -100,13 +113,14 @@ header is a small pill, centred, with the online dot in `--success`.
 | Part | Reference | Role |
 | --- | --- | --- |
 | Window | `#1E1F2B`, 8px radius, `1px #2A2B36` | `--card`, `--border` |
-| Title bar | macOS dots **left** and `− □ ×` **right** | literals, `--muted-foreground` |
-| Icon rail | 72px `#23242F`, teal selected chat icon | `--muted`, `--success` |
+| Title bar | `− □ ×` at the **right**, no title text | `--muted-foreground` |
+| Controls | compose left, video + phone right; the rail replaces the sidebar toggle | `--muted-foreground` |
+| Icon rail | 72px `#23242F`, teal selected chat icon | `--muted`, `--success-soft` / `--success-soft-foreground` |
 | List pane | `#23242F`, rows teal `#1F4E5A`, white text | `--muted`, `--success-soft` / `--success-soft-foreground` |
 | Thread | `#1A1B26` | `--background` |
 | Incoming | `#2A2B36` | `--secondary` / `--secondary-foreground` |
 | Outgoing | `#1D9BF0`, white text | `--info` / `--info-foreground` |
-| Composer | `#23242F`, "Type a message...", `+`, emoji, attach, blue send | `--muted`, `--info` |
+| Composer | `+`, "Type a message...", emoji, attach, blue circular send | `--muted`, `--info` |
 
 Cantarell / Ubuntu / Noto Sans. Grey timestamps and "Read".
 

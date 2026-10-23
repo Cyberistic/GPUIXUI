@@ -283,13 +283,13 @@ export function ConversationsSurface({
   return (
     <div className="gx-conv" data-platform={platform}>
       <div className="gx-conv-bar">
-        {platform === "windows" ? null : (
+        {platform === "macos" ? (
           <span aria-hidden="true" className="gx-conv-lights">
             <i />
             <i />
             <i />
           </span>
-        )}
+        ) : null}
         {platform === "macos" ? null : (
           <span aria-hidden="true" className="gx-conv-wincontrols">
             <i>–</i>
@@ -390,15 +390,13 @@ export function ConversationsSurface({
           className="gx-conv-thread"
         >
           <header className="gx-conv-head">
-            {platform === "macos" ? (
-              <button
-                aria-label="New message"
-                className="gx-conv-glyph"
-                type="button"
-              >
-                <ComposeGlyph />
-              </button>
-            ) : null}
+            <button
+              aria-label="New message"
+              className="gx-conv-glyph"
+              type="button"
+            >
+              <ComposeGlyph />
+            </button>
             <span className="gx-conv-contact">
               <span className="gx-conv-avatar gx-conv-avatar-sm">
                 {thread.initials}
@@ -473,11 +471,7 @@ export function ConversationsSurface({
               reveal();
             }}
           >
-            <button
-              aria-label="Attach a photo"
-              className="gx-conv-round"
-              type="button"
-            >
+            <button aria-label="Add" className="gx-conv-round" type="button">
               <PlusGlyph />
             </button>
             <input
@@ -490,48 +484,27 @@ export function ConversationsSurface({
               }
               value={draft}
             />
-            {platform === "macos" ? (
-              <>
-                <button
-                  aria-label="Record an audio message"
-                  className="gx-conv-glyph"
-                  type="button"
-                >
-                  <WaveGlyph />
-                </button>
-                <button
-                  aria-label="Send with an emoji"
-                  className="gx-conv-round"
-                  type="button"
-                >
-                  <SmileGlyph />
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  aria-label="Send with an emoji"
-                  className="gx-conv-glyph"
-                  type="button"
-                >
-                  <SmileGlyph />
-                </button>
-                <button
-                  aria-label="Attach a file"
-                  className="gx-conv-glyph"
-                  type="button"
-                >
-                  <BlockIcon name="paperclip" size={15} />
-                </button>
-                <button
-                  aria-label="Send message"
-                  className="gx-conv-send"
-                  type="submit"
-                >
-                  <SendGlyph />
-                </button>
-              </>
-            )}
+            <button
+              aria-label="Send with an emoji"
+              className="gx-conv-glyph"
+              type="button"
+            >
+              <SmileGlyph />
+            </button>
+            <button
+              aria-label="Attach a file"
+              className="gx-conv-glyph"
+              type="button"
+            >
+              <BlockIcon name="paperclip" size={15} />
+            </button>
+            <button
+              aria-label="Send message"
+              className="gx-conv-send"
+              type="submit"
+            >
+              <SendGlyph />
+            </button>
           </form>
         </section>
       </div>
@@ -641,12 +614,13 @@ export function MessagesWindow() {
             ))}
           </ScrollArea>
           <Stack direction="row" gap="sm" align="center">
-            <Button variant="ghost" aria-label="Attach a photo">
+            <Button variant="ghost" aria-label="Add">
               <Icon name="plus" />
             </Button>
             <Input label="Message" placeholder="iMessage" />
-            <Button variant="ghost">Audio</Button>
             <Button variant="ghost">Emoji</Button>
+            <Button variant="ghost">Attach</Button>
+            <Button variant="primary">Send</Button>
           </Stack>
         </Stack>
       </Stack>
@@ -742,14 +716,6 @@ function PlusGlyph() {
   return (
     <Glyph>
       <path d="M12 5v14M5 12h14" />
-    </Glyph>
-  );
-}
-
-function WaveGlyph() {
-  return (
-    <Glyph>
-      <path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3" />
     </Glyph>
   );
 }
