@@ -30,6 +30,10 @@ import { RollingText } from "@gpuixui/components/rolling-text";
 | `className` | `string` | — |
 | `style` | `StateStyle<RollingTextState>` | — |
 
+## State
+
+`style` may be a function of the roll. `phase` is `"leaving"` while the outgoing value travels out, `"entering"` while the new one arrives, and `"rest"` once the arrival's tween has completed, so a callback keyed on the phase stops reporting a value still on its way in.
+
 ## Limitations
 
 - Width follows the value; the clip is the value on screen.
