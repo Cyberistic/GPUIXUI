@@ -15,7 +15,10 @@
  * A reduced run is a zero-duration assignment: the resting frame still paints,
  * only the journey is removed. The levels, easings and that policy live in
  * `@gpuixui/motion` (`motionTiming`); the frames and the mount window live in
- * `internal/presence.tsx`. `docs/component-api.md` §11 has the per-surface table.
+ * `internal/presence.tsx`. The **provider itself** is the motion package's
+ * (`@gpuixui/motion/react`) and this module re-publishes it, so a primitive or
+ * another package below the same provider reads the one preference rather than
+ * taking its own flag. `docs/component-api.md` §11 has the per-surface table.
  */
 
 export {

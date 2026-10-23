@@ -65,6 +65,7 @@ import {
   waitFor,
 } from "../internal/interaction.js";
 import { MotionProvider } from "../motion.js";
+import { MotionProvider as PackageMotionProvider } from "@gpuixui/motion/react";
 import { renderComponent } from "../internal/test-root.js";
 import {
   presenceStyle,
@@ -277,6 +278,37 @@ describe("a modal surface", () => {
     await delay();
     expect(where(page.renderer, "dialog", "y")).toBe(entering);
     page.unmount();
+  });
+});
+
+describe("the preference", () => {
+  it("is the motion package's provider, not one of this package's own", () => {
+    // The bug this guards: the preference context lived here, so a tree wrapped
+    // in `@gpuixui/motion/react`'s provider still animated every surface below
+    // it — the reveal mounted at its distance and named the animated transition.
+    const page = renderComponent(
+      <PackageMotionProvider preference="reduced">
+        <div
+          testId="frame"
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          <Reveal testId="reveal" distance={12} />
+        </div>
+      </PackageMotionProvider>,
+    );
+    try {
+      page.renderer.clockPause();
+      settle(page);
+      expect(
+        where(page.renderer, "reveal", "y") -
+          where(page.renderer, "frame", "y"),
+      ).toBeCloseTo(0, 1);
+      expect(
+        page.renderer.findByTestId("reveal")?.customProps?.motion,
+      ).toMatchObject({ transition: { duration: 0 } });
+    } finally {
+      page.unmount();
+    }
   });
 });
 

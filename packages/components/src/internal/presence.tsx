@@ -18,8 +18,10 @@
  *   that keeps controls mounted covers them with `PresenceShield` for the exit —
  *   `pointerEvents` does not inherit, so a child keeps its own hitbox;
  * - the reduced preference is read from `MotionProvider`, because the runtime
- *   exposes no preference of its own. It zeroes the duration: the resting frame
- *   still paints, only the journey is removed.
+ *   exposes no preference of its own. The provider and its context are
+ *   `@gpuixui/motion/react`'s and this module re-publishes them, so a primitive
+ *   below the same provider reads the same flag. It zeroes the duration: the
+ *   resting frame still paints, only the journey is removed.
  *
  * The runtime is given geometry as a *between* value (the offset), so a headless
  * suite can read the movement in element bounds; the fade itself is a paint value
@@ -32,49 +34,21 @@ import type {
   MotionTransition,
   StyleDesc,
 } from "@gpuix/react";
+import { motionTiming, type MotionLevel } from "@gpuixui/motion/timing";
 import {
-  motionTiming,
-  type MotionLevel,
-  type MotionPreference,
-} from "@gpuixui/motion/timing";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useState,
-  type ReactNode,
-} from "react";
-
-const MotionContext = createContext<MotionPreference>("animated");
-
-/** Props for {@link MotionProvider}. */
-export interface MotionProviderProps {
-  /**
-   * The reader's motion preference. Default `"animated"`; a host that knows the
-   * platform's setting passes `"reduced"`.
-   */
-  readonly preference?: MotionPreference;
-  readonly children?: ReactNode;
-}
+  MotionProvider,
+  useMotionPreference,
+  type MotionProviderProps,
+} from "@gpuixui/motion/react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 /**
- * Supply a motion preference to every surface below it.
- *
- * There is no runtime query to read: `@gpuix/native@0.11.0` exposes no
- * reduced-motion preference (`docs/gpuix-capabilities.md`), so the application
- * owns it, exactly as it owns the theme mode.
+ * The preference provider is the motion package's, re-published here because
+ * this is where the package's own records and pages point at it. Every surface
+ * in the library reads the one context it creates, so an application states the
+ * flag once and a primitive below the same provider agrees with these surfaces.
  */
-export const MotionProvider = ({
-  preference = "animated",
-  children,
-}: MotionProviderProps) => (
-  <MotionContext.Provider value={preference}>{children}</MotionContext.Provider>
-);
-
-/** Read the nearest motion preference, `"animated"` without a provider. */
-export const useMotionPreference = (): MotionPreference =>
-  useContext(MotionContext);
+export { MotionProvider, useMotionPreference, type MotionProviderProps };
 
 /** The enter and exit timing a surface at one level moves with. */
 export interface SurfaceTiming {

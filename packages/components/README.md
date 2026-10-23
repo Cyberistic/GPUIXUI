@@ -214,7 +214,9 @@ trigger's side; a toast slides 16px in from the right edge; an accordion panel
 animates to the body's measured height; the tab pill retargets
 `left`/`top`/`width`/`height` from the box on screen.
 
-The preference is the application's, because the runtime exposes none:
+The preference is the application's, because the runtime exposes none. The
+provider is `@gpuixui/motion/react`'s and this package re-publishes it, so a
+primitive below the same provider reads the one flag instead of taking its own:
 
 ```tsx
 <MotionProvider preference={reduceMotion ? "reduced" : "animated"}>

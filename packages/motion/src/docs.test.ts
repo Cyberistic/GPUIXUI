@@ -50,7 +50,11 @@ const pinnedMinor = `${major}.${minor}`;
 
 /** Every source file in the package, so a comment cannot drift alone. */
 const sources = readdirSync(new URL(".", import.meta.url))
-  .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+  .filter(
+    (name) =>
+      (name.endsWith(".ts") || name.endsWith(".tsx")) &&
+      !name.includes(".test."),
+  )
   .map((name) => ({ name, text: read(`./${name}`) }));
 const readme = read("../README.md");
 const documents = [...sources, { name: "README.md", text: readme }];

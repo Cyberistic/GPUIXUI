@@ -20,7 +20,8 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
 | `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds |
-| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers |
+| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers, `useMotionPreference` |
+| `provider.ts` | `MotionProvider` — the one reduced-motion preference every package reads |
 
 ## Spring
 
@@ -88,6 +89,30 @@ function Grow({ open }: { open: boolean }) {
   return <motion.div animate={{ width: value }} transition={{ duration: 0 }} />;
 }
 ```
+
+The reader's preference is stated **once**, at the root of the tree, because the
+runtime publishes no reduced-motion query:
+
+```tsx
+import {
+  MotionProvider,
+  useMotionPreference,
+} from "@gpuixui/motion/react";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <App />
+</MotionProvider>;
+```
+
+`useMotionPreference()` reads the nearest provider and answers `"animated"`
+without one. The context lives in this package — the one that owns the timing and
+the policy — rather than in a component package, so a primitive, a component and
+an application surface below one provider agree on the flag, and a package that
+moves does not have to depend on the components library. `@gpuixui/components`
+re-publishes this provider, so a tree written against it reads the same context.
+`preference` is a policy, not a per-control option: a reduced run is a
+zero-duration assignment, so the resting frame still paints and only the journey
+is removed.
 
 Each hook returns `{ value, velocity, complete }`. Map `value` onto a GPUix
 `MotionStyle` numeric field — `width`, `height`, `top`, `right`, `bottom`,

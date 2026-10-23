@@ -1,5 +1,6 @@
 /**
- * React hooks that drive GPUix `motion.div` numeric targets.
+ * React hooks that drive GPUix `motion.div` numeric targets, and the preference
+ * provider they read.
  *
  * Each hook returns a scalar `{ value, velocity, complete }` the caller maps
  * onto a GPUix `MotionStyle` field (`width` / `height` / `top` / `right` /
@@ -38,6 +39,19 @@ import {
   type SpringPhysics,
   type Transition,
 } from "./index.js";
+
+/**
+ * The application's preference, published beside the hooks that read it.
+ *
+ * One provider for the whole library: a component package, a primitive and an
+ * application surface below it share the context, so the flag is stated once
+ * rather than threaded into every control.
+ */
+export {
+  MotionProvider,
+  useMotionPreference,
+  type MotionProviderProps,
+} from "./provider.js";
 
 /** The sampled scalar state a hook publishes. */
 export interface MotionState {
