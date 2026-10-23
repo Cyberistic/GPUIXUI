@@ -73,4 +73,24 @@ describe("the apps/docs ledger", () => {
     // The file, not just the mention: the policy is the page template.
     expect(policy).toContain("## The strategy");
   });
+
+  it("says the sidebar offers platforms, not a look control it retired", () => {
+    // `8c180a9f` removed the Look group, and `/docs/theming` and the preview
+    // policy were corrected with it. The site's own ledger still described a
+    // **Look** group and a "look picker" no reader can press, so a contributor
+    // would look for the control and change the wrong file. The page, not the
+    // policy, is the name the ledger has to match.
+    const readme = ledger.join("\n");
+    const page = readFileSync(
+      new URL("../../content/docs/theming.mdx", import.meta.url),
+      "utf8",
+    );
+
+    expect(page).toContain("### The look parameter");
+    expect(readme).toContain("## The platform switch and the look parameter");
+    expect(readme).toContain("no look group");
+    expect(readme).toContain("?look=luna");
+    expect(readme).not.toContain("look picker");
+    expect(readme).not.toContain("**Look** offers");
+  });
 });

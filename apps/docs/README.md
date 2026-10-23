@@ -22,7 +22,7 @@ installation.mdx             Requirements, nub, first component, terminal mode
 getting-started.mdx          A first screen: theme, card, state, run it natively
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
 styling.mdx                  The class recipe layer: two registries, states, refusals, extension
-theming.mdx                  Semantic roles, themes, the platform switch, the look picker, the desktop palette
+theming.mdx                  Semantic roles, themes, the platform switch, the look parameter, the desktop palette
 dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, and the workaround
@@ -38,9 +38,6 @@ reference.mdx                The public entry points and the symbols behind them
 themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/login.mdx             A centered sign-in card
-blocks/signup.mdx            A centered registration card
-blocks/forgot-password.mdx   A centered reset card with an inline success note
-blocks/otp.mdx               A centered one-time-code card with a resend countdown
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
 components/index.mdx         The filterable component index
@@ -228,9 +225,8 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
-src/components/docs/blocks.tsx            The block registry: Login, Sign up, Forgot password, One-time code, Settings and Dashboard
+src/components/docs/blocks.tsx            The Login, Settings and Dashboard recipes
 src/components/docs/block-preview.tsx     A block's browser rendering
-src/components/docs/auth-blocks.tsx       The auth blocks' states, validation and source strings
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
@@ -469,16 +465,22 @@ injected renderer, but `@gpuix/react` imports `@gpuix/native/runtime` and
 `@gpuix/native/automation` at module scope and nothing has measured that graph in
 a browser, so the route drives the batch protocol by hand.
 
-## The platform switch and the look picker
+## The platform switch and the look parameter
 
-`PlatformToggle` sits in the sidebar footer. **Platform** offers macOS, Linux,
-Windows and Default; **Look** offers the platform's own style and the two
-authored looks (`Windows XP (Luna)`, `Windows 7 (Aero)`). `src/lib/platform.ts`
-resolves `platformTheme(themes[mode], platform)` and then `applyStyle` over it for
-a look, the choice is carried in `?platform=…&look=…` and remembered in local
-storage, and every preview renders on a `PreviewSurface` that applies the resolved
-theme's variables, `data-platform` and `data-look`. A preview therefore paints the
-library's roles, radii, families and density, not a docs palette.
+`PlatformToggle` sits in the sidebar footer and offers macOS, Linux, Windows and
+Default — the mission's four platform names and **no look group**, because a look
+is not a fifth platform. `src/lib/platform.ts` resolves
+`platformTheme(themes[mode], platform)`; a look is still applied over it when a
+link carries one, because the authored styles are library data:
+`?look=luna` or `?look=aero` resolves `retroStyles` (`Windows XP (Luna)`,
+`Windows 7 (Aero)`) through `applyStyle`. The choice is carried in
+`?platform=…&mode=…&look=…` and remembered in local storage, and every preview
+renders on a `PreviewSurface` that applies the resolved theme's variables,
+`data-platform`, `data-mode` and `data-look`. A preview therefore paints the
+library's roles, radii, families and density, not a docs palette. `/docs/theming`
+documents the parameter under **The look parameter**;
+`src/lib/theming-page.test.ts` holds the page and `docs/preview-strategy.md` to
+the platform-only sidebar.
 
 ## The theme editor
 

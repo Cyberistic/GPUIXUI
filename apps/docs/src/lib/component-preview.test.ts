@@ -119,10 +119,19 @@ describe("the component previews", () => {
     // so a sixth page cannot land unannounced.
     const pages = curated();
     const theming = read("apps/docs/content/docs/theming.mdx");
-    const switchSection = theming.slice(
-      theming.indexOf("### The switch on this site"),
-      theming.indexOf("### The look picker"),
+    // The boundaries are asserted: a renamed heading used to turn the end index
+    // into `-1`, so the slice silently ran to the end of the page and a curated
+    // page announced in a later section counted as announced in this one.
+    const switchStart = theming.indexOf("### The switch on this site");
+    const switchEnd = theming.indexOf("### The palette parameter");
+    expect(switchStart, "the switch section lost its heading").toBeGreaterThan(
+      -1,
     );
+    expect(
+      switchEnd,
+      "the switch section has no following heading to end at",
+    ).toBeGreaterThan(switchStart);
+    const switchSection = theming.slice(switchStart, switchEnd);
     const strategy = read("docs/preview-strategy.md");
     const announced = new Set(
       [

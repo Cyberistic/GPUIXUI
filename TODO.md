@@ -7677,7 +7677,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 208/208
+`[x]` `[██████████]` 209/209
+
+`[x]` Retract the **retired Look control from the site's own ledger** — `8c180a9f`
+      removed the sidebar's Look group and corrected `/docs/theming` (now **The
+      look parameter**) and `docs/preview-strategy.md`, but `apps/docs/README.md`
+      still listed "the look picker" and told a contributor that "**Look** offers
+      the platform's own style and the two authored looks" — a control no reader
+      can press, in the file that says which module owns which part of the site.
+      The ledger now says the sidebar offers platforms only, keeps the
+      `?look=luna|aero` parameter (resolved through `applyStyle` and remembered
+      beside `platform`/`mode`), and names `/docs/theming` §The look parameter.
+      `readme-ledger.test.ts` gained `says the sidebar offers platforms, not a
+      look control it retired`: it reads the page's heading, requires the
+      parameter truth and refuses `look picker` / `**Look** offers` anywhere in
+      the ledger — measured failing on the old README and green after it.
+      The same pass fixed the **curated-page announcement guard's stale slice**:
+      `component-preview.test.ts` ended its switch section at `### The look
+      picker`, which no longer exists, so `indexOf` returned `-1`, `slice(start,
+      -1)` ran to the end of the page, and a curated page linked in any later
+      section counted as announced where the switch is described. The end is now
+      the next real heading (`### The palette parameter`) and both boundaries are
+      asserted. Directions measured: the old README fails the ledger case by
+      name; moving `Breadcrumb`'s link out of the switch section into §The palette
+      parameter fails the preview case with `[ 'breadcrumb' ]`, while the stale
+      slice would have passed it. `nub run --filter @gpuixui/docs test
+      src/lib/readme-ledger.test.ts src/lib/component-preview.test.ts`: 13/13;
+      `check-types` clean. No native scenario applies — a README claim and an
+      MDX-section boundary have no runtime path.
 
 `[x]` Keep the **Table page's printed native count** with its suite — the data
       workstream landed `a8df4d0e` (`keep a hidden column out of the search, not
