@@ -789,6 +789,50 @@ describe("a notice", () => {
       page.unmount();
     }
   });
+
+  it("keeps the fan lift a dismissed card held while it leaves", async () => {
+    // The bug this guards: the fan ranked only the cards still in the queue, so
+    // a card dismissed while the stack was hovered lost its lift in the frame it
+    // became a ghost. Its exit frame is written at `-fanLift` — a leaving card
+    // slides right at the lift it rests at — so dropping the rank turned that
+    // exit into a fall out of the fan: the ghost travelled back down to its
+    // slot while it faded, which is a journey no page describes.
+    const page = renderComponent(
+      <ToastProvider>
+        <FanPage />
+      </ToastProvider>,
+    );
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "push-two");
+      await waitFor(() => expect(painted(page.renderer, "toast-2")).toBe(true));
+      page.renderer.clockFastForward(700);
+      await delay();
+      // The pointer rests on the newest card, so the older one is fanned up.
+      hoverCentreOf(page, "toast-2");
+      page.renderer.clockFastForward(400);
+      await delay();
+      const lifted = where(page.renderer, "toast-1", "y");
+      const restX = where(page.renderer, "toast-1", "x");
+
+      // Dismiss the older card from the stack it is still fanned in.
+      clickCentreOf(page, "toast-dismiss");
+      await delay();
+      expect(painted(page.renderer, "toast-1")).toBe(true);
+      page.renderer.clockFastForward(1);
+      await delay();
+      page.renderer.clockFastForward(159);
+      await delay();
+
+      // The ghost is on its way out to the right...
+      expect(where(page.renderer, "toast-1", "x")).toBeGreaterThan(restX);
+      // ...at the lift it was resting at, not falling back into its slot.
+      expect(where(page.renderer, "toast-1", "y")).toBe(lifted);
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
+  });
 });
 
 /** Controlled state, so the page itself decides when the palette is open. */

@@ -380,11 +380,25 @@ export const ToastViewport = ({
   }, [stack]);
   // The fan lifts the older cards: the newest rests still and each older card
   // sits one step higher, so hovering widens the gap between neighbours.
-  const present = Arr.filter(stack, (entry) => entry.present);
+  /**
+   * The rank of every card **in the stack**, the ghosts included.
+   *
+   * A card's exit frame is written at the lift it rests at, so a rank read from
+   * the cards still present took that lift away in the frame the card started
+   * leaving and the ghost fell back into its slot while it slid away. Ranks from
+   * the whole stack keep the lift through the exit, and they stay continuous
+   * when a ghost unmounts: the size shrinks by the same one as every later rank.
+   */
   const rankById = HashMap.fromIterable(
-    Arr.map(present, (entry, index) => [entry.toast.id, index] as const),
+    Arr.map(stack, (entry, index) => [entry.toast.id, index] as const),
   );
-  const stackHovered = Arr.some(present, (entry) =>
+  /**
+   * The fan is open while the pointer rests on a card that is **painted** — a
+   * ghost is one, so dismissing the card the pointer is on does not close the fan
+   * in the frame its exit starts. The set holds only ids on screen (the prune
+   * above reads the stack), so the fan closes when the ghost unmounts.
+   */
+  const stackHovered = Arr.some(stack, (entry) =>
     HashSet.has(hovered, entry.toast.id),
   );
 

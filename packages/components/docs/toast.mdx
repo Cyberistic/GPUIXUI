@@ -93,8 +93,10 @@ was dismissed with.
 
 Hovering any card fans the stack — each card that is not the newest lifts 8px,
 widening the gap — and holds every auto-dismiss clock; leaving the stack resumes
-each with the time it had left. `MotionProvider preference="reduced"` removes
-the travel and paints the resting frame at once.
+each with the time it had left. A card dismissed while the stack is fanned keeps
+the lift it was resting at for its exit, so a ghost slides away from where it
+sat instead of falling back into its slot. `MotionProvider
+preference="reduced"` removes the travel and paints the resting frame at once.
 
 ## Limitations
 
