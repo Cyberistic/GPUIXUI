@@ -113,6 +113,36 @@ const ratioOf = (colour: string | undefined, over: string | undefined) =>
 const underFloor = (ratio: number | undefined): boolean =>
   ratio === undefined || ratio < decorativeFloor;
 
+const ones = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+] as const;
+const tens = ["", "", "twenty", "thirty", "forty", "fifty"] as const;
+
+/** The spelled count the contract's own prose prints, or the numeral past the list. */
+const spelled = (count: number): string =>
+  count < 20
+    ? (ones[count] ?? String(count))
+    : `${tens[Math.floor(count / 10)] ?? ""}-${ones[count % 10] ?? ""}`;
+
 /** The wash a press paints, or the role it derives from when the source cannot derive one. */
 const pressWash = (theme: Theme, replaced: (typeof dividerPresses)[number]) =>
   pointerWash(theme, "active", replaced);
@@ -359,6 +389,56 @@ describe("a rule on the row it crosses", () => {
       "border on accent is 1.01",
       "border on the press over hover is 1.00",
     ]);
+  });
+
+  it("prints the counts it measures in its own documentation", () => {
+    // The contract publishes its measurement in prose, and two style additions
+    // outgrew it: the rule doc still said sixteen styles, "20 of the 80" and
+    // "seven of the thirty-two" presses while the table measured eighteen, 90
+    // and 36. The numbers here are derived from the same tables the report
+    // walks, so a style or a placement added to the contract fails the prose
+    // that publishes it.
+    const source = read("./decorative.ts")
+      .replace(/^\s*\*\s?/gm, "")
+      .replace(/\s+/g, " ");
+    const derivedPresses = everyStyle.filter(([, theme]) =>
+      dividerPresses.some((replaced) => {
+        const wash = pressWash(theme, replaced);
+        return wash !== undefined && wash !== theme.colors.active;
+      }),
+    );
+    const moved = everyStyle.flatMap(([, theme]) =>
+      dividerPresses.filter((replaced) => {
+        const wash = pressWash(theme, replaced);
+        return wash !== undefined && wash !== theme.colors.active;
+      }),
+    );
+    const presses = everyStyle.length * dividerPresses.length;
+    // The tonal action's wash claim is a count beside the rule's: the fill of a
+    // `secondary` action on the four washes a row wears.
+    const washCells = everyStyle.flatMap(([, theme]) =>
+      (["hover", "active", "accent", "selected"] as const).map((wash) =>
+        ratioOf(theme.colors.secondary, theme.colors[wash]),
+      ),
+    );
+    const washMisses = washCells.filter(underFloor);
+
+    expect(moved).toHaveLength(7);
+    expect(derivedPresses).toHaveLength(6);
+    expect(washMisses).toHaveLength(36);
+    expect(source).toContain(
+      `**${missed.length} of the ${placements.length}**`,
+    );
+    expect(source).toContain(`all ${placements.length} placements`);
+    expect(source).toContain(
+      `of the ${spelled(presses)} press placements in the ${spelled(everyStyle.length)} shipped`,
+    );
+    expect(source).toContain(
+      `**${washMisses.length} of the ${washCells.length}** wash placements`,
+    );
+    expect(source).not.toContain("20 of the 80");
+    expect(source).not.toContain("all 80 placements");
+    expect(source).not.toContain("thirty-two");
   });
 
   it("holds the premise to the painter and the pages", () => {

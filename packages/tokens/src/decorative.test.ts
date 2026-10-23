@@ -762,7 +762,7 @@ describe("decorative surfaces", () => {
   it("leaves a row's wash to the edge both packages paint", () => {
     // The fill claim stops at the content strips. A row's wash is answered by
     // `borderStrong`: the fill reads 1.0000:1 against `hover` in both
-    // high-contrast variants and 32 of the 64 wash placements are under the
+    // high-contrast variants and 36 of the 72 wash placements are under the
     // floor, so a fill placement there would demand a colour no palette has —
     // while the edge is held to the boundary floor on every wash by the
     // contrast table. The painters are read here, so the decision cannot

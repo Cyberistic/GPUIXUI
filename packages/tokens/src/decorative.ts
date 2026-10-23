@@ -187,9 +187,9 @@ const stateWashStrips = ["background", "card", "popover", "muted"] as const;
  * A **row's wash** is deliberately not a fill placement. Both packages' tonal
  * action paints the `borderStrong` edge (`packages/primitives/src/core/
  * variants.ts` and the components' `Button`), and on a wash that edge is what
- * carries the control: over the sixteen shipped styles the fill reads
- * **1.0000:1** against `hover` in both high-contrast variants and **32 of the
- * 64** wash placements are under the floor, so no fill answers them — while
+ * carries the control: over the eighteen shipped styles the fill reads
+ * **1.0000:1** against `hover` in both high-contrast variants and **36 of the
+ * 72** wash placements are under the floor, so no fill answers them — while
  * `contrastPairs` holds `borderStrong` to the boundary floor on all four and it
  * clears them everywhere (tightest 3.73:1, Windows light's `active`). The
  * fill claim stays on the four content strips and the wash is the edge's.
@@ -536,11 +536,12 @@ export type DividerWash = (typeof dividerWashes)[number];
  *
  * A press is `pointerWash(theme, "active", replaced)` — the role only when the
  * palette's own `active` already answers the pointer — so the rule crossing it
- * has to be derived over the wash the row actually wears. Seven of the thirty-two
- * press placements in the shipped styles paint a wash that is not the `active`
- * role (macOS light's press over `accent` and over `hover`, macOS dark's and
- * Linux dark's and Windows dark's over `accent`, and both authored looks over
- * `accent`), so measuring the role measured a fill those rows do not paint.
+ * has to be derived over the wash the row actually wears. Seven of the
+ * thirty-six press placements in the eighteen shipped styles paint a wash that
+ * is not the `active` role — macOS light's over `accent` and over `hover`, macOS
+ * dark's, Linux dark's and Windows dark's over `accent`, and the Luna and Aero
+ * light looks over `accent` — so measuring the role measured a fill those rows
+ * do not paint.
  *
  * Read from {@link pointerWashTransitions}, so the derivation and this contract
  * cannot drift apart.
@@ -559,9 +560,9 @@ const DIVIDER_STEPS = 50;
  *
  * `border` is the decorative rule role, and a row is a surface of its own: a
  * chosen row fills `selected`, a pointed one tints `accent` or `hover`, and a
- * pressed one repaints the wash `pointerWash` derives. Measured over the sixteen
+ * pressed one repaints the wash `pointerWash` derives. Measured over the eighteen
  * shipped, high-contrast, platform and authored styles, the raw `border` is
- * under the 1.05:1 perceptibility floor on **20 of the 80** placements — the
+ * under the 1.05:1 perceptibility floor on **22 of the 90** placements — the
  * base light theme's and the base dark theme's `accent` at **1.001:1** and
  * **1.004:1**, and six of the presses the rows paint (macOS dark's over `hover`
  * at **1.000:1**) — so a table's grid vanishes on exactly the rows the reader is
@@ -572,7 +573,7 @@ const DIVIDER_STEPS = 50;
  * The rule is therefore derived: the theme's `border`, stepped toward
  * `borderStrong` — the functional boundary role, the strongest line a theme
  * owns — by the smallest **2%** step that clears {@link decorativeFloor}
- * against the surface it crosses. `borderStrong` clears all 80 placements in
+ * against the surface it crosses. `borderStrong` clears all 90 placements in
  * every shipped style (its tightest is 3.73:1), so the derivation always has
  * room; the derived line lands just over the floor (1.050–1.081:1 in the
  * shipped styles) rather than at the boundary's weight, so a row keeps the quiet
@@ -624,7 +625,8 @@ export function dividerOn(
  * three role washes come from {@link dividerWashes}, and the press a row derives
  * comes from {@link dividerPresses} — the derived fill the row paints, because a
  * rule drawn on the raw `active` role was measured on a surface the painter does
- * not paint in seven of the thirty-two press placements the shipped styles have.
+ * not paint in seven of the thirty-six press placements the eighteen shipped
+ * styles have.
  *
  * The report names the role the rule is derived from and the wash it crosses, so
  * a reader can tell which state broke; a theme with no `border`, no
