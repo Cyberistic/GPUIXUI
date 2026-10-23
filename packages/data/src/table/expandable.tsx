@@ -22,6 +22,11 @@
  *   belongs in the plain table or the list's children mode; a fixed-height
  *   window would misplace every row below it (`virtual-list-expand`).
  *
+ * A disclosure row is a **control**, so it is a Tab stop and answers Enter and
+ * Space. A focusable `div` has no activation of its own — only the pointer path
+ * runs `onClick` — and a row that only answered the pointer left a keyboard
+ * reader no way to open a panel at all.
+ *
  * ```tsx
  * <TableHeader>
  *   <TableRow>
@@ -139,6 +144,8 @@ export const TableExpandableRow = ({
   disabled,
   className,
   style,
+  tabIndex,
+  onKeyDown,
   ...rest
 }: TableExpandableRowProps) => {
   const theme = useTheme();
@@ -149,6 +156,14 @@ export const TableExpandableRow = ({
         {...rest}
         disabled={disabled}
         aria-expanded={open}
+        // The row is the disclosure's control, so it is a stop in the Tab order
+        // unless the caller places it, and a disabled row leaves the order the
+        // same way a disabled action does.
+        tabIndex={disabled === true ? -1 : (tabIndex ?? 0)}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (event.key === "enter" || event.key === "space") onToggle?.();
+        }}
         className={className}
         style={style}
         onClick={onToggle}

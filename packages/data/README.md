@@ -326,8 +326,10 @@ table's content and pushes the rows below it:
 ```
 
 The header needs a matching expander track (`<TableHeaderCell width={32} />`).
-An expanding row belongs in the plain table or the list's children mode: a
-fixed-estimate `itemCount` window would misplace every row below it.
+The row is the disclosure's **control**: it is a Tab stop and Enter/Space toggle
+the panel, because a focusable `div` has no activation of its own. An expanding
+row belongs in the plain table or the list's children mode: a fixed-estimate
+`itemCount` window would misplace every row below it.
 
 A **chart** is one `<svg>` per series, tinted through `style.color`, because an
 `<svg source>` is one mask (`chart-raster`). The geometry is pure data, and the
@@ -428,7 +430,7 @@ in the primitives' registry and a column width is data.
 | Virtualized table (`VirtualTable`, `useVirtualRows`) | shipped, window-verified |
 | Trees (`TreeView`, `useExpandedRows`, `tree/logic`) | shipped, window-verified |
 | Windowed trees (`VirtualTree` over the `itemCount` window) | shipped, window-verified |
-| Expandable rows (`TableExpandableRow`, `TableDetailRow`) | shipped, window-verified |
+| Expandable rows (`TableExpandableRow`, `TableDetailRow`) | shipped, window-verified (the row is a Tab stop and answers Enter/Space) |
 | Data surfaces (`KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`, `AdvancedFilter`) | shipped, window-verified |
 | Pinned / frozen columns (`FrozenTable`) | shipped, window-verified (`data-grid-frozen-column`, `frozen-column-lifecycle`) |
 | Charts (`BarChart`, `StackedBar`, `LineChart`, `DonutChart`, `Sparkline`) | shipped, window-verified |

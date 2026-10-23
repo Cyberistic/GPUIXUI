@@ -15,6 +15,7 @@ import { Order } from "effect";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import { useState } from "react";
+import { Button } from "@gpuixui/primitives/button";
 import { KeyValue } from "../src/surfaces/key-value.js";
 import {
   Table,
@@ -48,6 +49,8 @@ const files: ReadonlyArray<FileRow> = [
 export const ExpandableRowsExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState<HashSet.HashSet<string>>(HashSet.empty());
+  const allOpen =
+    files.length > 0 && Arr.every(files, (file) => HashSet.has(open, file.id));
 
   return (
     <div
@@ -58,18 +61,41 @@ export const ExpandableRowsExample = () => {
         width: 520,
       }}
     >
-      <text
-        testId="expandable-readout"
+      <div
         style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing.sm,
         }}
       >
-        {`${files.length} files · open=${Arr.join(
-          Arr.sort(Arr.fromIterable(open), Order.String),
-          ",",
-        )}`}
-      </text>
+        <Button
+          variant="outline"
+          size="sm"
+          testId="expandable-expand-all"
+          onActivate={() =>
+            setOpen(
+              allOpen
+                ? HashSet.empty()
+                : HashSet.fromIterable(Arr.map(files, (file) => file.id)),
+            )
+          }
+        >
+          {allOpen ? "Collapse all" : "Expand all"}
+        </Button>
+        <text
+          testId="expandable-readout"
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {`${files.length} files · open=${Arr.join(
+            Arr.sort(Arr.fromIterable(open), Order.String),
+            ",",
+          )}`}
+        </text>
+      </div>
       <Table
         height={300}
         aria-label="Files with details"

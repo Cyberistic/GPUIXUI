@@ -14,6 +14,7 @@
  *   open the row (`press-routing-lifecycle`).
  */
 
+import * as Option from "effect/Option";
 import { afterEach, describe, expect, it } from "vitest";
 import { ExpandableRowsExample } from "../../examples/expandable-rows.example.js";
 import {
@@ -35,6 +36,20 @@ const mount = (): DataTestRoot => {
   settle(root);
   return root;
 };
+
+/** The renderer's id for `testId`, failing with the id it looked for. */
+const testIdOf = (root: DataTestRoot, testId: string): number => {
+  const element = root.renderer.findByTestId(testId);
+  if (element === undefined) throw new Error(`behaviour: no ${testId}`);
+  return element.id;
+};
+
+/** The test id of whatever holds the platform focus. */
+const focusedTestId = (root: DataTestRoot): Option.Option<string> =>
+  Option.flatMap(
+    Option.fromNullishOr(root.renderer.getFocusedElementId()),
+    (id) => Option.fromNullishOr(root.renderer.getElement(id)?.testId),
+  );
 
 afterEach(() => {
   root?.unmount();
@@ -123,5 +138,29 @@ describe("the expandable table row", () => {
     root.renderer.flush();
 
     expect(paintedText(root)).toContain("src/theme.ts");
+  });
+
+  it("opens the row the Tab order lands on, from the keyboard", () => {
+    const root = mount();
+
+    // A disclosure row is a control: it is a stop in the Tab order, so Tab from
+    // the toolbar reaches it, and Enter/Space toggle the panel. A focusable
+    // `div` has no activation of its own — only the pointer path runs `onClick`
+    // — so a row that answered the pointer alone left a keyboard reader no way
+    // to open a panel at all.
+    root.renderer.focusElement(testIdOf(root, "expandable-expand-all"));
+    root.renderer.flush();
+    root.renderer.focusNext();
+    root.renderer.flush();
+    expect(focusedTestId(root)).toEqual(Option.some("expandable-row-readme"));
+
+    const row = testIdOf(root, "expandable-row-readme");
+    root.renderer.nativeSimulateKeyDown(row, "space");
+    root.renderer.flush();
+    expect(paintedText(root)).toContain("src/readme.md");
+
+    root.renderer.nativeSimulateKeyDown(row, "enter");
+    root.renderer.flush();
+    expect(paintedText(root)).not.toContain("src/readme.md");
   });
 });

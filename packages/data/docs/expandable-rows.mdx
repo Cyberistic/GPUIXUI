@@ -50,11 +50,20 @@ const [open, setOpen] = useState<string | null>(null);
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `expanded` | `boolean` | `false` | the panel under the row paints |
-| `onToggle` | `() => void` | — | the row's press; the caller flips `expanded` |
+| `onToggle` | `() => void` | — | the row's press, and the activation its Enter/Space makes; the caller flips `expanded` |
 | `cells` | `ReactNode` | — | the row's cells, after the expander track |
 | `detail` | `ReactNode` | — | the panel painted under the row while it is open |
 | `toggleWidth` | `number` | `32` | the expander track's width |
 | `detailTestId` | `string` | — | the panel's test id |
+| `tabIndex` | `number` | `0` | the row's place in the Tab order; a disabled row takes `-1` |
+
+## Keyboard
+
+The row is the disclosure's **control**, so it is a stop in the Tab order and
+answers Enter and Space to toggle the panel; a caller's `onKeyDown` still runs.
+A focusable `div` has no activation of its own — only the pointer path runs
+`onClick` — so a row that answered the press alone would leave a keyboard reader
+no way to open a panel. A disabled row leaves the Tab order.
 
 ## Limitations
 
