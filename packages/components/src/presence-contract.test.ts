@@ -382,3 +382,26 @@ describe("the leaving shell", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/** The claim the shield replaced on the reveal's own page. */
+const retractedPressClaim = "still takes a press";
+
+describe("the reveal's page", () => {
+  it("does not teach a collapsing body answering a press", () => {
+    // The bug this guards: `docs/auto-height.mdx` listed "a filled control
+    // inside a collapsing body still takes a press" as a limitation after the
+    // seam's shield had been measured taking that press, so the one page a
+    // consumer reads taught the opposite of the behaviour.
+    const page = readEntry("docs/auto-height.mdx");
+    expect(page.failures).toEqual([]);
+    const body = Option.getOrElse(
+      Option.map(Arr.head(page.sources), (source) => source.body),
+      () => "",
+    );
+    expect(Str.includes(retractedPressClaim)(body)).toBe(false);
+    // The rule is stated where the reader meets the component, rather than left
+    // to the seam's source.
+    expect(Str.includes("PresenceShield")(body)).toBe(true);
+    expect(Str.includes("takes no presses")(body)).toBe(true);
+  });
+});

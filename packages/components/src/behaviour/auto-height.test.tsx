@@ -125,6 +125,65 @@ describe("AutoHeight", () => {
       page.unmount();
     }
   });
+
+  /**
+   * The bug this guards: the measurement outlived the subtree that produced it,
+   * so a reveal reopened after its content changed headed for the height the
+   * **closed** content had until the new body reported one. The box still
+   * started at zero, but its target was a number that described content no
+   * longer mounted, and the caller's `style` callback read that stale height on
+   * the first frame.
+   */
+  it("starts a reopened reveal from nothing, not the height it closed with", async () => {
+    const heights: number[] = [];
+    const Box = ({
+      open,
+      body,
+    }: {
+      readonly open: boolean;
+      readonly body: number;
+    }) => (
+      <AutoHeight
+        open={open}
+        testId="box"
+        style={(state) => {
+          heights.push(state.height);
+          return {};
+        }}
+      >
+        <div testId="body" style={{ height: body }} />
+      </AutoHeight>
+    );
+    const page = renderComponent(<Box open={false} body={80} />);
+    try {
+      page.renderer.clockPause();
+      page.rerender(<Box open body={80} />);
+      settle(page);
+      page.renderer.clockFastForward(400);
+      settle(page);
+      await waitFor(() => expect(height(page)).toBe(80));
+
+      // Close and let the entry unmount, so the height it reported belongs to a
+      // subtree that is no longer on screen.
+      page.rerender(<Box open={false} body={80} />);
+      settle(page);
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("box")).toBeUndefined(),
+      );
+
+      heights.length = 0;
+      page.rerender(<Box open body={160} />);
+      settle(page);
+      expect(heights[0]).toBe(0);
+
+      page.renderer.clockFastForward(400);
+      settle(page);
+      await waitFor(() => expect(height(page)).toBe(160));
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
+  });
 });
 
 describe("the press a close uncovers", () => {

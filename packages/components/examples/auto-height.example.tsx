@@ -3,8 +3,7 @@
  *
  * The trigger is the application's; the reveal owns the measurement and the
  * tween. A second, reduced-motion section shows the same content arriving
- * without the journey, and the body has a row that changes height, so a reader
- * sees the reveal re-measure.
+ * without the journey.
  */
 
 import { useState } from "react";

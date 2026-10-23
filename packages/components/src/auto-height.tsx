@@ -11,6 +11,10 @@
  * its exit tween and unmounts after it, and a reopen during the exit retargets
  * the same run. Under the reduced preference the tween is a zero-duration
  * assignment, so the content still paints at its measured height.
+ *
+ * The measurement belongs to the content on screen: when the subtree unmounts,
+ * the height it reported is retired, so a body that changed while closed is
+ * measured again on the next open instead of the box heading for a stale target.
  */
 
 import type { Props } from "@gpuix/react";
@@ -22,7 +26,7 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   PresenceShield,
   presenceMotion,
@@ -36,7 +40,7 @@ import { useTheme } from "./internal/theme.js";
 
 /** What a reveal draws at one frame. */
 export interface AutoHeightState {
-  /** The measured height the reveal is heading for, in pixels. */
+  /** The measured height of the content on screen, `0` until it reports one. */
   readonly height: number;
   /** Whether the content is revealed. */
   readonly open: boolean;
@@ -80,6 +84,17 @@ export const AutoHeight = ({
   const timing = useSurfaceTiming(level);
   const presence = useSurfacePresence(open, timing);
   const [measured, setMeasured] = useState(Option.none<number>());
+
+  // A measurement belongs to the subtree that produced it. Once the reveal has
+  // unmounted its content, the height it reported is no longer a target the box
+  // can have: keeping it would make the next open head for a stale height until
+  // the new content reported one.
+  useEffect(() => {
+    if (presence.mounted) return;
+    setMeasured((current) =>
+      Option.isSome(current) ? Option.none() : current,
+    );
+  }, [presence.mounted]);
 
   if (!presence.mounted) return null;
 
@@ -140,7 +155,7 @@ export const autoHeightMeta = {
   limitations: [
     "the first reveal paints the box at zero and retargets once the content reports its height",
     "the clipped box does not reflow its content: a percentage height inside it measures against the content box",
-    "the reveal unmounts its subtree after the collapse, so state inside it does not survive a close",
+    "the reveal unmounts its subtree after the collapse, so state inside it does not survive a close and the next open measures the body again — a measurement is retired with the subtree it came from, never reused as a stale target",
   ],
   docs: "docs/auto-height.mdx",
   example: "examples/auto-height.example.tsx",
