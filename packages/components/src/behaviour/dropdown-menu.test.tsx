@@ -492,7 +492,7 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("stops taking presses while it leaves", async () => {
+  it("takes the press a leaving surface would leak", async () => {
     const onBehind = vi.fn();
     const menu = renderComponent(
       <div style={{ position: "relative", width: 800, height: 600 }}>
@@ -526,18 +526,25 @@ describe("DropdownMenu", () => {
     const surface = requireBounds(menu, "menu");
     menu.renderer.simulateKeystrokes("escape");
 
-    // The surface is still mounted for its exit tween at its own coordinates;
-    // a press inside that box belongs to the control under it now.
+    // The surface is still mounted for its exit tween at its own coordinates.
+    // Its rows keep their own hitboxes, so the seam's shield covers the box:
+    // the ghost row cannot run and the page underneath stays unpressed.
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     menu.renderer.nativeSimulateClick(
       surface.x + surface.width / 2,
       surface.y + surface.height / 2,
     );
-    expect(onBehind).toHaveBeenCalledTimes(1);
+    expect(onBehind).not.toHaveBeenCalled();
 
     await waitFor(() =>
       expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
     );
+    // Once the exit window has elapsed the page answers again.
+    menu.renderer.nativeSimulateClick(
+      surface.x + surface.width / 2,
+      surface.y + surface.height / 2,
+    );
+    expect(onBehind).toHaveBeenCalledTimes(1);
 
     menu.unmount();
   });

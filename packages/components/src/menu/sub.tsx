@@ -181,6 +181,9 @@ export const MenuSubTrigger = ({
 /** The gap between the trigger row and its submenu surface, in pixels. */
 const SUBMENU_GAP = 4;
 
+/** The height the submenu's rows scroll within, in pixels. */
+const SUBMENU_MAX_HEIGHT = 320;
+
 /** {@link MenuSubContent} props: the secondary menu surface. */
 export interface MenuSubContentProps extends Omit<Props, "children"> {
   /** The submenu's accessible name. */
@@ -352,6 +355,7 @@ export const MenuSubContent = ({
           ref={setSurface}
           testId={testId}
           label={label}
+          leaving={!presence.present}
           motion={presenceMotion(fadeFromAnchor("right", 4), presence)}
           {...rest}
           onKeyDown={(event) => {
@@ -364,14 +368,23 @@ export const MenuSubContent = ({
             // A relative box is what the travel offset is measured against.
             {
               position: "relative",
-              maxHeight: 320,
-              overflowY: "scroll",
               ...presenceStyle(presence.present),
             },
             style,
           )}
         >
-          {children}
+          {/* The rows scroll inside the surface, so the seam's leaving guard
+              (inset against the surface) cannot be scrolled off the box. */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              maxHeight: SUBMENU_MAX_HEIGHT,
+              overflowY: "scroll",
+            }}
+          >
+            {children}
+          </div>
         </MenuSurface>
       </anchored>
     </MenuContext.Provider>

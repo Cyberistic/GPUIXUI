@@ -29,6 +29,7 @@ import {
   swallowsDefault,
 } from "../internal/key.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
+import { PresenceShield } from "../internal/presence.js";
 import { useTheme, type Theme } from "../internal/theme.js";
 import { typedChar } from "../typeahead.js";
 import { useMenuContext, type MenuContextValue } from "./state.js";
@@ -96,6 +97,13 @@ export interface MenuSurfaceProps extends Props {
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: ReactNode;
+  /**
+   * Whether the surface is painted only for its exit tween. The host's own
+   * hitbox is what stops answering, not its children's: the seam's shield
+   * covers the box and takes the press the reader meant for whatever the menu
+   * uncovered.
+   */
+  readonly leaving?: boolean;
 }
 
 /**
@@ -106,6 +114,7 @@ export interface MenuSurfaceProps extends Props {
 export const MenuSurface = ({
   label,
   children,
+  leaving = false,
   onKeyDown,
   onKeyUp,
   className,
@@ -134,11 +143,14 @@ export const MenuSurface = ({
       style={mergeStyles(
         mergeStyles(menuSurfaceStyle(theme, className), {
           pointerEvents: "auto",
+          // A positioned box is what the leaving guard is inset against.
+          position: "relative",
         }),
         style,
       )}
     >
       <DismissScope>{children}</DismissScope>
+      <PresenceShield present={!leaving} />
     </div>
   );
 };

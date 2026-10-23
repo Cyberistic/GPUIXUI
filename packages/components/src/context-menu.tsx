@@ -324,6 +324,7 @@ export const ContextMenuContent = ({
         {...rest}
         motion={presenceMotion(fadeFromAnchor("bottom", 4), presence)}
         label={label}
+        leaving={!presence.present}
         testId={testId}
         className={className}
         onMouseDownOutside={(event) => {

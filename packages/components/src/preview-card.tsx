@@ -46,6 +46,7 @@ import {
 } from "./internal/parts.js";
 import {
   fadeFromAnchor,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useSurfacePresence,
@@ -346,12 +347,14 @@ export const PreviewCardContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(PREVIEW_CARD_CONTENT, className, theme),
-          presenceStyle(presence.present),
+          // A positioned box is what the leaving guard is inset against.
+          { position: "relative", ...presenceStyle(presence.present) },
         ),
         style,
       )}
     >
       <DismissScope>{children}</DismissScope>
+      <PresenceShield present={presence.present} />
     </FloatingLayer>
   );
 };

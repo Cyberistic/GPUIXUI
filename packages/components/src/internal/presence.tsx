@@ -318,6 +318,7 @@ export const presenceStyle = (
 export const PresenceShield = ({ present }: { readonly present: boolean }) =>
   present ? null : (
     <div
+      testId="presence-shield"
       style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
     />
   );

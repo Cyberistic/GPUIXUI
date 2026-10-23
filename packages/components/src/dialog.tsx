@@ -63,6 +63,7 @@ import {
 import {
   fadeFrom,
   fadeOnly,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useSurfacePresence,
@@ -265,52 +266,63 @@ export const DialogContent = ({
           },
         )}
       >
+        {/* The shield's box lives outside the surface's own scroller, so a
+            dialog scrolled down cannot carry the leaving guard off screen. */}
         <div
-          role="dialog"
-          aria-label={label}
-          tabIndex={-1}
-          {...rest}
-          ref={setContentElement}
-          testId={testId}
-          motion={presenceMotion(fadeFrom("top", 8), presence)}
-          onMouseDownOutside={(event) => {
-            onMouseDownOutside?.(event);
-            dismissTopLayer(event);
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
           }}
-          onKeyDown={handleKeyDown}
-          style={mergeStyles(
-            mergeStyles(
-              overlaySurfaceStyle(DIALOG_CONTENT, className, theme, "lg"),
-              {
-                display: "flex",
-                flexDirection: "column",
-                position: "relative",
-                width: Math.min(MAX_WIDTH[size], available),
-                maxWidth: available,
-                maxHeight: window.height - 2 * theme.spacing["3xl"],
-                overflow: "scroll",
-                ...presenceStyle(presence.present),
-              },
-            ),
-            style,
-          )}
         >
-          <DismissScope>{children}</DismissScope>
-          {showClose ? (
-            <IconButton
-              label="Close"
-              size="sm"
-              testId="dialog-close"
-              onClick={close}
-              style={{
-                position: "absolute",
-                top: theme.spacing.lg,
-                right: theme.spacing.lg,
-              }}
-            >
-              <Icon name="x" size="sm" color={theme.colors.foreground} />
-            </IconButton>
-          ) : null}
+          <div
+            role="dialog"
+            aria-label={label}
+            tabIndex={-1}
+            {...rest}
+            ref={setContentElement}
+            testId={testId}
+            motion={presenceMotion(fadeFrom("top", 8), presence)}
+            onMouseDownOutside={(event) => {
+              onMouseDownOutside?.(event);
+              dismissTopLayer(event);
+            }}
+            onKeyDown={handleKeyDown}
+            style={mergeStyles(
+              mergeStyles(
+                overlaySurfaceStyle(DIALOG_CONTENT, className, theme, "lg"),
+                {
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  width: Math.min(MAX_WIDTH[size], available),
+                  maxWidth: available,
+                  maxHeight: window.height - 2 * theme.spacing["3xl"],
+                  overflow: "scroll",
+                  ...presenceStyle(presence.present),
+                },
+              ),
+              style,
+            )}
+          >
+            <DismissScope>{children}</DismissScope>
+            {showClose ? (
+              <IconButton
+                label="Close"
+                size="sm"
+                testId="dialog-close"
+                onClick={close}
+                style={{
+                  position: "absolute",
+                  top: theme.spacing.lg,
+                  right: theme.spacing.lg,
+                }}
+              >
+                <Icon name="x" size="sm" color={theme.colors.foreground} />
+              </IconButton>
+            ) : null}
+          </div>
+          <PresenceShield present={presence.present} />
         </div>
       </div>
     </anchored>

@@ -41,6 +41,7 @@ import {
 } from "./internal/parts.js";
 import {
   fadeFromAnchor,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useSurfacePresence,
@@ -342,12 +343,14 @@ export const DropdownMenuContent = ({
       style={mergeStyles(
         mergeStyles(
           menuSurfaceStyle(theme, className),
-          presenceStyle(presence.present),
+          // A positioned box is what the leaving guard is inset against.
+          { position: "relative", ...presenceStyle(presence.present) },
         ),
         style,
       )}
     >
       <DismissScope>{children}</DismissScope>
+      <PresenceShield present={presence.present} />
     </FloatingLayer>
   );
 };

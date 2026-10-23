@@ -25,6 +25,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import {
   delayedTiming,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useMotionPreference,
@@ -120,6 +121,7 @@ export const Reveal = ({
       )}
     >
       {children}
+      <PresenceShield present={presence.present} />
     </div>
   );
 };

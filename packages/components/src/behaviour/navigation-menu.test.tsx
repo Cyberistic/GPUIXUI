@@ -495,16 +495,22 @@ describe("NavigationMenu motion", () => {
     const leaving = nav.renderer.findByTestId("panel-platform");
     expect(leaving).toBeDefined();
     expect(leaving?.style.pointerEvents).toBe("none");
-    // ...so a press inside the box belongs to the control under it now.
+    // ...and its links keep their own hitboxes, so the seam's shield takes the
+    // press rather than the page underneath receiving it mid-exit.
+    nav.renderer.nativeSimulateClick(
+      surface.x + surface.width / 2,
+      surface.y + surface.height / 2,
+    );
+    expect(onBehind).not.toHaveBeenCalled();
+
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined(),
+    );
     nav.renderer.nativeSimulateClick(
       surface.x + surface.width / 2,
       surface.y + surface.height / 2,
     );
     expect(onBehind).toHaveBeenCalledTimes(1);
-
-    await waitFor(() =>
-      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined(),
-    );
 
     nav.unmount();
   });

@@ -40,7 +40,12 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "../dialog.js";
-import { Drawer, DrawerContent, DrawerTrigger } from "../drawer.js";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTrigger,
+} from "../drawer.js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -453,8 +458,14 @@ describe("a submenu", () => {
 });
 
 describe("a context menu", () => {
-  /** A row over a full-surface control, so a press through the ghost lands. */
-  const OverlapPage = ({ onBehind }: { readonly onBehind: () => void }) => (
+  /** A menu over a full-surface control, so a press into the ghost is visible. */
+  const OverlapPage = ({
+    onBehind,
+    onRow,
+  }: {
+    readonly onBehind: () => void;
+    readonly onRow: () => void;
+  }) => (
     <Page>
       <div style={{ position: "relative", width: 600, height: 400 }}>
         <Button
@@ -475,7 +486,7 @@ describe("a context menu", () => {
             <text>Project</text>
           </ContextMenuTrigger>
           <ContextMenuContent testId="menu" label="Project actions">
-            <ContextMenuItem>Open</ContextMenuItem>
+            <ContextMenuItem onSelect={onRow}>Open</ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
       </div>
@@ -495,15 +506,21 @@ describe("a context menu", () => {
       throw new Error(`behaviour: "${testId}" painted no box`);
     });
 
-  it("stays painted for its exit without taking the pointer", async () => {
+  it("stays painted for its exit without any control answering", async () => {
+    // The bug this guards: the row a dismissed menu keeps painted for its exit
+    // kept its own hitbox — `pointerEvents` does not inherit — so a press
+    // aimed at what the menu uncovered ran the ghost row instead. The seam's
+    // shield covers the box for the exit window.
     const onBehind = vi.fn();
-    const page = renderComponent(<OverlapPage onBehind={onBehind} />);
+    const onRow = vi.fn();
+    const page = renderComponent(
+      <OverlapPage onBehind={onBehind} onRow={onRow} />,
+    );
     const row = originOf(page, "row");
     // The pointer sits inside the row's lower half, so the menu hangs below it.
     page.renderer.nativeSimulateClick(row.x + 10, row.y + row.height / 2, 2);
     await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
     const menu = originOf(page, "menu");
-    const presses = onBehind.mock.calls.length;
 
     page.renderer.simulateKeystrokes("escape");
     await delay();
@@ -512,11 +529,16 @@ describe("a context menu", () => {
     const leaving = page.renderer.findByTestId("menu");
     expect(leaving).toBeDefined();
     expect(leaving?.style.pointerEvents).toBe("none");
-    // ...so a press inside its box belongs to the control underneath.
+    // ...and its rows do not answer a press either: the ghost takes the press
+    // rather than running one of its own controls.
     page.renderer.nativeSimulateClick(menu.x + menu.width / 2, menu.y + 20);
-    expect(onBehind.mock.calls.length).toBe(presses + 1);
+    expect(onRow).not.toHaveBeenCalled();
+    expect(onBehind).not.toHaveBeenCalled();
 
     await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
+    // Once the exit window has elapsed the page answers again.
+    page.renderer.nativeSimulateClick(menu.x + menu.width / 2, menu.y + 20);
+    expect(onBehind).toHaveBeenCalledTimes(1);
     page.unmount();
   });
 });
@@ -827,6 +849,268 @@ describe("the preference", () => {
     await delay();
     // Well inside the 320 ms the animated window would still be running.
     expect(painted(page.renderer, "dialog")).toBe(false);
+    page.unmount();
+  });
+});
+
+describe("a control inside a leaving surface", () => {
+  /**
+   * The bug these guard: `presenceStyle` removes only a surface's **own**
+   * hitbox, and `pointerEvents` does not inherit in `@gpuix/native@0.11.0`, so a
+   * control a surface keeps mounted for its exit kept its own box and answered
+   * a press. Measured: a dismissed `Dialog` still painted for its tween ran its
+   * confirm action once.
+   *
+   * The seated surfaces take the seam's `PresenceShield`. The anchored family is
+   * **not** in that list, because its host already drops out of the hit test the
+   * moment the surface stops being present (`occlude`/`FloatingLayer`), so a
+   * press inside the fading box belongs to the control underneath — measured by
+   * the context menu's and the menu's cases above.
+   */
+  it("does not answer a press in a dismissed dialog", async () => {
+    const confirm = vi.fn();
+    const page = renderComponent(
+      <Page>
+        <Dialog>
+          <DialogTrigger testId="open">Rename</DialogTrigger>
+          <DialogContent label="Rename" testId="dialog" size="sm">
+            <DialogFooter>
+              <Button testId="confirm" onClick={confirm}>
+                Confirm
+              </Button>
+              <DialogClose testId="cancel">Cancel</DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Page>,
+    );
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
+
+      clickCentreOf(page, "cancel");
+      await delay();
+      expect(painted(page.renderer, "dialog")).toBe(true);
+      clickCentreOf(page, "confirm");
+      expect(confirm).not.toHaveBeenCalled();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("does not answer a press in a dismissed drawer", async () => {
+    const apply = vi.fn();
+    const page = renderComponent(
+      <Page>
+        <Drawer>
+          <DrawerTrigger testId="open">Filters</DrawerTrigger>
+          <DrawerContent label="Filters" testId="drawer" side="right" size="sm">
+            <Button testId="apply" onClick={apply}>
+              Apply
+            </Button>
+            <DrawerClose testId="close">Close</DrawerClose>
+          </DrawerContent>
+        </Drawer>
+      </Page>,
+    );
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "drawer")).toBe(true));
+
+      clickCentreOf(page, "close");
+      await delay();
+      expect(painted(page.renderer, "drawer")).toBe(true);
+      clickCentreOf(page, "apply");
+      expect(apply).not.toHaveBeenCalled();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints the seam's shield over a dismissed notice", async () => {
+    // A card's dismiss is idempotent, so a press on the ghost is invisible; the
+    // card still keeps a control mounted for its exit, so the shield is what
+    // stops it being a target. The other cases in this suite measure the
+    // shield's effect on a press.
+    const NoticePage = () => {
+      const toast = useToast();
+      return (
+        <Page>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Button
+              testId="push"
+              onClick={() =>
+                toast.push(
+                  { title: "Saved", action: { label: "Undo" } },
+                  { onAction: () => undefined },
+                )
+              }
+            >
+              Push
+            </Button>
+            <ToastViewport />
+          </div>
+        </Page>
+      );
+    };
+    const page = renderComponent(
+      <ToastProvider>
+        <NoticePage />
+      </ToastProvider>,
+    );
+    try {
+      clickCentreOf(page, "push");
+      await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
+      settleMotion(page);
+      expect(page.renderer.findByTestId("presence-shield")).toBeUndefined();
+
+      clickCentreOf(page, "toast-dismiss");
+      await delay();
+      expect(painted(page.renderer, "toast-1")).toBe(true);
+      expect(painted(page.renderer, "presence-shield")).toBe(true);
+
+      await waitFor(() =>
+        expect(painted(page.renderer, "toast-1")).toBe(false),
+      );
+      expect(page.renderer.findByTestId("presence-shield")).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("does not answer a press in a section that is collapsing", async () => {
+    const inside = vi.fn();
+    const page = renderComponent(
+      <Page>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="shipping">
+            <AccordionTrigger testId="trigger">Shipping</AccordionTrigger>
+            <AccordionContent testId="body">
+              <Button testId="inside" onClick={inside}>
+                Inside
+              </Button>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Page>,
+    );
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "trigger");
+      settle(page);
+      page.renderer.clockFastForward(400);
+      settle(page);
+      await waitFor(() =>
+        expect(
+          Option.getOrElse(
+            Option.map(boundsOf(page, "inside"), (box) => box.height),
+            () => 0,
+          ),
+        ).toBeGreaterThan(0),
+      );
+
+      // The clock stays paused, so the body is still at its measured height
+      // when the press lands in the frame the collapse starts.
+      clickCentreOf(page, "trigger");
+      settle(page);
+      expect(painted(page.renderer, "body")).toBe(true);
+      clickCentreOf(page, "inside");
+      expect(inside).not.toHaveBeenCalled();
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
+  });
+
+  it("does not answer a press in a reveal that is leaving", async () => {
+    const inside = vi.fn();
+    const page = renderComponent(
+      <Page>
+        <Reveal open testId="reveal">
+          <Button testId="inside" onClick={inside}>
+            Inside
+          </Button>
+        </Reveal>
+      </Page>,
+    );
+    try {
+      settleMotion(page);
+      page.rerender(
+        <Page>
+          <Reveal open={false} testId="reveal">
+            <Button testId="inside" onClick={inside}>
+              Inside
+            </Button>
+          </Reveal>
+        </Page>,
+      );
+      settle(page);
+      expect(painted(page.renderer, "inside")).toBe(true);
+      clickCentreOf(page, "inside");
+      expect(inside).not.toHaveBeenCalled();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("does not run a row inside a dismissed menu", async () => {
+    const ghostPress = vi.fn();
+    const behindPress = vi.fn();
+    const page = renderComponent(
+      <Page>
+        <div style={{ position: "relative", width: 700, height: 400 }}>
+          <Button
+            testId="behind"
+            onClick={behindPress}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: 300,
+              height: 200,
+            }}
+          >
+            Behind
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              testId="open"
+              style={{ position: "absolute", left: 0, top: 240 }}
+            >
+              Actions
+            </DropdownMenuTrigger>
+            <DropdownMenuContent testId="menu" label="Actions">
+              <DropdownMenuItem testId="ghost" onSelect={ghostPress}>
+                Open
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </Page>,
+    );
+    clickCentreOf(page, "open");
+    await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
+    const ghost = Option.getOrElse(boundsOf(page, "ghost"), () => {
+      throw new Error("behaviour: the row painted no box");
+    });
+
+    page.renderer.simulateKeystrokes("escape");
+    await delay();
+    expect(painted(page.renderer, "menu")).toBe(true);
+    expect(page.renderer.findByTestId("menu")?.style.pointerEvents).toBe(
+      "none",
+    );
+
+    page.renderer.nativeSimulateClick(
+      ghost.x + ghost.width / 2,
+      ghost.y + ghost.height / 2,
+    );
+    // The row the reader can still see is a ghost: its host has left the hit
+    // test, so the press never reaches its action.
+    expect(ghostPress).not.toHaveBeenCalled();
+    expect(behindPress).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
     page.unmount();
   });
 });

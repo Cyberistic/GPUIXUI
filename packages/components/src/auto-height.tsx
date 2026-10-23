@@ -24,6 +24,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useState, type ReactNode } from "react";
 import {
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useMotionPreference,
@@ -105,6 +106,8 @@ export const AutoHeight = ({
           {
             width: "100%",
             overflow: "hidden",
+            // A positioned box is what the leaving guard is inset against.
+            position: "relative",
             ...presenceStyle(presence.present, "wrapper"),
           },
           recipeStyle(cn(className), theme),
@@ -123,6 +126,7 @@ export const AutoHeight = ({
       >
         {children}
       </div>
+      <PresenceShield present={presence.present} />
     </div>
   );
 };

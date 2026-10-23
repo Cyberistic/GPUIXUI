@@ -54,6 +54,7 @@ import {
 } from "./internal/parts.js";
 import {
   fadeFromAnchor,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useSurfacePresence,
@@ -265,12 +266,18 @@ export const PopoverContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(POPOVER_CONTENT, className, theme, "lg"),
-          { minWidth: 200, ...presenceStyle(presence.present) },
+          // A positioned box is what the leaving guard is inset against.
+          {
+            minWidth: 200,
+            position: "relative",
+            ...presenceStyle(presence.present),
+          },
         ),
         style,
       )}
     >
       <DismissScope>{children}</DismissScope>
+      <PresenceShield present={presence.present} />
     </FloatingLayer>
   );
 };

@@ -103,8 +103,10 @@ export const surfaceBudget = {
   // because the next family would otherwise have had two kilobytes to fit in.
   // 1 029 KiB measured with Glyph (the wall's logic and its text hosts, the
   // marked figures above), so the ceiling moved 1030 → 1070 KiB for the next
-  // family's headroom.
-  bytes: 1070 * 1024,
+  // family's headroom. 1 072 KiB measured with the leaving surface guard on
+  // every overlay and wrapper (the seam's `PresenceShield` adopted by the eight
+  // surfaces and the two wrappers); the ceiling moved 1070 → 1090 KiB.
+  bytes: 1090 * 1024,
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

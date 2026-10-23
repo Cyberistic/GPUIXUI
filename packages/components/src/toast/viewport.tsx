@@ -26,6 +26,7 @@ import { overlaySurfaceStyle } from "../internal/overlay.js";
 import {
   exitWindowMs,
   fadeFromSide,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useSurfaceTiming,
@@ -202,7 +203,8 @@ const ToastCard = ({
       onMouseLeave={() => setHover(false)}
       style={mergeStyles(
         overlaySurfaceStyle(TOAST_CARD, undefined, theme),
-        presenceStyle(present),
+        // A positioned box is what the leaving guard is inset against.
+        { position: "relative", ...presenceStyle(present) },
       )}
     >
       <div
@@ -279,6 +281,7 @@ const ToastCard = ({
           <Icon name="x" size="sm" color={theme.colors.foreground} />
         </IconButton>
       </div>
+      <PresenceShield present={present} />
     </div>
   );
 };

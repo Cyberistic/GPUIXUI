@@ -447,15 +447,19 @@ under `"animated"` is gone at once when the reader turns reduced motion on.
 reports an exit only through `onMotionComplete` on a `motion.div`, and the
 popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
 element, so one mechanism covers every surface. A leaving surface paints in the
-same frame its state closed but **takes no presses on its own box**: its style
-goes to `pointerEvents: "none"` (and an anchored host drops its occlusion), so
-the press the dismissal was for lands on the control underneath. That rule does
-not reach the surface's **children** — `pointerEvents` does not inherit in
-`0.11.0`, and a child keeps its own hitbox, measured with a dismissed dialog
-whose confirm action ran a press during its exit — so a surface that keeps
-controls mounted for its exit covers them with `PresenceShield`, a hit-taking
-layer that answers nothing, for that window; `PageTransition`'s leaving view
-does, and the overlay family's adoption is `TODO.md` → Interlocks. A
+same frame its state closed and **takes no presses on anything inside it**: its
+own style goes to `pointerEvents: "none"` for the box it paints, and the
+`PresenceShield` layer covers the box for the exit window. The guard is a
+positioned child of the surface's own positioned root (a dialog and a drawer
+carry one *outside* their scroller, so a scrolled surface cannot carry the guard
+off screen), and it answers nothing: the press the dismissal was for lands on
+the shield and stops there rather than running a control the reader can no longer
+see. The rule is what makes a single gesture safe — `pointerEvents` does not
+inherit in `0.11.0`, so without it a child kept its own hitbox (measured: a
+dismissed dialog's confirm action ran a press during its exit). Every overlay and
+both wrappers adopt it, and `PageTransition`'s leaving view does too; the two
+places a press behaves differently are the dismissal press itself and the press
+after the window, which land where the reader aimed them. A
 **wrapper** — a
 `Reveal` or an `AutoHeight` box — is not an overlay, so while open it paints no
 pointer rule at all: it must never put a hitbox over the content it holds. The

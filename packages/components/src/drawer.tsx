@@ -49,6 +49,7 @@ import {
 import {
   fadeFromSide,
   fadeOnly,
+  PresenceShield,
   presenceMotion,
   presenceStyle,
   useSurfacePresence,
@@ -276,43 +277,56 @@ export const DrawerContent = ({
           },
         )}
       >
+        {/* The shield's box sits outside the surface's own scroller, so a
+            drawer scrolled down cannot carry the leaving guard off screen. */}
         <div
-          role="dialog"
-          aria-label={label}
-          tabIndex={-1}
-          {...rest}
-          ref={setContentElement}
-          testId={testId}
-          motion={presenceMotion(fadeFromSide(side, 12), presence)}
-          onMouseDownOutside={(event) => {
-            onMouseDownOutside?.(event);
-            dismissTopLayer(event);
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            width: box.width,
+            height: box.height,
           }}
-          onKeyDown={handleKeyDown}
-          style={mergeStyles(
-            mergeStyles(
-              surfaceStyle(theme, box, className),
-              presenceStyle(presence.present),
-            ),
-            style,
-          )}
         >
-          <DismissScope>{children}</DismissScope>
-          {showClose ? (
-            <IconButton
-              label="Close drawer"
-              size="sm"
-              testId="drawer-close"
-              onClick={close}
-              style={{
-                position: "absolute",
-                top: theme.spacing.lg,
-                right: theme.spacing.lg,
-              }}
-            >
-              <Icon name="x" size="sm" color={theme.colors.foreground} />
-            </IconButton>
-          ) : null}
+          <div
+            role="dialog"
+            aria-label={label}
+            tabIndex={-1}
+            {...rest}
+            ref={setContentElement}
+            testId={testId}
+            motion={presenceMotion(fadeFromSide(side, 12), presence)}
+            onMouseDownOutside={(event) => {
+              onMouseDownOutside?.(event);
+              dismissTopLayer(event);
+            }}
+            onKeyDown={handleKeyDown}
+            style={mergeStyles(
+              mergeStyles(
+                surfaceStyle(theme, box, className),
+                presenceStyle(presence.present),
+              ),
+              style,
+            )}
+          >
+            <DismissScope>{children}</DismissScope>
+            {showClose ? (
+              <IconButton
+                label="Close drawer"
+                size="sm"
+                testId="drawer-close"
+                onClick={close}
+                style={{
+                  position: "absolute",
+                  top: theme.spacing.lg,
+                  right: theme.spacing.lg,
+                }}
+              >
+                <Icon name="x" size="sm" color={theme.colors.foreground} />
+              </IconButton>
+            ) : null}
+          </div>
+          <PresenceShield present={presence.present} />
         </div>
       </div>
     </anchored>
