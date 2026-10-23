@@ -32,10 +32,16 @@ The host input's handlers are composed rather than replaced: `onChange`,
 focused (the display or the editor), and each runs after the component's own
 decision — so `onSubmit` fires once per Enter, after the commit.
 
+**A disabled control refuses the edit in both phases.** It opens nothing, and a
+control a consumer disables mid-edit discards that draft — on `Enter`, on the
+host's submit, and on blur — so no path writes a value into an inert control.
+The editor stays `readOnly` until the caller frees it.
+
 ## Limitations
 
 - No rich text; the editor is a single-line `<input>`.
 - Blur commits; a consumer wanting blur-to-cancel must not use this part.
+- A control disabled mid-edit discards the draft instead of committing it.
 - No validation state; `onCommit` is where a caller rejects a value.
 - No multi-line editor.
 

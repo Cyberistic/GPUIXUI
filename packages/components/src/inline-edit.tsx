@@ -3,7 +3,8 @@
  *
  * GPUix has no contenteditable, so the honest implementation swaps a `<text>`
  * display for a real `<input>`. The commit contract is one rule: Enter or blur
- * commits, Escape cancels, and an unchanged draft calls nothing.
+ * commits, Escape cancels, an unchanged draft calls nothing, and a control the
+ * caller disabled mid-edit discards the draft rather than commit it.
  *
  * The component owns the draft, never the committed value — like `FieldInput`,
  * the caller owns the data. Focus is moved with the renderer's `focusElement`
@@ -135,7 +136,11 @@ export const InlineEdit = ({
     finished.current = true;
     refocusDisplay.current = refocus;
     setEditing(false);
-    if (commit && draft !== value) onCommit(draft);
+    // A caller that disables the control mid-edit has refused the edit: the
+    // draft leaves the way Escape's does, so no half (`Enter`, the host's
+    // submit, or blur) writes a value into an inert control. The entry guard
+    // alone is not enough — a read-only host still receives every one of them.
+    if (commit && !disabled && draft !== value) onCommit(draft);
   };
 
   const cancel = (): void => finish(false, true);
@@ -236,6 +241,7 @@ export const inlineEditMeta = {
   limitations: [
     "no contenteditable in 0.11.0: display and input are swapped explicitly",
     "blur commits; Escape cancels; empty text is a valid committed value",
+    "a control disabled mid-edit discards the draft instead of committing it",
     "no aria-invalid or aria-describedby, so a rejected commit is the consumer's feedback",
   ],
   docs: "docs/inline-edit.mdx",

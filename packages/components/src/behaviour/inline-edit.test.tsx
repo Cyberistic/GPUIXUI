@@ -4,9 +4,10 @@
  * The bugs these guard: a swap that leaves focus outside the input; Enter that
  * commits twice (keyDown and submit); Escape that commits the draft; an
  * unchanged draft that still calls `onCommit`; a disabled control that opens;
- * a controlled edit state the component overrides; and the caller's own
- * `onChange`, `onBlur` and `onSubmit` handlers, which the editor used to drop
- * because it wrote its own over them.
+ * a control a caller disables mid-edit that still commits that draft on Enter
+ * or blur; a controlled edit state the component overrides; and the caller's
+ * own `onChange`, `onBlur` and `onSubmit` handlers, which the editor used to
+ * drop because it wrote its own over them.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -152,6 +153,39 @@ describe("InlineEdit", () => {
     clickCentreOf(disabled, "name");
     expect(disabled.renderer.findByType("input")).toHaveLength(0);
     disabled.unmount();
+  });
+
+  it("discards a draft the caller disables before it commits", () => {
+    const onCommit = vi.fn();
+    const edit = renderComponent(<Harness initial="old" onCommit={onCommit} />);
+
+    startEditing(edit);
+    type(edit, "new");
+    edit.rerender(<Harness initial="old" onCommit={onCommit} disabled />);
+    edit.renderer.simulateKeystrokes("enter");
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.renderer.getAllText()).toEqual(["old", "Elsewhere"]);
+    expect(focusedTestId(edit)).toEqual(Option.some("name"));
+
+    edit.unmount();
+  });
+
+  it("discards a draft the caller disables before the blur commits it", () => {
+    const onCommit = vi.fn();
+    const edit = renderComponent(<Harness initial="old" onCommit={onCommit} />);
+
+    startEditing(edit);
+    type(edit, "new");
+    edit.rerender(<Harness initial="old" onCommit={onCommit} disabled />);
+    edit.renderer.focusElement(
+      edit.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.renderer.getAllText()).toEqual(["old", "Elsewhere"]);
+
+    edit.unmount();
   });
 
   it("composes the caller's edit, submit and blur handlers with its own", () => {

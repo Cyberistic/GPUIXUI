@@ -7289,6 +7289,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     rule. Direction measured: with the old `focus(row.parent)` the case fails
     `expected { _tag: "None" } to deeply equal { _tag: "Some", value:
     "readme.md" }`.
+  - [x] Do not let a **key that moved nothing** suppress a reveal's focus — the
+    tree's reveal retake is armed by `fromKeys`, which `commit` set on every
+    tree-driven cursor write and the layout effect consumed only when the active
+    row **changed**. A key that clamped in place (Up on the first row, Enter on
+    a branch under the active row) or a press on the row already active left the
+    mark set, so the next caller-driven reveal was taken for the tree's own move
+    and skipped the next-tick retake: the revealed row painted and the pressed
+    Reveal button kept native focus. The effect now clears the mark when it sees
+    no move, and a test presses Up on the first row before a reveal.
+    `src/behaviour/tree.test.tsx` gains `takes the focus on a reveal after a key
+    that moved nothing`; direction measured — without the clear the case fails
+    with `tree-reveal` where `tree-row-row.tsx` is required. The suite is 8
+    cases, `docs/tree-view.mdx` gains §The controller and §A reveal lands the
+    focus, and the README's tree paragraph and runtime table plus the Tree views
+    row state the rule.
   - [x] Tier 3 phase 6 — SVG charts: `BarChart`, `StackedBar`, `LineChart`,
     `DonutChart`, `Sparkline` and `ChartLegend` in `packages/data/src/chart/`
     over the pure geometry in `chart/logic.ts`. An `<svg source>` is one tinted
