@@ -93,6 +93,39 @@ shipped divider's, which takes no press yet (above). The preview is a browser
 drawing of [`SplitPane`](/docs/dock/split-pane) in the platform you picked; the
 Code tab is the shipped native call.
 
+## Resize a pane with its menus open
+
+A divider drag reflows the panes, and a pane's row menu, column picker or dropdown
+is an anchored surface. `floating-reflow-lifecycle` measured the question a dock
+plan has to answer — whether an open panel is placed again or left on the pixels
+it entered at — with three anchors open at once, each deriving its box from
+`useWindowSize`: the platform's zoom from **900×520** to **1680×923** moved them
+**780** right and **403** down, a raw `FloatingLayer`'s panel kept its **6**-point
+gap and its top alignment through both (`700,120 → 1480,120`, panel
+`554,120 → 1334,120`; `y 440 → 843`), and the shipped `Popover` kept both of its
+own offsets against a trigger that moved the same 780 and 403. The control is the
+absolute pixel: a panel left where it opened reads **1334** against the **554** it
+started on.
+
+Three rules follow:
+
+- **Do not dismiss menus on a resize.** An open surface is laid out again with the
+  box it points at, so closing it from `onLayout` costs the reader the menu they
+  had open for no gain.
+- **A reflow is not a paint offset.** A wheel moves the trigger and its panel
+  together in the same read (`header-menu-lifecycle`); a reflow computes the
+  anchor's box again and the panel follows it. Both axes matter — a horizontal
+  reflow carries the panel sideways, a vertical one down.
+- **The side pins when the surface opens.** A menu that flipped above its trigger
+  at the window's bottom edge keeps that side while it stays open, so a pane near
+  the bottom keeps opening upwards after the window grows; a dock that needs the
+  other side closes and reopens the surface.
+
+The probe drove a **window zoom**, because `zoomWindow()` is the only reflow the
+automation protocol can send without a pointer; a divider drag changes a sibling's
+width, which `dock-reflow` measures. See [Runtime](/docs/runtime) for the row and
+both limits.
+
 ## A dock's panes own their scrollers
 
 A wheel does not stop at the pane under the pointer. A window measured

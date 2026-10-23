@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { columnDrag } from "./column-drag.test-util";
+import { reflow } from "./floating-reflow.test-util";
 import { laneView, summarize } from "./inventory";
 import { inventory } from "./inventory-data";
 import { sidebarPages } from "./sidebar-pages.test-util";
@@ -546,6 +547,52 @@ describe("the layouts page's direction claim", () => {
  * listens to both drag events, and the whole app renders into a terminal while
  * hosting a PTY inside a window still does not.
  */
+
+describe("the workspace page's reflow rule", () => {
+  // A dock's row menu is an anchored surface, and a divider drag reflows every
+  // pane. Nothing told a dock plan whether an open menu is placed again or left
+  // on the pixels it entered at, so the page could only guess at dismissing
+  // surfaces on `onLayout`. `floating-reflow-lifecycle` measured the rule on
+  // three anchors at once, and the record and the page print the same geometry.
+  const workspace = read(workspacePage).replace(/\s+/g, " ");
+
+  it("keeps an open surface attached through a pane's resize", () => {
+    const row = rowFor(record, "Floating panel reflow");
+
+    expect(row).toContain("supported, with limits");
+    expect(row).toContain("floating-reflow-lifecycle");
+    expect(workspace).toContain("Resize a pane with its menus open");
+    expect(workspace).toContain("floating-reflow-lifecycle");
+    expect(workspace).toContain("**Do not dismiss menus on a resize.**");
+    // The numbers the page prints are the probe's own arithmetic.
+    expect(workspace).toContain(
+      `${reflow.right.anchor.rest.x},${reflow.right.anchor.rest.y} → ${reflow.right.anchor.zoomed.x},${reflow.right.anchor.zoomed.y}`,
+    );
+    expect(workspace).toContain(
+      `${reflow.right.panel.rest.x},${reflow.right.panel.rest.y} → ${reflow.right.panel.zoomed.x},${reflow.right.panel.zoomed.y}`,
+    );
+    expect(workspace).toContain(
+      `y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`,
+    );
+    expect(workspace).toContain(`**${reflow.travel.dx}**`);
+    expect(workspace).toContain(`**${reflow.travel.dy}**`);
+    expect(workspace).toContain(`**${reflow.gap}**-point`);
+  });
+
+  it("names the half the probe did not drive, and where the side decides", () => {
+    // The probe is a zoom, not a divider drag, and the side is a source read —
+    // a page that taught either as measured would send a plan to a proof that
+    // does not exist.
+    const row = rowFor(record, "Floating panel reflow");
+
+    expect(row).toContain("window zoom");
+    expect(row).toContain("decided once per open");
+    expect(workspace).toContain("The probe drove a **window zoom**");
+    expect(workspace).toContain("`dock-reflow`");
+    expect(workspace).toContain("The side pins when the surface opens");
+    expect(workspace).toContain("`header-menu-lifecycle`");
+  });
+});
 
 describe("the workspace page's pointer and terminal claims", () => {
   const workspace = read(workspacePage);
