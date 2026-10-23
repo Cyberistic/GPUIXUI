@@ -136,13 +136,39 @@ export interface SwitchAuditSource {
 }
 
 /**
+ * One declared value, read as the shape a store hands back: JSON has no
+ * `undefined`, so a dropped key arrives as `null`, and neither is a colour. The
+ * distinction the report keeps is between a *value* that is not a colour (a typo,
+ * printed back) and a *slot* that is not there (an absence, printed as such).
+ */
+const declared = (
+  paint: Partial<SwitchColors>,
+  slot: SwitchPaintRole,
+): string | undefined => {
+  const value: unknown = paint[slot];
+  return typeof value === "string" ? value : undefined;
+};
+
+/** The declared values the renderer cannot paint, in `switchPaintRoles` order. */
+const paintFailures = (
+  paint: Partial<SwitchColors>,
+): ReadonlyArray<InvalidSwitchColor> =>
+  switchPaintRoles.flatMap(
+    (slot): ReadonlyArray<InvalidSwitchColor> =>
+      isPaintableColor(declared(paint, slot))
+        ? []
+        : [{ slot, value: declared(paint, slot) }],
+  );
+
+/**
  * Measure a declared switch paint.
  *
  * A theme that declares none answers with an empty report: its switch is painted
  * from the accent family, and the roles that switch uses are measured by the
  * mark, contrast and decorative tables like every other role. A theme that
- * declares one is held to {@link switchPaint} and {@link switchPlacements}, and
- * a value or a strip the theme does not carry is reported rather than skipped.
+ * declares one is held to {@link invalidSwitchColors} and
+ * {@link switchPlacements}, and a value or a strip the theme does not carry is
+ * reported rather than skipped.
  *
  * @example
  * ```ts
@@ -160,25 +186,15 @@ export function switchFailures(
   if (paint === undefined) {
     return { paint: [], placements: [] };
   }
-  const value = (slot: SwitchPaintRole): string | undefined => {
-    const declared: unknown = paint[slot];
-    return typeof declared === "string" ? declared : undefined;
-  };
-  const color = (slot: SwitchPaintRole | SwitchSurface): string | undefined =>
-    slot === "on" || slot === "off" || slot === "knob"
-      ? value(slot)
-      : theme.colors[slot];
   return {
-    paint: switchPaintRoles.flatMap(
-      (slot): ReadonlyArray<InvalidSwitchColor> =>
-        isPaintableColor(paint[slot]) ? [] : [{ slot, value: value(slot) }],
-    ),
+    paint: paintFailures(paint),
     placements: switchPlacements.flatMap(
       (placement): ReadonlyArray<SwitchPlacementFailure> => {
-        const ratio = contrastRatio(
-          color(placement.slot),
-          color(placement.over),
-        );
+        const [top, under] =
+          placement.slot === "knob"
+            ? [declared(paint, "knob"), declared(paint, placement.over)]
+            : [declared(paint, placement.slot), theme.colors[placement.over]];
+        const ratio = contrastRatio(top, under);
         return ratio !== undefined && ratio >= floor
           ? []
           : [{ ...placement, ratio, floor }];
@@ -209,5 +225,5 @@ export function switchFailures(
 export function invalidSwitchColors(
   theme: Pick<SwitchAuditSource, "switch">,
 ): readonly InvalidSwitchColor[] {
-  return switchFailures({ colors: {}, switch: theme.switch }).paint;
+  return theme.switch === undefined ? [] : paintFailures(theme.switch);
 }
