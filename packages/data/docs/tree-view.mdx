@@ -44,6 +44,19 @@ const tree = useExpandedRows({
 | `height` | `number` | — | a definite height; the rows scroll inside it |
 | `testId` | `string` | — | the tree's locator |
 
+## The controller
+
+`useExpandedRows({ roots, keyOf, childrenOf, labelOf, initialExpanded, initialActive })`
+returns the rows and the cursor, and the edits an application makes to them:
+`rows`, `cursor`, `expanded`, `active`, `setCursor`, `setActive`, `toggle`,
+`setExpanded(key, open)`, `expandAll`, `collapseAll`, `pressKey(key)`,
+`typeAhead(prefix)` and `reveal(key)`. Every one is a write over the pure model
+in `tree/logic`, so an Effect- or store-driven tree composes the same functions
+without this hook.
+
+`initialActive` moves the cursor without a press; the first paint is the
+baseline, so mounting a tree never steals the window's focus.
+
 ## Keyboard
 
 The tree is one Tab stop. Up/Down/Home/End move the cursor and the platform
@@ -54,6 +67,22 @@ falls back to the first painted row, which would move a reader standing on a
 later root. Enter and Space toggle the branch under the cursor or activate a
 leaf; a printable character jumps to the first row after the cursor whose label
 starts with the typed prefix.
+
+## A reveal lands the focus, not only the cursor
+
+`reveal(key)` opens the path to a node and moves the cursor to it, which is the
+shape a search hit or a "show this file" command needs. The cursor comes from
+the caller, not from the tree's key handler, so the tree tells the two apart: a
+row its own keys reached is focused in the same commit, while a caller-driven
+row is re-taken on the **next tick**, after the runtime has handed the pressed
+control the focus (`data-tree-lifecycle` measured the Reveal button keeping it).
+
+A key that leaves the cursor where it was — Up on the first row, Down on the
+last, Enter on a branch that opens under the active row — has no row to focus,
+so it is not a move the tree made. It cannot leave a mark that makes the next
+reveal look like the tree's own: `tree.test.tsx`'s `takes the focus on a reveal
+after a key that moved nothing` presses Up on the first row, asks for a reveal
+and requires the revealed row to hold native focus after the tick.
 
 ## Limitations
 

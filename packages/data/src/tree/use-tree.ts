@@ -144,8 +144,15 @@ export const useTree = <T>({
     if (
       Option.getOrUndefined(resolved.active) ===
       Option.getOrUndefined(focused.current)
-    )
+    ) {
+      // A commit that leaves the cursor where it was (a key clamped at an end,
+      // a press on the row already active, a branch opening under it) has no
+      // row to focus. Its "this tree moved" mark must not outlive it: the next
+      // caller-driven reveal would then be taken for the tree's own move and
+      // skip the retake that lands its focus after the press's.
+      fromKeys.current = false;
       return;
+    }
     const ours = fromKeys.current;
     fromKeys.current = false;
     focused.current = resolved.active;

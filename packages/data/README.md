@@ -38,6 +38,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
 | A fill takes the row's hover too | `hover-routing-lifecycle` | The native `hover` refinement's hovered set is the **same hit test** the press takes. A filled `<text>` or `<div>` in a row takes the row's hover wash and hears its own enter; an unfilled label leaves both to the row; `pointerEvents: "none"` removes the fill's hitbox while the child still runs its own listener. A decorative pill in a cell opts out so the row keeps its feedback. |
 | Arrow keys move real native focus | `virtual-tree-lifecycle` | A tree holds **one** tab stop and moves `renderer.focusElement` in a layout effect **after** the `tabIndex` commit. A call from the key handler moved nothing: the row was still outside the tab order. A 16px depth inset is the hierarchy's only paint. |
+| A reveal lands the focus, not only the cursor | `data-tree-lifecycle`, `tree.test.tsx` | A caller-driven cursor (a search hit, a "show this file" press) is re-taken on the next tick, because the runtime hands the pressed control the focus after the commit. A key that left the cursor where it was — Up on the first row, a press on the row already active — has no row to focus, so it is not a move the tree made and cannot take that retake away. |
 | A windowed tree keeps its tab stop mounted | `virtual-tree-lifecycle`, `virtual-list-windowed` | `VirtualTree` moves the window to a row before focusing it, and a wheel or collapse that unmounts the cursor's row moves the cursor to the viewport's top row — the runtime unmounts the focused row, and a tree without a mounted tab stop cannot take the next key. |
 | A painted row that grows re-measures | `virtual-list-expand` | An expandable row opens a **sibling** detail row (no row span on 0.11.0): the rows below shift by the growth, and a fixed-estimate `itemCount` window cannot express it — use the plain table or the list's children mode. |
 | A key is dispatched along the focus path | `press-routing-lifecycle` | A key typed in a field inside a row still reaches the row's `onKeyDown`, so a row that owns activation reads the renderer's focused element first. `TableExpandableRow` toggles only while the row itself holds focus, and a disabled row toggles on no key. |
@@ -336,7 +337,11 @@ Up/Down/Home/End move the cursor (and the platform focus); Right opens a branch
 or steps into it; Left closes it or steps out — a root stays where it is, because
 clearing the cursor would fall back to the first painted row; a printable
 character jumps to the first row after the cursor whose label starts with the
-prefix. `reveal(key)` opens the path to a node and moves the cursor to it.
+prefix. `reveal(key)` opens the path to a node and moves the cursor to it, and a
+caller-driven cursor **lands the focus** on its row: the row is re-taken on the
+next tick, after the runtime has handed the pressed control the focus. A key that
+left the cursor where it was is not a move the tree made, so it cannot suppress
+that retake.
 
 A tree of thousands uses **`VirtualTree`**: the same rows and keyboard over the
 runtime's `itemCount` window, so only the rows around the viewport are retained.

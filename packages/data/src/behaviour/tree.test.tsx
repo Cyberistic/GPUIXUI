@@ -164,4 +164,34 @@ describe("the file tree", () => {
     root.renderer.flush();
     expect(focusedTestId(root)).toEqual(Option.some("tree-row-row.tsx"));
   });
+
+  it("takes the focus on a reveal after a key that moved nothing", async () => {
+    const root = mount();
+
+    // Up on the first row clamps in place: the tree commits a cursor whose
+    // active row has not changed. That is not a move the tree made, so it must
+    // not make the next caller-driven reveal look like one.
+    pressKey(root, "tree-row-src", "up");
+    root.renderer.flush();
+    expect(focusedTestId(root)).toEqual(Option.some("tree-row-src"));
+
+    clickCentreOf(root, "tree-reveal");
+    root.renderer.flush();
+    expect(readout(root)).toContain("active=row.tsx");
+    expect(root.renderer.findByTestId("tree-row-row.tsx")).toBeDefined();
+
+    // A window hands the press's focus to the button after the commit; the
+    // reveal has to take the row back on the next tick, exactly as it does
+    // when no key came before it.
+    const button = root.renderer.findByTestId("tree-reveal");
+    if (button === undefined)
+      throw new Error("behaviour: no tree-reveal button");
+    root.renderer.focusElement(button.id);
+    root.renderer.flush();
+    expect(focusedTestId(root)).toEqual(Option.some("tree-reveal"));
+
+    await after(5);
+    root.renderer.flush();
+    expect(focusedTestId(root)).toEqual(Option.some("tree-row-row.tsx"));
+  });
 });
