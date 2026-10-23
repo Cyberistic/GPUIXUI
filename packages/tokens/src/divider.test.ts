@@ -267,9 +267,10 @@ describe("a rule on the row it crosses", () => {
   });
 
   it("holds the premise to the painter and the pages", () => {
-    // The table paints the raw role on the header and every row, so the measured
-    // placements are live until the data half adopts the helper.
-    expect(table).toContain("borderColor: theme.colors.border");
+    // The table paints the rule on the row itself. It is the raw role until the
+    // data half adopts the helper, and either way the tokens guard should not
+    // punish the adoption — the prose moves with the interlock row.
+    expect(table).toMatch(/borderColor: (?:dividerOn\(|theme\.colors\.border)/);
     // Both pages teach the helper, the count and the four surfaces.
     [catalogue, designSystem].forEach((page) => {
       expect(page).toContain("dividerOn");
