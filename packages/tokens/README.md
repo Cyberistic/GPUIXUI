@@ -543,7 +543,7 @@ families-and-label view of the same table.
 
 | Platform | `sans` | `mono` | `radius.md` | density |
 | -------- | ------ | ------ | ----------- | ------- |
-| macOS (`darwin`) | `.SystemUIFont` | `Menlo` | 6 | `compact` |
+| macOS (`darwin`) | `.SystemUIFont` | `Menlo` | 10 | `compact` |
 | Linux (`linux`) | `.SystemUIFont` | `DejaVu Sans Mono` | 6 | `spacious` |
 | Windows (`win32`) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` |
 | `default` | `.SystemUIFont` | `Menlo` | 6 | `comfortable` |
@@ -560,10 +560,17 @@ the base theme's own variant. `default` is the library's own identity and change
 only the name. A high-contrast base keeps its palette and takes only the
 families, radii and density, because accessibility outranks the platform look.
 
+A style may also declare the platform's own switch — Apple's green on and grey
+off, a white knob — which `Theme.switch` carries once applied. The accent family
+cannot derive those fills, so the declaration is separate; the primitives draw
+the platform's 51×31 box only for a theme that carries it, and an authored look
+that declares none keeps the library's accent toggle.
+
 All three axes are measured as painted: the playground's `theme-platform` probe
 reads each platform's mono family, `primary` fill, `lg` radius and `md` control
 height back from the runtime (macOS 28 / Linux 36 / Windows 32px). Its negative
-control paints the base `radius.lg` instead and fails `expected 10, got 8`.
+control paints the base `radius.lg` instead and fails `expected 14, got 8` (the
+probe's first run, at the pre-HIG `lg` of 10, failed `expected 10, got 8`).
 
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";

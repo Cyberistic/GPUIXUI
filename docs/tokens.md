@@ -760,7 +760,7 @@ table, so a preview cannot show a look the library does not ship.
 
 | Platform | `sans` | `mono` | `radius.md` | density |
 | -------- | ------ | ------ | ----------- | ------- |
-| `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 6 | `compact` (28px) |
+| `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 10 | `compact` (28px) |
 | `linux` | `.SystemUIFont` | `DejaVu Sans Mono` | 6 | `spacious` (36px) |
 | `win32` (Windows) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` (32px) |
 | `default` | `.SystemUIFont` | `Menlo` | 6 | `comfortable` (32px) |
@@ -801,6 +801,17 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 `platformStyles[platform].colors[mode]` is that table: a partial `ThemeColors`, so
 a value you leave out is the base theme's. The dark sets carry a lighter
 `placeholder` because their field surfaces are lighter than the base canvas.
+
+A style may also declare the platform's **own switch**, the one control whose
+paint the accent family cannot derive. Apple's toggle is green on and grey off —
+`#34C759` / `#E9E9EA` in light, `#30D158` / `#39393D` in dark, with a white 27pt
+knob — while a checked Windows or Linux switch is the accent fill.
+`PlatformStyle.switch` is that declaration, `Theme.switch` is the half for the
+resolved mode, and a primitive draws the platform's 51×31 box only when the
+theme carries it: `sm` and `lg` keep the library's derived steps, because the HIG
+publishes one switch. An authored look that declares none clears it, so Luna over
+macOS keeps Luna's chrome and the library's toggle.
+
 Each `darwin` set and all three dark sets carry their own `secondary`, because
 `platformTheme` inherits the base `#E1E5EC` and those windows and popovers sit
 1.004–1.049:1 from it — a tonal button would have no shape on them
@@ -858,8 +869,9 @@ styled. The playground's `theme-platform` probe then paints one row per platform
 through `platformTheme` and reads the runtime's style report and `bounds`: the
 `lg` radius, the `primary` fill and an `md` control at the platform's own density
 (macOS 28, Linux 36, Windows 32). Its negative control — painting the base
-`radius.lg` instead — reads `expected 10, got 8`, so the shape is the platform's
-and not the base theme's. An application whose own window differs layers
+`radius.lg` instead — reads `expected 14, got 8`, so the shape is the platform's
+and not the base theme's. (The probe's first run, at the pre-HIG macOS `lg` of
+10, read `expected 10, got 8`.) An application whose own window differs layers
 `extendTheme` on top.
 
 #### Editing a platform style
@@ -3225,7 +3237,7 @@ and the tables; the probe is the paint. Evidence:
 | `full` | 9999 | pills and avatars |
 
 This is the default theme's scale. A platform style replaces it —
-macOS 4/6/10/14, Linux 4/6/9/12, Windows 4/4/8/8 — so a Windows control reads
+macOS 6/10/14/18, Linux 4/6/9/12, Windows 4/4/8/8 — so a Windows control reads
 squarer than a macOS one. `full` stays rounded everywhere.
 
 ## Density

@@ -2238,8 +2238,14 @@ describe("the curated component pages", () => {
       css.indexOf("/* ---- tooltip:"),
     );
     expect(switchCss).toContain("min-height: var(--target-size)");
-    expect(switchCss).toContain("width: calc(var(--icon-size-md) * 1.75)");
-    expect(switchCss).toContain("width: calc(var(--icon-size-md) - 4px)");
+    // A platform that declares its own switch overrides the pill and the knob;
+    // the derived step is the fallback every other theme paints.
+    expect(switchCss).toContain(
+      "var(--switch-track-width, calc(var(--icon-size-md) * 1.75))",
+    );
+    expect(switchCss).toContain(
+      "var(--switch-knob-size, calc(var(--icon-size-md) - 4px))",
+    );
     expect(switchCss).toContain("transition: left 150ms ease-out");
     expect(switchCss).not.toContain("width: 28px");
 

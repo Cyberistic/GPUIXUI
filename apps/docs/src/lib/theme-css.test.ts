@@ -235,7 +235,17 @@ describe("theme bridge", () => {
 
 describe("preview style sheets", () => {
   it("read only variables the bridge provides, or declares of their own", () => {
-    const provided = new Set(Object.keys(toCssVars(themes.dark)));
+    const provided = new Set([
+      ...Object.keys(toCssVars(themes.dark)),
+      // A platform switch's paint is written only by a theme that declares one
+      // (`toCssVars(platformTheme(themes.dark, "darwin"))`); every read falls
+      // back to the accent recipe, and the guard below proves the bridge writes
+      // them when the theme does.
+      "--switch-on",
+      "--switch-off",
+      "--switch-knob",
+      "--switch-knob-shadow",
+    ]);
 
     const unknown = previewCss().map(([sheet, css]) => {
       const local = new Set(declaredVars(css));
@@ -391,18 +401,76 @@ describe("preview style sheets", () => {
     expect(block(css, ".gx-switch")).toContain(
       "min-height: var(--target-size)",
     );
+    // A platform that declares its own switch overrides the box; every other
+    // theme keeps the derived step as the fallback.
     expect(block(css, ".gx-switch-track")).toContain(
-      "width: calc(var(--icon-size-md) * 1.75)",
+      "var(--switch-track-width, calc(var(--icon-size-md) * 1.75))",
     );
     expect(block(css, ".gx-switch-track")).toContain(
-      "height: var(--icon-size-md)",
+      "var(--switch-track-height, var(--icon-size-md))",
     );
     expect(block(css, ".gx-switch-thumb")).toContain(
-      "width: calc(var(--icon-size-md) - 4px)",
+      "var(--switch-knob-size, calc(var(--icon-size-md) - 4px))",
     );
     expect(block(css, ".gx-switch-thumb")).toContain(
       "transition: left 150ms ease-out",
     );
+  });
+
+  it("draws Apple's switch at 51×31 with a 27px knob", () => {
+    // The HIG publishes one switch: 51×31pt, a 27pt knob at a 2pt inset and no
+    // edge. The preview draws it only under the Apple platform, and only at the
+    // standard size — `sm` and `lg` keep the library's derived steps because
+    // Apple publishes no compact or large toggle.
+    const css = read("../styles/demos.css");
+    const apple = block(css, '.gx-demo[data-platform="darwin"] .gx-switch');
+
+    expect(apple).toContain("--switch-track-width: 51px");
+    expect(apple).toContain("--switch-track-height: 31px");
+    expect(apple).toContain("--switch-knob-size: 27px");
+
+    const track = block(
+      css,
+      '.gx-demo[data-platform="darwin"] .gx-switch[data-size="md"] .gx-switch-track',
+    );
+    expect(track).toContain("border-width: 0");
+    // The paint rides the bridge: the preview carries no Apple literal of its
+    // own, so the switch cannot drift from `platformStyles.darwin.switch`.
+    expect(block(css, ".gx-switch-track")).toContain(
+      "var(--switch-off, var(--muted))",
+    );
+    expect(block(css, ".gx-switch-thumb")).toContain(
+      "var(--switch-knob, var(--foreground))",
+    );
+  });
+
+  it("moves a control's paint on hover, never its box", () => {
+    // A pointer must not resize the control it is over: an Apple action is 28pt
+    // tall with a 10px corner in both states, so a hover that added an edge or
+    // a padding would shift the row it sits in. Feedback is a fill.
+    const css = read("../styles/demos.css");
+    const hover = [
+      ...css.matchAll(/(\.gx-(?:btn|field)[^{]*:hover[^{]*)\{([^}]*)\}/g),
+    ];
+
+    expect(hover.length).toBeGreaterThan(3);
+    const shifting = hover
+      .filter(([, , body]) => /border-width|\bpadding/.test(body ?? ""))
+      .map(([, selector]) => selector);
+    expect(shifting).toEqual([]);
+  });
+
+  it("writes a declared switch's paint, and the knob's lift, as variables", () => {
+    const apple = platformTheme(themes.dark, "darwin");
+    const vars = toCssVars(apple);
+
+    expect(vars["--switch-on"]).toBe("#30D158");
+    expect(vars["--switch-off"]).toBe("#39393D");
+    expect(vars["--switch-knob"]).toBe("#FFFFFF");
+    expect(vars["--switch-knob-shadow"]).toBeDefined();
+    // A theme without the declaration writes none of them; the preview's
+    // fallbacks then paint the accent switch.
+    expect(Object.keys(toCssVars(themes.dark))).not.toContain("--switch-on");
   });
 
   it("takes a timeline's dot and rail from the roles the mark contract holds", () => {

@@ -13,6 +13,7 @@ import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
 import {
   disabledOpacity,
+  elevationShadow,
   filledHover,
   filledPressed,
   targetInset,
@@ -154,6 +155,40 @@ export const switchThumbInset = (theme: PrimitiveTheme): number =>
   theme.spacing["2xs"];
 
 /**
+ * The pill a switch draws.
+ *
+ * A theme that carries a switch paint — a platform whose own toggle has fixed
+ * metrics — draws the standard control at 51×31 with no edge, which is the
+ * box Apple's HIG publishes. Its `sm` and `lg` sizes keep the icon-derived
+ * steps, because the HIG specifies one switch and a compact or large one would
+ * be a value Apple never ships. Every other theme keeps the derived box.
+ */
+export interface SwitchBox {
+  /** Pill width in pixels. */
+  readonly width: number;
+  /** Pill height in pixels, which is also the knob's outer box. */
+  readonly height: number;
+  /** Edge thickness; the standard platform switch paints none. */
+  readonly border: number;
+}
+
+/** Apple's switch: 51×31 points, with a 27pt knob at a 2pt inset. */
+const APPLE_SWITCH = { width: 51, height: 31, border: 0 } as const;
+
+/** The box a switch paints in, from the platform's paint and the size step. */
+export const switchBox = (
+  size: ControlSize,
+  theme: PrimitiveTheme,
+): SwitchBox =>
+  theme.switch !== undefined && size === "md"
+    ? APPLE_SWITCH
+    : {
+        width: Math.round(theme.iconSize[size] * 1.75),
+        height: theme.iconSize[size],
+        border: theme.borderWidth.thin,
+      };
+
+/**
  * The box a selection control reserves around its drawing.
  *
  * The drawing is the icon-sized square that lines up with a label's icon; the
@@ -200,17 +235,17 @@ export const switchTargetStyle = (spec: SelectionSpec): StyleDesc => ({
  * How far a switch thumb travels between its two positions.
  *
  * The track is a fixed ratio of the icon side, so the travel is the track's
- * width less one thumb and both included borders: the same number a measured
+ * width less one knob and both included borders: the same number a measured
  * drag would produce, without the measurement. It keeps the knob's gap to each
  * edge equal in the two states.
  */
 export const switchThumbTravel = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
-): number =>
-  Math.round(theme.iconSize[spec.size] * 1.75) -
-  theme.iconSize[spec.size] -
-  theme.borderWidth.thin * 2;
+): number => {
+  const box = switchBox(spec.size, theme);
+  return box.width - box.height - box.border * 2;
+};
 
 /**
  * A switch thumb's offset from the track's left edge.
@@ -228,6 +263,57 @@ export const switchThumbOffset = (
   switchThumbInset(theme) + (filled(spec) ? switchThumbTravel(spec, theme) : 0);
 
 /**
+ * The fill a platform's own switch paints, or nothing for the accent family.
+ *
+ * A declared paint is a control's, not a role's: Apple's toggle is green on and
+ * grey off whatever the accent is, so the accent family cannot derive it. Its
+ * feedback is the same fill — a native switch does not tint to the pointer —
+ * and an invalid off switch keeps the library's error colour, which is the one
+ * state the HIG does not draw.
+ */
+const switchFill = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): string | undefined =>
+  theme.switch === undefined
+    ? undefined
+    : filled(spec)
+      ? theme.switch.on
+      : spec.invalid === true
+        ? theme.colors.destructive
+        : theme.switch.off;
+
+/**
+ * The paint a platform's own switch declares, as a style the switch merges over
+ * the accent recipe. Nothing when the theme carries no paint.
+ */
+export const switchTrackPaint = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): StyleDesc | undefined => {
+  const fill = switchFill(spec, theme);
+  return fill === undefined
+    ? undefined
+    : {
+        backgroundColor: fill,
+        borderColor: fill,
+        hover: { backgroundColor: fill, borderColor: fill },
+        active: { backgroundColor: fill, borderColor: fill },
+      };
+};
+
+/** The knob's paint, which follows the track's declaration. */
+export const switchThumbPaint = (
+  theme: PrimitiveTheme,
+): StyleDesc | undefined =>
+  theme.switch === undefined
+    ? undefined
+    : {
+        backgroundColor: theme.switch.knob,
+        boxShadow: elevationShadow(theme, "sm"),
+      };
+
+/**
  * The pill a switch slides in.
  *
  * Height is the box side, width a fixed ratio of it, so a switch is the same
@@ -239,38 +325,45 @@ export const switchTrackStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const height = theme.iconSize[spec.size];
+  const box = switchBox(spec.size, theme);
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true
       ? theme.colors.destructive
       : theme.colors.borderStrong;
+  const paint = switchTrackPaint(spec, theme);
+  const fill =
+    paint?.backgroundColor ??
+    (filled(spec) ? role.background : theme.colors.muted);
+  const edge =
+    paint?.borderColor ?? (filled(spec) ? role.background : emptyBorder);
   const style: StyleDesc = {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     position: "relative",
-    width: Math.round(height * 1.75),
-    height,
+    width: box.width,
+    height: box.height,
     flexShrink: 0,
     borderRadius: theme.radius.full,
-    borderWidth: theme.borderWidth.thin,
-    borderColor: filled(spec) ? role.background : emptyBorder,
-    backgroundColor: filled(spec) ? role.background : theme.colors.muted,
+    borderWidth: box.border,
+    borderColor: edge,
+    backgroundColor: fill,
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
-    hover: filled(spec)
-      ? feedbackFill(spec, theme, "hover")
-      : { backgroundColor: theme.colors.hover },
-    active: filled(spec)
-      ? feedbackFill(spec, theme, "press")
-      : { backgroundColor: pressWash(theme) },
+    hover:
+      paint?.hover ??
+      (filled(spec)
+        ? feedbackFill(spec, theme, "hover")
+        : { backgroundColor: theme.colors.hover }),
+    active:
+      paint?.active ??
+      (filled(spec)
+        ? feedbackFill(spec, theme, "press")
+        : { backgroundColor: pressWash(theme) }),
   };
   if (spec.disabled === true) {
     style.opacity = disabledOpacity;
-    style.hover = {
-      backgroundColor: filled(spec) ? role.background : theme.colors.muted,
-      borderColor: filled(spec) ? role.background : emptyBorder,
-    };
+    style.hover = { backgroundColor: fill, borderColor: edge };
     style.active = {};
   }
   return style;
@@ -295,8 +388,9 @@ export const switchThumbStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
+  const paint = switchThumbPaint(theme);
   const inset = switchThumbInset(theme);
-  const side = theme.iconSize[spec.size] - inset * 2;
+  const side = switchBox(spec.size, theme).height - inset * 2;
   return {
     position: "absolute",
     top: inset,
@@ -306,9 +400,12 @@ export const switchThumbStyle = (
     flexShrink: 0,
     borderRadius: theme.radius.full,
     pointerEvents: "none",
-    backgroundColor: filled(spec)
-      ? accentRole(spec, theme).foreground
-      : theme.colors.foreground,
+    backgroundColor:
+      paint?.backgroundColor ??
+      (filled(spec)
+        ? accentRole(spec, theme).foreground
+        : theme.colors.foreground),
+    boxShadow: paint?.boxShadow,
   };
 };
 
