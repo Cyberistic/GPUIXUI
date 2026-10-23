@@ -18,6 +18,7 @@
     "@gpuixui/data": "workspace:*",
     "@gpuixui/dock": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/shell": "workspace:*",
     "@gpuixui/testing": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:",

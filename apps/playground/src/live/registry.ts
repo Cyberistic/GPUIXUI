@@ -720,6 +720,12 @@ export const liveRegistry = [
       "Input: an exclusive-choice menu paints its mark on the chosen row, a choice closes it, and the chosen row reports nothing",
     capability: "input",
   },
+  {
+    id: "app-chrome-lifecycle",
+    title:
+      "Workspace: the shipped menu bar opens and navigates, the toolbar roves the native focus and overflows, and the status bar paints its tone roles",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

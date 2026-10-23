@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-114 probes a real window can prove, of which twenty-three mount shipped
+115 probes a real window can prove, of which twenty-three mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -53,8 +53,9 @@ combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail), nine mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 ScrollArea and the Button, and the media probe's play/pause action), three mount `@gpuixui/data`'s examples (the table, the virtualized
-table and the tree), one mounts the package's shipped charts, one more
-mounts the runtime's own `Select` parts, and the rest prove the runtime itself
+table and the tree), one mounts the package's shipped charts, one mounts the
+package's three chrome parts (the menu bar, the toolbar and the status bar), one
+more mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel, a scroll region's keyboard contract and size, a split pane, a virtual
 list, a paginated list's loading-row
@@ -6416,6 +6417,66 @@ measured, exit `1`, restored green: expecting the mark to stay on the first row
 fails `the mark follows the value to the next row` with `expected 0, got 2`.
 Evidence: `.artifacts/live/menu-radio.png`, `.artifacts/live/menu-radio-next.png`.
 
+### `app-chrome-lifecycle` — measured on 0.11.0 here
+
+**Three parts shipped with pure rules and no renderer.** `@gpuixui/shell`'s
+`AppMenu`, `Toolbar` and `StatusBar` arrived with logic suites only, so a
+menubar whose dropdown never opens, a roving stop that moves an internal number
+but not the native focus, or a status tone painted in the wrong role would have
+passed every test. This probe mounts all three in one window and reads the
+facts only a renderer has: a dropdown child's box under its trigger, the
+window's own focused id, and a frame's ink.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | the triggers paint on one row, `Edit` to the right of `File`; the readout hears nothing |
+| a press on File | the dropdown paints below the trigger and row `New` carries its `Ctrl` accelerator (the probe asks for `platform="linux"`, so the keycap is ASCII) |
+| `down`, `enter` | `menu=file/new menuReports=1`; the surface unpaints |
+| reopen, `down`, `down`, `enter` | the disabled `Open` row is skipped: `menu=file/save menuReports=2` |
+| `right` while open | `Edit`'s rows replace `File`'s; `right` again wraps past the disabled `Help` menu back to `File`, whose rows paint |
+| `escape` | the surface unpaints and the window's focused id is `app-menu-trigger-file` |
+| the toolbar's `max: 4` | `Open`, the disabled `Save` and `Copy` paint plus the overflow trigger; `Link` paints nowhere in the strip |
+| `right` from `Open` | the **window's** focus id moves to `Copy` — the disabled `Save` is skipped — and `enter` reports `action=copy` once |
+| `right`, `enter` | the overflow trigger takes the focus and its menu paints `Link`, `Image` and `Code`; a press on `Link` reports and closes |
+| keyboard overflow | the trigger's own `enter` opens and closes the menu |
+| the status bar | both groups paint in one row (≤ 40 points tall); the trailing 200 points hold the destructive `#FFE0E0` and success `#D3F9E2` ink, the leading 200 hold neither |
+
+Three rules the window settles:
+
+1. **The bar is one keyboard surface, and its keys survive the surface's own
+   focus.** Opening a dropdown moves the native focus into the floating layer
+   (a layer with no `testId`, so `focused()` reads `none`), and `escape` still
+   reaches the bar: the surface unpaints and the trigger is focused again. A bar
+   that routed keys only from its triggers would lose every open menu.
+2. **A roving move must name a real element.** The toolbar's internal stop and
+   the window's focused id are two different numbers until `focusElement` runs;
+   the probe reads the second, and with `Copy` disabled instead of `Save` the
+   same step lands on `toolbar-overflow` — the negative control below.
+3. **A tone is a role, and it reaches the glass.** The probes' 8-point ink
+   tolerance is smaller than the 32-point gap between the dark label ink
+   (`#EEF1F5`) and its nearest tone, so the counts cannot read a plain label as
+   a tone; putting the error item back on the default tone leaves the trailing
+   count at **0**.
+
+**One measured gap.** `escape` does **not** dismiss the toolbar's overflow
+menu: opening it leaves the focus on the trigger, the trigger owns no Escape
+rule, and the surface's own handler never hears the key. The keyboard route is
+the trigger's own `enter`, which toggles the menu; the fix (focus the surface on
+open, or handle Escape on the bar) is recorded in `TODO.md` → Interlocks for the
+shell workstream.
+
+47 checks, `--only app-chrome-lifecycle`, green on 0.11.0 here (~3–5 s, two
+captures). Fixture `src/live/app-chrome.ts` (the ids, the menus and actions, the
+readout and the tolerance) + `app-chrome.test.ts` (the readout parsing, the tone
+separation, the shipped parts the view mounts, the overflow split against
+`@gpuixui/shell`'s own `splitOverflow`, the registry entry and wiring, the count,
+and this section). Two negative controls measured, exit `1` each, restored
+green: the error item on the default tone fails `the trailing group paints the
+destructive tone` with `expected true, got false`, and `Copy` disabled fails
+`Right moves the focus to the next enabled action` with
+`expected "toolbar-action-copy", got "toolbar-overflow"`. Evidence:
+`.artifacts/live/app-chrome.png`, `.artifacts/live/app-chrome-menu.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6654,8 +6715,8 @@ narrower. Each deviation is deliberate and measured:
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
-  `media-frame-lifecycle` and `menu-radio-lifecycle` (fifty-six probes, each run
-  alone).
+  `media-frame-lifecycle` and `menu-radio-lifecycle` and `app-chrome-lifecycle`
+  (fifty-seven probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

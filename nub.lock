@@ -223,6 +223,9 @@ importers:
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
+      '@gpuixui/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
       '@gpuixui/testing':
         specifier: workspace:*
         version: link:../../packages/testing
