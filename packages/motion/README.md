@@ -20,6 +20,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
 | `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds |
+| `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
 | `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers, `useMotionPreference` |
 | `provider.ts` | `MotionProvider` — the one reduced-motion preference every package reads |
 
@@ -113,6 +114,28 @@ re-publishes this provider, so a tree written against it reads the same context.
 `preference` is a policy, not a per-control option: a reduced run is a
 zero-duration assignment, so the resting frame still paints and only the journey
 is removed.
+
+## The presence table
+
+A surface that enters and leaves reads one table, exported from
+`@gpuixui/motion/presence`:
+
+- `fadeFrom`, `fadeFromAnchor`, `fadeFromSide` and `fadeOnly` build the three
+  frames (first paint, rest, exit) — a fade plus an inset offset on `top` or
+  `left`, never a `transform`, because the runtime has no such style key;
+- `presenceTiming(level, preference)` gives the enter and exit tween at one
+  level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"`;
+- `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds
+  a box stays mounted for, including the wait a delayed run sits out first;
+- `delayedTiming` adds a stagger and drops it with a reduced journey, since the
+  runtime waits out a delay before an instant assignment too;
+- `presenceStyle` is the leaving pointer rule — a surface takes no presses while
+  it fades, and a wrapper paints nothing at rest so it never covers its content.
+
+The table is renderer-neutral and has no React or GPUix import, so a component
+package and a primitive package compose the same one rather than agreeing by
+hand. The React half — the mounted window, the preference provider and the
+leaving shield — stays with the package that owns a tree.
 
 Each hook returns `{ value, velocity, complete }`. Map `value` onto a GPUix
 `MotionStyle` numeric field — `width`, `height`, `top`, `right`, `bottom`,

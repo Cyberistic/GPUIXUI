@@ -23,18 +23,35 @@
  *   below the same provider reads the same flag. It zeroes the duration: the
  *   resting frame still paints, only the journey is removed.
  *
+ * The frames, the hold window and the pointer rule are **numbers and strings**,
+ * so they live in the motion package (`@gpuixui/motion/presence`) where a
+ * primitive package can compose the same ones without depending on this one.
+ * This module keeps the React half: the preference hook, the mounted window and
+ * the shield, because those need a React tree and a GPUix host.
+ *
  * The runtime is given geometry as a *between* value (the offset), so a headless
  * suite can read the movement in element bounds; the fade itself is a paint value
  * the native tree does not expose, and the live probes are what prove it.
  */
 
-import type {
-  MotionProps,
-  MotionStyle,
-  MotionTransition,
-  StyleDesc,
-} from "@gpuix/react";
-import { motionTiming, type MotionLevel } from "@gpuixui/motion/timing";
+import type { MotionProps } from "@gpuix/react";
+import {
+  delayedTiming,
+  exitWindowMs,
+  fadeFrom,
+  fadeFromAnchor,
+  fadeFromSide,
+  fadeOnly,
+  presenceMotion as motionOfPresence,
+  presenceStyle,
+  presenceTiming,
+  transitionWindowMs,
+  type PresenceFrames,
+  type PresenceHitRule,
+  type PresenceSide,
+  type PresenceTiming,
+} from "@gpuixui/motion/presence";
+import { type MotionLevel } from "@gpuixui/motion/timing";
 import {
   MotionProvider,
   useMotionPreference,
@@ -50,18 +67,30 @@ import { useEffect, useLayoutEffect, useState } from "react";
  */
 export { MotionProvider, useMotionPreference, type MotionProviderProps };
 
-/** The enter and exit timing a surface at one level moves with. */
-export interface SurfaceTiming {
-  readonly enter: MotionTransition;
-  readonly exit: MotionTransition;
-}
+/** The frames a surface paints, in the runtime's `motion` grammar. */
+export type SurfaceFrames = PresenceFrames;
 
-/** A surface's three frames: its first paint, its resting frame and its exit. */
-export interface SurfaceFrames {
-  readonly initial: MotionStyle;
-  readonly animate: MotionStyle;
-  readonly exit: MotionStyle;
-}
+/** The enter and exit timing a surface at one level moves with. */
+export type SurfaceTiming = PresenceTiming;
+
+/** A window edge a panel is anchored to. */
+export type PanelSide = PresenceSide;
+
+/**
+ * The frames, staggered arrivals and pointer rule, re-published from
+ * `@gpuixui/motion/presence` so this package's surfaces keep one import.
+ */
+export {
+  delayedTiming,
+  exitWindowMs,
+  fadeFrom,
+  fadeFromAnchor,
+  fadeFromSide,
+  fadeOnly,
+  presenceStyle,
+  transitionWindowMs,
+};
+export type { PresenceHitRule };
 
 /**
  * The timings a surface at `level` moves with, under the current preference.
@@ -70,127 +99,8 @@ export interface SurfaceFrames {
  * transitions rather than one shared curve: a surface that speeds up as it
  * leaves reads as being pulled away.
  */
-export const useSurfaceTiming = (level: MotionLevel): SurfaceTiming => {
-  const preference = useMotionPreference();
-  return {
-    enter: motionTiming(level, { phase: "enter", preference }),
-    exit: motionTiming(level, { phase: "exit", preference }),
-  };
-};
-
-/** A timing field in milliseconds, with a value that cannot be read as none. */
-const milliseconds = (seconds: number | undefined): number =>
-  seconds !== undefined && Number.isFinite(seconds) ? seconds * 1000 : 0;
-
-/**
- * The window a run occupies, in whole milliseconds.
- *
- * `motionTiming` names a duration in seconds because the runtime reads seconds;
- * every component that keeps a box painted for the length of a journey converts
- * through here, so a preference change rescales the window with the tween it
- * belongs to. The wait a delayed run sits out first is part of its window — the
- * runtime holds the first frame for it — so a window that counted only the
- * duration would unmount a feedback layer before its journey began. A run with
- * no duration and no wait is no window at all.
- */
-export const transitionWindowMs = (timing: MotionTransition): number =>
-  Math.round(milliseconds(timing.duration) + milliseconds(timing.delay));
-
-/**
- * The mount window a leaving surface occupies, in whole milliseconds.
- *
- * The seam and the toast stack both keep a leaving box painted for exactly the
- * length of its exit tween, so the conversion lives in one place and a
- * preference change rescales both.
- */
-export const exitWindowMs = (timing: SurfaceTiming): number =>
-  transitionWindowMs(timing.exit);
-
-/**
- * A house timing that waits `delayMs` before it runs — a stagger.
- *
- * The delay is named in milliseconds and handed to the runtime in seconds. A
- * reduced timing (a zero duration) drops the delay with the journey: the runtime
- * waits a delay out *before* an instant assignment, so keeping it would hold a
- * resting frame back by exactly the wait the preference removes. A delay that
- * cannot be scheduled (negative, infinite, `NaN`) adds nothing, and the timing
- * is returned as it was, so an unstaggered run keeps the object it was given.
- *
- * This is the one place a timing gains a stagger; a component that spreads a
- * delay onto a timing itself re-implements the reduced rule.
- */
-export const delayedTiming = (
-  timing: MotionTransition,
-  delayMs: number,
-): MotionTransition =>
-  timing.duration === 0 || !Number.isFinite(delayMs) || delayMs <= 0
-    ? timing
-    : { ...timing, delay: delayMs / 1000 };
-
-/**
- * A fade that travels `offset` pixels along one axis.
- *
- * A positive `top` starts the surface low and rises it into place; a negative
- * one starts high. Panels anchored to an edge pass the direction they open
- * from, so the movement points at the edge it belongs to.
- */
-export const fadeFrom = (axis: "top" | "left", offset: number): SurfaceFrames =>
-  axis === "top"
-    ? {
-        initial: { opacity: 0, top: offset },
-        animate: { opacity: 1, top: 0 },
-        exit: { opacity: 0, top: offset },
-      }
-    : {
-        initial: { opacity: 0, left: offset },
-        animate: { opacity: 1, left: 0 },
-        exit: { opacity: 0, left: offset },
-      };
-
-/** A fade that travels nowhere: a scrim dims, it does not move. */
-export const fadeOnly: SurfaceFrames = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-};
-
-/** A window edge a panel is anchored to. */
-export type PanelSide = "top" | "right" | "bottom" | "left";
-
-/**
- * A fade that travels in from a window edge.
- *
- * A panel at the right edge starts `offset` pixels further right and moves in;
- * the surface reads as arriving from outside the window. This is the drawer's
- * rule, and the reverse of {@link fadeFromAnchor}.
- */
-export const fadeFromSide = (side: PanelSide, offset: number): SurfaceFrames =>
-  side === "top"
-    ? fadeFrom("top", -offset)
-    : side === "bottom"
-      ? fadeFrom("top", offset)
-      : side === "left"
-        ? fadeFrom("left", -offset)
-        : fadeFrom("left", offset);
-
-/**
- * A fade that travels out from the control it is anchored to.
- *
- * shadcn's popover enters from the side facing its trigger (`slide-in-from-*`),
- * so a surface below its trigger starts above its resting place and moves down
- * while it fades. The menu, popover and preview card share the rule.
- */
-export const fadeFromAnchor = (
-  side: PanelSide,
-  offset: number,
-): SurfaceFrames =>
-  side === "top"
-    ? fadeFrom("top", offset)
-    : side === "bottom"
-      ? fadeFrom("top", -offset)
-      : side === "left"
-        ? fadeFrom("left", offset)
-        : fadeFrom("left", -offset);
+export const useSurfaceTiming = (level: MotionLevel): SurfaceTiming =>
+  presenceTiming(level, useMotionPreference());
 
 /** A surface's mount and presence state while it enters or leaves. */
 export interface SurfacePresence {
@@ -242,35 +152,7 @@ export const useSurfacePresence = (
 export const presenceMotion = (
   frames: SurfaceFrames,
   presence: SurfacePresence,
-): MotionProps => ({
-  initial: frames.initial,
-  animate: presence.present ? frames.animate : frames.exit,
-  transition: presence.present ? presence.timing.enter : presence.timing.exit,
-});
-
-/**
- * The pointer rule a surface paints for its current presence.
- *
- * A surface stays painted for its exit tween, so it is still a box with
- * controls in it. The press that dismissed it belongs to whatever now lies
- * underneath, so a leaving surface takes none until its tween ends and it
- * unmounts.
- *
- * `rest` is what the surface is while it is open, and the two answers are not
- * interchangeable. An overlay is a **target**: it blocks the pointer (and the
- * wheel) behind it, which is what `"auto"` buys over the implicit hitbox its
- * fill already inserts. A reveal is a **wrapper**: it paints no surface of its
- * own, so `"auto"` would put a hitbox over the content it wraps — a glyph
- * wrapped by a reveal would swallow the press meant for its control — and it
- * paints nothing at rest.
- */
-export const presenceStyle = (
-  present: boolean,
-  rest: "target" | "wrapper" = "target",
-): StyleDesc =>
-  present && rest === "wrapper"
-    ? {}
-    : { pointerEvents: present ? "auto" : "none" };
+): MotionProps => motionOfPresence(frames, presence.present, presence.timing);
 
 /**
  * The layer a leaving surface paints over its content.

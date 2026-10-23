@@ -106,6 +106,25 @@ const scan = (relative: string): Scan => {
   );
 };
 
+/** A source file from the motion package, which now owns the presence table. */
+const motionSource = (file: string): string =>
+  readFileSync(
+    fileURLToPath(new URL(`../../motion/src/${file}`, import.meta.url)),
+    "utf8",
+  );
+
+/** This package's seam, as its text. */
+const seamBody = (): string =>
+  Option.getOrElse(
+    Option.map(
+      Arr.findFirst(sources, (source) => source.path === timingSeam),
+      (source) => source.body,
+    ),
+    () => {
+      throw new Error(`presence contract: ${timingSeam} was not read`);
+    },
+  );
+
 const { sources, failures } = scan("src/");
 
 /** A floating host plus the presence seam: a surface that can cover a control. */
@@ -191,11 +210,18 @@ describe("the pointer contract", () => {
 
   it("keeps the guard in one home", () => {
     // Eight copies and two omissions were one rule; a ninth copy is how the
-    // next omission happens.
+    // next omission happens. The rule now lives in the motion package, where a
+    // primitive can compose it without depending on this package.
     const copies = Arr.filterMap(sources, ({ path, body }) =>
       inlineGuard.test(body) ? Result.succeed(path) : Result.failVoid,
     );
-    expect(copies).toEqual(["src/internal/presence.tsx"]);
+    expect(copies).toEqual([]);
+    expect(
+      motionSource("presence.ts").match(
+        /pointerEvents: present \? "auto" : "none"/g,
+      ),
+    ).toHaveLength(1);
+    expect(seamBody()).toContain('from "@gpuixui/motion/presence"');
   });
 
   it("a pointer-placed host drops its occlusion with its presence", () => {
@@ -236,11 +262,14 @@ describe("the house timing", () => {
     // The bug this guards: `Reveal` spread `delayMs` onto the reduced timing
     // itself, and the runtime waits a delay out *before* an instant assignment —
     // so a reduced reveal sat at its first frame for the whole stagger. Its two
-    // siblings had each written the correct rule in their own logic module.
+    // siblings had each written the correct rule in their own logic module. The
+    // rule is the motion package's now, and no surface may restate it.
     const offenders = Arr.filterMap(sources, ({ path, body }) =>
       inlineDelay.test(body) ? Result.succeed(path) : Result.failVoid,
     );
-    expect(offenders).toEqual([timingSeam]);
+    expect(offenders).toEqual([]);
+    expect(motionSource("presence.ts")).toContain("export const delayedTiming");
+    expect(seamBody()).toContain("delayedTiming");
   });
 
   it("is composed by every staggered arrival", () => {
@@ -266,18 +295,23 @@ describe("the house timing", () => {
   });
 
   it("still drops the delay under a reduced timing, so the rule cannot pass by deletion", () => {
-    const seam = Option.getOrElse(
-      Option.map(
-        Arr.findFirst(sources, (source) => source.path === timingSeam),
-        (source) => source.body,
-      ),
-      () => {
-        throw new Error(`timing contract: ${timingSeam} was not read`);
-      },
-    );
-    expect(Str.includes("export const delayedTiming")(seam)).toBe(true);
-    expect(Str.includes("timing.duration === 0")(seam)).toBe(true);
-    expect(Str.includes("delay: delayMs / 1000")(seam)).toBe(true);
+    const shared = motionSource("presence.ts");
+    expect(Str.includes("export const delayedTiming")(shared)).toBe(true);
+    expect(Str.includes("timing.duration === 0")(shared)).toBe(true);
+    expect(Str.includes("delay: delayMs / 1000")(shared)).toBe(true);
+  });
+});
+
+describe("the shared presence table", () => {
+  it("is composed by this package's seam, not restated", () => {
+    // The bug this guards: both packages carried the frames, the window and the
+    // pointer rule, and they agreed only until one was edited. The seam must
+    // reach the one table rather than copy it, so a fix lands for both.
+    const seam = seamBody();
+    expect(seam).toContain('from "@gpuixui/motion/presence"');
+    expect(seam).not.toContain("export const fadeFrom");
+    expect(seam).not.toContain("export const presenceStyle");
+    expect(seam).not.toContain("const milliseconds");
   });
 });
 
