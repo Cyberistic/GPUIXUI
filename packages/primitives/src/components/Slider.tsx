@@ -120,6 +120,16 @@ export interface SliderProps
   /** How the value is announced. Defaults to `String(value)`; a blank answer keeps it. */
   readonly formatValue?: (value: number) => string;
   /**
+   * The value a gesture ended on.
+   *
+   * `onValueChange` reports every frame of a drag; this reports the value the
+   * gesture finished with — once, on pointer release, or once per key that
+   * moved the value. A caller that persists or fetches does that work here
+   * instead of debouncing `onValueChange`, and a gesture that ends on the value
+   * it started with still reports one commit because it happened.
+   */
+  readonly onValueCommit?: (value: number) => void;
+  /**
    * The axis the value runs along. Defaults to `horizontal`.
    *
    * A vertical track has no natural length: give it a definite height (its
@@ -154,6 +164,15 @@ export interface RangeSliderProps
   readonly label?: string;
   /** How each thumb's value is announced. Defaults to `String(value)`; a blank answer keeps it. */
   readonly formatValue?: (value: number) => string;
+  /**
+   * The span a gesture ended on.
+   *
+   * `onValueChange` reports every frame of a drag; this reports the span the
+   * gesture finished with — once, on pointer release, or once per key that
+   * moved an end. A caller that persists or fetches does that work here instead
+   * of debouncing `onValueChange`.
+   */
+  readonly onValueCommit?: (span: readonly [number, number]) => void;
   /** The axis the value runs along. Defaults to `horizontal`. */
   readonly orientation?: SliderOrientation;
   /** Extra style, resolved against the range's live state and merged last. */
@@ -501,7 +520,11 @@ export const renderSlider = (
         if (props.disabled === true || !isPlainKey(event.modifiers)) return;
         Option.match(decideValueKey(value, range, event.key ?? ""), {
           onNone: () => {},
-          onSome: handlers.onValueChange,
+          // A key that lands on the value already painted moved nothing, so it
+          // is not a commit: `Home` on a slider at its floor is a no-op.
+          onSome: (next) => {
+            if (next !== value) handlers.onValueChange(next);
+          },
         });
       })}
       onKeyUp={props.onKeyUp}
@@ -713,16 +736,34 @@ export const Slider = (props: SliderProps): ReactElement => {
   );
   const inset = sliderInset(props.size ?? "md", theme);
   const orientation = props.orientation ?? "horizontal";
+  /** The value the gesture in flight has reached, so its end can report it. */
+  const gesture = useRef<Option.Option<number>>(Option.none());
+  const report = (next: number): void => {
+    gesture.current = Option.some(next);
+    state.set(next);
+  };
+  const endGesture = (): void => {
+    Option.match(gesture.current, {
+      onNone: () => {},
+      onSome: (value) => props.onValueCommit?.(value),
+    });
+    gesture.current = Option.none();
+  };
   const apply = (event: EventPayload): void =>
     Option.match(
       pointerOf(event, renderer, trackId.current, range, inset, orientation),
       {
         onNone: () => {},
-        onSome: state.set,
+        onSome: report,
       },
     );
   return renderSlider(props, theme, state.value, focus, {
-    onValueChange: state.set,
+    onValueChange: (next) => {
+      // A key is a whole gesture, so it commits as it lands rather than on a
+      // release: there is no frame after it in which the caller could wait.
+      state.set(next);
+      props.onValueCommit?.(next);
+    },
     registerTrack: (instance) => {
       trackId.current = instance?.id ?? null;
     },
@@ -735,12 +776,14 @@ export const Slider = (props: SliderProps): ReactElement => {
       if (props.disabled === true || !dragging.current) return;
       if (event.pressedButton !== 0) {
         dragging.current = false;
+        endGesture();
         return;
       }
       apply(event);
     },
     onPointerUp: () => {
       dragging.current = false;
+      endGesture();
     },
   });
 };
@@ -787,6 +830,22 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     });
     setFocusedIndex(Option.some(index));
   };
+  /**
+   * The span the gesture in flight has reached, so its end can report it.
+   *
+   * `onValueChange` reports every move; a commit is the one a caller acts on,
+   * so the value is held until the pointer is released.
+   */
+  const gesture = useRef<Option.Option<readonly [number, number]>>(
+    Option.none(),
+  );
+  const endGesture = (): void => {
+    Option.match(gesture.current, {
+      onNone: () => {},
+      onSome: (span) => props.onValueCommit?.(span),
+    });
+    gesture.current = Option.none();
+  };
   const change = (
     span: ValueSpan,
     end: "start" | "end",
@@ -796,14 +855,18 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     // unchanged span: an arrow at a bound or a press on a thumb reported the
     // value the control already held. Report only a real move.
     const next = moveSpanEnd(span, end, value, range);
-    if (next.start !== span.start || next.end !== span.end)
+    if (next.start !== span.start || next.end !== span.end) {
+      gesture.current = Option.some(spanTuple(next));
       state.set(spanTuple(next));
+    }
   };
   /** Report a span the pointer drew, when it differs from the one painted. */
   const commitSpan = (next: ValueSpan): void => {
     const span = spanOf(state.value.current, range);
-    if (next.start !== span.start || next.end !== span.end)
+    if (next.start !== span.start || next.end !== span.end) {
+      gesture.current = Option.some(spanTuple(next));
       state.set(spanTuple(next));
+    }
   };
   return renderRangeSlider(
     props,
@@ -818,7 +881,11 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         ),
     },
     {
-      onSpanChange: state.set,
+      onSpanChange: (next) => {
+        // A key moves one end once, so it is its own finished gesture.
+        state.set(next);
+        props.onValueCommit?.(next);
+      },
       registerTrack: (instance) => {
         trackId.current = instance?.id ?? null;
       },
@@ -859,6 +926,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         if (event.pressedButton !== 0) {
           dragging.current = false;
           grabPoint.current = Option.none();
+          endGesture();
           return;
         }
         Option.match(
@@ -901,6 +969,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
       onPointerUp: () => {
         dragging.current = false;
         grabPoint.current = Option.none();
+        endGesture();
       },
     },
     useMessages(),

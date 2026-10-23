@@ -755,3 +755,93 @@ it("keeps a meter out of the tab order", async () => {
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
 });
+
+it("reports a drag's frames to onValueChange and one commit on release", async () => {
+  // The bug guarded: a slider reports every frame of a drag, so a caller that
+  // persists or fetches on `onValueChange` does that work dozens of times per
+  // gesture. `onValueCommit` is the end of the gesture — once, on release, with
+  // the value the drag finished on — and a press the control refuses ends no
+  // gesture, so it commits nothing.
+  const changes: Array<number> = [];
+  const commits: Array<number> = [];
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={20}
+      onValueChange={(value) => changes.push(value)}
+      onValueCommit={(value) => commits.push(value)}
+    />,
+  );
+  const grab = pointAt(runtime, "s", 0.4);
+  runtime.mouseDownAt(grab.x, grab.y);
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.6).x, grab.y, 0);
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.8).x, grab.y, 0);
+  runtime.flush();
+  expect(changes.length).toBeGreaterThan(1);
+  expect(commits).toStrictEqual([]);
+
+  runtime.mouseUpAt(pointAt(runtime, "s", 0.8).x, grab.y);
+  runtime.flush();
+  expect(commits).toStrictEqual([80]);
+  expect(announced(runtime, "Volume")).toBe("80");
+
+  // A right press is refused by `primaryButton`, so it arms no drag and has no
+  // end to report.
+  runtime.renderer.nativeSimulateMouseDown(grab.x, grab.y, 2);
+  runtime.renderer.nativeSimulateMouseUp(grab.x, grab.y, 2);
+  expect(commits).toStrictEqual([80]);
+});
+
+it("commits each key that moved it, and no key that could not", async () => {
+  const commits: Array<number> = [];
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={99}
+      onValueCommit={(value) => commits.push(value)}
+    />,
+  );
+  runtime.keyDown("s", "right");
+  // At the ceiling the arrow decides the value it already holds, which is not a
+  // move; neither is a key the contract does not own.
+  runtime.keyDown("s", "right");
+  runtime.keyDown("s", "a");
+  expect(commits).toStrictEqual([100]);
+  runtime.keyDown("s", "home");
+  expect(commits).toStrictEqual([100, 0]);
+});
+
+it("commits the span a range gesture ended on, once", async () => {
+  const changes: Array<readonly [number, number]> = [];
+  const commits: Array<readonly [number, number]> = [];
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      defaultValue={[20, 60] as const}
+      onValueChange={(span) => changes.push(span)}
+      onValueCommit={(span) => commits.push(span)}
+    />,
+  );
+  const grab = pointAt(runtime, "r", 0.9);
+  runtime.mouseDownAt(grab.x, grab.y);
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.95).x, grab.y, 0);
+  runtime.flush();
+  expect(changes.length).toBeGreaterThan(0);
+  expect(commits).toStrictEqual([]);
+
+  runtime.mouseUpAt(pointAt(runtime, "r", 0.95).x, grab.y);
+  runtime.flush();
+  expect(commits).toStrictEqual([[20, 95]]);
+  expect(announced(runtime, "Price maximum")).toBe("95");
+
+  // The thumb the gesture moved holds focus afterwards, so a key continues from
+  // it and commits its own move as it lands.
+  const focused = Option.getOrElse(runtime.focusedElement(), () =>
+    expect.fail("no thumb took focus"),
+  );
+  runtime.renderer.nativeSimulateKeyDown(focused.id, "left");
+  expect(commits.at(-1)).toStrictEqual([20, 94]);
+});

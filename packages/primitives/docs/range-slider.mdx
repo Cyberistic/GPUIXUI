@@ -52,6 +52,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `value` | `readonly [number, number]` | — | controlled span |
 | `defaultValue` | `readonly [number, number]` | `[min, max]` | uncontrolled start |
 | `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
+| `onValueCommit` | `(value: readonly [number, number]) => void` | — | the span a gesture ended on: once per drag release, once per key that moved an end |
 | `onChange` | `(value: readonly [number, number]) => void` | — | deprecated alias for `onValueChange` |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous |
@@ -79,6 +80,12 @@ holds the arithmetic; the probe holds the paint and the runtime's pointer path.
 table with no row for an end returns `""`, and that thumb announces its own
 number rather than an empty `aria-valuetext` — the only channel it has. A real
 answer is trimmed and used as it is.
+
+`onValueChange` is every frame; `onValueCommit` is the end of the gesture — one
+commit per drag release, with the ordered span the drag finished on, and one per
+key that moved an end. A drag that ends on the span it started with still
+commits once, because the gesture happened; a press the range refuses (a
+non-primary button) ends no gesture and commits nothing.
 
 The group's `label` names both thumbs through the provider's `rangeEnd`
 sentence. **A blank answer is absence there too**: a sentence that says nothing

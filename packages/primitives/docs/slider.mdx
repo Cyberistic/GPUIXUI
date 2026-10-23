@@ -47,6 +47,7 @@ indicator take no handlers of their own, because the track owns the press.
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | `min` | uncontrolled start |
 | `onValueChange` | `(value: number) => void` | — | called only when the value changed |
+| `onValueCommit` | `(value: number) => void` | — | the value a gesture ended on: once per drag release, once per key that moved it |
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous |
@@ -74,6 +75,14 @@ holds the arithmetic; the probe holds the paint and the runtime's pointer path.
 table with no row for this value returns `""`, and the slider announces its own
 number rather than an empty `aria-valuetext` — the only channel it has. A real
 answer is trimmed and used as it is.
+
+`onValueChange` is every frame; `onValueCommit` is the end of the gesture. A
+drag reports its moves to `onValueChange` and one commit on release, with the
+value the drag finished on; a key commits as it lands, because there is no
+release after it to wait for. A key that could not move the value (an arrow at
+the ceiling, `Home` on the floor) and a press the control refuses (a non-primary
+button) are not gestures that ended in a value, so they commit nothing. Persist
+or fetch there instead of debouncing `onValueChange`.
 
 ## Limitations
 

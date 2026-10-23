@@ -7470,6 +7470,38 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       explicit `0`, and the `COMPONENTS.md` row carries it (that row's hunk was
       swept into `e927ea4e` by the shared-index hazard — the content is on
       `master` under a message that does not name it).
+`[x]` `packages/primitives`: **a slider reported a drag frame by frame and had no
+      seam for the moment it ended** — `onValueChange` fires on every pointer
+      move, so a settings screen that persists a value or refetches on it did
+      that work dozens of times per drag and debounced its own release, which is
+      the API `Slider`/`RangeSlider` never published (shadcn's slider inherits
+      Radix's `onValueCommit` for exactly this). Both shapes now take
+      **`onValueCommit`**: once per pointer release with the value/span the
+      gesture finished on, and once per key that moved the value, because a key
+      is its own finished gesture and has no release to wait for. A key that
+      could not move the value (`Home` on the floor, an arrow at the ceiling) is
+      not a commit, and a refused non-primary press arms no gesture to end; a
+      press that ends on the value it started with still commits once, because
+      the gesture happened. The single track's key path now compares the
+      decided value before reporting, so the commit cannot fire twice at a bound
+      (the moved value was already deduplicated by `state.set`, so no painted or
+      reported behaviour changed). Proof: `runtime/value.runtime.test.tsx` gains
+      `reports a drag's frames to onValueChange and one commit on release`,
+      `commits each key that moved it, and no key that could not` and `commits
+      the span a range gesture ended on, once` (the moving drag with no commit
+      before release, the release's value, the refused right press, the
+      ceiling, the unrelated key, and the range's continuation from the thumb
+      the drag focused). Directions measured: with the four commit sites
+      neutralised the three cases fail by name (`expected [] to strictly equal
+      [ 80 ]`, `expected [] to strictly equal [ 100 ]`, `expected [] to
+      strictly equal [ [ 20, 95 ] ]`) while the other 28 pass; restored,
+      31/31 in the file and 45/45 with the example suite. The package is 56
+      files / 1 072 tests with `check-types` and `check:tests` clean. Docs:
+      `docs/slider.mdx` and `docs/range-slider.mdx` §API + the gesture
+      paragraph, the `value.example.tsx` budget row saves on release, and the
+      `Slider`/`Range slider` rows. No live scenario applies — the pointer route
+      it rides is `pointer-capture`'s and `slider-vertical-lifecycle`'s, both
+      already measured in a window.
 
 ## Blockers (project-level, with evidence)
 

@@ -55,6 +55,7 @@ export const ValueExample = (): ReactElement => {
   const [quality, setQuality] = useState(62);
   const [level, setLevel] = useState(40);
   const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
+  const [saved, setSaved] = useState("not saved");
   const diskUsed = 68;
 
   return (
@@ -112,10 +113,15 @@ export const ValueExample = (): ReactElement => {
             label="Budget"
             value={price}
             onValueChange={setPrice}
+            onValueCommit={(next) => setSaved(`$${next[0]} – $${next[1]}`)}
             step={5}
             formatValue={(value) => `$${value}`}
           />
         </Row>
+
+        <Text role="caption" tone="muted">
+          Budget saved on release: {saved}
+        </Text>
 
         <Separator orientation="horizontal" />
 
