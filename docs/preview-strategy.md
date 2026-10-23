@@ -458,11 +458,16 @@ A page that ships a demo mounts it exactly as a curated page does, so
 that page's preview is **strategy 3**: a browser approximation, labelled, with
 the real API tables and limitations beside it. A page that ships none has only
 its source and limitations: **strategy 4**. A component page ships none when the
-interaction has no honest browser reproduction to draw, and the dock, editor,
-files, media and shell lanes still ship none; the data lane's Property panels
-page is the first drawer outside the component and primitive lanes — one object
-read by a preview, a field, a table and a metric card, every one of which the
-browser can draw honestly. Either way
+interaction has no honest browser reproduction to draw; today the dock, files
+and shell lanes still ship none, while the media lane draws all five of its
+surfaces (`crop-area`, `qr-code`, `image-preview`, `file-upload`, `drop-zone`)
+and the editor lane will draw its four next. Those media drawings run the
+package's own **logic** — `@gpuixui/media`'s `crop/logic`, `qr/encode` and
+`upload/queue` — so the crop's masks and handlers, the symbol's modules and the
+queue's lifecycle are the component's, and only the paint is the browser's. The
+data lane's Property panels page was the first drawer outside the component and
+primitive lanes — one object read by a preview, a field, a table and a metric
+card, every one of which the browser can draw honestly. Either way
 the page opens with a note saying the drawing is not the shipped frame and
 naming the command that opens the companion playground — `nub run
 dev:playground`, read from the root manifest rather than typed twice — with a

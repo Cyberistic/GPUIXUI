@@ -12,6 +12,11 @@ import {
   CountingNumberDemo,
   countingNumberDemoSource,
 } from "./counting-number-demo";
+import { CropAreaDemo, cropAreaDemoSource } from "./crop-area-demo";
+import { DropZoneDemo, dropZoneDemoSource } from "./drop-zone-demo";
+import { FileUploadDemo, fileUploadDemoSource } from "./file-upload-demo";
+import { ImagePreviewDemo, imagePreviewDemoSource } from "./image-preview-demo";
+import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
 import {
   AvatarStates,
   AvatarWorkflow,
@@ -3192,4 +3197,15 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: CountingNumberDemo,
     source: countingNumberDemoSource,
   },
+  "crop-area-demo": { render: CropAreaDemo, source: cropAreaDemoSource },
+  "drop-zone-demo": { render: DropZoneDemo, source: dropZoneDemoSource },
+  "file-upload-demo": {
+    render: FileUploadDemo,
+    source: fileUploadDemoSource,
+  },
+  "image-preview-demo": {
+    render: ImagePreviewDemo,
+    source: imagePreviewDemoSource,
+  },
+  "qr-code-demo": { render: QrCodeDemo, source: qrCodeDemoSource },
 };

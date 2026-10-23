@@ -175,11 +175,12 @@ describe("the preview strategy document", () => {
     );
   });
 
-  it("names the one demo outside the component and primitive lanes, and only that one", () => {
+  it("names every demo outside the component and primitive lanes", () => {
     // Bug guarded: the policy said every lane but Components and Primitives was
-    // strategy 4, while the Property panels page now draws its composition. A
-    // second demo outside those lanes has to ask the policy to say so, and a
-    // page that loses this one has to ask it too.
+    // strategy 4, while the Property panels page draws its composition and the
+    // media lane draws all five of its surfaces. A lane that starts drawing has
+    // to ask the policy to say so, and a page that loses its demo has to ask it
+    // too.
     const lanes = ["data", "dock", "editor", "files", "media", "shell"];
     const withDemo = packagePages.filter(
       (path) =>
@@ -187,8 +188,17 @@ describe("the preview strategy document", () => {
         read(path).includes("<ComponentPreview"),
     );
 
-    expect(withDemo).toEqual(["packages/data/docs/property-panel.mdx"]);
-    expect(read("docs/preview-strategy.md")).toContain("Property panels");
+    expect(withDemo).toEqual([
+      "packages/data/docs/property-panel.mdx",
+      "packages/media/docs/crop-area.mdx",
+      "packages/media/docs/drop-zone.mdx",
+      "packages/media/docs/file-upload.mdx",
+      "packages/media/docs/image-preview.mdx",
+      "packages/media/docs/qr-code.mdx",
+    ]);
+    const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
+    expect(policy).toContain("Property panels");
+    expect(policy).toContain("the media lane draws all five of its surfaces");
   });
 
   it("states the Related rule without a count the pages can outgrow", () => {

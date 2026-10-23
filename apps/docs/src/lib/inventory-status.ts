@@ -88,6 +88,7 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
 
   "Code editor": ["Code editor integration"],
   MarkdownEditor: ["Rich-text editing"],
+  MediaPlayer: ["Video / audio player + waveform"],
   DropZone: ["File / folder selection"],
 };
 

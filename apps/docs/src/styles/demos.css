@@ -10612,3 +10612,276 @@
   font-size: 11px;
   color: var(--muted-foreground);
 }
+
+/* ---- media: the crop frame, a QR symbol, an image preview, an upload queue
+   and a drop target. The paint is the media package's own geometry and roles;
+   the arithmetic behind the crop, the symbol and the queue is imported from
+   `@gpuixui/media`'s logic subpaths, not re-drawn here. ---- */
+.gx-crop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-crop-frame {
+  position: relative;
+  width: 320px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--card);
+  cursor: move;
+}
+
+.gx-crop-picture {
+  display: block;
+  width: 320px;
+  height: 200px;
+}
+
+.gx-crop-bar {
+  position: absolute;
+  background: var(--overlay);
+  pointer-events: none;
+}
+
+.gx-crop-guide {
+  position: absolute;
+  background: var(--background);
+  box-shadow: 0 0 0 1px var(--foreground);
+  pointer-events: none;
+}
+
+.gx-crop-handle {
+  position: absolute;
+  padding: 0;
+  background: var(--primary);
+  border: 1px solid var(--background);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.gx-crop-handle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-crop-readout,
+.gx-crop-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-crop-readout {
+  font-family: var(--font-mono);
+  color: var(--foreground);
+}
+
+.gx-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: calc(var(--radius) + 2px);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.gx-qr-meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-preview-demo {
+  gap: 12px;
+}
+
+.gx-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gx-preview-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 240px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+.gx-preview-picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    width 300ms ease,
+    height 300ms ease,
+    left 300ms ease,
+    top 300ms ease;
+}
+
+.gx-preview-frame:hover .gx-preview-picture {
+  width: 160%;
+  height: 160%;
+  left: -30%;
+  top: -30%;
+}
+
+.gx-preview-caption {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-preview-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-preview-error-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  border-radius: 9999px;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gx-preview-error-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.gx-upload-demo {
+  gap: 12px;
+}
+
+.gx-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(420px, 100%);
+}
+
+.gx-upload-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.gx-upload-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-upload-glyph {
+  width: var(--icon-size-md);
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.gx-upload-glyph[data-status="done"] {
+  color: var(--success);
+}
+
+.gx-upload-glyph[data-status="error"] {
+  color: var(--destructive);
+}
+
+.gx-upload-glyph[data-status="uploading"] {
+  color: var(--primary);
+}
+
+.gx-upload-name {
+  flex-grow: 1;
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.gx-upload-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 15px;
+}
+
+.gx-upload-remove:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-drop-demo {
+  gap: 12px;
+}
+
+.gx-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(360px, 100%);
+  padding: 24px;
+  border: 1px dashed var(--border-strong);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--muted);
+}
+
+.gx-drop:hover {
+  border-color: var(--ring);
+  background: var(--accent);
+}
+
+.gx-drop[data-disabled] {
+  border-color: var(--border-strong);
+  background: var(--muted);
+}
+
+.gx-drop-mark {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+.gx-drop-label {
+  margin: 0;
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.gx-drop-description,
+.gx-drop-readout {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}

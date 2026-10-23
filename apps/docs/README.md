@@ -276,6 +276,11 @@ src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and over
 src/components/docs/bubbles-demo.tsx       The bubbles field's rising scatter
 src/components/docs/code-block-demo.tsx    The code block's title bar, gutter and source
 src/components/docs/copy-button-demo.tsx   The copy button's acknowledge flip
+src/components/docs/crop-area-demo.tsx     The crop frame's mask, guides and drag, on the package's crop logic
+src/components/docs/drop-zone-demo.tsx     The drop target's pick action and received names
+src/components/docs/file-upload-demo.tsx   The upload queue's states and simulated transfer, on the package's queue
+src/components/docs/image-preview-demo.tsx The image surface's loaded, loading and error states
+src/components/docs/qr-code-demo.tsx       A scannable symbol from the package's own encoder
 src/components/docs/countdown-demo.tsx     The countdown's clock formats
 src/components/docs/counting-number-demo.tsx The counting number's easing ramp
 src/components/docs/fireworks-demo.tsx     The fireworks field's bursting sparks
