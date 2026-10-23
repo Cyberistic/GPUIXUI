@@ -923,6 +923,15 @@ describe("the theming page's look parameter", () => {
     expect(policy).toContain("the sidebar offers platforms only");
     expect(policy).not.toContain("look picker");
     expect(policy).not.toContain("Hunter License green");
+    // The policy named the era pair after `omarchy` joined `retroNames`, so a
+    // reader of the policy could not see the third style. Deriving the labels
+    // makes a fourth look fail here too.
+    expect(
+      retroNames
+        .map((name) => retroStyles[name].label)
+        .filter((label) => !policy.includes(label)),
+    ).toEqual([]);
+    expect(policy).not.toContain("Luna and Aero");
   });
 
   it("describes the styles the library ships, not ones the site invented", () => {

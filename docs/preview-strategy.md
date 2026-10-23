@@ -533,8 +533,9 @@ landing's own vocabulary); the components have the library's tokens (iris). A
 preview must show the latter, and it must follow the platform switch, the palette
 switch and the look parameter. All three are library values: the platform names
 come from `platformStyles`, the palettes are the library's own light and dark
-themes, and the looks are the authored `retroStyles` — Luna and Aero — which are
-styles of the same shape, not a fifth platform (the mission's toggle stays
+themes, and the looks are the authored `retroStyles` — Windows XP (Luna),
+Windows 7 (Aero) and Omarchy — which are styles of the same shape, not a fifth
+platform (the mission's toggle stays
 macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each
 is written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
 reader saw.
