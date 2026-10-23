@@ -412,19 +412,16 @@ export const useInertia = (
 
   useEffect(() => {
     if (reduced(options)) {
-      // The declaration this commit ends is retired, whether or not the frame
-      // it names differs from the one on screen: the animated branch below must
-      // not launch it again when the preference turns back off. A coast this
-      // hook already ended is held rather than projected again, since another
-      // reduced commit is not a new gesture to complete.
+      // The declaration this commit ends is retired, whether or not the frame it
+      // names differs from the one on screen: the animated branch must not
+      // launch it again when the preference turns back off.
       retired.current = running;
       // The render paints the projection the declaration names from the frame on
-      // screen; retiring the value there in this commit means a preference that
-      // turns back on does not relaunch a gesture the reader saw end.
+      // screen, and this commit retires the retained value there.
       const destination = coastRest(running, motion.current);
-      // A coast this hook already ended is held, not projected a second time:
-      // the reader watched that journey finish, so a later reduced commit is not
-      // a new gesture to complete.
+      // A coast this hook already ended is held rather than projected again: the
+      // reader watched that journey finish, so another reduced commit is not a
+      // new gesture to complete.
       if (ended) return;
       if (destination === motion.current) return;
       motion.set(destination);
