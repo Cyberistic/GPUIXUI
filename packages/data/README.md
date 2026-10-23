@@ -404,9 +404,9 @@ same number the marks divide by (`chartScale`, the widest single value among the
 slots the chart paints, is the grouped bar's and the line's). A value past the
 last label draws nowhere, so it cannot raise the axis either. The axis column
 paints its ceiling at the plot's top and its floor on the plot's floor, so a
-bar's top reads against the value beside it. Every mark sits at the centre of its category slot — a bar, a line's
-point and the label under it share one `x` — so a series with fewer values than
-labels stays in the columns it names.
+bar's top reads against the value beside it. Every mark sits at the centre of
+its category slot — a bar, a line's point and the label under it share one `x`
+— so a series with fewer values than labels stays in the columns it names.
 
 The picture announces its numbers: the chart is a group named by `aria-label`,
 each series is an image named by its label, and the values travel in
