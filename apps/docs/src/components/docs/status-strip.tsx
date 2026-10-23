@@ -10,9 +10,19 @@ import { inventoryUrl, statusForPage } from "../../lib/inventory-status";
  * inventory's verdict — shipped or not, fully supported or partial — before the
  * prose that describes it. A page the inventory has no row for renders no strip
  * rather than a guess.
+ *
+ * The address comes with the title because a title is not an identity: two
+ * packages ship a `PropertyPanel`, and only the address says which page is
+ * reporting which component's verdict.
  */
-export function StatusStrip({ title }: { readonly title: string }) {
-  const status = statusForPage(inventory, title);
+export function StatusStrip({
+  title,
+  url,
+}: {
+  readonly title: string;
+  readonly url: string;
+}) {
+  const status = statusForPage(inventory, { title, url });
   if (status.kind === "none") return null;
 
   const { row } = status;

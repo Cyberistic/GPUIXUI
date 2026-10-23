@@ -2,11 +2,13 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
+import { pageUrl } from "./component-index";
 import { inventory } from "./inventory-data";
 import {
   inventoryUrl,
   laneRows,
   pageRows,
+  pageRowsByUrl,
   rowsForPage,
   statusForPage,
   unpublishedRows,
@@ -70,6 +72,13 @@ const componentPages = [...curatedPages, ...packagePages];
 const titleOf = (page: Page): string => {
   if (page.title === undefined) throw new Error(`${page.file}: no title`);
   return page.title;
+};
+
+/** A page's address, resolved the way the component index resolves it. */
+const urlOf = (page: Page): string => {
+  const url = pageUrl(page.file.replace(/^apps\/docs\//, ""));
+  if (url === undefined) throw new Error(`${page.file}: no address`);
+  return url;
 };
 
 describe("the status a package page reports", () => {
@@ -136,14 +145,69 @@ describe("the status a package page reports", () => {
     expect(dock.kind === "row" && dock.row.name).toBe("Docking layouts");
   });
 
+  it("reports the row the page's own package ships", () => {
+    // Bug guarded: `@gpuixui/data` and `@gpuixui/files` each ship a
+    // `PropertyPanel`, so both mounted pages carry the title "Property
+    // panels". The join was the title alone, so `/docs/files/property-panel`
+    // reported the **data** package's row: a reader was shown another
+    // component's status, and the files panel's two rows were credited to a
+    // page that does not document them. The address is the identity the two
+    // pages do not share.
+    const data = statusForPage(inventory, {
+      title: "Property panels",
+      url: "/docs/data-display/property-panel",
+    });
+    const files = statusForPage(inventory, {
+      title: "Property panels",
+      url: "/docs/files/property-panel",
+    });
+
+    expect(data.kind === "row" && data.row.name).toBe("Property panels");
+    expect(files.kind === "row" && files.row.name).toBe("Inspector panels");
+    expect(
+      rowsForPage(inventory, {
+        title: "Property panels",
+        url: "/docs/files/property-panel",
+      }).map((row) => row.name),
+    ).toEqual(["Inspector panels", "Property editors"]);
+  });
+
+  it("names a live page and a real row for every address alias", () => {
+    const titles = new Map(
+      componentPages.map((page) => [urlOf(page), titleOf(page)] as const),
+    );
+
+    const findings = Object.entries(pageRowsByUrl).flatMap(([url, names]) => {
+      const title = titles.get(url);
+      if (title === undefined) return [`${url}: no mounted page`];
+      const unknown = names
+        .filter((name) => !inventory.rows.some((row) => row.name === name))
+        .map((name) => `${url} -> ${name}`);
+      // An alias that reports the row its title already names is dead weight:
+      // the page's strip would be right with the entry deleted.
+      const redundant =
+        rowsForPage(inventory, title)[0]?.name ===
+        rowsForPage(inventory, { title, url })[0]?.name
+          ? [`${url}: the alias names the row the title already names`]
+          : [];
+      return [...unknown, ...redundant];
+    });
+
+    expect(findings).toEqual([]);
+  });
+
   it("publishes every shipped row on a page", () => {
     // The inventory's own rule: a row may only be `done` when the component has
     // a docs page. A row renamed on the site, or a package page mounted under a
     // title its alias does not name, leaves the row undocumented while every
-    // page it does not touch still passes.
-    const titles = componentPages.map(titleOf);
+    // page it does not touch still passes. Pages are compared by address, not
+    // title: two packages' `PropertyPanel` pages share one title.
+    const pages = componentPages.map((page) => ({
+      title: titleOf(page),
+      url: urlOf(page),
+    }));
 
-    expect(unpublishedRows(inventory, titles)).toEqual([]);
+    expect(unpublishedRows(inventory, pages)).toEqual([]);
   });
 
   it("reports a shipped row no page names, rather than counting it", () => {
@@ -215,8 +279,10 @@ describe("the status a package page reports", () => {
       view.indexOf("function DocsView"),
     );
 
-    expect(curated).toContain("<StatusStrip title={page.title} />");
-    expect(packaged).toContain("<StatusStrip title={page.title} />");
+    // Each frame hands the strip the page's address, because two pages can
+    // share a title and only the address tells their rows apart.
+    expect(curated).toContain("<StatusStrip title={page.title} url={url} />");
+    expect(packaged).toContain("<StatusStrip title={page.title} url={url} />");
   });
 
   it("throws on a title two rows could answer, instead of guessing", () => {

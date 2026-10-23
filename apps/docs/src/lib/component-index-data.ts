@@ -2,6 +2,7 @@ import {
   buildIndex,
   type ComponentEntry,
   type ComponentPage,
+  type PageIdentity,
   type PageVerdict,
 } from "./component-index";
 import { inventory } from "./inventory-data";
@@ -39,8 +40,8 @@ const pages = (files: Readonly<Record<string, string>>): ComponentPage[] =>
     source,
   }));
 
-const verdictOf = (title: string): PageVerdict | undefined => {
-  const status = statusForPage(inventory, title);
+const verdictOf = (page: PageIdentity): PageVerdict | undefined => {
+  const status = statusForPage(inventory, page);
   return status.kind === "row"
     ? { status: status.row.status, support: status.row.support }
     : undefined;

@@ -341,7 +341,7 @@ src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack b
 src/lib/inventory.ts                Parses the tier tables of COMPONENTS.md into lane rows
 src/lib/inventory-data.ts           The parsed inventory, at build time
 src/lib/lane-pages.ts               The pages a lane's packages ship, grouped by package
-src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip, both ways
+src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip (title, plus the address two pages can share), both ways
 src/lib/public-api.ts               Derives the entry points from each package's exports map
 src/lib/public-api-data.ts          The entry points, at build time
 src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
@@ -464,7 +464,11 @@ it mounts — opens with a **status strip** generated from its `COMPONENTS.md` r
 (`src/components/docs/status-strip.tsx`): the inventory's status and its GPUix
 support verdict, plus a link to the inventory. The join is the page title
 (`src/lib/inventory-status.ts`), which normalises punctuation and a trailing
-plural and names the titles whose row reads differently. A page may publish
+plural and names the titles whose row reads differently. Two packages can ship a
+component of the same name — `@gpuixui/data` and `@gpuixui/files` each have a
+`PropertyPanel` — so the join also takes the page's address and `pageRowsByUrl`
+pins the page whose row its title cannot name; the address reaches the index too,
+so a tile cannot wear its neighbour's verdict. A page may publish
 several rows — the table page teaches the column menu, the resize strip and the
 filter field, the dock page its tabs, nesting and persistence — and the first one
 is what its strip reports. Under it, the **Built on** line

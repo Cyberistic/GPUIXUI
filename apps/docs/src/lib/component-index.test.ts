@@ -233,7 +233,7 @@ describe("the verdict a row reports", () => {
     Card: { status: "done", support: "yes" },
     Skeleton: { status: "todo", support: "?" },
   };
-  const verdicts: VerdictOf = (title) => rows[title];
+  const verdicts: VerdictOf = (page) => rows[page.title];
   const entries = buildIndex(
     [
       page("packages/primitives/docs/button.mdx", "Button"),
@@ -670,7 +670,8 @@ describe("the real index", () => {
     const missing = componentIndex.filter(
       (row) =>
         row.verdict === undefined &&
-        statusForPage(inventory, row.title).kind === "row",
+        statusForPage(inventory, { title: row.title, url: row.url }).kind ===
+          "row",
     );
     const answered = componentIndex.filter((row) => row.verdict !== undefined);
 

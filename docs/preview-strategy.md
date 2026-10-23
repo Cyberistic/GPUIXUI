@@ -630,6 +630,13 @@ prints the `COMPONENTS.md` row — its status and its GPUix support verdict — 
 the page, joined by the page title: `src/lib/inventory-status.ts` normalises
 punctuation and a trailing plural, and names the few titles whose row reads
 differently (`Text` → `Text / typography`, `Toast` → `Toasts / notifications`).
+A title is not an identity, though: `@gpuixui/data` and `@gpuixui/files` each
+ship a `PropertyPanel`, so both pages are titled `Property panels` and only the
+address says which component a page is about. The strip therefore hands the join
+its page's URL, and `pageRowsByUrl` pins the one page whose row its title cannot
+name — the files panel's `Inspector panels` and `Property editors` rows, while
+the data page keeps the `Property panels` row. The address also travels to the
+index, so a tile cannot wear its neighbour's verdict.
 The strip reads the inventory, so a row that moves to `done` moves on the page in
 the same commit with no docs change. Both frames mount it, so the curated page a
 reader lands on reports the same verdict as the package page the URL shadows —
@@ -638,9 +645,10 @@ the verdict is not left to the index tile alone.
 A page the inventory has no row for renders no strip rather than a guess. The
 argued exemption is `ThemeProvider`, a provider rather than a component, and
 `inventory-status.test.ts` fails when a new page needs an entry, when an alias
-names a row that is gone, when an exemption outlives its page, or when a title
-two rows could answer would report the wrong verdict. `Grid` was the second
-exemption until its Tier 1 row landed; the strip now reports it.
+names a row that is gone, when an alias reports the row its title already names,
+when an exemption outlives its page, or when a title two rows could answer would
+report the wrong verdict. `Grid` was the second exemption until its Tier 1 row
+landed; the strip now reports it.
 
 The same row marks the index row, because the strip is on a page the reader has
 not opened yet. `src/lib/component-index-data.ts` resolves every page title

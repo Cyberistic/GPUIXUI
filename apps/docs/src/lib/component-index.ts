@@ -30,13 +30,20 @@ export interface PageVerdict {
   readonly support: string;
 }
 
+/** A page as the verdict is resolved: its title, and the address that pins it. */
+export interface PageIdentity {
+  readonly title: string;
+  readonly url: string;
+}
+
 /**
- * The inventory row for a page title, or `undefined` when it has none.
+ * The inventory row for a page, or `undefined` when it has none.
  *
  * Injected rather than imported: the index stays a function of its pages, and
- * the data module resolves the title aliases the status strip already uses.
+ * the data module resolves the title aliases the status strip already uses. The
+ * address travels with the title because two pages can share one.
  */
-export type VerdictOf = (title: string) => PageVerdict | undefined;
+export type VerdictOf = (page: PageIdentity) => PageVerdict | undefined;
 
 /** One row the index renders. */
 export interface ComponentEntry {
@@ -446,7 +453,7 @@ const entryOf = (
     description: frontmatterValue(head, "description") ?? "",
     url,
     section,
-    verdict: verdictOf(title),
+    verdict: verdictOf({ title, url }),
     parts: partsOf(page.source),
     ...propsOf(page.source),
     limitations: limitationsOf(page.source),

@@ -8858,6 +8858,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | **Two icon cards say the same thing in two layers** — the primitives index now draws every icon in a gallery (`/docs/primitives#the-icon-set`), and the API page at `/docs/icons/icon` still carries its prose §Names list of the same 76 names; a name added to the set has to satisfy the gallery's guard (it is derived, so it cannot miss one) and the icons page's own §Names guard. The two surfaces answer different questions — what it looks like, and what it is called with its props — so this is duplication to keep in step rather than to remove | icons (`packages/icons/docs/icon.mdx`) + docs-site (`/docs/primitives`) | open — no action needed while the icons page's §Names guard derives from the package; if the list is ever hand-kept, point it at the gallery instead |
 | Hand a **transparent code field the fill it actually paints** — `CodeEditor`'s `<textarea>` overlay passed `nativeTextTheme(theme)` with the seam's default `input` fill while the editor's own surface is `bg-background`, so a light theme handed the runtime `#FFFFFF` behind a `#F6F8FA` pane; a brand that owns `input` and `background` independently can hand it a fill the reader never sees, and the caret/selection the seam exists to theme are measured against that surface. This is the mismatch `MarkdownEditor` already fixed for its own source pane (`nativeTextTheme(theme, "background")`) | components (`packages/editor/src/code-editor/code-editor.tsx`) | **resolved 2026-10-23** — the host takes `nativeTextTheme(theme, "background")`, the source header names the role, and `src/behaviour/code-editor.test.tsx` gains `hands the source field the page fill the editor paints` over both shipped themes (appearance, `bg`, `caret`, `fontMono`, and no `appearance` in the style). Direction measured: at `HEAD` the light case reads `"bg": "#FFFFFF"` where the editor paints `#F6F8FA`; restored, the behaviour suite is 30/30 and the unit suite 59/59 with `check-types` clean. No native scenario re-run — `editor-surface` measures the raw `<textarea>` and the seam is an offscreen-renderer fact |
 | Stop a **disabled drop zone advertising a drop** — `DropZone` gated the leave handler on `!disabled` but painted from the hover flag unconditionally, so a zone disabled while the pointer was over it kept the accent border and fill (the highlight is the promise of an action), and a pointer that left during the disabled window left the flag set, so a zone re-enabled after saving painted a hover it no longer had | components (`packages/media/src/drop-zone.tsx`) | **resolved 2026-10-23** — the paint reads `surface.hovered && !disabled` and the leave handler always clears the flag (enter stays gated, so a disabled zone never takes a new one). `src/drop-zone.test.tsx` gains `paints a disabled zone at rest even while the hover flag is set` (with the enabled highlight as its negative control) and `clears a hover that ends while the zone is disabled`. Directions measured: with the two lines restored the cases fail (`borderColor` ring vs `borderStrong`, and `onLeave` `0` calls); fixed, the file is 7/7 and the package 110/110 with `check-types` clean. Docs `docs/drop-zone.mdx` §API/§Limitations state the resting paint. No native scenario re-run — the pointer wash is the `press-routing-lifecycle` contract and the state is the wrapper's |
+| Give the **files `PropertyPanel` page its own title** — `@gpuixui/data` and `@gpuixui/files` each ship a `PropertyPanel`, so both pages are titled "Property panels": the sidebar, the component grid and the search dialog list two entries a reader cannot tell apart, and a search for "property panel" returns both under one name. The docs site no longer reports the wrong verdict (the status strip and the index tile are address-pinned — see the docs-site row above), but the title is the files page's to choose: `Inspector panel` names the component it ships and leaves "Property panels" to the data panel. When the page is retitled, add `"Inspector panel": ["Inspector panels", "Property editors"]` to `pageRows` and delete the `pageRowsByUrl` entry in the same change (its guard fails an alias that reports the row its title already names) | files (`packages/files/docs/property-panel.mdx`) + docs-site (the alias table) | open — measured 2026-10-24 while fixing the address join: the two mounted pages share the title `Property panels`, and `inventory-status.test.ts` holds the address pin that keeps their verdicts apart |
+| `packages/primitives`' **`check-types` is red on master** — `src/core/testing/theme.fixture.ts:186` declares `const typography: MutableTypeGroup` and no such type exists (`TS2304`), with `theme.test.ts:208` also failing (`TS2704`, `delete` on a read-only property). `nub run check-types` stops on that package, so the repo-wide gate cannot be read for any other package | primitives (`src/core/testing/theme.fixture.ts`, `src/core/theme.test.ts`) | open — measured 2026-10-24 during a docs-site pass; not this workstream's files, and `nub run --filter @gpuixui/docs check-types` is clean |
 
 ## Phase D — data and workspace components
 
@@ -10385,7 +10387,37 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 328/329
+`[ ]` `[██████████]` 329/330
+
+`[x]` Report the **component a page's address belongs to**, not its neighbour's —
+      `@gpuixui/data` and `@gpuixui/files` each ship a `PropertyPanel`, so
+      `/docs/data-display/property-panel` and `/docs/files/property-panel` are
+      both titled "Property panels", and the page → `COMPONENTS.md` join read the
+      **title alone**: the files page printed the data package's status, its
+      support verdict and `data-component="Property panels"` (the same on the
+      component index's tile), while the two rows the files panel answers for —
+      `Inspector panels` and `Property editors` — were credited to a page that
+      does not document them. `src/lib/inventory-status.ts` now takes a
+      `PageRef { title, url }`: `pageRowsByUrl` pins a page whose title cannot
+      name its row (`/docs/files/property-panel` → its two rows), the data page
+      keeps the `Property panels` row alone, `StatusStrip` and the index's
+      `VerdictOf` both pass the address, and `unpublishedRows` reads pages
+      rather than titles so a row's publication is still proven by a page.
+      Guards: `inventory-status.test.ts` gains `reports the row the page's own
+      package ships` (the pair by address, both rows and the primary) and
+      `names a live page and a real row for every address alias` (the address is
+      mounted, the rows exist, and an alias that repeats what the title already
+      names is dead weight), and `status-strip.test.tsx` gains `reports the
+      component the page's address belongs to, not its neighbour`. Directions
+      measured: with the pin removed, the row case fails `expected 'Property
+      panels' to be 'Inspector panels'`, the publication case reports `[
+      'Inspector panels', …(1) ]` unpublished and the strip case fails by name;
+      restored, `apps/docs` is **150 files / 1 310 tests** green with
+      `check-types` clean, and the served site prints `data-component="Inspector
+      panels"` on the files page and `data-component="Property panels"` on the
+      data page. The remaining duplication is the title itself, recorded for the
+      files owner below. No native scenario applies — a build-time join and the
+      strip it feeds.
 
 `[x]` Correct the **second set of claims the site's prose made against the
       source** — five more pages printed a rule the library had outgrown.

@@ -10,7 +10,25 @@ import { gitConfig } from "./shared";
  * generated from its row. The page title is the join: most titles match their
  * row once punctuation and a plural are normalised, and the titles whose row
  * reads differently — or that publish more than one row — are named below.
+ *
+ * A title is not an identity. Two packages can ship a component of the same
+ * name (`PropertyPanel` is in `@gpuixui/data` and `@gpuixui/files`), so two
+ * mounted pages can carry one title while the inventory keeps a row per
+ * component. The address is what the two pages do not share, so a page whose
+ * row its title cannot name is pinned by address in {@link pageRowsByUrl}.
  */
+
+/** A page as the strip, the index and the inventory's publication rule name it. */
+export interface PageRef {
+  /** The page's frontmatter title. */
+  readonly title: string;
+  /**
+   * The page's address. Omitted by a caller that has only a title and means
+   * whatever that title publishes; present on a page, because a title two pages
+   * share cannot identify one.
+   */
+  readonly url?: string;
+}
 
 /**
  * The rows a page publishes, primary first.
@@ -64,16 +82,29 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   ],
   "Split pane": ["Resizable split panes"],
 
-  // A property panel is the inspector and its editors on one page.
-  "Property panels": [
-    "Property panels",
-    "Inspector panels",
-    "Property editors",
-  ],
+  // The `@gpuixui/data` panel: the rows that describe one object. The
+  // `@gpuixui/files` panel shares the title and is pinned to its own rows below.
+  "Property panels": ["Property panels"],
 
   "Code editor": ["Code editor integration"],
   MarkdownEditor: ["Rich-text editing"],
   DropZone: ["File / folder selection"],
+};
+
+/**
+ * The rows a page publishes when its title cannot name them, by address.
+ *
+ * Both `@gpuixui/data` and `@gpuixui/files` ship a `PropertyPanel`, so their
+ * pages carry the same title while the inventory keeps the data panel's row and
+ * the two rows the files panel answers for — the inspector it fills and the
+ * editors it holds. Without this table the files page reported the **data**
+ * package's verdict, and the files rows were credited to a page that does not
+ * document them. Every address here must be a mounted page whose rows are not
+ * the ones its title already publishes; `inventory-status.test.ts` holds both
+ * directions.
+ */
+export const pageRowsByUrl: Readonly<Record<string, ReadonlyArray<string>>> = {
+  "/docs/files/property-panel": ["Inspector panels", "Property editors"],
 };
 
 /**
@@ -166,19 +197,30 @@ const stem = (text: string): string => {
   return normalised.endsWith("s") ? normalised.slice(0, -1) : normalised;
 };
 
+/** A page named once: a title, or a title and the address that separates it. */
+const refOf = (page: PageRef | string): PageRef =>
+  typeof page === "string" ? { title: page } : page;
+
+/** The rows a page names outright, address pin first, title alias second. */
+const namedRows = (page: PageRef): ReadonlyArray<string> | undefined =>
+  (page.url === undefined ? undefined : pageRowsByUrl[page.url]) ??
+  pageRows[page.title];
+
 /**
- * Every row a page's title publishes, primary first.
+ * Every row a page publishes, primary first.
  *
- * A title named in `pageRows` publishes its rows outright; any other title must
- * match one row once punctuation and a trailing plural are dropped.
+ * A page pinned by address publishes the rows in `pageRowsByUrl`; a page named
+ * in `pageRows` publishes its rows outright; any other title must match one row
+ * once punctuation and a trailing plural are dropped.
  */
 export const rowsForPage = (
   inventory: Inventory,
-  title: string,
+  page: PageRef | string,
 ): ReadonlyArray<InventoryRow> => {
-  const named = pageRows[title];
+  const ref = refOf(page);
+  const named = namedRows(ref);
   if (named === undefined) {
-    return inventory.rows.filter((row) => stem(row.name) === stem(title));
+    return inventory.rows.filter((row) => stem(row.name) === stem(ref.title));
   }
   // The declared order is the primary-first order the strip reads, so it must
   // not fall back to the inventory's own ordering.
@@ -190,11 +232,11 @@ export const rowsForPage = (
 /** The shipped rows no page publishes, by name. */
 export const unpublishedRows = (
   inventory: Inventory,
-  titles: ReadonlyArray<string>,
+  pages: ReadonlyArray<PageRef | string>,
 ): ReadonlyArray<string> => {
   const published = new Set(
-    titles.flatMap((title) =>
-      rowsForPage(inventory, title).map((row) => row.name),
+    pages.flatMap((page) =>
+      rowsForPage(inventory, page).map((row) => row.name),
     ),
   );
   const laneOnly = new Set(laneRows.map((entry) => entry.row));
@@ -208,29 +250,30 @@ export const unpublishedRows = (
 /**
  * The status a page reports.
  *
- * The first row a title publishes is the one its strip reports. An ambiguous
+ * The first row a page publishes is the one its strip reports. An ambiguous
  * title throws instead of guessing: a page that reported the wrong component's
  * verdict would be worse than one that reported none, and
  * `inventory-status.test.ts` holds every mounted page to one row.
  */
 export const statusForPage = (
   inventory: Inventory,
-  title: string,
+  page: PageRef | string,
 ): PageStatus => {
-  const exempt = withoutRow.find((page) => page.title === title);
+  const ref = refOf(page);
+  const exempt = withoutRow.find((entry) => entry.title === ref.title);
   if (exempt !== undefined) return { kind: "none", reason: exempt.reason };
 
-  const rows = rowsForPage(inventory, title);
+  const rows = rowsForPage(inventory, ref);
   const [row] = rows;
   if (row === undefined) {
     return { kind: "none", reason: "COMPONENTS.md has no row for this page" };
   }
-  // A title in `pageRows` names its rows on purpose; one that matched several
-  // by itself is ambiguous and must be aliased rather than silently reading the
-  // first.
-  if (pageRows[title] === undefined && rows.length > 1) {
+  // A page in either alias table names its rows on purpose; one that matched
+  // several by itself is ambiguous and must be aliased rather than silently
+  // reading the first.
+  if (namedRows(ref) === undefined && rows.length > 1) {
     throw new Error(
-      `inventory: "${title}" names ${rows.length} rows (${rows
+      `inventory: "${ref.title}" names ${rows.length} rows (${rows
         .map((candidate) => candidate.name)
         .join(", ")}); add it to the alias table in inventory-status.ts`,
     );

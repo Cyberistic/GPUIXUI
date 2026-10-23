@@ -148,7 +148,7 @@ function SiteContent({ path, url }: { path: string; url: string }) {
       toc={toc}
       url={url}
     >
-      <StatusStrip title={page.title} />
+      <StatusStrip title={page.title} url={url} />
       <DependencyStrip url={url} />
       <MDX components={mdxComponents} />
       <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
@@ -187,7 +187,7 @@ function PackageContent({
       toc={toc}
       url={url}
     >
-      <StatusStrip title={page.title} />
+      <StatusStrip title={page.title} url={url} />
       <DependencyStrip url={url} />
       <NativeRunNote
         kind={collection.kind}

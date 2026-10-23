@@ -10,8 +10,8 @@ import { StatusStrip } from "./status-strip";
  * it has to stay silent on a page the inventory has no row for.
  */
 
-const render = (title: string): string =>
-  renderToStaticMarkup(<StatusStrip title={title} />);
+const render = (title: string, url = "/docs/components"): string =>
+  renderToStaticMarkup(<StatusStrip title={title} url={url} />);
 
 describe("the status strip", () => {
   it("prints the row's status, its GPUix verdict and the inventory link", () => {
@@ -73,6 +73,18 @@ describe("the status strip", () => {
     );
     expect(render("DropZone")).toContain(
       'data-component="File / folder selection"',
+    );
+  });
+
+  it("reports the component the page's address belongs to, not its neighbour", () => {
+    // Bug guarded: `@gpuixui/data` and `@gpuixui/files` each ship a
+    // `PropertyPanel`, so both pages are titled "Property panels". The join was
+    // the title alone, so the files page printed the data package's verdict.
+    expect(
+      render("Property panels", "/docs/data-display/property-panel"),
+    ).toContain('data-component="Property panels"');
+    expect(render("Property panels", "/docs/files/property-panel")).toContain(
+      'data-component="Inspector panels"',
     );
   });
 });
