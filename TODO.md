@@ -1820,6 +1820,27 @@ applies — printed figures a suite derives.
 
 `[x]` Print the **find wash's tightest pair and the suite's case count** the way the suite measures them — the `Find highlights` inventory row still read "tightest shipped pair **1.150:1**, high-contrast dark on `muted`" after macOS dark's brand face moved the tightest cell, while `highlight.test.ts` derives **1.077:1** on `Dark · macOS`'s `popover`; it also called the file "(16 cases)" when it runs **17**. Neither figure was held: the suite's print case read only `docs/tokens.md`, where 1.077 already appeared, so the row could age on its own. The row now prints the derived pair and **(18 cases)** (the new guard is the eighteenth), and the tightest case reads the **§Find highlights section** and **that row** rather than the whole documents — a whole-file `toContain("Dark · macOS")` passes on a mention sixty lines away, which is how the row's attribution survived. A new `prints the case count this file runs` reads the count from the file itself, the way `scales.test.ts` holds its own row. Directions measured: restoring the row's `1.150`/`high-contrast dark on \`muted\`` fails the tightest case by name, restoring the catalogue's old "macOS dark's … on its own popover" fails the same case (the section-scoped read no longer passes on a distant mention), and restoring `(16 cases)` fails the count case. Green: the file 18/18, the package 49 files / 2 919 tests, `check-types`, `check:tests`, `oxfmt` and `oxlint` clean. No native scenario applies — printed figures a suite derives.
 
+`[x]` Read the **colour tables through their own entries, not the prototype** —
+`measure.ts` states in its own header that the paint check and the measurement
+seam "cannot disagree about a name", and two names broke it: `namedColours` and
+`families` are plain objects, so `constructor` and `__proto__` answered from
+`Object.prototype` — `isNamedColour("constructor")` and
+`isPaintableColor("__proto__")` said yes while `measuredColour` resolved nothing,
+so a role written as one passed `invalidColorRoles` (the check a stored brand and
+the docs theme editor run) and then failed every pair as unmeasurable, and
+`measuredColour("constructor(1 2 3)")` handed back an array instead of nothing.
+Both tables are read through one `entry` helper now, which answers only for a key
+the table owns. `measure.test.ts` gains `refuses a prototype key the table does
+not carry`: it walks `Object.getOwnPropertyNames(Object.prototype)` instead of a
+hand-written list, so the guard cannot go stale, holds the paint check, the seam
+and the report to the rule, and names the functional half. Directions measured:
+restoring the three bare lookups fails the case by name (`constructor`, then
+`__proto__`); restored, the file is 30/30 and `measure.test.ts`/`color.test.ts`
+552/552, `check-types` and `check:tests` clean. Docs in `docs/tokens.md`
+§Paint-ready values, `docs/design-system.md` §9, the package README and the
+`Colour grammar` inventory row. No native scenario applies — a pure grammar and
+the report built on it.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 154/154
