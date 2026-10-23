@@ -31,6 +31,8 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import { AdvancedFilter } from "../surfaces/advanced-filter.js";
+import type { FilterTree } from "../surfaces/logic.js";
 
 let root: DataTestRoot | undefined;
 
@@ -101,6 +103,64 @@ describe("the data surfaces", () => {
     root.renderer.flush();
 
     expect(paintedText(root)).toContain("1 of 4 shapes");
+  });
+
+  it("gives a nested group's clauses their own locators", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        {
+          kind: "predicate",
+          field: "status",
+          comparison: "equals",
+          value: "tracked",
+        },
+        {
+          kind: "any",
+          children: [
+            {
+              kind: "predicate",
+              field: "name",
+              comparison: "contains",
+              value: "alpha",
+            },
+            {
+              kind: "predicate",
+              field: "size",
+              comparison: "greaterThan",
+              value: "1024",
+            },
+          ],
+        },
+      ],
+    };
+    root = renderData(
+      <AdvancedFilter
+        fields={[
+          { field: "status", label: "Status" },
+          { field: "name", label: "Name" },
+          { field: "size", label: "Size" },
+        ]}
+        tree={tree}
+        onChange={() => {}}
+        testId="nested"
+      />,
+    );
+    settle(root);
+
+    // A clause's locator is its path, so two clauses at index 0 in different
+    // groups cannot share an id.
+    expect(root.renderer.findByTestId("nested-0-value")).toBeDefined();
+    expect(root.renderer.findByTestId("nested-1-0-value")).toBeDefined();
+    expect(root.renderer.findByTestId("nested-1-1-value")).toBeDefined();
+    expect(root.renderer.findByTestId("nested-1-group-remove")).toBeDefined();
+    // …and each one addresses its own painted row.
+    expect(requireBounds(root, "nested-1-0-value").y).toBeLessThan(
+      requireBounds(root, "nested-1-1-value").y,
+    );
+    expect(requireBounds(root, "nested-0-value").y).toBeLessThan(
+      requireBounds(root, "nested-1-0-value").y,
+    );
   });
 
   it("reports a toolbar search only after the debounce", async () => {

@@ -6170,6 +6170,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     '#191D25' to be '#2E2370'`; with the fill it is green (70 behaviour cases).
     `docs/table-selection.mdx` §The painted target and the Tier 3 Row selection
     row state the rule.
+  - [x] Give a **nested filter group's clauses their own locators** — the
+    builder named a clause by the last index in its path, so a clause at the
+    first position of an `any` group repeated the root clause's id
+    (`filter-0-value` twice) and the second one was unaddressable; the docs also
+    promised the reversed order (`${testId}-field-${at}`) that the code never
+    wrote. A clause's locator is now its whole path (`${testId}-${slot}-value`,
+    a root clause `0`, a nested `1-0`), and a removable group's action carries
+    its own (`${testId}-${slot}-group-remove`). `surfaces.test.tsx` gains `gives
+    a nested group's clauses their own locators`, which mounts an `all` holding
+    a clause and an `any` of two and reads both nested rows' positions.
+    Direction measured: with the path collapsed to its last index the case fails
+    on the missing `nested-1-0-value`. `docs/advanced-filter.mdx` states the
+    locators and the builder's real limit (it adds to the root group; a nested
+    group is the caller's tree), which the page previously overstated.
   - [x] Stop a **row claiming a state the window cannot hear** — `TableRow` wrote
     `aria-disabled={disabled}`, and the runtime's `aria-*` set is closed: it
     carries `aria-label`, `aria-description`, `aria-id`, `aria-expanded`,

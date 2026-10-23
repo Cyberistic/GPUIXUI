@@ -81,9 +81,12 @@ export interface AdvancedFilterProps extends Omit<
   readonly title?: string;
   readonly className?: string;
   /**
-   * The trigger's test id. Every row derives from it:
-   * `${testId}-field-${at}`, `${testId}-comparison-${at}`,
-   * `${testId}-value-${at}` and `${testId}-remove-${at}`.
+   * The trigger's test id. Every row derives from it: `${testId}-${slot}` names
+   * a clause, where `slot` is the clause's path joined with `-` (a root clause
+   * is `0`), and the row's parts are `${testId}-${slot}-field`,
+   * `${testId}-${slot}-comparison`, `${testId}-${slot}-value` and
+   * `${testId}-${slot}-remove`. A nested group's clause therefore keeps its own
+   * id instead of repeating a sibling's.
    */
   readonly testId?: string;
 }
@@ -114,27 +117,32 @@ const labelOf = (
     Option.getOrElse(() => field),
   );
 
+/** A clause's or group's path as a locator segment: a root node is `0`. */
+const slotOf = (path: FilterPath): string =>
+  path.length === 0 ? "0" : Arr.join(Arr.map(path, String), "-");
+
 /** One clause: a field, a comparison, a value and a way out. */
 const ClauseRow = ({
   root,
   clause,
   path,
+  slot,
   fields,
   onChange,
   testId,
-  at,
 }: {
   /** The whole tree: an edit is written back into it by path. */
   readonly root: FilterTree;
   readonly clause: FieldPredicate;
   readonly path: FilterPath;
+  /** The clause's path as a locator segment, unique across nested groups. */
+  readonly slot: string;
   readonly fields: ReadonlyArray<AdvancedFilterField>;
   readonly onChange: (next: FilterTree) => void;
   readonly testId: string | undefined;
-  readonly at: number;
 }) => {
   const theme = useTheme();
-  const id = testId === undefined ? undefined : `${testId}-${at}`;
+  const id = testId === undefined ? undefined : `${testId}-${slot}`;
   const replace = (change: Partial<FieldPredicate>): void => {
     onChange(updateAt(root, path, { ...clause, ...change }));
   };
@@ -209,12 +217,15 @@ const Group = ({
   kind,
   children,
   onRemove,
+  slot,
   testId,
 }: {
   readonly kind: "all" | "any" | "not";
   readonly children: ReactNode;
   /** The group's own removal, when it sits in a group that can drop it. */
   readonly onRemove?: () => void;
+  /** The group's path as a locator segment. */
+  readonly slot: string;
   readonly testId: string | undefined;
 }) => {
   const theme = useTheme();
@@ -234,7 +245,11 @@ const Group = ({
             size="sm"
             label="Remove group"
             onActivate={remove}
-            testId={testId === undefined ? undefined : `${testId}-group-remove`}
+            testId={
+              testId === undefined
+                ? undefined
+                : `${testId}-${slot}-group-remove`
+            }
           >
             Remove group
           </Button>
@@ -271,10 +286,10 @@ const Tree = ({
         root={root}
         clause={node}
         path={path}
+        slot={slotOf(path)}
         fields={fields}
         onChange={onChange}
         testId={testId}
-        at={path.length === 0 ? 0 : (path[path.length - 1] ?? 0)}
       />
     );
   }
@@ -282,6 +297,7 @@ const Tree = ({
     return (
       <Group
         kind="not"
+        slot={slotOf(path)}
         testId={testId}
         onRemove={removable ? () => onChange(removeAt(root, path)) : undefined}
       >
@@ -300,6 +316,7 @@ const Tree = ({
   return (
     <Group
       kind={node.kind}
+      slot={slotOf(path)}
       testId={testId}
       onRemove={removable ? () => onChange(removeAt(root, path)) : undefined}
     >

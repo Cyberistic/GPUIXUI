@@ -3,8 +3,11 @@ title: Advanced filtering / query builders
 description: A builder over a typed predicate tree.
 ---
 
-`AdvancedFilter` is a **query builder**: the reader composes clauses, combined
-with `all`, `any` and `not`.
+`AdvancedFilter` is a **query builder**: the reader composes clauses, and the
+tree combines them with `all`, `any` and `not`. The builder paints the tree it
+is handed and adds clauses to its root group; a nested `any` or `not` group is
+part of the caller's tree (the builder paints and edits it, but does not create
+one).
 
 ## Usage
 
@@ -32,7 +35,13 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
 | `title` | `string` | `Filters` | the title above the builder |
-| `testId` | `string` | — | every row derives from it |
+| `testId` | `string` | — | the builder's id; a clause is `${testId}-${slot}-…` |
+
+A clause's `slot` is its path joined with `-` (a root clause is `0`), so a
+clause inside a nested group keeps its own locators: `${testId}-${slot}-field`,
+`${testId}-${slot}-comparison`, `${testId}-${slot}-value`,
+`${testId}-${slot}-remove`, and a group's remove is
+`${testId}-${slot}-group-remove`.
 
 The tree's own API, exported beside the builder:
 
@@ -46,5 +55,7 @@ The tree's own API, exported beside the builder:
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.
-- The builder never writes a `not`; a negated clause is removed with its group.
+- The builder adds clauses to the root group. It never writes an `any` or a
+  `not` and never changes a group's combinator: a group the caller's tree holds
+  is painted and edited, and a negated group is removed whole.
 - No pattern comparison: a value is compared literally.
