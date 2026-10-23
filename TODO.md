@@ -8135,6 +8135,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
     three cases fail by name (`7 native behaviour cases`, `(13 cases)`,
     `(6 cases)`); corrected, 4/4 and the package unit suite is 20 files / 171
     tests green. Owner: data.
+  - [x] Narrow a **table with the advanced filter's tree** — the builder's own
+    prose claimed "a builder, a saved query and a table's filter read one
+    shape", while `useTable` narrowed by a text query only: a consumer had to
+    copy the column lookup to run the tree, and a copied lookup is how the tree
+    and the grid come to disagree about which field a clause names. `useTable`
+    takes `filterTree` and narrows the records before the query, reading each
+    field through the column whose `id` it names via the new exported
+    `fieldValueOf(columns)`; a field no column names reads blank (a saved tree
+    that mentions a removed column narrows instead of throwing), and the
+    render-time retention releases a chosen record the tree hides, then paints
+    it chosen again when a wider tree keeps it. `src/use-table-filter.test.ts`
+    (5 cases) holds the seam: the value's own type, the missing field, a
+    numeric order typed as text, text comparisons, and the empty tree.
+    `src/behaviour/table-tree-filter.test.tsx` (2 cases) mounts the shipped
+    controller: only the tree's records paint, a chosen record is released in
+    the hiding commit (`2 rows · 1 selected` → `1 rows · 0 selected`) and a
+    widened tree paints it again (`3 rows · 1 selected`). Directions measured:
+    a missing field read as its own name fails the seam case with
+    `expected 'removed' to be ''`; dropping the narrowing fails both window
+    cases (`expected '3 rows · 1 selected' to be '2 rows · 1 selected'` and
+    `2 rows · 0 selected` for `1 rows · 0 selected`). README §The data
+    surfaces and `docs/advanced-filter.mdx` §Narrowing a table state the
+    composition. `nub run --filter @gpuixui/data test` 176/176,
+    `test:behaviour` 106/106, `check-types` clean. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
