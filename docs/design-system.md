@@ -488,17 +488,17 @@ measured on both — the tightest shipped placement is the Luna look's chosen ro
 at 7.77:1. It is also a **pointer** surface: the row fills `selected` once chosen
 and tints `accent` under the pointer, so the fill a click repaints is the one the
 row already wears. `decorativeFailures` measures that replacement like every
-other wash, and it found **eleven of the sixteen** shipped styles with no step at
-all — the four base and high-contrast palettes at 1.00:1 — so each carries a
-`selected` one step stronger than its accent (macOS light moves its `accent`
-instead, and every text role measured on those fills keeps its floor), and the
-base dark theme's chosen row is the tightest at 1.05:1.
+other wash, and it found **eleven of the sixteen** styles that shipped at the
+time with no step at all — the four base and high-contrast palettes at 1.00:1 —
+so each carries a `selected` one step stronger than its accent (macOS light
+moves its `accent` instead, and every text role measured on those fills keeps
+its floor), and the base dark theme's chosen row is the tightest at 1.05:1.
 
 The **press** that follows a hover is the same defect one state over, and it
 needed a derivation rather than a palette edit: a row's press replaces the wash
 the row is already wearing — `active` over the `accent` a list row tints under
 the pointer, and `active` over the `hover` a menu row tints — so it is measured
-against the wash, not against the strip under the row. Measured over the sixteen
+against the wash, not against the strip under the row. Measured over the 18
 shipped, high-contrast, platform and authored styles, the press was invisible in
 **six**: macOS light's `active` sat 1.026:1 from its `accent` and macOS dark's
 1.011:1, Linux dark's 1.015:1, Windows dark's 1.044:1, Luna light's 1.016:1 and

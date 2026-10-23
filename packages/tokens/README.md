@@ -956,10 +956,10 @@ Each report is also a function of its own:
   light `secondary` was its `muted` value, so a secondary button in a toolbar was
   a label with no button around it, and the fill is measured on the four content
   strips while the edge answers a row's wash; **eleven of the
-  sixteen styles painted a chosen row's pointer step in the fill it already
-  wore** — the four base palettes at 1.00:1 — so each `selected` is a step
-  stronger than its `accent` now (macOS light moves its `accent`), tightest the
-  base dark theme at 1.05:1; the base dark theme's
+  sixteen styles that shipped at the time painted a chosen row's pointer step in
+  the fill it already wore** — the four base palettes at 1.00:1 — so each
+  `selected` is a step stronger than its `accent` now (macOS light moves its
+  `accent`), tightest the base dark theme at 1.05:1; the base dark theme's
   `muted` was its `popover`, so a progress bar in a dialog had no track, and four
   dark styles were within 5% of the fill a bar sits on (the five quiet surfaces
   moved a step, tightest rail now 1.052:1); and the light

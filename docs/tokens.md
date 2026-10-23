@@ -2524,17 +2524,18 @@ the page under a row and not the state a row is in. A selectable list row fills
 `selected` once chosen and tints `accent` under the pointer (`list.tsx`), so a
 chosen row is repainted `accent` when the pointer arrives: a theme whose two
 roles are one value has a selection that answers nothing. Measured, that was
-**eleven of the sixteen** shipped styles — the four base and high-contrast
-palettes at exactly 1.00:1, and macOS dark 1.036:1, Linux light 1.011:1, Linux
-dark 1.012:1, Windows light 1.021:1, Windows dark 1.024:1, Luna light 1.003:1
-and Aero light 1.022:1 — while macOS light's 1.050:1 sat on the floor. Each
-style now moves the role that had the room by the smallest step that clears, its
-`selected` fill in twelve of them and macOS light's `accent`, because `selected`
-is the stronger state: a chosen row deepens, it does not fade. Every step also
-had to keep the text roles measured on those fills and the accent face's own
-7:1 label, so the four base palettes moved `selected` by three or two percent
-rather than a ramp step. The chosen row's pointer step is now measured on all
-sixteen styles, and the base dark theme's chosen row is the tightest at 1.05:1.
+**eleven of the sixteen** styles that shipped at the time — the four base and
+high-contrast palettes at exactly 1.00:1, and macOS dark 1.036:1, Linux light
+1.011:1, Linux dark 1.012:1, Windows light 1.021:1, Windows dark 1.024:1, Luna
+light 1.003:1 and Aero light 1.022:1 — while macOS light's 1.050:1 sat on the
+floor. Each style now moves the role that had the room by the smallest step that
+clears, its `selected` fill in twelve of them and macOS light's `accent`, because
+`selected` is the stronger state: a chosen row deepens, it does not fade. Every
+step also had to keep the text roles measured on those fills and the accent
+face's own 7:1 label, so the four base palettes moved `selected` by three or two
+percent rather than a ramp step. The chosen row's pointer step is now measured
+on all eighteen styles, and the base dark theme's chosen row is the tightest at
+1.05:1.
 The **press** that follows a hover is the same defect one state over, and it
 needed a derivation rather than a palette edit.
 

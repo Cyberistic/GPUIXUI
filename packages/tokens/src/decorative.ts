@@ -410,7 +410,7 @@ const POINTER_STEPS: readonly number[] = [
  * same `active` carries the row's title in `selectedForeground` at the body floor
  * and, in macOS dark, a checked row's `primary` tick at 3.06:1 — a palette with
  * room to separate the washes has none left for the label above them. Measured,
- * six of the sixteen shipped styles painted the press in the wash it replaced,
+ * six of the eighteen shipped styles painted the press in the wash it replaced,
  * and macOS light's press in its hover (see `docs/tokens.md` §Decorative
  * surfaces).
  *

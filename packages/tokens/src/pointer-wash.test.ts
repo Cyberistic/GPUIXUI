@@ -8,7 +8,7 @@
  * `hover` and repaints `active`. So a row's press was a role on a strip, and
  * the strip under a row is the page — the one surface every wash passes.
  *
- * Measured on the sixteen shipped, high-contrast, platform and authored styles,
+ * Measured on the eighteen shipped, high-contrast, platform and authored styles,
  * the press was invisible in six of them: macOS light's `active` sat 1.026:1
  * from its `accent` and macOS dark's 1.011:1, Linux dark's 1.015:1, Windows
  * dark's 1.044:1, Luna light's 1.016:1 and Aero light's 1.020:1 — and macOS
@@ -518,6 +518,124 @@ describe("the pages that teach the wash", () => {
           text.includes("The painters are the components' workstreams"),
         name,
       ).toBe(false);
+    });
+  });
+});
+
+/** How a count reads in prose: the pages print the set in words, or in digits. */
+const spoken = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+] as const;
+
+/** A document with its wrapping removed, so a phrase is one line. */
+const flat = (document: string): string => document.replace(/\s+/g, " ");
+
+describe("the arithmetic the press prints", () => {
+  /**
+   * Every press before the derivation: the role against the wash it replaces.
+   *
+   * One entry per placement a theme answers with nothing — the measurement the
+   * pages report as "the raw press was invisible in six".
+   */
+  const rawMisses = everyStyle.flatMap(([name, theme]) =>
+    pointerWashTransitions.flatMap(({ wash, replaced }) => {
+      const ratio = contrastRatio(theme.colors[wash], theme.colors[replaced]);
+      return ratio === undefined || ratio < decorativeFloor
+        ? [{ name, wash, replaced }]
+        : [];
+    }),
+  );
+
+  /** The styles that miss on any transition — the count the pages print. */
+  const misfitStyles = [...new Set(rawMisses.map(({ name }) => name))];
+
+  /** The set the sweep walks, built the way `everyStyle` builds it. */
+  const styles = 4 + platformNames.length * 2 + retroNames.length * 2;
+
+  it("counts the styles its sweep walks, not the set before the third look", () => {
+    // The bug this holds: the Omarchy look added two styles and this suite's
+    // sweep grew to eighteen, while the seam's JSDoc and this file's own header
+    // still told a reader sixteen — the denominator the pages had already
+    // moved. A count a document prints is derived from the list the sweep
+    // builds, never retyped from the release it was written in.
+    expect(everyStyle).toHaveLength(styles);
+    expect(spoken[styles]).toBe("eighteen");
+
+    expect(read("./decorative.ts")).toContain(
+      `six of the ${spoken[styles]} shipped styles`,
+    );
+    expect(read("./pointer-wash.test.ts")).toContain(
+      `the ${spoken[styles]} shipped, high-contrast, platform and authored styles`,
+    );
+  });
+
+  it("prints the set and the count it measures on every page that teaches it", () => {
+    const count = spoken[misfitStyles.length];
+    const pages: ReadonlyArray<readonly [string, string, string]> = [
+      ["docs/tokens.md", catalogue, `invisible in **${count}** of them`],
+      ["docs/design-system.md", designSystem, `invisible in **${count}**`],
+      ["packages/tokens/README.md", readme, `invisible in **${count}**`],
+      [
+        "COMPONENTS.md",
+        inventory,
+        `invisible in **${count}** of the ${spoken[styles]} shipped styles`,
+      ],
+    ];
+
+    pages.forEach(([page, document, phrase]) => {
+      expect(flat(document), page).toContain(phrase);
+    });
+
+    // The numeral form three of them print beside the word form.
+    [catalogue, designSystem, readme].forEach((document, page) => {
+      const name = [
+        "docs/tokens.md",
+        "docs/design-system.md",
+        "packages/tokens/README.md",
+      ][page];
+
+      expect(flat(document), name).toContain(
+        `${styles} shipped, high-contrast, platform and authored styles`,
+      );
+    });
+  });
+
+  it("marks the repaired palette's figure as the set it was measured on", () => {
+    // Eleven of the sixteen was measured before the palettes moved and before
+    // Omarchy shipped, and today every one of the eighteen carries a step. A
+    // reader must not take the historical count for the current sweep, so the
+    // four documents state the set it belongs to.
+    [catalogue, designSystem, readme, inventory].forEach((document, page) => {
+      const name = [
+        "docs/tokens.md",
+        "docs/design-system.md",
+        "packages/tokens/README.md",
+        "COMPONENTS.md",
+      ][page];
+      const text = flat(document);
+
+      expect(text, name).toContain("that shipped at the time");
+      expect(text, name).not.toContain("eleven of the sixteen shipped styles");
+      expect(text, name).not.toContain("six of the sixteen");
+      expect(text, name).not.toContain("over the sixteen shipped");
     });
   });
 });
