@@ -24,6 +24,7 @@ import {
   highContrastFloors,
   highContrastLightTheme,
   highContrastThemes,
+  highlightFailures,
   indicatorFailures,
   keyboardDimFailures,
   lightTheme,
@@ -111,6 +112,7 @@ describe("the floors follow the theme's contrast variant", () => {
       syntax: [],
       selection: [],
       indicators: [],
+      highlight: [],
       disabledFade: [],
       keyboardDim: [],
       passed: true,
@@ -160,6 +162,21 @@ describe("every report is part of the gate", () => {
     expect(mark?.ratio).toBeCloseTo(2.02, 2);
     expect(mark?.floor).toBe(contrastFloors.boundary);
     expect(auditTheme(invisibleMark).passed).toBe(false);
+  });
+
+  it("returns the find wash report the standalone check returns", () => {
+    // An accent that is its own card paints matches the reader cannot find.
+    // The gate's report is the standalone contract's list, not a second
+    // opinion, so a caller reading either entry point gets the same wash.
+    const invisibleFind = extendTheme(lightTheme, {
+      colors: { primary: lightTheme.colors.card },
+    });
+    const audit = auditTheme(invisibleFind);
+
+    expect(audit.highlight.length).toBeGreaterThan(0);
+    expect(audit.highlight).toEqual(highlightFailures(invisibleFind));
+    expect(audit.highlight[0]?.floor).toBe(1.05);
+    expect(audit.passed).toBe(false);
   });
 
   it("reports an unpaintable role", () => {
@@ -219,6 +236,7 @@ describe("every report is part of the gate", () => {
       syntax: [],
       selection: [],
       indicators: [],
+      highlight: [],
       disabledFade: [],
       keyboardDim: [],
       passed: true,
@@ -321,15 +339,19 @@ describe("every report is part of the gate", () => {
     // The gate's contract: `passed` is the conjunction of the reports, not a
     // separate opinion. A report that is returned but left out of the
     // conjunction would let a theme ship with a failure printed beside a true
-    // `passed`. The dim's report cannot be the only failure on a real palette
-    // (the fade's band contains the dim's), so this pins the shape rather than
-    // one isolable palette.
+    // `passed`. Two reports cannot be the only failure on a real palette — the
+    // dim's band contains the fade's, and an accent whose matches vanish also
+    // fails the mark contract — so this pins the shape rather than one
+    // isolable palette; their own cases above prove the report is returned.
     const audits = [
       themes.light,
       themes.dark,
       highContrastLightTheme,
       extendTheme(lightTheme, {
         colors: { primary: "#000000", primaryForeground: "#999999" },
+      }),
+      extendTheme(lightTheme, {
+        colors: { primary: lightTheme.colors.card },
       }),
       invisibleDividers,
     ].map((theme) => auditTheme(theme));
@@ -346,6 +368,7 @@ describe("every report is part of the gate", () => {
         audit.series.deficiencies,
         audit.selection,
         audit.indicators,
+        audit.highlight,
         audit.disabledFade,
         audit.keyboardDim,
       ].filter((report) => report.length > 0);

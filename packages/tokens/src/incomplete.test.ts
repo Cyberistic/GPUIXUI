@@ -420,11 +420,12 @@ describe("an absent colour group", () => {
     expect(unmeasurable(report.selection)).toBe(true);
     expect(unmeasurable(report.indicators)).toBe(true);
     expect(unmeasurable(report.syntax)).toBe(true);
+    expect(unmeasurable(report.highlight)).toBe(true);
     expect(unmeasurable(report.disabledFade)).toBe(true);
     expect(unmeasurable(report.keyboardDim)).toBe(true);
     expect(unmeasurable(report.series.surfaces)).toBe(true);
-    // The two reports that live beside the gate keep the same rule: a find wash
-    // and a declared switch paint nothing on a theme with no roles.
+    // The report beside the gate keeps the same rule: a declared switch paints
+    // nothing on a theme with no roles.
     expect(unmeasurable(highlightFailures({}))).toBe(true);
     expect(
       unmeasurable(

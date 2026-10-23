@@ -526,8 +526,8 @@ the resting match is the runtime's 30% where it holds and steps down to the
 largest share whose composite is visible (1.05:1) and keeps body text at the
 theme's body floor — Linux 22%, Luna 23%, Windows 27%, Aero 26%, Omarchy 13% —
 while the active match is the strongest wash that keeps body text readable,
-falling back to the secondary floor only when the accent has no stronger safe
-wash. Its `radius` is `radius.sm`, the tightest step the scale carries; the
+falling back to the secondary floor when that body-safe share cannot be told
+apart from the resting one. Its `radius` is `radius.sm`, the tightest step the scale carries; the
 runtime's 2px is a literal. Spread the result into a host's `highlight` spec:
 
 ```tsx
@@ -541,10 +541,10 @@ The washes are measured on `background`, `card`, `popover` and `muted`, the
 strips a search runs over. `highlightFailures(theme, floors?)` reports a
 `visibility`, `legibility` or `distinct` failure — the last for an active match
 the surface cannot tell apart from the resting ones at 1.05:1, which is the one
-job a wash cannot do for a body pair already sitting on the floor. It sits
-**beside** `auditTheme` rather than inside it until the docs site's readout maps
-a report for it (`TODO.md` → Interlocks). A runnable example lives in
-[`src/highlight.example.ts`](./src/highlight.example.ts).
+job a wash cannot do for a body pair already sitting on the floor. `auditTheme`
+returns this list as `audit.highlight` and folds it into `passed`, so the
+documented gate cannot pass a theme whose matches vanish. A runnable example
+lives in [`src/highlight.example.ts`](./src/highlight.example.ts).
 
 ## Platform styles
 
@@ -742,7 +742,7 @@ in [`src/system-theme.example.ts`](./src/system-theme.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all eleven reports are
+CSS validation and lint, and `passed` is true only when all twelve reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, every report that takes
@@ -846,7 +846,13 @@ read as a colour per token, so the `constructor` key a hand-written literal
 inherits from `Object.prototype` is the missing token it is, not a function the
 contract tries to measure.
 
-`keyboardDimFailures(theme, floor?)` is the eleventh report (`audit.keyboardDim`):
+`highlightFailures(theme, floors?)` is one of the gate's reports
+(`audit.highlight`): it composites the two find washes over the four strips a
+search runs on and reports a `visibility`, `legibility` or `distinct` failure
+(see §Find highlights). It still answers on its own for a consumer that wants
+the list without the rest of the audit.
+
+`keyboardDimFailures(theme, floor?)` is the twelfth report (`audit.keyboardDim`):
 it measures the dim the runtime paints on every other focusable while one has
 keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). The dim and the
 disabled fade are the same composite with two shares, so no palette fails the
@@ -928,7 +934,7 @@ Each report is also a function of its own:
   or a dialog casting a tighter shadow than a menu. A type role or elevation
   level the theme does not carry is not a rung, so the steps either side of it
   are compared with each other rather than read through it. It is not one of the
-  audit's eleven reports yet (the docs readout words each report it prints), so
+  audit's twelve reports yet (the docs readout words each report it prints), so
   run it beside `auditTheme`; it found the Windows style's `xl` radius equal to
   its `lg`, and that pair is a deliberate **alias** — Fluent 2 rounds a control
   at 4 and a surface at 8, so `sm`/`md` and `lg`/`xl` share a corner and radius

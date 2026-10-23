@@ -1306,8 +1306,8 @@ is made from this run.
 
 ## Checking your own theme
 
-A theme fails silently in eleven independent ways, and `auditTheme(theme)` is
-the one call that returns all eleven reports:
+A theme fails silently in twelve independent ways, and `auditTheme(theme)` is
+the one call that returns all twelve reports:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -1315,7 +1315,7 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all eleven reports below are empty
+audit.passed; // true only when all twelve reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
@@ -1325,11 +1325,12 @@ audit.series; // data-series colours lost on their plot, against each other, or 
 audit.syntax; // a code block's token colour that vanishes into the fill it is read on
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
+audit.highlight; // a find wash that cannot be seen, hides its result, or fails to stand apart
 audit.disabledFade; // a disabled control whose faded label vanishes into the faded fill
 audit.keyboardDim; // a control whose label the runtime's keyboard dim erases
 ```
 
-`passed` is computed from the eleven reports, so it cannot drift from them. The
+`passed` is computed from the twelve reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -1879,7 +1880,7 @@ adjacent pair; a rung that *shrinks* is still reported, so `xl: 6` under `lg: 8`
 fails. The two executed brands are `equalRadiusBrand` (accepted, `// []`) and
 `computedBrand` (its `xl: 6` reported) in `src/scales.example.ts`.
 
-`invalidScales` is not one of `auditTheme`'s eleven reports yet. The docs site's
+`invalidScales` is not one of `auditTheme`'s twelve reports yet. The docs site's
 theme readout words each report it prints, so folding this in is one coordinated
 change with that page — recorded in `TODO.md` → Interlocks. Run it beside
 `auditTheme` until then: `src/scales.example.ts` is a brand whose `sm` control is
@@ -4099,8 +4100,10 @@ export const searchHighlight = (theme: Theme) => {
   **22%**, Windows XP (Luna) to **23%**, Windows to **27%**, Windows 7 (Aero) to
   **26%**, and Omarchy to **13%**.
 - The active match takes the strongest wash that still keeps body text readable,
-  and falls back to the theme's **secondary** floor only when the accent has no
-  stronger safe wash — a dark palette whose text is already near the floor. Both
+  and falls back to the theme's **secondary** floor when that body-safe share
+  cannot be told apart from the resting one — a dark palette whose text is
+  already near the floor leaves no visible step at 30%, so the extra headroom
+  the secondary floor allows is what makes the active match findable. Both
   washes stay translucent, so the strip shows through the way the runtime's own
   do. Across the shipped styles the active share lands at 34–53%, and the pair is
   always distinguishable: the tightest separation is **1.077:1**, Dark · macOS's
@@ -4122,11 +4125,11 @@ wash costs the text the ratio it just met. A theme restored from storage is read
 as the absence it is: a missing role or strip reports rather than throws, and
 `invalidColorRoles` names the role.
 
-**It sits beside the gate rather than inside it.** The docs site's theme editor
-words every report `auditTheme` returns and derives its printed count from the
-gate's own keys, so folding a twelfth report in is one coordinated change with
-that page (`TODO.md` → Interlocks); until then a brand runs `highlightFailures`
-beside `auditTheme`, as it does `invalidScales`.
+**It is one of the gate's reports.** `auditTheme(theme)` returns
+`highlightFailures(theme, floors)` as `audit.highlight` and folds it into
+`passed`, so a brand that runs only the documented gate cannot ship a search
+whose matches vanish. The standalone function still answers on its own when a
+consumer wants the list without the rest of the audit.
 
 **Adoption.** The shipped `HighlightText` takes the derived pair as its default
 wash — the resting and active shares and the `radius.sm` corner — and a caller

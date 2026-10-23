@@ -895,8 +895,9 @@ shipped, high-contrast, platform and authored style and the resting share in fiv
 dark ones. `findHighlight(theme)` derives both from the theme's `primary` — the
 resting 30% where it holds, stepped down where it does not, and the strongest
 active wash the ink can survive — so a mark painted behind a word answers the
-same floors a mark painted beside it does, and `highlightFailures` reports an
-accent or a body pair that cannot. The active match is the one place this system
+same floors a mark painted beside it does, and `auditTheme` returns
+`highlightFailures` as `audit.highlight` so a brand that runs the gate is told
+when the accent or the body pair cannot carry it. The active match is the one place this system
 asks the secondary floor (4.5:1; 7:1 in high contrast) of body text, because a
 stronger wash is the only difference a text host can paint between the match the
 reader is on and the ones around it; the pair is then held 1.05:1 apart. The
@@ -1162,10 +1163,10 @@ and the text or the icon would spill or clip while every number is still layable
 (§6).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all eleven in one call — `invalidRoles`, `invalidShadows`,
+reports all twelve in one call — `invalidRoles`, `invalidShadows`,
 `invalidNumbers`, `contrast`, `decorative`, `series`, `syntax`, `selection`,
-`indicators`, `disabledFade` and `keyboardDim` — and `passed` is true only
-when every list is empty. The contrast half
+`indicators`, `highlight`, `disabledFade` and `keyboardDim` — and `passed` is
+true only when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
@@ -1343,14 +1344,15 @@ roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
 would ignore or a number it cannot lay out. The audit is the gate: `auditTheme(theme)`
-runs all eleven checks — an unpaintable role, an unpaintable shadow in a level
+runs all twelve checks — an unpaintable role, an unpaintable shadow in a level
 the brand supplied, a size, length or shadow geometry the renderer would drop,
 every pair below the floor its variant asks for, every decorative surface too
 close to its background — including the derived hover and press a filled role
 paints (§8) — a data series lost on its plot or to a colour-vision deficiency, a
 code block's syntax token that vanishes into the page it is read on,
 a selection wash that hides the body or secondary text inside it, an indicator
-mark nobody can find, a disabled label the fade erases, and a label the
+mark nobody can find, a find wash that hides the result it marks or cannot be
+told apart from the resting matches, a disabled label the fade erases, and a label the
 keyboard dim erases while another control holds the focus; run it over the
 resolved theme before it ships and assert `passed` in the package's own tests.
 
@@ -1358,17 +1360,13 @@ One contract sits beside the gate rather than inside it: `invalidScales(theme)`
 holds every named ladder to its order — spacing, radii, border weights, icons,
 the type hierarchy, the control sizes and the elevation levels — because a scale
 is selected by name, and a brand whose `sm` control is taller than its `lg` has
-a `size` prop that lies while every value is still layable. `highlightFailures(theme)`
-is the second: a find highlight's two translucent washes are composited over the
-strips a search runs on (§9), and the docs site's readout words every report the
-audit returns, so a report cannot be added to the gate without that page. The
-audit's report list is printed there and its count derived from the gate's own
-keys, so folding either in is one coordinated change with that page
-(`TODO.md` → Interlocks); until then a brand runs `invalidScales` and
-`highlightFailures` beside `auditTheme`. §6 and
-[`tokens.md`](./tokens.md#scale-order) carry the scale rule and the shipped style
-it corrected; [`tokens.md`](./tokens.md#find-highlights) carries the wash
-contract.
+a `size` prop that lies while every value is still layable. The audit's report
+list is printed on the docs site and its count derived from the gate's own
+keys, so folding it in is one coordinated change with that page
+(`TODO.md` → Interlocks); until then a brand runs `invalidScales` beside
+`auditTheme`. §6 and [`tokens.md`](./tokens.md#scale-order) carry the scale rule
+and the shipped style it corrected; [`tokens.md`](./tokens.md#find-highlights)
+carries the wash contract, whose report the gate already returns.
 
 ## 12. Non-goals
 

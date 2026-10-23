@@ -456,9 +456,9 @@ describe("what the pages teach", () => {
     expect(page).toContain("radius.sm");
   });
 
-  it("states which floor each wash answers to, and where it sits beside the gate", () => {
+  it("states which floor each wash answers to, and the report the gate returns", () => {
     expect(page).toContain("secondary");
-    expect(page).toContain("beside the gate");
+    expect(page).toContain("audit.highlight");
     expect(designSystem).toContain("findHighlight");
     expect(readme).toContain("findHighlight");
     expect(inventory).toContain("Find highlights");

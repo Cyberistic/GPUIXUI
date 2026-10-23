@@ -402,6 +402,7 @@ describe("theme audit example", () => {
         syntax: [],
         selection: [],
         indicators: [],
+        highlight: [],
         disabledFade: [],
         keyboardDim: [],
         passed: true,

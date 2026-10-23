@@ -25,10 +25,13 @@
  * theme's own body floor, because it is the text the reader asked for. The active
  * match is the only difference a host can paint between one match and the next,
  * so it takes the strongest wash that still clears the body floor, and the
- * strongest that clears the **secondary** floor when the accent has no stronger
- * body-safe share — a dark palette whose text is already near the floor. The
- * pair must still be told apart, which is the one job a wash in this system
- * cannot always do at AAA; {@link highlightFailures} reports it.
+ * strongest that clears the **secondary** floor when the body-safe share cannot
+ * be told apart from the resting one — a dark palette whose text is already near
+ * the floor leaves no visible step between 30% and the last body-safe share, so
+ * the active match spends the headroom the secondary floor allows instead of
+ * painting a match a reader cannot find. The pair must still be told apart,
+ * which is the one job a wash in this system cannot always do at AAA;
+ * {@link highlightFailures} reports the accent that has no such share.
  *
  * Both washes are translucent (`alpha`), so the strip shows through the way the
  * runtime's own do; the colour a reader sees is the composite
@@ -161,13 +164,34 @@ const strongest = (
   steps.filter((share) => carries(colors, share, floor)).at(-1);
 
 /**
+ * Whether a share is visibly stronger than the resting one on every strip —
+ * the difference a host paints between the active match and the ones around it.
+ */
+const standsApart = (
+  colors: Partial<ThemeColors>,
+  share: number,
+  rest: number,
+): boolean =>
+  highlightSurfaces.every((fill) => {
+    const wash = composite(colors, fill, share);
+    const other = composite(colors, fill, rest);
+    if (wash === undefined || other === undefined) {
+      return false;
+    }
+    const ratio = contrastRatio(wash, other);
+    return ratio !== undefined && ratio >= decorativeFloor;
+  });
+
+/**
  * The two shares a theme can carry, from the runtime's own pair.
  *
  * The resting match is the runtime's 30% unless the body floor makes it step
  * down. The active match prefers the strongest wash that still keeps body text
- * at the theme's own floor, and falls back to the strongest the secondary floor
- * allows only when the accent cannot offer anything stronger than the resting
- * one — a dark palette whose text is already near the floor.
+ * at the theme's own floor. When that strongest body-safe share cannot be told
+ * apart from the resting one, the accent has no visible step left at the body
+ * floor, so the active match takes the strongest share the secondary floor
+ * allows — a dark palette whose text already sits near the floor spends that
+ * headroom rather than painting every match the same strength.
  */
 const sharesFor = (
   colors: Partial<ThemeColors>,
@@ -178,10 +202,14 @@ const sharesFor = (
     highlightShares.match,
     bodyCeiling ?? highlightShares.match,
   );
+  const secondaryCeiling = strongest(colors, floors.secondary);
   const active =
-    bodyCeiling !== undefined && bodyCeiling > match
+    bodyCeiling !== undefined && standsApart(colors, bodyCeiling, match)
       ? bodyCeiling
-      : (strongest(colors, floors.secondary) ?? highlightShares.active);
+      : secondaryCeiling !== undefined &&
+          standsApart(colors, secondaryCeiling, match)
+        ? secondaryCeiling
+        : (bodyCeiling ?? secondaryCeiling ?? highlightShares.active);
   return { match, active: Math.max(active, match) };
 };
 

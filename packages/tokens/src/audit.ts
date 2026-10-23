@@ -7,9 +7,10 @@
  * unreadable, a decorative surface close to its background is invisible, a data
  * series is lost on its plot, a code block's syntax token vanishes into the page
  * it is read on, the selection wash hides the text it selects, an indicator mark
- * disappears into the strip it is drawn on, a disabled control faded by
- * `disabledOpacity` loses its label, and the keyboard dim the runtime paints on
- * every other focusable erases a control's label. Each has its own report, and a
+ * disappears into the strip it is drawn on, a find wash cannot be seen or hides
+ * the result it marks, a disabled control faded by `disabledOpacity` loses its
+ * label, and the keyboard dim the runtime paints on every other focusable erases
+ * a control's label. Each has its own report, and a
  * consumer who forgets one ships the failure it would have caught — which is
  * what the documented gate did, running two of the three and holding every theme
  * to the default floors even when the theme declares the high-contrast variant.
@@ -34,6 +35,7 @@ import {
   type InvalidShadowColor,
 } from "./elevation.js";
 import { keyboardDimFailures, type KeyboardDimFailure } from "./focus-dim.js";
+import { highlightFailures, type HighlightFailure } from "./highlight.js";
 import { indicatorFailures, type IndicatorFailure } from "./indicator.js";
 import {
   invalidNumbers,
@@ -334,16 +336,18 @@ export interface ThemeAudit {
   readonly selection: readonly SelectionFailure[];
   /** Indicator marks that cannot be found on the strip they are drawn on. */
   readonly indicators: readonly IndicatorFailure[];
+  /** Find washes that cannot be seen, hide their result, or fail to stand apart. */
+  readonly highlight: readonly HighlightFailure[];
   /** Disabled controls whose faded label vanishes into the faded fill. */
   readonly disabledFade: readonly DisabledFadeFailure[];
   /** Controls whose label the keyboard dim erases while another control has focus. */
   readonly keyboardDim: readonly KeyboardDimFailure[];
-  /** True only when all eleven reports are empty. */
+  /** True only when all twelve reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the eleven contracts the library holds itself to.
+ * Audit a theme against the twelve contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
@@ -403,6 +407,7 @@ export function auditTheme(
   const syntax = syntaxFailures(theme, floors);
   const selection = selectionFailures(theme, floors);
   const indicators = indicatorFailures(theme, floors);
+  const highlight = highlightFailures(theme, floors);
   const disabledFade = disabledFadeFailures(theme);
   const keyboardDim = keyboardDimFailures(theme);
   return {
@@ -415,6 +420,7 @@ export function auditTheme(
     syntax,
     selection,
     indicators,
+    highlight,
     disabledFade,
     keyboardDim,
     passed:
@@ -429,6 +435,7 @@ export function auditTheme(
       syntax.length === 0 &&
       selection.length === 0 &&
       indicators.length === 0 &&
+      highlight.length === 0 &&
       disabledFade.length === 0 &&
       keyboardDim.length === 0,
   };
