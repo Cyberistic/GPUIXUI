@@ -113,6 +113,7 @@ src/routes/docs/index.tsx           /docs, the Introduction
 src/routes/docs/$.tsx               Every other docs page, from either collection
 src/routes/api/search.ts            Fumadocs search endpoint over every mounted collection
 src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
+src/routes/llms[.]txt.ts            /llms.txt, the page index an agent reads instead of the sidebar
 
 src/components/mdx.tsx              The MDX component registry
 src/components/highlighted-code.tsx A render-time code block, in the library's syntax palette
@@ -333,6 +334,7 @@ src/lib/page-edit.ts                The Markdown file behind a page, for its Git
 src/lib/site.ts                     The one deployed origin
 src/lib/shared.ts                   App name, docs route and the repository link
 src/lib/sitemap.ts                  The sitemap's URL set
+src/lib/llms.ts                     /llms.txt: every page, grouped by the sidebar's section, with its note
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables of COMPONENTS.md into lane rows
@@ -509,6 +511,11 @@ No page restates what the code already says:
   collections plus the site's two routes — the landing and `/live`
   (`src/lib/sitemap.ts`) — with one URL per page and a curated page shadowing
   its package page; `public/robots.txt` points at it.
+- **Machine index** (`/llms.txt`) is generated from those same collections
+  (`src/lib/llms.ts`), one line per page with its description, grouped by the
+  sidebar's sections. It lists the docs pages only: the landing and `/live` are
+  routes a reader opens, not pages a model needs to read. `/docs/reference` links
+  it.
 
 ## Preview honesty
 

@@ -10377,7 +10377,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 312/313
+`[ ]` `[█████████░]` 313/314
 
 `[x]` Stop the **component index teaching sections the pages do not have** — its
       "How to read a page" table was written from memory and read as a promise:
@@ -10528,6 +10528,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
       same completeness case in `packages/components/src/docs.test.ts` so its
       shape check gains a resolution half. The docs app should not carry a
       333-row known-gap list for another workstream's files.
+
+`[x]` Publish the **page index an agent reads instead of the sidebar** — the
+      site's map existed only as a sidebar (for a reader) and a `sitemap.xml`
+      (for a crawler), so an agent arriving at the docs had to crawl 184 pages to
+      learn what exists; nothing named every page, grouped by the section the
+      sidebar puts it in, with the sentence its frontmatter carries.
+      `/llms.txt` is generated on request from the same two collections the
+      sitemap and the search index read: `src/lib/llms.ts` owns the document and
+      the section rules (`packageCollections` route → its sidebar section, plus
+      the site's `Blocks` and `Workspace` lanes), `src/routes/llms[.]txt.ts` hands
+      it the site's pages first and the package pages after, `llms.test.ts` (7
+      cases) measures it against the disk, and `/docs/reference` points a machine
+      reader at it. The two paragraphs above the list are the honesty rule an
+      agent needs: this is a browser app documenting a native library, a preview
+      is labelled unless the page mounts `/live`, and `COMPONENTS.md` — not a
+      page's existence — is the status. Directions measured: dropping the
+      deduplication fails `lists every page…` (216 lines for 184 addresses) and
+      the curated-shadow case (2 lines for one URL); dropping the `Blocks`
+      section fails the order case (`…(4)` headings for `…(5)`) and the folder
+      case (`[ 'blocks' ]`); leaving the package collection out of the route's
+      argument fails the route case by name. Verified on a served build (`vite
+      preview`): `/llms.txt` answers **200** with `text/plain; charset=utf-8`,
+      **184** entries over 7 sections, all unique — the sitemap's **186** less the
+      landing and `/live`. `nub run --filter @gpuixui/docs test` is **138 files /
+      1 183 tests** green, `check-types` and `build` clean. No native scenario
+      applies — a generated text document.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

@@ -80,6 +80,8 @@ const extraRoutes: ReadonlyArray<string> = [
   "/",
   // The live GPUix surface: a real wasm renderer, not a docs page.
   "/live",
+  // The generated page index `/docs/reference` points a machine reader at.
+  "/llms.txt",
 ];
 
 const mounted = new Set<string>([
