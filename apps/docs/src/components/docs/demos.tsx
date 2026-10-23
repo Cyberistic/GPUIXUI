@@ -165,6 +165,38 @@ import {
   timePickerStatesSource,
   timePickerWorkflowSource,
 } from "./time-picker-demo";
+import { BoxDemo, boxDemoSource } from "./box-demo";
+import { ButtonGroupDemo, buttonGroupDemoSource } from "./button-group-demo";
+import {
+  CheckboxGroupDemo,
+  checkboxGroupDemoSource,
+} from "./checkbox-group-demo";
+import { GridDemo, gridDemoSource } from "./grid-demo";
+import { IconButtonDemo, iconButtonDemoSource } from "./icon-button-demo";
+import { InputDemo, inputDemoSource } from "./input-demo";
+import { LabelDemo, labelDemoSource } from "./label-demo";
+import { MeterDemo, meterDemoSource } from "./meter-demo";
+import { NumberFieldDemo, numberFieldDemoSource } from "./number-field-demo";
+import { OTPFieldDemo, otpFieldDemoSource } from "./otp-field-demo";
+import { ProgressDemo, progressDemoSource } from "./progress-demo";
+import { RadioGroupDemo, radioGroupDemoSource } from "./radio-group-demo";
+import { RangeSliderDemo, rangeSliderDemoSource } from "./range-slider-demo";
+import { RatingDemo, ratingDemoSource } from "./rating-demo";
+import { ScrollAreaDemo, scrollAreaDemoSource } from "./scroll-area-demo";
+import { SeparatorDemo, separatorDemoSource } from "./separator-demo";
+import { SkeletonDemo, skeletonDemoSource } from "./skeleton-demo";
+import { SliderDemo, sliderDemoSource } from "./slider-demo";
+import { SpacerDemo, spacerDemoSource } from "./spacer-demo";
+import { SpinnerDemo, spinnerDemoSource } from "./spinner-demo";
+import { StackDemo, stackDemoSource } from "./stack-demo";
+import { TextDemo, textDemoSource } from "./text-demo";
+import { TextAreaDemo, textareaDemoSource } from "./textarea-demo";
+import {
+  ThemeProviderDemo,
+  themeProviderDemoSource,
+} from "./theme-provider-demo";
+import { ToggleDemo, toggleDemoSource } from "./toggle-demo";
+import { ToggleGroupDemo, toggleGroupDemoSource } from "./toggle-group-demo";
 
 /**
  * Browser previews for the docs pages.
@@ -2724,5 +2756,58 @@ export const demos: Readonly<Record<string, Demo>> = {
   "time-picker-workflow": {
     render: TimePickerWorkflow,
     source: timePickerWorkflowSource,
+  },
+  "box-demo": { render: BoxDemo, source: boxDemoSource },
+  "button-group-demo": {
+    render: ButtonGroupDemo,
+    source: buttonGroupDemoSource,
+  },
+  "checkbox-group-demo": {
+    render: CheckboxGroupDemo,
+    source: checkboxGroupDemoSource,
+  },
+  "grid-demo": { render: GridDemo, source: gridDemoSource },
+  "icon-button-demo": {
+    render: IconButtonDemo,
+    source: iconButtonDemoSource,
+  },
+  "input-demo": { render: InputDemo, source: inputDemoSource },
+  "label-demo": { render: LabelDemo, source: labelDemoSource },
+  "meter-demo": { render: MeterDemo, source: meterDemoSource },
+  "number-field-demo": {
+    render: NumberFieldDemo,
+    source: numberFieldDemoSource,
+  },
+  "otp-field-demo": { render: OTPFieldDemo, source: otpFieldDemoSource },
+  "progress-demo": { render: ProgressDemo, source: progressDemoSource },
+  "radio-group-demo": {
+    render: RadioGroupDemo,
+    source: radioGroupDemoSource,
+  },
+  "range-slider-demo": {
+    render: RangeSliderDemo,
+    source: rangeSliderDemoSource,
+  },
+  "rating-demo": { render: RatingDemo, source: ratingDemoSource },
+  "scroll-area-demo": {
+    render: ScrollAreaDemo,
+    source: scrollAreaDemoSource,
+  },
+  "separator-demo": { render: SeparatorDemo, source: separatorDemoSource },
+  "skeleton-demo": { render: SkeletonDemo, source: skeletonDemoSource },
+  "slider-demo": { render: SliderDemo, source: sliderDemoSource },
+  "spacer-demo": { render: SpacerDemo, source: spacerDemoSource },
+  "spinner-demo": { render: SpinnerDemo, source: spinnerDemoSource },
+  "stack-demo": { render: StackDemo, source: stackDemoSource },
+  "text-demo": { render: TextDemo, source: textDemoSource },
+  "textarea-demo": { render: TextAreaDemo, source: textareaDemoSource },
+  "theme-provider-demo": {
+    render: ThemeProviderDemo,
+    source: themeProviderDemoSource,
+  },
+  "toggle-demo": { render: ToggleDemo, source: toggleDemoSource },
+  "toggle-group-demo": {
+    render: ToggleGroupDemo,
+    source: toggleGroupDemoSource,
   },
 };
