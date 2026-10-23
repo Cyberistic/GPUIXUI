@@ -351,14 +351,21 @@ export const resizeCrop = (
   });
 };
 
-/** A crop translated by dragging the picture inside the frame. */
+/**
+ * A crop translated by dragging the picture inside the frame.
+ *
+ * A move translates the hole and never reshapes it, so the caller's minimum
+ * travels with it: a hole `minSize` allowed below the default stays the size it
+ * was, on the pointer path and the keyboard path alike.
+ */
 export const moveCrop = (
   crop: CropRect,
   dx: number,
   dy: number,
   bounds: CropBounds,
+  min: number = CROP_MIN_SIZE,
 ): CropRect => {
-  const held = clampCrop(crop, bounds);
+  const held = clampCrop(crop, bounds, min);
   return new CropRect({
     x: clamp(held.x + delta(dx), 0, Math.max(0, bounds.width - held.width)),
     y: clamp(held.y + delta(dy), 0, Math.max(0, bounds.height - held.height)),
@@ -406,15 +413,18 @@ export const keyboardCrop = (
  *
  * A move keeps the hole's shape, so the ratio a resize would keep is held here
  * too; the step reads a negative value as its magnitude like the resize path.
+ * The caller's minimum travels with it: a hole the caller allowed to be smaller
+ * than the default must not grow on a move.
  */
 export const keyboardMove = (
   crop: CropRect,
   key: string,
   step: number,
   bounds: CropBounds,
+  min: number = CROP_MIN_SIZE,
 ): Option.Option<CropRect> =>
   Option.map(keyDelta(key, Math.abs(step)), (delta) =>
-    moveCrop(crop, delta.dx, delta.dy, bounds),
+    moveCrop(crop, delta.dx, delta.dy, bounds, min),
   );
 
 /** The modifiers a handle's key payload may carry. */
@@ -445,7 +455,7 @@ export const cropKey = (
   aspectRatio?: number,
 ): Option.Option<CropRect> =>
   modifiers?.alt === true
-    ? keyboardMove(crop, key, cropKeyStep(modifiers), bounds)
+    ? keyboardMove(crop, key, cropKeyStep(modifiers), bounds, min)
     : keyboardCrop(
         crop,
         corner,
@@ -481,7 +491,7 @@ export const gestureCrop = (
   aspectRatio?: number,
 ): CropRect =>
   gesture.kind === "move"
-    ? moveCrop(gesture.start, at.x - gesture.x, at.y - gesture.y, bounds)
+    ? moveCrop(gesture.start, at.x - gesture.x, at.y - gesture.y, bounds, min)
     : resizeCrop(
         gesture.start,
         gesture.corner,

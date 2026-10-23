@@ -327,6 +327,28 @@ describe("moveCrop", () => {
     });
   });
 
+  it("keeps a hole the caller allowed below the default minimum", () => {
+    // A caller may set `minSize` below the 24-point default; a move must not
+    // grow the hole to it — both pointer paths share this translation.
+    const tiny = new CropRect({ x: 10, y: 10, width: 10, height: 10 });
+    expect(boxes(moveCrop(tiny, 5, 5, bounds, 8))).toStrictEqual({
+      x: 15,
+      y: 15,
+      width: 10,
+      height: 10,
+    });
+    expect(
+      boxes(
+        gestureCrop(
+          { kind: "move", start: tiny, x: 0, y: 0 },
+          { x: 5, y: 5 },
+          bounds,
+          8,
+        ),
+      ),
+    ).toStrictEqual({ x: 15, y: 15, width: 10, height: 10 });
+  });
+
   it("stops the hole at the frame's edges", () => {
     expect(boxes(moveCrop(opening, -900, 900, bounds))).toStrictEqual({
       x: 0,
@@ -370,6 +392,13 @@ describe("keyboardMove", () => {
     ).toStrictEqual(Option.some({ x: 60, y: 48, width: 100, height: 70 }));
   });
 
+  it("keeps a hole below the default minimum when it steps", () => {
+    const tiny = new CropRect({ x: 10, y: 10, width: 10, height: 10 });
+    expect(
+      Option.map(keyboardMove(tiny, "right", 1, bounds, 8), boxes),
+    ).toStrictEqual(Option.some({ x: 11, y: 10, width: 10, height: 10 }));
+  });
+
   it("stops the hole at the frame's edges", () => {
     const atEdge = new CropRect({ x: 0, y: 90, width: 100, height: 70 });
     expect(
@@ -408,6 +437,13 @@ describe("cropKey", () => {
         boxes,
       ),
     ).toStrictEqual(Option.some({ x: 60, y: 48, width: 100, height: 70 }));
+  });
+
+  it("moves a hole below the default minimum without growing it", () => {
+    const tiny = new CropRect({ x: 10, y: 10, width: 10, height: 10 });
+    expect(
+      Option.map(cropKey(tiny, "se", "right", { alt: true }, bounds, 8), boxes),
+    ).toStrictEqual(Option.some({ x: 11, y: 10, width: 10, height: 10 }));
   });
 
   it("ignores a key that is not an arrow, with or without Alt", () => {

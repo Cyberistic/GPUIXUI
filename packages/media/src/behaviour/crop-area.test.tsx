@@ -1,12 +1,15 @@
 /**
  * `CropArea`'s gestures, driven through the real GPUix renderer.
  *
- * The bug these guard: a controlled crop asked its caller for a rectangle on
+ * The bugs these guard: a controlled crop asked its caller for a rectangle on
  * **every delivered move**, including the moves of a drag held past the frame's
  * edge — where the clamped hole no longer changes. A caller that regenerates a
  * preview, uploads a crop or writes state on `onChange` did that work once per
  * frame for one rectangle. A crop reports a rectangle only when it differs from
  * the one already painted, and a press without a move reports nothing at all.
+ * The second: both move paths clamped with the **default** minimum, so a hole
+ * the caller allowed to be smaller (a `minSize` below 24) grew to 24 on a
+ * pointer drag or an `Alt`+arrow — a move changed the hole's sides.
  */
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
@@ -22,9 +25,11 @@ const opening = new CropRect({ x: 60, y: 40, width: 100, height: 70 });
 /** A controlled crop whose reports the suite counts. */
 const Harness = ({
   start,
+  minSize,
   onReport,
 }: {
   readonly start: CropRect;
+  readonly minSize?: number;
   readonly onReport: (crop: CropRect) => void;
 }) => {
   const [crop, setCrop] = useState(start);
@@ -35,6 +40,7 @@ const Harness = ({
       width={240}
       height={160}
       value={crop}
+      minSize={minSize}
       testId="crop"
       label="Crop"
       onChange={(next) => {
@@ -47,12 +53,17 @@ const Harness = ({
 
 const mount = (
   start: CropRect = opening,
+  minSize?: number,
 ): { readonly root: TestRoot; readonly reports: CropRect[] } => {
   const reports: CropRect[] = [];
   const root = createTestRoot({ width: 1280, height: 800 });
   root.render(
     <ThemeProvider theme={lightTheme}>
-      <Harness start={start} onReport={(crop) => reports.push(crop)} />
+      <Harness
+        start={start}
+        minSize={minSize}
+        onReport={(crop) => reports.push(crop)}
+      />
     </ThemeProvider>,
   );
   return { root, reports };
@@ -134,6 +145,24 @@ describe("CropArea gestures", () => {
     root.renderer.simulateKeystrokes("right");
 
     expect(reports).toStrictEqual([]);
+    root.unmount();
+  });
+
+  it("moves a hole below the default minimum without growing it", () => {
+    // `minSize` may be smaller than the 24-point default; the move path used
+    // to clamp with the default, so Alt+Right grew a 10-point hole to 24.
+    const tiny = new CropRect({ x: 10, y: 10, width: 10, height: 10 });
+    const { root, reports } = mount(tiny, 8);
+    const handle = root.renderer.findByTestId("crop-handle-se");
+    if (handle === undefined) {
+      throw new Error("behaviour: the bottom-right handle is missing");
+    }
+    root.renderer.focusElement(handle.id);
+    root.renderer.simulateKeystrokes("alt-right");
+
+    expect(reports.map(boxes)).toStrictEqual([
+      { x: 11, y: 10, width: 10, height: 10 },
+    ]);
     root.unmount();
   });
 });
