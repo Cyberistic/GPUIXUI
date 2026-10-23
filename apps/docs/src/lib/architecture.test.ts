@@ -2,7 +2,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { PackageGraph } from "../components/docs/package-graph";
 import { PackageTable } from "../components/docs/package-table";
+import { packageGraph } from "../lib/package-graph-data";
 
 /**
  * The architecture page is the map of the workspace, so it has to name every
@@ -14,6 +16,12 @@ import { PackageTable } from "../components/docs/package-table";
  * the rendered table and the manifests on disk: a package that is not printed,
  * a dependency the row omits, and a dependency the row invents each fail by
  * name.
+ *
+ * The direction diagram was the same drift one layer up: it named neither
+ * `@gpuixui/dock` nor `@gpuixui/media`, and nothing checked the page's own
+ * "the graph is acyclic" claim. The diagram is now data the page renders, and
+ * this suite closes both graphs over the manifests — a missing edge, an
+ * invented edge, a curated name with no package and a cycle each fail by name.
  */
 
 const root = new URL("../../../../", import.meta.url);
@@ -65,6 +73,9 @@ const page = read("apps/docs/content/docs/architecture.mdx");
 /** The generated table's markup. */
 const rendered = renderToStaticMarkup(createElement(PackageTable));
 
+/** The rendered direction diagram. */
+const diagram = renderToStaticMarkup(createElement(PackageGraph));
+
 /** The table's body rows, as cell text: package, responsibility, dependencies. */
 const rows = (): ReadonlyArray<ReadonlyArray<string>> =>
   rendered
@@ -81,6 +92,48 @@ const rows = (): ReadonlyArray<ReadonlyArray<string>> =>
             .trim(),
         ),
     );
+
+/** One arrow: `to` may import `from`. */
+type Edge = readonly [from: string, to: string];
+
+/** The arrows a chain list draws, one per adjacent pair. */
+const edgesOf = (
+  layers: ReadonlyArray<ReadonlyArray<string>>,
+): ReadonlyArray<Edge> =>
+  layers.flatMap((layer) =>
+    layer.flatMap((to, index) => {
+      const from = layer[index - 1];
+      return from === undefined ? [] : [[from, to] as const];
+    }),
+  );
+
+/** The arrows the manifests declare, dependency first. */
+const declaredEdges: ReadonlyArray<Edge> = [...manifests].flatMap(
+  ([name, dependencies]) =>
+    dependencies.map((dependency) => [dependency, name] as const),
+);
+
+/** Every arrow a set of edges implies, transitively, as `from -> to` strings. */
+const closureOf = (edges: ReadonlyArray<Edge>): ReadonlySet<string> => {
+  const out = new Map<string, ReadonlyArray<string>>();
+  for (const [from, to] of edges) {
+    out.set(from, [...(out.get(from) ?? []), to]);
+  }
+
+  const pairs = new Set<string>();
+  for (const from of out.keys()) {
+    const seen = new Set<string>();
+    const queue = [...(out.get(from) ?? [])];
+    while (queue.length > 0) {
+      const to = queue.pop();
+      if (to === undefined || seen.has(to)) continue;
+      seen.add(to);
+      pairs.add(`${from} -> ${to}`);
+      queue.push(...(out.get(to) ?? []));
+    }
+  }
+  return pairs;
+};
 
 describe("the architecture page", () => {
   it("prints the generated package table, not a hand-kept copy", () => {
@@ -124,10 +177,57 @@ describe("the architecture page", () => {
     );
   });
 
-  it("draws the arrows in the direction the manifests allow", () => {
-    // `data` builds on components; components builds on primitives. A graph
-    // that omits either reads as licence to import the other way.
-    expect(page).toContain("primitives ──▶ components ──▶ data");
-    expect(page).not.toContain("does not depend on `@gpuixui/primitives`");
+  it("draws the direction the manifests allow, as they allow it", () => {
+    const drawn = edgesOf(packageGraph.direction);
+    const invented = drawn.filter(([from, to]) => {
+      const declared = manifests.get(to);
+      return declared === undefined || !declared.includes(from);
+    });
+    expect(invented.map(([from, to]) => `${to} -> ${from}`)).toEqual([]);
+
+    const declaredClosure = closureOf(declaredEdges);
+    const drawnClosure = closureOf(drawn);
+    expect(
+      [...declaredClosure].filter((pair) => !drawnClosure.has(pair)).toSorted(),
+    ).toEqual([]);
+    expect(
+      [...drawnClosure].filter((pair) => !declaredClosure.has(pair)).toSorted(),
+    ).toEqual([]);
+  });
+
+  it("keeps the graph acyclic, as the page claims", () => {
+    const cycles = [...closureOf(declaredEdges)].filter((pair) => {
+      const [from, to] = pair.split(" -> ");
+      return from === to;
+    });
+
+    expect(cycles).toEqual([]);
+    expect(page).toContain("the graph is acyclic");
+  });
+
+  it("names every package in the diagram, and says which stand alone", () => {
+    const drawn = new Set(edgesOf(packageGraph.direction).flat());
+    const alone = packageGraph.packages
+      .map((row) => row.name)
+      .filter((name) => !drawn.has(name));
+
+    expect(packageGraph.standalone).toEqual(alone);
+    expect(diagram).toContain("──▶");
+    for (const name of packageGraph.packages
+      .map((row) => row.name)
+      .filter((name) => drawn.has(name))) {
+      expect(diagram).toContain(name);
+    }
+    for (const name of alone) expect(diagram).toContain(name);
+    expect(diagram).toContain(
+      `${alone.join(", ")} ${alone.length === 1 ? "stands" : "stand"} alone`,
+    );
+    expect(page).toContain("<PackageGraph />");
+  });
+
+  it("draws a chain the page's own rendering carries", () => {
+    for (const layer of packageGraph.direction) {
+      expect(diagram).toContain(layer.join(" ──▶ "));
+    }
   });
 });

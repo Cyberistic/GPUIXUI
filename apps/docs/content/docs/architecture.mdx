@@ -4,22 +4,15 @@ description: The packages, the dependency direction, and where a change belongs.
 ---
 
 import { PackageTable } from "@/components/docs/package-table";
+import { PackageGraph } from "@/components/docs/package-graph";
 
-The table is read from each package's manifest at build time.
+The table and the direction diagram are read from each package's manifest at build time.
 
 <PackageTable />
 
 ## The direction
 
-```
-tokens ──▶ tw ──▶ primitives ──▶ components ──▶ data
-   └──────▶ icons ──▶ primitives
-motion ──▶ primitives
-primitives ──▶ editor
-data, primitives ──▶ files
-primitives, keyboard ──▶ shell
-keyboard, runtime, testing   stand alone
-```
+<PackageGraph />
 
 Each arrow means "may import at build time"; the graph is acyclic. Tokens import nothing in the library, a styling layer never imports a component, and no package imports the docs site.
 

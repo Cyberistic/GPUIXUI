@@ -7,11 +7,12 @@
  * dependency (`@gpuixui/editor` → `@gpuixui/dock`), while the page still taught
  * the old edges.
  *
- * Two things a manifest cannot say are curated here: the table's reading order
+ * Three things a manifest cannot say are curated here: the table's reading order
  * (the layers a component is built from, then the packages that stand alone —
- * not alphabetical) and each package's responsibility sentence. A package missing from either is reported rather than dropped — the
- * table still prints the manifest's own description and appends the package at
- * the end, so a new package is visible before its row is written.
+ * not alphabetical), each package's responsibility sentence, and the direction
+ * diagram's chains. A package missing from any of them is reported rather than
+ * dropped — the table still prints the manifest's own description and appends
+ * the package at the end, so a new package is visible before its row is written.
  */
 
 /** One package, as its manifest declares it. */
@@ -38,6 +39,10 @@ export interface PackageGraph {
   readonly uncatalogued: ReadonlyArray<string>;
   /** Packages the curated order does not place; they print last. */
   readonly unordered: ReadonlyArray<string>;
+  /** The direction diagram's chains, dependency first, as this workspace has them. */
+  readonly direction: ReadonlyArray<ReadonlyArray<string>>;
+  /** Packages no direction chain names, in reading order. */
+  readonly standalone: ReadonlyArray<string>;
 }
 
 /**
@@ -65,6 +70,35 @@ export const packageOrder: ReadonlyArray<string> = [
   "@gpuixui/testing",
   "@gpuixui/config",
   "@gpuixui/deploy",
+];
+
+/**
+ * The direction diagram's chains, dependency first.
+ *
+ * Each arrow is a dependency a manifest declares, and together the chains say
+ * every edge the workspace has: the architecture guard closes them transitively
+ * and fails when a declared dependency is not implied or a chain invents one.
+ * A package no chain names stands alone.
+ */
+export const packageLayers: ReadonlyArray<ReadonlyArray<string>> = [
+  [
+    "@gpuixui/tokens",
+    "@gpuixui/tw",
+    "@gpuixui/primitives",
+    "@gpuixui/components",
+    "@gpuixui/data",
+    "@gpuixui/files",
+  ],
+  ["@gpuixui/tokens", "@gpuixui/icons", "@gpuixui/primitives"],
+  [
+    "@gpuixui/motion",
+    "@gpuixui/primitives",
+    "@gpuixui/dock",
+    "@gpuixui/editor",
+  ],
+  ["@gpuixui/keyboard", "@gpuixui/components", "@gpuixui/media"],
+  ["@gpuixui/primitives", "@gpuixui/shell"],
+  ["@gpuixui/keyboard", "@gpuixui/shell"],
 ];
 
 /** The sentence each package's row prints, curated from the layer it belongs to. */
@@ -153,6 +187,14 @@ export const buildPackageGraph = (
     .filter((manifest) => packageResponsibilities[manifest.name] === undefined)
     .map((manifest) => manifest.name);
 
+  // A chain naming a package this workspace does not have is a stale curated
+  // entry, not a line to print; the guard reports it by name.
+  const present = new Set(manifests.map((manifest) => manifest.name));
+  const direction = packageLayers.filter((layer) =>
+    layer.every((name) => present.has(name)),
+  );
+  const drawn = new Set(direction.flat());
+
   return {
     packages: [...ordered, ...rest].map((manifest) => ({
       name: manifest.name,
@@ -165,5 +207,9 @@ export const buildPackageGraph = (
     })),
     uncatalogued,
     unordered: rest.map((manifest) => manifest.name),
+    direction,
+    standalone: [...ordered, ...rest]
+      .map((manifest) => manifest.name)
+      .filter((name) => !drawn.has(name)),
   };
 };

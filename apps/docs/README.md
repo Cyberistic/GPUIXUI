@@ -233,6 +233,7 @@ src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared
 src/components/docs/examples-index.tsx    The generated registry on /docs/examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
 src/components/docs/package-table.tsx     The package table on /docs/architecture, generated from the manifests
+src/components/docs/package-graph.tsx     The direction diagram below it, from the graph's chains
 src/components/docs/type-scale.tsx        The typography specimen, from the theme
 src/components/docs/theme-matrix.tsx      The built-in themes, generated from the token package
 src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /docs/theming
@@ -334,7 +335,7 @@ src/lib/public-api-data.ts          The entry points, at build time
 src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
 src/lib/public-symbols-source.ts    Reads the workspace source the index describes
 src/lib/public-symbols-data.ts      The index, read from the plugin's build-time module
-src/lib/package-graph.ts            The package table's order, responsibilities and model
+src/lib/package-graph.ts            The package table's order, responsibilities, direction chains and model
 src/lib/package-graph-source.ts     Reads packages/*/package.json for the table
 src/lib/package-graph-data.ts       The graph, read from the plugin's build-time module
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package

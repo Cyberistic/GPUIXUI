@@ -10308,7 +10308,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 299/299
+`[x]` `[██████████]` 300/300
+
+`[x]` Draw the **architecture direction from the manifests** — the page's
+      direction fence was hand-written and named neither `@gpuixui/dock` nor
+      `@gpuixui/media`, drew `primitives ──▶ editor` (editor builds on `dock`,
+      which builds on `primitives` and `motion`), and nothing checked its "the
+      graph is acyclic" claim, while the table beside it was generated. The
+      diagram is data now (`packageLayers` in `package-graph.ts`) rendered by
+      `src/components/docs/package-graph.tsx` beside a derived standalone line
+      (`runtime`, `testing`, `config`, `deploy`), and `architecture.test.ts`
+      holds it to the manifests: every drawn arrow must be a declared
+      dependency, the transitive closure of the drawn arrows must equal the
+      declared graph's (so an omitted edge fails by pair), the declared graph
+      must be acyclic, and every package and the standalone sentence must
+      render. `package-graph.test.ts` gains the chain-covers-only-shipped-
+      packages case and the direction/standalone shape. Directions measured:
+      dropping the dock chain fails with **13** missing pairs, and adding
+      `shell ──▶ editor` fails `@gpuixui/editor -> @gpuixui/shell`. No native
+      scenario applies — build-time data and the page it renders.
 
 `[x]` Publish the **typed refusal the runtime page omitted** — `/docs/runtime`
       showed `capabilities` and `unsupportedFeature` and never named

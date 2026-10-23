@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPackageGraph,
+  packageLayers,
   packageOrder,
   packageResponsibilities,
   parsePackageManifest,
@@ -98,5 +99,18 @@ describe("the shipped workspace", () => {
     expect(
       Object.keys(packageResponsibilities).filter((name) => !names.has(name)),
     ).toEqual([]);
+    expect(packageLayers.flat().filter((name) => !names.has(name))).toEqual([]);
+  });
+
+  it("carries the direction chains and the packages they leave out", () => {
+    const graph = readPackageGraph(repoRoot);
+    const drawn = new Set(graph.direction.flat());
+
+    expect(graph.direction.length).toBeGreaterThanOrEqual(4);
+    expect(graph.direction.flat().length).toBeGreaterThanOrEqual(10);
+    expect(graph.standalone).toEqual(
+      graph.packages.map((row) => row.name).filter((name) => !drawn.has(name)),
+    );
+    expect(graph.standalone.length).toBeGreaterThan(0);
   });
 });
