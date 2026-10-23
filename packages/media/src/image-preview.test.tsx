@@ -14,6 +14,7 @@ import * as Option from "effect/Option";
 import { ImageZoom } from "@gpuixui/components/image-zoom";
 import { lightTheme } from "@gpuixui/tokens";
 import { renderImagePreview } from "./image-preview.js";
+import type { ImagePreviewStatus } from "./image-preview.js";
 import {
   elementChildren,
   findByTestId,
@@ -50,6 +51,24 @@ describe("ImagePreview", () => {
       lightTheme,
     );
     expect(Option.isSome(findByTestId(root, "image-preview-loading"))).toBe(
+      true,
+    );
+  });
+
+  it("reads a stored status the union does not name as the derived state", () => {
+    // The bug guarded: Match.exhaustive threw out of the render for a status
+    // restored from storage whose name the union no longer carried.
+    const stored = "ready" as ImagePreviewStatus;
+    const real = renderImagePreview(
+      { src: "x.png", alt: "photo", status: stored },
+      lightTheme,
+    );
+    expect(Option.isNone(findByTestId(real, "image-preview-error"))).toBe(true);
+    const blank = renderImagePreview(
+      { src: "  ", alt: "photo", status: stored },
+      lightTheme,
+    );
+    expect(Option.isSome(findByTestId(blank, "image-preview-error"))).toBe(
       true,
     );
   });

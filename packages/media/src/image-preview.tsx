@@ -19,12 +19,21 @@ import { Spinner } from "@gpuixui/primitives";
 import { Button } from "@gpuixui/primitives/button";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import type { ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
 
 /** What the preview is painting right now. */
-export type ImagePreviewStatus = "loading" | "loaded" | "error";
+export const ImagePreviewStatus = Schema.Literals([
+  "loading",
+  "loaded",
+  "error",
+]);
+/** What the preview is painting right now. */
+export type ImagePreviewStatus = typeof ImagePreviewStatus.Type;
+
+const isStatus = Schema.is(ImagePreviewStatus);
 
 /** {@link ImagePreview} props. */
 export interface ImagePreviewProps extends Omit<Props, "children"> {
@@ -75,7 +84,10 @@ const cornerRadius = (value: number | undefined, theme: Theme): number =>
 const resolveStatus = (
   src: string,
   status?: ImagePreviewStatus,
-): ImagePreviewStatus => status ?? (isBlank(src) ? "error" : "loaded");
+): ImagePreviewStatus =>
+  // A status restored from storage arrives untyped; a name the union no longer
+  // carries reads as the derived state rather than reaching a Match.exhaustive.
+  isStatus(status) ? status : isBlank(src) ? "error" : "loaded";
 
 const frameStyle = (theme: Theme): StyleDesc => ({
   display: "flex",
