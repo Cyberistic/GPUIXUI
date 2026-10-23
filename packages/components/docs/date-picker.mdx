@@ -52,6 +52,9 @@ DatePicker
 
 ## Limitations
 
+- A picker the consumer disables while its calendar is open closes with it,
+  and neither a day nor `Clear` writes the value (the trigger already refuses to
+  open one that starts disabled).
 - No `aria-current`; today is marked by a border.
 - No `aria-disabled`; an unavailable day leaves the tab order.
 - Fixed English labels; no i18n layer.

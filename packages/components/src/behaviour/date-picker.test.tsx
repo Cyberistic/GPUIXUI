@@ -8,8 +8,9 @@
  * Escape that does not return focus to the trigger; a selected day painted
  * from a constant instead of the theme; a click on an out-of-range day producing
  * a value; arrow keys walking past `min`/`max`; the month controls browsing past
- * the bound; a picked day that cannot be cleared from the surface; and Clear
- * appearing without a value or without `clearable`.
+ * the bound; a picked day that cannot be cleared from the surface; Clear
+ * appearing without a value or without `clearable`; and a picker the caller
+ * disables while its calendar is open still selecting a day or clearing.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -280,6 +281,38 @@ describe("DatePicker", () => {
         picker.renderer.findByTestId("date-picker-content"),
       ).toBeUndefined(),
     );
+
+    picker.unmount();
+  });
+
+  it("closes with a picker the caller disables while its calendar is open", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker
+        defaultValue="2026-10-17"
+        clearable
+        onValueChange={onValueChange}
+      />,
+    );
+    open(picker);
+
+    expect(picker.renderer.findByTestId("date-day-2026-10-20")).toBeDefined();
+    picker.rerender(
+      <Picker
+        defaultValue="2026-10-17"
+        clearable
+        disabled
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(picker.renderer.getAllText()).toContain("17 October 2026");
 
     picker.unmount();
   });

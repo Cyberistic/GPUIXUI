@@ -200,18 +200,29 @@ export const DatePicker = ({
 
   const choose = useCallback(
     (day: DateTime.Utc): void => {
-      if (!isAvailable(day, bounds)) return;
+      // A caller that disables the picker refuses the edit, whichever half of
+      // the surface the press or key reaches: the value is the caller's.
+      if (disabled || !isAvailable(day, bounds)) return;
       setSelected(formatIsoDay(day));
       closeToTrigger();
     },
-    [bounds, closeToTrigger, setSelected],
+    [bounds, closeToTrigger, disabled, setSelected],
   );
 
   /** Drop the selection and close; the next open anchors on today. */
   const clear = useCallback((): void => {
+    if (disabled) return;
     setSelected(null);
     closeToTrigger();
-  }, [closeToTrigger, setSelected]);
+  }, [closeToTrigger, disabled, setSelected]);
+
+  // A surface already open when the caller disables the picker closes with it:
+  // a calendar no day can be chosen from is not an affordance, and the stored
+  // request is dropped so re-enabling does not resurrect it. A layout effect
+  // retires it before the frame paints.
+  useLayoutEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
 
   assertParts(datePickerRoot, children);
 
@@ -690,6 +701,7 @@ export const datePickerMeta = {
     "0.11.0 has no aria-current, so today is marked by a border only",
     "0.11.0 has no aria-disabled: an unavailable day leaves the tab order and its accessible name ends in ', unavailable'",
     "a min after max makes no day selectable; the grid is visible and inert rather than throwing from render",
+    "a picker disabled while its calendar is open closes with it, and no day or Clear writes the value",
   ],
   docs: "docs/date-picker.mdx",
   example: "examples/date-picker.example.tsx",
