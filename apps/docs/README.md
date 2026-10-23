@@ -23,7 +23,7 @@ getting-started.mdx          A first screen: theme, card, state, run it natively
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
 styling.mdx                  The class recipe layer: two registries, states, refusals, extension, the React bridge
 theming.mdx                  Semantic roles, themes, the platform switch, the look parameter, the desktop palette
-dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
+dark-mode.mdx                App-owned mode switching, following the desktop's palette, restoring a stored theme
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
 accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree

@@ -10308,7 +10308,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 305/305
+`[x]` `[██████████]` 306/306
+
+`[x]` Teach **following the desktop's palette** — `/docs/dark-mode` said the
+      application owns the mode and passed `getTheme` to the provider, and
+      stopped. `@gpuixui/tokens` ships the whole follow — `paletteToTokens`,
+      `paletteMode`, `watchSystemTheme`, `intervalTimer`,
+      `decodeOmarchyPalette` — plus `missingTokens` for a stored theme's
+      absence, and neither had a page on the site: a reader who wanted a window
+      wearing the colours their desktop already chose could only find it in
+      `docs/tokens.md`, which the site does not serve. The page gains **Follow
+      the desktop's palette** (the `SystemPalette` shape, the poll and its
+      injectable `timer`, the returned cancel, every `WatchSystemThemeOptions`
+      field, the delivery-before-record rule, the wash an opaque selection
+      becomes, Omarchy's own names and `problems`, `auditTheme` before
+      shipping) and **Restore a stored theme** (`missingTokens`'s `group`/`step`/
+      `family` and the default-theme route). `src/lib/palette-follow-page.test.ts`
+      (7 cases) reads the package to keep the page true: every seam must still be
+      declared before the page may name it, the sample must pass every required
+      option, the poll must be `timer.poll(every, tick)` with no watcher call, the
+      tick must record `applied` **after** `onChange`, `selectionWash` must keep
+      the opaque-to-share rule, the Omarchy reader's five names and its `problems`
+      table, and the gate's three absence kinds. Directions measured: against the
+      committed page all **7** cases fail by name; restored, the file is 7/7,
+      `check-types` is clean, and the app run is 1136 passed with its three
+      failures on another session's in-flight `multi-step-form` preview modules
+      (untracked in this shared checkout, owner: the session adding that page's
+      demo). No native scenario applies — a site page and the package it
+      documents.
 
 `[x]` Hold the **policy's guard citations to files the site carries** — the page
       prune deleted `src/lib/accessibility-page.test.ts` and renamed the note's
