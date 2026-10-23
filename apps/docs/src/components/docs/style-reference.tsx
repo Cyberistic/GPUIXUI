@@ -24,6 +24,17 @@ import { PreviewSurface } from "./preview-surface";
 const cell = "px-2 py-1.5 font-mono text-xs";
 const headCell = "px-2 py-1.5 font-semibold";
 
+/** A group's rule, with the class names it backticks painted as code. */
+const Note = ({ text }: { readonly text: string }) => (
+  <p className="mb-2 mt-1 text-xs leading-relaxed text-muted-foreground">
+    {text
+      .split("`")
+      .map((part, index) =>
+        index % 2 === 1 ? <code key={`${index}-${part}`}>{part}</code> : part,
+      )}
+  </p>
+);
+
 /** What a compiled row reads in its second column. */
 const painted = (resolved: ResolvedClass): string =>
   Match.value(resolved).pipe(
@@ -67,9 +78,7 @@ export function StyleReferenceBody({ theme }: { readonly theme: Theme }) {
           <h3 className="m-0 text-sm font-semibold text-foreground">
             {group.name}
           </h3>
-          <p className="mb-2 mt-1 text-xs leading-relaxed text-muted-foreground">
-            {group.note}
-          </p>
+          <Note text={group.note} />
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full border-collapse text-sm">
               <thead>
