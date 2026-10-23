@@ -3,6 +3,8 @@ title: Accessibility
 description: What a screen reader hears from a GPUix surface, and which states have no attribute.
 ---
 
+import { decorativeFloor, iconSize, keyboardFocusDimOpacity, targetInset, targetSize } from "@gpuixui/tokens";
+
 A node exists in the tree only if it has a role. A `div` with only an `aria-label` paints nothing readable; `role="none"` removes the node.
 
 | Attribute | Type | Reaches the tree as |
@@ -55,3 +57,17 @@ const help = "Where notifications are delivered.";
 ```
 
 A visible `Label` beside a control is not associated with it.
+
+## Pressable targets
+
+A control may paint smaller than the box a pointer has to hit. The floors are fixed tokens rather than a theme group — a brand that could lower one would make the library's own controls non-conforming. `targetSize.minimum` is {targetSize.minimum}px (WCAG 2.2 SC 2.5.8, AA) and `targetSize.comfortable` is {targetSize.comfortable}px for a touch-first surface (WCAG 2.1 SC 2.5.5, AAA).
+
+`targetInset(visual, floor)` returns the padding each side a smaller drawing reserves so its press target reaches the floor, rounded up so two neighbours' {targetSize.minimum}px targets touch rather than overlap; it answers `0` once the drawing already reaches the floor. A {iconSize.md}px checkbox needs {targetInset(iconSize.md)}px each side, and {targetInset(iconSize.md, targetSize.comfortable)}px at the touch floor.
+
+The library measures the adoption in the renderer: the components' four clear controls, the standalone Checkbox and Switch, a group's option row and Rating's star box — `targets.test.tsx`, `selection-targets.runtime.test.tsx`, `groups.runtime.test.tsx` and `Rating.test.tsx`.
+
+## The keyboard dim
+
+While one element holds keyboard focus, the runtime multiplies every **other** focusable element's opacity by `keyboardFocusDimOpacity` ({keyboardFocusDimOpacity * 100}%). It is a paint the runtime applies, not a theme value, and a focused input or textarea dims nothing — typing is keyboard input too.
+
+The dim is a where-can-Tab-go cue, not a reading mode: `keyboardDimFailures` holds each placement to {decorativeFloor}:1, and a placement the dim erases is reported rather than hidden. A control whose label must stay readable while Tab is elsewhere opts out with `keyboardFocusDim: false` — the library's filled actions declare it through `keepContent` (the primitives merge it for any variant that paints a fill) and so do the fields, while an `outline` or `ghost` action keeps the cue.
