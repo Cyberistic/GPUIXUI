@@ -236,6 +236,7 @@ export type {
 } from "./style.js";
 
 export {
+  actionOnColor,
   buttonVariants,
   BUTTON_VARIANTS,
   fieldVariant,

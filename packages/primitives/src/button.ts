@@ -5,8 +5,9 @@
  * action would load all of Tier 1 to paint it. The `./hint` seam measured that
  * route at 52 modules / 416 KiB against a subpath's 5 / 49, which is why a
  * second implementation of the same button was kept in `@gpuixui/components`
- * rather than pay it (plan 160). This entry publishes `Button`, `IconButton`
- * and their prop types on their own, so the route is one control.
+ * rather than pay it (plan 160). This entry publishes `Button`, `IconButton`,
+ * their prop types and `actionOnColor` on their own, so the route is one
+ * control.
  *
  * It is a re-export seam, not a second implementation: the components, their
  * props and every rule behind them are the ones in `components/`. It lives at
@@ -21,3 +22,6 @@ export type { ButtonProps } from "./components/Button.js";
 
 export { IconButton } from "./components/IconButton.js";
 export type { IconButtonProps } from "./components/IconButton.js";
+
+export { actionOnColor } from "./core/variants.js";
+export type { ButtonVariant } from "./core/variants.js";

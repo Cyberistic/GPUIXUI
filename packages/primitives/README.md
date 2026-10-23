@@ -106,15 +106,17 @@ the exact steps and the native-style-prop → utility-class mapping are in
 ### Actions load from their own subpath
 
 Import one action from `@gpuixui/primitives/button` when the package root is too
-much to load. The subpath publishes `Button`, `IconButton` and their prop types
-from a re-export seam (`src/button.ts`) and reaches six component modules — the
-two actions, `Spinner`, `ThemeProvider`, `MessagesProvider` and the shared
-`internal.ts` — where the root barrel reaches 53 own modules and every other
-component. Plan 160 measured
+much to load. The subpath publishes `Button`, `IconButton`, `actionOnColor` and
+their prop types from a re-export seam (`src/button.ts`) and reaches six
+component modules — the two actions, `Spinner`, `ThemeProvider`,
+`MessagesProvider` and the shared `internal.ts` — where the root barrel reaches
+53 own modules and every other component. Plan 160 measured
 the barrel at 52 modules / 416 KiB from `@gpuixui/components`, which is why that
 package kept a local button stand-in until this route existed. The seam is a
 route, not a second implementation: `IconButton` is still `Button` with a
-required name.
+required name, and `actionOnColor(theme, variant)` is the role the variant table
+paints its label in, for a layer drawn over the action (a busy loader, a
+chevron, an effect's wash).
 
 ### The scroll box loads from its own subpath
 

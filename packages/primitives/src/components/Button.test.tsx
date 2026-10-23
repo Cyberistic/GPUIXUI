@@ -39,7 +39,12 @@ import {
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
-import { buttonVariants, type ButtonVariant } from "../core/variants.js";
+import {
+  actionOnColor,
+  buttonVariants,
+  BUTTON_VARIANTS,
+  type ButtonVariant,
+} from "../core/variants.js";
 import { keyEvent, keyUpEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -311,6 +316,24 @@ describe("Button", () => {
     expect(linkColour(lightTheme)).not.toBe(lightTheme.colors.primary);
     // ...and where it already reads, the derivation leaves the brand alone.
     expect(linkColour(darkTheme)).toBe(darkTheme.colors.primary);
+  });
+
+  it("paints every variant's label in the role the action route publishes", () => {
+    // The bug: a layer over an action (a busy loader, a chevron, an effect's
+    // wash) could only guess the label role, and a role from another fill is
+    // invisible — `secondaryForeground` on a `primary` fill is 1.42:1 in Windows
+    // dark. The route's `actionOnColor` and the painted label are held together
+    // here, so a second map cannot drift from the painter.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      Arr.forEach(BUTTON_VARIANTS, (variant) => {
+        const element = renderButton({ variant, children: "Save" }, theme, {
+          focused: false,
+        });
+        expect(expectSome(hostStyleString(element, "color")), variant).toBe(
+          actionOnColor(theme, variant),
+        );
+      });
+    });
   });
 
   it("stays focusable while loading but refuses to activate", () => {

@@ -153,6 +153,23 @@ export const buttonVariants: Record<ButtonVariant, ControlVariant> = {
   link,
 };
 
+/**
+ * The role a variant paints its label in: the on-colour of the fill it owns.
+ *
+ * A glyph inside an action is the control's label drawn in vectors, not a mark
+ * with a colour of its own, so it takes the same role. Any other choice names a
+ * colour picked for a different fill — `secondaryForeground` on a `primary` fill
+ * measures 1.42:1 in Windows dark, and a chevron painted that way is invisible.
+ *
+ * Read from the variant table, so a variant added there answers here without a
+ * second list, and a layer painted over an action (a busy loader, a chevron or
+ * an effect's wash) tints in the role the action's own label paints.
+ */
+export const actionOnColor = (
+  theme: PrimitiveTheme,
+  variant: ButtonVariant,
+): string => buttonVariants[variant].foreground(theme);
+
 const FILLED_SPINNER_ACCENT: Readonly<
   Partial<Record<ButtonVariant, SpinnerAccent>>
 > = {

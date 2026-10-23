@@ -39,6 +39,35 @@ import { Button, Stack } from "@gpuixui/primitives";
 control sits on. `Button.test.tsx` measures it against those washes in all 16
 shipped, platform and authored styles and names the fill it replaced.
 
+### Layering over an action
+
+A layer painted on top of an action — a busy loader, a chevron, an effect's
+wash — is the control's label drawn another way, so it takes the action's own
+label role. `actionOnColor(theme, variant)` answers with the role the variant
+table paints from; it is published by `@gpuixui/primitives/button` beside the
+component, so a layered caller does not carry a second map:
+
+```tsx
+import { Button, actionOnColor } from "@gpuixui/primitives/button";
+import { useTheme } from "@gpuixui/primitives";
+import { Icon } from "@gpuixui/icons";
+
+const theme = useTheme();
+
+<Button
+  variant="primary"
+  leading={<Icon name="loader" color={actionOnColor(theme, "primary")} />}
+>
+  Saving
+</Button>;
+```
+
+Any other role names a colour picked for a different fill: `secondaryForeground`
+on a `primary` fill measures 1.42:1 in Windows dark, so the chevron would be
+invisible. `button-entry.test.ts` holds the export and its role map, and
+`Button.test.tsx` holds the published role to the label the painter draws for
+every variant in both shipped themes.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -50,7 +79,7 @@ shipped, platform and authored styles and names the fill it replaced.
 | `disabled` | `boolean` | `false` | blocks activation; out of the Tab order (`tabIndex: -1`) |
 | `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
 | `loadingLabel` | `string` | `loading.busy` (`"Loading"`) | the busy word, announced as the description and the spinner's name; a blank one silences both |
-| `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot |
+| `reducedMotion` | `boolean` | the motion provider | holds the busy spinner's lit dot; the prop overrides the provider |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key; not called while busy |

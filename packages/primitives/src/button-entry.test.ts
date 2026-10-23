@@ -9,6 +9,12 @@
  * control. A manifest entry that later points at the barrel, or an entry that
  * re-exports one more component, brings that cost back — and nothing about the
  * import looks different at the call site.
+ *
+ * The second bug: a layer painted over an action (a busy loader, a chevron, an
+ * effect's wash) had to guess the action's label role, and a role belonging to
+ * another fill is invisible — `secondaryForeground` on a `primary` fill measures
+ * 1.42:1 in Windows dark. `actionOnColor` publishes the table's own answer, so
+ * the guess has one home.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -24,6 +30,12 @@ import * as buttonEntry from "@gpuixui/primitives/button";
 import type * as ButtonTypes from "@gpuixui/primitives/button";
 import { Button } from "./components/Button.js";
 import { IconButton } from "./components/IconButton.js";
+import { testTheme } from "./core/testing/theme.fixture.js";
+import {
+  actionOnColor,
+  buttonVariants,
+  BUTTON_VARIANTS,
+} from "./core/variants.js";
 
 const packageRoot = fileURLToPath(new URL("../", import.meta.url));
 const entryFile = join(packageRoot, "src", "button.ts");
@@ -102,9 +114,40 @@ describe("the action subpath", () => {
     expect(Arr.sort(Object.keys(buttonEntry), Order.String)).toEqual([
       "Button",
       "IconButton",
+      "actionOnColor",
     ]);
     expect(buttonEntry.Button).toBe(Button);
     expect(buttonEntry.IconButton).toBe(IconButton);
+    expect(buttonEntry.actionOnColor).toBe(actionOnColor);
+  });
+
+  it("answers every variant with the role its label paints", () => {
+    // The role map is read from the table the recipe paints from, so a variant
+    // added here cannot answer `undefined` or a role belonging to another fill.
+    expect(
+      Arr.every(
+        BUTTON_VARIANTS,
+        (variant) =>
+          buttonVariants[variant].foreground(testTheme) ===
+          actionOnColor(testTheme, variant),
+      ),
+    ).toBe(true);
+    // The four roles plan 160's callers name, held by value.
+    expect(actionOnColor(testTheme, "primary")).toBe(
+      testTheme.colors.primaryForeground,
+    );
+    expect(actionOnColor(testTheme, "destructive")).toBe(
+      testTheme.colors.destructiveForeground,
+    );
+    expect(actionOnColor(testTheme, "secondary")).toBe(
+      testTheme.colors.secondaryForeground,
+    );
+    expect(actionOnColor(testTheme, "ghost")).toBe(testTheme.colors.foreground);
+    // A filled action's label role is not its fill: the premise the helper
+    // exists for.
+    expect(actionOnColor(testTheme, "primary")).not.toBe(
+      testTheme.colors.primary,
+    );
   });
 
   it("carries the prop types a consumer builds on", () => {
