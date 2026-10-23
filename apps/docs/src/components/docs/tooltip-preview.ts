@@ -9,6 +9,11 @@
  * delay. A window's `Tab` traversal moves the focus without running that
  * handler (measured three times on 0.11.0), so the tip stays closed.
  *
+ * The wrapper adds one moment of its own: the runtime publishes no exit
+ * lifecycle, so a closed tip is held for its exit tween (**160 ms**, the house
+ * `fast` level) and then unmounts — and it takes no presses while it leaves.
+ * Under `reducedMotion` the journey is removed, so a close unmounts at once.
+ *
  * The preview mirrors those rules instead of inventing a nicer tooltip, and the
  * machine is plain data so the page's claims can be pinned here. `null` is "the
  * tip is waiting for nothing"; there is no absence to model.
@@ -22,10 +27,12 @@ export interface TipTiming {
   readonly closeGrace: number;
   /** A tip reopened within this window of closing skips its delay. */
   readonly skipDelay: number;
+  /** The window a closed tip stays painted for, for its exit tween. */
+  readonly exitWindow: number;
 }
 
 /**
- * The runtime's own numbers, read from its tooltip source by
+ * The runtime's and the wrapper's own numbers, read from their sources by
  * `tooltip-preview.test.ts` — a change upstream fails the page rather than
  * leaving it teaching the previous clock.
  */
@@ -33,25 +40,41 @@ export const tipTiming: TipTiming = {
   delay: 0,
   closeGrace: 80,
   skipDelay: 300,
+  exitWindow: 160,
 };
+
+/**
+ * The same clock with the journey removed.
+ *
+ * `reducedMotion` zeroes the tween, so a close is an unmount: there is no exit
+ * window to hold and the tip is gone in the frame it closed.
+ */
+export const reducedTipTiming: TipTiming = { ...tipTiming, exitWindow: 0 };
 
 /** The one thing the tip is scheduled to do next. */
 export interface TipTimer {
   /** Milliseconds until it happens. */
   readonly after: number;
-  /** Whether it opens the tip or closes it. */
-  readonly opens: boolean;
+  /** Opens the tip, ends the leaving pointer's grace, or releases the exit. */
+  readonly kind: "open" | "grace" | "exit";
 }
 
 export interface TipState {
   readonly open: boolean;
   /** A press or Escape closed the tip; only leaving may arm it again. */
   readonly held: boolean;
+  /** The runtime has closed it; its box is still painted for the exit. */
+  readonly leaving: boolean;
   readonly timer: TipTimer | null;
 }
 
 /** A tip nobody has touched. */
-export const closedTip: TipState = { open: false, held: false, timer: null };
+export const closedTip: TipState = {
+  open: false,
+  held: false,
+  leaving: false,
+  timer: null,
+};
 
 export type TipEvent =
   /** The pointer entered the trigger. */
@@ -73,7 +96,32 @@ export type TipEvent =
   /** A scheduled timer reached its end. */
   | { readonly type: "elapsed" };
 
-const openNow: TipState = { open: true, held: false, timer: null };
+const openNow: TipState = {
+  open: true,
+  held: false,
+  leaving: false,
+  timer: null,
+};
+
+/**
+ * The state a closed tip takes.
+ *
+ * A click or a key closes the runtime's surface; the wrapper keeps the box for
+ * its exit tween, which is the only reason a closed tip is still painted. A
+ * timing with no window (the reduced preference) unmounts at once.
+ */
+const resting = (state: TipState, timing: TipTiming, held: boolean): TipState =>
+  state.open
+    ? {
+        open: false,
+        held,
+        leaving: timing.exitWindow > 0,
+        timer:
+          timing.exitWindow > 0
+            ? { after: timing.exitWindow, kind: "exit" }
+            : null,
+      }
+    : { ...state, held };
 
 /**
  * The tip's next state after one event.
@@ -95,40 +143,51 @@ export const tipAfter = (
       return {
         open: false,
         held: false,
+        leaving: state.leaving,
         timer: {
           after: event.recentlyClosed === true ? 0 : timing.delay,
-          opens: true,
+          kind: "open",
         },
       };
     case "leave":
       // Leaving before the delay elapsed cancels the open; leaving an open tip
-      // starts the grace it gets to reach the tip.
-      return {
-        open: state.open,
-        held: false,
-        timer: state.open ? { after: timing.closeGrace, opens: false } : null,
-      };
+      // starts the grace it gets to reach the tip. A tip already leaving keeps
+      // the exit it is running.
+      return state.open
+        ? {
+            ...state,
+            held: false,
+            timer: { after: timing.closeGrace, kind: "grace" },
+          }
+        : { ...state, held: false };
     case "enter-tip":
       // The pointer crossed the gap: the close the trigger scheduled is off.
-      return state.timer?.opens === false ? { ...state, timer: null } : state;
+      // A leaving tip has none to cancel — it takes no presses.
+      return state.timer?.kind === "grace" ? { ...state, timer: null } : state;
     case "press":
-      return { open: false, held: true, timer: null };
+      return resting(state, timing, true);
     case "escape":
       // Only an open tip has a dismissable layer to reach; a closed one ignores
       // the key, and an open one stays shut while the pointer remains.
-      return state.open ? { open: false, held: true, timer: null } : state;
+      return state.open ? resting(state, timing, true) : state;
     case "focus":
       return openNow;
     case "blur":
-      return closedTip;
+      // Losing the focus closes it, but it is not a dismissal: the pointer can
+      // reopen it without leaving first.
+      return resting(state, timing, false);
     case "traversal":
       // The window measured no `onFocus` on a traversal, so there is no event.
       return state;
-    case "elapsed":
-      if (state.timer === null) return state;
-      return state.timer.opens
-        ? { open: true, held: false, timer: null }
-        : closedTip;
+    case "elapsed": {
+      const timer = state.timer;
+      if (timer === null) return state;
+      if (timer.kind === "open") return openNow;
+      // A grace that runs out closes the tip; the wrapper holds its box for the
+      // exit just as it does for a press.
+      if (timer.kind === "grace") return resting(state, timing, false);
+      return { ...state, leaving: false, timer: null };
+    }
   }
 };
 
@@ -136,18 +195,23 @@ export const tipAfter = (
  * What the preview's readout says, in the reader's terms.
  *
  * A scheduled close is worded as open, because the tip is still painted while
- * the grace runs — the one state a screenshot cannot distinguish.
+ * the grace runs; a closed tip is worded as leaving while its exit window runs,
+ * because the box is still on screen — the two states a screenshot cannot
+ * distinguish from idle.
  */
 export const describeTip = (
   state: TipState,
   timing: TipTiming = tipTiming,
 ): string => {
-  if (state.timer?.opens === true) {
+  if (state.timer?.kind === "open") {
     return `opening in ${state.timer.after} ms`;
+  }
+  if (state.leaving) {
+    return `leaving — ${state.timer?.after ?? 0} ms until it unmounts`;
   }
   if (state.open) {
     return `open — a press or Escape closes it${
-      state.timer?.opens === false
+      state.timer?.kind === "grace"
         ? `; leaving closes it in ${timing.closeGrace} ms unless the pointer reaches the tip`
         : ""
     }`;

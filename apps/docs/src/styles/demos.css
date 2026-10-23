@@ -3259,6 +3259,53 @@
   font-size: 12px;
   line-height: 16px;
   white-space: nowrap;
+  animation: gx-tip-in 160ms ease-out;
+}
+
+/* The wrapper's exit: the box is held for the house `fast` level, then
+   unmounted. It takes no presses while it leaves, because the press that
+   dismissed it belongs to what is underneath. */
+.gx-tip-leaving {
+  animation: gx-tip-out 160ms ease-in forwards;
+  pointer-events: none;
+}
+
+/* `reducedMotion` removes the journey, not the frame. */
+.gx-tip-static {
+  animation: none;
+}
+
+@keyframes gx-tip-in {
+  from {
+    opacity: 0;
+    bottom: calc(100% + 8px);
+  }
+  to {
+    opacity: 1;
+    bottom: calc(100% + 6px);
+  }
+}
+
+@keyframes gx-tip-out {
+  from {
+    opacity: 1;
+    bottom: calc(100% + 6px);
+  }
+  to {
+    opacity: 0;
+    bottom: calc(100% + 8px);
+  }
+}
+
+.gx-tip-motion {
+  align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-tip,
+  .gx-tip-leaving {
+    animation: none;
+  }
 }
 
 .gx-tip-readout {

@@ -79,7 +79,7 @@ still learn the reader dismissed it.
 | ---- | ------- | -------------- |
 | `Tooltip` | the runtime's root | the open state, the delay, the provider defaults |
 | the trigger | the child you pass | hover, focus, press and `aria-description`; one focusable element |
-| the tip | an anchored layer over the popover surface | the label; no controls, no focus |
+| the tip | an anchored layer over the popover surface | the label, the fade and the held exit; no controls, no focus |
 
 `Tooltip` is the whole composition — there is no `TooltipContent` to place, and
 the tip is not a child of the page's flow. Use a **Popover** when the surface has
@@ -117,6 +117,32 @@ well as hovered. `disableHoverableContent` removes the 80 ms grace — the tip
 closes the moment the pointer leaves the trigger, and the tip itself cannot be
 reached.
 
+The runtime closes the surface at once; what you see leave is the wrapper's own
+exit, below.
+
+## Motion
+
+A tip is the smallest floating surface, so it moves the smallest distance: a
+fade plus **2 px** along the side it is anchored to — a tip above its trigger
+starts 2 px lower and rises — over the house **fast** level (**160 ms**),
+entering with `easeOut` and leaving with `easeIn`. Both timings come from
+`@gpuixui/motion/timing` through the package's `core/presence.ts` seam, so a
+change to the house timing reaches the tip with no component change.
+
+**A dismissed tip is still painted while it leaves.** GPUix publishes no exit
+lifecycle — the runtime's content paints nothing once it closes — so the wrapper
+holds the box open for the tween's window and releases it after: a tip closed by
+a press or `Escape` fades out instead of vanishing. A leaving tip takes **no
+presses** (`pointerEvents: "none"`), because the press that dismissed it belongs
+to whatever is underneath, and re-opening it during the window retargets the
+same box rather than mounting a second one.
+
+**`reducedMotion` removes the journey, not the frames.** The resting frame is
+what paints either way; a reduced close unmounts at once instead of holding the
+exit. The runtime exposes no reduced-motion preference (see
+[Runtime capabilities](/docs/runtime)), so the application states it, exactly as
+it states the theme mode — the preview's *motion* switch shows both.
+
 ## API reference
 
 | Prop | Type | Default | Consequence |
@@ -131,6 +157,7 @@ reached.
 | `defaultOpen` | `boolean` | `false` | starts open before any interaction; ignored while `open` is set |
 | `onOpenChange` | `(open: boolean) => void` | — | every state the runtime asked for, controlled or not |
 | `disableHoverableContent` | `boolean` | `false` | close as soon as the pointer leaves the trigger, instead of letting it cross onto the tip |
+| `reducedMotion` | `boolean` | `false` | removes the journey — the tip lands at once and a close unmounts at once instead of holding the exit |
 | `className` | `string` | — | joined after the tip's recipe, so it wins conflicts |
 | `style` | `StyleDesc` | — | merged after the recipe **and** `className`, so it is the last word |
 | `testId` | `string` | — | lands on the tip's surface |
@@ -165,6 +192,9 @@ surface that adds no shadow, which is why the preview draws none either.
   description is the assistive path, so a tip that repeats the trigger's name
   adds nothing.
 - A `Tab` traversal does not open the tip; hover is the window's open path.
+- A leaving tip takes no presses, so the press that dismissed it reaches the
+  control underneath; it is gone within its exit window unless the reader asked
+  for reduced motion, where it is gone at once.
 - The tip carries no controls and cannot be focused: anything pressable belongs
   in a popover or a menu.
 - The tip does not wrap — the runtime paints overlay content unwrapped — so a
@@ -183,6 +213,7 @@ surface that adds no shadow, which is why the preview draws none either.
 | `@gpuix/react/tooltip` | the anchored layer, the delay, Escape dismissal and the provider defaults |
 | `@gpuix/react` | the host style type |
 | `@gpuix/react/floating` | the `FloatingSide` / `FloatingAlign` types the placement props take |
+| `@gpuixui/motion` | the house timing the tip moves with, read through `core/presence.ts` |
 | `@gpuixui/tw` | the `tooltipClass` recipe, compiled through `recipeTw` |
 | `@gpuixui/icons` | the trigger's glyph in the example, not the tip |
 
@@ -199,9 +230,12 @@ surface that adds no shadow, which is why the preview draws none either.
 tooltip mechanism, so the layer, the delay and the dismissal are supported rather
 than reimplemented. The wrapper is held by
 `packages/primitives/src/components/Tooltip.test.tsx` and the live
-`tooltip-lifecycle` probe in `apps/playground` (14 checks on 0.11.0: hover opens
-the tip above its trigger, leaving closes it, Escape dismisses it with the focus
-on the trigger, and a traversal leaves it closed). The `partial` verdict is the
-one measured gap above — a keyboard traversal reaches the trigger but does not
-open the tip — and the strongest alternative is the `aria-description` the
-trigger already publishes.
+`tooltip-lifecycle` probe in `apps/playground` (on 0.11.0: hover opens the tip
+above its trigger, the entry fades and rises into place, leaving closes it,
+Escape dismisses it with the focus on the trigger, and a traversal leaves it
+closed). Its motion is measured on the
+`TestRenderer`'s motion clock — the tip travels into place, a clicked tip is
+still painted in the click's frame and gone after its window, and the reduced
+preference lands at once. The `partial` verdict is the one measured gap above — a
+keyboard traversal reaches the trigger but does not open the tip — and the
+strongest alternative is the `aria-description` the trigger already publishes.
