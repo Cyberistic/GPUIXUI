@@ -1,13 +1,13 @@
 ---
 title: Workspace
-description: The desktop-shell lane — the parts that already compose a window, the docking behaviours the runtime cannot support yet, and where state lives.
+description: The desktop-shell lane — the shipped split, panel group and dock tree, the shell pieces they compose with, and where state lives.
 ---
 
 A workspace is the part of a desktop app that is not a form: panels that resize,
 tabs that move, a palette that finds anything, a layout that survives a restart.
-Most of the lane is unbuilt. What ships today composes into a real window; the
-rest is blocked on one row — split panes — and this page says why instead of
-drawing a docking layout that does not exist.
+The panels now ship: `@gpuixui/dock` is the split, the group and the dock tree,
+and this page records the rules they were built from, the shell pieces they
+compose with, and the runtime gaps that remain.
 
 ## The lane
 
@@ -20,6 +20,9 @@ Rows and statuses come from `COMPONENTS.md`.
 | Part of the shell | What to compose it from | Page |
 | ----------------- | ----------------------- | ---- |
 | The frame | `Box` + `Stack` + `Separator` + `ScrollArea` — fixed sidebar, growing content column | [Layouts](/docs/layouts) |
+| Resizable split panes | `SplitPane`: two panes and one divider that drags, steps and clamps | [Split pane](/docs/dock/split-pane) |
+| Panel groups | `PanelGroup`: N panes as fractions, a collapse toggle per pane and one `PanelLayout` | [Panel groups](/docs/dock/panel-group) |
+| A docked arrangement | `DockLayout`: a named tree of splits and tab groups rendered from `DockNode` | [Docking layouts](/docs/dock/dock-layout) |
 | Tabbed panels | `Tabs` with a measured shared indicator, both axes, manual or automatic activation | [Tabs](/docs/components/tabs) |
 | Command palette | `CommandMenu` over a dialog-hosted, ranked, searchable list | [Command menu](/docs/components/command-menu) |
 | Application menus | `DropdownMenu`, `ContextMenu` and submenus over the shared row model | [Components](/docs/components) |
@@ -36,11 +39,11 @@ arrows, Home and End move by the runtime's real focus. A tabbed panel built from
 it resizes with the window because the indicator re-measures instead of caching
 a pixel offset.
 
-## Split panes are the gate
+## The split ships, and the divider carries it
 
-`Resizable split panes` is the first unbuilt row and everything that nests —
-panel groups, docking layouts, nested arrangements, multi-pane editing — is a
-composition over it. The runtime supports the pieces and not the behaviour:
+`@gpuixui/dock` ships the three panel rows — `SplitPane`, `PanelGroup` and
+`DockLayout` — and everything that nests is a composition over the first. The
+runtime supplies the pieces and the component owns the behaviour:
 
 - **What exists:** pointer events, `col-resize`/`row-resize` cursors, measured
   layout (`onLayout`), real native focus, and pointer capture — with a rule.
@@ -59,7 +62,9 @@ pointer drag updates the same number while following the pointer outside the
 divider's box, because it declares both listeners. The width is application
 state, because a workspace that cannot persist it is not a workspace. Choosing
 otherwise (animated panels, a transform-based slide) would be a browser promise
-this runtime cannot keep.
+this runtime cannot keep. The shipped parts and their APIs are on
+[Split pane](/docs/dock/split-pane), [Panel groups](/docs/dock/panel-group) and
+[Docking layouts](/docs/dock/dock-layout).
 
 ## A dock's panes own their scrollers
 

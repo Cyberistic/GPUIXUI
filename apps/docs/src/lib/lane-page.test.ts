@@ -705,6 +705,73 @@ describe("the workspace page's pointer and terminal claims", () => {
   });
 });
 
+describe("the workspace lane's shipped panels", () => {
+  const workspace = read(workspacePage);
+  const layouts = read("layouts.mdx");
+
+  it("names the dock components the inventory calls done", () => {
+    // The lane's table is generated from `COMPONENTS.md`, so it showed the
+    // panels as done while the prose above it still called the lane unbuilt and
+    // blocked on a row that had shipped. The three package exports are read
+    // here, so the page cannot name a component the package does not ship.
+    const index = readFileSync(
+      new URL("../../../../packages/dock/src/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(index).toContain('export { SplitPane } from "./split-pane.js";');
+    expect(index).toContain('export { PanelGroup } from "./panel-group.js";');
+    expect(index).toContain('export { DockLayout } from "./dock-layout.js";');
+
+    const shipped = summarize(laneView(inventory, "workspace").rows).shipped;
+    expect(shipped).toBeGreaterThan(0);
+    expect(workspace).toContain("@gpuixui/dock");
+    expect(workspace).toContain("`SplitPane`");
+    expect(workspace).toContain("`PanelGroup`");
+    expect(workspace).toContain("`DockLayout`");
+    expect(workspace).toContain("](/docs/dock/split-pane)");
+    expect(workspace).toContain("](/docs/dock/panel-group)");
+    expect(workspace).toContain("](/docs/dock/dock-layout)");
+
+    expect(workspace).not.toContain("Most of the lane is unbuilt");
+    expect(workspace).not.toContain("first unbuilt row");
+    expect(workspace).not.toContain(
+      "drawing a docking layout that does not exist",
+    );
+    expect(layouts).not.toContain("with no component yet");
+    expect(layouts).toContain("`@gpuixui/dock`");
+    expect(layouts).toContain("](/docs/dock/split-pane)");
+  });
+
+  it("links the page titles the dock collection mounts", () => {
+    // The link lives in the surface table, not only in prose: a reader planning
+    // a shell reads the table first, so a row that lost its route is the same
+    // gap as a page that is not mounted. The names are the inventory's where it
+    // has one (`Resizable split panes`, `Panel groups`) and the composition's
+    // for the dock tree.
+    const pages = [
+      ["split-pane.mdx", "Split pane", "Resizable split panes"],
+      ["panel-group.mdx", "Panel groups", "Panel groups"],
+      ["dock-layout.mdx", "Docking layouts", "A docked arrangement"],
+    ] as const;
+
+    const missing = pages.flatMap(([file, title, rowName]) => {
+      const page = readFileSync(
+        new URL(`../../../../packages/dock/docs/${file}`, import.meta.url),
+        "utf8",
+      );
+      const gaps: Array<string> = [];
+      if (!page.includes(`title: ${title}`)) gaps.push(`${file}: no ${title}`);
+      const route = file.replace(/\.mdx$/, "");
+      if (!rowFor(workspace, rowName).includes(`](/docs/dock/${route})`)) {
+        gaps.push(`${file}: the lane page's table does not link it`);
+      }
+      return gaps;
+    });
+
+    expect(missing).toEqual([]);
+  });
+});
+
 /**
  * The data page said the lane had not started while it had.
  *
@@ -809,6 +876,41 @@ describe("the data-display page's shipped rows", () => {
     expect(dataPage).toContain("`VirtualList`");
     expect(dataPage).toContain("`VirtualTable`/`VirtualTableBody`");
     expect(dataPage).toContain("`useVirtualRows`");
+  });
+
+  it("links the windowed tree's own page", () => {
+    // `VirtualTree` composes the tree keyboard over the `<virtual-list>`
+    // `itemCount` window, so a reader planning a large hierarchy needs the page
+    // that explains the rules — the lane page named only the plain tree and
+    // the virtualization surfaces. The row, the link and the package half are
+    // read together, so a page that drops one fails by name.
+    const index = readFileSync(
+      new URL("../../../../packages/data/src/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(index).toContain('export { VirtualTree } from "./virtual/tree.js";');
+
+    const packagePage = readFileSync(
+      new URL("../../../../packages/data/docs/virtual-tree.mdx", import.meta.url),
+      "utf8",
+    );
+    expect(packagePage).toContain("title: Virtual trees");
+    expect(
+      ["VirtualTree", "itemCount", "useExpandedRows"].filter(
+        (part) => !packagePage.includes(part),
+      ),
+    ).toEqual([]);
+
+    const registry = readFileSync(
+      new URL("../../../../packages/data/examples/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(registry).toContain('"virtual-tree": VirtualTreeExample');
+
+    const row = rowFor(dataPage, "Virtual tree");
+    expect(row).toContain("](/docs/data-display/virtual-tree)");
+    expect(row).toContain("`VirtualTree`");
+    expect(dataPage).toContain("`VirtualTree`");
   });
 
   it("says where a tree reveal leaves the focus", () => {

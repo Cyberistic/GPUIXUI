@@ -40,6 +40,7 @@ The package documents its own surfaces on this site:
 | Resizable columns | [Table](/docs/components/table) | `TableColumnDivider`, the 6px strip whose drag `column-resize-lifecycle` measured |
 | Frozen columns | [Frozen columns](/docs/data-display/frozen-columns) | `FrozenTable`: a pinned column in its own vertical scroller beside a grid that pans, mirrored both ways |
 | Tree view | [Tree views](/docs/data-display/tree-view) | one tab stop, arrow keys, type-ahead and a hierarchy the reader opens |
+| Virtual tree | [Virtual trees](/docs/data-display/virtual-tree) | `VirtualTree`: the same tree keyboard over the `<virtual-list>` `itemCount` window, so 4 000 rows retain only the rows around the viewport |
 | Expandable rows | [Expandable rows](/docs/data-display/expandable-rows) | a detail panel under the row it describes, without a row span |
 | Key-value | [Key-value](/docs/data-display/key-value) | one object as label/value rows, with no copy of it |
 | Property panel | [Property panel](/docs/data-display/property-panel) | editable and read-only rows over the same object |
@@ -162,7 +163,9 @@ re-deriving them.
   is computed — without that, narrowing a thousand rows to 127 while the reader
   sat near row 900 mounted five rows in a nine-row viewport and left half the
   table blank until the next wheel, and a record the set no longer holds stayed
-  in the tree (`virtual-table-lifecycle`).
+  in the tree (`virtual-table-lifecycle`). A hierarchy uses
+  [`VirtualTree`](/docs/data-display/virtual-tree), which is the plain tree's
+  keyboard and cursor over the same window instead of the children form.
 - **A reveal lands the focus, not only the cursor** — a "show this file" command
   or a search hit moves a tree's cursor from the **caller**, and `TreeView`
   re-takes native focus for the row it lands on: `data-tree-lifecycle` pressed

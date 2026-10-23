@@ -53,9 +53,12 @@ The full capability table, with the evidence for each line, is on
 
 ## What this lane does not include
 
-- **Split panes, docked panels and collapsible sidebars.** They are Tier 4 rows
-  with no component yet; the gate and the design are on
-  [Workspace](/docs/workspace).
+- **Split panes, docked panels and collapsible sidebars.** They live in
+  `@gpuixui/dock`, not here: `SplitPane` is two panes and a divider, `PanelGroup`
+  is N panes as fractions, and `DockLayout` renders a named tree of splits and
+  tab groups. The rules they follow are on [Workspace](/docs/workspace) and the
+  APIs on [Split pane](/docs/dock/split-pane), [Panel groups](/docs/dock/panel-group)
+  and [Docking layouts](/docs/dock/dock-layout).
 - **Table rows and column grids.** A table is a Tier 3 row; the grid facts it
   needs are on [Data display](/docs/data-display).
 - **Responsive behaviour.** There is no breakpoint token to add: a window that
