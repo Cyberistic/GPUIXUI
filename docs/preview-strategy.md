@@ -540,10 +540,8 @@ generated line answers the package pages.
   `## Related` section it writes and no page prints the links twice.
 
 `related-strip.test.tsx` holds the rendered line (a sibling's href and label,
-the page's own href absent) and the pages argued as solos. No mounted page writes
-`## Related`; the strip is the only source. `related-strip.test.tsx` holds the rendered line
-(a sibling's href and label, the page's own href absent), the silence for a page
-that writes the section, and the argued solos.
+the page's own href absent), the silence for a page that writes the section, and
+the argued solos.
 
 ### The source block is generated, not written
 
@@ -742,7 +740,29 @@ The page is the sentence, the preview, the example, the API and the limits. A
 rationale, a measured story or a section that restates the API belongs in the
 commit or the source comment instead.
 
-<<<<<<< HEAD
+`src/lib/component-page.test.ts` checks every curated page for the required
+sections and their order, a preview, and the package it installs from. It also
+**resolves the API table**: every backticked name in the table's first column
+must be a prop an interface declares or a part an exported component declares, in
+`packages/primitives` or `packages/components`.
+
+The **Accessibility and limitations** row has a shared half as well as a
+per-component one. A page states what its own control does and cannot do; the
+runtime's whole ARIA budget — the role-required rule, the seven attributes that
+are published, the fifteen it refuses, the absent live region, the focus ring
+and the keyboard dim — is the cross-cutting contract on `/docs/accessibility`,
+so a page does not have to restate the runtime in order to be honest.
+`src/lib/accessibility-page.test.ts` holds that page to the installed typings,
+the capability record, the primitives' label rule, the tokens' focus helpers and
+the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
+capability row that changes cannot leave the contract teaching the old budget.
+`src/lib/package-page-template.test.ts` holds every package page to its own
+`## API` and `## Limitations`.
+
+The package's own pages are the component's doc file: a page that ships a demo
+mounts it as a labelled browser approximation (strategy 3), a lane with no demo
+shows none (strategy 4).
+
 ### The page's own file
 
 The footer of every page — curated or package — names the Markdown that renders
@@ -762,33 +782,6 @@ exist; it also pins the two trees apart and the curated page to its own file.
 mount. The floors are real — the site's own collection and every mounted package
 collection carry a minimum page count — so a scan that stopped matching cannot
 pass on an empty set.
-
-The **Accessibility and limitations** row has a shared half as well as a
-per-component one. A page states what its own control does and cannot do; the
-runtime's whole ARIA budget — the role-required rule, the seven attributes that
-are published, the fifteen it refuses, the absent live region, the focus ring
-and the keyboard dim — is the cross-cutting contract on `/docs/accessibility`,
-so a page does not have to restate the runtime in order to be honest.
-`src/lib/accessibility-page.test.ts` holds that page to the installed typings,
-the capability record, the primitives' label rule, the tokens' focus helpers and
-the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
-capability row that changes cannot leave the contract teaching the old budget.
-=======
-`src/lib/component-page.test.ts` checks every curated page for the required
-sections and their order, a preview, and the package it installs from. It also
-**resolves the API table**: every backticked name in the table's first column
-must be a prop an interface declares or a part an exported component declares, in
-`packages/primitives` or `packages/components`.
->>>>>>> origin/agent/docs-prune
-
-The runtime's whole ARIA budget is the cross-cutting contract on
-`/docs/accessibility`; a component page states only its own limits.
-`src/lib/package-page-template.test.ts` holds every package page to `## API` and
-`## Limitations`.
-
-The package's own pages are the component's doc file: a page that ships a demo
-mounts it as a labelled browser approximation (strategy 3), a lane with no demo
-shows none (strategy 4).
 
 ## The getting-started page
 

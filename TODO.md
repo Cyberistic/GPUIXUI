@@ -10305,7 +10305,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 292/292
+`[x]` `[██████████]` 293/293
+
+`[x]` Resolve the **committed merge conflict** in the policy document, and hold
+      the policy files to it — `a19b51a3` merged `agent/docs-prune` and committed
+      `docs/preview-strategy.md` with its conflict block intact (`<<<<<<< HEAD`,
+      the page-edit section, `=======`, the curated-template paragraph,
+      `>>>>>>> origin/agent/docs-prune`) between the template table and the
+      sections below it; the Related paragraph was also left twice, once
+      claiming "No mounted page writes `## Related`" while the other copy says 31
+      of 104 do. Both halves of the conflict were wanted: the curated and
+      package template guards, the shared Accessibility half and the page-edit
+      section now read once each, and the Related paragraph is the copy that
+      states both the silence and the 31 pages. Every docs test stayed green,
+      because nothing read the policy as a document. `src/lib/preview-strategy.test.ts`
+      (4 cases) scans the policy, the site's pages and every `packages/*/docs`
+      page for the two marker lines a merge writes, and holds this file to both
+      template-guard sentences and to one Related paragraph. Directions measured:
+      appending the conflict block fails `keeps every document free of
+      merge-conflict markers` with `docs/preview-strategy.md: 1030, 1033`, and
+      appending the retired claim fails the Related case by name; restored, the
+      app is 123 files / 1 087 tests green, `check-types` clean. No native
+      scenario applies — Markdown the site ships.
 
 `[x]` Restore the **three index guards** a merge resolution deleted — `648e90e2`
       ("reconcile the pruned pages with the tiled index") resolved
