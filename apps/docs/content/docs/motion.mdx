@@ -209,6 +209,16 @@ completes exactly instead of painting nothing for its whole journey. A caller's
 own easing — `tween(300, myEasing)` — and a keyframe's `easing` both go through
 it.
 
+**A frame is a weighted sum, not a difference.** `from + (to − from) × progress`
+overflows when the endpoints are far apart, even though each endpoint is a number
+the runtime paints: a tween from `-1e308` to `1e308` answered `NaN` at its first
+frame and `Infinity` for the rest of the journey, so the surface painted nothing
+until it snapped to its target. Both the tween and a keyframe segment therefore
+read `from × (1 − progress) + to × progress`, which stays inside the endpoints'
+own range for every progress in `[0, 1]`. A curve may overshoot that range
+(`backOut`, `anticipate`), and an overshoot the arithmetic cannot represent falls
+back to the endpoint the progress is heading for, so the frame is always a number.
+
 `Sequence` positions keyed steps in absolute elapsed time and samples all of
 them at once — `at`, `append`, `stagger`, `duration`, `sample` and `complete`.
 Each sample is `{ key, state, value }` with `state` one of `pending`, `active`
@@ -260,6 +270,17 @@ standstill. `project({ tau: NaN, min: null, max: 10 }, 0, 100)` is `10`, and
 `sampleInertia` on the same value settles. Before that, a hand-built inertia
 answered `NaN` from both, so a `MotionValue` coasting on one painted `NaN` into
 its target and never reported `complete`.
+
+**An unrepresentable rest is no journey either.** `position + velocity × tau`
+can overflow — the largest finite numbers are still numbers the arithmetic will
+multiply past — and `Infinity` is not a frame: the runtime paints a non-finite
+inset as nothing. The samplers therefore settle a release the projection cannot
+represent **in the frame it is released**, on the wall in the direction it was
+thrown — `project(inertia(1_000, { max: 900 }), 1e308, 1e308)` is `900` — or,
+with no wall on that side, on the frame it was released from, where
+`project(inertia(1_000), 1e308, 1e308)` stays `1e308`. A coast that painted
+`Infinity` would not travel: it would vanish for the length of its journey and
+reappear at the end.
 
 ## In React
 

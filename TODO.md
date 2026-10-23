@@ -7051,7 +7051,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Update the **playground's syntax fixture when the dark keyword moves** — `packages/tokens/src/syntax.ts` (uncommitted on 2026-10-23, owner: tokens-theme) moves `darkSyntax.keyword` from `#A7A9FF` to `#B0B2FF` because a `<markdown>` fence paints its own fill, so the token is read one step brighter. At HEAD the playground suite is green; with that edit in the working tree `apps/playground/src/live/syntax-palette.test.ts`'s `names the keyword each shipped palette paints` fails (`expected { _tag: 'Some', value: … } to deeply equal …`), because the fixture's `DARK_KEYWORD` and the README's syntax-palette table print the old value. The landing order is: the token workstream's own catalogue (`docs/tokens.md` §Syntax palette, the `#A7A9FF` cells at its table and its count sentence), then this workstream's `src/live/syntax-palette.ts` (`DARK_KEYWORD`), `src/live/syntax-palette.test.ts`'s drawn `KEYWORD` bytes, and `README.md` §`syntax-palette` (`#A7A9FF` → the new ink and the **896**-pixel count re-measured) | playground + tokens-theme | **resolved 2026-10-23 — the premise changed, and the fixture was right to stay.** The token change landed as a **platform** override (`platformDarkSyntax` in `platforms.ts` sets `keyword: #B0B2FF` for the three dark platform looks), not as a move of the identity's `darkSyntax.keyword`; the base dark table still ships `#A7A9FF`, so `src/live/syntax-palette.ts`'s `DARK_KEYWORD` and the README's table are correct and this workstream's fixture needed no edit. The fence half is now measured instead of inferred: the `markdown-fence` probe paints both tables on their own fence (`#A7A9FF` **896** px on `#191C22` for the base, `#B0B2FF` **896** px on `#242426` for macOS), holds each keyword to the body floor on that composite, and records that a fence composites over the fill **behind** the host rather than over the theme object's `bg`. `src/live/markdown-fence.test.ts` holds both tables to `syntaxColors` (14 cases), so a future keyword move fails by name at the token table and the probe re-measures in the same change. See `apps/playground/README.md` §`markdown-fence` |
 | Publish the **fence a window paints** where the syntax palette is taught — `packages/tokens` now derives `nativeFenceFill`/`nativeFenceHeaderFill` and reads the keyword on that composite, but `docs/tokens.md` §Syntax palette and `COMPONENTS.md`'s `Syntax palette` row describe the palette's ink on the page and stop; the new `markdown-fence` live probe (50 checks, 0.11.0) measured the other half: the block paints the two derived washes (`#191C22` body / `#1E2126` strip for the base dark page, `#242426`/`#28282A` for macOS), the base keyword `#A7A9FF` and the platform keyword `#B0B2FF` each 896 solid pixels, and a host handed no theme paints the runtime's `#8F96ED`. It also found the rule a consumer needs: a fence composites over the fill **behind** the host, not over the theme object's `bg`, so a document inset on a card must derive `nativeFenceFill(card)` and a theme composed on a different page measures nothing it claimed. The capability record (`docs/gpuix-capabilities.md`) and `/docs/runtime` have no fence row, so a reader planning a markdown pane cannot find any of it | tokens-theme (`docs/tokens.md` §Syntax palette, `docs/design-system.md` §9, the `Syntax palette` row) and docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | **docs-site half landed 2026-10-23** — §3 gains **Fenced code block surface** (`supported, with limits`) with both washes, both keywords, the strip's 1.057/1.053 second-wash rule, the runtime's `#8F96ED` control and the derive-from-the-host-fill rule as its workaround; `/docs/runtime#measured-in-a-window` publishes the row and §5 owes `markdown-fence`; `capability-doc.test.ts` derives every printed ink, ratio and the 2000px floor from the fixture and the seam (2 new cases). **tokens-theme half open** — `docs/tokens.md`, `docs/design-system.md` and the `Syntax palette` row. Measured 2026-10-23 by `markdown-fence`; evidence `apps/playground/README.md` §`markdown-fence`, `.artifacts/live/markdown-fence.png` |
 | Carry the **reduced preference's later frames** to `/docs/motion` — the page teaches the preference's first render (a reduced mount paints the resting frame rather than the `initial` it removes) and says nothing about a target or release changed **while** it is on, which the package now paints in the render that names it, with the completion edge, and retires the retained run in that commit (`packages/motion/src/react.ts`'s `restingFrame`; held by `packages/components/src/behaviour/motion-hooks.test.tsx`'s `the reduced preference's later frames`). A reader adjusting a reduced control cannot learn from the page that the previous frame never survives the change, or that turning the preference back on starts where the reader is instead of relaunching a gesture they saw end | docs-site (`apps/docs/content/docs/motion.mdx`; `motion-page.test.ts` should hold the sentences to `react.ts`'s reduced branch the way it holds the printed defaults) | **resolved 2026-10-23** — §Reduced motion gains **When the preference changes**: the preference is read every render, so turning it on lands on the resting frame *in the commit that names it* (computed in the render, not in the effect that retires the run); a target or release changed while it stays on paints the new destination with `complete` on that frame, so the previous frame never survives the change for a commit; a mount that asked for no journey keeps `complete` false; and a reduced commit retires the skipped run (value set to the resting frame, coast established and finished), so turning the preference back off starts from the frame on screen rather than relaunching a gesture the reader saw end. It prints the renderer's four readings (`100:0:false` → `200:0:true`, and a coast at `400` → `140:0:true` against `300` → `105:0:true`) and cites the suite. `motion-page.test.ts` gains `carries the reduced preference past the mount's first frame` (19 in the file): it reads both reduced branches (`motion.set(resting)`, the `resting === motion.current` no-arrival guard, the coast's finishing sample and `skippingStart.current = false`), requires the completion expression in both hooks, holds the page's five sentences, requires each of the suite's four case names, and holds every printed reading to the assertion that measures it. Directions measured: deleting the new section fails the case by name (`expected … to contain 'read on every render, not only at mount'`), and dropping a reading from either surface fails its line. `nub run --filter @gpuixui/docs test src/lib/motion-page.test.ts`: 19/19; `check-types`, `oxlint` and `oxfmt` clean. No native GPUix scenario applies — a docs page and its guard have no runtime path. |
-| Carry the **overflow repair** to `/docs/motion` §Inertia — the page teaches the inertia sampler's repairs as a list (the house 350 ms, per-bound dropping, the swapped pair, a standstill for a non-finite position or velocity), and `packages/motion` repairs one more: a release whose projected rest the arithmetic cannot represent is no journey either — an overflowed projection lands on a wall in the direction it was thrown, or on the release frame when there is no wall, instead of painting `Infinity`/`NaN`. Held by `inertia.test.ts`'s `a release whose rest the runtime cannot represent` and `motion.test.ts`'s `settles a coast whose projected rest overflows`; `motion-page.test.ts` should hold the sentence to `inertia.ts`'s `destinationOf` the way it holds the printed defaults. | docs-site (`apps/docs/content/docs/motion.mdx`) | open — the package half landed 2026-10-23 |
+| Carry the **overflow repair** to `/docs/motion` §Inertia — the page teaches the inertia sampler's repairs as a list (the house 350 ms, per-bound dropping, the swapped pair, a standstill for a non-finite position or velocity), and `packages/motion` repairs one more: a release whose projected rest the arithmetic cannot represent is no journey either — an overflowed projection lands on a wall in the direction it was thrown, or on the release frame when there is no wall, instead of painting `Infinity`/`NaN`. Held by `inertia.test.ts`'s `a release whose rest the runtime cannot represent` and `motion.test.ts`'s `settles a coast whose projected rest overflows`; `motion-page.test.ts` should hold the sentence to `inertia.ts`'s `destinationOf` the way it holds the printed defaults. | docs-site (`apps/docs/content/docs/motion.mdx`) | **resolved 2026-10-23** — §Inertia gains **An unrepresentable rest is no journey either.** with both directions (`project(inertia(1_000, { max: 900 }), 1e308, 1e308)` is `900`; with no wall, `project(inertia(1_000), 1e308, 1e308)` stays `1e308`) and the reason the alternative is worse (the runtime paints a non-finite inset as nothing, so the coast would vanish for the length of its journey); `motion-page.test.ts` gained `places the unrepresentable rest in the sampler that projects it`, which reads `destinationOf`'s finite check, the wall-or-release-frame fallback, both call sites and the page's two examples (measured: deleting the paragraph fails it by name; 21/21 green). The same wave carries the frame's sibling repair (`mix`) and repairs the curve case's stale literal — see the docs-site ledger. |
 | Animate the **primitives' `Tooltip` tip** — every floating surface in `packages/components` enters and leaves on the house timing, and the tip is the one that does not: `packages/primitives/src/components/Tooltip.tsx` renders `TooltipContent` with no `motion` prop, so a tip appears at rest beside a popover, menu or preview card that fades. The hook is already there — `TooltipContent` extends the runtime's `FloatingContentProps` → `Props` → `HostProps`, which carries `motion?: MotionProps`, and `FloatingLayer` spreads its remaining props onto the host `div` it renders (`@gpuix/react@0.11.0` `dist/components/floating.js`) — so the seam's `fadeFromAnchor` + `presenceMotion` frames would reach a real host element, but the primitives publish no presence seam and do not depend on `@gpuixui/motion`, and `TooltipContent` owns its own mount. It needs the motion seam on the primitives' side (a `@gpuixui/motion` dependency for `useSurfaceTiming`/`motionTiming`, or the seam hoisted into a package both may depend on) plus a held exit, and `tooltip-lifecycle` should then read the tip's entry offset the way `surface-fade` reads the dialog's fade. | primitives (owns `Tooltip`, its page and the `Tooltips` inventory row) | open — read from the installed typings and the runtime's floating layer; the tip's frame is not measured in a window yet |
 
 ## Phase D — data and workspace components
@@ -7454,6 +7454,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
     button restored the case fails on the button's element where `undefined` was
     expected; with it, behaviour 72/72. `docs/advanced-filter.mdx` §Limitations
     states the rule. Owner: data.
+  - [x] Reach a **group a `not` negates**, instead of painting controls that
+    change nothing — the builder paints a clause's Remove inside a negated
+    group, and (with the Add rule above) a nested group's own Add, but
+    `removeAt`/`appendAt` refused at the `not` itself: `clauseAt`/`updateAt`
+    already descend into its one child at index `0`, so a field and a value
+    inside that group could be edited while the two controls beside them were
+    dead presses. Both reducers now follow the same index, so a group a `not`
+    negates edits like any other (`removeAt(tree, [0, 0, 0])` drops that clause,
+    `appendAt(tree, [0, 0], clause)` appends to the negated group) while a path
+    naming the `not` itself or the clause it holds directly still leaves the
+    tree alone — the `not` paints no Add and its direct child no Remove.
+    `surfaces/logic.test.ts` gains `edits a group a not negates, because it is a
+    group like any other` (both reducers, plus the `not`-itself refusal) and
+    `surfaces.test.tsx` gains `edits a group a not negates, where the builder
+    paints its controls` (the painted sentence before and after a Remove, then
+    the Add's clause at the negated group's second slot). Directions measured:
+    at `HEAD` the unit case fails `expected 2 to be 1` and the window case fails
+    on the clause the Remove should have taken (`expected { id: 28, type:
+    'input', … } to be undefined`); with the descent, 29 unit and 9 behaviour
+    cases green. `docs/advanced-filter.mdx`, the README, the builder's docs and
+    the Advanced filtering row state the rule. Owner: data.
   - [x] Read a **blank side as no number** in an advanced filter order — the
     builder appends a clause with `value: ""`, and `numeric` was the global
     `Number(...)`, whose `Number("")` is `0`: a reader who switched that fresh
@@ -7908,7 +7929,46 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 217/217
+`[x]` `[██████████]` 219/219
+
+`[x]` Carry the **overflow repair** to `/docs/motion` — the inertia sampler's
+      repairs are taught as a list (the house 350 ms, per-bound dropping, the
+      swapped pair, a standstill for a non-finite position or velocity), and the
+      package repairs one more: a release whose projected rest the arithmetic
+      cannot represent is no journey either. `position + velocity × tau` can
+      overflow, and `Infinity` is not a frame — the runtime paints a non-finite
+      inset as nothing — so the coast settles in the frame it is released, on
+      the wall in the direction it was thrown, or on the release frame when
+      there is no wall that way. §Inertia gains **An unrepresentable rest is no
+      journey either.** with both directions as executed examples
+      (`project(inertia(1_000, { max: 900 }), 1e308, 1e308)` is `900`, and the
+      unbounded `project(inertia(1_000), 1e308, 1e308)` stays `1e308`).
+      `motion-page.test.ts` gains `places the unrepresentable rest in the
+      sampler that projects it`: it reads `destinationOf`'s finite check, the
+      `(rest > 0 ? limits.max : limits.min) ?? clampTo(start, limits)` fallback,
+      both samplers' calls, and the page's two examples. Direction measured:
+      deleting the paragraph fails the case by name (`expected … to contain
+      '**An unrepresentable rest is no journey either.**'`); 21/21 green with it.
+
+`[x]` Publish the **frame's interpolation** beside the curve's repair — the same
+      commit that fixed the coast (`7ef8ecbd`) replaced the tween's and a
+      keyframe segment's arithmetic: `from + (to − from) × progress` overflows
+      when two finite endpoints are far apart, so a tween from `-1e308` to
+      `1e308` answered `NaN` at its first frame and `Infinity` after it and the
+      surface painted nothing until it snapped. Both now read
+      `from × (1 − progress) + to × progress`, and an overshoot the arithmetic
+      cannot represent falls back to the endpoint the progress is heading for.
+      `/docs/motion` §Keyframes gains **A frame is a weighted sum, not a
+      difference.**; `motion-page.test.ts` gains `places the frame's
+      interpolation in the convex mix, not a difference` (the helper, its
+      weighted sum and its half-way fallback, both call sites, the page's
+      sentence and its two endpoints). The same pass repaired the **curve case's
+      stale literal**: it still required `timeline.ts`'s retired
+      `lo.value + (hi.value - lo.value) * eased(…)` and was red on `master` when
+      the segment moved to `mix(...)`; it now holds the paint that ships.
+      Directions measured: deleting the paragraph fails the new case by name,
+      and the curve case fails on the retired line before the repair; 21/21
+      green after both.
 
 `[x]` Publish the **surface a fenced code block paints** — a markdown pane is
       designed against the fence the runtime's `<markdown>` element draws for

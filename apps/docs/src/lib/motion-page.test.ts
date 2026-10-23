@@ -261,6 +261,43 @@ describe("the motion page", () => {
     expect(pageText).toContain("is no wait rather than a `NaN` delay");
   });
 
+  it("places the unrepresentable rest in the sampler that projects it", () => {
+    // `position + velocity × tau` can overflow, and `Infinity` is not a frame:
+    // the runtime paints a non-finite inset as nothing, so a coast on one
+    // vanishes for its journey. `destinationOf` settles it on the wall in the
+    // direction it was thrown, or on the release frame with no wall there. The
+    // page listed the sampler's repairs and stopped before this one.
+    const destination = inertia.slice(
+      inertia.indexOf("const destinationOf = ("),
+      inertia.indexOf("export const inertia = ("),
+    );
+    expect(destination).toContain("const rest = start + speed * tau;");
+    expect(destination).toContain(
+      "if (Number.isFinite(rest)) return clampTo(rest, limits);",
+    );
+    expect(destination).toContain(
+      "(rest > 0 ? limits.max : limits.min) ?? clampTo(start, limits)",
+    );
+
+    // Both a projection and a coast go through it, so a hand-built inertia
+    // cannot reach the runtime unrepresented.
+    expect(
+      inertia.match(/destinationOf\(/g)?.length ?? 0,
+      "only one sampler projects its rest",
+    ).toBeGreaterThanOrEqual(2);
+
+    expect(pageText).toContain(
+      "**An unrepresentable rest is no journey either.**",
+    );
+    expect(pageText).toContain("in the frame it is released");
+    expect(pageText).toContain(
+      "`project(inertia(1_000, { max: 900 }), 1e308, 1e308)` is `900`",
+    );
+    expect(pageText).toContain(
+      "`project(inertia(1_000), 1e308, 1e308)` stays `1e308`",
+    );
+  });
+
   it("places the spring's repair in the samplers a hand-built physics reaches", () => {
     // `SpringPhysics` is structural, so a caller may build one without
     // `springPhysics()` — and a `NaN` damping made every formula answer `NaN`
@@ -330,7 +367,7 @@ describe("the motion page", () => {
       "const progress = eased(transition.easing, t / durationSec);",
     );
     expect(timeline).toContain(
-      "return lo.value + (hi.value - lo.value) * eased(easing, local);",
+      "return mix(lo.value, hi.value, eased(easing, local));",
     );
 
     expect(pageText).toContain("The curve is repaired the same way.");
@@ -343,6 +380,32 @@ describe("the motion page", () => {
       "instead of painting nothing for its whole journey",
     );
     expect(pageText).toContain("`tween(300, myEasing)`");
+  });
+
+  it("places the frame's interpolation in the convex mix, not a difference", () => {
+    // `from + (to - from) * progress` overflows when two finite endpoints are
+    // far apart: a tween from `-1e308` to `1e308` answered `NaN` on its first
+    // frame and `Infinity` after it, so the surface painted nothing until it
+    // snapped. Both the tween and a keyframe segment read `mix` now, and the
+    // page has to carry the rule beside the curve's repair.
+    expect(progress).toContain(
+      "export const mix = (from: number, to: number, progress: number): number =>",
+    );
+    expect(progress).toContain("from * (1 - progress) + to * progress");
+    expect(progress).toContain("return progress < 0.5 ? from : to;");
+    expect(motion).toContain(
+      "this.value = mix(this.from, this.target, progress);",
+    );
+    expect(timeline).toContain(
+      "return mix(lo.value, hi.value, eased(easing, local));",
+    );
+
+    expect(pageText).toContain(
+      "**A frame is a weighted sum, not a difference.**",
+    );
+    expect(pageText).toContain("`from × (1 − progress) + to × progress`");
+    expect(pageText).toContain("`-1e308` to `1e308`");
+    expect(pageText).toContain("the endpoint the progress is heading for");
   });
 
   it("places the sequence's end and its stagger rule where a driver waits", () => {
