@@ -645,10 +645,19 @@ export const TableStates = () => {
   );
 };
 
-export const tableWorkflowSource = `import { Table, TableBody, TableCell, TableFilterField, TableHeader, TableHeaderCell, TableRow, TableSortHeader, TableViewport, useTable } from "@gpuixui/data";
+export const tableWorkflowSource = `import { Table, TableBody, TableCell, TableFilterField, TableHeader, TableHeaderCell, TableRow, TableSortHeader, TableViewport, useColumns, useTable } from "@gpuixui/data";
 
-// One column list is what the header paints, what the core sorts by and what
-// the filter searches — a hidden column cannot leave a second copy behind.
+// One column list is what the header paints and what the Columns menu hides.
+const columns = useColumns({
+  columns: [
+    { id: "service", label: "Service", width: 260 },
+    { id: "environment", label: "Environment", width: 140 },
+    { id: "status", label: "Status", width: 120 },
+  ],
+});
+
+// The other list is what the core sorts by and what the filter searches; a
+// hidden column cannot leave a second copy behind.
 const table = useTable({
   rows,
   keyOf: (row) => row.id,
@@ -657,6 +666,8 @@ const table = useTable({
     { id: "environment", valueOf: (row) => row.environment },
     { id: "status", valueOf: (row) => row.status },
   ],
+  // A column the menu hides leaves the query; it keeps its sort.
+  hiddenColumns: columns.hidden,
 });
 
 <TableFilterField value={table.query} onValueChange={table.setQuery} />

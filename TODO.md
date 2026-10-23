@@ -16268,14 +16268,20 @@ fails the case by name; restored, the file is 44/44 and
       `enableGlobalFilter` line and `useTable` sentence, the hidden-column query
       emptying, the remaining columns still matching, a hidden `environment`
       still ordering the rows, and the two `visibleRows(…, columns)` call sites);
-      `lane-page.test.ts` gains `show the surface the lane is about, from a demo
-      that exists` (every lane page mounts a registered demo, with the policy's
-      new rule). Directions measured: dropping `columns` from the demo's paint
-      call fails on `visibleRows(rows, query, order, columns)`, and removing the
-      lane mount fails `expected [ { …(3) } ] to deeply equal []`; restored, the
-      two files are 26/26. Docs: `docs/preview-strategy.md` §A lane page shows
-      the surface it is about. No native scenario applies — a browser preview and
-      the page it draws on.
+      the preview's copyable source now carries `useColumns` and
+      `hiddenColumns: columns.hidden` too, so the Code tab cannot teach less than
+      the drawing it labels; `lane-page.test.ts` gains `show the surface the lane
+      is about, from a demo that exists` (every lane page mounts a registered
+      demo, with the policy's new rule). Directions measured: dropping `columns`
+      from the demo's paint call fails on `visibleRows(rows, query, order,
+      columns)`, removing `hiddenColumns` from the copyable source fails
+      `to contain 'hiddenColumns: columns.hidden'`, and removing the lane mount
+      fails `expected [ { …(3) } ] to deeply equal []`; restored, the two files
+      are 26/26. Docs: `docs/preview-strategy.md` §A lane page shows
+      the surface it is about. The served build answers `/docs/data-display`
+      **200** and renders the preview's Columns menu, so the mount is a page a
+      reader meets rather than a registered demo. No native scenario applies — a
+      browser preview and the page it draws on.
 
 ## Swarm-owned blockers (fix these)
 

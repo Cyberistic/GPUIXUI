@@ -181,6 +181,8 @@ describe("the preview's filter", () => {
 
     expect(tableWorkflowSource).toContain("columns: [");
     expect(tableWorkflowSource).not.toContain("textOf");
+    expect(tableWorkflowSource).toContain("hiddenColumns: columns.hidden");
+    expect(tableWorkflowSource).toContain("useColumns");
     expect(tableWorkflowSource).toContain("table.query");
     expect(tableWorkflowSource).toContain("table.setQuery");
     expect(tableWorkflowSource).toContain("order={table.sortOrder}");
