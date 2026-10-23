@@ -1,11 +1,10 @@
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import type { PackageOrigin } from "./collection-routes";
+import type { PageOrigin } from "./collection-routes";
 import { docsByOrigin } from "./package-docs";
 import { docs } from "./source";
 
-/** Which collection a page's Markdown is read from. */
-export type PageOrigin = "site" | PackageOrigin;
+export type { PageOrigin } from "./collection-routes";
 
 /** The processed Markdown for one page, used by the "Copy page" action. */
 export const readPageMarkdown = createServerFn({ method: "GET" })

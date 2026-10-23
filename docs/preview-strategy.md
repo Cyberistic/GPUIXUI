@@ -769,6 +769,26 @@ name that no longer exists. It is a resolution check rather than a completeness
 one — a prop the page omits is a documentation gap, and inherited `Omit`/`Props`
 types make "every prop" a compiler question rather than a regex one.
 
+### The page's own file
+
+The footer of every page — curated or package — names the Markdown that renders
+it and links that file's GitHub edit view. It is not a template row an author
+writes, for the same reason the related line and the status strip are not: the
+site knows which collection served the page, so `src/lib/page-edit.ts` derives
+the path from the page's `origin` and `path` and `src/components/docs/edit-page.tsx`
+renders it. A curated page keeps its URL over the package page it shadows, so
+`/docs/components/dialog` edits `apps/docs/content/docs/components/dialog.mdx`
+rather than the package's displaced copy — a link to a file no reader's page
+came from would send a contributor to edit the wrong page.
+
+`page-edit.test.ts` walks the site's collection and every mounted package
+collection, resolves each served page to a file, and fails on one that does not
+exist; it also pins the two trees apart and the curated page to its own file.
+`edit-page.test.tsx` holds the rendered href, the printed path and the frame's
+mount. The floors are real — the site's own collection and every mounted package
+collection carry a minimum page count — so a scan that stopped matching cannot
+pass on an empty set.
+
 The **Accessibility and limitations** row has a shared half as well as a
 per-component one. A page states what its own control does and cannot do; the
 runtime's whole ARIA budget — the role-required rule, the seven attributes that

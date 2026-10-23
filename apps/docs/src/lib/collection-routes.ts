@@ -31,6 +31,15 @@ export type PackageOrigin =
   | "dock"
   | "media";
 
+/**
+ * Which collection a page came from.
+ *
+ * The site writes its own pages in `content/docs`; a package writes the page a
+ * component ships with in `packages/<pkg>/docs`. Both render through one frame,
+ * and `page-edit.ts` needs to know which tree a page's Markdown lives in.
+ */
+export type PageOrigin = "site" | PackageOrigin;
+
 /** One mounted package docs directory. */
 export interface PackageCollection {
   readonly origin: PackageOrigin;

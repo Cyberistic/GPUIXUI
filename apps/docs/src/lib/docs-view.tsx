@@ -13,6 +13,7 @@ import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
 import { CopyPage } from "@/components/docs/copy-page";
 import { DependencyStrip } from "@/components/docs/dependency-strip";
+import { EditPage } from "@/components/docs/edit-page";
 import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PackageSource } from "@/components/docs/package-source";
 import { PageExample } from "@/components/docs/page-example";
@@ -129,6 +130,7 @@ function PageFrame({
       <DocsBody>
         <PageExample url={url} />
         {children}
+        <EditPage origin={origin} path={path} />
       </DocsBody>
     </DocsPage>
   );

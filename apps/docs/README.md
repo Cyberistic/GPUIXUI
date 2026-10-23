@@ -220,6 +220,7 @@ src/components/docs/component-source.tsx  The copyable source block, for a curat
 src/components/docs/package-source.tsx    The generated source block a package page ends with
 src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
+src/components/docs/edit-page.tsx         The footer link to the page's Markdown, on GitHub
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
 src/components/docs/dependency-strip.tsx  The generated "Built on" line: the component's workspace imports
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
@@ -319,6 +320,7 @@ src/lib/collection-pages.ts         The pages a mounted collection serves, inclu
 src/lib/page-tree.ts                Fills the package's pages into their sidebar section
 src/lib/page-meta.ts                Title, description, canonical and social metadata
 src/lib/page-markdown.ts            Server function behind "Copy page"
+src/lib/page-edit.ts                The Markdown file behind a page, for its GitHub link
 src/lib/site.ts                     The one deployed origin
 src/lib/shared.ts                   App name, docs route and the repository link
 src/lib/sitemap.ts                  The sitemap's URL set
@@ -656,6 +658,23 @@ and alt text, so a shared link is a card and not a blank rectangle;
 
 `src/lib/site.ts` holds the one origin (`https://gpuixui.sudokw.com`), and
 `site.test.ts` holds it to `DOCS_DOMAIN` in the deploy stack.
+
+## Editing a page
+
+Every docs page ends with the Markdown file that renders it, named and linked to
+GitHub's edit view — the reader who finds a wrong sentence is the one who can
+fix it, and a page that does not say which file it is leaves them searching the
+tree. `src/lib/page-edit.ts` derives the path from the same `origin` and `path`
+the loader hands the frame; `src/components/docs/edit-page.tsx` is the footer
+line. No page writes its own path, so renaming a file cannot leave the link
+behind: a curated page keeps its URL over the package page it shadows, so
+`/docs/components/dialog` edits `apps/docs/content/docs/components/dialog.mdx`,
+not the package's displaced copy.
+
+`page-edit.test.ts` walks both collections, resolves every page the site serves
+to a file, and fails on one that does not exist; `edit-page.test.tsx` holds the
+href, the printed path and the frame's mount. The ledger's one rule applies to
+the link as well: the file is derived from the page, never typed beside it.
 
 ## Commands
 

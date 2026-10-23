@@ -10303,7 +10303,37 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 287/287
+`[x]` `[██████████]` 288/288
+
+`[x]` Give every page the **Markdown file it renders**, named and linked — the
+      site renders the pages it writes and the pages each package writes, and no
+      page said which file a reader was looking at, so a wrong sentence sent them
+      searching the tree. The curated pages make the obvious guess wrong: a
+      curated page keeps the URL of the package page it shadows, so
+      `/docs/components/dialog` is `apps/docs/content/docs/components/dialog.mdx`
+      and not the package copy no reader's page came from. Every page's footer now
+      prints the path and links GitHub's edit view. `src/lib/page-edit.ts` derives
+      it from the `origin`/`path` the loader already hands the frame (site →
+      `apps/docs/content/docs`, a package → its own collection directory, `.mdx`
+      added once whatever shape the path arrives in); `src/components/docs/edit-page.tsx`
+      renders it and `docs-view.tsx` mounts it once for both collections.
+      Guards: `page-edit.test.ts` (6 cases) walks the served set — the site's
+      files plus every mounted collection — and requires a file on disk for every
+      page, one URL per site file, the two trees apart, and the shadowed
+      `dialog` to resolve to the curated file while the package's copy still
+      exists; `edit-page.test.tsx` (3 cases) holds the href, the printed path,
+      `target`/`rel`, the curated-versus-package pair and the frame's mount.
+      Directions measured: a site prefix one directory short fails the path and
+      existence cases, ignoring the `repo` argument fails the custom-fork URL,
+      and removing the mount fails the frame case (6 failed); restored, 9/9.
+      End to end on the dev server: `/docs/components/dialog` prints
+      `apps/docs/content/docs/components/dialog.mdx`, `/docs/primitives/slider`
+      prints `packages/primitives/docs/slider.mdx`, `/docs/dock/split-pane`,
+      `/docs/editor/markdown-editor` and `/docs/media/qr-code` print their own
+      package files, and `/docs/blocks/dashboard` prints the site's.
+      `docs/preview-strategy.md` gains §The page's own file and the README ledger
+      the two modules. The app is 136 files / 1 463 tests green, `check-types` and
+      `build` clean. No native scenario applies — a browser page's footer.
 
 `[x]` Highlight the **code in the library's own syntax palette** — every MDX
       fence and every render-time block (an install command, a preview's Code
