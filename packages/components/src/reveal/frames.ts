@@ -10,9 +10,26 @@
 
 import type { MotionStyle } from "@gpuix/react";
 import { Match } from "effect";
+import * as Schema from "effect/Schema";
+
+/** The edges a reveal can arrive from, read from a value a caller stores. */
+const RevealEdge = Schema.Literals(["below", "above", "left", "right", "none"]);
 
 /** Where the content comes from. `"none"` is a plain fade. */
-export type RevealFrom = "below" | "above" | "left" | "right" | "none";
+export type RevealFrom = typeof RevealEdge.Type;
+
+/**
+ * The edge the frames travel from, read from a value that may be a stored
+ * choice.
+ *
+ * `RevealFrom` is a compile-time guarantee, but `from` can arrive from persisted
+ * UI state the library never type-checked. A name the union does not carry is
+ * the house edge, `"below"` — the direction a reveal that asked for nothing
+ * arrives from — rather than a `Match.exhaustive` that throws out of the render
+ * and takes the surface with it.
+ */
+const revealEdgeOf = (from: unknown): RevealFrom =>
+  Schema.is(RevealEdge)(from) ? from : "below";
 
 /** The three frames a reveal paints, at one travel distance. */
 export interface RevealFrames {
@@ -42,16 +59,14 @@ const still: RevealFrames = {
  * starts high and drops, and `left`/`right` name the edge the content comes
  * **from**: `right` starts further right and slides left. A broken or negative
  * distance falls back to the house 8 px rather than reaching the runtime as
- * `NaN`.
+ * `NaN`, and an edge the union does not name is the house `below` arrival
+ * ({@link revealEdgeOf}).
  */
-export const revealFrames = (
-  from: RevealFrom,
-  distance: number,
-): RevealFrames => {
+export const revealFrames = (from: unknown, distance: number): RevealFrames => {
   const travel =
     Number.isFinite(distance) && distance > 0 ? Math.round(distance) : 8;
 
-  return Match.value(from).pipe(
+  return Match.value(revealEdgeOf(from)).pipe(
     Match.when("none", () => still),
     Match.when("below", () => travelling("top", travel)),
     Match.when("above", () => travelling("top", -travel)),

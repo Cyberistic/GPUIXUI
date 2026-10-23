@@ -52,4 +52,14 @@ describe("revealFrames", () => {
   it("rounds a fractional distance to a whole pixel", () => {
     expect(revealFrames("below", 7.6).initial).toEqual({ opacity: 0, top: 8 });
   });
+
+  it("takes the house edge for an edge it does not name", () => {
+    // A stored `from` is not type-checked: `Match.exhaustive` threw out of the
+    // render for a name the union does not carry, so a persisted direction took
+    // the whole surface down with it. The house arrival is `below`.
+    const frames = revealFrames("diagonal", 12);
+    expect(frames.initial).toEqual({ opacity: 0, top: 12 });
+    expect(frames.animate).toEqual({ opacity: 1, top: 0 });
+    expect(frames.exit).toEqual({ opacity: 0, top: 12 });
+  });
 });

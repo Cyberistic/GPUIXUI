@@ -38,6 +38,8 @@ import { PageTransition } from "@gpuixui/components";
 - One view at a time; the two never cross-fade.
 - A clipped region; travel is a relative `left`.
 - No vertical direction.
+- A `direction` the component does not name travels `forward` instead of
+  failing: the value can be a stored setting the type never checked.
 - The focus does not move with the swap.
 - The leaving view takes no presses: it is still painted for its exit half, so a
   shield covers its content until the incoming view arrives. A press meant for

@@ -113,6 +113,17 @@ describe("the travel between two views", () => {
     });
   });
 
+  it("travels forward for a direction it does not name", () => {
+    // A stored `direction` is not type-checked: `Match.exhaustive` threw out of
+    // the render for a name the union does not carry, so a persisted direction
+    // took the whole region down with it. The house direction is `forward`.
+    expect(pageFrames("sideways", 12)).toEqual({
+      enterFrom: { opacity: 0, left: 12 },
+      rest: { opacity: 1, left: 0 },
+      exitTo: { opacity: 0, left: -12 },
+    });
+  });
+
   it("refuses a distance the renderer could not paint", () => {
     expect(pageTravel(Number.NaN)).toBe(PAGE_TRAVEL);
     expect(pageTravel(Number.POSITIVE_INFINITY)).toBe(PAGE_TRAVEL);

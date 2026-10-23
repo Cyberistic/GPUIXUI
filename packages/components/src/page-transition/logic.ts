@@ -16,9 +16,24 @@
 import type { MotionStyle } from "@gpuix/react";
 import { Match } from "effect";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+
+/** The directions a reader can move through the views. */
+const ViewDirection = Schema.Literals(["forward", "back"]);
 
 /** Which way the reader is moving through the views. */
-export type PageDirection = "forward" | "back";
+export type PageDirection = typeof ViewDirection.Type;
+
+/**
+ * The direction a swap travels, read from a value that may be a stored choice.
+ *
+ * `PageDirection` is a compile-time guarantee, but `direction` can arrive from
+ * persisted UI state the library never type-checked. A name the union does not
+ * carry is `forward` — the house direction — rather than a `Match.exhaustive`
+ * that throws out of the render and takes the region with it.
+ */
+const directionOf = (direction: unknown): PageDirection =>
+  Schema.is(ViewDirection)(direction) ? direction : "forward";
 
 /** Where a swap is: at rest, holding the outgoing view, or arriving. */
 export type PagePhase = "rest" | "leaving" | "entering";
@@ -47,15 +62,18 @@ export const pageTravel = (distance: number): number =>
  *
  * `forward` reads as moving right through a document: the outgoing view leaves
  * toward the left and the incoming one arrives from the right. `back` mirrors
- * it, so a reader who goes back sees the movement they came from.
+ * it, so a reader who goes back sees the movement they came from. A direction
+ * the union does not name is `forward` — the house direction — rather than a
+ * `Match.exhaustive` that throws out of the render, because `direction` can be
+ * a stored setting the library never type-checked.
  */
 export const pageFrames = (
-  direction: PageDirection,
+  direction: unknown,
   distance: number,
 ): PageFrames => {
   const travel = pageTravel(distance);
 
-  return Match.value(direction).pipe(
+  return Match.value(directionOf(direction)).pipe(
     Match.when("forward", () => ({
       enterFrom: { opacity: 0, left: travel },
       rest: { opacity: 1, left: 0 },
