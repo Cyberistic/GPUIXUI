@@ -1,3 +1,7 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 @import "tailwindcss";
 @import "fumadocs-ui/css/preset.css";
 @import "fumadocs-ui/css/shadcn.css";
@@ -81,20 +85,9 @@ body {
 
 /* The landing's mark, reused as the docs brand. */
 .gx-mark {
-  position: relative;
   display: inline-block;
   width: 18px;
   height: 18px;
-  border: 2px solid var(--primary);
-  border-radius: 5px;
-}
-
-.gx-mark::after {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: 2px;
-  background: var(--primary);
 }
 
 /* Section labels in a sidebar and the uppercase eyebrow used on pages. */
@@ -140,6 +133,7 @@ body {
 
 .gx-component-panel {
   margin: 0;
+  min-height: 340px;
 }
 
 .gx-component-code {

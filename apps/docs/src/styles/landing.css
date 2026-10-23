@@ -141,20 +141,9 @@
 }
 
 .landing-mark {
-  position: relative;
   flex: none;
   width: 22px;
   height: 22px;
-  border: 2px solid var(--accent);
-  border-radius: 6px;
-}
-
-.landing-mark::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  background: var(--accent);
-  border-radius: 2px;
 }
 
 .landing-nav-links {

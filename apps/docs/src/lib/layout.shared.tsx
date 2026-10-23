@@ -7,7 +7,14 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <span className="flex items-center gap-2 font-semibold tracking-tight">
-          <span aria-hidden="true" className="gx-mark" />
+          <img
+            alt=""
+            aria-hidden="true"
+            className="gx-mark"
+            height={18}
+            src="/logo.svg"
+            width={18}
+          />
           <span>
             {appName}
             <span className="ml-1.5 font-normal text-fd-muted-foreground">

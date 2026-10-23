@@ -29,7 +29,14 @@ function Nav() {
   return (
     <nav className="landing-nav">
       <a className="landing-brand" href="/">
-        <span aria-hidden="true" className="landing-mark" />
+        <img
+          alt=""
+          aria-hidden="true"
+          className="landing-mark"
+          height={22}
+          src="/logo.svg"
+          width={22}
+        />
         GPUIxUI
       </a>
       <div className="landing-nav-links">

@@ -64,6 +64,10 @@
   --destructive-pressed: #fc8384;
 }
 
+.gx-demo > * {
+  max-width: 100%;
+}
+
 .gx-demo {
   display: flex;
   flex-wrap: wrap;
@@ -73,7 +77,7 @@
   min-height: 180px;
   padding: 40px 24px;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   color-scheme: dark;
   background-color: var(--background);
   background-image:
