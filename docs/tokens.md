@@ -420,7 +420,7 @@ measured too: `secondary` is held to the perceptibility floor on the four conten
 strips it can sit on (see [Decorative surfaces](#decorative-surfaces)), which is
 why the base light `secondary` is `#E1E5EC` rather than the `muted` value it used
 to be. A **row's wash** is deliberately not a fill placement, because the fill
-cannot answer it: measured over the sixteen styles, `secondary` reads
+cannot answer it: measured over the eighteen styles, `secondary` reads
 **1.0000:1** against `hover` in both high-contrast variants and **36 of the 72**
 wash placements are under the floor. What carries a tonal action on a row is its
 edge — `borderStrong`, which the contrast table holds to the boundary floor on

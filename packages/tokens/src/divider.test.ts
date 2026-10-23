@@ -439,6 +439,14 @@ describe("a rule on the row it crosses", () => {
     expect(source).not.toContain("20 of the 80");
     expect(source).not.toContain("all 80 placements");
     expect(source).not.toContain("thirty-two");
+    // The page that teaches the same decision kept sixteen styles beside a
+    // seventy-two-cell sweep after the source doc was counted, so it is held to
+    // the same list here rather than to its own copy of the number.
+    const prose = catalogue.replace(/\s+/g, " ");
+    expect(prose).toContain(
+      `measured over the ${spelled(everyStyle.length)} styles`,
+    );
+    expect(prose).not.toContain("measured over the sixteen styles");
     // The inventory row names the same premise the guard holds, so the count a
     // reader checks there cannot stay on the previous style set.
     expect(inventory).toContain(
