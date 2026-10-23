@@ -1,6 +1,6 @@
 ---
 title: Carousel
-description: Discrete slide stepping with previous/next controls, a dot per slide and the arrow keys — every slide kept mounted.
+description: Discrete slide stepping with previous/next controls, a dot per slide and the arrow keys — only the slide on screen is mounted.
 ---
 
 `Carousel` steps through a fixed set of slides. It is **discrete, not sliding**:
@@ -8,9 +8,12 @@ GPUix `motion` animates box geometry and opacity only — there is no `transform
 and the runtime has no scroll snap, so a translating track is not honestly
 expressible. The component says so rather than drawing a slide it cannot paint.
 
-Every slide stays mounted and only the active one is displayed. That keeps each
-slide's own component state: a form on slide three is still filled in after a
-reader visits slide one and comes back.
+Only the slide on screen is **mounted**. The pinned renderer lays out a mounted
+element even when it is hidden with `display: none`, so a kept spare slide would
+paint beside the active one and hold onto its tab stops; the component mounts
+one slide and states the cost where it is paid — a slide's local state does not
+survive a visit. The frame is therefore sized by the slide being read, and a form
+on slide three starts empty when the reader comes back.
 
 <ComponentPreview name="carousel-workflow" />
 
@@ -85,7 +88,7 @@ into whatever is behind it.
 | ---- | -------------- |
 | `Carousel` | the slide index, the loop rule, the region and the arrow keys |
 | `CarouselTrack` | the slide row; reports the slide count |
-| `CarouselSlide` | one slide; displayed only while active |
+| `CarouselSlide` | one slide; mounted only while it is the active one |
 | `CarouselControl` | a previous/next action, disabled at an edge |
 | `CarouselIndicators` | one press target per slide, marking the active one |
 
@@ -200,9 +203,11 @@ re-heights the controls with the platform's density and leaves the track's fixed
 - A dot is a button named "Go to slide N" with **`aria-selected`** on the active
   one: `0.11.0` has no `aria-current`, the substitution Pagination, Stepper and
   Breadcrumb make. There is no slide-position announcement and no live region.
-- Inactive slides stay in the tree with `display: none`, so they are not
-  announced and their state survives. A heavy slide costs render time on every
-  frame even while hidden.
+- Only the active slide is mounted: the pinned renderer ignores `display: none`
+  for layout, so a mounted spare would paint beside the slide on screen and keep
+  its controls in the tab order. The cost is the slide's local state — it does
+  **not** survive a visit — and a heavy slide is paid for only while it is
+  shown.
 - **No slide animation, no swipe and no drag:** the runtime has no transform and
   no scroll snap, and there is no drag host feature to read a swipe from.
 - No auto-advance, no thumbnails and no lazy loading in this version; the dots
@@ -238,8 +243,8 @@ the carousel steps instead of sliding. `docs/carousel.mdx` in the package record
 the same four limits.
 
 `src/behaviour/carousel.test.tsx` runs **17 native tests** in the real GPUix
-renderer on `@gpuix/native@0.11.0`: one displayed slide with every slide mounted,
-control stepping, edge clamping, loop wrapping, arrows and Home/End, a controlled
+renderer on `@gpuix/native@0.11.0`: only the slide on screen mounted, control
+stepping, edge clamping, loop wrapping, arrows and Home/End, a controlled
 carousel, region and control naming, the state callback in both themes, the
 chevron's role read back off the renderer, and the dots — one named target per
 slide, a press jumping to its slide, the roving stop following the slide, the

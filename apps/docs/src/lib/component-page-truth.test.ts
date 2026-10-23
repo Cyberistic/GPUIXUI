@@ -2267,10 +2267,11 @@ describe("the curated component pages", () => {
 
   it("holds the carousel's clamp, its dot pill and its control edge to the source", () => {
     // A carousel page can drift in four silent ways: it can promise a slide
-    // animation the runtime cannot paint, describe a dot whose state is only a
-    // hue, print a press target smaller than the floor, or read the recipe's
-    // `border-input` class literally as the `input` role. The first three are
-    // read from the painter; the edge is read through the compiler's remap.
+    // animation the runtime cannot paint, name a mount window the component
+    // does not keep, describe a dot whose state is only a hue, print a press
+    // target smaller than the floor, or read the recipe's `border-input` class
+    // literally as the `input` role. The first four are read from the painter;
+    // the edge is read through the compiler's remap.
     const page = pages.find((candidate) => candidate.file === "carousel.mdx");
     expect(page, "the carousel page is not in the curated set").toBeDefined();
     if (page === undefined) return;
@@ -2284,7 +2285,10 @@ describe("the curated component pages", () => {
       "const active = count === 0 ? 0 : Math.min(Math.max(value, 0), count - 1);",
     );
     expect(source).toContain("(next + count) % count");
-    expect(source).toContain('display: active ? "flex" : "none"');
+    // Only the slide on screen is mounted: the pinned renderer lays a hidden
+    // spare out anyway, so a `display` swap was the defect this replaced.
+    expect(source).toContain("if (index !== activeIndex) return null;");
+    expect(source).not.toContain('display: active ? "flex" : "none"');
     // The region, its keys and its one roving stop on the active dot.
     expect(source).toContain('role="group"');
     expect(source).toContain("aria-label={label}");
@@ -2329,7 +2333,9 @@ describe("the curated component pages", () => {
     expect(text).toContain("`aria-selected`");
     expect(text).toContain("no `aria-current`");
     expect(text).toContain("one roving tab stop");
-    expect(text).toContain("stays mounted");
+    expect(text).toContain("does not survive a visit");
+    expect(text).not.toContain("stays mounted");
+    expect(text).not.toContain("their state survives");
     expect(text).toContain("`secondaryForeground`");
     expect(text).toContain("`filledHover`");
     expect(text).toContain("`filledPressed`");
