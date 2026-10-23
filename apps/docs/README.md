@@ -174,6 +174,32 @@ src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budge
 src/components/docs/tag-input-demo.tsx     The tag field's two browser renderings and their source strings
 src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, traversal
 src/components/docs/tooltip-demo.tsx      The tooltip's two browser renderings and their source strings
+src/components/docs/box-demo.tsx          The box's surface tones and facts as a labelled diagram
+src/components/docs/button-group-demo.tsx The button group's attached and separated modes
+src/components/docs/checkbox-group-demo.tsx The group's roving one-tab-stop list around the shared box
+src/components/docs/grid-demo.tsx         The grid's equal tracks as a labelled diagram
+src/components/docs/icon-button-demo.tsx  The square action's variants and busy state
+src/components/docs/input-demo.tsx        The field's resting, invalid and disabled chrome
+src/components/docs/label-demo.tsx        The visible name's plain, required and invalid paint
+src/components/docs/meter-demo.tsx        The measurement's four tones
+src/components/docs/number-field-demo.tsx The field chrome and its pointer steppers
+src/components/docs/otp-field-demo.tsx    The six cells and an invalid code
+src/components/docs/progress-demo.tsx     The determinate fill, buffer and indeterminate segment
+src/components/docs/radio-group-demo.tsx  The one-choice group and its selected dot
+src/components/docs/range-slider-demo.tsx The two thumbs and the fill between them
+src/components/docs/rating-demo.tsx       The stars, whole and half
+src/components/docs/scroll-area-demo.tsx  The vertical and horizontal bounded frames
+src/components/docs/separator-demo.tsx    The horizontal, vertical and captioned rules
+src/components/docs/skeleton-demo.tsx     The pulsing placeholder shapes
+src/components/docs/slider-demo.tsx       The track, fill, thumb and disabled paint
+src/components/docs/spacer-demo.tsx       The fixed step and the flexible filler
+src/components/docs/spinner-demo.tsx      The three dots, their sizes and accents
+src/components/docs/stack-demo.tsx        The row, column and justified arrangements
+src/components/docs/text-demo.tsx         The roles and tones of one run of type
+src/components/docs/textarea-demo.tsx     The multi-line field's chrome and invalid paint
+src/components/docs/theme-provider-demo.tsx The same surface painted dark and light
+src/components/docs/toggle-demo.tsx       The pressed paint and the disabled state
+src/components/docs/toggle-group-demo.tsx The single and multiple mode toolbars
 src/components/docs/sources.ts            The real source files the Code tab shows
 src/components/docs/component-source.tsx  The copyable source block, for a curated page
 src/components/docs/package-source.tsx    The generated source block a package page ends with

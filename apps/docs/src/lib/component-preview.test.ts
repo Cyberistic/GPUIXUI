@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { demos } from "../components/docs/demos";
+import { packageCollections } from "./collection-routes";
 
 /**
  * The preview registry, held to the pages that mount it.
@@ -16,14 +17,42 @@ import { demos } from "../components/docs/demos";
  * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
  */
 
-const dir = new URL("../../content/docs/", import.meta.url);
+const contentDir = new URL("../../content/docs/", import.meta.url);
 const root = new URL("../../../../", import.meta.url);
 
-/** Every `.mdx` the site writes, at any depth. */
-const sitePages = (): ReadonlyArray<readonly [string, string]> =>
-  readdirSync(dir, { encoding: "utf8", recursive: true })
+/**
+ * Every `.mdx` a preview can be mounted from: the site's own pages at any
+ * depth, plus each package's docs directory (a package page now mounts a
+ * preview the same way a curated page does).
+ */
+const pages = (): ReadonlyArray<readonly [string, string]> => {
+  const sitePages = readdirSync(contentDir, {
+    encoding: "utf8",
+    recursive: true,
+  })
     .filter((name) => name.endsWith(".mdx"))
-    .map((name) => [name, readFileSync(new URL(name, dir), "utf8")] as const);
+    .map(
+      (name) =>
+        [
+          `content/docs/${name}`,
+          readFileSync(new URL(name, contentDir), "utf8"),
+        ] as const,
+    );
+
+  const packagePages = packageCollections.flatMap((collection) =>
+    readdirSync(new URL(collection.dir, root))
+      .filter((name) => name.endsWith(".mdx"))
+      .map(
+        (name) =>
+          [
+            `${collection.dir}/${name}`,
+            readFileSync(new URL(`${collection.dir}/${name}`, root), "utf8"),
+          ] as const,
+      ),
+  );
+
+  return [...sitePages, ...packagePages];
+};
 
 /** Every `.mdx` a package writes under `packages/<pkg>/docs`. */
 const packagePages = (): ReadonlyArray<readonly [string, string]> =>
