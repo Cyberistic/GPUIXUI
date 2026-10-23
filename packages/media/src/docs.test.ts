@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
+import { QR_MAX_VERSION, qrByteCapacity } from "./qr/encode.js";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -113,11 +114,23 @@ const documentedProps = (page: string): ReadonlyArray<string> => {
   const end = rest.indexOf("\n## ", 1);
   const section = end < 0 ? rest : rest.slice(0, end);
   return Arr.flatMap(Str.split(section, "\n"), (line) =>
-    Str.startsWith("| `")(line)
-      ? namesIn(Str.split(line, "|")[1] ?? "")
-      : [],
+    Str.startsWith("| `")(line) ? namesIn(Str.split(line, "|")[1] ?? "") : [],
   );
 };
+
+describe("the qr-code page", () => {
+  it("prints the byte capacity the encoder reports", () => {
+    // The bug guarded: the page advertised 274 bytes because that is the
+    // version-10 `L` symbol's *data codeword* count, not the byte capacity a
+    // reader can actually encode (the mode indicator and the count field take
+    // their bits first). A reader chose a payload by the larger number and got
+    // the overflow box the same page promises not to paint.
+    const stated = /largest symbol holds (\d+) bytes at `L`/.exec(
+      read("../docs/qr-code.mdx"),
+    )?.[1];
+    expect(stated).toBe(String(qrByteCapacity(QR_MAX_VERSION, "L")));
+  });
+});
 
 describe.each(PAGES)("the $page page", (contract) => {
   it("documents every prop its type declares, and nothing else", () => {

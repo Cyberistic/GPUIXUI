@@ -5291,6 +5291,20 @@ the report built on it.
       element tree's role and label; the symbol's paint is the existing
       `qr-matrix` probe.
 
+`[x]` Print the **capacity a reader can encode, not the symbol's codeword
+      count** — `packages/media/docs/qr-code.mdx` said the largest symbol holds
+      **274** bytes at `L`, which is version 10's data-codeword count: byte mode
+      spends four bits on the mode indicator and sixteen on the character count
+      first, so `qrByteCapacity(10, "L")` is **271**. A reader who sized a
+      payload by the page met the overflow box the same page promises not to
+      paint. The page says 271 now, and `src/docs.test.ts` gains `the qr-code
+      page prints the byte capacity the encoder reports`, which reads the
+      printed figure and requires `qrByteCapacity(QR_MAX_VERSION, "L")`.
+      Directions measured: restoring `274` fails `expected '274' to be '271'`;
+      restored, the package is 9 files / **112 tests** green with `check-types`
+      clean. No native scenario applies — a printed figure and the encoder's
+      own answer.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 22/22
