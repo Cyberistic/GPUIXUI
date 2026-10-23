@@ -987,19 +987,23 @@ own applies it with no registry and no new platform name.
 
 These facts about the authored looks:
 
-- **The chrome is the era's; the artwork is not.** Luna's `#ECE9D8` face, its
+- **The chrome is the look's; the artwork is not.** Luna's `#ECE9D8` face, its
   blue title-bar accent, the `#7F9DB9` field edge and the `#316AC5` selection,
-  and Aero's glass-blue greys and `#3399FF` highlight, are colour values. No
-  gradient, bitmap, icon, cursor or logo is copied, so there is no
-  redistributable asset and no trademark in the library's identity.
-- **Neither era had a dark mode.** Both dark editions are authored for this
-  library — invented, not reconstructions — and are held to the same measured
-  floors as every other theme.
-- **`sans` stays the sentinel.** The package bundles no font, so naming Tahoma
-  or Segoe UI would silently fall back on a machine that lacks the face. The
-  era is carried by colour, radius and density; the monospace family is the
-  era's own.
-- **They obey the same accessibility and decorative contracts.** All four
+  Aero's glass-blue greys and `#3399FF` highlight, and Omarchy's Tokyo Night
+  ink and Flexoki paper are colour values, decoded from the palettes the shells
+  document (`colors.toml` for Omarchy). No gradient, bitmap, icon, cursor or
+  logo is copied, so there is no redistributable asset and no trademark in the
+  library's identity.
+- **Two provenances for the dark editions.** Neither Windows era had a dark
+  mode, so those two dark editions are authored for this library — invented,
+  not reconstructions. Omarchy's pair is not invented: its dark set is Tokyo
+  Night and its light set the guide's Flexoki Light reference. All six themes
+  are held to the same measured floors as every other theme.
+- **`sans` stays the sentinel.** The package bundles no font, so naming Tahoma,
+  Segoe UI or JetBrains Mono as the UI face would silently fall back on a
+  machine that lacks it. The look is carried by colour, radius and density; the
+  monospace family is the look's own.
+- **They obey the same accessibility and decorative contracts.** All six
   themes run every pair in `contrastPairs` through `contrastFailures` and every
   decorative placement through `decorativeFailures`, in `retro.test.ts`; a
   high-contrast base keeps its own palette and takes only the families, radii
@@ -2973,7 +2977,7 @@ The hunk stripe is a `muted` toolbar, and its text is the runtime's `text_faint`
 — the `placeholder` role — so the faint role had to clear the secondary floor
 **on a chrome strip**, not only on the page. It did not: the base dark
 placeholder measured 4.29:1 on its own toolbar, and every light style was
-4.35–4.46:1 on the platform toolbars and the two authored looks. The faintest
+4.35–4.46:1 on the platform toolbars and the two era looks. The faintest
 role is a step further from its surface now — light `#606A79`, dark `#858E9F`,
 Luna `#59616D`, Aero `#586978` — and every placement clears 4.5:1, the tightest
 being a dark platform's page fill at 5.01:1.
@@ -3746,7 +3750,7 @@ meets: the grey ramp's 600 and 400 steps sit at that edge, so any visible wash
 had to bury them. The wash is not the defect — a secondary role with no room
 above its floor can only survive a selection by making the selection invisible.
 The light sets' secondary text is a step darker (`#4B5362`) and the dark sets' a
-step lighter (`#C1C7D1`), the two authored looks follow with their own tint
+step lighter (`#C1C7D1`), the two era looks follow with their own tint
 (`#4F5550`, `#B4C6DD`, `#BCCEDF`), and the high-contrast dark wash carries a 26%
 share instead of 30% so its 7:1 secondary text clears the composite. No other
 wash strength changed.
@@ -3789,7 +3793,7 @@ wash visible (1.05:1) and the text readable (the theme's body floor) on *that*
 surface, at the same translucent share. All 64 tint placements resolve: the
 light tints keep the theme's own wash, the dark ones move as far as 70% of the way
 to the page, and the tightest resolved placement is 7.00:1 of text under a
-1.05:1 wash (the two authored looks' warning tints). A surface no step can serve
+1.05:1 wash (the two era looks' warning tints). A surface no step can serve
 — a fully transparent wash, say — keeps the theme's own role rather than
 inventing one, and `selectionFailures` reports the pair it breaks.
 
@@ -4340,12 +4344,15 @@ look keeps the sentinel UI face, one mono family, a full radius scale and a
 density preset, and `retroTheme` repaints, re-shapes and re-types without mutating
 its base — the elevation keeps the base geometry in the look's own `shadow` tint.
 A role a look does not author inherits, each look paints a background, primary
-and radius of its own (different from the other look and from the Windows
-platform style), both dark editions are a real second palette, a high-contrast
-base keeps its colours, and all four themes clear every `contrastPairs` pair,
-every decorative placement and both selection floors. `resolveRetroBrand` is
-executed and held to the audit, and the provenance prose, the catalogue table and
-the inventory row are held to the table the package ships.
+and radius of its own (different from the other looks and from the Windows
+platform style), each declares both editions as a real second palette, a
+high-contrast base keeps its colours, and all six themes clear every
+`contrastPairs` pair, every decorative placement and both selection floors.
+`resolveRetroBrand` is executed and held to the audit, and the documents are
+held to the table the package ships: every look named in the inventory row and
+the README, every printed look and theme count derived from `retroNames`, and
+the invented-dark-edition claim scoped to the two Windows looks while Omarchy's
+own provenance is stated.
 
 `packages/tokens/src/catalogue-values.test.ts` holds **the values the catalogue
 and the README print** to the package, so a document cannot teach a theme the
@@ -4408,10 +4415,12 @@ cannot go untested. Evidence:
   A consumer who wants both starts from `platformStyles` and checks the result
   with `contrastRatio`.
 - The authored looks are styles, not platform names: the docs platform toggle
-  offers the four operating systems, so a site that wants to preview Luna or Aero
-  resolves `retroTheme` itself. Their dark editions are invented — neither era
-  shipped one — and their UI face is still the sentinel, so the era's monospace
-  family falls back where the machine lacks it.
+  offers the four operating systems, so a site that wants to preview Luna, Aero
+  or Omarchy resolves `retroTheme` itself. The two Windows looks' dark editions
+  are invented — neither era shipped one — while Omarchy's pair is the shell's
+  own Tokyo Night and Flexoki Light palettes. The UI face is still the sentinel
+  on all three, and each look's monospace family falls back where the machine
+  lacks it.
 - `.SystemUIFont` is a name GPUI documents, and the theme asserts it as the UI
   family on every platform; what face the runtime resolves it to is not measured
   anywhere. The playground's `theme-platform` proves the platform **mono**

@@ -181,14 +181,16 @@ pre-HIG scale and reads `expected 14, got 8` now that this style's `lg` is 14.
 window runs on, and the persisted choice the docs toggle offers; a look is a
 `PlatformStyle` applied by name, and the package ships three more of them —
 Windows XP's Luna, Windows 7's Aero and Omarchy — in `retroStyles`, resolved with
-`retroTheme`. Both read the same way a platform style does: the era is carried
+`retroTheme`. Both read the same way a platform style does: the look is carried
 by colour, radius and density, while `sans` stays the sentinel and the mono
-family is the era's own. Neither Windows era had a dark mode, so those dark editions are
-authored for this library (invented, not reconstructed), and all six themes run
-`contrastFailures` and `decorativeFailures` in `retro.test.ts` like every other
-shipped theme. `applyStyle(base, style)` is the single merge rule behind both,
-so a brand can author a third look as data rather than forking a component or
-adding a platform name.
+family is the look's own. Two provenances for the dark editions: neither Windows
+era had a dark mode, so those dark editions are authored for this library
+(invented, not reconstructed), while Omarchy's pair is the shell's own palette
+(Tokyo Night dark, Flexoki Light light, from its `colors.toml`). All six themes
+run `contrastFailures` and `decorativeFailures` in `retro.test.ts` like every
+other shipped theme. `applyStyle(base, style)` is the single merge rule behind
+both, so a brand can author a look of its own as data rather than forking a
+component or adding a platform name.
 
 A high-contrast theme is the one combination that keeps its own palette: it takes
 the families, radii and density but no platform colour, because accessibility

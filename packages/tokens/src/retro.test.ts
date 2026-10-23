@@ -2,17 +2,23 @@
  * Guards the authored looks.
  *
  * The defect this closes: the only way to ship a look that was not one of the
- * four platform names was `extendTheme` one value at a time, so the two most
+ * four platform names was `extendTheme` one value at a time, so the most
  * recognisable desktop looks could only be reached by copying twenty roles out
  * of prose. `retroStyles` is the same data shape as `platformStyles` and
  * `applyStyle` is the one merge rule, so a look is data a consumer can read,
  * edit and ship — without `platformNames` growing a value, because that list is
  * the persisted key a consumer stores and the docs toggle offers.
  *
- * The second thing held here is honesty: the palettes are authored (no
- * Microsoft artwork, no bundled face), neither era had a dark mode so both dark
- * editions are invented, and every one of the four themes has to clear the same
- * contrast and decorative contracts as the built-in and platform themes.
+ * The second thing held here is honesty, and it now has two provenances. The
+ * Windows eras carried no artwork (their chrome is a handful of colour values,
+ * no bundled face), and neither shipped a dark mode, so those two dark editions
+ * are invented. Omarchy's pair is **not** invented: its dark set is Tokyo Night
+ * and its light set the guide's Flexoki Light reference, both named in the
+ * module. Every one of the six themes has to clear the same contrast and
+ * decorative contracts as the built-in and platform themes, and the documents
+ * have to name all three looks, state the theme count the tables carry, and
+ * keep the invented claim where it belongs rather than reading as a fact about
+ * every look.
  */
 
 import { readFileSync } from "node:fs";
@@ -41,7 +47,7 @@ import {
 
 const looks = retroNames;
 
-/** Every authored theme: both looks, both modes. */
+/** Every authored theme: every look, both modes. */
 const retroThemes = looks.flatMap((name) =>
   themeModes.map((mode) => ({
     label: `${name} ${mode}`,
@@ -322,15 +328,103 @@ describe("retro documentation", () => {
     expect(vague).toEqual([]);
   });
 
-  it("says both dark editions are authored, not historical", () => {
-    const unprovenanced = Object.entries(surfaces())
-      .filter(
-        ([, text]) =>
-          !/dark (editions?|sets?|modes?)/i.test(text) ||
-          !/invented|authored/i.test(text),
+  it("keeps the invented dark editions with the era that invented them", () => {
+    // The claim is true of the two Windows looks and false of Omarchy, whose
+    // pair is a desktop's own palette. A page that reads as a fact about every
+    // look sends a consumer looking for an Omarchy dark mode nobody invented.
+    const everyLookInvented = Object.entries(surfaces())
+      .filter(([, text]) =>
+        /their (?:dark )?(?:editions?|sets?|modes?) (?:are|is) invented/i.test(
+          text,
+        ),
       )
       .map(([name]) => name);
-    expect(unprovenanced).toEqual([]);
+    expect(everyLookInvented).toEqual([]);
+    const provenanced = Object.entries(surfaces())
+      .filter(
+        ([, text]) =>
+          !/omarchy/i.test(text) ||
+          !/(colors\.toml|tokyo night|flexoki)/i.test(text),
+      )
+      .map(([name]) => name);
+    expect(provenanced).toEqual([]);
+    const unscoped = Object.entries(surfaces())
+      .filter(
+        ([, text]) =>
+          !/dark (?:editions?|sets?|modes?)/i.test(text) ||
+          !/invented|authored/i.test(text) ||
+          !/neither[^.]{0,40}era[^.]{0,80}dark\s+mode/i.test(text),
+      )
+      .map(([name]) => name);
+    expect(unscoped).toEqual([]);
+  });
+
+  it("names every look in the inventory row and the README table", () => {
+    const unnamed = looks
+      .map((name) => retroStyles[name].label)
+      .filter(
+        (label) => !(inventoryRow()["COMPONENTS.md"] ?? "").includes(label),
+      );
+    expect(unnamed).toEqual([]);
+    const readme = read("../README.md");
+    const missing = looks
+      .map((name) => `| \`${name}\` (`)
+      .filter((cell) => !readme.includes(cell));
+    expect(missing).toEqual([]);
+  });
+
+  it("states the look and theme counts the tables carry", () => {
+    // A look or a mode added to the table has to move every printed count with
+    // it: the pages said "ships two" and "All four themes" for a season while
+    // three looks painted six themes.
+    const numberWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+    ];
+    const spelled = (count: number): string =>
+      numberWords[count] ?? String(count);
+    const lookCount = spelled(looks.length);
+    const themeCount = spelled(looks.length * themeModes.length);
+    const claimed = (text: string, pattern: RegExp): ReadonlyArray<string> =>
+      [...text.matchAll(pattern)]
+        .map((match) => match[1] ?? "")
+        .filter((word) => word !== "")
+        .map((word) => word.toLowerCase());
+    const looksClaimed = (text: string): ReadonlyArray<string> =>
+      claimed(
+        text,
+        /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+) (?:authored )?looks\b/gi,
+      );
+    const themesClaimed = (text: string): ReadonlyArray<string> =>
+      claimed(
+        text,
+        /\ball (one|two|three|four|five|six|seven|eight|nine|ten|\d+) themes\b/gi,
+      );
+    const wrong = Object.entries(surfaces()).flatMap(([name, text]) => [
+      ...looksClaimed(text)
+        .filter((word) => word !== lookCount)
+        .map((word) => `${name}: ${word} looks`),
+      ...themesClaimed(text)
+        .filter((word) => word !== themeCount)
+        .map((word) => `${name}: ${word} themes`),
+    ]);
+    expect(wrong).toEqual([]);
+    const silent = Object.entries(surfaces())
+      .filter(
+        ([, text]) =>
+          looksClaimed(text).length === 0 && themesClaimed(text).length === 0,
+      )
+      .map(([name]) => name);
+    expect(silent).toEqual([]);
   });
 
   it("names the contract the looks are held to", () => {

@@ -471,7 +471,7 @@ wash over cards lighter than the base theme's, so each carries the base dark
 theme's 24% share now. Measuring secondary text then found nine styles had no
 headroom for any wash: the grey ramp's 600 and 400 steps sat at the 4.5:1 floor,
 so the wash buried them. The base light secondary text is `#4B5362` and the dark
-one `#C1C7D1` — a step further from their surfaces — with the two authored looks
+one `#C1C7D1` — a step further from their surfaces — with the two era looks
 carrying their own tint, and the high-contrast dark wash at 26% so its 7:1
 secondary text clears the composite. The bubble was the fifth surface it found:
 Aero dark's 30% share left a user message's body text at 6.74:1, so that look
@@ -612,8 +612,8 @@ A runnable example lives in
 
 ## Authored looks
 
-A platform style is not the only look a theme can wear. `retroStyles` ships two
-more in the same shape — Windows XP's Luna and Windows 7's Aero — and
+A platform style is not the only look a theme can wear. `retroStyles` ships three
+in the same shape — Windows XP's Luna, Windows 7's Aero and Omarchy — and
 `retroTheme(base, name)` resolves one for the base's mode. A look is **not a
 platform name**: `platformNames` stays the persisted key and the docs toggle's
 four choices, and a look is applied by name. `retroNames` / `isRetroName` are its
@@ -626,13 +626,14 @@ tables go through (`platformTheme` is `applyStyle` over `platformStyles`).
 | `aero` (Windows 7) | `.SystemUIFont` | `Consolas` | 4 | `comfortable` |
 | `omarchy` (Omarchy) | `.SystemUIFont` | `JetBrains Mono` | 2 | `compact` |
 
-The chrome values are the era's own and carry no Microsoft artwork, gradient,
-icon or logo. Neither Windows era had a dark mode, so both of those dark editions
-are authored for this library — invented, not reconstructions — and all six
-themes are held to `contrastFailures` and `decorativeFailures` in
-`retro.test.ts`. The UI face stays
-the sentinel because no font is bundled; the era is carried by colour, radius and
-density.
+The chrome values are the looks' own and carry no artwork, gradient, icon or
+logo. Two provenances: neither Windows era had a dark mode, so those two dark
+editions are authored for this library — invented, not reconstructions — while
+Omarchy's pair is the shell's own palette (Tokyo Night dark, Flexoki Light
+light, decoded from its `colors.toml`). All six themes are held to
+`contrastFailures` and `decorativeFailures` in `retro.test.ts`. The UI face stays
+the sentinel because no font is bundled; the look is carried by colour, radius
+and density, and the monospace family is the look's own.
 
 ```ts
 import { extendTheme, retroStyles, retroTheme, themes } from "@gpuixui/tokens";

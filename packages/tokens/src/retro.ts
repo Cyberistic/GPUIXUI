@@ -1,33 +1,40 @@
 /**
- * Two authored looks from the desktop's past: Windows XP's Luna and Windows 7's
- * Aero.
+ * The authored looks: Windows XP's Luna, Windows 7's Aero and Omarchy.
  *
  * They are **styles, not platforms**. `platformNames` is the persisted key a
  * consumer stores and the docs toggle offers, so it names the operating systems
  * an application runs on today; a look is data of the same shape as
  * `platformStyles`, applied with `applyStyle` and offered under its own name.
  * That distinction is the extension mechanism in practice: the library ships
- * two more looks without the platform axis growing a value.
+ * three looks without the platform axis growing a value.
  *
- * Provenance: the chrome values are the era's own — Luna's blue title bar and
- * `#ECE9D8` face, its `#7F9DB9` field edge and `#316AC5` selection; Aero's
- * glass-blue greys and `#3399FF` highlight. No artwork, gradient, bitmap, icon
- * or logo is copied, so there is no redistributable asset here. Neither era had
- * a dark mode, so both dark sets are authored for this library and held to the
- * same contrast, decorative and selection contracts as everything else — they
- * are not reconstructions, and are documented as invented. Luna's dark
- * `selection` is a 24% tint, not the 30% Aero can carry: its lighter card left
- * the selected text under the body floor (`selection.ts`). Both modes carry
- * their own `secondary` — the face a tonal action rests on — because each look's
- * muted strip and window sit at their own lightness (`decorative.ts`). Luna light
- * also carries its own status tints: its beige page is at the lightness a pale
- * tint has, so the base light tint would vanish into it and a deeper one into
- * its toolbar — the look sits its tints above its page instead. Its warm pressed
- * wash is why the light destructive status text is red 900 in the base theme,
- * which this look inherits. Its beige page and toolbar also swallow the shared
- * light **chart** amber (2.75:1 on `#E0DCCB`), so the look declares its own
- * light `series` — the amber one step deeper, `#9A6300` — while the dark edition
- * keeps the shared dark table, which separates on its navy page already.
+ * Provenance, in two kinds. The Windows chrome values are the era's own — Luna's
+ * blue title bar and `#ECE9D8` face, its `#7F9DB9` field edge and `#316AC5`
+ * selection; Aero's glass-blue greys and `#3399FF` highlight — and no artwork,
+ * gradient, bitmap, icon or logo is copied, so there is no redistributable asset
+ * here. Omarchy's colours are the shell's: Tokyo Night for its dark set and the
+ * guide's Flexoki Light reference for its light set. Neither Windows era had a
+ * dark mode, so both of those dark sets are authored for this library and
+ * documented as invented; Omarchy's are not — they are the palettes a running
+ * desktop stages in `colors.toml`, which `decodeOmarchyPalette` reads.
+ * Every look is held to the same contrast, decorative and selection contracts as
+ * everything else. Luna's dark `selection` is a 24% tint, not the 30% Aero can
+ * carry: its lighter card left the selected text under the body floor
+ * (`selection.ts`). Both modes carry their own `secondary` — the face a tonal
+ * action rests on — because each look's muted strip and window sit at their own
+ * lightness (`decorative.ts`). Luna light also carries its own status tints: its
+ * beige page is at the lightness a pale tint has, so the base light tint would
+ * vanish into it and a deeper one into its toolbar — the look sits its tints
+ * above its page instead. Its warm pressed wash is why the light destructive
+ * status text is red 900 in the base theme, which this look inherits. Its beige
+ * page and toolbar also swallow the shared light **chart** amber (2.75:1 on
+ * `#E0DCCB`), so the look declares its own light `series` — the amber one step
+ * deeper, `#9A6300` — while the dark edition keeps the shared dark table, which
+ * separates on its navy page already.
+ *
+ * Omarchy needs a series of its own for the same reason (the shared amber is
+ * 2.96:1 on its `#E6E4D9` inset), and its geometry and face are the shell's:
+ * near-square corners (`radius.md` 2) and `JetBrains Mono`.
  */
 
 import { palette, type ThemeColors } from "./color.js";
@@ -357,10 +364,10 @@ export const omarchySeries: SeriesColors = [
  * apply, and a palette applies only to a base of the `contrast` variant it was
  * designed for.
  *
- * `sans` stays GPUI's `.SystemUIFont` sentinel rather than naming Tahoma or
- * Segoe UI: the package bundles no font, and a look that named a face the
- * machine lacks would fall back silently. The era is carried by colour, radius
- * and density; the monospace family is the era's own.
+ * `sans` stays GPUI's `.SystemUIFont` sentinel rather than naming Tahoma,
+ * Segoe UI or JetBrains Mono: the package bundles no font, and a look that
+ * named a face the machine lacks would fall back silently. The look is carried
+ * by colour, radius and density; the monospace family is the look's own.
  */
 export const retroStyles: Readonly<Record<RetroName, PlatformStyle>> = {
   luna: {
