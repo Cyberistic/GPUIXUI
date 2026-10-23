@@ -32,7 +32,10 @@ import { ImagePreview } from "@gpuixui/media";
 | `onRetry` | no | Shown as a button in the error state |
 
 The zoom is `ImageZoom`, so `width`, `height`, `scale` and `radius` are the zoom
-frame's own; `zoom={false}` swaps in a plain `<img>` for a static preview.
+frame's own; `zoom={false}` swaps in a plain `<img>` for a static preview. A
+`width` or `height` the runtime cannot lay out (non-finite, or below one point)
+reads as the default box, and an unusable `radius` as the theme's corner, so a
+stored frame does not paint a dimensionless preview.
 
 ## API
 

@@ -57,6 +57,17 @@ export const hostStyleString = (
     ),
   ).pipe(Option.flatMap(Schema.decodeUnknownOption(Schema.String)));
 
+/** A `style` property decoded as a number — a width, a height, a radius. */
+export const hostStyleNumber = (
+  element: ReactElement,
+  name: string,
+): Option.Option<number> =>
+  Option.flatMap(hostProp(element, "style"), (style) =>
+    Option.flatMap(Schema.decodeUnknownOption(StyleRecord)(style), (record) =>
+      Option.fromNullishOr(record[name]),
+    ),
+  ).pipe(Option.flatMap(Schema.decodeUnknownOption(Schema.Number)));
+
 const Handler = Schema.declare(
   (input: unknown): input is (event: unknown) => void =>
     typeof input === "function",

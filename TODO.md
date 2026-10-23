@@ -8176,6 +8176,25 @@ the report built on it.
       No native scenario applies — the matcher is a pure function and the bar's
       window route is `search-replace`'s own.
 
+`[x]` `packages/media`: **a stored image frame painted no box** — `ImagePreview`
+      read `width < 1 ? DEFAULT_WIDTH : width` (and the same for `height`), so a
+      `NaN` from a config that had not loaded failed the comparison and reached
+      the frame's `style`, which the runtime reads as no width at all; an
+      infinity survived too. `radius ?? theme.radius.md` let a `NaN` corner drop
+      the radius the same way, and the zoom branch was handed the raw radius as
+      well. The three values now read through `frameSide`/`cornerRadius`: a side
+      that is not finite or is below one point takes `240`/`160` and a corner
+      that is not a finite non-negative number takes `theme.radius.md`, with the
+      resolved corner handed to `ImageZoom` rather than the prop.
+      `src/image-preview.test.tsx` gains `reads a stored frame it cannot lay
+      out as the default box` (NaN width, infinite height, NaN radius, read back
+      from the frame's own style). Directions measured: with the comparisons
+      restored the case fails by name while the other three pass; restored, the
+      file is 4/4 and the package 73/73 with `check-types` clean. Docs
+      `packages/media/docs/image-preview.mdx` §The zoom. No native scenario
+      applies — element-tree arithmetic the runtime would drop; the picture's
+      paint is `image-fit`'s and `surface-origin`'s.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21

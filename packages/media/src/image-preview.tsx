@@ -62,6 +62,16 @@ const DEFAULT_HEIGHT = 160;
 
 const isBlank = (src: string): boolean => Str.isEmpty(Str.trim(src));
 
+/** A frame side, or the default when the value cannot be laid out. */
+const frameSide = (value: number, fallback: number): number =>
+  Number.isFinite(value) && value >= 1 ? value : fallback;
+
+/** The corner, or the theme's when the value cannot be painted. */
+const cornerRadius = (value: number | undefined, theme: Theme): number =>
+  value === undefined || !Number.isFinite(value) || value < 0
+    ? theme.radius.md
+    : value;
+
 const resolveStatus = (
   src: string,
   status?: ImagePreviewStatus,
@@ -98,9 +108,9 @@ export const renderImagePreview = (
     ...rest
   } = props;
   const status = resolveStatus(src, statusProp);
-  const boxWidth = width < 1 ? DEFAULT_WIDTH : width;
-  const boxHeight = height < 1 ? DEFAULT_HEIGHT : height;
-  const corner = radius ?? theme.radius.md;
+  const boxWidth = frameSide(width, DEFAULT_WIDTH);
+  const boxHeight = frameSide(height, DEFAULT_HEIGHT);
+  const corner = cornerRadius(radius, theme);
 
   const body = Match.value(status).pipe(
     Match.when("loading", () => (
@@ -135,7 +145,7 @@ export const renderImagePreview = (
           width={boxWidth}
           height={boxHeight}
           scale={scale}
-          radius={radius}
+          radius={corner}
         />
       ) : (
         <img

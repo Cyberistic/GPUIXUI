@@ -2,8 +2,10 @@
  * `ImagePreview` — the error state for a bad source, and the loaded picture.
  *
  * The bug guarded: a blank `src` must paint the error state, never a bare
- * `<img>` that the runtime's `img: no src` fallback would leave blank. The
- * negative control is a real source, which must paint the picture (the shipped
+ * `<img>` that the runtime's `img: no src` fallback would leave blank — and a
+ * stored frame size or corner the runtime cannot lay out must read as the
+ * documented default rather than dropping the box or the radius. The negative
+ * control is a real source, which must paint the picture (the shipped
  * `ImageZoom`), not the error.
  */
 
@@ -15,6 +17,7 @@ import { renderImagePreview } from "./image-preview.js";
 import {
   elementChildren,
   findByTestId,
+  hostStyleNumber,
   hostTag,
   expectSome,
 } from "./testing/element.js";
@@ -48,6 +51,22 @@ describe("ImagePreview", () => {
     );
     expect(Option.isSome(findByTestId(root, "image-preview-loading"))).toBe(
       true,
+    );
+  });
+
+  it("reads a stored frame it cannot lay out as the default box", () => {
+    // The frame used `width < 1`/`height < 1` and `radius ??`: `NaN` fails both
+    // comparisons and reached the style, which the runtime reads as no box at
+    // all, while a `NaN` corner dropped the radius.
+    const frame = box("data:image/png;base64,AA==", {
+      width: Number.NaN,
+      height: Number.POSITIVE_INFINITY,
+      radius: Number.NaN,
+    });
+    expect(hostStyleNumber(frame, "width")).toStrictEqual(Option.some(240));
+    expect(hostStyleNumber(frame, "height")).toStrictEqual(Option.some(160));
+    expect(hostStyleNumber(frame, "borderRadius")).toStrictEqual(
+      Option.some(lightTheme.radius.md),
     );
   });
 });
