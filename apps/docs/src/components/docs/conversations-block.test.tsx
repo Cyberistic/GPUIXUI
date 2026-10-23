@@ -39,6 +39,7 @@ const render = (
       onSearch={noop}
       onSelect={noop}
       onSend={noop}
+      onToggleRail={noop}
       platform={platform}
       state={state}
     />,
@@ -111,7 +112,8 @@ describe("the conversations window", () => {
     expect(initial).toContain('class="gx-conv-list"');
     expect(initial).toContain('class="gx-conv-log"');
     expect(initial).toContain('placeholder="iMessage"');
-    expect(initial).toContain('aria-label="Show sidebar"');
+    expect(initial).toContain('aria-label="Collapse sidebar"');
+    expect(initial).toContain('aria-expanded="true"');
     expect(initial).toContain('aria-label="New message"');
     expect(initial).toContain('aria-label="Start video call"');
     expect(initial).toContain('aria-label="Start voice call"');
@@ -198,9 +200,7 @@ describe("the three platform dresses", () => {
       expect(markup.includes('class="gx-conv-rail"')).toBe(rail);
       expect(markup.includes('class="gx-conv-lights"')).toBe(lights);
       expect(markup.includes('class="gx-conv-wincontrols"')).toBe(wincontrols);
-      expect(markup.includes('aria-label="Show sidebar"')).toBe(
-        platform === "macos",
-      );
+      expect(markup).toContain('aria-label="Collapse sidebar"');
     },
   );
 
@@ -285,6 +285,25 @@ describe("the three platform dresses", () => {
 });
 
 describe("the conversations' state", () => {
+  it("collapses the list pane to an icon strip and expands it again", () => {
+    // The bug this guards: the rail's toggle painted an icon and changed
+    // nothing. The reducer owns the state, so the aria state, the rail's
+    // collapsed flag and the labels' hidden class move together.
+    const collapsed = conversationsReducer(initialConversationsState, {
+      type: "toggle-rail",
+    });
+    const markup = render(collapsed);
+
+    expect(collapsed.railCollapsed).toBe(true);
+    expect(markup).toContain('data-collapsed="true"');
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('aria-label="Expand sidebar"');
+    expect(markup).toContain("gx-conv-row-text gx-rail-label");
+    expect(
+      conversationsReducer(collapsed, { type: "toggle-rail" }).railCollapsed,
+    ).toBe(false);
+  });
+
   it("swaps the thread to the clicked conversation", () => {
     const gon = render({ ...initialConversationsState, selectedId: "gon" });
     expect(gon).toContain('aria-label="Conversation with Gon Freecss"');

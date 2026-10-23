@@ -218,18 +218,31 @@ describe("the Apple platform style", () => {
 
   it("switches green on and grey off, which the accent cannot derive", () => {
     expect(darwin.switch).toEqual({
-      light: { on: "#34C759", off: "#E3E3E8", knob: "#FFFFFF" },
-      dark: { on: "#30D158", off: "#39393D", knob: "#FFFFFF" },
+      light: {
+        on: "#34C759",
+        off: "#E9E9EA",
+        knob: "#FFFFFF",
+        edge: "#C7C7CC",
+      },
+      dark: {
+        on: "#30D158",
+        off: "#39393D",
+        knob: "#FFFFFF",
+        edge: "#5A5A5E",
+      },
     });
-    // The light off track is a measured step off the HIG's own grey, for the
-    // reason the blue is: a declared switch draws no edge, and `#E9E9EA` sits
-    // 1.003:1 from this style's `muted` sidebar. `switch.test.ts` holds both.
-    expect(
-      contrastRatio("#E9E9EA", darwin.colors.light.muted ?? ""),
-    ).toBeLessThan(1.05);
+    expect(darwin.switchMetrics).toEqual({
+      width: 38,
+      height: 22,
+      knob: 20,
+      inset: 1,
+      border: 0,
+    });
+    // Apple's off track is a hair from this style's `muted` sidebar, so the
+    // shipped paint carries a rim; the rim is what a reader sees on that strip.
     expect(
       contrastRatio(
-        darwin.switch?.light?.off ?? "",
+        darwin.switch?.light?.edge ?? "",
         darwin.colors.light.muted ?? "",
       ),
     ).toBeGreaterThanOrEqual(1.05);
@@ -241,15 +254,41 @@ describe("the Apple platform style", () => {
     expect(platformTheme(darkTheme, "darwin").switch).toEqual(
       darwin.switch?.dark,
     );
+    expect(platformTheme(lightTheme, "darwin").switchMetrics).toEqual(
+      darwin.switchMetrics,
+    );
     expect(platformTheme(highContrastLightTheme, "darwin").switch).toBe(
       undefined,
     );
-    // Windows and Linux paint the accent switch: the HIG's green is Apple's.
-    styled
-      .filter((platform) => platform !== "darwin")
-      .forEach((platform) => {
-        expect(platformStyles[platform].switch, platform).toBeUndefined();
-      });
+  });
+
+  it("gives Windows and Linux their own switch box and paint", () => {
+    expect(platformStyles.win32.switch?.light).toEqual({
+      on: "#0078D4",
+      off: "transparent",
+      knob: "#FFFFFF",
+      edge: "#8A8A8A",
+    });
+    expect(platformStyles.win32.switchMetrics).toEqual({
+      width: 40,
+      height: 20,
+      knob: 12,
+      inset: 4,
+      border: 1,
+    });
+    expect(platformStyles.linux.switch?.light).toEqual({
+      on: "#3584E4",
+      off: "#DEDDDA",
+      knob: "#FFFFFF",
+    });
+    expect(platformStyles.linux.switchMetrics).toEqual({
+      width: 44,
+      height: 24,
+      knob: 18,
+      inset: 3,
+      border: 0,
+    });
+    expect(platformStyles.default.switch).toBeUndefined();
   });
 
   it("clears the switch when an authored look is applied over the platform", () => {

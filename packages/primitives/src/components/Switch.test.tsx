@@ -191,7 +191,12 @@ describe("SwitchThumb", () => {
     const on = thumbOf(
       renderSwitch({ checked: true }, testTheme, checked(true), idle, vi.fn()),
     );
-    expect(numberAt(off, "left")).toBe(switchThumbInset(testTheme));
+    expect(numberAt(off, "left")).toBe(
+      switchThumbInset(
+        { state: "unchecked", size: "md", accent: "primary" },
+        testTheme,
+      ),
+    );
     expect(animatedLeft(off)).toBe(numberAt(off, "left"));
     expect(animatedLeft(on)).toBe(numberAt(on, "left"));
     expect(animatedLeft(on) - animatedLeft(off)).toBe(
@@ -365,25 +370,27 @@ describe("a switch's address and help", () => {
  *
  * The bug this guards: a theme whose style declares the platform's own switch
  * (Apple's green on, grey off) still drew the library's icon-derived pill, so
- * macOS shipped a 28×16 accent toggle in a theme that names a 51×31 native one.
+ * macOS shipped a 28×16 accent toggle in a theme that names a 38×22 native one.
  * The paint and the box come from the one declaration, and the knob's travel
  * stays the track width less the knob and its two insets.
  */
 describe("Switch under the Apple platform", () => {
   const apple = platformTheme(themes.light, "darwin");
 
-  it("draws the 51×31 track with a 27pt knob and no edge", () => {
+  it("draws the 38×22 track with a 20pt knob and no edge", () => {
     const element = renderSwitch({}, apple, checked(false), idle, vi.fn());
     const track = trackOf(element);
     const thumb = thumbOf(element);
 
-    expect(numberAt(track, "width")).toBe(51);
-    expect(numberAt(track, "height")).toBe(31);
+    expect(numberAt(track, "width")).toBe(38);
+    expect(numberAt(track, "height")).toBe(22);
     expect(numberAt(track, "borderWidth")).toBe(0);
     expect(expectSome(hostStyleString(track, "backgroundColor"))).toBe(
       apple.switch?.off,
     );
-    expect(numberAt(thumb, "width")).toBe(27);
+    expect(numberAt(thumb, "width")).toBe(20);
+    expect(numberAt(thumb, "height")).toBe(20);
+    expect(numberAt(thumb, "top")).toBe(1);
     expect(styleOf(thumb)["backgroundColor"]).toBe(apple.switch?.knob);
   });
 
@@ -400,7 +407,7 @@ describe("Switch under the Apple platform", () => {
     expect(
       expectSome(hostStyleString(trackOf(element), "backgroundColor")),
     ).toBe(apple.switch?.on);
-    // 51 − 27 − 2 × 2 = 22, the same two-point inset at both ends.
-    expect(animatedLeft(thumb)).toBe(22);
+    // 38 − 20 − 1 = 17, the same one-point inset at the far end.
+    expect(animatedLeft(thumb)).toBe(17);
   });
 });

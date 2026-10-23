@@ -28,6 +28,7 @@ const render = (state: FileManagerState): string =>
       onSelectFile={noop}
       onSelectLocation={noop}
       onSelectView={noop}
+      onToggleRail={noop}
       state={state}
     />,
   );
@@ -150,6 +151,20 @@ describe("fileManagerReducer", () => {
     expect(
       selectedFile({ ...initialFileManagerState, selected: "nope.jpg" }).id,
     ).toBe("car-driving.jpg");
+  });
+
+  it("collapses the folder tree to icons and expands it again", () => {
+    const collapsed = fileManagerReducer(initialFileManagerState, {
+      type: "toggle-rail",
+    });
+    const markup = render(collapsed);
+
+    expect(collapsed.railCollapsed).toBe(true);
+    expect(markup).toContain('data-collapsed="true"');
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('aria-label="Expand sidebar"');
+    expect(markup).toContain('aria-label="Pictures"');
+    expect(markup).toContain('class="gx-rail-label">Pictures</span>');
   });
 });
 

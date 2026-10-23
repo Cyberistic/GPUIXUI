@@ -1,5 +1,6 @@
 import { Fragment, useReducer, useRef, useState, type ReactNode } from "react";
 import { BlockIcon } from "./block-icons";
+import { RailToggle } from "./sidebar-rail";
 
 /**
  * Conversations block — `/docs/blocks/conversations`.
@@ -188,18 +189,21 @@ export interface ConversationsState {
   readonly selectedId: string;
   readonly query: string;
   readonly threads: ReadonlyArray<Conversation>;
+  readonly railCollapsed: boolean;
 }
 
 export const initialConversationsState: ConversationsState = {
   selectedId: "killua",
   query: "",
   threads: conversations,
+  railCollapsed: false,
 };
 
 export type ConversationsAction =
   | { readonly type: "select"; readonly id: string }
   | { readonly type: "search"; readonly query: string }
-  | { readonly type: "send"; readonly text: string };
+  | { readonly type: "send"; readonly text: string }
+  | { readonly type: "toggle-rail" };
 
 /** The thread a send opens; an unknown selection falls back to the sample. */
 export const selectedConversation = (state: ConversationsState): Conversation =>
@@ -226,6 +230,9 @@ export const conversationsReducer = (
   }
   if (action.type === "search") {
     return { ...state, query: action.query };
+  }
+  if (action.type === "toggle-rail") {
+    return { ...state, railCollapsed: !state.railCollapsed };
   }
   const text = action.text.trim();
   if (text === "") return state;
@@ -255,6 +262,7 @@ export interface ConversationsSurfaceProps {
   readonly onSelect: (id: string) => void;
   readonly onSearch: (query: string) => void;
   readonly onSend: (text: string) => void;
+  readonly onToggleRail: () => void;
 }
 
 /** The window at a given state; `ConversationWindow` owns the reducer. */
@@ -264,6 +272,7 @@ export function ConversationsSurface({
   onSelect,
   onSearch,
   onSend,
+  onToggleRail,
 }: ConversationsSurfaceProps) {
   const [draft, setDraft] = useState("");
   const log = useRef<HTMLDivElement>(null);
@@ -328,7 +337,11 @@ export function ConversationsSurface({
           </nav>
         )}
 
-        <aside aria-label="Conversations" className="gx-conv-side">
+        <aside
+          aria-label="Conversations"
+          className="gx-conv-side"
+          data-collapsed={state.railCollapsed}
+        >
           <div className="gx-conv-side-head">
             <span className="gx-conv-search">
               <BlockIcon name="search" size={12} />
@@ -341,15 +354,11 @@ export function ConversationsSurface({
                 value={state.query}
               />
             </span>
-            {platform === "macos" ? (
-              <button
-                aria-label="Show sidebar"
-                className="gx-conv-glyph"
-                type="button"
-              >
-                <SidebarGlyph />
-              </button>
-            ) : null}
+            <RailToggle
+              className="gx-conv-glyph"
+              collapsed={state.railCollapsed}
+              onToggle={onToggleRail}
+            />
           </div>
 
           <div className="gx-conv-list">
@@ -361,6 +370,7 @@ export function ConversationsSurface({
                   aria-current={
                     conversation.id === state.selectedId ? "true" : undefined
                   }
+                  aria-label={`Conversation with ${conversation.name}`}
                   className="gx-conv-row"
                   data-selected={conversation.id === state.selectedId}
                   key={conversation.id}
@@ -370,7 +380,7 @@ export function ConversationsSurface({
                   <span className="gx-conv-avatar">
                     {conversation.initials}
                   </span>
-                  <span className="gx-conv-row-text">
+                  <span className="gx-conv-row-text gx-rail-label">
                     <span className="gx-conv-row-top">
                       <span className="gx-conv-name">{conversation.name}</span>
                       <span className="gx-conv-when">{conversation.when}</span>
@@ -524,6 +534,7 @@ export function ConversationsRender() {
       onSearch={(query) => dispatch({ type: "search", query })}
       onSelect={(id) => dispatch({ type: "select", id })}
       onSend={(text) => dispatch({ type: "send", text })}
+      onToggleRail={() => dispatch({ type: "toggle-rail" })}
       platform="macos"
       state={state}
     />
@@ -546,6 +557,7 @@ export function ConversationWindow({
       onSearch={(query) => dispatch({ type: "search", query })}
       onSelect={(id) => dispatch({ type: "select", id })}
       onSend={(text) => dispatch({ type: "send", text })}
+      onToggleRail={() => dispatch({ type: "toggle-rail" })}
       platform={platform}
       state={state}
     />
@@ -647,15 +659,6 @@ function Glyph({ children }: { readonly children: ReactNode }) {
     >
       {children}
     </svg>
-  );
-}
-
-function SidebarGlyph() {
-  return (
-    <Glyph>
-      <rect height="18" rx="2" width="18" x="3" y="3" />
-      <path d="M9 3v18" />
-    </Glyph>
   );
 }
 

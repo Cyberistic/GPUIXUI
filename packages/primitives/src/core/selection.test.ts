@@ -287,7 +287,7 @@ describe("switch", () => {
     expect(Number(on.left) - Number(off.left)).toBe(
       switchThumbTravel(spec(), testTheme),
     );
-    expect(off.left).toBe(switchThumbInset(testTheme));
+    expect(off.left).toBe(switchThumbInset(spec(), testTheme));
     expect(on.top).toBe(off.top);
   });
 
@@ -325,6 +325,8 @@ describe("a stored switch paint", () => {
   const derivedBox = {
     width: Math.round(apple.iconSize.md * 1.75),
     height: apple.iconSize.md,
+    knob: apple.iconSize.md - apple.spacing["2xs"] * 2,
+    inset: apple.spacing["2xs"],
     border: apple.borderWidth.thin,
   };
   /** The shape a store hands back: JSON has no `undefined`, so a lost table is `null`. */
@@ -355,8 +357,10 @@ describe("a stored switch paint", () => {
   it("keeps the paint a theme actually declares", () => {
     // The counterweight: the absence rule must not silence a declared platform.
     expect(switchBox("md", apple)).toStrictEqual({
-      width: 51,
-      height: 31,
+      width: 38,
+      height: 22,
+      knob: 20,
+      inset: 1,
       border: 0,
     });
     expect(
@@ -473,4 +477,59 @@ describe("switchTargetStyle", () => {
     );
     expect(switchTargetStyle(spec()).cursor).toBe("pointer");
   });
+});
+
+/**
+ * The three platform boxes.
+ *
+ * The bug this guards: every platform drew Apple's old 51×31 box, so macOS was
+ * too large and Windows/Linux had no native box at all. Each platform now owns
+ * its track, knob and inset, and the knob's top is derived from those values —
+ * never a literal — so every platform is centred in both states and every size.
+ */
+describe("the platform switch boxes", () => {
+  const platforms = [
+    {
+      platform: "darwin",
+      width: 38,
+      height: 22,
+      knob: 20,
+      inset: 1,
+      border: 0,
+    },
+    { platform: "win32", width: 40, height: 20, knob: 12, inset: 4, border: 1 },
+    { platform: "linux", width: 44, height: 24, knob: 18, inset: 3, border: 0 },
+  ] as const;
+
+  it.each(platforms)(
+    "centres $platform's $width×$height track and $knob knob",
+    ({ platform, width, height, knob, inset, border }) => {
+      const theme = platformTheme(lightTheme, platform);
+      const metrics = theme.switchMetrics ?? expect.fail("no metrics");
+      const box = switchBox("md", theme);
+      const thumb = switchThumbStyle(spec(), theme);
+
+      expect(box).toEqual({ width, height, knob, inset, border });
+      expect(thumb.width).toBe(knob);
+      expect(thumb.height).toBe(knob);
+      expect(thumb.left).toBe(inset);
+      expect(thumb.top).toBe((height - knob) / 2);
+
+      // Negative control: the top follows the track and knob, not a literal.
+      const taller = switchThumbStyle(spec(), {
+        ...theme,
+        switchMetrics: { ...metrics, height: height + 2 },
+      });
+      expect(taller.top).toBe((height + 2 - knob) / 2);
+      expect(taller.top).not.toBe(thumb.top);
+
+      // Negative control: the knob's side comes from the box, not the track.
+      const larger = switchThumbStyle(spec(), {
+        ...theme,
+        switchMetrics: { ...metrics, knob: knob + 2 },
+      });
+      expect(larger.width).toBe(knob + 2);
+      expect(larger.height).toBe(knob + 2);
+    },
+  );
 });

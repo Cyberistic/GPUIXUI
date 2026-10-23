@@ -1,5 +1,6 @@
 import { useReducer } from "react";
 import { BlockIcon } from "./block-icons";
+import { RailToggle } from "./sidebar-rail";
 
 /**
  * File manager block — `/docs/blocks/file-manager`.
@@ -111,18 +112,21 @@ export interface FileManagerState {
   readonly location: FileLocation;
   readonly selected: string;
   readonly view: FileView;
+  readonly railCollapsed: boolean;
 }
 
 export const initialFileManagerState: FileManagerState = {
   location: "Pictures",
   selected: carDriving.id,
   view: "grid",
+  railCollapsed: false,
 };
 
 export type FileManagerAction =
   | { readonly type: "select-file"; readonly id: string }
   | { readonly type: "select-location"; readonly location: FileLocation }
-  | { readonly type: "select-view"; readonly view: FileView };
+  | { readonly type: "select-view"; readonly view: FileView }
+  | { readonly type: "toggle-rail" };
 
 export const fileManagerReducer = (
   state: FileManagerState,
@@ -133,6 +137,9 @@ export const fileManagerReducer = (
   }
   if (action.type === "select-location") {
     return { ...state, location: action.location };
+  }
+  if (action.type === "toggle-rail") {
+    return { ...state, railCollapsed: !state.railCollapsed };
   }
   return { ...state, view: action.view };
 };
@@ -165,6 +172,7 @@ export interface FileManagerSurfaceProps {
   readonly onSelectFile: (id: string) => void;
   readonly onSelectLocation: (location: FileLocation) => void;
   readonly onSelectView: (view: FileView) => void;
+  readonly onToggleRail: () => void;
 }
 
 /** The browser at a given state; `FileManagerRender` owns the reducer. */
@@ -173,6 +181,7 @@ export function FileManagerSurface({
   onSelectFile,
   onSelectLocation,
   onSelectView,
+  onToggleRail,
 }: FileManagerSurfaceProps) {
   const file = selectedFile(state);
   const atRoot = state.location === "My files";
@@ -209,27 +218,39 @@ export function FileManagerSurface({
       </header>
 
       <div className="gx-fm-body">
-        <aside aria-label="Folders" className="gx-fm-side">
+        <aside
+          aria-label="Folders"
+          className="gx-fm-side"
+          data-collapsed={state.railCollapsed}
+        >
+          <RailToggle
+            className="gx-fm-collapse"
+            collapsed={state.railCollapsed}
+            onToggle={onToggleRail}
+          />
           <button
+            aria-label="Add new item"
             className="gx-btn gx-btn-primary gx-btn-sm gx-fm-add"
             type="button"
           >
             <BlockIcon name="plus" size={13} />
-            Add New
+            <span className="gx-rail-label">Add New</span>
           </button>
           <button
+            aria-label="My files"
             className="gx-fm-root"
             data-active={atRoot}
             onClick={() => onSelectLocation("My files")}
             type="button"
           >
             <BlockIcon name="folder" size={14} />
-            My files
+            <span className="gx-rail-label">My files</span>
           </button>
           <nav className="gx-fm-tree">
             {fileFolders.map((folder) => (
               <button
                 aria-current={state.location === folder ? "true" : undefined}
+                aria-label={folder}
                 className="gx-fm-folder"
                 data-active={state.location === folder}
                 key={folder}
@@ -237,11 +258,11 @@ export function FileManagerSurface({
                 type="button"
               >
                 <BlockIcon name="folder" size={14} />
-                {folder}
+                <span className="gx-rail-label">{folder}</span>
               </button>
             ))}
           </nav>
-          <div className="gx-fm-storage">
+          <div className="gx-fm-storage gx-rail-label">
             <span className="gx-fm-storage-row">
               <span>Storage</span>
               <span className="gx-fm-storage-value">58.7 GB of 100 GB</span>
@@ -365,6 +386,7 @@ export function FileManagerRender() {
         dispatch({ type: "select-location", location })
       }
       onSelectView={(view) => dispatch({ type: "select-view", view })}
+      onToggleRail={() => dispatch({ type: "toggle-rail" })}
       state={state}
     />
   );

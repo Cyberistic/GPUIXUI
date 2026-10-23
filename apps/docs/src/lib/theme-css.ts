@@ -1,9 +1,11 @@
 import {
+  controlSizes,
   dividerOn,
   elevationShadow,
   filledHover,
   filledPressed,
   seriesColors,
+  switchMetricsAt,
   targetSize,
   type BoxShadow,
   type Theme,
@@ -40,10 +42,33 @@ const cssShadow = (shadow: BoxShadow): string =>
 const switchVars = (theme: Theme): CssVars => {
   if (theme.switch === undefined) return {};
   const shadow = elevationShadow(theme, "sm");
+  const metrics = theme.switchMetrics;
   return {
     "--switch-on": theme.switch.on,
     "--switch-off": theme.switch.off,
     "--switch-knob": theme.switch.knob,
+    ...(theme.switch.edge === undefined
+      ? {}
+      : {
+          "--switch-edge": theme.switch.edge,
+          ...(metrics?.border === 0
+            ? { "--switch-edge-shadow": `0 0 0 1px ${theme.switch.edge}` }
+            : {}),
+        }),
+    ...(metrics === undefined
+      ? {}
+      : controlSizes.reduce<CssVars>((vars, size) => {
+          const at = switchMetricsAt(metrics, size);
+          const suffix = size === "md" ? "" : `-${size}`;
+          return {
+            ...vars,
+            [`--switch-track-width${suffix}`]: `${at.width}px`,
+            [`--switch-track-height${suffix}`]: `${at.height}px`,
+            [`--switch-knob-size${suffix}`]: `${at.knob}px`,
+            [`--switch-inset${suffix}`]: `${at.inset}px`,
+            [`--switch-border-width${suffix}`]: `${at.border}px`,
+          };
+        }, {})),
     ...(shadow === undefined
       ? {}
       : { "--switch-knob-shadow": cssShadow(shadow) }),
