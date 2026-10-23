@@ -31,12 +31,15 @@ export interface LicenseRecord {
   readonly exclusions: string;
 }
 
-/** The artefacts `LICENSES/README.md` requires before a release. */
-export const releaseArtifacts = [
-  "inventory.md",
-  "provenance.md",
-  "NOTICE",
-] as const;
+/**
+ * The artefacts `LICENSES/README.md` requires before a release.
+ *
+ * A notice a redistribution must carry lives **beside the port that needs it** —
+ * `packages/motion/NOTICE` — so it is not one of these: the directory owes the
+ * two aggregate tables, and a package's own notice is held where a consumer of
+ * that package finds it.
+ */
+export const releaseArtifacts = ["inventory.md", "provenance.md"] as const;
 
 /** The required artefacts the directory does not have yet. */
 export const missingReleaseArtifacts = (

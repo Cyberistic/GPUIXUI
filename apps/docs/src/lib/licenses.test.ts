@@ -100,7 +100,7 @@ describe("the licence records", () => {
   });
 
   it("names the release artefacts the directory still lacks", () => {
-    expect(missingReleaseArtifacts(["inventory.md", "NOTICE"])).toEqual([
+    expect(missingReleaseArtifacts(["inventory.md"])).toEqual([
       "provenance.md",
     ]);
     expect(missingReleaseArtifacts(releaseArtifacts)).toEqual([]);
@@ -116,6 +116,23 @@ describe("the license page", () => {
   it("renders the records instead of restating them", () => {
     expect(page).toContain("<LicenseInventory />");
     expect(page).toContain("LICENSES/");
+  });
+
+  it("sends a reader to the notice the release carries, not to a path it lacks", () => {
+    // The page said a redistributed notice lives in `LICENSES/NOTICE`, which
+    // does not exist: the notice ships beside the port that owes it
+    // (`packages/motion/NOTICE`, the location `LICENSES/README.md` names), so a
+    // reader following the page found nothing and the footer reported a notice
+    // missing from a release that carries one.
+    expect(page).not.toContain("LICENSES/NOTICE");
+    expect(page).toContain("packages/motion/NOTICE");
+    expect(
+      readFileSync(
+        new URL("../../../../packages/motion/NOTICE", import.meta.url),
+        "utf8",
+      ),
+    ).toContain("The NOTICE this package must redistribute");
+    expect(releaseArtifacts).not.toContain("NOTICE");
   });
 
   it("sits in the sidebar after Contributing", () => {
