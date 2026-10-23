@@ -16,8 +16,9 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import {
   clickCentreOf,
-  waitFor,
   focusedTestId,
+  pressKey,
+  waitFor,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
@@ -88,6 +89,60 @@ describe("DatePicker", () => {
     expect(picker.renderer.findByTestId("date-month")).toBeDefined();
     expect(picker.renderer.findByText("October 2026")).toBeDefined();
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.unmount();
+  });
+
+  it("runs the trigger's action on Enter and opens the picker", () => {
+    const onActivate = vi.fn();
+    const onClick = vi.fn();
+    const picker = renderComponent(
+      <div style={{ width: 420, padding: 40 }}>
+        <DatePicker today="2026-10-17">
+          <DatePickerTrigger
+            label="Due date"
+            onActivate={onActivate}
+            onClick={onClick}
+          />
+          <DatePickerContent>
+            <DatePickerCalendar />
+          </DatePickerContent>
+        </DatePicker>
+      </div>,
+    );
+    picker.renderer.focusElement(
+      picker.renderer.findByTestId("date-picker-trigger")?.id ?? -1,
+    );
+
+    pressKey(picker, "enter");
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("keeps the deprecated onClick as the action's alias", () => {
+    const onClick = vi.fn();
+    const picker = renderComponent(
+      <div style={{ width: 420, padding: 40 }}>
+        <DatePicker today="2026-10-17">
+          <DatePickerTrigger label="Due date" onClick={onClick} />
+          <DatePickerContent>
+            <DatePickerCalendar />
+          </DatePickerContent>
+        </DatePicker>
+      </div>,
+    );
+    picker.renderer.focusElement(
+      picker.renderer.findByTestId("date-picker-trigger")?.id ?? -1,
+    );
+
+    pressKey(picker, "enter");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
 
     picker.unmount();
   });

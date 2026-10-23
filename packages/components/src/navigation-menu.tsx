@@ -20,13 +20,23 @@
  * while it leaves (`internal/presence.tsx`).
  */
 
-import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   FloatingLayer,
   floatingRootStyle,
   mergeStyles,
+  resolveStyle,
 } from "@gpuix/react/floating";
+import {
+  Button as PrimitiveButton,
+  type ButtonProps as PrimitiveButtonProps,
+} from "@gpuixui/primitives/button";
 import {
   cn,
   NAVIGATION_MENU_CONTENT,
@@ -629,16 +639,25 @@ export const NavigationMenuContent = ({
 };
 
 /** {@link NavigationMenuLink} props. */
-export interface NavigationMenuLinkProps extends Omit<ButtonProps, "variant"> {
+export interface NavigationMenuLinkProps extends Omit<
+  PrimitiveButtonProps,
+  "variant"
+> {
   /** Called when the link is chosen; the nav closes afterwards. */
   readonly onSelect?: () => void;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /**
+   * Called for a click or an activating key, closing the panel afterwards.
+   * @deprecated use `onActivate`; removed in the next release.
+   */
+  readonly onClick?: (event: EventPayload) => void;
 }
 
 /** A navigation row. 0.11.0 has no anchor/href, so this is a button. */
 export const NavigationMenuLink = ({
   onSelect,
+  onActivate,
   onClick,
   className,
   style,
@@ -646,25 +665,28 @@ export const NavigationMenuLink = ({
 }: NavigationMenuLinkProps) => {
   const theme = useTheme();
   const { setOpen, stopHover } = useNavigationMenu();
+  const linkStyle = mergeStyles(
+    recipeStyle(cn(NAVIGATION_MENU_LINK, className), theme),
+    {
+      hover: {
+        backgroundColor: theme.colors.accent,
+        color: theme.colors.accentForeground,
+      },
+    },
+  );
   return (
-    <Button
+    <PrimitiveButton
       {...rest}
       variant="ghost"
-      onClick={(event) => {
-        onClick?.(event);
+      onActivate={(event) => {
+        (onActivate ?? onClick)?.(event);
         onSelect?.();
         stopHover();
         setOpen(null);
       }}
-      style={mergeStyles(
-        mergeStyles(recipeStyle(cn(NAVIGATION_MENU_LINK, className), theme), {
-          hover: {
-            backgroundColor: theme.colors.accent,
-            color: theme.colors.accentForeground,
-          },
-        }),
-        style,
-      )}
+      style={(state) =>
+        mergeStyles(linkStyle, resolveStyle(style, state)) ?? {}
+      }
     />
   );
 };

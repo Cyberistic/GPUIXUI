@@ -22,7 +22,7 @@
  * click as already handled — the technique `@gpuix/react@0.11.0`'s Select uses.
  */
 
-import type { PublicInstance } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   FloatingLayer,
@@ -31,6 +31,10 @@ import {
   type FloatingContentProps,
 } from "@gpuix/react/floating";
 import { POPOVER_CONTENT } from "@gpuixui/tw";
+import {
+  Button,
+  type ButtonProps as PrimitiveButtonProps,
+} from "@gpuixui/primitives/button";
 import { Match } from "effect";
 import {
   createContext,
@@ -40,7 +44,6 @@ import {
   useRef,
   type RefObject,
 } from "react";
-import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
@@ -128,8 +131,23 @@ export const Popover = ({
   );
 };
 
+/** {@link PopoverTrigger} props: the shared action, opening this popover. */
+export interface PopoverTriggerProps extends PrimitiveButtonProps {
+  /**
+   * Called for a click or an activating key, opening the popover afterwards.
+   * @deprecated use `onActivate`; removed in the next release.
+   */
+  readonly onClick?: (event: EventPayload) => void;
+}
+
 /** Opens the popover it sits in. An ordinary button in every other respect. */
-export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
+export const PopoverTrigger = ({
+  onClick,
+  onActivate,
+  ref,
+  variant = "secondary",
+  ...rest
+}: PopoverTriggerProps) => {
   const { open, setOpen, trigger, dismissedByOutsidePress } =
     usePopoverContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
@@ -138,9 +156,10 @@ export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
     <Button
       {...rest}
       ref={setTrigger}
+      variant={variant}
       aria-expanded={open}
-      onClick={(event) => {
-        onClick?.(event);
+      onActivate={(event) => {
+        (onActivate ?? onClick)?.(event);
         // The press that dismissed the popover owns this click: toggling here
         // would re-open what the same gesture just closed.
         if (dismissedByOutsidePress.current) {

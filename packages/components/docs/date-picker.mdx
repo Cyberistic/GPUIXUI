@@ -44,6 +44,8 @@ DatePicker
 | `DatePicker` | `disabled` | `boolean` | `false` |
 | `DatePicker` | `today` | ISO day | runtime clock |
 | `DatePickerTrigger` | `placeholder` / `label` | `string` | `"Pick a date"` / — |
+| `DatePickerTrigger` | `onActivate` / `onClick` | `(event) => void` — the action's one handler; `onClick` is the deprecated alias | — |
+| `DatePickerTrigger` | action props | `variant`, `size`, `disabled`, `loading`, `style` — the shared `Button` contract, because the trigger *is* that action | — |
 | `DatePickerContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` / `"start"` |
 | `DatePickerContent` | `sideOffset` | `number` | `6` |
 | `DatePickerCalendar` | `label` | `string` | `"Calendar"` |

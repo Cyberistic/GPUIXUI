@@ -42,6 +42,8 @@ Popover
 | ---- | ---- | ---- | ------- |
 | `Popover` | `open` / `defaultOpen` | `boolean` | — / `false` |
 | `Popover` | `onOpenChange` | `(open: boolean) => void` | — |
+| `PopoverTrigger` | `onActivate` / `onClick` | `(event) => void` — the action's one handler, then the popover toggles; `onClick` is the deprecated alias | — |
+| `PopoverTrigger` | action props | `variant`, `size`, `disabled`, `loading`, `style` — the shared `Button` contract | `variant="secondary"` |
 | `PopoverContent` | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
 | `PopoverContent` | `align` | `"start" \| "center" \| "end"` | `"start"` |
 | `PopoverContent` | `sideOffset` | `number` | `6` |

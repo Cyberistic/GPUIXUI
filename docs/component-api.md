@@ -20,7 +20,7 @@ history. No landed component currently deviates.
 | Compound parts (§1) | **adopted** — Card, Dialog, Tabs, Accordion, menus, Alert and the rest export their parts |
 | Typed-by-position children (§1) | **adopted with a render check** — `PartChildren` narrows children to elements and conditionals (text is a compile error); part identity is enforced by `internal/parts.ts` at render, because React 19's JSX types are not nominal (plan 304 §2) |
 | Controlled/uncontrolled names (§2) | **adopted** — `value`/`defaultValue`/`onValueChange` across the landed components |
-| State-aware `style`/`children(state)` (§3) | **adopted for `style`** — eleven parts export a `<Part>State` and accept `StateStyle<<Part>State>` from `@gpuix/react/floating` (plan 305); `children(state)` is not offered, and button-shaped triggers keep a plain `StyleDesc` until `@gpuixui/primitives` owns the button |
+| State-aware `style`/`children(state)` (§3) | **adopted for `style`** — eleven parts export a `<Part>State` and accept `StateStyle<<Part>State>` from `@gpuix/react/floating` (plan 305); `children(state)` is not offered. The three button-shaped parts that are already the primitives' action (`PopoverTrigger`, `DatePickerTrigger`, `NavigationMenuLink`) take `StateStyle<ButtonState>` through the primitives' `ButtonProps`; the rest of that family keeps a plain `StyleDesc` until it migrates (plan 160) |
 | Shared keyboard contract (§4) | **adopted** — Enter activates on the press, Space on the release, a **repeat** (`event.isHeld`) never does, and a Space press swallows the platform default so one keystroke cannot also scroll the region behind the control. `defaultPrevented` is not read: this package's handlers run before a caller's, so an earlier handler cannot have set it |
 | Accessibility subset (§5) | **adopted** — every component's docs record the gaps |
 
@@ -156,12 +156,15 @@ Which parts have a state, and which do not, is a measured line:
   `MenuItem`, `MenuCheckboxItem`, `PaginationItem`, `SearchInput`, `FieldInput`,
   `TimePickerSegment`, `ComboboxItem` (plus `ComboboxList.itemStyle` for the
   rows it renders). Their state is not expressible in `StyleDesc`.
-- **no** — button-shaped triggers (`DialogTrigger`, `PopoverTrigger`,
-  `DropdownMenuTrigger`, `ContextMenuTrigger`, `DatePickerTrigger`,
-  `AlertDismiss`, `PaginationPrevious`/`Next`). Their only state beyond
-  `StyleDesc` is `disabled`, and they draw through the local
-  `internal/button.tsx` stand-in that `@gpuixui/primitives` replaces; adding a
-  second state layer there would be deleted with it.
+- **no** — button-shaped triggers (`DialogTrigger`,
+  `DropdownMenuTrigger`, `ContextMenuTrigger`, `AlertDismiss`,
+  `PaginationPrevious`/`Next`). Their only state beyond `StyleDesc` is
+  `disabled`, and they draw through the local `internal/button.tsx` adapter over
+  the primitive before the call-site rewrite (plan `160` Phase 4). The three
+  parts already on the primitive's props — `PopoverTrigger`, `DatePickerTrigger`,
+  `NavigationMenuLink` — take the action's own `StateStyle<ButtonState>`
+  instead, so a caller can style by `disabled`/`focused` through the same seam
+  every other primitive action uses.
 - **no `children(state)`** — no landed part changes its markup by state, and the
   runtime's own `StateStyle` path is `style`; a part that genuinely needs
   different markup composes a different part.

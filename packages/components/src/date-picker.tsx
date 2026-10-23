@@ -21,10 +21,15 @@
  * of day is the separate TimePicker.
  */
 
-import type { KeyEvent, PublicInstance } from "@gpuix/react";
+import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type FloatingContentProps,
+} from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import type { ButtonProps as PrimitiveButtonProps } from "@gpuixui/primitives/button";
 import {
   cn,
   DATE_PICKER_CARET,
@@ -68,7 +73,7 @@ import {
   type DayBounds,
   type WeekStart,
 } from "./date-picker/calendar.js";
-import { Button, IconButton, type ButtonProps } from "./internal/button.js";
+import { Button, IconButton } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import {
   isActivation,
@@ -237,7 +242,10 @@ export const DatePicker = ({
 };
 
 /** {@link DatePickerTrigger} props. */
-export interface DatePickerTriggerProps extends Omit<ButtonProps, "children"> {
+export interface DatePickerTriggerProps extends Omit<
+  PrimitiveButtonProps,
+  "children"
+> {
   /** Default `"Pick a date"`. */
   readonly placeholder?: string;
   /** The trigger's accessible name. */
@@ -246,14 +254,19 @@ export interface DatePickerTriggerProps extends Omit<ButtonProps, "children"> {
   readonly className?: string;
   /** Default `"date-picker-trigger"`. */
   readonly testId?: string;
+  /**
+   * Called for a click or an activating key, opening the picker afterwards.
+   * @deprecated use `onActivate`; removed in the next release.
+   */
+  readonly onClick?: (event: EventPayload) => void;
 }
 
 /** The field-shaped trigger: the selected day or the placeholder, plus a caret. */
 export const DatePickerTrigger = ({
   placeholder = "Pick a date",
-  label,
   className,
   testId = "date-picker-trigger",
+  style,
   ...rest
 }: DatePickerTriggerProps) => {
   const theme = useTheme();
@@ -267,6 +280,15 @@ export const DatePickerTrigger = ({
     onSome: formatDayLabel,
   });
   const isPlaceholder = Option.isNone(selectedDay);
+  const fieldStyle = mergeStyles(
+    recipeStyle(cn(DATE_PICKER_TRIGGER, className), theme),
+    {
+      height: controlHeight(theme, "md"),
+      color: isPlaceholder
+        ? theme.colors.mutedForeground
+        : theme.colors.foreground,
+    },
+  );
 
   return (
     <PopoverTrigger
@@ -274,16 +296,9 @@ export const DatePickerTrigger = ({
       ref={setTrigger}
       testId={testId}
       disabled={disabled}
-      {...(label === undefined ? {} : { "aria-label": label })}
-      style={mergeStyles(
-        mergeStyles(recipeStyle(cn(DATE_PICKER_TRIGGER, className), theme), {
-          height: controlHeight(theme, "md"),
-          color: isPlaceholder
-            ? theme.colors.mutedForeground
-            : theme.colors.foreground,
-        }),
-        rest.style,
-      )}
+      style={(state) =>
+        mergeStyles(fieldStyle, resolveStyle(style, state)) ?? {}
+      }
     >
       <text
         style={mergeStyles(recipeStyle(DATE_PICKER_TRIGGER_TEXT, theme), {

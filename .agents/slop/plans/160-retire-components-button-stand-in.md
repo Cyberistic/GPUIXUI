@@ -1,6 +1,19 @@
 # 160 — Retire the components package's local Button stand-in
 
 **Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:**
+**Phase 3 landed 2026-10-23** — `PopoverTriggerProps`, `DatePickerTriggerProps`
+and `NavigationMenuLinkProps` extend `@gpuixui/primitives`' `ButtonProps`
+(the popover trigger directly, the picker's minus `children`, the link's minus
+`variant`); each keeps `onClick` as a documented `@deprecated` alias for
+`onActivate`, the new name wins when both arrive, and the three parts render the
+primitive action (`PopoverTrigger` no longer draws through the adapter).
+`src/trigger-action.test.ts` holds the types, the alias expression, the
+no-double-press rule and the three pages, measured 6 of 11 failing on the
+previous tree; behaviour cases drive Enter through each part (date picker 18 →
+20, popover 12 → 14, navigation menu 21 → 23). **Phase 4 remains**: delete the
+adapter and rewrite the 15 call sites that still use it (the ripple component
+belongs to another workstream). See §Adapter landed for the measured deltas.
+
 **Phase 2 landed 2026-10-23** — `internal/button.tsx` is a thin adapter over
 `@gpuixui/primitives/button`; every STOP below is closed (the disabled stop
 paints `-1`, the event payload reaches activation, the subpath exports the two

@@ -28,6 +28,7 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  pressKey,
   requireBounds,
   waitFor,
 } from "../internal/interaction.js";
@@ -49,10 +50,14 @@ const Workspace = ({
   value,
   onValueChange,
   onSelect,
+  onActivate,
+  onClick,
 }: {
   readonly value?: string | null;
   readonly onValueChange?: (value: string | null) => void;
   readonly onSelect?: (value: string) => void;
+  readonly onActivate?: () => void;
+  readonly onClick?: () => void;
 }) => (
   <div
     style={{
@@ -79,6 +84,10 @@ const Workspace = ({
             <NavigationMenuLink
               testId="link-overview"
               onSelect={() => onSelect?.("overview")}
+              {...(onActivate === undefined
+                ? {}
+                : { onActivate: () => onActivate() })}
+              {...(onClick === undefined ? {} : { onClick: () => onClick() })}
             >
               Overview
             </NavigationMenuLink>
@@ -279,6 +288,46 @@ describe("NavigationMenu", () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("overview");
 
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined(),
+    );
+
+    nav.unmount();
+  });
+
+  it("runs the focused link's action on Enter, then closes the panel", async () => {
+    const onActivate = vi.fn();
+    const onClick = vi.fn();
+    const nav = renderComponent(
+      <Workspace onActivate={onActivate} onClick={onClick} />,
+    );
+    clickCentreOf(nav, "trigger-platform");
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("link-overview")?.id ?? -1,
+    );
+
+    pressKey(nav, "enter");
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onClick).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined(),
+    );
+
+    nav.unmount();
+  });
+
+  it("runs a link's deprecated onClick when it is the only handler", async () => {
+    const onClick = vi.fn();
+    const nav = renderComponent(<Workspace onClick={onClick} />);
+    clickCentreOf(nav, "trigger-platform");
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("link-overview")?.id ?? -1,
+    );
+
+    pressKey(nav, "enter");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
     await waitFor(() =>
       expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined(),
     );

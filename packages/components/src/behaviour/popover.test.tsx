@@ -20,6 +20,7 @@ import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  pressKey,
   requireBounds,
   settleMotion,
   waitFor,
@@ -121,6 +122,64 @@ describe("Popover", () => {
       trigger.value.y + trigger.value.height,
     );
     expect(panel.value.x).toBe(trigger.value.x);
+
+    popover.unmount();
+  });
+
+  it("runs the trigger's action once on Enter and opens, with the alias standing in", () => {
+    const onActivate = vi.fn();
+    const onClick = vi.fn();
+    const popover = renderComponent(
+      <div style={{ padding: 40 }}>
+        <Popover>
+          <PopoverTrigger
+            testId="trigger"
+            onActivate={onActivate}
+            onClick={onClick}
+          >
+            Filters
+          </PopoverTrigger>
+          <PopoverContent testId="panel">
+            <text>Visible columns</text>
+          </PopoverContent>
+        </Popover>
+      </div>,
+    );
+    popover.renderer.focusElement(
+      popover.renderer.findByTestId("trigger")?.id ?? -1,
+    );
+
+    pressKey(popover, "enter");
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.unmount();
+  });
+
+  it("keeps the deprecated onClick as the trigger's action alias", () => {
+    const onClick = vi.fn();
+    const popover = renderComponent(
+      <div style={{ padding: 40 }}>
+        <Popover>
+          <PopoverTrigger testId="trigger" onClick={onClick}>
+            Filters
+          </PopoverTrigger>
+          <PopoverContent testId="panel">
+            <text>Visible columns</text>
+          </PopoverContent>
+        </Popover>
+      </div>,
+    );
+    popover.renderer.focusElement(
+      popover.renderer.findByTestId("trigger")?.id ?? -1,
+    );
+
+    pressKey(popover, "enter");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
 
     popover.unmount();
   });
