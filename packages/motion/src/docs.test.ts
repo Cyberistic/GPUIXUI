@@ -287,7 +287,7 @@ describe("the reduced coast the README teaches", () => {
     // the next release — or by a release of `0`. The rule lives in `coastRest`,
     // and both the frame it paints and the run it retires read it.
     expect(react).toContain(
-      "const resting = coastRest(running, motion.current);",
+      "const resting = ended ? motion.current : coastRest(running, motion.current);",
     );
     expect(react).toContain(
       "const destination = coastRest(running, motion.current);",
@@ -295,6 +295,25 @@ describe("the reduced coast the README teaches", () => {
     expect(readme).toMatch(
       /A coast's projected rest is read \*\*from the\s+frame on screen\*\*/,
     );
+  });
+
+  it("holds a gesture the reduced preference already ended", () => {
+    // The bug this guards: retiring the reduced run was not enough — the effect
+    // re-ran when the preference turned off and launched the same declaration
+    // from the frame it ended on, so a coast the reader watched finish replayed.
+    // The ended declaration is recognised by the reference the reduced branch
+    // records, and both branches hold it rather than releasing it again.
+    expect(react).toContain(
+      "retired.current !== undefined && sameCoast(retired.current, running)",
+    );
+    expect(react).toContain("if (ended) return;");
+    expect(react).toContain("if (ended) {");
+    expect(react).toContain(
+      "publish(setFrame, settleBefore(motion, start, false));",
+    );
+    // The package README is where a consumer meets the rule, so the hold is
+    // stated there rather than only in the source.
+    expect(readme).toContain("turning it **off** again holds the frame");
   });
 });
 

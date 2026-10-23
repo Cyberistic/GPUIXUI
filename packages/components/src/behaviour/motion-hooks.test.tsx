@@ -26,6 +26,14 @@
  * and retired the retained value there — the next readable value then reported a
  * journey the reader never saw. A value the render cannot read is no destination
  * now: the hook holds the frame on screen.
+ *
+ * The fourth guard: a reduced commit retired the retained coast, and the effect
+ * re-ran when the preference turned back off and launched that same declaration
+ * again from the frame it ended on — measured, a 50 ms coast released at `400`
+ * rested at `20` under the preference and then drifted on to `40`, replaying a
+ * gesture the reader had already watched finish. The ended declaration is held
+ * now, a second reduced commit holds it too rather than projecting again, and a
+ * genuinely new release still starts from the frame on screen.
  */
 
 import { describe, expect, it } from "vitest";
@@ -107,6 +115,23 @@ const RestedCoast = ({
   });
   return (
     <text testId="rested-coast">{`${value}:${velocity}:${complete}`}</text>
+  );
+};
+
+/** A coast the preference toggles after its journey has ended. */
+const ToggledCoast = ({
+  release,
+  reduced,
+}: {
+  readonly release: number;
+  readonly reduced: boolean;
+}) => {
+  const { value, velocity, complete } = useInertia(release, inertia(50), {
+    initial: 0,
+    reducedMotion: reduced,
+  });
+  return (
+    <text testId="toggled-coast">{`${value}:${velocity}:${complete}`}</text>
   );
 };
 
@@ -257,6 +282,55 @@ describe("the reduced preference's later frames", () => {
     );
     try {
       expect(painted(page)).toBe("0:0:false");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("does not relaunch a coast whose journey the reduced preference ended", async () => {
+    // The defect: a reduced commit retired the retained value, and the effect
+    // re-ran when the preference turned off and launched the same declaration
+    // again from the frame it ended on — a 50 ms coast released at 400 rested at
+    // 20 under the preference and then drifted on to 40, replaying a gesture the
+    // reader had already watched finish.
+    const page = renderComponent(<ToggledCoast release={400} reduced />);
+    try {
+      expect(painted(page)).toBe("20:0:true");
+      page.rerender(<ToggledCoast release={400} reduced={false} />);
+      await after(150);
+      expect(painted(page)).toBe("20:0:false");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("holds an ended coast rather than projecting it again", async () => {
+    // The same journey is not a new gesture the next time the preference turns
+    // on: projecting again from the frame it rests on would jump the surface to
+    // a rest nobody released towards (the `40` a `400` release projects from it).
+    const page = renderComponent(<ToggledCoast release={400} reduced />);
+    try {
+      expect(painted(page)).toBe("20:0:true");
+      page.rerender(<ToggledCoast release={400} reduced={false} />);
+      await after(60);
+      page.rerender(<ToggledCoast release={400} reduced />);
+      expect(painted(page)).toBe("20:0:false");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("starts a new release from the frame an ended coast rests on", async () => {
+    // The guard must not stop the next gesture: once the reader releases again,
+    // the coast projects from the frame on screen, not from where this one
+    // began.
+    const page = renderComponent(<ToggledCoast release={400} reduced />);
+    try {
+      expect(painted(page)).toBe("20:0:true");
+      page.rerender(<ToggledCoast release={400} reduced={false} />);
+      await after(60);
+      page.rerender(<ToggledCoast release={300} reduced={false} />);
+      await waitFor(() => expect(painted(page)).toBe("35:0:true"));
     } finally {
       page.unmount();
     }

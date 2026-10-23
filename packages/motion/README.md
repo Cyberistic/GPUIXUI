@@ -187,11 +187,17 @@ no journey, and a preference that turns back on starts where the reader is. A
 value the render cannot read is no destination — a measurement that failed for
 one commit is not a new resting place — so it holds the frame on screen and
 reports no journey, instead of collapsing the surface to the first frame and
-retiring the retained value there. A coast's projected rest is read **from the
-frame on screen**, not from the offset the hook mounted at: a release is a new
-gesture from where the surface is, so a reduced reader whose coast rested at
-`140` is not sent back to `0` by the next release — or by a release of `0`,
-which asks for no journey and stays put.
+retiring the retained value there. That retire is also what keeps the preference
+from replaying a gesture: turning it **off** again holds the frame the coast
+came to rest on instead of releasing the same declaration a second time. A
+coast is a gesture, and the reader watched it end — measured, a 50 ms coast
+released at `400` rested at `20` under the preference and then drifted on to
+`40` before the hold landed. The next genuine release still starts from the
+frame on screen. A coast's projected rest is read **from the frame on screen**,
+not from the offset the hook mounted at: a release is a new gesture from where
+the surface is, so a reduced reader whose coast rested at `140` is not sent back
+to `0` by the next release — or by a release of `0`, which asks for no journey
+and stays put.
 
 The hooks own one clock, so they **sample once before retargeting**: a run that
 has come to rest is not advanced while nothing moves, and handing the retained

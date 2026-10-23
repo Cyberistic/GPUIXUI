@@ -22,6 +22,7 @@ import {
 import {
   retainCoast,
   retainTransition,
+  sameCoast,
   sameFrame,
   type CoastDeclaration,
 } from "./hook-read.js";
@@ -382,6 +383,18 @@ export const useInertia = (
   /** The first paint shows the projected rest; the release point is skipped. */
   const skippingStart = useRef(reducedMotion);
   /**
+   * The coast a reduced commit retired — the gesture the reader saw end.
+   *
+   * Retiring the retained value in that commit is not enough on its own: the
+   * effect also re-runs when the preference turns back **off**, and it would
+   * launch the same declaration again from the frame it ends on, replaying a
+   * gesture the reader already watched finish (a 50 ms coast released at `400`
+   * rested at `20` and then drifted to `40`). A declaration this ref names is
+   * therefore held rather than launched, and a genuinely new release forgets it
+   * so the next gesture starts from the frame on screen.
+   */
+  const retired = useRef<CoastDeclaration | undefined>(undefined);
+  /**
    * The coast this hook is running. `inertia()` is documented as safe to build
    * inline, and identity would re-arm the effect — and its frame loop — on every
    * render, so the declaration is retained by the physics a sample reads and the
@@ -390,13 +403,29 @@ export const useInertia = (
   const declared = useRef<CoastDeclaration>({ inertia, velocity });
   declared.current = retainCoast(declared.current, { inertia, velocity });
   const running = declared.current;
+  /**
+   * Whether this coast is one the hook already ended under the reduced
+   * preference — the gesture the reader watched finish.
+   */
+  const ended =
+    retired.current !== undefined && sameCoast(retired.current, running);
 
   useEffect(() => {
     if (reduced(options)) {
+      // The declaration this commit ends is retired, whether or not the frame
+      // it names differs from the one on screen: the animated branch below must
+      // not launch it again when the preference turns back off. A coast this
+      // hook already ended is held rather than projected again, since another
+      // reduced commit is not a new gesture to complete.
+      retired.current = running;
       // The render paints the projection the declaration names from the frame on
       // screen; retiring the value there in this commit means a preference that
       // turns back on does not relaunch a gesture the reader saw end.
       const destination = coastRest(running, motion.current);
+      // A coast this hook already ended is held, not projected a second time:
+      // the reader watched that journey finish, so a later reduced commit is not
+      // a new gesture to complete.
+      if (ended) return;
       if (destination === motion.current) return;
       motion.set(destination);
       skippingStart.current = false;
@@ -408,6 +437,16 @@ export const useInertia = (
       });
       return;
     }
+    if (ended) {
+      // This declaration's journey ended under the reduced preference and the
+      // reader watched it finish, so the preference turning off holds the frame
+      // it rests on instead of releasing the same coast a second time. The
+      // sample keeps the retained clock current, so a later release starts from
+      // now rather than counting the pause as its own travel.
+      publish(setFrame, settleBefore(motion, start, false));
+      return;
+    }
+    retired.current = undefined;
     const sampled = settleBefore(motion, start, reduced(options));
     if (skippingStart.current && sampled.value === offset) {
       // The mount painted the rest the preference names, so the release offset
@@ -434,9 +473,11 @@ export const useInertia = (
    * the frame on screen, or — when the release cannot be read — that frame,
    * which is the standstill. A projection read from the mount offset sent a
    * reader who had already coasted back to where the gesture began, and
-   * projecting `NaN` as `0` flashed the same first frame.
+   * projecting `NaN` as `0` flashed the same first frame. A declaration whose
+   * journey this hook already ended paints the frame it rests on instead of a
+   * projection the reader never asked for.
    */
-  const resting = coastRest(running, motion.current);
+  const resting = ended ? motion.current : coastRest(running, motion.current);
   return reducedMotion
     ? restingFrame(
         resting,
