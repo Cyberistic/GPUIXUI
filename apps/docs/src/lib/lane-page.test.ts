@@ -926,7 +926,10 @@ describe("the data-display page's shipped rows", () => {
     expect(index).toContain('export { VirtualTree } from "./virtual/tree.js";');
 
     const packagePage = readFileSync(
-      new URL("../../../../packages/data/docs/virtual-tree.mdx", import.meta.url),
+      new URL(
+        "../../../../packages/data/docs/virtual-tree.mdx",
+        import.meta.url,
+      ),
       "utf8",
     );
     expect(packagePage).toContain("title: Virtual trees");

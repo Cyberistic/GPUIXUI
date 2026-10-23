@@ -66,7 +66,10 @@ export function Hero() {
       </p>
 
       <div className="landing-actions">
-        <a className="landing-btn landing-btn-primary" href="/docs/getting-started">
+        <a
+          className="landing-btn landing-btn-primary"
+          href="/docs/getting-started"
+        >
           Get started
         </a>
         <a

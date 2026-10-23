@@ -57,6 +57,8 @@ describe("hourlyBars", () => {
         ? { ...column, top: column.top + 12, bottom: column.bottom + 12 }
         : column,
     );
-    expect(shifted.every((column) => column.bottom === plot.bottom)).toBe(false);
+    expect(shifted.every((column) => column.bottom === plot.bottom)).toBe(
+      false,
+    );
   });
 });

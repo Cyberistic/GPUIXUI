@@ -51,7 +51,9 @@ export const DockPreview = () => {
   const onPointerMove = (event: PointerEvent<HTMLDivElement>): void => {
     const active = drag.current;
     if (active === undefined || active.pointerId !== event.pointerId) return;
-    setWidth(dragWidth(active.startWidth, event.clientX - active.startX, DOCK_BOUNDS));
+    setWidth(
+      dragWidth(active.startWidth, event.clientX - active.startX, DOCK_BOUNDS),
+    );
   };
 
   const onPointerEnd = (event: PointerEvent<HTMLDivElement>): void => {

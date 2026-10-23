@@ -154,8 +154,7 @@ const DataCell = ({
 
 /** A deploy queue: filter it, hide a column, sort it, page it, act on a row. */
 export const TableWorkflow = () => {
-  const [rows, setRows] =
-    useState<ReadonlyArray<PreviewTableRow>>(TABLE_ROWS);
+  const [rows, setRows] = useState<ReadonlyArray<PreviewTableRow>>(TABLE_ROWS);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<PreviewSort | null>(INITIAL_SORT);
   const [selection, setSelection] = useState<PreviewSelection>({
@@ -222,7 +221,12 @@ export const TableWorkflow = () => {
   const onToggleRow = (id: string, shift: boolean) => {
     setSelection((state) =>
       shift
-        ? pressRow(state, id, { shift: true }, shown.map((row) => row.id))
+        ? pressRow(
+            state,
+            id,
+            { shift: true },
+            shown.map((row) => row.id),
+          )
         : toggleRow(state, id),
     );
   };

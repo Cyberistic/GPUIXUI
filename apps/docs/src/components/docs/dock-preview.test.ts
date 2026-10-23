@@ -84,7 +84,7 @@ describe("the dock preview's split arithmetic", () => {
       "home",
       "end",
     ]);
-    expect([ "ArrowUp", "Tab", "a" ].map(dockKeyOf)).toEqual([
+    expect(["ArrowUp", "Tab", "a"].map(dockKeyOf)).toEqual([
       undefined,
       undefined,
       undefined,
@@ -114,7 +114,7 @@ describe("the dock preview's paint", () => {
     // The panes are the theme's surfaces, not the docs chrome's.
     expect(block(css, ".gx-dock")).toContain("var(--background)");
     expect(block(css, ".gx-dock-inspector")).toContain("var(--card)");
-    expect(block(css, ".gx-dock-file[aria-current=\"page\"]")).toContain(
+    expect(block(css, '.gx-dock-file[aria-current="page"]')).toContain(
       "var(--accent)",
     );
   });

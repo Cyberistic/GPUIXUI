@@ -41,7 +41,9 @@ export const dockKeys = ["left", "right", "home", "end"] as const;
 
 export type DockKey = (typeof dockKeys)[number];
 
-const widths: Readonly<Record<DockKey, (width: number, bounds: DockBounds) => number>> = {
+const widths: Readonly<
+  Record<DockKey, (width: number, bounds: DockBounds) => number>
+> = {
   left: (width, bounds) => clampWidth(width - DOCK_STEP, bounds),
   right: (width, bounds) => clampWidth(width + DOCK_STEP, bounds),
   home: (_width, bounds) => bounds.min,

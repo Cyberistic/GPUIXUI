@@ -519,7 +519,9 @@ export function DashboardRender() {
           <i />
           <i />
         </span>
-        <span className="gx-dash-bar-title">Hunter Association — {activeLabel}</span>
+        <span className="gx-dash-bar-title">
+          Hunter Association — {activeLabel}
+        </span>
         <button
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-pressed={collapsed}

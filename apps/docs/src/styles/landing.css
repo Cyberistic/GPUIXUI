@@ -42,11 +42,7 @@
       rgba(0, 0, 0, 0.03),
       transparent 58%
     ),
-    radial-gradient(
-      820px 480px at 8% -4%,
-      rgba(0, 0, 0, 0.03),
-      transparent 55%
-    );
+    radial-gradient(820px 480px at 8% -4%, rgba(0, 0, 0, 0.03), transparent 55%);
   color: var(--fg);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -370,7 +366,6 @@
   margin: 12px auto 0;
   overflow: visible;
 }
-
 
 /* the platform window — the dialog itself is the window */
 .landing-window {
