@@ -302,11 +302,16 @@ export const cropGuides = (crop: CropRect): ReadonlyArray<CropGuide> => {
  * A corner handle's box, centred on the crop's corner. A side that cannot be
  * laid out (not finite, or not positive) reads as {@link CROP_HANDLE_SIZE}, so
  * a stored preference never paints a one-point box no pointer can grab.
+ *
+ * Given the frame, a handle the corner would push past its edge is held inside
+ * it: the frame clips its children, so a centred handle on a hole touching the
+ * edge would paint half a box and keep half a press target.
  */
 export const handleBox = (
   crop: CropRect,
   corner: CropCorner,
   size: number,
+  bounds?: CropBounds,
 ): CropRect => {
   const side = Number.isFinite(size) && size > 0 ? size : CROP_HANDLE_SIZE;
   const point = Match.value(corner).pipe(
@@ -316,9 +321,17 @@ export const handleBox = (
     Match.when("se", () => ({ x: crop.right, y: crop.bottom })),
     Match.exhaustive,
   );
+  const inside = (value: number, extent: number): number =>
+    clamp(value, 0, Math.max(0, extent - side));
   return new CropRect({
-    x: point.x - side / 2,
-    y: point.y - side / 2,
+    x:
+      bounds === undefined
+        ? point.x - side / 2
+        : inside(point.x - side / 2, bounds.width),
+    y:
+      bounds === undefined
+        ? point.y - side / 2
+        : inside(point.y - side / 2, bounds.height),
     width: side,
     height: side,
   });

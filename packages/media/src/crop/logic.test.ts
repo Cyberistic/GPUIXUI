@@ -192,6 +192,37 @@ describe("handleBox", () => {
     });
   });
 
+  it("holds a handle inside a frame the hole touches", () => {
+    // The bug guarded: a full-frame hole centred its handles on the frame's
+    // edges, so the clipping frame painted half of each box and the pointer
+    // could reach half of the target.
+    const full = new CropRect({ x: 0, y: 0, width: 240, height: 160 });
+    expect(boxes(handleBox(full, "nw", 10, bounds))).toStrictEqual({
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+    });
+    expect(boxes(handleBox(full, "se", 10, bounds))).toStrictEqual({
+      x: 230,
+      y: 150,
+      width: 10,
+      height: 10,
+    });
+    expect(boxes(handleBox(full, "ne", 10, bounds))).toStrictEqual({
+      x: 230,
+      y: 0,
+      width: 10,
+      height: 10,
+    });
+    expect(boxes(handleBox(full, "sw", 10, bounds))).toStrictEqual({
+      x: 0,
+      y: 150,
+      width: 10,
+      height: 10,
+    });
+  });
+
   it("reads a handle side it cannot lay out as the default box", () => {
     Arr.forEach([Number.NaN, Infinity, 0, -5], (size) => {
       expect(boxes(handleBox(opening, "se", size))).toStrictEqual(

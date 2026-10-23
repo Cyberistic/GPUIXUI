@@ -258,7 +258,7 @@ export const renderCropArea = (
             }}
             style={handleStyle(
               theme,
-              handleBox(crop, corner, handleSize),
+              handleBox(crop, corner, handleSize, bounds),
               corner,
               disabled,
             )}

@@ -139,6 +139,23 @@ describe("renderCropArea", () => {
     expect(handleOf(root, "sw")).toBeDefined();
   });
 
+  it("keeps a touched edge's handles inside the clipping frame", () => {
+    // The bug guarded: the frame clips its children, so a handle centred on a
+    // full-frame hole's corner painted half a box and kept half a press target.
+    const full = new CropRect({ x: 0, y: 0, width: 240, height: 160 });
+    const root = renderCropArea(
+      props({ value: full }),
+      lightTheme,
+      surfaceOf(),
+    );
+    const styleOf = (corner: "nw" | "ne" | "sw" | "se") =>
+      expectSome(hostProp(handleOf(root, corner), "style"));
+    expect(styleOf("nw")).toMatchObject({ left: 0, top: 0 });
+    expect(styleOf("ne")).toMatchObject({ left: 230, top: 0 });
+    expect(styleOf("sw")).toMatchObject({ left: 0, top: 150 });
+    expect(styleOf("se")).toMatchObject({ left: 230, top: 150 });
+  });
+
   it("paints the resize cursor along each corner's own diagonal", () => {
     // The bug guarded: every handle painted `nwse-resize`, so the top-right and
     // bottom-left handles pointed across the diagonal they drag on.
