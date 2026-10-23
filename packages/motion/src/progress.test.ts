@@ -26,8 +26,8 @@ describe("clamp01", () => {
 
 describe("eased", () => {
   it("applies a curve to the clamped progress", () => {
-    expect(eased((t) => t * t, 0.5)).toBe(0.25);
-    expect(eased((t) => 1 - t, 2)).toBe(0);
+    expect(eased((t: number) => t * t, 0.5)).toBe(0.25);
+    expect(eased((t: number) => 1 - t, 2)).toBe(0);
   });
 
   it("falls back to the linear progress for a curve that cannot read the frame", () => {
@@ -37,5 +37,17 @@ describe("eased", () => {
     expect(eased(() => Number.NaN, 0.5)).toBe(0.5);
     expect(eased(() => Number.POSITIVE_INFINITY, 0.25)).toBe(0.25);
     expect(eased(() => Number.NaN, Number.NaN)).toBe(0);
+  });
+
+  it("treats a value that is not a function as no curve", () => {
+    // `Easing` is a caller's function, and a `Transition`/`Keyframe` is
+    // structural, so a hand-built declaration can carry the easing a config
+    // failed to decode. The samplers called it inside a frame loop, so the run
+    // threw `TypeError: curve is not a function` from a timer instead of
+    // painting; no curve is the linear progress, exactly like a curve whose
+    // answer cannot be painted.
+    expect(eased(undefined, 0.5)).toBe(0.5);
+    expect(eased(null, 0.25)).toBe(0.25);
+    expect(eased("easeOut", 0.5)).toBe(0.5);
   });
 });

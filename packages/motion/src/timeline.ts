@@ -9,12 +9,13 @@
  * The values a caller builds a timeline from are repaired before they reach the
  * formulas: a frame whose offset or value cannot be read is not a stop, a step
  * whose timing cannot be read is placed at the start with no duration, a step
- * that cannot be read is no wait, and a curve that cannot read the frame it is
- * handed falls back to the linear progress (`eased` in `progress.ts`). A `NaN`
- * anywhere used to paint a frame the runtime draws as nothing and leave
- * `Sequence.complete` false forever. The sequence's own end follows the same
- * rule: a step whose duration it cannot run ends at its start, so the end is
- * never before a step the sequence still has to run.
+ * that cannot be read is no wait, a stagger direction the package does not name
+ * is the house start, and a curve that cannot read the frame it is handed — or
+ * cannot be called at all — falls back to the linear progress (`eased` in
+ * `progress.ts`). A `NaN` anywhere used to paint a frame the runtime draws as
+ * nothing and leave `Sequence.complete` false forever. The sequence's own end
+ * follows the same rule: a step whose duration it cannot run ends at its start,
+ * so the end is never before a step the sequence still has to run.
  */
 
 import { linear, type Easing } from "./easing.js";
@@ -93,6 +94,17 @@ export const sampleKeyframes = (
 export type StaggerFrom = "start" | "end" | "center";
 
 /**
+ * The direction a group starts from.
+ *
+ * `from` may be a persisted choice a caller reads back, so a name the package
+ * does not carry takes the house default (`start`). The distance arithmetic used
+ * to end in a `center` arm, so an unreadable direction silently staggered a
+ * group from its middle.
+ */
+const staggerFromOf = (from: StaggerFrom): StaggerFrom =>
+  from === "start" || from === "end" || from === "center" ? from : "start";
+
+/**
  * The delay (ms) the `index`-th of `count` children waits under `from`.
  *
  * A step that is not a wait is no wait: a non-finite one is unreadable and a
@@ -111,10 +123,11 @@ const staggerDelay = (
 ): number => {
   if (!Number.isFinite(index) || !Number.isFinite(count)) return 0;
   if (count <= 0 || index < 0 || index >= count) return 0;
+  const direction = staggerFromOf(from);
   const distance =
-    from === "start"
+    direction === "start"
       ? index
-      : from === "end"
+      : direction === "end"
         ? count - 1 - index
         : Math.abs(index - (count - 1) / 2);
   return (Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0) * distance;
@@ -125,7 +138,8 @@ const staggerDelay = (
  * `0` for an out-of-range index or empty group, and for a step that is not a
  * wait: a non-finite one is unreadable and a negative one is no delay at all. An
  * `index` or `count` that cannot be read is no wait too, so a caller's failed
- * measurement never reaches the runtime as a `NaN` or infinite delay.
+ * measurement never reaches the runtime as a `NaN` or infinite delay. A `from`
+ * the package does not name is the house default (`"start"`), not the centre.
  */
 export const stagger = (
   stepMs: number,

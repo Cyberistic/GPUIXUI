@@ -82,6 +82,24 @@ describe("stagger", () => {
     expect(stagger(20, -1, 3)).toBe(0);
   });
 
+  it("starts from the default for a direction it does not name", () => {
+    // `from` is a name a consumer can read back from stored settings. The
+    // distance arithmetic was a ternary ladder whose final arm was `center`, so
+    // a name outside the three (`"middle"`, a stored `"Start"`) silently placed
+    // the group from the **middle** instead of the documented default.
+    const unreadable = ["middle", "Start"];
+    unreadable.forEach((from) => {
+      // @ts-expect-error — a persisted direction the library did not type-check.
+      expect(stagger(10, 0, 4, from)).toBe(0);
+      // @ts-expect-error — the same stored direction at the group's last index.
+      expect(stagger(10, 3, 4, from)).toBe(30);
+    });
+    // The three real directions keep their own arithmetic, and the default too.
+    expect(stagger(10, 0, 4, "center")).toBe(15);
+    expect(stagger(10, 0, 4, "end")).toBe(30);
+    expect(stagger(10, 0, 4)).toBe(0);
+  });
+
   it("waits for nothing when the group cannot be read", () => {
     // `index` and `count` are caller arithmetic too (a measured position, a
     // filtered length). A delay the helper cannot compute used to be returned as

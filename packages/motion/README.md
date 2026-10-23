@@ -191,7 +191,10 @@ stagger entry points answer it the same way: the standalone `stagger()` and the
 `Sequence`'s own group, whose members then all sit at the group's start rather
 than one of them starting before the sequence does. An `index` or `count` the
 standalone helper cannot read is no wait as well, so a failed position or length
-never becomes a `NaN` or infinite delay.
+never becomes a `NaN` or infinite delay. A direction the package does not name is
+the house `start`, not the centre: the distance arithmetic used to end in a
+`center` arm, so a persisted `"middle"` staggered a group from its middle instead
+of the documented default.
 
 An easing curve is the caller's own function, so it gets the same rule. The
 shipped curves read a progress they cannot read as the start of the run (`NaN`
@@ -199,7 +202,10 @@ passed both clamp comparisons, so every curve answered `NaN`), and the three
 samplers that apply a caller's curve — `MotionValue`'s tween, `sampleKeyframes`
 and `Sequence.sample` — fall back to the linear progress when the curve answers a
 value that cannot be painted, because a frame a curve cannot read is not a curve.
-The run keeps its start, its end and its completion edge either way.
+A value that is not a function at all is no curve either: `Transition` and
+`Keyframe` are exported and structural, so a hand-built one can carry the easing
+a config never decoded, and calling it threw from a frame loop instead of
+painting. The run keeps its start, its end and its completion edge either way.
 
 A frame between two values is read the same way. The tween in `MotionValue` and
 `sampleKeyframes` interpolate by weighting **both** endpoints rather than adding

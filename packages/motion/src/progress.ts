@@ -18,6 +18,10 @@
 export const clamp01 = (value: number): number =>
   Number.isNaN(value) ? 0 : value < 0 ? 0 : value > 1 ? 1 : value;
 
+/** A value the samplers can call as a curve. */
+const isCurve = (value: unknown): value is (progress: number) => number =>
+  typeof value === "function";
+
 /**
  * A curve applied at `progress`, falling back to the progress itself.
  *
@@ -26,12 +30,15 @@ export const clamp01 = (value: number): number =>
  * paints nothing for its whole journey. Degrading to the linear progress is the
  * same honest fallback `bezier` takes for controls it cannot use, and it keeps
  * the run's start, end and completion exact.
+ *
+ * A value that is not a function at all is no curve either. `Transition` and
+ * `Keyframe` are exported and structural, so a hand-built one can carry the
+ * easing a config never decoded; calling it threw `TypeError: curve is not a
+ * function` out of a frame loop instead of painting the run.
  */
-export const eased = (
-  curve: (progress: number) => number,
-  progress: number,
-): number => {
+export const eased = (curve: unknown, progress: number): number => {
   const unit = clamp01(progress);
+  if (!isCurve(curve)) return unit;
   const value = curve(unit);
   return Number.isFinite(value) ? value : unit;
 };
