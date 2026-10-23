@@ -9,11 +9,13 @@
     ".": "./src/index.ts",
     "./examples": "./examples/index.ts",
     "./diff/logic": "./src/diff/logic.ts",
+    "./markdown/logic": "./src/markdown/logic.ts",
     "./search/logic": "./src/search/logic.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:behaviour": "vitest run --config vitest.behaviour.config.ts"
   },
   "dependencies": {
     "@gpuix/react": "catalog:",

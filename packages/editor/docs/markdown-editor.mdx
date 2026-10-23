@@ -1,0 +1,117 @@
+---
+title: MarkdownEditor
+description: Markdown source editing with the runtime's rendered markdown beside it — the honest rich-text alternative.
+---
+
+`MarkdownEditor` is the strongest rich-text surface this runtime supports: the
+reader writes **markdown** in a real `<textarea>`, and the same value renders
+through the runtime's `<markdown>` host beside it. It is not WYSIWYG, and it does
+not pretend to be — see [Why not rich text](#why-not-rich-text).
+
+```tsx
+import { MarkdownEditor } from "@gpuixui/editor";
+
+<MarkdownEditor
+  value={value}
+  onValueChange={setValue}
+  label="Release notes"
+  width={640}
+  height={300}
+/>;
+```
+
+## Views
+
+| Mode | Paints |
+| ---- | ------ |
+| `split` (default) | source and preview side by side, one border between |
+| `source` | the source only |
+| `preview` | the rendered document only |
+
+`mode`/`defaultMode`/`onModeChange` is the controlled/uncontrolled contract; the
+three toolbar buttons report a change in both modes. A stored mode that is not
+one of the three reads as `split`.
+
+## The document
+
+`value`/`defaultValue`/`onValueChange` is the text contract: a controlled editor
+is authoritative, an uncontrolled one keeps its own draft. The status line counts
+**lines, words and Unicode code points** (an emoji counts once, not twice); an
+empty document reads `0 lines · 0 words`.
+
+An **unclosed code fence is closed in the preview only**. A document being
+written mid-block would otherwise swallow every following line into one code
+block; the source keeps exactly the characters the reader typed, and the preview
+appends the missing marker (`markdown/logic.ts`).
+
+## Keyboard
+
+| Where | Contract |
+| ----- | -------- |
+| source | the runtime's native text editing, including IME, paste and undo |
+| toolbar | the shipped `Button` activation — Enter and Space on release |
+| preview | a focusable `ScrollArea`, so a long document scrolls from the keyboard |
+
+The editor installs no key handler of its own: typing is the textarea's, and the
+runtime has no caret or selection API to build one against.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` | — (uncontrolled) |
+| `defaultValue` | `string` | `""` |
+| `onValueChange` | `(value: string) => void` | — |
+| `mode` | `"split" \| "source" \| "preview"` | — (uncontrolled) |
+| `defaultMode` | `"split" \| "source" \| "preview"` | `"split"` |
+| `onModeChange` | `(mode) => void` | — |
+| `label` | `string` | `"Markdown editor"` |
+| `placeholder` | `string` | — |
+| `width` | `number` | `640` |
+| `height` | `number` | `280` |
+| `readOnly` | `boolean` | `false` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
+
+## Accessibility
+
+The source is a real text field named `<label> source` and is the editor's tab
+stop; a read-only editor stays focusable, and a disabled one leaves the tab order.
+The preview is a `ScrollArea` named `<label> preview`, so a keyboard reader can
+scroll a long document. The mode buttons are the shipped `Button`s with their own
+accessible names and activation contract. The status line is plain text, not a
+live region (the runtime has none), so a reader who needs the count announced
+should render it beside the editor.
+
+## Why not rich text
+
+The runtime provides **no editable rich-text host**. Measured on 0.11.0:
+
+- `<markdown>` renders a document, `<textarea>` edits plain text, and nothing
+  joins them;
+- a `<textarea>` reports **no caret position and no selection**, so a toolbar
+  cannot wrap the text the reader selected;
+- a transparent field over a `<code>` view paints **no caret** and reports no
+  scroll offset (the `editor-overlay` probe: the two layers are pixel-identical
+  to the code alone, and no caret appears in five frames 120 ms apart).
+
+A WYSIWYG or formatting-toolbar surface would therefore be a decorative
+imitation. Editing source and previewing it is the strongest honest alternative,
+and it is what `CodeEditor` does one tier down.
+
+## Limitations
+
+- **No formatting toolbar.** It needs a selection API the runtime does not have.
+- **No caret or selection read-back.** `MarkdownEditor` cannot insert at the
+  reader's cursor.
+- **Two panes, fixed widths.** A split divides the editor between the two panes;
+  the caller sets the editor's `width`.
+- **Preview is read-only.** Editing happens in the source, by design.
+
+## Evidence
+
+`src/behaviour/markdown-editor.test.tsx` (9 native behaviour tests) types into the
+real field, follows the edit into the preview, switches all three views, and
+holds the read-only and disabled refusals; `src/markdown/logic.test.ts` (12
+cases) holds the fence, the counts and the stored mode.

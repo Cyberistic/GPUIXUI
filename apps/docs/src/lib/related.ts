@@ -290,6 +290,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
     name: "Code surfaces",
     pages: [
       editor("code-editor", "Code editor"),
+      editor("markdown-editor", "MarkdownEditor"),
       editor("diff-viewer", "Diff viewer"),
       editor("search-replace", "Search and replace"),
     ],
