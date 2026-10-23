@@ -279,6 +279,21 @@ the monospace family is the one the platform installs (`Menlo`,
 `DejaVu Sans Mono`, `Consolas`). `default` is the library's own identity, for a
 platform it does not name.
 
+### A window measured the switch
+
+`theme-switch-lifecycle` drove this provider switch in a window (73 checks),
+reading the page and card fills at points inside their own padding and an `md`
+control's height after each press, because a window's renderer reports no style.
+The **palette** axis repaints without reflowing: dark `#11141A` / `#191D25` →
+light `#F6F8FA` / `#FFFFFF` → high contrast `#000000` / `#0D0D0D`, with the
+control at **32** at every step. The **platform** axis re-lays it out: macOS
+**28**, Linux **36**, Windows **32**, Default **32**. Selecting a platform while
+the high-contrast palette is active leaves the page `#000000`, because
+`applyStyle` reserves a high-contrast palette while it takes the look's density,
+and both cycles close on the frame the app opened in. That is what "switching
+restyles the subtree" means in a window: a colour change is a repaint, a density
+change is a reflow.
+
 ### The switch on this site
 
 The **Platform** switch at the foot of the sidebar picks the theme every preview

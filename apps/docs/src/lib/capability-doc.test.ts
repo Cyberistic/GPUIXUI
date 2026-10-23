@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { themes } from "@gpuixui/tokens";
+import { getTheme, platformTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { columnDrag } from "./column-drag.test-util";
 
@@ -1590,6 +1590,84 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("shrink-0");
     expect(page?.[2]).toContain("minWidth: 0");
     expect(page?.[2]).toContain("maxWidth");
+  });
+
+  it("publishes the theme switch a window measured", () => {
+    // MISSION lists theme switching among the critical interactions, and the
+    // theming page taught the token layer without saying what a window does
+    // when the provider's value changes: a palette press repaints, a platform
+    // press re-lays out, and a high-contrast base keeps its palette while it
+    // takes a look's density. `theme-switch-lifecycle` measured both axes, and
+    // the frames below are derived from the palettes and the tokens' platform
+    // presets, so neither document can teach a frame the window no longer
+    // paints.
+    const palettes = {
+      dark: getTheme("dark"),
+      light: getTheme("light"),
+      high: getTheme("dark", "high"),
+    } as const;
+    const hex = (value: string): string => value.toUpperCase();
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `theme-switch-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
+      "";
+    const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
+    expect(checks, "the probe's README has no check count").toBeGreaterThan(20);
+
+    const heights = {
+      default: platformTheme(palettes.high, "default").density.controlHeight.md,
+      darwin: platformTheme(palettes.high, "darwin").density.controlHeight.md,
+      linux: platformTheme(palettes.high, "linux").density.controlHeight.md,
+      win32: platformTheme(palettes.high, "win32").density.controlHeight.md,
+    };
+    // The premise: the platforms are distinguishable by the height a switch
+    // can show, and macOS is the compact end while Linux is the spacious one.
+    expect(new Set(Object.values(heights)).size).toBeGreaterThanOrEqual(3);
+    expect(heights.darwin).toBeLessThan(heights.default);
+    expect(heights.linux).toBeGreaterThan(heights.default);
+
+    const row = rowFor("Theme and density switch");
+    expect(row?.verdict).toBe("supported");
+    expect(row?.evidence).toContain("theme-switch-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(hex(palettes.dark.colors.background));
+    expect(row?.evidence).toContain(hex(palettes.light.colors.background));
+    expect(row?.evidence).toContain(hex(palettes.high.colors.background));
+    expect(row?.evidence).toContain(hex(palettes.dark.colors.card));
+    expect(row?.evidence).toContain(hex(palettes.light.colors.card));
+    expect(row?.evidence).toContain(hex(palettes.high.colors.card));
+    expect(row?.evidence).toContain(`**${heights.default}**`);
+    expect(row?.evidence).toContain(`**${heights.darwin}**`);
+    expect(row?.evidence).toContain(`**${heights.linux}**`);
+    expect(row?.evidence).toContain("reserves");
+    expect(row?.evidence).toContain("reflow");
+    expect(row?.workaround).toContain("provider");
+
+    const page = measuredRow("Theme and density switch");
+    expect(
+      page,
+      "the page's measured table has no theme-switch row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("theme-switch-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(hex(palettes.dark.colors.background));
+    expect(page?.[1]).toContain(hex(palettes.light.colors.background));
+    expect(page?.[1]).toContain(hex(palettes.high.colors.background));
+    expect(page?.[1]).toContain(`**${heights.default}**`);
+    expect(page?.[1]).toContain(`**${heights.darwin}**`);
+    expect(page?.[1]).toContain(`**${heights.linux}**`);
+    expect(page?.[1]).toContain("reserves");
+
+    const theming = read("apps/docs/content/docs/theming.mdx");
+    expect(theming).toContain("theme-switch-lifecycle");
+    expect(theming).toContain(`${checks} checks`);
+    expect(theming).toContain(hex(palettes.dark.colors.background));
+    expect(theming).toContain(hex(palettes.light.colors.background));
+    expect(theming).toContain(hex(palettes.high.colors.background));
+    expect(theming).toContain(`**${heights.darwin}**`);
+    expect(theming).toContain(`**${heights.linux}**`);
+    expect(theming).toContain("reserves");
   });
 
   it("publishes the dismissal order a three-level stack measured", () => {
