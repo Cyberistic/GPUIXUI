@@ -309,6 +309,7 @@ src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve f
 src/lib/column-drag.test-util.ts    The column drag both guards print, derived from the probe
 src/lib/floating-reflow.test-util.ts The panel placement both reflow guards print, derived from the probe
 src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
+src/lib/search-tree.ts              The tree search reads: package sections filled, separators unnamed
 src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
@@ -404,6 +405,18 @@ is why the route column is the collection's root.
 curated pages. A curated page keeps its URL, and the search index skips the
 package page for that URL. The primitive layer is one sidebar section even
 though two packages write its pages.
+
+### Search
+
+`src/routes/api/search.ts` indexes one list over every mounted collection:
+`src/lib/search-index.ts` keeps a curated page in place of the package page it
+shadows, so the same URL never appears twice. The dialog's breadcrumbs read
+`src/lib/search-tree.ts` — the sidebar's tree with the package sections filled
+and every separator left unnamed. Fumadocs treats a separator's name as a
+breadcrumb, so the sidebar's group headings used to leak in (`Docs › Blocks ›
+Blocks`) while a package page showed none at all; a result now names the
+section it lives in, `Docs › Components` or `Docs › Primitives`.
+`search-tree.test.ts` holds the shape and the route's one-tree rule.
 
 The packages' files are written as Markdown and compiled here as MDX, which is
 stricter: frontmatter must be valid YAML and prose may not contain a raw

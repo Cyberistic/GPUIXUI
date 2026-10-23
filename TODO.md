@@ -10294,7 +10294,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 284/284
+`[x]` `[██████████]` 285/285
+
+`[x]` Give every **search result the section it lives in** — the dialog's
+      breadcrumbs come from a page tree, and the search index walked only the
+      site's own collection: a package page (`/docs/primitives/slider`,
+      `/docs/dock/dock-layout`, …) showed none at all, while a page whose folder
+      sat under a sidebar group repeated the group's name (`/docs/blocks` read
+      `Docs › Blocks › Blocks`) because Fumadocs treats a **separator's name** as
+      a breadcrumb. `src/lib/search-tree.ts` completes the same package sections
+      the sidebar shows, then blanks every separator's name; the route indexes
+      that one tree (`getPageTree: () => searchTree`, built once because
+      Fumadocs caches breadcrumbs by tree identity). Results now read
+      `Docs › Components`, `Docs › Primitives`, `Docs › Workspace`,
+      `Docs › Data display`, `Docs › Blocks`, and a top-level page `Docs`.
+      `search-tree.test.ts` (5 cases) holds the separator rule at every depth,
+      the package page under its own folder, one row per URL, the input tree
+      untouched, and the route's one-tree wiring. Directions measured:
+      returning separators unchanged fails the first case
+      (`expected [ 'Getting Started', …(2) ] to deeply equal []`), and dropping
+      `getPageTree` from the route fails the wiring case by name. Restored, the
+      three files are 16/16, `check-types` is clean, and the served
+      `/api/search` returns a breadcrumb for every page result across the five
+      queries read (`blocks`, `login`, `slider`, `dock`, `workspace`). No native
+      scenario applies — a browser search endpoint and its tree.
 
 `[x]` Put the **API reference's symbol filter on the page URL** — the reference
       renders every name the workspace publishes (2 144 symbols across 15 packages
