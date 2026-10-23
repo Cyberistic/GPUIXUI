@@ -336,16 +336,21 @@ theme colour an empty field's placeholder** — at the pinned release it shapes 
 hint with a fixed `#8F8F8F` (`custom_elements/input.rs`), so no token can move it
 and a component that needs a themed hint paints the text itself.
 
-A control with **no** border — the `secondary` variant paints `border-0` — is
-carried by its fill instead, so that fill is measured: `secondary` is held to the
-perceptibility floor (1.05:1) on the page, a card, a popover and a muted toolbar,
-the strips a button can sit on. It is the same claim the state washes make, one
-control over, and it found the shipped alias: light `secondary` *was* `muted`, so
-a secondary button in a toolbar was a label with no button around it, and each
-platform window was 1.015–1.049:1 from it. The base light fill is now `#E1E5EC`,
+A `secondary` action paints an edge (`borderStrong`) and no brand colour, so on
+the strips it rests on it is carried by its fill, and that fill is measured:
+`secondary` is held to the perceptibility floor (1.05:1) on the page, a card, a
+popover and a muted toolbar, the strips a button can sit on. It is the same claim
+the state washes make, one control over, and it found the shipped alias: light
+`secondary` *was* `muted`, so a secondary button in a toolbar was a label with no
+button around it, and each platform window was 1.015–1.049:1 from it. A **row's
+wash** is the edge's claim instead: the fill reads 1.0000:1 against `hover` in
+both high-contrast variants and 32 of the 64 wash placements are under the floor,
+while `borderStrong` is held to the 3:1 boundary floor on `hover`, `active`,
+`accent` and `selected` and clears it in every style (tightest 3.73:1, Windows
+light's `active`). The base light fill is now `#E1E5EC`,
 its pressed wash `#D6DBE4` (so a resting control is not the value of a pressed
 ghost) and `borderStrong` `#616A79` (so the boundary keeps its 3:1 on the new
-fill, on the pressed wash and on the derived pointer fills the components'
+fill, on the pressed wash and on the derived pointer fills both packages'
 `secondary` paints); each affected platform style and look owns its control face. §9 lists the
 placement, `docs/tokens.md` §Decorative surfaces the measurements.
 
@@ -744,7 +749,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, and every raised elevation level (`sm`, `md`, `lg`) | 1.05:1 | 1.05:1 |
-| a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
+| a filled action's resting fill (`secondary`, whose edge is the contrast table's claim on a row's wash) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | a bar's rail (`muted`) on background, card and popover — never on the muted strip it is made of | 1.05:1 | 1.05:1 |
 | a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
@@ -894,10 +899,10 @@ five aliases: the base dark theme's
 macOS light's, Windows light's and Linux dark's were within one step of the
 strips they tint (the Linux dark wash now sits at 1.06 on both the card and the
 popover it can land on). The filled-action half found the same defect one control
-over: `secondary` paints no border, so its fill is the whole button, and light
-`secondary` was the `muted` value exactly (1.00:1) while macOS light, Linux
-light, Windows light and the dark platform/look popovers sat 1.004–1.049:1 from
-it. The base fill, its pressed wash, `borderStrong` and every affected style's
+over: `secondary` has no brand colour of its own, so its fill is what separates
+it from a strip, and light `secondary` was the `muted` value exactly (1.00:1)
+while macOS light, Linux light, Windows light and the dark platform/look
+popovers sat 1.004–1.049:1 from it. The base fill, its pressed wash, `borderStrong` and every affected style's
 own control face moved with the contract. The boundary half of the same table
 found the state the fill changes into: a bordered control keeps `borderStrong`
 while its fill moves, and both base themes, high-contrast dark and

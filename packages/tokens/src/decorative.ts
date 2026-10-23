@@ -162,16 +162,26 @@ const stateWashRoles = ["hover", "active", "selected", "accent"] as const;
 const stateWashStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
- * The tonal action's resting fill, on every strip a filled control can sit on.
+ * The tonal action's resting fill, on every content strip a filled control can
+ * sit on.
  *
  * `secondary` is the one filled action with no brand colour of its own, so its
- * fill is the only thing that separates it from the surface behind it: the
- * variant paints no border (`packages/primitives/src/core/variants.ts`), and its
- * own hover and press are derived from the fill rather than from a wash role.
- * The base light theme shipped it equal to `muted`, so a secondary button inside
- * a muted toolbar was a label with no button around it; macOS light was 1.015:1
- * from its own window, Linux light 1.040:1 and Windows light 1.021:1, while the
- * dark platform palettes fell under the floor on their lighter popovers.
+ * fill is what separates it from the surface behind it, and its own hover and
+ * press are derived from the fill rather than from a wash role. The base light
+ * theme shipped it equal to `muted`, so a secondary button inside a muted
+ * toolbar was a label with no button around it; macOS light was 1.015:1 from its
+ * own window, Linux light 1.040:1 and Windows light 1.021:1, while the dark
+ * platform palettes fell under the floor on their lighter popovers.
+ *
+ * A **row's wash** is deliberately not a fill placement. Both packages' tonal
+ * action paints the `borderStrong` edge (`packages/primitives/src/core/
+ * variants.ts` and the components' `Button`), and on a wash that edge is what
+ * carries the control: over the sixteen shipped styles the fill reads
+ * **1.0000:1** against `hover` in both high-contrast variants and **32 of the
+ * 64** wash placements are under the floor, so no fill answers them — while
+ * `contrastPairs` holds `borderStrong` to the boundary floor on all four and it
+ * clears them everywhere (tightest 3.73:1, Windows light's `active`). The
+ * fill claim stays on the four content strips and the wash is the edge's.
  *
  * This is the perceptibility claim, not the 3:1 control-boundary claim: a
  * component that needs a hard edge paints `borderStrong`, which `contrastPairs`

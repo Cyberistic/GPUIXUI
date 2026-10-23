@@ -24,13 +24,17 @@
  * Those five now carry a wash a reader can see.
  *
  * The tonal action's resting fill joined last, and it is the same defect one
- * control over: `secondary` is a filled variant with no border and no brand
- * colour, so the fill is the whole button. The base light theme shipped it
- * equal to `muted` (1.000:1), which made a secondary button inside a muted
- * toolbar a label with no button around it; macOS light's window sat at
- * 1.015:1, Linux light at 1.040:1, Windows light at 1.021:1, and the four dark
- * platform/look palettes fell at 1.021–1.049:1 on their lighter popovers. Each
- * of those styles now carries its own control face.
+ * control over: `secondary` is a filled variant with no brand colour of its
+ * own, so on a content strip the fill is what separates it from the surface.
+ * The base light theme shipped it equal to `muted` (1.000:1), which made a
+ * secondary button inside a muted toolbar a label with no button around it;
+ * macOS light's window sat at 1.015:1, Linux light at 1.040:1, Windows light at
+ * 1.021:1, and the four dark platform/look palettes fell at 1.021–1.049:1 on
+ * their lighter popovers. Each of those styles now carries its own control
+ * face. A row's wash is not a fill placement: both packages' tonal action
+ * paints the `borderStrong` edge now, and the fill cannot answer a wash it is
+ * 1.0000:1 from — so the washes belong to the edge, which `contrastPairs`
+ * holds at the boundary floor there.
  *
  * The status tint joined last, and it is the surface a message actually sits in:
  * `xSoft` appeared only as the background a `statusEdge` was measured over, so a
@@ -741,15 +745,53 @@ describe("decorative surfaces", () => {
     ).toMatchObject({ role: "scrollbar", ratio: 1, floor: decorativeFloor });
   });
 
-  it("measures the tonal action's fill on every strip it sits on", () => {
-    // A secondary button paints no border, so its fill is the whole control: a
-    // fill that matches the toolbar it lives in leaves a label with no button
-    // around it. A toolbar, a card, a popover and the page all hold one.
+  it("measures the tonal action's fill on every content strip it sits on", () => {
+    // A secondary action has no brand colour of its own, so on a content strip
+    // its fill is what separates it from the surface: a fill that matches the
+    // toolbar it lives in leaves a label with no button around it. A toolbar, a
+    // card, a popover and the page all hold one.
     const missing = ["background", "card", "popover", "muted"].filter(
       (over) => !measured("filledAction", "secondary", over),
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("leaves a row's wash to the edge both packages paint", () => {
+    // The fill claim stops at the content strips. A row's wash is answered by
+    // `borderStrong`: the fill reads 1.0000:1 against `hover` in both
+    // high-contrast variants and 32 of the 64 wash placements are under the
+    // floor, so a fill placement there would demand a colour no palette has —
+    // while the edge is held to the boundary floor on every wash by the
+    // contrast table. The painters are read here, so the decision cannot
+    // outlive them: a `secondary` that paints no edge leaves the row with
+    // nothing.
+    const recipe = readFileSync(
+      new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+      "utf8",
+    );
+    const variants = readFileSync(
+      new URL("../../primitives/src/core/variants.ts", import.meta.url),
+      "utf8",
+    );
+    const components = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+
+    const washes = ["hover", "active", "accent", "selected"] as const;
+
+    expect(recipe).toContain(
+      "bg-secondary text-secondary-foreground border border-strong",
+    );
+    expect(variants).toContain("border: (theme) => theme.colors.borderStrong");
+    expect(components).toContain('secondary: "border border-strong"');
+    expect(
+      decorativeSurfaces.filter(
+        ({ surface, over }) =>
+          surface === "filledAction" && washes.some((wash) => wash === over),
+      ),
+    ).toEqual([]);
   });
 
   it("measures a rail on every strip a bar is drawn on", () => {

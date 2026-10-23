@@ -252,13 +252,18 @@ states of all four roles against the fill each replaces, inside the
 role, state)` is the derivation for a stored theme, and answers `undefined` for
 a role the theme lost.
 
-The one action that also paints an **edge** is `secondary`: the components
-package adds `border border-strong` to the primitive's fill-only recipe, and no
-role pair can name a derived fill, so `styles.test.ts` holds `borderStrong` to
+The one action that also paints an **edge** is `secondary`, in both packages:
+`packages/primitives`' recipe and the components package's `Button` both add
+`border border-strong`, and no role pair can name a derived fill, so
+`styles.test.ts` holds `borderStrong` to
 `contrastFloorsFor(theme).boundary` on both pointer fills in every shipped style.
 It was under the floor in twelve styles hovered and fifteen pressed — the Luna
 dark at **2.16:1** — before `borderStrong` moved the smallest step that clears
-them; the tightest is now Windows dark's pressed fill at 3.00:1.
+them; the tightest is now Windows dark's pressed fill at 3.00:1. The edge is also
+what carries the action on a **row's wash**, which is why `filledActionStrips`
+stops at the four content strips: the fill reads 1.0000:1 against `hover` in both
+high-contrast variants, while `borderStrong` is held on `hover`, `active`,
+`accent` and `selected` (tightest 3.73:1, Windows light's `active`).
 
 ## Pointer states
 
@@ -838,8 +843,9 @@ Each report is also a function of its own:
   painted on to be seen,
   compositing a translucent role first. Each half found a shipped alias: the base
   dark theme's `hover` was its `popover`, so a hovered menu row painted nothing;
-  light `secondary` was its `muted` value and paints no border, so a secondary
-  button in a toolbar was a label with no button around it; **eleven of the
+  light `secondary` was its `muted` value, so a secondary button in a toolbar was
+  a label with no button around it, and the fill is measured on the four content
+  strips while the edge answers a row's wash; **eleven of the
   sixteen styles painted a chosen row's pointer step in the fill it already
   wore** — the four base palettes at 1.00:1 — so each `selected` is a step
   stronger than its `accent` now (macOS light moves its `accent`), tightest the

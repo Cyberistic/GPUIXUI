@@ -504,6 +504,111 @@ describe("filled action adoption claim", () => {
   });
 });
 
+describe("the tonal action's edge", () => {
+  /**
+   * The pages called `secondary` "fill-only" and "the tonal one with no border"
+   * long after both packages' action painted `borderStrong`, and they measured
+   * its fill on "every strip it can sit on" though a row's wash is the edge's
+   * claim. Both statements are held to the sources that decide them, and the
+   * numbers the pages print are derived from the sixteen shipped styles.
+   */
+  const retracted = [
+    "paints no border",
+    "fill-only",
+    "no brand colour and no border",
+  ];
+  const contentStrips = ["background", "card", "popover", "muted"] as const;
+  const washes = ["hover", "active", "accent", "selected"] as const;
+
+  it("says both packages' tonal action paints an edge", () => {
+    const recipe = read("../../primitives/src/recipe/index.ts");
+    const components = read("../../components/src/internal/button.tsx");
+
+    expect(recipe).toContain(
+      "bg-secondary text-secondary-foreground border border-strong",
+    );
+    expect(components).toContain('secondary: "border border-strong"');
+    expect(catalogue).toContain(
+      "`packages/primitives`' recipe and the components package's `Button` both add",
+    );
+    expect(designSystem).toContain(
+      "`secondary` action paints an edge (`borderStrong`)",
+    );
+    expect(inventoryRow("Action fills")).toContain(
+      "`secondary` paints `border border-strong` in both packages",
+    );
+    expect(
+      retracted.filter((clause) =>
+        [catalogue, designSystem, readme].some((page) => page.includes(clause)),
+      ),
+    ).toEqual([]);
+  });
+
+  it("keeps the fill claim on the content strips and leaves a row's wash to the edge", () => {
+    const fills = Tokens.decorativeSurfaces
+      .filter(({ surface }) => surface === "filledAction")
+      .map(({ over }) => over);
+    const edges = washes.filter((wash) =>
+      Tokens.contrastPairs.some(
+        ({ foreground, background }) =>
+          foreground === "borderStrong" && background === wash,
+      ),
+    );
+
+    expect(contentStrips.filter((strip) => fills.includes(strip))).toEqual(
+      contentStrips,
+    );
+    expect(fills).toHaveLength(contentStrips.length);
+    expect(edges).toEqual(washes);
+
+    const styles = [
+      ...Object.values(Tokens.themes),
+      ...Object.values(Tokens.highContrastThemes),
+      ...Tokens.platformNames.flatMap((platform) =>
+        Object.values(Tokens.themes).map((theme) =>
+          Tokens.platformTheme(theme, platform),
+        ),
+      ),
+      ...Tokens.retroNames.flatMap((look) =>
+        Object.values(Tokens.themes).map((theme) =>
+          Tokens.retroTheme(theme, look),
+        ),
+      ),
+    ];
+    const fillsWashed = styles.flatMap((theme) =>
+      washes.map((wash) =>
+        Tokens.contrastRatio(theme.colors.secondary, theme.colors[wash]),
+      ),
+    );
+    const missed = fillsWashed.filter(
+      (ratio) => (ratio ?? 0) < Tokens.decorativeFloor,
+    );
+    const tightestFill = Math.min(...fillsWashed.map((ratio) => ratio ?? 0));
+    const tightestEdge = Math.min(
+      ...styles.flatMap((theme) =>
+        washes.map(
+          (wash) =>
+            Tokens.contrastRatio(
+              theme.colors.borderStrong,
+              theme.colors[wash],
+            ) ?? 0,
+        ),
+      ),
+    );
+
+    const printed = [catalogue, designSystem].map((page) => [
+      page.includes(`${missed.length} of the ${fillsWashed.length}`),
+      page.includes(`${tightestFill.toFixed(4)}:1`),
+      page.includes(`${tightestEdge.toFixed(2)}:1`),
+    ]);
+
+    expect(printed).toEqual([
+      [true, true, true],
+      [true, true, true],
+    ]);
+  });
+});
+
 describe("the fade's page scope", () => {
   /** The two pages that teach the disabled state. */
   const pages: Readonly<Record<string, string>> = {

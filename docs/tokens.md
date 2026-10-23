@@ -116,8 +116,9 @@ The four washes — `hover`, `active`, `selected` and `accent` — are surfaces 
 two contracts: the text on them keeps the contrast floors, and the tint itself
 must be visible against every strip it can land on (see
 [Decorative surfaces](#decorative-surfaces)). `secondary` is the tonal action's
-resting fill and is held to the same perceptibility floor on the same strips,
-because that variant paints no border — its fill is the whole control.
+resting fill and is held to the same perceptibility floor on the same strips; the
+action also paints the `borderStrong` edge in both packages, so a row's wash is
+the edge's job rather than the fill's (see [Action fills](#action-fills)).
 
 The literal tables behind the themes are exported too: `lightColors`,
 `darkColors`, `highContrastLightColors` and `highContrastDarkColors`. Read them
@@ -351,9 +352,10 @@ and on a dialog. The derivation is checked like a role pair: the on-colour text
 keeps its contrast floor on both fills in every shipped theme (4.5:1 default,
 7:1 high contrast), and both fills are opaque and move toward the foreground.
 
-The one action that also paints an **edge** is `secondary`: `@gpuixui/components`
-adds `border border-strong` to the primitive's fill-only recipe, so the edge is
-drawn on each derived fill — and no role pair can name a derived fill, so nothing
+The one action that also paints an **edge** is `secondary`, in both packages:
+`packages/primitives`' recipe and the components package's `Button` both add
+`border border-strong`, so the edge is drawn on each derived fill — and no role
+pair can name a derived fill, so nothing
 measured it. It was under the boundary floor in **twelve** of the sixteen shipped
 styles hovered and **fifteen** pressed (high-contrast light was the only style
 that cleared both), the worst being the authored Luna dark at **2.16:1**: an
@@ -414,10 +416,16 @@ actionFeedbackFailures(theme); // [] when every hover and press is visible
 
 Ghost and subtle surfaces are the other case: they paint no fill at rest and
 take the `hover` / `active` washes instead. A filled action's **resting fill** is
-measured too, because the tonal one has no border: `secondary` is held to the
-perceptibility floor on every strip it can sit on (see
-[Decorative surfaces](#decorative-surfaces)), which is why the base light
-`secondary` is `#E1E5EC` rather than the `muted` value it used to be. A runnable
+measured too: `secondary` is held to the perceptibility floor on the four content
+strips it can sit on (see [Decorative surfaces](#decorative-surfaces)), which is
+why the base light `secondary` is `#E1E5EC` rather than the `muted` value it used
+to be. A **row's wash** is deliberately not a fill placement, because the fill
+cannot answer it: measured over the sixteen styles, `secondary` reads
+**1.0000:1** against `hover` in both high-contrast variants and **32 of the 64**
+wash placements are under the floor. What carries a tonal action on a row is its
+edge — `borderStrong`, which the contrast table holds to the boundary floor on
+`hover`, `active`, `accent` and `selected` and which clears it in every style,
+the tightest being **3.73:1** (Windows light's `active`). A runnable
 example spreads the three fills onto a control; see
 [`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts),
 and [`src/action-feedback.example.ts`](../packages/tokens/src/action-feedback.example.ts)
@@ -2363,8 +2371,9 @@ contrast dark at **1.08:1**, and `pointer-wash.test.ts` holds it with a brand
 whose `shadow` is its own press as the negative control.
 
 A **filled action** is the same defect one control over. `secondary` is the one
-filled variant with no brand colour and no border — `packages/primitives` paints
-`border-0` for it — so its fill is the whole button. The base light theme shipped
+filled variant with no brand colour of its own, so its fill is what separates it
+from the strip it sits on — and on a row's wash the edge takes over, which is why
+that wash is not a fill placement (§Action fills). The base light theme shipped
 `secondary` equal to `muted` (1.000:1), which made a secondary button inside a
 muted toolbar a label with no button around it; macOS light's window sat
 1.015:1 from it, Linux light 1.040:1 and Windows light 1.021:1, and the four
