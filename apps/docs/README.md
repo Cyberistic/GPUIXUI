@@ -81,7 +81,7 @@ components/timeline.mdx      Curated: the passed status, the rail that stops, th
 components/tabs.mdx          Curated: the measured indicator
 components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
 components/toast.mdx         Curated: the bounded queue, one action, the hold
-components/tooltip.mdx       Curated: the tip's clock, the traversal that never opens it
+components/tooltip.mdx       Curated: the tip's clock, its entry and held exit, the traversal that never opens it
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
 testing.mdx                  The two test lanes, the check model and the report
 contributing.mdx             The checks, the worktree rules, the component checklist
@@ -178,8 +178,8 @@ src/components/docs/table-preview.ts      The table preview's copy of the packag
 src/components/docs/table-demo.tsx        The table's browser renderings and their source strings
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate
 src/components/docs/tag-input-demo.tsx     The tag field's two browser renderings and their source strings
-src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, traversal
-src/components/docs/tooltip-demo.tsx      The tooltip's two browser renderings and their source strings
+src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, held exit, reduced preference, traversal
+src/components/docs/tooltip-demo.tsx      The tooltip's browser renderings (clock, motion switch, states) and their source strings
 src/components/docs/box-demo.tsx          The box's surface tones and facts as a labelled diagram
 src/components/docs/button-group-demo.tsx The button group's attached and separated modes
 src/components/docs/checkbox-group-demo.tsx The group's roving one-tab-stop list around the shared box
