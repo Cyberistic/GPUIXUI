@@ -30,8 +30,7 @@ describe("the gallery's entries", () => {
   it("draws the geometry the package ships", () => {
     const wrong = galleryIcons.filter(
       ({ name, markup }) =>
-        markup !==
-        icons[name].replace(reservedPaint, 'stroke="currentColor"'),
+        markup !== icons[name].replace(reservedPaint, 'stroke="currentColor"'),
     );
 
     expect(wrong).toEqual([]);
@@ -57,9 +56,9 @@ describe("the gallery's entries", () => {
     );
 
     expect(doubled).toEqual([]);
-    expect(galleryIcons.filter(({ markup }) => markup.includes(reservedPaint))).toEqual(
-      [],
-    );
+    expect(
+      galleryIcons.filter(({ markup }) => markup.includes(reservedPaint)),
+    ).toEqual([]);
   });
 
   it("reads the data modules the icon package publishes", () => {
@@ -85,11 +84,9 @@ describe("the gallery's filter", () => {
   });
 
   it("matches a name, in any case, with the surrounding space ignored", () => {
-    expect(filterIcons(galleryIcons, " PANEL ").map(({ name }) => name)).toEqual([
-      "panel-bottom",
-      "panel-left",
-      "panel-right",
-    ]);
+    expect(
+      filterIcons(galleryIcons, " PANEL ").map(({ name }) => name),
+    ).toEqual(["panel-bottom", "panel-left", "panel-right"]);
     expect(filterIcons(galleryIcons, "arrow").map(({ name }) => name)).toEqual([
       "arrow-down",
       "arrow-left",

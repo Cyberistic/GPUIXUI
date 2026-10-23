@@ -295,8 +295,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     );
     const firstLook = lookSteps[0];
     const lookReady = await until(
-      () =>
-        session.page.text(ready(lookGroup, firstLook?.label ?? "Platform")),
+      () => session.page.text(ready(lookGroup, firstLook?.label ?? "Platform")),
       (state) => state === "ready",
       budget,
     );

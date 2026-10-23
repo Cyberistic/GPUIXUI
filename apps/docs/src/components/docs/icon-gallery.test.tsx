@@ -27,7 +27,9 @@ describe("the icon gallery", () => {
     expect(galleryIcons.length).toBeGreaterThan(60);
     expect((markup.match(/<figure/g) ?? []).length).toBe(galleryIcons.length);
     expect(
-      galleryIcons.filter(({ name }) => !markup.includes(`>${name}</figcaption>`)),
+      galleryIcons.filter(
+        ({ name }) => !markup.includes(`>${name}</figcaption>`),
+      ),
     ).toEqual([]);
   });
 
@@ -90,7 +92,9 @@ describe("the icon gallery", () => {
     ).replace(/\s+/g, " ");
 
     expect(mount).toContain("useIndexQuery()");
-    expect(mount).toContain("<IconGalleryView onQueryChange={chooseQuery} query={query} />");
+    expect(mount).toContain(
+      "<IconGalleryView onQueryChange={chooseQuery} query={query} />",
+    );
     // The page mounts the URL-backed component and links the reference half.
     expect(page).toContain("<IconGallery />");
     expect(page).toContain("](/docs/icons/icon)");

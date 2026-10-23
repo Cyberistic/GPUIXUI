@@ -71,7 +71,9 @@ const steps = (() => {
     'const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"]',
   );
   const end = scenarios.indexOf("\nconst ", start + 1);
-  return start === -1 ? "" : scenarios.slice(start, end === -1 ? undefined : end);
+  return start === -1
+    ? ""
+    : scenarios.slice(start, end === -1 ? undefined : end);
 })();
 
 const opened = sizes[0] ?? { width: Number.NaN, height: Number.NaN };
@@ -122,7 +124,10 @@ export const reflow = {
     1 +
     [...steps.matchAll(/yield\* paintedPair\(/g)].length,
   right: {
-    anchor: { rest: rightAnchor(opened.width), zoomed: rightAnchor(zoomed.width) },
+    anchor: {
+      rest: rightAnchor(opened.width),
+      zoomed: rightAnchor(zoomed.width),
+    },
     panel: { rest: rightPanel(opened.width), zoomed: rightPanel(zoomed.width) },
   },
   bottom: {
