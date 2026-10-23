@@ -15,6 +15,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
+import { ScrollArea as ScrollAreaRoute } from "@gpuixui/primitives/scroll-area";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
@@ -414,6 +415,37 @@ it("reports the scroll box's own height, not the frame's", async () => {
   expect(heights.length).toBeGreaterThan(0);
   expect(heights[heights.length - 1]).toBe(viewport.height);
   expect(viewport.height).toBe(120 - testTheme.spacing.md * 2);
+});
+
+it("mounts the scroll box through its published subpath", async () => {
+  // The route exists so another package's scroll reading can compose this
+  // scroller instead of duplicating a viewport without its keyboard contract.
+  // A re-export that drifted from the component would pass every static check
+  // and still paint nothing here.
+  const runtime = await openWindow();
+  const heights: number[] = [];
+  runtime.render(
+    <Surface>
+      <ScrollAreaRoute
+        axis="vertical"
+        style={{ height: 90, width: 200 }}
+        viewportTestId="routed"
+        onLayout={(event) => heights.push(event.height ?? 0)}
+      >
+        {card("routed-card", 200, 400)}
+      </ScrollAreaRoute>
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const viewport = boundsOf(runtime, "routed");
+  expect(viewport.height).toBe(90);
+  expect(heights[heights.length - 1]).toBe(viewport.height);
+  runtime.wheel("routed", 0, -40);
+  const offset = Option.getOrElse(runtime.scrollOffset("routed"), () =>
+    expect.fail("the routed ScrollArea lost its scroll offset"),
+  );
+  expect(offset.y).toBe(-40);
 });
 
 it("declares the keyboard ring on the scroll region that takes the stop", async () => {

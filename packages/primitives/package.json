@@ -20,6 +20,10 @@
     "./button": {
       "types": "./src/button.ts",
       "default": "./src/button.ts"
+    },
+    "./scroll-area": {
+      "types": "./src/scroll-area.ts",
+      "default": "./src/scroll-area.ts"
     }
   },
   "scripts": {

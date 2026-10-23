@@ -86,6 +86,20 @@ package kept a local button stand-in until this route existed. The seam is a
 route, not a second implementation: `IconButton` is still `Button` with a
 required name.
 
+### The scroll box loads from its own subpath
+
+Import `ScrollArea` and `ScrollAreaViewport` from
+`@gpuixui/primitives/scroll-area` when another package needs a scroll reading.
+The subpath publishes the two parts and their prop types from a re-export seam
+(`src/scroll-area.ts`); it reaches `ScrollArea`, the two providers and the
+shared `internal.ts`, never the root barrel. The route exists because a reading
+must measure the element that scrolls: composing this scroller keeps its
+keyboard contract (arrows, PageUp/PageDown, Home/End) instead of duplicating a
+viewport without it. `scroll-area-entry.test.ts` holds the manifest entry, the
+namespace and the import closure, and
+`runtime/layout.runtime.test.tsx` mounts the routed export in a window and
+reads its layout and offset back.
+
 ## Components
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
