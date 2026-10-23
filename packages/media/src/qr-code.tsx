@@ -55,12 +55,13 @@ export interface QrCodeProps extends Omit<Props, "children"> {
   readonly ink?: string;
   /** The background and quiet zone's colour. Default {@link QR_PAPER}. */
   readonly paper?: string;
-  /** The symbol's accessible name. Default `"QR code"`. */
+  /** The symbol's accessible name. Default `"QR code"`; a blank name reads as the default. */
   readonly label?: string;
   readonly className?: string;
 }
 
 const DEFAULT_SIZE = 160;
+const DEFAULT_LABEL = "QR code";
 
 const errorStyle = (theme: Theme): StyleDesc => ({
   display: "flex",
@@ -81,6 +82,14 @@ const errorText = (theme: Theme): StyleDesc => ({
 export const qrOverflowMessage = (bytes: number, capacity: number): string =>
   `A QR code holds ${capacity} bytes at this level; the value is ${bytes}.`;
 
+/**
+ * The symbol's accessible name. A blank name reads as the default rather than
+ * publishing an image that names nothing: a QR code carries information, so it
+ * is never decoration.
+ */
+const qrLabel = (label: string): string =>
+  label.trim().length === 0 ? DEFAULT_LABEL : label.trim();
+
 /** The element `QrCode` renders. Pure in its arguments. */
 export const renderQrCode = (
   props: QrCodeProps,
@@ -93,7 +102,7 @@ export const renderQrCode = (
     quietZone = QR_QUIET_ZONE,
     ink = QR_INK,
     paper = QR_PAPER,
-    label = "QR code",
+    label = DEFAULT_LABEL,
     className,
     style,
     ...rest
@@ -128,7 +137,7 @@ export const renderQrCode = (
         <div
           {...rest}
           role="img"
-          aria-label={label}
+          aria-label={qrLabel(label)}
           style={mergeStyles(
             mergeStyles(recipeStyle(cn("rounded-sm", className), theme), {
               display: "flex",

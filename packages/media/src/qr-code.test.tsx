@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { encodeQr, qrByteCapacity, QrSymbol } from "./qr/encode.js";
@@ -67,6 +68,15 @@ describe("QrCode", () => {
     expect(expectSome(hostTag(svg))).toBe("svg");
     expect(expectSome(hostStyleString(svg, "color"))).toBe(QR_INK);
     expect(expectSome(hostProp(svg, "style"))).toMatchObject({ width: 145 });
+  });
+
+  it("reads a blank name as the default, never an unnamed image", () => {
+    // The bug guarded: a stored blank label published `role="img"` with an
+    // empty name, so assistive technology met an image that said nothing.
+    Arr.forEach(["", "   "], (label) => {
+      const root = render({ label });
+      expect(expectSome(elementProp(root, "aria-label"))).toBe("QR code");
+    });
   });
 
   it("carries every dark module and the four-module quiet zone", () => {
