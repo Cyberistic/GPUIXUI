@@ -38,6 +38,17 @@ describe("the presence frames", () => {
     });
   });
 
+  it("takes the house vertical axis for an axis it does not name", () => {
+    // An axis is a builder argument, but a caller can also hand it a name it
+    // restored from UI state. The branching used to end in an `else`, so a name
+    // the package does not carry travelled on `left`: a surface that asked for a
+    // vertical arrival moved sideways while every frame stayed paintable.
+    // @ts-expect-error — an axis a store wrote, not the union the builder declares.
+    expect(fadeFrom("diagonal", 8)).toEqual(fadeFrom("top", 8));
+    // The readable horizontal axis still travels horizontally.
+    expect(fadeFrom("left", 8).initial).toEqual({ opacity: 0, left: 8 });
+  });
+
   it("arrives from the edge a panel is anchored to, and leaves back out of it", () => {
     // A right-hand drawer starts further right, so it reads as arriving from
     // outside the window; an anchored surface does the opposite and starts

@@ -73,18 +73,33 @@ const travelOf = (offset: number): number =>
   Number.isFinite(offset) ? offset : 0;
 
 /**
+ * The inset a frame travels on, read from a value a caller may have stored.
+ *
+ * The axis is a union, but a builder is also handed a name from persisted UI
+ * state — the same door {@link fadeFromSide}'s side comes through. The
+ * branching below used to end in an `else`, so a name the package does not
+ * carry travelled on `left`: a surface that asked for a vertical arrival moved
+ * sideways. An unnamed axis is the house **vertical** one, the axis every
+ * surface that asked for nothing travels on (`below`/`above`, and the `bottom`
+ * a stored side falls back to).
+ */
+const axisOf = (axis: "top" | "left"): "top" | "left" =>
+  axis === "left" ? "left" : "top";
+
+/**
  * A fade that travels `offset` pixels along one axis.
  *
  * A positive `top` starts the surface low and rises it into place; a negative
  * one starts high. An offset that cannot be read travels nowhere
- * ({@link travelOf}).
+ * ({@link travelOf}), and an axis the table does not name takes the house
+ * vertical one ({@link axisOf}).
  */
 export const fadeFrom = (
   axis: "top" | "left",
   offset: number,
 ): PresenceFrames => {
   const travel = travelOf(offset);
-  return axis === "top"
+  return axisOf(axis) === "top"
     ? {
         initial: { opacity: 0, top: travel },
         animate: { opacity: 1, top: 0 },
