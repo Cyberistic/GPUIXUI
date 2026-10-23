@@ -26,6 +26,9 @@ import {
   SCROLLBAR_DEFAULT_WIDTH,
   SCROLLBAR_FLOOR,
   SCROLLBAR_FLOOR_CONTENT,
+  SCROLLBAR_HORIZONTAL,
+  SCROLLBAR_HORIZONTAL_SCROLLED_BY,
+  SCROLLBAR_HORIZONTAL_STOP,
   SCROLLBAR_IDS,
   SCROLLBAR_MIN_THUMB,
   SCROLLBAR_SCROLLED_BY,
@@ -38,6 +41,7 @@ import {
   SCROLLBAR_VIEWPORTS,
   SCROLLBAR_WIDE,
   thumbOf,
+  trackOf,
 } from "./scrollbar.js";
 
 const readme = readFileSync(
@@ -76,6 +80,23 @@ describe("the thumb the runtime paints", () => {
     expect(
       Option.getOrUndefined(thumbOf(track, 2_000, 0))?.length,
     ).toBeLessThan(Option.getOrUndefined(thumbOf(track, 500, 0))?.length ?? 0);
+  });
+
+  it("puts the same share on the horizontal axis, measured by width", () => {
+    // One rule, two coordinates: the horizontal case's track is the viewport's
+    // width, so the thumb is longer than the vertical case's at the same content.
+    expect(trackOf("horizontal")).toBe(SCROLLBAR_VIEWPORT.width);
+    expect(trackOf("vertical")).toBe(SCROLLBAR_VIEWPORT.height);
+    expect(
+      thumbOf(trackOf("horizontal"), SCROLLBAR_HORIZONTAL.content, 0),
+    ).toEqual(Option.some({ start: 0, length: 68 }));
+    expect(
+      thumbOf(
+        trackOf("horizontal"),
+        SCROLLBAR_HORIZONTAL.content,
+        -SCROLLBAR_HORIZONTAL_SCROLLED_BY,
+      ),
+    ).toEqual(Option.some({ start: 104, length: 68 }));
   });
 
   it("floors a thumb at the minimum, and never past its track", () => {
@@ -127,21 +148,31 @@ describe("the scrollbar case table", () => {
     expect(SCROLLBAR_THUMBS).toEqual([
       {
         id: SCROLLBAR_IDS.tinted,
+        axis: "vertical",
         tint: SCROLLBAR_TINTED.tint,
         box: { x: 250, y: 0, width: 10, height: 26 },
       },
       {
         id: SCROLLBAR_IDS.wide,
+        axis: "vertical",
         tint: SCROLLBAR_WIDE.tint,
         box: { x: 242, y: 0, width: 18, height: 51 },
       },
       {
         id: SCROLLBAR_IDS.floor,
+        axis: "vertical",
         tint: SCROLLBAR_FLOOR.tint,
         box: { x: 250, y: 0, width: 10, height: SCROLLBAR_MIN_THUMB },
       },
       {
+        id: SCROLLBAR_IDS.horizontal,
+        axis: "horizontal",
+        tint: SCROLLBAR_HORIZONTAL.tint,
+        box: { x: 0, y: 150, width: 68, height: 10 },
+      },
+      {
         id: SCROLLBAR_IDS.default,
+        axis: "vertical",
         tint: Option.none(),
         box: { x: 254, y: 0, width: SCROLLBAR_DEFAULT_WIDTH, height: 26 },
       },
@@ -155,7 +186,18 @@ describe("the scrollbar case table", () => {
       SCROLLBAR_IDS.tinted,
       SCROLLBAR_IDS.wide,
       SCROLLBAR_IDS.floor,
+      SCROLLBAR_IDS.horizontal,
     ]);
+    // The transposition is in the table, not in the reader: the horizontal
+    // thumb is as long across as the width rule says and its thickness is its
+    // height, laid along the bottom edge (150 + 10 = the 160 px track).
+    const horizontal = Arr.findFirst(
+      SCROLLBAR_THUMBS,
+      (thumb) => thumb.id === SCROLLBAR_IDS.horizontal,
+    );
+    expect(Option.map(horizontal, (thumb) => thumb.box)).toEqual(
+      Option.some({ x: 0, y: 150, width: 68, height: 10 }),
+    );
   });
 
   it("mounts one scroller per case and one control that fits", () => {
@@ -164,6 +206,7 @@ describe("the scrollbar case table", () => {
       SCROLLBAR_IDS.wide,
       SCROLLBAR_IDS.short,
       SCROLLBAR_IDS.floor,
+      SCROLLBAR_IDS.horizontal,
       SCROLLBAR_IDS.default,
     ]);
     // A case whose content fits must be the only one the rule answers nothing
@@ -193,6 +236,25 @@ describe("the scrollbar case table", () => {
     ]);
   });
 
+  it("predicts the sideways wheel on the width", () => {
+    expect(Option.isSome(SCROLLBAR_HORIZONTAL_STOP)).toBe(true);
+    expect(
+      Option.map(SCROLLBAR_HORIZONTAL_STOP, (stop) => ({
+        delta: stop.delta,
+        offset: stop.offset,
+        start: stop.thumb.start,
+        length: stop.thumb.length,
+      })),
+    ).toEqual(
+      Option.some({
+        delta: -SCROLLBAR_HORIZONTAL_SCROLLED_BY,
+        offset: -SCROLLBAR_HORIZONTAL_SCROLLED_BY,
+        start: 104,
+        length: 68,
+      }),
+    );
+  });
+
   it("keeps every locator apart", () => {
     const ids = Object.values(SCROLLBAR_IDS);
     expect(new Set(ids).size).toBe(ids.length);
@@ -209,10 +271,11 @@ describe("the scrollbar case table", () => {
         2 +
         SCROLLBAR_STOPS.length * 4 +
         1 +
+        4 +
         2 +
         4,
     );
-    expect(SCROLLBAR_CHECKS).toBe(59);
+    expect(SCROLLBAR_CHECKS).toBe(72);
   });
 });
 
@@ -238,15 +301,18 @@ describe("the scrollbar-thumb probe's record", () => {
   });
 
   it("prints the lengths the capture read, not only the rule's", () => {
-    // The rounded caps hide one point at each end of a solid-colour read, so the
-    // section prints the rule and the read together; a page that printed the
-    // rule alone would claim a measurement it does not have.
-    const rules = Arr.map(SCROLLBAR_THUMBS, (thumb) => thumb.box.height);
+    // The rounded caps hide one point of a solid-colour read, so the section
+    // prints the rule and the read together; a page that printed the rule alone
+    // would claim a measurement it does not have. The horizontal thumb's length
+    // is its width, so the table is read along each thumb's own axis.
+    const rules = Arr.map(SCROLLBAR_THUMBS, (thumb) =>
+      thumb.axis === "horizontal" ? thumb.box.width : thumb.box.height,
+    );
     const reads = Arr.map(rules, (length) => length - 1);
     expect(flat).toContain(
       `The resting thumbs read ${Arr.map(reads, (read) => `**${read}**`).join(
         ", ",
-      )} px tall against rules of ${Arr.map(
+      )} px long against rules of ${Arr.map(
         rules,
         (length) => `**${length}**`,
       ).join(", ")}`,
@@ -272,14 +338,31 @@ describe("the scrollbar-thumb probe's record", () => {
       `One \`-${SCROLLBAR_SCROLLED_BY}\` wheel moves the offset to \`-${SCROLLBAR_SCROLLED_BY}\` and the start to 64`,
     );
     expect(flat).toContain("`scrollbar-short` paints none of its tint");
+    // The sideways row: the rule transposes, and the read is half a point in
+    // because the cap rounds.
+    const sideways = Option.getOrUndefined(SCROLLBAR_HORIZONTAL_STOP);
+    expect(sideways).toBeDefined();
+    const start = sideways?.thumb.start ?? 0;
+    const length = sideways?.thumb.length ?? 0;
+    expect(flat).toContain(
+      `the horizontal scroller, one \`-${SCROLLBAR_HORIZONTAL_SCROLLED_BY}\` wheel on \`x\` | \`-${SCROLLBAR_HORIZONTAL_SCROLLED_BY}\` | **${start}** | the thumb reads from **${
+        start + 0.5
+      }** to **${start + 0.5 + (length - 1)}** along the width`,
+    );
   });
 
-  it("states both negative controls it measured", () => {
+  it("states the three negative controls it measured", () => {
     expect(flat).toContain(
       "painting `scrollbar-floor` eight pixels thick fails `scrollbar-floor's thumb is the thickness it asks for` (`expected 10 ± 1, got 8`)",
     );
     expect(flat).toContain(
       "dropping the rule's minimum fails `scrollbar-floor's thumb is the length its content gives it` (`expected 3 ± 1, got 19`)",
+    );
+    expect(flat).toContain(
+      "mounting the horizontal case as a **vertical** scroller",
+    );
+    expect(flat).toContain(
+      "fails `the scrollbar-horizontal thumb paints the tint it asks for` (`expected a value, got none`)",
     );
   });
 });
@@ -301,6 +384,12 @@ describe("the probe asks the questions the section answers", () => {
     );
     expect(liveScenarios).toContain(
       "scrollbarWidth={Option.getOrUndefined(scroller.width)}",
+    );
+    // The axis is the case's, so the horizontal scroller really is mounted as
+    // one; and its content is a strip rather than a column.
+    expect(liveScenarios).toContain("axis={scroller.axis}");
+    expect(liveScenarios).toContain(
+      'scroller.axis === "horizontal"\n            ? {',
     );
     expect(liveScenarios).toContain("viewportTestId={scroller.id}");
     expect(liveScenarios).toContain("backgroundColor: theme.colors.scrollbar");

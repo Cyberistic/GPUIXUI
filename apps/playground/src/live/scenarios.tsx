@@ -874,6 +874,9 @@ import {
   SCROLLBAR_DEFAULT,
   SCROLLBAR_FILL,
   SCROLLBAR_FLOOR,
+  SCROLLBAR_HORIZONTAL,
+  SCROLLBAR_HORIZONTAL_SCROLLED_BY,
+  SCROLLBAR_HORIZONTAL_STOP,
   SCROLLBAR_IDS,
   SCROLLBAR_SHORT,
   SCROLLBAR_STOPS,
@@ -20764,12 +20767,13 @@ const ScrollbarProbe = (): ReactNode => {
   /**
    * One scroller: every case mounts the shipped `ScrollArea`, and the two knobs
    * are passed only when the fixture names one, so the default case really is
-   * the library's default paint.
+   * the library's default paint. A horizontal case asks the same rule on the
+   * other axis, whose content is a strip rather than a column.
    */
   const scroller = (scroller: ScrollbarCase) => (
     <ScrollArea
       key={scroller.id}
-      axis="vertical"
+      axis={scroller.axis}
       scrollbarColor={Option.getOrUndefined(scroller.tint)}
       scrollbarWidth={Option.getOrUndefined(scroller.width)}
       viewportTestId={scroller.id}
@@ -20781,9 +20785,13 @@ const ScrollbarProbe = (): ReactNode => {
       <div
         testId={scroller.contentId}
         style={{
-          height: scroller.content,
+          ...(scroller.axis === "horizontal"
+            ? {
+                width: scroller.content,
+                height: SCROLLBAR_VIEWPORT.height,
+              }
+            : { height: scroller.content, alignSelf: "stretch" }),
           flexShrink: 0,
-          alignSelf: "stretch",
           backgroundColor: SCROLLBAR_FILL,
         }}
       />
@@ -20816,6 +20824,7 @@ const ScrollbarProbe = (): ReactNode => {
         />
       </div>
       <div style={row}>
+        {scroller(SCROLLBAR_HORIZONTAL)}
         {scroller(SCROLLBAR_SHORT)}
         {scroller(SCROLLBAR_DEFAULT)}
       </div>
@@ -20900,18 +20909,22 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           }),
       });
 
-    // Every mounted scroller: its box, its content's box, and the content writing
-    // to the full width — a thumb laid out in a gutter would narrow it.
+    // Every mounted scroller: its box, its content's box, and the content
+    // keeping the viewport's cross axis — a thumb laid out in a gutter would
+    // narrow a vertical scroller's content and shorten a horizontal one's.
     const mounted = yield* Effect.forEach(
       SCROLLBAR_VIEWPORTS,
       (scroller) =>
         Effect.gen(function* () {
           const viewport = yield* paintedBox(ctx, scroller.id);
           const content = yield* paintedBox(ctx, scroller.contentId);
+          const horizontal = scroller.axis === "horizontal";
           yield* ctx.expectNear(
-            `${scroller.id}'s content keeps the scroller's full width`,
-            content.width,
-            viewport.width,
+            `${scroller.id}'s content keeps the scroller's full ${
+              horizontal ? "height" : "width"
+            }`,
+            horizontal ? content.height : content.width,
+            horizontal ? viewport.height : viewport.width,
             1,
           );
           return { scroller, viewport };
@@ -20927,8 +20940,11 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         onSome: Effect.succeed,
       });
 
-    // The resting thumb, per case: the tint paints, flush right, at the top of
-    // the track, at the thickness asked for and the length the content gives it.
+    // The resting thumb, per case: the tint paints, flush at the trailing edge,
+    // at the track's start, at the thickness asked for and the length the
+    // content gives it. A horizontal thumb swaps the two coordinates, and the
+    // expectations are read the same way rather than through one shared helper,
+    // so a read that forgot the axis could not agree with itself.
     yield* Effect.forEach(
       SCROLLBAR_THUMBS,
       (thumb) =>
@@ -20939,28 +20955,31 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
             `the ${thumb.id} thumb paints the tint it asks for`,
             thumbIn(frame, viewport, colour),
           );
+          const horizontal = thumb.axis === "horizontal";
           yield* ctx.expectNear(
             `${thumb.id}'s thumb ends at the scroller's trailing edge`,
-            logical(box.x + box.width),
-            SCROLLBAR_VIEWPORT.width,
+            horizontal
+              ? logical(box.y + box.height)
+              : logical(box.x + box.width),
+            horizontal ? SCROLLBAR_VIEWPORT.height : SCROLLBAR_VIEWPORT.width,
             1,
           );
           yield* ctx.expectNear(
-            `${thumb.id}'s thumb starts at the track's top`,
-            logical(box.y),
-            thumb.box.y,
+            `${thumb.id}'s thumb starts at the track's start`,
+            horizontal ? logical(box.x) : logical(box.y),
+            horizontal ? thumb.box.x : thumb.box.y,
             1,
           );
           yield* ctx.expectNear(
             `${thumb.id}'s thumb is the thickness it asks for`,
-            logical(box.width),
-            thumb.box.width,
+            horizontal ? logical(box.height) : logical(box.width),
+            horizontal ? thumb.box.height : thumb.box.width,
             1,
           );
           yield* ctx.expectNear(
             `${thumb.id}'s thumb is the length its content gives it`,
-            logical(box.height),
-            thumb.box.height,
+            horizontal ? logical(box.width) : logical(box.height),
+            horizontal ? thumb.box.width : thumb.box.height,
             1,
           );
         }),
@@ -21047,6 +21066,48 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           }
         }),
       { concurrency: 1, discard: true },
+    );
+
+    // The other axis: a sideways wheel moves the offset and the thumb along the
+    // width, so the same rule has to transpose rather than only apply to height.
+    const horizontal = yield* viewportOf(SCROLLBAR_HORIZONTAL.id);
+    const horizontalColour = yield* tintOf(SCROLLBAR_HORIZONTAL.tint);
+    const sideways = yield* Option.match(SCROLLBAR_HORIZONTAL_STOP, {
+      onNone: () =>
+        Effect.die(
+          "the scrollbar fixture's horizontal case no longer overflows",
+        ),
+      onSome: Effect.succeed,
+    });
+    yield* ctx.host.wheel(
+      SCROLLBAR_HORIZONTAL.id,
+      -SCROLLBAR_HORIZONTAL_SCROLLED_BY,
+      0,
+    );
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("scrollbar-sideways");
+    const sidewaysFrame = yield* ctx.host.pixels("scrollbar-sideways");
+    const sidewaysThumb = yield* ctx.expectSome(
+      "the sideways wheel keeps the thumb painted",
+      thumbIn(sidewaysFrame, horizontal, horizontalColour),
+    );
+    const sidewaysOffset = yield* ctx.expectSome(
+      "the horizontal scroller reports a scroll offset",
+      Option.fromNullishOr(
+        yield* ctx.host.scrollOffset(SCROLLBAR_HORIZONTAL.id),
+      ),
+    );
+    yield* ctx.expectNear(
+      "the sideways wheel leaves the scroller at its offset",
+      sidewaysOffset.x,
+      sideways.offset,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the horizontal thumb starts where the offset puts it",
+      logical(sidewaysThumb.x),
+      sideways.thumb.start,
+      1,
     );
 
     // The pointer does not appear or fade the thumb: hovering leaves the same

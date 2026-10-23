@@ -5118,22 +5118,25 @@ than in a gutter.
 | `scrollbar-tinted` | 1 000 | 10 | at the track's top, flush at the trailing edge |
 | `scrollbar-wide` | 500 | 18 | longer and thicker, from the same rule |
 | `scrollbar-floor` | 10 000 | 10 | the 20 px minimum, not the 2.5 px share |
+| `scrollbar-horizontal` | 1 000 (width) | 10 | the same rule on the other axis: along the bottom edge, its length from the width |
 | `scrollbar-default` | 1 000 | none | the theme's `scrollbar` role (the swatch beside it) at the platform's 6 px |
 | `scrollbar-short` | 100 | 10 | none at all — the content fits |
 
-The resting thumbs read **25**, **50**, **19**, **25** px tall against rules of
-**26**, **51**, **20**, **26**; the missing point at each end is the rounded
-cap, which a solid-colour crop cannot count, and the probe allows it. Every
-scroller's content keeps the viewport's full width, which is the no-gutter half:
-a thumb laid out beside the content would narrow it.
+The resting thumbs read **25**, **50**, **19**, **67**, **25** px long against
+rules of **26**, **51**, **20**, **68**, **26**; the missing point is the
+rounded cap, which a solid-colour crop cannot count, and the probe allows it.
+Every scroller's content keeps the viewport's cross axis, which is the no-gutter
+half: a thumb laid out beside the content would narrow a vertical scroller's
+content and shorten a horizontal one's.
 
 | State | Offset | Thumb start | Read |
 | --- | --- | --- | --- |
-| at rest | `0` | `0` | 25 px tall |
+| at rest | `0` | `0` | 25 px long |
 | one `-400` wheel | `-400` | `64` | moved, same length |
 | a wheel past the end | `-840` | `134` | bottom reads **159** of the **160** px track |
 | the pointer over it | `-840` | `134` | unchanged |
 | a wheel back to the top | `0` | `0` | back at the top |
+| the horizontal scroller, one `-400` wheel on `x` | `-400` | **104** | the thumb reads from **104.5** to **171.5** along the width |
 
 The four rules a component plan needs:
 
@@ -5148,26 +5151,38 @@ The four rules a component plan needs:
    `-840` and starts the thumb at 134, whose bottom reads **159** of the **160**
    px track — the rule ends it at 160 and the rounded cap takes the last point.
    Hovering changes neither.
-4. **Content that fits paints no thumb, and the thumb takes no gutter.**
+4. **The rule transposes to the other axis.** The horizontal scroller's thumb is
+   the viewport's share of its **width** (**67** of a rule's **68**), lies along
+   the bottom edge rather than in a gutter below it, and a `-400` sideways wheel
+   starts it at 104 — read **104.5**, because the cap rounds. A table's sideways
+   scroller and a toolbar's overflow show the same affordance, and a component
+   that reads `scrollY` alone will believe a sideways scroller never moved.
+5. **Content that fits paints no thumb, and the thumb takes no gutter.**
    `scrollbar-short` paints none of its tint, so the affordance is not a
    decoration every scroller wears; and every content box keeps the viewport's
-   width, because the thumb is painted over it rather than beside it.
+   cross axis, because the thumb is painted over it rather than beside it.
 
-59 checks, `--only scrollbar-thumb`, green on 0.11.0 here (~4.6 s). Fixture:
-`src/live/scrollbar.ts` (the locators, `maxOffset`/`thumbOf`, the case and thumb
-tables, `SCROLLBAR_STOPS` and `SCROLLBAR_CHECKS`) + `scrollbar.test.ts` (16
-cases: the rule's length, its floor, both clamps and its absence; the resting
-table; the mounted cases; the two stops; the locators; the count; the registry
-entry; this section with the reads, the moves and the controls it prints; the
-view's wiring; and the shipped painter's defaults). The view and steps live in
-`src/live/scenarios.tsx`. Evidence: `.artifacts/live/scrollbar.png`,
-`.artifacts/live/scrollbar-{400,840,hover,top}.png`.
+72 checks, `--only scrollbar-thumb`, green on 0.11.0 here (~5.7 s). Fixture:
+`src/live/scrollbar.ts` (the locators, `maxOffset`/`thumbOf`, `trackOf`, the
+case and thumb tables, `SCROLLBAR_STOPS`, the sideways stop and
+`SCROLLBAR_CHECKS`) + `scrollbar.test.ts` (18 cases: the rule's length, its floor
+and both clamps; the same rule on the horizontal axis; its absence for content
+that fits; the resting table including the transposed box; the mounted cases;
+the two vertical stops and the sideways one; the locators; the count; the
+registry entry; this section with the reads, the moves and the controls it
+prints; the view's wiring; and the shipped painter's defaults). The view and
+steps live in `src/live/scenarios.tsx`.
+Evidence: `.artifacts/live/scrollbar.png`,
+`.artifacts/live/scrollbar-{400,840,hover,top,sideways}.png`.
 
-Two negative controls measured, exit `1` each, restored green: painting
+Three negative controls measured, exit `1` each, restored green: painting
 `scrollbar-floor` eight pixels thick fails `scrollbar-floor's thumb is the
-thickness it asks for` (`expected 10 ± 1, got 8`), and dropping the rule's
-minimum fails `scrollbar-floor's thumb is the length its content gives it`
-(`expected 3 ± 1, got 19`).
+thickness it asks for` (`expected 10 ± 1, got 8`), dropping the rule's minimum
+fails `scrollbar-floor's thumb is the length its content gives it` (`expected
+3 ± 1, got 19`), and mounting the horizontal case as a **vertical** scroller —
+whose content then fits — fails `the scrollbar-horizontal thumb paints the tint
+it asks for` (`expected a value, got none`), so the bottom-edge thumb is the
+axis's consequence rather than a decoration.
 
 ## Terminal mode: the pty probe
 
