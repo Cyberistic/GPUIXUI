@@ -588,6 +588,12 @@ export const liveRegistry = [
       "Layout: a row's leftover goes to its growers, a basis of zero splits it evenly, an item shrinks only when it may, and alignSelf overrides a stretch",
     capability: "layout",
   },
+  {
+    id: "scrollbar-thumb",
+    title:
+      "Scroll: a scroller paints a native thumb in its own tint and thickness, at the viewport's share of the content, and none at all when the content fits",
+    capability: "scroll",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -1197,7 +1197,7 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 128/128
+`[x]` `[██████████]` 129/129
 
 `[x]` Measure the **flex sizing rules** a `flex-1` composes with — `@gpuixui/tw`
       compiles `flex-1` to `{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }` and
@@ -3829,6 +3829,41 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `apps/playground/README.md` §`image-box`. Publishing it in the capability
       record's **Image painting** row is the Interlocks row below.
 
+`[x]` Measure the **thumb a `ScrollArea` paints**, not only the style it passes —
+      GPUix 0.11.0 draws the scrollbar itself (`scrollbarColor` turns it on for
+      an axis with more to show and `scrollbarWidth` sizes it), the shipped
+      `ScrollArea` tints it from the theme's `scrollbar` role, and every proof
+      was either an offscreen style report or a scroll-offset probe: how long a
+      thumb is, where it starts and whether one is painted at all was the
+      typings' claim, and a preview pane, a table body and a code host rest on
+      it. The `scrollbar-thumb` live probe mounts five scrollers (260×160), reads
+      each painted box and drives the tinted one on 0.11.0: content **1 000**
+      paints a thumb **25** px tall at the top (the rule's **26**, one point lost
+      to the rounded caps), **500** paints **50** (rule **51**), **10 000**
+      paints the **19/20** px floor rather than its 2.5 px share, the no-knob
+      case paints the theme's role at the platform's **6**, and content that
+      **fits** paints **none** of its tint; each thumb ends exactly at the
+      scroller's trailing edge and every content box keeps the viewport's full
+      width (no gutter). One `-400` wheel moves the offset to `-400` and the
+      start to **64**, a wheel past the end clamps at `-840` with the thumb at
+      **134** and its bottom reading **159** of the 160 px track, hovering
+      changes neither, and a wheel back returns it to `0`. 59 checks,
+      `--only scrollbar-thumb`, green on 0.11.0 here (~4.6 s). Fixture
+      `src/live/scrollbar.ts` (`maxOffset`/`thumbOf`, the five cases, the resting
+      thumb table, `SCROLLBAR_STOPS`, `SCROLLBAR_CHECKS`) + `scrollbar.test.ts`
+      (16 cases: the length, the floor, both clamps and the absence; the resting
+      table; the mounted cases; the two stops; the locators; the count; the
+      registry entry; this section with its printed reads, moves and controls;
+      the view's wiring; and the shipped painter's defaults). Two negative
+      controls measured, exit `1` each, restored green: painting the floor
+      scroller eight pixels thick fails `scrollbar-floor's thumb is the
+      thickness it asks for` (`expected 10 ± 1, got 8`), and dropping the rule's
+      minimum fails `scrollbar-floor's thumb is the length its content gives it`
+      (`expected 3 ± 1, got 19`). Evidence: `apps/playground/README.md`
+      §`scrollbar-thumb`, `.artifacts/live/scrollbar.png` and
+      `.artifacts/live/scrollbar-{400,840,hover,top}.png`. Publishing it in the
+      capability record is the Interlocks row below.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 4/4
@@ -6253,6 +6288,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | State the **render-time retention** a filter applies to a selection — `packages/data/README.md` says "A hidden row's selection must be cleared: `narrowTable` releases it in the same commit; `useTable` does the same for a sort/filter change", which a consumer reads as permanent, and `useTable` holds `chosen` and computes `selection = retainSelection(chosen, keys)` during render: `data-table-lifecycle` measured in a window that a typed `001` narrows to `1 rows · 0 selected` (the release paints on the first frame), then a query the whole set matches paints `60 rows · 2 selected` — the same two records chosen again, because nothing committed the release. A grid that needs a permanent clear must call `clear()` (or commit the retained set) on the query change. The Tier 3 **Row selection** / **Filtering controls** rows and the `/docs/data-display` rules should say it, and the README line should stop implying a permanent release | data (the README, the two `COMPONENTS.md` rows and `packages/data/docs`) | **resolved 2026-10-23 (data half)** — the README's runtime row now reads *A hidden row's selection is released at render, not erased* and states the measured round trip (`1 rows · 0 selected`, then the whole set painting `60 rows · 2 selected`), with `clear()` named as the permanent clear; `useTable`'s doc comment says the same; the Tier 3 **Row selection** and **Filtering controls** rows carry the rule and its evidence. `packages/data/src/selection/logic.test.ts` gains `paints the record again when a wider set brings it back`, so an implementation that erases on retention fails by name. The `/docs/data-display` sentence is docs-site's path and is recorded below |
 | The **Property panels** inventory row is malformed and silences the whole data-display table — its Notes cell prints the union `` `kind: "readonly" \| "editable"` `` with a bare pipe, so the row carries five cells; `apps/docs/src/lib/inventory.test.ts` reports `line 259: expected 4 cells under a tier, found 5`, and the site's parser drops every row on `/docs/data-display` (the lane pages read the same table). Escape the pipe as `\|`. Measured 2026-10-22 on `master`: `nub run --filter @gpuixui/docs test` is 923/930 with this case failing; the other six failures are in-flight component/data page edits | data (owns the Tier 3 rows in `COMPONENTS.md`) | **resolved 2026-10-23** — the row is worded without a pipe (`its kind is readonly or editable`), every Tier 3 row measures four cells, and `nubx vitest run src/lib/inventory.test.ts src/lib/package-page-template.test.ts` is 18/18 green |
 | Restore the **playground's live suite build** — `apps/playground/src/live/scenarios.tsx` (uncommitted, in the working tree) imports `VIRTUAL_TABLE`, `VIRTUAL_TABLE_FILTER`, `VIRTUAL_TABLE_FILTERED_ROWS`, `VIRTUAL_TABLE_INITIAL`, `VIRTUAL_TABLE_NAME_SORT`, `VIRTUAL_TABLE_READOUT`, `VIRTUAL_TABLE_REVEAL`, `virtualTableReadout` and `virtualTableRow` from `./virtual-table.js` and never reads them, so `nub run --filter playground build` exits 2 and no headless or live run can start: the tree and expandable-rows probes were measured against a build made with `--noUnusedLocals false`. Finish or drop the in-flight virtual-table live probe | playground (the live suite's owner — the edit is uncommitted, so coordinate before touching it) | **resolved 2026-10-23** — the in-flight virtual-table probe landed and the build is clean: `nub run --filter playground build` and `check-types` both exit 0, and a live run (`--only focus-ring-offset`) starts from that build |
+| Publish the **thumb a `ScrollArea` paints** in the capability record — the playground's `scrollbar-thumb` (59 checks on 0.11.0) measured what no proof covered before: content **1 000** in a 160 px track paints a thumb **25** px tall (rule 26), **500** paints **50** (rule 51), **10 000** paints the **19/20** px floor rather than the 2.5 px share, a scroller whose content **fits** paints **no thumb at all**, the thumb sits flush at the trailing edge with the content keeping the viewport's full width, one `-400` wheel moves it to start **64**, the end clamps at offset `-840`/start **134** with its bottom reading **159** of 160, and hovering changes neither. `docs/gpuix-capabilities.md` §3 has a **Scroll events** row but no row for the painted thumb, and the `COMPONENTS.md` capability row says "verified (native thumb tint and thickness measured on 0.11.0)" without naming the probe that measured it — so a consumer planning a preview pane or a table body still reads the typings' claim | docs-site (the record and `/docs/runtime`) and the inventory (the capability row's citation) | open — measured 2026-10-23; the numbers, the fixture and both negative controls are in `apps/playground/README.md` §`scrollbar-thumb` and `apps/playground/src/live/scrollbar.ts` |
+
 
 | Re-clamp a **virtual table's window when the set shrinks** — `virtual-table-lifecycle` measured on 0.11.0 that filtering 1 000 rows to 127 while the window sat near row 700 updates the readout and releases the selection, but leaves a row the app no longer holds still reporting its box (`virtual-row-row-701`), and the range reports `first=8 last=16` (the pre-filter window) until the next wheel, when it jumps to `last=127` and the paint holds `file-0601.ts` and its neighbours. `useVirtualRows` derives the window from `scrollOffset` with `calculator.at`, so the offset is not re-clamped when `count` changes, and `VirtualTableBody` keeps the indices it had. The app should clamp the offset on a count change (or the body should) and drop the children outside the new count; add a `packages/data/src/virtual/list.test.ts` case for a shrinking count, state the rule in the Tier 3 **Virtualized tables** row and `/docs/data-display`, and re-run `--only virtual-table-lifecycle` | data (the hook, the body, the inventory row and the data-display page) | **resolved 2026-10-23** — the diagnosis was half right: the offset was never re-clamped, and the core's own clamp landed the stale offset on the *new content's end*, mounting **five rows in a nine-row viewport** (the paint did hold the narrowed tail, so `virtual-row-row-701` was painted because `file-0701.ts` really is in the narrowed set). `window.ts` now exports `maxScrollOffset`/`clampScrollOffset` (`count × rowHeight − viewport`), `indicesAt` clamps and drops an index outside the count, and `useVirtualRows` commits the clamp in the same render. Measured both directions: without the clamp the new behaviour case fails `expected 5 to be greater than or equal to 8`, and the live probe fails `the tail fills the viewport from the narrowed set`; with it the case is green and `--only virtual-table-lifecycle` passes (31 checks). The probe now asserts the truthful facts (row-700, which the set no longer holds, leaves the tree; row-701, which it holds, stays; the paint fills the viewport and ends on `file-0901.ts`), and the Tier 3 row + package README carry the rule. The unit case lives in `src/virtual/window.test.ts` (where the clamp is) rather than `list.test.ts`, plus a behaviour case in `src/behaviour/virtual-table.test.tsx`. The `/docs/data-display` bullet is docs-site's path and is recorded below |
 

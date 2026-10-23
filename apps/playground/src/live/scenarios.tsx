@@ -871,6 +871,22 @@ import {
   FLEX_WIDTH_CASES,
 } from "./flex-sizing.js";
 import {
+  SCROLLBAR_DEFAULT,
+  SCROLLBAR_FILL,
+  SCROLLBAR_FLOOR,
+  SCROLLBAR_IDS,
+  SCROLLBAR_SHORT,
+  SCROLLBAR_STOPS,
+  SCROLLBAR_SWATCH,
+  SCROLLBAR_THUMBS,
+  SCROLLBAR_TINTED,
+  SCROLLBAR_TINTED_THUMBS,
+  SCROLLBAR_VIEWPORT,
+  SCROLLBAR_VIEWPORTS,
+  SCROLLBAR_WIDE,
+  type ScrollbarCase,
+} from "./scrollbar.js";
+import {
   IMAGE_BOX_CASES,
   IMAGE_BOX_IDS,
   IMAGE_HEIGHT,
@@ -20717,6 +20733,362 @@ const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The native scrollbar thumb a `ScrollArea` paints, and the strip it moves on.
+ *
+ * `scrollbarColor` and `scrollbarWidth` are the runtime's own knobs, and the
+ * shipped `ScrollArea` sets both from the theme — but the offscreen suite only
+ * reads the style it passes, so what a consumer actually sees at rest, after a
+ * wheel, at the clamp and under the pointer was unmeasured. The fixture
+ * (`scrollbar.ts`) derives the binding's thumb rule, and the probe holds two
+ * scrollers to their tint and thickness, the shipped default to the theme's
+ * role, and a scroller whose content fits to **no thumb at all**.
+ */
+const ScrollbarProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.lg,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.spacing.lg,
+  };
+  /**
+   * One scroller: every case mounts the shipped `ScrollArea`, and the two knobs
+   * are passed only when the fixture names one, so the default case really is
+   * the library's default paint.
+   */
+  const scroller = (scroller: ScrollbarCase) => (
+    <ScrollArea
+      key={scroller.id}
+      axis="vertical"
+      scrollbarColor={Option.getOrUndefined(scroller.tint)}
+      scrollbarWidth={Option.getOrUndefined(scroller.width)}
+      viewportTestId={scroller.id}
+      style={{
+        width: SCROLLBAR_VIEWPORT.width,
+        height: SCROLLBAR_VIEWPORT.height,
+      }}
+    >
+      <div
+        testId={scroller.contentId}
+        style={{
+          height: scroller.content,
+          flexShrink: 0,
+          alignSelf: "stretch",
+          backgroundColor: SCROLLBAR_FILL,
+        }}
+      />
+    </ScrollArea>
+  );
+  return (
+    <div testId={SCROLLBAR_IDS.probe} style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A scroller paints a native thumb at the trailing edge, over the content
+        rather than in a gutter: its colour and thickness are the caller&apos;s,
+        its length is the viewport&apos;s share of the content, it follows the
+        offset, and a scroller with nothing to show paints none.
+      </text>
+      <div style={row}>
+        {scroller(SCROLLBAR_TINTED)}
+        {scroller(SCROLLBAR_WIDE)}
+        {scroller(SCROLLBAR_FLOOR)}
+        <div
+          testId={SCROLLBAR_IDS.swatch}
+          style={{
+            width: SCROLLBAR_SWATCH,
+            height: SCROLLBAR_SWATCH,
+            backgroundColor: theme.colors.scrollbar,
+          }}
+        />
+      </div>
+      <div style={row}>
+        {scroller(SCROLLBAR_SHORT)}
+        {scroller(SCROLLBAR_DEFAULT)}
+      </div>
+    </div>
+  );
+};
+
+const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(SCROLLBAR_IDS.probe);
+    // The resting frame: every scroller in one paint, plus the swatch that names
+    // the theme's own thumb colour.
+    yield* ctx.host.capture("scrollbar");
+    const frame = yield* ctx.host.pixels("scrollbar");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+
+    /** The capture pixels a logical box covers. */
+    const regionOf = (box: Smoke.Bounds): Pixels.PixelRegion =>
+      new Pixels.PixelRegion({
+        x: Math.round(box.x * scale),
+        y: Math.round(box.y * scale),
+        width: Math.round(box.width * scale),
+        height: Math.round(box.height * scale),
+      });
+    /**
+     * A capture read as the logical pixels the rule is written in. The rounded
+     * caps hide half a pixel at each end from an exact-colour read, so a length
+     * is asserted against whole logical pixels with a one-pixel allowance —
+     * measured, not assumed: a thumb the rule paints 26 px long reads 25.
+     */
+    const logical = (pixels: number): number => pixels / scale;
+    /** The part of a frame one box covers, or `None` when it is off the frame. */
+    const cropIn = (
+      source: Pixels.Pixels,
+      box: Smoke.Bounds,
+    ): Option.Option<Pixels.Pixels> =>
+      Option.fromNullishOr(Pixels.crop(source, regionOf(box)));
+    /** How many pixels of `colour` a box paints, or `-1` when it is off frame. */
+    const countIn = (
+      source: Pixels.Pixels,
+      box: Smoke.Bounds,
+      colour: Pixels.Rgba,
+    ): number =>
+      Option.match(cropIn(source, box), {
+        onNone: () => -1,
+        onSome: (crop) => Pixels.countColour(crop, colour),
+      });
+    /** The box a colour paints inside `box`, or `None` when it paints none. */
+    const thumbIn = (
+      source: Pixels.Pixels,
+      box: Smoke.Bounds,
+      colour: Pixels.Rgba,
+    ): Option.Option<Pixels.PixelRegion> =>
+      Option.flatMap(cropIn(source, box), (crop) =>
+        Option.fromNullishOr(Pixels.boundsOfColour(crop, colour)),
+      );
+
+    // The swatch is the theme's `scrollbar` role, so the shipped default's paint
+    // is compared with a colour this frame measured rather than a remembered one.
+    const swatch = yield* paintedBox(ctx, SCROLLBAR_IDS.swatch);
+    const swatchColour = yield* ctx.expectSome(
+      "the swatch paints the theme's scrollbar role",
+      colourAt(
+        frame,
+        { x: swatch.x + swatch.width / 2, y: swatch.y + swatch.height / 2 },
+        scale,
+      ),
+    );
+    /** The tint a case asks for, or the theme's role when it names none. */
+    const tintOf = (tint: Option.Option<string>): Effect.Effect<Pixels.Rgba> =>
+      Option.match(tint, {
+        onNone: () => Effect.succeed(swatchColour),
+        onSome: (hex) =>
+          Option.match(Option.fromNullishOr(Pixels.hexToRgba(hex)), {
+            onNone: () =>
+              Effect.die(`the scrollbar fixture's ${hex} is not a colour`),
+            onSome: (colour) => Effect.succeed(colour),
+          }),
+      });
+
+    // Every mounted scroller: its box, its content's box, and the content writing
+    // to the full width — a thumb laid out in a gutter would narrow it.
+    const mounted = yield* Effect.forEach(
+      SCROLLBAR_VIEWPORTS,
+      (scroller) =>
+        Effect.gen(function* () {
+          const viewport = yield* paintedBox(ctx, scroller.id);
+          const content = yield* paintedBox(ctx, scroller.contentId);
+          yield* ctx.expectNear(
+            `${scroller.id}'s content keeps the scroller's full width`,
+            content.width,
+            viewport.width,
+            1,
+          );
+          return { scroller, viewport };
+        }),
+      { concurrency: 1 },
+    );
+    const viewports = HashMap.fromIterable(
+      Arr.map(mounted, (entry) => [entry.scroller.id, entry.viewport] as const),
+    );
+    const viewportOf = (id: string): Effect.Effect<Smoke.Bounds> =>
+      Option.match(HashMap.get(viewports, id), {
+        onNone: () => Effect.die(`the scrollbar fixture mounts no ${id}`),
+        onSome: Effect.succeed,
+      });
+
+    // The resting thumb, per case: the tint paints, flush right, at the top of
+    // the track, at the thickness asked for and the length the content gives it.
+    yield* Effect.forEach(
+      SCROLLBAR_THUMBS,
+      (thumb) =>
+        Effect.gen(function* () {
+          const viewport = yield* viewportOf(thumb.id);
+          const colour = yield* tintOf(thumb.tint);
+          const box = yield* ctx.expectSome(
+            `the ${thumb.id} thumb paints the tint it asks for`,
+            thumbIn(frame, viewport, colour),
+          );
+          yield* ctx.expectNear(
+            `${thumb.id}'s thumb ends at the scroller's trailing edge`,
+            logical(box.x + box.width),
+            SCROLLBAR_VIEWPORT.width,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${thumb.id}'s thumb starts at the track's top`,
+            logical(box.y),
+            thumb.box.y,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${thumb.id}'s thumb is the thickness it asks for`,
+            logical(box.width),
+            thumb.box.width,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${thumb.id}'s thumb is the length its content gives it`,
+            logical(box.height),
+            thumb.box.height,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    // The control: content that fits paints no thumb, so the affordance is not a
+    // decoration every scroller wears.
+    const shortViewport = yield* viewportOf(SCROLLBAR_SHORT.id);
+    const shortTint = yield* tintOf(SCROLLBAR_SHORT.tint);
+    yield* ctx.expectEqual(
+      "a scroller whose content fits paints no thumb",
+      countIn(frame, shortViewport, shortTint),
+      0,
+    );
+
+    // The thumb is confined to its own scroller: the tint's paint in the frame is
+    // the tint's paint in the box, so nothing bled into a neighbour.
+    yield* Effect.forEach(
+      SCROLLBAR_TINTED_THUMBS,
+      (thumb) =>
+        Effect.gen(function* () {
+          const viewport = yield* viewportOf(thumb.id);
+          const colour = yield* tintOf(thumb.tint);
+          yield* ctx.expectEqual(
+            `${thumb.id}'s tint paints inside its own scroller only`,
+            countIn(frame, viewport, colour),
+            Pixels.countColour(frame, colour),
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    const tinted = yield* viewportOf(SCROLLBAR_IDS.tinted);
+    const tintedColour = yield* tintOf(SCROLLBAR_TINTED.tint);
+    const offsetOf = Effect.gen(function* () {
+      return yield* ctx.expectSome(
+        "the tinted scroller reports a scroll offset",
+        Option.fromNullishOr(
+          yield* ctx.host.scrollOffset(SCROLLBAR_IDS.tinted),
+        ),
+      );
+    });
+    yield* ctx.expectEqual(
+      "the tinted scroller starts at the top",
+      (yield* offsetOf).y,
+      0,
+    );
+
+    // One wheel down and one past the end: the offset the renderer holds, and
+    // the box the rule says the thumb paints at that offset.
+    yield* Effect.forEach(
+      SCROLLBAR_STOPS,
+      (stop) =>
+        Effect.gen(function* () {
+          yield* ctx.host.wheel(SCROLLBAR_IDS.tinted, 0, stop.delta);
+          yield* Effect.sleep(SETTLE);
+          const name = `scrollbar-${-stop.offset}`;
+          yield* ctx.host.capture(name);
+          const after = yield* ctx.host.pixels(name);
+          const box = yield* ctx.expectSome(
+            `${stop.label}: the thumb still paints its tint`,
+            thumbIn(after, tinted, tintedColour),
+          );
+          yield* ctx.expectNear(
+            `${stop.label}: the wheel leaves the scroller at its offset`,
+            (yield* offsetOf).y,
+            stop.offset,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${stop.label}: the thumb starts where the offset puts it`,
+            logical(box.y),
+            stop.thumb.start,
+            1,
+          );
+          if (stop.endsAtTrack) {
+            yield* ctx.expectNear(
+              "at the end the thumb's bottom is the track's bottom",
+              logical(box.y + box.height),
+              SCROLLBAR_VIEWPORT.height,
+              1,
+            );
+          }
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    // The pointer does not appear or fade the thumb: hovering leaves the same
+    // paint in the same place.
+    yield* ctx.host.hover(SCROLLBAR_IDS.tinted);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("scrollbar-hover");
+    const hovered = yield* ctx.host.pixels("scrollbar-hover");
+    const hoveredThumb = yield* ctx.expectSome(
+      "hovering the scroller keeps its thumb painted",
+      thumbIn(hovered, tinted, tintedColour),
+    );
+    const end = SCROLLBAR_STOPS[SCROLLBAR_STOPS.length - 1];
+    yield* ctx.expectNear(
+      "hovering the scroller leaves the thumb where the offset put it",
+      logical(hoveredThumb.y),
+      end?.thumb.start ?? Number.NaN,
+      2,
+    );
+
+    // Back to the top: the thumb returns to the start of its track.
+    yield* ctx.host.wheel(SCROLLBAR_IDS.tinted, 0, 100_000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a wheel past the start returns the offset to zero",
+      (yield* offsetOf).y,
+      0,
+    );
+    yield* ctx.host.capture("scrollbar-top");
+    const top = yield* ctx.host.pixels("scrollbar-top");
+    const topThumb = yield* ctx.expectSome(
+      "the thumb paints again at the top",
+      thumbIn(top, tinted, tintedColour),
+    );
+    yield* ctx.expectNear(
+      "the thumb returns to the track's top",
+      logical(topThumb.y),
+      0,
+      1,
+    );
+  });
+/**
  * What box an `<img>` paints, and what a style can make it paint.
  *
  * An image is the one element whose intrinsic ratio the runtime owns: GPUI
@@ -26527,5 +26899,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "flex-sizing",
     view: () => <FlexSizingProbe />,
     steps: flexSizingSteps,
+  },
+  "scrollbar-thumb": {
+    id: "scrollbar-thumb",
+    view: () => <ScrollbarProbe />,
+    steps: scrollbarSteps,
   },
 };

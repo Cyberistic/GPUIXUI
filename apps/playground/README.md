@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-92 probes a real window can prove, of which eighteen mount shipped
+93 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -5095,6 +5095,80 @@ rule expects` (`expected 200 ± 1, got 300`), and the headless twin with a
 hand-written **212** for the long auto-basis grower fails `paints the width its
 rule expects` (`expected 212 ± 1, got 210`).
 
+### `scrollbar-thumb` — measured on 0.11.0 here
+
+**Does a `ScrollArea` really paint the runtime's thumb, and does it say where?**
+GPUix 0.11.0 draws the scrollbar itself: `scrollbarColor` turns one on for each
+axis with more to show and `scrollbarWidth` sizes it, and the shipped
+`ScrollArea` passes both from the theme. The offscreen suites prove the style it
+passes; the shipped scroll probes measure offsets and events. The paint itself —
+how long a thumb is, where it starts, whether there is one at all — was the
+typings' claim, and every preview pane, table body and code host rests on it.
+
+The binding's rule, which the measured numbers confirm: on an axis of `track` px
+where the content can move `maxScroll` px, the thumb is
+`track * track / (track + maxScroll)` long (at least 20, never longer than the
+track) and starts `progress * (track - length)` down it, where `progress` is how
+much of the travel the offset has covered. Both are rounded to whole pixels, and
+the thumb sits flush against the trailing edge, painted over the content rather
+than in a gutter.
+
+| Scroller (260×160) | Content | Thickness | Thumb |
+| --- | --- | --- | --- |
+| `scrollbar-tinted` | 1 000 | 10 | at the track's top, flush at the trailing edge |
+| `scrollbar-wide` | 500 | 18 | longer and thicker, from the same rule |
+| `scrollbar-floor` | 10 000 | 10 | the 20 px minimum, not the 2.5 px share |
+| `scrollbar-default` | 1 000 | none | the theme's `scrollbar` role (the swatch beside it) at the platform's 6 px |
+| `scrollbar-short` | 100 | 10 | none at all — the content fits |
+
+The resting thumbs read **25**, **50**, **19**, **25** px tall against rules of
+**26**, **51**, **20**, **26**; the missing point at each end is the rounded
+cap, which a solid-colour crop cannot count, and the probe allows it. Every
+scroller's content keeps the viewport's full width, which is the no-gutter half:
+a thumb laid out beside the content would narrow it.
+
+| State | Offset | Thumb start | Read |
+| --- | --- | --- | --- |
+| at rest | `0` | `0` | 25 px tall |
+| one `-400` wheel | `-400` | `64` | moved, same length |
+| a wheel past the end | `-840` | `134` | bottom reads **159** of the **160** px track |
+| the pointer over it | `-840` | `134` | unchanged |
+| a wheel back to the top | `0` | `0` | back at the top |
+
+The four rules a component plan needs:
+
+1. **A length is the viewport's share, not a bar.** 1 000 px of content paints
+   ~26 px of thumb and 500 px paints ~51 px, so the thumb reports how much of
+   the document is visible — a table body and a page use the same rule.
+2. **There is a 20 px floor.** 10 000 px of content would be a 2.5 px share, and
+   the window paints 20 px instead: a very long document still shows a thumb a
+   reader can find.
+3. **The thumb follows the offset and clamps at the end.** One `-400` wheel
+   moves the offset to `-400` and the start to 64; a wheel past the end leaves
+   `-840` and starts the thumb at 134, whose bottom reads **159** of the **160**
+   px track — the rule ends it at 160 and the rounded cap takes the last point.
+   Hovering changes neither.
+4. **Content that fits paints no thumb, and the thumb takes no gutter.**
+   `scrollbar-short` paints none of its tint, so the affordance is not a
+   decoration every scroller wears; and every content box keeps the viewport's
+   width, because the thumb is painted over it rather than beside it.
+
+59 checks, `--only scrollbar-thumb`, green on 0.11.0 here (~4.6 s). Fixture:
+`src/live/scrollbar.ts` (the locators, `maxOffset`/`thumbOf`, the case and thumb
+tables, `SCROLLBAR_STOPS` and `SCROLLBAR_CHECKS`) + `scrollbar.test.ts` (16
+cases: the rule's length, its floor, both clamps and its absence; the resting
+table; the mounted cases; the two stops; the locators; the count; the registry
+entry; this section with the reads, the moves and the controls it prints; the
+view's wiring; and the shipped painter's defaults). The view and steps live in
+`src/live/scenarios.tsx`. Evidence: `.artifacts/live/scrollbar.png`,
+`.artifacts/live/scrollbar-{400,840,hover,top}.png`.
+
+Two negative controls measured, exit `1` each, restored green: painting
+`scrollbar-floor` eight pixels thick fails `scrollbar-floor's thumb is the
+thickness it asks for` (`expected 10 ± 1, got 8`), and dropping the rule's
+minimum fails `scrollbar-floor's thumb is the length its content gives it`
+(`expected 3 ± 1, got 19`).
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5318,7 +5392,8 @@ narrower. Each deviation is deliberate and measured:
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
-  `dock-split-lifecycle` and `flex-sizing` (thirty-four probes, each run alone).
+  `dock-split-lifecycle`, `flex-sizing` and `scrollbar-thumb` (thirty-five
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
