@@ -203,6 +203,12 @@ both the header and the body, so the two read one column list.
 | `rows` | `number` — bars, one row each | `3` |
 | `columns` | `number` — bars per row | `3` |
 
+Both counts are often computed — a page size read from a config, a viewport
+divided by a row height — so a count the skeleton cannot read takes the default
+and a finite one is held to a whole number of tracks between 1 and 20. An
+`Infinity` row count used to throw `RangeError: Invalid array length` and a
+`NaN` one painted no placeholder at all.
+
 ### TableSortHeader
 
 | Prop | Type | Default |
@@ -340,10 +346,11 @@ measured body height and a column's width.
 ## Status
 
 `done` in `COMPONENTS.md` with the `yes` runtime verdict its inventory row
-records (measured): 26 native behaviour cases mount the parts, the pressed cell,
+records (measured): 27 native behaviour cases mount the parts, the pressed cell,
 the measured body, the right press a divider refuses, the column move that keeps
-every width while the order changes, and the hidden column whose cells leave the
-search with it. Its rules
+every width while the order changes, the hidden column whose cells leave the
+search with it, and the skeleton count a loading table clamps when a caller
+computes `Infinity` or `NaN`. Its rules
 are the ones a window measured —
 `table-lifecycle` (a press selects the record it hit and that row holds the
 focus, a header press sorts and a second flips, the header keeps its painted

@@ -9735,7 +9735,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 251/251
+`[x]` `[██████████]` 252/252
+
+`[x]` Follow the **skeleton count the table now clamps** — `f0e7cbd8` bounded
+      `TableSkeleton`'s computed `rows`/`columns` (`Number.isFinite`, floor,
+      clamp to 1–20, unreadable takes the default) because `Array.from({ length:
+      Infinity })` threw `RangeError` and `NaN` painted no track, and the curated
+      page's Status still printed **26 native behaviour cases** against the
+      suite's **27**. The sentence prints 27 and names the case, and the
+      `TableSkeleton` API table now states the clamp with the failure it
+      prevents, because both counts are computed values a reader can pass past
+      the type. Directions measured: `component-page-truth.test.ts` failed with
+      `table.mdx: says 26, suite runs 27`; restored, the docs app is 121 files /
+      1 311 tests green. No native scenario applies — a printed count, a small
+      API sentence and the page that prints them.
 
 `[x]` Follow the **inline edit's tab-order case** — `7cfb7182` took the
       editor out of the tab order while a caller disables the control
