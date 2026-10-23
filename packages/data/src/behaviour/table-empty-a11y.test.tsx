@@ -18,7 +18,11 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
-import { renderData, settle, type DataTestRoot } from "../internal/test-root.js";
+import {
+  renderData,
+  settle,
+  type DataTestRoot,
+} from "../internal/test-root.js";
 import {
   Table,
   TableBody,

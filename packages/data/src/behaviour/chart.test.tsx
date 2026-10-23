@@ -68,9 +68,8 @@ const topOfLayer = (root: DataTestRoot, testId: string): number => {
     throw new Error(`behaviour: no SVG source on "${testId}"`);
   }
   const tops = Arr.filter(
-    Arr.map(
-      [...source.matchAll(/<rect\b[^>]*\by="(-?[\d.]+)"/g)],
-      (match) => Number(match[1]),
+    Arr.map([...source.matchAll(/<rect\b[^>]*\by="(-?[\d.]+)"/g)], (match) =>
+      Number(match[1]),
     ),
     Number.isFinite,
   );

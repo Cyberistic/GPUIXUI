@@ -95,9 +95,8 @@ describe("the aria set the grid writes", () => {
       new URL("../../../../docs/gpuix-capabilities.md", import.meta.url),
       "utf8",
     );
-    const found = Arr.findFirst(
-      Arr.fromIterable(record.split("\n")),
-      (line) => line.startsWith("| `role` and the `aria-*` subset"),
+    const found = Arr.findFirst(Arr.fromIterable(record.split("\n")), (line) =>
+      line.startsWith("| `role` and the `aria-*` subset"),
     );
     const row = Option.match(found, {
       onNone: () => "",
