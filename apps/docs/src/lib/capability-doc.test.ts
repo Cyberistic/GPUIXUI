@@ -3634,6 +3634,103 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(keeping).toContain("`sidebar-clip-lifecycle`");
   });
 
+  it("publishes the second window a process is refused, from its fixture", () => {
+    // The Portals, Movable tabs, Drag reorder and Second OS window surfaces all
+    // said "the binding opens one window per process" without a measurement;
+    // the sentence was inferred from there being no window verb in the typings.
+    // `second-window-lifecycle` made the attempt an application would: a second
+    // `init()` inside a running window. The refusal, the marker and the check
+    // count are derived from the fixture and the readouts from the probe's own
+    // README, so neither document can print an attempt the window did not make.
+    const fixture = read("apps/playground/src/live/second-window.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = (\\d+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const word = (name: string): string =>
+      new RegExp(`export const ${name} =\\s*"([^"]+)";`).exec(fixture)?.[1] ??
+      "";
+    const refusal = word("SECOND_WINDOW_REFUSAL");
+    const marker = word("SECOND_WINDOW_MARKER");
+    const checks = constant("SECOND_WINDOW_CHECKS");
+    expect(refusal).not.toBe("");
+    expect(marker).toMatch(/^#[0-9A-F]{6}$/);
+    expect(checks).toBeGreaterThan(0);
+    // The flag is read after the attempt, so "refused" and "half-initialised"
+    // are separate facts rather than one word.
+    expect(fixture).toContain("second.isInitialized()");
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `second-window-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(
+        readme,
+      )?.[0] ?? "";
+    expect(section, "the probe's README has no section").not.toBe("");
+    expect(section).toContain(refusal);
+    expect(section).toContain(`${checks} checks`);
+    expect(section).toContain(marker);
+    expect(section).toContain("after=1");
+
+    // At rest, the first press and the second press: the refusal is the rule,
+    // not a first-call artefact.
+    const readouts = [
+      ...section.matchAll(/attempts=\d+ refused=\d+ opened=\d+ started=\w+/g),
+    ].map((match) => match[0] ?? "");
+    expect(readouts.length).toBeGreaterThanOrEqual(3);
+    expect(readouts[1]).toContain("attempts=1");
+    const again = readouts[2] ?? "";
+    expect(again).toContain("refused=2");
+
+    const portals = rowFor("Portals");
+    expect(portals?.evidence).toContain("second-window-lifecycle");
+    expect(portals?.evidence).toContain(refusal);
+    expect(rowFor("Movable tabs")?.evidence).toContain(
+      "second-window-lifecycle",
+    );
+    expect(rowFor("Movable tabs")?.evidence).toContain(again);
+    expect(rowFor("Drag reorder")?.workaround).toContain(
+      "second-window-lifecycle",
+    );
+
+    const secondWindow = rowFor("Second OS window");
+    expect(secondWindow?.verdict).toBe("not supported");
+    expect(secondWindow?.evidence).toContain("second-window-lifecycle");
+    expect(secondWindow?.evidence).toContain(`${checks} checks`);
+    expect(secondWindow?.evidence).toContain(refusal);
+    expect(secondWindow?.evidence).toContain("isInitialized() === false");
+    expect(secondWindow?.evidence).toContain(again);
+    expect(secondWindow?.evidence).toContain(marker);
+    expect(secondWindow?.evidence).toContain("after=1");
+
+    const page = measuredRow("Second window");
+    expect(
+      page,
+      "the page's measured table has no second-window row",
+    ).toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("second-window-lifecycle");
+    expect(pageEvidence).toContain(`${checks} checks`);
+    expect(pageEvidence).toContain(refusal);
+    expect(pageEvidence).toContain("isInitialized() === false");
+    expect(pageEvidence).toContain(again);
+    expect(pageEvidence).toContain(marker);
+    expect(pageEvidence).toContain("after=1");
+    expect(measuredRow("Movable tabs")?.[2]).toContain(
+      "second-window-lifecycle",
+    );
+    expect(measuredRow("Drag reorder")?.[2]).toContain(
+      "second-window-lifecycle",
+    );
+    expect(measuredRow("Portals (`createPortal`)")?.[2]).toContain(
+      "second-window-lifecycle",
+    );
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
+    expect(keeping).toContain("`second-window-lifecycle`");
+  });
+
   it("records the Select reveal gap a window and a runtime suite measured", () => {
     // `Select` is named in §2 as provided, so the record read as "a Select is
     // just a wrapper". A window measured the overlay half (`select-lifecycle`)
