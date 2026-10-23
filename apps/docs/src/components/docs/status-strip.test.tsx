@@ -49,4 +49,30 @@ describe("the status strip", () => {
     expect(row).toBeDefined();
     expect(render("Button")).toContain(row?.status ?? "");
   });
+
+  it("prints the row a page publishes beyond its own words", () => {
+    // Eight package pages opened with no strip at all: their titles name a
+    // composition rather than the row's words (`Table sorting`, `Virtualization`,
+    // `DropZone`), and the join knew one page per row. A page that publishes
+    // several rows reports the first one declared, so a reader sees the row the
+    // page is about rather than whichever the inventory lists first.
+    expect(render("Table sorting")).toContain(
+      'data-component="Sortable tables"',
+    );
+    expect(render("Table selection")).toContain(
+      'data-component="Row selection"',
+    );
+    expect(render("Virtualization")).toContain(
+      'data-component="Virtualized lists"',
+    );
+    expect(render("Docking layouts")).toContain(
+      'data-component="Docking layouts"',
+    );
+    expect(render("Code editor")).toContain(
+      'data-component="Code editor integration"',
+    );
+    expect(render("DropZone")).toContain(
+      'data-component="File / folder selection"',
+    );
+  });
 });
