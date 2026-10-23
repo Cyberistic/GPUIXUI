@@ -4984,6 +4984,22 @@ applies — printed figures a suite derives.
 
 `[x]` `[██████████]` 19/19
 
+`[x]` `packages/components`: **a disabled colour picker left its field in the
+      tab order** — every disabled host in this package leaves the tab order
+      (`tabIndex={-1}`) because `0.11.0` has no `disabled` on an input and
+      `readOnly` still takes focus; `ColorPicker` set `readOnly` on its HEX
+      field and stopped there, so a picker a form had disabled still accepted a
+      Tab stop and a caret the reader could not use (`is inert when disabled`
+      read only the swatch's `-1`, never the field's). The field declares
+      `tabIndex={disabled ? -1 : 0}` now, the same rule `FieldInput`,
+      `SearchInput`, `TagInputField`, `MentionInput` and the time segments
+      follow. Proof: `color-picker.test.tsx`'s `is inert when disabled` gained
+      the field's tab stop and measured at HEAD `expected undefined to be -1`;
+      restored, the file is 10/10. Docs: the rule beside the field,
+      `docs/color-picker.mdx` §Limitations and the `COMPONENTS.md` Color picker
+      row. No native scenario applies — the tab stop is the declaration the
+      renderer reads, and the behaviour suite runs the real renderer.
+
 `[x]` `packages/components`: **a fractional tag cap admitted one token more than
       it named** — `TagInput`'s `max` is often a budget a caller computes over a
       measured width (`width / chipWidth`), and `addTokens` compared

@@ -235,6 +235,9 @@ export const ColorPicker = ({
           testId={testId === undefined ? undefined : `${testId}-hex`}
           value={draft}
           readOnly={disabled}
+          // A disabled field leaves the tab order: the host has no `disabled`,
+          // and `readOnly` still takes focus.
+          tabIndex={disabled ? -1 : 0}
           onSubmit={() => commit()}
           onChange={(event) => setDraft(event.value ?? "")}
           onBlur={() => commit()}

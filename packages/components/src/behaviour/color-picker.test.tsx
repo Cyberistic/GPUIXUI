@@ -3,8 +3,8 @@
  *
  * The bugs these guard: a swatch grid that ignores the theme, a shorthand hex
  * that is not expanded on commit, an invalid draft that commits anyway, a blur
- * that keeps invalid text, a disabled picker that still changes, and a style
- * callback that cannot see validity.
+ * that keeps invalid text, a disabled picker that still changes or keeps its
+ * field in the tab order, and a style callback that cannot see validity.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -177,6 +177,11 @@ describe("ColorPicker", () => {
     expect(
       picker.renderer.findByTestId("picker-hex")?.customProps?.readOnly,
     ).toBe(true);
+    // A read-only host still takes focus, so the disabled field leaves the tab
+    // order the way every other disabled host in the package does.
+    expect(
+      picker.renderer.findByTestId("picker-hex")?.customProps?.tabIndex,
+    ).toBe(-1);
 
     clickCentreOf(picker, "picker-swatch-1");
     expect(onValueChange).not.toHaveBeenCalled();

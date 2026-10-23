@@ -38,7 +38,9 @@ import { ColorPicker } from "@gpuixui/components";
 - Validation runs on commit, not on each keystroke.
 - A `disabled` picker refuses both commit paths (Enter and blur) as well as its
   swatches, because a read-only host still receives keys — a draft typed before
-  the field was disabled is never written to the caller's value.
+  the field was disabled is never written to the caller's value. Its swatches
+  and HEX field also leave the tab order, because a read-only host still takes
+  focus.
 
 ## Related
 
