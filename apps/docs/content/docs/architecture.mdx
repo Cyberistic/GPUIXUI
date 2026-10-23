@@ -3,6 +3,8 @@ title: Architecture
 description: The packages, the direction dependencies run, and where a new component, token or example belongs.
 ---
 
+import { PackageTable } from "@/components/docs/package-table";
+
 GPUIxUI is a TypeScript monorepo of small packages around one idea: a component
 is a **typed React component that renders through GPUix**, and everything it
 needs to look right is data in a theme. The packages are layered so a lower
@@ -11,25 +13,12 @@ runtime at all.
 
 ## The packages
 
-| Package | Responsibility | Depends on |
-| ------- | -------------- | ---------- |
-| `@gpuixui/tokens` | Semantic colour roles, type, spacing, radii, density, elevation; light/dark, high contrast, platform styles | — |
-| `@gpuixui/tw` | The Tailwind-subset recipe registry; compiles class strings to a GPUix `StyleDesc` | `tokens` |
-| `@gpuixui/icons` | Icon markup, size scale and accessibility rules | `tokens` |
-| `@gpuixui/primitives` | Tier 1: layout, type, actions, inputs, selection and indicators | `tokens`, `tw`, `icons`, `motion` |
-| `@gpuixui/components` | Tier 2: cards, overlays, menus, tabs, pickers, feedback | `tokens`, `tw`, `icons`, `keyboard`, `motion`, `primitives` |
-| `@gpuixui/data` | Tier 3: the table core, sorting, selection, filtering, virtualisation and charts | `tokens`, `tw`, `icons`, `primitives`, `components` |
-| `@gpuixui/editor` | Tier 4 code surfaces: a highlighted editor, a diff viewer and find-and-replace | `tokens`, `tw`, `primitives` |
-| `@gpuixui/files` | Tier 4 file surfaces: a file tree, a log viewer and a property panel | `tokens`, `tw`, `icons`, `primitives`, `data` |
-| `@gpuixui/shell` | Tier 4 application chrome: menu bars, status bars and toolbars | `tokens`, `tw`, `icons`, `keyboard`, `primitives` |
-| `@gpuixui/dock` | Tier 4 panel workspace: split panes, panel groups and docking layouts | `tokens`, `tw`, `primitives`, `motion` |
-| `@gpuixui/media` | Tier 5 media surfaces: image preview, upload queue and drop zone | `tokens`, `tw`, `icons`, `primitives`, `components` |
-| `@gpuixui/keyboard` | Accelerator grammar, scoped keymaps, event matching, command registry | — |
-| `@gpuixui/motion` | Renderer-neutral springs, easing, timelines and inertia | — |
-| `@gpuixui/runtime` | The pinned GPUix capability matrix and typed refusals | — |
-| `@gpuixui/testing` | Shared harnesses: render helpers, state replay, smoke utilities | — |
-| `@gpuixui/config` | Shared TypeScript, lint and format configuration | — |
-| `@gpuixui/deploy` | The Cloudflare Worker that publishes this docs site | — |
+The table is read from each package's manifest at build time, so a dependency a
+package declares — or a package added to the workspace — appears here without a
+docs edit. The reading order and the responsibility sentence beside each package
+are curated in `src/lib/package-graph.ts`.
+
+<PackageTable />
 
 `@gpuixui/components` depends on `@gpuixui/primitives` for one published
 subpath — `@gpuixui/primitives/hint`, the seam that paints a themed hint over a
@@ -53,8 +42,9 @@ primitives, keyboard ──▶ shell
 keyboard, runtime, testing   stand alone
 ```
 
-Each arrow means "may import at build time". The graph is acyclic, and three
-rules keep it that way:
+The sketch is the layering the table's edges imply, not an exhaustive edge
+list — the table is exact. Each arrow means "may import at build time", the
+graph is acyclic, and three rules keep it that way:
 
 1. **Tokens may not import anything in the library.** A token value is plain
    data, so a theme can be built and tested without a renderer.

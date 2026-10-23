@@ -10278,7 +10278,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 281/281
+`[x]` `[██████████]` 282/282
+
+`[x]` Generate the **architecture page's package table** from the manifests —
+      the table was hand-kept and drifted the first time a package gained a
+      dependency: `packages/editor/package.json` declares `@gpuixui/dock` while
+      `architecture.mdx` still read `tokens, tw, primitives`, so
+      `architecture.test.ts` failed with `@gpuixui/editor: page says […],
+      manifest declares […, @gpuixui/dock]`. The page now mounts
+      `<PackageTable />`, which reads `virtual:gpuixui-package-graph`:
+      `plugins/package-graph-plugin.ts` reads every manifest once at build time
+      through `package-graph-source.ts`, and `package-graph.ts` owns the two
+      things a manifest cannot say (the reading order and each responsibility
+      sentence). A package outside either list is still printed — the manifest's
+      own description is the fallback — and reported, so a new package is
+      visible before its row is written. `package-graph.test.ts` (6 cases) holds
+      the curated order and responsibilities to the shipped manifests, refuses
+      an entry for a package that no longer exists, and proves an unplaced
+      package is appended and reported. `architecture.test.ts` renders the table
+      and compares each row's dependency cell with its manifest in both
+      directions: dropping two dependencies from the component fails every
+      drifted row by name (`@gpuixui/primitives: table says […], manifest
+      declares […]`), and hiding `unordered` fails `expected [] to deeply equal
+      [ '@gpuixui/new' ]`. `apps/docs` is 132 files / 1 432 tests green with
+      `check-types` and `build` clean. No native scenario applies — a generated
+      docs table and its guards have no runtime path.
 
 `[x]` Teach the **root key route the runtime actually offers**, and run what it
       resolves — `/docs/keyboard`'s React example typed its handler with
