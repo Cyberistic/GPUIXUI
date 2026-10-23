@@ -49,6 +49,7 @@ import {
   focusedOption,
   optionBody,
   optionDisabled,
+  optionHelp,
   optionItems,
   optionName,
   optionRowStyle,
@@ -309,6 +310,7 @@ export const renderRadioGroup = (
             }
             role="radio"
             aria-label={optionName(option)}
+            aria-description={optionHelp(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={selectionValueText(current, messages.selection)}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}

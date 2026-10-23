@@ -77,6 +77,13 @@ and a run of spaces lays out a whole line (measured on 0.11.0: 0px for `""`,
 nothing. Real copy is painted **as written** — only the decision is the name
 rule's, not the spacing.
 
+**A group row is a control too**, so the caption beside an option's name is that
+row's help: every option row in `RadioGroup`, `CheckboxGroup` and
+`ToggleGroup` announces its `description` through `aria-description`
+(`optionHelp` in `components/group.tsx`), the channel a field's `description`
+already uses — the runtime has no `aria-describedby`. A blank caption is
+absence there too, so it paints and announces nothing.
+
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.
 

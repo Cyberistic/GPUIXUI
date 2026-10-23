@@ -7230,6 +7230,33 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       package's hinted hosts call this seam, so they inherit the rule; no
       `COMPONENTS.md` row changes — every row it touches is already `done`.
 
+`[x]` `packages/primitives`: **the caption beside a group option's name reached
+      nobody** — `RadioGroup`, `CheckboxGroup` and `ToggleGroup` painted an
+      option's `description` as text beside its name, and the row that is the
+      control announced only its label: this runtime has no `aria-describedby`,
+      so "Weekly — Every Monday." was heard as "Weekly", and the limitation was
+      written on the radio page and in the inventory row instead of being
+      closed. The channel was already in use everywhere else in the package
+      (`aria-description`, the field-style help `Checkbox`, `Switch`, `Toggle`
+      and every field carry), so `optionHelp` now joins `optionName` in
+      `components/group.tsx` — `accessibleName(option.description)`, the rule a
+      name keeps, so a blank caption announces nothing — and the three groups
+      pass it to the row they draw. Proof: one unit case per group
+      (`RadioGroup.test.tsx`/`CheckboxGroup.test.tsx`/`ToggleGroup.test.tsx`'s
+      `announces an option's caption as the row's help`, each with a real
+      caption and a spaces-only one) and
+      `runtime/groups.runtime.test.tsx`'s `announces an option's caption as the
+      row's help`, which reads `Weekly`/`Push` back off the window's
+      accessibility tree and requires `Monthly`/`SMS` to have none. Directions
+      measured: with `optionHelp` answering `undefined` all three unit cases
+      fail by name and the window case fails `expected undefined to be 'Every
+      Monday.'`; restored, 55 files / 1 057 tests and the four touched runtime
+      files green, `check-types`, lint, `check:tests` and the formatter clean.
+      Docs: `docs/radio-group.mdx` §Limitations now states the rule instead of
+      the gap, the `CheckboxGroupItem`/`ToggleGroupItem` `description` rows name
+      the channel, the `COMPONENTS.md` Radio groups row drops its "not
+      associated" clause, and the README's words section names the row's help.
+
 `[x]` `packages/components`: **a `Toast` stack's exit snapped where it claimed to
       slide** — the sonner toast leaves by fading while it travels 16px right, but
       its resting frames declared no `left`, so the runtime had no value to

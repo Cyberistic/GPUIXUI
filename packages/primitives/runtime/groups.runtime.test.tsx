@@ -2,7 +2,7 @@
  * The rows of the group controls in the real GPUix runtime.
  *
  * Each case is a defect measured in the pinned runtime, and the row the user
- * presses is the subject of all three:
+ * presses is the subject of all four:
  *
  * 1. **A painted box is not a press target.** GPUix gives a filled element a
  *    mouse-blocking hitbox (`style.rs` `should_occlude`), so the checked box a
@@ -18,6 +18,10 @@
  * 3. **A row is a press target.** A single-line option row measured 17px tall
  *    on 0.11.0 — under the 24px floor WCAG 2.2 SC 2.5.8 states — so every row
  *    reserves it.
+ * 4. **The caption beside a name is help, not decoration.** An option's
+ *    `description` was painted text only, so a reader heard the name and lost
+ *    the words that qualify it; the row announces it through the one help
+ *    channel 0.11.0 has (`aria-description`).
  */
 
 import * as Arr from "effect/Array";
@@ -29,6 +33,7 @@ import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import {
+  a11yDescriptionOf,
   a11yNodes,
   a11yValueOf,
   type Bounds,
@@ -199,6 +204,45 @@ it("publishes a row's trimmed name, and no name at all for a blank label", async
   // The padded label announced its padding, and the blank one announced an
   // empty name; the row now publishes the trimmed name, or none at all.
   expect(names).toEqual([undefined, "Yankee"]);
+});
+
+it("announces an option's caption as the row's help", async () => {
+  // The bug this guards: the caption beside an option's name was painted text
+  // only — this runtime has no `aria-describedby`, so a reader of a radio that
+  // says "Every Monday." heard "Weekly" and nothing else. The row is the
+  // control, so the caption rides the one help channel 0.11.0 has
+  // (`aria-description`), and a blank caption is absence rather than an empty
+  // description.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <RadioGroup
+          label="Pick"
+          defaultValue="weekly"
+          options={[
+            { value: "weekly", label: "Weekly", description: "Every Monday." },
+            { value: "monthly", label: "Monthly", description: "   " },
+          ]}
+        />
+        <CheckboxGroup
+          label="Channels"
+          defaultValue={["push"]}
+          options={[
+            { value: "push", label: "Push", description: "Desktop app" },
+            { value: "sms", label: "SMS" },
+          ]}
+        />
+      </Stack>
+    </Surface>,
+  );
+  const help = (label: string) =>
+    Option.getOrUndefined(a11yDescriptionOf(runtime.a11y(), { label }));
+
+  expect(help("Weekly")).toBe("Every Monday.");
+  expect(help("Monthly")).toBeUndefined();
+  expect(help("Push")).toBe("Desktop app");
+  expect(help("SMS")).toBeUndefined();
 });
 
 it("paints every group option at the pressable floor", async () => {

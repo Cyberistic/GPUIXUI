@@ -47,6 +47,7 @@ import {
   focusedOption,
   optionBody,
   optionDisabled,
+  optionHelp,
   optionItems,
   optionName,
   optionRowStyle,
@@ -283,6 +284,7 @@ export const renderCheckboxGroup = (
             ref={addressed ? mergeRefs(register, props.ref) : register}
             role="checkbox"
             aria-label={optionName(option)}
+            aria-description={optionHelp(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={selectionValueText(current, messages.selection)}
             tabIndex={

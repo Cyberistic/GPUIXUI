@@ -404,6 +404,33 @@ describe("RadioGroupItem", () => {
     expect(states).toEqual(["unchecked", "unchecked", "checked"]);
   });
 
+  it("announces an option's caption as the row's help", () => {
+    // The bug guarded: an option's `description` was painted text only — this
+    // runtime has no `aria-describedby`, so a radio that says "Every Monday."
+    // was heard as "Weekly" alone. The row is the control, so its caption is the
+    // row's help (`aria-description`, the channel every control here uses), and
+    // a blank caption is absence like a blank name.
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "weekly", label: "Weekly", description: "Every Monday." },
+          { value: "monthly", label: "Monthly", description: "   " },
+        ],
+      },
+      testTheme,
+      text("weekly"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+
+    expect(
+      rows(element).map((row) =>
+        Option.getOrUndefined(hostProp(row, "aria-description")),
+      ),
+    ).toEqual(["Every Monday.", undefined]);
+  });
+
   it("paints an option whose value is the empty string as the chosen one", () => {
     // Bug guarded: `""` is the group's default (no choice) value, and the state
     // reader also refused it as a choice — so an option whose value was `""`

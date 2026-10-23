@@ -44,6 +44,7 @@ import {
   focusedOption,
   optionBody,
   optionDisabled,
+  optionHelp,
   optionItems,
   optionName,
   useRovingFocus,
@@ -321,6 +322,7 @@ export const renderToggleGroup = (
             ref={addressed ? mergeRefs(register, props.ref) : register}
             role="button"
             aria-label={optionName(option)}
+            aria-description={optionHelp(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={pressedValueText(pressed, messages.press)}
             tabIndex={

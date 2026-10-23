@@ -185,6 +185,31 @@ describe("CheckboxGroup", () => {
     expect(ref).toHaveBeenCalledWith(null);
   });
 
+  it("announces an option's caption as the row's help", () => {
+    // The bug guarded: an option's `description` was painted text only — this
+    // runtime has no `aria-describedby`, so an option that says "Desktop app"
+    // was heard as its name alone. The row is the control, so its caption is the
+    // row's help (`aria-description`, the channel every control here uses), and
+    // a blank caption is absence like a blank name.
+    const element = render(
+      {
+        options: [
+          { value: "push", label: "Push", description: "Desktop app" },
+          { value: "sms", label: "SMS", description: "   " },
+        ],
+      },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+
+    expect(
+      rows(element).map((row) =>
+        Option.getOrUndefined(hostProp(row, "aria-description")),
+      ),
+    ).toEqual(["Desktop app", undefined]);
+  });
+
   it("publishes a trimmed row name, and no name at all for a blank label", () => {
     // The bug guarded: the row's `aria-label` was the option's label verbatim,
     // so a padded label announced its padding and a blank one published `""` —

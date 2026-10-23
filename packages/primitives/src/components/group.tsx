@@ -98,6 +98,18 @@ export const optionName = (option: GroupOption): string | undefined =>
   accessibleName(option.label);
 
 /**
+ * The help one option row announces after its name.
+ *
+ * A row is a control of its own, so the caption beside its name is that
+ * control's help — the channel every other control in the package uses
+ * (`aria-description`; 0.11.0 has no `aria-describedby`). A blank caption is
+ * absence, the rule a blank name keeps, so a missing row in a caller's data
+ * announces nothing rather than an empty description.
+ */
+export const optionHelp = (option: GroupOption): string | undefined =>
+  accessibleName(option.description);
+
+/**
  * The body of one row: the name pair, or the option's rich content.
  *
  * Keep the content non-interactive — GPUix hit-tests the deepest element and
