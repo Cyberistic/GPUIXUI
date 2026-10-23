@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { demos } from "../components/docs/demos";
 
@@ -17,12 +17,34 @@ import { demos } from "../components/docs/demos";
  */
 
 const dir = new URL("../../content/docs/", import.meta.url);
+const root = new URL("../../../../", import.meta.url);
 
 /** Every `.mdx` the site writes, at any depth. */
-const pages = (): ReadonlyArray<readonly [string, string]> =>
+const sitePages = (): ReadonlyArray<readonly [string, string]> =>
   readdirSync(dir, { encoding: "utf8", recursive: true })
     .filter((name) => name.endsWith(".mdx"))
     .map((name) => [name, readFileSync(new URL(name, dir), "utf8")] as const);
+
+/** Every `.mdx` a package writes under `packages/<pkg>/docs`. */
+const packagePages = (): ReadonlyArray<readonly [string, string]> =>
+  readdirSync(new URL("packages/", root), { withFileTypes: true }).flatMap(
+    (entry) => {
+      if (!entry.isDirectory()) return [];
+      const docs = new URL(`packages/${entry.name}/docs/`, root);
+      if (!existsSync(docs)) return [];
+      return readdirSync(docs)
+        .filter((name) => name.endsWith(".mdx"))
+        .map(
+          (name) => [name, readFileSync(new URL(name, docs), "utf8")] as const,
+        );
+    },
+  );
+
+/** Every page the site or a package mounts, as `[name, body]`. */
+const pages = (): ReadonlyArray<readonly [string, string]> => [
+  ...sitePages(),
+  ...packagePages(),
+];
 
 /** Every demo key a page mounts, with the page it mounts from. */
 const mounts = (): ReadonlyArray<readonly [string, string]> =>
@@ -31,8 +53,6 @@ const mounts = (): ReadonlyArray<readonly [string, string]> =>
       match[1] === undefined ? [] : [[match[1], name] as const],
     ),
   );
-
-const root = new URL("../../../../", import.meta.url);
 
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
