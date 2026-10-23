@@ -1592,6 +1592,59 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("maxWidth");
   });
 
+  it("publishes the layout a move does not report", () => {
+    // A surface that stores its box from `onLayout` and subtracts a fresh
+    // pointer point is how a magnetic plate, a zoom or an anchored palette
+    // reads where it is. `surface-origin` measured that a **move** delivers no
+    // layout at all: a panel opening above the surface left the stored origin
+    // at 88 while the surface painted at 208, and only a nudged 1px probe
+    // re-reported. The bug this guards: the record recommended `onLayout` for a
+    // box without saying it is a size report.
+    const fixture = read("apps/playground/src/live/surface-origin.ts");
+    const movedBy = Number(/MOVED_BY = ([\d_]+)/.exec(fixture)?.[1] ?? NaN);
+    expect(movedBy).toBeGreaterThan(0);
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `surface-origin`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ?? "";
+    const origins = [...section.matchAll(/originY=(\d+)/g)].map((match) =>
+      Number(match[1]),
+    );
+    const base = origins[0] ?? Number.NaN;
+    const moved = base + movedBy;
+    const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
+    expect(checks).toBeGreaterThan(5);
+    expect(origins).toContain(moved);
+
+    const row = rowFor("Layout reports");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("surface-origin");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(`originY=${base}`);
+    expect(row?.evidence).toContain(`reportedY=${base}`);
+    expect(row?.evidence).toContain(`originY=${moved}`);
+    expect(row?.evidence).toContain(`**${movedBy}**`);
+
+    const queries = rowFor("Container queries");
+    expect(queries?.workaround).toContain("size");
+    expect(queries?.workaround).toContain("Layout reports");
+
+    const page = measuredRow("Layout reports");
+    expect(
+      page,
+      "the page's measured table has no layout-reports row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("surface-origin");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`originY=${base}`);
+    expect(page?.[1]).toContain(`originY=${moved}`);
+
+    const layouts = read("apps/docs/content/docs/layouts.mdx");
+    expect(layouts).toContain("surface-origin");
+    expect(layouts).toContain(`**${movedBy}**`);
+    expect(layouts).toContain("size");
+  });
+
   it("publishes the tab move a window measured", () => {
     // Tier 4's movable tabs are `partial` because the binding opens one window
     // per process, and the half a window can prove is the move inside it.

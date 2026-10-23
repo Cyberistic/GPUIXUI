@@ -7020,7 +7020,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 198/198
+`[x]` `[██████████]` 199/199
+
+`[x]` Publish the **layout a move does not report** — the record's **Container
+queries** row sent a component to `onLayout` to measure its box, and no row said
+that a **move** delivers no report at all: `surface-origin` (15 checks) measured
+a 240×60 surface under a panel that opens and it still reported `originY=88`
+after painting at **208**, so a box stored from the last report is the box it
+used to occupy; the candidate repair — a 1px probe at the surface's origin whose
+width alternates on each pointer read — is laid out again (`probe=3`) and
+reports the fresh origin, making the same pointer read the local point it had at
+rest (`120,30`) where the stale box reads `120,150`. §3 gains **Layout reports**
+(`supported, with limits`), the Container-queries row now says `onLayout` is a
+**size** report and points at it, `/docs/runtime` publishes the row, §5 owes the
+probe, and `/docs/layouts` gains the rule in its runtime-imposed table.
+`capability-doc.test.ts` gains `publishes the layout a move does not report`: it
+reads `MOVED_BY` out of the fixture and both origins out of the probe's README,
+derives the moved origin, and holds the record, the page and the layouts table to
+the readout; it also refuses a Container-queries row that omits the size rule.
+Directions measured: with the row absent the case fails `expected undefined to be
+'supported, with limits'`, and the page at `originY=209` fails `to contain
+'originY=208'`; restored, the case is 99/99, the lane file is 146/146 with
+`check-types` clean. The full docs suite keeps the two foreign failures recorded
+in Interlocks. No native scenario applies — a docs page and its guard have no
+runtime path.
 
 `[x]` Publish the **movable tabs** a window measured — Tier 4's
 detachable/movable tabs row is `partial` (the binding opens one window per
