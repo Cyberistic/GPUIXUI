@@ -34,7 +34,7 @@ export function EmptyStateDemo() {
           </span>
           <p className="gx-empty-title">Nothing here</p>
           <p className="gx-empty-desc">
-            The inbox is empty — new mentions land here.
+            The folder is empty — new files land here.
           </p>
         </div>
       </div>
@@ -54,19 +54,31 @@ export function EmptyStateDemo() {
   );
 }
 
-export const emptyStateDemoSource = `import { EmptyState } from "@gpuixui/components/empty-state";
-import { Button } from "@gpuixui/primitives";
+export const emptyStateDemoSource = `import { Button } from "@gpuixui/primitives";
+import { EmptyState } from "@gpuixui/components/empty-state";
+import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/components";
 
-<EmptyState
-  title="No projects yet"
-  description="A project holds your files, runs and settings."
-  action={<Button variant="primary">New project</Button>}
-/>;
+export const EmptyStates = () => {
+  const theme = useTheme();
 
-<EmptyState
-  icon={<Icon name="inbox" />}
-  title="Nothing here"
-  description="The inbox is empty — new mentions land here."
-/>;
+  return (
+    <>
+      <EmptyState
+        title="No projects yet"
+        description="A project holds your files, runs and settings."
+        action={<Button variant="primary">New project</Button>}
+      />
 
-<EmptyState title="Loading…" />;`;
+      <EmptyState
+        icon={
+          <Icon color={theme.colors.mutedForeground} name="folder-open" />
+        }
+        title="Nothing here"
+        description="The folder is empty — new files land here."
+      />
+
+      <EmptyState title="Loading…" />
+    </>
+  );
+};`;

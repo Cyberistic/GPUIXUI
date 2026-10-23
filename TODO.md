@@ -6734,7 +6734,12 @@ the empty panel's slot order, its measure and its missing role to the source`,
 which reads `MEASURE`, `maxWidth: MEASURE`, `mergeStyles`, the four slots in
 paint order and the absent `role=`/`tabIndex`/`aria-`, then holds the page to
 `360px`, the no-role sentence, the absent live region, the non-heading title and
-its **6 native behaviour tests**; the curated entry joins the set in
+its **6 native behaviour tests**. The preview's **Code tab** is copyable again:
+`emptyStateDemoSource` painted an `Icon` it never imported, gave it no colour and
+named a glyph the registry does not carry, while the drawing showed one —
+`empty-state-demo.test.tsx` holds the three panels, the caller's surface and the
+fixed measure, then the sample's imports, `theme.colors.mutedForeground` and the
+`folder-open` name. The curated entry joins the set in
 `component-page-truth.test.ts` and `package-docs.test.ts`, `sources.ts` carries
 the `emptyState` `?raw` block, and `meta.json`, the Components index,
 `/docs/theming`'s switch list, the strategy's curated line and the app ledger
@@ -6746,8 +6751,8 @@ one fails `package-docs.test.ts`'s shadow set. `nub run --filter @gpuixui/docs
 check-types` and `check:tests` green; the docs suite is 1081 passed with the two
 foreign failures recorded in Interlocks (the editor pages' six cross-links and
 two dock pages with no limitations section), and the six touched guard files are
-131/131. No native scenario applies — a docs page and its guards have no runtime
-path.
+131/131 with the preview's file 3/3. No native scenario applies — a docs page and
+its guards have no runtime path.
 
 `[x]` Mount the **workspace lane** — five packages shipped their own docs
 (`editor`, `files`, `shell`, `dock`, `media`) and the site mounted none of them,
