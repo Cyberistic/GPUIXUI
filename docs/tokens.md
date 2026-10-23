@@ -3659,6 +3659,80 @@ cannot mistake for a field the package draws.
 **Not measured, deliberately:** a field's `placeholder`. It is painted only
 while the field is empty, so there is no run for a reader to select.
 
+## Find highlights
+
+A search marks its matches with a **wash behind the text**: any `text`/`div` host
+takes a `highlight` spec, and the glyphs keep the colour they already had. A host
+given no colour paints one itself — the runtime theme's `accent` at **30%** for
+every match and **65%** for the active one, with a **2px** corner
+(`packages/native/src/text/search.rs` at the pinned `@gpuix/native@0.11.0`). The
+library's application passes no window theme, so that accent is the runtime's
+built-in violet: the one text surface still painted from a palette this package
+does not own.
+
+Those shares are also too strong for the text they mark. Measured over the
+sixteen shipped, high-contrast, platform and authored styles, the 65% active
+wash leaves `foreground` under the **7:1** body floor in every one of them — the
+worst is Windows dark's popover at **3.05:1** — and the resting 30% wash is under
+it in four dark styles, the worst being Dark · Linux at **6.14:1** on its
+popover. A reader who pressed Enter on their own query could be shown a result
+under the reading floor.
+
+`findHighlight(theme)` answers the pair a theme can carry, derived from its
+`primary` so a brand's accent family reaches a find bar the way it reaches every
+other mark:
+
+```ts
+import { findHighlight, type Theme } from "@gpuixui/tokens";
+
+export const searchHighlight = (theme: Theme) => {
+  const { color, activeColor, radius } = findHighlight(theme);
+  return { color, activeColor, radius };
+};
+
+// <text highlight={{ query, ...searchHighlight(theme) }}>{line}</text>
+```
+
+- The resting match keeps the runtime's **30%** where it holds, and steps down to
+  the largest share whose composite is both visible on the strip (1.05:1) and
+  keeps body text at the theme's own floor. Four dark styles step: Linux to
+  **22%**, Windows XP (Luna) to **23%**, Windows and Windows 7 (Aero) to **26%**.
+- The active match takes the strongest wash that still keeps body text readable,
+  and falls back to the theme's **secondary** floor only when the accent has no
+  stronger safe wash — a dark palette whose text is already near the floor. Both
+  washes stay translucent, so the strip shows through the way the runtime's own
+  do. Across the shipped styles the active share lands at 34–53%, and the pair is
+  always distinguishable: the tightest separation is **1.150:1**, high-contrast
+  dark on a `muted` strip.
+- The corner is `radius.sm`, the tightest step the scale carries. The runtime's
+  own 2px is a literal, not a step — a look whose radii are authored (Luna's are
+  1–4px) otherwise keeps a corner from another design system.
+
+The washes are measured on the four content tones a search runs over —
+`background`, `card`, `popover` and `muted` (`highlightSurfaces`) — the same
+strips the selection wash is measured on. The runtime's two shares are exported
+as `highlightShares` so a consumer can read the baseline the derivation starts
+from. `highlightFailures(theme, floors?)` returns every placement that
+misses a job, naming the state, the strip and the ratio: `visibility`, the wash
+against the strip; `legibility`, the ink inside it; and `distinct`, an active
+match the surface cannot tell apart from the resting ones at 1.05:1 — the one job
+a wash cannot do for a theme whose body pair sits at the floor, where any visible
+wash costs the text the ratio it just met. A theme restored from storage is read
+as the absence it is: a missing role or strip reports rather than throws, and
+`invalidColorRoles` names the role.
+
+**It sits beside the gate rather than inside it.** The docs site's theme editor
+words every report `auditTheme` returns and derives its printed count from the
+gate's own keys, so folding a twelfth report in is one coordinated change with
+that page (`TODO.md` → Interlocks); until then a brand runs `highlightFailures`
+beside `auditTheme`, as it does `invalidScales`.
+
+**Adoption.** `HighlightText` paints its marker with the theme's `selection` role
+by default — a sweep across a phrase rather than a search result's two states —
+and the playground's search probes hand the host no colour at all, so they paint
+the runtime's built-in accent. Passing `findHighlight(theme)` from a search
+surface is the interlock row in `TODO.md`.
+
 ## Theme API
 
 ```ts

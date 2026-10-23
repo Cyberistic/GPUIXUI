@@ -500,6 +500,40 @@ smallest 2% step that keeps the wash visible and the text readable, at the same
 share. All 64 tint placements resolve (light tints keep the designed role); a
 surface no step can serve keeps the designed wash and the gate reports it.
 
+## Find highlights
+
+A search marks its matches with a wash **behind** the text, and a host given no
+colour paints the runtime's own: `accent` at **30%** for every match and **65%**
+for the active one, with a **2px** corner (`packages/native/src/text/search.rs`
+at the pinned `@gpuix/native@0.11.0`). The library's application passes no window
+theme, so that accent is the runtime's built-in violet. Measured over the
+sixteen shipped, high-contrast, platform and authored styles, the 65% active
+wash leaves body text under the 7:1 floor in all of them (Windows dark's popover
+at 3.05:1) and the 30% resting wash is under it in four dark styles (Dark ·
+Linux 6.14:1 on its popover).
+
+`findHighlight(theme)` derives the pair a theme can carry from its `primary`:
+the resting match is the runtime's 30% where it holds and steps down to the
+largest share whose composite is visible (1.05:1) and keeps body text at the
+theme's body floor — Linux 22%, Luna 23%, Windows and Aero 26% — while the
+active match is the strongest wash that keeps body text readable, falling back
+to the secondary floor only when the accent has no stronger safe wash. Its
+`radius` is `radius.sm`, the tightest step the scale carries; the runtime's 2px
+is a literal. Spread the result into a host's `highlight` spec:
+
+```tsx
+<text highlight={{ query, ...findHighlight(theme) }}>{line}</text>
+```
+
+The washes are measured on `background`, `card`, `popover` and `muted`, the
+strips a search runs over. `highlightFailures(theme, floors?)` reports a
+`visibility`, `legibility` or `distinct` failure — the last for an active match
+the surface cannot tell apart from the resting ones at 1.05:1, which is the one
+job a wash cannot do for a body pair already sitting on the floor. It sits
+**beside** `auditTheme` rather than inside it until the docs site's readout maps
+a report for it (`TODO.md` → Interlocks). A runnable example lives in
+[`src/highlight.example.ts`](./src/highlight.example.ts).
+
 ## Platform styles
 
 `platformStyles` decides each platform once — its families, corner radii, control
