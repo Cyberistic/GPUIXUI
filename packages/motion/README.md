@@ -233,7 +233,11 @@ last sample rather than jumping to the end.
 The inertia inputs are repaired the same way, because `Inertia` is structural: a
 time constant that cannot run takes the house 350 ms, a bound that cannot be read
 is dropped while the readable one beside it still clamps, an inverted pair is
-swapped, and a non-finite position or velocity reads as a standstill. A coast
+swapped, and a non-finite position or velocity reads as a standstill. A
+declaration that carries **no inertia object at all** — a config that did not
+decode — is the house coast too, because `useInertia` projects its resting frame
+before it samples, so reading `.tau` off nothing threw a `TypeError` out of the
+render and the surface never mounted. A coast
 therefore always projects a finite rest and settles, instead of painting `NaN` and
 sampling forever. A rest the arithmetic cannot represent is no journey either: an
 overflowed projection still knows which way it went, so a wall in that direction

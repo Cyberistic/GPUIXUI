@@ -215,7 +215,9 @@ export class MotionValue {
    * the full speed it has since lost (which would overshoot its rest and never
    * settle). A new gesture — another release velocity, a changed time constant
    * or bound — starts from the presentation, and so does a `coast` after `set`
-   * or `animate`.
+   * or `animate`. A declaration that carries no inertia object at all is the
+   * house coast, because `Inertia` is structural and a stored config may not
+   * have decoded.
    */
   coast(inertia: Inertia, velocity?: number): void {
     const release = finite(velocity ?? this.velocity, 0);

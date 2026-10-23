@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { inertia, project, sampleInertia, type Inertia } from "./inertia.js";
+import { sameInertia } from "./inertia-read.js";
 
 describe("inertia", () => {
   it("projects the resting position and clamps to bounds", () => {
@@ -108,6 +109,20 @@ describe("an inertia built by hand", () => {
     const hand = { tau: 0.35, min: Number.NaN, max: 10 };
     expect(project(hand, 0, 100)).toBe(10);
     expect(sampleInertia(hand, 0, 100, 120).value).toBeLessThanOrEqual(10);
+  });
+
+  it("reads a declaration that carries no inertia as the house coast", () => {
+    // A config decoded from storage can reach these entry points with no object
+    // at all. Reading `.tau` off nothing threw a `TypeError` out of the render
+    // that projects a resting frame (`useInertia`), and the coast never ran.
+    // @ts-expect-error — an inertia a store wrote as `null`.
+    expect(project(null, 0, 100)).toBe(project(inertia(350), 0, 100));
+    // @ts-expect-error — the same absent inertia reaching a sample.
+    expect(sampleInertia(undefined, 0, 100, 350)).toEqual(
+      sampleInertia(inertia(350), 0, 100, 350),
+    );
+    // @ts-expect-error — and the equality the retained value's guard reads.
+    expect(sameInertia(null, inertia(350))).toBe(true);
   });
 
   it("swaps an inverted pair the sampler is handed", () => {

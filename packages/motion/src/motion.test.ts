@@ -128,6 +128,21 @@ describe("MotionValue", () => {
     expect(done.complete).toBe(true);
   });
 
+  it("settles a coast whose declaration carries no inertia", () => {
+    // The same door one step earlier: a declaration decoded from storage can
+    // hand `coast` no object at all. `project` read `.tau` off `null` and threw
+    // out of the render (`useInertia` projects its resting frame first), so the
+    // surface never mounted instead of coasting under the house constant.
+    const value = new MotionValue(0);
+    // @ts-expect-error — an inertia a store wrote as `null`.
+    value.coast(null, 100);
+
+    const done = value.sample(4_500);
+    expect(done.value).toBeCloseTo(35, 3);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
   it("settles a coast whose projected rest overflows", () => {
     // The release is readable, only its rest is not: the sampler's
     // `Infinity * 0` at the release frame answered `NaN`, so the value painted

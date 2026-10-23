@@ -21,8 +21,10 @@ export interface Bounds {
 }
 
 /** The time constant a sample can run with: the house one for a value it cannot. */
-export const tauOf = (tau: number): number =>
-  Number.isFinite(tau) && tau > 0 ? tau : DEFAULT_TAU_MS / 1000;
+export const tauOf = (tau: number | undefined): number =>
+  tau !== undefined && Number.isFinite(tau) && tau > 0
+    ? tau
+    : DEFAULT_TAU_MS / 1000;
 
 /** Bounds a sample can clamp to: unreadable ones dropped, an inverted pair swapped. */
 export const boundsOf = (min: number | null, max: number | null): Bounds => {
@@ -34,18 +36,31 @@ export const boundsOf = (min: number | null, max: number | null): Bounds => {
 };
 
 /**
+ * The inertia a sample can run with: a declaration the samplers were handed
+ * with no object at all is the house coast.
+ *
+ * `Inertia` is structural, so a config decoded from storage can reach
+ * `project`, `sampleInertia`, `sameInertia` or `MotionValue.coast` as `null` or
+ * `undefined`. Reading `.tau` off nothing threw a `TypeError` out of a render —
+ * `useInertia` projects its resting frame before it samples — instead of
+ * coasting. It is read as `{}`, the house 350 ms with no bounds, which is the
+ * answer every unreadable field already gets.
+ */
+export const inertiaOf = (fields: Inertia | null | undefined): Inertia => ({
+  tau: tauOf(fields?.tau),
+  ...boundsOf(fields?.min ?? null, fields?.max ?? null),
+});
+
+/**
  * Whether two inertia declarations are the same coast.
  *
  * Compares what a sample reads, so the two objects need not be the same one:
- * `{ tau: NaN }` and `{ tau: 350 }` are the house 350 ms, and a bound pair in
- * the other order is the same pair after the repair.
+ * `{ tau: NaN }` and `{ tau: 350 }` are the house 350 ms, a bound pair in the
+ * other order is the same pair after the repair, and an absent declaration is
+ * the house coast.
  */
 export const sameInertia = (left: Inertia, right: Inertia): boolean => {
-  const leftBounds = boundsOf(left.min, left.max);
-  const rightBounds = boundsOf(right.min, right.max);
-  return (
-    tauOf(left.tau) === tauOf(right.tau) &&
-    leftBounds.min === rightBounds.min &&
-    leftBounds.max === rightBounds.max
-  );
+  const a = inertiaOf(left);
+  const b = inertiaOf(right);
+  return a.tau === b.tau && a.min === b.min && a.max === b.max;
 };

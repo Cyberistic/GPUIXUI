@@ -12,21 +12,18 @@
  * `Inertia` is structural, so a caller may build one without {@link inertia}:
  * the samplers repair what they are handed — a time constant that cannot run
  * takes the house 350 ms, a bound that cannot be read is dropped and an inverted
- * pair is swapped, and a non-finite position or velocity reads as a standstill.
- * Without that, `tau: NaN` answered `NaN` from {@link project} and a coast never
- * settled, painting `NaN` into every frame. A rest the arithmetic cannot
+ * pair is swapped, a non-finite position or velocity reads as a standstill, and
+ * a declaration that carries **no object at all** is the house coast. Without
+ * that, `tau: NaN` answered `NaN` from {@link project} and a coast never
+ * settled, painting `NaN` into every frame, while an absent declaration threw
+ * `TypeError` out of the render that projected it. A rest the arithmetic cannot
  * represent is no journey either: the coast settles on the nearest finite
  * destination (a wall in the direction it was thrown, or the release frame) in
  * the frame it is released, because an overflowed travel times a zero decay is
  * `NaN`, and `Infinity` is painted as nothing.
  */
 
-import {
-  DEFAULT_TAU_MS,
-  boundsOf,
-  tauOf,
-  type Bounds,
-} from "./inertia-read.js";
+import { DEFAULT_TAU_MS, inertiaOf, type Bounds } from "./inertia-read.js";
 
 /** Time constant (seconds) plus optional hard bounds. */
 export interface Inertia {
@@ -77,10 +74,12 @@ const destinationOf = (
 export const inertia = (
   tauMs = DEFAULT_TAU_MS,
   bounds?: { readonly min?: number; readonly max?: number },
-): Inertia => {
-  const limits = boundsOf(bounds?.min ?? null, bounds?.max ?? null);
-  return { tau: tauOf(tauMs / 1000), min: limits.min, max: limits.max };
-};
+): Inertia =>
+  inertiaOf({
+    tau: tauMs / 1000,
+    min: bounds?.min ?? null,
+    max: bounds?.max ?? null,
+  });
 
 /** A number the formula can read, or the standstill it means. */
 const finiteOr = (value: number, fallback: number): number =>
@@ -91,13 +90,15 @@ export const project = (
   inertia: Inertia,
   position: number,
   velocity: number,
-): number =>
-  destinationOf(
+): number => {
+  const read = inertiaOf(inertia);
+  return destinationOf(
     finiteOr(position, 0),
     finiteOr(velocity, 0),
-    tauOf(inertia.tau),
-    boundsOf(inertia.min, inertia.max),
+    read.tau,
+    read,
   );
+};
 
 /**
  * Samples exponential deceleration at an explicit elapsed time. The trajectory
@@ -120,8 +121,8 @@ export const sampleInertia = (
   const t = (Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0)) / 1000;
   const position = finiteOr(from, 0);
   const speed = finiteOr(velocity, 0);
-  const tau = tauOf(inertia.tau);
-  const limits = boundsOf(inertia.min, inertia.max);
+  const read = inertiaOf(inertia);
+  const tau = read.tau;
   const rest = position + speed * tau;
   if (!Number.isFinite(rest)) {
     // The rest this release is heading for is not a number the runtime can
@@ -130,17 +131,17 @@ export const sampleInertia = (
     // standstill does, instead of taking an overflowed travel times a zero
     // decay into a `NaN` frame that never settles.
     return {
-      value: destinationOf(position, speed, tau, limits),
+      value: destinationOf(position, speed, tau, read),
       velocity: 0,
       settled: true,
     };
   }
   const decay = Math.exp(-t / tau);
-  const value = clampTo(position + (rest - position) * (1 - decay), limits);
+  const value = clampTo(position + (rest - position) * (1 - decay), read);
   const outVelocity = speed * decay;
   const intoWall =
-    (limits.min !== null && value <= limits.min && outVelocity <= 0) ||
-    (limits.max !== null && value >= limits.max && outVelocity >= 0);
+    (read.min !== null && value <= read.min && outVelocity <= 0) ||
+    (read.max !== null && value >= read.max && outVelocity >= 0);
   const settled = intoWall || Math.abs(outVelocity) <= REST_SPEED;
   return { value, velocity: intoWall ? 0 : outVelocity, settled };
 };
