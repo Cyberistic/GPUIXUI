@@ -155,7 +155,7 @@ export interface TableController<Row extends RowData> {
   readonly sortOrder: SortOrder;
   readonly query: string;
   readonly selection: SelectionState;
-  /** The rows the current query keeps, before sorting. */
+  /** The rows the tree and the current query keep, before sorting. */
   readonly kept: ReadonlyArray<Row>;
   /** How many records are chosen. */
   readonly selectedCount: number;
