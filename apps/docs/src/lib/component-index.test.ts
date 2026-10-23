@@ -851,7 +851,8 @@ describe("the real index", () => {
     // "and" ("Tooltip and Toast"); a title that itself contains "and" stays
     // whole because the exact match is tried first.
     const names = (listed ?? "").split(/,\s*/).flatMap((segment) => {
-      const text = segment.trim();
+      // Markdown wraps the bullet, so a title can span two source lines.
+      const text = segment.replaceAll(/\s+/g, " ").trim();
       if (titles.includes(text)) return [text];
       const joined = text.split(/\sand\s/);
       return joined.every((name) => titles.includes(name)) ? joined : [text];
