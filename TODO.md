@@ -6584,6 +6584,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `<svg source>` for a two-value line under four labels. Directions measured:
     with the old spacing both unit cases fail (`M0 90L200 80` for `M25 90L75
     80`) and the window case fails on `M0 50L200 0` for `M25 50L75 0`.
+  - [x] Put the **windowed table's empty state in a row and cell** — `VirtualTable`
+    passed the caller's `empty` node straight into the body's `rowgroup`, so the
+    accessibility tree described the message under a `RowGroup` with no row or
+    cell — the role-less shape `TableEmpty` had already fixed for the plain
+    table. The count-0 branch now wraps the node in `TableEmpty`, and
+    `src/behaviour/table-empty-a11y.test.tsx` gains a windowed case that decodes
+    the rendered tree, locates the message's `Cell` and requires its `Label`
+    parent to be a `Row`. Direction measured: with the old branch the case fails
+    with `the tree has no Cell node`. `docs/virtualization.mdx` and the Tier 3
+    Virtualized tables row state the rule.
   - [x] Paint the **checkbox column's target in its row's fill** — the box's
     painted target is the hit boundary that keeps a box press off its row, and
     it was fixed to `card`, so a chosen row (`selected`) carried a card-coloured

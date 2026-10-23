@@ -32,6 +32,7 @@ import {
   TableRow,
   TableViewport,
 } from "../table/table.js";
+import { VirtualTable } from "../virtual/table.js";
 
 /** One node of the accessibility tree the renderer reports. */
 class A11yNode extends Schema.Class<A11yNode>("A11yNode")({
@@ -108,6 +109,34 @@ const withEmptyTree = (read: (tree: A11yTree) => void): void => {
   }
 };
 
+/** The windowed table over no rows: the same empty state through its own path. */
+const emptyVirtualTable = () => (
+  <VirtualTable
+    height={200}
+    aria-label="Files"
+    count={0}
+    rowHeight={32}
+    header={
+      <TableRow>
+        <TableHeaderCell width={260}>Name</TableHeaderCell>
+      </TableRow>
+    }
+    row={() => null}
+    empty={<text>No file matches that filter.</text>}
+  />
+);
+
+/** Render the empty windowed table, read its tree, and release the window. */
+const withEmptyVirtualTree = (read: (tree: A11yTree) => void): void => {
+  const root: DataTestRoot = renderData(emptyVirtualTable());
+  try {
+    settle(root);
+    read(Schema.decodeUnknownSync(A11yTree)(root.renderer.getA11yTree()));
+  } finally {
+    root.unmount();
+  }
+};
+
 describe("the table's empty state", () => {
   it("is a row with a cell, inside the body's row group", () => {
     withEmptyTree((tree) => {
@@ -133,6 +162,20 @@ describe("the table's empty state", () => {
       const labels = withRole(tree, cell, "Label");
       expect(labels).toHaveLength(1);
       // ...and the label's parent is that cell, not the row group.
+      const parents = Object.entries(tree.nodes).filter(([, node]) =>
+        (node.children ?? []).includes(cell),
+      );
+      expect(parents.map(([id]) => roleOf(tree, id))).toEqual(["Row"]);
+    });
+  });
+
+  it("gives the windowed table's empty state the same row and cell", () => {
+    // `VirtualTable` paints its own body when the set is empty, and it passed
+    // the caller's node straight into the body's row group — the role-less
+    // shape the plain table had already lost. The message belongs to a cell.
+    withEmptyVirtualTree((tree) => {
+      const cell = onlyRole(tree, "Cell");
+      expect(withRole(tree, cell, "Label")).toHaveLength(1);
       const parents = Object.entries(tree.nodes).filter(([, node]) =>
         (node.children ?? []).includes(cell),
       );

@@ -52,6 +52,7 @@ import {
   Table,
   TableBody,
   TableCaption,
+  TableEmpty,
   TableHeader,
   TableViewport,
 } from "../table/table.js";
@@ -192,9 +193,14 @@ export interface VirtualTableProps extends Omit<
   readonly header: ReactNode;
   /** Paint one absolute row index. Must return a row of exactly `rowHeight`. */
   readonly row: (index: number) => ReactNode;
-  /** Painted in place of the rows when `count` is `0`. */
-  readonly empty?: ReactNode;
-  readonly caption?: ReactNode;
+  /**
+   * Painted in place of the rows when `count` is `0`.
+   *
+   * The table wraps it in a `TableEmpty` row, so the message sits inside the
+   * grid as a cell rather than directly under the body's row group — the shape
+   * the accessibility tree needs.
+   */
+  readonly empty?: ReactNode;  readonly caption?: ReactNode;
   /** Rows mounted beyond the viewport on each side. Defaults to `4`. */
   readonly overdraw?: number;
   /** A row to reveal: the window moves, then the body scrolls to it. */
@@ -208,7 +214,9 @@ export interface VirtualTableProps extends Omit<
  *
  * The header is the same measured sibling composition as {@link Table}: it sits
  * outside the vertical scroller and inside the one horizontal scroller, so a
- * sideways pan moves both and a wheel over the rows moves only the rows.
+ * sideways pan moves both and a wheel over the rows moves only the rows. An
+ * empty set paints the caller's `empty` inside a `TableEmpty` row, so the
+ * message is a cell of the grid rather than a loose label under its row group.
  */
 export const VirtualTable = ({
   count,
@@ -229,7 +237,9 @@ export const VirtualTable = ({
     <TableViewport>
       <TableHeader>{header}</TableHeader>
       {count === 0 ? (
-        <TableBody>{empty}</TableBody>
+        <TableBody>
+          {empty === undefined ? undefined : <TableEmpty>{empty}</TableEmpty>}
+        </TableBody>
       ) : (
         <VirtualTableBody
           count={count}

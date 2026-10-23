@@ -44,13 +44,17 @@ import { VirtualList } from "@gpuixui/data";
 | `row` / `renderRow` | `(index: number) => ReactNode` | — | paints one absolute row index |
 | `height` | `number` | measured body | a definite table (or body) height |
 | `header` | `ReactNode` | — | the header row's cells |
-| `empty` | `ReactNode` | — | painted when `count` is `0` |
+| `empty` | `ReactNode` | — | painted inside a `TableEmpty` row when `count` is `0` |
 | `caption` | `ReactNode` | — | the line below the frame |
 | `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
 | `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report |
 
 `useVirtualRows({ count, rowHeight, viewportHeight, overdraw, initialOffset, reveal })` returns the window state a consumer needs to render it themselves.
+
+An empty set paints `empty` inside a `TableEmpty` row: the message is a cell of
+the grid, not a loose label under the body's row group — the same shape the
+plain table's empty state has.
 
 ## Limitations
 
