@@ -6542,8 +6542,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the last label draws nowhere, the rule `barMarks` follows; `LineChart`
     passes `labels.length` and `Sparkline` keeps its own length.
     `src/chart/logic.test.ts` gains `keeps a ragged series in its own
-    categories` and moves the point positions. Directions measured: with the
-    old spacing both cases fail (`M0 90L200 80` for `M25 90L75 80`).
+    categories` and moves the point positions, and
+    `src/behaviour/chart.test.tsx` gains a window case that reads the painted
+    `<svg source>` for a two-value line under four labels. Directions measured:
+    with the old spacing both unit cases fail (`M0 90L200 80` for `M25 90L75
+    80`) and the window case fails on `M0 50L200 0` for `M25 50L75 0`.
   - [x] Paint the **checkbox column's target in its row's fill** — the box's
     painted target is the hit boundary that keeps a box press off its row, and
     it was fixed to `card`, so a chosen row (`selected`) carried a card-coloured

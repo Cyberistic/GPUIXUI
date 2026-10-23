@@ -265,7 +265,9 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   rule — a series with more values than labels paints only the labelled
   slots — is true for a line as well as a bar. `src/chart/logic.test.ts` holds
   the ragged series and the dropped tail; directions measured: the old spacing
-  fails both with `M0 90L200 80` for `M25 90L75 80`.
+  fails both with `M0 90L200 80` for `M25 90L75 80`, and
+  `src/behaviour/chart.test.tsx` reads the painted `<svg source>` for a
+  two-value line under four labels (`M0 50L200 0` for `M25 50L75 0`).
 - **Type-ahead is the published seam**: the tree imports
   `typeaheadMatchIndex` from `@gpuixui/components/typeahead` and keeps only the
   position-to-key step; `TreeView` uses the seam's `typedChar`/`useTypeahead`, so

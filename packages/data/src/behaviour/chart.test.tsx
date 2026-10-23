@@ -23,7 +23,7 @@ import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { ChartExample } from "../../examples/chart.example.js";
-import { BarChart, StackedBar } from "../chart/chart.js";
+import { BarChart, LineChart, StackedBar } from "../chart/chart.js";
 import {
   paintedText,
   requireBounds,
@@ -240,5 +240,32 @@ describe("the charts", () => {
     // The lone bar is the labelled 5 of a 500 scale: a pixel tall under the
     // ceiling. The discarded 500 would have stood the full plot at y = 0.
     expect(topOfLayer(root, "chart-past-labels-layer-revenue")).toBe(99);
+  });
+
+  it("puts a line's points over the labels it draws under", () => {
+    // The labels (and the bars) are centred in `width / labels.length` slots,
+    // so a path spaced edge to edge stood its first and last points half a slot
+    // off and a two-value series under four labels stretched across the whole
+    // plot. Two of four 50px slots put the points at x = 25 and 75.
+    root = renderData(
+      <LineChart
+        aria-label="Churn"
+        labels={["Q1", "Q2", "Q3", "Q4"]}
+        series={[{ key: "churn", label: "Churn", values: [10, 20] }]}
+        width={200}
+        height={100}
+        testId="chart-ragged-line"
+      />,
+    );
+    settle(root);
+
+    const source = root.renderer.findByTestId("chart-ragged-line-layer-churn")
+      ?.customProps?.source;
+    if (typeof source !== "string") {
+      throw new Error("behaviour: no SVG source on the line layer");
+    }
+    // The scale is the widest value (20), so y = 50 and 0.
+    expect(source).toContain("M25 50L75 0");
+    expect(source).not.toContain("M0");
   });
 });
