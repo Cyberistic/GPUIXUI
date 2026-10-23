@@ -1042,4 +1042,32 @@ describe("the verification section's contracts", () => {
     // when the sentence was written.
     expect(verification).not.toContain("the four body roles");
   });
+
+  it("names the native gallery that paints the tokens, not a TODO row", () => {
+    // The page named the gallery as the native proof and sent a reader to
+    // `TODO.md` for it, although the four scenarios had landed and the
+    // playground README records them. A proof that exists cannot read as
+    // future work: the page cites the gallery, and the gallery is four
+    // scenarios registered in the playground.
+    const gallery = read("../../../apps/playground/README.md");
+    const registry = read("../../../apps/playground/src/scenarios/registry.ts");
+    const scenarios = [
+      "theme-color-roles",
+      "theme-type-and-shadow",
+      "theme-platform",
+      "theme-look",
+    ];
+
+    expect(gallery).toContain("## The theme gallery");
+    scenarios.forEach((id) => {
+      expect(registry, id).toContain(`id: "${id}"`);
+      expect(verification, id).toContain(`\`${id}\``);
+    });
+    expect(verification).toContain("runtime's own style report");
+    expect(verification).toContain("apps/playground/README.md");
+    // The retracted pointer: the bullets' native proof read as future work.
+    expect(section("## Limitations and future work")).not.toContain(
+      "Native visual proof is the playground's theme gallery",
+    );
+  });
 });

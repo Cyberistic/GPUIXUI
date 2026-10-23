@@ -1173,6 +1173,28 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `syntax-palette`), and with the page restored the package suite is 44 files
       / 2 514 tests green.
 
+`[x]` Cite the **native theme gallery** where the catalogue names its native proof
+      — `docs/tokens.md` §Limitations ended "Native visual proof is the
+      playground's theme gallery, not this document. See `TODO.md`", so a reader
+      of the page a consumer trusts for tokens was sent to a TODO row for a proof
+      that had landed: the playground ships four headless scenarios reading the
+      runtime's own style report (`theme-color-roles`, `theme-type-and-shadow`,
+      `theme-platform`, `theme-look`). The bullet is retracted and §Verification
+      gains the native-proof paragraph: what each scenario asserts (every
+      `colorRoles` swatch and a palette switch, every type role through
+      `textStyle` plus the ring's spread and `elevationShadow("md")`, each
+      platform's mono family/fill/`lg`/`md` at its density, and the authored
+      looks to the same bar), that the role lists are derived from `colorRoles`
+      and `typography`, and the evidence path. `docs.test.ts` gains `names the
+      native gallery that paints the tokens, not a TODO row`: it requires the
+      README's gallery section, each id registered in
+      `apps/playground/src/scenarios/registry.ts`, each id and the style-report
+      rule in §Verification, and refuses the retracted bullet in §Limitations.
+      Directions measured: against `HEAD`'s page the case fails naming
+      `theme-color-roles`, and re-adding the bullet with the paragraph in place
+      fails the §Limitations assertion; with the page restored, 44 files /
+      2 515 tests green.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 128/128

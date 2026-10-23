@@ -4046,6 +4046,19 @@ density preset, each elevation level's one shadow, and each status tone's roles.
 The printed row set is compared with the exports too, so a token that is added
 or dropped is named rather than passing silently.
 
+The **native proof** is the playground's theme gallery — four headless scenarios
+that read the runtime's own style report, decoded at the adapter boundary, so a
+token that never reaches the renderer fails by name. `theme-color-roles` paints
+every role in `colorRoles` and re-paints the swatches through a palette switch
+(dark → light → high contrast); `theme-type-and-shadow` runs every type role
+through `textStyle`, the focus ring's spread and `elevationShadow(theme, "md")`;
+`theme-platform` paints one row per platform through `platformTheme` — its mono
+family, `primary` fill, `lg` radius and `md` control at that platform's density;
+and `theme-look` holds the authored looks to the same bar through `retroTheme`.
+The role lists are derived from `colorRoles` and `typography`, so a new token
+cannot go untested. Evidence:
+[`apps/playground/README.md` §The theme gallery](../apps/playground/README.md).
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
@@ -4169,5 +4182,3 @@ or dropped is named rather than passing silently.
 - No font family is bundled: `registerFonts` is consumer-only, so there is no
   redistribution licence to review yet. Shipping one needs the same review
   `LICENSES/` gives every other asset.
-- Native visual proof is the playground's theme gallery, not this document. See
-  `TODO.md`.
