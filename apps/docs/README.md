@@ -229,7 +229,7 @@ src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/edit-page.tsx         The footer link to the page's Markdown, on GitHub
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
-src/components/docs/dependency-strip.tsx  The generated "Built on" line: the component's workspace imports
+src/components/docs/dependency-strip.tsx  The generated "Built on" line: the module's workspace imports, curated and package pages alike
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
 src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
@@ -345,7 +345,7 @@ src/lib/package-graph.ts            The package table's order, responsibilities,
 src/lib/package-graph-source.ts     Reads packages/*/package.json for the table
 src/lib/package-graph-data.ts       The graph, read from the plugin's build-time module
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package
-src/lib/page-dependencies-source.ts Reads each page's component module at build time
+src/lib/page-dependencies-source.ts Reads each package page's component module and each curated page's source block, at build time
 src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
 src/lib/page-source.ts              The source model: a page's module and the loader that reads it
 src/lib/page-source-data.ts         The source index, read from the plugin's build-time module
@@ -453,21 +453,24 @@ the suite that proves the component where the package keeps one, and the site
 cannot invent a suite, so a page without the heading is not a defect the site
 can fix.
 
-Every package page opens with a **status strip** generated from its
-`COMPONENTS.md` row (`src/components/docs/status-strip.tsx`): the inventory's
-status and its GPUix support verdict, plus a link to the inventory. The join is
-the page title (`src/lib/inventory-status.ts`), which normalises punctuation and
-a trailing plural and names the titles whose row reads differently. A page may
-publish several rows — the table page teaches the column menu, the resize strip
-and the filter field, the dock page its tabs, nesting and persistence — and the
-first one is what its strip reports. The guard holds both directions: every page
-**every mounted collection** serves resolves a row (the collection list comes
-from `packageCollections`, so a new lane cannot sit outside the check), and every
-row the inventory calls shipped is published by a page, with a row documented
-only on a lane page argued in `laneRows` beside the file and probe that teach it.
-The page therefore cannot claim more than the inventory, a row that changes
-changes the page with no docs edit, and a page that has none is argued in the
-module.
+Every component page — the curated pages this site writes and the package pages
+it mounts — opens with a **status strip** generated from its `COMPONENTS.md` row
+(`src/components/docs/status-strip.tsx`): the inventory's status and its GPUix
+support verdict, plus a link to the inventory. The join is the page title
+(`src/lib/inventory-status.ts`), which normalises punctuation and a trailing
+plural and names the titles whose row reads differently. A page may publish
+several rows — the table page teaches the column menu, the resize strip and the
+filter field, the dock page its tabs, nesting and persistence — and the first one
+is what its strip reports. Under it, the **Built on** line
+(`src/components/docs/dependency-strip.tsx`) lists the workspace packages the
+component's own module imports (§Pages that read the workspace). The guard holds
+both directions: every page **every mounted collection and this site's curated
+pages** serves resolves a row (the collection list comes from
+`packageCollections`, so a new lane cannot sit outside the check), and every row
+the inventory calls shipped is published by a page, with a row documented only on
+a lane page argued in `laneRows` beside the file and probe that teach it. The
+page therefore cannot claim more than the inventory, a row that changes changes
+the page with no docs edit, and a page that has none is argued in the module.
 
 ## Pages that read the workspace
 

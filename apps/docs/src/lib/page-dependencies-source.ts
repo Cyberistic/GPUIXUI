@@ -8,6 +8,7 @@ import {
   type PageDependencyIndex,
 } from "./page-dependencies";
 import { buildWorkspaceSymbolIndex } from "./public-symbols-source";
+import { componentDocsRoute } from "./shared";
 
 /**
  * The packages each package page's component imports, read from the workspace.
@@ -191,10 +192,54 @@ export const readPackagePages = (
   );
 };
 
+/** A page this site writes, and the module its source block shows. */
+export interface CuratedPageModule {
+  /** The URL the page renders at. */
+  readonly url: string;
+  /** The module the page's `<ComponentSource>` names, when it resolves. */
+  readonly module?: string;
+  /** The page writes its own `## Dependencies`, so the generated strip stays off. */
+  readonly writesDependencies: boolean;
+}
+
+/** The module a curated page's `<ComponentSource file="…">` names. */
+const curatedModule = (root: string, markdown: string): string | undefined => {
+  const file = /<ComponentSource\b[^>]*\bfile="([^"]+)"/.exec(markdown)?.[1];
+  return file !== undefined && existsSync(join(root, file)) ? file : undefined;
+};
+
+/**
+ * Every component page this site writes, and the module it shows.
+ *
+ * A curated page is MDX this app owns, and the module it displays is the file
+ * its `<ComponentSource>` names — not the package page the URL shadows. The two
+ * can document different modules: `/docs/components/button` shows the
+ * primitives' action, while the components package's page documents its own
+ * wrapper. Reading the page's own source block keeps the generated dependency
+ * strip beside the code the reader can see.
+ */
+export const readCuratedPages = (
+  root: string,
+): ReadonlyArray<CuratedPageModule> =>
+  readdirSync(join(root, "apps/docs/content/docs/components"))
+    .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+    .toSorted()
+    .map((name) => {
+      const markdown = readFileSync(
+        join(root, "apps/docs/content/docs/components", name),
+        "utf8",
+      );
+      return {
+        url: `${componentDocsRoute}/${name.replace(/\.mdx$/, "")}`,
+        module: curatedModule(root, markdown),
+        writesDependencies: /^## Dependencies\s*$/m.test(markdown),
+      };
+    });
+
 /** The whole index, for the plugin's virtual module and the guard. */
 export const readPageDependencies = (root: string): PageDependencyIndex => {
-  const read = readPackagePages(root).flatMap((page) =>
-    page.writesDependencies ? [] : [page],
+  const read = [...readPackagePages(root), ...readCuratedPages(root)].filter(
+    (page) => !page.writesDependencies,
   );
 
   return read.reduce<{

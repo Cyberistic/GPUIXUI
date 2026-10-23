@@ -187,6 +187,38 @@ describe("the status a package page reports", () => {
     expect(inventoryUrl).toContain("/COMPONENTS.md");
   });
 
+  it("reports the row for every curated page too, not only the packages'", () => {
+    // The curated page is the one a reader lands on and it shadows its package
+    // page, so a strip on the package frame alone leaves the verdict unshown on
+    // the site's most-read component pages.
+    const missing = curatedPages.flatMap((page) => {
+      if (page.title === undefined) return [`${page.file}: no title`];
+      const status = statusForPage(inventory, page.title);
+      return status.kind === "row" ? [] : [`${page.file}: ${status.reason}`];
+    });
+
+    expect(missing).toEqual([]);
+    expect(curatedPages.length).toBe(38);
+  });
+
+  it("mounts the status strip on both component page frames", () => {
+    const view = readFileSync(
+      new URL("apps/docs/src/lib/docs-view.tsx", root),
+      "utf8",
+    );
+    const curated = view.slice(
+      view.indexOf("function SiteContent"),
+      view.indexOf("function PackageContent"),
+    );
+    const packaged = view.slice(
+      view.indexOf("function PackageContent"),
+      view.indexOf("function DocsView"),
+    );
+
+    expect(curated).toContain("<StatusStrip title={page.title} />");
+    expect(packaged).toContain("<StatusStrip title={page.title} />");
+  });
+
   it("throws on a title two rows could answer, instead of guessing", () => {
     const ambiguous = {
       rows: [

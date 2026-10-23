@@ -2,12 +2,14 @@ import { inventory } from "../../lib/inventory-data";
 import { inventoryUrl, statusForPage } from "../../lib/inventory-status";
 
 /**
- * The status strip a package page opens with.
+ * The status strip a component page opens with.
  *
- * The package writes the page; this line is the site's, generated from
- * `COMPONENTS.md`, so a reader sees the inventory's verdict — shipped or not,
- * fully supported or partial — before the prose that describes it. A page the
- * inventory has no row for renders no strip rather than a guess.
+ * Both frames mount it — the curated page this site writes and the package page
+ * it mounts — so the verdict is on the page a reader lands on, not only the
+ * index tile. The row is generated from `COMPONENTS.md`, so a reader sees the
+ * inventory's verdict — shipped or not, fully supported or partial — before the
+ * prose that describes it. A page the inventory has no row for renders no strip
+ * rather than a guess.
  */
 export function StatusStrip({ title }: { readonly title: string }) {
   const status = statusForPage(inventory, title);

@@ -1,14 +1,14 @@
 import { pageDependencies } from "../../lib/page-dependencies-data";
 
 /**
- * The packages a package page's component is built on.
+ * The packages a component page's component is built on.
  *
- * `MISSION.md` asks every component page for its dependencies, and the package
- * pages are Markdown the site mounts rather than copies. This line is the
- * site's: it reads the component's own imports at build time, so the list
- * cannot fall behind the code, and it stays silent on a page whose author wrote
- * its own `## Dependencies` section or whose component imports no workspace
- * package.
+ * `MISSION.md` asks every component page for its dependencies, and the pages are
+ * Markdown the site mounts or MDX it writes. This line is the site's: it reads
+ * the component's own imports at build time — a package page's component symbol,
+ * or the module a curated page's `ComponentSource` shows — so the list cannot
+ * fall behind the code, and it stays silent on a page whose author wrote its own
+ * `## Dependencies` section or whose component imports no workspace package.
  */
 export function DependencyStrip({ url }: { readonly url: string }) {
   const entry = pageDependencies.pages[url];

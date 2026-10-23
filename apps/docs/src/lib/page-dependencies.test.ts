@@ -8,7 +8,10 @@ import {
   dependencyPackage,
   packagePage,
 } from "./page-dependencies";
-import { readPageDependencies } from "./page-dependencies-source";
+import {
+  readPageDependencies,
+  readCuratedPages,
+} from "./page-dependencies-source";
 
 /**
  * The package page template asks every component page for its dependencies
@@ -151,19 +154,55 @@ describe("the dependency index", () => {
     expect(dependencyPackage("react")).toBeUndefined();
   });
 
-  it("is mounted on the package page frame, not the curated one", () => {
+  it("is mounted on both component page frames, so a curated page lists its packages too", () => {
     const view = readFileSync(
       join(root, "apps/docs/src/lib/docs-view.tsx"),
       "utf8",
     );
-    const frame = view.indexOf("function PackageContent");
-    const strip = view.indexOf("<DependencyStrip");
-    const curated = view.indexOf("function SiteContent");
+    const curated = view.slice(
+      view.indexOf("function SiteContent"),
+      view.indexOf("function PackageContent"),
+    );
+    const packaged = view.slice(
+      view.indexOf("function PackageContent"),
+      view.indexOf("function DocsView"),
+    );
 
-    expect(frame).toBeGreaterThan(-1);
-    expect(strip).toBeGreaterThan(frame);
-    expect(strip).toBeLessThan(view.indexOf("function DocsView"));
-    // The curated page writes its own Dependencies table in MDX.
-    expect(view.slice(curated, frame)).not.toContain("<DependencyStrip");
+    expect(curated).toContain("<DependencyStrip url={url} />");
+    expect(packaged).toContain("<DependencyStrip url={url} />");
+  });
+
+  it("reads a curated page's module from the source block it shows", () => {
+    // The page's own `<ComponentSource file>` is what a reader can see, and it
+    // can differ from the package page the URL shadows: `button` shows the
+    // primitives' action, while the components package's page documents its own
+    // wrapper. The dependency list must describe the code on the page.
+    const curated = readCuratedPages(root);
+    const mismatched = curated.flatMap((page) => {
+      const name = page.url.slice(page.url.lastIndexOf("/") + 1);
+      const markdown = readFileSync(
+        join(root, "apps/docs/content/docs/components", `${name}.mdx`),
+        "utf8",
+      );
+      const shown = /<ComponentSource\b[^>]*\bfile="([^"]+)"/.exec(
+        markdown,
+      )?.[1];
+      if (shown === undefined) return [`${page.url}: no source block`];
+      return index.pages[page.url]?.module === shown
+        ? []
+        : [
+            `${page.url}: reads ${index.pages[page.url]?.module ?? "nothing"}, shows ${shown}`,
+          ];
+    });
+
+    expect(mismatched).toEqual([]);
+    expect(curated).toHaveLength(38);
+    // The two pages the package does not also document at this URL.
+    expect(index.pages["/docs/components/button"]?.module).toBe(
+      "packages/primitives/src/components/Button.tsx",
+    );
+    expect(index.pages["/docs/components/table"]?.module).toBe(
+      "packages/data/src/table/table.tsx",
+    );
   });
 });

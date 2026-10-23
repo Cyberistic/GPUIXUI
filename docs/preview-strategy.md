@@ -494,9 +494,10 @@ browser rather than failing the build).
 ### The dependency line is generated, not written
 
 `MISSION.md` asks every component page for the packages it needs, and the
-package pages are Markdown the site mounts. Asking every page author to keep a
-list beside their imports would drift the first time an import moved, so the
-site reads the component's own module instead:
+package pages are Markdown the site mounts while the curated pages are MDX the
+site writes. Asking every page author to keep a list beside their imports would
+drift the first time an import moved, so the site reads the component's own
+module instead:
 
 - `src/lib/page-dependencies.ts` is the model: a page's component imports,
   grouped by workspace package (`@gpuixui/*`, `@gpuix/*`), with the page that
@@ -506,19 +507,26 @@ site reads the component's own module instead:
   finds the `Grid` declared in `Stack.tsx`, `spacer` finds `Separator.tsx`. A
   family that publishes no symbol under its own name falls back to the file of
   the same name (`chat` → `chat.tsx`). A page that resolves to no module is
-  reported, not guessed, and the guard fails until it has a source to read.
+  reported, not guessed, and the guard fails until it has a source to read. A
+  **curated** page names its module in the `<ComponentSource file>` it shows, and
+  that is the module the strip reads — `/docs/components/button` lists the
+  primitives' imports even though the components package documents its own
+  wrapper at another URL.
 - `plugins/page-dependencies-plugin.ts` serves that index as a build-time
   module, so neither the browser bundle nor the Worker opens the workspace.
 - `<DependencyStrip>` prints it under the status strip, names the module the
   imports were read from, and links each package to its page. It renders nothing
   on a page whose author wrote `## Dependencies` itself (today,
   `packages/primitives/docs/tooltip.mdx`) or whose component imports no
-  workspace package.
+  workspace package. Both frames mount it, so the curated page a reader lands on
+  lists its packages beside the source block it shows.
 
 `src/lib/page-dependencies.test.ts` holds both directions of the reading — every
 workspace import the module makes is listed and nothing invented — and keeps
-every printed link on a mounted page. Deleting the strip's mount fails the
-frame case; emptying the index fails five cases across the two guards.
+every printed link on a mounted page. It also holds a curated page's entry to its
+own `ComponentSource` file. Deleting either frame's mount fails the frame case;
+emptying the index or dropping the curated half fails the curated case and both
+strip cases.
 
 ### The related line is generated, not written
 
@@ -591,14 +599,16 @@ length.
 
 ### The status strip is generated, not written
 
-A package page describes its component but does not decide whether that
-component is shipped. `src/components/docs/status-strip.tsx` prints the
-`COMPONENTS.md` row — its status and its GPUix support verdict — above the page,
-joined by the page title: `src/lib/inventory-status.ts` normalises punctuation
-and a trailing plural, and names the few titles whose row reads differently
-(`Text` → `Text / typography`, `Toast` → `Toasts / notifications`). The strip
-reads the inventory, so a row that moves to `done` moves on the page in the same
-commit with no docs change.
+A component page — curated or package — describes its component but does not
+decide whether that component is shipped. `src/components/docs/status-strip.tsx`
+prints the `COMPONENTS.md` row — its status and its GPUix support verdict — above
+the page, joined by the page title: `src/lib/inventory-status.ts` normalises
+punctuation and a trailing plural, and names the few titles whose row reads
+differently (`Text` → `Text / typography`, `Toast` → `Toasts / notifications`).
+The strip reads the inventory, so a row that moves to `done` moves on the page in
+the same commit with no docs change. Both frames mount it, so the curated page a
+reader lands on reports the same verdict as the package page the URL shadows —
+the verdict is not left to the index tile alone.
 
 A page the inventory has no row for renders no strip rather than a guess. The
 argued exemption is `ThemeProvider`, a provider rather than a component, and

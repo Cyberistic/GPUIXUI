@@ -10377,7 +10377,48 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 315/317
+`[ ]` `[█████████░]` 316/318
+
+`[x]` Give the **curated component pages their generated verdict and packages** —
+      both strips were mounted on the package frame only (`docs-view.tsx`'s
+      `PackageContent`), so the 38 pages a reader opens in the Components lane —
+      the curated pages that shadow their package copies — carried no
+      `COMPONENTS.md` verdict and no "Built on" line, while the page each one
+      displaces carried both. **26 of the 38 are `done` on a `partial` GPUix
+      verdict** (Breadcrumb, Button, Checkbox, Dialog, Select, Table, Tooltip,
+      …), and the index tile's badge was the only place a reader could see it;
+      `page-dependencies.test.ts` even asserted the strip was "not" on the
+      curated frame because "the curated page writes its own Dependencies table"
+      — no curated page writes one. `SiteContent` now mounts `<StatusStrip>` and
+      `<DependencyStrip>`, so a curated page reports the same row as the page it
+      shadows and lists the packages of the module it shows. The dependency
+      index reads a curated page's own `<ComponentSource file>` rather than the
+      shadowed package page, because the two can differ: `/docs/components/button`
+      shows the primitives' action while the components package documents its
+      wrapper, and the six curated URLs with no same-URL package page (button,
+      checkbox, select, switch, table, tooltip) had no entry at all. Guards:
+      `inventory-status.test.ts` gains `reports the row for every curated page
+      too, not only the packages'` (all 38 resolve, held to the count) and
+      `mounts the status strip on both component page frames`;
+      `page-dependencies.test.ts` replaces the false frame case with `is mounted
+      on both component page frames` and gains `reads a curated page's module
+      from the source block it shows` (an independent `<ComponentSource` parse
+      over all 38, plus the primitives' Button and the data Table); and
+      `dependency-strip.test.tsx` renders a curated page's list, its own module
+      and a curated page the package documents at another URL. Directions
+      measured: removing the curated dependency mount fails the frame case;
+      dropping `readCuratedPages` from the index fails the curated case and both
+      strip cases; removing the curated status mount fails the status frame case.
+      Docs: README §status strip and the two ledger lines,
+      `docs/preview-strategy.md` §Dependencies/§The status strip is generated, and
+      the strips' own JSDocs. Verified on a served build:
+      `/docs/components/button` answers 200 with `GPUix support partial` and
+      `data-dependencies="packages/primitives/src/components/Button.tsx"`,
+      `/docs/components/table` reads the data package's table, `/docs/components/dialog`
+      and `/docs/primitives/button` still render, and `/docs/theming` renders
+      neither strip. `apps/docs` is 140 files / 1 225 tests green with
+      `check-types` and `build` clean. No native scenario applies — a site page's
+      generated metadata.
 
 `[x]` Stop the **component index teaching sections the pages do not have** — its
       "How to read a page" table was written from memory and read as a promise:
