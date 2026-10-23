@@ -3,15 +3,18 @@
  *
  * The bugs these guard: a source field that cannot take a keystroke; a preview
  * that does not follow the text; a view button that does not change the panes;
- * a read-only or disabled editor that still edits; and an empty preview that
- * paints nothing rather than saying why.
+ * a read-only or disabled editor that still edits; a disabled editor that keeps
+ * its field, divider and preview as tab stops and paints as though it were
+ * live; and an empty preview that paints nothing rather than saying why.
  */
 
 import { useState, type ReactNode } from "react";
 import { DIVIDER_STEP, DIVIDER_WIDTH } from "@gpuixui/dock";
+import { Button } from "@gpuixui/primitives";
 import { createTestRoot } from "@gpuix/react/testing";
-import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { darkTheme, disabledOpacity, lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
+import * as Option from "effect/Option";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MarkdownEditor,
@@ -64,6 +67,13 @@ const visible = (root: Root, testId: string): boolean => {
   const found = root.renderer.findByTestId(testId);
   return found !== undefined && found !== null;
 };
+
+/** The test id of the element holding focus, if it names one. */
+const focused = (root: Root): Option.Option<string> =>
+  Option.flatMap(
+    Option.fromNullishOr(root.renderer.getFocusedElementId()),
+    (id) => Option.fromNullishOr(root.renderer.getElement(id)?.testId),
+  );
 
 const click = (root: Root, testId: string): void => {
   const element = root.renderer.findByTestId(testId);
@@ -200,6 +210,61 @@ describe("MarkdownEditor", () => {
     );
     type(editor, "x");
     expect(onChange).not.toHaveBeenCalled();
+    editor.unmount();
+  });
+
+  it("leaves the tab order and paints the disabled chrome", () => {
+    const editor = render(
+      <div>
+        <Button testId="before">Before</Button>
+        <MarkdownEditor defaultValue="fixed" disabled testId="editor" />
+        <Button testId="after">After</Button>
+      </div>,
+    );
+    expect(
+      editor.renderer.findByTestId("markdown-source")?.customProps,
+    ).toMatchObject({ tabIndex: -1 });
+    expect(
+      editor.renderer.findByTestId("markdown-preview-viewport")?.customProps
+        ?.tabIndex,
+    ).toBeUndefined();
+    expect(editor.renderer.findByTestId("editor")?.style.opacity).toBe(
+      disabledOpacity,
+    );
+
+    editor.renderer.focusElement(
+      editor.renderer.findByTestId("before")?.id ?? -1,
+    );
+    editor.renderer.simulateKeystrokes("tab");
+    expect(focused(editor)).toEqual(Option.some("after"));
+    editor.unmount();
+  });
+
+  it("keeps its source and preview as stops while it can edit", () => {
+    const editor = render(
+      <div>
+        <Button testId="before">Before</Button>
+        <MarkdownEditor defaultValue="fixed" testId="editor" />
+        <Button testId="after">After</Button>
+      </div>,
+    );
+    expect(
+      editor.renderer.findByTestId("markdown-source")?.customProps,
+    ).toMatchObject({ tabIndex: 0 });
+    expect(
+      editor.renderer.findByTestId("markdown-preview-viewport")?.customProps
+        ?.tabIndex,
+    ).toBe(0);
+    expect(
+      editor.renderer.findByTestId("editor")?.style.opacity,
+    ).toBeUndefined();
+
+    editor.renderer.focusElement(
+      editor.renderer.findByTestId("before")?.id ?? -1,
+    );
+    editor.renderer.simulateKeystrokes("tab");
+    expect(Option.isSome(focused(editor))).toBe(true);
+    expect(focused(editor)).not.toEqual(Option.some("after"));
     editor.unmount();
   });
 

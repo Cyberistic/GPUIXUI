@@ -25,7 +25,7 @@ import {
   hintHost,
   renderFieldHint,
 } from "@gpuixui/primitives/hint";
-import { nativeTextTheme, textStyle } from "@gpuixui/tokens";
+import { disabledOpacity, nativeTextTheme, textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
@@ -188,6 +188,7 @@ export const MarkdownEditor = ({
           aria-label={`${label} source`}
           aria-description={help ?? "Markdown source"}
           readOnly={readOnly || disabled}
+          tabIndex={disabled ? -1 : 0}
           testId="markdown-source"
           style={chrome}
         />
@@ -208,9 +209,10 @@ export const MarkdownEditor = ({
     >
       <ScrollArea
         axis="vertical"
-        focusable
+        focusable={!disabled}
         label={`${label} preview`}
         testId="markdown-preview"
+        viewportTestId="markdown-preview-viewport"
         padding="sm"
         style={{ height: body }}
       >
@@ -240,9 +242,12 @@ export const MarkdownEditor = ({
     <div
       testId={testId}
       style={mergeStyles(
-        mergeStyles(recipeStyle(cn(EDITOR_ROOT, className), theme), {
-          width: total,
-        }),
+        mergeStyles(
+          mergeStyles(recipeStyle(cn(EDITOR_ROOT, className), theme), {
+            width: total,
+          }),
+          disabled ? { opacity: disabledOpacity } : {},
+        ),
         style,
       )}
     >
