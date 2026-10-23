@@ -327,7 +327,29 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 208/208
+`[x]` `[██████████]` 209/209
+
+`[x]` Hold the **scale-order ladders to the scales they measure** — `invalidScales`' five
+ladders (`spacingKeys`, `radiusKeys`, `borderKeys`, `iconKeys`, `typeKeys`) were
+hand-written second lists, so a release that added a step to `Spacing`, `Radius`,
+`BorderWidth`, `IconSize` or a new `TextRole` moved the interface, the record and the
+catalogue table together while the contract kept comparing the old rungs: the shipped
+theme carried a size nothing measured, and a brand could invert the new rung with every
+report empty. `scales.ts` now carries `EveryStepListed` guards whose assignment fails
+`check-types` with the missing step named (measured both ways: dropping `5xl` from
+`spacingKeys` fails `Type 'boolean' is not assignable to type '["a scale step is missing
+from its order ladder", "5xl"]'`, and dropping `codeBlock` from `notRungs` names
+`"codeBlock"` the same way), and the three type roles that are not rungs are now data
+(`bodyStrong` shares `body`'s size; `code`/`codeBlock` are the mono family) instead of
+prose. `scales.test.ts` gains `every rung the ladder walks` (5 cases) beside the one
+sample per group: it lowers **every adjacent pair** the shipped theme carries — spacing,
+radius, border width, icon size and the size-ordered type roles — so a step the ladder
+forgets fails by name. Direction measured: with `5xl` removed from the ladder the spacing
+case fails `spacing.5xl: expected … value 47 …, got []`; restored, `scales.test.ts` is
+25/25 and the package is 49 files / 2 924 tests green. `docs/tokens.md` §Scale order
+teaches the type-check half and the every-pair sweep; the `Scale order` inventory row
+moves 20 → 25 cases and names the guard. No native scenario applies — pure data and a
+contract.
 
 `[x]` Keep the **null-role sweep inside the suite's own budget** — `incomplete.test.ts`'s
 `never reaches a paint seam as a value` walked 18 styles × 47 roles × four seams, so it

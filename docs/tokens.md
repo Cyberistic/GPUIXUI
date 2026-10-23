@@ -1805,6 +1805,11 @@ it, naming both steps:
 | `density` | `controlHeight` and `controlPaddingX`, `sm` → `md` → `lg` |
 | `elevation` | `sm` → `md` → `lg`, by the reach of the shadow each level paints |
 
+A step added to a scale fails the package's type check until it joins the ladder,
+and `scales.test.ts` lowers **every adjacent pair** the shipped scale carries, so
+a new rung cannot ship unmeasured. Density and elevation already derive their
+ladders from the lists they walk (`controlSizes`, `elevationLevels`).
+
 `bodyStrong` shares `body`'s size and differs by weight, and the two mono roles
 are a separate family rather than rungs of the size ladder, so neither is
 compared here. The emphasis pair is not left unmeasured for it: `bodyStrong`

@@ -40,6 +40,8 @@ import {
   themes,
   type BoxShadow,
   type InvalidScale,
+  type TextStyle,
+  type Theme,
   type ThemeOverrides,
 } from "./index.js";
 import {
@@ -337,6 +339,146 @@ describe("the step that breaks a scale", () => {
       "sm",
       "md",
     ]);
+  });
+});
+
+/**
+ * A rung the ladder forgets is a size no contract compares.
+ *
+ * The bug this guards: the scales are data — `Spacing` is ten steps, `Radius`
+ * six — and each ladder in `invalidScales` was a second hand-written list. A
+ * release that adds a step to a scale (the interface, the record and the
+ * catalogue all move together) could leave the ladder behind, so the shipped
+ * theme carried a size nothing measured and a brand could invert the new rung
+ * with every report empty. `scales.ts` now fails its own type check when a
+ * scale gains a step the ladder does not list, and this suite walks **every
+ * adjacent pair** the shipped theme carries, not one sample per group: lower a
+ * step below the one before it and the report must name that step.
+ */
+const lower = {
+  spacing: (step: string, value: number): Theme => ({
+    ...lightTheme,
+    spacing: Object.assign({}, lightTheme.spacing, { [step]: value }),
+  }),
+  radius: (step: string, value: number): Theme => ({
+    ...lightTheme,
+    radius: Object.assign({}, lightTheme.radius, { [step]: value }),
+  }),
+  borderWidth: (step: string, value: number): Theme => ({
+    ...lightTheme,
+    borderWidth: Object.assign({}, lightTheme.borderWidth, { [step]: value }),
+  }),
+  iconSize: (step: string, value: number): Theme => ({
+    ...lightTheme,
+    iconSize: Object.assign({}, lightTheme.iconSize, { [step]: value }),
+  }),
+} as const;
+
+/** Lower every step of a numeric scale below the one before it, once each. */
+const everyPair = (
+  group: keyof typeof lower,
+  entries: ReadonlyArray<readonly [string, number]>,
+): ReadonlyArray<string> =>
+  entries.slice(1).flatMap(([step], offset) => {
+    const previous = entries[offset];
+    if (previous === undefined) {
+      return [];
+    }
+    const [previousStep, previousValue] = previous;
+    const expected: InvalidScale = {
+      group,
+      path: step,
+      value: previousValue - 1,
+      previous: { path: previousStep, value: previousValue },
+    };
+    const found = invalidScales(lower[group](step, expected.value));
+    return JSON.stringify(found) === JSON.stringify([expected])
+      ? []
+      : [
+          `${group}.${step}: expected ${JSON.stringify([expected])}, got ${JSON.stringify(found)}`,
+        ];
+  });
+
+describe("every rung the ladder walks", () => {
+  it("compares each spacing pair the scale ships, not a sample", () => {
+    const entries = Object.entries(lightTheme.spacing);
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(entries.length).toBeGreaterThan(5);
+    expect(everyPair("spacing", entries)).toEqual([]);
+    // A step added to the scale has to join the ladder, and the page says so:
+    // the type-level guard in `scales.ts` is the other half of the contract.
+    expect(page).toContain(
+      "A step added to a scale fails the package's type check until it joins the ladder",
+    );
+  });
+
+  it("compares each radius pair the scale ships, not a sample", () => {
+    const entries = Object.entries(lightTheme.radius);
+
+    expect(entries.length).toBeGreaterThan(4);
+    expect(everyPair("radius", entries)).toEqual([]);
+  });
+
+  it("compares the border pair the scale ships", () => {
+    const entries = Object.entries(lightTheme.borderWidth);
+
+    expect(entries.length).toBe(2);
+    expect(everyPair("borderWidth", entries)).toEqual([]);
+  });
+
+  it("compares each icon pair the scale ships, not a sample", () => {
+    const entries = Object.entries(lightTheme.iconSize);
+
+    expect(entries.length).toBeGreaterThan(3);
+    expect(everyPair("iconSize", entries)).toEqual([]);
+  });
+
+  it("compares each type pair, and leaves the roles that are not rungs", () => {
+    // The three roles the size ladder leaves out, for the reasons `scales.ts`
+    // records: an emphasis that shares body's size and the two mono roles.
+    const notRungs = new Set(["bodyStrong", "code", "codeBlock"]);
+    const rungs = Object.entries(lightTheme.typography)
+      .filter(
+        (entry): entry is [string, TextStyle] => typeof entry[1] === "object",
+      )
+      .filter(([role]) => !notRungs.has(role))
+      .sort((left, right) => left[1].fontSize - right[1].fontSize);
+    const lowered = rungs.slice(1).flatMap(([role, style], offset) => {
+      const previous = rungs[offset];
+      if (previous === undefined) {
+        return [];
+      }
+      const [previousRole, previousStyle] = previous;
+      const value = previousStyle.fontSize - 1;
+      const theme: Theme = {
+        ...lightTheme,
+        typography: Object.assign({}, lightTheme.typography, {
+          [role]: { ...style, fontSize: value },
+        }),
+      };
+      const expected: InvalidScale = {
+        group: "typography",
+        path: `${role}.fontSize`,
+        value,
+        previous: {
+          path: `${previousRole}.fontSize`,
+          value: previousStyle.fontSize,
+        },
+      };
+      const found = invalidScales(theme);
+      return JSON.stringify(found) === JSON.stringify([expected])
+        ? []
+        : [
+            `${role}: expected ${JSON.stringify([expected])}, got ${JSON.stringify(found)}`,
+          ];
+    });
+
+    expect(rungs.length).toBeGreaterThan(5);
+    expect(lowered).toEqual([]);
   });
 });
 

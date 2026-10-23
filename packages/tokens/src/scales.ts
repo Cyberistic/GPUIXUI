@@ -44,7 +44,14 @@ import {
   type Elevation,
   elevationLevels,
 } from "./elevation.js";
-import { controlSizes, type ControlSize } from "./scale.js";
+import {
+  controlSizes,
+  type BorderWidth,
+  type ControlSize,
+  type IconSize,
+  type Radius,
+  type Spacing,
+} from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { TextRole } from "./typography.js";
 
@@ -142,6 +149,57 @@ const typeKeys = [
   "h1",
   "display",
 ] as const satisfies readonly TextRole[];
+
+/**
+ * The type roles that are deliberately not rungs of the size ladder, with the
+ * reason each one is left out. A role added to the type scale has to be sorted
+ * into `typeKeys` or named here, so no role can arrive unmeasured.
+ */
+const notRungs = {
+  /** Shares `body`'s size and differs by weight; `invalidNumbers` holds the pair. */
+  bodyStrong: "emphasis",
+  /** A separate family rather than a size between the UI steps. */
+  code: "mono",
+  codeBlock: "mono",
+} as const satisfies Partial<Record<TextRole, string>>;
+
+/**
+ * A step the ladder does not list, as a build error.
+ *
+ * A scale is data and its ladder is the order the contract compares, so a step
+ * added to a scale is one list away from shipping unmeasured: the shipped theme
+ * would carry a size `invalidScales` never compares, and a brand could invert
+ * the new rung in silence. The assignment below fails the package's type check
+ * with the missing step named, so the ladder and the scale move together.
+ */
+type EveryStepListed<Step extends string, Listed extends Step> =
+  Exclude<Step, Listed> extends never
+    ? true
+    : ["a scale step is missing from its order ladder", Exclude<Step, Listed>];
+
+const spacingLadder: EveryStepListed<
+  keyof Spacing,
+  (typeof spacingKeys)[number]
+> = true;
+const radiusLadder: EveryStepListed<keyof Radius, (typeof radiusKeys)[number]> =
+  true;
+const borderLadder: EveryStepListed<
+  keyof BorderWidth,
+  (typeof borderKeys)[number]
+> = true;
+const iconLadder: EveryStepListed<keyof IconSize, (typeof iconKeys)[number]> =
+  true;
+const typeLadder: EveryStepListed<
+  TextRole,
+  (typeof typeKeys)[number] | keyof typeof notRungs
+> = true;
+
+// Keep the guards live under `noUnusedLocals`; the values are never produced.
+void spacingLadder;
+void radiusLadder;
+void borderLadder;
+void iconLadder;
+void typeLadder;
 
 type Step = readonly [path: string, value: number];
 
