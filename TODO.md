@@ -6275,6 +6275,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     role-less box restored both cases fail by name (`the tree has no Cell
     node`); with it, behaviour 9 files / 57 tests green and still 7 in the table
     file. `COMPONENTS.md`'s Tables row states it.
+  - [x] Move a column **several places**, not only one — `moveColumn(state, id,
+    delta)` is exported as "`delta` visible places" and `useColumns.move` takes
+    any delta, but the reducer traded places with the target column, so
+    `moveColumn(state, "name", 2)` on `name,status,size` produced
+    `size,status,name`: the column landed past `size` while `status` stayed
+    behind it, an order neither a one-place step nor a two-place move produces.
+    A move now removes the column from the visible order, inserts it at the
+    clamped visible target, and writes the visible columns back into the visible
+    slots, so a hidden column keeps the slot it occupied (restoring it returns
+    it to the reader's order) and a step past either end clamps at the end.
+    `columns/logic.test.ts` gains `moves a column several places in one call,
+    not only by swapping it` (two-place moves in both directions and both
+    clamps) and the hidden-column case now asserts the hidden track's slot.
+    Direction measured: with the swap restored the case fails with `expected [
+    'size', 'status', 'name' ] to deeply equal [ 'status', 'size', 'name' ]`;
+    with the insert it is 133/133. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -6398,6 +6414,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
    - [x] The **Workspace** lane denied pointer capture ("no pointer capture, so a drag ends when the pointer leaves the divider") and called every terminal surface unverified, both of which a window has measured since. The page now states the rule — capture is armed on a left press only for an element that listens to both `onMouseDown` and `onMouseMove`, so a divider declaring both keeps the drag and its release outside its own box while a move-only one loses it to its sibling — and separates **rendering the app into a terminal** (`render(<App />, { terminal: true })` with `isTerminal()`, supported) from **hosting a PTY inside a window** (no host element, unverified). `lane-page.test.ts` holds both claims to the record's `Pointer capture` and `Terminal rendering` rows and fails the old wording by name. Directions measured: restoring "no pointer capture"/"No terminal host element" fails both cases, and dropping the two-listener rule fails the capture case (`expected … to contain` the `onMouseDown` token)
 
    - [x] `packages/primitives/docs` said the **opposite of its own API table**: `input.mdx`'s Keyboard section ended "There is no `onKeyDown` prop", while the table above listed `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` and `FieldProps` extends `InteractionProps`, whose handlers the field composes with its own. The section now states the composition and keeps the true half — a *global* shortcut belongs to the window key handler. `src/docs.test.ts` gains `does not deny a prop its own API table lists`: it reads every page's API table (splitting a row's backticked prop list), collects the sentences "There is no `x` prop", and fails when `x` is listed. Deliberately not the host phrasing — "GPUix has no `disabled` prop" is true and `disabled` is still the component's prop. Both directions measured: restoring the retracted sentence fails by name (`input.mdx: says there is no onKeyDown prop, and its API table lists it`), and the fixed page passes 9/9
+
+   - [x] `packages/primitives/docs` **promised eleven sections per page that no page carried** — the brevity rewrite (`f8722170`) left `## Usage`, `## API` and `## Limitations` (plus a few component-specific ones), while `docs/README.md` §Page contract still listed Keyboard, Accessibility, Theming, Verification and Related, so a reader or an agent filling a gap followed a contract the package had abandoned. The contract is a table now — required, optional and what each section carries — and `src/docs.test.ts`'s `holds the page contract to the sections the pages carry` reads it with every page: a required row is on every page, an optional row is on at least one, and a page carries no section the table does not name. Both directions measured: restoring `## Keyboard` as a row fails by name (`docs/README.md: ## Keyboard is promised but no page carries it`), and dropping `## Absence` while a page still carries it reports `number-field.mdx: ## Absence is not in the page contract`; restored, the file is 24/24.
 
 `[x]` Follow a **desktop palette in a running window** — the tokens half of the
       system-theme recipe (`paletteToTokens`/`watchSystemTheme`) was proven on a

@@ -5,12 +5,11 @@ and the component cannot drift. The browser docs site (`apps/docs`) is a separat
 workstream; these pages are the in-package source of truth it can copy or link,
 and the examples registry is what `apps/playground` mounts natively.
 
-Each page follows the same contract: what it is, usage, variants/sizes/states,
-API, keyboard, accessibility, theming, limitations, verification, related. Every
-claim is traceable to the source and to the suite each Tier 1 record in
-`src/inventory.ts` names; `COMPONENTS.md` carries the same verdicts. A capability
-the pinned runtime does not have is written as a limitation with the alternative
-in use — never as a promise.
+Each page carries frontmatter, a paragraph saying what the component is, and the
+sections §Page contract lists below. Every claim is traceable to the source and
+to the suite each Tier 1 record in `src/inventory.ts` names; `COMPONENTS.md`
+carries the same verdicts. A capability the pinned runtime does not have is
+written as a limitation with the alternative in use — never as a promise.
 
 ## Pages
 
@@ -52,25 +51,39 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 
 ## Page contract
 
-1. **Frontmatter** — `title`, `description`.
-2. **What it is** — including what it is *not*.
-3. **Usage** — a TSX snippet importing from the public package root.
-4. **Variants / sizes / states** — every union the component exposes, read from
-   the real types. Where the variants are props, the API table's `Type` column is
-   that table; where a state needs its own explanation (what `pressed` paints,
-   why a range clamps), a sentence above or below it.
-5. **API** — prop, type, default, consequence. Every component takes the
-   caller's `className` (compiled through the recipe registry, after the
-   component's own rules) and `style` (merged last); the section names both.
-   `Select` is the one exception, because its root paints only a width: the page
-   says so and teaches `triggerStyle`/`itemStyle` instead. `src/docs.test.ts`
-   fails when a page's API section never names `className`.
-6. **Keyboard** — the `core/keyboard.ts` contract, or "not focusable".
-7. **Accessibility** — the role and `aria-*` the pinned runtime actually supports.
-8. **Theming** — the semantic roles the resolver reads.
-9. **Limitations** — measured gaps and the honest alternative.
-10. **Verification** — the suites and the command that ran them.
-11. **Related**.
+Each page opens with frontmatter (`title`, `description`) and a paragraph saying
+what the component is — and what it is *not*. The sections below are the shape
+the pages carry now; a required one is on every page, an optional one is on the
+pages whose component needs it. A page cannot invent a section the table does
+not name, and a row cannot promise a section no page carries — `src/docs.test.ts`
+reads this table and every page together.
+
+| Section | Required | What it carries |
+| ------- | -------- | --------------- |
+| `## Usage` | yes | a TSX snippet importing from the public package root |
+| `## API` | yes | prop, type, default, consequence; the variants, sizes and states are the `Type` column |
+| `## Limitations` | yes | measured gaps and the honest alternative |
+| `## Composition` | no | the parts and what each one is responsible for |
+| `## Variants` | no | a variant set whose paint needs a sentence of its own |
+| `## Roles` | no | the semantic roles a page enumerates from the theme |
+| `## Tones` | no | the semantic tone set a page enumerates from the theme |
+| `## Words` | no | the provider's vocabulary |
+| `## Dependencies` | no | the runtime parts or packages the page composes |
+| `## Absence` | no | what a component does when it has no value |
+
+Every component takes the caller's `className` (compiled through the recipe
+registry, after the component's own rules) and `style` (merged last); its `## API`
+section names both. `Select` is the one exception, because its root paints only a
+width: the page says so and teaches `triggerStyle`/`itemStyle` instead.
+`src/docs.test.ts` fails when a page's API section never names `className`.
+
+A keyboard rule, a supported `aria-*` and the roles a component paints belong in
+the section they inform — the API table's consequence, a limitation, or a role
+row — rather than a heading of their own, so no page promises a section its
+component does not have. Every claim is traceable to the source and to the suite
+each Tier 1 record in `src/inventory.ts` names; `COMPONENTS.md` carries the same
+verdicts. A capability the pinned runtime does not have is written as a
+limitation with the alternative in use — never as a promise.
 
 ## Cross-component guards
 

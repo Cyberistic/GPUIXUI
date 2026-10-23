@@ -588,6 +588,63 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("holds the page contract to the sections the pages carry", () => {
+    // The bug guarded: `docs/README.md` still promised eleven sections per page
+    // after the pages were rewritten — `## Keyboard`, `## Accessibility`,
+    // `## Theming`, `## Verification` and `## Related` were on no page — so a
+    // reader or an agent filling a gap followed a contract the package had
+    // abandoned. The contract is a table now: a required row is on every page,
+    // an optional row is on at least one, and a page carries no section the
+    // table does not name.
+    const rows = Arr.filterMap(read("README.md").split("\n"), (line) => {
+      const match = /^\| `## (.+?)` \| (yes|no) \|/.exec(line);
+      return match === null
+        ? Result.failVoid
+        : Result.succeed({
+            heading: match[1] ?? "",
+            required: match[2] === "yes",
+          });
+    });
+    const headingsOf = (page: string): ReadonlyArray<string> =>
+      Arr.map(sections(read(page)), (section) => section.heading);
+    const carried = Arr.map(pages, (page) => ({
+      page,
+      headings: headingsOf(page),
+    }));
+    expect(Arr.length(rows)).toBeGreaterThanOrEqual(5);
+    expect(
+      Arr.flatMap(
+        Arr.filter(rows, (row) => row.required),
+        (row) =>
+          Arr.filterMap(carried, ({ page, headings }) =>
+            Arr.contains(headings, row.heading)
+              ? Result.failVoid
+              : Result.succeed(`${page}: no ## ${row.heading}`),
+          ),
+      ),
+    ).toEqual([]);
+    expect(
+      Arr.flatMap(carried, ({ page, headings }) =>
+        Arr.filterMap(headings, (heading) =>
+          Arr.some(rows, (row) => row.heading === heading)
+            ? Result.failVoid
+            : Result.succeed(
+                `${page}: ## ${heading} is not in the page contract`,
+              ),
+        ),
+      ),
+    ).toEqual([]);
+    expect(
+      Arr.filterMap(rows, (row) =>
+        Arr.some(carried, ({ headings }) => Arr.contains(headings, row.heading))
+          ? Result.failVoid
+          : Result.succeed(
+              `docs/README.md: ## ${row.heading} is promised but no page carries it`,
+            ),
+      ),
+    ).toEqual([]);
+  });
+
   it("documents the caller's className on every primitive page", () => {
     // The bug guarded: the tw migration gave every primitive a compiled
     // Tailwind escape hatch joined after its recipe, and sixteen pages never
