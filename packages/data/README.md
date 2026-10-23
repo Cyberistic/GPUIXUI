@@ -221,6 +221,16 @@ often computed, and `NaN` orders below every number, so clamping it would
 collapse the track — `resizeColumn` leaves such a column alone while a key press
 steps from its floor. The page is `docs/column-configuration.mdx`.
 
+A **cell's own `width` is the same kind of number**, and it is read by the
+layout rather than by a reducer: `TableHeaderCell`/`TableCell` take the track a
+column paints, and the runtime drops a width it cannot lay out (`NaN` and the
+infinities reach native as `null`, and a negative width paints nothing usable).
+A cell whose width was dropped sized to its own content instead, so a column's
+header and its cells stopped sharing a track — measured, a 62px `Name` heading
+above a 204px body cell. A width that cannot paint is **no width**, the reading
+`width` already has when it is omitted: the cell shares the leftover track and
+the column stays aligned, while a finite width is the caller's exactly.
+
 A hidden column **leaves the search but keeps its sort**. `useTable` takes the
 controller's memoised `hidden` list (`useColumns().hidden`) and the core marks
 those columns out of the global filter, so a query keeps no record by text no

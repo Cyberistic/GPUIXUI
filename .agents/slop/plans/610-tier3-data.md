@@ -490,6 +490,20 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   nodes; direction measured: the old `Math.max(1, count)` fails on the
   `RangeError`. Green: 196 unit / 116 behaviour. The README and the Tables row
   teach the rule.
+- **A cell width the layout cannot paint is no width**: `cellLayout` wrote a
+  caller's `width` into `width` and `flexBasis` verbatim, so a computed track —
+  a share of a pane, a stored size, a measurement taken before the first layout
+  — reached the runtime as `NaN`/an infinity, which the serializer drops, or as
+  a negative, which paints nothing usable. The cell then sized to its own
+  content: measured in the window, a 62px `Name` heading sat above a 204px body
+  cell and the later columns followed the drift. A width that cannot paint now
+  reads as **no width**, the meaning it already has when omitted, so the cell
+  shares the leftover track and a finite width is still exact.
+  `behaviour/table.test.tsx` gains two cases (`29` now): `NaN`/`Infinity`/`-20`
+  hold the header, its cell and the next column to one track, and a 160px
+  column stays 160px in both rows. Directions measured: with the bare write
+  restored the first case fails `expected 204 to be 62`; with the reading it is
+  29/29. The README's cell-width paragraph and the Tables row teach the rule.
 
 
 ## 5. Acceptance
