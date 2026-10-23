@@ -1035,6 +1035,15 @@ a `PlatformStyle` may carry one per mode for its own page. `syntaxFailures(theme
 reports every token that misses its floor and is part of `auditTheme`
 (`audit.syntax`).
 
+The pixels are measured, not only the host object: the playground's
+`syntax-palette` probe paints one four-line TypeScript source three times in a
+window on `0.11.0` (**29** checks) and counts each block's own box. The light
+block paints **756** solid `#3B2C8F` pixels, the dark **896** `#A7A9FF`, and a
+third block handed the same seam **without** `syntax` paints **832** of the
+runtime's own `#8F96ED` — so the colour travels with the theme object, and the
+fallback a palette-less host inherits is real. Evidence:
+[`apps/playground/README.md` §`syntax-palette`](../apps/playground/README.md).
+
 ## For documentation sites
 
 `colorRoles` lists every semantic role in documentation order, typed as
@@ -1101,10 +1110,12 @@ persisted theme at its own boundary, where `Schema` belongs.
 - No OS appearance detection; the app selects the mode and contrast.
 - Motion lives in `@gpuixui/motion`, not here: durations, easings, springs and
   reduced-motion policy are that package's, and a second copy would duplicate it.
-- The syntax palette reaches a `<code>` host through `nativeTextTheme`, and the
-  guard for that is structural; the **painted pixels** are not yet measured in a
-  window, and the runtime's tokenizer decides which run is a token. A pixel probe
-  is recorded in `TODO.md`.
+- The syntax palette reaches a `<code>` host through `nativeTextTheme`, and its
+  **painted pixels are measured**: the `syntax-palette` probe paints the theme's
+  keyword and the runtime's fallback and counts each block's own box (light
+  **756** solid `#3B2C8F`, dark **896** `#A7A9FF`, a palette-less block **832**
+  of the runtime's `#8F96ED`). What the palette does not decide is which run is
+  a token — the host's tokenizer does.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when
   the package is published.

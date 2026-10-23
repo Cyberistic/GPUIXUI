@@ -301,8 +301,8 @@ describe("the syntax palette", () => {
     // A host object carrying `syntax` is a source read: the runtime owns the
     // tokenizer and the paint, so a light block could still highlight for a dark
     // canvas with every case above green. The playground's probe is the paint,
-    // and the two pages that teach the palette must cite it with the readings it
-    // printed rather than promise a measurement.
+    // and the three pages that teach the palette must cite it with the readings
+    // it printed rather than promise a measurement.
     const catalogue = read("../../../docs/tokens.md");
     const inventory = read("../../../COMPONENTS.md");
     const probe = read("../../../apps/playground/README.md");
@@ -352,6 +352,7 @@ describe("the syntax palette", () => {
     const pages = [
       ["docs/tokens.md", adoption],
       ["COMPONENTS.md", row],
+      ["packages/tokens/README.md", read("../README.md")],
     ] as const;
     const readings = [light, dark, control];
 

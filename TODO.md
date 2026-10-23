@@ -1155,6 +1155,24 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       record" to the README fails the retraction assertion by name; green it is 43
       files / 2 488 tests.
 
+`[x]` Retract the **syntax palette's "pixels not yet measured" limitation** — the
+      package README's §Limitations still ended "the **painted pixels** are not yet
+      measured in a window … A pixel probe is recorded in `TODO.md`" after the
+      `syntax-palette` probe (29 checks, 0.11.0) had measured them and both the
+      catalogue and the inventory row had been corrected (the row this replaces).
+      A reader of the package's own page was sent to a probe as future work and to
+      a `TODO.md` row that was resolved. §Syntax palette now carries the three
+      readings the probe counted (light **756** solid `#3B2C8F`, dark **896**
+      `#A7A9FF`, a palette-less block **832** of the runtime's `#8F96ED`) and
+      §Limitations keeps the honest residual — which run is a token is the host's
+      tokenizer's decision. `syntax.test.ts`'s `prints the paint the window
+      measured, not only the host object` now reads the README as its third page,
+      so all three must name the probe, its count and each keyword and pixel count
+      while refusing both retracted sentences. Directions measured: against
+      `HEAD`'s README the case fails naming `packages/tokens/README.md` (missing
+      `syntax-palette`), and with the page restored the package suite is 44 files
+      / 2 514 tests green.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 128/128
@@ -6248,6 +6266,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Publish the **flex sizing rules** the playground measured — the capability record's **Flexbox and grid** row is supported on the typings alone (`display`, `flexDirection`, `flexWrap`, `gap`), so a plan composing a dock pane, a table column or a truncating label has no measured statement of what `flexGrow`, `flexShrink`, `flexBasis`, `minWidth`/`maxWidth` and `alignSelf` actually paint. The `flex-sizing` probe (27 checks, 0.11.0) and the headless `layout-flex-sizing` twin measured: the leftover goes to the grower (**280** beside a fixed 120); `flexBasis: 0` splits it evenly (**140/140**) only while the content fits, an auto basis grows from content (**70/210**), and **a grower whose content is wider than its share keeps its content and the other takes the rest (200/80)** — so `flex-1` is not equality and a truncating column declares `minWidth: 0`; an over-full row shrinks the item that may shrink (**180**) while `flexShrink: 0` keeps **320** painted past the row; an item's automatic minimum is its content (**300** in a 200 row) until `minWidth: 0` lifts it (**200**); `maxWidth` stops a grower (**120**, row left short); and `alignSelf` places content width at **0/120/240** in a 300 column whose `stretch` item is **300**. The row should carry the measurements, the `minWidth: 0` rule and the probe ids, and `/docs/runtime`'s *measured in a window* section should publish it | docs-site (`docs/gpuix-capabilities.md` *Flexbox and grid*, `/docs/runtime`) | **resolved 2026-10-23** — the record's **Flexbox and grid** row now carries the `flex-sizing` measurement (280 of 400 to the grower beside a fixed 120; 140/140 for two fitting `flexBasis: 0` growers against 70/210 with no basis; 200 and 80 for a grower holding more than its share, so `flex-1` is **not equality**; 320 → 180 in a 300 row while `flexShrink: 0` keeps 320 painted 20 past it; 300 floors in a 200 row until `minWidth: 0` lifts it to 200; `maxWidth: 120` leaves the row short; `alignSelf` at 0/120/240 with `stretch` at 300), names the headless `layout-flex-sizing` twin, and states the two rules in its workaround. `/docs/runtime#measured-in-a-window` publishes **Flex sizing**, and §5's owed-probe list names both probes. `capability-doc.test.ts` gains `records the flex rules a flex-1 composes with, derived from its fixture`, which parses the probe's own constants and derives every printed width, so neither file can teach a number the probe no longer paints; `flex-1` joins the evidence scan's quoted values. Directions measured: the page at **281** and the record at **140/141** each fail the new case by name; restored, `capability-doc.test.ts` is 94/94 and the docs suite is 1100 passed with only the two foreign editor/dock guards red |
 | Retire the **components' duplicate edge on the tonal action** — `packages/components/src/internal/button.tsx`'s `VARIANT_CLASS` still adds `border border-strong` to `secondary` and justifies it with "the primitive's recipe paints `border-0`", a premise the primitives' half of the row above retired on 2026-10-23 (`core/variants.ts`'s variant table and `recipe/index.ts`'s `bg-secondary text-secondary-foreground border border-strong` now paint the edge). The class is harmless — the same role drawn twice — but the comment teaches a reader a decision that no longer exists, and either resolution is the components' own: drop the class and the clause, or keep the class as a defensive copy and restate why. `packages/tokens/src/decorative.test.ts`'s `leaves a row's wash to the edge both packages paint` reads that class as the second painter, so the tokens owner widens that reader in the same change (the recipe is the authority). Measured 2026-10-23: with the class removed and the recipe's `border border-strong` intact, the primitives still paint the edge | components (`internal/button.tsx`) + tokens (the guard's second painter) | open — measured 2026-10-23; the duplicate class is the stale copy, not a defect in the painted pixels |
 
+| Correct the **Dropdown menus row's printed test count** — `packages/components/src/behaviour/dropdown-menu.test.tsx` now runs **42** native cases (the menu-radio work added one) while `COMPONENTS.md`'s Dropdown menus row still prints `41 native behaviour tests`, so the inventory undersells the suite by a case. The docs site's curated page prints 42 and `component-page-truth.test.ts` derives it from the suite, which is how the drift surfaced (the generic count case failed on the page before it was corrected) | components (`COMPONENTS.md`'s Dropdown menus row) | open — measured 2026-10-23 while correcting the curated page; the row's behaviour prose already names the radio-group cases, only the number lags |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -6468,6 +6488,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     bounds and the plot's height. Direction measured: with ascending paint the
     case fails `expected 259 to be less than 135`; with it 9/9 behaviour cases
     pass. `packages/data/docs/charts.mdx` and the README state the order.
+  - [x] Put a **line's points over their own labels** — `linePath` spaced its
+    points edge to edge (`0 … width`) over the series' own length, while the
+    labels and the bars are centred in `width / labels.length` slots: a
+    four-label line stood its first and last points half a slot off, and a
+    two-value series against four labels drew across the whole plot, under
+    `Q1` and `Q4` instead of `Q1` and `Q2`. The page's own rule — "a series with
+    more values than labels paints only the labelled slots, and the extra
+    values draw nowhere" — was false for a line. `linePath` takes the labelled
+    count (defaulting to the series' own) and places each point at its slot
+    centre, so a ragged series stays in the columns it names and a value past
+    the last label draws nowhere, the rule `barMarks` follows; `LineChart`
+    passes `labels.length` and `Sparkline` keeps its own length.
+    `src/chart/logic.test.ts` gains `keeps a ragged series in its own
+    categories` and moves the point positions. Directions measured: with the
+    old spacing both cases fail (`M0 90L200 80` for `M25 90L75 80`).
   - [x] Paint the **checkbox column's target in its row's fill** — the box's
     painted target is the hit boundary that keeps a box press off its row, and
     it was fixed to `card`, so a chosen row (`selected`) carried a card-coloured
