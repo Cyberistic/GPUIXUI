@@ -6,18 +6,20 @@ import {
   allPageSelected,
   cellsOf,
   clampPage,
+  directionIn,
   filterRows,
-  INITIAL_SORT,
-  nextSort,
+  INITIAL_ORDER,
   normalizeQuery,
   NO_SELECTION,
   pageCount,
   pageSlice,
   PAGE_SIZE,
   pressRow,
+  pressSortOrder,
   retainSelection,
   somePageSelected,
-  sortLabel,
+  sortOrderGlyph,
+  sortOrderLabel,
   sortRows,
   TABLE_ROWS,
   toggleColumn,
@@ -26,7 +28,7 @@ import {
   visibleRows,
   type ColumnId,
   type PreviewSelection,
-  type PreviewSort,
+  type PreviewSortOrder,
 } from "./table-preview";
 
 /**
@@ -62,6 +64,7 @@ const read = (path: string): string => {
 const gridCore = read("packages/data/src/grid-core.ts");
 const sortLogic = read("packages/data/src/sort/logic.ts");
 const selectionLogic = read("packages/data/src/selection/logic.ts");
+const useTableSource = read("packages/data/src/use-table.ts");
 
 const ids = (
   rows: ReadonlyArray<{ readonly id: string }>,
@@ -119,22 +122,29 @@ describe("the preview's filter", () => {
     // The snippet a reader copies. It still passed `textOf`/`valueOf` to
     // `useTable` after those options were replaced by one `columns` list, and
     // the lane page still described the sort as a `sortRows` helper the package
-    // no longer has.
+    // no longer has. It then taught a single-column sort while the controller
+    // had grown an order: a reader copying it lost the Shift tie-break.
     expect(gridCore).toContain(
       "readonly valueOf: (row: Row) => string | number",
     );
-    expect(read("packages/data/src/use-table.ts")).toContain(
-      "readonly columns",
-    );
+    expect(useTableSource).toContain("readonly columns");
+    expect(useTableSource).toContain("readonly sortOrder: SortOrder");
 
     expect(tableWorkflowSource).toContain("columns: [");
     expect(tableWorkflowSource).not.toContain("textOf");
     expect(tableWorkflowSource).toContain("table.query");
     expect(tableWorkflowSource).toContain("table.setQuery");
+    expect(tableWorkflowSource).toContain("order={table.sortOrder}");
+    expect(tableWorkflowSource).toContain("onSortPress={table.pressSort}");
+    expect(tableWorkflowSource).not.toContain("onSort={(next)");
 
     const tablePage = read("apps/docs/content/docs/components/table.mdx");
     expect(tablePage).toContain("columns: [");
     expect(tablePage).not.toContain("textOf");
+    expect(tablePage).toContain("order={table.sortOrder}");
+    expect(tablePage).toContain("onSortPress={table.pressSort}");
+    expect(tablePage).toContain("pressSortOrder");
+    expect(tablePage).toContain("tie-break");
 
     const dataPage = read("apps/docs/content/docs/data-display/index.mdx");
     expect(dataPage).toContain('sortFn: "basic"');
@@ -143,41 +153,81 @@ describe("the preview's filter", () => {
 });
 
 describe("the preview's sort", () => {
-  it("flips the sorted field, starts another at its own direction, and clears on a third press", () => {
-    // `sort/logic.ts`'s `toggleSort`: the same field flips, any other starts at
-    // the direction the header passes. The preview adds a third, clearing press
-    // (`nextSort` returns `null`), which the native header never does — it only
-    // hands `Option.some(next)` and clears through `setSort`.
-    expect(sortLogic).toContain('state.direction === "asc" ? "desc" : "asc"');
-    expect(sortLogic).toContain("initialDirection");
-
-    expect(nextSort(null, "service")).toEqual({
-      field: "service",
-      direction: "asc",
-    });
-    expect(nextSort(INITIAL_SORT, "service")).toEqual({
-      field: "service",
-      direction: "desc",
-    });
-    expect(nextSort(INITIAL_SORT, "duration", "desc")).toEqual({
-      field: "duration",
-      direction: "desc",
-    });
-    expect(nextSort(INITIAL_SORT, "environment", "desc")).toEqual({
-      field: "environment",
-      direction: "desc",
-    });
-    // The third press returns to "none": the header's `↕` glyph, not a sort.
-    expect(nextSort({ field: "service", direction: "desc" }, "service")).toBe(
-      null,
+  it("presses the cycle the package implements, and Shift adds a tie-break", () => {
+    // `sort/logic.ts`'s `pressSortOrder`: a plain press keeps the cycle over
+    // the primary entry and drops every other field; a Shift press (`additive`)
+    // flips the pressed field where it sits or appends it at `initialDirection`.
+    // The controller then walks the order in turn (`use-table.ts`), so the
+    // preview copies a multi-column order rather than a single sort.
+    expect(sortLogic).toContain("export const pressSortOrder");
+    expect(sortLogic).toContain("additive: boolean = false");
+    expect(sortLogic).toContain("flip(entry.direction)");
+    expect(useTableSource).toContain(
+      'pressSortOrder(sortOrder, field, "asc", additive)',
     );
+    expect(useTableSource).toContain(
+      "pressSort: (field, initialDirection, modifiers) =>",
+    );
+
+    expect(pressSortOrder(INITIAL_ORDER, "service")).toEqual([
+      { field: "service", direction: "desc" },
+    ]);
+    // A plain press on another column replaces the order...
+    expect(pressSortOrder(INITIAL_ORDER, "duration", "desc")).toEqual([
+      { field: "duration", direction: "desc" },
+    ]);
+    // ...even when the table was already sorted by more than one field.
+    expect(
+      pressSortOrder(
+        [
+          { field: "environment", direction: "asc" },
+          { field: "service", direction: "desc" },
+        ],
+        "duration",
+      ),
+    ).toEqual([{ field: "duration", direction: "asc" }]);
+    // A Shift press appends the second field as the tie-break...
+    expect(
+      pressSortOrder(
+        [{ field: "environment", direction: "asc" }],
+        "service",
+        "asc",
+        true,
+      ),
+    ).toEqual([
+      { field: "environment", direction: "asc" },
+      { field: "service", direction: "asc" },
+    ]);
+    // ...and the next Shift press on that field flips it in place.
+    expect(
+      pressSortOrder(
+        [
+          { field: "environment", direction: "asc" },
+          { field: "service", direction: "asc" },
+        ],
+        "service",
+        "asc",
+        true,
+      ),
+    ).toEqual([
+      { field: "environment", direction: "asc" },
+      { field: "service", direction: "desc" },
+    ]);
+    // An empty table has no press cycle to keep.
+    expect(pressSortOrder([], "size", "desc", true)).toEqual([
+      { field: "size", direction: "desc" },
+    ]);
+    expect(pressSortOrder([], "size")).toEqual([
+      { field: "size", direction: "asc" },
+    ]);
+    expect(directionIn(INITIAL_ORDER, "service")).toBe("asc");
+    expect(directionIn(INITIAL_ORDER, "duration")).toBeUndefined();
   });
 
   it("orders numbers as numbers and keeps the caller's order when unsorted", () => {
-    const byDuration = sortRows(TABLE_ROWS, {
-      field: "duration",
-      direction: "desc",
-    });
+    const byDuration = sortRows(TABLE_ROWS, [
+      { field: "duration", direction: "desc" },
+    ]);
     expect(byDuration.map((row) => row.duration)).toEqual([
       211, 148, 129, 92, 74, 36,
     ]);
@@ -189,7 +239,7 @@ describe("the preview's sort", () => {
       92, 74, 36, 211, 148, 129,
     ]);
 
-    const byName: PreviewSort = { field: "service", direction: "asc" };
+    const byName: PreviewSortOrder = [{ field: "service", direction: "asc" }];
     expect(ids(sortRows(TABLE_ROWS, byName))).toEqual([
       "auth",
       "billing",
@@ -200,7 +250,7 @@ describe("the preview's sort", () => {
     ]);
 
     // Unsorted is the caller's order, not a default sort.
-    expect(ids(sortRows(TABLE_ROWS, null))).toEqual(ids(TABLE_ROWS));
+    expect(ids(sortRows(TABLE_ROWS, []))).toEqual(ids(TABLE_ROWS));
     // A sort never mutates the fixture the next preview reads.
     expect(ids(TABLE_ROWS)).toEqual([
       "billing",
@@ -213,27 +263,73 @@ describe("the preview's sort", () => {
     // Filter first, then sort: the rows a query keeps are the rows ordered.
     expect(
       ids(
-        visibleRows(TABLE_ROWS, "production", {
-          field: "duration",
-          direction: "asc",
-        }),
+        visibleRows(TABLE_ROWS, "production", [
+          { field: "duration", direction: "asc" },
+        ]),
       ),
     ).toEqual(["gateway", "auth", "billing"]);
+  });
+
+  it("orders by every entry in turn, the first field deciding the ties", () => {
+    // Environment repeats, so the second entry is the only thing ordering three
+    // production rows. Without it the caller's order survives the ties.
+    expect(
+      ids(sortRows(TABLE_ROWS, [{ field: "environment", direction: "asc" }])),
+    ).toEqual(["media", "billing", "gateway", "auth", "search", "reports"]);
+    expect(
+      ids(
+        sortRows(TABLE_ROWS, [
+          { field: "environment", direction: "asc" },
+          { field: "service", direction: "desc" },
+        ]),
+      ),
+    ).toEqual(["media", "gateway", "billing", "auth", "search", "reports"]);
+    // The first field still leads: reversing it reverses the groups, and the
+    // tie-break only reorders rows inside one group.
+    expect(
+      ids(
+        sortRows(TABLE_ROWS, [
+          { field: "environment", direction: "desc" },
+          { field: "service", direction: "desc" },
+        ]),
+      ),
+    ).toEqual(["search", "reports", "gateway", "billing", "auth", "media"]);
   });
 
   it("announces the sorted column because the runtime has no aria-sort", () => {
     expect(sortLogic).toContain(
       'rather than "Name" and a glyph they cannot see',
     );
-    expect(sortLabel("Service", INITIAL_SORT, "service")).toBe(
+    expect(sortOrderLabel("Service", INITIAL_ORDER, "service")).toBe(
       "Service, sorted ascending",
     );
-    expect(sortLabel("Service", INITIAL_SORT, "duration")).toBe(
+    expect(sortOrderLabel("Service", INITIAL_ORDER, "duration")).toBe(
       "Service, sortable",
     );
     expect(
-      sortLabel("Service", { field: "service", direction: "desc" }, "service"),
+      sortOrderLabel(
+        "Service",
+        [{ field: "service", direction: "desc" }],
+        "service",
+      ),
     ).toBe("Service, sorted descending");
+
+    const order: PreviewSortOrder = [
+      { field: "environment", direction: "asc" },
+      { field: "service", direction: "desc" },
+    ];
+    // A field in a multi-column order also announces its place, and its glyph
+    // carries it: ↑1 decides, ↓2 breaks the tie.
+    expect(sortOrderLabel("Environment", order, "environment")).toBe(
+      "Environment, sorted ascending, sort 1 of 2",
+    );
+    expect(sortOrderLabel("Service", order, "service")).toBe(
+      "Service, sorted descending, sort 2 of 2",
+    );
+    expect(sortOrderGlyph(order, "environment")).toBe("↑1");
+    expect(sortOrderGlyph(order, "service")).toBe("↓2");
+    expect(sortOrderGlyph(INITIAL_ORDER, "service")).toBe("↑");
+    expect(sortOrderGlyph(order, "duration")).toBe("");
   });
 });
 

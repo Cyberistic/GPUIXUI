@@ -3,15 +3,17 @@ import {
   ALL_COLUMNS,
   allPageSelected,
   clampPage,
-  INITIAL_SORT,
-  nextSort,
+  directionIn,
+  INITIAL_ORDER,
   pageCount,
   pageSlice,
   PAGE_SIZE,
   pressRow,
+  pressSortOrder,
   retainSelection,
   somePageSelected,
-  sortLabel,
+  sortOrderGlyph,
+  sortOrderLabel,
   TABLE_ROWS,
   toggleColumn,
   togglePageSelection,
@@ -19,7 +21,7 @@ import {
   visibleRows,
   type ColumnId,
   type PreviewSelection,
-  type PreviewSort,
+  type PreviewSortOrder,
   type PreviewTableRow,
 } from "./table-preview";
 
@@ -66,13 +68,9 @@ const COLUMN_WIDTH: Readonly<Record<ColumnId, number>> = {
 const SELECT_WIDTH = 40;
 const ACTIONS_WIDTH = 48;
 
-/** The glyph a sortable header paints: none, ascending or descending. */
-const sortGlyph = (sort: PreviewSort | null, id: ColumnId): string =>
-  sort === null || sort.field !== id
-    ? "↕"
-    : sort.direction === "asc"
-      ? "↑"
-      : "↓";
+/** The glyph a sortable header paints: the order's, or the unsorted affordance. */
+const sortGlyph = (order: PreviewSortOrder, id: ColumnId): string =>
+  sortOrderGlyph(order, id) || "↕";
 
 /** A drawn checkbox in the select column, reusing the checkbox page's parts. */
 const TableCheck = ({
@@ -156,7 +154,7 @@ const DataCell = ({
 export const TableWorkflow = () => {
   const [rows, setRows] = useState<ReadonlyArray<PreviewTableRow>>(TABLE_ROWS);
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<PreviewSort | null>(INITIAL_SORT);
+  const [order, setOrder] = useState<PreviewSortOrder>(INITIAL_ORDER);
   const [selection, setSelection] = useState<PreviewSelection>({
     selected: ["billing"],
     anchor: "billing",
@@ -194,7 +192,7 @@ export const TableWorkflow = () => {
     };
   }, []);
 
-  const shown = visibleRows(rows, query, sort);
+  const shown = visibleRows(rows, query, order);
   const count = pageCount(shown);
   const current = clampPage(page, count);
   const pageRows = pageSlice(shown, current);
@@ -209,13 +207,15 @@ export const TableWorkflow = () => {
     setSelection((state) =>
       retainSelection(
         state,
-        visibleRows(rows, next, sort).map((row) => row.id),
+        visibleRows(rows, next, order).map((row) => row.id),
       ),
     );
   };
 
-  const onSort = (id: ColumnId) => {
-    setSort((state) => nextSort(state, id, COLUMN_INITIAL[id]));
+  const onSort = (id: ColumnId, additive: boolean) => {
+    setOrder((state) =>
+      pressSortOrder(state, id, COLUMN_INITIAL[id], additive),
+    );
   };
 
   const onToggleRow = (id: string, shift: boolean) => {
@@ -300,6 +300,11 @@ export const TableWorkflow = () => {
           </div>
         </div>
 
+        <p className="gx-table-hint">
+          Press a header to sort by it; Shift-press a second header to add a
+          tie-break.
+        </p>
+
         <div className="gx-table">
           <table aria-label="Deploy queue" className="gx-table-el">
             <caption className="gx-table-caption">
@@ -327,17 +332,15 @@ export const TableWorkflow = () => {
                 {columns.map((id) => (
                   <th className="gx-table-head" key={id} scope="col">
                     <button
-                      aria-label={sortLabel(COLUMN_LABELS[id], sort, id)}
+                      aria-label={sortOrderLabel(COLUMN_LABELS[id], order, id)}
                       className="gx-table-sort"
-                      data-sorted={
-                        sort?.field === id ? sort.direction : undefined
-                      }
-                      onClick={() => onSort(id)}
+                      data-sorted={directionIn(order, id)}
+                      onClick={(event) => onSort(id, event.shiftKey)}
                       type="button"
                     >
                       {COLUMN_LABELS[id]}
                       <span aria-hidden="true" className="gx-table-glyph">
-                        {sortGlyph(sort, id)}
+                        {sortGlyph(order, id)}
                       </span>
                     </button>
                   </th>
@@ -488,10 +491,13 @@ const StateCard = ({
 
 /** The states a table spends its life in: chosen, empty and loading. */
 export const TableStates = () => {
-  const sorted = visibleRows(TABLE_ROWS, "", {
-    field: "duration",
-    direction: "desc",
-  });
+  const sorted = visibleRows(TABLE_ROWS, "", [
+    { field: "duration", direction: "desc" },
+  ]);
+  const sortedByEnvironment = visibleRows(TABLE_ROWS, "", [
+    { field: "environment", direction: "asc" },
+    { field: "service", direction: "desc" },
+  ]);
 
   return (
     <div className="gx-demo-table gx-table-states">
@@ -524,6 +530,43 @@ export const TableStates = () => {
                   <td className="gx-table-cell gx-table-number">
                     {row.duration}s
                   </td>
+                  <td className="gx-table-cell">{row.service}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </StateCard>
+
+      <StateCard
+        meta="Shift-press adds a field: environment decides, service breaks its ties. Each glyph carries its place — ↑1 decides, ↓2 orders the rows ↑1 ties."
+        title="Two sorts"
+      >
+        <div className="gx-table">
+          <table
+            aria-label="Sorted deploys by two fields"
+            className="gx-table-el"
+          >
+            <thead>
+              <tr>
+                <th className="gx-table-head" scope="col">
+                  Environment
+                  <span aria-hidden="true" className="gx-table-glyph">
+                    ↑1
+                  </span>
+                </th>
+                <th className="gx-table-head" scope="col">
+                  Service
+                  <span aria-hidden="true" className="gx-table-glyph">
+                    ↓2
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedByEnvironment.slice(0, 4).map((row) => (
+                <tr className="gx-table-row" key={row.id}>
+                  <td className="gx-table-cell">{row.environment}</td>
                   <td className="gx-table-cell">{row.service}</td>
                 </tr>
               ))}
@@ -602,8 +645,7 @@ export const TableStates = () => {
   );
 };
 
-export const tableWorkflowSource = `import * as Option from "effect/Option";
-import { Table, TableBody, TableCell, TableFilterField, TableHeader, TableHeaderCell, TableRow, TableSortHeader, TableViewport, useTable } from "@gpuixui/data";
+export const tableWorkflowSource = `import { Table, TableBody, TableCell, TableFilterField, TableHeader, TableHeaderCell, TableRow, TableSortHeader, TableViewport, useTable } from "@gpuixui/data";
 
 // One column list is what the header paints, what the core sorts by and what
 // the filter searches — a hidden column cannot leave a second copy behind.
@@ -624,11 +666,14 @@ const table = useTable({
   <TableViewport>
     <TableHeader>
       <TableRow>
+        {/* The order, not only the primary sort: a Shift press adds a
+            tie-break, so the header needs the whole list back. */}
         <TableSortHeader
           field="service"
           label="Service"
-          onSort={(next) => table.setSort(Option.some(next))}
           sort={table.sort}
+          order={table.sortOrder}
+          onSortPress={table.pressSort}
           width={260}
         />
         <TableHeaderCell width={140}>Environment</TableHeaderCell>

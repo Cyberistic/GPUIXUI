@@ -92,27 +92,70 @@ export interface PreviewSort {
   readonly direction: "asc" | "desc";
 }
 
-/** The column the header shows first, and the one a press starts at. */
-export const INITIAL_SORT: PreviewSort = { field: "service", direction: "asc" };
+/**
+ * The fields a table is sorted by, primary first.
+ *
+ * One entry is the ordinary single-column sort; a second orders the rows the
+ * first ties, a third orders the rows the second ties. The package's
+ * `pressSortOrder` produces it and its sorted row model walks every entry in
+ * turn.
+ */
+export type PreviewSortOrder = ReadonlyArray<PreviewSort>;
+
+/** The order the workflow preview opens on: the service column, ascending. */
+export const INITIAL_ORDER: PreviewSortOrder = [
+  { field: "service", direction: "asc" },
+];
+
+/** The other direction, for a press on a field that is already sorted. */
+const flip = (direction: "asc" | "desc"): "asc" | "desc" =>
+  direction === "asc" ? "desc" : "asc";
 
 /**
- * The sort a press produces: the sorted field flips, any other field starts at
- * its own initial direction, and a third press on the field returns to none.
+ * The order a header press produces.
  *
- * The flip is the package's (`sort/logic.ts` flips the sorted field); the
- * third, clearing press is the preview's own gesture, because the native
- * header only ever hands `Option.some(next)` and clears through `setSort`.
+ * The rules are `@gpuixui/data`'s `pressSortOrder`: a plain press keeps the
+ * press cycle over the **primary** entry and drops every other field —
+ * pressing a header is a request to sort by that column, not to rearrange a
+ * multi-column order. A `Shift` press (`additive`) leaves the order in place
+ * and either flips the pressed field where it already sits or appends it at
+ * `initialDirection`, so the first `Shift` press on a second column makes it the
+ * tie-break and the next flips it.
  */
-export const nextSort = (
-  current: PreviewSort | null,
+export const pressSortOrder = (
+  order: PreviewSortOrder,
   field: string,
   initialDirection: "asc" | "desc" = "asc",
-): PreviewSort | null =>
-  current === null || current.field !== field
-    ? { field, direction: initialDirection }
-    : current.direction === "asc"
-      ? { field, direction: "desc" }
-      : null;
+  additive = false,
+): PreviewSortOrder => {
+  const at = order.findIndex((entry) => entry.field === field);
+  if (additive) {
+    return at === -1
+      ? [...order, { field, direction: initialDirection }]
+      : order.map((entry, position) =>
+          position === at ? { field, direction: flip(entry.direction) } : entry,
+        );
+  }
+  const primary = order[0];
+  return primary === undefined
+    ? [{ field, direction: initialDirection }]
+    : [
+        {
+          field,
+          direction:
+            primary.field === field
+              ? flip(primary.direction)
+              : initialDirection,
+        },
+      ];
+};
+
+/** The direction a field is in within an order, or nothing when it is unsorted. */
+export const directionIn = (
+  order: PreviewSortOrder,
+  field: string,
+): "asc" | "desc" | undefined =>
+  order.find((entry) => entry.field === field)?.direction;
 
 /** The query as it is matched: trimmed and lowercased, never a pattern. */
 export const normalizeQuery = (query: string): string =>
@@ -137,7 +180,7 @@ export const filterRows = (
       );
 };
 
-/** The order two rows take under one column, ignoring the direction. */
+/** The order two rows take under one entry, ignoring the direction. */
 const compareBy = (
   left: PreviewTableRow,
   right: PreviewTableRow,
@@ -149,39 +192,48 @@ const compareBy = (
   return `${a}` < `${b}` ? -1 : `${a}` > `${b}` ? 1 : 0;
 };
 
+/** The order two rows take under a whole order: the first entry that decides. */
+const compareRows = (
+  left: PreviewTableRow,
+  right: PreviewTableRow,
+  order: PreviewSortOrder,
+): number =>
+  order.reduce((decided, entry) => {
+    if (decided !== 0) return decided;
+    const direction = entry.direction === "asc" ? 1 : -1;
+    return compareBy(left, right, entry.field) * direction;
+  }, 0);
+
 /** Insert one row into an already-ordered list, keeping the caller's order on ties. */
 const insertOrdered = (
   ordered: ReadonlyArray<PreviewTableRow>,
   row: PreviewTableRow,
-  sort: PreviewSort,
+  order: PreviewSortOrder,
 ): ReadonlyArray<PreviewTableRow> => {
-  const direction = sort.direction === "asc" ? 1 : -1;
-  const at = ordered.findIndex(
-    (other) => compareBy(other, row, sort.field) * direction > 0,
-  );
+  const at = ordered.findIndex((other) => compareRows(other, row, order) > 0);
   return at === -1
     ? [...ordered, row]
     : [...ordered.slice(0, at), row, ...ordered.slice(at)];
 };
 
-/** The rows in the sorted order; an unsorted table keeps the caller's order. */
+/** The rows in the sorted order; an empty order keeps the caller's order. */
 export const sortRows = (
   rows: ReadonlyArray<PreviewTableRow>,
-  sort: PreviewSort | null,
+  order: PreviewSortOrder,
 ): ReadonlyArray<PreviewTableRow> =>
-  sort === null
+  order.length === 0
     ? rows
     : rows.reduce<ReadonlyArray<PreviewTableRow>>(
-        (ordered, row) => insertOrdered(ordered, row, sort),
+        (ordered, row) => insertOrdered(ordered, row, order),
         [],
       );
 
-/** The rows a preview paints: filtered first, then sorted. */
+/** The rows a preview paints: filtered first, then sorted by every entry. */
 export const visibleRows = (
   rows: ReadonlyArray<PreviewTableRow>,
   query: string,
-  sort: PreviewSort | null,
-): ReadonlyArray<PreviewTableRow> => sortRows(filterRows(rows, query), sort);
+  order: PreviewSortOrder,
+): ReadonlyArray<PreviewTableRow> => sortRows(filterRows(rows, query), order);
 
 /** Chosen records plus the record a range extends from. */
 export interface PreviewSelection {
@@ -247,15 +299,44 @@ export const retainSelection = (
       : null,
 });
 
-/** The name a sortable column announces, because 0.11.0 has no `aria-sort`. */
-export const sortLabel = (
+/**
+ * The announced name of a sortable column, within an order.
+ *
+ * `@gpuix/native@0.11.0` has no `aria-sort`, so the state travels in the
+ * control's accessible name instead: "Service, sorted descending" for one
+ * column, "…, sort 1 of 2" for a field in a multi-column order.
+ */
+export const sortOrderLabel = (
   label: string,
-  sort: PreviewSort | null,
+  order: PreviewSortOrder,
   field: string,
-): string =>
-  sort === null || sort.field !== field
-    ? `${label}, sortable`
-    : `${label}, sorted ${sort.direction === "asc" ? "ascending" : "descending"}`;
+): string => {
+  const at = order.findIndex((entry) => entry.field === field);
+  const entry = order[at];
+  if (entry === undefined) return `${label}, sortable`;
+  const state = `${label}, sorted ${entry.direction === "asc" ? "ascending" : "descending"}`;
+  return order.length > 1
+    ? `${state}, sort ${at + 1} of ${order.length}`
+    : state;
+};
+
+/**
+ * The glyph a sorted column paints, within an order.
+ *
+ * An arrow alone is the single-column state; in a multi-column order the arrow
+ * carries the field's one-based place, so `↓1` decides first and `↑2` orders
+ * the rows `↓1` ties.
+ */
+export const sortOrderGlyph = (
+  order: PreviewSortOrder,
+  field: string,
+): string => {
+  const at = order.findIndex((entry) => entry.field === field);
+  const entry = order[at];
+  if (entry === undefined) return "";
+  const arrow = entry.direction === "asc" ? "↑" : "↓";
+  return order.length > 1 ? `${arrow}${at + 1}` : arrow;
+};
 
 /* ---- pagination ----
  *

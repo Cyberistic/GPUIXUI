@@ -109,7 +109,7 @@ text no painted cell shows.
 | `TableCaption` | the caption below the rows |
 | `TableEmpty` | the empty set's frame — one full-width row, not a blank body |
 | `TableSkeleton` | a placeholder bar inside a loading row |
-| `TableSortHeader` | the sortable header cell: the glyph, the announced name and the next `SortState` |
+| `TableSortHeader` | the sortable header cell: the glyph, the announced name, its place in an order and the press it reports |
 | `TableFilterField` | the query field above the rows |
 | `useTable` | the uncontrolled controller joining sort, selection and filter |
 | `ColumnMenu`, `useColumns`, `TableColumnDivider` | the visible column list, its order, its widths and the resize strip |
@@ -123,13 +123,17 @@ the box forces no typographic role on it.
 
 The three reducers import no React; a grid driven from Effect or from its own
 store reads the same functions `useTable` does. Their rules are the ones the
-package implements and a window measured (`table-lifecycle`,
-`table-filter-lifecycle`, `modifier-select-lifecycle`):
+package implements; a window measured the press, the filter and the chords
+(`table-lifecycle`, `table-filter-lifecycle`, `modifier-select-lifecycle`), and
+the multi-column order is the controller's own (`sort/logic.ts`):
 
 - **Sort** — the first press sorts a column ascending, a press on the sorted
   field flips it, and a press on another field starts at the direction the
   header passes (`initialDirection`), so a numeric column can read largest-first
-  on its first press. The selected **record** survives a sort.
+  on its first press. A **Shift press** keeps the order and either flips the
+  pressed field where it already sits or adds it as the next tie-break, so a
+  Shift press on a second column orders the rows the first ties. The selected
+  **record** survives a sort.
 - **Selection** — a set of row keys, never indices. A plain press replaces the
   set and becomes the anchor, a `Cmd`/`Ctrl` press toggles one record and moves
   the anchor, and `Shift` extends from the anchor **over the visible order** and
@@ -199,6 +203,52 @@ both the header and the body, so the two read one column list.
 | `rows` | `number` — bars, one row each | `3` |
 | `columns` | `number` — bars per row | `3` |
 
+### TableSortHeader
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `field` | `string` — the field a press reports | — |
+| `label` | `string` — the visible label and the base of the accessible name | — |
+| `sort` | `Option<SortState>` — the primary sort, for a single-sort consumer | — |
+| `order` | `SortOrder` — the whole order, primary first | `sort` alone |
+| `initialDirection` | `"asc" \| "desc"` — the direction a first press starts at | `"asc"` |
+| `onSort` | `(next: SortState) => void` — the single-column contract | — |
+| `onSortPress` | `(field, initialDirection, modifiers) => void` — the raw press, so the controller can compose an order | — |
+| `width` | `number` — a fixed track | — |
+| `align` | `"left" \| "center" \| "right"` | `"left"` |
+| `resize` | `TableColumnResizeProps` — the divider; needs a fixed `width` | — |
+| `testId` | `string` | — |
+
+`onSort` and `onSortPress` are alternatives. A table that owns one sort passes
+`onSort` and receives the next entry the press cycle produces. A table with an
+order passes `onSortPress` and hands the raw press to the controller, which is
+what keeps a Shift press:
+
+```tsx
+<TableSortHeader
+  field="service"
+  label="Service"
+  sort={table.sort}
+  order={table.sortOrder}
+  onSortPress={table.pressSort}
+  width={260}
+/>
+```
+
+The header derives the glyph and the announced name from `order`, which defaults
+to `sort` alone, so a single-sort consumer passes the same props it always did.
+
+### The sort surface `useTable` exposes
+
+| Member | Type | Consequence |
+| ------ | ---- | ----------- |
+| `sort` | `Option<SortState>` | the primary entry, for a single-sort readout or header |
+| `sortOrder` | `SortOrder` | every sorted field, primary first — what the rows and the header read |
+| `setSort` | `(sort: Option<SortState>) => void` | replace the order with one entry, or none |
+| `toggleSort` | `(field: string, additive?: boolean) => void` | the press cycle; `additive` keeps the order and adds a tie-break |
+| `pressSort` | `(field, initialDirection, modifiers?) => void` | the raw press; `modifiers.shift` is what sets `additive` |
+| `rows` | `ReadonlyArray<Row>` | filtered by the query, then ordered by every entry in turn |
+
 The controllers (`useTable`, `useColumns`, `useVirtualRows`) and the pure
 reducers are documented where each lives on
 [Data display](/docs/data-display), together with the remaining rows.
@@ -247,7 +297,10 @@ measured body height and a column's width.
   `aria-rowindex` or `aria-describedby` in `@gpuix/native@0.11.0`, so a cell
   address is not announced.
 - **No `aria-sort`.** `TableSortHeader` carries the state in its accessible
-  name — "Service, sorted ascending" — rather than a glyph a reader cannot see.
+  name — "Service, sorted ascending", or "Service, sorted descending, sort 2 of
+  2" when the table is ordered by more than one field — rather than a glyph a
+  reader cannot see. The glyph carries the same place: `↑1` decides first, `↓2`
+  orders the rows `↑1` ties.
 - **No `position: "sticky"`.** A header inside the row scroller scrolls away
   (measured at `y = -36`); the sibling composition is the fixed header.
 - **A press stops at the first painted child.** A control inside a cell that
@@ -287,18 +340,22 @@ measured body height and a column's width.
 ## Status
 
 `done` in `COMPONENTS.md` with the `yes` runtime verdict its inventory row
-records (measured): 25 native behaviour cases mount the parts, the pressed cell,
-the measured body, the column move that keeps every width while the order
-changes, and the hidden column whose cells leave the search with it. Its rules
+records (measured): 26 native behaviour cases mount the parts, the pressed cell,
+the measured body, the right press a divider refuses, the column move that keeps
+every width while the order changes, and the hidden column whose cells leave the
+search with it. Its rules
 are the ones a window measured —
 `table-lifecycle` (a press selects the record it hit and that row holds the
 focus, a header press sorts and a second flips, the header keeps its painted
 `y`), `data-grid-fixed-header` (the header is a sibling),
 `table-filter-lifecycle` (a hidden selection is released),
 `modifier-select-lifecycle` (the chords and the anchor) and
-`press-routing-lifecycle` (a filled child owns the press). Column
-configuration, resizing and `VirtualTable` ship beside it, and the surfaces a
-grid composes with — [Tree views](/docs/data-display/tree-view),
+`press-routing-lifecycle` (a filled child owns the press). The multi-column
+order ships beside the single cycle: `pressSortOrder` keeps the order on a
+Shift press, the header's glyph and announced name carry the field's place, and
+`useTable` exposes the whole order as `sortOrder`. Column configuration,
+resizing and `VirtualTable` ship beside it, and the surfaces a grid composes
+with — [Tree views](/docs/data-display/tree-view),
 [Expandable rows](/docs/data-display/expandable-rows),
 [Virtualization](/docs/data-display/virtualization),
 [Charts](/docs/data-display/charts) — each have their own page on
