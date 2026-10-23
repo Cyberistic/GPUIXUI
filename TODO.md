@@ -4382,7 +4382,22 @@ page — recorded in `TODO.md` → Interlocks as the docs-site half.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 10/10
+`[x]` `[██████████]` 11/11
+
+`[x]` `packages/components`: **a row still promised a package that shipped** —
+      `COMPONENTS.md`'s Command menus row justified its host input with "input is
+      the host element until primitives lands", while `@gpuixui/primitives/input`
+      shipped and the real reason is ADR 0006 (this package compiles shadcn's
+      fixed recipe; the primitive's fields are density-scaled), which the
+      record's own limitation already states. The stale-promise rule lived only
+      in `inventory.test.ts`'s record check, so a row could carry a phrase no
+      reader of the limit list sees. The row now names the ADR reason and the
+      suite gained `does not promise a package that has already shipped, in a
+      row either`, which reads every Tier 2 and animated row through the same
+      matcher — widened from `until @gpuixui/primitives lands` to the unscoped
+      phrasing a row actually used. Directions measured: restoring the old row
+      fails the case naming `Command menus`; with the row fixed the file is
+      25/25. Docs: the row itself; no page carried the claim.
 
 `[x]` `packages/components`: **a `maxVisible` a caller could not measure hid
       every mention** — the row budget is usually `Math.floor(availableHeight /

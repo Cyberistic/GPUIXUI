@@ -6,9 +6,10 @@
  * `COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
  * finished Tier 2 row has no record, when two records claim the same name or
  * docs page, when one Tier 2 component has two rows (a stray `todo` copy beneath
- * the real one used to hide there), and when a row's stated native test count
- * disagrees with the behaviour suite (plan 139). It is the automated form of
- * plan 117 §1.
+ * the real one used to hide there), when a row's stated native test count
+ * disagrees with the behaviour suite (plan 139), and when a record or a row
+ * justifies a control with a package that shipped long ago. It is the automated
+ * form of plan 117 §1.
  *
  * The date picker landed in plan 119, so every Tier 2 row now has a record.
  * `node:fs` is used here only because this is a test-time repository check —
@@ -263,7 +264,7 @@ describe("inventory", () => {
  * fields are density-scaled (ADR 0006).
  */
 describe("the records' limitations", () => {
-  const stale = /until @gpuixui\/primitives lands/;
+  const stale = /until (?:@gpuixui\/)?primitives lands/;
 
   /** The limitations a record declares, or none when no record claims it. */
   const limitationsOf = (name: string): ReadonlyArray<string> =>
@@ -301,6 +302,21 @@ describe("the records' limitations", () => {
         name,
       ).toBe(true);
     });
+  });
+
+  it("does not promise a package that has already shipped, in a row either", () => {
+    // A row is what the generated status strip and a consumer scanning the
+    // inventory read, so the records' rule has to hold there too: `Command
+    // menus` called its input "the host element until primitives lands" after
+    // the package shipped and the seam it named had landed. The reason that
+    // host stays is this package's fixed recipe against the primitives'
+    // density-scaled chrome (ADR 0006), and a reader deserves that instead of a
+    // wait for something already delivered.
+    expect(
+      Arr.filter(packageRows(), (row) => stale.test(row.notes)).map(
+        (row) => row.name,
+      ),
+    ).toEqual([]);
   });
 
   it("names the live-region gap the alert really has", () => {
