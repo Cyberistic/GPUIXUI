@@ -1069,6 +1069,7 @@ import {
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import { SidebarClipProbe, sidebarClipSteps } from "./sidebar-clip-probe.js";
 import { MediaFrameProbe, mediaFrameSteps } from "./media-frame-probe.js";
+import { MenuRadioProbe, menuRadioSteps } from "./menu-radio-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -29435,5 +29436,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "media-frame-lifecycle",
     view: () => <MediaFrameProbe />,
     steps: mediaFrameSteps,
+  },
+  "menu-radio-lifecycle": {
+    id: "menu-radio-lifecycle",
+    view: () => <MenuRadioProbe />,
+    steps: menuRadioSteps,
   },
 };

@@ -714,6 +714,12 @@ export const liveRegistry = [
       "Content: a clip has no media host, so its frame is an image buffer the app's clock re-pushes and its transport is app-drawn",
     capability: "content",
   },
+  {
+    id: "menu-radio-lifecycle",
+    title:
+      "Input: an exclusive-choice menu paints its mark on the chosen row, a choice closes it, and the chosen row reports nothing",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

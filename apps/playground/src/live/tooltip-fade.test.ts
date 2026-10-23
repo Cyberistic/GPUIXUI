@@ -132,13 +132,20 @@ describe("the tooltip-fade fixture", () => {
     const duration = /fast:\s*(\d+)/.exec(timing)?.[1];
     expect(duration).toBe(`${TOOLTIP_ENTER_MS}`);
     expect(TOOLTIP_LEVEL).toBe("fast");
+    // The primitive's seam names the level once and the motion package reads
+    // both phases from it, so an exit at another level — which would unmount the
+    // tip before the entry the probe measures — cannot ship.
     const presence = read(
       "../../../../packages/primitives/src/core/presence.ts",
     );
-    expect(presence).toContain(`motionTiming("${TOOLTIP_LEVEL}"`);
-    // Both phases read the same level: an exit at another level would unmount
-    // the tip before the entry the probe measures.
-    expect(presence.match(/motionTiming\("fast"/g)).toHaveLength(2);
+    expect(presence).toContain(`presenceTiming("${TOOLTIP_LEVEL}"`);
+    const motionPresence = read("../../../../packages/motion/src/presence.ts");
+    expect(motionPresence).toContain("enter: motionTiming(level");
+    expect(motionPresence).toContain("exit: motionTiming(level");
+    const tooltip = read(
+      "../../../../packages/primitives/src/components/Tooltip.tsx",
+    );
+    expect(tooltip).toContain("surfaceTiming(reducedMotion)");
   });
 
   it("holds the travel to the offset the component paints", () => {

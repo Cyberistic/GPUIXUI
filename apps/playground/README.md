@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-113 probes a real window can prove, of which twenty-two mount shipped
+114 probes a real window can prove, of which twenty-three mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6369,6 +6369,53 @@ fails `a press starts the clip and its app clock advances it` with
 `expected a string containing "playing=true", got "playing=false playhead=0"`.
 Evidence: `.artifacts/live/media-{rest,playing,paused,sought}.png`.
 
+### `menu-radio-lifecycle` — measured on 0.11.0 here
+
+**What does an exclusive-choice menu paint, and what does a choice do?** A
+radio row's state is one check mark in a fixed leading slot, so the row's box is
+the same marked or not: `aria-selected` and the mark's accessible name are a
+renderer fact, and only a frame says whether the ink reached the glass. The probe
+mounts the shipped `DropdownMenu` with the shipped radio rows and reads the
+theme's `primary` ink inside each row's own box.
+
+The mark is a 16-point check glyph drawn by a 1.33-point stroke, so no pixel is
+fully covered: the window's closest pixel measures 82% of `#A7A9FF` over the
+row's fill, 51 away in RGB, while the row's own text is 67 away. The reading is
+therefore "within 60 of the ink", which counts the whole glyph and neither the
+label nor the fill (`MARK_TOLERANCE`).
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `value=system reports=0 opens=0 closes=0`; the surface is not painted |
+| a press on the trigger | the menu opens, the readout counts `opens=1` |
+| the mark, first open | row 1 paints **41** `primary` pixels; rows 2 and 3 paint **0** |
+| a press on row 3 | the surface closes, the readout is `value=dark reports=1 opens=2 closes=2`, and the focus returns to the trigger |
+| the mark, next open | row 3 paints **41**; rows 1 and 2 paint **0** — the mark followed the value |
+| a press on row 3 again | the surface closes and the readout still says `reports=1` (`opens=4 closes=4`): choosing the chosen row reports nothing |
+
+Three rules an exclusive-choice menu owes:
+
+1. **The mark is the row's state, and it is one `primary` glyph.** The leading
+   slot keeps its width, so nothing about the row's layout changes when the
+   value moves; a probe that reads boxes cannot tell a chosen row from an
+   unchecked one.
+2. **A radio choice closes the surface.** A press reports the value once and
+   dismisses the menu, unlike a checkbox row, which stays open so several
+   settings can be visited in one visit.
+3. **The chosen row's own press reports nothing.** The menu still closes; the
+   caller's value is the only truth, so a press that changes nothing calls
+   nothing.
+
+31 checks, `--only menu-radio-lifecycle`, green on 0.11.0 here (~7–10 s, two
+captures). Fixture `src/live/menu-radio.ts` (the ids, the three choices, the
+readout and the mark's tolerance) + `menu-radio.test.ts` (the readout parsing,
+the mark's `primary` role and tolerance against the measured 82% and the text's
+distance, the shipped rows the view mounts, the steps' four readings, the
+registry entry and wiring, the count, and this section). One negative control
+measured, exit `1`, restored green: expecting the mark to stay on the first row
+fails `the mark follows the value to the next row` with `expected 0, got 2`.
+Evidence: `.artifacts/live/menu-radio.png`, `.artifacts/live/menu-radio-next.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6607,7 +6654,8 @@ narrower. Each deviation is deliberate and measured:
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
-  `media-frame-lifecycle` (fifty-five probes, each run alone).
+  `media-frame-lifecycle` and `menu-radio-lifecycle` (fifty-six probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
