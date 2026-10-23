@@ -475,10 +475,10 @@ describe("the tones the wash is painted on", () => {
     // translucent role cannot be strong enough for the page and weak enough for
     // a saturated fill. The selected row's title is the largest group: the body
     // floor it now carries is what the wash costs it on its own fill.
-    expect(under.length).toBe(39);
+    expect(under.length).toBe(43);
     expect(tightest.pair).toBe("mutedForeground on selected");
-    expect(tightest.theme).toBe("Light · Windows XP (Luna)");
-    expect(tightest.washed).toBeCloseTo(3.68, 2);
+    expect(tightest.theme).toBe("Light · Omarchy");
+    expect(tightest.washed).toBeCloseTo(3.38, 2);
     expect(tightestBody.pair).toBe("selectedForeground on selected");
     expect(tightestBody.theme).toBe("Dark");
     expect(tightestBody.washed).toBeCloseTo(5.11, 2);
@@ -494,7 +494,7 @@ describe("the tones the wash is painted on", () => {
     const printed = `${under.length} of the ${placements.length} placements`;
 
     expect(catalogue).toContain(printed);
-    expect(catalogue).toContain("3.68");
+    expect(catalogue).toContain("3.38");
     expect(catalogue).toContain("5.11");
     expect(catalogue).toContain("saturated");
     expect(design).toContain("saturated");
@@ -569,7 +569,7 @@ describe("the wash a status message can carry", () => {
     // The light palettes are far enough from the ink; the dark ones are not:
     // the wash only ever moves those fills toward the near-white text.
     expect(under.filter(({ mode }) => mode === "light")).toEqual([]);
-    expect(under).toHaveLength(30);
+    expect(under).toHaveLength(32);
     expect(tightest.tint).toBe("warningSoft");
     expect(tightest.theme.name).toBe("Dark · Windows");
     expect(tightest.body).toBeCloseTo(5.21, 2);

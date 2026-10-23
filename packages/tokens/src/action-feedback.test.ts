@@ -140,8 +140,8 @@ describe("the pointer feedback a filled role paints", () => {
         placement.ratio < lowest.ratio ? placement : lowest,
       );
 
-    expect(tightest.name).toBe("High contrast dark");
-    expect(`${tightest.role}/${tightest.state}`).toBe("primary/hover");
+    expect(tightest.name).toBe("Dark · Omarchy");
+    expect(`${tightest.role}/${tightest.state}`).toBe("destructive/hover");
     expect(tightest.ratio).toBeGreaterThanOrEqual(decorativeFloor);
     expect(section(catalogue, "## Action fills")).toContain(
       `${tightest.ratio.toFixed(2)}:1`,

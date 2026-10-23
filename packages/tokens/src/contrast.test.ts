@@ -336,7 +336,7 @@ describe("status text on a surface", () => {
         ),
       })),
     );
-    expect(styles).toHaveLength(16);
+    expect(styles).toHaveLength(18);
     expect(
       placements
         .filter(
@@ -351,7 +351,7 @@ describe("status text on a surface", () => {
     );
     expect(
       `${tightest.theme} ${tightest.tone} ${printedRatio(tightest.ratio)}`,
-    ).toBe("Light · Windows XP (Luna) warning 8.78:1");
+    ).toBe("Dark · Omarchy info 8.22:1");
   });
 });
 
@@ -439,8 +439,8 @@ describe("the ink an alert paints on its own tint", () => {
       })),
     );
 
-    expect(styles).toHaveLength(16);
-    expect(placements).toHaveLength(64);
+    expect(styles).toHaveLength(18);
+    expect(placements).toHaveLength(72);
     expect(
       placements
         .filter(
@@ -564,8 +564,8 @@ describe("the quiet ink a changed line paints on its tint", () => {
       })),
     );
 
-    expect(styles).toHaveLength(16);
-    expect(placements).toHaveLength(32);
+    expect(styles).toHaveLength(18);
+    expect(placements).toHaveLength(36);
     expect(
       placements
         .filter(
@@ -1234,9 +1234,9 @@ describe("the resting role of a floating row on the wash it tints", () => {
     // theme, so the tightest placement is the warmest of them rather than the
     // base light theme, whose text moved a step deeper with its soft surface.
     expect(tightest.name).toBe(
-      "Dark · Windows XP (Luna)/destructiveSoftForeground/active",
+      "Light · Omarchy/destructiveSoftForeground/active",
     );
-    expect(tightest.ratio.toFixed(2)).toBe("8.06");
+    expect(tightest.ratio.toFixed(2)).toBe("7.77");
   });
 });
 
@@ -1358,9 +1358,9 @@ describe("the status label on the wash a list row wears", () => {
     // The authored look's warmer selected wash is the tightest of the sixteen
     // styles; the catalogue prints the same number.
     expect(tightest.name).toBe(
-      "Dark · Windows XP (Luna)/destructiveSoftForeground/selected",
+      "Light · Omarchy/destructiveSoftForeground/selected",
     );
-    expect(tightest.ratio.toFixed(2)).toBe("7.97");
+    expect(tightest.ratio.toFixed(2)).toBe("7.77");
 
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
@@ -1825,8 +1825,8 @@ describe("the text a selected row keeps", () => {
     expect(placements.map(({ floor }) => floor)).toEqual(
       placements.map(() => contrastFloors.body),
     );
-    expect(tightest.name).toBe("Dark/selectedForeground/active");
-    expect(tightest.ratio?.toFixed(2)).toBe("7.31");
+    expect(tightest.name).toBe("Dark · Omarchy/selectedForeground/active");
+    expect(tightest.ratio?.toFixed(2)).toBe("7.12");
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -2977,8 +2977,8 @@ describe("the muted text inside a field's own fill", () => {
     );
 
     expect(hidden).toEqual([]);
-    expect(tightest.name).toBe("Light · Windows XP (Luna)");
-    expect(tightest.ratio?.toFixed(2)).toBe("7.64");
+    expect(tightest.name).toBe("Light · Omarchy");
+    expect(tightest.ratio?.toFixed(2)).toBe("6.31");
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(

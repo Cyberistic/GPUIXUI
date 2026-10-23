@@ -33,7 +33,7 @@ import {
   resolveDensePlatformTheme,
   resolveHouseTheme,
 } from "./platforms.example.js";
-import { densityPresets } from "./scale.js";
+import { densityPresets, spacing, targetSize } from "./scale.js";
 import { textStyle } from "./styles.js";
 import {
   darkTheme,
@@ -120,6 +120,28 @@ describe("platformStyles", () => {
       ),
     );
     expect(empty).toEqual([]);
+  });
+
+  it("holds Linux to Adwaita's corners, accent and surfaces", () => {
+    // GNOME's control corner is 6px and its window corner 12px
+    // (`$button_radius` and `$window_radius` in libadwaita 1.5); the 12px
+    // spacing grid and the 44px touch target are the library's own scale.
+    const { radius, density, colors } = platformStyles.linux;
+    expect(radius).toMatchObject({ sm: 4, md: 6, lg: 12, xl: 16 });
+    expect(density).toBe("spacious");
+    expect(densityPresets[density].controlHeight).toEqual({
+      sm: 32,
+      md: 36,
+      lg: 40,
+    });
+    expect(spacing.lg).toBe(12);
+    expect(targetSize.comfortable).toBe(44);
+    // Adwaita Blue 3 is the selection wash; Blue 4 is the action fill that
+    // carries white text and a full pointer step. Both are the GNOME palette.
+    expect(colors.light.selection).toBe("#3584E43D");
+    expect(colors.light.primary).toBe("#1A6DD3");
+    expect(colors.light.background).toBe("#FAFAFA");
+    expect(colors.dark.background).toBe("#242424");
   });
 
   it("keeps the default variant as the library's own identity", () => {
