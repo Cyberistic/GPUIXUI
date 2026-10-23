@@ -17,6 +17,9 @@
  * - `file-upload` — a queue over `upload/queue.ts`, the pure state machine
  *   (`idle | uploading | done | error`) with a monotonic progress and a token
  *   that cancels a removed file.
+ * - `qr-code` — a QR symbol painted from the package's own encoder
+ *   (`qr/encode.ts`): byte mode, versions 1–10, every error correction level,
+ *   one tinted `<svg>` mask with the quiet zone inside it.
  */
 
 export {
@@ -58,5 +61,34 @@ export {
   type UploadQueue,
   type UploadStatus,
 } from "./upload/queue.js";
+
+export {
+  QrCode,
+  renderQrCode,
+  qrOverflowMessage,
+  QR_INK,
+  QR_PAPER,
+  type QrCodeProps,
+} from "./qr-code.js";
+
+export {
+  encodeQr,
+  qrByteCapacity,
+  qrModules,
+  qrPlacement,
+  qrSvgSource,
+  qrVersionFor,
+  QrEncoding,
+  QrLevel,
+  QrOverflow,
+  QrSymbol,
+  QR_LEVELS,
+  QR_MAX_VERSION,
+  QR_QUIET_ZONE,
+  QR_VERSIONS,
+  type QrEncodeOptions,
+  type QrPlacement,
+  type QrVersion,
+} from "./qr/encode.js";
 
 export { ThemeProvider, useTheme, type Theme } from "./internal.js";

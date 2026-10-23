@@ -1,0 +1,114 @@
+---
+title: QrCode
+description: A QR symbol painted from the package's own encoder — byte mode, versions 1–10, every error correction level and a scanner-safe quiet zone.
+---
+
+`QrCode` encodes a value and paints the symbol as **one tinted `<svg>` mask**. The
+encoder ships in the package (`@gpuixui/media/qr/encode`), so a consumer needs no
+QR dependency; the component owns the placement, the quiet zone and the refusal a
+value that is too large is owed.
+
+```tsx
+import { QrCode } from "@gpuixui/media";
+
+<QrCode
+  value="https://gpuixui.dev/docs/components/qr-code"
+  label="The component documentation"
+  size={160}
+/>;
+```
+
+## Anatomy
+
+| Part | What it paints |
+| ---- | -------------- |
+| frame | the paper box, the quiet zone's four modules included |
+| mask | every dark module as one `<svg>` path, tinted by `ink` |
+| overflow | a bordered message naming the bytes and the capacity |
+
+The frame is `role="img"` with `label` as its accessible name.
+
+## Sizes
+
+`size` is the **whole painted square, quiet zone included**. Modules are laid out
+at whole points, so the square is the largest module grid the asked side can
+hold and never larger:
+
+- a version-1 symbol (21 modules) with the default `quietZone={4}` is a 29-cell
+  field; `size={160}` paints a 5-point module and a **145**-point square;
+- the same symbol with `quietZone={0}` is 21 cells; `size={160}` paints **147**;
+- a side that cannot be laid out (`NaN`, zero, negative) reads as the default.
+
+Reserve the square the component paints (`side`) rather than `size` when a layout
+depends on it.
+
+## Levels and capacity
+
+| Level | Recoverable damage | Bytes in version 10 |
+| ----- | ------------------ | ------------------- |
+| `L` | ~7% | 274 |
+| `M` | ~15% | 213 |
+| `Q` | ~25% | 154 |
+| `H` | ~30% | 119 |
+
+The value is UTF-8 in byte mode at the smallest version (1–10) that holds it, so
+a stronger level spends a bigger symbol for the same text. A value past version
+10's capacity paints the overflow state instead of a truncated symbol:
+
+```tsx
+<QrCode value={veryLongText} level="H" label="The address" />
+// A QR code holds 119 bytes at this level; the value is 240.
+```
+
+## Colour
+
+The ink and paper are **not theme roles**. A symbol is read by a camera, so the
+defaults are a near-black `#111111` on white; a dark theme does not invert them.
+`ink` and `paper` override the pair, and a caller who does takes on what a
+low-contrast symbol costs a scanner.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` | required |
+| `level` | `"L" \| "M" \| "Q" \| "H"` | `"M"` |
+| `size` | `number` | `160` |
+| `quietZone` | `number` | `4` |
+| `ink` | `string` | `#111111` |
+| `paper` | `string` | `#FFFFFF` |
+| `label` | `string` | `"QR code"` |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
+
+## Encoder
+
+`encodeQr(value, { level, mask? })` answers a `QrSymbol` or a `QrOverflow`; the
+result is a tagged union (`QrEncoding`), so a caller can draw the same matrix
+somewhere else:
+
+```ts
+import { encodeQr, qrSvgSource, QrSymbol } from "@gpuixui/media";
+
+const encoding = encodeQr("https://example.com", { level: "Q" });
+if (encoding instanceof QrSymbol) {
+  const svg = qrSvgSource(encoding, 4); // one path, quiet zone in the viewBox
+}
+```
+
+`qrByteCapacity(version, level)`, `qrModules(version)` and `qrVersionFor(bytes,
+level)` are the arithmetic; `qrPlacement(symbol, side, quietZone)` is the
+module-aligned square the component reserves. The encoder is held to a
+module-for-module comparison against an independent implementation at versions
+1, 6 and 10.
+
+## Limits
+
+- **Versions 1–10.** The largest symbol holds 274 bytes at `L`. Larger values are
+  refused, not split into structured-append symbols.
+- **Byte mode only.** Numeric and alphanumeric payloads would pack more tightly;
+  the encoder always declares byte mode, which every scanner reads.
+- **No logo or artwork overlay.** A mask is a path, not a composited image; an
+  overlay would have to be painted over the frame and is the caller's risk.
+- **Polarity is fixed by default.** Inverting the pair is possible through
+  `ink`/`paper`, but many scanners will not read an inverted symbol.

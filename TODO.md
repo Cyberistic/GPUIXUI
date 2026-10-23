@@ -9942,6 +9942,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     stop, `Right` expands in place, and a collapse that hides the cursor's row
     keeps a live keyboard stop. Docs `packages/data/docs/virtual-tree.mdx`;
     example `virtual-tree.example.tsx`. Owner: data.
+  - [x] **QR code** — `@gpuixui/media` ships `QrCode` over the package's own
+    encoder (`src/qr/encode.ts`): byte mode, versions 1–10, all four levels,
+    Reed–Solomon over GF(256), the standard block table and interleaving, the
+    eight masks and the penalty search. A value past version 10 is refused with
+    a `QrOverflow` naming the bytes and the capacity, never truncated. The
+    symbol is one tinted `<svg>` mask with the four-module quiet zone inside the
+    viewBox — the route the playground's `qr-matrix` probe measured (33 checks,
+    0.11.0) — at whole-module sizes (a version-1 symbol at `size={160}` paints
+    145 points). Ink and paper are scanner-safe constants, not theme roles.
+    `src/qr/encode.test.ts` (17 cases) compares every module of a version-1,
+    version-6 and version-10 symbol against `python-qrcode` and holds the
+    capacity boundary, the mask search, the format/version fields, the function
+    patterns and the penalty rules; `src/qr-code.test.tsx` (6 cases) holds the
+    mask, quiet zone, reserved box, the level's own symbol and the overflow
+    message. Docs `packages/media/docs/qr-code.mdx`; example
+    `qr-code.example.tsx`; inventory row `done`. Owner: components.
 `[x]` Document every capability GPUix does not provide, with evidence
 
 ## Phase F — integration and polish

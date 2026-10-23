@@ -12,6 +12,7 @@
     "./drop-zone": "./src/drop-zone.tsx",
     "./file-upload": "./src/file-upload.tsx",
     "./upload/queue": "./src/upload/queue.ts",
+    "./qr/encode": "./src/qr/encode.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
