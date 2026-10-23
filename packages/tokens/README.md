@@ -1129,7 +1129,7 @@ miss its floor on the block the theme draws. `nativeFenceFill(fill)` and
 `#A7A9FF`, the dark keyword cleared every page and reached **6.49:1** on Linux
 dark's fence, so the three dark platform styles — the ones whose page is lighter
 than the base theme's — declare `syntax.dark` with the smallest 2% step toward
-white (`#B0B2FF`, 7.09:1 there); the identity and both looks keep `#A7A9FF`.
+white (`#B0B2FF`, 7.09:1 there); the identity and every authored look keep `#A7A9FF`.
 `syntaxFailures(theme)` reports every token that misses its floor on the two fills
 a caller paints and is part of `auditTheme` (`audit.syntax`); the fence's own
 composite is measured by `native-text.test.ts` against the same floors.

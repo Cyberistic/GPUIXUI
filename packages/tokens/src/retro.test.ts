@@ -403,7 +403,7 @@ describe("retro documentation", () => {
     const looksClaimed = (text: string): ReadonlyArray<string> =>
       claimed(
         text,
-        /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+) (?:authored )?looks\b/gi,
+        /\b(both|one|two|three|four|five|six|seven|eight|nine|ten|\d+) (?:authored )?looks\b/gi,
       );
     const themesClaimed = (text: string): ReadonlyArray<string> =>
       claimed(

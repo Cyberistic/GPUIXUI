@@ -3033,8 +3033,8 @@ identity value: Linux dark **6.49:1** over its page fill and 6.76:1 over
 `input`, Windows dark 6.85:1 and 6.94:1, macOS dark 6.92:1 over `input`. A style
 that repaints the page owns the table for it, so `darwin`, `linux` and `win32`
 declare `syntax.dark` with the smallest 2% step toward white — `#B0B2FF`, which
-puts the worst of those at **7.09:1** — while the identity and both authored
-looks keep `#A7A9FF`, because their pages already carried it. The tightest
+puts the worst of those at **7.09:1** — while the identity and every authored
+look keep `#A7A9FF`, because their pages already carried it. The tightest
 placement over the sixteen styles is Linux dark's `macroName` on its fence at
 **7.07:1**.
 
