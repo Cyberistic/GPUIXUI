@@ -4236,7 +4236,26 @@ and clause).
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 4/4
+`[x]` `[██████████]` 5/5
+
+`[x]` `packages/components`: **an unreadable remaining time was painted as the
+      word `NaN`** — `Countdown` formatted `remainingMs` straight into the
+      clock, and a remaining time is usually arithmetic over a deadline the
+      application decoded, so a timestamp that never arrived (`NaN`) or an
+      absent bound (an infinity) reached the label: the renderer painted
+      `NaN:NaN` / `Infinity:NaN:NaN` while `expired` read `false` (a `<= 0`
+      comparison against `NaN` is), so a finished offer was presented as live.
+      One normaliser (`countdown/logic.ts`'s `readableRemaining`) keeps a finite
+      value floored at zero and reads an unreadable one as zero; the text, the
+      expired role and `CountdownState.expired` all read it, and the state hands
+      a style callback the number the clock is drawn from.
+      `countdown/logic.test.ts` gains the unreadable inputs and the normaliser,
+      and `behaviour/countdown.test.tsx` mounts `remainingMs={NaN}` and reads
+      `00:00` in the expired role with `expired` true. Directions measured:
+      before the fix the logic case reports `expected 'NaN:NaN' to be '00:00'`,
+      `'Infinity:NaN:NaN'` and a NaN breakdown, and the window case the same
+      text; after it 12 logic / 6 behaviour cases are green. Docs:
+      `docs/countdown.mdx` §API/§Limitations and the Countdown row.
 
 `[x]` `packages/components`: a **highlighted menu row's bar was a wash on a
       wash** — `menuRowStyle` painted the leading bar `accent` while the
@@ -7429,6 +7448,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the README's key-routing row and status row, and the Tier 3 Expandable rows
     row. `nub run --filter @gpuixui/data test` 149/149, `test:behaviour` 97/97,
     `check-types` clean. Owner: data.
+  - [x] Arm the **column drag on the primary button only** — the runtime
+    delivers `mouseDown` for all three buttons while `onClick` is the primary
+    one's (the rule the primitives' sliders already follow through
+    `primaryButton`), and `TableColumnDivider` armed its press for every one:
+    a right press — the context-menu gesture — then a move still over the 6px
+    strip resized the column. The divider now reads `primaryButton`, so a right
+    or middle press arms nothing. `src/behaviour/table.test.tsx` gains `refuses
+    a press that is not the primary button`, which right- and middle-presses
+    the shipped example's divider and moves 2px inside the strip. Direction
+    measured: without the guard the readout leaves `w=260`; with it, 98/98
+    behaviour cases. README's resize row and the Tier 3 Resizable columns row
+    state the rule. Owner: data.
   - [x] **Adopt** the type-ahead seam in the tree — `packages/data/src/tree/logic.ts`
     carried a copy of the window, the repeat rule, the matcher and `typedChar`
     because the components seam was private. `@gpuixui/components/typeahead` now
