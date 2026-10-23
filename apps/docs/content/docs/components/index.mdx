@@ -5,37 +5,38 @@ description: Every component the library ships, and what its page tells you.
 
 import { playgroundCommand } from "@/components/docs/native-run-note";
 
-The Tier 2 components are composed from the [primitives](/docs/primitives):
-dialogs, menus, tabs, pickers and the rest of the feedback layer. The data lane
-ships its own package, `@gpuixui/data`: [Data display](/docs/data-display) is
-its map, and each row's state is the inventory's — read from `COMPONENTS.md` and
-printed on the row — so a page appears here only once it exists. This index
-covers both component lanes, curated and package-shipped, and the filter
-matches a page's name, its purpose, its lane,
-**the parts it documents**, **the props and prop types its API table declares**,
-**the limits it records** and **its inventory verdict**. So
-`DialogFooter` finds the dialog, `onCheckedChange` finds the switch, `StateStyle`
-finds every page whose props take it, `aria-orientation` finds the tabs,
-`preview` finds the pages that open with a browser rendering, and `partial`
-finds every component the runtime supports only in part:
+The composed layer: dialogs, menus, pickers, tables and the rest, built from the
+[primitives](/docs/primitives). Every card below is a page — its own browser
+rendering, install block, API table and the real source. The filter matches a
+page's name, its purpose, **the parts it documents**, **the props and prop
+types its API table declares**, **the limits it records** and **its inventory
+verdict**. So `DialogFooter` finds the dialog, `onCheckedChange` finds the
+switch, `StateStyle` finds every page whose props take it, `aria-orientation`
+finds the tabs, `preview` finds the pages that open with a browser rendering,
+and `partial` finds every component the runtime supports only in part. The lower
+lanes have their own maps: [Primitives](/docs/primitives), and the
+`@gpuixui/data` lane at [Data display](/docs/data-display).
 
 <ComponentIndex />
 
 The filter travels in the URL (`?q=partial`), the way the platform switch
 carries `?platform=win32`: a filtered view can be linked, and a reload opens the
-same rows. Clear the box and the parameter leaves the address bar.
+same cards. Clear the box and the parameter leaves the address bar.
+
+The grid holds every composed component. Each tile renders the demo the page
+mounts and links to the page itself; a component with no demo says so rather
+than showing an empty frame.
 
 The pages come from two places:
 
 - **A curated page** for the components documented here in depth — Accordion,
-  Alert, Avatar, Badge, Breadcrumb, Button, Card, Carousel, Checkbox, Collapsible,
-  Combobox, Command menu, Confirmation dialog, Context menu, Date picker, Dialog,
-  Drawer, Dropdown menu, Empty state, Field and inline validation, Form,
-  Inline edit, List, Navigation menu, Pagination, Popover, Search input, Select,
-  Stepper, Switch, Color picker, Table, Tag input, Tabs, Time picker, Timeline,
-  Tooltip and Toast — with browser previews, an install block and the copyable
-  source. A page that mounts a preview is marked **Browser preview** in the
-  index above.
+  Alert, Avatar, Badge, Breadcrumb, Button, Card, Carousel, Checkbox,
+  Collapsible, Combobox, Command menu, Confirmation dialog, Context menu, Date
+  picker, Dialog, Drawer, Dropdown menu, Empty state, Field and inline
+  validation, Form, Inline edit, List, Navigation menu, Pagination, Popover,
+  Search input, Select, Stepper, Switch, Color picker, Table, Tag input, Tabs,
+  Time picker, Timeline, Tooltip and Toast — with browser previews, an install
+  block and the copyable source. A page that mounts a preview renders it in its grid tile.
 - **The package's own page** for every other component, rendered from
   `packages/components/docs/`. That file is what the component ships with, so
   the page and the package cannot disagree. A component or primitive page mounts
@@ -43,16 +44,13 @@ The pages come from two places:
   with no demo opens with a note naming the command that opens the companion
   playground.
 
-**What the marks mean.** A **Browser preview** mark is about the page: it opens
-with a rendering you can press. A **partial** mark is about the component:
+**What the mark means.** A **partial** mark is about the component:
 `COMPONENTS.md` records that the pinned runtime supports only part of it, and
 the page's own Status section names the missing part. The same rule names a
 `todo` status or an unmeasured `?` if one ever lands on a page, so a mark never
 means "shipped whole" when the inventory says otherwise.
 
-Neither mark is written by hand. The preview is read from the page's own source
-and the verdict from the `COMPONENTS.md` row the status strip already joins, so
-a component that moves to `done` loses its mark in the same commit.
+The mark is not written by hand: the verdict comes from the `COMPONENTS.md` row the status strip already joins, so a component that moves to `done` loses its mark in the same commit.
 
 ## How to read a page
 

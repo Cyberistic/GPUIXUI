@@ -25,7 +25,6 @@ const searchTree = searchPageTree(
   source.getPageTree(),
   packageSections.map((section) => ({
     name: section.name,
-    separator: section.separator,
     pages: sectionPages(section.origins),
   })),
 );

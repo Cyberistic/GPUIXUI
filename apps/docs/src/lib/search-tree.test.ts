@@ -48,7 +48,6 @@ const tree: PageTree.Root = {
 
 const section: SearchSection = {
   name: "Primitives",
-  separator: "All primitives",
   pages: [
     { name: "Slider", url: "/docs/primitives/slider" },
     { name: "Button", url: "/docs/primitives/button" },

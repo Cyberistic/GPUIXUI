@@ -83,7 +83,7 @@ describe("the composition pages", () => {
     expect(silent).toEqual([]);
   });
 
-  it("sit in the sidebar, after the component sections", () => {
+  it("sit in the sidebar beside the component lanes", () => {
     const positions = pages.map(({ file }) => {
       // A lane page that moved into a folder is listed by its folder's name.
       const slug = file.replace(/\/index\.mdx$/, "").replace(/\.mdx$/, "");
@@ -91,8 +91,16 @@ describe("the composition pages", () => {
     });
 
     expect(positions.every((position) => position > 0)).toBe(true);
-    expect(Math.min(...positions)).toBeGreaterThan(
+    // Layouts is a guide above the separator; the two package lanes follow the
+    // component group in the order the root meta declares.
+    expect(sidebar.indexOf("layouts")).toBeLessThan(
       sidebar.indexOf("components"),
+    );
+    expect(sidebar.indexOf("data-display")).toBeGreaterThan(
+      sidebar.indexOf("components"),
+    );
+    expect(sidebar.indexOf("workspace")).toBeGreaterThan(
+      sidebar.indexOf("data-display"),
     );
   });
 

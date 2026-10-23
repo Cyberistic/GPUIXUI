@@ -504,12 +504,10 @@ describe("the testing page", () => {
     expect(isPrivate).toBe(pageText.includes("workspace-internal"));
   });
 
-  it("sits in the Contributing section of the sidebar", () => {
+  it("sits at the end of the sidebar, before the licence", () => {
     const pages = sidebarPages("apps/docs/content/docs/meta.json");
-    const section = pages.indexOf("---Contributing---");
 
-    expect(section).toBeGreaterThanOrEqual(0);
-    expect(pages.indexOf("testing")).toBeGreaterThan(section);
+    expect(pages.indexOf("testing")).toBeGreaterThan(pages.indexOf("blocks"));
     expect(pages.indexOf("testing")).toBeLessThan(pages.indexOf("license"));
   });
 });

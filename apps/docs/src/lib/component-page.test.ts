@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { componentPages } from "./component-index-data";
 
 /**
  * The component page contract.
@@ -240,28 +241,32 @@ describe("the component section index", () => {
   it("names every curated page, so a fifth cannot land as a fourth", () => {
     // The index listed Button, Dialog, Popover and Tabs while the Dropdown menu
     // page shipped beside them, so a reader looking for a menu preview was told
-    // the curated set did not include one.
+    // the curated set did not include one. The grid is the list now, so the
+    // guard reads its rows rather than prose that can drift.
     const index = source("index.mdx");
+    const listed = new Set(componentPages.map((entry) => entry.title));
 
     expect(
       pages
         .map((name) => title(source(name)))
-        .filter((pageTitle) => !index.includes(pageTitle)),
+        .filter((pageTitle) => !listed.has(pageTitle)),
     ).toEqual([]);
+    expect(index).toContain("<ComponentIndex />");
   });
 
-  it("teaches the badge its rows wear, so the mark is not unexplained", () => {
-    // The index marks the curated rows and offers `preview` as a query; a
-    // reader needs the page to say what the mark means, and the mark's wording
-    // lives in the component that renders it.
+  it("renders each page's demo in its grid tile", () => {
+    // The index offers `preview` as a query and says a page that mounts a
+    // preview renders it; a tile that dropped the demo would leave the claim
+    // false and the grid a wall of names.
     const index = source("index.mdx");
-    const badge = readFileSync(
+    const grid = readFileSync(
       new URL("../components/docs/component-index.tsx", import.meta.url),
       "utf8",
     );
 
-    expect(badge).toContain("Browser preview");
-    expect(index).toContain("**Browser preview**");
+    expect(grid).toContain("<Scene />");
+    expect(grid).toContain("data-preview");
+    expect(index).toContain("renders it in its grid tile");
     expect(index).toContain("`preview` finds");
   });
 

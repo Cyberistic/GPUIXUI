@@ -49,12 +49,7 @@ const pageTree = async () =>
   source.serializePageTree(
     packageSections.reduce(
       (tree, section) =>
-        completeSection(
-          tree,
-          section.name,
-          sectionPages(section.origins),
-          section.separator,
-        ),
+        completeSection(tree, section.name, sectionPages(section.origins)),
       source.getPageTree(),
     ),
   );

@@ -104,10 +104,9 @@ describe("the examples page", () => {
     expect(policy).toContain("runtime/examples.runtime.test.tsx");
   });
 
-  it("sits under Reference, before the API reference", () => {
+  it("sits after the component lanes, before the API reference", () => {
     const position = sidebar.indexOf("examples");
-    expect(position).toBeGreaterThan(0);
-    expect(sidebar[position - 1]).toBe("---Reference---");
+    expect(position).toBeGreaterThan(sidebar.indexOf("blocks"));
     expect(sidebar[position + 1]).toBe("reference");
   });
 

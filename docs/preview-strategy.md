@@ -416,7 +416,7 @@ cannot ship a page the site does not show and the two cannot drift:
 | Collection | Source | Route | Sidebar |
 | ---------- | ------ | ----- | ------- |
 | Primitives | `packages/primitives/docs` | `/docs/primitives` | Primitives |
-| Icons | `packages/icons/docs` | `/docs/icons` | Primitives |
+| Icons | `packages/icons/docs` | `/docs/icons` | Icons |
 | Components | `packages/components/docs` | `/docs/components` | Components |
 | Data | `packages/data/docs` | `/docs/data-display` | Data display |
 | Code surfaces | `packages/editor/docs` | `/docs/editor` | Workspace |
