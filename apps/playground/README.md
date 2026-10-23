@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-89 probes a real window can prove, of which eighteen mount shipped
+90 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4887,6 +4887,61 @@ cells` (`expected "grid-focus-after", got "gridfocus-r1c0"`), and wrapping
 `Right` at a row's end fails `Right clamps at the row's end`
 (`expected "gridfocus-r0c2", got "gridfocus-r0c0"`).
 
+### `document-type` — measured on 0.11.0 here
+
+**Does a document host paint the type the theme hands it?** `nativeTextTheme`
+passes a `<code>`, `<diff>` and `<markdown>` host the scale's own metrics — the
+code role's size and leading, the caption's for a fenced card's language strip —
+and every claim about it was a read of the pinned Rust source (`MetricsOverride`
+is `camelCase`), including `COMPONENTS.md`'s. A brand that rescales its
+`codeBlock` role was promised a paint nobody had looked at. The probe gives the
+seam a theme whose roles cannot be mistaken for the runtime's own
+(`codeBlock` **20/24** against 12.5/18, the caption **18** against 11) and reads
+the frame.
+
+| Host | What the window measured |
+| ---- | ------------------------ |
+| `<code>`, themed | the word's ink is **32** device pixels tall, exactly the same word painted as a `<text>` at 20 in the theme's mono family; its two lines advance **24** each (the host is 48 tall) |
+| `<code>`, no theme | **20** device pixels, matching a `<text>` at the runtime's 12.5; two lines advance **18** (36 tall) |
+| `<diff>`, themed vs plain | the same four-row patch is **12** taller with the theme — four rows × the 3-point leading difference (24 against 21) |
+| `<markdown>` strip, themed | the language `ts` paints **26** device pixels, the caption-sized `<text>`'s own height; the plain card's strip is **17** against the runtime's 11 at **16**, within the one-row antialias slack |
+
+What it settles for a consumer:
+
+1. **The seam is the paint.** The numbers `nativeTextTheme` hands over are the
+   ones the host lays out and paints: a code block's glyph, its line advance,
+   a diff row's advance and a fenced card's language strip all move with the
+   theme, and no second table is involved.
+2. **A host with no theme keeps the runtime's numbers.** `12.5/18`, `21` and
+   `11` are what an unthemed host paints, so the seam is a real override and
+   not the only path.
+3. **The caption role reaches the strip.** A fenced card's language label is
+   the one place `typography.caption` appears inside a document host; the probe
+   holds it to a caption-sized control rather than to a literal.
+
+**Limits:** this host is macOS at scale 2, and ink height is an antialias
+measurement, so the language strip's row count may differ by one from its
+control (the plain case did: 17 against 16). The diff's *glyph* size is proven
+by its row advance, not by ink, because a changed row paints a wash and several
+syntax colours; the code host's ink is the glyph-size evidence. The fenced
+body's own lines use `codeBlock`, measured by the block above.
+
+11 checks, `--only document-type`, green on 0.11.0 here (~0.4–2.6 s; one
+capture). Fixture: `src/live/document-type.ts` (the samples, the unmistakable
+theme, the seam object read by the view, the band reader, the gains and
+`DOCUMENT_TYPE_CHECKS`) + `document-type.test.ts` (16 cases: the band reader on
+synthetic frames, the strip reader's wash and borders, the theme's roles through
+the seam, the gains, the registry entry, this section and the printed count).
+The view and steps live in `src/live/scenarios.tsx`. Evidence:
+`.artifacts/live/document-type.png`.
+
+Three negative controls measured, exit `1` each, restored green: dropping the
+theme from the `<code>` host fails `the themed block's glyph is the size the
+theme names` (`expected 32, got 20`); from the `<diff>` host it fails `the
+diff's four rows advance by the theme's leading` (`expected 12, got 0`); and
+from the `<markdown>` host it fails `the fenced card's language strip paints the
+caption size`.
+
 ### `system-theme-follow` — measured on 0.11.0 here
 
 **Does a running window follow the desktop's theme?** `@gpuixui/tokens` ships
@@ -5168,7 +5223,7 @@ narrower. Each deviation is deliberate and measured:
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
-  `image-fit`, `grid-focus-lifecycle` and `system-theme-follow` (thirty-one probes, each run alone).
+  `image-fit`, `grid-focus-lifecycle`, `system-theme-follow` and `document-type` (thirty-two probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

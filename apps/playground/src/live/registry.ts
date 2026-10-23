@@ -565,6 +565,12 @@ export const liveRegistry = [
     capability: "focus",
   },
   {
+    id: "document-type",
+    title:
+      "Text: a document host paints the code size, leading and caption strip the theme hands it, and one handed no theme paints the runtime's own",
+    capability: "text",
+  },
+  {
     id: "system-theme-follow",
     title:
       "Theme: a running window follows a desktop palette without a restart or a remount, and returns to its own theme when the palette is deleted",

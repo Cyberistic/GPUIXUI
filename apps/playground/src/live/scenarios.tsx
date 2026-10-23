@@ -480,6 +480,23 @@ import {
   paperPalette,
 } from "./system-theme.js";
 import {
+  CODE_SAMPLE,
+  CODE_LEADING,
+  DIFF_LEADING_GAIN,
+  DOCUMENT_TYPE_HOST,
+  DOCUMENT_TYPE_IDS,
+  DOCUMENT_TYPE_THEME,
+  MARKDOWN_SAMPLE,
+  PATCH_SAMPLE,
+  CODE_SIZE,
+  RUNTIME_CODE_LEADING,
+  RUNTIME_HEADER_SIZE,
+  bandHeight,
+  headerBands,
+  inkBands,
+  near,
+} from "./document-type.js";
+import {
   THEME_CARD,
   THEME_CARD_PADDING,
   THEME_CONTROL_WIDTH,
@@ -25245,6 +25262,290 @@ const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sync(resetSystemPalette);
   });
 
+/** One calibration line at a known size, painted in the strip's own role. */
+const DocumentTypeCalibration = ({
+  testId,
+  size,
+  family,
+  text,
+}: {
+  readonly testId: string;
+  readonly size: number;
+  readonly family?: string;
+  readonly text: string;
+}): ReactNode => (
+  <text
+    testId={testId}
+    style={{
+      fontFamily: family,
+      fontSize: size,
+      lineHeight: 28,
+      color: DOCUMENT_TYPE_THEME.colors.mutedForeground,
+    }}
+  >
+    {text}
+  </text>
+);
+
+/**
+ * Three document hosts in one theme whose code and caption roles are
+ * unmistakable, each beside the plain host the runtime's own numbers paint.
+ *
+ * `<code>` paints no surface, so its ink is read against the page; a `<markdown>`
+ * fenced card does paint washes, so its language strip is read by the exact
+ * `mutedForeground` glyph pixels instead.
+ */
+const DocumentTypeProbe = (): ReactNode => {
+  const theme = DOCUMENT_TYPE_THEME;
+  return (
+    <div
+      testId={DOCUMENT_TYPE_IDS.probe}
+      style={{
+        width: 870,
+        height: 500,
+        padding: 12,
+        display: "flex",
+        flexDirection: "row",
+        gap: 16,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 280,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <DocumentTypeCalibration
+          testId={DOCUMENT_TYPE_IDS.codeCalibration}
+          size={CODE_SIZE}
+          family={theme.typography.mono}
+          text="HAMBURG"
+        />
+        <code
+          testId={DOCUMENT_TYPE_IDS.codeThemed}
+          code={CODE_SAMPLE}
+          language="ts"
+          theme={DOCUMENT_TYPE_HOST}
+        />
+        <DocumentTypeCalibration
+          testId={DOCUMENT_TYPE_IDS.codeRuntimeCalibration}
+          size={12.5}
+          family={theme.typography.mono}
+          text="HAMBURG"
+        />
+        <code
+          testId={DOCUMENT_TYPE_IDS.codePlain}
+          code={CODE_SAMPLE}
+          language="ts"
+        />
+      </div>
+      <div
+        style={{
+          width: 280,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <diff
+          testId={DOCUMENT_TYPE_IDS.diffThemed}
+          patch={PATCH_SAMPLE}
+          theme={DOCUMENT_TYPE_HOST}
+        />
+        <diff testId={DOCUMENT_TYPE_IDS.diffPlain} patch={PATCH_SAMPLE} />
+      </div>
+      <div
+        style={{
+          width: 240,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <markdown
+          testId={DOCUMENT_TYPE_IDS.markdownThemed}
+          source={MARKDOWN_SAMPLE}
+          theme={DOCUMENT_TYPE_HOST}
+        />
+        <markdown
+          testId={DOCUMENT_TYPE_IDS.markdownPlain}
+          source={MARKDOWN_SAMPLE}
+        />
+        <DocumentTypeCalibration
+          testId={DOCUMENT_TYPE_IDS.captionCalibration}
+          size={18}
+          family={theme.typography.sans}
+          text="ts"
+        />
+        <DocumentTypeCalibration
+          testId={DOCUMENT_TYPE_IDS.headerRuntimeCalibration}
+          size={RUNTIME_HEADER_SIZE}
+          family={theme.typography.sans}
+          text="ts"
+        />
+      </div>
+    </div>
+  );
+};
+
+const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(DOCUMENT_TYPE_IDS.probe);
+    yield* ctx.host.capture("document-type");
+    const frame = yield* ctx.host.pixels("document-type");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const theme = DOCUMENT_TYPE_THEME;
+    const page = yield* ctx.expectSome(
+      "the page role is a colour the frame can measure",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.background)),
+    );
+
+    /** The part of the capture one host paints, or `None` before it paints. */
+    const cropOf = (
+      testId: string,
+    ): Effect.Effect<Option.Option<Pixels.Pixels>, Smoke.SmokeHostError> =>
+      Effect.gen(function* () {
+        const bounds = yield* ctx.host.bounds(testId);
+        return Option.flatMap(Option.fromNullishOr(bounds), (box) =>
+          Option.fromNullishOr(
+            Pixels.crop(
+              frame,
+              new Pixels.PixelRegion({
+                x: Math.round(box.x * scale),
+                y: Math.round(box.y * scale),
+                width: Math.round(box.width * scale),
+                height: Math.round(box.height * scale),
+              }),
+            ),
+          ),
+        );
+      });
+
+    /** A host's height in logical pixels, or `-1` when it paints nothing. */
+    const heightOf = (
+      testId: string,
+    ): Effect.Effect<number, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.match(Option.fromNullishOr(bounds), {
+          onNone: () => -1,
+          onSome: (box) => box.height,
+        }),
+      );
+
+    /** The first ink band's height, or `-1` when the crop paints nothing. */
+    const inkHeight = (
+      crop: Option.Option<Pixels.Pixels>,
+      reference: Pixels.Rgba,
+    ): number =>
+      Option.getOrElse(
+        Option.map(
+          Option.flatMap(crop, (pixels) =>
+            Arr.get(inkBands(pixels, reference), 0),
+          ),
+          bandHeight,
+        ),
+        () => -1,
+      );
+
+    /** The first band of the language strip, or `-1` high. */
+    const stripHeight = (crop: Option.Option<Pixels.Pixels>): number =>
+      Option.getOrElse(
+        Option.map(
+          Option.flatMap(crop, (pixels) =>
+            Arr.get(headerBands(pixels, scale), 0),
+          ),
+          bandHeight,
+        ),
+        () => -1,
+      );
+
+    const codeThemed = yield* cropOf(DOCUMENT_TYPE_IDS.codeThemed);
+    const codePlain = yield* cropOf(DOCUMENT_TYPE_IDS.codePlain);
+    const codeCalibration = yield* cropOf(DOCUMENT_TYPE_IDS.codeCalibration);
+    const codeRuntime = yield* cropOf(DOCUMENT_TYPE_IDS.codeRuntimeCalibration);
+    const markdownThemed = yield* cropOf(DOCUMENT_TYPE_IDS.markdownThemed);
+    const markdownPlain = yield* cropOf(DOCUMENT_TYPE_IDS.markdownPlain);
+    const caption = yield* cropOf(DOCUMENT_TYPE_IDS.captionCalibration);
+    const headerRuntime = yield* cropOf(
+      DOCUMENT_TYPE_IDS.headerRuntimeCalibration,
+    );
+
+    // 1. The block's glyph is the size the theme names. A painted `<text>` at
+    //    the same size and family is the reference, so a host that ignores the
+    //    metric cannot pass by painting a different font.
+    yield* ctx.expectEqual(
+      "the themed block's glyph is the size the theme names",
+      inkHeight(codeThemed, page),
+      inkHeight(codeCalibration, page),
+    );
+
+    // 2. A host handed no theme paints the runtime's own 12.5.
+    yield* ctx.expectEqual(
+      "a host handed no theme paints the runtime's own code size",
+      inkHeight(codePlain, page),
+      inkHeight(codeRuntime, page),
+    );
+
+    // 3. The two are visibly different.
+    yield* ctx.expectEqual(
+      "the theme's code size is the larger of the two paints",
+      inkHeight(codeThemed, page) > inkHeight(codePlain, page),
+      true,
+    );
+
+    // 4. The block's lines advance by the leading the seam handed over, which
+    //    the host's own box states (two rows of the role's line height).
+    const themedHeight = yield* heightOf(DOCUMENT_TYPE_IDS.codeThemed);
+    const plainHeight = yield* heightOf(DOCUMENT_TYPE_IDS.codePlain);
+    yield* ctx.expectEqual(
+      "the themed block's two lines advance by the theme's leading",
+      themedHeight,
+      2 * CODE_LEADING,
+    );
+    yield* ctx.expectEqual(
+      "the plain block's two lines advance by the runtime's leading",
+      plainHeight,
+      2 * RUNTIME_CODE_LEADING,
+    );
+
+    // 5. A diff's four changed rows advance by `diffLineHeight`; the headers
+    //    are the same height in both hosts, so the gain is the rows alone.
+    const diffThemed = yield* heightOf(DOCUMENT_TYPE_IDS.diffThemed);
+    const diffPlain = yield* heightOf(DOCUMENT_TYPE_IDS.diffPlain);
+    yield* ctx.expectEqual(
+      "the diff's four rows advance by the theme's leading",
+      diffThemed - diffPlain,
+      DIFF_LEADING_GAIN,
+    );
+
+    // 6. The language strip is painted at the caption role the seam hands it,
+    //    and a host with no theme paints the runtime's own 11.
+    const themedStrip = stripHeight(markdownThemed);
+    const plainStrip = stripHeight(markdownPlain);
+    yield* ctx.expectEqual(
+      "the fenced card's language strip paints the caption size",
+      near(themedStrip, inkHeight(caption, page), 1),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a host handed no theme paints the runtime's own strip size",
+      near(plainStrip, inkHeight(headerRuntime, page), 1),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the strip's size is the one the theme moved",
+      themedStrip > plainStrip,
+      true,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -25692,5 +25993,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "system-theme-follow",
     view: () => <SystemThemeProbe />,
     steps: systemThemeSteps,
+  },
+  "document-type": {
+    id: "document-type",
+    view: () => <DocumentTypeProbe />,
+    steps: documentTypeSteps,
   },
 };
