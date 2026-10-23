@@ -46,7 +46,9 @@ describe("a hidden column's search rule", () => {
   });
 
   it("is taught on the data lane and on the curated table page", () => {
-    expect(lanePage).toContain("**A hidden column leaves the search, not the sort**");
+    expect(lanePage).toContain(
+      "**A hidden column leaves the search, not the sort**",
+    );
     expect(lanePage).toContain("enableGlobalFilter");
     expect(lanePage).toContain("hiddenColumns: columns.hidden");
     expect(lanePage).toContain("**20**");
@@ -64,9 +66,10 @@ describe("a hidden column's search rule", () => {
     expect(snippet, "the usage section has no tsx snippet").not.toBe("");
     const controller = snippet.indexOf("const columns = useColumns(");
     const table = snippet.indexOf("const table = useTable(");
-    expect(controller, "the snippet has no useColumns declaration").toBeGreaterThan(
-      -1,
-    );
+    expect(
+      controller,
+      "the snippet has no useColumns declaration",
+    ).toBeGreaterThan(-1);
     expect(table).toBeGreaterThan(controller);
     expect(snippet).toContain("hiddenColumns: columns.hidden,");
     expect(snippet).toContain("  useColumns,");

@@ -2082,11 +2082,16 @@ describe("docs/gpuix-capabilities.md", () => {
 
     const max = content - track;
     const rule = Math.round(
-      Math.min(Math.max((track * track) / (track + max), Math.min(min, track)), track),
+      Math.min(
+        Math.max((track * track) / (track + max), Math.min(min, track)),
+        track,
+      ),
     );
     /** The cap loses the rounded point, which a solid-colour crop cannot count. */
     const painted = rule - 1;
-    const start = Math.round(Math.min(Math.max(sideways / max, 0), 1) * (track - rule));
+    const start = Math.round(
+      Math.min(Math.max(sideways / max, 0), 1) * (track - rule),
+    );
 
     expect(rule).toBeLessThan(track);
     expect(painted).toBeGreaterThan(min);
@@ -2102,7 +2107,10 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.evidence).toContain("scrollY");
 
     const page = measuredRow("Scrollbar thumb");
-    expect(page, "the page's measured table has no horizontal thumb row").toBeDefined();
+    expect(
+      page,
+      "the page's measured table has no horizontal thumb row",
+    ).toBeDefined();
     expect(page?.[1]).toContain(`**${painted}**`);
     expect(page?.[1]).toContain(`**${rule}**`);
     expect(page?.[1]).toContain(`**${start}**`);
@@ -2254,9 +2262,7 @@ describe("docs/gpuix-capabilities.md", () => {
     const max = content - track;
     const length = Math.round(Math.min((track * track) / (track + max), track));
     const startAt = (offset: number): number =>
-      Math.round(
-        Math.min(Math.max(-offset / max, 0), 1) * (track - length),
-      );
+      Math.round(Math.min(Math.max(-offset / max, 0), 1) * (track - length));
     const wheeled = startAt(wheel);
 
     expect(length).toBeLessThan(track);
@@ -2281,7 +2287,10 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.workaround).toContain("scrollTo");
 
     const page = measuredRow("Scrollbar thumb");
-    expect(page, "the page's measured table has no scrollbar-drag row").toBeDefined();
+    expect(
+      page,
+      "the page's measured table has no scrollbar-drag row",
+    ).toBeDefined();
     expect(page?.[1]).toContain("scrollbar-drag");
     expect(page?.[1]).toContain(`${checks} checks`);
     expect(page?.[1]).toContain(`**${track}**`);
