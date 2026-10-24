@@ -110,6 +110,19 @@ describe("the shell-selection probe", () => {
     expect(ui).toContain("isActivationKey(event.key)");
   });
 
+  it("names every row and palette button the accessibility tree carries", () => {
+    // A node's name comes from `aria-label` alone (`accessibility.rs`), so the
+    // probe's subject is a declaration the shell has to make. The runtime check
+    // is in the probe; this holds the premise on a host with no binding.
+    const shell = source("app.tsx");
+    expect(shell).toContain("aria-label={scenario.title}");
+    expect(shell).toContain("aria-label={`${palette} palette`}");
+    expect(probe).toContain("every sidebar row publishes the title it paints");
+    expect(probe).toContain(
+      "the palette switch publishes a name for every button",
+    );
+  });
+
   it("drives the arrows and states the roving rule", () => {
     expect(
       Arr.every(["down", "up", "home", "end"], (key) =>

@@ -34,7 +34,7 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { App } from "../app.js";
-import { palettes, type PaletteId } from "../palettes.js";
+import { paletteIds, palettes, type PaletteId } from "../palettes.js";
 import { scenarios } from "./index.js";
 import {
   SHELL_LIST,
@@ -122,6 +122,41 @@ export const shellSelectionScenario: ScenarioBody = {
         "the stage holds none of the pressed scenario yet",
         Option.isNone(Option.fromNullishOr(ctx.host.bounds(TARGET_MARKER))),
         true,
+      );
+
+      // The accessibility tree: the runtime builds a node's **name** from
+      // `aria-label` only, and a row that paints its title in a child `<text>`
+      // reaches the tree as a nameless button. The shell is the surface the docs
+      // send a reader to, so every row and palette button publishes its words.
+      const tree = yield* ctx.expectSome(
+        "the shell paints an accessibility tree",
+        Option.fromNullishOr(ctx.host.a11yTree()),
+      );
+      const buttons = Arr.getSomes(
+        Arr.map(
+          Arr.filter(tree.nodes, (node) =>
+            Option.contains(node.role, "Button"),
+          ),
+          (node) => node.label,
+        ),
+      );
+      yield* ctx.expectEqual(
+        "every sidebar row publishes the title it paints",
+        Arr.length(
+          Arr.filter(scenarios, (scenario) =>
+            Arr.contains(buttons, scenario.title),
+          ),
+        ),
+        Arr.length(scenarios),
+      );
+      yield* ctx.expectEqual(
+        "the palette switch publishes a name for every button",
+        Arr.length(
+          Arr.filter(paletteIds, (palette) =>
+            Arr.contains(buttons, `${palette} palette`),
+          ),
+        ),
+        Arr.length(paletteIds),
       );
 
       const listed = yield* ctx.expectSome(

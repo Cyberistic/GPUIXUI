@@ -2790,7 +2790,29 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 182/182
+`[x]` `[██████████]` 183/183
+
+`[x]` Publish a **name for every control in the shell's accessibility tree** —
+      the runtime builds a node's name from `aria-label` alone
+      (`packages/native/src/accessibility.rs`: role and `aria-*` are the only
+      fields it reads), while GPUix publishes a `<text>`'s run as `aria.value` on
+      a node of its own, so a `role="button"` that paints its title in a child
+      `<text>` reached the tree as a **nameless button**. Every one of the
+      sidebar's 48 rows and all three palette buttons were that button, on the
+      one surface the docs send a reader to. The rows now publish
+      `aria-label={scenario.title}` and the palette buttons
+      `` `${palette} palette` `` (the visible word is in the name, so the WCAG
+      label-in-name rule holds). `shell-selection` reads the tree the renderer
+      paints and requires every registry title and every palette name to be a
+      `Button` node's label (**75 checks**, green on 0.11.0, ~1.9 s), and
+      `shell-selection.test.ts` gained the premise (8 cases) so a host with no
+      binding still fails when a name is dropped. Directions measured: with both
+      `aria-label`s removed the probe fails `every sidebar row publishes the
+      title it paints` (`expected 48, got 0`, exit `1`); restored, the playground
+      suite is 124 files / 1 236 tests green and `check-types` clean. Docs:
+      `apps/playground/README.md` §The shell's selection (the new row, the count
+      and the rule) and the shell row of §What makes these measurements
+      trustworthy.
 
 `[x]` Answer **Space by the name the runtime sends** — `isActivationKey` (the
       shell's one activation rule, used by every sidebar row, the palette switch

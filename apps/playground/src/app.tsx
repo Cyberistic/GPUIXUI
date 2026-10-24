@@ -52,6 +52,10 @@ const PaletteSwitch = ({
             testId={`theme-mode-${palette}`}
             tabIndex={0}
             role="button"
+            // The visible text is not a name: the runtime reads a node's label
+            // from `aria-label` only, so a button whose name it cannot read is
+            // announced as "button" and nothing else.
+            aria-label={`${palette} palette`}
             onClick={() => onSelect(palette)}
             onKeyDown={(event) => {
               if (!isActivationKey(event.key)) return;
@@ -149,6 +153,10 @@ const ScenarioList = ({
           }}
           tabIndex={selected === scenario.id ? 0 : -1}
           role="button"
+          // A row paints its title in a child `<text>`, and the runtime builds a
+          // node's name from `aria-label` alone — without this every row is an
+          // unnamed button in the accessibility tree.
+          aria-label={scenario.title}
           onClick={() => onSelect(scenario.id)}
           onKeyDown={(event) => {
             const next = sidebarCursor(event.key, cursor, list.length);
