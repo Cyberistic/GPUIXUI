@@ -38,6 +38,15 @@
  * {@link fieldValueOf}: one tree shape serves the builder, a saved query and
  * the table.
  *
+ * A **page** is the last view over that set: the filtered and sorted rows are
+ * sliced by the core's pagination model, so `rows`/`keys` are the page while
+ * `kept` and the selection are the whole kept set. A filter, a search or a new
+ * sort returns to the first page (the rows the reader was on are not where the
+ * index says they are), a page index past a narrowed set clamps to its last
+ * page, and a page size change keeps the reader's top row in view. The chosen
+ * ids are not per page, so a record chosen on page one is still chosen — and
+ * still saved — while page two paints.
+ *
  * ```tsx
  * const columns = [
  *   { id: "name", label: "Name", width: 260, valueOf: (row) => row.name },
@@ -75,7 +84,11 @@ import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import { useCallback, useMemo, useState } from "react";
-import type { RowData, SortingState } from "@tanstack/table-core";
+import type {
+  PaginationState,
+  RowData,
+  SortingState,
+} from "@tanstack/table-core";
 import {
   constructGrid,
   gridConfig,
@@ -87,6 +100,12 @@ import {
 } from "./grid-core.js";
 import { filterByTree, type FilterTree } from "./surfaces/logic.js";
 import { listOf } from "./internal/list.js";
+import {
+  clampPageIndex,
+  pageCountOf,
+  pageSizeOf,
+  withPageSize,
+} from "./pagination/logic.js";
 import {
   allSelected,
   clearSelection,
@@ -147,7 +166,8 @@ export interface UseTableOptions<Row extends RowData> {
    */
   readonly filterTree?: FilterTree;
   /**
-   * A state a store handed back — sorting, query and chosen ids in one record.
+   * A state a store handed back — sorting, query, chosen ids and page in one
+   * record.
    *
    * Read **once, at mount**, through `readGridState`, the seam a store-driven
    * grid already uses: a saved workspace reopens a grid sorted, narrowed and
@@ -163,13 +183,34 @@ export interface UseTableOptions<Row extends RowData> {
   readonly stored?: unknown;
   /** Start sorted, for a table whose natural order is not the source order. */
   readonly initialSort?: SortState;
+  /**
+   * How many rows one page paints.
+   *
+   * Omit it for **one page holding every filtered row** — the table earlier
+   * releases shipped, and what `stored` names when the saved grid had no page
+   * size. A size the grid cannot lay out (`NaN`, zero, a negative) is that one
+   * page too, because a page of no row paints nothing.
+   *
+   * The page a reader is on is controller state, not an option: `pageIndex`,
+   * `pageCount`, `setPageIndex`, `setPageSize`, `nextPage` and `previousPage`
+   * are the API, and `save()` writes the page so a workspace reopens on it.
+   */
+  readonly pageSize?: number;
 }
 
 /** Everything a table's parts read from {@link useTable}. */
 export interface TableController<Row extends RowData> {
-  /** The painted rows, narrowed, then sorted by every field in the order. */
+  /**
+   * The painted rows: narrowed by the tree and the query, sorted by every field
+   * in the order, and then sliced to the page.
+   */
   readonly rows: ReadonlyArray<Row>;
-  /** The visible keys, in paint order — what a Shift range spans. */
+  /**
+   * The visible keys, in paint order — what a Shift range spans.
+   *
+   * It is the **page**, not the kept set: a range extends over the records the
+   * reader can see, and a page turn paints a different order.
+   */
   readonly keys: ReadonlyArray<string>;
   /** The primary sort, for a single-sort header or a readout. */
   readonly sort: Option.Option<SortState>;
@@ -184,15 +225,44 @@ export interface TableController<Row extends RowData> {
   readonly sortOrder: SortOrder;
   readonly query: string;
   readonly selection: SelectionState;
-  /** The rows the tree and the current query keep, before sorting. */
+  /** The rows the tree and the current query keep, before sorting or a page. */
   readonly kept: ReadonlyArray<Row>;
-  /** How many records are chosen. */
+  /** How many kept records are chosen — the selection is not per page. */
   readonly selectedCount: number;
-  /** Every visible record is chosen — the header checkbox's checked state. */
+  /** Every record on the painted page is chosen — the header checkbox's state. */
   readonly allSelected: boolean;
-  /** Some visible records are chosen — the header checkbox's mixed state. */
+  /** Some record on the painted page is chosen — the header checkbox's mixed state. */
   readonly someSelected: boolean;
-  /** The chosen record, when one is chosen: what a focus-follow effect reads. */
+  /**
+   * The page the grid paints, clamped to the pages the kept set holds.
+   *
+   * It is a **view**: a saved index past the end of a narrowed set clamps to
+   * the last page, so the grid paints rows instead of a blank page. The stored
+   * index is not rewritten, the same rule the selection's retention follows.
+   */
+  readonly pageIndex: number;
+  /**
+   * How many pages the kept set holds.
+   *
+   * Never zero: an empty grid paints one page, which its empty state sits on.
+   */
+  readonly pageCount: number;
+  /** How many rows one page paints; every row is `Infinity`. */
+  readonly pageSize: number;
+  /** Move to a page; an index outside the pages the set holds clamps. */
+  readonly setPageIndex: (pageIndex: number) => void;
+  /** Change how many rows a page paints, keeping the top row in view. */
+  readonly setPageSize: (pageSize: number) => void;
+  /** Move to the next page, when the set holds one. */
+  readonly nextPage: () => void;
+  /** Move to the previous page, when the grid is past the first. */
+  readonly previousPage: () => void;
+  /**
+   * The chosen record **on the painted page**: what a focus-follow effect reads.
+   *
+   * A record chosen on another page is still in `selection` and `save()`, but
+   * no row paints it, so focusing it would target nothing.
+   */
   readonly activeKey: Option.Option<string>;
   /**
    * The record that owns the roving tab stop: the chosen one, or the first
@@ -207,14 +277,15 @@ export interface TableController<Row extends RowData> {
   /** The core table the controller runs on, for a consumer that needs more. */
   readonly table: GridTable<Row>;
   /**
-   * The record to keep: the sorting, the query and the chosen ids.
+   * The record to keep: the sorting, the query, the chosen ids and the page.
    *
    * The chosen ids are the **core's**, not the retained view — a filter hides a
    * chosen record from the paint but does not clear it — so a grid saved while
    * narrowed restores that record when the query widens again. The sort is the
    * order the grid runs, so an entry naming a column this release dropped is
-   * not written back. The range anchor is a gesture cursor, not state: it
-   * starts fresh on the next press.
+   * not written back. The page is the one the grid paints, clamped, so a
+   * workspace reopens on a page the restored set still holds. The range anchor
+   * is a gesture cursor, not state: it starts fresh on the next press.
    */
   readonly save: () => GridConfig;
   readonly setSort: (next: Option.Option<SortState>) => void;
@@ -330,10 +401,12 @@ export const useTable = <Row extends RowData>({
   filterTree,
   stored,
   initialSort,
+  pageSize,
 }: UseTableOptions<Row>): TableController<Row> => {
   // The record a store handed back, read once through the seam a store-driven
   // grid uses. Each starting slice is the saved one; an unreadable record reads
-  // as no sort, no query and no chosen ids (`readGridState`).
+  // as no sort, no query, no chosen ids and the first page of every row
+  // (`readGridState`).
   const start = useMemo(() => readGridState(stored), [stored]);
   const [sorting, setSorting] = useState<SortingState>(() =>
     openingSorting(start.sorting, Option.fromNullishOr(initialSort)),
@@ -342,6 +415,19 @@ export const useTable = <Row extends RowData>({
   const [rowSelection, setRowSelection] = useState<
     Readonly<Record<string, true>>
   >(start.rowSelection);
+  /**
+   * The page the grid paints.
+   *
+   * The caller's `pageSize` is the layout; a saved record's page size is the
+   * reader's own choice when the caller names none. The saved index is kept as
+   * written and clamped at paint time, so a narrowed set paints its last page
+   * without rewriting where the reader was.
+   */
+  const [pagination, setPagination] = useState<PaginationState>(() => ({
+    pageIndex: start.pagination.pageIndex,
+    pageSize:
+      pageSize === undefined ? start.pagination.pageSize : pageSizeOf(pageSize),
+  }));
   /**
    * The record a Shift range extends from.
    *
@@ -369,20 +455,86 @@ export const useTable = <Row extends RowData>({
     [records, filterTree, columns],
   );
 
-  const table = useMemo(
+  // A page belongs to the set it was measured against: a narrowing or a
+  // reorder moves the reader to the first page, because the rows they were
+  // reading are not where the page index says they are. The core's own
+  // auto-reset is off (`constructGrid`), so this is the one place a filter or a
+  // sort changes the page — in the gesture, not inside a row model.
+  const firstPage = useCallback(
     () =>
+      setPagination((current) =>
+        current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+      ),
+    [],
+  );
+  const writeQuery = useCallback(
+    (next: string) => {
+      setQuery(next);
+      firstPage();
+    },
+    [firstPage],
+  );
+  const writeSorting = useCallback(
+    (next: SortingState) => {
+      setSorting(next);
+      firstPage();
+    },
+    [firstPage],
+  );
+
+  /**
+   * The table, and the page it can paint.
+   *
+   * The core slices the filtered and sorted rows by the index it is given, so a
+   * stored index past the end would paint no row at all. The pre-paginated model
+   * knows the set's size, so the index is clamped against it and the table is
+   * rebuilt at that page — once, on a stale record, not per frame.
+   */
+  const built = useMemo(() => {
+    const build = (pageIndex: number) =>
       constructGrid({
         rows: source,
         keyOf,
         columns,
         hiddenColumns,
-        state: { sorting, globalFilter: query, rowSelection },
-        onSortingChange: setSorting,
-        onGlobalFilterChange: setQuery,
+        state: {
+          sorting,
+          globalFilter: query,
+          rowSelection,
+          pagination: { pageIndex, pageSize: pagination.pageSize },
+        },
+        onSortingChange: writeSorting,
+        onGlobalFilterChange: writeQuery,
         onRowSelectionChange: setRowSelection,
-      }),
-    [source, keyOf, columns, hiddenColumns, sorting, query, rowSelection],
-  );
+        onPaginationChange: setPagination,
+      });
+    const first = build(pagination.pageIndex);
+    const rowCount = first.getPrePaginatedRowModel().rows.length;
+    const pageIndex = clampPageIndex(
+      pagination.pageIndex,
+      rowCount,
+      pagination.pageSize,
+    );
+    return {
+      table: pageIndex === pagination.pageIndex ? first : build(pageIndex),
+      pageIndex,
+      pageCount: pageCountOf(rowCount, pagination.pageSize),
+      rowCount,
+    };
+  }, [
+    source,
+    keyOf,
+    columns,
+    hiddenColumns,
+    sorting,
+    query,
+    rowSelection,
+    pagination.pageIndex,
+    pagination.pageSize,
+    writeSorting,
+    writeQuery,
+  ]);
+  const table = built.table;
 
   const painted = table.getRowModel().rows;
   /**
@@ -402,9 +554,20 @@ export const useTable = <Row extends RowData>({
     () => Arr.map(table.getFilteredRowModel().rows, (row) => row.original),
     [table],
   );
+  /**
+   * Every record the query keeps, in the order the grid runs.
+   *
+   * A page is a view of this set, not a second filter: a record chosen on page
+   * one is still chosen while page two paints, so retention reads these keys
+   * rather than the page's. The header checkbox reads the page (`keys`).
+   */
+  const keptKeys = useMemo(
+    () => Arr.map(table.getPrePaginatedRowModel().rows, (row) => row.id),
+    [table],
+  );
 
   /**
-   * The chosen records, before the visible set releases what it hides.
+   * The chosen records, before the kept set releases what it hides.
    *
    * Retention is a **view**, not a write: the ids stay in the core's state, so
    * a query that widens back to a released record paints it chosen again.
@@ -417,12 +580,12 @@ export const useTable = <Row extends RowData>({
     [table, anchor],
   );
 
-  // A narrowed set releases the records it no longer shows **during render**,
+  // A narrowed set releases the records it no longer keeps **during render**,
   // not in an effect: the first frame after a query change already paints the
   // released selection, and the next press starts from it.
   const selection = useMemo(
-    () => retainSelection(chosen, keys),
-    [chosen, keys],
+    () => retainSelection(chosen, keptKeys),
+    [chosen, keptKeys],
   );
 
   const write = useCallback((next: SelectionState) => {
@@ -432,8 +595,32 @@ export const useTable = <Row extends RowData>({
 
   const sortOrder = sortOrderOf(order);
   const writeSort = useCallback(
-    (next: SortOrder) => setSorting(sortingOfOrder(next)),
-    [],
+    (next: SortOrder) => writeSorting(sortingOfOrder(next)),
+    [writeSorting],
+  );
+  const stepPage = useCallback(
+    (delta: number) =>
+      setPagination((current) => ({
+        ...current,
+        pageIndex: clampPageIndex(
+          current.pageIndex + delta,
+          built.rowCount,
+          current.pageSize,
+        ),
+      })),
+    [built.rowCount],
+  );
+  /**
+   * The chosen record the painted page holds.
+   *
+   * A range or a page change can leave the core's chosen record off this page;
+   * it stays chosen (and saved), but nothing paints it, so a focus-follow effect
+   * must not be handed it.
+   */
+  const activeKey = useMemo(
+    () =>
+      Option.filter(currentKey(selection), (key) => Arr.contains(keys, key)),
+    [selection, keys],
   );
 
   return {
@@ -448,11 +635,31 @@ export const useTable = <Row extends RowData>({
     selectedCount: selectionSize(selection),
     allSelected: allSelected(selection, keys),
     someSelected: someSelected(selection, keys),
-    activeKey: currentKey(selection),
-    tabStop: Option.orElse(currentKey(selection), () => Arr.head(keys)),
+    pageIndex: built.pageIndex,
+    pageCount: built.pageCount,
+    pageSize: pagination.pageSize,
+    setPageIndex: (pageIndex) =>
+      setPagination((current) => ({
+        ...current,
+        pageIndex: clampPageIndex(pageIndex, built.rowCount, current.pageSize),
+      })),
+    setPageSize: (next) =>
+      setPagination((current) => withPageSize(current, next)),
+    nextPage: () => stepPage(1),
+    previousPage: () => stepPage(-1),
+    activeKey,
+    tabStop: Option.orElse(activeKey, () => Arr.head(keys)),
     save: () =>
-      gridConfig({ sorting: order, globalFilter: query, rowSelection }),
-    setSort: (next) => setSorting(sortingOf(next)),
+      gridConfig({
+        sorting: order,
+        globalFilter: query,
+        rowSelection,
+        pagination: {
+          pageIndex: built.pageIndex,
+          pageSize: pagination.pageSize,
+        },
+      }),
+    setSort: (next) => writeSorting(sortingOf(next)),
     toggleSort: (field, additive = false) =>
       writeSort(pressSortOrder(sortOrder, field, "asc", additive)),
     pressSort: (field, initialDirection, modifiers) =>
@@ -464,7 +671,7 @@ export const useTable = <Row extends RowData>({
           modifiers?.shift === true,
         ),
       ),
-    setQuery,
+    setQuery: writeQuery,
     press: (key, modifiers) =>
       write(pressSelection(chosen, key, pressMode(modifiers), keys)),
     pressRow: (row, modifiers) =>

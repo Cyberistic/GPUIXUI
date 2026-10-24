@@ -24,15 +24,18 @@ import {
   columnFilteringFeature,
   constructTable,
   createFilteredRowModel,
+  createPaginatedRowModel,
   createSortedRowModel,
   filterFn_includesString,
   functionalUpdate,
   globalFilteringFeature,
+  rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
   sortFn_basic,
   tableFeatures,
   type ColumnDef,
+  type PaginationState,
   type RowData,
   type SortingState,
   type Table,
@@ -46,23 +49,29 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { listOf } from "./internal/list.js";
+import { readPagination } from "./pagination/logic.js";
 
 /**
  * The features every grid registers.
  *
  * A stock bundle would be shorter and would carry every feature's cost into
- * every consumer; these five are the ones the controller drives. Filtering is
+ * every consumer; these six are the ones the controller drives. Filtering is
  * registered for its **global** filter (the field above the rows), and its
  * `columnFilteringFeature` prerequisite carries the filter function registry.
+ * Pagination is registered so a page is the core's own slice of the filtered
+ * and sorted rows — the controller reads the pre-paginated model for the
+ * selection and the painted page for everything else.
  */
 export const gridFeatures = tableFeatures({
   coreReactivityFeature: storeReactivityBindings(),
   columnFilteringFeature,
   globalFilteringFeature,
+  rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
   filteredRowModel: createFilteredRowModel(),
   sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
   filterFns: { includesString: filterFn_includesString },
   sortFns: { basic: sortFn_basic },
 });
@@ -81,7 +90,20 @@ export interface GridState {
   readonly sorting: SortingState;
   readonly globalFilter: string;
   readonly rowSelection: Readonly<Record<string, true>>;
+  /**
+   * The page the grid paints — a slice of the filtered, sorted rows.
+   *
+   * Omit it for one page holding every row, which is the table earlier
+   * releases shipped. A record read from a store always carries it
+   * ({@link readGridState}).
+   */
+  readonly pagination?: PaginationState;
 }
+
+/** The state {@link readGridState} answers: every slice is present. */
+export type RestoredGridState = GridState & {
+  readonly pagination: PaginationState;
+};
 
 /** A sorting entry a store wrote: a column id, and its direction when it had one. */
 class StoredSort extends Schema.Class<StoredSort>("StoredSort")({
@@ -141,29 +163,31 @@ const storedChosen = (stored: unknown): Readonly<Record<string, true>> =>
  *
  * `constructGrid` is the seam an Effect- or store-driven grid builds its table
  * with, so the state is **stored data** as often as it is React state: a saved
- * workspace restores its sorting, its query and its chosen ids in one record,
- * and JSON writes a field that was never set as `null`. Measured before this
- * read: `globalFilter: null` threw `Cannot read properties of null (reading
- * 'trim')` out of the first build and `sorting: null` threw `state.sorting is
- * not iterable`, while an entry that named no column threw
+ * workspace restores its sorting, its query, its chosen ids and the page it was
+ * on in one record, and JSON writes a field that was never set as `null`.
+ * Measured before this read: `globalFilter: null` threw `Cannot read properties
+ * of null (reading 'trim')` out of the first build and `sorting: null` threw
+ * `state.sorting is not iterable`, while an entry that named no column threw
  * `Cannot read properties of null (reading 'id')` — a grid that remembered its
  * state could not reopen at all.
  *
  * Each slice is read, not dereferenced: a sorting list that is not a list is
  * **no sort** (the source order) and an entry that names no column is dropped,
- * a query that is not text is **no query** (nothing narrowed the set), and a
- * chosen set keeps only the ids the store set to `true`. A `hiddenColumns`
- * list follows the same rule: one that is not a list hides nothing. A sorting
- * entry that names a column **this grid does not hold** is dropped when the
- * table is built ({@link retainSorting}), because only the column list knows
- * which ids still exist.
+ * a query that is not text is **no query** (nothing narrowed the set), a chosen
+ * set keeps only the ids the store set to `true`, and a page record this release
+ * cannot read is the first page of every row ({@link readPagination}). A
+ * `hiddenColumns` list follows the same rule: one that is not a list hides
+ * nothing. A sorting entry that names a column **this grid does not hold** is
+ * dropped when the table is built ({@link retainSorting}), because only the
+ * column list knows which ids still exist.
  */
-export const readGridState = (stored: unknown): GridState => {
+export const readGridState = (stored: unknown): RestoredGridState => {
   const record = storedRecord(stored);
   return {
     sorting: storedSorting(storedSlice(record, "sorting")),
     globalFilter: storedQuery(storedSlice(record, "globalFilter")),
     rowSelection: storedChosen(storedSlice(record, "rowSelection")),
+    pagination: readPagination(storedSlice(record, "pagination")),
   };
 };
 
@@ -191,19 +215,22 @@ export const retainSorting = <Row>(
   );
 
 /**
- * The state to persist: the sorting, the query and the chosen ids.
+ * The state to persist: the sorting, the query, the chosen ids and the page.
  *
  * The inverse of {@link readGridState}, and the shape a store keeps beside
  * `columnConfig`'s: a workspace writes it, hands it back as `useTable`'s
- * `stored` or `constructGrid`'s `state`, and the grid reopens as it was left.
- * The record is written from the reader's own normalisation and holds copies, so
- * a store can serialise it without aliasing the arrays the controller paints
+ * `stored` or `constructGrid`'s `state`, and the grid reopens as it was left —
+ * on the page the reader was reading. A size of every row is `Infinity`, which
+ * JSON writes as `null` and {@link readPagination} reads back as every row. The
+ * record is written from the reader's own normalisation and holds copies, so a
+ * store can serialise it without aliasing the arrays the controller paints
  * from.
  */
 export interface GridConfig {
   readonly sorting: SortingState;
   readonly globalFilter: string;
   readonly rowSelection: Readonly<Record<string, true>>;
+  readonly pagination: PaginationState;
 }
 
 /** Write the record a store keeps for one grid. */
@@ -216,6 +243,10 @@ export const gridConfig = (state: GridState): GridConfig => {
     })),
     globalFilter: current.globalFilter,
     rowSelection: R.map(current.rowSelection, () => true as const),
+    pagination: {
+      pageIndex: current.pagination.pageIndex,
+      pageSize: current.pagination.pageSize,
+    },
   };
 };
 
@@ -224,6 +255,14 @@ export interface GridChange {
   readonly onSortingChange: (next: SortingState) => void;
   readonly onGlobalFilterChange: (next: string) => void;
   readonly onRowSelectionChange: (next: Readonly<Record<string, true>>) => void;
+  /**
+   * Report a page the core's own pagination API produced.
+   *
+   * Omit it for a grid that does not hold a page: the core's state is
+   * controlled, so `setPageIndex` on the instance reports here and nowhere
+   * else. {@link useTable} wires it; a store-driven grid wires its own store.
+   */
+  readonly onPaginationChange?: (next: PaginationState) => void;
 }
 
 /** What {@link constructGrid} needs. */
@@ -293,6 +332,11 @@ const columnDefs = <Row extends RowData>(
  * narrows and sorts the set instead of taking the renderer down; the callbacks'
  * own fallback is that same read, so an updater never receives a slice the core
  * could not read.
+ *
+ * The page is the state's own slice: `autoResetPageIndex` is off, because the
+ * core's automatic reset would write the controller's state from inside a row
+ * model — a React update during render — and a grid that wants a narrowed set
+ * to reopen on its first page does that in the gesture that narrowed it.
  */
 export const constructGrid = <Row extends RowData>({
   rows,
@@ -303,6 +347,7 @@ export const constructGrid = <Row extends RowData>({
   onSortingChange,
   onGlobalFilterChange,
   onRowSelectionChange,
+  onPaginationChange,
 }: ConstructGridOptions<Row>): GridTable<Row> => {
   const current = readGridState(state);
   return constructTable({
@@ -322,7 +367,9 @@ export const constructGrid = <Row extends RowData>({
       sorting: [...retainSorting(current.sorting, columns)],
       globalFilter: current.globalFilter.trim(),
       rowSelection: current.rowSelection,
+      pagination: current.pagination,
     },
+    autoResetPageIndex: false,
     globalFilterFn: "includesString",
     onSortingChange: (updater) =>
       onSortingChange(functionalUpdate(updater, current.sorting)),
@@ -330,5 +377,7 @@ export const constructGrid = <Row extends RowData>({
       onGlobalFilterChange(functionalUpdate(updater, current.globalFilter)),
     onRowSelectionChange: (updater) =>
       onRowSelectionChange(functionalUpdate(updater, current.rowSelection)),
+    onPaginationChange: (updater) =>
+      onPaginationChange?.(functionalUpdate(updater, current.pagination)),
   });
 };

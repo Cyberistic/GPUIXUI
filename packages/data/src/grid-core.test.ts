@@ -31,6 +31,7 @@ import {
   type GridColumn,
   type GridTable,
 } from "./grid-core.js";
+import { ALL_ROWS } from "./pagination/logic.js";
 
 interface Row {
   readonly id: string;
@@ -56,6 +57,7 @@ interface GridState {
   readonly query?: string;
   readonly chosen?: Readonly<Record<string, true>>;
   readonly hidden?: ReadonlyArray<string>;
+  readonly page?: { readonly pageIndex: number; readonly pageSize: number };
 }
 
 const grid = ({
@@ -63,13 +65,19 @@ const grid = ({
   query = "",
   chosen = {},
   hidden,
+  page,
 }: GridState = {}) =>
   constructGrid({
     rows,
     keyOf: (row) => row.id,
     columns,
     hiddenColumns: hidden,
-    state: { sorting, globalFilter: query, rowSelection: chosen },
+    state: {
+      sorting,
+      globalFilter: query,
+      rowSelection: chosen,
+      ...(page === undefined ? {} : { pagination: page }),
+    },
     onSortingChange: () => {},
     onGlobalFilterChange: () => {},
     onRowSelectionChange: () => {},
@@ -160,6 +168,64 @@ describe("the filtered row model", () => {
   });
 });
 
+describe("the paginated row model", () => {
+  const page = (
+    pageIndex: number,
+    pageSize: number,
+  ): { readonly pageIndex: number; readonly pageSize: number } => ({
+    pageIndex,
+    pageSize,
+  });
+
+  it("paints one page of the filtered and sorted set", () => {
+    // Sorted by size: r2 (20), r3 (30), r1 (100). Two a page: page 1 is r3, r1.
+    const sorting = [{ id: "size", desc: false }];
+    expect(ids({ sorting, page: page(0, 2) })).toEqual(["r2", "r3"]);
+    expect(ids({ sorting, page: page(1, 2) })).toEqual(["r1"]);
+  });
+
+  it("slices the order a multi-entry sort produces", () => {
+    // The sort decides the whole set; the page only slices it, so page two of
+    // an order cannot hold a record the order put on page one.
+    const order = [
+      { id: "status", desc: false },
+      { id: "size", desc: true },
+    ];
+    expect(ids({ sorting: order, page: page(0, 1) })).toEqual(["r3"]);
+    expect(ids({ sorting: order, page: page(1, 1) })).toEqual(["r1"]);
+    expect(ids({ sorting: order, page: page(2, 1) })).toEqual(["r2"]);
+  });
+
+  it("pages the rows the query kept, not the source", () => {
+    const query = "auth";
+    expect(ids({ query, page: page(0, 1) })).toEqual(["r3"]);
+    expect(ids({ query, page: page(1, 1) })).toEqual(["r1"]);
+    expect(ids({ query, page: page(2, 1) })).toEqual([]);
+  });
+
+  it("paints every row when the size is every row", () => {
+    expect(ids()).toEqual(["r3", "r1", "r2"]);
+    expect(ids({ page: page(0, ALL_ROWS) })).toEqual(["r3", "r1", "r2"]);
+  });
+
+  it("paints no row for a page past the set", () => {
+    // The premise the controller's clamp rests on: the core slices by the index
+    // it is given, so nothing holds a stored index that outlived its set.
+    expect(ids({ page: page(4, 2) })).toEqual([]);
+  });
+
+  it("keeps the whole set before the page, so selection can read it", () => {
+    // Retention reads the pre-paginated model: a chosen record on another page
+    // is not released by a page turn, only by a filter that hides it.
+    const paged = grid({ page: page(0, 1), chosen: { r1: true } });
+    expect(
+      Arr.map(paged.getPrePaginatedRowModel().rows, (row) => row.id),
+    ).toEqual(["r3", "r1", "r2"]);
+    expect(Arr.map(paged.getRowModel().rows, (row) => row.id)).toEqual(["r3"]);
+    expect(paged.getSelectedRowIds()).toEqual(["r1"]);
+  });
+});
+
 describe("a hidden column", () => {
   it("leaves the search, so no record is kept by text no cell shows", () => {
     expect(ids({ query: "modified", hidden: ["status"] })).toEqual([]);
@@ -222,7 +288,12 @@ describe("a grid state a store restored", () => {
   });
 
   it("reads a state that is not a record as no state at all", () => {
-    const emptyState = { sorting: [], globalFilter: "", rowSelection: {} };
+    const emptyState = {
+      sorting: [],
+      globalFilter: "",
+      rowSelection: {},
+      pagination: { pageIndex: 0, pageSize: ALL_ROWS },
+    };
     expect(
       Arr.map([null, undefined, 42, "sorting"], (stored) =>
         readGridState(stored),
@@ -333,11 +404,9 @@ describe("a grid handed a row list a store wrote as absent", () => {
   });
 
   it("still builds the rows a readable list holds", () => {
-    expect(Arr.map(gridOver(rows).getRowModel().rows, (row) => row.id)).toEqual([
-      "r3",
-      "r1",
-      "r2",
-    ]);
+    expect(Arr.map(gridOver(rows).getRowModel().rows, (row) => row.id)).toEqual(
+      ["r3", "r1", "r2"],
+    );
   });
 });
 
@@ -356,7 +425,20 @@ describe("the record a grid writes to a store", () => {
       sorting: [],
       globalFilter: "",
       rowSelection: {},
+      pagination: { pageIndex: 0, pageSize: ALL_ROWS },
     });
+  });
+
+  it("reads back the page it wrote", () => {
+    const state = readGridState({
+      sorting: [],
+      globalFilter: "",
+      rowSelection: {},
+      pagination: { pageIndex: 1, pageSize: 2 },
+    });
+    const saved = gridConfig(state);
+    expect(saved.pagination).toEqual({ pageIndex: 1, pageSize: 2 });
+    expect(readGridState(saved)).toEqual(state);
   });
 
   it("writes lists of its own, so a store never holds the controller's", () => {

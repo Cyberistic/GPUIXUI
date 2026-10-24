@@ -95,6 +95,72 @@ is the same state as a window with no bound.
 In a 320px pane both paint the window they paint at `height={320}`: 8 table rows
 and 10 tree rows in `behaviour/paintable-height.test.tsx`.
 
+## Paging versus windowing
+
+The two bound paint differently, and a grid usually wants one of them:
+
+- a **window** mounts the rows near the viewport and follows the scroll — the
+  reader can reach any row, and the set is never sliced;
+- a **page** slices the filtered and sorted set at a page size and paints one
+  slice — the reader moves the slice, and every row on it is mounted.
+
+Paging is `useTable`'s, and it runs on the same `@tanstack/table-core`
+pagination row model the sort and the filter do, so the page is a slice of what
+the core kept instead of a second filter:
+
+| Member | Type | Default | Consequence |
+| ------ | ---- | ------- | ----------- |
+| `pageSize` (option) | `number` | `ALL_ROWS` | how many rows one page paints; a value the grid cannot lay out is every row |
+| `pageIndex` | `number` | `0` | the page the grid paints, **clamped** to the pages the kept set holds |
+| `pageCount` | `number` | — | how many pages the kept set holds; never zero, so an empty grid is one page |
+| `pageSize` | `number` | `ALL_ROWS` | the size the grid runs |
+| `setPageIndex` | `(pageIndex: number) => void` | — | move to a page, clamped |
+| `setPageSize` | `(pageSize: number) => void` | — | change the size, keeping the reader's top row in view |
+| `nextPage` / `previousPage` | `() => void` | — | move one page, clamped at the ends |
+| `rows` / `keys` | the page | — | the painted slice, and the order a Shift range spans |
+| `kept` | `ReadonlyArray<Row>` | — | the rows the tree and the query keep, before sorting or a page |
+| `selectedCount` | `number` | — | chosen records in the **kept set**, not on the page |
+| `allSelected` / `someSelected` | `boolean` | — | the header box's state over the **painted page** |
+
+Four rules are measured, not assumed:
+
+- **a filter, a search or a new sort returns to the first page** — the records
+  the reader was reading are not where the index says they are once the set
+  changes (`setQuery`, `pressSort`, `toggleSort` and `setSort` all reset it);
+- **a page index past the set clamps to its last page** — a saved workspace
+  reopens with the page it was on, and a set that has since narrowed paints its
+  last page instead of a blank one past the end;
+- **a page size change keeps the reader's top row in view**, so doubling the
+  size shows the same records from the same first row;
+- **the selection is the kept set's, not the page's** — a record chosen on page
+  one is still chosen (and still saved) while page two paints, while the
+  header's box covers only what it paints.
+
+The page is part of the record a grid saves: `save()` writes `pagination`, and
+`readGridState(stored)` reads it back, so a workspace reopens on the page the
+reader left. `pageSize` of every row is `Infinity`, which JSON writes as `null`
+and the reader takes as every row again. A store-driven grid builds the core
+itself and passes `onPaginationChange`; `ALL_ROWS`, `DEFAULT_PAGINATION`,
+`pageIndexOf`, `pageSizeOf`, `pageCountOf`, `clampPageIndex`, `withPageSize` and
+`readPagination` are exported for the arithmetic it needs.
+
+```tsx
+const table = useTable({ rows, keyOf: (row) => row.id, columns, pageSize: 20 });
+
+<Button
+  disabled={table.pageIndex >= table.pageCount - 1}
+  onActivate={table.nextPage}
+>
+  Next
+</Button>;
+// `Page ${table.pageIndex + 1} of ${table.pageCount}` · `${table.rows.length} rows`
+```
+
+`pagination/logic.test.ts` holds the arithmetic, `behaviour/table-pagination`
+the page the shipped controller paints, and `behaviour/pagination-example` the
+screen in `examples/table-pagination.example.tsx`. A grid that must never slice
+its set uses the windowed surfaces above instead.
+
 ## Limitations
 
 - One row height: the windowed mode positions rows from `estimatedItemHeight`.

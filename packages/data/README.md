@@ -1,15 +1,15 @@
 # `@gpuixui/data`
 
 Data presentation rendered by GPUix through React — the table core, the
-sort/selection/filter controller it runs on, column configuration with resizing,
-the virtualized list over the runtime's own `<virtual-list>`, the virtualized
-table that composes it with a fixed header, the **tree** with its expansion and
-cursor model, the **windowed tree** that retains one window of a hierarchy, the
-**expandable table row** that opens a detail panel under itself, the
-**charts** (bar, stacked, line, donut and sparkline, one tinted `<svg>` mask per
-series), and the **data surfaces** (a key-value list, a statistic card, a property
-panel, a toolbar and the advanced filter's predicate tree), and the **frozen
-column** — two panes mirrored into one scroll (`FrozenTable`).
+sort/selection/filter/**pagination** controller it runs on, column configuration
+with resizing, the virtualized list over the runtime's own `<virtual-list>`, the
+virtualized table that composes it with a fixed header, the **tree** with its
+expansion and cursor model, the **windowed tree** that retains one window of a
+hierarchy, the **expandable table row** that opens a detail panel under itself,
+the **charts** (bar, stacked, line, donut and sparkline, one tinted `<svg>` mask
+per series), and the **data surfaces** (a key-value list, a statistic card, a
+property panel, a toolbar and the advanced filter's predicate tree), and the
+**frozen column** — two panes mirrored into one scroll (`FrozenTable`).
 
 ## Why a package
 
@@ -35,6 +35,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | Chord presses arrive on `click` | `modifier-select-lifecycle` | Selection reads `event.modifiers.{shift,cmd,ctrl}`; the anchor rules are `selection/logic`. |
 | A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the core still holds the chosen ids, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
 | A sort is an order | `grid-core.test.ts`, `table.test.tsx` | A plain header press replaces the order; a Shift press appends the field as the next tie-break or flips it where it already sits. The core's sorted model walks every entry in turn, so records the primary sort ties are ordered by the second. |
+| A page is the last view over the kept set | `pagination/logic.test.ts`, `behaviour/table-pagination.test.tsx` | `useTable({ pageSize })` slices the filtered and sorted rows with the core's pagination model, so `rows`/`keys` are the page and `kept`/the selection are the whole kept set. **A filter, a search or a new sort returns to the first page** (the records the reader was on are not where the index says they are), **a saved index past the set clamps to its last page** (the core slices by the index it is given, so an unclamped one paints **no row** — measured `page 6/3 · 0 rows` before the clamp), **a page size change keeps the reader's top row in view**, and **a record chosen on one page stays chosen while another paints** — a retention that read the page instead of the kept set painted `0 selected` on page two for a record page one had chosen. The page is part of the saved record (`save()` writes `pagination`, `readGridState` reads it), and every row on one page is `ALL_ROWS`, which JSON writes as `null` and reads back as every row. |
 | A restored state is read, not dereferenced | `grid-core.test.ts`, `behaviour/table-restore.test.tsx` | `constructGrid` is the seam a store-driven grid builds with, so its state is stored data: JSON writes a slice that was never set as `null`. `readGridState` reads each slice — a sorting list that is not a list is **no sort** and an entry that names no column is dropped, a query that is not text is **no query**, a chosen set keeps only the ids set to `true`, and a `hiddenColumns` list that is not a list of text ids hides nothing. Measured before: `globalFilter: null` threw `Cannot read properties of null (reading 'trim')`, `sorting: null` threw `state.sorting is not iterable`, and a `[null]` entry threw `Cannot read properties of null (reading 'id')` — the grid could not reopen with the state it saved. **The shipped controller takes the same record**: `useTable({ stored })` reads it once at mount, so a workspace reopens its grid sorted, narrowed and chosen — `initialSort` is the sorting shorthand, used only when the record names no sorting (`behaviour/table-restore.test.tsx`). **The record is written too**: `gridConfig(state)` is the inverse of `readGridState` and `useTable().save()` composes it from the controller, so the round trip needs no caller-side copy of the wire shape. A saved sort naming a column this release dropped is not an order the grid counts (`retainSorting`), and the chosen ids are the core's — a record a filter hides is still saved, because retention is a view, not a write. |
 | A row list a store wrote is read as a list | `grid-core.test.ts`, `behaviour/stored-rows.test.tsx` | The rows are stored data as often as the state beside them: a saved workspace restores a grid's records from JSON, and an app hands `snapshot?.rows` while the snapshot is absent. `useTable` and `constructGrid` hand the core `listOf(rows)`, so one absence is **no rows** — the grid paints `0 rows` and its empty state, where the core's `data` access threw `Cannot read properties of null (reading 'length')` out of the first build — and a filter tree narrows that same list rather than the stored value. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
@@ -71,6 +72,7 @@ src/
               the header/row checkbox column
   filter/     TableFilterField (the field above the rows)
   grid-core   the @tanstack/table-core features, constructGrid and readGridState
+  pagination/ the page arithmetic: sizes, counts, the clamp and the saved record
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
               VirtualTable, VirtualTree, useVirtualRows and the window calculator
@@ -87,15 +89,21 @@ src/
 examples/     mountable screens (registered in examples/index.ts)
 ```
 
-The grid state is **`@tanstack/table-core`'s**: sorting, the filtered order and
-the chosen ids are row models over one data array (`grid-core.ts` registers the
-features and `constructGrid` builds a table from controlled state — React holds
-each slice, so no store subscription, adapter package or DOM is involved). The
-press cycle, the pointer gesture and the render-time release stay in this
-package: they are the rules a window measured, and the core has no opinion about
-them. The window arithmetic is **`@tanstack/virtual-core`'s** — this package
-hands it the scroll offset and the viewport and reads the range back — so the
-grid's windowing is the same one a browser grid uses, driven without a DOM.
+The grid state is **`@tanstack/table-core`'s**: sorting, the filtered order, the
+chosen ids and the page are row models over one data array (`grid-core.ts`
+registers the features and `constructGrid` builds a table from controlled state
+— React holds each slice, so no store subscription, adapter package or DOM is
+involved). The press cycle, the pointer gesture and the render-time release stay
+in this package: they are the rules a window measured, and the core has no
+opinion about them. The window arithmetic is **`@tanstack/virtual-core`'s** —
+this package hands it the scroll offset and the viewport and reads the range
+back — so the grid's windowing is the same one a browser grid uses, driven
+without a DOM. **Paging and windowing bound paint differently**: a page slices
+the filtered and sorted set (`useTable({ pageSize })`), a window mounts the rows
+near the viewport (`VirtualTable`, `VirtualTree`). The page is a view like the
+query: `useTable` clamps a saved index to the pages the kept set holds, returns
+to the first page when the set changes, and keeps the selection on the kept set
+rather than the page (`pagination/logic.ts`, `behaviour/table-pagination`).
 An application driving a grid from Effect or its own store builds the same table
 with `constructGrid`, whose `state` is read through `readGridState`: a restored
 record narrows and sorts the set instead of taking the build down, because a
@@ -305,14 +313,39 @@ restores the definitions rather than the saved set. The page is
 `docs/column-configuration.mdx` §Saving and restoring.
 
 A **grid's own state** is saved the same way: `table.save()` (or the pure
-`gridConfig(state)`) writes the sorting, the query and the chosen ids — the
-record `readGridState` reads and `useTable({ stored })` reopens. The order is the
-one the grid **runs**, so a saved sort naming a column this release dropped is
+`gridConfig(state)`) writes the sorting, the query, the chosen ids and the page —
+the record `readGridState` reads and `useTable({ stored })` reopens. The order is
+the one the grid **runs**, so a saved sort naming a column this release dropped is
 not counted or written back (`retainSorting`), and the ids are the core's rather
 than the retained view: a record a filter hides is saved, and paints chosen
 again when the query widens. The range anchor is a gesture cursor and starts
 fresh after a restore. The page is `docs/table-sorting.mdx` §Saving the state a
 grid holds.
+
+A grid **pages** with `useTable({ pageSize })`; omit it and one page holds every
+filtered row, which is what every earlier release painted. The page is a slice
+of the kept set, so `rows`/`keys` are the page while `kept` and the selection
+are the whole set:
+
+```tsx
+const table = useTable({ rows, keyOf: (row) => row.id, columns, pageSize: 20 });
+const page = `${table.pageIndex + 1} of ${table.pageCount}`;
+
+<Button
+  disabled={table.pageIndex >= table.pageCount - 1}
+  onActivate={table.nextPage}
+>
+  Next
+</Button>;
+```
+
+A filter, a search or a new sort returns to the first page; a saved page index
+past a narrowed set clamps to its last page; a page size change keeps the
+reader's top row in view; and a record chosen on one page stays chosen while
+another paints. The size of every row is `ALL_ROWS` (`Infinity`), which JSON
+writes as `null` and reads back as every row. §Paging versus windowing on
+`docs/virtualization.mdx` teaches the rules, and
+`examples/table-pagination.example.tsx` is the screen.
 
 A **pinned column** is `FrozenTable`, not a column attribute: the runtime paints
 no `position: "sticky"`, so the frozen column is its own vertical scroller beside
@@ -859,6 +892,7 @@ chosen. `paint-readers` scans the same sources for the colour group.
 | Table core, fixed header, empty and loading states | shipped, window-verified |
 | Sort reducer + `TableSortHeader` | shipped, window-verified |
 | Multi-column sort (Shift press, `sortOrder`, `pressSort`) | shipped, window-verified |
+| Pagination (`useTable({ pageSize })`, `pageIndex`/`pageCount`, the saved page) | shipped (`pagination/logic.test.ts`, `behaviour/table-pagination.test.tsx`, `behaviour/pagination-example.test.tsx`; no live probe yet — the shipped table scenario is unpaged) |
 | Selection reducer + row paint + keyboard walk | shipped (the walk is composed in the example; `tabStop` names the one row stop, and no roving-focus API exists in the runtime) |
 | Selection column (`TableSelectionHeader`, `TableSelectionCell`) | shipped, window-verified |
 | Filter reducer + `TableFilterField` | shipped, window-verified |

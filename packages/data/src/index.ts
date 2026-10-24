@@ -190,7 +190,19 @@ export type {
   GridConfig,
   GridState,
   GridTable,
+  RestoredGridState,
 } from "./grid-core.js";
+
+export {
+  ALL_ROWS,
+  clampPageIndex,
+  DEFAULT_PAGINATION,
+  pageCountOf,
+  pageIndexOf,
+  pageSizeOf,
+  readPagination,
+  withPageSize,
+} from "./pagination/logic.js";
 
 export { fieldValueOf, useTable } from "./use-table.js";
 export type { TableController, UseTableOptions } from "./use-table.js";

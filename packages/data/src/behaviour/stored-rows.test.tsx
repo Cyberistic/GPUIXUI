@@ -209,7 +209,8 @@ describe("a grid whose stored row list is absent", () => {
   });
 });
 
-describe("a tree whose stored row list is absent", () => {  // @ts-expect-error — a row list a store wrote as absent.
+describe("a tree whose stored row list is absent", () => {
+  // @ts-expect-error — a row list a store wrote as absent.
   const absentRows: ReadonlyArray<TreeRow<string>> = null;
 
   it("paints its frame instead of throwing", () => {
