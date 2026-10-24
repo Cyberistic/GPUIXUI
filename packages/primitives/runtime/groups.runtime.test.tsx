@@ -149,6 +149,34 @@ it("unchecks a checked checkbox group option when its own box is pressed", async
   expect(announced(runtime, "Xray")).toBe("unchecked");
 });
 
+it("paints a stored selection it cannot read as no selection, not a crash", async () => {
+  // The bug guarded: a selection is saved with the control, and a record
+  // written by an older release holds a map of chosen ids where this one writes
+  // a list. Read as the type promises, that object reached `Arr.contains`, whose
+  // iteration threw `self is not iterable` and took every row out of the render.
+  const runtime = await openWindow();
+  // @ts-expect-error — a selection a store wrote in an older shape.
+  const stored: ReadonlyArray<string> = { x: true };
+  runtime.render(
+    <Surface>
+      <CheckboxGroup
+        testId="checks"
+        label="Many"
+        value={stored}
+        options={[
+          { value: "x", label: "Xray" },
+          { value: "y", label: "Yankee" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(announced(runtime, "Xray")).toBe("unchecked");
+  runtime.clickElement(rowOf(runtime, "Xray"));
+  runtime.flush();
+  // Absence means uncontrolled, so the press still paints.
+  expect(announced(runtime, "Xray")).toBe("checked");
+});
+
 it("declares the keyboard ring on the option that holds native focus", async () => {
   // The bug this guards: the ring was declared on the decorative circle, which
   // has no focus handle, so the runtime never painted it. A group option had no

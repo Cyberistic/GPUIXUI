@@ -389,7 +389,9 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 248/248
+`[x]` `[██████████]` 249/249
+
+`[x]` **Restore a stored whole theme from its own labels**, and keep the density box's preset name — `extendTheme` keeps its base's `mode` and `contrast` by design, and that is right for a brand, but a whole theme read back from storage carries the labels it was saved from: `extendTheme(lightTheme, JSON.parse(saved))` restored a dark theme's roles onto a theme that still called itself `light`, and `themeModeOf` — the seam `seriesColors`/`syntaxColors`/`platformTheme` read — handed it the **light** chart scale and the light code palette on its dark fills, while `themeColors`'s own documented shape (`colors: { primary: null }`) did not type-check because `ColourSource` admitted only strings at the group level. A stored `density` had the second half: a whole theme is serialised as a complete box, but the merge read it as a partial override and kept the **base** preset's `name` over the stored metrics, so `/docs/themes`' active-preset row (and the token-scale table) highlighted `comfortable` for a restored compact theme. `restoreTheme(stored)` starts from the shipped theme the saved labels name — through the total `themeModeOf`/`themeContrastOf`, so an unshipped mode is read from its page and an unshipped contrast variant is the strict one — then applies the saved groups with `extendTheme`; `ThemeOverrides.density` accepts a whole `Density` box and `mergeDensity` replaces the base's when a shipped name and every metric are present, while a partial override still merges size by size and keeps the base name; `ColourSource` admits the values a store and a hand-edited literal write, so the seam's documented `{ primary: null }` call compiles. `theme.test.ts`'s `restoreTheme` suite (8 cases) holds the label choice, a round-trip of all 18 shipped, high-contrast, platform and authored themes (`toEqual`, `mode`, contrast variant), the density name, an unshipped `Dark` read from its page, an unshipped `HIGH` held to the strict floors, the label-less store, and the five teaching surfaces. Directions measured: a naive `restoreTheme` that always extends `lightTheme` fails 5 cases by name; deleting `mergeDensity`'s whole-box branch fails 2 (the round-trip naming the theme, and the density case with `expected 'comfortable' to be 'compact'`). Green: 50 files / **3 084** tests, `check-types`, `oxlint`, `oxfmt` (touched files), `check:tests` and `check:exports` clean. Docs: `docs/tokens.md` §Theme API (the restore path + the whole-box rule), `docs/design-system.md` §11, the package README §Extending a theme and the `Theme extension` row. No native scenario applies — a merge, two labels and the type of their input.
 
 `[x]` Read a **partial the store handed back** in the extension mechanism —
 `extendTheme(base, overrides)` documented that "a key written as `undefined`
@@ -11256,6 +11258,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
     clean. Docs: `docs/charts.mdx` §Limitations, the README's chart paragraph
     and the Charts inventory row. No native scenario applies — the boundary
     read is the render the behaviour suite drives. Owner: data.
+  - [x] Keep a **category's slot when its stored label is a hole** — a `labels`
+    list is stored data like a series list, and a store can write a hole where a
+    category's name belongs (or a number in a text slot). The description
+    interpolated the entry itself, so a reader heard `null 6` — words the caller
+    never wrote — while the paint showed a blank slot; and filtering the hole
+    away would have moved every later value under the wrong label, because a
+    chart draws one value per label. `textsOf` (`internal/list.ts`) keeps the
+    slot and reads an entry that is not text as no words, and
+    `seriesDescription` reads a blank or whitespace label as no category, so
+    that datum is announced by its number alone (`Q1 3, 6`).
+    `src/internal/list.test.ts` (3 cases) holds the three readers,
+    `src/chart/logic.test.ts` gains the description case and
+    `src/behaviour/chart-a11y.test.tsx` the window case: the layer's
+    description reads `Q1 3, 6`, the second category's slot still exists, and
+    no text node reads `null`. Directions measured: with the old description
+    restored the unit case reads `Q1 3, null 6` and the window case
+    `Q1 3,  6`; green, the package is 249 unit / 177 behaviour with
+    `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the README's
+    chart paragraph and the Charts row. No native scenario applies — the words
+    are read off the real renderer. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -12579,8 +12601,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
       four rows and `panels open`, `/docs/data-display/frozen-columns` **200**
       with both panes and `frozen column stays`. `check-types` on `apps/docs`
       still reports **0** errors in `apps/docs/src` (its 88 foreign errors are
-      the in-flight `boxShadow` type change in the packages). No native scenario
-      applies — browser drawings over pure package rules.
+      the in-flight `boxShadow` type change in the packages). The presses are
+      measured too, not only the markup: `scripts/data-previews-probe.ts` opens
+      the served pages, waits for the commit that attaches the listeners (a node
+      carries `__reactProps` **before** its handlers are attached — a press at
+      the first hydrated node is a no-op, measured), then presses each drawing
+      and reads its own readout. Measured 2026-10-24 on the served build: ten
+      `PASS` lines, exit `0` — `2 of 4 panels open` after the second row,
+      `1 of 4` after closing only that row, `reported “staging” · 3 of 6 rows ·
+      wait 150 ms`, `frozen:72,0 | data:72,0` on a data-pane wheel and
+      `data:0,40` after a vertical mirror, and the label column reading `120`
+      for `NaN` and `168` for a readable width. `src/lib/data-previews.test.ts`
+      (4 cases) derives the probe's counts from the demo modules and holds its
+      selectors to the classes they render; directions measured: dropping the
+      settle delay fails `records the press it measured…`
+      (`… not to contain 'setTimeout(wait, 300)'`), restoring a record count
+      fails `expects the counts…` (`expected 6 to be 10`) and deleting a row's
+      `aria-expanded` fails the selector case. The policy's new §The data lane's
+      four presses are measured carries the command, the readouts and the race.
+      No native scenario applies — two browser drawings over pure package rules.
 
 `[x]` Draw the **last two unillustrated data pages** — `/docs/data-display`'s
       key-value and data-toolbar pages were the lane's only surfaces with no
@@ -20336,3 +20375,6 @@ render's, read in the real renderer the behaviour suite drives. Owner: data.
 `[x]` `packages/primitives`: **a saved option list that was not a list took the control down** — a picker's choices and a group's options are saved data as often as literals (a restored settings pane, a picker in a record, a saved toolbar), and JSON keeps a field a record never set as `null` while a deleted record leaves `null` inside the array. `Select` read its required `options` raw — `Arr.map`/`Arr.flatMap` over `null` threw `Cannot read properties of null (reading 'length')` out of the render and took the trigger and every control beside it with it, a `null` entry threw through `isSelectGroup`'s `"options" in entry`, and a group whose list was `null` threw the same way at its rows; the three groups' `options` read each entry at `.value`, so one deleted record unmounted every row, and `ToggleGroup`'s `toggleGroupValues` returned a stored `null`/object as itself, which reached `Arr.contains` as a non-list. `core/stored.ts` owns the two boundary reads (`storedList` — only a real array is a list, one unusable entry is dropped — and `storedText`); `selectEntries` (`Select.tsx`) reads options and group lists, leaving a missing or blank name unnamed (the row's content names it), dropping a group whose list is not a list, and painting no caption band for a group whose name arrived blank; `groupOptions` (`group.tsx`) is the same read for the three group components, which now fall back to item children only when `options` is absent; `toggleGroupValues` reads a value it cannot use as no values, and `ToggleGroup`'s controlled/default read goes through `Option` so a stored `null` is absence, not an empty choice. Proof: `Select.test.tsx` (4 cases: no list, a dropped entry, a group's list, a blank group caption), `CheckboxGroup.test.tsx`/`RadioGroup.test.tsx`/`ToggleGroup.test.tsx` (a dropped entry each) and `ToggleGroup.test.tsx`'s `toggleGroupValues` case; `runtime/fields.runtime.test.tsx` gains two window cases (`paints a Select whose stored option list is not a list`, `drops a stored option record it cannot place, keeping the rows beside it`). Directions measured: with the raw container read restored the unit case fails `TypeError: Cannot read properties of null (reading 'map')` and the window case the same; with the entry guards restored the six other new cases fail with `Cannot use 'in' operator…`/`Cannot read properties of null (reading 'value')` and `expected null to deeply equal []`, and with the caption always painted the blank-caption case fails `expected [ …(2) ] to have a length of 1 but got 2`; restored, the four files are 105/105, the two window cases pass, and the package is 57 files / 1195 unit and 60/60 across the two window suites, with `check-types`, `oxlint`, `oxfmt`, `check:tests` and `check:exports` clean. Docs: `docs/select.mdx`, `docs/{checkbox-group,radio-group,toggle-group}.mdx` §Limitations, the README's stored-choices list and the four `COMPONENTS.md` rows state the rule.
 
 `[x]` `packages/components`: **a stored alert tone the union no longer carried painted the message with no surface** — `Alert` indexed `ALERT_TONES[tone]` and the wash's own role table (`softRoles`) with the caller's name, so a status item a store saved under a name a release renamed (`"critical"`, an older spelling) answered `undefined`: the recipe dropped the tone's entry, and because `ALERT_BASE` paints only structure the message lost its **fill, its edge colour and its tone ink**, while `statusTone` beside it had already read the same unknown name as `info` — so the ink and the palette disagreed and the alert read as page text inside a border with no colour. `internal/theme.ts` now owns `toneOf`, the boundary read over the tone vocabulary (`Schema.Literals`, the `Tone` type derived from it), and `Alert` resolves the caller's value **once** into the class, the palette, the wash and the context, so the four cannot disagree; a name this release does not ship paints `info`, the family the token package substitutes for it. Proof: `src/behaviour/alert.test.tsx` gains `paints a stored tone name it does not carry as the neutral family` (a stored `"critical"` paints the `info` fill, edge, ink and selection wash, and its title reads the same tone through the context) and the negative control `keeps a shipped tone when it was stored as one` (a stored `danger` alert keeps its own fill and wash). Direction measured: at `HEAD` the first case fails with the painted style holding none of the four values (`expected { display: 'flex', …(6) } to match object { backgroundColor: '#173A88', …(3) }`), the second passes; restored, the file is 15/15 and the package is 104 files / **986** unit and 99 files / **1 057** behaviour cases green with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. The behaviour suite's four `combobox-remote.test.tsx` cases are red at `HEAD` on this tree (another workstream's in-flight combobox work: `renderComponent: a root is still mounted`), measured with this change stashed. Docs: `packages/components/docs/alert.mdx` §API/§Limitations, the package README's stored-choices section and the `Alerts` row (13 → 15 native cases). No native scenario applies — the paint is the renderer's own tree, read in the behaviour suite, and the live `command-palette`/`sidebar-clip-lifecycle` probes drive no alert.
+
+
+`[x]` `packages/primitives`: **a stored selection that was not a list threw the group out of the render** — a group's `value`/`defaultValue` is saved with the control (a restored settings pane, a saved permissions set), and a record written by another release can hold a map of chosen ids where this one writes a list. `CheckboxGroup` passed it to `useControlState` as the value type promises, so the first `Arr.contains(selected, …)` iterated the object: measured in a window, `TypeError: self is not iterable` left no accessibility node for any row. `storedTextList` (`core/stored.ts`) reads a list and keeps its text entries, and answers **absence** for anything else — so a `null` or an older shape leaves the group uncontrolled rather than pinning it to an empty choice nobody made; `CheckboxGroup` reads both props through it, and `ToggleGroup`'s `storedSelection` does the same for its string-or-list value. Proof: `core/stored.test.ts` (3 cases: `storedText`, `storedList`, `storedTextList`) and `runtime/groups.runtime.test.tsx`'s `paints a stored selection it cannot read as no selection, not a crash` (the rows paint unselected and a press paints the choice). Directions measured: with the raw `props.value`/`defaultValue ?? []` restored the window case fails on the exact `TypeError: self is not iterable` (`no accessibility node announced Xray`), and the `storedTextList` case fails without its guard; restored, the package is 58 files / **1 198** unit cases and the groups window suite 7/7, with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs: `docs/checkbox-group.mdx` §Limitations, the README's stored-choices bullet and the `Checkbox group` row.

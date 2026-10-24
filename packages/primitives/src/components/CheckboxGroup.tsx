@@ -43,6 +43,7 @@ import {
 } from "../core/selection.js";
 import { controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
+import { storedTextList } from "../core/stored.js";
 import { selectionBoxClass, stackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { renderCheckboxIndicator, selectionValueText } from "./Checkbox.js";
@@ -336,8 +337,12 @@ export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const messages = useMessages();
   const focus = useRovingFocus();
   const selected = useControlState<ReadonlyArray<string>>(
-    props.value,
-    props.defaultValue ?? [],
+    // A saved selection is a list this release writes and often a record an
+    // older one wrote (a map of chosen ids). Only a list is a controlled value;
+    // anything else is absence, so the group stays usable instead of being
+    // pinned to an empty set or throwing at `Arr.contains`'s iteration.
+    Option.getOrUndefined(storedTextList(props.value)),
+    Option.getOrElse(storedTextList(props.defaultValue), () => []),
     valueChange(props),
   );
   const options = checkboxGroupItems(props);

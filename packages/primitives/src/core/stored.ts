@@ -30,3 +30,19 @@ export const storedList = <A>(
   read: (entry: unknown) => Option.Option<A>,
 ): ReadonlyArray<A> =>
   Arr.isArray(value) ? Arr.getSomes(Arr.map(value, read)) : [];
+
+/**
+ * A stored list of strings, or absence when the value is not a list.
+ *
+ * A selection is saved with the control that made it, and a record written by
+ * another release can hold a map (`{ email: true }`) where this one writes a
+ * list. A list keeps only its text entries; anything else is **absence**, so a
+ * controlled control stays uncontrolled rather than being pinned to an empty
+ * choice nobody made.
+ */
+export const storedTextList = (
+  value: unknown,
+): Option.Option<ReadonlyArray<string>> =>
+  Arr.isArray(value)
+    ? Option.some(Arr.filter(value, P.isString))
+    : Option.none();

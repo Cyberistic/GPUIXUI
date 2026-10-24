@@ -119,6 +119,21 @@ export const toggleGroupValues = (value: unknown): ReadonlyArray<string> =>
       ? Arr.filter(value, P.isString)
       : [];
 
+/**
+ * A stored selection, or absence when the value is a shape this release does
+ * not write.
+ *
+ * A record saved by another release can hold a map of pressed ids rather than a
+ * list. That is absence, not an empty choice: a controlled group stays
+ * uncontrolled so a reader can still press a mode.
+ */
+const storedSelection = (
+  value: unknown,
+): Option.Option<ReadonlyArray<string>> =>
+  P.isString(value) || Arr.isArray(value)
+    ? Option.some(toggleGroupValues(value))
+    : Option.none();
+
 /** The value a caller's `onValueChange` receives for the group's mode. */
 export function toggleGroupValue(
   mode: "single",
@@ -379,14 +394,10 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
   };
   const selected = useControlState<ReadonlyArray<string>>(
     // `value` and `defaultValue` are saved selections: JSON keeps a field a
-    // record never set as `null`, which is absence rather than an empty choice.
-    Option.getOrUndefined(
-      Option.map(Option.fromNullishOr(props.value), toggleGroupValues),
-    ),
-    Option.getOrElse(
-      Option.map(Option.fromNullishOr(props.defaultValue), toggleGroupValues),
-      () => [],
-    ),
+    // record never set as `null`, and an older shape is not a list at all.
+    // Both are absence, not an empty choice.
+    Option.getOrUndefined(storedSelection(props.value)),
+    Option.getOrElse(storedSelection(props.defaultValue), () => []),
     notify,
   );
   const options = toggleGroupItems(props);

@@ -176,8 +176,12 @@ and each is read through a membership test rather than indexed raw:
   inside `isSelectGroup`'s `in`. `selectEntries` (`Select.tsx`) and
   `groupOptions` (`group.tsx`) read only a real array, drop an entry with no
   text `value`, leave a missing or blank name unnamed (the row's content names
-  it) and drop a `Select` group whose list is not one; `toggleGroupValues` reads
-  a value it cannot use as **no values**. The shared boundary reads live in
+  it) and drop a `Select` group whose list is not one. A saved selection is
+  read the same way: `storedTextList` (`CheckboxGroup`) and `storedSelection`
+  (`ToggleGroup`) keep the text entries of a list and read a `null` or a shape
+  this release does not write as **absence** — the control stays uncontrolled
+  rather than pinned to an empty choice, and no read reaches `Arr.contains` as a
+  non-list (its iteration threw `self is not iterable`). The shared boundary reads live in
   `core/stored.ts` (`storedList`, `storedText`). `Select.test.tsx`, the three
   groups' suites and `runtime/fields.runtime.test.tsx` (a window) hold them.
 - the **theme itself** is what a store gave back, and a numeric group it did not

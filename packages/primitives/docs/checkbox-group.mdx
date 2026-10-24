@@ -62,4 +62,4 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 
 - No `aria-checked` and no `aria-multiselectable`: state is `aria-valuetext`.
 - One tab stop; an option is not reachable by Tab.
-- No select-all, indeterminate parent or virtualisation. A stored `options` list is read structurally — an entry with no text `value` is dropped rather than hiding the rows beside it, a missing or blank `label` stays unnamed (the row's content can name it), and a `null` entry from a deleted record no longer throws out of the render.
+- No select-all, indeterminate parent or virtualisation. A stored `options` list is read structurally — an entry with no text `value` is dropped rather than hiding the rows beside it, a missing or blank `label` stays unnamed (the row's content can name it), and a `null` entry from a deleted record no longer throws out of the render. A stored selection that is `null` or a shape this release does not write (a map of ids) reads as **no selection**, so the group stays uncontrolled and still answers a press.
