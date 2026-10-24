@@ -31,6 +31,11 @@
  * announced and pressed from as the column's floor — the number its keys already
  * step from — rather than as `NaN pixels`.
  *
+ * Its **name** is content the same way: a blank label reads as
+ * {@link DEFAULT_RESIZE_LABEL}, and a name that says which column is composed
+ * from the column's own words (`columnName(column.label, column.id)`), the
+ * reading the header and the menu share.
+ *
  * Only the **primary** button arms the drag: the runtime delivers `mouseDown`
  * for all three buttons while `onClick` is the primary one's, so a right press —
  * the context-menu gesture — and a middle press would otherwise start a resize
@@ -39,7 +44,7 @@
 
 import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { primaryButton } from "@gpuixui/primitives/core";
+import { primaryButton, spokenText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useRef } from "react";
@@ -61,6 +66,17 @@ interface ResizePress {
   readonly width: number;
 }
 
+/**
+ * The divider's name when the caller hands over no words.
+ *
+ * A name is copy before it is a literal: a locale table missing its row and a
+ * saved label both answer `""`, and a default written in the destructuring only
+ * covers an **absent** prop. Without the reading the one control that resizes a
+ * column was a nameless `separator` tab stop (measured: the tree held a
+ * `Splitter` with no label) while its width stayed announced.
+ */
+export const DEFAULT_RESIZE_LABEL = "Resize column";
+
 /** {@link TableColumnDivider} props. */
 export interface TableColumnDividerProps {
   /**
@@ -76,7 +92,12 @@ export interface TableColumnDividerProps {
   readonly maxWidth?: number;
   /** Receives every width the gesture produces, already clamped. */
   readonly onResize: (width: number) => void;
-  /** The divider's accessible name, e.g. `Resize the name column`. */
+  /**
+   * The divider's accessible name, e.g. `Resize the name column`.
+   *
+   * A blank name reads as {@link DEFAULT_RESIZE_LABEL}, because a default only
+   * covers an absent prop.
+   */
   readonly label: string;
   /** Pixels one arrow press moves the divider. Defaults to 16. */
   readonly step?: number;
@@ -115,13 +136,14 @@ export const TableColumnDivider = ({
   // The width the divider can read: a computed `NaN` is announced and dragged
   // from as the column's floor, the number its keys already step from.
   const track = clampWidth(readableWidth(width, bounds), bounds);
+  const name = spokenText(Option.fromNullishOr(label), DEFAULT_RESIZE_LABEL);
   const press = useRef<Option.Option<ResizePress>>(Option.none());
 
   return (
     <div
       testId={testId}
       role="separator"
-      aria-label={label}
+      aria-label={name}
       aria-valuetext={`${track} pixels`}
       tabIndex={0}
       style={mergeStyles(

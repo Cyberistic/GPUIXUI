@@ -11280,7 +11280,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `expected [] to deeply equal [ 'Resize column', 'Resize column' ]`, and
     reverting the example's composition fails the docs case
     `expected '…' to contain 'columnName(column.label, column.id)'`; after
-    them the file is 14/14 and the package is 232 unit / 155 behaviour cases.
+    them the file is 14/14 and the package is 232 unit / 157 behaviour cases.
     Docs: the page's divider table (`label` defaults to `Resize column`), the
     README's divider paragraph and the Tier 3 Resizable columns row.
     No native scenario applies — the names are read off the renderer's tree,

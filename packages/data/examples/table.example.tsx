@@ -59,6 +59,7 @@ import {
   TableViewport,
 } from "../src/table/table.js";
 import { TableSortHeader } from "../src/sort/header.js";
+import { columnName } from "../src/sort/logic.js";
 import { TableFilterField } from "../src/filter/field.js";
 import { useTable } from "../src/use-table.js";
 import { neighbourKey, selectionSize } from "../src/selection/logic.js";
@@ -322,11 +323,16 @@ export const TableExample = () => {
                 testId="files-select-all"
               />
               {Arr.map(columns.visible, (column) => {
+                // The header, the menu row and the divider are one column's
+                // words: a blank label reads as the column's id, so a saved
+                // configuration cannot leave the resize control named after
+                // nothing.
+                const name = columnName(column.label, column.id);
                 const resize = {
                   minWidth: column.minWidth,
                   maxWidth: column.maxWidth,
                   onResize: (width: number) => columns.resize(column.id, width),
-                  label: `Resize the ${column.label.toLowerCase()} column`,
+                  label: `Resize the ${name.toLowerCase()} column`,
                   testId: `files-divider-${column.id}`,
                 };
                 return Match.value(column.id).pipe(
@@ -379,7 +385,7 @@ export const TableExample = () => {
                           color: theme.colors.mutedForeground,
                         }}
                       >
-                        {column.label}
+                        {name}
                       </text>
                     </TableHeaderCell>
                   )),

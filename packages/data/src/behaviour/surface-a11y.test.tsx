@@ -20,11 +20,18 @@
  * and a panel's blank title as no heading, not an unnamed one. The grid's own
  * controls follow the same rule: a column menu's trigger and surface and the
  * select-all box were left unnamed by a blank default, because their fallback
- * was written in the destructuring where only `undefined` reaches it.
+ * was written in the destructuring where only `undefined` reaches it. The
+ * column divider is the same shape one step further out: its name is copy, and
+ * a blank one left the only control that resizes a column a nameless
+ * `separator` while its width stayed announced.
  */
 
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
+import {
+  DEFAULT_RESIZE_LABEL,
+  TableColumnDivider,
+} from "../columns/divider.js";
 import { ColumnMenu, DEFAULT_COLUMN_MENU_LABEL } from "../columns/menu.js";
 import { DEFAULT_FILTER_LABEL, TableFilterField } from "../filter/field.js";
 import { decodeA11yTree, onlyRole, withRole } from "../internal/a11y.js";
@@ -448,5 +455,34 @@ describe("the data surfaces announce what they paint", () => {
     );
     expect(checkboxes).toEqual(["name", "size"]);
     expect(moves).toEqual(["Move name", "Move size"]);
+  });
+
+  it("reads a blank divider name as the documented default", () => {
+    // Bug guarded: the divider's name is copy — a locale table missing its row
+    // and a saved label both hand over `""` — so the one control that resizes a
+    // column was a nameless `separator` tab stop while its width stayed
+    // announced.
+    const tree = treeOf(
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <TableColumnDivider
+          width={160}
+          onResize={() => {}}
+          label=""
+          testId="blank-divider"
+        />
+        <TableColumnDivider
+          width={160}
+          onResize={() => {}}
+          label="   "
+          testId="whitespace-divider"
+        />
+      </div>,
+    );
+
+    const separators = withRole(tree, tree.root, "Splitter");
+    expect(Arr.map(separators, (id) => nameOf(tree, id))).toEqual([
+      DEFAULT_RESIZE_LABEL,
+      DEFAULT_RESIZE_LABEL,
+    ]);
   });
 });

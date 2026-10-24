@@ -15,6 +15,7 @@ import {
   TableRow,
   TableSortHeader,
   TableViewport,
+  columnName,
   useColumns,
   useTable,
 } from "@gpuixui/data";
@@ -49,7 +50,8 @@ const table = useTable({
             resize={{
               minWidth: column.minWidth,
               maxWidth: column.maxWidth,
-              label: `Resize the ${column.label.toLowerCase()} column`,
+              // One column's words, read the way its header reads them.
+              label: `Resize the ${columnName(column.label, column.id).toLowerCase()} column`,
               onResize: (width) => columns.resize(column.id, width),
             }}
           />
@@ -135,10 +137,18 @@ the submenu says `Move name` rather than `Move ` and stops.
 | `minWidth` | `number` | `80` | the narrowest a drag may reach |
 | `maxWidth` | `number` | `640` | the widest a drag may reach |
 | `onResize` | `(width: number) => void` | — | receives every clamped width |
-| `label` | `string` | — | the divider's accessible name |
+| `label` | `string` | `"Resize column"` | the divider's accessible name; a blank one reads as the default |
 | `step` | `number` | `16` | pixels one arrow press moves it |
 | `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the divider's locator |
+
+A **blank** `label` reads as `Resize column` rather than publishing a nameless
+control: the divider is a focusable `separator`, so a locale table with a
+missing row — or a saved label that answers `""` — used to leave the one control
+that resizes a column unnamed while its width stayed announced. A name that
+should say *which* column is composed from the column's own words, the way the
+header composes it (`columnName`); `src/behaviour/surface-a11y.test.tsx` mounts
+an empty and a whitespace label and reads both names off the tree.
 
 ### `useColumns`
 

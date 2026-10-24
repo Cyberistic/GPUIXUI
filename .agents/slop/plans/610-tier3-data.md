@@ -626,6 +626,24 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   row'`. Docs: `docs/table-selection.mdx`, the README's announce paragraph and
   the Tier 3 Row selection row.
 
+- **A blank divider name reads `Resize column`**: the column divider is a
+  focusable `separator` and its `label` is copy, so a locale table's missing row
+  or a saved label of `""` left the one control that resizes a column nameless
+  while its width stayed announced (measured in the tree: a `Splitter` with no
+  label, and one named `"   "`). `DEFAULT_RESIZE_LABEL` is the reading through
+  `spokenText`, and a name that says which column is composed from
+  `columnName(column.label, column.id)` — the header's and the menu's reading —
+  so a column restored without a title is named by its id; the shipped example,
+  the page and the README carry that composition, and the example's
+  non-sortable header cell reads the same words.
+  `behaviour/surface-a11y.test.tsx` gains the empty/whitespace case (direction
+  measured: `expected [] to deeply equal [ 'Resize column', 'Resize column' ]`)
+  and `columns/docs.test.ts` holds the three copyable snippets to the
+  composition (reverting the example fails
+  `expected '…' to contain 'columnName(column.label, column.id)'`). Docs:
+  `docs/column-configuration.mdx`, the README's divider paragraph and the
+  Resizable columns row. 232 unit / 157 behaviour green.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

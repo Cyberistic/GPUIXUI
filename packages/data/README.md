@@ -197,6 +197,8 @@ holds visibility, order and widths; the menu drives the first two and a divider
 drives the third:
 
 ```tsx
+import { ColumnMenu, columnName, useColumns } from "@gpuixui/data";
+
 const columns = useColumns({ columns: FILE_COLUMNS });
 
 <ColumnMenu
@@ -215,7 +217,7 @@ const columns = useColumns({ columns: FILE_COLUMNS });
       resize={{
         minWidth: column.minWidth,
         maxWidth: column.maxWidth,
-        label: `Resize the ${column.label.toLowerCase()} column`,
+        label: `Resize the ${columnName(column.label, column.id).toLowerCase()} column`,
         onResize: (width) => columns.resize(column.id, width),
       }}
       ...
@@ -233,6 +235,16 @@ collapse the track — `resizeColumn` leaves such a column alone while a key pre
 steps from its floor, and the divider **announces and drags from** that floor
 (`readableWidth`) rather than publishing `NaN pixels` or refusing to grow. The
 page is `docs/column-configuration.mdx`.
+
+The divider's **name** is content, like every other column's words: a locale
+table missing its row or a saved label answers `""`, and the control is a
+focusable `separator`, so a blank name used to leave the one control that
+resizes a column nameless while its width stayed announced. `DEFAULT_RESIZE_LABEL`
+(`Resize column`) is the reading, and a name that says *which* column is
+composed from `columnName(column.label, column.id)` — the same reading the
+header and the menu use — so a column restored without a title is named by its
+id, not by a blank. `surface-a11y.test.tsx` mounts an empty and a whitespace
+label and reads both names off the tree.
 
 A **cell's own `width` is the same kind of number**, and it is read by the
 layout rather than by a reducer: `TableHeaderCell`/`TableCell` take the track a

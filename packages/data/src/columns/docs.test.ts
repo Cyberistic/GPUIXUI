@@ -98,4 +98,19 @@ describe("the column page's API tables", () => {
       [],
     );
   });
+
+  it("names the divider from the column's own words", () => {
+    // Bug guarded: the divider's name was interpolated from the raw label, so a
+    // column restored without a title said `Resize the  column` — the one
+    // control that resizes a column named after nothing — while the header and
+    // the menu named the same column by its id.
+    const example = read("../../examples/table.example.tsx");
+    const readme = read("../../README.md");
+    expect(example).toContain("columnName(column.label, column.id)");
+    expect(example).not.toContain("Resize the ${column.label");
+    expect(page).toContain("columnName(column.label, column.id)");
+    expect(page).not.toContain("Resize the ${column.label");
+    expect(readme).toContain("columnName(column.label, column.id)");
+    expect(readme).not.toContain("Resize the ${column.label");
+  });
 });

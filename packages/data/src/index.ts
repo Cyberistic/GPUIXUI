@@ -185,7 +185,7 @@ export type { TableController, UseTableOptions } from "./use-table.js";
 
 export { ColumnMenu, DEFAULT_COLUMN_MENU_LABEL } from "./columns/menu.js";
 export type { ColumnMenuProps } from "./columns/menu.js";
-export { TableColumnDivider } from "./columns/divider.js";
+export { DEFAULT_RESIZE_LABEL, TableColumnDivider } from "./columns/divider.js";
 export type {
   TableColumnDividerProps,
   TableColumnResizeProps,
