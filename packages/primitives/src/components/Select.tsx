@@ -164,10 +164,10 @@ export interface SelectProps
   readonly value?: string;
   readonly defaultValue?: string;
   /**
-   * The value the trigger announces when it is not the one in `value` or
-   * `defaultValue` — the mirror a parent keeps of an uncontrolled select's
-   * choice, so a closed trigger can say what it shows. Defaults to
-   * `value ?? defaultValue`.
+   * The value the trigger announces — the mirror a parent keeps of an
+   * uncontrolled select's choice, so a closed trigger can say what it shows.
+   * The caller's mirror outranks `value` and `defaultValue`; without one the
+   * announcement follows `value ?? defaultValue`.
    */
   readonly selectedValue?: string;
   readonly placeholder?: string;
@@ -560,7 +560,9 @@ export const Select = (props: SelectProps): ReactElement => {
   const [held, setHeld] = useState(props.defaultOpen === true);
   // The same rule for the choice: an uncontrolled select's value lives inside
   // GPUix, and a closed trigger has to announce it. The mirror only moves an
-  // uncontrolled select — with `value` set, the caller's prop is the truth.
+  // uncontrolled select — with `value` set, the caller's prop is the truth —
+  // and the caller's own `selectedValue` outranks both, because a parent that
+  // mirrors the choice itself is the one statement of it.
   const [heldValue, setHeldValue] = useState<string | undefined>(
     props.defaultValue,
   );
@@ -570,7 +572,7 @@ export const Select = (props: SelectProps): ReactElement => {
     {
       ...props,
       open,
-      selectedValue: props.value ?? heldValue,
+      selectedValue: props.selectedValue ?? props.value ?? heldValue,
       onValueChange: (next) => {
         if (props.value === undefined) setHeldValue(next);
         notify?.(next);

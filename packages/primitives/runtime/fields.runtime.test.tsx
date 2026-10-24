@@ -663,6 +663,31 @@ it("announces a choice the caller owns, and drops one the options no longer offe
   expect(valueOf()).toStrictEqual(Option.none());
 });
 
+it("announces the mirror a caller supplies, not only its own record", async () => {
+  // The bug guarded: `selectedValue` is the documented way for a caller to
+  // keep the trigger's announcement beside an uncontrolled value it mirrors
+  // itself, and the wrapper replaced it with its own record unconditionally —
+  // so this select announced "Apple" while the caller's mirror said "Pear".
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        defaultValue="apple"
+        selectedValue="pear"
+        triggerTestId="fruit-trigger"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(
+    a11yValueOf(runtime.a11y(), { role: "ComboBox", label: "Fruit" }),
+  ).toStrictEqual(Option.some("Pear"));
+});
+
 it("announces a Select's options, their selection and their group", async () => {
   // The bug guarded: GPUix 0.11.0's `SelectItem`, `SelectGroup` and
   // `SelectLabel` are plain `div`s with no role, so an open list painted no

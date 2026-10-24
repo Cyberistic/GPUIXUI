@@ -31,7 +31,7 @@ import { Label, Select } from "@gpuixui/primitives";
 | `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | required | `{ value, label, disabled? }` items, or `{ label, options }` groups |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
-| `selectedValue` | `string` | `value ?? defaultValue` | the choice the trigger announces; a parent's mirror of an uncontrolled select's value |
+| `selectedValue` | `string` | `value ?? defaultValue` | the choice the trigger announces; outranks `value`/`defaultValue`, for a parent that mirrors an uncontrolled select's value |
 | `open` | `boolean` | — | controlled open state |
 | `defaultOpen` | `boolean` | `false` | the list's initial state |
 | `onOpenChange` | `(open: boolean) => void` | none | the open state GPUix reported |

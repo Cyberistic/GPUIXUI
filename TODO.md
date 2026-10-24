@@ -18504,6 +18504,26 @@ numbers).
       `docs/breadcrumb.mdx` §Anatomy/§Accessibility/§Verification, `breadcrumbMeta.limitations` and
       the `COMPONENTS.md` row; the live probes are unaffected (no behaviour change).
 
+`[x]` `packages/primitives`: **a caller's `selectedValue` mirror never reached the
+      trigger** — `Select` keeps its own record of the committed choice
+      (`heldValue`) so a closed uncontrolled trigger can announce it, and it
+      passed `selectedValue: props.value ?? heldValue`, replacing the documented
+      prop outright: a select mounted `defaultValue="apple" selectedValue="pear"`
+      announced **"Apple"** in a window while the caller's mirror said "Pear".
+      The wrapper now passes `props.selectedValue ?? props.value ?? heldValue` —
+      the precedence the pure `renderSelect` already documents — so a parent that
+      mirrors the choice is the statement of it, while the internal record still
+      feeds an uncontrolled select that gives none. Proof:
+      `runtime/fields.runtime.test.tsx`'s `announces the mirror a caller supplies,
+      not only its own record`, measured failing at HEAD (the accessibility tree
+      read `Some('Apple')` against the required `Some('Pear')`) and green with the
+      prop honoured; the fields suite is 52/52, the package 57 files / 1 169 unit
+      cases, `check-types` clean. Docs: `docs/select.mdx`'s `selectedValue` row and
+      the prop's JSDoc state the precedence, and the `COMPONENTS.md` Selects row
+      records the caller's mirror. No playground scenario applies — the
+      announcement is read from the runtime's own accessibility tree in the
+      package suite.
+
 ## Animated primitives (plan 600)
 
 `[x]` `[██████████]` 9/9
