@@ -120,6 +120,20 @@ describe("the summary parser", () => {
   it("has no summary for a file without a header", () => {
     expect(summaryOf("export const Nothing = 1;\n")).toBeUndefined();
   });
+
+  it("reads past the JSX directive a published example pins", () => {
+    // Every file under `packages/data/examples` opens with the runtime pin, so
+    // the registry answered `JsxImportSource @gpuix/react` for nine rows.
+    expect(
+      summaryOf(
+        "/** @jsxImportSource @gpuix/react */\n/**\n * Card example: a plan with a price.\n */\nexport {};\n",
+      ),
+    ).toBe("A plan with a price.");
+    // A directive is never a row's description, on the disk or in a fixture.
+    expect(
+      examples.filter((entry) => entry.summary.startsWith("Jsx")).map(pid),
+    ).toEqual([]);
+  });
 });
 
 describe("matching an example to its page", () => {

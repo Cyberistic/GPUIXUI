@@ -113,14 +113,31 @@ const sentenceCase = (text: string): string =>
     ? text
     : `${text.slice(0, 1).toUpperCase()}${text.slice(1)}`;
 
-/** The lines of a file's leading doc comment, without the ` * ` gutters. */
-const headerLines = (source: string): ReadonlyArray<string> => {
-  const comment = /^\/\*\*([\s\S]*?)\*\//.exec(source)?.[1];
-  if (comment === undefined) return [];
-  return comment
+/** The lines of one doc comment, without the ` * ` gutters. */
+const commentLines = (comment: string): ReadonlyArray<string> =>
+  comment
     .split("\n")
     .map((line) => line.replace(/^\s*\*\s?/, "").trim())
     .filter((line) => line !== "");
+
+/** A directive a published file pins before its header, e.g. `@jsxImportSource`. */
+const jsxDirectives = /^(?:\s*\/\*\*\s*@jsx\w+[^*]*\*\/)+/;
+
+/**
+ * The lines of a file's header comment.
+ *
+ * A file may open with a **directive** comment before its header — the packages
+ * pin their JSX runtime with `@jsxImportSource @gpuix/react` in one — and that
+ * line is an instruction to the compiler, not a description of the example, so
+ * it is read past rather than read as one. Measured on the nine files under
+ * `packages/data/examples`, whose every example opens that way: the registry
+ * answered `JsxImportSource @gpuix/react` for each.
+ */
+const headerLines = (source: string): ReadonlyArray<string> => {
+  const comment = /^\s*\/\*\*([\s\S]*?)\*\//.exec(
+    source.replace(jsxDirectives, ""),
+  )?.[1];
+  return comment === undefined ? [] : commentLines(comment);
 };
 
 /**

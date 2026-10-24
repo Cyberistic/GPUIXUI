@@ -13768,7 +13768,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 404/404
+`[x]` `[██████████]` 405/405
 
 `[x]` Publish the **root render rule a window measured** — `render` takes one
       element, and a top-level fragment paints only its **last** child with no
@@ -20744,6 +20744,27 @@ fails the case by name; restored, the file is 44/44 and
       shipped file (`expected … to contain 'theme.colors.mutedForeground'` —
       the red run that found this). Green: the file is 5/5. No native scenario
       applies — a drawing and the role the shipped card paints.
+
+`[x]` Read each example's **summary past the JSX runtime it pins** — every file
+      under `packages/data/examples` opens with `/** @jsxImportSource
+      @gpuix/react */` (the per-file runtime pin the packages took), and
+      `examples.ts`'s `headerLines` read the **first** doc comment in the file,
+      so the registry built `/docs/examples` from that directive: nine rows
+      described as `JsxImportSource @gpuix/react` instead of the sentence the
+      example's own header carries, and the page's guard caught it
+      (`reads each summary from the file it links` — `[ 'data/chart', …(8) ]`).
+      A directive is an instruction to the compiler, not a description, so
+      `headerLines` now strips a run of leading `@jsx…` directive comments
+      before it reads the header. `examples.test.ts` gains `reads past the JSX
+      directive a published example pins` (the fixture, plus the on-disk rule
+      that no row's summary begins with the pragma). Directions measured: with
+      the old reader restored the case fails
+      (`expected '@jsxImportSource @gpuix/react' to be 'A plan with a price.'`)
+      and the registry case lists the nine rows again; restored, the file is
+      17/17 and all nine data rows carry their own first sentence
+      (`chart: A metrics screen: every chart the package ships, on one card
+      surface.`, …). `check-types` and `check:tests` clean. No native scenario
+      applies — a page generated from the files it links.
 
 ## Swarm-owned blockers (fix these)
 
