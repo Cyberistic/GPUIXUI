@@ -426,11 +426,37 @@ describe("the leaving shell", () => {
 /** The per-surface motion table `docs/component-api.md` §11 publishes. */
 const apiDoc = readEntry("../../docs/component-api.md");
 
+/** The package page, whose §Motion states the rules the table's numbers serve. */
+const readmeDoc = readEntry("README.md");
+
 /** The whole document, or `""` when it could not be read. */
-const apiBody = Option.getOrElse(
-  Option.map(Arr.head(apiDoc.sources), (source) => source.body),
-  () => "",
-);
+const bodyOf = (doc: Scan): string =>
+  Option.getOrElse(
+    Option.map(Arr.head(doc.sources), (source) => source.body),
+    () => "",
+  );
+
+const apiBody = bodyOf(apiDoc);
+const readmeBody = bodyOf(readmeDoc);
+
+/** The lines under a `## <heading>`, up to the next `##` heading. */
+const sectionOf = (
+  markdown: string,
+  heading: string,
+): ReadonlyArray<string> => {
+  const lines = Str.split("\n")(markdown);
+  return Option.match(
+    Arr.findFirstIndex(lines, (line) => line === `## ${heading}`),
+    {
+      onNone: () => [],
+      onSome: (index) =>
+        Arr.takeWhile(
+          Arr.drop(lines, index + 1),
+          (line) => !Str.startsWith("## ")(line),
+        ),
+    },
+  );
+};
 
 /**
  * The table under §11's `**Per surface:**` marker.
@@ -647,5 +673,90 @@ describe("the per-surface table", () => {
     // Both halves are stated: the rise it arrives on and the slide it leaves on.
     expect(Str.includes("rise")(text)).toBe(true);
     expect(Str.includes("slide")(text)).toBe(true);
+  });
+});
+
+/** The documents that state the motion contract, by the name a failure prints. */
+const motionDocs: ReadonlyArray<{
+  readonly name: string;
+  readonly body: string;
+  readonly failures: ReadonlyArray<string>;
+}> = [
+  { name: "README.md", body: readmeBody, failures: readmeDoc.failures },
+  {
+    name: "docs/component-api.md",
+    body: apiBody,
+    failures: apiDoc.failures,
+  },
+];
+
+/** The retracted claim: the seam owning what the motion package publishes. */
+const ownedSeam = ["owns the frames", "owns the mount window"] as const;
+
+/**
+ * §11's ownership row for the components seam.
+ *
+ * The whole document names the two subpaths elsewhere (the paragraph beneath the
+ * table), so the retracted reading is held where it was written: the seam's own
+ * "Owns" cell. The row said it owned "the frames … the mount window" after both
+ * moved to the motion package.
+ */
+const seamRow = Str.toLowerCase(
+  Option.getOrElse(
+    Option.map(
+      Arr.findFirst(
+        Arr.filter(Str.split("\n")(apiBody), Str.startsWith("|")),
+        (line) => Str.includes("internal/presence.tsx")(line),
+      ),
+      (line) => line,
+    ),
+    () => "",
+  ),
+);
+
+describe("the ownership the motion pages teach", () => {
+  it("places each half in the entry that publishes it", () => {
+    // The bug this guards: both documents called the components seam the owner of
+    // the frames and the mount window after the table was shared, so a consumer
+    // painting its own surface copied the rule instead of composing it — and the
+    // two packages could then disagree about one contract by editing one copy.
+    const wrong = Arr.flatMap(motionDocs, (doc) => {
+      const missing = Arr.filterMap(
+        ["@gpuixui/motion/presence", "@gpuixui/motion/react", "PresenceShield"],
+        (claim) =>
+          Str.includes(claim)(doc.body)
+            ? Result.failVoid
+            : Result.succeed(`${doc.name}: does not name ${claim}`),
+      );
+      const retracted = Arr.filterMap(ownedSeam, (claim) =>
+        Str.includes(claim)(doc.body)
+          ? Result.succeed(`${doc.name}: still says "${claim}"`)
+          : Result.failVoid,
+      );
+      return [...missing, ...retracted];
+    });
+    expect(wrong).toEqual([]);
+    // The seam's own row is where the wrong ownership was written.
+    expect(seamRow).toContain("re-publication");
+    expect(seamRow).toContain("presenceshield");
+    expect(
+      seamRow.includes("the frames") || seamRow.includes("mount window"),
+    ).toBe(false);
+  });
+
+  it("leaves the per-surface numbers to the one table", () => {
+    // The bug this guards: the README printed the table's numbers itself, and
+    // they drifted — it taught a toast that "slides 16px in from the right edge"
+    // after the card was rewritten to rise on its own 220 ms entry and leave on a
+    // 180 ms slide, so the first page a developer reads described a surface the
+    // library no longer shipped. §11 is the table, held to its painters above;
+    // the page states the rules and points at it.
+    const section = sectionOf(readmeBody, "Motion");
+    expect(motionDocs[0]?.failures).toEqual([]);
+    // A parse that read no section cannot pass by accident.
+    expect(section.length).toBeGreaterThan(5);
+    const text = Arr.join(section, "\n");
+    expect(text).toContain("docs/component-api.md");
+    expect(text.match(/\b\d+(?:\.\d+)?\s*(?:px|ms)\b/g) ?? []).toEqual([]);
   });
 });

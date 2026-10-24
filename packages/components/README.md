@@ -198,21 +198,24 @@ the picker surfaces keep their scroll/positioning in `style`.
 
 ## Motion
 
-The overlays and the tab rail move: a surface fades and travels a few pixels,
-and the tab pill slides between measured trigger boxes. The split is deliberate —
-the recipe owns the resting appearance, `@gpuixui/motion` owns the timing
-(`motionTiming`: 120/160/200/320/500 ms, ease-out in, ease-in out), and
-`src/internal/presence.tsx` owns the frames and the mount window. The runtime
-executes the tween and has **no `transform`**, so nothing scales, rotates or
-translates — shadcn's `zoom-in-95` stays unsupported rather than faked.
+The overlays, the disclosure panels and the tab rail move: a surface fades and
+travels a few pixels, a body grows to its measured height, and the pill slides
+between measured trigger boxes. The split is deliberate — the recipe owns the
+resting appearance, and `@gpuixui/motion` owns everything that makes a surface
+move: `@gpuixui/motion/timing` the five levels and the per-phase easing,
+`@gpuixui/motion/presence` the frames and the pointer rule, and
+`@gpuixui/motion/react` the mounted window and the preference provider.
+`src/internal/presence.tsx` re-publishes those entries under one import and adds
+the one piece that is a host element rather than a number — `PresenceShield`,
+which covers a leaving surface's content so a ghost control cannot run the press
+its dismissal was for. The runtime executes the tween and has **no `transform`**,
+so nothing scales, rotates or translates — shadcn's `zoom-in-95` stays
+unsupported rather than faked.
 
 A closed surface stays mounted for its exit tween and unmounts when it ends, so
 a dismissal is immediate in state (`onOpenChange`, focus return) while the box
-fades out. Dialog and the command palette rise 8px on a `slow` enter; the drawer
-travels 12px from its own edge; popovers and menus travel 4–8px out from their
-trigger's side; a toast slides 16px in from the right edge; an accordion panel
-animates to the body's measured height; the tab pill retargets
-`left`/`top`/`width`/`height` from the box on screen.
+fades out. The toast is the one surface with its own timing rather than a shared
+level, because a notice may be read while it leaves.
 
 The preference is the application's, because the runtime exposes none. The
 provider is `@gpuixui/motion/react`'s and this package re-publishes it, so a
@@ -227,8 +230,10 @@ primitive below the same provider reads the one flag instead of taking its own:
 A reduced run is a zero-duration assignment — the resting frame still paints.
 `src/behaviour/presence.test.tsx` measures the movement, the exit window, the
 reduced negative control, the accordion's measured height and the pill in the
-real renderer. Levels, the per-surface table and the reason presence is a
-duration: `docs/component-api.md` §11.
+real renderer. **The movement, the distance and the level of each surface are one
+table** — `docs/component-api.md` §11 — and `src/presence-contract.test.ts` holds
+every row to the painter it names; this page states the rules and prints no
+number, so the two cannot drift.
 
 ## What is here
 

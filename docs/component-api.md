@@ -444,8 +444,19 @@ component re-implements a part of it.
 | Piece | Owns |
 | ----- | ---- |
 | `@gpuixui/tw` | the resting recipe, including shadcn's motion classes as provenance |
-| `@gpuixui/motion` (`motionTiming`) | the levels (120 / 160 / 200 / 320 / 500 ms), the per-phase easing and the reduced-motion policy |
-| `packages/components/src/internal/presence.tsx` | the frames (fade + offset), the mount window, and the `motion` prop a surface hands the runtime |
+| `@gpuixui/motion/timing` | the levels (120 / 160 / 200 / 320 / 500 ms), the per-phase easing and the reduced-motion policy |
+| `@gpuixui/motion/presence` | the frames (fade + offset), the pointer rule and the window conversions |
+| `@gpuixui/motion/react` | the preference provider and the mounted window (`useSurfacePresence`) |
+| `packages/components/src/internal/presence.tsx` | the re-publication of those entries under one import, and `PresenceShield` — the one piece a host element paints |
+
+**The components seam re-publishes, it does not own.** The frames, the phases,
+the pointer rule and the mount window are numbers and a timer, so they live in
+the motion package where a primitive can compose them without depending on this
+one; `packages/components/src/internal/presence.tsx` re-exports them under one
+import so a surface here keeps a single seam. What this package adds is the
+shield, because it is a GPUix host element rather than a value. A consumer
+painting its own surface composes the same entries directly instead of copying
+the rule.
 
 **The runtime executes the tween.** `@gpuix/native@0.11.0` animates `opacity`,
 `width`, `height`, `top`, `right`, `bottom`, `left` and `borderRadius` on its own
