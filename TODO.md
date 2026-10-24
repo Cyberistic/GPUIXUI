@@ -11154,7 +11154,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Wait for the **probe it is about to measure** in a batched live run — the live runner mounts each selected probe into one window with a keyed render and a fixed settle, and two probes that print the same test id can answer each other: `--only virtual-tree-lifecycle --only data-tree-lifecycle` read the windowed tree's `visible=4000 expanded=40 selected=dir-030 range=0..1` as the plain tree's readout and failed `the tree opens on the example's own readout` (reproduced twice on 2026-10-24, 357 ms and 327 ms into the second probe, where the probe alone paints in 814 ms). The data package's tree example now prints a readout id of its own (`data-tree-readout`, held by `apps/playground/src/live/data-tree.test.ts`'s `keeps its readout id apart from the windowed tree's`, measured failing with the old id), so this pair is green — but any two probes that share an id are one batched run away from the same false read. The runner should wait for a per-scenario mount marker (a `live-probe-<id>` element rendered beside the view) before a probe's first step, so a stale screen cannot satisfy a wait | playground (`apps/playground/src/live/run.ts`) | open — recorded 2026-10-24 by the data workstream; the probe-level rename landed and the runner-level guard is the general fix |
 
-| Re-anchor the **theming page's contrast guard** to the seam the merge now reads — `apps/docs/src/lib/theming-page.test.ts`'s `states the contrast rule the merge implements` requires the literal `contrast === style.contrast` in `packages/tokens/src/theme.ts`, while the stored-style pass reads the style's variant through `styleContrastOf(style)` (a lost or unknown label is the default variant rather than a mismatch), so the docs suite is red while the page's sentence stays true. The guard should hold the comparison's **meaning** — the base's variant against the style's declared variant, with the documented default — rather than one expression | docs-site (`apps/docs/src/lib/theming-page.test.ts`) | open — measured 2026-10-24 while the tokens refactor was in the working tree (`nub run --filter @gpuixui/docs test src/lib/theming-page.test.ts`: 1 failed / 7 passed, `expected 'import { darkColors, highContra…' to contain 'contrast === style.contrast'`); master's committed `theme.ts` still carries the literal, so this is the docs half owed with that commit |
+| Re-anchor the **theming page's contrast guard** to the seam the merge now reads — `apps/docs/src/lib/theming-page.test.ts`'s `states the contrast rule the merge implements` requires the literal `contrast === style.contrast` in `packages/tokens/src/theme.ts`, while the stored-style pass reads the style's variant through `styleContrastOf(style)` (a lost or unknown label is the default variant rather than a mismatch), so the docs suite is red while the page's sentence stays true. The guard should hold the comparison's **meaning** — the base's variant against the style's declared variant, with the documented default — rather than one expression | docs-site (`apps/docs/src/lib/theming-page.test.ts`) | **resolved 2026-10-24** — the case holds the comparison's meaning instead of one expression: it accepts `style.contrast` (the committed literal) and `styleContrastOf(style)` (the reader the stored-style pass introduced), and refuses a fallback (`contrast === "default"`), a renamed `style.contrastOf(style)` and a reader over another value (`styleContrastOf(other)`) — the five spellings measured. `nub run --filter @gpuixui/docs test src/lib/theming-page.test.ts` is 8/8 with the tokens refactor in the working tree, where the old literal was red; the page's two sentences are unchanged, because they were true throughout |
 
 ## Phase D — data and workspace components
 
@@ -13490,7 +13490,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 397/397
+`[x]` `[██████████]` 398/398
+
+`[x]` Hold the **style merge's contrast rule to its meaning, not one
+      expression** — the tokens workstream's stored-style pass reads a style's
+      variant through `styleContrastOf(style)`, so a label a record lost is the
+      documented default variant rather than a mismatch, while the page guard
+      required the literal `contrast === style.contrast` and went red on the
+      refactor with the page's sentence still true. The case now matches the
+      comparison itself — the base's variant against the style's own — and
+      accepts either spelling: `/contrast === (?:style\.contrast|styleContrastOf\(style\))(?![.\w(])/`
+      was measured over five spellings, accepting the committed literal and the
+      reader the pass introduced and refusing `contrast === "default"`, a
+      renamed `style.contrastOf(style)` and a reader over another value
+      (`styleContrastOf(other)`). Directions measured: the old literal was red
+      with the refactor in the working tree (`expected 'import { darkColors,
+      highContra…' to contain 'contrast === style.contrast'`) and the new case
+      is 8/8. No native scenario applies — a source read and the page it guards.
 
 `[x]` Teach the **three picker boundaries a save can hand back** — the
       components workstream read a saved colour and palette, a saved token list

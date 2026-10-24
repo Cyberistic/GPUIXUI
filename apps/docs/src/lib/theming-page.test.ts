@@ -83,8 +83,13 @@ describe("the theming page's platform styles", () => {
 
   it("states the contrast rule the merge implements", () => {
     // A style is designed against one variant's floors, which is why a theme
-    // that needs more keeps its own palette — page and source must agree.
-    expect(theme).toContain("contrast === style.contrast");
+    // that needs more keeps its own palette — page and source must agree. The
+    // merge reads the style's own variant through a reader when the value came
+    // from a store (an unreadable label is the documented default), so the
+    // guard holds the comparison the rule is, not one spelling of it.
+    expect(theme).toMatch(
+      /contrast === (?:style\.contrast|styleContrastOf\(style\))(?![.\w(])/,
+    );
     expect(page).toContain("keeps its own colours");
     expect(page).toContain("geometry and families");
   });
