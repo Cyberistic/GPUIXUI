@@ -3272,7 +3272,12 @@ a merge over a stored theme.
       reading `base.syntax` instead of the resolved table fails the palette case;
       removing the refusal fails `refuses a theme of another mode or contrast
       variant`; restored, the file is 10/10 and the package **3 169** tests with
-      `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs:
+      `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. The result is held
+      to every override group at the type level — `EveryDiffGroupListed`, the
+      mirror of `EveryGroupOverridable` — so a group added to `Theme` without a
+      line in the diff fails `check-types` naming it (measured: deleting the
+      `series` line reports `Type 'boolean' is not assignable to type '["a theme
+      group is missing from the diff", "series"]'`). Docs:
       `docs/tokens.md` §Theme API → §Exporting an edit, `docs/design-system.md` §11,
       the package README §Extending a theme, the `Theme extension` row and
       `src/theme-export.example.ts`. **Remaining (owner: docs-site):** the

@@ -1003,7 +1003,7 @@ export function themeOverrides(theme: Theme, base: Theme): ThemeOverrides {
     sameMetrics(theme.switchMetrics, base.switchMetrics)
       ? undefined
       : theme.switchMetrics;
-  return {
+  const diff = {
     ...(name === undefined ? {} : { name }),
     ...(isEmptyGroup(colors) ? {} : { colors }),
     ...(typography === undefined ? {} : { typography }),
@@ -1018,7 +1018,29 @@ export function themeOverrides(theme: Theme, base: Theme): ThemeOverrides {
     ...(toggle === undefined ? {} : { switch: toggle }),
     ...(metrics === undefined ? {} : { switchMetrics: metrics }),
   };
+  // The mirror of `EveryGroupOverridable`: a group a `Theme` gains must also be
+  // one this diff can name, or the round trip silently loses it.
+  const named: EveryDiffGroupListed<keyof typeof diff> = true;
+  void named;
+  return diff;
 }
+
+/**
+ * A group the diff forgets, as a build error.
+ *
+ * `EveryGroupOverridable` keeps a new `Theme` group inside `ThemeOverrides`; this
+ * keeps it inside {@link themeOverrides}' result. Without it a group added to a
+ * theme would reach an edit and never leave it — the round trip would quietly
+ * drop the value, and no test over the shipped themes would notice unless one of
+ * them moved that group.
+ */
+type EveryDiffGroupListed<Built extends keyof ThemeOverrides> =
+  Exclude<keyof ThemeOverrides, Built> extends never
+    ? true
+    : [
+        "a theme group is missing from the diff",
+        Exclude<keyof ThemeOverrides, Built>,
+      ];
 
 /**
  * A stored theme as a boundary decodes it: the overrides a store keeps, plus the
