@@ -391,6 +391,74 @@ describe("extendTheme", () => {
   });
 
   /**
+   * A preset name is a stored choice, and a store writes "no choice" as a blank
+   * as readily as a `null`: a brand editor's cleared row writes `""`, an unset
+   * template variable leaves whitespace, and `JSON.parse` answers `any` so
+   * neither needs a cast to reach the merge. Read as a name, a cleared field was
+   * **refused** — `extendTheme` threw `` ` ` is not a density preset `` and the
+   * throw came from `restoreTheme`, the seat a store-based consumer calls at
+   * startup, so emptying one settings row took the window down while every other
+   * name the merge reads (`nameOf`, `namesColour`, the two families) answered
+   * the base's value. Nothing was chosen, so the base's preset is the truthful
+   * answer; a name that names a *different* preset is still refused, because that
+   * is a rename to repair rather than a field to inherit.
+   */
+  describe("a density preset a store wrote", () => {
+    it("inherits the base's box for a name that names none", () => {
+      const unreadable: ReadonlyArray<unknown> = ["", "   ", null, undefined];
+      const boxes = unreadable.map((density) => {
+        const stored = JSON.parse(
+          JSON.stringify({ density: density ?? null }),
+        ) as ThemeOverrides;
+        return extendTheme(darkTheme, stored).density;
+      });
+
+      expect(boxes).toEqual(unreadable.map(() => darkTheme.density));
+      // The control: a name still selects the preset it names.
+      expect(
+        extendTheme(darkTheme, JSON.parse('{"density":"compact"}')).density,
+      ).toEqual(densityPresets.compact);
+    });
+
+    it("restores a theme whose cleared field names no preset", () => {
+      // The documented restore route is where the refusal landed: a saved theme
+      // is decoded, then rebuilt from its own labels.
+      const restored = restoreTheme(JSON.parse('{"mode":"dark","density":""}'));
+
+      expect(restored.density).toEqual(darkTheme.density);
+      expect(restored.mode).toBe("dark");
+      // A name this release does not ship is still the refusal it was: the
+      // distinction is "names nothing" versus "names another preset".
+      expect(() =>
+        restoreTheme(JSON.parse('{"mode":"dark","density":"cosy"}')),
+      ).toThrow(/`cosy` is not a density preset/);
+    });
+
+    it("teaches the blank name on the three surfaces that document the merge", () => {
+      const read = (path: string): string =>
+        readFileSync(new URL(path, import.meta.url), "utf8").replace(
+          /\s+/g,
+          " ",
+        );
+      const seam = read("./theme.ts");
+      const catalogue = read("../../../docs/tokens.md");
+      const design = read("../../../docs/design-system.md");
+
+      expect(seam).toContain("A name written **blank** is the absence it is");
+      expect(catalogue).toContain(
+        "A name written **blank** is the absence it is",
+      );
+      expect(design).toContain("a name written blank is the absence it is");
+      // The rule sits beside the refusal, not instead of it: the two surfaces
+      // that quote the message still do, and the design page still names it.
+      [seam, catalogue].forEach((page) => {
+        expect(page).toContain("not a density preset");
+      });
+      expect(design).toContain("is refused by name");
+    });
+  });
+
+  /**
    * A theme's name is content — the row a picker prints, the header a preview
    * shows — so it is a value a store writes as readily as a word: JSON keeps the
    * `null` of a name never carried, a cleared brand-editor field writes `""`, a

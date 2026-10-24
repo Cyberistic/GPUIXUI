@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 274/274
+`[x]` `[██████████]` 275/275
 
 `[x]` Teach the **switch a brand half-declares** the fallback its painter takes —
       four teaching surfaces said a half-declared `switch` "paints the slots it
@@ -3285,6 +3285,29 @@ a merge over a stored theme.
       can hand the resolved theme to `themeOverrides(theme, base)` so the copied
       file is the diff a reader can re-apply. No native scenario applies — a
       derivation over plain data.
+
+`[x]` Read a **cleared density field as the absence it is** — `mergeDensity`
+      read every string as a preset name, so `""` (a brand editor's cleared row,
+      an unset template variable) and whitespace were **refused**:
+      `extendTheme` threw `` `` is not a density preset `` and the throw came out
+      of `restoreTheme`, the seat a store-based consumer calls at startup, so
+      emptying one settings row took the window down while every other name the
+      merge reads (`nameOf` for a theme name and its two families, `namesColour`
+      for a role) answered the base's value. Nothing was chosen, so the base's
+      box is the truthful answer; a **non-blank** name this release does not ship
+      is still refused, because that is a rename to repair rather than a field to
+      inherit. Proof: `theme.test.ts`'s `a density preset a store wrote` (3 cases:
+      the blank and whitespace names beside `null`/absent inheriting the base's
+      box through the documented restore route, a shipped name as the positive
+      control, and the three teaching surfaces). Directions measured: with the
+      guard removed the two behaviour cases fail on the exact
+      `` Error: `` is not a density preset ``; with a reader that swallows *any*
+      name the existing `refuses a density preset this release does not ship` and
+      the restore case both fail `expected [Function] to throw an error`;
+      restored, the package is **3 172** tests with `check-types` clean. Docs:
+      the `ThemeOverrides.density` JSDoc, `docs/tokens.md` §Density and §Theme
+      API, `docs/design-system.md` §11 and the `Theme extension` row. No native
+      scenario applies — a stored value read at a merge seam.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

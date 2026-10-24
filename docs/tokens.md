@@ -3954,6 +3954,15 @@ caller to rebuild a theme they had just built with `extendTheme`. Narrow a
 restored name with `isDensityName` (§Persisted choices) before it reaches a
 theme.
 
+A name written **blank** is the absence it is, not a name to refuse: `""` (or
+whitespace) is what a brand editor writes when the reader empties the field and
+what an unset template variable leaves, so the base's preset stands — nothing was
+chosen. Every other name the merge reads takes a blank value that way
+(`nameOf`, `namesColour`, the two font families), and read as a name here it
+threw out of `restoreTheme`, so a cleared field took the window down at startup.
+A **non-blank** name this release does not ship is still refused: that is a
+rename to repair, not a field to inherit.
+
 `densityPresets` holds all three presets and `defaultDensity` is
 `densityPresets.comfortable`, the preset the built-in themes carry.
 
@@ -4749,7 +4758,8 @@ Merge rules:
   raising one size inherits the rest rather than dropping the steps the audit
   gate requires. A preset name this release does not ship is **refused**, naming
   the value and the presets that ship, rather than merged into a theme with no
-  density group (§Density);
+  density group (§Density); a name written **blank** is the absence it is — the
+  base's preset stands — because a cleared editor field chose nothing;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
 - `contrast` is not overridable either, and for the same reason: a mode and a
   variant are what a theme's numbers mean, so a caller that wants the other one

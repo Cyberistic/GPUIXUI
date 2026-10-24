@@ -237,7 +237,10 @@ export interface ThemeOverrides {
    * writes, its own `name` and every metric — replace the base's box, so the
    * preset a theme reports is the one it paints. A partial override keeps the
    * base preset's name and merges each control size, so a brand that raises one
-   * size inherits the others.
+   * size inherits the others. A name written **blank** is the absence it is —
+   * a cleared editor field names no preset — so the base's box stands, while a
+   * name that names a different preset this release does not ship is refused
+   * rather than merged.
    */
   readonly density?: DensityName | Density | DensityOverrides;
   /** Replace individual elevation levels. */
@@ -495,11 +498,22 @@ const mergeDensity = (
     return base;
   }
   if (typeof override === "string") {
+    // A cleared field names no preset: `""` is what a brand editor writes when
+    // the reader empties the row and what an unset template variable leaves, and
+    // every other name the merge reads (`nameOf`, `namesColour`, the two font
+    // families) takes it as the absence it is. Read as a name here it threw out
+    // of `restoreTheme`, so a cleared field took the window down at startup
+    // while the base preset was the truthful answer: nothing was chosen.
+    if (override.trim() === "") {
+      return base;
+    }
     // A preset name is a stored preference as often as a literal, so the type
     // cannot vouch for it. The lookup it used to be answered `undefined` and
     // returned a theme with no density group: the first control beside it read
     // `Cannot read properties of undefined (reading 'controlHeight')`, and the
-    // gate blamed a stored theme rather than the name.
+    // gate blamed a stored theme rather than the name. A name that names a
+    // different preset is a rename to repair, not a field to inherit, so it is
+    // still refused by name.
     if (!isDensityName(override)) {
       throw new Error(
         `\`${override}\` is not a density preset: ${densityNames.join(", ")} are the presets this release ships. A restored or configured choice is narrowed with \`isDensityName\` before it reaches a theme.`,

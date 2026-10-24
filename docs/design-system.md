@@ -1534,7 +1534,10 @@ The extension mechanism is deliberately small:
 
 Overrides merge by group; typography merges field by field; a density preset's
 `controlHeight` and `controlPaddingX` merge size by size, so a brand that raises
-one size keeps the others; elevation levels are replaced as whole arrays; a
+one size keeps the others, a preset name this release no longer ships is refused
+by name, and a name written blank is the absence it is — the base's preset stands
+— because a cleared editor field chose nothing; elevation levels are replaced as
+whole arrays; a
 platform's `switch` paint is replaced whole, because the three slots are one
 control's paint and a half-declared switch is no declaration — the primitive
 keeps the accent toggle and `switchFailures` names the lost slot.
