@@ -15,6 +15,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { accessibleName } from "@gpuixui/primitives/core";
 import {
   cn,
   COLOR_PICKER_CELL,
@@ -95,7 +96,7 @@ export interface ColorPickerProps extends Omit<
   Props,
   "children" | "style" | "onChange"
 > {
-  /** The group's accessible name. */
+  /** The group's accessible name. A blank value reads as `"Color picker"`, so the group and its field are always named. */
   readonly label: string;
   /** The controlled normalised hex value. `undefined` means uncontrolled; a stored value that is not text means uncontrolled too. */
   readonly value?: string;
@@ -121,6 +122,9 @@ export interface ColorPickerState {
 /** The colour the field starts from when the caller gave none. */
 const DEFAULT_COLOUR = "#000000";
 
+/** The name a picker publishes when the caller's label says nothing. */
+const DEFAULT_COLOR_PICKER_LABEL = "Color picker";
+
 /** Swatches plus a HEX field, with a preview of the current colour. */
 export const ColorPicker = ({
   label,
@@ -135,6 +139,10 @@ export const ColorPicker = ({
   ...rest
 }: ColorPickerProps) => {
   const theme = useTheme();
+  // A label is copy from an i18n table as often as a literal: a blank one is
+  // the absence the documented default names, not an empty group announced
+  // beside a field called `" hex value"`.
+  const name = accessibleName(label) ?? DEFAULT_COLOR_PICKER_LABEL;
   const [value, setValue] = useControllableState({
     // A colour is saved with the control: a record's `null` is the absence the
     // controlled prop already reads as uncontrolled, and an absent default is
@@ -182,7 +190,7 @@ export const ColorPicker = ({
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={name}
       {...rest}
       testId={testId}
       style={mergeStyles(
@@ -247,7 +255,7 @@ export const ColorPicker = ({
           })}
         />
         <input
-          aria-label={`${label} hex value`}
+          aria-label={`${name} hex value`}
           // The hex field paints the page role as its own fill.
           theme={nativeTextTheme(theme, "background")}
           {...(valid ? {} : { "aria-description": "Invalid hex colour" })}
@@ -284,6 +292,7 @@ export const colorPickerMeta = {
     "swatches plus HEX entry only; no alpha, HSL/RGB fields or eyedropper",
     "the HEX field is validated on commit; an invalid draft is marked destructive and reverted on blur",
     "disabled refuses the swatches and both commit paths (Enter and blur), because a read-only host still receives keys",
+    "a blank label reads as `Color picker`, so the group and its hex field are always named",
   ],
   docs: "docs/color-picker.mdx",
   example: "examples/color-picker.example.tsx",

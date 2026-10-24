@@ -22,7 +22,7 @@ import { ColorPicker } from "@gpuixui/components";
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `label` | `string` | — |
+| `label` | `string` | — (a blank value reads as `"Color picker"`) |
 | `value` | `string` | — |
 | `defaultValue` | `string` | `"#000000"` |
 | `onValueChange` | `(value: string) => void` | — |
@@ -30,10 +30,24 @@ import { ColorPicker } from "@gpuixui/components";
 | `disabled` | `boolean` | `false` |
 | `style` | `StateStyle<ColorPickerState>` | — |
 | `className` | `string` | — |
+| `testId` | `string` | — |
 
 ## Limitations
 
 - No saturation/value square; two-stop gradients only.
 - No alpha, HSL/RGB fields or eyedropper.
 - HEX only; named colours are not parsed.
+- **Measured in a window**: `color-picker-lifecycle` (47 checks, 0.11.0) mounts
+  the shipped picker and a disabled twin. Each of the six swatches paints its
+  own theme role, counted inside a rounded cell's inner square so a corner
+  cannot stand in for the fill; the chosen one alone carries the page-filled pip; `Space` chooses on its release and `Enter` on its press; a typed `f0a`
+  commits `#ff00aa` with the marker cleared and the preview repainted; an
+  unreadable draft paints the destructive border and commits nothing; and a
+  disabled picker reports nothing while the traversal skips its swatches and its
+  read-only field. The group's and the field's names are the behaviour suite's
+  (`src/behaviour/color-picker.test.tsx`), because a window's protocol has no
+  accessibility verb.
+- **A blank label reads as `"Color picker"`**: the group and its field are
+  always named, so a label an i18n row left empty publishes `Color picker` and
+  `Color picker hex value` rather than an unnamed group beside `" hex value"`.
 - A colour and its palette read from storage are read at the boundary: a `value` that is not text means uncontrolled, a stored `defaultValue` that is not text paints the documented colour, a `swatches` value that is not a list paints the theme's defaults, and an entry that is not a non-blank colour is dropped.

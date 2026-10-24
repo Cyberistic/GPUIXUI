@@ -4,7 +4,9 @@
  * The bugs these guard: a swatch grid that ignores the theme, a shorthand hex
  * that is not expanded on commit, an invalid draft that commits anyway, a blur
  * that keeps invalid text, a disabled picker that still changes or keeps its
- * field in the tab order, and a style callback that cannot see validity.
+ * field in the tab order, a style callback that cannot see validity, and a
+ * stored label that arrived blank and published an unnamed group whose field
+ * was announced as `" hex value"`.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -82,6 +84,19 @@ describe("ColorPicker", () => {
     expect(
       picker.renderer.findByTestId("picker-preview")?.style.backgroundColor,
     ).toBe("#000000");
+
+    picker.unmount();
+  });
+
+  it("names a picker whose stored label is blank", () => {
+    const picker = renderComponent(<ColorPicker label="   " value="#000000" />);
+
+    const names = Arr.map(a11yNodes(picker.renderer), (node) => node.name);
+    // A label is copy from an i18n table as often as a literal, so a blank one
+    // is the absence the default names: the group and the field it holds.
+    expect(names).toContain("Color picker");
+    expect(names).toContain("Color picker hex value");
+    expect(names).not.toContain(" hex value");
 
     picker.unmount();
   });

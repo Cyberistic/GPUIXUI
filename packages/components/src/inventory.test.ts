@@ -939,6 +939,40 @@ describe("the measured target rows", () => {
     expect(pageText("image-zoom.mdx")).toContain("magnified corner is square");
   });
 
+  it("cites the swatch paint and the pip the color-picker probe measured", () => {
+    const heading = "### `color-picker-lifecycle` — measured on 0.11.0 here";
+    const probe = "color-picker-lifecycle";
+    const checks = readmeChecks(heading, probe);
+    expect(Number.isFinite(checks)).toBe(true);
+    expect(readmeSection(heading)).toContain(
+      `${checks} checks, \`--only ${probe}\``,
+    );
+
+    const claims = [
+      `\`${probe}\` (${checks} checks`,
+      "page-filled pip",
+      "`Space` chooses on its release and `Enter` on its press",
+      "`#ff00aa`",
+    ];
+    expect(
+      missingClaims(
+        "COMPONENTS.md's Color picker row",
+        rowText(oneRow("Color picker")),
+        claims,
+      ),
+    ).toEqual([]);
+    expect(
+      missingClaims("color-picker.mdx", pageText("color-picker.mdx"), claims),
+    ).toEqual([]);
+    // The names are the behaviour suite's half: a window has no a11y verb.
+    expect(pageText("color-picker.mdx")).toContain(
+      "src/behaviour/color-picker.test.tsx",
+    );
+    // A blank stored label is the absence the default names, in both places.
+    expect(rowText(oneRow("Color picker"))).toContain("Color picker hex value");
+    expect(pageText("color-picker.mdx")).toContain("Color picker hex value");
+  });
+
   it("cites the shipped player's own paint in its row and its page", () => {
     const heading = "### `media-player-lifecycle` — measured on 0.11.0 here";
     const probe = "media-player-lifecycle";
