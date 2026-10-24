@@ -38,6 +38,32 @@ export interface PresenceFrames {
   readonly exit: PresenceFrame;
 }
 
+/**
+ * One frame as a caller may have stored it.
+ *
+ * A field the config lost is absent or `null` — JSON has no `undefined`, so a
+ * key it never carried reads back as `null` — and a measurement that failed is a
+ * number the runtime cannot paint. Every {@link PresenceFrame} is one of these,
+ * so a component passes its builders' output and a consumer passes what its
+ * decoder answered, without an assertion between the two.
+ */
+export interface PresenceFrameInput {
+  readonly opacity?: number | null;
+  readonly height?: number | null;
+  readonly top?: number | null;
+  readonly left?: number | null;
+}
+
+/**
+ * A frame set as a caller may have stored it: a phase the config lost is absent
+ * or `null`, which is the shape a decoded config actually has.
+ */
+export interface PresenceFramesInput {
+  readonly initial?: PresenceFrameInput | null;
+  readonly animate?: PresenceFrameInput | null;
+  readonly exit?: PresenceFrameInput | null;
+}
+
 /** A tween in the shape a surface paints, with every field optional. */
 export interface PresenceTransition {
   /** Seconds, as the runtime reads it. */
@@ -51,6 +77,17 @@ export interface PresenceTransition {
 export interface PresenceTiming {
   readonly enter: PresenceTransition;
   readonly exit: PresenceTransition;
+}
+
+/**
+ * The timing a caller may have stored: a phase the config lost is absent or
+ * `null`, which is what JSON keeps for a key it never carried. Every
+ * {@link PresenceTiming} is one of these, so a level's own timing and a decoded
+ * config are both passed to {@link presenceTimingOf} without an assertion.
+ */
+export interface PresenceTimingInput {
+  readonly enter?: PresenceTransition | null;
+  readonly exit?: PresenceTransition | null;
 }
 
 /** The pointer rule a surface paints: only a resting surface is a target. */
@@ -174,20 +211,60 @@ export const fadeFromAnchor = (
 };
 
 /**
+ * One frame a surface paints, read from a value a caller may have stored.
+ *
+ * `PresenceFrame` is structural and `PresenceFrames` is exported, so a frame set
+ * can arrive from a config that did not decode: JSON has no `undefined`, so a
+ * phase the config never carried reads back as `null`, and a coordinate a
+ * measurement failed on is `NaN`. The runtime paints a non-finite inset as
+ * nothing and takes `animate` as a **required** target, so a field this cannot
+ * paint is **dropped** — the element keeps the value its own style states, which
+ * is where a frame's zero would have put it — and a phase the value does not
+ * name is **no frame**, the answer {@link presenceTimingOf} gives a phase it
+ * does not name.
+ */
+const frameOf = (
+  frame: PresenceFrameInput | null | undefined,
+): PresenceFrame => {
+  if (typeof frame !== "object" || frame === null) return {};
+  const read = (value: number | null | undefined): number | undefined =>
+    value !== null && Number.isFinite(value) ? value : undefined;
+  const opacity = read(frame.opacity);
+  const height = read(frame.height);
+  const top = read(frame.top);
+  const left = read(frame.left);
+  return {
+    ...(opacity === undefined ? {} : { opacity }),
+    ...(height === undefined ? {} : { height }),
+    ...(top === undefined ? {} : { top }),
+    ...(left === undefined ? {} : { left }),
+  };
+};
+
+/** The three frames a surface paints, each read from a value a caller may have stored. */
+const framesOf = (
+  frames: PresenceFramesInput | null | undefined,
+): PresenceFrames => ({
+  initial: frameOf(frames?.initial),
+  animate: frameOf(frames?.animate),
+  exit: frameOf(frames?.exit),
+});
+
+/**
  * The timing a surface paints, read from a value a caller may have stored.
  *
- * `PresenceTiming` is exported and structural, and this module is a published
- * subpath for a consumer painting its own surface, so a config that did not
- * decode can arrive with **no object at all** (JSON has no `undefined`, so a
- * field the config never carried reads back as `null`) or with a phase it never
- * named. Reading `.enter`/`.exit` off it threw `TypeError` out of the render that
- * projected the window. A phase the value does not name is **no transition** —
- * the answer {@link transitionWindowMs} already gives a field it cannot read —
- * so the surface paints its resting frame at once rather than throwing, and the
- * window and the frame cannot disagree about what a run is.
+ * `PresenceTimingInput` is the shape a decoded config actually has, and this
+ * module is a published subpath for a consumer painting its own surface: a
+ * config that did not decode can arrive with **no object at all** (JSON has no
+ * `undefined`, so a field the config never carried reads back as `null`) or with
+ * a phase it never named. Reading `.enter`/`.exit` off it threw `TypeError` out of
+ * the render that projected the window. A phase the value does not name is **no
+ * transition** — the answer {@link transitionWindowMs} already gives a field it
+ * cannot read — so the surface paints its resting frame at once rather than
+ * throwing, and the window and the frame cannot disagree about what a run is.
  */
 export const presenceTimingOf = (
-  timing: PresenceTiming | null | undefined,
+  timing: PresenceTimingInput | null | undefined,
 ): PresenceTiming => ({
   enter: timing?.enter ?? {},
   exit: timing?.exit ?? {},
@@ -237,7 +314,9 @@ const milliseconds = (seconds: number | undefined): number => {
  * the arithmetic cannot represent: the box unmounts rather than staying mounted
  * for a number the scheduler cannot take.
  */
-export const transitionWindowMs = (timing: PresenceTransition): number => {
+export const transitionWindowMs = (
+  timing: PresenceTransition | null | undefined,
+): number => {
   const total = milliseconds(timing?.duration) + milliseconds(timing?.delay);
   return Number.isFinite(total) ? Math.round(total) : 0;
 };
@@ -249,8 +328,9 @@ export const transitionWindowMs = (timing: PresenceTransition): number => {
  * length of its exit tween, so the conversion lives in one place and a
  * preference change rescales both.
  */
-export const exitWindowMs = (timing: PresenceTiming): number =>
-  transitionWindowMs(presenceTimingOf(timing).exit);
+export const exitWindowMs = (
+  timing: PresenceTimingInput | null | undefined,
+): number => transitionWindowMs(presenceTimingOf(timing).exit);
 
 /**
  * A house timing that waits `delayMs` before it runs — a stagger.
@@ -273,7 +353,7 @@ export const exitWindowMs = (timing: PresenceTiming): number =>
  * was given.
  */
 export const delayedTiming = (
-  timing: PresenceTransition,
+  timing: PresenceTransition | null | undefined,
   delayMs: number,
 ): PresenceTransition =>
   milliseconds(timing?.duration) === 0 ||
@@ -282,20 +362,31 @@ export const delayedTiming = (
     ? (timing ?? {})
     : { ...timing, delay: delayMs / 1000 };
 
-/** The `motion` prop a surface paints for its current presence. */
-export const presenceMotion = <Frames extends PresenceFrames>(
-  frames: Frames,
+/**
+ * The `motion` prop a surface paints for its current presence.
+ *
+ * Both halves are read from values a caller may have stored, because this module
+ * is a published entry for a consumer painting its own surface: a timing the
+ * value does not name is **no transition** ({@link presenceTimingOf}) and a frame
+ * it cannot paint is dropped or no frame at all ({@link framesOf}), so a decoded
+ * config cannot hand the runtime `undefined` where its target belongs or a
+ * non-finite inset it paints as nothing. A readable pair is passed through as it
+ * was given.
+ */
+export const presenceMotion = (
+  frames: PresenceFramesInput | null | undefined,
   present: boolean,
-  timing: PresenceTiming,
+  timing: PresenceTimingInput | null | undefined,
 ): {
-  readonly initial: Frames["initial"];
-  readonly animate: Frames["animate"] | Frames["exit"];
+  readonly initial: PresenceFrame;
+  readonly animate: PresenceFrame;
   readonly transition: PresenceTransition;
 } => {
   const phases = presenceTimingOf(timing);
+  const read = framesOf(frames);
   return {
-    initial: frames.initial,
-    animate: present ? frames.animate : frames.exit,
+    initial: read.initial,
+    animate: present ? read.animate : read.exit,
     transition: present ? phases.enter : phases.exit,
   };
 };

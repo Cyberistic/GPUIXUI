@@ -98,10 +98,16 @@ export const presenceWindowExample = (): readonly number[] => [
  * surface: the entry frame first, the resting or exit frame the presence names,
  * and the phase's transition — a panel below its trigger starts toward the
  * trigger and moves away from it, while a leaving one takes no presses.
+ *
+ * A frame set and a timing a caller **stored** are read the same way: both are
+ * `…Input` shapes, so a config that decoded with no phase (or with a coordinate
+ * a measurement failed on) reaches the composition without an assertion, and the
+ * phase it lost is no frame and no transition rather than `undefined` or `NaN`.
  */
 export const presenceCompositionExample = (): {
   readonly entering: ReturnType<typeof presenceMotion>;
   readonly leaving: ReturnType<typeof presenceMotion>;
+  readonly stored: ReturnType<typeof presenceMotion>;
   readonly pointsAtRest: boolean;
 } => {
   const frames = fadeFromAnchor("bottom", 4);
@@ -109,6 +115,11 @@ export const presenceCompositionExample = (): {
   return {
     entering: presenceMotion(frames, true, timing),
     leaving: presenceMotion(frames, false, timing),
+    stored: presenceMotion(
+      { initial: { opacity: 0, top: Number.NaN }, animate: null },
+      true,
+      { enter: { duration: 0.2 } },
+    ),
     pointsAtRest: presenceStyle(true).pointerEvents === "auto",
   };
 };

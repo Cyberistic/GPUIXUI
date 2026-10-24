@@ -108,7 +108,8 @@ describe("the usage example", () => {
     // starts toward the trigger (`top: -4`) and rests at `0`, the exit retraces
     // that travel, the enter decelerates and the exit accelerates, and only the
     // resting surface is a pointer target.
-    const { entering, leaving, pointsAtRest } = presenceCompositionExample();
+    const { entering, leaving, stored, pointsAtRest } =
+      presenceCompositionExample();
     expect(entering).toEqual({
       initial: { opacity: 0, top: -4 },
       animate: { opacity: 1, top: 0 },
@@ -118,6 +119,13 @@ describe("the usage example", () => {
       initial: { opacity: 0, top: -4 },
       animate: { opacity: 0, top: -4 },
       transition: { duration: 0.2, ease: "easeIn" },
+    });
+    // A stored set reaches the composition as the fields it can paint: the
+    // unreadable coordinate is dropped and the phase it lost is no frame.
+    expect(stored).toEqual({
+      initial: { opacity: 0 },
+      animate: {},
+      transition: { duration: 0.2 },
     });
     expect(pointsAtRest).toBe(true);
   });

@@ -147,15 +147,21 @@ A surface that enters and leaves reads one table, exported from
   under a stored preference the union does not name, the rule `preferenceOf`
   keeps);
 - `presenceTimingOf(timing)` reads the table back from a value a caller may have
-  stored: `PresenceTiming` is exported and structural, so a config that did not
-  decode can arrive with no object at all or with only one phase, and a phase the
-  value does not name is **no transition** — the surface paints its resting frame
-  at once instead of throwing out of the render that projected its window;
+  stored: `PresenceTimingInput` is the shape a decoded config has — no object at
+  all, or one phase — and a phase the value does not name is **no transition**,
+  so the surface paints its resting frame at once instead of throwing out of the
+  render that projected its window. A caller passes what its decoder answered;
+  the type takes it, so no assertion stands between the two;
 - `presenceMotion(frames, present, timing)` is the runtime's `motion` prop for a
   surface — the frames' first paint, the resting frame while it is open or the
   exit frame while it leaves, and that phase's transition — so a consumer that
   paints its own surface composes the table instead of restating the three
-  fields;
+  fields. Both halves are read as stored values too: `PresenceFramesInput` and
+  `PresenceTimingInput` are the shapes a decoded config has, a frame field the
+  runtime cannot paint (a `NaN` from a failed measurement) is **dropped** so the
+  element keeps the value its own style states, and a phase the value does not
+  name is **no frame** — the runtime takes `animate` as a required target and
+  paints a non-finite inset as nothing, so neither may reach it;
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds
   a box stays mounted for, including the wait a delayed run sits out first; a
   field that cannot be scheduled adds no time (a negative wait never shortens the

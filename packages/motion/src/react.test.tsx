@@ -24,7 +24,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { inertia } from "./inertia.js";
 import { tween } from "./motion.js";
-import { presenceTiming, type PresenceTiming } from "./presence.js";
+import { presenceTiming, type PresenceTimingInput } from "./presence.js";
 import {
   useInertia,
   useMotion,
@@ -121,7 +121,11 @@ const ReducedCompletion = ({ initial }: { readonly initial?: number }) => {
 };
 
 /** The mount state a surface paints from a timing a caller may have stored. */
-const StoredTimingFrame = ({ timing }: { readonly timing: PresenceTiming }) => {
+const StoredTimingFrame = ({
+  timing,
+}: {
+  readonly timing: PresenceTimingInput | null;
+}) => {
   const presence = useSurfacePresence(true, timing);
   return <>{`${presence.mounted}:${String(presence.timing.exit.duration)}`}</>;
 };
@@ -205,8 +209,13 @@ describe("the window a stored timing names", () => {
     // window from `.exit` in its render, so a config that decoded without one
     // threw out of the render and the surface never mounted at all. A phase the
     // value does not name is no transition, which is also no window.
-    const stored = { enter: { duration: 0.32 } } as PresenceTiming;
+    const stored = { enter: { duration: 0.32 } };
     expect(renderToStaticMarkup(<StoredTimingFrame timing={stored} />)).toBe(
+      "true:undefined",
+    );
+    // A config that decoded with no object at all is no phase in either
+    // direction, so the surface still mounts — the type says so, no cast.
+    expect(renderToStaticMarkup(<StoredTimingFrame timing={null} />)).toBe(
       "true:undefined",
     );
     // A complete timing still reports the exit it names.

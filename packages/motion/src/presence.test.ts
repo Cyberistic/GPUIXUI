@@ -21,7 +21,6 @@ import {
   presenceTiming,
   presenceTimingOf,
   transitionWindowMs,
-  type PresenceTiming,
   type PresenceTransition,
 } from "./presence.js";
 import { motionTiming } from "./timing.js";
@@ -256,9 +255,12 @@ describe("a timing a caller stored", () => {
     // `.exit` inside its render, so a stored value threw `TypeError` and the
     // surface never mounted.
     expect(presenceTimingOf(null)).toEqual({ enter: {}, exit: {} });
-    expect(
-      presenceTimingOf({ enter: { duration: 0.32 } } as PresenceTiming),
-    ).toEqual({ enter: { duration: 0.32 }, exit: {} });
+    // A config that decoded with one phase is the shape the input type takes, so
+    // the call needs no assertion to reach the reader.
+    expect(presenceTimingOf({ enter: { duration: 0.32 } })).toEqual({
+      enter: { duration: 0.32 },
+      exit: {},
+    });
     // A complete pair keeps the transitions it was given.
     expect(presenceTimingOf(presenceTiming("fast"))).toEqual(
       presenceTiming("fast"),
@@ -266,16 +268,57 @@ describe("a timing a caller stored", () => {
   });
 
   it("holds a surface that names no phase for no window, and paints it at rest", () => {
-    const stored = { enter: { duration: 0.32 } } as PresenceTiming;
+    // A config that did not decode carries no object at all, and the reader's
+    // signature takes it as it arrives — the call needs no assertion, which is
+    // the point of reading a stored value at the boundary.
+    const stored = { enter: { duration: 0.32 } };
     expect(exitWindowMs(stored)).toBe(0);
-    expect(exitWindowMs(null as unknown as PresenceTiming)).toBe(0);
-    expect(transitionWindowMs(null as unknown as PresenceTransition)).toBe(0);
-    expect(delayedTiming(null as unknown as PresenceTransition, 80)).toEqual(
-      {},
-    );
+    expect(exitWindowMs(null)).toBe(0);
+    expect(transitionWindowMs(null)).toBe(0);
+    expect(delayedTiming(null, 80)).toEqual({});
     expect(
       presenceMotion(fadeFrom("top", 8), false, stored).transition,
     ).toEqual({});
+  });
+
+  it("reads a frame set a caller stored as the fields it can paint", () => {
+    // The bug this guards: `PresenceFrames` is exported and structural, and this
+    // module is a published entry, so a frame set can arrive from a config that
+    // did not decode. `presenceMotion` handed it straight to the runtime, whose
+    // `animate` target is required and whose non-finite insets paint as nothing:
+    // a frame a config never carried reached the host as `undefined` (the surface
+    // never enters or leaves) and a failed measurement reached it as `NaN` (the
+    // travel disappears). The stored shape is a type of its own, so a consumer
+    // passes what its decoder answered without an assertion.
+    const timing = presenceTiming("normal");
+    const stored = {
+      initial: { opacity: 0, top: Number.NaN },
+      animate: null,
+      exit: { opacity: 0, left: Number.POSITIVE_INFINITY },
+    };
+
+    expect(presenceMotion(stored, true, timing)).toEqual({
+      initial: { opacity: 0 },
+      animate: {},
+      transition: timing.enter,
+    });
+    expect(presenceMotion(stored, false, timing)).toEqual({
+      initial: { opacity: 0 },
+      animate: { opacity: 0 },
+      transition: timing.exit,
+    });
+    // A set that did not decode at all is no frame in every phase.
+    expect(presenceMotion(null, true, timing)).toEqual({
+      initial: {},
+      animate: {},
+      transition: timing.enter,
+    });
+    // The readable pair keeps every field it was given.
+    expect(presenceMotion(fadeFrom("top", 8), true, timing)).toEqual({
+      initial: { opacity: 0, top: 8 },
+      animate: { opacity: 1, top: 0 },
+      transition: timing.enter,
+    });
   });
 });
 

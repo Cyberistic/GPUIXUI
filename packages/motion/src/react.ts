@@ -53,6 +53,7 @@ import {
   presenceTiming,
   presenceTimingOf,
   type PresenceTiming,
+  type PresenceTimingInput,
 } from "./presence.js";
 import { useMotionPreference } from "./provider.js";
 import { type MotionLevel } from "./timing.js";
@@ -106,7 +107,7 @@ export interface SurfacePresence {
  */
 export const useSurfacePresence = (
   open: boolean,
-  timing: PresenceTiming,
+  timing: PresenceTimingInput | null | undefined,
 ): SurfacePresence => {
   const [mounted, setMounted] = useState(open);
   // The hold is the window, not the duration: a delayed exit sits out its wait
