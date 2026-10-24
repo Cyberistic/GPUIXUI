@@ -2554,7 +2554,22 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 173/173
+`[x]` `[██████████]` 174/174
+
+`[x]` Stop the **theme gallery's inventory row** printing a registry size — the
+      `Native theme gallery` row said "**40/40** headless scenarios green" and
+      "all **39** shipped component examples" while the headless registry lists
+      **46** scenarios and `packages/components/examples` mounts **72**: the same
+      drift the playground README had already retired, because only the README's
+      gallery section and its §What is proven bullet were guarded. The row now
+      says the full headless suite is green and `examples-mount` pages every
+      registered component example, and names the two registries that own the
+      counts. `src/scenarios/examples.test.ts` gains `does not pin the suite's
+      size in its evidence` (the row must reject a scenario or example count and
+      state both readings). Directions measured: with the old row restored the
+      case fails by name (`expected '| Native theme gallery | …' not to match …`);
+      green, the file is 8/8. Docs: the `Native theme gallery` row. No scenario
+      applies — a docs read and the registries it names.
 
 `[x]` Measure the **shipped `PropertyPanel`** in a window — Tier 3's *Property
       panels* row cited `inspector-lifecycle`, whose inspector is composed in the

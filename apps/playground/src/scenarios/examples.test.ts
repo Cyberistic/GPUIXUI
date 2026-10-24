@@ -32,6 +32,25 @@ const readme = readFileSync(
   "utf8",
 );
 
+const components = readFileSync(
+  new URL("../../../../COMPONENTS.md", import.meta.url),
+  "utf8",
+);
+
+/**
+ * The gallery's row in the inventory.
+ *
+ * The row names the gallery's scenarios and the suite they belong to, so it
+ * carries the same coverage claim as the README — and the same two registries
+ * behind it. A count here is a function of another package's registry, which is
+ * why the row names both without one.
+ */
+const galleryRow = (() => {
+  const start = components.indexOf("| Native theme gallery |");
+  const end = components.indexOf("\n", start);
+  return start === -1 ? "" : components.slice(start, end);
+})();
+
 /** The prose between the gallery's heading and the next one. */
 const gallerySection = (() => {
   const start = readme.indexOf("## The example gallery");
@@ -124,6 +143,23 @@ describe("the example gallery's README section", () => {
     expect(gallerySection).toContain("`no two examples paint the same screen`");
     expect(source).toContain('"no two examples paint the same screen"');
     expect(source).toContain("`${id} lays out a height of its own`");
+  });
+});
+
+describe("the example gallery's inventory row", () => {
+  it("does not pin the suite's size in its evidence", () => {
+    // The row is where an inventory reader judges the gallery's coverage, and
+    // both numbers behind it are another registry's: the headless scenario
+    // registry and `packages/components/examples`. A count written here goes
+    // stale without a failing test, which is what happened (40/40 and 39 when
+    // the registries held 46 and 72).
+    expect(galleryRow).not.toBe("");
+    expect(galleryRow).not.toMatch(/\b\d+\s+(?:headless\s+)?scenarios?\b/i);
+    expect(galleryRow).not.toMatch(
+      /\b\d+\s+(?:shipped\s+)?(?:component\s+)?examples?\b/i,
+    );
+    expect(galleryRow).toContain("full headless suite");
+    expect(galleryRow).toContain("every registered component example");
   });
 });
 
