@@ -466,16 +466,19 @@ would already have covered 8px.
 
 ## The JSX runtime is pinned per file
 
-Every published `.tsx` file opens with `/** @jsxImportSource @gpuix/react */`, the
-pragma that makes its JSX the runtime's whatever compiler reads it. The package
+Every `.tsx` file the package ships opens with `/** @jsxImportSource @gpuix/react */`,
+the pragma that makes its JSX the runtime's whatever compiler reads it. That is
+the source under `src/` and the compositions under `examples/` — the trees
+`examples/index.ts` mounts and every inventory row names. The package
 tsconfig already sets the same `jsxImportSource`, so the pragma changes nothing
 here — it is for a consumer that compiles these files **from source** with its own
 automatic runtime, which otherwise types every host element against that
 runtime's props. The docs site did exactly that through one type-only import and
 reported **164** errors, all of them a `StyleDesc`, `EventPayload` or `Instance`
 React's element props cannot hold, in files no docs change touched. `jsx-runtime.test.ts`
-holds every published file of this package and `@gpuixui/icons` to the runtime its
-tsconfig names, so a new component file cannot ship without it.
+holds every shipped file of this package — both trees — and `@gpuixui/icons` to the
+runtime its tsconfig names, so neither a new component file nor a new composition
+can ship without it.
 
 ## Components
 

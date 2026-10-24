@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * IconButton example: a layer toolbar.
  *

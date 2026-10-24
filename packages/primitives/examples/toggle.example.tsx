@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Toggle example: a canvas toolbar.
  *

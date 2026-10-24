@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Selection example: notification preferences.
  *

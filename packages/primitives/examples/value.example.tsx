@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Value controls example: a render-settings panel.
  *

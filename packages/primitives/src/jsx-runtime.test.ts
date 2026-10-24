@@ -15,6 +15,12 @@
  * React — so a consumer's compiler setting cannot reinterpret a file the
  * consumer did not write.
  *
+ * The compositions under `examples/` are part of that surface: `examples/index.ts`
+ * is the tree `apps/playground` mounts and `runtime/examples.runtime.test.tsx`
+ * paints, every inventory row names one, and a reader copies them as starting
+ * points. The walk therefore covers both trees a package ships JSX in, so a new
+ * composition cannot land on a runtime the rest of the package does not use.
+ *
  * `node:fs` is the test-time repository boundary `docs.test.ts` already uses; the
  * package's runtime code stays on Effect's platform services.
  */
@@ -28,9 +34,21 @@ import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 
 /** The two packages in this workstream that publish files rendering JSX. */
-const PACKAGES: ReadonlyArray<{ readonly name: string; readonly root: URL }> = [
-  { name: "primitives", root: new URL("../", import.meta.url) },
-  { name: "icons", root: new URL("../../icons/", import.meta.url) },
+const PACKAGES: ReadonlyArray<{
+  readonly name: string;
+  readonly root: URL;
+  readonly trees: ReadonlyArray<string>;
+}> = [
+  {
+    name: "primitives",
+    root: new URL("../", import.meta.url),
+    trees: ["src", "examples"],
+  },
+  {
+    name: "icons",
+    root: new URL("../../icons/", import.meta.url),
+    trees: ["src"],
+  },
 ];
 
 const text = (root: URL, file: string): string =>
@@ -49,19 +67,29 @@ const pinnedRuntime = (source: string): Option.Option<string> =>
   );
 
 /**
- * The published `.tsx` files of a package, relative to it.
+ * The shipped `.tsx` files of one tree, relative to the package.
  *
  * A test file is compiled by its own package only, so it is never the JSX a
- * consumer's program sees; the files published under `src` are. The walk starts
- * there, so a package-manager tree or a build output is never read.
+ * consumer's program sees; the files published under `src` and the compositions
+ * under `examples` are. The walk starts at those trees, so a package-manager
+ * tree or a build output is never read.
  */
-const publishedTsx = (root: URL): ReadonlyArray<string> =>
+const shippedTsx = (root: URL, tree: string): ReadonlyArray<string> =>
   Arr.filter(
-    readdirSync(fileURLToPath(new URL("src/", root)), {
+    readdirSync(fileURLToPath(new URL(`${tree}/`, root)), {
       recursive: true,
       encoding: "utf8",
     }),
     (file) => Str.endsWith(".tsx")(file) && !Str.endsWith(".test.tsx")(file),
+  );
+
+/** Every shipped `.tsx` of a package across the trees it renders JSX in. */
+const packagedTsx = (
+  root: URL,
+  trees: ReadonlyArray<string>,
+): ReadonlyArray<string> =>
+  Arr.flatMap(trees, (tree) =>
+    Arr.map(shippedTsx(root, tree), (file) => `${tree}/${file}`),
   );
 
 /** The fault one file has, or none when it pins the runtime it should. */
@@ -70,7 +98,7 @@ const pinFault = (
   file: string,
   runtime: string,
 ): Result.Result<string, void> =>
-  Option.match(pinnedRuntime(text(root, `src/${file}`)), {
+  Option.match(pinnedRuntime(text(root, file)), {
     onNone: () => Result.succeed(`${file}: pins no JSX runtime`),
     onSome: (name) =>
       name === runtime
@@ -80,11 +108,11 @@ const pinFault = (
 
 describe("the JSX runtime a published file is written for", () => {
   it("pins every published file to the runtime its package compiles with", () => {
-    const faults = Arr.flatMap(PACKAGES, ({ name, root }) =>
+    const faults = Arr.flatMap(PACKAGES, ({ name, root, trees }) =>
       Option.match(jsxRuntime(text(root, "tsconfig.json")), {
         onNone: () => [`${name}: tsconfig declares no jsxImportSource`],
         onSome: (runtime) =>
-          Arr.filterMap(publishedTsx(root), (file) =>
+          Arr.filterMap(packagedTsx(root, trees), (file) =>
             pinFault(root, file, runtime),
           ),
       }),
@@ -95,8 +123,23 @@ describe("the JSX runtime a published file is written for", () => {
   it("walks the published files of both packages", () => {
     // A walk that read nothing would pass the case above for the wrong reason.
     expect(
-      Arr.map(PACKAGES, ({ root }) => publishedTsx(root).length > 0),
+      Arr.map(
+        PACKAGES,
+        ({ root, trees }) => packagedTsx(root, trees).length > 0,
+      ),
     ).toEqual([true, true]);
+  });
+
+  it("walks the compositions a package ships beside its source", () => {
+    // The examples are the other tree a component file can land in; a walk that
+    // quietly stopped at `src` would leave them unpinned, as it did until the
+    // twelve compositions were held.
+    expect(
+      Arr.filter(
+        packagedTsx(new URL("../", import.meta.url), ["examples"]),
+        (file) => Str.startsWith("examples/")(file),
+      ).length,
+    ).toBeGreaterThan(0);
   });
 
   it("reads the pragma only off the first line", () => {

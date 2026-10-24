@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Rating example: a review card.
  *

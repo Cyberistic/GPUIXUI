@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Layout example: an inspector sidebar.
  *

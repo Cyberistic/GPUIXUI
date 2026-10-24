@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Icons example: a status strip and the size scale.
  *

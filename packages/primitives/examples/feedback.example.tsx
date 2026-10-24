@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Feedback example: a metric card that is still loading.
  *

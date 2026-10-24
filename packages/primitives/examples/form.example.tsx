@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Form example: a project-creation form.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Number field example: export settings.
  *

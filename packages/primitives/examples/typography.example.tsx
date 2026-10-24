@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Typography example: one release-notes entry.
  *
