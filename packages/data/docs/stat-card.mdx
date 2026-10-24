@@ -21,7 +21,7 @@ import { StatCard } from "@gpuixui/data";
 | `value` | `ReactNode` | — | the reading, already rendered by the caller |
 | `unit` | `string` | — | the unit, beside the reading |
 | `hint` | `ReactNode` | — | a line under the reading |
-| `trend` | `StatTrend` | — | the movement of the reading |
+| `trend` | `StatTrend` | — | the movement of the reading; a `null` a store wrote for an absent trend paints no trend |
 | `className` | `string` | — | joined after the recipe |
 
 ### `StatTrend`
@@ -35,3 +35,5 @@ import { StatCard } from "@gpuixui/data";
 
 - The card does not size itself; it fills the box it is given.
 - The reading is a node, not a number: the card formats nothing.
+- A saved card's `trend` is read as data: `null` means no trend, so the
+  reading, label and hint still paint.

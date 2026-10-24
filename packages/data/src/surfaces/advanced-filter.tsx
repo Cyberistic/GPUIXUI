@@ -47,7 +47,9 @@ import { spokenText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import type { ReactNode } from "react";
+import { listOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import {
@@ -173,6 +175,22 @@ const clauseFor = (
   comparison: "equals",
   value: "",
 });
+
+/**
+ * The fields a builder can offer, read as data.
+ *
+ * A saved builder writes `null` where it carried no field list, and a picker
+ * that iterated it threw out of the render. Only a list is a list, and only an
+ * entry that names a field is one, so a corrupt record cannot leave an unnamed
+ * menu row behind.
+ */
+const fieldList = (
+  fields: ReadonlyArray<AdvancedFilterField>,
+): ReadonlyArray<AdvancedFilterField> =>
+  Arr.filter(
+    listOf(fields),
+    (field): boolean => P.isObject(field) && P.isString(field.field),
+  );
 
 /** One clause: a field, a comparison, a value and a way out. */
 const ClauseRow = ({
@@ -529,6 +547,8 @@ export const AdvancedFilter = ({
 }: AdvancedFilterProps) => {
   const theme = useTheme();
   const heading = spokenText(Option.fromNullishOr(title), DEFAULT_FILTER_TITLE);
+  // The fields a saved builder carries: only a list of named fields is a list.
+  const offered = fieldList(fields);
   /**
    * The tree this build can paint.
    *
@@ -544,7 +564,7 @@ export const AdvancedFilter = ({
   });
   const base = Option.getOrElse(shown, () => emptyTree);
   const addClause = (path: FilterPath): void => {
-    onChange(appendAt(base, path, clauseFor(fields)));
+    onChange(appendAt(base, path, clauseFor(offered)));
   };
   const addGroup = (path: FilterPath): void => {
     // A new group starts as an `all` holding one blank clause: the reader
@@ -553,7 +573,7 @@ export const AdvancedFilter = ({
     // keeps nothing, which is not a state an Add control should land a reader
     // in.
     onChange(
-      appendAt(base, path, { kind: "all", children: [clauseFor(fields)] }),
+      appendAt(base, path, { kind: "all", children: [clauseFor(offered)] }),
     );
   };
   return (
@@ -584,7 +604,7 @@ export const AdvancedFilter = ({
             root={readable}
             node={readable}
             path={[]}
-            fields={fields}
+            fields={offered}
             onChange={onChange}
             onAddClause={addClause}
             onAddGroup={addGroup}

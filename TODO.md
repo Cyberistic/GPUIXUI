@@ -389,7 +389,28 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 242/242
+`[x]` `[██████████]` 243/243
+
+`[x]` Measure a **decoded theme with the collection and highlight readers, not
+only paint it** — `seriesColors`/`syntaxColors` already resolved a stated mode
+and variant through `themeModeOf`/`themeContrastOf`, and `findHighlight`/
+`highlightFailures`/`seriesFailures`/`syntaxFailures` the floors, but their
+source types still declared `mode: ThemeMode`/`contrast?: ThemeContrast` — so the
+upper-cased `"Dark"`/`"HIGH"` those seams exist to read could reach them only
+through a cast (`AGENTS.md` §2), and `FindHighlightSource.radius` refused the
+`null` JSON writes. `SeriesSource`/`SyntaxSource`/`SyntaxAuditSource`/
+`FindHighlightSource` now take the storage shapes (`mode?: unknown`,
+`contrast?: unknown`, `radius?: Partial<Radius> | null`) and the two
+`highlightFailures` fields with them; the report bodies did not change.
+`series.test.ts` and `syntax.test.ts`'s stored-mode/variant fixtures are the
+sources themselves now (no `as Theme`), and `highlight.test.ts` gains `reads a
+stored variant and a nulled scale without a cast`. Directions measured: restoring
+the strict fields fails `check-types` with **10** errors across the two suites,
+the two sources and `nativeTextTheme`'s `syntaxColors` argument; green with the
+ports. Green: 50 files / **3 067** tests, `check-types` clean. Docs:
+`docs/tokens.md` §Paint-ready values, `docs/design-system.md` §9 and the package
+README; the `Find highlights` row's case count moves 19 → 20. No native scenario
+applies — report sources and the fixtures that measure them.
 
 `[x]` Read a **stored theme in the type and document paint seams without a
 cast** — `textStyle`, `nativeAccent` and `nativeTextTheme` were total on a theme
@@ -19818,3 +19839,24 @@ scenario applies — the timings are pure values.
 `[x]` Re-verify the **seven Tier 4/5 rows and the four Tier 5 component probes** after the two stored-name reads landed (`5f04fcf43`, `6e5efd5a9`) — no row's status changes (six `done`/`done (composed)`, Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative). After `nub run --filter playground build`, live `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` is **6/6 green** (4.8–17.1 s each; the capabilities report `unverified` because the selection samples each probe group), headless `--only editor-surface` is **1/1** (502 ms, `editor=verified`), `dist/terminal/run.js` is **4/4** in a pty (`terminal-render`, `terminal-resize`, `terminal-pointer`, `terminal-input`), and the workstream's four Tier 5 probes `--only multi-step-form-lifecycle --only crop-overlay --only qr-matrix --only markdown-fence` are **4/4 green** (1.5–9.5 s each). The badge and tabs fixes only change the answer a **name the probes never pass** gets (the probes paint literal `variant`s and the shipped horizontal/automatic tab set), so no measured frame moves; `--only list-row-press` was run separately for the badge (`badge.test.tsx`'s component in a window) and is 1/1 green (1.7 s).
 
 `[x]` Re-verify the **seven Tier 4/5 rows and the four Tier 5 component probes** on the tree that lands the player's pointer scrub — no row's status changes: six are `done`/`done (composed)` and Terminal surfaces stays `unsupported (no host element)` with the measured terminal-runtime alternative. After `nub run --filter playground build` (green once the other workstream's primitives edit settled), live `--only media-player-lifecycle --only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` is **7/7 green** (4.8–16.9 s each; capabilities report `unverified` because the selection samples each probe group), the workstream's four Tier 5 probes `--only multi-step-form-lifecycle --only crop-overlay --only qr-matrix --only markdown-fence` are **4/4 green** (3.6–12.0 s each), headless `--only editor-surface` is **1/1** (878 ms, `editor=verified`), and `apps/playground/dist/terminal/run.js` in a pty is **4/4** (`terminal-render`, `terminal-resize`, `terminal-pointer`, `terminal-input`). `media-player-lifecycle` mounts the shipped player with the new 24-point track and still reads the poster, the 200×32 waveform, the clock and the fill unchanged; it passes no pointer to the track, so the scrub's window measurement stays the open playground follow-up above. The shared `check-types` is green again after that foreign fix; `@gpuixui/media` is 12 files / **189 unit** and 5 files / **26 behaviour** cases green beside the probes.
+
+`[x]` Keep a **data surface whose saved slot is `null`** paintable — a store writes
+JSON's `null` for a field a record never set, and all five data surfaces read
+their optional slots as present because the prop types say they are: a
+`StatCard` with `trend: null` threw `Cannot read properties of null (reading
+'direction')`, a `DataToolbar` with `search: null` threw `... 'label'`, a
+`PropertyPanel` with `rows: null` and a `KeyValue` with `entries: null` each threw
+`... 'map'`, and an `AdvancedFilter` with `fields: null` threw `self is not
+iterable` out of the render — taking the title, the toolbar's own controls, the
+card's reading or the builder's saved clause down with the absent slot.
+`internal/list.ts`'s `listOf` reads a row list as a list (a value that is not
+one is no rows), the two optional objects (`trend`, `search`) are read through
+`Option.fromNullishOr`, and the builder drops an entry that names no field.
+`src/behaviour/surface-boundary.test.tsx` (5 cases) mounts each surface with the
+slot a store wrote as `null` and reads the rest of it off the renderer;
+directions measured: all five fail at `HEAD` with the exact `TypeError`s above
+and pass with the reads. Green: 29 unit files / 246 cases, 19 behaviour files /
+164 cases, `check-types`, `check:tests`, `oxlint` and `oxfmt` clean. Docs: the
+five pages' API and Limitations sections and the README's §The data surfaces.
+No native scenario applies — the throw is the render's, read in the real
+renderer the behaviour suite drives. Owner: data.

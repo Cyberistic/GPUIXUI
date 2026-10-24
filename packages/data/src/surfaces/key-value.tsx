@@ -22,7 +22,10 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import * as Arr from "effect/Array";
+import * as P from "effect/Predicate";
 import type { ReactNode } from "react";
+import { listOf } from "../internal/list.js";
 import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
@@ -94,49 +97,56 @@ export const KeyValue = ({
       role="list"
       style={mergeStyles(recipeStyle(cn("", className), theme), style)}
     >
-      {entries.map((entry) => (
-        <div
-          key={entry.key}
-          role="listitem"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: theme.spacing.sm,
-            ...recipeStyle(KEY_VALUE_ROW, theme),
-          }}
-        >
-          <text
-            testId={
-              testId === undefined ? undefined : `${testId}-label-${entry.key}`
-            }
+      {Arr.map(
+        Arr.filter(listOf(entries), (entry): boolean => P.isObject(entry)),
+        (entry) => (
+          <div
+            key={entry.key}
+            role="listitem"
             style={{
-              ...recipeStyle(KEY_VALUE_LABEL, theme),
-              width: labelTrack,
-              flexGrow: 0,
-              flexShrink: 0,
-              flexBasis: labelTrack,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: theme.spacing.sm,
+              ...recipeStyle(KEY_VALUE_ROW, theme),
             }}
           >
-            {entry.label}
-          </text>
-          {readable(entry.value, {
-            testId:
-              testId === undefined ? undefined : `${testId}-value-${entry.key}`,
-            style: {
-              ...recipeStyle(KEY_VALUE_VALUE, theme),
-              ...(valueTrack === undefined
-                ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
-                : {
-                    width: valueTrack,
-                    flexGrow: 0,
-                    flexShrink: 0,
-                    flexBasis: valueTrack,
-                  }),
-            },
-          })}
-        </div>
-      ))}
+            <text
+              testId={
+                testId === undefined
+                  ? undefined
+                  : `${testId}-label-${entry.key}`
+              }
+              style={{
+                ...recipeStyle(KEY_VALUE_LABEL, theme),
+                width: labelTrack,
+                flexGrow: 0,
+                flexShrink: 0,
+                flexBasis: labelTrack,
+              }}
+            >
+              {entry.label}
+            </text>
+            {readable(entry.value, {
+              testId:
+                testId === undefined
+                  ? undefined
+                  : `${testId}-value-${entry.key}`,
+              style: {
+                ...recipeStyle(KEY_VALUE_VALUE, theme),
+                ...(valueTrack === undefined
+                  ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
+                  : {
+                      width: valueTrack,
+                      flexGrow: 0,
+                      flexShrink: 0,
+                      flexBasis: valueTrack,
+                    }),
+              },
+            })}
+          </div>
+        ),
+      )}
     </div>
   );
 };

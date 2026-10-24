@@ -26,6 +26,9 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Input } from "@gpuixui/primitives";
 import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
+import * as Arr from "effect/Array";
+import * as P from "effect/Predicate";
+import { listOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { KeyValue, type KeyValueEntry } from "./key-value.js";
@@ -89,32 +92,35 @@ export const PropertyPanel = ({
 }: PropertyPanelProps) => {
   const theme = useTheme();
   const heading = accessibleName(title);
-  const entries: ReadonlyArray<KeyValueEntry> = rows.map((row) => {
-    // The label column and an editable row's field name are one reading: a
-    // blank label is content that says nothing, and the row's key is the
-    // identity the panel addresses it by.
-    const name = propertyName(row.label, row.key);
-    return isEditable(row)
-      ? {
-          key: row.key,
-          label: name,
-          value: (
-            <Input
-              label={name}
-              value={row.value}
-              onValueChange={row.onChange}
-              size="sm"
-              fullWidth
-              testId={`property-${row.key}`}
-            />
-          ),
-        }
-      : {
-          key: row.key,
-          label: name,
-          value: row.value,
-        };
-  });
+  const entries: ReadonlyArray<KeyValueEntry> = Arr.map(
+    Arr.filter(listOf(rows), (row): boolean => P.isObject(row)),
+    (row) => {
+      // The label column and an editable row's field name are one reading: a
+      // blank label is content that says nothing, and the row's key is the
+      // identity the panel addresses it by.
+      const name = propertyName(row.label, row.key);
+      return isEditable(row)
+        ? {
+            key: row.key,
+            label: name,
+            value: (
+              <Input
+                label={name}
+                value={row.value}
+                onValueChange={row.onChange}
+                size="sm"
+                fullWidth
+                testId={`property-${row.key}`}
+              />
+            ),
+          }
+        : {
+            key: row.key,
+            label: name,
+            value: row.value,
+          };
+    },
+  );
   return (
     <div
       {...rest}

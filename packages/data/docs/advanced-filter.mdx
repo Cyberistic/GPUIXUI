@@ -39,7 +39,7 @@ The tree's own readers are exported beside the builder:
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name |
+| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name, and a value that is not a list offers no field |
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
 | `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
@@ -78,6 +78,8 @@ builder read it as the empty tree.
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.
+- `fields` is read as data: a saved record that carried `null` for the
+  list offers no field, so a clause falls back to the field's own name.
 - A `not` holds exactly one child and paints no Add of its own.
 - A clause carries Remove only where removing it changes the tree.
 - A tree the release cannot read is refused with Clear; it is not migrated into

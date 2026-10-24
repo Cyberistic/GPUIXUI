@@ -600,6 +600,15 @@ runtime, and the label column would fall back to each label's own text width so
 every value started somewhere else. An unreadable `valueWidth` fills the row,
 like an omitted one (`src/behaviour/surfaces.test.tsx`).
 
+A saved surface's optional slots are **data**: a store writes `null` for a field
+a record never set, so a statistic card's `trend`, a toolbar's `search` and a
+panel's or list's `rows`/`entries` can arrive nullish. Each is read as the
+absence the prop already means — no trend, no field, no rows — so the rest of
+the surface (the title, the toolbar's own controls, the card's reading) still
+paints instead of being taken down by one dereference
+(`src/behaviour/surface-boundary.test.tsx`). A builder's `fields` is read the
+same way: a list, or no field list at all.
+
 ```tsx
 import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "@gpuixui/data";
 

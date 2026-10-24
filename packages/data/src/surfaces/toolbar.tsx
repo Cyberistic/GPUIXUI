@@ -105,6 +105,9 @@ export const DataToolbar = ({
   ...rest
 }: DataToolbarProps) => {
   const theme = useTheme();
+  // A saved toolbar writes `null` for the search it never carried, so the field
+  // is read as the absence the prop already means.
+  const field = Option.fromNullishOr(search);
   const wait = searchWait(search?.debounceMs);
   // The debouncer holds the callback it was built with, so the latest one is
   // read through a ref: a new `onValueChange` must not rebuild the debouncer
@@ -126,22 +129,27 @@ export const DataToolbar = ({
         style,
       )}
     >
-      {search === undefined ? undefined : (
-        <Input
-          label={spokenText(
-            Option.fromNullishOr(search.label),
-            DEFAULT_SEARCH_LABEL,
-          )}
-          placeholder={search.placeholder ?? "Search…"}
-          value={search.value}
-          onValueChange={(next) => {
-            if (wait <= 0) report.current(next);
-            else debouncer.maybeExecute(next);
-          }}
-          size="sm"
-          testId={testId === undefined ? "toolbar-search" : `${testId}-search`}
-        />
-      )}
+      {Option.match(field, {
+        onNone: () => undefined,
+        onSome: (query) => (
+          <Input
+            label={spokenText(
+              Option.fromNullishOr(query.label),
+              DEFAULT_SEARCH_LABEL,
+            )}
+            placeholder={query.placeholder ?? "Search…"}
+            value={query.value}
+            onValueChange={(next) => {
+              if (wait <= 0) report.current(next);
+              else debouncer.maybeExecute(next);
+            }}
+            size="sm"
+            testId={
+              testId === undefined ? "toolbar-search" : `${testId}-search`
+            }
+          />
+        ),
+      })}
       {children}
     </div>
   );

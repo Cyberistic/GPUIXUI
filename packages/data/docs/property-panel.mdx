@@ -26,7 +26,7 @@ import { PropertyPanel } from "@gpuixui/data";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `title` | `string` | — | the panel's header; a blank title paints no header, never an unnamed one |
-| `rows` | `PropertyRow[]` | — | the rows, in the order they paint; a blank label reads as the row's key |
+| `rows` | `PropertyRow[]` | — | the rows, in the order they paint; a blank label reads as the row's key, and a value that is not a list paints no rows |
 | `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` (the key-value list's rule) |
 | `className` | `string` | — | joined after the recipe |
 
@@ -45,3 +45,5 @@ import { PropertyPanel } from "@gpuixui/data";
 - The panel does not validate; a row reports its own change or message.
 - The panel does not scroll.
 - One editable row is one text session.
+- `rows` is read as data: a saved panel that carried `null` for its rows
+  paints the title and no rows rather than throwing out of the render.

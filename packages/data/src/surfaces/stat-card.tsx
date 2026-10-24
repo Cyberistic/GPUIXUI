@@ -15,6 +15,7 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { statusTone } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
+import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
@@ -74,6 +75,9 @@ export const StatCard = ({
   ...rest
 }: StatCardProps) => {
   const theme = useTheme();
+  // A saved card writes `null` for the fields it never set, so the trend is
+  // read as the absence the prop already means rather than dereferenced.
+  const movement = Option.fromNullishOr(trend);
   return (
     <div
       {...rest}
@@ -93,16 +97,19 @@ export const StatCard = ({
         {unit === undefined ? undefined : (
           <text style={recipeStyle(STAT_HINT, theme)}>{unit}</text>
         )}
-        {trend === undefined ? undefined : (
-          <text
-            style={{
-              ...recipeStyle(STAT_HINT, theme),
-              color: trendTone(trend.direction, theme),
-            }}
-          >
-            {trend.text}
-          </text>
-        )}
+        {Option.match(movement, {
+          onNone: () => undefined,
+          onSome: (shown) => (
+            <text
+              style={{
+                ...recipeStyle(STAT_HINT, theme),
+                color: trendTone(shown.direction, theme),
+              }}
+            >
+              {shown.text}
+            </text>
+          ),
+        })}
       </div>
       {hint === undefined
         ? undefined

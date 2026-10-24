@@ -20,7 +20,7 @@ import { DataToolbar } from "@gpuixui/data";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `children` | `ReactNode` | — | the controls the row holds |
-| `search` | `ToolbarSearch` | — | the field at the head of the row |
+| `search` | `ToolbarSearch` | — | the field at the head of the row; a `null` a store wrote for an absent field paints no field |
 | `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the field derives from it: `${testId}-search` |
 
@@ -39,5 +39,7 @@ import { DataToolbar } from "@gpuixui/data";
 - The toolbar does not own the query; it reports a debounced value.
 - A pending query is dropped when the toolbar unmounts.
 - It lays children out in one row only.
+- A saved toolbar's `search` is read as data: `null` means no field, so
+  the row's own controls still paint.
 - A blank `search.label` reads as `Search`: a locale table's missing row is
   absence, not an unnamed field.

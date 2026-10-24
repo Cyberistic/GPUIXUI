@@ -22,7 +22,7 @@ import { KeyValue } from "@gpuixui/data";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `entries` | `KeyValueEntry[]` | — | the rows, in the order they paint |
+| `entries` | `KeyValueEntry[]` | — | the rows, in the order they paint; a value that is not a list paints no rows |
 | `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` |
 | `valueWidth` | `number` | — | the value column's width; omitted — or one that cannot paint — and the value fills the row |
 | `className` | `string` | — | joined after the recipe |
@@ -41,3 +41,5 @@ import { KeyValue } from "@gpuixui/data";
 - The label column is fixed, not measured: a long label wraps.
 - An unusable `width` reads as the default rather than a malformed track.
 - The list does not scroll; the owning panel scrolls it.
+- `entries` is read as data: a saved record that carried `null` for the
+  list paints the list with no rows rather than throwing out of the render.
