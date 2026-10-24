@@ -75,7 +75,10 @@ A level is a geometry plus a share of the theme's `shadow` role, so the role own
 the tint: `extendTheme` restates every inherited level when `colors.shadow`
 changes, and a brand retints the library's shadows by changing that one role.
 `elevationWithTint(elevation, tint)` is the same rule on its own, for a theme
-composed by hand.
+composed by hand. A theme restored from storage is read **level by level**: a
+level it lost stays absent (the report names it and the surface paints flat), and
+an entry whose colour the seam cannot measure is left as written rather than
+restated as an opaque shadow.
 
 Every level a component raises a surface to must also be **visible** on the
 strips it can fall on, which `decorativeFailures` measures as a ceiling — a

@@ -439,7 +439,12 @@ cannot render half of itself. A level the theme does not carry resolves to
 `undefined` — a flat surface the audit has already named, not a throw on first
 paint (§9). Each level paints the `shadow` role at its designed
 strength — 8%, 12% and 16% over a pale canvas, 40%, 65% and 80% over a dark one —
-so retinting that one role retints every shadow a theme inherits. The high-contrast
+so retinting that one role retints every shadow a theme inherits. `extendTheme`
+restates the scale a **stored** theme carries level by level: a level the theme
+lost stays absent, a level written as something else stays as written, and an
+entry whose colour the seam cannot measure is left as written rather than restated
+as an opaque shadow (§9), so a retint never paints a shadow the store did not ask
+for. The high-contrast
 themes carry the same geometry in their own role's tint.
 Overlay layering is paint order, not a shadow or a weight: the runtime has no
 `zIndex`, so a surface paints above the page by being mounted after it, and the
@@ -1138,7 +1143,12 @@ level — or a whole scale — it does not carry, and `brandText`/`statusTone` a
 `undefined` when the roles they derive from are gone (a `Theme` still answers a
 colour outright), so no surface throws on the defect
 the report just
-explained (§7). The seam every role is read through **keeps only the strings**,
+explained (§7). The **retint** keeps the same rule: `extendTheme` restates a
+stored scale level by level, so a level the theme lost stays absent and the report
+still names it, and an entry whose colour the seam cannot measure is left as
+written — restated in the tint it would read as a full share, so a faint shadow a
+design tool exported would paint opaque and one outside the paint grammar would
+leave the report. The seam every role is read through **keeps only the strings**,
 so the `null` JSON writes for a role the theme never carried is the absence it
 is: no paint seam hands it to the runtime, and a focus ring keeps its geometry
 with no colour so the runtime paints its own outline. A shape a store wrote is that same absence: a level written as one

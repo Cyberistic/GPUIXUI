@@ -7,6 +7,7 @@ import {
   isPaintableColor,
   lightColors,
 } from "./color.js";
+import { measuredColour } from "./measure.js";
 
 /** A drop shadow, structurally identical to GPUix's `StyleDesc.boxShadow`. */
 export interface BoxShadow {
@@ -222,6 +223,39 @@ const level = (
 ];
 
 /**
+ * An elevation scale as storage hands it back: the levels a theme carries, in
+ * the shape a store wrote them. A saved theme may have lost the whole scale, one
+ * level, or keep a level the store wrote as `null` where JSON has no `undefined`
+ * — the absences `invalidShadowColors` reports and `elevationShadow` paints
+ * nothing for. Reading one is what {@link elevationWithTint} keeps total.
+ */
+export type ElevationSource = Partial<Record<ElevationLevel, unknown>>;
+
+/**
+ * One entry restated in `tint`, or the entry the store wrote.
+ *
+ * A share is the alpha the entry already carries, so an entry this seam cannot
+ * measure has no share to keep: a colour outside the measurement dialect (an
+ * `oklch()` a design tool exported) reads as **opaque** through `alphaOf`, and
+ * restating it in the tint would paint a shadow the store never asked for and
+ * drop the line `invalidShadowColors` reports. Such an entry, one that states no
+ * colour, and one that is not a shadow at all are returned as written.
+ */
+const retintedShadow = (shadow: unknown, tint: string): unknown => {
+  const color = shadowColor(shadow);
+  if (!isShadow(shadow) || measuredColour(color) === undefined) {
+    return shadow;
+  }
+  return { ...shadow, color: alpha(tint, alphaOf(color)) };
+};
+
+/** One level restated entry by entry, or kept as written when it is not a list. */
+const retintedLevel = (shadows: unknown, tint: string): unknown =>
+  Array.isArray(shadows)
+    ? shadows.map((shadow: unknown) => retintedShadow(shadow, tint))
+    : shadows;
+
+/**
  * Restate every level of an elevation scale in `tint`, keeping each level's
  * designed strength and geometry.
  *
@@ -232,26 +266,43 @@ const level = (
  * empty, and a level a caller passes to `extendTheme` replaces the whole array
  * instead — its colours are the caller's.
  *
+ * **The scale is read level by level**, because a theme restored from storage
+ * may not be the designed one: a brand retinting `colors.shadow` over such a
+ * theme used to throw `Cannot read properties of undefined (reading 'sm')` for a
+ * lost scale and `(reading 'map')` for a lost or `null` level, while every report
+ * had already called those absences paintable. A level that is gone stays gone —
+ * `invalidShadowColors` still names it and the surface paints flat — and a level
+ * written as something other than a list is kept as the store wrote it.
+ *
+ * **An entry whose colour the seam cannot measure is left as written**, the rule
+ * the other derived colours follow: restated in the tint it would read as a full
+ * share, so a colour nobody can measure became an **opaque shadow** and the line
+ * that named it disappeared.
+ *
  * @example
  * ```ts
  * const brandElevation = elevationWithTint(lightElevation, "#0B1220");
+ * // A stored scale answers a source: the levels it carries, retinted.
+ * const restored = elevationWithTint(fromStorage, "#0B1220");
  * ```
  */
 export function elevationWithTint(
   elevation: Elevation,
   tint: string,
-): Elevation {
-  const retint = (name: ElevationLevel): BoxShadow[] =>
-    elevation[name].map((shadow) => ({
-      ...shadow,
-      color: alpha(tint, alphaOf(shadow.color)),
-    }));
-
+): Elevation;
+export function elevationWithTint(
+  elevation: ElevationSource | undefined,
+  tint: string,
+): ElevationSource;
+export function elevationWithTint(
+  elevation: ElevationSource | undefined,
+  tint: string,
+): ElevationSource {
   return {
-    sm: retint("sm"),
-    md: retint("md"),
-    lg: retint("lg"),
-    overlay: retint("overlay"),
+    sm: retintedLevel(elevation?.sm, tint),
+    md: retintedLevel(elevation?.md, tint),
+    lg: retintedLevel(elevation?.lg, tint),
+    overlay: retintedLevel(elevation?.overlay, tint),
   };
 }
 

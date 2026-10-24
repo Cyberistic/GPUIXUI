@@ -11,8 +11,25 @@
  * geometry plus a share of the role, and `extendTheme` restates the inherited
  * levels when the role moves. The `shadow role` and `brand retint` suites fail
  * if a literal returns or an override stops following the role.
+ *
+ * A **stored** scale is the case the retint was not written for, and the suite's
+ * last one. A theme restored from storage may have lost the whole scale, one
+ * level, or carry a level a JSON store wrote as `null` — absences every report
+ * already names and every paint seam already answers — and `extendTheme` read the
+ * scale by level, so a brand retinting `colors.shadow` over such a theme threw
+ * `Cannot read properties of undefined (reading 'sm')` (the absent scale),
+ * `(reading 'map')` (an absent or null level) or
+ * `elevation[name].map is not a function` (a level written as a number). Worse,
+ * an entry whose colour the seam cannot measure — an `oklch()` a design tool
+ * exported, one that states no colour at all — read as a **full** share, so the
+ * retint painted it in the tint at full opacity and `invalidShadowColors` stopped
+ * naming it: an opaque halo where the store asked for nothing, and a report
+ * erased by the very step that was meant to keep the geometry. `a scale a store
+ * wrote` holds both halves: the retint is total, and it restates only a colour it
+ * can measure.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   alpha,
@@ -40,6 +57,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
+  type Theme,
 } from "./theme.js";
 
 /** The five fields the installed runtime's `BoxShadow` has, and nothing else. */
@@ -300,6 +318,150 @@ describe("brand retint", () => {
   it("keeps the base scale when the shadow role is untouched", () => {
     const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
     expect(brand.elevation).toBe(lightTheme.elevation);
+  });
+});
+
+describe("a scale a store wrote", () => {
+  const tint = "#0B1220";
+
+  /** A theme as storage hands it back: the type says complete, the value is not. */
+  const stored = (elevation: unknown): Theme =>
+    ({ ...lightTheme, elevation }) as Theme;
+
+  /** One level of a scale the retint answered, or nothing when it carries none. */
+  const levelOf = (
+    source: ReturnType<typeof elevationWithTint>,
+    level: (typeof levels)[number],
+  ): unknown => source[level];
+
+  it("restates the levels that survived instead of throwing", () => {
+    const { lg: _lost, ...restored } = lightElevation;
+    const brand = extendTheme(stored(restored), { colors: { shadow: tint } });
+
+    expect(rgb(brand.elevation.sm[0]?.color ?? "")).toBe(tint);
+    expect(rgb(brand.elevation.md[0]?.color ?? "")).toBe(tint);
+    // The lost level stays lost: the report still names it, and nothing paints.
+    expect(brand.elevation.lg).toBeUndefined();
+    expect(invalidShadowColors(brand)).toEqual([
+      { level: "lg", index: 0, color: undefined },
+    ]);
+  });
+
+  it("answers no level for a scale the theme lost whole", () => {
+    const brand = extendTheme(stored(undefined), { colors: { shadow: tint } });
+
+    levels.forEach((level) =>
+      expect(elevationShadow(brand, level), level).toBeUndefined(),
+    );
+    expect(invalidShadowColors(brand).map(({ level }) => level)).toEqual([
+      ...levels,
+    ]);
+  });
+
+  it("keeps a level written as something other than a list", () => {
+    [null, 45].forEach((written) => {
+      const brand = extendTheme(stored({ ...lightElevation, md: written }), {
+        colors: { shadow: tint },
+      });
+
+      expect(elevationShadow(brand, "md"), String(written)).toBeUndefined();
+      expect(invalidShadowColors(brand), String(written)).toEqual([
+        { level: "md", index: 0, color: undefined },
+      ]);
+      // The levels either side are untouched by the stored one.
+      expect(rgb(brand.elevation.lg[0]?.color ?? "")).toBe(tint);
+    });
+  });
+
+  it("leaves an entry whose colour it cannot measure as the store wrote it", () => {
+    // A perceptual colour is one the runtime paints but this seam cannot read,
+    // so `alphaOf` answers a **full** share: restated in the tint, a 12% shadow
+    // would paint opaque. Left as written it keeps the share it was designed
+    // with.
+    const oklch = "oklch(0.5 0 0)";
+    const brand = extendTheme(
+      stored({
+        ...lightElevation,
+        md: [{ ...lightElevation.md[0], color: oklch }],
+      }),
+      { colors: { shadow: tint } },
+    );
+
+    expect(brand.elevation.md[0]?.color).toBe(oklch);
+  });
+
+  it("keeps a colour the renderer cannot paint in the report", () => {
+    // A value outside the paint grammar is the second half: `alphaOf` reads it as
+    // opaque too, so the retint used to replace it with the tint — a paintable
+    // colour, which **erased** the line `invalidShadowColors` reported and painted
+    // a shadow where the store asked for none.
+    const unpaintable = "#00000";
+    const brand = extendTheme(
+      stored({
+        ...lightElevation,
+        md: [{ ...lightElevation.md[0], color: unpaintable }],
+      }),
+      { colors: { shadow: tint } },
+    );
+
+    expect(brand.elevation.md[0]?.color).toBe(unpaintable);
+    expect(invalidShadowColors(brand)).toEqual([
+      { level: "md", index: 0, color: unpaintable },
+    ]);
+  });
+
+  it("does not invent a shadow for an entry the store wrote as something else", () => {
+    const entries: readonly unknown[] = [
+      45,
+      null,
+      { offsetX: 0, offsetY: 2, blurRadius: 4, spreadRadius: 0 },
+    ];
+
+    entries.forEach((entry) => {
+      const brand = extendTheme(stored({ ...lightElevation, md: [entry] }), {
+        colors: { shadow: tint },
+      });
+
+      expect(levelOf(brand.elevation, "md")).toEqual([entry]);
+      expect(invalidShadowColors(brand), String(entry)).toEqual([
+        { level: "md", index: 0, color: undefined },
+      ]);
+    });
+  });
+
+  it("still restates a colour the seam can measure", () => {
+    // The positive control: a functional colour is measured, so its share is
+    // kept and the entry is retinted exactly as a shipped one.
+    const brand = extendTheme(
+      stored({
+        ...lightElevation,
+        md: [{ ...lightElevation.md[0], color: "rgb(0 0 0 / 0.5)" }],
+      }),
+      { colors: { shadow: tint } },
+    );
+
+    expect(rgb(brand.elevation.md[0]?.color ?? "")).toBe(tint);
+    expect(alphaOf(brand.elevation.md[0]?.color ?? "")).toBeCloseTo(0.5, 2);
+    expect(invalidShadowColors(brand)).toEqual([]);
+  });
+
+  it("teaches both rules where the retint is documented", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const source = read("./elevation.ts");
+
+    // The scale the retint keeps is read **level by level**, and a colour it
+    // cannot measure is left as written rather than read as a full share.
+    [catalogue, designSystem, readme, source].forEach((page) => {
+      expect(page).toContain("level by level");
+      expect(page).toContain("cannot measure");
+    });
+    expect(catalogue).toContain("an opaque shadow");
   });
 });
 

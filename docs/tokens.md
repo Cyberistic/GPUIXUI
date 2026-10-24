@@ -3698,6 +3698,19 @@ its colours are the caller's. `elevationWithTint(elevation, tint)` is that rule 
 its own, for a theme composed by hand, and keeps each level's strength and
 geometry.
 
+**A scale a store wrote is restated level by level**, because a saved theme is
+not the designed one: it may have lost the whole scale or one level, or keep a
+level JSON wrote as `null`, and every one of those is an absence the report names
+and the paint skips rather than a reason for the retint to throw. A level that is
+gone stays gone, a level written as something other than a list stays as written,
+and **an entry whose colour the seam cannot measure is left as written too** — a
+design tool's `oklch()` shadow or a value outside the paint grammar reads as a
+*full* share, so restating it in the tint would paint an **opaque shadow** where
+the store asked for a faint one, and a colour the renderer cannot paint at all
+would drop out of `invalidShadowColors`' report. `elevationWithTint` answers an
+`ElevationSource` for such a scale (the levels a store wrote, as they are) and the
+designed `Elevation` for a complete one.
+
 A supplied level's colours are outside `invalidColorRoles`' reach — that report
 reads `colors` — and the runtime ignores a shadow colour it cannot parse, so the
 level paints no shadow at all. `invalidShadowColors(theme)` names the level, the
