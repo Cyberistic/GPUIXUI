@@ -25,10 +25,7 @@
 
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  ColumnMenu,
-  DEFAULT_COLUMN_MENU_LABEL,
-} from "../columns/menu.js";
+import { ColumnMenu, DEFAULT_COLUMN_MENU_LABEL } from "../columns/menu.js";
 import { DEFAULT_FILTER_LABEL, TableFilterField } from "../filter/field.js";
 import { decodeA11yTree, onlyRole, withRole } from "../internal/a11y.js";
 import {
@@ -300,9 +297,7 @@ describe("the data surfaces announce what they paint", () => {
     const open = decodeA11yTree(root.renderer.getA11yTree());
     // The choice inside the menu is named by the same words, not left blank.
     expect(
-      Arr.map(withRole(open, open.root, "MenuItem"), (id) =>
-        nameOf(open, id),
-      ),
+      Arr.map(withRole(open, open.root, "MenuItem"), (id) => nameOf(open, id)),
     ).toContain("status");
   });
 
@@ -310,9 +305,7 @@ describe("the data surfaces announce what they paint", () => {
     root = renderData(
       <ColumnMenu
         state={{
-          columns: [
-            { id: "name", label: "Name", visible: true, width: 160 },
-          ],
+          columns: [{ id: "name", label: "Name", visible: true, width: 160 }],
         }}
         onChange={() => {}}
         label=""

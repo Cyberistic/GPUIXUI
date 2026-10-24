@@ -167,7 +167,10 @@ export const ColumnMenu = ({
     Option.fromNullishOr(label),
     DEFAULT_COLUMN_MENU_LABEL,
   );
-  const surfaceLabel = spokenText(Option.fromNullishOr(contentLabel), menuLabel);
+  const surfaceLabel = spokenText(
+    Option.fromNullishOr(contentLabel),
+    menuLabel,
+  );
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
