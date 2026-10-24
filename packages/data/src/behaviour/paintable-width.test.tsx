@@ -30,7 +30,11 @@
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
 import { requireBounds } from "../internal/interaction.js";
-import { renderData, settle, type DataTestRoot } from "../internal/test-root.js";
+import {
+  renderData,
+  settle,
+  type DataTestRoot,
+} from "../internal/test-root.js";
 import { FrozenTable } from "../table/frozen.js";
 import { TableCell, TableHeaderCell, TableRow } from "../table/table.js";
 
