@@ -136,6 +136,29 @@ describe("SearchReplace", () => {
     search.unmount();
   });
 
+  it("announces the match count as a named status", () => {
+    // The bug guarded: the readout was `role="presentation"`, and the runtime
+    // publishes a node only when it has a role — so a reader who typed a query
+    // heard neither `1 / 2` nor `No matches`. The bar's one piece of state was
+    // invisible to assistive technology: the tree held a nameless `Label`
+    // where the count is painted.
+    const search = render(
+      <Harness initial="cat cat" onChange={() => undefined} />,
+    );
+    const statuses = (): ReadonlyArray<unknown> =>
+      Object.values(search.renderer.getA11yTree().nodes ?? {}).flatMap(
+        (node) =>
+          node.aria?.role === "Status" && node.aria.label !== undefined
+            ? [node.aria.label]
+            : [],
+      );
+    typeInto(search, "search-replace-find", "cat");
+    expect(statuses()).toEqual(["1 / 2"]);
+    typeInto(search, "search-replace-find", "z");
+    expect(statuses()).toEqual(["No matches"]);
+    search.unmount();
+  });
+
   it("refuses to step the match once the bar is disabled", () => {
     const search = render(
       <SearchReplace value="cat cat" onValueChange={() => undefined} />,

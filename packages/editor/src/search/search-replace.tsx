@@ -113,6 +113,14 @@ export const SearchReplace = ({
   const ranges = findRanges(document, query, options);
   const count = ranges.length;
   const active = count === 0 ? 0 : Math.min(activeIndex, count - 1);
+  /**
+   * The bar's one piece of state: how many matches there are and which one is
+   * active. A `role="status"` node is the only way a reader hears it — the
+   * runtime drops an element from the accessibility tree unless it has a role,
+   * and a status without a name announces nothing — so the words are the
+   * node's name as well as its paint.
+   */
+  const readout = count === 0 ? "No matches" : `${active + 1} / ${count}`;
 
   const go = (step: 1 | -1): void => {
     if (disabled || count === 0) return;
@@ -178,8 +186,12 @@ export const SearchReplace = ({
       >
         W
       </Toggle>
-      <text role="presentation" testId={`${testId}-count`}>
-        {count === 0 ? "No matches" : `${active + 1} / ${count}`}
+      <text
+        role="status"
+        aria-label={readout}
+        testId={`${testId}-count`}
+      >
+        {readout}
       </text>
       <Button
         variant="outline"

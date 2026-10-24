@@ -51,6 +51,10 @@ occurrence the rule rejects is still found.
 - **Literal matching**: no regex mode.
 - **The active match cannot move the editor**: the bar reports `n / m` and the caller jumps.
 - **The bar does not own the text**: replacements arrive through `onValueChange`.
+- **The match count is a named status**: `1 / 2` and `No matches` are the bar's
+  one piece of state, so the readout is a `role="status"` node carrying those
+  words as its name — the runtime publishes a node only when it has a role, and
+  a status without a name announces nothing.
 - **A disabled bar is inert**: fields, toggles and actions disable, and `F3` no
   longer steps the match — the field is read-only, not silent, so the key handler
   refuses it. `src/behaviour/search-replace.test.tsx` holds the reading.
