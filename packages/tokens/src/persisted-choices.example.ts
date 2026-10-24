@@ -4,11 +4,11 @@
  * A preference restored from storage is `unknown`: a settings row, a URL
  * parameter or a persisted workspace can carry a mode, a contrast variant, a
  * platform, a look, a density, a control size, a status tone, the type role a
- * saved document was written with, the elevation a saved panel was raised to or
- * an identity mark's diameter, any of which this build may no longer ship. Each
- * axis has an ordered index beside its guard, so a consumer narrows the stored
- * value and falls back to a readable default instead of retyping the union or
- * casting the value.
+ * saved document was written with, the elevation a saved panel was raised to, a
+ * toolbar's icon size or an identity mark's diameter, any of which this build may
+ * no longer ship. Each axis has an ordered index beside its guard, so a consumer
+ * narrows the stored value and falls back to a readable default instead of
+ * retyping the union or casting the value.
  *
  * The example is executed in [`guards.test.ts`](./guards.test.ts).
  */
@@ -20,12 +20,14 @@ import {
   isAvatarSize,
   isControlSize,
   isDensityName,
+  isIconSize,
   isRadiusStep,
   isSpacingStep,
   densityPresets,
   type AvatarSizeName,
   type ControlSize,
   type Density,
+  type IconStep,
   type RadiusStep,
   type SpacingStep,
 } from "./scale.js";
@@ -80,6 +82,19 @@ export const elevationFromStoredChoice = (value: unknown): ElevationLevel =>
  */
 export const avatarSizeFromStoredChoice = (value: unknown): AvatarSizeName =>
   orDefault(isAvatarSize, "md", value);
+
+/**
+ * Resolve the icon size a saved toolbar or row was drawn at.
+ *
+ * A layout record stores the step its glyphs used, and the step is the argument
+ * an `Icon`'s `size` prop takes, so a release that renames or drops one hands
+ * the renderer a name the union no longer carries. `@gpuixui/icons`' `iconPixels`
+ * reads that name as `md` on its own; narrowing here is what keeps the saved
+ * intent — a toolbar's `lg` stays `lg` — and tells the consumer which value it
+ * substituted.
+ */
+export const iconSizeFromStoredChoice = (value: unknown): IconStep =>
+  orDefault(isIconSize, "md", value);
 
 /**
  * Resolve a saved layout's inset or gap to a step this release ships.

@@ -30,6 +30,12 @@
  * primitives hand-rolled their membership from the theme, so a token consumer had
  * to cast a restored step. `spacingSteps`/`isSpacingStep` and
  * `radiusSteps`/`isRadiusStep` close each axis, held to their scales here.
+ *
+ * The icon scale is the one a component's `size` prop selects, and it was the
+ * only theme scale of the twelve with neither: a saved toolbar's icon size is a
+ * stored name, so a consumer could reach `iconSize` only by retyping the union
+ * (the catalogue claimed every other axis had both). `iconSizes`/`isIconSize`
+ * close it, held to the scale here.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -42,9 +48,12 @@ import {
   controlSizes,
   densityNames,
   densityPresets,
+  iconSize,
+  iconSizes,
   isAvatarSize,
   isControlSize,
   isDensityName,
+  isIconSize,
   isRadiusStep,
   isSpacingStep,
   radius,
@@ -70,6 +79,7 @@ import {
   controlSizeFromStoredChoice,
   densityFromStoredChoice,
   elevationFromStoredChoice,
+  iconSizeFromStoredChoice,
   lookFromStoredChoice,
   platformFromStoredChoice,
   radiusStepFromStoredChoice,
@@ -99,6 +109,7 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isAvatarSize", guard: isAvatarSize, index: avatarSizes },
   { name: "isSpacingStep", guard: isSpacingStep, index: spacingSteps },
   { name: "isRadiusStep", guard: isRadiusStep, index: radiusSteps },
+  { name: "isIconSize", guard: isIconSize, index: iconSizes },
 ];
 
 /** Values no guard may accept, whatever its index holds. */
@@ -211,6 +222,20 @@ describe("indexes match the data they select", () => {
     expect(new Set(radiusSteps)).toEqual(new Set(Object.keys(radius)));
   });
 
+  /**
+   * The icon scale is the one a component's `size` prop selects, so its index is
+   * the record's own keys in documentation order: a step the scale grows must be
+   * listed (the package's type check refuses it otherwise), and a listed name the
+   * record does not carry has nothing to resolve.
+   */
+  it("names every step of the icon scale", () => {
+    expect(Object.keys(iconSize)).toEqual([...iconSizes]);
+    expect(new Set(iconSizes)).toEqual(new Set(Object.keys(iconSize)));
+    // A theme's icon group is the same scale, so a brand that edits it still
+    // answers every step a stored name can select.
+    expect(getTheme("light").iconSize).toEqual(iconSize);
+  });
+
   it("gives every density preset a metric for every control size", () => {
     densityNames.forEach((preset) => {
       expect(
@@ -262,6 +287,9 @@ describe("a stored choice resolves without a cast", () => {
     expect(avatarSizeFromStoredChoice("lg")).toBe("lg");
     expect(avatarSizeFromStoredChoice("xl")).toBe("md");
     expect(avatarSizeFromStoredChoice(32)).toBe("md");
+    expect(iconSizeFromStoredChoice("lg")).toBe("lg");
+    expect(iconSizeFromStoredChoice("huge")).toBe("md");
+    expect(iconSizeFromStoredChoice(18)).toBe("md");
     expect(spacingStepFromStoredChoice("lg")).toBe("lg");
     expect(spacingStepFromStoredChoice("roomy")).toBeUndefined();
     expect(radiusStepFromStoredChoice("full")).toBe("full");

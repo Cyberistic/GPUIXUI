@@ -4093,13 +4093,19 @@ the workspace preset, an identity mark does not. A circle's diameter is the
 element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
 
 A stored step is a **name** before it is a diameter, so the scale ships the
-index and guard every other persisted axis has — `avatarSizes` is the four steps
-in documentation order and `isAvatarSize` narrows a restored value.
-`avatarPixels(size)` resolves the diameter and reads a name this release does
-not ship as `md`, the rule `iconPixels` follows: a bare lookup answered
-`undefined`, which the renderer drops, so the mark painted with no side. The
-guard reads the index, not the record — `name in avatarSize` also answers true
-for `toString` and `constructor`.
+index and guard every persisted axis has. `iconSizes` is the five steps in
+documentation order and `isIconSize` narrows a restored value — a saved
+toolbar's icon size is the argument an `Icon`'s `size` prop takes, so a layout
+record neither retypes the union nor casts the value, and the index is the
+scale's own keys with a type-level guard failing a step it forgets.
+`iconSizeFromStoredChoice` in the catalogue's [Persisted
+choices](#persisted-choices) example is the narrowing written out.
+`avatarSizes` is the four avatar steps and `isAvatarSize` narrows a restored
+one. `avatarPixels(size)` resolves the diameter and reads a name this release
+does not ship as `md`, the rule `iconPixels` follows: a bare lookup answered
+`undefined`, which the renderer drops, so the mark painted with no side. Both
+guards read the index, not the record — `name in avatarSize` (or in `iconSize`)
+also answers true for `toString` and `constructor`.
 
 ### Target sizes
 
@@ -4688,11 +4694,12 @@ diffable against shadcn. `override-scope.test.ts` reads both halves.
 
 ### Persisted choices
 
-Twelve unions are choices a consumer stores or carries — a settings row, a URL
+Thirteen unions are choices a consumer stores or carries — a settings row, a URL
 parameter, a saved workspace, the role a saved document was written with, the
-lift a saved panel was raised to, an identity mark's diameter, a panel's inset or
-a restored corner. Each has an **ordered index** and a guard that takes `unknown`,
-so a restored value neither needs the union retyped nor a cast:
+lift a saved panel was raised to, a toolbar's icon size, an identity mark's
+diameter, a panel's inset or a restored corner. Each has an **ordered index** and
+a guard that takes `unknown`, so a restored value neither needs the union
+retyped nor a cast:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -4705,6 +4712,7 @@ so a restored value neither needs the union retyped nor a cast:
 | status tone | `statusTones` | `isStatusTone` |
 | type role | `textRoles` | `isTextRole` |
 | elevation level | `elevationLevels` | `isElevationLevel` |
+| icon size | `iconSizes` | `isIconSize` |
 | avatar size | `avatarSizes` | `isAvatarSize` |
 | spacing step | `spacingSteps` | `isSpacingStep` |
 | corner radius | `radiusSteps` | `isRadiusStep` |
@@ -4722,7 +4730,8 @@ data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
 density preset has a metric for every control size, every tone has its own soft
 roles, every type role is a key of the type scale, every elevation level a key
-of the elevation scale, every avatar size a key of the diameter record, and the
+of the elevation scale, every icon step a key of the icon scale, every avatar
+size a key of the diameter record, and the
 spacing and radius indexes are the two scales' own keys in documentation order
 (`guards.test.ts`; §Elevation holds the index itself to the shipped scale).
 
@@ -4739,11 +4748,12 @@ const themeFromStored = (stored: {
   );
 ```
 
-`src/persisted-choices.example.ts` resolves all twelve axes the same way, and
+`src/persisted-choices.example.ts` resolves all thirteen axes the same way, and
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
 an unknown pair keeps the light one, a document's dropped `subtitle` role reads
-as `body`, a saved panel's dropped lift reads as `md`, a saved avatar's dropped
-`xl` step reads as `md`, and the two layout names read as **absence** rather than
+as `body`, a saved panel's dropped lift reads as `md`, a saved toolbar's dropped
+icon step and a saved avatar's dropped `xl` step both read as `md`, and the two
+layout names read as **absence** rather than
 a substituted step — `spacingStepFromStoredChoice` and
 `radiusStepFromStoredChoice` answer `undefined`, because a step decides geometry
 the caller owns (§Spacing, §Radius).
@@ -4769,11 +4779,12 @@ step instead of throwing or painting nothing — `textStyle` reads a role as `bo
 (§Typography), `controlHeight`/`controlPaddingX`/`switchMetricsAt` read a
 control size as `md` (§Density), `elevationShadow` reads a level this release
 does not ship as `md` (§Elevation), `avatarPixels` reads a diameter step as `md`
-(§Borders, icons and identity marks) and `statusTone` reads a tone this release
-does not ship as `info` (§Status tones). Narrow a stored role, size, tone, level,
-avatar step, inset or corner with `isTextRole`, `isControlSize`, `isStatusTone`,
-`isElevationLevel`, `isAvatarSize`, `isSpacingStep` or `isRadiusStep` where the
-caller can tell the reader what it substituted.
+and `iconPixels` an icon step as `md` (§Borders, icons and identity marks), and
+`statusTone` reads a tone this release does not ship as `info` (§Status tones).
+Narrow a stored role, size, tone, level, icon step, avatar step, inset or corner
+with `isTextRole`, `isControlSize`, `isStatusTone`, `isElevationLevel`,
+`isIconSize`, `isAvatarSize`, `isSpacingStep` or `isRadiusStep` where the caller
+can tell the reader what it substituted.
 
 A theme's **mode** is a stated value of the same kind, and a whole theme is
 documented as storable. `themeModeOf(theme)` reads a mode this release does not

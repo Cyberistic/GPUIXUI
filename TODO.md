@@ -389,7 +389,35 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 260/260
+`[x]` `[██████████]` 261/261
+
+`[x]` Give the **icon scale the index and guard the persisted-choice contract
+promises** — `iconSize` is the one `Theme` scale a component selects by name
+(`<Icon size="md">`), and a saved toolbar's icon size is a stored choice as often
+as a literal, while the package shipped **no** `iconSizes` index and **no**
+`isIconSize` guard: a restored value could reach the scale only by retyping the
+five names or casting, which `AGENTS.md` §2 forbids, and the catalogue's
+§Borders paragraph meanwhile told a reader the avatar shipped "the index and
+guard every other persisted axis has" — a claim the icon scale, the axis it
+compares to, falsified. `iconSizes` is the five steps in documentation order with
+an `EveryIconStepListed` type-level guard (a step added to `IconSize` fails
+`check-types` naming it), `isIconSize` narrows the value through the index — not
+`name in iconSize`, which answers true for `toString` — and
+`iconSizeFromStoredChoice` is the executed thirteenth axis in
+`persisted-choices.example.ts`, reading a name this release does not ship as
+`md`, the rule `@gpuixui/icons`' `iconPixels` already follows.
+`guards.test.ts` gains the axis, the record-to-index case and the fallback
+assertions; `docs.test.ts`'s axis table is thirteen rows, and its new case holds
+§Borders to teaching `iconSizes`, `isIconSize` and the narrowing.
+`docs/tokens.md` §Persisted choices/§Borders, `docs/design-system.md` §11 and
+the package README carry the row and the rule. Directions measured: restoring
+HEAD's `scale.ts` fails `check-types` with four errors naming the missing
+exports, dropping the catalogue's row fails
+`expected [ …(11) ] to have a length of 13 but got 12`, and adding a `2xl` step to
+`IconSize` fails the type-level guard with
+`["an icon step is missing from the index", "2xl"]`. Green: 51 files /
+**3 117** tests, `check-types` and `oxfmt` clean. No native scenario applies —
+an index, a guard and the prose that teaches them.
 
 `[x]` Follow every relative reference **from the document that writes it** — the
 README's syntax-palette evidence row was `../apps/playground/README.md`, which
@@ -11050,6 +11078,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Publish an **icon-step reader** the chart legend dot needs — every numeric group the data package paints now goes through the primitives' published reader (`spaceValue`/`borderWidthOf`/`radiusValue`/`rowHeightOf`, held by `packages/data/src/paint-readers.test.ts`), except `packages/data/src/chart/chart.tsx`'s legend dot: it paints at `theme.iconSize.xs`, and `iconSideOf(theme, size)` maps a **control** size (`sm`/`md`/`lg` → 14/16/20) rather than an icon step (`xs` 12, `lg` 20, `xl` 24), so the one read has no honest seam to call. Publish `iconStepValue(theme, step)` (or let `iconSideOf` take an icon step in a second overload) and the dot adopts it; then the guard's group list can cover `iconSize` and the documented exception disappears | primitives (`packages/primitives/src/core/theme.ts`, `core/index.ts`) | **primitives half landed 2026-10-24** — `iconStepValue(theme, step)` (with `isIconStep`) reads `theme.iconSize`'s own step, distinct from `iconSideOf`'s control-size sides; a stored name the scale does not carry reads as `md`, the rule `iconPixels` follows, and a lost group reads the library's step. `core/theme.test.ts`'s `reads an icon step, not a control size, for a glyph painter` holds a brand's `xs`, both directions against `iconSideOf`, the lost group, an unknown name and a raw number, and the published-reader identity case names the new export. Direction measured: without the membership guard the case fails `expected undefined to be 16`; the package is 59 files / 1 218 tests with `check-types` clean. Docs: the primitives README's numeric-readers paragraph. **data half landed 2026-10-24** — `chart.tsx`'s legend dot paints `iconStepValue(theme, "xs")`, `paint-readers.test.ts` holds `iconSize` beside the other four groups, and the README's styling paragraph and rules row name it; the guard's premise case requires the reader, so the dot cannot fall back to the group. Row resolved |
 | Adopt the **colour port** in the data parts — the same stored-theme class the numeric groups just closed (`theme.spacing`/`borderWidth`/`radius`/`density` threw from the first layout) reaches colour: `theme.colors.*` is read raw in 24 places over 9 library sources, so a theme a store hands back without the `colors` group throws `Cannot read properties of undefined (reading 'card')` from the first row rather than painting the absence `@gpuixui/tokens`' `themeColors`/`colorsOf` port models. The parts would read the port (a role the theme lost is `undefined`, so the paint drops) the way the primitives do, and `paint-readers.test.ts` would gain the group | data (`packages/data/src/table/table.tsx`, `chart/chart.tsx`, `tree/row.tsx`, `surfaces/*`, `columns/*`) | open — measured 2026-10-24: 24 reads in 9 sources; a bigger change than the numeric half because every painter names several roles, and a role that is `undefined` must still be a documented absence in each part (this row records it rather than pretending the guard covers colour) |
+| Read **icon steps through the token index** — `@gpuixui/icons`' `sizes.ts` keeps a private `ICON_STEPS` list and private `isIconSize` over `iconSize`, while `@gpuixui/tokens` now owns both for every persisted axis (`iconSizes`/`isIconSize`, held to the scale by `guards.test.ts` and the `EveryIconStepListed` type guard). Two lists of the same five names drift apart the moment a step is renamed, and the icons guard is the one a consumer cannot import | icons (`packages/icons/src/sizes.ts`) | open — import `isIconSize` from `@gpuixui/tokens` and delete `ICON_STEPS`/the local predicate, keeping `iconPixels`' numeric branch; the tokens package is already a dependency |
 
 ## Phase D — data and workspace components
 

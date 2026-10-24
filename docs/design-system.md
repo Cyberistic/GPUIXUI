@@ -1488,14 +1488,15 @@ The extension mechanism is deliberately small:
   allow a branded panel inside a neutral shell.
 - Every choice a consumer can persist — theme mode, contrast variant, platform,
   authored look, density preset, control size, status tone, type role, elevation
-  level, avatar size, spacing step and corner radius — has an ordered index
-  beside a guard that takes `unknown` (`themeModes`, `themeContrasts`,
+  level, icon size, avatar size, spacing step and corner radius — has an ordered
+  index beside a guard that takes `unknown` (`themeModes`, `themeContrasts`,
   `platformNames`, `retroNames`, `densityNames`, `controlSizes`, `statusTones`,
-  `textRoles`, `elevationLevels`, `avatarSizes`, `spacingSteps`/`isSpacingStep`
-  and `radiusSteps`/`isRadiusStep`), so a settings row or a docs toggle iterates
-  the axis and a restored value narrows without a cast. The catalogue's
-  [Persisted choices](./tokens.md#persisted-choices) table is the list, and the
-  two layout axes answer absence where a paint name substitutes its default.
+  `textRoles`, `elevationLevels`, `iconSizes`/`isIconSize`, `avatarSizes`,
+  `spacingSteps`/`isSpacingStep` and `radiusSteps`/`isRadiusStep`), so a settings
+  row or a docs toggle iterates the axis and a restored value narrows without a
+  cast. The catalogue's [Persisted choices](./tokens.md#persisted-choices) table
+  is the list, and the two layout axes answer absence where a paint name
+  substitutes its default.
 
 Overrides merge by group; typography merges field by field; a density preset's
 `controlHeight` and `controlPaddingX` merge size by size, so a brand that raises

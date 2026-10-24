@@ -188,7 +188,7 @@ A complete, executed example lives in
 
 ## Persisted choices
 
-Twelve axes are choices a consumer stores or carries, and each has an ordered
+Thirteen axes are choices a consumer stores or carries, and each has an ordered
 index beside a guard that takes `unknown`:
 
 | Axis | Index | Guard |
@@ -202,6 +202,7 @@ index beside a guard that takes `unknown`:
 | status tone | `statusTones` | `isStatusTone` |
 | type role | `textRoles` | `isTextRole` |
 | elevation level | `elevationLevels` | `isElevationLevel` |
+| icon size | `iconSizes` | `isIconSize` |
 | avatar size | `avatarSizes` | `isAvatarSize` |
 | spacing step | `spacingSteps` | `isSpacingStep` |
 | corner radius | `radiusSteps` | `isRadiusStep` |
@@ -210,13 +211,14 @@ The unions derive from the indexes, so a settings row iterates the axis and a
 restored preference narrows without retyping the union or casting. Each index is
 held to the data it selects — every mode has both contrast variants, every
 platform a style, every look a style, every preset a metric per size, every type
-role a key of the type scale, every avatar size a key of the diameter record, and
+role a key of the type scale, every icon step a key of the icon scale, every
+avatar size a key of the diameter record, and
 the spacing and radius indexes are their scales' own keys — by
 [`src/guards.test.ts`](./src/guards.test.ts), and
 [`src/elevation.test.ts`](./src/elevation.test.ts) holds the elevation index to
 the shipped scale.
 [`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
-all twelve; the two layout axes answer **absence** for a name this release does
+all thirteen; the two layout axes answer **absence** for a name this release does
 not ship, because a step decides geometry the caller owns, while the paint names
 above substitute their documented default.
 
@@ -265,13 +267,17 @@ resolve a stated mode or variant this release does not ship through
 `elevationShadow` reads a level this release does not ship as
 `md` too, rather than a raised panel that silently paints flat, `avatarPixels`
 reads a diameter step this release does not ship as `md` rather than handing the
-renderer `undefined` (which it drops, so the mark painted with no side), and
+renderer `undefined` (which it drops, so the mark painted with no side),
+`iconPixels` (in `@gpuixui/icons`) reads an icon step this release does not ship
+as `md` for the same reason — a sized glyph with no side paints a full-width,
+zero-height box — and
 `statusTone`
 reads a tone this release does not ship as `info` — the family the boundary
 narrowing substitutes — rather than answering `undefined` to a caller that
-destructures it. Narrow a stored role, size, tone, level or avatar step with
-`isTextRole`, `isControlSize`, `isStatusTone`, `isElevationLevel` or
-`isAvatarSize` where the caller can tell the reader what it substituted.
+destructures it. Narrow a stored role, size, tone, level, icon step or avatar
+step with
+`isTextRole`, `isControlSize`, `isStatusTone`, `isElevationLevel`, `isIconSize`
+or `isAvatarSize` where the caller can tell the reader what it substituted.
 
 A whole theme is storable, so its **mode** is a stated value before it is a union.
 There is no strict reading of light and dark, so `themeModeOf(theme)` reads a mode

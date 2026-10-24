@@ -198,6 +198,54 @@ export interface IconSize {
 /** Default icon sizes. */
 export const iconSize: IconSize = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };
 
+/**
+ * The icon steps, in the order the scale is documented.
+ *
+ * A glyph's size is a stored choice as often as a literal — a saved toolbar's
+ * density, a restored inspector row, a settings row that says how large its
+ * icons are — so a value restored from storage is `unknown` and this index is
+ * what a consumer narrows it with. It is the argument an `Icon`'s `size` prop
+ * takes, and the scale it selects is a theme group: a brand can change a step
+ * with `extendTheme`, so the index is the **release's vocabulary** rather than
+ * the numbers a theme paints.
+ */
+export const iconSizes = [
+  "xs",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+] as const satisfies readonly (keyof IconSize)[];
+
+/** A step of the icon scale, by name. */
+export type IconStep = (typeof iconSizes)[number];
+
+/**
+ * An icon step the index forgets, as a build error — the spacing index's rule.
+ */
+type EveryIconStepListed<Listed extends IconStep> =
+  Exclude<keyof IconSize, Listed> extends never
+    ? true
+    : [
+        "an icon step is missing from the index",
+        Exclude<keyof IconSize, Listed>,
+      ];
+
+const iconIndex: EveryIconStepListed<(typeof iconSizes)[number]> = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void iconIndex;
+
+/**
+ * Narrow unknown input — a saved toolbar's icon size, a restored row's — to a
+ * step of this release's icon scale.
+ *
+ * The index's membership, not the record's, for the reason {@link isSpacingStep}
+ * states: `name in iconSize` answers true for `toString` too, and the lookup
+ * would hand the renderer a method where a pixel count belongs.
+ */
+export const isIconSize = (value: unknown): value is IconStep =>
+  iconSizes.some((step) => step === value);
+
 /** Diameters for identity marks (avatars), in pixels. */
 export interface AvatarSize {
   /** 20px — inline with a dense row. */

@@ -1172,7 +1172,7 @@ describe("the persisted-choice axes", () => {
   const guardsSuite = read("./guards.test.ts");
 
   it("prints one row per axis, exported and swept", () => {
-    expect(rows).toHaveLength(12);
+    expect(rows).toHaveLength(13);
     rows.forEach(({ axis, index, guard }) => {
       expect(declared, axis).toContain(index);
       expect(declared, axis).toContain(guard);
@@ -1188,9 +1188,9 @@ describe("the persisted-choice axes", () => {
       expect(designSystem, `design system ${index}`).toContain(`\`${index}\``);
     });
     expect(section(catalogue, "### Persisted choices")).toContain(
-      "Twelve unions",
+      "Thirteen unions",
     );
-    expect(section(readme, "## Persisted choices")).toContain("Twelve axes");
+    expect(section(readme, "## Persisted choices")).toContain("Thirteen axes");
   });
 
   /**
@@ -1228,6 +1228,22 @@ describe("the persisted-choice axes", () => {
     expect(flatten(catalogue)).toContain(
       "a name this release does not ship is **absence**",
     );
+  });
+
+  /**
+   * The icon scale is the one a component's `size` prop selects, so the section
+   * that prints its numbers teaches the index and guard beside them — the rule
+   * the avatar paragraph already claimed for "every other persisted axis".
+   */
+  it("teaches the icon scale's index and guard where it prints the scale", () => {
+    const icons = section(
+      catalogue,
+      "## Borders, icons and identity marks",
+    ).replace(/\s+/g, " ");
+
+    expect(icons).toContain("`iconSizes` is the five steps");
+    expect(icons).toContain("`isIconSize` narrows a restored value");
+    expect(icons).toContain("`iconSizeFromStoredChoice`");
   });
 });
 
