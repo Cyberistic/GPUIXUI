@@ -357,6 +357,7 @@ const ordered = (
 export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
   requireGroups(theme);
   const density: unknown = theme.density;
+  const types: unknown = theme.typography;
   const controlScale = (metric: "controlHeight" | "controlPaddingX"): unknown =>
     isStepRecord(density) ? density[metric] : undefined;
   return [
@@ -382,8 +383,7 @@ export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
       // A role the theme does not carry is not a rung: comparing across the gap
       // would report the steps either side of a name nothing can select.
       typeKeys.flatMap((role) => {
-        const scale: unknown = theme.typography;
-        const style: unknown = isStepRecord(scale) ? scale[role] : undefined;
+        const style: unknown = isStepRecord(types) ? types[role] : undefined;
         return isStepRecord(style)
           ? [[`${role}.fontSize`, stepNumber(style.fontSize)] as const]
           : [];
