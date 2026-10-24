@@ -308,11 +308,16 @@ describe("the house timing", () => {
     // The rule is the module's own reading of a duration, not a literal zero:
     // a stored timing whose duration is absent, unreadable or not positive is
     // no journey either, and the window conversion reads it the same way. The
-    // read is nullish-safe because `PresenceTransition` is structural too.
+    // read is nullish-safe because `PresenceTransition` is structural too, and
+    // the delay is converted by the module's own reader — a delay outside the
+    // clock's range adds nothing — rather than by raw division.
     expect(Str.includes("milliseconds(timing?.duration) === 0")(shared)).toBe(
       true,
     );
-    expect(Str.includes("delay: delayMs / 1000")(shared)).toBe(true);
+    expect(Str.includes("const wait = waitSeconds(delayMs)")(shared)).toBe(
+      true,
+    );
+    expect(Str.includes("delay: wait")(shared)).toBe(true);
   });
 });
 

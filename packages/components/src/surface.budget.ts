@@ -141,7 +141,12 @@ export const surfaceBudget = {
   // 1 161 KiB measured with the wizard's stored step list (`wizard/logic.ts`'s
   // `stepsOf` reads a saved definition's list and drops an entry that names no
   // step), so the ceiling moved 1160 → 1170 KiB for the next family's headroom.
-  bytes: 1170 * 1024,
+  // 1 171 KiB measured 2026-10-24 with the saved-state boundary reads in the
+  // combobox, accordion, tag input and command palette (`combobox/logic.ts`,
+  // `accordion/logic.ts`, `tag-input/logic.ts`, `menu/fuzzy.ts`) beside the
+  // motion seam's own rework in the same tree, so 1170 → 1180 KiB keeps the
+  // next family the headroom a prose edit needs.
+  bytes: 1180 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
