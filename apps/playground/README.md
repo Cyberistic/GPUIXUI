@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-137 probes a real window can prove, of which thirty mount shipped
+138 probes a real window can prove, of which thirty mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7850,6 +7850,70 @@ false`); sampling the disc's box corners at its centre fails
 `the action clips the disc: the page paints outside its own box` (`expected
 true, got false`). Evidence: `.artifacts/live/ripple-{rest,hover,small,clip,after}.png`.
 
+### `diff-viewer-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped `DiffViewer` paint change as tint, pair a split diff on one
+row, and keep a long line one line tall?** The editor package's page makes all
+three claims, and the package's suites read the reported tree: a `<text>` run's
+box and its declared colour are not the tint a window paints behind a row, a
+`flexGrow` cell is not a measured divider, and `whiteSpace: "nowrap"` is a
+declaration until a wrapped row grows. The headless `editor-surface` scenario
+mounted the raw `<diff>` host a patch string goes into; this probe mounts the
+wrapper a consumer imports.
+
+Four viewers are bounded to **420** points on a `card` page, so the diff's own
+`background` surface is a different colour from the page behind it. Their rows,
+line numbers and split pairing are derived from the package's own
+`diffStrings`/`numberDiff`/`splitPairs`.
+
+| Step | Measured |
+| ---- | -------- |
+| the unified surface | **420** points wide; each of its **5** rows is **418** wide (the 1-point border) and **18** tall (the `codeBlock` role's line height) |
+| the unified text | each row's own text is its marker, both gutters and the line: ` 11const total = add(1, 2);`, `-2export const doubled = total * 2;`, `+2export const doubled = total * 3;`, ` 33console.log(doubled);`, `+4console.log(summary);` |
+| a removed line | fills its whole row with the `destructive` soft role `#7E1D21`; none of the `success` role paints there |
+| an added line | fills its whole row with the `success` soft role `#0E5135`; none of the `destructive` role paints there |
+| a context line | paints the diff's own surface `#11141A` (on the `card` page `#191D25`), no tint of either kind |
+| the split surface | **4** rows for two changes: the replacement is one row, the appended line another |
+| a replacement on one row | the removed line's tint and the added line's tint share row 1; the row's text is `2export const doubled = total * 2;2export const doubled = total * 3;` |
+| the appended line's blank cell | the left cell paints no tint and the surface fill; the right cell paints the added role beside it |
+| the split's divider | the cells are sized by their own lines, not down the middle: the removed tint ends at **59%** of the row and the added cell's gutter begins at **61%** — so the removed tint crosses the midpoint |
+| the price of that | the pushed added line runs to the surface's edge and is **clipped** there, while the appended line that fits ends before it |
+| a long line | a **176**-character addition (160 of them `x`) in the 420-point surface still paints **one 18-point row** on a 418-wide row; the text is painted whole and clipped, not wrapped |
+| no gutters | the long viewer's row reads `+console.log('xxx…` with no line numbers, so `lineNumbers={false}` removes both gutters |
+| nothing changed | one **18**-point context row, no `success` or `destructive` tint, and no second row |
+
+Three rules the window measured:
+
+1. **A change is a tint, and the tint is the tone's soft role.** A removed row
+   is `statusTone(theme, "destructive").background` and an added row
+   `statusTone(theme, "success").background`, painted across the whole row; a
+   context row keeps the surface. The probe reads the roles from the shipped
+   palette, so a palette change re-measures rather than inherits.
+2. **A split row pairs a change; it does not halve the surface.** The two cells
+   are `flexGrow` over a zero basis but the runtime sizes them by their content,
+   so a changed line wider than half the row pushes the other cell right and
+   clips it. That is the measured limit of the shipped composition: a caller
+   that needs both lines whole should give the diff a wider pane.
+3. **A long line is clipped, not wrapped.** `whiteSpace: "nowrap"` plus the
+   surface's `overflow-hidden` keeps the row one line tall and the surface at
+   the width its caller gave it; the model still paints the whole line, so a
+   copy or a wider pane recovers it.
+
+98 checks, `--only diff-viewer-lifecycle`, green on 0.11.0 here (~4.6 s, four
+captures: `diff-unified`, `diff-split`, `diff-long`, `diff-same`). Fixture
+`src/live/diff-viewer.ts` + probe `src/live/diff-viewer-probe.tsx` +
+`diff-viewer.test.ts` (the component's ids and paint, the rows derived from its
+own logic, the fixture's colours from the palette, the registry and wiring, the
+band sampling, the count and this section). Negative controls measured, exit `1`
+each and restored green: expecting the pushed added line to end before the
+surface fails
+`the pushed added line is clipped at the surface's edge` (`expected 0, got
+550`), and reading the split sides at the row's midpoint (`DIFF_SIDE_BAND` at
+`0.5`) fails `the right band paints none of the removed role` (`expected 0, got
+2379`) — the removed line's tint crossing the midpoint, read as the other
+side's content.
+Evidence: `.artifacts/live/diff-{unified,split,long,same}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -8105,7 +8169,8 @@ narrower. Each deviation is deliberate and measured:
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
   `color-picker-lifecycle` and `mention-input-lifecycle` and
   `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` and
-  `hotkey-recorder-lifecycle` (79 probes, each run alone).
+  `hotkey-recorder-lifecycle` and `diff-viewer-lifecycle` (80 probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,

@@ -247,6 +247,9 @@ importers:
       '@gpuixui/dock':
         specifier: workspace:*
         version: link:../../packages/dock
+      '@gpuixui/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@gpuixui/files':
         specifier: workspace:*
         version: link:../../packages/files

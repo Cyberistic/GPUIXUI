@@ -1119,6 +1119,7 @@ import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import { SidebarClipProbe, sidebarClipSteps } from "./sidebar-clip-probe.js";
 import { MediaFrameProbe, mediaFrameSteps } from "./media-frame-probe.js";
 import { MediaPlayerProbe, mediaPlayerSteps } from "./media-player-probe.js";
+import { DiffViewerProbe, diffViewerSteps } from "./diff-viewer-probe.js";
 import { MenuRadioProbe, menuRadioSteps } from "./menu-radio-probe.js";
 import { AppChromeProbe, appChromeSteps } from "./app-chrome-probe.js";
 import { SecondWindowProbe, secondWindowSteps } from "./second-window-probe.js";
@@ -30739,5 +30740,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "typing-text-lifecycle",
     view: () => <TypingTextProbe />,
     steps: typingTextSteps,
+  },
+  "diff-viewer-lifecycle": {
+    id: "diff-viewer-lifecycle",
+    view: () => <DiffViewerProbe />,
+    steps: diffViewerSteps,
   },
 };

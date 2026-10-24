@@ -858,6 +858,12 @@ export const liveRegistry = [
       "Layout: the shipped RippleButton's disc is the label's own ink at a faint share, a circle born on the press point, clipped by the control and faded as it arrives, and it never takes the press it marks",
     capability: "layout",
   },
+  {
+    id: "diff-viewer-lifecycle",
+    title:
+      "Content: the shipped DiffViewer tints a removed and an added line with their soft roles, pairs a split change on one row with a blank cell where a side ran out, and clips a long line to the caller's surface",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
