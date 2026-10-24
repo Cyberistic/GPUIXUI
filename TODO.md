@@ -10135,6 +10135,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `350 → 510`; moving over `state.columns` instead of the visible list fails
     `["size","name"]`. Verified: `--only data-table-core` (1/1, headless) and
     `test:behaviour` (14/14). Frozen columns stay out — see the next row.
+  - [x] Restore a **saved column configuration** over the definitions a release
+    ships — the controller's order, hidden ids and widths are worth persisting,
+    but a store hands back data the next release may not recognise: a saved
+    order names columns that may have been added, renamed or dropped, and JSON
+    writes a field it never set as `null`. `columnConfig(state)` writes the
+    order/hidden/widths and `restoreColumns(defs, stored)` applies them to the
+    **current** definitions (dropped ids skipped, new columns following the
+    saved ones, widths clamped to each column's own bounds, an unreadable width
+    as the definition's, an unknown hidden id ignored, the last visible column
+    kept); `useColumns({ columns, stored })` reads it once at mount and `reset`
+    still restores the definitions. `columns/logic.test.ts` gains 7 cases
+    including a save → JSON → restore round trip and the all-hidden set;
+    `columns/docs.test.ts` holds the page, the seam and the hook together.
+    Directions measured: without `restoreColumns` the import is absent; skipping
+    the current definitions for the saved order fails the dropped/added case,
+    and dereferencing the stored widths fails on `null`. Owner: data.
   - [x] Tier 3 phase 3b — pinned/frozen columns: `FrozenTable` ships the
     measured two-pane composition (`data-grid-frozen-column`,
     `frozen-column-lifecycle`): the frozen column has its own vertical scroller
@@ -12078,7 +12094,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 377/377
+`[x]` `[██████████]` 378/378
+
+`[x]` Re-anchor the **two docs guards that read a value which moved** — the
+      status strip pinned Accordions' support cell to a bare `yes` while
+      `COMPONENTS.md` now records the measurement in that cell
+      (`yes (measured)`), and the table preview pinned
+      `globalFilter: state.globalFilter.trim()` while the table-core rewrite
+      reads the query through `readGridState` and lands it on `current`. The
+      strip case now holds the rendered strip to the inventory row's own
+      `support` text (a `done` row whose verdict begins with `yes`, and never
+      `partial`), so a generic label fails it; the filter case matches the
+      trimmed global filter with the local name the package chooses
+      (`/globalFilter: <name>.globalFilter.trim()/`), so the rule is held and
+      the holder's name is not. Directions measured: both old assertions fail on
+      this tree (`expected … to match /…yes…/` against `yes (measured)`, and
+      `expected … to contain 'globalFilter: state.globalFilter.trim()'`), and
+      the new filter pattern rejects an untrimmed read
+      (`globalFilter: current.globalFilter`). Green: the two files are 22/22.
+      No native scenario applies — two docs guards over the inventory and a
+      package source file.
 
 `[x]` Draw the **two tree pages that showed no tree** — `tree-view.mdx` and
       `virtual-tree.mdx` shipped props, keyboard notes and limitations and no

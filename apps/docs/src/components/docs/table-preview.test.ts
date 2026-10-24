@@ -74,8 +74,12 @@ describe("the preview's filter", () => {
   it("matches one literal, case-insensitive query over each cell", () => {
     // The rule the package owns (`grid-core.ts`): the core's `includesString`
     // global filter, fed a trimmed query, over every column's accessor value.
+    // The query is read through the state seam (`readGridState`), so the local
+    // name the record lands on is the package's to choose.
     expect(gridCore).toContain('globalFilterFn: "includesString"');
-    expect(gridCore).toContain("globalFilter: state.globalFilter.trim()");
+    expect(gridCore).toMatch(
+      /globalFilter: [A-Za-z_$][\w$]*\.globalFilter\.trim\(\)/,
+    );
     expect(gridCore).toContain("accessorFn: column.valueOf");
 
     expect(TABLE_ROWS.length).toBe(6);

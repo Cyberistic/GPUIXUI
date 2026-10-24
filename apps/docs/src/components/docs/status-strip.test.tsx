@@ -24,13 +24,21 @@ describe("the status strip", () => {
     expect(markup).toContain(inventoryUrl);
   });
 
-  it("prints a plain yes for a fully supported component", () => {
+  it("prints a fully supported component's verdict as the row states it", () => {
+    const row = inventory.rows.find(
+      (candidate) => candidate.name === "Accordions",
+    );
     const markup = render("Accordion");
 
-    // Accordions is `done` with `yes`: the strip must not print a generic
-    // verdict, or a partial component would look whole.
+    // Accordions is `done` with a `yes` verdict — now with its measurement in
+    // the same cell. The strip prints the row's own words, not a generic label,
+    // so a partial component cannot look whole.
+    expect(row).toBeDefined();
+    expect(row?.status).toBe("done");
+    expect(row?.support.startsWith("yes")).toBe(true);
     expect(markup).toContain("Accordions");
-    expect(markup).toMatch(/GPUix support <code[^>]*>yes<\/code>/);
+    expect(markup).toContain("GPUix support");
+    expect(markup).toContain(row?.support ?? "");
     expect(markup).not.toContain("partial");
   });
 
