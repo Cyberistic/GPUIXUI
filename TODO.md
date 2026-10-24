@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 272/273
+`[x]` `[██████████]` 273/273
 
 `[x]` Teach the **switch a brand half-declares** the fallback its painter takes —
       four teaching surfaces said a half-declared `switch` "paints the slots it
@@ -448,12 +448,34 @@ Verification.
       `syntax-palette` **1/1** (the probe paints the palette this seam hands the
       host); the merge and the report have no scenario of their own.
 
-`[ ]` Carry the **token-by-token palette rule into the inventory** — the
-      `Syntax palette` row in `COMPONENTS.md` still says a brand "replaces the
+`[x]` Carry the **token-by-token palette rule into the inventory** — the
+      `Syntax palette` row in `COMPONENTS.md` still said a brand "replaces the
       table whole" and that a host "would otherwise paint its own colour for that
-      token"; both are false since `syntaxColors` completes a stored palette, and
+      token"; both were false since `syntaxColors` completes a stored palette, and
       the row should say so beside the report that still refuses the lost token.
-      Owner: inventory (not a `tokens-theme` path).
+      **Landed 2026-10-24:** the row now says a brand's palette is read **token by
+      token** (`syntaxPalette` keeps every token it names and answers the shipped
+      table for each one it does not) beside the report that still refuses the
+      token a store lost, and both retracted sentences are gone. The same pass
+      found the row's two **printed figures** stale: `audit.syntax` was "(eleven
+      reports)" where the gate returns **fourteen**, and `syntax.test.ts` was
+      "(13 cases)" where the suite runs **22**. Four more **ordinals** in the
+      design-system table had aged the same way — `selection` "its fifth"
+      (tenth), `indicators` "its seventh contract" (eleventh), the disabled fade
+      "the gate's ninth report" (thirteenth) and the keyboard dim "its tenth"
+      (fourteenth) — and both pages carried the dim's "tenth". `inventory.test.ts`
+      grows 9 → **15 cases**: the gate's order is read from `auditTheme`'s own
+      keys with a claim per row and for the two pages, the word lists must cover
+      every report, the `audit.syntax` count is derived, the palette rule is read
+      against `syntax.ts` (`syntaxPalette(theme.syntax, table)`,
+      `namesColour(value)`), and the suite's case count is read from the file.
+      Directions measured: with the stale rows and pages restored, five cases fail
+      by name (the four ordinals and the report count the row prints); restored,
+      53 files / **3 158** tests green with
+      `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs:
+      `COMPONENTS.md`'s row, `docs/tokens.md` §The dim a control paints while Tab
+      is elsewhere and `docs/design-system.md` §8. No native scenario applies —
+      printed figures a suite derives.
 
 `[x]` Read the **value a store wrote apart from the role an older release never
       carried** — the previous fix read a blank colour as the absence it is and

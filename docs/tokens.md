@@ -2743,7 +2743,7 @@ field host declares it, and the components package re-states the same rule for
 its own parts (`internal/theme.ts`) — so a filled action and a field keep their
 text, and an unfilled action keeps the cue.
 
-`keyboardDimFailures` is the gate's tenth report (`audit.keyboardDim`), so a
+`keyboardDimFailures` is the gate's fourteenth report (`audit.keyboardDim`), so a
 brand runs it with the rest. The dim and the disabled fade are the same
 composite with two shares, and the measured consequence is that no palette
 fails the dim alone — the dim's band sits inside the fade's — so what the

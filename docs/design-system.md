@@ -761,7 +761,7 @@ A row under the pointer is dimmed as a whole, so its label lands on the dimmed
 (`hover`, `accent`, `active`) are measured as fills of their own, and the
 tightest wash placement over the shipped styles is Linux light's accent under a
 chosen row's title at **2.07:1**.
-It is the gate's tenth report (`audit.keyboardDim`): the dim and the
+It is the gate's fourteenth report (`audit.keyboardDim`): the dim and the
 disabled fade are the same composite with two shares, so no palette fails the
 dim alone — the dim's band sits inside the fade's — and what the report adds is
 the placement and the mechanism, so a consumer knows which control has to

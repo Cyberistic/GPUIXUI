@@ -21,6 +21,7 @@
  */
 import { existsSync, readdirSync, readFileSync, type Dirent } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { auditTheme } from "./audit.js";
 import { brandText } from "./brand-text.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { highlightSurfaces } from "./highlight.js";
@@ -45,6 +46,24 @@ const components = readFileSync(
   new URL("../../../COMPONENTS.md", import.meta.url),
   "utf8",
 );
+
+/** The two pages that teach the gate's order beside the inventory. */
+const pages: ReadonlyArray<{ readonly name: string; readonly text: string }> = [
+  {
+    name: "docs/tokens.md",
+    text: readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ),
+  },
+  {
+    name: "docs/design-system.md",
+    text: readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    ),
+  },
+];
 
 /** The `## Design system` section, found by its heading rather than by a phrase. */
 const section =
@@ -306,5 +325,177 @@ describe("citation resolution", () => {
 
   it("reports a file the workspace does not contain", () => {
     expect(resolves("vanished-protocol.test.ts")).toBe(false);
+  });
+});
+
+/**
+ * Guards the **position** each surface gives a report in the gate.
+ *
+ * The gate grew from two reports to fourteen, and the rows kept the places they
+ * were written at: `selection` was still "its fifth", `indicators` "its seventh
+ * contract", the disabled fade "the gate's ninth report" and the keyboard dim
+ * "its tenth" — in the table and on both pages — while `auditTheme` returns
+ * them tenth, eleventh, thirteenth and fourteenth. A reader following an
+ * ordinal is sent to the wrong check, and the count word beside `audit.syntax`
+ * said eleven for a gate that runs fourteen.
+ *
+ * The order is read from `auditTheme`'s own keys rather than remembered, so a
+ * report inserted ahead of another moves every ordinal after it and the claim
+ * fails instead of ageing. Extending the two word lists is deliberate: a
+ * fifteenth report should force this file to be read.
+ */
+describe("the position each surface gives a report in the gate", () => {
+  const reports = Object.keys(auditTheme(themes.light)).filter(
+    (key) => key !== "passed",
+  );
+  const ordinals = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "eleventh",
+    "twelfth",
+    "thirteenth",
+    "fourteenth",
+  ] as const;
+  const cardinals = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+  ] as const;
+
+  const ordinal = (report: string): string =>
+    ordinals[reports.indexOf(report)] ?? "unlisted";
+
+  /** One row's sentence about where its report sits, as the row prints it. */
+  const claims: ReadonlyArray<{
+    readonly capability: string;
+    readonly report: string;
+    readonly phrase: (word: string) => string;
+  }> = [
+    {
+      capability: "Token numbers",
+      report: "invalidNumbers",
+      phrase: (word) => `as its ${word} report`,
+    },
+    {
+      capability: "Text selection wash",
+      report: "selection",
+      phrase: (word) => `includes the report as its ${word}`,
+    },
+    {
+      capability: "Indicator marks",
+      report: "indicators",
+      phrase: (word) => `as its ${word} contract`,
+    },
+    {
+      capability: "Contrast contract",
+      report: "disabledFade",
+      phrase: (word) => `the gate's ${word} report (\`audit.disabledFade\`)`,
+    },
+    {
+      capability: "Keyboard focus dim",
+      report: "keyboardDim",
+      phrase: (word) => `the gate's ${word} report`,
+    },
+  ];
+
+  it("reads an order that covers every report and every word", () => {
+    expect(reports).toHaveLength(ordinals.length);
+    expect(cardinals[reports.length]).toBeDefined();
+    expect(claims.filter(({ report }) => !reports.includes(report))).toEqual(
+      [],
+    );
+  });
+
+  it("prints the position the gate returns each report at", () => {
+    const stale = claims.flatMap(({ capability, report, phrase }) => {
+      const row = rows.find((entry) => entry.capability === capability);
+      const wanted = phrase(ordinal(report));
+      return row !== undefined && row.notes.includes(wanted)
+        ? []
+        : [`${capability}: ${wanted}`];
+    });
+
+    expect(stale).toEqual([]);
+  });
+
+  it("counts the reports the gate returns, beside `audit.syntax`", () => {
+    const row = rows.find((entry) => entry.capability === "Syntax palette");
+    const count = cardinals[reports.length] ?? `${reports.length}`;
+
+    expect(row?.notes).toContain(`\`audit.syntax\` (${count} reports)`);
+  });
+
+  it("agrees on the keyboard dim's place on the pages that teach it", () => {
+    // A page wraps its prose, so the sentence is read across a line break.
+    const wanted = `the gate's ${ordinal("keyboardDim")} report (\`audit.keyboardDim\`)`;
+    const silent = pages
+      .filter(({ text }) => !text.replace(/\s+/g, " ").includes(wanted))
+      .map(({ name }) => `${name}: ${wanted}`);
+
+    expect(silent).toEqual([]);
+  });
+});
+
+/**
+ * Guards the rule the `Syntax palette` row teaches about a brand's palette.
+ *
+ * The row said a brand "replaces the table whole" and that the host "would
+ * otherwise paint its own colour for that token" — false once `syntaxColors`
+ * completed a stored palette: `syntaxPalette` keeps every token the brand names
+ * as a colour and answers the shipped table for each one it does not, so a host
+ * is always handed a complete table. The report is the other half: the gate
+ * still refuses a token the store lost, and the row must say both rather than
+ * sending a reader to a host default that no longer happens.
+ *
+ * The row also printed `syntax.test.ts` (13 cases) after the suite had grown, so
+ * the count is read from the file, the rule `highlight.test.ts`'s row follows.
+ */
+describe("the Syntax palette row", () => {
+  const source = readFileSync(new URL("./syntax.ts", import.meta.url), "utf8");
+  const suite = readFileSync(
+    new URL("./syntax.test.ts", import.meta.url),
+    "utf8",
+  );
+  const notes = rows.find(
+    (entry) => entry.capability === "Syntax palette",
+  )?.notes;
+
+  it("teaches the palette rule the paint follows", () => {
+    const code = source.replace(/\s+/g, " ");
+
+    expect(code).toContain("syntaxPalette(theme.syntax, table)");
+    expect(code).toContain("namesColour(value)");
+    expect(notes).toContain("token by token");
+    expect(notes).not.toContain("replaces the table whole");
+    expect(notes).not.toContain(
+      "would otherwise paint its own colour for that token",
+    );
+  });
+
+  it("prints the case count its suite runs", () => {
+    const cases = suite.match(/\bit\(/g)?.length ?? 0;
+
+    expect(cases).toBeGreaterThan(10);
+    expect(notes).toContain(`\`syntax.test.ts\` (${cases} cases)`);
   });
 });
