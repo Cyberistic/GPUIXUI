@@ -10,7 +10,13 @@
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { initial, isOpen, toggle, type AccordionState } from "./logic.js";
+import {
+  initial,
+  isOpen,
+  openSectionsOf,
+  toggle,
+  type AccordionState,
+} from "./logic.js";
 
 const single = (collapsible: boolean, open?: string): AccordionState =>
   initial({ type: "single", collapsible, defaultValue: open });
@@ -93,5 +99,24 @@ describe("toggle in multiple mode", () => {
   it("leaves the other sections open", () => {
     const state = toggle(toggle(toggle(multiple(), "a"), "b"), "c");
     expect(toggle(state, "b")).toEqual(multiple(["a", "c"]));
+  });
+});
+
+describe("openSectionsOf", () => {
+  it("keeps the sections a workspace saved", () => {
+    expect(openSectionsOf(["a", "b"])).toEqual(Option.some(["a", "b"]));
+  });
+
+  it("reads a value that is not a list as absence", () => {
+    // A store writes `null` where a saved layout carried no open set.
+    expect(openSectionsOf(null)).toEqual(Option.none());
+    expect(openSectionsOf(undefined)).toEqual(Option.none());
+    expect(openSectionsOf("a")).toEqual(Option.none());
+  });
+
+  it("drops an entry that is not a section id, keeping the rest", () => {
+    expect(openSectionsOf(["a", null, 2, "b"])).toEqual(
+      Option.some(["a", "b"]),
+    );
   });
 });

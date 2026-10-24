@@ -56,3 +56,4 @@ Accordion
 - No `aria-controls`; the trigger–body relationship is positional.
 - A `Tab` traversal focuses the trigger **without running its `onFocus`**; the ring is declared at rest.
 - The body grows and collapses through its measured height.
+- A `multiple` accordion's open set is read at the boundary: a `value` that is not a list means uncontrolled (the state the `defaultValue` starts), and an entry that is not a section id is dropped, so a saved workspace's `null` does not throw out of the first render.

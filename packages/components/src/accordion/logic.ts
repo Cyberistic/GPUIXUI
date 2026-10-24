@@ -8,6 +8,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import { Match } from "effect";
 
 /** Open sections for a single- or multi-open accordion. */
@@ -32,10 +33,30 @@ const singleDefault = (
 ): Option.Option<string> =>
   Option.fromNullishOr(typeof value === "string" ? value : undefined);
 
+/**
+ * The sections a saved open set carries: its text entries, or absence.
+ *
+ * Which sections are open is saved with the workspace — a panel's state
+ * restored on the next launch — so a stored `null` reaches the root, and
+ * `Arr.contains` over it threw out of the first render. Only a list is a list;
+ * an entry that is not a section id is dropped, so a hole cannot hide the open
+ * sections beside it. Anything else is **absence**, which is the uncontrolled
+ * accordion the prop already documents for `undefined`.
+ */
+export const openSectionsOf = (
+  value: unknown,
+): Option.Option<ReadonlyArray<string>> =>
+  Arr.isArray(value) ? Option.some(Arr.filter(value, P.isString)) : Option.none();
+
 const multipleDefault = (
   value: AccordionConfig["defaultValue"],
 ): ReadonlyArray<string> =>
-  Arr.dedupe(typeof value === "string" ? [value] : (value ?? []));
+  Arr.dedupe(
+    Option.getOrElse(
+      P.isString(value) ? Option.some([value]) : openSectionsOf(value),
+      Arr.empty,
+    ),
+  );
 
 /** The starting state for a configuration. */
 export const initial = (config: AccordionConfig): AccordionState =>

@@ -366,4 +366,55 @@ describe("Accordion", () => {
 
     faq.unmount();
   });
+
+  it("opens a saved multiple accordion whose open set is not a list", async () => {
+    // Which sections are open is saved with the workspace, and a store writes
+    // `null` for a layout that carried none. The root read the membership of
+    // that value on the first render, so the accordion threw before it painted.
+    const onValueChange = vi.fn();
+    const faq = renderComponent(
+      // @ts-expect-error — the open set a store wrote where it carried none.
+      <Accordion
+        type="multiple"
+        defaultValue={["one"]}
+        value={null}
+        onValueChange={onValueChange}
+      >
+        {section("one", "One")}
+        {section("two", "Two")}
+      </Accordion>,
+    );
+
+    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
+    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+
+    clickCentreOf(faq, "trigger-two");
+    await waitFor(() =>
+      expect(faq.renderer.findByTestId("content-two")).toBeDefined(),
+    );
+    expect(onValueChange).toHaveBeenLastCalledWith(["one", "two"]);
+
+    faq.unmount();
+  });
+
+  it("keeps the open sections beside an entry a store wrote as a hole", () => {
+    const onValueChange = vi.fn();
+    // A hole in the saved set is a section the store never named.
+    const saved = [null, "two"];
+    const faq = renderComponent(
+      // @ts-expect-error — a section a store saved as a hole in the set.
+      <Accordion type="multiple" value={saved} onValueChange={onValueChange}>
+        {section("one", "One")}
+        {section("two", "Two")}
+      </Accordion>,
+    );
+
+    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+
+    clickCentreOf(faq, "trigger-one");
+    expect(onValueChange).toHaveBeenLastCalledWith(["two", "one"]);
+
+    faq.unmount();
+  });
 });

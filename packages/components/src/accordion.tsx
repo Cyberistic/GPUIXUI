@@ -40,6 +40,7 @@ import {
 import {
   initial,
   isOpen as isOpenState,
+  openSectionsOf,
   toggle,
   type AccordionState,
 } from "./accordion/logic.js";
@@ -140,6 +141,7 @@ export type AccordionProps =
     })
   | (AccordionCommonProps & {
       readonly type: "multiple";
+      /** The open sections. `undefined` means uncontrolled; a stored value that is not a list means uncontrolled too. */
       readonly value?: ReadonlyArray<string>;
       readonly defaultValue?: ReadonlyArray<string>;
       readonly onValueChange?: (value: ReadonlyArray<string>) => void;
@@ -298,16 +300,22 @@ const MultipleAccordion = ({
   const [state, setState] = useState<AccordionState>(() =>
     initial({ type: "multiple", defaultValue }),
   );
-  const current =
-    value === undefined ? state : ({ type: "multiple", open: value } as const);
+  // A workspace saves which sections are open, and a store writes `null` where
+  // it carried none: the saved set is read at the boundary, and its absence is
+  // the uncontrolled accordion `undefined` already means.
+  const controlled = useMemo(() => openSectionsOf(value), [value]);
+  const current = Option.match(controlled, {
+    onNone: () => state,
+    onSome: (open) => ({ type: "multiple", open }) as const,
+  });
 
   const toggleItem = useCallback(
     (item: string): void => {
       const next = toggle(current, item);
-      if (value === undefined) setState(next);
+      if (Option.isNone(controlled)) setState(next);
       onValueChange?.(next.type === "multiple" ? next.open : []);
     },
-    [current, onValueChange, value],
+    [controlled, current, onValueChange],
   );
 
   return (
