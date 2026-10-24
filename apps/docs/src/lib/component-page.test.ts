@@ -844,9 +844,7 @@ describe("the component section index", () => {
     expect(index).toContain(
       "finds every component the runtime supports only in part",
     );
-    expect(index).toContain(
-      "`COMPONENTS.md` row",
-    );
+    expect(index).toContain("`COMPONENTS.md` row");
   });
 
   it("says how to run the native component, from one command", () => {
