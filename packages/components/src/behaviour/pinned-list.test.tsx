@@ -76,7 +76,51 @@ const mount = (surfaceColor?: string) => {
   return page;
 };
 
+/** Two sections of different heights, in a caller-chosen order. */
+const Ordered = ({ reversed }: { readonly reversed: boolean }) => {
+  const today = {
+    title: "Today",
+    children: <div testId="row-today" style={{ height: 200 }} />,
+  };
+  const yesterday = {
+    title: "Yesterday",
+    children: <div testId="row-yesterday" style={{ height: 400 }} />,
+  };
+  return (
+    <PinnedList
+      testId="list"
+      style={{ height: 160, width: 300 }}
+      sections={reversed ? [yesterday, today] : [today, yesterday]}
+    />
+  );
+};
+
 describe("PinnedList", () => {
+  it("keeps each section's measured height when the caller reorders them", () => {
+    // A section reports its height once, and a keyed element that moves keeps
+    // the measurement it gave. Held by slot instead, the height stayed behind:
+    // the section that took the slot was placed with its neighbour's height, so
+    // the first header was buried and the second pinned where no row began.
+    const page = renderComponent(<Ordered reversed={false} />);
+    try {
+      settle(page);
+      settle(page);
+
+      page.rerender(<Ordered reversed />);
+      settle(page);
+      scrollTo(page, -300);
+
+      // Yesterday (432 with its header row) now leads: its own header holds at
+      // the top, and Today's travels at 132 — its section starts at 432 and the
+      // list is scrolled 300 past it.
+      expect(has(page, "pinned-header-0")).toBe(true);
+      expect(headerTop(page, 0)).toBe(0);
+      expect(headerTop(page, 1)).toBe(132);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("reserves the header's row above the section's own content", () => {
     const page = mount();
     try {

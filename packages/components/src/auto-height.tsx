@@ -15,6 +15,8 @@
  * The measurement belongs to the content on screen: when the subtree unmounts,
  * the height it reported is retired, so a body that changed while closed is
  * measured again on the next open instead of the box heading for a stale target.
+ * The report is read through `internal/measure.ts`, so a height the payload
+ * cannot paint is no height rather than a `NaN` the runtime drops.
  */
 
 import type { Props } from "@gpuix/react";
@@ -27,6 +29,7 @@ import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useEffect, useState, type ReactNode } from "react";
+import { measuredHeight } from "./internal/measure.js";
 import {
   PresenceShield,
   presenceMotion,
@@ -132,7 +135,7 @@ export const AutoHeight = ({
     >
       <div
         onLayout={(event) => {
-          Option.match(Option.fromNullishOr(event.height), {
+          Option.match(measuredHeight(event), {
             onNone: () => undefined,
             onSome: (next) => setMeasured(Option.some(next)),
           });

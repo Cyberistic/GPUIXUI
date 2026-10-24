@@ -22,8 +22,10 @@
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 import { useState, type ReactNode } from "react";
+import { measuredHeight } from "./internal/measure.js";
 import { ScrollSurface } from "./internal/scroll-surface.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 import {
@@ -89,20 +91,29 @@ export const PinnedList = ({
   const theme = useTheme();
   const header = headerHeightOf(Option.fromNullishOr(headerHeight));
   const surface = surfaceColor ?? theme.colors.background;
-  // One measured height per section, in content order. A height is 0 until the
-  // first layout, and a section that changes size reports again.
-  const [heights, setHeights] = useState<ReadonlyArray<number>>([]);
+  // One measured height per section, keyed by the section's own title — the key
+  // the renderer reorders by. A height held by **position** would stay with the
+  // slot when a caller reorders its sections: the section that moved into the
+  // slot would be placed with its neighbour's height, and every header below it
+  // would pin at an offset no row has.
+  const [heights, setHeights] = useState<HashMap.HashMap<string, number>>(
+    HashMap.empty(),
+  );
 
   const noteHeight =
-    (index: number) =>
+    (title: string) =>
     (event: EventPayload): void => {
-      const height = event.height ?? 0;
-      setHeights((current) =>
-        Arr.map(sections, (_, at) =>
-          at === index ? height : (current[at] ?? 0),
-        ),
-      );
+      Option.match(measuredHeight(event), {
+        onNone: () => undefined,
+        onSome: (height) =>
+          setHeights((current) => HashMap.set(current, title, height)),
+      });
     };
+
+  /** The heights in the order the sections are declared now. */
+  const bands = Arr.map(sections, (section) =>
+    Option.getOrElse(HashMap.get(heights, section.title), () => 0),
+  );
 
   const headerLayer = (frames: ReadonlyArray<PinnedHeaderFrame>) => (
     <div
@@ -168,7 +179,7 @@ export const PinnedList = ({
       onLayout={onLayout}
       className={cn("relative", className)}
       chrome={(metrics) =>
-        headerLayer(pinnedHeaders(heights, metrics.offsetY, header))
+        headerLayer(pinnedHeaders(bands, metrics.offsetY, header))
       }
     >
       {sections.map((section, index) => (
@@ -177,7 +188,7 @@ export const PinnedList = ({
           testId={`pinned-section-${index}`}
           role="group"
           aria-label={section.title}
-          onLayout={noteHeight(index)}
+          onLayout={noteHeight(section.title)}
           style={{
             position: "relative",
             display: "flex",
@@ -206,7 +217,7 @@ export const pinnedListMeta = {
     "the runtime paints no position: sticky, so a header is a layer repositioned from the measured offset rather than a sticky child",
     "the region is vertical only, and an arrow key moves it by the primitives' row height",
     "a header is one line and reserves headerHeight: a wrapped title is clipped rather than made taller",
-    "sections are keyed by title, and a section inserted mid-list keeps stale heights until its own layout reports",
+    "sections are keyed by title, and each measured height is kept with its title — so reordering the sections keeps every header with its own rows; a section that has not reported yet counts as 0 until its layout arrives",
   ],
   docs: "docs/pinned-list.mdx",
   example: "examples/pinned-list.example.tsx",

@@ -39,6 +39,17 @@ export const measuredBox = (event: EventPayload): Option.Option<MeasuredBox> =>
     height: measurable(event.height),
   });
 
+/**
+ * The height an `onLayout` event carries.
+ *
+ * A component that only sizes its own box reads the one number it needs through
+ * the same rule as {@link measuredBox}: a height the payload cannot paint is the
+ * absence it is, not a `NaN` target `@gpuix/native@0.11.0` drops from the style
+ * batch and draws as nothing.
+ */
+export const measuredHeight = (event: EventPayload): Option.Option<number> =>
+  measurable(event.height);
+
 /** A point in window coordinates, as a pointer event reports it. */
 export interface MeasuredPoint {
   readonly x: number;

@@ -9,7 +9,7 @@
 import type { EventPayload } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { measuredBox, measuredPoint } from "./measure.js";
+import { measuredBox, measuredHeight, measuredPoint } from "./measure.js";
 
 const event = (fields: Partial<EventPayload>): EventPayload => ({
   elementId: 1,
@@ -45,9 +45,7 @@ describe("measuredBox", () => {
     // has. The payload is external input; this seam is where it is decoded.
     expect(
       Option.isNone(
-        measuredBox(
-          event({ x: Number.NaN, y: 40, width: 80, height: 32 }),
-        ),
+        measuredBox(event({ x: Number.NaN, y: 40, width: 80, height: 32 })),
       ),
     ).toBe(true);
     expect(
@@ -55,6 +53,30 @@ describe("measuredBox", () => {
         measuredBox(
           event({ x: 100, y: 40, width: Number.POSITIVE_INFINITY, height: 32 }),
         ),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("measuredHeight", () => {
+  it("reads the one side a sizing component needs", () => {
+    expect(Option.getOrUndefined(measuredHeight(event({ height: 232 })))).toBe(
+      232,
+    );
+  });
+
+  it("refuses a height it cannot paint", () => {
+    // A section or a reveal sizes its own box from this number alone, so a
+    // payload the runtime cannot have measured is no height: the runtime drops a
+    // `NaN` inset from the batch and draws nothing, which would collapse the box
+    // until a readable report arrived instead of keeping the frame it has.
+    expect(Option.isNone(measuredHeight(event({})))).toBe(true);
+    expect(Option.isNone(measuredHeight(event({ height: Number.NaN })))).toBe(
+      true,
+    );
+    expect(
+      Option.isNone(
+        measuredHeight(event({ height: Number.POSITIVE_INFINITY })),
       ),
     ).toBe(true);
   });
