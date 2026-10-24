@@ -21937,7 +21937,31 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 13/13
+`[x]` `[██████████]` 14/14
+
+`[x]` `packages/components`: **a stored value made the swap state's `text` a
+      non-string** — `RollingText` and `SlidingText` hand their prop to
+      `initialSwap`/`requestSwap`, which carry it as `SwapState.shown`, and both
+      publish it as `state.text`, declared `readonly text: string` in the
+      `style` callback's state. A value saved with a layout is JSON's `null` when
+      the record kept none, so the paint survived (React ignores a null child)
+      while the public state answered `null`: a caller's `style` callback that
+      measures the value — the record's own documented use of `state.text` —
+      threw `Cannot read properties of null (reading 'length')` out of the
+      render, a failure the component's types say cannot happen. Both read the
+      prop through `internal/text.ts`'s `textOf` and feed the swap the string it
+      declares, so a stored `null` is the empty value: nothing is painted, no
+      swap is requested, and `state.text` is `""`. Proof:
+      `behaviour/rolling-text.test.tsx` and `behaviour/sliding-text.test.tsx`
+      each gain `reports an empty value for a stored value that was not text`,
+      mounting a `null` and reading the state the `style` callback receives.
+      Direction measured: at `HEAD` both fail `expected [ null ] to deeply equal
+      [ '' ]`; restored, the two files are **21/21** and the inventory, docs,
+      text-swap and rolling logic suites **68/68** with `check-types`, `oxlint`,
+      `oxfmt` and `check:tests` clean. Docs: both pages' §Limitations and the
+      `Rolling text`/`Sliding text` rows. No native scenario applies — the state
+      is the render's own value, which the behaviour suites read in the real
+      renderer.
 
 `[x]` `packages/components`: **the same stored string took the two phrase
       painters down** — the pass above closed `SplittingText` and `TypingText`,
