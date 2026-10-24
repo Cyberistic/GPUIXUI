@@ -162,6 +162,14 @@ answering `undefined` and throwing `LOOKS[variant].variant` out of the render.
 an action keeps the role of the default it paints. `src/button-roles.test.ts`
 holds the role and `src/behaviour/button.test.tsx` the painted control.
 
+A badge's `variant` and `size` are stored with the record they label, so
+`badge.tsx` reads both through their own guards: a name this release does not
+ship paints `neutral`/`md`. The base recipe paints structure and leaves the
+colour to the variant, so an unguarded table read dropped the ink role and the
+fill together — a restored status pill painted as an unreadable label.
+`src/behaviour/badge.test.tsx` holds the fallback and a shipped `primary`/`sm`
+pill as the negative control.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

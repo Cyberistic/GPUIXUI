@@ -180,6 +180,51 @@ describe("Badge", () => {
     }
   });
 
+  it("paints the documented defaults for a stored variant and size it does not ship", () => {
+    // The bugs these guard: `BADGE_VARIANTS[variant]` and `BADGE_SIZES[size]`
+    // read the stored name straight off the table. A record saved under a
+    // renamed variant (`"critical"`), or a size this release dropped, answered
+    // `undefined`, so the pill painted no ink role and no fill at all — an
+    // unfilled label the page cannot read — at the runtime's own type size.
+    // The names arrive from a store, so they are what a decoder can hand over.
+    const badge = renderComponent(
+      // @ts-expect-error a stored name is not the union's literal
+      <Badge testId="badge" variant="critical" size="xs">
+        Active
+      </Badge>,
+    );
+
+    try {
+      expect(styleOf(badge)).toMatchObject({
+        backgroundColor: darkTheme.colors.muted,
+        color: darkTheme.colors.mutedForeground,
+      });
+      expect(heightOf(badge)).toEqual(Option.some(heightFor(darkTheme, "md")));
+    } finally {
+      badge.unmount();
+    }
+  });
+
+  it("keeps a shipped variant and size when it was stored as one", () => {
+    // The negative control: the guard must not flatten every pill to its
+    // default. `primary`/`sm` still paint their own roles and type step.
+    const badge = renderComponent(
+      <Badge testId="badge" variant="primary" size="sm">
+        Active
+      </Badge>,
+    );
+
+    try {
+      expect(styleOf(badge)).toMatchObject({
+        backgroundColor: darkTheme.colors.primary,
+        color: darkTheme.colors.primaryForeground,
+      });
+      expect(heightOf(badge)).toEqual(Option.some(heightFor(darkTheme, "sm")));
+    } finally {
+      badge.unmount();
+    }
+  });
+
   it("rounds every variant into a pill", () => {
     const variants: ReadonlyArray<BadgeVariant> = [
       "neutral",

@@ -125,8 +125,11 @@ export const surfaceBudget = {
   // 1 122 KiB measured at `HEAD` before the chat boundary read — the earlier
   // seam growth had passed the 1120 KiB ceiling with nothing to record it — and
   // 1 125 KiB with `internal/text.ts`, so the ceiling moved 1120 → 1140 KiB for
-  // the next family's headroom.
-  bytes: 1140 * 1024,
+  // the next family's headroom. 1 141 KiB measured 2026-10-24 with the badge's
+  // stored-name guard (`badge.tsx` reads `variant`/`size` through their own
+  // `Schema.is` guards, the seam `internal/button.tsx`'s `lookOf` already takes),
+  // which is the family the 1140 ceiling no longer held: 1140 → 1160 KiB.
+  bytes: 1160 * 1024,
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.
