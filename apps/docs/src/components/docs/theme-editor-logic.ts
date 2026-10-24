@@ -19,6 +19,7 @@ import {
   type SeriesDistinctnessFailure,
   type SeriesSurfaceFailure,
   type SeriesVisionFailure,
+  type SwitchMetricFailure,
   type SwitchPlacementFailure,
   type SyntaxFailure,
   type Theme,
@@ -427,6 +428,25 @@ export const formatSwitchPlacement = ({
   `switch ${slot} on ${over} — ${measured(ratio, floor)}`;
 
 /**
+ * A number of a declared switch's box, e.g. `switch height — 22 cannot hold a
+ * knob that needs 32`. A `fits` failure prints the value the slot must reach
+ * rather than only the pair that collides: the track's numbers are one geometry
+ * a platform style sets together, and the slot is the number to grow. A slot a
+ * stored theme lost is called missing, like the paint's absent slot.
+ */
+export const formatSwitchMetric = ({
+  slot,
+  value,
+  rule,
+  needs,
+}: SwitchMetricFailure): string =>
+  value === undefined
+    ? `switch ${slot} — missing from this theme`
+    : rule === "fits"
+      ? `switch ${slot} — ${String(value)} cannot hold a knob that needs ${needs}`
+      : `switch ${slot} — ${String(value)} cannot be laid out (needs ${numberRequirement[rule]})`;
+
+/**
  * A find wash that fails one of its three jobs, e.g. `find match on card —
  * 2.72:1 (needs 7:1)`. A wash is composited behind the text rather than read as
  * a role, so `contrastRatio` never sees it: `visibility` is the wash against its
@@ -504,6 +524,10 @@ export const auditFindings = (
   ...report.switch.placements.map((failure) => ({
     kind: "switch" as const,
     text: formatSwitchPlacement(failure),
+  })),
+  ...report.switch.metrics.map((failure) => ({
+    kind: "switch" as const,
+    text: formatSwitchMetric(failure),
   })),
   ...report.contrast.map((failure) => ({
     kind: "contrast" as const,

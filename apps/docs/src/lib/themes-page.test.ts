@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { formatContrastFailure } from "../components/docs/theme-editor-logic";
+import {
+  formatContrastFailure,
+  formatSwitchMetric,
+} from "../components/docs/theme-editor-logic";
 
 /**
  * `/docs/themes` teaches the editor's audit.
@@ -16,7 +19,7 @@ import { formatContrastFailure } from "../components/docs/theme-editor-logic";
 const app = new URL("../../", import.meta.url);
 const read = (path: string): string => readFileSync(new URL(path, app), "utf8");
 
-const page = read("content/docs/themes.mdx");
+const page = read("content/docs/themes.mdx").replace(/\s+/g, " ");
 
 describe("the theme page's audit section", () => {
   it("prints the contrast line the formatter produces", () => {
@@ -54,6 +57,31 @@ describe("the theme page's audit section", () => {
     expect(read("src/components/docs/theme-editor.tsx")).toContain(
       "data-kind={finding.kind}",
     );
+  });
+
+  it("teaches the switch box a reader cannot draw", () => {
+    // A switch's colours are measured by the switch report, and so is the box
+    // they are painted in: a knob the track cannot hold fails the gate with a
+    // line the readout printed nothing for. The two lines are the formatter's.
+    const fits = formatSwitchMetric({
+      slot: "height",
+      value: 22,
+      rule: "fits",
+      needs: 32,
+    });
+    const unlayable = formatSwitchMetric({
+      slot: "width",
+      value: 0,
+      rule: "positive",
+    });
+
+    expect(fits).toBe("switch height — 22 cannot hold a knob that needs 32");
+    expect(unlayable).toBe(
+      "switch width — 0 cannot be laid out (needs a size greater than zero)",
+    );
+    expect(page).toContain(fits);
+    expect(page).toContain(unlayable);
+    expect(page).toContain("platform style");
   });
 
   it("says what the audit is measured over, and where the edits go", () => {

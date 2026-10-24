@@ -12,7 +12,7 @@ GPUix tweens a numeric style field on its own clock. `@gpuixui/motion` adds clos
 | timeline | `keyframe`, `sampleKeyframes`, `stagger`, `Sequence` |
 | inertia | `inertia`, `project`, `sampleInertia` |
 | value | `MotionValue` with `instant`, `tween`, `springTransition`, `transitionEquals` |
-| React | `useSpring`, `useTransition`, `useInertia`, `useMotion` |
+| React | `useSpring`, `useTransition`, `useInertia`, `useMotion`, `useSurfaceTiming`, `useSurfacePresence`, `useMotionPreference`, `MotionProvider` |
 | timing | `motionLevels`, `motionEasings`, `motionTiming`, `motionTimingOf` |
 | presence | `fadeFrom`, `fadeFromSide`, `fadeFromAnchor`, `fadeOnly`, `presenceTiming`, `presenceMotion`, `presenceStyle`, `transitionWindowMs`, `exitWindowMs`, `delayedTiming` |
 
@@ -49,7 +49,7 @@ A reduced run is a zero-duration assignment.
 
 ## Presence
 
-A surface that leaves keeps a frame mounted while it fades, and a box that is still painted must not take a press. `@gpuixui/motion/presence` owns the three frames, the enter and exit timing and the mount window, so a dialog, a popover and a reveal agree about the journey.
+A surface that leaves keeps a frame mounted while it fades, and a box that is still painted must not take a press. `@gpuixui/motion/presence` owns the three frames, the enter and exit timing, and the window's conversion; the **mounted window** itself is a timer, so it belongs to the React entry — `useSurfacePresence` keeps a leaving box painted and `useSurfaceTiming` pairs the level with the provider's preference. A dialog, a popover and a reveal therefore agree about the journey.
 
 ```ts
 import {
@@ -58,11 +58,19 @@ import {
   presenceStyle,
   presenceTiming,
 } from "@gpuixui/motion/presence";
+import {
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "@gpuixui/motion/react";
 
 const frames = fadeFromSide("top", 8); // initial, animate and exit
 const timing = presenceTiming("normal"); // enter and exit transitions
 const held = exitWindowMs(timing); // 200 — the exit window, in ms
 const rule = presenceStyle(false, "target"); // { pointerEvents: "none" }
+
+const surfaceTiming = useSurfaceTiming("normal"); // the provider's preference
+const presence = useSurfacePresence(open, surfaceTiming);
+if (!presence.mounted) return null; // render until the exit has run
 ```
 
 `presenceMotion(frames, present, timing)` returns the `motion` prop the surface paints. `presenceStyle(present, rest)` takes the pointer rule: `"target"` for an overlay, which blocks the pointer behind it, and `"wrapper"` for a reveal, which paints no surface of its own and so paints nothing at rest.

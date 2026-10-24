@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -29,7 +29,23 @@ const page = read("apps/docs/content/docs/dark-mode.mdx").replace(/\s+/g, " ");
 
 const systemTheme = read("packages/tokens/src/system-theme.ts");
 const omarchy = read("packages/tokens/src/omarchy.ts");
-const audit = read("packages/tokens/src/audit.ts");
+
+/**
+ * Every non-test module the tokens package ships, concatenated.
+ *
+ * The follow's two declarations moved house once already (`missingTokens` now
+ * lives in `missing.ts`, and `audit.ts` only re-publishes it), so a guard that
+ * read one path went red while the page was still correct. The page names the
+ * seams; which module declares one is the package's business.
+ */
+const tokensDir = new URL("packages/tokens/src/", root);
+const tokensSource = readdirSync(tokensDir, {
+  recursive: true,
+  encoding: "utf8",
+})
+  .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+  .map((name) => readFileSync(new URL(name, tokensDir), "utf8"))
+  .join("\n");
 
 /** The fields an interface declares itself, `?` kept so required is derivable. */
 const declared = (source: string, name: string): ReadonlyArray<string> => {
@@ -70,7 +86,7 @@ describe("the dark-mode page's palette follow", () => {
         name === "decodeOmarchyPalette"
           ? omarchy
           : name === "missingTokens"
-            ? audit
+            ? tokensSource
             : systemTheme;
       return !source.includes(declaration) || !page.includes(name);
     });
@@ -147,14 +163,17 @@ describe("the dark-mode page's palette follow", () => {
 
   it("names the absence a stored theme reports, in the gate's own kinds", () => {
     // `missingTokens` is the restore path's answer, and its kinds are the
-    // refusals the gate makes rather than a list the page invents.
+    // refusals the gate makes rather than a list the page invents. The kinds
+    // are declared beside the function that returns them, so the guard reads
+    // that declaration rather than a file the package may move.
+    const declarations = tokensSource.split("export type MissingTokenKind =");
     const kinds =
-      audit
-        .split("export type MissingTokenKind =")[1]
+      declarations[1]
         ?.split(";")[0]
         ?.match(/"(\w+)"/g)
         ?.map((kind) => kind.slice(1, -1)) ?? [];
 
+    expect(declarations.length).toBe(2);
     expect(kinds).toEqual(["group", "step", "family"]);
     expect(page).toContain("`missingTokens(theme)`");
     expect(kinds.filter((kind) => !page.includes(`\`${kind}\``))).toEqual([]);

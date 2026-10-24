@@ -24,6 +24,7 @@ import {
   formatInvalidRole,
   formatInvalidSwitch,
   formatSelectionFailure,
+  formatSwitchMetric,
   noPins,
   paintsEveryRole,
   parseState,
@@ -799,6 +800,48 @@ describe("the structural edits the gate reports", () => {
     );
   });
 
+  it("reports a switch box the theme cannot draw, beside its paint", () => {
+    // `auditTheme` fails a theme whose knob no longer fits its track or whose
+    // slot the renderer drops, and the readout folded only the paint and the
+    // placements: a base whose switch box was broken showed a failing gate with
+    // no line saying why. The box enters a theme through the platform style.
+    const darwin = platformThemes("darwin").light;
+    const boxed = extendTheme(darwin, {
+      switchMetrics: { width: 38, height: 22, knob: 30, inset: 1, border: 0 },
+    });
+    const report = auditTheme(boxed);
+    const findings = themeFindings("light", noPins(), boxed).filter(
+      (finding) => finding.kind === "switch",
+    );
+
+    expect(report.switch.metrics).toEqual([
+      { slot: "height", value: 22, rule: "fits", needs: 32 },
+    ]);
+    expect(report.passed).toBe(false);
+    expect(findings.map((finding) => finding.text)).toContain(
+      "switch height — 22 cannot hold a knob that needs 32",
+    );
+  });
+
+  it("words a switch box's unlayable slot and the one a store lost", () => {
+    expect(
+      formatSwitchMetric({
+        slot: "height",
+        value: 22,
+        rule: "fits",
+        needs: 32,
+      }),
+    ).toBe("switch height — 22 cannot hold a knob that needs 32");
+    expect(
+      formatSwitchMetric({ slot: "width", value: 0, rule: "positive" }),
+    ).toBe(
+      "switch width — 0 cannot be laid out (needs a size greater than zero)",
+    );
+    expect(
+      formatSwitchMetric({ slot: "knob", value: undefined, rule: "finite" }),
+    ).toBe("switch knob — missing from this theme");
+  });
+
   it("words the three jobs a find wash has to do", () => {
     const wash = "#A7A9FF4D";
 
@@ -857,11 +900,12 @@ describe("the structural edits the gate reports", () => {
       "utf8",
     );
 
-    // The switch report has two halves, and a readout that printed only the
-    // paint would pass a track nobody can find.
+    // The switch report has three halves, and a readout that printed only the
+    // paint would pass a track nobody can find or a box nobody can draw.
     expect(source).toContain("report.scales");
     expect(source).toContain("report.switch.paint");
     expect(source).toContain("report.switch.placements");
+    expect(source).toContain("report.switch.metrics");
     expect(source).not.toContain("invalidScales(theme)");
     expect(source).not.toContain("switchFailures(theme)");
   });

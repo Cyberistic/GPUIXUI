@@ -47,6 +47,32 @@ const presenceValues = [
   ...read("packages/motion/src/presence.ts").matchAll(/^export const (\w+)/gm),
 ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
+/**
+ * The React entry's exports: its `export const` hooks and the names its
+ * `export { … }` blocks re-publish. The page's module table is the one list a
+ * reader uses to find a hook, so it is held to this set rather than to a
+ * hand-written row.
+ */
+const reactSource = read("packages/motion/src/react.ts");
+const reactExports = [
+  ...[...reactSource.matchAll(/^export const (\w+)/gm)].flatMap((match) =>
+    match[1] === undefined ? [] : [match[1]],
+  ),
+  ...[...reactSource.matchAll(/export \{([^}]*)\}/g)].flatMap((match) =>
+    (match[1] ?? "")
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name !== "" && !name.startsWith("type ")),
+  ),
+];
+
+/** The page's own React row, between its bars. */
+const reactRow = (): string => {
+  const start = page.indexOf("| React |");
+  const end = page.indexOf("|", start + 9);
+  return page.slice(start, end);
+};
+
 interface Level {
   readonly name: string;
   readonly ms: string;
@@ -93,6 +119,36 @@ describe("the motion page", () => {
     expect(missing).toEqual([]);
     expect(page).toContain("## Presence");
     expect(page).toContain("@gpuixui/motion/presence");
+  });
+
+  it("names every React entry the page's module table lists", () => {
+    // Bug guarded: the row listed four sampling hooks and none of the presence
+    // hooks a surface composes, so a reader of the module table never learned
+    // the mounted window exists — while the package publishes it here.
+    const row = reactRow();
+    const missing = reactExports.filter((name) => !row.includes(`\`${name}\``));
+
+    expect(reactExports.length).toBeGreaterThanOrEqual(8);
+    expect(row).not.toBe("");
+    expect(missing).toEqual([]);
+  });
+
+  it("splits the presence table's ownership where the package does", () => {
+    // Bug guarded: the page said the presence entry owns the mount window,
+    // while the timer lives in the React entry (`useSurfacePresence`) and the
+    // presence entry publishes only its conversion (`exitWindowMs`). A reader
+    // was pointed at a module that cannot keep a leaving box mounted.
+    expect(read("packages/motion/src/react.ts")).toContain(
+      "export const useSurfacePresence = (",
+    );
+    expect(read("packages/motion/src/presence.ts")).toContain(
+      "export const exitWindowMs = (",
+    );
+    expect(page).toContain("the **mounted window** itself is a timer");
+    expect(page).toContain("`useSurfacePresence` keeps a leaving box painted");
+    expect(page).not.toContain(
+      "owns the three frames, the enter and exit timing and the mount window",
+    );
   });
 
   it("prints the five durations motionLevels declares", () => {
