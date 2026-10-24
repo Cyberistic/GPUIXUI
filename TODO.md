@@ -2513,7 +2513,35 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 171/171
+`[x]` `[██████████]` 172/172
+
+`[x]` Measure the **shipped `PropertyPanel`** in a window — Tier 3's *Property
+      panels* row cited `inspector-lifecycle`, whose inspector is composed in the
+      probe from primitives, so no window had mounted `@gpuixui/data`'s
+      `PropertyPanel`, pressed an editable row's field or measured the label
+      column its header promises. The `property-panel-lifecycle` probe mounts two
+      shipped panels over one object (`tag=internal`, `owner=core` and two empty
+      editable rows), one at the default column and one given `labelWidth={200}`.
+      Measured: the two editable fields start at the same **152**-point `x`, **36**
+      points apart (`y` 150 and 186); the wide panel's field starts at **232** —
+      exactly the **80** = 200 − 120 the prop adds; a read-only row paints **no
+      field** (`property-tag` has no box); typing `Atlas` keeps the platform text
+      session on `property-name` and repaints the whole record (`name=Atlas`),
+      typing `v2` then moves the session to `property-note` and reports
+      `name=Atlas note=v2`, and the first field still starts at 152. **18
+      checks**, `--only property-panel-lifecycle`, green on 0.11.0 here
+      (~0.4–0.8 s, one capture). Fixture `src/live/property-panel.ts`, probe
+      `src/live/property-panel-probe.tsx`, guard
+      `src/live/property-panel.test.ts` (8 cases: the object and the whole-record
+      edit, the column offset derived from the package's own
+      `DEFAULT_LABEL_WIDTH`, the assertion-site count with the repeated field
+      helper, the shipped mount with both row kinds, the titles and widths, the
+      registry, the record's check count and its printed columns). Directions
+      measured: a record printing 17 checks fails the record case by name, and
+      the derived offset case fails if `DEFAULT_LABEL_WIDTH` and the scene's wide
+      width stop being 80 apart. Docs: `apps/playground/README.md`
+      §`property-panel-lifecycle`, `.artifacts/live/property-panel-edited.png`
+      and the `Property panels` row in `COMPONENTS.md`.
 
 `[x]` Measure the **shipped `LogViewer`** in a window — Tier 4's *Log viewers*
       row cited the headless `log-viewer` scenario, which measures the runtime's

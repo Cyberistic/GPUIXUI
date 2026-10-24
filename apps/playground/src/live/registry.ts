@@ -804,6 +804,12 @@ export const liveRegistry = [
       "Log: the shipped LogViewer starts at the tail, follows an append, leaves a reader who wheels up where they stopped, and narrows the rows to the level its filter keeps",
     capability: "log",
   },
+  {
+    id: "property-panel-lifecycle",
+    title:
+      "Workspace: the shipped PropertyPanel paints an editable row as a field and a read-only row as text, an edit reports the whole object without losing the text session, and a labelWidth moves the value column",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

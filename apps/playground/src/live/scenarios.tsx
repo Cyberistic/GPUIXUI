@@ -1130,6 +1130,7 @@ import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
 import { PanelGroupProbe, panelGroupSteps } from "./panel-group-probe.js";
 import { AccordionProbe, accordionSteps } from "./accordion-probe.js";
 import { LogViewerProbe, logViewerSteps } from "./log-viewer-probe.js";
+import { PropertyPanelProbe, propertyPanelSteps } from "./property-panel-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -30672,5 +30673,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "log-viewer-lifecycle",
     view: () => <LogViewerProbe />,
     steps: logViewerSteps,
+  },
+  "property-panel-lifecycle": {
+    id: "property-panel-lifecycle",
+    view: () => <PropertyPanelProbe />,
+    steps: propertyPanelSteps,
   },
 };

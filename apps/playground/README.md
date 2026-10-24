@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-128 probes a real window can prove, of which twenty-nine mount shipped
+129 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -51,7 +51,7 @@ the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail, the image zoom, the accordion and
-the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer`, ten mount
+the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer`, one mounts the data package's shipped `PropertyPanel`, ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
 action), three mount `@gpuixui/data`'s examples (the table, the virtualized
@@ -7240,6 +7240,34 @@ Evidence: `.artifacts/live/log-viewer-tail.png`. Fixture
 `src/live/log-viewer.ts`, probe `src/live/log-viewer-probe.tsx`, guard
 `src/live/log-viewer.test.ts`.
 
+### `property-panel-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/data` `PropertyPanel`: two panels over one object
+(`tag=internal`, `owner=core` and two empty editable rows), one at the package's
+default label column and one given `labelWidth={200}`. Tier 3's *Property
+panels* row cited `inspector-lifecycle`, whose inspector is composed in the probe
+from primitives, so this is the first window measurement of the component
+itself. Its cells are read off the frame: the two editable rows start at one
+`x`, the read-only rows paint no field, and the wide panel's value column is the
+width it added.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the readout is `name= note= tag=internal owner=core`; the title `Properties` and the read-only value `internal` paint; the two editable rows paint their fields at the same **152**-point `x`, **36** points apart (`y` 150 and 186); `property-tag` paints **no field**, because a read-only row carries no change; the wide panel paints its own title and its field starts at **232** — **80** points right, exactly the 200 − 120 the `labelWidth` prop adds |
+| type `Atlas` into the name field | the field takes the press and the platform text session (`property-name` keeps the focus), and the caller's object repaints the frame the edit lands: `name=Atlas` with the note row still empty |
+| type `v2` into the note field | the text session moves to `property-note`, the readout reports the object with both values (`name=Atlas note=v2 …`), and the first field still starts at **152** — a typed value does not move the label column |
+| capture `property-panel-edited` | both panels after the two edits, with the fields' values painted |
+
+The distinction the panel exists for is data, not a flag: an editable row carries
+the change it reports and paints the primitives' `Input`, while a read-only row
+paints its value as text — measured as the absence of a `property-tag` field, so
+a panel that painted every row as an input fails here.
+
+18 checks, `--only property-panel-lifecycle`, green on 0.11.0 here (~0.4–0.8 s).
+Evidence: `.artifacts/live/property-panel-edited.png`. Fixture
+`src/live/property-panel.ts`, probe `src/live/property-panel-probe.tsx`, guard
+`src/live/property-panel.test.ts`.
+
 
 ## Terminal mode: the pty probe
 
@@ -7492,7 +7520,7 @@ narrower. Each deviation is deliberate and measured:
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
   `motion-interruption` and `panel-group-lifecycle` and
-  `accordion-lifecycle` and `log-viewer-lifecycle` (70
+  `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` (71
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
