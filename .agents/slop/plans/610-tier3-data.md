@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | done — phases 1–7 and 3b landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 171 unit cases + 104 native behaviour cases on 2026-10-23). Frozen columns ship as `FrozenTable` |
+| Status | done — phases 1–7 and 3b landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 261 unit cases + 188 native behaviour cases on 2026-10-24; live `data-table-lifecycle`, `table-lifecycle`, `table-filter-lifecycle`, `table-columns-lifecycle`, `column-resize-lifecycle`, `frozen-column-lifecycle`, `virtual-table-lifecycle`, `data-tree-lifecycle`, `virtual-tree-lifecycle`, `chart-surface-lifecycle` and `property-panel-lifecycle` green). Frozen columns ship as `FrozenTable` |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
