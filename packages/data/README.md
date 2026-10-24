@@ -606,7 +606,12 @@ the same rule per datum: a zero paints no slice and still reads `Referral 0`, so
 a legend entry never stands without its number. A `Sparkline` is
 one image, not a group of them: the caller's `aria-label` names it and its values
 are its description. A name is a stored value as often as a literal, so a blank
-one reads as the documented `Trend` rather than publishing an unnamed image.
+one reads as the documented `Trend` rather than publishing an unnamed image. A
+**colour** is stored the same way: a blank `color` takes the first categorical
+swatch, because `color ?? swatch` only covers an absent prop and the runtime
+drops an empty tint, which left a saved sparkline painting no line while its
+description still read the values (`chosenColour`, held by
+`src/behaviour/chart.test.tsx`).
 The same rule covers the series: a series or ring datum with no words reads as
 its **key** — `seriesName`, the one reading the image's name and the legend row
 share — so a saved chart configuration cannot paint a nameless row beside an

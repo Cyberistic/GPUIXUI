@@ -29,6 +29,7 @@ import { seriesColors } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import { listOf, recordsOf, textsOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { textStyle, useTheme } from "../theme.js";
@@ -69,6 +70,23 @@ export const DEFAULT_CHART_WIDTH = 320;
 
 /** The plot's height when the caller names none. */
 export const DEFAULT_CHART_HEIGHT = 160;
+
+/**
+ * The colour a caller names, or the fallback when it names none.
+ *
+ * A colour is a stored value as often as a literal: a saved card keeps a
+ * preference, and a store or a locale table writes `""` where it carried
+ * nothing. `??` only covers an **absent** prop, so a blank colour reached
+ * `style.color` and the runtime dropped it — the layer painted no tint and the
+ * chart's marks vanished while its accessibility description still read them.
+ * A blank (or whitespace) colour is absence; any colour the caller wrote is
+ * kept as written.
+ */
+const chosenColour = (colour: string | undefined, fallback: string): string =>
+  Option.match(Option.fromNullishOr(colour), {
+    onNone: () => fallback,
+    onSome: (value) => (Str.isNonEmpty(Str.trim(value)) ? value : fallback),
+  });
 
 /** The side of a donut's square plot when the caller names none. */
 const DEFAULT_DONUT_SIZE = 160;
@@ -595,7 +613,11 @@ export interface SparklineProps extends Omit<Props, "children"> {
   readonly width?: number;
   /** The plot's height, in pixels. Defaults to `32`. */
   readonly height?: number;
-  /** The line's colour. Defaults to the theme's first categorical swatch. */
+  /**
+   * The line's colour. Defaults to the theme's first categorical swatch; a
+   * blank colour is that absence too, because a default only covers an absent
+   * prop.
+   */
   readonly color?: string;
   readonly className?: string;
   readonly testId?: string;
@@ -656,7 +678,7 @@ export const Sparkline = ({
             DEFAULT_SPARKLINE_LABEL,
           )}
           description={seriesDescription(points)}
-          colour={color ?? seriesColour(seriesColors(theme), 0)}
+          colour={chosenColour(color, seriesColour(seriesColors(theme), 0))}
           marks={Option.match(d, {
             onNone: () => [],
             onSome: (path): ReadonlyArray<ChartMark> => [

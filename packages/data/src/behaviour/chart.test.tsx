@@ -27,7 +27,7 @@ import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { ChartExample } from "../../examples/chart.example.js";
-import { BarChart, LineChart, StackedBar } from "../chart/chart.js";
+import { BarChart, LineChart, Sparkline, StackedBar } from "../chart/chart.js";
 import {
   paintedText,
   requireBounds,
@@ -210,6 +210,27 @@ describe("the charts", () => {
     const line = requireStyle(root, "chart-sparkline-layer-sparkline");
     expect(line.color).toBe(colourAt(0));
     expect(requireBounds(root, "chart-sparkline").width).toBe(160);
+  });
+
+  it("draws a sparkline whose stored colour is blank in the first series colour", () => {
+    // Bug guarded: `color` is a stored preference as often as a literal, and
+    // `color ?? swatch` only covers an **absent** prop — a saved `""` (or a
+    // whitespace run) reached `style.color`, the runtime dropped it, and the
+    // line painted no tint at all while its description still read the values.
+    root = renderData(
+      <div>
+        <Sparkline testId="blank-spark" values={[4, 8, 6]} color="" />
+        <Sparkline testId="spaces-spark" values={[4, 8, 6]} color="   " />
+      </div>,
+    );
+    settle(root);
+
+    expect(requireStyle(root, "blank-spark-layer-sparkline").color).toBe(
+      colourAt(0),
+    );
+    expect(requireStyle(root, "spaces-spark-layer-sparkline").color).toBe(
+      colourAt(0),
+    );
   });
 
   it("paints a line chart's single series over its whole plot", () => {

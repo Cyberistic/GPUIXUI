@@ -78,7 +78,7 @@ import {
 | `values` | `number[]` | — | one point each, in paint order |
 | `width` | `number` | `120` | the plot's width, in pixels |
 | `height` | `number` | `32` | the plot's height, in pixels |
-| `color` | `string` | the first categorical swatch | the line's colour |
+| `color` | `string` | the first categorical swatch | the line's colour; a blank one reads as the default |
 | `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the sparkline's locator |
 | `aria-label` | `string` | `Trend` | the single image's name; a blank name reads as `Trend` |
@@ -106,6 +106,9 @@ import {
   (`textsOf`). `src/behaviour/chart-boundary.test.tsx`
   and `src/behaviour/chart-a11y.test.tsx` hold both shapes.
 - One tint per layer: two colours inside one series need two layers.
+- A sparkline's `color` is data as often as a literal: a blank one takes the
+  theme's first categorical swatch, so a saved preference the store emptied
+  paints the line rather than an untinted layer the runtime drops.
 - No tooltips, hover readouts or zoom.
 - No animation between data sets.
 - A category label longer than its slot is clipped at the slot's edge, so two
