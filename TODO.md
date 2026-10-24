@@ -21912,7 +21912,35 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 11/11
+`[x]` `[██████████]` 12/12
+
+`[x]` `packages/components`: **a stored string took the two text primitives down**
+      — `SplittingText` handed its `text` to `splitUnits`, whose first read is
+      `Str.split`, and `TypingText` handed it to `characters`, whose first read
+      is `Arr.fromIterable`; a string is content a saved layout or record carries
+      as often as a literal, and JSON writes `null` where the record kept none,
+      so a reveal restored from storage threw `Cannot read properties of null
+      (reading 'split')` / `object null is not iterable` out of its first render
+      — the surface disappeared rather than painting nothing, the class
+      `RotatingText`, `TypingText`'s own caret role read and the editor's drafts
+      were each fixed for. Both read `text` at the boundary through the package's
+      one stored-text rule (`internal/text.ts`'s `textOf`): `SplittingText` splits
+      the phrase it read, paints it as the state's `text` and splits no units for
+      a value that carried none, and `TypingText` reveals, keys, announces and
+      names that same phrase. Proof: `behaviour/splitting-text.test.tsx` and
+      `behaviour/typing-text.test.tsx` each gain `... for a stored <phrase|string>
+      that was not text` — the root must be painted and the reveal empty, so a
+      downed tree cannot pass. Directions measured one component at a time with
+      the raw reads restored: `splitUnits` fails with that exact `TypeError` and
+      `expected undefined to be defined`, `characters` with `object null is not
+      iterable` and the same assertion; restored, the two files are **16/16** and
+      the inventory, docs and both logic suites **64/64** with `check-types`
+      clean on these files (the package's run is red only on another
+      workstream's in-flight `src/stepper/logic.test.ts`). Docs: both package
+      pages' §Limitations, and the `Typing text` (8 native cases) and
+      `Splitting text` rows. No native scenario applies — the reads are the
+      render's own, which the behaviour suites drive through the real renderer,
+      and the `typing-text-lifecycle` probe's measured frames are unchanged.
 
 `[x]` `packages/components`: **a stored "no entrance" read as an entrance** —
       four surfaces widen their `level` prop past the motion table —
