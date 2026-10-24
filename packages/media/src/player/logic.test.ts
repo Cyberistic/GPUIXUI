@@ -15,6 +15,7 @@ import {
   durationOf,
   formatClock,
   isFinished,
+  isFrame,
   MEDIA_SEEK_STEP_MS,
   peaksOf,
   progressWidth,
@@ -23,6 +24,35 @@ import {
   timeLabel,
   waveformSvg,
 } from "./logic.js";
+
+describe("the frame a picture paints", () => {
+  it("reads a decoded frame structurally, and paints nothing it cannot lay out", () => {
+    // The bug guarded: the frame was trusted, so a decoder that answered a box
+    // without bytes threw out of the layout effect on `pixels.length` and took
+    // the whole player — transport included — down with it.
+    const frame = (width: number, height: number): Uint8Array =>
+      Uint8Array.from({ length: width * height * 4 }, () => 0);
+    expect(isFrame({ width: 2, height: 2, pixels: frame(2, 2) })).toBe(true);
+    // A frame with more bytes than its box is still paintable (the picture
+    // reads the first width × height × 4).
+    expect(isFrame({ width: 1, height: 1, pixels: frame(2, 2) })).toBe(true);
+    // A partial buffer, a box that cannot be laid out, and a value that is not
+    // a frame at all paint nothing.
+    expect(isFrame({ width: 2, height: 2, pixels: frame(1, 1) })).toBe(false);
+    expect(isFrame({ width: 2, height: 2 })).toBe(false);
+    expect(isFrame({ width: 2, height: 2, pixels: null })).toBe(false);
+    expect(isFrame({ width: 2, height: 2, pixels: [0, 0, 0, 255] })).toBe(
+      false,
+    );
+    expect(isFrame({ width: 0, height: 2, pixels: frame(2, 2) })).toBe(false);
+    expect(isFrame({ width: Number.NaN, height: 2, pixels: frame(2, 2) })).toBe(
+      false,
+    );
+    expect(isFrame(null)).toBe(false);
+    expect(isFrame(undefined)).toBe(false);
+    expect(isFrame("frame")).toBe(false);
+  });
+});
 
 describe("the playhead", () => {
   it("holds a playhead inside the clip at both ends", () => {

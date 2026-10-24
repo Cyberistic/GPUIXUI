@@ -37,6 +37,7 @@ import {
   clampPlayhead,
   durationOf,
   isFinished,
+  isFrame,
   MEDIA_SEEK_STEP_MS,
   MEDIA_TICK_MS,
   peaksOf,
@@ -45,17 +46,12 @@ import {
   stepOf,
   timeLabel,
   waveformSvg,
+  type MediaFrame,
   type MediaKey,
   type MediaState,
 } from "./player/logic.js";
 
-/** One frame of the clip: the bytes the picture paints and their box. */
-export interface MediaFrame {
-  readonly width: number;
-  readonly height: number;
-  /** Straight RGBA bytes, `width * height * 4` of them. */
-  readonly pixels: Uint8Array;
-}
+export type { MediaFrame } from "./player/logic.js";
 
 /** The frame a playhead stands on; `None` paints no new picture. */
 export type MediaFrameAt = (playhead: number) => Option.Option<MediaFrame>;
@@ -124,13 +120,6 @@ const TRACK_HEIGHT = 6;
 /** A side, or the default when the value cannot be laid out. */
 const sideOf = (value: number, fallback: number): number =>
   Number.isFinite(value) && value > 0 ? value : fallback;
-
-const isFrame = (frame: MediaFrame): boolean =>
-  Number.isFinite(frame.width) &&
-  frame.width > 0 &&
-  Number.isFinite(frame.height) &&
-  frame.height > 0 &&
-  frame.pixels.length >= frame.width * frame.height * 4;
 
 const frameStyle = (
   theme: Theme,

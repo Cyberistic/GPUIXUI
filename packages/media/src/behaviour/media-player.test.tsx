@@ -241,4 +241,34 @@ describe("MediaPlayer transport", () => {
     expect(page.frames).toContain(0);
     page.root.unmount();
   });
+
+  it("keeps the transport when a decoded frame carries no bytes", () => {
+    // The bug guarded: the frame was trusted, so a decoder that answered a box
+    // without bytes threw `Cannot read properties of undefined (reading
+    // 'length')` out of the layout effect and unmounted the player — the
+    // transport included — instead of painting no picture.
+    const root = createTestRoot({ width: 800, height: 600 });
+    root.render(
+      <ThemeProvider theme={lightTheme}>
+        <MediaPlayer
+          testId="player"
+          duration={4000}
+          alt="A clip's frame"
+          width={160}
+          height={90}
+          frameAt={() =>
+            Option.some({ width: 4, height: 4 } as unknown as MediaFrame)
+          }
+        />
+      </ThemeProvider>,
+    );
+    const seek = root.renderer.findByTestId("media-seek");
+    if (seek === undefined) {
+      throw new Error("behaviour: the seek pad is missing");
+    }
+    root.renderer.focusElement(seek.id);
+    root.renderer.simulateKeystrokes("end");
+    expect(textOf(root, "media-time")).toBe("0:04 / 0:04");
+    root.unmount();
+  });
 });

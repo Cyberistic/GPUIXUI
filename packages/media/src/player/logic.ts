@@ -27,6 +27,39 @@ export interface MediaState {
   readonly playhead: number;
 }
 
+/** One frame of the clip: the bytes the picture paints and their box. */
+export interface MediaFrame {
+  readonly width: number;
+  readonly height: number;
+  /** Straight RGBA bytes, `width * height * 4` of them. */
+  readonly pixels: Uint8Array;
+}
+
+/**
+ * Whether a value is a frame the picture can paint.
+ *
+ * A frame is a decoder's output — a file's bytes, a generated sequence, a
+ * record read back from storage — so it is read structurally rather than
+ * trusted: a decoder that answered no bytes, a partial buffer, a box that
+ * cannot be laid out or a value that is not a frame at all paints no picture.
+ * Reading `pixels.length` first is the bug this guard exists for: a frame
+ * without bytes threw out of the layout effect and took the whole player down.
+ */
+export const isFrame = (frame: unknown): frame is MediaFrame => {
+  if (!P.isObject(frame)) return false;
+  const width: unknown = frame.width;
+  const height: unknown = frame.height;
+  const pixels: unknown = frame.pixels;
+  return (
+    P.isNumber(width) &&
+    width > 0 &&
+    P.isNumber(height) &&
+    height > 0 &&
+    pixels instanceof Uint8Array &&
+    pixels.length >= width * height * 4
+  );
+};
+
 /**
  * The clip's length a clock can hold. A stored duration that is not a positive
  * number reads as zero, so a saved record cannot poison every share the
