@@ -655,6 +655,23 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   on `blank-tree-row-alpha`). Docs: `docs/tree-view.mdx`, the README's
   type-ahead paragraph and the Tree views row. 232 unit / 158 behaviour green.
 
+- **A chart reads a stored list as a list**: the data surfaces already read a
+  slot a store wrote `null` for as absence (`internal/list.ts`), while every
+  chart part dereferenced its own list — `BarChart`/`StackedBar`/`LineChart`
+  through `Arr.map`/`.length`, `DonutChart` through `data.map`, `ChartLegend`
+  through `items.map`, `Sparkline` through `values.length` in the geometry — so
+  a saved dashboard configuration or an unloaded query result threw
+  `TypeError: object null is not iterable` / `Cannot read properties of null
+  (reading 'map')` out of the render and took the surface down. Every part reads
+  through `listOf` now, `ChartFrame` hands its normalized series and labels to
+  the geometry callback, and a series' own `values` is read the same way (that
+  series paints no layer while the rest of the chart paints).
+  `src/behaviour/chart-boundary.test.tsx` (7 cases) mounts each part with the
+  stored absence; directions measured: all seven fail at `HEAD` on the empty
+  render and the named TypeErrors. Green: 246 unit / 172 behaviour,
+  `check-types` and `check:tests` clean. Docs: `docs/charts.mdx` §Limitations,
+  the README's chart paragraph and the Charts row.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`
