@@ -1,7 +1,7 @@
 /**
- * The QR encoder `QrCode` ships — byte mode, versions 1–10, every error
- * correction level, Reed–Solomon over GF(256), the eight data masks and the
- * standard penalty search.
+ * The QR encoder `QrCode` ships — numeric, alphanumeric and byte mode, versions
+ * 1–10, every error correction level, Reed–Solomon over GF(256), the eight data
+ * masks and the standard penalty search.
  *
  * A QR symbol is arithmetic, not a runtime capability: the playground's
  * `qr-matrix` probe settled that both paint routes (a grid of `div`s and one
@@ -18,9 +18,11 @@
  * exported is pure, and every read is bounds-checked.
  */
 
+import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
 
 /** The four error correction levels, quietest first. */
 export const QR_LEVELS = ["L", "M", "Q", "H"] as const;
@@ -265,13 +267,141 @@ export const qrDataCodewords = (version: QrVersion, level: QrLevel): number =>
     (total, [blocks, data]) => total + blocks * data,
   );
 
-/** The bits a byte-mode character count takes at one version. */
-const countBits = (version: QrVersion): number => (version <= 9 ? 8 : 16);
+/** The modes a value is carried in, in the order {@link qrModeOf} tests them. */
+export const QR_MODES = ["numeric", "alphanumeric", "byte"] as const;
+
+/** The encoding mode a value is carried in. */
+export const QrMode = Schema.Literals(QR_MODES);
+
+export type QrMode = typeof QrMode.Type;
+
+/**
+ * The 45 characters alphanumeric mode carries (ISO/IEC 18004 table 5), in the
+ * order that gives each its value: a pair is `45 * first + second`.
+ */
+const ALPHANUMERIC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+
+/** The mode indicator each mode declares. */
+const MODE_INDICATORS: Readonly<Record<QrMode, number>> = {
+  numeric: 0b0001,
+  alphanumeric: 0b0010,
+  byte: 0b0100,
+};
+
+/** The bits a mode's character count takes: versions 1–9, then 10–26. */
+const COUNT_BITS: Readonly<Record<QrMode, readonly [number, number]>> = {
+  numeric: [10, 12],
+  alphanumeric: [9, 11],
+  byte: [8, 16],
+};
+
+/** The bits `mode`'s character count takes at `version`. */
+const countBits = (mode: QrMode, version: QrVersion): number =>
+  version <= 9 ? COUNT_BITS[mode][0] : COUNT_BITS[mode][1];
+
+const characters = (text: string): ReadonlyArray<string> =>
+  Arr.fromIterable(text);
+
+const isDigit = (character: string): boolean =>
+  character >= "0" && character <= "9";
+
+/** The value alphanumeric mode gives a character, when the table carries it. */
+const alphanumericValue = (character: string): Option.Option<number> =>
+  Str.indexOf(character)(ALPHANUMERIC);
+
+const isAlphanumeric = (character: string): boolean =>
+  Option.isSome(alphanumericValue(character));
+
+/**
+ * The mode a value is carried in: numeric when every character is a digit,
+ * alphanumeric when every one is in the table, byte mode otherwise.
+ *
+ * The whole value takes one mode. A value that mixes digits and other
+ * characters is carried in byte mode rather than split into segments, so the
+ * symbol is always valid though not always the smallest one the standard could
+ * paint.
+ */
+export const qrModeOf = (value: unknown): QrMode => {
+  const text = qrTextOf(value);
+  if (Str.isEmpty(text)) return "byte";
+  const parts = characters(text);
+  if (Arr.every(parts, isDigit)) return "numeric";
+  if (Arr.every(parts, isAlphanumeric)) return "alphanumeric";
+  return "byte";
+};
+
+/** The units a mode counts: UTF-8 bytes in byte mode, characters otherwise. */
+const payloadLength = (text: string, mode: QrMode): number =>
+  mode === "byte" ? utf8(text).length : text.length;
+
+/** A numeric payload's data bits: three digits to ten, then seven or four. */
+const numericBits = (length: number): number => {
+  const rest = length % 3;
+  return (
+    Math.floor(length / 3) * 10 + (rest === 2 ? 7 : rest === 1 ? 4 : 0)
+  );
+};
+
+/** An alphanumeric payload's data bits: two characters to eleven, then six. */
+const alphanumericBits = (length: number): number =>
+  Math.floor(length / 2) * 11 + (length % 2 === 1 ? 6 : 0);
+
+/** The data bits a payload takes, before its mode and count indicators. */
+const payloadBits = (text: string, mode: QrMode): number =>
+  Match.value(mode).pipe(
+    Match.when("numeric", () => numericBits(text.length)),
+    Match.when("alphanumeric", () => alphanumericBits(text.length)),
+    Match.when("byte", () => utf8(text).length * 8),
+    Match.exhaustive,
+  );
+
+/** The bits a value takes in `mode` at `version`: indicator, count, payload. */
+const segmentBits = (text: string, mode: QrMode, version: QrVersion): number =>
+  4 + countBits(mode, version) + payloadBits(text, mode);
+
+/**
+ * The most units one version/level holds at `mode`.
+ *
+ * The inverse of {@link segmentBits}: the units whose indicator, count and
+ * payload fit the version's data codewords, which is the capacity an overflow
+ * reports and the boundary a version search compares against.
+ */
+export const qrModeCapacity = (
+  mode: QrMode,
+  version: QrVersion,
+  level: QrLevel,
+): number => {
+  const available =
+    qrDataCodewords(version, level) * 8 - 4 - countBits(mode, version);
+  return Match.value(mode).pipe(
+    Match.when("numeric", () => {
+      const rest = available % 10;
+      return (
+        Math.floor(available / 10) * 3 + (rest >= 7 ? 2 : rest >= 4 ? 1 : 0)
+      );
+    }),
+    Match.when("alphanumeric", () =>
+      Math.floor(available / 11) * 2 + (available % 11 >= 6 ? 1 : 0),
+    ),
+    Match.when("byte", () => Math.floor(available / 8)),
+    Match.exhaustive,
+  );
+};
 
 /** The most UTF-8 bytes one version/level holds in byte mode. */
 export const qrByteCapacity = (version: QrVersion, level: QrLevel): number =>
-  Math.floor(
-    (qrDataCodewords(version, level) * 8 - 4 - countBits(version)) / 8,
+  qrModeCapacity("byte", version, level);
+
+/** The smallest version that holds a value in `mode`, if any. */
+const versionForMode = (
+  text: string,
+  mode: QrMode,
+  level: QrLevel,
+): Option.Option<QrVersion> =>
+  Arr.findFirst(
+    QR_VERSIONS,
+    (version) =>
+      segmentBits(text, mode, version) <= qrDataCodewords(version, level) * 8,
   );
 
 /** The smallest version whose byte capacity holds `bytes`, if any. */
@@ -319,7 +449,10 @@ export class QrSymbol extends Schema.Class<QrSymbol>("QrSymbol")({
 /** A value that does not fit the largest symbol this encoder prints. */
 export class QrOverflow extends Schema.Class<QrOverflow>("QrOverflow")({
   _tag: Schema.tag("overflow"),
-  bytes: Schema.Int,
+  mode: QrMode,
+  /** The value's length in the mode's unit: characters, or UTF-8 bytes. */
+  length: Schema.Int,
+  /** The most units version 10 holds at that mode and level. */
   capacity: Schema.Int,
   level: QrLevel,
 }) {}
@@ -404,17 +537,61 @@ const appendBits = (bits: number[], value: number, length: number): void => {
   for (let at = length - 1; at >= 0; at -= 1) bits.push((value >>> at) & 1);
 };
 
+/** A numeric payload: three digits to ten bits, then seven or four. */
+const numericPayload = (bits: number[], text: string): void => {
+  Arr.forEach(Arr.chunksOf(characters(text), 3), (group) => {
+    appendBits(
+      bits,
+      Number(Arr.join(group, "")),
+      group.length === 3 ? 10 : group.length === 2 ? 7 : 4,
+    );
+  });
+};
+
+/** An alphanumeric payload: two characters to eleven bits, then six. */
+const alphanumericPayload = (bits: number[], text: string): void => {
+  Arr.forEach(Arr.chunksOf(characters(text), 2), (group) => {
+    const value = Arr.reduce(
+      group,
+      0,
+      (total, character) =>
+        total * 45 +
+        Option.getOrElse(alphanumericValue(character), () => 0),
+    );
+    appendBits(bits, value, group.length === 2 ? 11 : 6);
+  });
+};
+
+/** The payload's bits, in the layout its mode declares. */
+const writePayload = (bits: number[], text: string, mode: QrMode): void => {
+  Match.value(mode).pipe(
+    Match.when("numeric", () => {
+      numericPayload(bits, text);
+    }),
+    Match.when("alphanumeric", () => {
+      alphanumericPayload(bits, text);
+    }),
+    Match.when("byte", () => {
+      Arr.forEach(utf8(text), (byte) => {
+        appendBits(bits, byte, 8);
+      });
+    }),
+    Match.exhaustive,
+  );
+};
+
 /** The data codewords, terminated, bit-padded and padded to `total`. */
 const dataCodewords = (
-  bytes: ReadonlyArray<number>,
+  text: string,
+  mode: QrMode,
   version: QrVersion,
   level: QrLevel,
 ): ReadonlyArray<number> => {
   const total = qrDataCodewords(version, level);
   const bits: number[] = [];
-  appendBits(bits, 0b0100, 4);
-  appendBits(bits, bytes.length, countBits(version));
-  for (const byte of bytes) appendBits(bits, byte, 8);
+  appendBits(bits, MODE_INDICATORS[mode], 4);
+  appendBits(bits, payloadLength(text, mode), countBits(mode, version));
+  writePayload(bits, text, mode);
 
   const capacity = total * 8;
   appendBits(bits, 0, Math.min(4, capacity - bits.length));
@@ -763,24 +940,31 @@ export interface QrEncodeOptions {
 /**
  * Encode a string as a QR symbol.
  *
- * The value is UTF-8 bytes in byte mode, at the smallest version (1–10) that
- * holds it. A value the largest symbol cannot hold is answered with a
- * {@link QrOverflow} naming the byte count and the capacity, never truncated.
+ * The value is carried in the densest mode it wholly fits — numeric for digits,
+ * alphanumeric for the 45-character table, byte mode (UTF-8) otherwise — at the
+ * smallest version (1–10) that holds it. A value the largest symbol cannot hold
+ * is answered with a {@link QrOverflow} naming its mode, its length and that
+ * mode's capacity, never truncated.
  */
 export const encodeQr = (
   value: string,
   options: QrEncodeOptions = {},
 ): QrEncoding => {
   const level = levelOf(options.level);
-  const bytes = utf8(qrTextOf(value));
-  const capacity = qrByteCapacity(QR_MAX_VERSION, level);
-  const versionOf = qrVersionFor(bytes.length, level);
+  const text = qrTextOf(value);
+  const mode = qrModeOf(text);
+  const versionOf = versionForMode(text, mode, level);
   if (Option.isNone(versionOf)) {
-    return new QrOverflow({ bytes: bytes.length, capacity, level });
+    return new QrOverflow({
+      mode,
+      length: payloadLength(text, mode),
+      capacity: qrModeCapacity(mode, QR_MAX_VERSION, level),
+      level,
+    });
   }
   const version = versionOf.value;
   const codewords = interleave(
-    blocksOf(dataCodewords(bytes, version, level), version, level),
+    blocksOf(dataCodewords(text, mode, version, level), version, level),
   );
   const canvas = functionCanvas(version, level);
   drawCodewords(canvas, codewords);

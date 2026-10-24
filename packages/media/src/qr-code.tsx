@@ -34,6 +34,7 @@ import {
   qrSvgSource,
   QR_QUIET_ZONE,
   type QrLevel,
+  type QrMode,
 } from "./qr/encode.js";
 
 /** The ink a symbol paints: near-black, as a scanner expects. */
@@ -91,9 +92,26 @@ const errorText = (theme: Theme): StyleDesc => ({
   color: theme.colors.destructive,
 });
 
-/** The capacity message an over-long value paints. */
-export const qrOverflowMessage = (bytes: number, capacity: number): string =>
-  `A QR code holds ${capacity} bytes at this level; the value is ${bytes}.`;
+/** The units an overflow is measured in, per mode. */
+const OVERFLOW_UNITS: Readonly<Record<QrMode, string>> = {
+  numeric: "digits",
+  alphanumeric: "characters",
+  byte: "bytes",
+};
+
+/**
+ * The capacity message an over-long value paints.
+ *
+ * The unit is the mode's own: a numeric payload is counted in digits and a
+ * byte-mode one in UTF-8 bytes, so the sentence names the length the encoder
+ * actually measured rather than a byte count of something that is not bytes.
+ */
+export const qrOverflowMessage = (
+  mode: QrMode,
+  length: number,
+  capacity: number,
+): string =>
+  `A QR code holds ${capacity} ${OVERFLOW_UNITS[mode]} at this level; the value is ${length}.`;
 
 /** The element `QrCode` renders. Pure in its arguments. */
 export const renderQrCode = (
@@ -141,7 +159,7 @@ export const renderQrCode = (
         )}
       >
         <text style={errorText(theme)}>
-          {qrOverflowMessage(overflow.bytes, overflow.capacity)}
+          {qrOverflowMessage(overflow.mode, overflow.length, overflow.capacity)}
         </text>
       </div>
     ),

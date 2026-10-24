@@ -25,18 +25,24 @@ import {
   levelOf,
   qrByteCapacity,
   qrFormatBits,
+  qrModeCapacity,
+  qrModeOf,
   qrModules,
   qrPenalty,
   qrPlacement,
   qrSvgSource,
   qrVersionBits,
   qrVersionFor,
+  QR_LEVELS,
   QR_MAX_VERSION,
+  QR_MODES,
   QR_QUIET_ZONE,
   QR_VERSIONS,
   QrOverflow,
   QrSymbol,
+  type QrEncoding,
   type QrLevel,
+  type QrMode,
   type QrVersion,
 } from "./encode.js";
 
@@ -192,6 +198,64 @@ const QR_REFERENCES: ReadonlyArray<Reference> = [
       "111111101010110101110111011001011011101110111010010001011",
     ],
   },
+  {
+    value: "01234567890123456789",
+    level: "L",
+    version: 1,
+    mask: 7,
+    rows: [
+      "111111100101101111111",
+      "100000101101001000001",
+      "101110101100101011101",
+      "101110100101001011101",
+      "101110101000101011101",
+      "100000101001101000001",
+      "111111101010101111111",
+      "000000001111100000000",
+      "110100110110001110110",
+      "010110010010001000010",
+      "010111101000110111100",
+      "000110000101000101011",
+      "011100111000101000001",
+      "000000001011001100000",
+      "111111101110000001000",
+      "100000100011110111100",
+      "101110100011011110001",
+      "101110101111000101011",
+      "101110100110100110001",
+      "100000101100011010110",
+      "111111101101100011000",
+    ],
+  },
+  {
+    value: "GPUIXUI DEV",
+    level: "M",
+    version: 1,
+    mask: 3,
+    rows: [
+      "111111101010001111111",
+      "100000101101101000001",
+      "101110100100101011101",
+      "101110101001001011101",
+      "101110100010001011101",
+      "100000100000001000001",
+      "111111101010101111111",
+      "000000001010000000000",
+      "101101110000001001011",
+      "101100001100111010010",
+      "010111101100101101100",
+      "011110000000110100111",
+      "111101110111000001011",
+      "000000001110010101000",
+      "111111101100011111011",
+      "100000101001111111110",
+      "101110100111001000111",
+      "101110101010010100110",
+      "101110101111010000000",
+      "100000100101101010100",
+      "111111101111100001010",
+    ],
+  },
 ];
 
 const rowsOf = (symbol: QrSymbol): ReadonlyArray<string> =>
@@ -201,6 +265,20 @@ const rowsOf = (symbol: QrSymbol): ReadonlyArray<string> =>
       "",
     ),
   );
+
+/** A symbol result, narrowed — the assertion fails before the cast can lie. */
+const symbolOf = (result: QrEncoding): QrSymbol => {
+  expect(result).toBeInstanceOf(QrSymbol);
+  if (!(result instanceof QrSymbol)) return expect.fail("no symbol");
+  return result;
+};
+
+/** An overflow result, narrowed. */
+const overflowOf = (result: QrEncoding): QrOverflow => {
+  expect(result).toBeInstanceOf(QrOverflow);
+  if (!(result instanceof QrOverflow)) return expect.fail("no overflow");
+  return result;
+};
 
 describe("encodeQr", () => {
   for (const reference of QR_REFERENCES) {
@@ -221,7 +299,8 @@ describe("encodeQr", () => {
     const result = encodeQr("y".repeat(capacity + 1), { level: "M" });
     expect(result).toBeInstanceOf(QrOverflow);
     if (!(result instanceof QrOverflow)) return expect.fail("no overflow");
-    expect(result.bytes).toBe(capacity + 1);
+    expect(result.mode).toBe("byte");
+    expect(result.length).toBe(capacity + 1);
     expect(result.capacity).toBe(capacity);
   });
 
@@ -244,8 +323,63 @@ describe("encodeQr", () => {
     }
   });
 
-  it("spends more symbol for a stronger level", () => {
-    const value = "z".repeat(40);
+  it("reads the densest mode a whole value fits", () => {
+    expect(qrModeOf("0123456789")).toBe("numeric");
+    expect(qrModeOf("ABC 123 $%*+-./:")).toBe("alphanumeric");
+    expect(qrModeOf("abc")).toBe("byte");
+    expect(qrModeOf("0123abc")).toBe("byte");
+    expect(qrModeOf("Ä")).toBe("byte");
+    expect(qrModeOf("")).toBe("byte");
+    expect(qrModeOf(null)).toBe("byte");
+  });
+
+  it("carries a numeric value byte mode would refuse", () => {
+    const bytes = qrByteCapacity(QR_MAX_VERSION, "M");
+    const value = "7".repeat(bytes + 20);
+    expect(qrModeOf(value)).toBe("numeric");
+    expect(symbolOf(encodeQr(value, { level: "M" })).version).toBeLessThan(
+      QR_MAX_VERSION,
+    );
+  });
+
+  it("holds exactly the value its capacity names, in every mode", () => {
+    const alphabet: Readonly<Record<QrMode, string>> = {
+      numeric: "1234567890",
+      alphanumeric: "ABCXYZ 123$",
+      byte: "abcxyz",
+    };
+    const valueOf = (mode: QrMode, length: number): string =>
+      Arr.join(
+        Arr.makeBy(
+          length,
+          (at) => alphabet[mode][at % alphabet[mode].length] ?? "0",
+        ),
+        "",
+      );
+    Arr.forEach(
+      Arr.flatMap(QR_MODES, (mode) =>
+        Arr.map(QR_LEVELS, (level) => ({ mode, level })),
+      ),
+      ({ mode, level }) => {
+        const atOne = qrModeCapacity(mode, 1, level);
+        expect(symbolOf(encodeQr(valueOf(mode, atOne), { level })).version).toBe(
+          1,
+        );
+
+        const atMax = qrModeCapacity(mode, QR_MAX_VERSION, level);
+        expect(
+          symbolOf(encodeQr(valueOf(mode, atMax), { level })).version,
+        ).toBe(QR_MAX_VERSION);
+
+        const refused = overflowOf(encodeQr(valueOf(mode, atMax + 1), { level }));
+        expect(refused.mode).toBe(mode);
+        expect(refused.length).toBe(atMax + 1);
+        expect(refused.capacity).toBe(atMax);
+      },
+    );
+  });
+
+  it("spends more symbol for a stronger level", () => {    const value = "z".repeat(40);
     const low = encodeQr(value, { level: "L" });
     const high = encodeQr(value, { level: "H" });
     expect(low).toBeInstanceOf(QrSymbol);

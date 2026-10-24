@@ -169,7 +169,7 @@ describe("QrCode", () => {
     expect(text).toBeDefined();
     if (text === undefined) return;
     expect(expectSome(elementProp(text, "children"))).toBe(
-      qrOverflowMessage(capacity + 1, capacity),
+      qrOverflowMessage("byte", capacity + 1, capacity),
     );
   });
 

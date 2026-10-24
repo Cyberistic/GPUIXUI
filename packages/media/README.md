@@ -33,7 +33,7 @@ src/
   behaviour/          the crop gestures, the player transport and a picture's name, in the real GPUix renderer
   crop/logic.ts       the crop arithmetic (bounds, bars, drag, keyboard)
   qr-code.tsx         the symbol's frame, quiet zone and overflow state
-  qr/encode.ts        the encoder (byte mode, versions 1-10, Reed-Solomon)
+  qr/encode.ts        the encoder (numeric, alphanumeric and byte mode, versions 1-10, Reed-Solomon)
   media-player.tsx    the frames, the waveform and the transport
   player/logic.ts     the player's arithmetic (playhead, clock, keys, waveform)
   internal.ts         the tw + tokens seam

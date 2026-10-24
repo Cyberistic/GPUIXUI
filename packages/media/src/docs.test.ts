@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
-import { QR_MAX_VERSION, qrByteCapacity } from "./qr/encode.js";
+import { QR_MAX_VERSION, qrByteCapacity, qrModeCapacity, type QrMode } from "./qr/encode.js";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -135,6 +135,23 @@ describe("the qr-code page", () => {
       read("../docs/qr-code.mdx"),
     )?.[1];
     expect(stated).toBe(String(qrByteCapacity(QR_MAX_VERSION, "L")));
+  });
+
+  it("prints the capacity each mode reaches from the encoder", () => {
+    // The bug guarded: the page's mode table is how a reader chooses a payload
+    // shape, so a printed length the encoder refuses would send them into the
+    // overflow box the same page promises not to paint.
+    const page = read("../docs/qr-code.mdx");
+    const printed: ReadonlyArray<readonly [QrMode, string]> = [
+      ["numeric", "digits"],
+      ["alphanumeric", "characters"],
+      ["byte", "bytes"],
+    ];
+    Arr.forEach(printed, ([mode, unit]) => {
+      expect(page).toContain(
+        `| ${mode} | ${qrModeCapacity(mode, 1, "L")} ${unit} |`,
+      );
+    });
   });
 });
 
