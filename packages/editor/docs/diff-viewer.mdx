@@ -34,8 +34,25 @@ cell. A one-line edit is therefore one row with the old line on the left and the
 new one on the right, not a removal and an addition stacked apart. Context rows
 pair with themselves and keep both line numbers.
 
+### A split row divides by content
+
+The two cells ask for an equal share — `flexGrow: 1` over a zero basis — but the
+runtime sizes a row's cells by their content first. A changed line wider than
+half the row therefore pushes the added cell right, and nothing wraps: a row is
+one line, and the surface clips whatever runs past its edge.
+
+Measured in a window (`diff-viewer-lifecycle`, 98 checks): a 32-character
+changed line took **61%** of the row, the removed tint ended at **59%**, and the
+added line was cut at the surface's edge, while an appended line that fits ends
+before it.
+
+Plan a narrow pane for that. A long changed line shows its old side and cuts its
+replacement, so give the viewer the width the longest changed line needs, or
+read the change in `unified` mode where the line has the whole row.
+
 ## Limitations
 
+- **A split row divides by content, not down the middle.** Each cell asks for an equal share, but the runtime sizes it by its line first: a changed line wider than half the row pushes its replacement right and that side is clipped at the surface's edge. Rows never wrap — give the viewer the width the longest changed line needs, or read the change in `unified` mode.
 - **`O(n·m)` time and space.** The LCS table is the size of the two files, so very large files are slow.
 - **No word-level diff.** A changed line is a whole line, not the words inside it.
 - **The diff text is presentational.** The rows are `role="presentation"` runs, so a reader hears whether anything changed, not the diffed text itself.

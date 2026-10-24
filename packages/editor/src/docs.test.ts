@@ -21,6 +21,11 @@ import { describe, expect, it } from "vitest";
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
+const repoRoot = new URL("../../../", import.meta.url);
+
+const readRepo = (relative: string): string =>
+  readFileSync(fileURLToPath(new URL(relative, repoRoot)), "utf8");
+
 /** A page and the props type its source declares, with a floor for the reader. */
 interface PageContract {
   readonly page: string;
@@ -120,5 +125,43 @@ describe.each(PAGES)("the $page page", (contract) => {
         (name) => !declared.includes(name) && !INHERITED.has(name),
       ),
     ).toEqual([]);
+  });
+});
+
+/**
+ * The Diff viewer's split-sizing record, held to the window's own reading.
+ *
+ * The bug guarded: `mode="split"` looks like two equal columns, so a reader
+ * plans a narrow pane on that assumption — while the runtime sizes each cell by
+ * its line first and clips what runs past the edge. The page said only "old line
+ * left, replacement right", so nothing told a consumer that a long change cuts
+ * its added side. The figures are read from the playground's fixture, so a probe
+ * that re-measures the share cannot leave the page printing the old one.
+ * `node:fs` is used here only because this is a test-time repository check.
+ */
+describe("the Diff viewer page's split sizing", () => {
+  const page = read("../docs/diff-viewer.mdx");
+  const fixture = readRepo("apps/playground/src/live/diff-viewer.ts");
+
+  it("prints the share the window measured, from the fixture's own figure", () => {
+    const gutter = /export const DIFF_SPLIT_GUTTER = ([\d.]+);/.exec(fixture);
+    // A floor: a reader that found no figure cannot pass vacuously.
+    expect(gutter).not.toBeNull();
+    const share = Math.round(Number(gutter?.[1]) * 100);
+    expect(share).toBeGreaterThan(50);
+
+    expect(page).toContain(`**${share}%**`);
+    // The second figure is the removed tint's end, which the fixture's note owns.
+    expect(fixture).toContain("59% of the 418-point");
+    expect(page).toContain("**59%**");
+  });
+
+  it("teaches the cut and the reading a narrow pane gets instead", () => {
+    expect(page).toContain("sizes a row's cells by their content");
+    expect(page).toContain("clips");
+    expect(page).toContain("never wrap");
+    expect(page).toContain("`unified` mode");
+    // The row is one line: a page promising a wrap would contradict the paint.
+    expect(page).not.toContain("wraps the line");
   });
 });
