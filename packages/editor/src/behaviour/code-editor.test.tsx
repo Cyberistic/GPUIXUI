@@ -213,6 +213,29 @@ describe("CodeEditor", () => {
     editor.unmount();
   });
 
+  it("lines a gutter number up with the code line it numbers", () => {
+    // The bug guarded: the gutter column was padded by one spacing step, so
+    // every number painted below the line it numbers — measured in the
+    // renderer as `alpha` at y=1 with its `1` at y=9 and `beta` at y=19 with
+    // its `2` at y=27 — on a surface whose whole job is to lay code out in
+    // numbered rows.
+    const editor = render(<CodeEditor defaultValue={"alpha\nbeta"} />);
+    const boundsOf = (text: string) => {
+      const element = editor.renderer.findByText(text);
+      return element === undefined
+        ? undefined
+        : editor.renderer.getElementBounds(element.id);
+    };
+    const firstLine = boundsOf("alpha");
+    const secondLine = boundsOf("beta");
+    const firstNumber = boundsOf("1");
+    const secondNumber = boundsOf("2");
+    expect(firstNumber?.y).toBe(firstLine?.y);
+    expect(secondNumber?.y).toBe(secondLine?.y);
+    expect(firstNumber?.height).toBe(firstLine?.height);
+    editor.unmount();
+  });
+
   it("hands the source field the page fill the editor paints", () => {
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       const editor = render(<CodeEditor defaultValue="const a = 1" />, theme);

@@ -48,7 +48,8 @@ import { enterIndent, tabIndent, tabInserts, type TabMode } from "./logic.js";
 /** The editor's resting appearance: a field-edged surface with a gutter. */
 const EDITOR_ROOT =
   "relative flex flex-row overflow-hidden rounded-lg border border-input bg-background";
-/** The gutter column: right-aligned line numbers in the quiet role. */
+/** The gutter column: right-aligned line numbers in the quiet role. It shares
+ * the code column's top edge, so a number sits on the line it numbers. */
 const EDITOR_GUTTER =
   "flex flex-col items-end bg-muted text-muted-foreground select-none";
 /** The code area: one row per line, the runs painted inside. */
@@ -207,7 +208,6 @@ export const CodeEditor = ({
           style={mergeStyles(recipeStyle(EDITOR_GUTTER, theme), {
             width: gutterWidth,
             flexShrink: 0,
-            paddingTop: theme.spacing.md,
           })}
         >
           {lines.map((_, index) => (

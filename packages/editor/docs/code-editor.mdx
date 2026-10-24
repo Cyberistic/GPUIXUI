@@ -47,4 +47,4 @@ import { CodeEditor } from "@gpuixui/editor";
 - **A stored draft that is not text paints an empty document**: a `value` or `defaultValue` restored from storage as `null` reads through `draftOf`, so the tokenizer and the gutter paint the empty state instead of throwing out of the render.
 - **A stored `language` that is not text paints plain text**: the id is read through `languageOf` before the tokenizer sees it, so a preference saved as a number or an object is the same plain fallback an unknown id gets instead of a `.trim()` throw.
 - **A blank `label` reads as `"Code editor"`**: the name is read through the same absence rule as every other name, so a stored empty string cannot publish an unnamed field.
-- No native host, so pixel-exact layer alignment is unverified.
+- **The gutter is flush with the code column**: a line number shares its row's top edge — held by `src/behaviour/code-editor.test.tsx` in the renderer, so a number cannot drift a spacing step below the line it numbers. The transparent field's own text inset stays unverified: it paints no caret to compare against the highlight layer.
