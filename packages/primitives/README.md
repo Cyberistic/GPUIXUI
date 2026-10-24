@@ -209,8 +209,13 @@ and each is read through a membership test rather than indexed raw:
   `typeOf`/`familyOf` already
   follow for the type group — so a paint seam never throws mid-render. The gate
   still refuses the theme: `missingTokens` names the group or the step and the
-  release to rebuild it from. `theme.test.ts` holds the readers, every painter
-  and a source scan that keeps a direct index out of the rest of the package;
+  release to rebuild it from. Those readers are **published from the package
+  root**, with their source ports (`SpaceSource`, `RadiusSource`,
+  `IconSizeSource`, `DensitySource`, `BorderWidthSource`), so a row or table
+  painter in another package takes `rowHeightOf`/`spaceValue`/`iconSideOf`
+  instead of indexing a group the theme may not carry. `theme.test.ts` holds the
+  readers and every painter, holds each published one to the entry and its
+  answer, and a source scan keeps a direct index out of the rest of the package;
   `docs/theme-provider.mdx` states the rule where a consumer hands a theme over.
 - the **colour group** is the other half of a stored theme, and the tokens
   package **reports** it rather than refusing the theme: a role is additive, so

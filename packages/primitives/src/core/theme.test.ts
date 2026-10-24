@@ -46,6 +46,7 @@ import {
 import { pressWash } from "./pointer.js";
 import { actionOnColor, buttonVariants, fieldVariant } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
+import * as primitives from "../index.js";
 import {
   borderWidthOf,
   colorRole,
@@ -622,6 +623,76 @@ describe("a numeric group a store gave back", () => {
         page.includes("missingTokens") &&
         page.includes("extendTheme"),
     }).toEqual({ readers: true, rule: true, gate: true, page: true });
+  });
+
+  it("publishes the paint-side readers from the package entry", () => {
+    // Bug guarded: `rowHeightOf` and its siblings are the one rule that keeps a
+    // truncated theme from throwing mid-paint, but this package published none
+    // of them, so a package that paints rows had to index
+    // `theme.density.rowHeight` directly — the read this seam exists to remove —
+    // and `@gpuixui/data` did. Each reader is the painters' own function, not a
+    // second copy, and each answers through the entry a consumer imports.
+    expect({
+      spaceValue: primitives.spaceValue === spaceValue,
+      radiusValue: primitives.radiusValue === radiusValue,
+      iconSideOf: primitives.iconSideOf === iconSideOf,
+      controlHeightOf: primitives.controlHeightOf === controlHeightOf,
+      controlPaddingOf: primitives.controlPaddingOf === controlPaddingOf,
+      rowHeightOf: primitives.rowHeightOf === rowHeightOf,
+      borderWidthOf: primitives.borderWidthOf === borderWidthOf,
+    }).toEqual({
+      spaceValue: true,
+      radiusValue: true,
+      iconSideOf: true,
+      controlHeightOf: true,
+      controlPaddingOf: true,
+      rowHeightOf: true,
+      borderWidthOf: true,
+    });
+  });
+
+  it("answers through the entry for a theme that lost every group", () => {
+    const lost: PrimitiveTheme = stored({
+      spacing: null,
+      radius: null,
+      iconSize: null,
+      density: null,
+      borderWidth: null,
+    });
+    expect({
+      space: primitives.spaceValue(lost, "md"),
+      radius: primitives.radiusValue(lost, "md"),
+      icon: primitives.iconSideOf(lost, "md"),
+      height: primitives.controlHeightOf(lost, "md"),
+      padding: primitives.controlPaddingOf(lost, "md"),
+      row: primitives.rowHeightOf(lost),
+      border: primitives.borderWidthOf(lost, "thin"),
+    }).toEqual({
+      space: librarySpacing.md,
+      radius: libraryRadius.md,
+      icon: libraryIconSize.md,
+      height: libraryDensity.controlHeight.md,
+      padding: libraryDensity.controlPaddingX.md,
+      row: libraryDensity.rowHeight,
+      border: libraryBorderWidth.thin,
+    });
+    // A brand's own numbers still win through the same entry.
+    expect(primitives.rowHeightOf(testTheme)).toBe(testTheme.density.rowHeight);
+  });
+
+  it("teaches the published set where another package paints", () => {
+    const readme = readFileSync(
+      fileURLToPath(new URL("../../README.md", import.meta.url)),
+      "utf8",
+    );
+    // Prose wraps, so the claim is read as one line.
+    const prose = readme.replace(/\s+/g, " ");
+    expect({
+      published: prose.includes("published from the package root"),
+      readers: Arr.every(["rowHeightOf", "spaceValue", "iconSideOf"], (name) =>
+        readme.includes(name),
+      ),
+    }).toEqual({ published: true, readers: true });
   });
 });
 
