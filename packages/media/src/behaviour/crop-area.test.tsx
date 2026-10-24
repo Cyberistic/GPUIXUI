@@ -17,6 +17,9 @@
  * The fourth: a disabled window kept the drag that was in flight, so the frame
  * resumed it on the next plain hover once it could act again — a disabled crop
  * still moved its hole without a press.
+ * The fifth: a ratio-locked resize capped its width against the whole frame
+ * rather than the room the anchored corner left, so a drag that reached one
+ * edge slid the crop across the picture instead of stopping at the frame.
  */
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
@@ -33,11 +36,13 @@ const opening = new CropRect({ x: 60, y: 40, width: 100, height: 70 });
 const Harness = ({
   start,
   minSize,
+  aspectRatio,
   disabled,
   onReport,
 }: {
   readonly start: CropRect;
   readonly minSize?: number;
+  readonly aspectRatio?: number;
   readonly disabled?: boolean;
   readonly onReport: (crop: CropRect) => void;
 }) => {
@@ -50,6 +55,7 @@ const Harness = ({
       height={160}
       value={crop}
       minSize={minSize}
+      aspectRatio={aspectRatio}
       disabled={disabled}
       testId="crop"
       label="Crop"
@@ -64,6 +70,7 @@ const Harness = ({
 const mount = (
   start: CropRect = opening,
   minSize?: number,
+  aspectRatio?: number,
 ): {
   readonly root: TestRoot;
   readonly reports: CropRect[];
@@ -77,6 +84,7 @@ const mount = (
         <Harness
           start={start}
           minSize={minSize}
+          aspectRatio={aspectRatio}
           disabled={disabled}
           onReport={(crop) => reports.push(crop)}
         />
@@ -254,6 +262,24 @@ describe("CropArea gestures", () => {
 
     expect(reports.map(boxes)).toStrictEqual([
       { x: 11, y: 10, width: 10, height: 10 },
+    ]);
+    root.unmount();
+  });
+
+  it("stops a locked resize at the frame instead of sliding the crop", () => {
+    // The fifth bug: a ratio-locked handle drag asked for the width its height
+    // implied and then capped it against the whole frame, so a drag past one
+    // edge moved the anchored corner — the crop jumped across the picture while
+    // the reader dragged the opposite corner.
+    const wide = new CropRect({ x: 60, y: 40, width: 100, height: 50 });
+    const { root, reports } = mount(wide, undefined, 2);
+    const at = centreOf(root, "crop-handle-se");
+    root.renderer.nativeSimulateMouseDown(at.x, at.y);
+    root.renderer.nativeSimulateMouseMove(at.x, at.y + 1000);
+    root.renderer.nativeSimulateMouseUp(at.x, at.y + 1000);
+
+    expect(reports.map(boxes)).toStrictEqual([
+      { x: 60, y: 40, width: 180, height: 90 },
     ]);
     root.unmount();
   });

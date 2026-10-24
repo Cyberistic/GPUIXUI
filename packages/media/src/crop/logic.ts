@@ -137,16 +137,6 @@ const fitRatio = (
   const down = (rect.height - start.height) * ratio;
   const wanted =
     start.width + (Math.abs(across) >= Math.abs(down) ? across : down);
-  let width = Math.max(minWidth, wanted);
-  let height = width / ratio;
-  if (height > maxH) {
-    height = maxH;
-    width = height * ratio;
-  }
-  if (width > maxW) {
-    width = maxW;
-    height = width / ratio;
-  }
   const anchor = Match.value(corner).pipe(
     Match.when("se", () => ({ x: rect.x, y: rect.y })),
     Match.when("nw", () => ({ x: rect.right, y: rect.bottom })),
@@ -156,9 +146,16 @@ const fitRatio = (
   );
   const movesLeft = corner === "nw" || corner === "sw";
   const movesTop = corner === "nw" || corner === "ne";
+  // The room is what the anchored corner leaves in the direction the hole
+  // grows: the whole frame is not available to a corner that must not move.
+  const roomW = movesLeft ? anchor.x : maxW - anchor.x;
+  const roomH = movesTop ? anchor.y : maxH - anchor.y;
+  const cap = Math.min(roomW, roomH * ratio);
+  const width = Math.max(minWidth, Math.min(wanted, cap));
+  const height = width / ratio;
   return new CropRect({
-    x: clamp(movesLeft ? anchor.x - width : anchor.x, 0, maxW - width),
-    y: clamp(movesTop ? anchor.y - height : anchor.y, 0, maxH - height),
+    x: movesLeft ? anchor.x - width : anchor.x,
+    y: movesTop ? anchor.y - height : anchor.y,
     width,
     height,
   });

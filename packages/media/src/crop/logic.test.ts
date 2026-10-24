@@ -353,6 +353,24 @@ describe("aspect ratio", () => {
     );
   });
 
+  it("stops a locked drag at the frame, not by sliding the anchored corner", () => {
+    // The bug guarded: a ratio-locked resize took its width from the height the
+    // frame allowed, so a drag reaching one edge could ask for more width than
+    // the anchored corner had room for. The generic clamps then moved the whole
+    // hole to fit — the corner the reader was not dragging slid across the
+    // picture, and the crop jumped.
+    const wide = new CropRect({ x: 100, y: 100, width: 100, height: 50 });
+    expect(boxes(resizeCrop(wide, "se", 0, 1000, frame, 24, 2))).toStrictEqual({
+      x: 100,
+      y: 100,
+      width: 300,
+      height: 150,
+    });
+    expect(boxes(resizeCrop(wide, "nw", 0, -1000, frame, 24, 2))).toStrictEqual(
+      { x: 0, y: 50, width: 200, height: 100 },
+    );
+  });
+
   it("keeps the ratio through a live gesture", () => {
     expect(
       boxes(

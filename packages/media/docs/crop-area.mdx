@@ -56,6 +56,7 @@ const [crop, setCrop] = useState(
 - A `minSize` or `handleSize` that is not a positive number reads as its default, so a stored `0` or `-1` cannot paint a hole that collapses or a one-point handle no pointer can grab.
 - A corner handle is held **inside** the frame: the frame clips its children, so a hole touching an edge would otherwise paint half a handle and keep half the press target.
 - A **move** never changes the hole's sides: the caller's `minSize` travels with a pointer drag and with `Alt`+arrow, so a hole allowed below the default does not grow to it.
+- **A ratio-locked resize stops at the frame**: the corner opposite the one being dragged stays still, so a drag that reaches an edge caps the hole at the room that corner leaves instead of sliding the whole crop across the picture.
 - **A guide never paints past the hole it divides**: a rule-of-thirds line is one point wide, so a hole narrower than that caps the line at the hole's own side and holds its origin inside the rectangle.
 - **`fill` is not a choice**: crop coordinates only match a filled frame.
 - A **blank `label`** reads as `"Crop area"` and is trimmed, so a stored empty name cannot publish an unnamed group and four handles called "`nw` handle".
