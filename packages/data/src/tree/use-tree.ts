@@ -31,9 +31,11 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { recordsOf } from "../internal/list.js";
 import {
   cursorRow,
   emptyCursor,
@@ -98,6 +100,11 @@ export const useTree = <T>({
   onActivate,
 }: UseTreeOptions<T>): TreeController<T> => {
   const renderer = useGpuix().renderer;
+  // The rows are stored data as often as a caller's model (`recordsOf`): a
+  // saved flattened list can carry a hole the store wrote, and every walk below
+  // reads a row's own key. Read once per list so the callbacks below keep their
+  // identity between renders.
+  const visible = useMemo(() => recordsOf(rows), [rows]);
   const [uncontrolled, setUncontrolled] = useState<TreeCursor>(
     defaultCursor ?? emptyCursor,
   );
@@ -132,7 +139,7 @@ export const useTree = <T>({
   );
 
   const typeahead = useTypeahead(
-    Arr.map(rows, (row) => ({
+    Arr.map(visible, (row) => ({
       key: row.key,
       // The words the row paints and is named by: a blank label reads as the
       // key (`treeName`), so a typed prefix can reach the row the tree shows.
@@ -140,7 +147,7 @@ export const useTree = <T>({
       disabled: false,
     })),
     Option.flatMap(resolved.active, (key) =>
-      Arr.findFirstIndex(rows, (row) => row.key === key),
+      Arr.findFirstIndex(visible, (row) => row.key === key),
     ),
     (match) => commit({ ...resolved, active: Option.some(match.key) }),
   );
@@ -194,10 +201,10 @@ export const useTree = <T>({
       // A press on a branch opens or closes it; every press also reports the
       // row, so a file tree can preview a file and a folder can be opened by its
       // row.
-      commit(row.hasChildren ? treeCursorMove(rows, onRow, "enter") : onRow);
+      commit(row.hasChildren ? treeCursorMove(visible, onRow, "enter") : onRow);
       onActivate?.(row);
     },
-    [commit, onActivate, resolved, rows],
+    [commit, onActivate, resolved, visible],
   );
 
   const holdsFocus = useCallback((): boolean => {
@@ -217,7 +224,7 @@ export const useTree = <T>({
       // descendant control keeps its space, its Enter and its characters.
       if (!holdsFocus()) return;
       if (isTreeKey(event.key)) {
-        const next = treeCursorMove(rows, resolved, event.key);
+        const next = treeCursorMove(visible, resolved, event.key);
         commit(next);
         if (event.key === "enter" || event.key === "space") {
           if (onActivate !== undefined) {
@@ -225,7 +232,7 @@ export const useTree = <T>({
               onNone: () => {},
               onSome: (key) => {
                 Option.match(
-                  Arr.findFirst(rows, (candidate) => candidate.key === key),
+                  Arr.findFirst(visible, (candidate) => candidate.key === key),
                   { onNone: () => {}, onSome: onActivate },
                 );
               },
@@ -239,7 +246,7 @@ export const useTree = <T>({
         onSome: typeahead,
       });
     },
-    [commit, onActivate, resolved, rows, typeahead, holdsFocus],
+    [commit, onActivate, resolved, visible, typeahead, holdsFocus],
   );
 
   const attach = useCallback(
@@ -250,7 +257,7 @@ export const useTree = <T>({
     [],
   );
 
-  const tabKey = Option.match(cursorRow(rows, resolved), {
+  const tabKey = Option.match(cursorRow(visible, resolved), {
     onNone: () => Option.none<string>(),
     onSome: (row) => Option.some(row.key),
   });

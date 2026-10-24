@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { listOf, recordsOf, textsOf } from "./list.js";
+import { listOf, recordsOf, rowsOf, textsOf } from "./list.js";
 
 describe("a stored list", () => {
   it("is a list only when it is one", () => {
@@ -49,5 +49,46 @@ describe("a stored list", () => {
     ];
     expect(textsOf(labels)).toEqual(["Q1", "", ""]);
     expect(textsOf(undefined)).toEqual([]);
+  });
+});
+
+describe("a saved row list", () => {
+  /** The shape a grid row is read through: its own key reader. */
+  const rowKey = (row: { readonly id: string }): string => row.id;
+
+  it("keeps only the rows its identity reader can name", () => {
+    // A row list is read by the surface's **own** reader, not by a `key` field
+    // (`recordsOf` is the keyed-list reader): a grid hands each entry to
+    // `getRowId`, so an entry that is not a record is dropped before the reader
+    // sees it, and a record the reader cannot name has no identity to address.
+    const rows: ReadonlyArray<{ readonly id: string }> = [
+      { id: "alpha" },
+      // @ts-expect-error — a hole a store wrote inside the list.
+      null,
+      // @ts-expect-error — an entry a store wrote as something else.
+      42,
+      // @ts-expect-error — a record the reader cannot name.
+      { name: "no id" },
+      { id: "" },
+      { id: "   " },
+      { id: "beta" },
+    ];
+    expect(rowsOf(rows, rowKey)).toEqual([{ id: "alpha" }, { id: "beta" }]);
+  });
+
+  it("reads an absent list as no rows", () => {
+    expect(rowsOf<{ readonly id: string }>(undefined, rowKey)).toEqual([]);
+    // A slot JSON wrote as `null` is the absence the port names, not a cast.
+    expect(rowsOf<{ readonly id: string }>(null, rowKey)).toEqual([]);
+    // @ts-expect-error — a slot a store wrote as something else.
+    expect(rowsOf<{ readonly id: string }>(42, rowKey)).toEqual([]);
+  });
+
+  it("hands the caller's own rows on unchanged", () => {
+    // A caller that composes the list by hand is unaffected: the surviving
+    // records are the same objects, in the same order.
+    const alpha = { id: "alpha" };
+    const beta = { id: "beta" };
+    expect(rowsOf([alpha, beta], rowKey)).toEqual([alpha, beta]);
   });
 });

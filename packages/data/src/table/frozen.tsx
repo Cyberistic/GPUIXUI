@@ -116,10 +116,11 @@ export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
    *
    * The list is stored data as often as a literal — a saved workspace restores
    * a panel's rows, and an app hands `snapshot?.rows`, which is `undefined`
-   * while the snapshot is absent — so it is read through {@link listOf}: a
-   * value that is not a list fills no pane, and the data pane paints its empty
-   * message. Before the read, one stored absence threw
-   * `Cannot read properties of null (reading 'map')` out of the first render
+   * while the snapshot is absent — so it is read through {@link rowsOf}: a
+   * value that is not a list fills no pane, and an entry `rowKey` cannot name
+   * is not a row, so a dropped record paints nothing. Before the read, one
+   * stored absence threw `Cannot read properties of null (reading 'map')` out
+   * of the first render and a hole in a readable list threw from `rowKey`,
    * and the grid painted neither pane nor its message
    * (`behaviour/stored-rows.test.tsx`).
    */
@@ -203,7 +204,8 @@ export const FrozenTable = <Row,>({
   const frozenTrack = Option.getOrUndefined(paintableSize(frozenWidth));
   const contentTrack = Option.getOrUndefined(paintableSize(contentWidth));
   // The caller's rows are stored data: a saved panel, or `snapshot?.rows`
-  // before the snapshot arrives, is not a list and fills no pane.
+  // before the snapshot arrives, is not a list and fills no pane, and a hole
+  // the store wrote inside one is a record with no identity to key a row by.
   const records = listOf(rows);
   const [frozenHeaderHeight, setFrozenHeaderHeight] = useState(0);
   const [dataHeaderHeight, setDataHeaderHeight] = useState(0);

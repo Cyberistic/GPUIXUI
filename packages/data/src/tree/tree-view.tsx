@@ -60,11 +60,13 @@ export interface TreeViewProps<T> extends Omit<Props, "children"> {
    * The visible rows, in paint order — one flat list, already flattened.
    *
    * The list is stored data as often as a literal: a workspace that keeps its
-   * flattened rows reaches this prop from a store, and an absent one is
-   * `undefined`. It is read through {@link listOf}, so a value that is not a
-   * list paints an empty tree instead of taking the frame down — before the
-   * read, the type-ahead's `Arr.map(rows, …)` threw
-   * `Cannot read properties of null (reading 'map')` in the first render.
+   * flattened rows reaches this prop from a store, an absent one is
+   * `undefined`, and an entry inside a readable one can be the hole a store
+   * wrote. It is read through {@link recordsOf}, so a value that is not a list
+   * paints an empty tree and a hole paints no row — before the read, the
+   * type-ahead's `Arr.map(rows, …)` threw
+   * `Cannot read properties of null (reading 'map')` in the first render and a
+   * hole threw `(reading 'key')` on the first row it reached.
    */
   readonly rows: ReadonlyArray<TreeRow<T>>;
   /** The row's label: its accessible name and what a typed prefix matches. */
@@ -131,7 +133,8 @@ export const TreeView = <T,>({
   const colors = themeColors(theme);
   const bound = Option.getOrUndefined(paintableSize(height));
   // The caller's rows are stored data: a saved flattened list, or a snapshot
-  // that has not arrived, is not a list and paints no rows.
+  // that has not arrived, is not a list and paints no rows, and a hole the
+  // store wrote inside one names no row.
   const visibleRows = listOf(rows);
   const tree = useTree({
     rows: visibleRows,

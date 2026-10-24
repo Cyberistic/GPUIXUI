@@ -457,7 +457,9 @@ export const useTable = <Row extends RowData>({
 
   // The caller's row list is stored data too: a saved workspace restores it
   // from JSON, and `snapshot?.rows` is `undefined` before the snapshot arrives.
-  // Read once, so the tree's filter and the core's row models read one list.
+  // A hole inside it is a record a store dropped, so the list is read through
+  // `rowsOf` — the controller's filter tree and the core's row models then read
+  // one set of rows that each have an identity.
   const records = useMemo(() => listOf(rows), [rows]);
 
   // The tree narrows the records before the core builds its row models, so the

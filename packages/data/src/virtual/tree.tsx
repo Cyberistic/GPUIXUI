@@ -55,10 +55,12 @@ import {
   Fragment,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   type ReactNode,
 } from "react";
 import { themeColors, useTheme } from "../theme.js";
+import { recordsOf } from "../internal/list.js";
 import { paintableSize } from "../internal/size.js";
 import { paneFill, usePaintedHeight } from "../internal/painted.js";
 import { treeName, type TreeCursor, type TreeRow } from "../tree/logic.js";
@@ -73,7 +75,15 @@ export interface VirtualTreeProps<T> extends Omit<
   Props,
   "children" | "onVisibleRange"
 > {
-  /** The visible rows, in paint order — the full flattened set, not a slice. */
+  /**
+   * The visible rows, in paint order — the full flattened set, not a slice.
+   *
+   * The list is stored data like every other (`recordsOf`): a workspace that
+   * keeps its flattened rows restores them from JSON, so an absent list paints
+   * the frame with no rows — before the read, the window's own `rows.length`
+   * threw `Cannot read properties of null (reading 'length')` in the first
+   * render — and an entry a store dropped names no row.
+   */
   readonly rows: ReadonlyArray<TreeRow<T>>;
   /** The row's label: its accessible name and what a typed prefix matches. */
   readonly labelOf: (node: T) => string;
@@ -153,14 +163,18 @@ export const VirtualTree = <T,>({
   // sees `0` and mounts only the overdraw in a pane that holds far more
   // (`paintable-height`).
   const listHeight = Option.orElse(bound, () => painted.measured);
+  // The rows are stored data: a saved flattened list can be absent, and a hole
+  // the store wrote inside one names no row (`recordsOf`). Read once, so the
+  // window, the cursor walks and the paint read one set.
+  const rows = useMemo(() => recordsOf(dataRows), [dataRows]);
   const window = useVirtualRows({
-    count: dataRows.length,
+    count: rows.length,
     rowHeight,
     viewportHeight: Option.getOrElse(listHeight, () => 0),
     overdraw,
   });
   const tree = useTree({
-    rows: dataRows,
+    rows,
     labelOf,
     cursor,
     onCursorChange,
@@ -177,7 +191,7 @@ export const VirtualTree = <T,>({
   );
 
   const activeIndex = Option.flatMap(tree.cursor.active, (key) =>
-    Arr.findFirstIndex(dataRows, (row) => row.key === key),
+    Arr.findFirstIndex(rows, (row) => row.key === key),
   );
   // A row outside the mounted window does not exist to focus, and the runtime
   // cannot build a row outside the window it was given. Move the window to it in
@@ -195,18 +209,18 @@ export const VirtualTree = <T,>({
   // update, so it runs after the commit rather than during the render.
   useLayoutEffect(() => {
     if (Option.isSome(activeIndex)) return;
-    if (dataRows.length === 0) return;
+    if (rows.length === 0) return;
     const index = Math.min(
-      dataRows.length - 1,
+      rows.length - 1,
       Math.max(0, Math.floor(window.scrollOffset / rowHeight)),
     );
-    const row = dataRows[index];
+    const row = rows[index];
     if (row === undefined) return;
     tree.commit(
       { ...tree.cursor, active: Option.some(row.key) },
       { focus: tree.holdsFocus() },
     );
-  }, [activeIndex, dataRows, rowHeight, tree, window.scrollOffset]);
+  }, [activeIndex, rows, rowHeight, tree, window.scrollOffset]);
 
   const handleRange = useCallback(
     (range: VisibleRange) => {
@@ -229,9 +243,9 @@ export const VirtualTree = <T,>({
         onSome: (index) => {
           if (Arr.contains(window.mountedAt(offset), index)) return;
           const anchorRow =
-            dataRows[
+            rows[
               Math.min(
-                dataRows.length - 1,
+                rows.length - 1,
                 Math.max(0, Math.floor(offset / rowHeight)),
               )
             ];
@@ -244,7 +258,7 @@ export const VirtualTree = <T,>({
       });
       onVisibleRange?.(range);
     },
-    [activeIndex, dataRows, onVisibleRange, renderer, rowHeight, tree, window],
+    [activeIndex, rows, onVisibleRange, renderer, rowHeight, tree, window],
   );
 
   // The window is already committed with this paint, so the scroll now names a
@@ -267,7 +281,7 @@ export const VirtualTree = <T,>({
       role="tree"
       testId={testId}
       height={Option.getOrUndefined(listHeight)}
-      itemCount={dataRows.length}
+      itemCount={rows.length}
       estimatedItemHeight={rowHeight}
       windowStart={window.windowStart}
       onVisibleRange={handleRange}
@@ -275,7 +289,7 @@ export const VirtualTree = <T,>({
       style={mergeStyles({ scrollbarColor: colors.scrollbar }, style)}
     >
       {Arr.map(window.mounted, (index) => {
-        const row = dataRows[index];
+        const row = rows[index];
         if (row === undefined) return null;
         return (
           <Fragment key={row.key}>

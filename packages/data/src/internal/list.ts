@@ -22,6 +22,7 @@
 
 import * as Arr from "effect/Array";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 
 /** The rows a saved surface carries: only a list is a list. */
 export const listOf = <A>(
@@ -59,3 +60,35 @@ export const textsOf = (
   value: ReadonlyArray<string> | undefined,
 ): ReadonlyArray<string> =>
   Arr.map(listOf(value), (entry) => (P.isString(entry) ? entry : ""));
+
+/** Whether a row's own id names it: any non-blank text is an identity. */
+const namesRow = (value: unknown): boolean =>
+  P.isString(value) && Str.isNonEmpty(Str.trim(value));
+
+/**
+ * The rows of a saved row list that name themselves.
+ *
+ * A row list crosses the same boundary as every other list, through a surface's
+ * **own** identity reader: a grid hands each record to `getRowId`, a tree reads
+ * `row.key`, a frozen pane calls its `rowKey`. The slot was already read
+ * (`listOf`) while the entries were dereferenced, so a hole a store wrote —
+ * `[null, { id }]`, a record a release dropped or an older shape saved — threw
+ * from the first paint and took the whole surface with it:
+ *
+ * - a grid threw `Cannot read properties of null (reading 'id')` out of the
+ *   core's `getRowId` and painted no readout, no rows and no empty state;
+ * - a tree threw `Cannot read properties of null (reading 'key')` before its
+ *   frame painted;
+ * - a frozen grid threw from `rowKey` and painted neither pane.
+ *
+ * A row that is not a record is not a row, and neither is a record the reader
+ * cannot name — an entry with no identity to address, key or choose is exactly
+ * the row a store dropped. The reader is asked **once per entry** and the
+ * surviving records are handed on unchanged, so a caller that composes the list
+ * by hand is unaffected.
+ */
+export const rowsOf = <A>(
+  value: ReadonlyArray<A> | null | undefined,
+  keyOf: (row: A) => string,
+): ReadonlyArray<A> =>
+  Arr.filter(listOf(value), (row) => P.isObject(row) && namesRow(keyOf(row)));

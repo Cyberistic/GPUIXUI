@@ -275,7 +275,10 @@ export interface ConstructGridOptions<Row> extends GridChange {
    * the snapshot is absent — so it is read through `listOf`: a value that is
    * not a list is **no rows**, and the grid paints its own empty state instead
    * of the core's `data` access throwing `Cannot read properties of null
-   * (reading 'length')` out of the build.
+   * (reading 'length')` out of the build. A **hole** inside the list is the
+   * other half (`rowsOf`): an entry the caller's `keyOf` cannot name is not a
+   * row, so a dropped record paints nothing instead of throwing from the core's
+   * `getRowId`.
    */
   readonly rows: ReadonlyArray<Row>;
   readonly keyOf: (row: Row) => string;
