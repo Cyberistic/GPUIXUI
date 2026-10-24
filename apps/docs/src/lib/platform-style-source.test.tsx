@@ -120,14 +120,21 @@ describe("the platform style source on the page", () => {
     expect(registry).toContain("PlatformStyleSource");
   });
 
-  it("says the copy is the library's and that deleting a key inherits", () => {
-    const section = page.slice(
-      page.indexOf("### Take a platform style"),
-      page.indexOf("### The look picker"),
-    );
+  it("says the copy is the library's and what inherits", () => {
+    const section = page
+      .slice(
+        page.indexOf("### Take a platform style"),
+        page.indexOf("### The look picker"),
+      )
+      .replace(/\s+/g, " ");
 
     expect(section).toContain("`platformStyles`");
-    expect(section).toContain("A key you delete inherits the");
+    expect(section).toContain(
+      "A colour role you delete from `colors` keeps the base theme's value",
+    );
+    expect(section).toContain(
+      "the required fields are what make the object a style",
+    );
     expect(section).toContain("edit any value");
   });
 

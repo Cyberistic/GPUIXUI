@@ -125,10 +125,11 @@ A browser that refuses site storage keeps the URL's choice and the identity, and
 
 Each tab is the library's own `platformStyles` entry, not a second copy
 written for this page. Copy one into your repository, edit any value and apply
-it over a base theme; the `label` is yours too. A key you delete inherits the
-base theme's value, so a style can carry only the roles it means to repaint — the
-one under **Author a style** below is that shape. The audit you run before
-shipping is the same gate the library uses.
+it over a base theme; the `label` is yours too. A colour role you delete from
+`colors` keeps the base theme's value, and so does an optional table you leave
+out (`switch`, `switchMetrics`, `series`, `syntax`); the required fields are what
+make the object a style, so the type checker asks for them. The audit you run
+before shipping is the same gate the library uses.
 
 ### The look picker
 

@@ -12875,8 +12875,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       disagree with the package; `platform-style-source.tsx` (registered in
       `mdx.tsx`) renders it, `platform.css` adds the bar, and the README ledger
       names both modules. `theming.mdx` gains **Take a platform style**, the
-      sentence that a deleted key inherits the base theme's value, and the
-      `applyStyle`/`auditTheme` route beside the copy.
+      sentence that a colour role deleted from `colors` (or an omitted optional
+      table) keeps the base theme's value while the required fields are what make
+      the object a style, and the `applyStyle`/`auditTheme` route beside the copy.
       `src/lib/platform-style-source.test.tsx` (12 cases) evaluates every emitted
       file and compares it with the table **field for field and key for key**, so
       a dropped optional table or radius step fails rather than shipping a
