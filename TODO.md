@@ -3066,7 +3066,44 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 189/189
+`[x]` `[██████████]` 190/190
+
+`[x]` Measure the **shipped `RippleButton`'s paint in a window** — the
+      catalogue's *Ripple button* row claimed four things about the glass (the
+      disc is the action's own label ink at a faint share, a circle, grown from
+      the press point, clipped by the control and inert), while
+      `src/behaviour/ripple-button.test.tsx` read the layer's **reported box**
+      and its declarations only: a wash painted in the action's own fill, a
+      square layer, a disc born at the window origin or a layer that ate the
+      next press would all have passed. `ripple-lifecycle` (**51 checks**,
+      0.11.0) mounts the shipped component on a 240x160 action with **no visible
+      label** (so the disc is the only paint inside the box) and measures with
+      the renderer's motion clock frozen: at rest and under the pointer the fill
+      is a role (`primary`, then the hover role `filled-action-dim` measured —
+      the wash is read over the colour the glass shows, not the palette's); a
+      frozen press mounts a disc **under one point** wide; the first stepped
+      frame is a **56.5**-point square box centred on the press (116, 148) whose
+      paint is `actionOnColor` at **0.064** with every measurable channel
+      agreeing (a second colour fails), whose box's four corners paint the
+      action's fill (the inscribed circle, not a square), and whose neighbour
+      point is the fill; a later **201**-point frame is fainter at **0.0327**
+      and starts **16.5** points past the action's own left edge while the
+      **page** paints there (the control clips it); a press over the painted disc
+      reports `presses=3` (the layer is inert); and both discs unmount on resume.
+      One capture per disc, because the removal is a real 500 ms timer.
+      `ripple-button.test.ts` (18 cases) holds the wash algebra on the two
+      measured samples, the frame arithmetic and the corner rule, the clock
+      order, the count and the README section. Directions measured, exit `1`
+      each and restored green: reading the fill as the disc's paint fails
+      `the wash is faint: the ink at a share, not the ink itself`, sampling the
+      box's corners at its centre fails `every corner of the disc's box paints
+      the action's fill, so the layer is round` (`expected 0, got 4`), and
+      sampling the clip point inside the action fails `the action clips the
+      disc: the page paints outside its own box`. Green: `--only
+      ripple-lifecycle` 1/1 on three runs (7.7 s, 8.0 s, 8.7 s), the playground
+      suite 130 files / 1 304 tests, `check-types` and `lint` clean. Docs:
+      `apps/playground/README.md` §`ripple-lifecycle`, the *Ripple button* row in
+      `COMPONENTS.md` and `.artifacts/live/ripple-{rest,hover,small,clip,after}.png`.
 
 `[x]` Measure the **radio group's choice and keyboard contract in a window** —
       `COMPONENTS.md`'s *Radio groups* row claimed "a window measures the second
@@ -13822,7 +13859,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 406/406
+`[x]` `[██████████]` 407/407
 
 `[x]` Publish the **root render rule a window measured** — `render` takes one
       element, and a top-level fragment paints only its **last** child with no
@@ -20848,6 +20885,31 @@ fails the case by name; restored, the file is 44/44 and
       11/11 with `runtime-page`, `aria-budget` and the capability suite green.
       No native scenario applies — the probe it publishes already ran.
 
+`[x]` Teach the **retained value `/docs/motion` named only in its module table** —
+      the page added Springs, Keyframes and Inertia but `MotionValue` remained a
+      row: a reader could not learn that the caller owns the clock, what a frame
+      reports, or that `complete` is a one-shot edge, and the row omitted
+      `DEFAULT_TWEEN_MS` while the motion workstream's `runDurationMs` had just
+      taught the package that a tween duration past `Number.MAX_SAFE_INTEGER`
+      is the house run (a finite frame that never completes churns the hook for
+      the life of the tree), not a house ceiling — a large duration the clock can
+      name is kept. §Values now shows a retained tween and its two frames,
+      `set`/`coast`/`sample`, the one-shot edge, `tween`'s house duration and its
+      three unreadable shapes, `springTransition`, and `transitionEquals` reading
+      the run a declaration actually samples; the value row lists every value
+      and the class. `motion-page.test.ts` grows three cases (17 → 20): it
+      executes the retained frames (50 then 100, with a re-declared run still
+      completing at the original 200 ms), executes the duration rules (`NaN`,
+      infinity, `1e300` → `300`; `1e12` kept; `0`/negative an instant assignment;
+      `transitionEquals` true for a repaired declaration) and holds the row to
+      `motion.ts`'s own `export const`/`export class` names, both ways.
+      Directions measured: against the committed page all three fail by name
+      (`expected [ 'DEFAULT_TWEEN_MS' ] to deeply equal []`, the missing
+      `## Values`, and the missing `Number.MAX_SAFE_INTEGER`); restored, the file
+      is 20/20. `apps/docs/README.md`'s motion row now describes the page the
+      site serves. No native scenario applies — a page and the sampler it
+      teaches.
+
 ## Swarm-owned blockers (fix these)
 
 - **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
@@ -21351,6 +21413,7 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion`: **a finite time constant no clock can reach kept the coast's frame loop alive** — `tauOf` fell back from a time constant that could not be read (`NaN`, an infinity, zero or negative) but kept every finite one, so `inertia(1e300)` — or the `{ tau: 1e300 }` a stored config decoded — was a **1e297-second** coast. Its projected rest is finite (140 for a 400 px/s release), so the overflow guard did not catch it either; at any clock a reader can sit through the decay is still `1`, the velocity never reaches the rest speed, and `MotionValue.sample` answered `active` forever: a frame every 16 ms for the life of the tree with the surface standing still, and no completion. It is the leak the tween's own duration closed one module along, and the README's promise that "a coast therefore always projects a finite rest and settles" was false for it. `tauOf` now reads the field through the package's one clock bound (`duration.ts`'s `schedulableSeconds`), so a constant past `Number.MAX_SAFE_INTEGER` seconds is the house 350 ms — the answer an unreadable one already got — while a large constant the clock can name (`1e12` seconds) is kept. The constructor, the samplers and `sameInertia` read the same repair. Proof: `inertia.test.ts`'s `a time constant no clock can reach` (4 cases — the constructor and the hand-built value against the house coast, a 400 px/s release settling within ten seconds, the `1e12`-second control, and the equality the retained value compares by) and `motion.test.ts`'s `settles a coast whose time constant no clock can reach` (the retained value completes instead of sampling forever). Directions measured: with the old read restored both files fail by name — `expected { tau: 1e+297, … } to deeply equal { tau: 0.35, … }`, `expected false to be true` (the coast's `settled`), the equality case, and `expected +0 to be close to 140` with the retained value still active at ten seconds — while the overflow case now builds its extreme release on a `tau: 3` constant the clock can name, so it still guards the overflow branch. Green: 15 files / **219** tests with `check-types` clean. Docs: the README §Inputs the runtime can paint, the `tauOf`/`inertia` JSDocs and the module header. No live scenario applies — a pure sampler rule the behaviour suite does not paint differently (the house coast is the one it already drives).
 `[x]` `@gpuixui/motion`: **a finite duration no clock can reach kept the frame loop alive** — `runDurationMs` fell back from `NaN` and an infinity but kept any finite value, so `tween(1e300)` — a stored config's duration past the integer milliseconds a clock can name — was a **1e297-second** run: every sample painted a frame short of the target and the hook scheduled another, a frame every 16 ms for the life of the tree, and the run never reported completion. It is the leak the `NaN`/infinity fix already closed, one door along; a duration past `Number.MAX_SAFE_INTEGER` ms (≈285 000 years) is now the house `DEFAULT_TWEEN_MS`, the answer an unreadable duration gets, while a large duration the clock can still name (`1e12` ms) is kept. Proof: `motion.test.ts`'s `falls back from a tween duration that cannot run` gains the `1e300` declaration and the sampling loop over it (measured at HEAD as `expected 1e+300 to be 300`, and its 150 ms sample was `0` rather than `0.5`) plus the reachable control; `transitionEquals` reads the same value, so a hand-built declaration the sampler repairs is still not a new run on every render. Green: 15 files / **214** tests with `check-types` clean. Docs: the README §Inputs the runtime can paint names the finite case beside `NaN`/infinity, and the `runDurationMs` JSDoc gives the bound. No live scenario applies — a pure sampler rule.
 `[x]` `@gpuixui/motion` + `packages/components`: **a stored duration past the renderer's clock painted no frame at all** — the binding converts a transition's seconds into a `Duration` and rejects the **whole** motion description for one it cannot represent (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s `validate_seconds`; its own suite pins `duration: 1e300` as refused), which paints no motion frame. `motionTimingOf` read only finiteness and sign, so a surface that names its own feel and was handed a stored duration above the clock's range (`1e300` ms — a pace a caller's arithmetic produced) got a description the runtime refused: measured on a painted box, it asked for **8px** of travel and moved **0**, at either end, while `presenceTimingOf` — the other public builder of the same timing — already read the field as no journey. The bound has one home now, `src/duration.ts`'s `schedulableSeconds` (private, like `progress.ts`): `motionTimingOf` reads a duration through it as the house surface arrival (the answer an unreadable duration already gets), and `presence.ts` composes the same reader for its phases, its window and its stagger, which removed its two private copies of the range (`secondsOf`, `SCHEDULABLE_SECONDS`). Proof: `timing.test.ts`'s `reads a duration past the clock the renderer schedules as the house arrival` (the `1e300` and `1e19` ms values, the house answer, and a large-but-schedulable `1e12` ms control), `presence.test.ts`'s window case gains `transitionWindowMs({ duration: 1e17 })` = 0, and `src/behaviour/presence.test.tsx`'s `travels on a stored duration past the clock, read as the house arrival` mounts two probes composed through `motionTimingOf` and reads the painted box. Directions measured: with the old read restored the timing case fails `expected { duration: 1e+297, … } to deeply equal { duration: 0.2, … }`, the window case fails `expected 0 to be 100000000000000000000`, and the behaviour case fails `expected +0 to be 8`. Green: motion 15 files / **214** tests with `check-types` clean, the components' `presence.test.tsx` **43/43** and `surface.test.ts` 15/15 against the budget's new `familyMotion` (**5** modules / 39 KiB, measured 39 512 bytes — the family graph gains `duration.ts`). Docs: the README §The runtime's declarative timing prints and evaluates `motionTimingOf(1e300)`, the `motionTimingOf` and `schedulableSeconds` JSDocs teach the clock, and `docs.test.ts` holds the page to the evaluated call. The `/docs/motion` sentence is filed as an interlock row. No live scenario applies — the binding's refusal is the installed `motion.rs`, and the behaviour suite drives the real renderer.
 `[x]` `@gpuixui/motion` + `packages/components`: **a frame field the renderer refuses

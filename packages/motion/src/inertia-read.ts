@@ -9,6 +9,7 @@
  * Private to the package: `index.ts` does not re-export this module.
  */
 
+import { schedulableSeconds } from "./duration.js";
 import type { Inertia } from "./inertia.js";
 
 /** The house time constant, in milliseconds. */
@@ -20,11 +21,19 @@ export interface Bounds {
   readonly max: number | null;
 }
 
-/** The time constant a sample can run with: the house one for a value it cannot. */
+/**
+ * The time constant a sample can run with: the house one for a value it cannot
+ * read or one no clock can name.
+ *
+ * A time constant in seconds is read through the package's clock bound
+ * ({@link schedulableSeconds}), the rule a tween's duration already follows: a
+ * stored `1e300` is a 1e297-second coast whose decay is still `1` at every
+ * clock a reader can sit through, so its velocity never reaches the rest speed
+ * and the run never settles — a frame every 16 ms for the life of the tree with
+ * the surface standing still. A constant inside the range is kept.
+ */
 export const tauOf = (tau: number | undefined): number =>
-  tau !== undefined && Number.isFinite(tau) && tau > 0
-    ? tau
-    : DEFAULT_TAU_MS / 1000;
+  schedulableSeconds(tau) ?? DEFAULT_TAU_MS / 1000;
 
 /** Bounds a sample can clamp to: unreadable ones dropped, an inverted pair swapped. */
 export const boundsOf = (min: number | null, max: number | null): Bounds => {

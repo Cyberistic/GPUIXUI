@@ -139,8 +139,10 @@ describe("a release whose rest the runtime cannot represent", () => {
     // A rest that overflows is still a readable input, so no repair above
     // caught it: `position + speed * tau` was `Infinity`, and the release
     // frame's zero travel multiplied it into `Infinity * 0`, which is `NaN` —
-    // a frame the runtime paints as nothing, that never settles.
-    const huge = inertia(1e308);
+    // a frame the runtime paints as nothing, that never settles. The constant is
+    // one a clock can still name (three seconds); only the release is extreme,
+    // so this guards the overflow branch rather than the time-constant repair.
+    const huge: Inertia = { tau: 3, min: null, max: null };
     expect(project(huge, 1e308, 1e308)).toBe(1e308);
     expect(sampleInertia(huge, 1e308, 1e308, 0)).toEqual({
       value: 1e308,
@@ -155,7 +157,7 @@ describe("a release whose rest the runtime cannot represent", () => {
 
     // A wall in the direction it was thrown is the destination: it is finite,
     // so the coast travels to it rather than inventing a rest.
-    const walled = inertia(1e308, { max: 100 });
+    const walled: Inertia = { ...huge, max: 100 };
     expect(project(walled, 1e308, 1e308)).toBe(100);
     expect(sampleInertia(walled, 1e308, 1e308, 0)).toEqual({
       value: 100,
@@ -169,6 +171,52 @@ describe("a release whose rest the runtime cannot represent", () => {
       expect(Number.isFinite(sample.value)).toBe(true);
       expect(Number.isFinite(sample.velocity)).toBe(true);
     });
+  });
+});
+
+describe("a time constant no clock can reach", () => {
+  // The defect this guards: `tauOf` fell back from a time constant it could not
+  // read (non-finite or not positive) but kept every finite one, so a stored
+  // `tau: 1e300` — or the `inertia(1e300)` a config's arithmetic produced — was
+  // a 1e297-second coast. Its rest is finite (140 for a 400 px/s release), but
+  // the decay across any clock a reader can sit through is still `1`, so the
+  // velocity never reaches the rest speed and the run never settles: a frame
+  // every 16 ms for the life of the tree with the surface standing still. It is
+  // the leak the tween's duration already closed, one module along.
+  const unreachable = (tau: number): Inertia => ({
+    tau,
+    min: null,
+    max: null,
+  });
+
+  it("takes the house time constant for one no clock can name", () => {
+    expect(inertia(1e300)).toEqual(inertia(350));
+    expect(project(unreachable(1e300), 0, 400)).toBeCloseTo(140, 5);
+    expect(sampleInertia(unreachable(1e300), 0, 400, 350)).toEqual(
+      sampleInertia(inertia(350), 0, 400, 350),
+    );
+  });
+
+  it("settles a coast it could not have finished on any clock", () => {
+    // The control is the same release on the house constant, which rests within
+    // the ten seconds a reader would sit through.
+    const sample = sampleInertia(inertia(1e300), 0, 400, 10_000);
+    expect(sample.settled).toBe(true);
+    expect(Math.abs(sample.velocity)).toBeLessThanOrEqual(0.001);
+    expect(sample.value).toBeCloseTo(140, 5);
+  });
+
+  it("keeps a large time constant the clock can still name", () => {
+    // `1e12` seconds is absurd for a UI coast but still a number a clock names,
+    // so the repair above is the clock's range and not a taste judgement.
+    expect(project(unreachable(1e12), 0, 100)).toBe(1e14);
+  });
+
+  it("reads the repair in the equality the retained value compares by", () => {
+    // `MotionValue.coast` treats a declaration it has already run as a no-op,
+    // so the repair has to be the value the comparison reads as well.
+    expect(sameInertia(unreachable(1e300), inertia(350))).toBe(true);
+    expect(sameInertia(unreachable(1e12), inertia(350))).toBe(false);
   });
 });
 

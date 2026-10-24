@@ -10,9 +10,11 @@
  * release frame. The boundary spring from the source is deferred.
  *
  * `Inertia` is structural, so a caller may build one without {@link inertia}:
- * the samplers repair what they are handed — a time constant that cannot run
- * takes the house 350 ms, a bound that cannot be read is dropped and an inverted
- * pair is swapped, a non-finite position or velocity reads as a standstill, and
+ * the samplers repair what they are handed — a time constant that cannot run, or
+ * one past the seconds a clock can name (`1e300` is a 1e297-second coast that
+ * never settles), takes the house 350 ms, a bound that cannot be read is dropped
+ * and an inverted pair is swapped, a non-finite position or velocity reads as a
+ * standstill, and
  * a declaration that carries **no object at all** is the house coast. Without
  * that, `tau: NaN` answered `NaN` from {@link project} and a coast never
  * settled, painting `NaN` into every frame, while an absent declaration threw
@@ -68,8 +70,10 @@ const destinationOf = (
 };
 
 /**
- * Builds inertia from a time constant (ms) and optional bounds. Non-finite or
- * non-positive `tauMs` falls back to 350 ms; inverted bounds are swapped.
+ * Builds inertia from a time constant (ms) and optional bounds. A `tauMs` that
+ * cannot run — non-finite, non-positive, or past the seconds a clock can name
+ * (`1e300` is a coast whose decay never starts) — falls back to 350 ms; inverted
+ * bounds are swapped.
  */
 export const inertia = (
   tauMs = DEFAULT_TAU_MS,

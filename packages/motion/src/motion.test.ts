@@ -162,6 +162,22 @@ describe("MotionValue", () => {
     expect(later.complete).toBe(false);
   });
 
+  it("settles a coast whose time constant no clock can reach", () => {
+    // The sampler repairs the constant (`tauOf`), but the retained value is the
+    // door a surface actually coasts through: a stored `1e300` ms was a
+    // 1e297-second run whose decay stayed `1`, so every sample was active and
+    // the hook re-armed its frame loop for the life of the tree while the
+    // surface stood still.
+    const value = new MotionValue(0);
+    value.coast(inertia(1e300), 400);
+
+    const done = value.sample(10_000);
+    expect(done.value).toBeCloseTo(140, 5);
+    expect(done.velocity).toBe(0);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
   it("keeps a coast released on a wall travelling back into its range", () => {
     // A drag released at the edge of its bounds with the velocity pointing back
     // inside: the sampler used to read "the value is at a bound" as "settled",

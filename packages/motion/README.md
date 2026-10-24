@@ -373,9 +373,13 @@ render. `MotionValue.sample` keeps its own rule: an unusable clock holds the
 last sample rather than jumping to the end.
 
 The inertia inputs are repaired the same way, because `Inertia` is structural: a
-time constant that cannot run takes the house 350 ms, a bound that cannot be read
-is dropped while the readable one beside it still clamps, an inverted pair is
-swapped, and a non-finite position or velocity reads as a standstill. A
+time constant that cannot run **or one past the seconds a clock can name** takes
+the house 350 ms — a stored `tau: 1e300` is a 1e297-second coast whose decay is
+still `1` at every clock a reader can sit through, so its rest is finite but its
+velocity never reaches the rest speed and the run never settles (the same frame
+loop the tween's duration closed) — a bound that cannot be read is dropped while
+the readable one beside it still clamps, an inverted pair is swapped, and a
+non-finite position or velocity reads as a standstill. A
 declaration that carries **no inertia object at all** — a config that did not
 decode — is the house coast too, because `useInertia` projects its resting frame
 before it samples, so reading `.tau` off nothing threw a `TypeError` out of the
