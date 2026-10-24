@@ -750,8 +750,11 @@ measured:
 | the palette switch | pressing `theme-mode-light` repaints the root's fill **and** the selected row's accent to the light palette's own roles |
 | the keyboard route | the sidebar is **one roving stop**: the row the app has open carries `tabIndex: 0` and every other row `-1`, so the palette's own walk reaches the open row and one more `Tab` leaves the list for the stage (`input-field`). An arrow steps the cursor with a clamp at both ends, opens the entry it lands on and carries the native focus with it — `down`/`up` step, `Home`/`End` jump, and a move to either end reveals the row it opened: the last row starts outside the list's box and is inside it after `End` |
 | the palette's route | a step back from the list reaches the last palette button (`high`), the walk on from there reaches `dark`, and `Enter` switches the palette — so the switch has the same keyboard route the rows do |
+| the other activating key | one more `Tab` reaches `light` and **`space`** switches the palette, so both names the runtime's controls answer activate here too. The key is spelled `space` — the runtime's `SPACE_KEY`, not the DOM's `" "`, which GPUix never sends: a rule comparing `" "` left every Space press on a row, a palette button or a `Pressable` doing nothing while `Enter` worked |
 
-**67 checks**, `--only shell-selection`, green on 0.11.0. The roving stop was
+**72 checks**, `--only shell-selection`, green on 0.11.0. The Space rule was
+measured by restoring the DOM's `" "`, `exit 1` and green again: `Space switches
+the palette it landed on` reads `expected "#F6F8FA", got "#11141A"`. The roving stop was
 measured by removing it, `exit 1` each and restored green: leaving every row at
 `tabIndex: 0` fails `one more Tab leaves the list for the stage` (the walk lands
 on the next row instead), dropping the arrow branch of the row's `onKeyDown`
@@ -768,7 +771,11 @@ entry's own view declares both `testId`s, the shell declares every address the
 probe presses and reads, the pressed palette is one the shell offers and paints
 differently from the other, the shell keeps one roving stop and drives every
 arrow the rule owns, the page states the roving rule, and the count above is the
-number of assertions in the probe's own source.
+number of assertions in the probe's own source. `ui.test.ts` (4 cases) holds the
+activation rule to the two names the runtime sends (`ENTER_KEY`/`SPACE_KEY` from
+`@gpuixui/primitives/core`), refuses the DOM's spellings, and records why the
+shell cannot call the library's `decideActivation`: Space activates a control on
+its release and this host's one key source sends a down.
 
 ## The stage scrolls a tall scenario to its bottom
 
@@ -835,7 +842,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | window size | `getWindowSize()` is the box the layout fills (not the retired 800×600 constant): `useWindowSize()` reads the same pair, and `zoomWindow()` takes a 900×520 window to 1680×923 while the flexible pane reflows and `onLayout` reports the new width (`window-resize-reflow`) |
-| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit, and the sidebar is drivable without a pointer: it is **one roving stop** (the open row), the arrows step the cursor with a clamp and open what they land on, `Home`/`End` jump and reveal the row they opened, and `Tab` leaves the list in one press — so the header, the mounted view and the selection's paint follow on either route; the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
+| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit, and the sidebar is drivable without a pointer: it is **one roving stop** (the open row), the arrows step the cursor with a clamp and open what they land on, `Home`/`End` jump and reveal the row they opened, and `Tab` leaves the list in one press — so the header, the mounted view and the selection's paint follow on either route; the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row and answers both `Enter` and `space` (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
 | content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence

@@ -403,5 +403,34 @@ export const shellSelectionScenario: ScenarioBody = {
         ),
         palettes.dark.colors.accent,
       );
+
+      // Space is the shell's other activating key, and the runtime spells it
+      // `space` — the name the library's own controls read, not the DOM's `" "`.
+      // Enter alone would leave a rule that answers only half the pair green.
+      ctx.host.focusNext();
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "the walk on from dark reaches the light palette",
+        ctx.host.focused() === paletteId(TARGET_PALETTE),
+        true,
+      );
+      ctx.host.key("space");
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "Space switches the palette it landed on",
+        yield* ctx.expectSome(
+          "the shell root paints a fill after Space",
+          fillOf(ctx, "app-shell"),
+        ),
+        palettes.light.colors.background,
+      );
+      yield* ctx.expectEqual(
+        "the selected row follows the palette after Space",
+        yield* ctx.expectSome(
+          "the selected row paints a fill after Space",
+          fillOf(ctx, navId(first.id)),
+        ),
+        palettes.light.colors.accent,
+      );
     }),
 };

@@ -10,19 +10,22 @@
  */
 import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import { ENTER_KEY, SPACE_KEY } from "@gpuixui/primitives/core";
 import { textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 
 /**
  * Whether `key` activates a `role="button"` surface here.
  *
- * Enter and Space are the pair the library's controls answer. Both act on the
- * key **down** in the playground: its only key source for these probes is the
- * renderer's synthetic key, which sends a down and no release, and selecting a
- * sidebar row a second time is the same row.
+ * The two names are the runtime's own (`ENTER_KEY`/`SPACE_KEY`), not the DOM's:
+ * GPUix reports the spacebar as `space`, so a comparison against `" "` — the
+ * browser spelling — refuses every Space press. Both act on the key **down** in
+ * the playground, unlike a library control's key-up rule for Space: the
+ * renderer's synthetic key, this shell's only key source, sends a down and no
+ * release, and selecting a sidebar row a second time is the same row.
  */
 export const isActivationKey = (key: string | undefined): boolean =>
-  key === "enter" || key === " ";
+  key === ENTER_KEY || key === SPACE_KEY;
 
 /** A `testId`-addressable string the smoke steps assert against. */
 export const Readout = ({
