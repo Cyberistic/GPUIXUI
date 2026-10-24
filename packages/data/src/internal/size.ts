@@ -18,7 +18,11 @@
  *   the **8** the same table paints with a readable height; the same held for
  *   the windowed table's body and for the windowed tree;
  * - a tree given a `NaN` height painted **640 points** inside a **200**-point
- *   pane, so it overflowed its pane instead of scrolling inside it.
+ *   pane, so it overflowed its pane instead of scrolling inside it;
+ * - a frozen pane given a negative `frozenWidth` painted **no pinned column at
+ *   all** (0 points) and handed the data pane the whole 1280-point frame, and a
+ *   negative `contentWidth` painted the data pane's column at **0 points**, so
+ *   the scrolling header and rows had no box.
  *
  * The rule is the one a cell's width already follows: a width that cannot paint
  * is **no width**, so the cell shares the leftover track and a column's header

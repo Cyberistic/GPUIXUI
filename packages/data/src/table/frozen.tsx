@@ -89,7 +89,14 @@ export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
    * a readable one, so the grid showed no row at all.
    */
   readonly height: number;
-  /** The frozen pane's width, in pixels. */
+  /**
+   * The frozen pane's width, in pixels.
+   *
+   * A width the layout cannot paint (`NaN`, an infinity, a negative) reads as
+   * **no width** ({@link paintableSize}): the pane keeps the track its own
+   * frozen cells declare instead of collapsing, and the data pane keeps the
+   * rest of the frame (`behaviour/paintable-width.test.tsx`).
+   */
   readonly frozenWidth: number;
   /**
    * The scrolling columns' total width, in pixels.
@@ -98,6 +105,10 @@ export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
    * composition puts the header and the body in one inner column of this width
    * (`data-grid-fixed-header`), so a pane narrower than the columns has
    * somewhere to scroll to.
+   *
+   * A width the layout cannot paint reads as **no width** ({@link paintableSize}),
+   * so the column takes the pane it sits in rather than painting in a box of no
+   * points (`behaviour/paintable-width.test.tsx`).
    */
   readonly contentWidth: number;
   /**
@@ -184,6 +195,13 @@ export const FrozenTable = <Row,>({
   const painted = usePaintedHeight(onLayout);
   const box = Option.orElse(bound, () => painted.measured);
   const boxHeight = Option.getOrUndefined(box);
+  // A width is computed as often as a literal — a share of the pane, the sum of
+  // a saved column set, a measurement taken before the first layout — and one
+  // the layout cannot paint reads as **no width** (`paintableSize`), the rule
+  // every other size here follows: each pane falls back to the track its own
+  // cells declare rather than the composition painting a zero-point box.
+  const frozenTrack = Option.getOrUndefined(paintableSize(frozenWidth));
+  const contentTrack = Option.getOrUndefined(paintableSize(contentWidth));
   // The caller's rows are stored data: a saved panel, or `snapshot?.rows`
   // before the snapshot arrives, is not a list and fills no pane.
   const records = listOf(rows);
@@ -236,10 +254,11 @@ export const FrozenTable = <Row,>({
     >
       <div
         style={{
-          width: frozenWidth,
           flexGrow: 0,
           flexShrink: 0,
-          flexBasis: frozenWidth,
+          ...(frozenTrack === undefined
+            ? {}
+            : { width: frozenTrack, flexBasis: frozenTrack }),
           display: "flex",
           flexDirection: "column",
           height: boxHeight,
@@ -280,10 +299,11 @@ export const FrozenTable = <Row,>({
         >
           <div
             style={{
-              width: contentWidth,
               flexGrow: 0,
               flexShrink: 0,
-              flexBasis: contentWidth,
+              ...(contentTrack === undefined
+                ? {}
+                : { width: contentTrack, flexBasis: contentTrack }),
               display: "flex",
               flexDirection: "column",
               height: boxHeight,

@@ -45,8 +45,8 @@ import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `height` | `number` | — | the grid's definite height; one the layout cannot paint reads as no height (see below) |
-| `frozenWidth` | `number` | — | the frozen pane's width |
-| `contentWidth` | `number` | — | the scrolling columns' total width |
+| `frozenWidth` | `number` | — | the frozen pane's width; one the layout cannot paint reads as no width (see below) |
+| `contentWidth` | `number` | — | the scrolling columns' total width; one the layout cannot paint reads as no width |
 | `rows` | `ReadonlyArray<Row>` | — | the records, in paint order; a value that is not a list paints the empty message (see below) |
 | `rowKey` | `(row: Row) => string` | — | the stable React key of a record |
 | `frozenHeader` | `ReactNode` | — | the frozen column's header cells |
@@ -74,6 +74,22 @@ both row scrollers at **0 points** against the **276** the same grid paints with
 a readable height, so the grid showed no row at all and neither pane could
 scroll. `src/behaviour/paintable-height.test.tsx` holds the case beside the four
 other bounded surfaces, and the rule itself lives in `internal/size.ts`.
+
+The two widths are sizes too, and a caller computes them the same way — a share
+of the pane, the sum of the columns a release ships, a saved layout read before
+the first measurement. A width the layout cannot paint (`NaN`, an infinity, a
+negative) reads as **no width**: the frozen pane takes the track its own cells
+declare, and the data pane's column takes the pane it sits in. A width that does
+paint is the caller's, exactly.
+
+Measured in the renderer on 0.11.0, in a 1280-point frame with a 120-point frozen
+cell and a readable `frozenWidth={180}`: `frozenWidth={-180}` painted **no frozen
+pane at all** (0 points) and handed the data pane the whole frame (1280), while
+`frozenWidth={NaN}` painted the pane at its own content (120) against the 180 the
+readable width gives it; `contentWidth={-420}` painted the data pane's column at
+**0 points**, so the scrolling header and rows had no box at all.
+`src/behaviour/paintable-width.test.tsx` holds the three beside two readable
+widths as its control.
 
 ## The rows a store kept
 
