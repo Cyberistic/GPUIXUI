@@ -431,7 +431,10 @@ or `count` the standalone helper cannot read is no wait as well, so a failed
 position or length never becomes a `NaN` or infinite delay. A direction the
 package does not name is the house `start`, not the centre: the distance
 arithmetic used to end in a `center` arm, so a persisted `"middle"` staggered a
-group from its middle instead of the documented default.
+group from its middle instead of the documented default. The **keys** a
+`Sequence` group is built from are read the same way: a list the caller does not
+have places no step, so a saved animation that decoded without its layers builds
+no group instead of throwing out of the render that built the sequence.
 
 An easing curve is the caller's own function, so it gets the same rule. The
 shipped curves read a progress they cannot read as the start of the run (`NaN`

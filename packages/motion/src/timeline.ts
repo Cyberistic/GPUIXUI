@@ -281,6 +281,19 @@ const clockOf = (elapsedMs: number): number =>
   Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0);
 
 /**
+ * The keys a group places: only a real list is a list.
+ *
+ * A group's keys are caller data as often as a literal — a workspace rebuilding
+ * a saved animation hands over the list it decoded, and a config that did not
+ * decode carries no list at all (JSON keeps `null` for a key it never wrote).
+ * Reading `.length`/`.forEach` off it threw `TypeError` out of the render that
+ * built the sequence; a value that is not a list places no step, the answer an
+ * empty group already gives.
+ */
+const keysOf = <K>(keys: readonly K[] | null | undefined): ReadonlyArray<K> =>
+  Array.isArray(keys) ? keys : [];
+
+/**
  * A deterministic keyed sequence of tween steps. Steps are positioned in
  * absolute elapsed time and sampled by a single `elapsedMs`; the caller owns
  * the clock, exactly like the hooks own `performance.now()`.
@@ -331,17 +344,22 @@ export class Sequence<K> {
    * collapsed the whole group to the start of the clock for an unreadable one.
    * An offset the sum cannot represent is no wait either ({@link placedAt}), so
    * a member never lands at `0` before the group it belongs to.
+   *
+   * A list the caller does not have places no step ({@link keysOf}), so a saved
+   * animation that decoded without its layers builds no group instead of
+   * throwing out of the render that built the sequence.
    */
   stagger(
-    keys: readonly K[],
+    keys: readonly K[] | null | undefined,
     startMs: number,
     stepMs: number,
     durationMs: number,
     easing: Easing = linear,
   ): this {
     const start = finiteOr(startMs, 0);
-    const count = keys.length;
-    keys.forEach((key, index) => {
+    const list = keysOf(keys);
+    const count = list.length;
+    list.forEach((key, index) => {
       this.at(
         key,
         placedAt(start, staggerDelay(stepMs, index, count, "start")),

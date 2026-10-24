@@ -252,6 +252,28 @@ describe("a timeline built by hand", () => {
     expect(sampleKeyframes([null, keyframe(1, 100)], 0)).toBe(100);
   });
 
+  it("places no step for a group of keys the caller does not have", () => {
+    // The bug this guards: a workspace rebuilds an animation's steps from the
+    // layer list it decoded, and a config that did not decode carries no list at
+    // all — JSON keeps `null` for a key it never wrote. `Sequence.stagger` read
+    // `.length`/`.forEach` off the value, so building the sequence threw
+    // `TypeError: Cannot read properties of null (reading 'length')` out of the
+    // render that built it. A group with no keys places no step, the answer an
+    // empty group already gives.
+    const missing = new Sequence<string>().stagger(null, 10, 20, 50);
+    expect(missing.sample(0)).toEqual([]);
+    expect(missing.duration()).toBe(0);
+    expect(missing.complete(0)).toBe(true);
+    expect(
+      new Sequence<string>().stagger(undefined, 0, 10, 50).sample(0),
+    ).toEqual([]);
+
+    // A readable list still places every step it names.
+    expect(
+      new Sequence<string>().stagger(["a", "b"], 0, 10, 50).sample(0),
+    ).toHaveLength(2);
+  });
+
   it("waits for nothing when the step cannot be read", () => {
     // A delay that is not a wait is no wait: `delayedTiming` already drops a
     // zero one, and `NaN`/negative steps used to reach the runtime as `NaN`.
