@@ -4360,6 +4360,21 @@ const themeFromStored = (stored: {
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
 an unknown pair keeps the light one.
 
+The **resolvers refuse** a value outside these indexes rather than answering
+around it — the sentence names the value, the values this release ships and the
+guard that prevents it:
+
+| Resolver | A value it does not ship once | Now |
+| -------- | ----------------------------- | --- |
+| `getTheme(mode)` | answered `undefined`, and the first read was a `TypeError` | names the mode; narrow with `isThemeMode` |
+| `getTheme(mode, contrast)` | painted the **default** palette, so a restored `HIGH` quietly lost its contrast | names the variant; narrow with `isThemeContrast` |
+| `platformTheme(base, platform)` | threw `Cannot read properties of undefined (reading 'contrast')` from inside `applyStyle` | names the platform; narrow with `isPlatformName` |
+| `retroTheme(base, look)` | the same `TypeError` | names the look; narrow with `isRetroName` |
+| `extendTheme` / `createTheme` (`density`) | returned a theme with **no density group**, and the first control read `Cannot read properties of undefined (reading 'controlHeight')` | names the preset; narrow with `isDensityName` (§Density) |
+
+`themeFromStored`, above, is the route that never throws: it narrows each axis
+before the resolver sees it.
+
 ## React binding
 
 ```tsx

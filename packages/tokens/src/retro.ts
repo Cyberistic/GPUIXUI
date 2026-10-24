@@ -409,6 +409,11 @@ export const retroStyles: Readonly<Record<RetroName, PlatformStyle>> = {
 /**
  * A theme wearing an authored look — `applyStyle` over {@link retroStyles}.
  *
+ * A look name is a stored preference as often as a literal, so a name this
+ * release does not ship is refused rather than looked up: `applyStyle` read the
+ * absent style's `contrast` and threw `Cannot read properties of undefined
+ * (reading 'contrast')`. Narrow a restored value with {@link isRetroName} first.
+ *
  * @example
  * ```tsx
  * import { retroTheme, themes } from "@gpuixui/tokens";
@@ -417,5 +422,10 @@ export const retroStyles: Readonly<Record<RetroName, PlatformStyle>> = {
  * ```
  */
 export function retroTheme(base: Theme, name: RetroName): Theme {
+  if (!isRetroName(name)) {
+    throw new Error(
+      `\`${name}\` is not an authored look: ${retroNames.join(", ")} are the looks this release ships. A restored or configured choice is narrowed with \`isRetroName\` before it reaches a theme.`,
+    );
+  }
   return applyStyle(base, retroStyles[name]);
 }

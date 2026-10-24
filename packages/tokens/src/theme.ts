@@ -14,6 +14,8 @@ import {
   type Elevation,
 } from "./elevation.js";
 import {
+  isPlatformName,
+  platformNames,
   platformStyles,
   type PlatformName,
   type PlatformStyle,
@@ -444,6 +446,13 @@ export const highContrastThemes: Readonly<Record<ThemeMode, Theme>> = {
  * Return a built-in theme for a mode and contrast level. The default contrast
  * keeps the existing behaviour, so `getTheme("dark")` is unchanged.
  *
+ * A mode and a contrast variant are stored preferences as often as literals, so
+ * a value this release does not ship is refused rather than resolved: the lookup
+ * answered `undefined` for a mode a release dropped, and painted the **default**
+ * palette for a contrast it did not recognise — a quiet accessibility regression
+ * for anyone restoring `HIGH`. Narrow a restored value with {@link isThemeMode}
+ * and {@link isThemeContrast} first.
+ *
  * @example
  * ```ts
  * const accessible = getTheme("dark", "high");
@@ -453,6 +462,16 @@ export function getTheme(
   mode: ThemeMode,
   contrast: ThemeContrast = "default",
 ): Theme {
+  if (!isThemeMode(mode)) {
+    throw new Error(
+      `\`${mode}\` is not a theme mode: light, dark are the modes this release ships. A restored or configured choice is narrowed with \`isThemeMode\` before it reaches a theme.`,
+    );
+  }
+  if (!isThemeContrast(contrast)) {
+    throw new Error(
+      `\`${contrast}\` is not a contrast variant: default, high are the variants this release ships. A restored or configured choice is narrowed with \`isThemeContrast\` before it reaches a theme.`,
+    );
+  }
   return contrast === "high" ? highContrastThemes[mode] : themes[mode];
 }
 
@@ -571,6 +590,12 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
  * A theme for one platform, by name — `applyStyle` over
  * {@link platformStyles}.
  *
+ * A platform name is a stored preference as often as a literal, so a name this
+ * release does not style is refused rather than looked up: `applyStyle` read the
+ * absent style's `contrast` and threw `Cannot read properties of undefined
+ * (reading 'contrast')`. Narrow a restored value with {@link isPlatformName}
+ * first.
+ *
  * @example
  * ```tsx
  * import { platformTheme, themes } from "@gpuixui/tokens";
@@ -579,5 +604,10 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
  * ```
  */
 export function platformTheme(base: Theme, platform: PlatformName): Theme {
+  if (!isPlatformName(platform)) {
+    throw new Error(
+      `\`${platform}\` is not a platform style: ${platformNames.join(", ")} are the styles this release ships. A restored or configured choice is narrowed with \`isPlatformName\` before it reaches a theme.`,
+    );
+  }
   return applyStyle(base, platformStyles[platform]);
 }

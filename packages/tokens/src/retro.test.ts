@@ -34,7 +34,13 @@ import { decorativeFailures } from "./decorative.js";
 import { elevationWithTint } from "./elevation.js";
 import { platformNames, platformStyles, systemUiFont } from "./platforms.js";
 import { resolveRetroBrand } from "./retro.example.js";
-import { isRetroName, retroNames, retroStyles, retroTheme } from "./retro.js";
+import {
+  isRetroName,
+  retroNames,
+  retroStyles,
+  retroTheme,
+  type RetroName,
+} from "./retro.js";
 import { densityPresets } from "./scale.js";
 import {
   highContrastDarkTheme,
@@ -72,6 +78,27 @@ describe("retroStyles", () => {
     // must not reach `retroStyles[name]` as `undefined`.
     ["Luna", "aero ", "", "win32", 7, null].forEach((value) =>
       expect(isRetroName(value), String(value)).toBe(false),
+    );
+  });
+
+  /**
+   * `retroStyles[name]` on a name the release dropped is `undefined`, and
+   * `applyStyle` then read the absent style's `contrast` and threw
+   * `Cannot read properties of undefined (reading 'contrast')` — a message
+   * naming neither the look nor the release it predates. A look name is a stored
+   * preference, so the resolver refuses it by name instead.
+   */
+  it("refuses a stored look its resolver cannot find", () => {
+    // The cast is the storage boundary: a settings row is unknown input.
+    const stored = JSON.parse('"aqua"') as RetroName;
+
+    expect(() => retroTheme(themes.light, stored)).toThrow(
+      /`aqua` is not an authored look/,
+    );
+    expect(() => retroTheme(themes.light, stored)).toThrow(/isRetroName/);
+    // The membership test is the guard's, so no shipped look is refused.
+    looks.forEach((name) =>
+      expect(retroTheme(themes.light, name).mode).toBe("light"),
     );
   });
 

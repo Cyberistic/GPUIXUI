@@ -22,13 +22,19 @@ import {
   highContrastThemes,
   invalidNumbers,
   lightTheme,
+  platformNames,
   platformTheme,
   seriesColors,
   switchFailures,
   syntaxColors,
+  themeContrasts,
+  themeModes,
   themes,
+  type PlatformName,
   type SwitchColors,
   type Theme,
+  type ThemeContrast,
+  type ThemeMode,
   type ThemeOverrides,
 } from "./index.js";
 
@@ -43,6 +49,51 @@ describe("built-in themes", () => {
   it("carries the matching mode", () => {
     expect(lightTheme.mode).toBe("light");
     expect(darkTheme.mode).toBe("dark");
+  });
+});
+
+/**
+ * A mode, a contrast variant and a platform name are stored preferences before
+ * they are literals, so a value this release does not ship reaches a resolver
+ * through a decoder or a cast. The lookups took them on the type's word: an
+ * unshipped mode answered `undefined`, an unrecognised contrast painted the
+ * **default** palette — a restored `HIGH` silently losing its contrast — and an
+ * unshipped platform threw `Cannot read properties of undefined (reading
+ * 'contrast')` from inside `applyStyle`.
+ */
+describe("a resolver refuses an axis value this release does not ship", () => {
+  it("names an unshipped mode instead of answering undefined", () => {
+    // The cast is the storage boundary: a settings row is unknown input.
+    const stored = JSON.parse('"solar"') as ThemeMode;
+
+    expect(() => getTheme(stored)).toThrow(/`solar` is not a theme mode/);
+    expect(() => getTheme(stored)).toThrow(/isThemeMode/);
+    // The membership test is the guard's, so no shipped mode is refused.
+    themeModes.forEach((mode) => {
+      expect(getTheme(mode).mode).toBe(mode);
+    });
+  });
+
+  it("names an unshipped contrast variant instead of painting the default", () => {
+    const stored = JSON.parse('"HIGH"') as ThemeContrast;
+
+    expect(() => getTheme("dark", stored)).toThrow(/`HIGH` is not a contrast/);
+    expect(() => getTheme("dark", stored)).toThrow(/isThemeContrast/);
+    themeContrasts.forEach((contrast) => {
+      expect(getTheme("dark", contrast).contrast).toBe(contrast);
+    });
+  });
+
+  it("names an unshipped platform instead of reading an absent style", () => {
+    const stored = JSON.parse('"beos"') as PlatformName;
+
+    expect(() => platformTheme(lightTheme, stored)).toThrow(
+      /`beos` is not a platform style/,
+    );
+    expect(() => platformTheme(lightTheme, stored)).toThrow(/isPlatformName/);
+    platformNames.forEach((platform) => {
+      expect(platformTheme(lightTheme, platform).mode).toBe("light");
+    });
   });
 });
 

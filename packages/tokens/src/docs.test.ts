@@ -878,6 +878,46 @@ describe("the density override the pages teach", () => {
 });
 
 /**
+ * The catalogue's Persisted choices section says the resolvers refuse a value
+ * outside an index, and the claim is read back from the code that decides it:
+ * the lookups answered `undefined` for a dropped mode, the **default** palette
+ * for an unrecognised contrast (a restored `HIGH` silently losing its contrast),
+ * and `Cannot read properties of undefined (reading 'contrast')` for a style the
+ * release does not ship.
+ */
+describe("the resolvers refuse an axis they do not ship", () => {
+  const themeSource = read("./theme.ts");
+  const retroSource = read("./retro.ts");
+
+  it("asks each axis's own guard before it resolves", () => {
+    expect(themeSource).toContain("if (!isThemeMode(mode)) {");
+    expect(themeSource).toContain("if (!isThemeContrast(contrast)) {");
+    expect(themeSource).toContain("if (!isPlatformName(platform)) {");
+    expect(retroSource).toContain("if (!isRetroName(name)) {");
+  });
+
+  it("prints the rule and every guard on the pages that teach the axes", () => {
+    const flat = catalogue.replace(/\s+/g, " ");
+
+    expect(flat).toContain(
+      "The **resolvers refuse** a value outside these indexes",
+    );
+    [
+      "isThemeMode",
+      "isThemeContrast",
+      "isPlatformName",
+      "isRetroName",
+      "isDensityName",
+    ].forEach((guard) => {
+      expect(flat, guard).toContain(guard);
+    });
+    expect(readme.replace(/\s+/g, " ")).toContain(
+      "The resolvers refuse a value outside an index",
+    );
+  });
+});
+
+/**
  * `bodyStrong` is `body`'s emphasis at the same size and leading, and the
  * typography merge is per role, so an example that raises the body size has to
  * raise the pair — and the gate now says so: `invalidNumbers` reports a strong

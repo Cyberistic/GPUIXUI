@@ -178,6 +178,15 @@ const mode = isThemeMode(stored.mode) ? stored.mode : "light";
 const theme = getTheme(mode);
 ```
 
+The resolvers refuse a value outside an index instead of answering around it:
+`getTheme` names an unshipped mode (the lookup answered `undefined`) or contrast
+variant (it painted the default palette, so a restored `HIGH` lost its contrast),
+`platformTheme` and `retroTheme` name an unshipped style (the lookup threw
+`Cannot read properties of undefined (reading 'contrast')`), and
+`extendTheme`/`createTheme` name an unshipped density preset. Each message names
+the value, the values this release ships and the guard — narrowing first is the
+route that never throws.
+
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1

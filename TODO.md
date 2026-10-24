@@ -1986,6 +1986,29 @@ merge list. Directions measured: with the bare lookup restored, both cases fail
 by name (`refuses a density preset…`, `says a preset name…`); restored, the two
 files are 93/93. No native scenario applies — a constructor's precondition.
 
+`[x]` Refuse the **axis value a theme resolver does not ship**, the same way —
+`getTheme(mode)` answered `undefined` for a mode a release dropped (the next
+read threw from a component), `getTheme(mode, contrast)` painted the **default**
+palette for an unrecognised contrast, so a restored `HIGH` silently lost its
+contrast — an accessibility regression rather than a crash — and
+`platformTheme`/`retroTheme` read the absent style's `contrast` and threw
+`Cannot read properties of undefined (reading 'contrast')`, naming neither the
+value nor the release it predates. All four now ask their own published guard
+(`isThemeMode`, `isThemeContrast`, `isPlatformName`, `isRetroName`) before the
+lookup and throw a sentence naming the value, the values this release ships and
+the guard that narrows a stored one; `themeFromStored`'s documented route is
+unchanged. Proof: `theme.test.ts` gains `a resolver refuses an axis value this
+release does not ship` (3 cases: an unshipped mode, contrast and platform, each
+read from a stored setting and each followed by a control that every shipped
+member still resolves) and `retro.test.ts` gains `refuses a stored look its
+resolver cannot find`; `docs.test.ts` gains `the resolvers refuse an axis they
+do not ship` (2 cases) reading the four guards in the sources and the rule on
+`docs/tokens.md` §Persisted choices and the README. Directions measured: with
+the four guards removed, five cases fail by name; restored, the three files are
+759/759 and the package 49 files / **2 966** tests with `check-types` clean. The
+docs app's four theme consumers stay green (57/57). No native scenario applies —
+resolver preconditions.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 160/160
@@ -10698,7 +10721,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
       uses) is the route. Owner: **shell** for that subpath; **docs-site** then
       adds the demo modules, their CSS and the `package-preview.ts` rows, as the
       files lane now does. No invented drawing: the strip runs the package's
-      roving and menu reducers, and only the paint is the browser's.
+      roving and menu reducers, and only the paint is the browser's. **Measured
+      2026-10-24:** the root import is one symbol — `toolbar/logic.ts` and
+      `app-menu/logic.ts` import `decideMove` from `@gpuixui/primitives`, which
+      `@gpuixui/primitives/core` also exports, while `status-bar/logic.ts`
+      imports only `effect/Option` and `@gpuixui/tokens` — so the subpath can be
+      `export * from` the three logic modules after that one import moves to
+      `./core` (no new logic, no behaviour change); the docs half is then the
+      three demo modules, their style sheet and three `package-preview.ts` rows.
 
 `[x]` Teach a reader to **read the theme editor's audit** — `/docs/themes` said
       what the controls do and nothing about the readout, so the first line an
