@@ -1299,6 +1299,34 @@ describe("the primitives docs page contract", () => {
     expect(painter).toContain("Arr.reverse(flattenParts(children))");
   });
 
+  it("lifts a box by the level it was stored with, and says so", () => {
+    // Bug guarded: the shipped painter indexed the level's class table raw, so a
+    // stored name this release renamed painted a raised panel **flat** while
+    // `elevationShadow` — the resolver's seam and the tokens package's rule —
+    // painted the default lift. The page, the README and the painter must tell
+    // one story, and the page cannot promise a lift the painter drops.
+    const page = read("box.mdx");
+    expect(page).toContain("| `elevation` |");
+    expect(page).toContain("stored level name");
+    expect(page).toContain("default lift");
+    expect(page).toContain("paints none");
+
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("../README.md", import.meta.url)),
+      "utf8",
+    );
+    expect(catalogue).toContain("`elevationLevel`");
+    expect(catalogue).toContain("`boxClass`");
+    expect(catalogue).toContain("flat");
+
+    const painter = readFileSync(
+      fileURLToPath(new URL("../src/recipe/index.ts", import.meta.url)),
+      "utf8",
+    );
+    expect(painter).toContain("elevationClass(spec.elevation)");
+    expect(painter).not.toContain("ELEVATION_SHADOW[spec.elevation]");
+  });
+
   it("keeps the window that painted the vertical slider registered and recorded", () => {
     // Bug guarded: the vertical axis is proved in a real window by
     // `slider-vertical-lifecycle`, and a plan that deleted or renamed the probe

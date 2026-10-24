@@ -112,6 +112,15 @@ and each is read through a membership test rather than indexed raw:
   Raw, a height step resolved to `h-space-undefined` (a track with no height)
   and a tone to no colour class at all — a finished task whose fill was
   transparent.
+- an **elevation level** is saved with the panel it raises (a workspace record,
+  a settings row), so `elevationLevel` (`core/theme.ts`) reads a name the scale
+  does not carry as `md`, the default lift `elevationShadow` already answers,
+  and an absent or nullish level as **no lift at all**. `boxClass` indexed its
+  class table raw, so the shipped painter dropped the shadow class and painted
+  a raised panel **flat** — indistinguishable from a card at rest — while the
+  core resolver painted the lift. `recipe.test.ts`'s equivalence case,
+  `presentational.test.tsx` and `runtime/layout.runtime.test.tsx` hold both
+  paths to the one answer, and the reserved `overlay` level still paints none.
 - a **group's `orientation`** is a saved layout choice, and it reaches the
   keyboard contract as well as the paint: `isOrientation`/`orientationOf`
   (`core/keyboard.ts`) read a name the arrow table does not carry as the group's

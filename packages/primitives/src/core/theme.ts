@@ -9,9 +9,11 @@
 
 import {
   isControlSize,
+  isElevationLevel,
   isTextRole,
   typography as libraryTypography,
   type ControlSize,
+  type ElevationLevel,
 } from "@gpuixui/tokens";
 import type {
   Radius,
@@ -20,6 +22,7 @@ import type {
   TextStyle,
   Theme,
 } from "@gpuixui/tokens";
+import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 
 export { isTextRole };
@@ -58,6 +61,25 @@ export type {
  */
 export const controlSize = (size: unknown): ControlSize =>
   isControlSize(size) ? size : "md";
+
+/**
+ * The lift a raised surface paints with: the stored level, or absence.
+ *
+ * An elevation level is a stored choice — a saved workspace records the level it
+ * raised a panel to — so a name a release renamed or dropped arrives as a string
+ * the union no longer names. `@gpuixui/tokens`' `elevationShadow` reads such a
+ * name as `md`, the default lift, and the core resolver paints through it; the
+ * recipe behind `Box` indexed its class table raw, so the same box painted
+ * **flat** from the shipped painter and raised from the resolver.
+ *
+ * Absence is its own answer: a box with no level paints no lift at all, so an
+ * absent or nullish level stays absent instead of taking the default.
+ */
+export const elevationLevel = (level: unknown): ElevationLevel | undefined =>
+  Option.match(Option.fromNullishOr(level), {
+    onNone: () => undefined,
+    onSome: (value) => (isElevationLevel(value) ? value : "md"),
+  });
 
 /**
  * A theme, or anything shaped like one, as the type scale reads it.

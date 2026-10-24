@@ -15,6 +15,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
+import { elevationShadow } from "@gpuixui/tokens";
 import { ScrollArea as ScrollAreaRoute } from "@gpuixui/primitives/scroll-area";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
@@ -29,7 +30,7 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { ScrollAxis } from "../src/core/style.js";
-import type { Density } from "../src/core/theme.js";
+import type { Density, ElevationLevel } from "../src/core/theme.js";
 import { a11yNode, a11yNodes, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
@@ -96,6 +97,50 @@ it("pads each axis by the step it was given, and paints the edge it was given", 
   );
   expect(element.style.borderStyle).toBe("dashed");
   expect(element.style.aspectRatio).toBe(2);
+});
+
+// Bug guarded: an elevation level is a stored choice (a workspace records the
+// level it raised a panel to), and the recipe indexed the level raw while the
+// core resolver read it through `elevationShadow`. A name this release does not
+// carry therefore painted a **flat** panel from the shipped painter — the one
+// box nobody can tell apart from a card at rest — and the raised one from the
+// resolver. Both read the default `md` lift now; the reserved `overlay` level
+// still paints nothing, because the theme ships it empty.
+it("lifts a box whose stored elevation this release does not carry", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="card"
+        // The cast is the storage boundary: a saved level is one string.
+        elevation={"raised" as ElevationLevel}
+        style={{ height: 20 }}
+        testId="raised"
+      />
+      <Box
+        tone="card"
+        elevation="overlay"
+        style={{ height: 20 }}
+        testId="reserved"
+      />
+    </Surface>,
+  );
+  const element = (testId: string) =>
+    Option.getOrElse(runtime.element(testId), () =>
+      expect.fail(`the runtime painted no box for ${testId}`),
+    );
+  // The exact shadow the theme designs for the default lift, not merely "some
+  // shadow": a class that resolved to the wrong level would still paint one.
+  // `toMatchObject` because the runtime adds its own `inset: false` to a painted
+  // shadow; the five fields the theme designs are what must match.
+  const lift = Option.getOrElse(
+    Option.fromNullishOr(elevationShadow(testTheme, "md")),
+    () => expect.fail("the test theme designs no md shadow"),
+  );
+  expect(element("raised").style.boxShadow).toMatchObject(lift);
+  expect(
+    Option.fromNullishOr(element("reserved").style.boxShadow),
+  ).toStrictEqual(Option.none());
 });
 
 it("separates a row Stack's children by the theme's gap", async () => {

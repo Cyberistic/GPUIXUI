@@ -26,6 +26,7 @@ import {
   contrastFloors,
   contrastRatio,
   darkTheme,
+  elevationShadow,
   lightTheme,
 } from "@gpuixui/tokens";
 import type { ControlSize } from "@gpuixui/tokens";
@@ -50,7 +51,11 @@ import {
   type GridSpec,
   type StackSpec,
 } from "../core/layout.js";
-import type { PrimitiveTheme, TextRole } from "../core/theme.js";
+import type {
+  ElevationLevel,
+  PrimitiveTheme,
+  TextRole,
+} from "../core/theme.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   BUTTON_VARIANTS,
@@ -462,12 +467,32 @@ describe("Box recipe", () => {
       { tone: "card", paddingY: "md" },
       { tone: "card", border: true, borderStyle: "dashed" },
       { tone: "card", aspectRatio: 16 / 9, fullWidth: true },
+      // An elevation level is a stored choice, and a name this release does not
+      // carry is the default lift for both paint paths.
+      { tone: "card", elevation: "raised" as ElevationLevel },
     ];
     Arr.forEach(cases, (spec) => {
       expect(recipeTw.classesToStyle(boxClass(spec), testTheme).style).toEqual(
         boxStyle(spec, testTheme),
       );
     });
+  });
+
+  it("lifts a box for a level name this release does not carry", () => {
+    // `elevationShadow` — the seam the core resolver paints through and the rule
+    // `@gpuixui/tokens` states — reads a stored name as `md`, so a panel a
+    // workspace saved at a level this release renamed stays raised. The recipe
+    // indexed the level raw, so the shipped painter dropped the class and
+    // painted **flat** while the resolver painted the lift. `overlay` is the one
+    // reserved level and still paints nothing, because the theme ships it empty.
+    const shadow = (elevation: ElevationLevel) =>
+      recipeTw.classesToStyle(boxClass({ tone: "card", elevation }), testTheme)
+        .style.boxShadow;
+    expect(shadow("raised" as ElevationLevel)).toEqual(
+      elevationShadow(testTheme, "md"),
+    );
+    expect(shadow("overlay")).toBeUndefined();
+    expect(shadow("md")).toEqual(elevationShadow(testTheme, "md"));
   });
 
   it("reads the surface role from the theme, not a fixed value", () => {

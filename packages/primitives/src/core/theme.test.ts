@@ -24,6 +24,7 @@ import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import {
   controlSize,
+  elevationLevel,
   familyOf,
   isTextRole,
   typeOf,
@@ -262,6 +263,27 @@ describe("a control size is a stored choice", () => {
     it(`reads the size through controlSize in ${name}`, () => {
       expect(withStored()).toStrictEqual(withDefault());
     });
+  });
+});
+
+describe("an elevation level is a stored choice", () => {
+  it("reads a name the scale does not carry as the default lift, and absence as none", () => {
+    // A level a saved workspace recorded is the level it gets...
+    expect(elevationLevel("sm")).toBe("sm");
+    expect(elevationLevel("md")).toBe("md");
+    expect(elevationLevel("lg")).toBe("lg");
+    // ...a name this release renamed is the default lift `elevationShadow`
+    // already answers, and a level that is not a name at all answers the same.
+    expect(elevationLevel("raised")).toBe("md");
+    expect(elevationLevel("")).toBe("md");
+    expect(elevationLevel(2)).toBe("md");
+    // A box with no level paints no lift, and JSON writes `null` where a record
+    // carried none, so both are absence rather than the default.
+    expect(elevationLevel(undefined)).toBeUndefined();
+    expect(elevationLevel(null)).toBeUndefined();
+    // The one reserved level stays itself: the theme ships it empty, and it is
+    // not a name that went missing.
+    expect(elevationLevel("overlay")).toBe("overlay");
   });
 });
 

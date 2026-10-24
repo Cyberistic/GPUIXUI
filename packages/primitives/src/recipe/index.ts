@@ -10,7 +10,7 @@
 
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
-import { isTextRole } from "../core/theme.js";
+import { elevationLevel, isTextRole } from "../core/theme.js";
 import { spinnerAccentOf } from "../core/loading.js";
 import type { SpinnerAccent } from "../core/loading.js";
 import { trackCount } from "../core/layout.js";
@@ -297,6 +297,15 @@ const ELEVATION_SHADOW: Readonly<Record<ElevationLevel, string | undefined>> = {
   overlay: undefined,
 };
 
+/**
+ * The shadow class a box paints: a stored level reads as the default lift, and
+ * an absent one as no lift — the rule {@link elevationLevel} states.
+ */
+const elevationClass = (level: unknown): string | undefined => {
+  const resolved = elevationLevel(level);
+  return resolved === undefined ? undefined : ELEVATION_SHADOW[resolved];
+};
+
 /** The padding classes a `Box` resolves: one shorthand or four sides. */
 const boxPaddingClass = (spec: BoxSpec): string | undefined => {
   const sides = paddingSides(spec);
@@ -323,7 +332,7 @@ export const boxClass = (spec: BoxSpec): string =>
     paintableAspectRatio(spec.aspectRatio) === undefined
       ? undefined
       : `aspect-ratio-${spec.aspectRatio}`,
-    spec.elevation === undefined ? undefined : ELEVATION_SHADOW[spec.elevation],
+    elevationClass(spec.elevation),
     spec.shrink === true ? "shrink-1" : "shrink-0",
     spec.grow === true && "flex-grow",
     spec.fullWidth === true && "w-full",

@@ -270,7 +270,13 @@ export {
 } from "./variants.js";
 export type { ButtonVariant, ToggleVariant } from "./variants.js";
 
-export { controlSize, familyOf, isTextRole, typeOf } from "./theme.js";
+export {
+  controlSize,
+  elevationLevel,
+  familyOf,
+  isTextRole,
+  typeOf,
+} from "./theme.js";
 
 export type {
   BorderWidth,

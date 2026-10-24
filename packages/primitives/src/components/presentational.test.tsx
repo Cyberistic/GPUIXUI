@@ -18,12 +18,13 @@ import {
   contrastFloorsFor,
   contrastRatio,
   darkTheme,
+  elevationShadow,
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import type { SpinnerAccent } from "../core/loading.js";
 import type { TextTone } from "../core/style.js";
-import type { TextRole } from "../core/theme.js";
+import type { ElevationLevel, TextRole } from "../core/theme.js";
 import * as primitives from "../index.js";
 import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
@@ -113,6 +114,22 @@ describe("layout containers", () => {
       Option.some("dashed"),
     );
     expect(numberIn(element, "aspectRatio")).toStrictEqual(Option.some(2));
+  });
+
+  it("lifts a box for a stored level name this release does not carry", () => {
+    // `elevationShadow` reads a name the scale does not carry as `md`, so the
+    // shipped painter must paint that lift rather than a flat box: the recipe
+    // indexed the level raw and dropped the class. `overlay` is reserved and
+    // empty, and an absent level paints no lift at all.
+    const shadow = (elevation: ElevationLevel): Option.Option<unknown> =>
+      styleProp(renderBox({ tone: "card", elevation }, testTheme), "boxShadow");
+    expect(shadow("raised" as ElevationLevel)).toStrictEqual(
+      Option.some(elevationShadow(testTheme, "md")),
+    );
+    expect(shadow("overlay")).toStrictEqual(Option.none());
+    expect(
+      styleProp(renderBox({ tone: "card" }, testTheme), "boxShadow"),
+    ).toStrictEqual(Option.none());
   });
 
   it("lay their children out in one direction, on the theme's spacing", () => {
