@@ -51,10 +51,22 @@ describe("the Statistic card preview", () => {
   it("paints each trend in the role the shipped trendTone reads", () => {
     // The premise is the package's own derivation: the docs table must name the
     // same three roles, or the drawing teaches a colour the card never paints.
+    // The flat arm is held to the role rather than to the expression that reads
+    // it: the package reads a stored theme's roles through `themeColors(theme)`,
+    // and naming `theme.colors.mutedForeground` here would fail a card that is
+    // more careful than the one this pass measured.
     const card = read("packages/data/src/surfaces/stat-card.tsx");
     expect(card).toContain('statusTone(theme, "success").foreground');
     expect(card).toContain('statusTone(theme, "destructive").foreground');
-    expect(card).toContain("theme.colors.mutedForeground");
+    const trendTone = card.slice(
+      card.indexOf("export const trendTone"),
+      card.indexOf("export const StatCard"),
+    );
+    // The flat arm is the muted role, and no solid fill reaches a trend's words.
+    expect(trendTone).toMatch(
+      /(?:theme\.colors|themeColors\(theme\))\.mutedForeground/,
+    );
+    expect(trendTone).not.toMatch(/colors\.(?:success|destructive)(?![A-Za-z])/);
 
     expect(trendRole("up")).toBe("successSoftForeground");
     expect(trendRole("down")).toBe("destructiveSoftForeground");
