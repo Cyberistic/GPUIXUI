@@ -15,6 +15,7 @@
 
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
+import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { MotionProvider } from "@gpuixui/motion/react";
 import { Switch } from "../src/components/Switch.js";
 import { Stack } from "../src/components/Stack.js";
@@ -167,6 +168,38 @@ it("lands the thumb at once under the provider's reduced preference", async () =
   runtime.flush();
 
   expect(thumbOf(runtime).x).toBe(rest.x + travel);
+});
+
+it("paints the edge a platform switch declares", async () => {
+  // The bug guarded: the seam decoded a declared switch table and rebuilt it
+  // from the three fills, dropping `edge`. Windows' off track is `transparent`
+  // with a 1px rim, so the window painted a white knob on nothing — the whole
+  // control vanished — and macOS's rim shadow went with it. `core/selection`
+  // pins both styles; this reads the style the window actually applied.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface theme={platformTheme(lightTheme, "win32")}>
+      <Switch testId="s" label="Airplane mode" />
+    </Surface>,
+  );
+  const track = trackElement(runtime).style;
+  expect(track["backgroundColor"]).toBe("transparent");
+  expect(track["borderColor"]).toBe("#8A8A8A");
+
+  runtime.render(
+    <Surface theme={platformTheme(lightTheme, "darwin")}>
+      <Switch testId="s" label="Airplane mode" />
+    </Surface>,
+  );
+  // The runtime states every shadow field, so the expectation names the ones
+  // the edge paints and lets the renderer fill the rest (`inset: false`).
+  expect(trackElement(runtime).style["boxShadow"]).toMatchObject({
+    offsetX: 0,
+    offsetY: 0,
+    blurRadius: 0,
+    spreadRadius: 1,
+    color: "#C7C7CC",
+  });
 });
 
 it("paints the track's checked fill and leaves it at rest when disabled", async () => {

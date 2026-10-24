@@ -37,7 +37,7 @@ import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
 /** One slot of the paint a platform's own switch declares. */
-type SwitchSlot = "on" | "off" | "knob";
+type SwitchSlot = "on" | "off" | "knob" | "edge";
 
 /** A declared switch paint, as a store wrote it: an open record. */
 const DeclaredSwitch = Schema.Record(Schema.String, Schema.Unknown);
@@ -61,21 +61,33 @@ export type SwitchPaintTheme = Omit<PrimitiveTheme, "switch"> & {
 };
 
 /**
- * The three colours a stored table carries, or `None` when it is no paint.
+ * The colours a stored table carries, or `None` when it is no paint.
  *
- * A declaration is **whole** or it is nothing: the slots are one control's
- * paint, and a table that lost one cannot draw a coherent switch — the tokens'
- * report names the lost slot, and until it is repaired the control keeps the
- * accent toggle every base theme paints.
+ * A declaration is **whole** or it is nothing: the three fills are one
+ * control's paint, and a table that lost one cannot draw a coherent switch —
+ * the tokens' report names the lost slot, and until it is repaired the control
+ * keeps the accent toggle every base theme paints.
+ *
+ * `edge` is optional and travels with the table when it is declared. It is the
+ * boundary of a style whose fill is not the silhouette — Windows' off track is
+ * `transparent`, so its 1px edge **is** the control, and Apple's track draws its
+ * edge as a rim shadow — so rebuilding the table without it dropped the one
+ * mark that makes an off switch visible.
  */
 const declaredPaint = (source: SwitchPaintTheme): Option.Option<SwitchColors> =>
   Option.flatMap(Option.fromNullishOr(source.switch), (table) =>
     Option.flatMap(decodeDeclaredSwitch(table), (paint) =>
-      Option.all({
-        on: declaredColour(paint, "on"),
-        off: declaredColour(paint, "off"),
-        knob: declaredColour(paint, "knob"),
-      }),
+      Option.map(
+        Option.all({
+          on: declaredColour(paint, "on"),
+          off: declaredColour(paint, "off"),
+          knob: declaredColour(paint, "knob"),
+        }),
+        (slots) => {
+          const edge = Option.getOrUndefined(declaredColour(paint, "edge"));
+          return edge === undefined ? slots : { ...slots, edge };
+        },
+      ),
     ),
   );
 

@@ -404,6 +404,53 @@ describe("a stored switch paint", () => {
     );
   });
 
+  it("keeps the edge a declared switch table carries", () => {
+    // The bug guarded: the seam rebuilt a declared table from `on`/`off`/`knob`
+    // and dropped `edge`, so a style whose boundary *is* the edge lost it —
+    // Windows' off track is `transparent` and its 1px edge is the whole
+    // control, so the switch painted a knob with no track, and macOS's 1px rim
+    // shadow vanished. The round-trip case below could not see it, because both
+    // sides of its comparison were decoded the same way.
+    const windows = platformTheme(lightTheme, "win32");
+    const off = switchTrackStyle(spec(), windows);
+    expect(off.backgroundColor).toBe("transparent");
+    expect(off.borderColor).toBe("#8A8A8A");
+    expect(off.hover).toStrictEqual({
+      backgroundColor: "transparent",
+      borderColor: "#8A8A8A",
+    });
+    // A rim rather than a border: this style's box has no border width, so the
+    // edge is the shadow the track paints around itself.
+    const apple = switchTrackStyle(spec(), platformTheme(lightTheme, "darwin"));
+    expect(apple.borderColor).toBe("#C7C7CC");
+    expect(apple.boxShadow).toStrictEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: 1,
+      color: "#C7C7CC",
+    });
+    // A table a store hands back keeps the slot, and one that declares no edge
+    // keeps the fill as its edge, the rule the derived switch paints.
+    expect(
+      switchTrackStyle(
+        spec(),
+        stored(windows, {
+          on: "#0078D4",
+          off: "transparent",
+          knob: "#FFFFFF",
+          edge: "#8A8A8A",
+        }),
+      ),
+    ).toStrictEqual(off);
+    expect(
+      switchTrackStyle(
+        spec(),
+        stored(windows, { on: "#0078D4", off: "transparent", knob: "#FFFFFF" }),
+      ).borderColor,
+    ).toBe("transparent");
+  });
+
   it("paints the accent toggle for a table that lost a slot", () => {
     // A declaration is whole or it is nothing: the slots are one control's
     // paint, so a stored table missing one keeps the accent toggle and the
