@@ -14,6 +14,10 @@
       "types": "./src/react.ts",
       "default": "./src/react.ts"
     },
+    "./react/presence": {
+      "types": "./src/react/presence.ts",
+      "default": "./src/react/presence.ts"
+    },
     "./timing": {
       "types": "./src/timing.ts",
       "default": "./src/timing.ts"

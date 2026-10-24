@@ -446,7 +446,7 @@ component re-implements a part of it.
 | `@gpuixui/tw` | the resting recipe, including shadcn's motion classes as provenance |
 | `@gpuixui/motion/timing` | the levels (120 / 160 / 200 / 320 / 500 ms), the per-phase easing and the reduced-motion policy |
 | `@gpuixui/motion/presence` | the frames (fade + offset), the pointer rule, the window conversions and `presenceTimingOf`, the reader that turns a stored timing back into the table |
-| `@gpuixui/motion/react` | the preference provider and the mounted window (`useSurfacePresence`) |
+| `@gpuixui/motion/react/presence` | the preference provider, the surface timing (`useSurfaceTiming`) and the mounted window (`useSurfacePresence`), published without the physics hooks a fade never samples; `@gpuixui/motion/react` re-exports it |
 | `packages/components/src/internal/presence.tsx` | the re-publication of those entries under one import, and `PresenceShield` — the one piece a host element paints |
 
 **The components seam re-publishes, it does not own.** The frames, the phases,

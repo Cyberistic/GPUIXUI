@@ -149,9 +149,14 @@ describe("the motion page", () => {
     // Bug guarded: the page said the presence entry owns the mount window,
     // while the timer lives in the React entry (`useSurfacePresence`) and the
     // presence entry publishes only its conversion (`exitWindowMs`). A reader
-    // was pointed at a module that cannot keep a leaving box mounted.
-    expect(read("packages/motion/src/react.ts")).toContain(
+    // was pointed at a module that cannot keep a leaving box mounted. The
+    // React half is its own light entry now, so the timer is declared there and
+    // the full entry re-exports it rather than owning a second binding.
+    expect(read("packages/motion/src/react/presence.ts")).toContain(
       "export const useSurfacePresence = (",
+    );
+    expect(read("packages/motion/src/react.ts")).toContain(
+      'from "./react/presence.js"',
     );
     expect(read("packages/motion/src/presence.ts")).toContain(
       "export const exitWindowMs = (",

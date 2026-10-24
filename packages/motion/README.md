@@ -21,7 +21,8 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
 | `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — and `preferenceOf`, the reader that decodes a stored motion preference |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
-| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers, `useMotionPreference`, and the presence hooks `useSurfaceTiming` / `useSurfacePresence` |
+| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers — the physics hooks; it re-exports `useMotionPreference`, `useSurfaceTiming` / `useSurfacePresence` and the provider from the presence half below |
+| `react/presence.ts` | The presence half of the React entry (entry `@gpuixui/motion/react/presence`): `useSurfaceTiming` / `useSurfacePresence` and `MotionProvider`, published without the physics a fade never samples |
 | `provider.ts` | `MotionProvider` — the one reduced-motion preference every package reads |
 
 ## Spring
@@ -176,13 +177,18 @@ A surface that enters and leaves reads one table, exported from
 The table is renderer-neutral and has no React or GPUix import, so a component
 package and a primitive package compose the same one rather than agreeing by
 hand. Its **React half** is published here as well, on
-`@gpuixui/motion/react`: the surface timing (`useSurfaceTiming`), the mounted
-window (`useSurfacePresence`) and the preference provider (`MotionProvider`). A
-timer and a React tree need a package that owns a tree, and this one already
-does — so a consumer painting its own surface finds the whole table in one
-package. The one half that stays with the component package is the **leaving
-shield**: it is a GPUix host element the runtime paints, so it belongs to the
-package that renders one.
+`@gpuixui/motion/react/presence`: the surface timing (`useSurfaceTiming`), the
+mounted window (`useSurfacePresence`) and the preference provider
+(`MotionProvider`). It is its own entry because the physics hooks on
+`@gpuixui/motion/react` drive a retained `MotionValue` and reach the spring,
+inertia and timeline samplers — and a surface that only enters and leaves never
+samples one, so the half a fade needs is published without them. The full React
+entry re-exports this half, so a consumer that needs both imports it once and the
+two cannot drift. A timer and a React tree need a package that owns a tree, and
+this one already does — so a consumer painting its own surface finds the whole
+table in one package. The one half that stays with the component package is the
+**leaving shield**: it is a GPUix host element the runtime paints, so it belongs
+to the package that renders one.
 
 A surface composes the table in three steps — the timing, the frames and the
 mounted window:
@@ -194,7 +200,10 @@ import {
   presenceMotion,
   presenceStyle,
 } from "@gpuixui/motion/presence";
-import { useSurfacePresence, useSurfaceTiming } from "@gpuixui/motion/react";
+import {
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "@gpuixui/motion/react/presence";
 
 function Panel({ open }: { open: boolean }) {
   const timing = useSurfaceTiming("normal");

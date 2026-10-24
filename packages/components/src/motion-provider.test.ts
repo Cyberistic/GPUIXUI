@@ -18,9 +18,13 @@
 
 import { readFileSync } from "node:fs";
 import {
-  MotionProvider as PackageProvider,
-  useMotionPreference as packageHook,
+  MotionProvider as FullEntryProvider,
+  useMotionPreference as fullEntryHook,
 } from "@gpuixui/motion/react";
+import {
+  MotionProvider as PresenceEntryProvider,
+  useMotionPreference as presenceEntryHook,
+} from "@gpuixui/motion/react/presence";
 import { describe, expect, it } from "vitest";
 import { MotionProvider, useMotionPreference } from "./motion.js";
 
@@ -35,26 +39,32 @@ const entry = readFileSync(new URL("./motion.tsx", import.meta.url), "utf8");
 
 describe("the motion preference", () => {
   it("is the motion package's provider and hook, not a copy", () => {
-    expect(MotionProvider).toBe(PackageProvider);
-    expect(useMotionPreference).toBe(packageHook);
+    expect(MotionProvider).toBe(PresenceEntryProvider);
+    expect(useMotionPreference).toBe(presenceEntryHook);
+    // The light entry is the full one's presence half, not a second binding:
+    // the two entries publish the same provider and hook.
+    expect(FullEntryProvider).toBe(PresenceEntryProvider);
+    expect(fullEntryHook).toBe(presenceEntryHook);
   });
 
   it("declares no context of its own", () => {
     // A local `createContext` is the failure: it type-checks, it provides a
     // preference, and every surface below one provider silently animates.
     expect(seam).not.toContain("createContext(");
-    expect(seam).toContain('from "@gpuixui/motion/react"');
+    // The light entry, so a surface that only enters and leaves does not load
+    // the physics hooks — the reason the presence half has its own subpath.
+    expect(seam).toContain('from "@gpuixui/motion/react/presence"');
   });
 
   it("names the subpaths the frames and the mounted window live on", () => {
     // The bug this guards: the entry said the frames and the mount window live
     // in `internal/presence.tsx`, but both moved to the motion package when the
     // presence table was shared — the frames to `@gpuixui/motion/presence`, the
-    // mounted window to `@gpuixui/motion/react` — and this package's seam only
-    // re-publishes them. A reader told the seam owns the rule would look for
-    // it here and find a re-export.
+    // mounted window to `@gpuixui/motion/react/presence` — and this package's
+    // seam only re-publishes them. A reader told the seam owns the rule would
+    // look for it here and find a re-export.
     expect(entry).toContain("@gpuixui/motion/presence");
-    expect(entry).toContain("@gpuixui/motion/react");
+    expect(entry).toContain("@gpuixui/motion/react/presence");
     expect(entry).not.toContain("the frames and the mount window live in");
     // The seam really does re-publish both halves, so the entry's claim and the
     // code agree.

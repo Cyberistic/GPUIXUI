@@ -155,6 +155,7 @@ const io: SurfaceIO = {
   },
 };
 
-/** Walk this package's entry and everything it reaches. */
-export const measurePackageSurface = (): Surface =>
-  measureSurface(join(packageRoot, "src/index.ts"), io);
+/** Walk this package's entry — or one family's subpath — and everything it reaches. */
+export const measurePackageSurface = (
+  entry: string = join(packageRoot, "src/index.ts"),
+): Surface => measureSurface(entry, io);

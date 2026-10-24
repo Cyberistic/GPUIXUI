@@ -15,6 +15,7 @@
  * an exported string is not a specifier — are invisible in the totals.
  */
 
+import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -179,6 +180,32 @@ describe("the recorded budget", () => {
     () => ({ name: "@gpuixui/components", modules: 0, bytes: 0 }),
   );
 
+  /**
+   * One family's graph: what a consumer of `@gpuixui/components/<family>` pays.
+   *
+   * The barrel re-exports every family, so the entry's graph answers a different
+   * question from a consumer's. `motion-grid` is the animated family that draws
+   * the entrance seam and nothing else, so its motion share is the seam's cost
+   * rather than a physics hook's.
+   */
+  const family = measurePackageSurface(
+    fileURLToPath(new URL("./motion-grid.tsx", import.meta.url)),
+  );
+  const familyMotion = Option.getOrElse(
+    Arr.findFirst(family.groups, (group) => group.name === "@gpuixui/motion"),
+    () => ({ name: "@gpuixui/motion", modules: 0, bytes: 0 }),
+  );
+
+  /** The modules of a package in one graph, by file name. */
+  const moduleNames = (
+    graph: ReadonlyArray<{ readonly path: string; readonly group: string }>,
+    group: string,
+  ): ReadonlyArray<string> =>
+    Arr.map(
+      Arr.filter(graph, (module) => module.group === group),
+      (module) => module.path.slice(module.path.lastIndexOf("/") + 1),
+    );
+
   it("measures a real graph, so the budget cannot pass on an empty walk", () => {
     expect(own.modules).toBeGreaterThan(50);
     expect(own.bytes).toBeGreaterThan(100 * 1024);
@@ -212,5 +239,43 @@ describe("the recorded budget", () => {
   it("reaches every module it imports", () => {
     expect(surface.unresolved).toEqual([]);
     expect(surface.unreadable).toEqual([]);
+  });
+
+  it("gives a family the presence half of motion, not its physics", () => {
+    // The bug this guards: the seam imported `@gpuixui/motion/react` for the
+    // provider and the two presence hooks, and that entry drives a retained
+    // `MotionValue` — so every family that enters and leaves loaded the spring,
+    // inertia, timeline and hook bookkeeping the fade never samples. The React
+    // presence half is its own entry now, and a family that imports only the
+    // seam pays for it alone.
+    expect(family.unresolved).toEqual([]);
+    expect(familyMotion.modules).toBe(surfaceBudget.familyMotion.modules);
+    expect(familyMotion.bytes).toBeLessThanOrEqual(
+      surfaceBudget.familyMotion.bytes,
+    );
+    // The names, so a sampler rejoining the route fails by name rather than by
+    // a count a reader has to decode.
+    const physics = [
+      "easing.ts",
+      "hook-read.ts",
+      "inertia-read.ts",
+      "inertia.ts",
+      "motion.ts",
+      "progress.ts",
+      "react.ts",
+      "spring.ts",
+      "timeline.ts",
+    ] as const;
+    const present = moduleNames(family.modules, "@gpuixui/motion");
+    expect(Arr.filter(present, (name) => Arr.contains(physics, name))).toEqual(
+      [],
+    );
+    // The half it does pay is really there: a graph that reached no motion
+    // module cannot satisfy the rule above by reading nothing.
+    expect(present).toEqual(
+      expect.arrayContaining(["presence.ts", "provider.ts", "timing.ts"]),
+    );
+    expect(present).toContain("presence.ts");
+    expect(Arr.length(present)).toBeGreaterThanOrEqual(4);
   });
 });

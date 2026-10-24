@@ -420,7 +420,9 @@ describe("the motion claim", () => {
     // instead of leaving a page that describes a seam nobody can find.
     expect(seam).toContain('from "@gpuixui/motion/presence"');
     expect(seam).toContain("transitionWindowMs");
-    expect(seam).toContain('from "@gpuixui/motion/react"');
+    // The preference and the mounted window are the React entry's presence
+    // half: published without the physics hooks, which a fade never samples.
+    expect(seam).toContain('from "@gpuixui/motion/react/presence"');
     expect(seam).toContain("useSurfaceTiming");
     expect(seam).toContain("useMotionPreference");
 

@@ -323,6 +323,10 @@ describe("the shared presence table", () => {
     // reach the one table rather than copy it, so a fix lands for both.
     const seam = seamBody();
     expect(seam).toContain('from "@gpuixui/motion/presence"');
+    // The React half is the physics-free entry: the seam needs the provider and
+    // the mount window, not the spring sampler beside them.
+    expect(seam).toContain('from "@gpuixui/motion/react/presence"');
+    expect(seam).not.toMatch(/from "@gpuixui\/motion\/react";/);
     expect(seam).not.toContain("export const fadeFrom");
     expect(seam).not.toContain("export const presenceStyle");
     expect(seam).not.toContain("const milliseconds");
@@ -958,7 +962,11 @@ describe("the ownership the motion pages teach", () => {
     // two packages could then disagree about one contract by editing one copy.
     const wrong = Arr.flatMap(motionDocs, (doc) => {
       const missing = Arr.filterMap(
-        ["@gpuixui/motion/presence", "@gpuixui/motion/react", "PresenceShield"],
+        [
+          "@gpuixui/motion/presence",
+          "@gpuixui/motion/react/presence",
+          "PresenceShield",
+        ],
         (claim) =>
           Str.includes(claim)(doc.body)
             ? Result.failVoid

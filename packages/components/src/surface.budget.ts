@@ -15,9 +15,18 @@
  * `--import` for the cold load, recorded in the package README). Regenerate with
  * the same command and state what moved in the commit.
  *
- * `@gpuixui/motion` is reached through its `./timing` subpath, not its barrel:
- * the surfaces need the level table and the reduced-motion policy, and the
- * physics modules (spring, timeline, inertia) are not part of an overlay's cost.
+ * `@gpuixui/motion` joins the graph through its own entries, and which one a
+ * module takes is a cost decision. `./timing` is the level table and the
+ * reduced-motion policy, `./presence` the frames and the window conversion, and
+ * `./react/presence` the preference provider and the two presence hooks. The
+ * components seam composes the last one rather than `./react`, whose physics
+ * hooks reach the spring, inertia and timeline samplers a fade never samples: a
+ * family that imports only the seam measured **13 modules / 101 KiB** through
+ * `./react` and **4 modules / 29 KiB** through `./react/presence`. The entry's
+ * own graph still carries the physics — `CountingNumber` counts with
+ * `./react`'s `useTransition`, and (until the primitives take the light entry,
+ * `TODO.md` → Interlocks) their `Spinner` reads the preference from it — so
+ * `familyMotion` below is the budget that holds the seam's route.
  */
 export const surfaceBudget = {
   /** Modules in the entry's own package — `src/index.ts` and everything it reaches. */
@@ -130,6 +139,16 @@ export const surfaceBudget = {
   // `Schema.is` guards, the seam `internal/button.tsx`'s `lookOf` already takes),
   // which is the family the 1140 ceiling no longer held: 1140 → 1160 KiB.
   bytes: 1160 * 1024,
+  /**
+   * The motion share of a **family** consumer's graph, in modules and bytes.
+   *
+   * A consumer imports `@gpuixui/components/<family>`, not the barrel, so a
+   * family is where a shared seam's cost is paid. `src/motion-grid.tsx` walks
+   * the entrance half with the physics-free entry: the presence frames, the
+   * per-phase timing, the mount window and the provider, and nothing else. The
+   * `./react` route measured 13 modules / 101 KiB before the split.
+   */
+  familyMotion: { modules: 4, bytes: 32 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

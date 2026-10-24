@@ -229,7 +229,9 @@ between measured trigger boxes. The split is deliberate — the recipe owns the
 resting appearance, and `@gpuixui/motion` owns everything that makes a surface
 move: `@gpuixui/motion/timing` the five levels and the per-phase easing,
 `@gpuixui/motion/presence` the frames and the pointer rule, and
-`@gpuixui/motion/react` the mounted window and the preference provider.
+`@gpuixui/motion/react/presence` the mounted window and the preference provider
+— the physics-free half of the React entry, which `@gpuixui/motion/react`
+re-exports for a consumer that also drives a spring.
 `src/internal/presence.tsx` re-publishes those entries under one import and adds
 the one piece that is a host element rather than a number — `PresenceShield`,
 which covers a leaving surface's content so a ghost control cannot run the press
@@ -243,8 +245,9 @@ fades out. The toast is the one surface with its own timing rather than a shared
 level, because a notice may be read while it leaves.
 
 The preference is the application's, because the runtime exposes none. The
-provider is `@gpuixui/motion/react`'s and this package re-publishes it, so a
-primitive below the same provider reads the one flag instead of taking its own:
+provider is `@gpuixui/motion/react/presence`'s and this package re-publishes it,
+so a primitive below the same provider reads the one flag instead of taking its
+own:
 
 ```tsx
 <MotionProvider preference={reduceMotion ? "reduced" : "animated"}>

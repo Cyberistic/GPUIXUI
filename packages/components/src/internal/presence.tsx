@@ -27,10 +27,13 @@
  * so they live in the motion package (`@gpuixui/motion/presence`) where a
  * primitive package can compose the same ones without depending on this one.
  * The **React half** lives there too — the preference provider, the surface
- * timing it reads and the mounted window (`@gpuixui/motion/react`) — because a
- * timer and a React tree are not this package's to give away, and a second copy
- * of the window could only agree with this one by hand. What stays here is the
- * GPUix half: the shield, which is a host element the runtime paints.
+ * timing it reads and the mounted window (`@gpuixui/motion/react/presence`)
+ * — because a timer and a React tree are not this package's to give away, and a
+ * second copy of the window could only agree with this one by hand. It is the
+ * physics-free half of the motion package's React entry: a surface that only
+ * enters and leaves composes it without loading the spring, inertia and timeline
+ * samplers, which no fade samples. What stays here is the GPUix half: the
+ * shield, which is a host element the runtime paints.
  *
  * The runtime is given geometry as a *between* value (the offset), so a headless
  * suite can read the movement in element bounds; the fade itself is a paint value
@@ -60,7 +63,7 @@ import {
   useSurfaceTiming,
   type MotionProviderProps,
   type SurfacePresence,
-} from "@gpuixui/motion/react";
+} from "@gpuixui/motion/react/presence";
 
 /**
  * The preference provider is the motion package's, re-published here because

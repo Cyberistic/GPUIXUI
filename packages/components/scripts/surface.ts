@@ -116,7 +116,25 @@ const measureImport = (): boolean => {
   return true;
 };
 
-const surface = measurePackageSurface();
+/**
+ * The file a `--entry <path>` argument names, resolved against the package root.
+ *
+ * A consumer of this package imports a family subpath (`./src/dialog.tsx`)
+ * rather than the barrel, so measuring one is how a change to a shared seam's
+ * cost is read where that consumer pays it.
+ */
+const entryArg = (): Option.Option<string> => {
+  const index = process.argv.indexOf("--entry");
+  return Option.map(
+    Option.fromNullishOr(index === -1 ? undefined : process.argv[index + 1]),
+    (value) => fileURLToPath(new URL(`../${value}`, import.meta.url)),
+  );
+};
+
+const entry = Option.getOrElse(entryArg(), () =>
+  fileURLToPath(new URL("../src/index.ts", import.meta.url)),
+);
+const surface = measurePackageSurface(entry);
 if (process.argv.includes("--json")) {
   console.log(JSON.stringify(surface, null, 2));
 } else {
