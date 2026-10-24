@@ -1204,13 +1204,17 @@ describe("a theme that lost a whole numeric group", () => {
   });
 
   it("is what the catalogue promises the reports do", () => {
-    const page = readFileSync(
-      new URL("../../../docs/tokens.md", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
+    const page = (path: string): string =>
+      readFileSync(
+        new URL(`../../../${path}`, import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " ");
 
-    expect(page).toContain(
+    expect(page("docs/tokens.md")).toContain(
       "a report that cannot open a group makes the same refusal",
+    );
+    expect(page("docs/design-system.md")).toContain(
+      "The two numeric reports make that refusal themselves",
     );
   });
 });

@@ -381,10 +381,10 @@ or null to object'`, the `null` case with `Cannot read properties of null`, `sca
 `packages/editor/src/diff/diff-viewer.tsx`, which the editor workstream had just renamed to
 `view` (through `modeOf(mode)`, `7622a98c`), so master's tokens suite was red; the case now
 requires the `const view = modeOf(mode);` seam and fails if the slice marker is absent
-instead of slicing from `-1`. Docs: `docs/tokens.md` §Every refusals paragraph gains the
-group rule, the package README's incomplete-theme paragraph names both reports, and the
-`Token numbers` / `Scale order` rows record the refusal (`scales.test.ts` 27 → **29
-cases**). No native scenario applies — a pure precondition on two data reports.
+instead of slicing from `-1`. Docs: `docs/tokens.md`'s refusals paragraph and
+`docs/design-system.md` §11 gain the group rule (both read back by the new case), the
+package README's incomplete-theme paragraph names both reports, and the `Token numbers` /
+`Scale order` rows record the refusal (`scales.test.ts` 27 → **29 cases**). No native scenario applies — a pure precondition on two data reports.
 
 `[x]` Hold the **extension mechanism to every group a theme carries** — the
 mission's promise is that a consumer takes a shipped style and edits *any* of
