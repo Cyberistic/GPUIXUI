@@ -29,6 +29,7 @@ import { cn } from "@gpuixui/tw";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { KeyValue, type KeyValueEntry } from "./key-value.js";
+import { propertyName } from "./logic.js";
 import { SURFACE_HEADER, SURFACE_PANEL } from "./recipe.js";
 
 /** A row the panel shows. */
@@ -88,14 +89,18 @@ export const PropertyPanel = ({
 }: PropertyPanelProps) => {
   const theme = useTheme();
   const heading = accessibleName(title);
-  const entries: ReadonlyArray<KeyValueEntry> = rows.map((row) =>
-    isEditable(row)
+  const entries: ReadonlyArray<KeyValueEntry> = rows.map((row) => {
+    // The label column and an editable row's field name are one reading: a
+    // blank label is content that says nothing, and the row's key is the
+    // identity the panel addresses it by.
+    const name = propertyName(row.label, row.key);
+    return isEditable(row)
       ? {
           key: row.key,
-          label: row.label,
+          label: name,
           value: (
             <Input
-              label={row.label}
+              label={name}
               value={row.value}
               onValueChange={row.onChange}
               size="sm"
@@ -106,10 +111,10 @@ export const PropertyPanel = ({
         }
       : {
           key: row.key,
-          label: row.label,
+          label: name,
           value: row.value,
-        },
-  );
+        };
+  });
   return (
     <div
       {...rest}

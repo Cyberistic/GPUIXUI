@@ -301,6 +301,37 @@ describe("the data surfaces announce what they paint", () => {
     ).toContain("status");
   });
 
+  it("reads a blank property row's label as the key it is stored by", () => {
+    // Bug guarded: a property row's label is content — a saved object answers
+    // `""` for a row whose name key is missing — and the panel paints it in the
+    // label column and hands it to the editable row's `Input` as its name. A
+    // blank one left that field unnamed while the row was still editable, and
+    // the label column empty. The row's key is the identity the panel addresses
+    // it by, so a blank label reads as the key.
+    const tree = treeOf(
+      <PropertyPanel
+        aria-label="Properties"
+        rows={[
+          { kind: "readonly", key: "tag", label: "", value: "hero" },
+          {
+            kind: "editable",
+            key: "name",
+            label: "   ",
+            value: "Ada",
+            onChange: () => {},
+          },
+        ]}
+      />,
+    );
+
+    const field = onlyRole(tree, "TextInput");
+    expect(nameOf(tree, field)).toBe("name");
+    // The label column paints the same word the field is named by.
+    expect(labelsUnder(tree, onlyRole(tree, "List"))).toEqual(
+      expect.arrayContaining(["tag", "name"]),
+    );
+  });
+
   it("reads blank column-menu names as the documented default", () => {
     root = renderData(
       <ColumnMenu

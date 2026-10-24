@@ -47,6 +47,7 @@ import {
   matchesComparison,
   matchesTree,
   negateAt,
+  propertyName,
   readFilterTree,
   removeAt,
   setGroupKind,
@@ -807,5 +808,13 @@ describe("a saved query", () => {
     // Absence is the caller's to read: `useTable` and the builder treat a
     // nullish query as no filter, while a direct read refuses it.
     expect(Option.isNone(readFilterTree(null))).toBe(true);
+  });
+});
+
+describe("the name a property row is painted by", () => {
+  it("reads a blank label as the key the row is stored by", () => {
+    expect(propertyName("", "tag")).toBe("tag");
+    expect(propertyName("   ", "name")).toBe("name");
+    expect(propertyName("  Tag  ", "tag")).toBe("Tag");
   });
 });

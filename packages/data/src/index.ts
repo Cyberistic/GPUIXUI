@@ -312,6 +312,7 @@ export {
   matchesComparison,
   matchesTree,
   negateAt,
+  propertyName,
   readFilterTree,
   removeAt,
   setGroupKind,

@@ -35,12 +35,26 @@
  * ```
  */
 
+import { spokenText } from "@gpuixui/primitives/core";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Number from "effect/Number";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
+
+/**
+ * The words a property row is painted and named by.
+ *
+ * A row's label is content before it is a literal: a saved object answers `""`
+ * for a row whose name key is missing, and the panel paints that label in its
+ * label column and hands it to an editable row's field as the field's own name.
+ * A blank label therefore reads as the row's **key** — the identity the panel
+ * addresses the row by — so a row is never an unnamed field beside an empty
+ * column.
+ */
+export const propertyName = (label: string, key: string): string =>
+  spokenText(Option.fromNullishOr(label), key);
 
 /** How a field's value is compared with a clause's value. */
 export const comparisons = [
