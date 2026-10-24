@@ -18044,13 +18044,15 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 7/7
+`[x]` `[██████████]` 9/9
 
 > Every phase is landed. The text catalogue closes with `gradient-text` sampled
 > per glyph — the honest form of a text ramp while the host paints no text fill
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `packages/components`: **a glyph wall's node cap did not hold on a short side** — `glyphMaxCells` (240) is the one promise the wall makes about what it costs, because every cell is a `<text>` host the runtime lays out. The cell grew from the box's **area** alone (`ceil(sqrt(width × height / cap))`), and the grid floors each dimension at one cell, so a strip narrower than that estimate painted one column of every row it could fit: measured, a **10 × 6 000** box painted **272** cells and a **10 × 10 000** box **454**, so a decorative rail or a tall hero mounted more than the cap the module and its record state. The cell now also grows to a `glyphMaxCells`th of each side, which bounds the one-column and one-row cases while the area term keeps bounding the ordinary ones; every box that already fitted keeps the caller's cell (400 × 240 is still 18 × 10, 4 000 × 3 000 still 17 × 13). Proof: `src/glyph/logic.test.ts` gains `keeps the cap on a wall that is one cell wide or one cell tall` (five strips) and `holds the cap over every aspect ratio` (a 6 × 6 sweep of sides), both measured failing at `HEAD` with the exact counts (`1x8000: 363 > 240`, `10x6000: 272 > 240`, …); restored, 10/10. Docs: `docs/glyph.mdx` §Limitations states the cap and the aspect rule; the `COMPONENTS.md` row (a one-line stub) now records the measured defect and the bound, and `inventory.test.ts`'s `records the node cap a glyph wall keeps` holds the row's `` `glyphMaxCells` (240) `` to the constant (measured: `(250)` fails it by name). No native scenario applies — a pure layout; the wall's own paint stays `behaviour/glyph.test.tsx`'s.
+`[x]` `packages/components`: **the glyph suite's per-glyph sweep outran the suite's budget** — the first case reads every glyph's painted box through the native renderer (one FFI tree read per cell) over the house cell's 18 × 10 wall, so it cost ~1.6 s alone and crossed the suite's 5 s default twice on a loaded box (measured 5.38 s, `Test timed out in 5000ms`, two runs). The case now fills a **220 × 140** box — the same 10 × 6 claim at the same 22px cell, with the few pixels of slack the text host's line box needs below its last row (a 40px cell on the 400 × 240 box measured the overflow honestly: 247 > 240) — and still measures **every** glyph: 1.55 s → **444 ms**, 7/7. No product change; the seed, reduced and resize cases are untouched.
 `[x]` `@gpuixui/motion`: **a timeline decoded from storage took the render down** — `sampleKeyframes`
 is a published sampler and its frame list is caller data, so a stored timeline whose `frames` field
 never decoded arrives as **no list at all** (JSON has no `undefined`, so it reads back as `null`) or as

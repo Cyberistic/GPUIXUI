@@ -69,6 +69,50 @@ describe("glyphField", () => {
     expect(grid(small)).toBe(100);
   });
 
+  /**
+   * The bug this guards: the cell was chosen from the box's **area** alone, and
+   * the grid floors each dimension at one cell — so a strip narrower than the
+   * estimate painted one column of every row it could fit. Measured, a 10 × 6000
+   * box painted **272** text hosts and a 10 × 10 000 box **454**, against a cap
+   * of 240. A wall is a node per glyph, so that is the one bound the module
+   * promises and a decorative strip could hold thousands.
+   */
+  it("keeps the cap on a wall that is one cell wide or one cell tall", () => {
+    const strips = [
+      { width: 10, height: 6000 },
+      { width: 10, height: 10000 },
+      { width: 8000, height: 16 },
+      { width: 1, height: 4000 },
+      { width: 4000, height: 1 },
+    ];
+    Arr.forEach(strips, (box) => {
+      const field = glyphField({ ...box, density: 1 });
+      const painted = field.cells.length;
+      expect(
+        painted,
+        `${box.width}x${box.height} painted ${painted} of ${field.columns}x${field.rows}`,
+      ).toBeLessThanOrEqual(glyphMaxCells);
+      expect(field.cell).toBeGreaterThanOrEqual(glyphCell);
+    });
+  });
+
+  it("holds the cap over every aspect ratio", () => {
+    // A derived sweep rather than a second list of the boxes above: the cap is
+    // a claim about *any* box, and the area estimate failed only where one side
+    // is shorter than the cell it computes.
+    const sides = [1, 10, 16, 240, 1000, 8000];
+    const over = Arr.flatMap(sides, (width) =>
+      Arr.flatMap(sides, (height) => {
+        const field = glyphField({ width, height, density: 1 });
+        const painted = field.cells.length;
+        return painted > glyphMaxCells
+          ? [`${width}x${height}: ${painted} > ${glyphMaxCells}`]
+          : [];
+      }),
+    );
+    expect(over).toEqual([]);
+  });
+
   it("paints no cell at density 0 and every grid cell at density 1", () => {
     expect(glyphField({ ...BOX, density: 0 }).cells).toEqual([]);
     const full = glyphField({ ...BOX, density: 1 });

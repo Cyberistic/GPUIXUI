@@ -65,6 +65,20 @@ const mountFrozen = (node: ReactNode): ReturnType<typeof renderComponent> => {
 
 const WALL = { width: 400, height: 240 } as const;
 
+/**
+ * The box this suite's per-glyph sweep fills.
+ *
+ * The sweep reads the painted bounds of **every** glyph through the native
+ * renderer, which is one FFI tree read per cell. At the house 22px cell the
+ * suite's 400 × 240 wall is 180 hosts — ~1.6 s alone, and twice over the suite's
+ * 5 s budget under load (measured 5.38 s). A 220 × 140 box is the same claim
+ * over a 10 × 6 grid at the same cell (60 hosts) with a few pixels of slack
+ * below the last row, so the text host's line box stays inside the wall. The
+ * larger walls are covered by the cases that read the painted text rather than
+ * every glyph's box.
+ */
+const SWEPT = { width: 220, height: 140 } as const;
+
 describe("Glyph", () => {
   it("paints one glyph per painted cell, inside the measured box", () => {
     const page = mountFrozen(
@@ -72,16 +86,16 @@ describe("Glyph", () => {
         testId="wall"
         seed={7}
         density={1}
-        style={{ width: WALL.width, height: WALL.height }}
+        style={{ width: SWEPT.width, height: SWEPT.height }}
       />,
     );
     try {
-      const field = glyphField({ ...WALL, seed: 7, density: 1 });
+      const field = glyphField({ ...SWEPT, seed: 7, density: 1 });
       const glyphs = glyphsOf(page);
       expect(glyphs).toHaveLength(field.cells.length);
 
       const box = requireBounds(page, "wall");
-      expect({ width: box.width, height: box.height }).toEqual(WALL);
+      expect({ width: box.width, height: box.height }).toEqual(SWEPT);
       Arr.forEach(glyphs, (glyph) => {
         const bounds = page.renderer.getElementBounds(glyph.id);
         expect(bounds).not.toBeNull();

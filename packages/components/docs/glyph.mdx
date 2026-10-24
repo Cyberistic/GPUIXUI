@@ -38,5 +38,8 @@ import { Glyph } from "@gpuixui/components/glyph";
 ## Limitations
 
 - Paint, not content; the wall publishes no accessibility node.
+- One `<text>` host per painted cell, so the wall is capped at **240** cells and a
+  box that would need more grows its cell instead — including a strip narrower
+  than one cell, which would otherwise paint a column of every row it fits.
 - No drift, zoom or rotate; the breath is the only motion.
 - A hidden wall keeps breathing; unmount it when off screen.

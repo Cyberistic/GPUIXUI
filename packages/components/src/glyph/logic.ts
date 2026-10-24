@@ -13,8 +13,10 @@
  * solid block.
  *
  * The caller's cell size is honoured unless the box would need more cells than
- * the cap allows, in which case the cell grows to the smallest one that fits —
- * the wall covers whole cells, so a strip narrower than one cell stays empty.
+ * the cap allows, in which case the cell grows until the grid fits it — a wall
+ * is a node per glyph, so the cap is absolute, and it holds on a short side too
+ * ({@link glyphMaxCells}). The wall covers whole cells, so a strip narrower than
+ * one cell stays empty.
  */
 
 import * as Arr from "effect/Array";
@@ -120,13 +122,22 @@ const gridOf = (
 /**
  * The cell size that keeps a box under the cap.
  *
- * The area estimate is enough: the cap exists to bound the nodes the wall
- * mounts, not to make a promise about the exact count, which the wall reports.
- * A box smaller than the cap keeps the caller's cell; a larger one grows it
- * rather than painting part of the wall.
+ * The area estimate alone is not enough, and the module's own promise is the
+ * proof: the grid floors each dimension at **one** cell, so a box narrower than
+ * the estimated cell paints one column of every row it can fit. Measured, a
+ * 10 × 6 000 strip painted **272** text hosts and a 10 × 10 000 one **454**,
+ * because the area term (`sqrt(area / cap)`) is smaller than the whole of the
+ * short side. The cell therefore also grows to a `glyphMaxCells`th of each side,
+ * which bounds the one-column and one-row cases at the cap while the area term
+ * keeps bounding the ordinary ones. A box that fits already keeps the caller's
+ * cell, so nothing grows for a wall that was under the cap to begin with.
  */
 const cellForCap = (box: PatternBox): number =>
-  Math.ceil(Math.sqrt((box.width * box.height) / glyphMaxCells));
+  Math.max(
+    Math.ceil(Math.sqrt((box.width * box.height) / glyphMaxCells)),
+    Math.ceil(box.width / glyphMaxCells),
+    Math.ceil(box.height / glyphMaxCells),
+  );
 
 /** One cell's place in the grid, in grid order. */
 const cellAt = (

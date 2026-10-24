@@ -22,6 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
+import { glyphMaxCells } from "./glyph/logic.js";
 import { inventory, type ComponentMeta } from "./inventory.js";
 
 const packageRoot = new URL("../", import.meta.url);
@@ -239,6 +240,24 @@ describe("inventory", () => {
     );
 
     expect(problems).toEqual([]);
+  });
+
+  /**
+   * The bug this guards: the glyph wall promised a node cap and its cell was
+   * chosen from the box's **area** alone, so a strip shorter than the computed
+   * cell floored to one column and painted every row it could fit — measured at
+   * 272 cells for 10 × 6 000 and 454 for 10 × 10 000 against `glyphMaxCells`
+   * (240). The row a reader meets has to state the bound, and the number has to
+   * be the one the layout declares, so a cap change without the row fails here.
+   */
+  it("records the node cap a glyph wall keeps", () => {
+    const row = rowsNamed("Glyph");
+    expect(row).toHaveLength(1);
+    // The phrase is the one the row states, so a removed cap and a changed
+    // constant fail here rather than leaving the row with a stale number.
+    expect(row[0]?.notes ?? "").toContain(
+      `\`glyphMaxCells\` (${glyphMaxCells})`,
+    );
   });
 
   it("records one blocked capability for every partial row", () => {
