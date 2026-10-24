@@ -6,6 +6,7 @@ import { Hero } from "./deck";
 import { Lineage } from "./lineage";
 import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
+import { DashboardManagementRender } from "../docs/dashboard-management";
 import { DashboardRender } from "../docs/dashboard";
 import { attribution, countWord, navLinks, repo } from "./data";
 
@@ -17,6 +18,7 @@ export function Landing() {
         <main id={mainContentId} tabIndex={-1}>
           <Hero />
           <Dashboard />
+          <Management />
           <Terminal />
           <Lineage />
           <Defaults />
@@ -104,6 +106,36 @@ function MoonIcon() {
     >
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
+  );
+}
+
+/**
+ * The management console, the second full-window composition on the page.
+ *
+ * It is the same recipe the blocks page documents, rendered in the browser: the
+ * landing has no native host, so the preview is HTML over the theme's roles.
+ */
+export function Management() {
+  return (
+    <section
+      className="landing-section landing-management-section"
+      id="management"
+    >
+      <p className="landing-kicker">The console</p>
+      <h2 className="landing-h2">Every deploy, one screen.</h2>
+      <p className="landing-lead">
+        A management console composed from the same parts — service health,
+        deploys, toasts, an API-key table and a context menu. The recipe lives
+        on the <a href="/docs/blocks/dashboard-management">blocks page</a>.
+      </p>
+      <div className="landing-dashboard landing-management">
+        <DashboardManagementRender />
+      </div>
+      <p className="landing-dashboard-caption">
+        Browser preview of the native composition · the shipped window renders
+        through GPUix, not the DOM.
+      </p>
+    </section>
   );
 }
 

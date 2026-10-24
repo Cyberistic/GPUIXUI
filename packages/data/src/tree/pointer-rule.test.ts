@@ -17,25 +17,12 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import * as Arr from "effect/Array";
 
 const read = (relative: string): string =>
   readFileSync(new URL(relative, import.meta.url), "utf8");
 
 const rowSource = read("./row.tsx");
 const page = read("../../docs/tree-view.mdx");
-const readme = read("../../README.md");
-const inventory = read("../../../../COMPONENTS.md");
-
-/** One Tier 3 row, by its first cell. */
-const row = (name: string): string => {
-  const rows = Arr.filter(Arr.fromIterable(inventory.split("\n")), (line) =>
-    line.startsWith(`| ${name} |`),
-  );
-  expect(rows.length).toBe(1);
-  return rows[0] ?? "";
-};
-
 describe("the tree page's pointer rule and shipped forms", () => {
   it("derives the press over the wash each row replaces", () => {
     expect(rowSource).toContain('pointerWash(theme, "active", "accent")');

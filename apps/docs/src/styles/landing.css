@@ -1003,6 +1003,11 @@
   color: var(--fg);
 }
 
+/* The console is three columns of cards, so it takes the wider frame. */
+.landing-management .gx-mgmt {
+  width: min(1100px, 100%);
+}
+
 .landing-dashboard-caption {
   margin: 16px auto 0;
   max-width: 60ch;
