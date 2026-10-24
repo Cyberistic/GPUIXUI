@@ -25,7 +25,7 @@ import {
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { accessibleName, spokenText } from "../core/a11y.js";
+import { accessibleName, spokenText, visibleCopy } from "../core/a11y.js";
 import {
   progressSizeOf,
   progressToneOf,
@@ -94,7 +94,10 @@ export const meterPart = (
     fraction: valueFraction(value, range),
     tone: progressToneOf(props.tone),
     size: progressSizeOf(props.size),
-    label: props.label,
+    // The label is copy, and a blank one is no copy: `visibleCopy` keeps the
+    // caller's own spacing and reports a run of spaces as absence, so the name
+    // and the caption part agree on whether there is a word at all.
+    label: visibleCopy(props.label),
     // A formatter answers for this measurement; an answer that says nothing
     // falls back to the number rather than announcing an empty value.
     valueText: spokenText(
@@ -200,14 +203,19 @@ export interface MeterLabelProps {
 export const renderMeterLabel = (
   { children, testId }: MeterLabelProps,
   part: MeterPart,
-): ReactElement => (
-  <Text role="caption" tone="muted" testId={testId}>
-    {children ?? part.label}
-  </Text>
-);
+): ReactElement | null => {
+  // A blank label is absence, so no element is painted at all: an empty
+  // `<text>` still pays the frame's gap, and spaces lay out a full line.
+  const copy = children ?? part.label;
+  return copy === undefined ? null : (
+    <Text role="caption" tone="muted" testId={testId}>
+      {copy}
+    </Text>
+  );
+};
 
 /** The measurement's subject, inside a meter. */
-export const MeterLabel = (props: MeterLabelProps): ReactElement =>
+export const MeterLabel = (props: MeterLabelProps): ReactElement | null =>
   renderMeterLabel(props, useMeterPart("MeterLabel"));
 
 /** {@link MeterValue} props. */

@@ -29,7 +29,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { useMotionPreference } from "@gpuixui/motion/react";
 import { cn } from "@gpuixui/tw";
-import { accessibleName, spokenText } from "../core/a11y.js";
+import { accessibleName, spokenText, visibleCopy } from "../core/a11y.js";
 import {
   defaultMessages,
   indeterminateWord,
@@ -170,7 +170,10 @@ export const progressPart = (
     tone: progressToneOf(tone),
     size: progressSizeOf(size),
     step,
-    label,
+    // The label is copy, and a blank one is no copy: `visibleCopy` keeps the
+    // caller's own spacing and reports a run of spaces as absence, so the name
+    // and the caption part agree on whether there is a word at all.
+    label: visibleCopy(label),
     // The share is said in the caller's words: a locale, a unit, or a buffer the
     // default phrase cannot know about. The formatter sees the **clamped**
     // percentage, so it cannot announce a number the track never paints, and an
@@ -319,14 +322,19 @@ export interface ProgressLabelProps {
 export const renderProgressLabel = (
   { children, testId }: ProgressLabelProps,
   part: ProgressPart,
-): ReactElement => (
-  <Text role="caption" tone="muted" testId={testId}>
-    {children ?? part.label}
-  </Text>
-);
+): ReactElement | null => {
+  // A blank label is absence, so no element is painted at all: an empty
+  // `<text>` still pays the frame's gap, and spaces lay out a full line.
+  const copy = children ?? part.label;
+  return copy === undefined ? null : (
+    <Text role="caption" tone="muted" testId={testId}>
+      {copy}
+    </Text>
+  );
+};
 
 /** The task's name, inside a progress. */
-export const ProgressLabel = (props: ProgressLabelProps): ReactElement =>
+export const ProgressLabel = (props: ProgressLabelProps): ReactElement | null =>
   renderProgressLabel(props, useProgressPart("ProgressLabel"));
 
 /** {@link ProgressValue} props. */

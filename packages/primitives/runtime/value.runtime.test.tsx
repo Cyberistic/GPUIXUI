@@ -19,7 +19,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
-import { Meter } from "../src/components/Meter.js";
+import { Meter, MeterLabel } from "../src/components/Meter.js";
 import {
   RangeSlider,
   Slider,
@@ -742,6 +742,28 @@ it("announces a meter's measurement and paints it inside its own range", async (
     expect.fail("the meter painted no fill"),
   );
   expect(Math.abs(fillBox.width - barBox.width / 2)).toBeLessThan(2);
+});
+
+it("paints no caption line for a meter label that arrived blank", async () => {
+  // The bug guarded: a meter's subject is copy from an i18n table or a saved
+  // record, so a missing row arrives as a run of spaces, and the runtime lays
+  // that out as a full line (16px on 0.11.0). The caption part painted it
+  // unconditionally, so the measurement grew a blank caption row while its
+  // accessible name was correctly absent. The part paints no element now, and a
+  // label that says something still paints.
+  const blank = await mount(
+    <Meter testId="m" label="   " value={25}>
+      <MeterLabel testId="caption" />
+    </Meter>,
+  );
+  expect(blank.bounds("caption")).toStrictEqual(Option.none());
+  expect(blank.allText()).not.toContain("   ");
+  const named = await mount(
+    <Meter testId="m" label="Disk" value={25}>
+      <MeterLabel testId="caption" />
+    </Meter>,
+  );
+  expect(named.allText()).toContain("Disk");
 });
 
 it("keeps a meter out of the tab order", async () => {

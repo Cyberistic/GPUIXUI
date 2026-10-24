@@ -67,10 +67,12 @@ const fillOf = (element: ReactElement) =>
   expect.fail("the track has no indicator");
 
 /** A text part's children, as React handed them to the host. */
-const textOf = (element: ReactElement): string =>
+const textOf = (element: ReactElement | null): string =>
   Option.getOrElse(
-    Option.flatMap(elementProp(element, "children"), (children) =>
-      Schema.decodeUnknownOption(Schema.String)(children),
+    Option.flatMap(Option.fromNullishOr(element), (host) =>
+      Option.flatMap(elementProp(host, "children"), (children) =>
+        Schema.decodeUnknownOption(Schema.String)(children),
+      ),
     ),
     () => expect.fail("the part carried no text"),
   );
@@ -367,6 +369,21 @@ describe("Progress", () => {
   it("shows the label in a label part, or the caller's own text", () => {
     const part = progressPart({ value: 42, label: "Uploading" }, testTheme, 0);
     expect(textOf(renderProgressLabel({}, part))).toBe("Uploading");
+    expect(textOf(renderProgressLabel({ children: "Saving" }, part))).toBe(
+      "Saving",
+    );
+  });
+
+  it("paints no label line for a label that arrived blank", () => {
+    // The bug guarded: a bar's label is copy from an i18n table or a saved
+    // record, so a missing row arrives as `""` or a run of spaces. The label
+    // part painted `children ?? label` unconditionally, and the runtime lays a
+    // run of spaces out as a full line (16px on 0.11.0), so a bar whose name
+    // said nothing still grew a blank caption row — while its accessible name
+    // was correctly absent. The rule is `visibleCopy`'s, the one a separator's
+    // caption already follows.
+    const part = progressPart({ value: 42, label: "   " }, testTheme, 0);
+    expect(renderProgressLabel({}, part)).toBeNull();
     expect(textOf(renderProgressLabel({ children: "Saving" }, part))).toBe(
       "Saving",
     );

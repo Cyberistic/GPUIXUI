@@ -22,6 +22,7 @@ import { Box } from "../src/components/Box.js";
 import {
   Progress,
   ProgressIndicator,
+  ProgressLabel,
   ProgressTrack,
   ProgressValue,
 } from "../src/components/Progress.js";
@@ -267,6 +268,31 @@ it("paints a muted bar's held share in a role its fill does not use", async () =
   expect(fill).toBe(testTheme.colors.mutedForeground);
   expect(buffer).toBe(testTheme.colors.borderStrong);
   expect(buffer).not.toBe(fill);
+});
+
+it("paints no caption line for a Progress label that arrived blank", async () => {
+  // The bug guarded: a bar's label is interface copy from an i18n table or a
+  // saved record, so a missing row arrives as a run of spaces. The caption part
+  // painted it unconditionally, and the runtime lays a run of spaces out as a
+  // full line (16px on 0.11.0), so the bar grew a blank caption row while its
+  // accessible name was correctly absent. The part paints no element now, and a
+  // label that says something still paints.
+  const runtime = await openWindow();
+  const composed = (label: string) => (
+    <Surface>
+      <Progress testId="pg" value={42} label={label}>
+        <ProgressTrack testId="track">
+          <ProgressIndicator />
+        </ProgressTrack>
+        <ProgressLabel testId="caption" />
+      </Progress>
+    </Surface>
+  );
+  runtime.render(composed("   "));
+  expect(runtime.bounds("caption")).toStrictEqual(Option.none());
+  expect(runtime.allText()).not.toContain("   ");
+  runtime.render(composed("Uploading"));
+  expect(runtime.allText()).toContain("Uploading");
 });
 
 it("paints a caller's Progress composition from the same resolved state", async () => {
