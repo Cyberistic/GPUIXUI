@@ -10,7 +10,7 @@ import {
   targetSize,
   themes,
 } from "@gpuixui/tokens";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { platformThemes } from "../../lib/platform";
 import {
@@ -908,5 +908,55 @@ describe("the structural edits the gate reports", () => {
     expect(source).toContain("report.switch.metrics");
     expect(source).not.toContain("invalidScales(theme)");
     expect(source).not.toContain("switchFailures(theme)");
+  });
+
+  it("folds every list the gate returns into a finding", () => {
+    // The class the switch box fell through: a report joined `ThemeAudit`, the
+    // gate failed on it, and the readout printed every list except that one, so
+    // a failing theme showed no sentence saying why. The lists are read from
+    // the gate's own declarations — including the reports declared in a sibling
+    // module (`SwitchReport`, `SeriesReport`) — so a report added to
+    // `ThemeAudit` or a new sub-list fails here until it is folded.
+    const tokensDir = new URL(
+      "../../../../../packages/tokens/src/",
+      import.meta.url,
+    );
+    const tokensSource = readdirSync(tokensDir, {
+      recursive: true,
+      encoding: "utf8",
+    })
+      .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+      .map((name) => readFileSync(new URL(name, tokensDir), "utf8"))
+      .join("\n");
+    const source = readFileSync(
+      new URL("./theme-editor-logic.ts", import.meta.url),
+      "utf8",
+    );
+    const bodyOf = (name: string): string =>
+      tokensSource.split(`export interface ${name} {`)[1]?.split("\n}")[0] ??
+      "";
+    const fieldsOf = (body: string): ReadonlyArray<string> =>
+      [...body.matchAll(/readonly (\w+)[?]?:/g)].flatMap((match) =>
+        match[1] === undefined ? [] : [match[1]],
+      );
+
+    const auditFields = fieldsOf(bodyOf("ThemeAudit")).filter(
+      (field) => field !== "passed",
+    );
+    const folded = auditFields.flatMap((field) => {
+      const declaration =
+        bodyOf("ThemeAudit").match(
+          new RegExp(`readonly ${field}:\\s*([^;]+);`),
+        )?.[1] ?? "";
+      if (declaration.includes("[]")) return [`report.${field}`];
+      const typeName = declaration.trim().replace(/;$/, "");
+      const nested = fieldsOf(bodyOf(typeName));
+      return nested.length === 0
+        ? [`report.${field}`]
+        : nested.map((sub) => `report.${field}.${sub}`);
+    });
+
+    expect(auditFields.length).toBeGreaterThanOrEqual(10);
+    expect(folded.filter((read) => !source.includes(read))).toEqual([]);
   });
 });
