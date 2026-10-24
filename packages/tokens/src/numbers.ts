@@ -78,8 +78,18 @@
 
 import type { BoxShadow, Elevation } from "./elevation.js";
 import { isStepRecord, requireGroups } from "./missing.js";
-import { controlSizes, targetSize, type ControlSize } from "./scale.js";
-import type { Theme } from "./theme.js";
+import {
+  controlSizes,
+  targetSize,
+  type BorderWidth,
+  type ControlSize,
+  type Density,
+  type DensityName,
+  type IconSize,
+  type Radius,
+  type Spacing,
+} from "./scale.js";
+import type { Stored } from "./theme.js";
 import type { TextRole, Typography } from "./typography.js";
 
 /** A group of numeric tokens, in the order the catalogue lists them. */
@@ -165,42 +175,44 @@ export interface InvalidNumber {
   readonly rule: NumberRule;
 }
 
-/** The numbers one type role carries, in the shape a stored theme can carry them. */
-interface TextStyleNumbers {
-  readonly fontSize: number;
-  readonly lineHeight: number;
-  readonly fontWeight: number;
-}
+/**
+ * The type scale as the report reads it: each role's numbers as the value the
+ * batch sees, which a store can write as `"8"`, `"8px"` or `null`.
+ *
+ * The families stay in the shape so a role a store left out is a step the gate
+ * names by path rather than one this walk throws on, and each role is opened so
+ * a weight or a size a theme **computed** rather than chose is still inspected.
+ */
+type TypographyNumbers = Stored<Typography>;
 
 /**
- * The type scale as the report reads it. The families are dropped to the two
- * names it needs, and each role's numbers are opened to `number` rather than
- * `TextStyle`'s own shape: the report is the gate for a weight or a size a
- * theme computed rather than chose, and it reads the value the batch sees.
+ * The fields the number audit reads: every numeric group of a theme except its
+ * colours.
  *
- * A role is optional because a stored theme can predate it. The report walks the
- * steps a theme carries, so it says nothing about one that is not there — the
- * gate refuses that absence by name (`requireSteps`), because a role is what a
- * component reads by name and cannot be painted around.
+ * Each group is the **storage shape** (`Stored`), because that is what the report
+ * exists for: a theme a store handed back can carry a step as `"8"`, a group as
+ * `null` and a role the release did not ship, and the report names each rather
+ * than throwing on it. A group is optional for the same reason — a theme that
+ * lost one is the gate's refusal by name (`requireGroups`), and the walk that
+ * follows reads only what a caller's value carries. This is the type its own
+ * `@example` documents (`invalidNumbers(JSON.parse(row))`), which compiled
+ * before only because `JSON.parse` answers `any`.
  */
-type TypographyNumbers = Omit<Typography, TextRole> & {
-  readonly [role in TextRole]?: TextStyleNumbers;
-};
-
-/** The fields the number audit reads: every group of a theme except its colours. */
-export type NumberSource = Pick<
-  Theme,
-  "spacing" | "radius" | "borderWidth" | "iconSize" | "density"
-> & {
+export type NumberSource = {
+  readonly spacing?: Stored<Spacing>;
+  readonly radius?: Stored<Radius>;
+  readonly borderWidth?: Stored<BorderWidth>;
+  readonly iconSize?: Stored<IconSize>;
+  readonly density?: Stored<Density> | DensityName;
   /** Opened so a stored weight a computed scale produced is still inspected. */
-  readonly typography: TypographyNumbers;
+  readonly typography?: TypographyNumbers;
   /**
    * A level the theme does not carry is the shadow report's business
    * (`invalidShadowColors`), not a number this report can inspect, so a stored
    * theme older than a level — or than the whole scale — is measured over the
    * levels it has.
    */
-  readonly elevation?: Partial<Elevation>;
+  readonly elevation?: Stored<Elevation>;
 };
 
 /**
@@ -273,14 +285,43 @@ const inspectLengths = (
  */
 const inspectBorderWidths = (
   borderWidth: NumberSource["borderWidth"],
-): readonly InvalidNumber[] => [
-  ...inspect("borderWidth", "thin", borderWidth.thin, "nonNegative"),
-  ...inspect("borderWidth", "strong", borderWidth.strong, "positive"),
-];
+): readonly InvalidNumber[] => {
+  const widths = isStepRecord(borderWidth) ? borderWidth : {};
+  return [
+    ...inspect("borderWidth", "thin", widths.thin, "nonNegative"),
+    ...inspect("borderWidth", "strong", widths.strong, "positive"),
+  ];
+};
 
-/** The size and leading of every text role, the leading against its size, and the weight. */
-const isTextStyle = (value: unknown): value is TextStyleNumbers =>
-  typeof value === "object" && value !== null && "fontSize" in value;
+/** A type role as a store writes one: the three numbers, each still unread. */
+interface StoredTextStyle {
+  readonly fontSize: unknown;
+  readonly lineHeight: unknown;
+  readonly fontWeight: unknown;
+}
+
+/**
+ * The size and leading of every text role, the leading against its size, and the weight.
+ *
+ * A role is read as the record it is when it carries a size — the rule the report
+ * keeps for a stored value: a role written as `"14px"` or a number is the gate's
+ * absence, not a style, and `inspect` names each number it cannot lay out.
+ */
+const isTextStyle = (value: unknown): value is StoredTextStyle =>
+  isStepRecord(value) && "fontSize" in value;
+
+/**
+ * Whether a stored number is usable: a positive finite one. Every rule about two
+ * tokens reads through this, so a value the store wrote as `"14"` or `null` is
+ * the single-value report's — the pair comparisons say nothing about a number
+ * that cannot be laid out on its own.
+ */
+const usable = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0;
+
+/** Whether two stored numbers are both numbers, and the first is the larger. */
+const exceeds = (value: unknown, than: unknown): boolean =>
+  typeof value === "number" && typeof than === "number" && value > than;
 
 const isShadowList = (value: unknown): value is readonly BoxShadow[] =>
   Array.isArray(value);
@@ -297,43 +338,50 @@ const isShadowEntry = (value: unknown): value is BoxShadow =>
 const inspectType = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] =>
-  Object.entries(typography).flatMap(([role, value]) => {
-    if (!isTextStyle(value)) {
-      return [];
-    }
-    const measured = [
-      ...inspect("typography", `${role}.fontSize`, value.fontSize, "positive"),
-      ...inspect(
-        "typography",
-        `${role}.lineHeight`,
-        value.lineHeight,
-        "positive",
-      ),
-      ...inspect(
-        "typography",
-        `${role}.fontWeight`,
-        value.fontWeight,
-        "finite",
-      ),
-    ];
-    // Only comparable when both numbers are usable; an unusable one is already
-    // reported by the size check above, and would be reported twice here.
-    const collides =
-      value.fontSize > 0 &&
-      value.lineHeight > 0 &&
-      value.lineHeight < value.fontSize;
-    return collides
-      ? [
-          ...measured,
-          {
-            group: "typography",
-            path: `${role}.lineHeight`,
-            value: value.lineHeight,
-            rule: "leading",
-          },
-        ]
-      : measured;
-  });
+  Object.entries(isStepRecord(typography) ? typography : {}).flatMap(
+    ([role, value]) => {
+      if (!isTextStyle(value)) {
+        return [];
+      }
+      const measured = [
+        ...inspect(
+          "typography",
+          `${role}.fontSize`,
+          value.fontSize,
+          "positive",
+        ),
+        ...inspect(
+          "typography",
+          `${role}.lineHeight`,
+          value.lineHeight,
+          "positive",
+        ),
+        ...inspect(
+          "typography",
+          `${role}.fontWeight`,
+          value.fontWeight,
+          "finite",
+        ),
+      ];
+      // Only comparable when both numbers are usable; an unusable one is already
+      // reported by the size check above, and would be reported twice here.
+      const collides =
+        usable(value.fontSize) &&
+        usable(value.lineHeight) &&
+        value.lineHeight < value.fontSize;
+      return collides
+        ? [
+            ...measured,
+            {
+              group: "typography",
+              path: `${role}.lineHeight`,
+              value: value.lineHeight,
+              rule: "leading",
+            },
+          ]
+        : measured;
+    },
+  );
 
 /**
  * The one pair of type roles that is one emphasis at one size. `bodyStrong` is
@@ -347,7 +395,8 @@ const inspectType = (
 const inspectEmphasis = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] => {
-  const { body, bodyStrong } = typography;
+  const roles = isStepRecord(typography) ? typography : {};
+  const { body, bodyStrong } = roles;
   // A stored theme that predates either role is the gate's refusal to name; there
   // is no pair to compare, and reading through an absent one would throw.
   if (!isTextStyle(body) || !isTextStyle(bodyStrong)) {
@@ -357,9 +406,7 @@ const inspectEmphasis = (
   // report one broken value twice, under a rule that says nothing about it. A
   // leading inside its own glyph box is the same — the `leading` rule owns that
   // line — so the pair compares only leadings that are decisions.
-  const usable = (value: number): boolean =>
-    Number.isFinite(value) && value > 0;
-  const reaching = (role: TextStyleNumbers): boolean =>
+  const reaching = (role: StoredTextStyle): boolean =>
     usable(role.fontSize) &&
     usable(role.lineHeight) &&
     role.lineHeight >= role.fontSize;
@@ -383,7 +430,7 @@ const inspectEmphasis = (
   const outweighs =
     !Number.isFinite(body.fontWeight) ||
     !Number.isFinite(bodyStrong.fontWeight) ||
-    bodyStrong.fontWeight > body.fontWeight
+    exceeds(bodyStrong.fontWeight, body.fontWeight)
       ? []
       : [
           {
@@ -430,12 +477,23 @@ const contentCeiling = (
   iconSize: NumberSource["iconSize"],
   roles: readonly TextRole[],
 ): number | undefined => {
-  const styles = roles.map((role) => typography[role]);
-  if (!styles.every(isTextStyle)) {
+  const scale = isStepRecord(typography) ? typography : {};
+  const styles = roles.map((role) => scale[role]);
+  const glyph = isStepRecord(iconSize) ? iconSize.md : undefined;
+  const leadings = styles.flatMap((style) =>
+    isTextStyle(style) ? [style.lineHeight] : [],
+  );
+  // A role or the glyph a theme lost makes the ceiling unknown rather than
+  // smaller, which is the single report's line — not this one's.
+  if (leadings.length !== styles.length || typeof glyph !== "number") {
     return undefined;
   }
-  const parts = [...styles.map(({ lineHeight }) => lineHeight), iconSize.md];
-  return parts.every(Number.isFinite) ? Math.max(...parts) : undefined;
+  const parts: ReadonlyArray<unknown> = [...leadings, glyph];
+  return parts.every(
+    (part): part is number => typeof part === "number" && Number.isFinite(part),
+  )
+    ? Math.max(...parts)
+    : undefined;
 };
 
 /**
@@ -462,7 +520,9 @@ const inspectControlHeights = (
   iconSize: NumberSource["iconSize"],
 ): readonly InvalidNumber[] => {
   const ceiling = contentCeiling(typography, iconSize, controlRoles);
-  const heights: unknown = density.controlHeight;
+  const heights: unknown = isStepRecord(density)
+    ? density.controlHeight
+    : undefined;
   return controlSizes.flatMap((size: ControlSize) => {
     const path = `controlHeight.${size}`;
     const value = isStepRecord(heights) ? heights[size] : undefined;
@@ -495,7 +555,7 @@ const inspectRowHeight = (
   typography: NumberSource["typography"],
   iconSize: NumberSource["iconSize"],
 ): readonly InvalidNumber[] => {
-  const value: unknown = density.rowHeight;
+  const value: unknown = isStepRecord(density) ? density.rowHeight : undefined;
   if (value === undefined || value === null) {
     return [];
   }
@@ -627,7 +687,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
     ...inspectControlHeights(theme.density, theme.typography, theme.iconSize),
     ...inspectLengths(
       "density",
-      theme.density.controlPaddingX,
+      isStepRecord(theme.density) ? theme.density.controlPaddingX : undefined,
       "nonNegative",
       "controlPaddingX.",
     ),

@@ -6,9 +6,9 @@
  * test suite.
  */
 
-import { themeColors, type ThemeColors } from "./color.js";
+import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { relativeLuminance } from "./luminance.js";
-import { themeContrastOf, type ThemeContrast } from "./theme.js";
+import { themeContrastOf } from "./theme.js";
 
 /**
  * The WCAG 2.1 contrast ratio between two opaque colours: 1 for identical
@@ -91,6 +91,21 @@ export const highContrastFloors: ContrastFloors = {
 };
 
 /**
+ * The contrast variant as a report reads it from a theme.
+ *
+ * The value is `unknown` because a theme stored by an application, or a
+ * consumer's decoder, carries a **name** before it is a union — the upper-cased
+ * `HIGH` a store wrote is read as the strict variant by `themeContrastOf`,
+ * which is why every seam that selects floors takes this shape rather than
+ * `ThemeContrast`. `auditTheme` is the caller that matters: the gate is handed
+ * the value `restoreTheme` was handed, so its own parameter has to admit it.
+ */
+export interface ContrastSource {
+  /** The variant the theme states, if any. A stored name is read strictly. */
+  readonly contrast?: unknown;
+}
+
+/**
  * The floors a theme's own contrast variant is held to.
  *
  * A theme that declares `contrast: "high"` is held to the AAA floors, not to the
@@ -106,9 +121,7 @@ export const highContrastFloors: ContrastFloors = {
  * contrastFloorsFor(highContrastDarkTheme); // { body: 7, secondary: 7, boundary: 4.5 }
  * ```
  */
-export function contrastFloorsFor(theme: {
-  readonly contrast?: unknown;
-}): ContrastFloors {
+export function contrastFloorsFor(theme: ContrastSource): ContrastFloors {
   return themeContrastOf(theme) === "high"
     ? highContrastFloors
     : contrastFloors;
@@ -588,10 +601,7 @@ export interface ContrastFailure {
  * ```
  */
 export function contrastFailures(
-  theme: {
-    readonly colors?: Partial<ThemeColors>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & ContrastSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly ContrastFailure[] {
   const colors = themeColors(theme);

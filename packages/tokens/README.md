@@ -957,6 +957,15 @@ audit.keyboardDim; // [] — every label the runtime's keyboard dim fades is sti
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
+The gate and its reports take the **shape a store hands back** in their type,
+not only at runtime: `ThemeAuditSource` composes the ports each report reads —
+the mode and the contrast variant as `unknown`, a group `null`, a step absent —
+so `auditTheme(stored)` runs on a `StoredTheme` (the value `restoreTheme` takes)
+without a cast, and `invalidNumbers`, `invalidScales`, `seriesColors`,
+`syntaxColors` and `switchFailures` read their own group the same way. A numeric
+group or step the store lost is still the refusal `missingTokens` names, because
+no report can describe a token nothing carries.
+
 A theme restored from storage can be **incomplete**. A missing colour role, an
 elevation level or the whole elevation scale is a line in the report, but a
 missing **numeric step** is not

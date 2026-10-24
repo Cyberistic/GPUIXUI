@@ -28,13 +28,14 @@ import {
   contrastFloorsFor,
   type ContrastFailure,
   type ContrastFloors,
+  type ContrastSource,
 } from "./contrast.js";
 import { decorativeFailures, type DecorativeFailure } from "./decorative.js";
 import { disabledFadeFailures, type DisabledFadeFailure } from "./disabled.js";
 import {
   invalidShadowColors,
-  type Elevation,
   type InvalidShadowColor,
+  type ShadowSource,
 } from "./elevation.js";
 import { keyboardDimFailures, type KeyboardDimFailure } from "./focus-dim.js";
 import { highlightFailures, type HighlightFailure } from "./highlight.js";
@@ -52,12 +53,12 @@ import {
 import { selectionFailures, type SelectionFailure } from "./selection.js";
 import {
   seriesFailures,
-  type SeriesColors,
+  type SeriesAuditSource,
   type SeriesReport,
 } from "./series.js";
 import {
   syntaxFailures,
-  type SyntaxColors,
+  type SyntaxAuditSource,
   type SyntaxFailure,
 } from "./syntax.js";
 import {
@@ -71,28 +72,29 @@ import {
   type MissingToken,
   type MissingTokenKind,
 } from "./missing.js";
-import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 export { missingTokens };
 export type { MissingToken, MissingTokenKind };
 
-/** A theme's contrast variant, when it has declared one. */
-type ContrastSource = { readonly contrast?: ThemeContrast };
-
-/** The field the shadow audit reads: the elevation scale a theme paints, if it carries one. */
-type ShadowSource = { readonly elevation?: Partial<Elevation> };
-
-/** The fields a series audit reads: the mode, the variant and an authored scale. */
-type SeriesSource = {
-  readonly mode: ThemeMode;
-  readonly series?: SeriesColors;
-};
-
-/** The fields a syntax audit reads: the mode and an authored palette. */
-type SyntaxSource = {
-  readonly mode: ThemeMode;
-  readonly syntax?: SyntaxColors;
-};
+/**
+ * A theme as the gate reads it: every group in the **storage shape** the reports
+ * themselves take.
+ *
+ * This is the value the seam's own flow produces — `restoreTheme(decoded)` and
+ * the reports are meant to be run on the shape a store hands back — so the
+ * labels are `unknown` (a stored `"Dark"` or `"HIGH"` is read by
+ * `themeModeOf`/`themeContrastOf`), a group may be `null` and a role may be
+ * absent. A theme that lost a numeric group or a step is still refused by name
+ * (`requireTokens`), because that is an absence no report can describe.
+ */
+export type ThemeAuditSource = ColourSource &
+  ContrastSource &
+  SeriesAuditSource &
+  SyntaxAuditSource &
+  ShadowSource &
+  NumberSource &
+  ScaleSource &
+  SwitchAuditSource;
 
 /** Everything a theme must be free of before it ships. */
 export interface ThemeAudit {
@@ -183,14 +185,7 @@ export interface ThemeAudit {
  * ```
  */
 export function auditTheme(
-  theme: ColourSource &
-    ContrastSource &
-    SeriesSource &
-    SyntaxSource &
-    ShadowSource &
-    NumberSource &
-    ScaleSource &
-    SwitchAuditSource,
+  theme: ThemeAuditSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
   requireTokens(theme);

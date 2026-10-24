@@ -46,8 +46,9 @@ import {
   contrastPairs,
   contrastRatio,
   type ContrastPair,
+  type ContrastSource,
 } from "./contrast.js";
-import type { Elevation, ElevationLevel } from "./elevation.js";
+import type { ElevationLevel, ShadowSource } from "./elevation.js";
 import {
   filledFeedback,
   filledFeedbackStates,
@@ -57,7 +58,6 @@ import {
   type FilledFeedbackState,
   type FilledRole,
 } from "./styles.js";
-import type { ThemeContrast } from "./theme.js";
 
 /**
  * The perceptibility floor a decorative surface meets: 1.05:1 against what it
@@ -300,7 +300,7 @@ export const actionFeedbackPlacements: readonly ActionFeedbackPlacement[] =
  * ```
  */
 export function actionFeedbackFailures(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   return actionFeedbackPlacements.flatMap(({ role, state }) => {
@@ -431,7 +431,7 @@ const POINTER_STEPS: readonly number[] = [
  * ```
  */
 export function pointerWash(
-  source: ColourSource & { readonly contrast?: ThemeContrast },
+  source: ColourSource & ContrastSource,
   wash: PointerWashRole,
   replaced: PointerWashSurface,
   floor: number = decorativeFloor,
@@ -481,7 +481,7 @@ export function pointerWash(
  * ```
  */
 export function pointerWashFailures(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   return pointerWashTransitions.flatMap(({ wash, replaced }) => {
@@ -641,7 +641,7 @@ export function dividerOn(
  * ```
  */
 export function dividerFailures(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   const failureOn = (
@@ -1035,10 +1035,7 @@ export interface DecorativeFailure {
  * ```
  */
 export function decorativeFailures(
-  theme: ColourSource & {
-    readonly elevation?: Partial<Elevation>;
-    readonly contrast?: ThemeContrast;
-  },
+  theme: ColourSource & ShadowSource & ContrastSource,
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   const surfaces = decorativeSurfaces.flatMap(

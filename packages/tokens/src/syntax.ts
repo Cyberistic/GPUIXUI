@@ -205,7 +205,14 @@ export interface SyntaxSource extends ColourSource {
   readonly mode?: unknown;
   /** The contrast variant. A stored name is read through `themeContrastOf`. */
   readonly contrast?: unknown;
-  readonly syntax?: SyntaxColors;
+  /**
+   * The palette the theme authors, when it carries one. A store writes `null`
+   * for a table it never carried, so a saved theme reaches this seam without a
+   * cast — the same rule {@link SeriesSource} follows. A *partial* table is the
+   * audit's shape ({@link SyntaxAuditSource}): a paint seam hands a host the
+   * whole table or the shipped one.
+   */
+  readonly syntax?: SyntaxColors | null;
 }
 
 /**
@@ -285,7 +292,12 @@ export interface SyntaxAuditSource extends ColourSource {
   readonly mode?: unknown;
   /** The contrast variant. A stored name is read through `themeContrastOf`. */
   readonly contrast?: unknown;
-  readonly syntax?: Readonly<Record<string, unknown>>;
+  /**
+   * The palette the theme authors, or `null` for a table a store never
+   * carried. Read as an open record — a decoded palette can hold a subset of
+   * the tokens, or one a store wrote as `null`.
+   */
+  readonly syntax?: Readonly<Record<string, unknown>> | null;
 }
 
 /** The colour a palette names for a token, or `undefined` when it names none. */

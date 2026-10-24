@@ -1536,6 +1536,10 @@ mark nobody can find, a find wash that hides the result it marks or cannot be
 told apart from the resting matches, a disabled label the fade erases, and a label the
 keyboard dim erases while another control holds the focus; run it over the
 resolved theme before it ships and assert `passed` in the package's own tests.
+The gate and its reports take the **shape a store hands back** in their types as
+well as at runtime — `ThemeAuditSource` composes the ports each report reads, so
+`auditTheme(stored)` on a `StoredTheme` (what `restoreTheme` takes) needs no
+cast, and a nulled or truncated group is measured rather than promised.
 
 Two of those checks are about the theme's own **structure** rather than its
 colours: `invalidScales(theme)` holds every named ladder to its order — spacing,

@@ -1453,6 +1453,16 @@ so `auditTheme` returns a failing report instead of throwing
 gone too; the same seam reads it, so every role is named rather than the first
 lookup throwing.
 
+The gate and its reports take that shape **in their type**, not only at runtime.
+`ThemeAuditSource` composes the ports each report reads — the mode and the
+contrast variant as `unknown`, a group `null`, a step absent — so
+`auditTheme(stored)` runs on a `StoredTheme` (the value `restoreTheme` takes)
+without a cast, and the reports one group at a time name their own shape:
+`invalidNumbers`, `invalidScales`, `seriesColors`, `syntaxColors` and
+`switchFailures` all read a nulled or truncated group rather than a promised
+one. A numeric group or a step the store lost is still the refusal
+`missingTokens` names, because no report can describe a token nothing carries.
+
 `disabledFade` is the one report those floors do not reach: a fade is a
 mechanism rather than a readability claim, so `disabledFadeFailures` holds every
 variant to `contrastFloors.disabled` (1.5:1). The fade cannot clear a

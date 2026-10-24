@@ -24,7 +24,7 @@
 import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
-import { themeContrastOf, themeModeOf } from "./theme.js";
+import { themeContrastOf, themeModeOf, type Stored } from "./theme.js";
 
 /**
  * One categorical scale: five colours, in the order a chart assigns them. A
@@ -175,7 +175,12 @@ export interface SeriesSource extends ColourSource {
   readonly mode?: unknown;
   /** The contrast variant. A stored name is read through `themeContrastOf`. */
   readonly contrast?: unknown;
-  readonly series?: SeriesColors;
+  /**
+   * The scale the theme authors, when it carries one. Read from the storage
+   * shape — a store writes `null` for a table it never carried — so a saved
+   * theme reaches this seam without a cast.
+   */
+  readonly series?: Stored<SeriesColors>;
 }
 
 /**
@@ -391,7 +396,7 @@ export function simulateColorVision(
 }
 
 /** A theme with the fields a series audit reads. */
-type SeriesAuditSource = Omit<SeriesSource, "series"> &
+export type SeriesAuditSource = Omit<SeriesSource, "series"> &
   ColourSource & {
     /**
      * The scale the theme carries. A stored theme can hold a table shorter than
@@ -399,7 +404,7 @@ type SeriesAuditSource = Omit<SeriesSource, "series"> &
      * absent when it was saved, so the audit reads it positionally and measures
      * what each position paints rather than what the type promised.
      */
-    readonly series?: readonly (string | undefined)[];
+    readonly series?: readonly (string | undefined)[] | null;
   };
 
 /**

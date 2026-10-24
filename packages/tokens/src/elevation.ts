@@ -8,6 +8,7 @@ import {
   lightColors,
 } from "./color.js";
 import { measuredColour } from "./measure.js";
+import type { Stored } from "./theme.js";
 
 /** A drop shadow, structurally identical to GPUix's `StyleDesc.boxShadow`. */
 export interface BoxShadow {
@@ -128,13 +129,25 @@ const shadowColor = (shadow: unknown): string | undefined =>
  * ```
  */
 export function elevationShadow(
-  theme: { readonly elevation?: Partial<Elevation> },
+  theme: ShadowSource,
   level: ElevationLevel,
 ): BoxShadow | undefined {
   const shadows: unknown =
     theme.elevation?.[isElevationLevel(level) ? level : "md"];
   const first: unknown = Array.isArray(shadows) ? shadows[0] : undefined;
   return isShadow(first) ? first : undefined;
+}
+
+/**
+ * The elevation scale as a report or a paint seam reads it.
+ *
+ * A store writes `null` for a level it never carried — JSON has no `undefined` —
+ * so a level is the storage shape beside the array the type promises, and a
+ * theme a store truncated reaches these seams without a cast. A level written as
+ * anything but a list paints nothing and is the shadow report's line.
+ */
+export interface ShadowSource {
+  readonly elevation?: Stored<Elevation>;
 }
 
 /** One elevation shadow whose colour the renderer cannot paint. */
@@ -195,9 +208,9 @@ export interface InvalidShadowColor {
  * // [{ level: "md", index: 0, color: undefined }] — a stored theme older than the level
  * ```
  */
-export function invalidShadowColors(theme: {
-  readonly elevation?: Partial<Elevation>;
-}): readonly InvalidShadowColor[] {
+export function invalidShadowColors(
+  theme: ShadowSource,
+): readonly InvalidShadowColor[] {
   return elevationLevels.flatMap((level): ReadonlyArray<InvalidShadowColor> => {
     const shadows: unknown = theme.elevation?.[level];
     // A level written as anything but a list is one surface's shadow this report

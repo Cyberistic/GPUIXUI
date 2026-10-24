@@ -51,12 +51,14 @@ import {
   controlSizes,
   type BorderWidth,
   type ControlSize,
+  type Density,
+  type DensityName,
   type IconSize,
   type Radius,
   type Spacing,
 } from "./scale.js";
-import type { Theme } from "./theme.js";
-import type { TextRole } from "./typography.js";
+import type { Stored } from "./theme.js";
+import type { TextRole, Typography } from "./typography.js";
 
 /** The scales a theme carries, in the order the catalogue lists them. */
 export type ScaleGroup =
@@ -93,18 +95,26 @@ export interface InvalidScale {
   };
 }
 
-/** The fields the scale audit reads: every ordered group of a theme. */
-export type ScaleSource = Pick<
-  Theme,
-  "spacing" | "radius" | "borderWidth" | "iconSize" | "density"
-> & {
-  /**
-   * The type roles the theme carries, keyed by name. A role it omits is skipped
-   * rather than reported — a theme restored from storage can predate a role the
-   * library added, and the gate refuses that absence by name (`requireSteps`),
-   * because a component selects a role by name and cannot paint around one.
-   */
-  readonly typography: Partial<Record<TextRole, { readonly fontSize: number }>>;
+/**
+ * The fields the scale audit reads: every ordered group of a theme.
+ *
+ * Each group is the **storage shape** (`Stored`) — a step a store wrote as `"8"`
+ * or `null`, a group as `null` — because that is the input the report exists to
+ * measure, and a group is optional because a theme that lost one is the gate's
+ * refusal by name (`requireGroups`) rather than a `TypeError` out of the walk.
+ * The type roles are the same shape one level down: a role a store left out is
+ * skipped rather than reported — a theme restored from storage can predate a
+ * role the library added, and the gate refuses that absence by name
+ * (`requireSteps`), because a component selects a role by name and cannot paint
+ * around one.
+ */
+export type ScaleSource = {
+  readonly spacing?: Stored<Spacing>;
+  readonly radius?: Stored<Radius>;
+  readonly borderWidth?: Stored<BorderWidth>;
+  readonly iconSize?: Stored<IconSize>;
+  readonly density?: Stored<Density> | DensityName;
+  readonly typography?: Stored<Typography>;
   /**
    * Every elevation level the theme carries. A level it omits is skipped rather
    * than reported: a theme restored from storage can predate a level the
@@ -112,7 +122,7 @@ export type ScaleSource = Pick<
    * absent group is the same rule one level up — a store that predates the
    * scale has no rung to compare, and the shadow report names every level.
    */
-  readonly elevation?: Partial<Elevation>;
+  readonly elevation?: Stored<Elevation>;
 };
 
 /** Spacing steps from tightest to loosest. */
@@ -259,7 +269,7 @@ const reach = ({ offsetY, blurRadius, spreadRadius }: BoxShadow): number =>
  * the only one the level renders.
  */
 const elevationSteps = (
-  elevation: Partial<Elevation> | undefined,
+  elevation: Stored<Elevation> | undefined,
 ): readonly Step[] =>
   elevationLevels.flatMap((level) => {
     const shadow = elevationShadow({ elevation }, level);
@@ -346,30 +356,34 @@ const ordered = (
  */
 export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
   requireGroups(theme);
+  const density: unknown = theme.density;
+  const controlScale = (metric: "controlHeight" | "controlPaddingX"): unknown =>
+    isStepRecord(density) ? density[metric] : undefined;
   return [
     ...ordered(
       "spacing",
-      keyed(spacingKeys, (key) => theme.spacing[key]),
+      keyed(spacingKeys, (key) => stepValue(theme.spacing, key)),
     ),
     ...ordered(
       "radius",
-      keyed(radiusKeys, (key) => theme.radius[key]),
+      keyed(radiusKeys, (key) => stepValue(theme.radius, key)),
       true,
     ),
     ...ordered(
       "borderWidth",
-      keyed(borderKeys, (key) => theme.borderWidth[key]),
+      keyed(borderKeys, (key) => stepValue(theme.borderWidth, key)),
     ),
     ...ordered(
       "iconSize",
-      keyed(iconKeys, (key) => theme.iconSize[key]),
+      keyed(iconKeys, (key) => stepValue(theme.iconSize, key)),
     ),
     ...ordered(
       "typography",
       // A role the theme does not carry is not a rung: comparing across the gap
       // would report the steps either side of a name nothing can select.
       typeKeys.flatMap((role) => {
-        const style: unknown = theme.typography[role];
+        const scale: unknown = theme.typography;
+        const style: unknown = isStepRecord(scale) ? scale[role] : undefined;
         return isStepRecord(style)
           ? [[`${role}.fontSize`, stepNumber(style.fontSize)] as const]
           : [];
@@ -378,13 +392,13 @@ export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
     ...ordered(
       "density",
       sized("controlHeight", (size) =>
-        stepValue(theme.density.controlHeight, size),
+        stepValue(controlScale("controlHeight"), size),
       ),
     ),
     ...ordered(
       "density",
       sized("controlPaddingX", (size) =>
-        stepValue(theme.density.controlPaddingX, size),
+        stepValue(controlScale("controlPaddingX"), size),
       ),
     ),
     ...ordered("elevation", elevationSteps(theme.elevation)),

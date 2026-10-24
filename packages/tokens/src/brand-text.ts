@@ -50,8 +50,9 @@ import {
   contrastFloorsFor,
   contrastRatio,
   type ContrastFloors,
+  type ContrastSource,
 } from "./contrast.js";
-import type { Theme, ThemeContrast } from "./theme.js";
+import type { Theme } from "./theme.js";
 
 /**
  * The surfaces a piece of brand-coloured text can sit on: the four page
@@ -82,7 +83,7 @@ export const brandTextSurfaces = [
 const TEXT_STEPS = 50;
 
 /** A source the derivation reads: roles that may be gone, and the variant's floors. */
-type BrandSource = ColourSource & { readonly contrast?: ThemeContrast };
+type BrandSource = ColourSource & ContrastSource;
 
 /**
  * The ratio `colour` reaches on the surface it is least readable on, or

@@ -84,9 +84,10 @@ import {
   contrastRatio,
   type ContrastFloors,
   type ContrastPair,
+  type ContrastSource,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
-import type { Theme, ThemeContrast } from "./theme.js";
+import type { Theme } from "./theme.js";
 
 /**
  * The text pairs a reader can select, and the surface each keeps its role on.
@@ -208,7 +209,7 @@ const bodyRoleOn = (surface: keyof ThemeColors): keyof ThemeColors =>
  * ```
  */
 export function selectionFailures(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly SelectionFailure[] {
   const colors = themeColors(theme);
@@ -294,12 +295,12 @@ export function selectionOn(
   floors?: ContrastFloors,
 ): string;
 export function selectionOn(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   surface: keyof ThemeColors,
   floors?: ContrastFloors,
 ): string | undefined;
 export function selectionOn(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   surface: keyof ThemeColors,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): string | undefined {

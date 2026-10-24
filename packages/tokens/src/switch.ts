@@ -33,12 +33,7 @@
  * held by the gate rather than by a contract a consumer has to remember to run.
  */
 
-import {
-  isPaintableColor,
-  themeColors,
-  type ColourSource,
-  type ThemeColors,
-} from "./color.js";
+import { isPaintableColor, themeColors, type ColourSource } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { isControlSize, type ControlSize } from "./scale.js";
@@ -340,18 +335,18 @@ export type SwitchBoxSource = {
  *
  * A theme restored from storage writes `null` where it declares no paint — JSON
  * has no `undefined` — so the declaration is read through {@link declaredSwitch}
- * rather than compared to `undefined`.
+ * rather than compared to `undefined`. The roles a track is measured against are
+ * the colour group's, which is the storage shape {@link ColourSource} names: a
+ * strip the theme lost is reported, not thrown.
  */
 export interface SwitchAuditSource extends ColourSource {
-  /** The roles a track is measured against; a strip the theme lost is reported. */
-  readonly colors?: Partial<ThemeColors>;
   /** The declared paint, or nothing for the accent switch. */
-  readonly switch?: Partial<SwitchColors>;
+  readonly switch?: Partial<SwitchColors> | null;
   /**
    * The box the paint is drawn in. Measured on its own, because a consumer reads
    * it directly through `switchMetricsAt` as well as through the primitive.
    */
-  readonly switchMetrics?: SwitchBoxSource;
+  readonly switchMetrics?: SwitchBoxSource | null;
 }
 
 /**

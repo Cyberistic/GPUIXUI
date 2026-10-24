@@ -5,7 +5,11 @@ import {
   type ColourSource,
   type ThemeColors,
 } from "./color.js";
-import { contrastFloorsFor, contrastRatio } from "./contrast.js";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  type ContrastSource,
+} from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
 import {
   borderWidth as shippedBorderWidth,
@@ -13,7 +17,7 @@ import {
   type BorderWidth,
   type ControlSize,
 } from "./scale.js";
-import type { Theme, ThemeContrast } from "./theme.js";
+import type { Stored, Theme } from "./theme.js";
 import {
   isTextRole,
   typography as shippedTypography,
@@ -337,7 +341,8 @@ export interface FocusRing {
  * was never carried. The colour roles have the same port in {@link ColourSource}.
  */
 export interface BorderSource {
-  readonly borderWidth?: Readonly<Partial<BorderWidth>> | null;
+  /** The scale, as a store hands it back: a step may be absent or `null`. */
+  readonly borderWidth?: Stored<BorderWidth>;
 }
 
 /**
@@ -574,10 +579,13 @@ export type FilledFeedbackState = (typeof filledFeedbackStates)[number];
  * roles are optional — the derivation answers `undefined` rather than a colour
  * it could not build.
  */
-export interface FilledFeedbackSource extends ColourSource {
-  /** The contrast variant, whose label floor clamps the step. */
-  readonly contrast?: ThemeContrast;
-}
+/**
+ * What a filled action's derived states read: the roles, and the contrast
+ * variant whose label floor clamps the press. The variant is the storage shape
+ * (`ContrastSource`), so a brand a store handed back reaches the derivation
+ * without a cast — the rule every report follows.
+ */
+export type FilledFeedbackSource = ColourSource & ContrastSource;
 
 /** The label role each filled role carries its text and marks in. */
 const filledOnColour: Readonly<Record<FilledRole, keyof ThemeColors>> = {

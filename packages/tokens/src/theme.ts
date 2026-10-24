@@ -349,13 +349,25 @@ export interface ThemeOverrides {
 }
 
 /**
- * A partial shape as a store hands it back: every value may also be `null`.
+ * A shape as a store hands it back: every value may also be absent or `null`.
  *
  * JSON has no `undefined`, so a store writes `null` for a group, a role or a
  * table it never carried. An array is a value here rather than a shape to widen
  * (an elevation level, a series), so it keeps its own type beside `null`.
+ *
+ * Exported because the reports that measure a stored theme take their group as
+ * this shape — `invalidNumbers` reads a `Stored<Spacing>`, `seriesColors` a
+ * `Stored<SeriesColors>` — so a consumer's own decoder can type the value it
+ * hands them without a cast.
+ *
+ * @example
+ * ```ts
+ * import type { Stored, Spacing } from "@gpuixui/tokens";
+ *
+ * const spacing: Stored<Spacing> = JSON.parse(row).spacing; // a step may be null
+ * ```
  */
-type Stored<T> =
+export type Stored<T> =
   T extends ReadonlyArray<unknown>
     ? T | null
     : T extends object

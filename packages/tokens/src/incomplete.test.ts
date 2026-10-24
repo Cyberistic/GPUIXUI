@@ -32,6 +32,8 @@ import {
   auditTheme,
   brandText,
   brandTextOn,
+  contrastFailures,
+  contrastFloorsFor,
   colorRoles,
   contrastPairs,
   contrastRatio,
@@ -47,6 +49,7 @@ import {
   filledHover,
   filledPressed,
   focusRing,
+  highContrastFloors,
   highlightFailures,
   invalidColorRoles,
   invalidNumbers,
@@ -73,6 +76,7 @@ import {
   type Density,
   type DensitySource,
   type ElevationLevel,
+  type StoredTheme,
   type Theme,
   type ThemeColors,
 } from "./index.js";
@@ -82,13 +86,15 @@ import {
   highContrastLightTheme,
 } from "./theme.js";
 import {
-  lightSeries,
   darkSeries,
+  highContrastDarkSeries,
+  lightSeries,
   seriesColors,
   seriesFailures,
 } from "./series.js";
 import {
   darkSyntax,
+  highContrastDarkSyntax,
   lightSyntax,
   syntaxColors,
   syntaxFailures,
@@ -1638,5 +1644,90 @@ describe("a role a store wrote as null", () => {
     expect(designSystem).toContain("keeps only the strings");
     expect(readme).toContain("keeps only the strings");
     expect(inventory).toContain("keeps only the strings");
+  });
+});
+
+/**
+ * The shape a store hands back, as a **type** the gate accepts.
+ *
+ * The bug this holds: `StoredTheme` is the value `restoreTheme` is documented to
+ * take — the labels a theme was saved from, `null` where a group or a role was
+ * never carried — and the gate refused it. `auditTheme`, `invalidNumbers`,
+ * `invalidScales`, `seriesColors`, `syntaxColors` and `switchFailures` declared
+ * complete groups, a `ThemeMode` label and non-null tables, so the consumer
+ * `restoreTheme` exists for could run the one check this library asks for only
+ * through a cast, which `AGENTS.md` §2 forbids. Every body already read the
+ * storage shape — `invalidNumbers`' own `@example` passes `JSON.parse`, which
+ * answers `any` and hid the hole — so each seam's input is the shape it reads
+ * now. These cases fail `check-types` if a group goes back to `Theme`'s (the
+ * fixture below is the type, not a cast) and fail by name if a seam stops
+ * answering the labels and the `null` group a store wrote.
+ */
+describe("the shape a store hands back", () => {
+  // The labels are the strings a store wrote, not the union: `"HIGH"` is the
+  // strict variant and `"Dark"` the dark page's mode, the reads `restoreTheme`
+  // makes on the way in and every floor and palette makes after it.
+  const saved: StoredTheme = {
+    ...highContrastDarkTheme,
+    mode: "Dark",
+    contrast: "HIGH",
+  };
+
+  it("runs the gate and its reports without a cast", () => {
+    expect(missingTokens(saved)).toEqual([]);
+    expect(auditTheme(saved).passed).toBe(true);
+    expect(invalidNumbers(saved)).toEqual([]);
+    expect(invalidScales(saved)).toEqual([]);
+    expect(contrastFailures(saved)).toEqual([]);
+  });
+
+  it("reads the labels the store wrote, not the ones a cast would promise", () => {
+    expect(contrastFloorsFor(saved)).toEqual(highContrastFloors);
+    expect(seriesColors(saved)).toEqual(highContrastDarkSeries);
+    expect(syntaxColors(saved)).toEqual(highContrastDarkSyntax);
+  });
+
+  it("reads an optional table a store nulled as the shipped one", () => {
+    const bare: StoredTheme = {
+      ...highContrastDarkTheme,
+      series: null,
+      syntax: null,
+      switch: null,
+    };
+    expect(seriesColors(bare)).toEqual(highContrastDarkSeries);
+    expect(syntaxColors(bare)).toEqual(highContrastDarkSyntax);
+    expect(switchFailures(bare).paint).toEqual([]);
+  });
+
+  it("refuses a numeric group the store lost, naming it", () => {
+    const lost: StoredTheme = { ...highContrastDarkTheme, spacing: null };
+    expect(missingTokens(lost)).toContainEqual({
+      group: "spacing",
+      path: "",
+      kind: "group",
+    });
+    expect(() => auditTheme(lost)).toThrow("`spacing`");
+  });
+
+  it("reports a nulled colour group's every role, rather than throwing", () => {
+    const noColours: StoredTheme = { ...highContrastDarkTheme, colors: null };
+    expect(invalidColorRoles(noColours)).toHaveLength(colorRoles.length);
+    expect(auditTheme(noColours).passed).toBe(false);
+  });
+
+  it("is taught where the gate and the extension mechanism are", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const surfaces = {
+      catalogue: read("../../../docs/tokens.md"),
+      designSystem: read("../../../docs/design-system.md"),
+      readme: read("../README.md"),
+      inventory: read("../../../COMPONENTS.md"),
+    };
+
+    for (const [surface, text] of Object.entries(surfaces)) {
+      expect(text, surface).toContain("ThemeAuditSource");
+      expect(text, surface).toContain("StoredTheme");
+    }
   });
 });

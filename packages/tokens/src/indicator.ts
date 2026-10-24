@@ -23,9 +23,9 @@ import {
   contrastFloorsFor,
   contrastRatio,
   type ContrastFloors,
+  type ContrastSource,
 } from "./contrast.js";
 import { statusTones } from "./styles.js";
-import type { ThemeContrast } from "./theme.js";
 
 /**
  * The roles a component may paint a mark in: the three action and field marks
@@ -122,7 +122,7 @@ export interface IndicatorFailure {
  * ```
  */
 export function indicatorFailures(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & ContrastSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly IndicatorFailure[] {
   const colors = themeColors(theme);
