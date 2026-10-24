@@ -28,9 +28,9 @@ export const relativeLuminance = (
 };
 
 /**
- * The mode a page's fill implies: a page closer to white than black is a dark
- * theme's page, because its ink is designed to read on it. `undefined` when no
- * colour grammar reads the page, the same absence `contrastRatio` answers.
+ * The mode a page's fill implies: a fill closer to white is a light theme's page.
+ * That theme's dark ink is designed to read on it. `undefined` when no colour
+ * grammar reads the page, the same absence `contrastRatio` answers.
  */
 export const pageMode = (
   background: string | undefined,

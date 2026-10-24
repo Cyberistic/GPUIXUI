@@ -12,6 +12,7 @@ import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { almostBrandAudit } from "./theme-audit.example.js";
 import { resolveBrandTheme, resolveTheme } from "./high-contrast.example.js";
 import { densityNames, densityPresets, type BoxShadow } from "./index.js";
+import { pageMode, relativeLuminance } from "./luminance.js";
 import {
   auditTheme,
   createTheme,
@@ -162,6 +163,41 @@ describe("a theme mode this release does not ship", () => {
     pages.forEach((page) => {
       expect(page).toContain("themeModeOf");
       expect(page).toContain("the page it carries");
+    });
+  });
+
+  it("prints the direction the page rule answers, not the opposite one", () => {
+    // A page nearer white is a *light* theme's page: its dark ink is designed
+    // to read on it. Every surface taught the fallback said the opposite — a
+    // page nearer white was "a dark theme's page" — so a reader learned the
+    // inverted rule from the seam, both pages, the README and the inventory.
+    const lightPage = lightTheme.colors.background;
+    const darkPage = darkTheme.colors.background;
+    expect(pageMode(lightPage)).toBe("light");
+    expect(pageMode(darkPage)).toBe("dark");
+    expect(relativeLuminance(lightPage) ?? 0).toBeGreaterThan(
+      relativeLuminance(darkPage) ?? 1,
+    );
+
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const surfaces: Readonly<Record<string, string>> = {
+      "docs/tokens.md": read("../../../docs/tokens.md"),
+      "docs/design-system.md": read("../../../docs/design-system.md"),
+      "packages/tokens/README.md": read("../README.md"),
+      "packages/tokens/src/theme.ts": read("./theme.ts"),
+      "packages/tokens/src/luminance.ts": read("./luminance.ts"),
+      "COMPONENTS.md": read("../../../COMPONENTS.md"),
+    };
+    Object.entries(surfaces).forEach(([name, text]) => {
+      expect(text, name).toContain(
+        "a fill closer to white is a light theme's page",
+      );
+      expect(text, name).not.toContain(
+        "a fill closer to white is a dark theme's page",
+      );
     });
   });
 });

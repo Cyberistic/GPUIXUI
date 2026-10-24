@@ -389,7 +389,24 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 235/235
+`[x]` `[██████████]` 236/236
+
+`[x]` Print the **page→mode rule in the direction it answers** — a theme whose
+`mode` a store wrote as an unsupported name is read from the page it carries,
+and every surface that taught that fallback said the opposite of what
+`pageMode` does: `themeModeOf`, `luminance.ts`, `docs/tokens.md`,
+`docs/design-system.md`, the package README and the `Design tokens` row all read
+"a fill closer to white is a **dark** theme's page", when a fill nearer white
+answers `light` (a dark page answers `dark`). A reader following the sentence
+would have expected the inverted palette for a stored theme; the sentence is
+corrected on all six live surfaces. `theme.test.ts` gains `prints the direction
+the page rule answers, not the opposite one`: it proves the shipped pages'
+answers (`light` for the light page, `dark` for the dark one, the light page the
+nearer white by luminance), then requires the derived sentence on all six
+surfaces and refuses the inverted one. Directions measured: at HEAD the case
+fails naming `docs/tokens.md` and the missing sentence; corrected, the package
+is 49 files / **3 039** tests with `check-types` and `check:tests` clean. No
+native scenario applies — a page rule and the prose that teaches it.
 
 `[x]` Keep the **focus ring's geometry when a store truncated the border scale** —
 `keyboardFocusRing` and `focusRing` read `theme.borderWidth.strong` straight off
@@ -19025,6 +19042,32 @@ scenario applies — the timings are pure values.
 `[x]` `@gpuixui/motion`: **a frame set a caller stored reached the runtime as `undefined` and `NaN`** — `presenceMotion(frames, present, timing)` is the published composition a consumer paints its own surface with, and the frames were the table's one structural input with no reader: `PresenceFrames` is exported, so a config that did not decode arrives with a phase it never carried (`null`, the shape JSON keeps) or a coordinate a failed measurement wrote (`NaN`), and the composition handed both straight to the runtime's `motion` prop — whose `animate` target is **required** (a surface with none never enters and never leaves) and whose non-finite insets paint as nothing (the travel silently disappears). The frames are read now (`frameOf`/`framesOf`, private like the module's other repairs): a field the runtime cannot paint is **dropped**, so the element keeps the value its own style states — where the frame's zero would have put it — and a phase the value does not name is **no frame**. Both stored shapes are types now (`PresenceFrameInput`/`PresenceFramesInput`, and `PresenceTimingInput` for the timing half), so a consumer passes what its decoder answered without the assertion `AGENTS.md` §2 forbids; `presenceMotion`, `presenceTimingOf`, `exitWindowMs`, `transitionWindowMs`, `delayedTiming` and `useSurfacePresence` take them. Proof: `src/presence.test.ts`'s `reads a frame set a caller stored as the fields it can paint` (a `NaN` coordinate, a `null` phase, a set that did not decode at all, and the readable pair unchanged), the stored-timing case and `src/react.test.tsx`'s `the window a stored timing names` write their stored values **without a cast**, and `api.example.ts`'s executed `presenceCompositionExample` composes a stored set through the public entry. Directions measured: with `framesOf` reverted the case fails `expected { … } to deeply equal { initial: { opacity: +0 }, … }`, reporting the received `animate: null` and `top: NaN`; restored, the package is 14 files / **187 tests** with `check-types`, `build` and `check:tests` clean. Docs: `packages/motion/README.md` §The presence table (both bullets) and the `presenceTimingOf`/`presenceMotion` JSDoc. No native scenario applies — the frames are pure values a surface merges into its own style, and no shipped surface passes an unreadable one today.
 
 `[x]` `packages/components`: **the re-open the seam promises had no measurement** — the motion package's README and `useSurfacePresence`'s JSDoc both promise that reopening during an exit keeps the same instance, "so the run retargets instead of restarting", and that the leave's timer belongs to the leave that started: nothing measured either half. The exit is a wall-clock timer for the whole window, so a re-open that did not cancel it would unmount the surface its owner still holds open when the *interrupted* leave's window ended — a dismissed dialog reopened 100 ms into its 320 ms exit vanishes 220 ms later, with every other presence case green. `presence.test.tsx` gains `keeps the instance a re-open finds, and outlives the leave it cancelled` (a controlled modal on a paused motion clock: the surface is dismissed, advanced into its exit, reopened, and held — the entry must start from the frame on screen rather than the entry frame, the surface must still be painted after the window the interrupted leave armed, and the run must settle back on its resting frame). Directions measured: with the seam's timer cleanup removed the case fails `expected true to be false` on the painted assertion; restored, the file is 34/34. Docs: `docs/component-api.md` §11's Verification paragraph names the case. No native scenario applies — the window is wall-clock and the renderer measures it, as `the seam's mount window` does.
+
+`[x]` `packages/components`: **a dismissed menu's ghost rows stayed in the window's Tab order** —
+      the seam stops a leaving surface taking **presses** (`presenceStyle` removes its own
+      hitbox, `PresenceShield` covers the content), and the runtime decides its Tab order element
+      by element: neither rule reaches a child's `tabIndex`, and `0.11.0` has no inherited
+      `inert`. Measured in the renderer with a trigger, one control after it and a two-row
+      dropdown: the window's order is the trigger, the control, then the rows, so after Escape the
+      rows are still reached by `focusNext` **while the ghost is painted** (`rename`, `delete`),
+      and a reader who presses Tab twice lands on a row that unmounts under the keyboard — the
+      window keeps no focused element. A row of a leaving surface now drops its own stop:
+      `MenuLeaving` (`menu/state.ts`) is a second context beside `MenuContext`, `MenuItem` reads it
+      with `useMenuLeaving` and paints `tabIndex={disabled || leaving ? -1 : 0}`, and both
+      surfaces that paint rows provide it — `DropdownMenuContent` from `!presence.present` and
+      `MenuSurface` from its own `leaving` prop, so the context menu and the submenu agree.
+      Proof: `src/behaviour/presence.test.tsx` gains `keeps a dismissed menu's rows out of the
+      window's tab order` (the live walk is the control: the same rows **are** reached while the
+      menu is open) and `does the same for a context menu, which paints the shared surface` (the
+      `MenuSurface` half). Directions measured: with the row's read reverted the ghost walk fails
+      `expected [ 'open', 'after', 'rename', …(3) ] to not include 'rename'`; with either
+      provider's value forced `false` the same case fails, so the row, the dropdown and the shared
+      surface are each load-bearing. Restored: `presence` + `dropdown-menu` + `context-menu`
+      behaviour **96/96**, `check-types`, `oxfmt` and `oxlint` clean on the changed files.
+      Docs: `PresenceShield`'s JSDoc and `MenuLeaving`'s state the rule and the residual limit —
+      caller content a consumer puts inside a modal ghost keeps its stops until the runtime
+      publishes an inherited `inert`, and a page could teach that beside §11's pointer rule.
+      No native scenario applies — the traversal is the renderer's own, measured here.
 
 ## TanStack cores
 

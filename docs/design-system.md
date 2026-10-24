@@ -1292,7 +1292,7 @@ dim is a where-can-Tab-go cue rather than a reading mode, so it is held to
 
 A theme's **mode** is a stated value of the same kind, but there is no strict
 reading of light and dark: `themeModeOf(theme)` reads a mode this release does
-not ship from the page it carries — a fill closer to white is a dark theme's page,
+not ship from the page it carries — a fill closer to white is a light theme's page,
 and a page no colour grammar reads keeps `light`. The chart scale, the code
 palette, a native host's `appearance` and the palette `applyStyle` wears all read
 it there. Read as light, an upper-cased `Dark` was handed the light tables on a

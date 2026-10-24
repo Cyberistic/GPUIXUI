@@ -130,7 +130,7 @@ export const themeContrastOf = (theme: {
  * families but not its colours.
  *
  * A value this release does not ship — or none at all — is therefore read from
- * the page the theme carries: a fill closer to white is a dark theme's page,
+ * the page the theme carries: a fill closer to white is a light theme's page,
  * because that theme's ink is designed to read on it. That is the one question
  * the palette can answer without trusting the label, and it is the rule
  * {@link paletteMode} already follows for a system palette. A page no colour
