@@ -72,10 +72,15 @@ translation answers `""` (`src/behaviour/surface-a11y.test.tsx`).
 | ---- | ---- | ------- | ----------- |
 | `checked` | `boolean` | — | whether this record is chosen |
 | `onCheckedChange` | `(selected: boolean) => void` | — | the box's next state; a controlled table flips the record's membership |
-| `label` | `string` | — | the record's accessible name, e.g. `Select file-001.ts`; required |
+| `label` | `string` | `Select this row` | the record's accessible name, e.g. `Select file-001.ts`; a blank name reads as the default |
 | `width` | `number` | `40` | the track width; the header box must match it |
 | `disabled` | `boolean` | `false` | refuses the press |
 | `testId` | `string` | — | the box's id; the cell is `${testId}-cell` and its target `${testId}-target` |
+
+A row box's name is content: a record restored without its title interpolates
+`Select ` and a saved label answers `""`. A blank or whitespace name reads as
+the documented `Select this row` rather than leaving the box unnamed — the same
+rule the header box follows (`src/behaviour/surface-a11y.test.tsx`).
 
 ## Limitations
 

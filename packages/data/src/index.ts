@@ -157,6 +157,7 @@ export type {
   SelectionState,
 } from "./selection/logic.js";
 export {
+  DEFAULT_SELECTION_CELL_LABEL,
   DEFAULT_SELECTION_LABEL,
   SELECTION_COLUMN_WIDTH,
   TableSelectionCell,

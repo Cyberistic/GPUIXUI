@@ -613,6 +613,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `docs/column-configuration.mdx`, the README's column-label paragraph and the
   Tier 3 Column configuration row.
 
+- **A row box's blank name reads the documented default**: `TableSelectionCell`
+  handed its `label` straight to `Checkbox`, so a record restored without its
+  title — `Select ${row.name}` with a blank name, or a saved label of `""` —
+  left the per-row box **unnamed**, the one channel a reader has to tell one
+  row's box from another, while the header box already read
+  `Select every row`. The cell reads the label through `spokenText` and the new
+  `DEFAULT_SELECTION_CELL_LABEL` (`Select this row`).
+  `surface-a11y.test.tsx` gains `reads a blank row box name as the documented
+  default` (a blank and a whitespace name, read off the tree); direction
+  measured: before the reading the case fails `expected '' to be 'Select this
+  row'`. Docs: `docs/table-selection.mdx`, the README's announce paragraph and
+  the Tier 3 Row selection row.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

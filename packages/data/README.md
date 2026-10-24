@@ -588,11 +588,13 @@ titles are headings, and every primitive label or value is a `Label` node
 name as well as an absent one: the filter field and the toolbar's search field
 read `Filter rows` and `Search`, the builder's title reads `Filters` and its
 field picker reads the field's own name, the column menu and its surface read
-`Columns` and the select-all box reads `Select every row`, and a property
+`Columns`, the select-all box reads `Select every row` and a row's box reads
+`Select this row`, and a property
 panel's blank title paints no heading rather than an unnamed one. A property
 row's label is content too: a blank one reads as the row's key (`propertyName`,
 the one reading the label column and an editable row's field name share), so a
-saved object cannot leave its editor unnamed.
+saved object cannot leave its editor unnamed. A column's label is the same kind
+of content: a blank one reads as its `id` in the column menu (`columnName`).
 
 The advanced filter's state is a **predicate tree**, not a string: a predicate
 (field, comparison, value), an `all`, an `any` and a `not`. The tree is the

@@ -34,7 +34,9 @@ import {
   type DataTestRoot,
 } from "../internal/test-root.js";
 import {
+  DEFAULT_SELECTION_CELL_LABEL,
   DEFAULT_SELECTION_LABEL,
+  TableSelectionCell,
   TableSelectionHeader,
 } from "../selection/column.js";
 import {
@@ -246,6 +248,38 @@ describe("the data surfaces announce what they paint", () => {
     // the prop's documented default sat unused.
     expect(nameOf(tree, onlyRole(tree, "CheckBox"))).toBe(
       DEFAULT_SELECTION_LABEL,
+    );
+  });
+
+  it("reads a blank row box name as the documented default", () => {
+    // Bug guarded: a row's box label is content — a record restored without a
+    // title interpolates `Select ` and a saved label answers `""` — and the
+    // box's name is the only channel a reader has to tell one row's box from
+    // another. A blank label left it unnamed while the header box already read
+    // its own default.
+    const blank = treeOf(
+      <TableSelectionCell
+        checked={false}
+        onCheckedChange={() => {}}
+        label=""
+        testId="blank-row-select"
+      />,
+    );
+    expect(nameOf(blank, onlyRole(blank, "CheckBox"))).toBe(
+      DEFAULT_SELECTION_CELL_LABEL,
+    );
+
+    root?.unmount();
+    const whitespace = treeOf(
+      <TableSelectionCell
+        checked={false}
+        onCheckedChange={() => {}}
+        label="   "
+        testId="whitespace-row-select"
+      />,
+    );
+    expect(nameOf(whitespace, onlyRole(whitespace, "CheckBox"))).toBe(
+      DEFAULT_SELECTION_CELL_LABEL,
     );
   });
 

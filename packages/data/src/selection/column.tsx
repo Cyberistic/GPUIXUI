@@ -31,6 +31,9 @@ export const SELECTION_COLUMN_WIDTH = 40;
 /** The select-all box's name when the caller says nothing. */
 export const DEFAULT_SELECTION_LABEL = "Select every row";
 
+/** A row box's name when the caller hands over no words. */
+export const DEFAULT_SELECTION_CELL_LABEL = "Select this row";
+
 /**
  * The box's own painted target.
  *
@@ -127,7 +130,14 @@ export interface TableSelectionCellProps {
   readonly checked: boolean;
   /** The box's next state; a controlled table flips the record's membership. */
   readonly onCheckedChange: (selected: boolean) => void;
-  /** The record's accessible name, e.g. `Select file-001.ts`. Required. */
+  /**
+   * The record's accessible name, e.g. `Select file-001.ts`.
+   *
+   * A blank name is content a record can hand over — an object restored
+   * without its title interpolates `Select ` and a saved label answers `""` —
+   * so it reads as {@link DEFAULT_SELECTION_CELL_LABEL} rather than leaving
+   * the box unnamed.
+   */
   readonly label: string;
   /** Defaults to {@link SELECTION_COLUMN_WIDTH}, which the header must match. */
   readonly width?: number;
@@ -141,7 +151,8 @@ export interface TableSelectionCellProps {
  *
  * A `label` is required: a row box that reads only "checkbox" is anonymous in
  * the accessibility tree, and the runtime has no `aria-labelledby` to borrow
- * the row's text.
+ * the row's text. A blank name is content rather than absence, so it reads as
+ * {@link DEFAULT_SELECTION_CELL_LABEL} instead of publishing an unnamed box.
  */
 export const TableSelectionCell = ({
   checked,
@@ -152,6 +163,10 @@ export const TableSelectionCell = ({
   testId,
 }: TableSelectionCellProps) => {
   const theme = useTheme();
+  const boxLabel = spokenText(
+    Option.fromNullishOr(label),
+    DEFAULT_SELECTION_CELL_LABEL,
+  );
   return (
     <TableCell
       width={width}
@@ -169,7 +184,7 @@ export const TableSelectionCell = ({
         <Checkbox
           checked={checked}
           onCheckedChange={onCheckedChange}
-          label={label}
+          label={boxLabel}
           disabled={disabled}
           size="sm"
           testId={testId}
