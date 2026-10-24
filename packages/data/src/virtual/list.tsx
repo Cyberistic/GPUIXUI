@@ -170,10 +170,7 @@ export const VirtualList = (props: VirtualListProps) => {
     onVisibleRange: handleRange,
     style: mergeStyles(
       recipeStyle(cn(className ?? ""), theme),
-      mergeStyles(
-        listBox(Option.getOrUndefined(paintableSize(height))),
-        style,
-      ),
+      mergeStyles(listBox(Option.getOrUndefined(paintableSize(height))), style),
     ),
   };
   const windowed =
