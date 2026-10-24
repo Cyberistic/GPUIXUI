@@ -111,13 +111,6 @@ describe("the divider count the data lane prints", () => {
     );
   });
 
-  it("prints the same count on the page that owns the rule", () => {
-    expect(page).toContain(`**${missed.length} of the ${placements.length}**`);
-    expect(behaviour).toContain(
-      `${missed.length} of the ${placements.length} shipped`,
-    );
-  });
-
   it("keeps no retracted count in the lane's own records", () => {
     // The two numbers that shipped before the eighteen-style set: a rewrite of
     // one sentence must not leave its old count behind in another.

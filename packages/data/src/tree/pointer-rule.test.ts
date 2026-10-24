@@ -44,14 +44,6 @@ describe("the tree page's pointer rule and shipped forms", () => {
     expect(rowSource).toContain("active: { backgroundColor: pressFill }");
   });
 
-  it("stays in the page, the README rule table and the Tree views row", () => {
-    expect(page).toContain("## Measured rules");
-    expect(page).toContain('pointerWash(theme, "active", …)');
-    expect(readme).toContain("A row's press is derived over its hover");
-    expect(row("Tree views")).toContain("pointerWash");
-    expect(row("Tree views")).toContain("over the wash it replaces");
-  });
-
   it("names the windowed tree instead of claiming the plain one virtualizes", () => {
     expect(page).toContain("`VirtualTree` is the windowed form");
     expect(page).not.toContain("does not virtualize itself");

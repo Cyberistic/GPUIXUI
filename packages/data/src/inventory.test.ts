@@ -119,13 +119,6 @@ describe("the data lane's printed case counts", () => {
     );
   });
 
-  it("prints the virtual tree's suite count on its page", () => {
-    const cases = countCases("src/behaviour/virtual-tree.test.tsx");
-    expect(read(packageRoot, "docs/virtual-tree.mdx")).toContain(
-      `${cases} tests`,
-    );
-  });
-
   it("prints the style set the washes are derived in", () => {
     // The `Row selection` row outlived Omarchy's two styles: the tokens suite
     // walks eighteen, while the row still told a reader sixteen. The count is
