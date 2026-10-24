@@ -24,6 +24,7 @@ carries the detail.
 
 | Rule | What a window measured | Use instead |
 | ---- | ---------------------- | ----------- |
+| In-window application chrome | the shipped `AppMenu`/`Toolbar`/`StatusBar` paint in a window: a dropdown lands below its trigger, `Escape` returns the focus to it, the toolbar's roving moves the **window's** focus and skips a disabled action, and a status tone paints its own ink (`app-chrome-lifecycle`, 47 checks) | the app paints its own top and bottom rows; toggle the toolbar overflow with `Enter`, and open a menu with a press rather than relying on the hover |
 | A modal contains the wheel | the shipped `DialogContent` paints one `<anchored occlude>` veil over the page, and it is a wall: a wheel on the veil moves neither the page nor the modal body, a wheel inside the body scrolls it by its delta and clamps against its own content, and `Escape` leaves the page where the reader left it (`modal-scroll-lifecycle`, 35 checks) | mount the shipped `Dialog`; no scroll lock is needed. Read the body's own `onScrollChange`, and keep a close control outside the scrolling body |
 
 ## The browser build

@@ -245,4 +245,45 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("no scroll lock");
     expect(runtimePage).toContain("occlude");
   });
+
+  it("records the chrome the shipped shell parts paint, from the probe", () => {
+    // The record's Application-menu row can only say "draw an in-window menu";
+    // whether the shipped parts actually paint one was only in the playground's
+    // README. The row is the durable claim, so it is held to the probe's own
+    // section: a renamed probe, a changed check count or a limit the probe no
+    // longer measures fails here.
+    const row = rowFor("In-window application chrome");
+
+    expect(row?.verdict).toBe("supported, with limits");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("Composed, not provided");
+    expect(evidence).toContain("`app-chrome-lifecycle`");
+    expect(evidence).toContain("47 checks");
+    expect(evidence).toContain("`Escape`");
+    expect(evidence).toContain("overflow");
+    expect(evidence).toContain("pointer move");
+    expect(row?.workaround).toContain("`Enter`");
+
+    const probe = read("apps/playground/README.md");
+    const section = probe.slice(probe.indexOf("### `app-chrome-lifecycle`"));
+    expect(section).not.toBe("");
+    expect(section).toContain("47 checks");
+    expect(section).toContain("Right");
+    expect(section).toContain("disabled");
+    expect(section).toContain("`escape`");
+    expect(section).toContain("status bar");
+
+    // The page is a summary of the record, not a second copy: it names the
+    // probe, the parts and the one action a reader takes.
+    const pageRow = runtimePage
+      .split("\n")
+      .find((line) => line.startsWith("| In-window application chrome"));
+    expect(pageRow).toContain("`app-chrome-lifecycle`");
+    expect(pageRow).toContain("47 checks");
+    expect(pageRow).toContain("AppMenu");
+    expect(pageRow).toContain("`Enter`");
+
+    // §5 owes every cited probe a line.
+    expect(doc.slice(doc.indexOf("## 5."))).toContain("`app-chrome-lifecycle`");
+  });
 });
