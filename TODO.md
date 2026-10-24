@@ -430,7 +430,7 @@ stacked-pair count (the Omarchy ink fixed one contrast placement, 25 → 24) and
 improved, so Luna's success line is now tightest at 8.57:1). Green: 50 files /
 **3 105** tests, `check-types` clean; `@gpuixui/components`' `selection`,
 `alert` and `theme-high-contrast` behaviour suites pass against the same seam.
-Docs: `docs/tokens.md` §Text selection, `docs/design-system.md` §8, the package
+Docs: `docs/tokens.md` §Text selection, `docs/design-system.md` §9, the package
 README §Text selection and the `Text selection wash` row. No native scenario
 applies — a pure derivation over values and the prose that teaches it.
 
