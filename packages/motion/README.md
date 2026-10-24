@@ -327,17 +327,20 @@ the house `tween()` (300 ms, ease-out): storing it and reading `.kind` off
 nothing threw `TypeError` out of a frame loop, and the equality rule a re-render
 runs to decide whether the run changed threw before the run could start.
 
-A timeline is repaired at the value the caller supplies: a keyframe whose offset
-or value cannot be read is not a stop (it is dropped, and a set with none answers
-`0`), a set is read by the offsets its frames name rather than by the order they
-were declared — a list built from a map interpolates through the journey it
-describes, where reading the first and last entries as the ends made the frame
-declared first answer for every progress below its offset — two frames at one
-offset are an instant jump, so the value declared last at it holds from that
-offset on, a `Sequence` step whose start cannot be read is placed at `0`, and a
-duration it cannot run is no duration at all — the step is completed on the
-first sample, and the sequence's own end never lands before a step it still has
-to run. An end the arithmetic cannot represent is no duration either: two
+A timeline is repaired at the value the caller supplies: a list the caller does
+not have — a stored timeline field that never decoded reads back as `null` — is a
+set with none, and an entry that is not a frame is dropped with the unreadable
+stops, so a sampler is never asked to paint from a config the render did not
+build; a keyframe whose offset or value cannot be read is not a stop (it is
+dropped, and a set with none answers `0`), a set is read by the offsets its
+frames name rather than by the order they were declared — a list built from a map
+interpolates through the journey it describes, where reading the first and last
+entries as the ends made the frame declared first answer for every progress below
+its offset — two frames at one offset are an instant jump, so the value declared
+last at it holds from that offset on, a `Sequence` step whose start cannot be read
+is placed at `0`, and a duration it cannot run is no duration at all — the step is
+completed on the first sample, and the sequence's own end never lands before a
+step it still has to run. An end the arithmetic cannot represent is no duration either: two
 readable numbers can add to an `Infinity` no clock reaches, which made
 `duration()` infinite — so `complete()` never answered true — and `append` place
 the next step at `0`, before the steps it was meant to follow; a duration the

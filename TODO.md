@@ -17944,6 +17944,23 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion`: **a timeline decoded from storage took the render down** — `sampleKeyframes`
+is a published sampler and its frame list is caller data, so a stored timeline whose `frames` field
+never decoded arrives as **no list at all** (JSON has no `undefined`, so it reads back as `null`) or as
+a list carrying an entry that is not a frame. The reader called `.filter` on the list and `.at` on each
+entry, so `sampleKeyframes(null, 0.5)` threw `TypeError: Cannot read properties of null (reading
+'filter')` and a null entry threw `(reading 'at')` — out of the render that sampled the progress, from a
+sampler whose documented rule is that an input it cannot read is repaired. `stopsOf` now reads the list
+and its entries (`isFrame`), so no list is a set with no stops — the module's own answer for a set with
+none — and an entry that is not a frame is dropped like an unreadable offset or value; the public
+signature says `readonly (Keyframe | null | undefined)[] | null | undefined`, the shape a decoded
+config actually has. Proof: `src/timeline.test.ts`'s `reads a stored frame set as the stops it actually
+carries` (a missing and an `undefined` list answer `0`; a list with `null`/`undefined` entries between
+two readable frames samples `50`; a null first entry cannot become the set's first stop). Directions
+measured: with the list read restored the case fails `TypeError: Cannot read properties of null
+(reading 'filter')`; with the entry guard removed it fails `(reading 'at')`; restored, the package is 14
+files / **185 tests** with `check-types` clean. Docs: the package README §Inputs the runtime can paint
+teaches the list rule beside the unreadable stop. No native scenario applies — a pure sampler.
 `[x]` `@gpuixui/motion`: **a timing a caller stored took the surface's render down** — `PresenceTiming`
 is exported and structural, and `/presence` is now a published entry for a consumer painting its own
 surface, so a config decoded from storage can hand `useSurfacePresence` **no object at all** (JSON

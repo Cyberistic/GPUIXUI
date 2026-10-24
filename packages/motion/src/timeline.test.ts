@@ -6,7 +6,9 @@
  * The last suite guards the totality the package promises for a timeline a
  * caller **built by hand**: a frame or a step whose offset, value or duration
  * cannot be read must be repaired rather than reach the formulas, because a
- * `NaN` there painted nothing and left a driver sampling forever. It reads the
+ * `NaN` there painted nothing and left a driver sampling forever — and so must
+ * the list itself, because a timeline decoded from storage can arrive with no
+ * list at all or with an entry that is not a frame. It reads the
  * sequence's own arithmetic too: an end its sum cannot represent made
  * `complete()` false forever (and `append` land before the steps it follows),
  * and an offset that overflows put a staggered member before its group.
@@ -227,6 +229,25 @@ describe("a timeline built by hand", () => {
   it("answers zero when no frame can be read", () => {
     expect(sampleKeyframes([keyframe(Number.NaN, Number.NaN)], 0.5)).toBe(0);
     expect(sampleKeyframes([], 0.5)).toBe(0);
+  });
+
+  it("reads a stored frame set as the stops it actually carries", () => {
+    // A timeline decoded from storage is a list the render did not build: JSON
+    // has no `undefined`, so a field the config never carried comes back as
+    // `null`, and a list assembled from stored rows can carry an entry that is
+    // not a frame. The reader called `.filter` on the list and `.at` on every
+    // entry, so a missing list threw `TypeError: Cannot read properties of null
+    // (reading 'filter')` and a null entry threw `(reading 'at')` — out of the
+    // render, from a sampler whose rule is that an input it cannot read is
+    // repaired rather than thrown.
+    expect(sampleKeyframes(null, 0.5)).toBe(0);
+    expect(sampleKeyframes(undefined, 0.5)).toBe(0);
+
+    const entries = [keyframe(0, 0), null, undefined, keyframe(1, 100)];
+    expect(sampleKeyframes(entries, 0.5)).toBe(50);
+    // An entry that is not a frame is dropped like an unreadable stop, so it
+    // cannot become a segment's endpoint nor the set's first stop.
+    expect(sampleKeyframes([null, keyframe(1, 100)], 0)).toBe(100);
   });
 
   it("waits for nothing when the step cannot be read", () => {

@@ -88,11 +88,28 @@ export const keyframe = (
   easing?: Easing,
 ): Keyframe => ({ at, value, easing });
 
-/** The frames a sample can stop on, in the order it was given. */
-const stopsOf = (frames: readonly Keyframe[]): ReadonlyArray<Keyframe> =>
-  frames.filter(
-    (frame) => Number.isFinite(frame.at) && Number.isFinite(frame.value),
-  );
+/** Whether a value is a frame the sampler can stop on. */
+const isFrame = (frame: Keyframe | null | undefined): frame is Keyframe =>
+  typeof frame === "object" &&
+  frame !== null &&
+  Number.isFinite(frame.at) &&
+  Number.isFinite(frame.value);
+
+/**
+ * The frames a sample can stop on, in the order it was given.
+ *
+ * A timeline is a config as often as a literal: a stored one whose list never
+ * decoded arrives with **no list at all** — JSON has no `undefined`, so the field
+ * reads back as `null` — and a list a caller assembled can carry an entry that is
+ * not a frame. Reading `.filter`/`.at` off either threw `TypeError` out of the
+ * render that sampled the progress. A list the caller does not have is a set with
+ * no stops (the answer this module already gives one), and an entry that is not a
+ * frame is dropped like an offset or value that cannot be read.
+ */
+const stopsOf = (
+  frames: readonly (Keyframe | null | undefined)[] | null | undefined,
+): ReadonlyArray<Keyframe> =>
+  Array.isArray(frames) ? frames.filter(isFrame) : [];
 
 /** The stop the set starts at: the least offset, the first declared at it. */
 const firstStop = (stops: ReadonlyArray<Keyframe>): Keyframe =>
@@ -149,10 +166,13 @@ const upperStop = (
  * cannot be read is dropped rather than becoming the segment's endpoint — an
  * unreadable stop would make every value between it and its neighbour `NaN`,
  * which the runtime paints as nothing — and a curve that cannot read the segment
- * falls back to its linear progress.
+ * falls back to its linear progress. The set itself is read the same way: a list
+ * a caller does not have, or an entry in it that is not a frame, is no stop
+ * ({@link stopsOf}), so a config that did not decode paints `0` rather than
+ * throwing out of the render.
  */
 export const sampleKeyframes = (
-  frames: readonly Keyframe[],
+  frames: readonly (Keyframe | null | undefined)[] | null | undefined,
   progress: number,
 ): number => {
   const stops = stopsOf(frames);
