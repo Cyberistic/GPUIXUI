@@ -32,7 +32,7 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { listOf, recordsOf, textsOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
-import { textStyle, useTheme } from "../theme.js";
+import { textStyle, themeColors, useTheme } from "../theme.js";
 import {
   axisTicks,
   barSlot,
@@ -145,6 +145,7 @@ export const ChartLegend = ({
   ...rest
 }: ChartLegendProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const rows = recordsOf(items);
   return (
     <div
@@ -168,7 +169,7 @@ export const ChartLegend = ({
           <text
             style={{
               ...textStyle(theme, "caption"),
-              color: theme.colors.mutedForeground,
+              color: colors.mutedForeground,
             }}
           >
             {seriesName(item.label, item.key)}

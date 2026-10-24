@@ -32,7 +32,7 @@ import {
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
-import { pointerWash, textStyle, useTheme } from "../theme.js";
+import { pointerWash, textStyle, themeColors, useTheme } from "../theme.js";
 import { TREE_INDENT, type TreeRow } from "./logic.js";
 import { TREE_CHEVRON, TREE_ROW, TREE_ROW_ACTIVE } from "./recipe.js";
 
@@ -75,13 +75,12 @@ export interface TreeRowViewProps<T> {
 /** The default content: the label in the row's own ink. */
 const Label = ({ active, label }: { active: boolean; label: string }) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   return (
     <text
       style={{
         ...textStyle(theme, "body"),
-        color: active
-          ? theme.colors.selectedForeground
-          : theme.colors.foreground,
+        color: active ? colors.selectedForeground : colors.foreground,
       }}
     >
       {label}
@@ -103,11 +102,16 @@ export const TreeRowView = <T,>({
   attach,
 }: TreeRowViewProps<T>) => {
   const theme = useTheme();
-  const hoverFill = active ? theme.colors.accent : theme.colors.hover;
+  const colors = themeColors(theme);
+  // A theme that lost the colour group has no tint for the chevron: the slot
+  // keeps its box so labels stay aligned, and no glyph paints rather than black
+  // on a dark surface (the absence the primitives' stepper answers).
+  const chevron = active ? colors.selectedForeground : colors.mutedForeground;
+  const hoverFill = active ? colors.accent : colors.hover;
   const pressFill =
     (active
       ? pointerWash(theme, "active", "accent")
-      : pointerWash(theme, "active", "hover")) ?? theme.colors.active;
+      : pointerWash(theme, "active", "hover")) ?? colors.active;
   return (
     <div
       ref={attach}
@@ -140,15 +144,11 @@ export const TreeRowView = <T,>({
           // lines up with a branch's.
         }}
       >
-        {row.hasChildren ? (
+        {row.hasChildren && chevron !== undefined ? (
           <Icon
             name={row.expanded ? "chevron-down" : "chevron-right"}
             size="md"
-            color={
-              active
-                ? theme.colors.selectedForeground
-                : theme.colors.mutedForeground
-            }
+            color={chevron}
           />
         ) : undefined}
       </div>

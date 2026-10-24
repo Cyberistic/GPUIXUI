@@ -26,7 +26,7 @@ import {
   TableColumnDivider,
   type TableColumnResizeProps,
 } from "../columns/divider.js";
-import { textStyle } from "../theme.js";
+import { textStyle, themeColors } from "../theme.js";
 import type { CellAlign } from "../table/table.js";
 import { TableHeaderCell } from "../table/table.js";
 import { useTheme } from "../theme.js";
@@ -115,6 +115,7 @@ export const TableSortHeader = (props: TableSortHeaderProps) => {
     testId,
   } = props;
   const theme = useTheme();
+  const colors = themeColors(theme);
   const order = orderProp ?? Option.toArray(sort);
   const glyph = sortOrderGlyph(order, field);
   // The paint and the name read one value: a header a reader can press shows
@@ -140,7 +141,7 @@ export const TableSortHeader = (props: TableSortHeaderProps) => {
             <text
               style={{
                 ...textStyle(theme, "caption"),
-                color: theme.colors.mutedForeground,
+                color: colors.mutedForeground,
               }}
             >
               {glyph}

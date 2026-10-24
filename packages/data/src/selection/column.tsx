@@ -23,7 +23,7 @@ import { Checkbox } from "@gpuixui/primitives";
 import { spokenText } from "@gpuixui/primitives/core";
 import * as Option from "effect/Option";
 import { TableCell, TableHeaderCell } from "../table/table.js";
-import { useTheme, type Theme } from "../theme.js";
+import { themeColors, useTheme, type Theme } from "../theme.js";
 
 /** The fixed track a selection column takes in the header and every row. */
 export const SELECTION_COLUMN_WIDTH = 40;
@@ -49,15 +49,18 @@ export const DEFAULT_SELECTION_CELL_LABEL = "Select this row";
  */
 const selectionBox = (
   theme: Theme,
-  fill: string,
+  fill: string | undefined,
   interactive: boolean,
-): StyleDesc => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: fill,
-  ...(interactive ? { hover: { backgroundColor: theme.colors.accent } } : {}),
-});
+): StyleDesc => {
+  const colors = themeColors(theme);
+  return {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: fill,
+    ...(interactive ? { hover: { backgroundColor: colors.accent } } : {}),
+  };
+};
 
 /** {@link TableSelectionHeader} props. */
 export interface TableSelectionHeaderProps {
@@ -95,6 +98,7 @@ export const TableSelectionHeader = ({
   testId,
 }: TableSelectionHeaderProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   // A blank i18n row must not leave the select-all box unnamed.
   const boxLabel = spokenText(
     Option.fromNullishOr(label),
@@ -108,7 +112,7 @@ export const TableSelectionHeader = ({
     >
       <div
         testId={testId === undefined ? undefined : `${testId}-target`}
-        style={selectionBox(theme, theme.colors.card, false)}
+        style={selectionBox(theme, colors.card, false)}
       >
         <Checkbox
           checked={checked}
@@ -163,6 +167,7 @@ export const TableSelectionCell = ({
   testId,
 }: TableSelectionCellProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const boxLabel = spokenText(
     Option.fromNullishOr(label),
     DEFAULT_SELECTION_CELL_LABEL,
@@ -177,7 +182,7 @@ export const TableSelectionCell = ({
         testId={testId === undefined ? undefined : `${testId}-target`}
         style={selectionBox(
           theme,
-          checked ? theme.colors.selected : theme.colors.card,
+          checked ? colors.selected : colors.card,
           true,
         )}
       >

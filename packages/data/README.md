@@ -55,6 +55,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A row height the window can divide | `rowheight.test.tsx`, `window.test.ts` | `rowHeightOf` reads a computed row height once — a finite height above zero, else `DEFAULT_ROW_HEIGHT` (37, what the shipped row paints) — and the runtime's estimate, the anchor, a reveal and the tree's cursor walks all read it. A height nothing could be read from used to mount a row per pixel and to clamp the anchor's offset to `0`, so a thousand-row table painted nothing past its first window. |
 | A theme without the density group still builds a row | `tree/row.test.ts` | The step a tree row defaults to is the primitives' density reader (`rowHeightOf(theme)`), which answers the library's row for a theme a store gave back without the group. Indexing the group directly threw `TypeError: Cannot read properties of undefined (reading 'rowHeight')` from the first row, in the plain tree and the windowed one alike. |
 | A numeric group is read through the seam that answers its absence | `paint-readers.test.ts` | `spaceValue`, `borderWidthOf`, `radiusValue`, `iconStepValue` and `rowHeightOf` answer the library's number for a theme a store gave back without the group; indexing `theme.spacing`, `theme.borderWidth`, `theme.radius`, `theme.iconSize` or `theme.density` threw from the first layout that asked for a gap, an edge, a glyph or a row height. |
+| A colour role is read through the seam that answers its absence | `paint-readers.test.ts` | `themeColors` answers `undefined` for a role the theme does not carry — the group a store truncated, a role JSON wrote as `null` — so a fill, a wash, a rule, a scrollbar tint or a label ink that cannot be named is not painted while the words, the box and the press stay. The raw group read threw `Cannot read properties of undefined (reading 'card')` from the first row; a chevron whose tint is gone paints no glyph rather than black, and the selection box's unpainted target lets a box press reach its row — the control-unfilled route the routing probe measured — where the record is still chosen. |
 
 ## Shape
 
@@ -807,6 +808,22 @@ published readers (`spaceValue`, `borderWidthOf`, `radiusValue`,
 `iconStepValue`, `iconSideOf`, `rowHeightOf`), which answer the library's number
 for the group the theme lost; `paint-readers` holds every source under `src/` to
 them.
+
+**A colour role is read the same way.** A stored theme can lose the whole
+`colors` group, or carry a role as `null` — the value JSON writes for a field it
+never set — and 24 reads across nine painters used to index `theme.colors.*`, so
+the first row that named a role threw `TypeError: Cannot read properties of
+undefined (reading 'card')`. Every part reads the group through
+`@gpuixui/tokens`' `themeColors` (re-exported by `src/theme.ts`), which answers
+`undefined` for a role the theme does not carry: a fill, a wash, a rule, a
+scrollbar tint or a label ink that cannot be named is **not painted**, while the
+element keeps its words, its box and its press. A label ink that cannot be named
+is left unset, so the text paints the runtime's default rather than a colour the
+theme does not own, and a chevron whose tint is gone paints no glyph rather than
+a black one on a dark surface — the absence the primitives' stepper answers. The
+selection box's painted target is a fill too: with no role it paints nothing, so
+a box press also reaches its row (`control-unfilled`), and the record is still
+chosen. `paint-readers` scans the same sources for the colour group.
 
 ## Status
 

@@ -48,7 +48,13 @@ import * as P from "effect/Predicate";
 import type { ReactNode, Ref } from "react";
 import { paintableSize } from "../internal/size.js";
 import { recipeStyle } from "../recipe.js";
-import { dividerOn, pointerWash, textStyle, useTheme } from "../theme.js";
+import {
+  dividerOn,
+  pointerWash,
+  textStyle,
+  themeColors,
+  useTheme,
+} from "../theme.js";
 import {
   reportBoth,
   TableFrameProvider,
@@ -182,6 +188,7 @@ export const TableViewport = ({
   ...rest
 }: TableViewportProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const frame = useTableFrame();
   return (
     <div
@@ -199,7 +206,7 @@ export const TableViewport = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TABLE_VIEWPORT, className), theme), {
           overflowX: "scroll",
-          scrollbarColor: theme.colors.scrollbar,
+          scrollbarColor: colors.scrollbar,
         }),
         style,
       )}
@@ -224,6 +231,7 @@ export const TableHeader = ({
   ...rest
 }: TableHeaderProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const frame = useTableFrame();
   return (
     <div
@@ -245,8 +253,7 @@ export const TableHeader = ({
           // The header sits on the table's own `card` fill; the rule is the
           // same derivation a row uses, so a brand whose `border` is too close
           // to its card gets a visible line here too.
-          borderColor:
-            dividerOn(theme, theme.colors.card) ?? theme.colors.border,
+          borderColor: dividerOn(theme, colors.card) ?? colors.border,
         }),
         style,
       )}
@@ -294,6 +301,7 @@ export const TableBody = ({
   ...rest
 }: TableBodyProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const empty = children === undefined || children === null;
   const measured = useMeasuredBodyHeight();
   const definite = Option.orElse(paintableSize(height), () => measured);
@@ -304,7 +312,7 @@ export const TableBody = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TABLE_BODY, className), theme), {
           overflowY: "scroll",
-          scrollbarColor: theme.colors.scrollbar,
+          scrollbarColor: colors.scrollbar,
           ...(Option.isNone(definite)
             ? {}
             : {
@@ -386,6 +394,7 @@ export const TableRow = ({
   ...rest
 }: TableRowProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const interactive = onClick !== undefined && disabled !== true;
   const recipe =
     selected === true
@@ -402,14 +411,13 @@ export const TableRow = ({
    * the rule is `dividerOn`'s — `border` stepped toward `borderStrong` until it
    * clears the wash it crosses, and the authored role where it already does.
    */
-  const rule = (surface: string): string =>
-    dividerOn(theme, surface) ?? theme.colors.border;
-  const hoverFill =
-    selected === true ? theme.colors.accent : theme.colors.hover;
+  const rule = (surface: string | undefined): string | undefined =>
+    dividerOn(theme, surface) ?? colors.border;
+  const hoverFill = selected === true ? colors.accent : colors.hover;
   const pressFill =
     (selected === true
       ? pointerWash(theme, "active", "accent")
-      : pointerWash(theme, "active", "hover")) ?? theme.colors.active;
+      : pointerWash(theme, "active", "hover")) ?? colors.active;
   return (
     <div
       {...rest}
@@ -420,9 +428,7 @@ export const TableRow = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(recipe, className), theme), {
           borderBottomWidth: borderWidthOf(theme, "thin"),
-          borderColor: rule(
-            selected === true ? theme.colors.selected : theme.colors.card,
-          ),
+          borderColor: rule(selected === true ? colors.selected : colors.card),
           // A chosen row answers the pointer too: the selection fill says which
           // record is chosen, and the `accent` wash a step off it says the
           // pointer is on it. The press takes the wash derived over the hover,
@@ -556,6 +562,7 @@ export const TableCaption = ({
   ...rest
 }: TableCaptionProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   return (
     <div
       {...rest}
@@ -568,7 +575,7 @@ export const TableCaption = ({
         <text
           style={{
             ...textStyle(theme, "caption"),
-            color: theme.colors.mutedForeground,
+            color: colors.mutedForeground,
           }}
         >
           {children}
@@ -628,6 +635,7 @@ export const TableEmpty = ({
   ...rest
 }: TableEmptyProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   return (
     <div
       {...rest}
@@ -647,7 +655,7 @@ export const TableEmpty = ({
           <text
             style={{
               ...textStyle(theme, "body"),
-              color: theme.colors.mutedForeground,
+              color: colors.mutedForeground,
             }}
           >
             {children}

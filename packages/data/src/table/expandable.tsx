@@ -61,7 +61,7 @@ import { useGpuix, type Props, type PublicInstance } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { useCallback, useRef, type ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
-import { useTheme } from "../theme.js";
+import { themeColors, useTheme } from "../theme.js";
 import { TABLE_DETAIL_CELL, TABLE_DETAIL_ROW } from "./recipe.js";
 import { TableCell, TableRow, type TableRowProps } from "./table.js";
 
@@ -160,6 +160,7 @@ export const TableExpandableRow = ({
   ...rest
 }: TableExpandableRowProps) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const renderer = useGpuix().renderer;
   const row = useRef<PublicInstance | null>(null);
   const attach = useCallback(
@@ -203,11 +204,16 @@ export const TableExpandableRow = ({
           align="center"
           style={{ paddingLeft: 0, paddingRight: 0 }}
         >
-          <Icon
-            name={open ? "chevron-down" : "chevron-right"}
-            size="sm"
-            color={theme.colors.mutedForeground}
-          />
+          {/* A theme that lost the colour group has no tint for the chevron:
+              the track keeps its width and the row keeps its press, while the
+              glyph paints nothing rather than black on a dark surface. */}
+          {colors.mutedForeground === undefined ? undefined : (
+            <Icon
+              name={open ? "chevron-down" : "chevron-right"}
+              size="sm"
+              color={colors.mutedForeground}
+            />
+          )}
         </TableCell>
         {cells}
       </TableRow>

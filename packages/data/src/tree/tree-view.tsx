@@ -43,7 +43,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
-import { useTheme } from "../theme.js";
+import { themeColors, useTheme } from "../theme.js";
 import { paintableSize } from "../internal/size.js";
 import { treeName, type TreeCursor, type TreeRow } from "./logic.js";
 import { TREE_INSET, TreeRowView } from "./row.js";
@@ -117,6 +117,7 @@ export const TreeView = <T,>({
   ...rest
 }: TreeViewProps<T>) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const bound = Option.getOrUndefined(paintableSize(height));
   const tree = useTree({
     rows,
@@ -143,7 +144,7 @@ export const TreeView = <T,>({
                 flexBasis: bound,
               }),
           overflowY: "scroll",
-          scrollbarColor: theme.colors.scrollbar,
+          scrollbarColor: colors.scrollbar,
         }),
         style,
       )}

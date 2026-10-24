@@ -1,5 +1,5 @@
 /**
- * The numeric groups a paint reads.
+ * The groups a paint reads.
  *
  * The bug these guard: the parts read `theme.spacing.xs`,
  * `theme.borderWidth.thin` and the density's `rowHeight` straight off the
@@ -12,6 +12,13 @@
  * `radiusValue`, `iconStepValue`, `rowHeightOf`), which answers the library's
  * number for the group the theme lost.
  *
+ * The **colour** group is the same class one pass later: 24 reads over nine
+ * painters indexed `theme.colors.*`, so a theme that lost the group threw
+ * `Cannot read properties of undefined (reading 'card')` from the first row.
+ * Those parts read `themeColors`, which answers `undefined` for a role the theme
+ * does not carry, so a fill, a rule or an ink that cannot be named is not
+ * painted.
+ *
  * Examples are excluded: a demo composes like an application and owns the theme
  * it paints; the library's parts are what a consumer cannot fix.
  */
@@ -19,13 +26,14 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/** A numeric group a part must not index directly. */
+/** A group a part must not index directly. */
 const groups = [
   "spacing",
   "radius",
   "borderWidth",
   "iconSize",
   "density",
+  "colors",
 ] as const;
 
 /** Every published reader that answers a group the theme lost. */
@@ -35,6 +43,7 @@ const readers = [
   "radiusValue",
   "iconStepValue",
   "rowHeightOf",
+  "themeColors",
 ] as const;
 
 const pattern = new RegExp(`theme\\.(${groups.join("|")})\\b`, "g");
@@ -67,7 +76,7 @@ const sources = (root = "./"): ReadonlyArray<readonly [string, string]> => {
   return walk(new URL(root, import.meta.url));
 };
 
-describe("the numeric groups a paint reads", () => {
+describe("the groups a paint reads", () => {
   it("reads every group through the reader that answers its absence", () => {
     const raw = sources().flatMap(([path, text]) =>
       rawReads(text).map((read) => `${path}: ${read}`),
@@ -91,6 +100,7 @@ describe("the numeric groups a paint reads", () => {
         "borderWidthOf",
         "iconStepValue",
         "rowHeightOf",
+        "themeColors",
       ]),
     );
     // And the scan sees the shapes it is meant to reject, and nothing else:
@@ -103,6 +113,10 @@ describe("the numeric groups a paint reads", () => {
     expect(rawReads("const spacing = theme.spacing;")).toEqual([
       "theme.spacing",
     ]);
+    expect(rawReads("color: theme.colors.mutedForeground,")).toEqual([
+      "theme.colors",
+    ]);
+    expect(rawReads("const colors = themeColors(theme);")).toEqual([]);
   });
 
   it("scans the package rather than a list someone remembered", () => {

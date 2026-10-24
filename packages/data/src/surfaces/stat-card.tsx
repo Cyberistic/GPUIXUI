@@ -20,7 +20,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
-import { useTheme } from "../theme.js";
+import { themeColors, useTheme } from "../theme.js";
 import { STAT_CARD, STAT_HINT, STAT_LABEL, STAT_VALUE } from "./recipe.js";
 
 /** Which way a reading moved, and by how much. */
@@ -57,12 +57,12 @@ export interface StatCardProps extends Omit<Props, "children"> {
 export const trendTone = (
   direction: StatTrend["direction"],
   theme: ReturnType<typeof useTheme>,
-): string =>
+): string | undefined =>
   direction === "up"
     ? statusTone(theme, "success").foreground
     : direction === "down"
       ? statusTone(theme, "destructive").foreground
-      : theme.colors.mutedForeground;
+      : themeColors(theme).mutedForeground;
 
 /** A card that shows one derived reading. */
 export const StatCard = ({

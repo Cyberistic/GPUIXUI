@@ -57,7 +57,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useTheme } from "../theme.js";
+import { themeColors, useTheme } from "../theme.js";
 import { paintableSize } from "../internal/size.js";
 import { paneFill, usePaintedHeight } from "../internal/painted.js";
 import { treeName, type TreeCursor, type TreeRow } from "../tree/logic.js";
@@ -134,6 +134,7 @@ export const VirtualTree = <T,>({
   ...rest
 }: VirtualTreeProps<T>) => {
   const theme = useTheme();
+  const colors = themeColors(theme);
   const renderer = useGpuix().renderer;
   // The viewport's height, when it paints. A height nothing could be read from
   // is no height, so the caller's layout owns the viewport (`paintableSize`).
@@ -270,7 +271,7 @@ export const VirtualTree = <T,>({
       windowStart={window.windowStart}
       onVisibleRange={handleRange}
       className={className}
-      style={mergeStyles({ scrollbarColor: theme.colors.scrollbar }, style)}
+      style={mergeStyles({ scrollbarColor: colors.scrollbar }, style)}
     >
       {Arr.map(window.mounted, (index) => {
         const row = dataRows[index];

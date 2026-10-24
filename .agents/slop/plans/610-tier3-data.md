@@ -777,6 +777,21 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `docs/table-sorting.mdx` §Saving the state a grid holds, the README and the
   Tier 3 Tables row.
 
+- **A colour role is read through the port that answers its absence**: the
+  numeric groups closed this class for metrics, while 24 reads over nine
+  painters still indexed the colour group — so a theme a store handed back
+  without `colors`, or with a role JSON wrote as `null`, threw
+  `Cannot read properties of undefined (reading 'card')` from the first row.
+  Every painter reads `themeColors` (re-exported by `src/theme.ts`): a fill, a
+  wash, a rule, a scrollbar tint or a label ink that cannot be named is not
+  painted, the words/box/press stay, a chevron with no tint paints no glyph,
+  and the selection box's unpainted target lets a box press reach its row. The
+  charts' swatches are stored values, so `ChartLegend`'s label ink is unset.
+  `src/paint-readers.test.ts` gains the group (premise: `themeColors(theme` is
+  used; shapes: `theme.colors.mutedForeground` refused). Direction measured:
+  restoring the raw read in `sort/header.tsx` fails with
+  `sort/header.tsx: theme.colors`.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`
