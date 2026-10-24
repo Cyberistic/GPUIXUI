@@ -33,6 +33,12 @@ import type {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
+  rowHeightOf,
+  spaceValue,
+  type DensitySource,
+  type SpaceSource,
+} from "@gpuixui/primitives/core";
+import {
   mergeStyles,
   resolveStyle,
   type StateStyle,
@@ -90,6 +96,25 @@ import { makeRowStore, type RowStore } from "./list/store.js";
 
 /** Whether the list only presents rows, or also tracks a selection. */
 export type ListSelectionMode = "none" | "single" | "multiple";
+
+/**
+ * The box a list row paints at.
+ *
+ * A row is built at the theme's density `rowHeight`, and its two-line form adds
+ * one `md` spacing step above it. Both are numeric groups a store can lose: a
+ * theme restored from storage writes `null` where JSON carried no group, a
+ * hand-edited literal drops the key, and a saved style from a release that added
+ * one restores without it. Reading the group directly therefore threw
+ * `Cannot read properties of undefined (reading 'rowHeight')` from the first row
+ * a list painted, and a group that lost only the step built a `NaN` height the
+ * serialiser drops. The primitives' density and spacing seams answer the
+ * library's numbers for that absence.
+ */
+export const listRowHeight = (
+  theme: DensitySource & SpaceSource,
+  dense: boolean,
+): number =>
+  dense ? rowHeightOf(theme) : rowHeightOf(theme) + spaceValue(theme, "md");
 
 /** One registered row: its value, whether it accepts input, its native id, and
  *  the text type-ahead searches. */
@@ -778,9 +803,7 @@ export const ListItem = ({
       }
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(LIST_ITEM, className), theme), {
-          height: dense
-            ? theme.density.rowHeight
-            : theme.density.rowHeight + theme.spacing.md,
+          height: listRowHeight(theme, dense),
           // No `opacity` on a disabled row: it composites the `selected` fill
           // this same style paints into the strip behind it, so the wash a
           // reader uses to find the current row drops under the perceptibility

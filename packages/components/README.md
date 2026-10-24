@@ -208,6 +208,15 @@ release does not ship paints `Unknown` rather than a blank status line, and
 never claims the call finished or failed. `src/behaviour/message.test.tsx` holds
 the fallback beside a shipped `error` call as the negative control.
 
+A theme a store hands back can lose a numeric group, so a box built from one is
+read through the primitives' seams rather than off the group: a list row's
+height is `listRowHeight` (`list.tsx`) — `rowHeightOf(theme)` for a dense
+row, plus `spaceValue(theme, "md")` for the two-line form — so a restored theme
+without the density or spacing group paints the library's row instead of
+throwing `Cannot read properties of undefined (reading 'rowHeight')` from the
+first row. `src/list/row.test.ts` holds both groups' absence and a source guard
+that the row does not read the group raw.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

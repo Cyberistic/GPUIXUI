@@ -71,3 +71,7 @@ List
 - No drag reorder, group headers or nested rows.
 - No `aria-multiselectable`; the mode reads from per-row `aria-selected`.
 - No virtualisation; a long list renders every row.
+- A row's height is the density's `rowHeight` read through the primitives'
+  density and spacing seams (`dense` is the bare row, the default adds one `md`
+  step for the second line), so a theme a store gave back without either group
+  paints the library's row instead of throwing from the first row.
