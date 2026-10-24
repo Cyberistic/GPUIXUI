@@ -12271,7 +12271,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 381/381
+`[x]` `[██████████]` 381/382
 
 `[ ]` Gate the **preview switch on the content it changes** — a palette press
       made in the window between the sidebar's hydration and the page previews'
@@ -12293,6 +12293,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
       (press at 0/250/750/1500/3000 ms after the button's props appear) and
       `probe-palette-zero.ts` (both URLs, three runs each).
 
+`[x]` Wait for the **surface the palette probe measures** before pressing —
       `palette-switch-probe.ts` pressed the sidebar's Light button as soon as
       *it* carried React props, while the page's previews hydrate after the
       sidebar: a press in that window updated the group and the URL while the
