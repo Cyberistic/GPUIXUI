@@ -45,7 +45,7 @@ import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { paintableSize } from "../internal/size.js";
-import type { TreeCursor, TreeRow } from "./logic.js";
+import { treeName, type TreeCursor, type TreeRow } from "./logic.js";
 import { TREE_INSET, TreeRowView } from "./row.js";
 import { TREE_ROOT } from "./recipe.js";
 import { useTree } from "./use-tree.js";
@@ -154,7 +154,7 @@ export const TreeView = <T,>({
           row={row}
           active={Option.contains(tree.cursor.active, row.key)}
           tabbable={Option.contains(tree.tabKey, row.key)}
-          label={labelOf(row.node)}
+          label={treeName(labelOf(row.node), row.key)}
           renderRow={renderRow}
           testId={testId === undefined ? undefined : `${testId}-row-${row.key}`}
           onPress={() => tree.activate(row)}

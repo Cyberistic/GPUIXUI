@@ -31,6 +31,7 @@ import {
   setExpanded,
   toggleExpanded,
   treeCursorMove,
+  treeName,
   typeAheadRow,
   type TreeRow,
   type TreeSpec,
@@ -280,5 +281,34 @@ describe("the typed prefix", () => {
     expect(typeAheadRow(rows, Option.some("k1"), "   ", labelOf)).toEqual(
       Option.none(),
     );
+  });
+
+  it("searches a blank label by the key the row is painted and named by", () => {
+    // A caller's accessor answers blank for a node whose name never arrived.
+    // The row is painted and named by its key, so the same prefix has to reach
+    // it; a node with a real label still matches the label, not the key.
+    const blank = [row("alpha", ""), row("beta", "   ")];
+    expect(typeAheadRow(blank, Option.none(), "a", labelOf)).toEqual(
+      Option.some("alpha"),
+    );
+    expect(typeAheadRow(blank, Option.none(), "bet", labelOf)).toEqual(
+      Option.some("beta"),
+    );
+
+    const named = [row("gamma", "Row")];
+    expect(typeAheadRow(named, Option.none(), "g", labelOf)).toEqual(
+      Option.none(),
+    );
+    expect(typeAheadRow(named, Option.none(), "r", labelOf)).toEqual(
+      Option.some("gamma"),
+    );
+  });
+});
+
+describe("the name a row is painted by", () => {
+  it("reads a blank label as the key the row is stored by", () => {
+    expect(treeName("", "readme.md")).toBe("readme.md");
+    expect(treeName("   ", "src")).toBe("src");
+    expect(treeName("  readme.md  ", "readme.md")).toBe("readme.md");
   });
 });

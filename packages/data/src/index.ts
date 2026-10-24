@@ -347,6 +347,7 @@ export {
   toggleExpanded,
   treeCursorMove,
   treeKeys,
+  treeName,
   typeAheadRow,
 } from "./tree/logic.js";
 export type { TreeCursor, TreeRow, TreeSpec } from "./tree/logic.js";

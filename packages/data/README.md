@@ -425,7 +425,11 @@ Up/Down/Home/End move the cursor (and the platform focus); Right opens a branch
 or steps into it; Left closes it or steps out — a root stays where it is, because
 clearing the cursor would fall back to the first painted row; a printable
 character jumps to the first row after the cursor whose label starts with the
-prefix. `reveal(key)` opens the path to a node and moves the cursor to it, and a
+prefix. A label is content: an accessor that answers blank — a listing that could
+not read a name, a record restored without its title — reads as the row's key
+(`treeName`, the one reading the paint, the accessible name and the type-ahead
+match share), so a tree never paints a nameless row no prefix can reach.
+`reveal(key)` opens the path to a node and moves the cursor to it, and a
 caller-driven cursor **lands the focus** on its row: the row is re-taken on the
 next tick, after the runtime has handed the pressed control the focus. A key that
 left the cursor where it was is not a move the tree made, so it cannot suppress

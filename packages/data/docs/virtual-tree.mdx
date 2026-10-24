@@ -28,7 +28,7 @@ const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `rows` | `TreeRow<T>[]` | — | the **whole** flattened set, in paint order |
-| `labelOf` | `(node: T) => string` | — | the row's accessible name and what type-ahead matches |
+| `labelOf` | `(node: T) => string` | — | the row's accessible name and what type-ahead matches; a blank label reads as the row's key |
 | `cursor` | `TreeCursor` | — | the caller's cursor; omit it for an uncontrolled tree |
 | `onCursorChange` | `(cursor: TreeCursor) => void` | — | reports every cursor a key, a press or a window move produces |
 | `defaultCursor` | `TreeCursor` | nothing open | the uncontrolled tree's start |

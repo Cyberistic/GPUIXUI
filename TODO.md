@@ -389,7 +389,9 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 231/231
+`[x]` `[██████████]` 232/232
+
+`[x]` Say **which seam paints a control's box**, now that the two packages answer a lost density group differently — the primitives paint the library's preset through `controlHeightOf`/`controlPaddingOf`, while `@gpuixui/components` calls `controlHeight(theme, size)` directly and paints no height; `docs/tokens.md` §Paint-ready values said a control's box is read through `controlHeight`, which is the components' answer alone, and a reader with a truncated theme was told the wrong thing for whichever package they were in. Both pages now state the split (the helper answers `undefined`, the primitives' seam answers the library's preset, the components still call the helper), and `density-adoption.test.ts` gains `says which seam paints a control box…`, which derives the components' direct readers from the tree (more than eight), refuses `controlHeightOf(` in that package, and requires `controlHeightOf`, the library's preset, "no height" and `@gpuixui/components` on both pages. Directions measured: replacing "no height" on the design system fails the case by name, and the reader floor cannot pass on an empty scan. Green: 49 files / **3 029** tests with `check-types` clean. No native scenario applies — source reads and page text.
 
 `[x]` Hold the **density guard to the seam the primitives paint through** — the primitives hoisted their density reads into `core/theme.ts` (`controlHeightOf`, `controlPaddingOf`, `rowHeightOf`), so a theme a store gave back without the group paints the library's preset instead of answering `undefined`; `density-adoption.test.ts` still read the retired expressions, so master's tokens gate was red twice (`reads the theme's metrics in the primitives' registry` and `derives the boxes a theme builds at the row height`, 5 paths against 6, because `ScrollArea` takes `rowHeightOf(theme)` now). The suite holds the seam: `resolvesDensity` drives the registry's two calls and refuses the raw index (that shape is its negative control), `readsRowHeight` accepts both routes to the step and refuses the data package's number normaliser (a second negative control), and one case pins the scroller, the seam's library fallback and the JSDoc that records it. The catalogue's §Density and the design system's §6 name `controlHeightOf`/`controlPaddingOf` in `packages/primitives/src/core/theme.ts` in place of the retired expression. Directions measured: at HEAD the two cases fail by name; replacing `rowHeightOf` on the step's JSDoc and the catalogue fails `resolves a scroller's line…` by name; the two predicates' controls fail if either accepts the raw read or the number normaliser. Green: 49 files / **3 028** tests with `check-types` clean. No native scenario applies — source reads and two pure predicates.
 
@@ -2337,22 +2339,26 @@ handed to the timer.
       says "a target change starts the next transition from the current visible
       value", while a collapsible sidebar reopened mid-close and a split pane
       dragged while its width travels both rest on that sentence alone. The
-      `motion-interruption` probe drives a box 120 → 400 and cuts to 240 1.2s in
-      (painted **212**), then drives it 400 → 120 and cuts back to 400 (painted
-      **307**): the frame after each cut paints **212.5** and **306.5**, so the
-      run continues from the width on screen rather than restarting at 120 (or
-      400) or finishing the abandoned target, and each settles on the new target
-      (**240** / **400**). The cut is from the measured travel, not assumed:
-      the same declared duration painted a ~3s run on this loaded box and, per
-      `motion-geometry`, a few hundred milliseconds on an idle one, so the probe
-      **polls** for the target instead of sleeping. **20 checks**,
-      `--only motion-interruption`, green in two consecutive runs (~14.4s each).
+      `motion-interruption` probe drives a box 120 → 400 and cuts to 240 a
+      quarter of the way in (painted **191.5**), then drives it 400 → 120 and
+      cuts back to 400 a quarter back (painted **329.5**): the frame after each
+      cut paints **192** and **329.5**, so the run continues from the width on
+      screen rather than restarting at 120 (or 400) or finishing the abandoned
+      target, and each settles on the new target (**240** / **400**). The cut is
+      from the measured travel, not assumed: the same declared duration painted
+      a multi-second run on this loaded box and, per `motion-geometry`, a few
+      hundred milliseconds on an idle one, so the probe **polls** for the
+      target. **18 checks**, `--only motion-interruption`, green in two
+      consecutive runs (~20s each) and twice after `motion-geometry` (~23s).
       Fixture `src/live/motion-interruption.ts` + `MotionInterruptProbe`/
       `motionInterruptSteps` + `motion-interruption.test.ts` (13 cases: the two
       failure shapes below the 60-point tolerance in both directions, the
       registry/body wiring, the 20-check count derived from the assertion sites,
       and the poll guard — measured failing when a `millis(3xxx)` sleep returns
-      to the steps). README §`motion-interruption`,
+      to the steps). Also polled the **existing** `motion-geometry` settle after
+      the same load flake made it red twice (`expected 240 ± 1, got 119`),
+      guarded by `motion-geometry.test.ts` (6 cases). README
+      §`motion-interruption`,
       `.artifacts/live/motion-interrupt-{far,rest}.png`. The docs half is the
       interlock row below.
 
@@ -11121,6 +11127,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
     chart paragraph and the Charts inventory row state the fallback.
     No native scenario applies — the names are read off the renderer's tree, and
     the shipped `chart-surface-lifecycle` paint is unchanged.
+    Owner: data.
+  - [x] Read a **blank tree label as the key the row is stored by** — `labelOf`
+    is a caller's accessor over its own nodes, so it can answer blank for a node
+    whose name never arrived (a listing that could not read one, a record
+    restored without its title), and the label is both what `TreeRowView` paints
+    and the only name a reader gets: the row published an unnamed `treeitem`
+    while it was still there to press, and type-ahead had nothing to match.
+    `tree/logic.ts` gains `treeName(label, key)`, the one reading the paint, the
+    accessible name and the type-ahead match share, which reads a blank label as
+    the row's `key` — the identity the tree expands, focuses and reports by.
+    `TreeView` and `VirtualTree` label every row through it, and `typeAheadRow`
+    searches through it, so a row painted by its key is reachable by typing that
+    key. `src/behaviour/tree.test.tsx` gains `names a row whose label arrived
+    blank by the key it is stored by` (a tree whose accessor answers `""`, read
+    off the accessibility tree and the paint) and `src/tree/logic.test.ts` the
+    pure case plus the blank-label prefix (a real label still decides, even when
+    the key names another prefix). Directions measured: with the raw
+    `labelOf` restored the window case fails `expected [ '', '', …, 'Files' ] to
+    deeply equal ArrayContaining [ 'alpha', 'beta' ]`, and with the raw mapping
+    in `typeAheadRow` the unit case fails `expected { _tag: 'None' } to deeply
+    equal { _tag: 'Some' }`. Green: the package is 29 files / **230** unit cases
+    and 18 files / **153** behaviour cases. Docs: the `labelOf` rows on
+    `docs/tree-view.mdx` and `docs/virtual-tree.mdx`, the README's tree
+    paragraph and the Tree views inventory row state the fallback.
+    No native scenario applies — the names are read off the renderer's tree, and
+    the shipped tree probes' paint is unchanged.
     Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)

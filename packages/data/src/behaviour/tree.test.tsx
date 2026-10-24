@@ -16,10 +16,12 @@
 
 import { Input } from "@gpuixui/primitives";
 import { darkTheme, pointerWash } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { TreeExample } from "../../examples/tree.example.js";
+import { decodeA11yTree } from "../internal/a11y.js";
 import {
   after,
   clickCentreOf,
@@ -113,6 +115,30 @@ const TreeFieldFixture = () => {
         }
       />
     </div>
+  );
+};
+
+/**
+ * A tree whose node names never arrived — the accessor answers blank for every
+ * node, which is what a listing that could not read a name hands over.
+ */
+const BlankNameTree = () => {
+  const tree = useExpandedRows({
+    roots: [{ name: "alpha" }, { name: "beta" }],
+    keyOf: (node) => node.name,
+    childrenOf: () => [],
+    labelOf: () => "",
+  });
+  return (
+    <TreeView
+      testId="blank-tree"
+      aria-label="Files"
+      height={120}
+      rows={tree.rows}
+      cursor={tree.cursor}
+      onCursorChange={tree.setCursor}
+      labelOf={() => ""}
+    />
   );
 };
 
@@ -321,5 +347,25 @@ describe("the file tree", () => {
     pressKey(root, "field-tree-row-src", "enter");
     root.renderer.flush();
     expect(root.renderer.findByTestId("field-tree-row-child.ts")).toBeDefined();
+  });
+
+  it("names a row whose label arrived blank by the key it is stored by", () => {
+    // Bug guarded: `labelOf` is a caller's accessor over its own nodes, so it
+    // can answer blank — a listing that could not read a name, a record restored
+    // without its title — and the row's label is both what it paints and the
+    // only name a reader gets. It published an unnamed tree item while the row
+    // was still there to press. The key is the identity the tree expands,
+    // focuses and reports by, so a blank label reads as that key.
+    root = renderData(<BlankNameTree />);
+    settle(root);
+
+    const tree = decodeA11yTree(root.renderer.getA11yTree());
+    const names = Arr.map(
+      Object.values(tree.nodes),
+      (node) => node.aria.label ?? "",
+    );
+    expect(names).toEqual(expect.arrayContaining(["alpha", "beta"]));
+    // The paint and the name are one reading.
+    expect(paintedText(root)).toContain("alpha");
   });
 });

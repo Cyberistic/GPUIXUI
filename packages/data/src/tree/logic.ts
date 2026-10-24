@@ -22,6 +22,7 @@
  */
 
 import { typeaheadMatchIndex } from "@gpuixui/components/typeahead";
+import { spokenText } from "@gpuixui/primitives/core";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -359,12 +360,26 @@ export const treeCursorMove = <T>(
 };
 
 /**
+ * The words a row is painted and named by.
+ *
+ * `labelOf` is a caller's accessor over its own nodes, so it can answer blank
+ * for a node whose name is missing — a file the listing could not read, a
+ * record restored without its title. A blank label reads as the row's **key**,
+ * the stable identity the tree expands, focuses and reports by: the row is then
+ * named by something, and a typed prefix can reach it, rather than the tree
+ * painting a nameless row no key can find.
+ */
+export const treeName = (label: string, key: string): string =>
+  spokenText(Option.fromNullishOr(label), key);
+
+/**
  * The row a typed prefix names: the first row **after** the active one whose
  * label starts with the prefix, wrapping to the first match.
  *
  * Searching after the cursor is what lets a repeated letter walk the matches.
  * An empty prefix, or one nothing matches, answers `None`, so the caller keeps
- * the row it was on.
+ * the row it was on. A row whose label came back blank is searched by its key
+ * ({@link treeName}), the same word it is painted and named by.
  */
 export const typeAheadRow = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
@@ -374,7 +389,10 @@ export const typeAheadRow = <T>(
 ): Option.Option<string> =>
   Option.flatMap(
     typeaheadMatchIndex(
-      Arr.map(rows, (row) => ({ label: labelOf(row), disabled: false })),
+      Arr.map(rows, (row) => ({
+        label: treeName(labelOf(row), row.key),
+        disabled: false,
+      })),
       indexOf(rows, active),
       prefix,
     ),

@@ -59,7 +59,7 @@ import {
 import { useTheme } from "../theme.js";
 import { paintableSize } from "../internal/size.js";
 import { paneFill, usePaintedHeight } from "../internal/painted.js";
-import type { TreeCursor, TreeRow } from "../tree/logic.js";
+import { treeName, type TreeCursor, type TreeRow } from "../tree/logic.js";
 import { TreeRowView } from "../tree/row.js";
 import { useTree } from "../tree/use-tree.js";
 import { VirtualList, type VisibleRange } from "./list.js";
@@ -278,7 +278,7 @@ export const VirtualTree = <T,>({
               row={row}
               active={Option.contains(tree.cursor.active, row.key)}
               tabbable={Option.contains(tree.tabKey, row.key)}
-              label={labelOf(row.node)}
+              label={treeName(labelOf(row.node), row.key)}
               renderRow={renderRow}
               height={rowHeight}
               testId={

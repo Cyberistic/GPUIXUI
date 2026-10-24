@@ -34,7 +34,7 @@ const tree = useExpandedRows({
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `rows` | `TreeRow<T>[]` | — | the visible rows, in paint order |
-| `labelOf` | `(node: T) => string` | — | the row's accessible name and type-ahead match |
+| `labelOf` | `(node: T) => string` | — | the row's accessible name and type-ahead match; a blank label reads as the row's key |
 | `cursor` | `TreeCursor` | — | the caller's cursor; omit for an uncontrolled tree |
 | `onCursorChange` | `(cursor: TreeCursor) => void` | — | reports every cursor |
 | `defaultCursor` | `TreeCursor` | nothing open | the uncontrolled tree's start |
