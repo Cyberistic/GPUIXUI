@@ -349,6 +349,15 @@ describe("the data surfaces", () => {
     expect(root.renderer.findByTestId("gated-add")).toBeUndefined();
     expect(root.renderer.findByTestId("gated-add-group")).toBeUndefined();
 
+    // A blank `field` names no field either: the clause a saved query starts
+    // with carries `""` until a field is picked, and an entry that carries it
+    // can never match a column id, so offering it let Add compose a clause over
+    // no field and named its picker after the blank entry's label.
+    root.rerender(<GatedBuilder fields={[{ field: "", label: "Nameless" }]} />);
+    settle(root);
+    expect(root.renderer.findByTestId("gated-add")).toBeUndefined();
+    expect(root.renderer.findByTestId("gated-add-group")).toBeUndefined();
+
     // A saved clause inside a group keeps its row — the reader can edit or
     // remove it — but the group offers no second clause to name.
     root.rerender(
@@ -385,6 +394,32 @@ describe("the data surfaces", () => {
     settle(root);
     expect(root.renderer.findByTestId("gated-add")).toBeDefined();
     expect(root.renderer.findByTestId("gated-add-group")).toBeDefined();
+  });
+
+  it("names the field a blank entry cannot be", () => {
+    // Bug guarded: the field list kept every string `field`, including the
+    // blank one a saved clause carries before a field is picked. A builder with
+    // a blank entry beside a real field appended its clause over the blank one,
+    // so the new clause's picker painted the blank entry's label (`Nameless`)
+    // while it named no column at all — a query that reads as one field and
+    // narrows by none.
+    root = renderData(
+      <GatedBuilder
+        fields={[
+          { field: "", label: "Nameless" },
+          { field: "status", label: "Status" },
+        ]}
+      />,
+    );
+    settle(root);
+
+    clickCentreOf(root, "gated-add");
+    root.renderer.flush();
+
+    // The first field Add can actually name is `status`, so the clause reads it.
+    expect(root.renderer.findByTestId("gated-0-field")).toBeDefined();
+    expect(paintedText(root)).toContain("Status");
+    expect(paintedText(root)).not.toContain("Nameless");
   });
 
   it("composes a group's combinator and its negation from the builder", () => {

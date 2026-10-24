@@ -48,6 +48,7 @@ import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import type { ReactNode } from "react";
 import { listOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
@@ -186,15 +187,21 @@ const clauseFor = (
  *
  * A saved builder writes `null` where it carried no field list, and a picker
  * that iterated it threw out of the render. Only a list is a list, and only an
- * entry that names a field is one, so a corrupt record cannot leave an unnamed
- * menu row behind.
+ * entry that **names** a field is one: a blank `field` is the absence a saved
+ * clause already carries before a field is picked, so it can name no column and
+ * no value column — offering it left an unnamed menu row, made Add compose a
+ * clause over no field, and named a saved clause after a field it does not
+ * have.
  */
 const fieldList = (
   fields: ReadonlyArray<AdvancedFilterField>,
 ): ReadonlyArray<AdvancedFilterField> =>
   Arr.filter(
     listOf(fields),
-    (field): boolean => P.isObject(field) && P.isString(field.field),
+    (field): boolean =>
+      P.isObject(field) &&
+      P.isString(field.field) &&
+      Str.isNonEmpty(Str.trim(field.field)),
   );
 
 /** One clause: a field, a comparison, a value and a way out. */

@@ -655,7 +655,12 @@ a field to name** — a new clause takes the first offered field, so a saved lis
 that arrived empty (or whose one entry this release cannot read) would append a
 clause over no field: a press that composes a query narrowing nothing. Clear
 stays, and a saved clause that names no field still paints its row so the reader
-can edit or remove it (`src/behaviour/surfaces.test.tsx`).
+can edit or remove it (`src/behaviour/surfaces.test.tsx`). An entry whose `field`
+is **blank** names no field either: it is the same absence a saved clause carries
+before a field is picked, so it can never match a column id and is dropped from
+the picker and from the list Add reads — a blank entry beside a real one used to
+be the field Add chose, painting a clause whose picker read the blank entry's
+label while the clause narrowed by no column.
 
 ```tsx
 import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "@gpuixui/data";

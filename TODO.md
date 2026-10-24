@@ -12710,6 +12710,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
     announcement are read off the real renderer, and `column-resize-lifecycle`
     measures a width inside its bounds, where nothing moved.
     Owner: data.
+  - [x] Read a **blank field name as no field the builder can offer** — a field
+    entry's `field` is the identity a clause matches a column by, and the blank
+    string is the absence a **saved clause** already carries before a field is
+    picked (the tree's schema accepts it, and `clauseFieldName` names it
+    `Field`). `fieldList` kept every entry whose `field` was a string, so
+    `""` counted as a field: with only that entry the builder painted Add
+    (a press that appended a clause over no field), and beside a real field the
+    first entry was the blank one, so the clause Add composed painted the blank
+    entry's label (`Nameless`) while naming no column at all — a query that
+    reads as one field and narrows by none. `fieldList` reads a name through
+    `Str.trim`/`Str.isNonEmpty`, so an entry that names no field is dropped from
+    the picker and from the list Add reads, and a saved clause that names a
+    blank field still paints its row under `Field`. `behaviour/surfaces.test.tsx`
+    gains `names the field a blank entry cannot be` (a blank entry beside
+    `status`: the clause Add composes reads `Status`) and the no-field case now
+    also mounts a lone blank entry (Add and Add group withheld). Directions
+    measured: at `HEAD` the lone blank entry leaves `gated-add` painted
+    (`expected … to be undefined`) and the mixed list paints `Nameless` where
+    `Status` belongs; with the read the file is 16/16. Docs:
+    `docs/advanced-filter.mdx`'s `fields` row and §Limitations (both blank-name
+    bullets), the README's §The data surfaces and the Advanced filtering row.
+    No native scenario applies — the names and the withheld controls are read
+    off the real renderer the behaviour suite drives. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
@@ -21121,7 +21144,6 @@ scenario applies — the timings are pure values.
       table's `easing.ts`/`timing.ts` rows. The site page's `easing` row still lists the old
       names and no `motionCurve` — recorded in `TODO.md` → Interlocks. No native scenario
       applies — pure curves; the live `surface-fade` probe measures the runtime's own.
-`[x]` `@gpuixui/motion`: **the provider refused the stored preference it documents decoding** — `preferenceOf` exists because the preference is a settings row as often as a literal (a `NULL` column, a renamed setting, a `"true"` from a checkbox), and the README tells an application to hand that row over, while `MotionProviderProps.preference` was typed `MotionPreference`: the one call site every application writes could pass its stored value only through an assertion (AGENTS.md §2), or by re-deriving the union beside the decoder the package already owns. The prop takes the shape a store hands back (`unknown`) and `preferenceOf` is still the only reader — nullish keeps the animated default, a present non-name is the reduced policy. Proof: `provider.test.tsx`'s stored-shape case passes a `string | null`, a missing row and `"true"` with no directive, and the components' `presence.test.tsx` tree lost its `@ts-expect-error`. Directions measured: with the `MotionPreference` prop restored, `check-types` fails **3** errors in `provider.test.tsx` (TS2322 on `string`, `null` and `"true"`) and **1** in the components' `presence.test.tsx` (`string | null`); with the port both packages type-check and the suites are green (motion 15 files / **197** tests, the presence behaviour file 39). Docs: the prop's JSDoc and `packages/motion/README.md` (the provider paragraph under the preference rule). No native scenario applies — a prop type and the decoder it feeds.
 
 ## TanStack cores
 

@@ -39,7 +39,7 @@ The tree's own readers are exported beside the builder:
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name, a value that is not a list offers no field, and a list that offers none paints no Add control |
+| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name, a value that is not a list offers no field, and a list that offers none — or whose entries name a blank `field` — paints no Add control |
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
 | `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
@@ -84,11 +84,14 @@ name as `Field`, so the row is named and its sentence says which part is absent.
 
 - The builder edits a tree; it does not run one — use `filterByTree`.
 - `fields` is read as data: a saved record that carried `null` for the
-  list offers no field, so a clause falls back to the field's own name.
+  list offers no field, so a clause falls back to the field's own name. An entry
+  that names a **blank** `field` is not a field either — it can never match a
+  column id, so it is dropped from the picker and from the list Add reads.
 - **Add is offered only while there is a field to name.** A new clause takes the
   first offered field, so a builder with none to offer paints no Add clause and
   no Add group — the press would append a clause over no field, a query that
-  narrows nothing. Clear stays.
+  narrows nothing. Clear stays. A blank `field` among other entries is skipped,
+  so the clause Add composes names the first field it can actually use.
 - A clause that names no field — the shape a saved query can carry — reads
   `Field` in its clause row and its sentence, so it is never a nameless picker
   and its sentence never opens on its comparison.
