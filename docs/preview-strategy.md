@@ -645,7 +645,9 @@ are the tree's own: the rows are `flattenTree`, the cursor is the package's
 `useExpandedRows` over `treeCursorMove`, a typed prefix is `typeAheadRow`, and
 the windowed page mounts the package's `createWindowCalculator` slice of the
 whole set, so a cursor move or a reveal mounts the row it names before the
-focus moves. That drawing passes `rowHeight={37}` and prints it, so its window
+focus moves, and a scroll keeps the tab stop on a row the window still mounts —
+the viewport's top row — because the runtime unmounts a row it does not paint.
+That drawing passes `rowHeight={37}` and prints it, so its window
 is exact for the rows it paints; a caller who leaves the prop out gets the
 theme's density row, which a browser page cannot read from the preview surface.
 Property panels

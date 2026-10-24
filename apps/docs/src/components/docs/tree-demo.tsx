@@ -368,6 +368,40 @@ export const treeVisibleRows = (
 export const revealOffsetFor = (count: number, index: number): number =>
   treeOffset(count, rowIndex(index) * VIRTUAL_TREE_ROW_HEIGHT);
 
+/** The row at the viewport's top edge: the one row a window is sure to hold. */
+export const anchorIndexFor = (count: number, offset: number): number =>
+  Math.min(
+    Math.max(count - 1, 0),
+    Math.max(0, Math.floor(treeOffset(count, offset) / VIRTUAL_TREE_ROW_HEIGHT)),
+  );
+
+/**
+ * The cursor a scroll keeps.
+ *
+ * The runtime unmounts a row outside the window, and the tree mounts exactly
+ * one window of the set, so a row the reader scrolled past cannot hold the tab
+ * stop: its `aria-activedescendant` would name an element that is not in the
+ * document. The row at the viewport's top edge is the one the new window is
+ * guaranteed to hold, which is where the shipped tree moves the cursor. A row
+ * the new window still mounts keeps the cursor exactly where it was.
+ */
+export const cursorAfterScroll = (
+  rows: ReadonlyArray<TreeRow<DependencyNode>>,
+  cursor: TreeCursor,
+  count: number,
+  offset: number,
+): TreeCursor => {
+  const mounted = treeMountedRows(count, offset);
+  const stillMounted = Option.flatMap(cursor.active, (key) =>
+    Option.map(rowIndexOf(rows, key), (index) => Arr.contains(mounted, index)),
+  );
+  if (Option.getOrElse(stillMounted, () => false)) return cursor;
+  return Option.match(Arr.get(rows, anchorIndexFor(count, offset)), {
+    onNone: () => cursor,
+    onSome: (row) => withActive(cursor, row.key),
+  });
+};
+
 /** What the drawing reports about its window. */
 export const treeWindowReadout = (count: number, offset: number): string => {
   const window = treeVisibleRows(count, offset);
@@ -432,6 +466,14 @@ export function VirtualTreeDemo() {
     );
   };
 
+  // A scroll keeps the tab stop on a row the new window mounts, which is the
+  // shipped tree's rule: a row outside the window does not exist to focus.
+  const scrollTo = (next: number): void => {
+    const clamped = treeOffset(count, next);
+    setOffset(clamped);
+    tree.setCursor(cursorAfterScroll(tree.rows, tree.cursor, count, clamped));
+  };
+
   const revealLast = (): void => {
     Option.match(Arr.last(tree.rows), {
       onNone: () => {},
@@ -456,9 +498,7 @@ export function VirtualTreeDemo() {
             className="gx-virt-range"
             max={virtualTreeMaxOffset(count)}
             min={0}
-            onChange={(event) =>
-              setOffset(treeOffset(count, Number(event.target.value)))
-            }
+            onChange={(event) => scrollTo(Number(event.target.value))}
             step={VIRTUAL_TREE_ROW_HEIGHT}
             type="range"
             value={treeOffset(count, offset)}

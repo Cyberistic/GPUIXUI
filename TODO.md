@@ -10830,6 +10830,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
     fix the package is 29 files / **226** tests and the docs site's
     `component-index` guard is green in its 1 856-test suite. The four
     inventory rows name the guard. Owner: data.
+  - [x] Read a **grid state a store restored** instead of dereferencing it —
+    `constructGrid` is the seam an Effect- or store-driven grid builds its table
+    with, so its `state` is stored data as often as React state: JSON writes a
+    slice that was never set as `null`, and a release that renames a column
+    leaves the entry it named behind. `grid-core.ts` gains `readGridState`,
+    which reads each slice as the shape it means — a sorting list that is not a
+    list is **no sort** and an entry that names no column is dropped, a query
+    that is not text is **no query**, a chosen set keeps only the ids set to
+    `true` — and `constructGrid` reads both the state it hands the core and the
+    fallback its change callbacks pass an updater. `hiddenColumns` follows the
+    same rule (a stored list that is not a list of text ids hides nothing).
+    `src/grid-core.test.ts` gains `a grid state a store restored` (5 cases: the
+    slice reads, a state that is not a record, the build from the three
+    `null` slices, a restored sort and query, and the stored column list).
+    Directions measured: with the old dereference restored the build case fails
+    `TypeError: current.sorting is not iterable` and the column-list case fails
+    `TypeError: values is not iterable` (`HashSet.fromIterable(42)`); with
+    `readGridState` bypassed the two reader cases fail by name
+    (`expected [ null, { id: 'size' }, 'name', …(1) ] to deeply equal
+    [ { id: 'size', desc: false } ]`). Unit 246/246 green; `check-types` is red
+    only on the columns workstream's in-flight `src/columns/logic.ts`
+    (`'fallback' is declared but its value is never read`), not on these paths.
+    Docs: `docs/table-sorting.mdx` §A saved order is read, the README's restored-
+    state row and §Usage, and the Tier 3 Sortable tables row. No native scenario
+    applies — a boundary read with no paint path of its own. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -12094,7 +12119,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 378/378
+`[x]` `[██████████]` 379/379
+
+`[x]` Keep the **virtual tree's tab stop on a row the window paints** — the
+      drawing left `aria-activedescendant` naming the row a reader had revealed
+      while a scroll had unmounted that row, so the tree named a node that was
+      not in the document; the shipped `VirtualTree` moves the cursor to the
+      viewport's top row instead, because the runtime unmounts a row it does not
+      paint. `cursorAfterScroll` and `anchorIndexFor` in
+      `src/components/docs/tree-demo.tsx` are that rule: a row the new window
+      still mounts keeps the cursor exactly where it was, and a row it does not
+      moves the tab stop to the viewport's top edge. `tree-demo.test.tsx` gains
+      `keeps the tab stop on a row the window still mounts` (all three branches,
+      the identity of an unchanged cursor, and the anchor's own mount), and the
+      scroll control routes through `scrollTo`. Directions measured: with the
+      fallback removed the case fails by name (`expected
+      'registry-12/ns-12/pkg-12' to be 'registry-01/ns-2/pkg-10'`); restored,
+      the file is 10/10. Verified in a hydrated dev-server session (React's
+      handler attached on the chevron, 8.7 s to hydrate): offset 900 put the
+      cursor on `registry-01/ns-2/pkg-10` (index 24, mounted), 1184 on
+      `registry-01/ns-3/pkg-5`, back to 0 on `registry-01`, and
+      `aria-activedescendant` resolved to a painted element every time.
+      `docs/preview-strategy.md` names the rule beside the reveal rule. The docs
+      suite is **189 files / 1 937 tests** green with `check-types` clean.
+      No native scenario applies — a browser drawing over the package's window
+      arithmetic.
 
 `[x]` Re-anchor the **two docs guards that read a value which moved** — the
       status strip pinned Accordions' support cell to a bare `yes` while

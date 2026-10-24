@@ -20,11 +20,14 @@ import {
   VIRTUAL_TREE_OVERDRAW,
   VIRTUAL_TREE_ROW_HEIGHT,
   VirtualTreeDemo,
+  anchorIndexFor,
+  cursorAfterScroll,
   dependencyLabel,
   dependencyRows,
   dependencySpec,
   revealOffsetFor,
   rowId,
+  rowIndexOf,
   treeMountedRows,
   treeOffset,
   treeReadout,
@@ -208,6 +211,101 @@ describe("the VirtualTree preview", () => {
     // The overdraw the page prints is the package's default.
     expect(VIRTUAL_TREE_OVERDRAW).toBe(4);
     expect(HashSet.size(virtualTreeExpanded)).toBeGreaterThan(100);
+  });
+
+  it("keeps the tab stop on a row the window still mounts", () => {
+    const rows = virtualTreeRows;
+    const last = rows[count - 1];
+    expect(last).toBeDefined();
+    if (last === undefined) return;
+    const atEnd: TreeCursor = {
+      expanded: virtualTreeExpanded,
+      active: Option.some(last.key),
+    };
+
+    // The scroll landed on a row the new window does not hold: the cursor goes
+    // to the viewport's top row, which the window is guaranteed to mount.
+    const anchor = anchorIndexFor(count, 900);
+    expect(anchor).toBe(24);
+    expect(Arr.contains(treeMountedRows(count, 900), anchor)).toBe(true);
+    expect(Arr.contains(treeMountedRows(count, 900), count - 1)).toBe(false);
+    const moved = cursorAfterScroll(rows, atEnd, count, 900);
+    expect(Option.getOrNull(moved.active)).toBe(rows[anchor]?.key);
+
+    // A row the window still mounts keeps the cursor, and its identity.
+    const top = rows[0];
+    expect(top).toBeDefined();
+    if (top === undefined) return;
+    const inside: TreeCursor = { ...atEnd, active: Option.some(top.key) };
+    expect(cursorAfterScroll(rows, inside, count, 0)).toBe(inside);
+    // A cursor with no row takes the anchor rather than naming no row at all.
+    expect(
+      Option.getOrNull(
+        cursorAfterScroll(
+          rows,
+          { expanded: virtualTreeExpanded, active: Option.none() },
+          count,
+          900,
+        ).active,
+      ),
+    ).toBe(rows[anchor]?.key);
+  });
+
+  it("keeps the tab stop the way the shipped windowed tree does", () => {
+    const rows = virtualTreeRows;
+    const host = read("packages/data/src/virtual/tree.tsx");
+    const drawing = read("apps/docs/src/components/docs/tree-demo.tsx");
+
+    // The package's window handler keeps the tab stop on a mounted row: the row
+    // at the viewport's top edge, and only once the active row has unmounted.
+    expect(host).toContain(
+      "if (Arr.contains(window.mountedAt(offset), index)) return;",
+    );
+    expect(host).toContain("Math.floor(offset / rowHeight)");
+    expect(host).toContain("active: Option.some(anchorRow.key)");
+
+    // The drawing scrolls through that rule, not through a bare offset write.
+    expect(drawing).toContain(
+      "cursorAfterScroll(tree.rows, tree.cursor, count, clamped)",
+    );
+    expect(drawing).toContain("onChange={(event) => scrollTo(");
+
+    // The anchor is the row the viewport's top edge lands in, and the window
+    // mounts it, so the tab stop can name it at every scroll position.
+    Arr.forEach([0, VIRTUAL_TREE_ROW_HEIGHT, 900, 5000], (offset) => {
+      const settled = treeOffset(count, offset);
+      const anchor = anchorIndexFor(count, settled);
+      expect(anchor * VIRTUAL_TREE_ROW_HEIGHT).toBeLessThanOrEqual(settled);
+      expect((anchor + 1) * VIRTUAL_TREE_ROW_HEIGHT).toBeGreaterThan(settled);
+      expect(Arr.contains(treeMountedRows(count, settled), anchor)).toBe(true);
+
+      const moved = cursorAfterScroll(
+        rows,
+        {
+          expanded: virtualTreeExpanded,
+          active: Option.map(Arr.head(rows), (row) => row.key),
+        },
+        count,
+        settled,
+      );
+      const landed = Option.flatMap(moved.active, (key) =>
+        rowIndexOf(rows, key),
+      );
+      expect(
+        Option.match(landed, {
+          onNone: () => false,
+          onSome: (index) =>
+            Arr.contains(treeMountedRows(count, settled), index),
+        }),
+      ).toBe(true);
+    });
+
+    // A scroll past the end still names a row the window holds.
+    const end = treeOffset(count, 1e9);
+    expect(anchorIndexFor(count, end)).toBeLessThan(count);
+    expect(
+      Arr.contains(treeMountedRows(count, end), anchorIndexFor(count, end)),
+    ).toBe(true);
   });
 
   it("mounts the rows the readout names, and nothing else", () => {
