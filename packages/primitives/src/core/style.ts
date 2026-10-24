@@ -33,7 +33,7 @@ import type {
 } from "./theme.js";
 import { controlRing } from "./focus.js";
 import { pressWash } from "./pointer.js";
-import { familyOf, typeOf } from "./theme.js";
+import { controlSize, familyOf, typeOf } from "./theme.js";
 import { fieldVariant } from "./variants.js";
 
 /**
@@ -108,8 +108,8 @@ export const controlStyle = (
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const { variant, size } = spec;
-  const height = theme.density.controlHeight[size];
-  const padding = theme.density.controlPaddingX[size];
+  const height = theme.density.controlHeight[controlSize(size)];
+  const padding = theme.density.controlPaddingX[controlSize(size)];
   const label = typeOf(theme, "label");
   const rest = paint(variant.background, theme);
   const border =
@@ -610,7 +610,7 @@ const isVertical = (spec: Pick<SliderSpec, "orientation">): boolean =>
  * off it.
  */
 export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
-  Math.round(theme.iconSize[size] / 2);
+  Math.round(theme.iconSize[controlSize(size)] / 2);
 
 /**
  * The slider's hit area.
@@ -629,7 +629,7 @@ export const sliderTrackStyle = (
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const inset = sliderInset(spec.size, theme);
-  const control = theme.density.controlHeight[spec.size];
+  const control = theme.density.controlHeight[controlSize(spec.size)];
   const style: StyleDesc = isVertical(spec)
     ? {
         display: "flex",
@@ -722,7 +722,7 @@ export const sliderThumbStyle = (
   spec: SliderSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = theme.iconSize[spec.size];
+  const side = theme.iconSize[controlSize(spec.size)];
   const half = Math.round(side / 2);
   const style: StyleDesc = {
     width: side,

@@ -8714,6 +8714,30 @@ scenario applies — the floors, the gate and two tables read from one value.
       stored-choice list. No native scenario applies — the classes resolve to
       the same box and fill the bar suite already paints.
 
+`[x]` `packages/primitives`: **the exported core resolvers still indexed a
+      control size raw** — `theme.test.ts` holds every component to
+      `controlSize`, and the resolvers those components are built on stayed
+      unguarded while the package exports them for a consumer painting its own
+      control: `controlStyle` (`theme.density.controlHeight[size]`),
+      `sliderInset`, `sliderTrackStyle`, `selectionBoxStyle`,
+      `selectionTargetStyle`, `radioDotStyle`, `switchBox` (the icon-scale
+      fallback branch) and `switchThumbStyle`, plus `hint.tsx`'s frame padding.
+      A stored name therefore answered `undefined` for a height, a box side or
+      a thumb offset — a collapsed control, a selection mark with no box, a
+      `NaN` thumb — while the documented rule said it reads `md`. All ten sites
+      read through `controlSize` now. Proof: `theme.test.ts` gains
+      `reads the size through controlSize in <seam>` (8 cases, one per resolver,
+      the name `xlarge` so neither scale carries it) and
+      `field-hint.test.tsx` gains `insets a stored size at the default step`;
+      directions measured by reverting the ten reads — 9 cases fail by name
+      (`controlStyle`, `sliderInset`, `sliderTrackStyle`, `selectionBoxStyle`,
+      `selectionTargetStyle`, `radioDotStyle`, `switchBox`,
+      `switchThumbStyle`, the hint) and pass restored; the package is 56 files /
+      **1 123** tests green with `check-types` clean. Docs: the package README's
+      control-size paragraph names the resolvers and the cases. No native
+      scenario applies — the resolvers paint what the components' own suites
+      already read in a window.
+
 `[x]` `packages/components`: **a hover delay the caller could not supply opened
       the surface at once** — `PreviewCard` and `NavigationMenu` each scheduled
       `openDelay`/`closeDelay` straight into `setTimeout`, which answers a delay

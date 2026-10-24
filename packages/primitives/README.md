@@ -54,6 +54,15 @@ action with no height class beside the **32px** default it documents;
 `theme.test.ts` holds the rule and derives the components that must take their
 size through it, and `runtime/controls.runtime.test.tsx` proves the painted box.
 
+The same read is the **core resolvers'** — `controlStyle`, `sliderInset`,
+`sliderTrackStyle`, `selectionBoxStyle`, `selectionTargetStyle`,
+`radioDotStyle`, `switchBox` and `switchThumbStyle` are exported so a consumer
+can paint its own control, and each indexed the scales raw, so a stored name
+answered `undefined` for a height, a box side or a thumb offset (a collapsed
+control, a vanished mark, a `NaN` offset). They read through `controlSize` now,
+and `theme.test.ts`'s `reads the size through controlSize in …` cases hold each
+seam to the `md` paint; `fieldHint`'s frame follows the same rule.
+
 The other three names a control is given are stored choices for the same reason,
 and each is read through a membership test rather than indexed raw:
 

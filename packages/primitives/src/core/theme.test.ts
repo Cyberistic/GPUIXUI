@@ -5,8 +5,16 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { keyboardFocusRing, typography as libraryScale } from "@gpuixui/tokens";
+import { sliderInset, sliderTrackStyle } from "./style.js";
 import { controlStyle } from "./style.js";
 import { keyboardRing } from "./focus.js";
+import {
+  radioDotStyle,
+  selectionBoxStyle,
+  selectionTargetStyle,
+  switchBox,
+  switchThumbStyle,
+} from "./selection.js";
 import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import {
@@ -14,6 +22,7 @@ import {
   familyOf,
   isTextRole,
   typeOf,
+  type ControlSize,
   type PrimitiveTheme,
 } from "./theme.js";
 
@@ -179,6 +188,75 @@ describe("a control size is a stored choice", () => {
       ),
     );
     expect(inline).toEqual([]);
+  });
+
+  // The core resolvers the components are built on are exported for a consumer
+  // painting its own control, so the same rule has to hold there: a stored size
+  // answered `undefined` for a height, a box side or a thumb offset — a
+  // collapsed control and a vanished selection mark — while the components had
+  // already moved to `controlSize`.
+  // A name neither scale carries: `xl` is an icon step, so it would still
+  // resolve through the wrong table and hide the index the components no
+  // longer take.
+  const storedSize = "xlarge" as ControlSize;
+  const checked = { state: "checked", accent: "primary" } as const;
+  const paintings: ReadonlyArray<
+    readonly [string, () => unknown, () => unknown]
+  > = [
+    [
+      "controlStyle",
+      () =>
+        controlStyle(
+          { variant: buttonVariants.primary, size: storedSize },
+          testTheme,
+        ),
+      () =>
+        controlStyle(
+          { variant: buttonVariants.primary, size: "md" },
+          testTheme,
+        ),
+    ],
+    [
+      "sliderInset",
+      () => sliderInset(storedSize, testTheme),
+      () => sliderInset("md", testTheme),
+    ],
+    [
+      "sliderTrackStyle",
+      () => sliderTrackStyle({ size: storedSize }, testTheme),
+      () => sliderTrackStyle({ size: "md" }, testTheme),
+    ],
+    [
+      "selectionBoxStyle",
+      () => selectionBoxStyle({ ...checked, size: storedSize }, testTheme),
+      () => selectionBoxStyle({ ...checked, size: "md" }, testTheme),
+    ],
+    [
+      "selectionTargetStyle",
+      () => selectionTargetStyle({ ...checked, size: storedSize }, testTheme),
+      () => selectionTargetStyle({ ...checked, size: "md" }, testTheme),
+    ],
+    [
+      "radioDotStyle",
+      () => radioDotStyle({ ...checked, size: storedSize }, testTheme),
+      () => radioDotStyle({ ...checked, size: "md" }, testTheme),
+    ],
+    [
+      "switchBox",
+      () => switchBox(storedSize, testTheme),
+      () => switchBox("md", testTheme),
+    ],
+    [
+      "switchThumbStyle",
+      () => switchThumbStyle({ ...checked, size: storedSize }, testTheme),
+      () => switchThumbStyle({ ...checked, size: "md" }, testTheme),
+    ],
+  ];
+
+  Arr.forEach(paintings, ([name, withStored, withDefault]) => {
+    it(`reads the size through controlSize in ${name}`, () => {
+      expect(withStored()).toStrictEqual(withDefault());
+    });
   });
 });
 

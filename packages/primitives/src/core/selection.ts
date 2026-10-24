@@ -26,6 +26,7 @@ import {
   targetSize,
 } from "@gpuixui/tokens";
 import type { SwitchColors } from "@gpuixui/tokens";
+import { controlSize } from "./theme.js";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
@@ -204,7 +205,7 @@ export const selectionBoxStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = theme.iconSize[spec.size];
+  const side = theme.iconSize[controlSize(spec.size)];
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true
@@ -282,7 +283,7 @@ export const switchBox = (
   if (theme.switch !== undefined && metrics !== undefined) {
     return switchMetricsAt(metrics, size);
   }
-  const iconSide = theme.iconSize[size];
+  const iconSide = theme.iconSize[controlSize(size)];
   return {
     width: Math.round(iconSide * 1.75),
     height: iconSide,
@@ -306,7 +307,7 @@ export const selectionTargetStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = theme.iconSize[spec.size];
+  const side = theme.iconSize[controlSize(spec.size)];
   const inset = targetInset(side);
   return {
     display: "flex",
@@ -559,7 +560,7 @@ export const radioDotStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = Math.round(theme.iconSize[spec.size] / 2);
+  const side = Math.round(theme.iconSize[controlSize(spec.size)] / 2);
   return {
     width: side,
     height: side,

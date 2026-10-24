@@ -25,6 +25,7 @@ import { disabledOpacity } from "@gpuixui/tokens";
 import * as hintSubpath from "@gpuixui/primitives/hint";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ControlSize } from "../core/theme.js";
 import {
   fieldHelp as publishedFieldHelp,
   fieldHint as publishedFieldHint,
@@ -200,6 +201,27 @@ describe("a field's hint", () => {
     });
     expect(content.paddingLeft).toBe(0);
     expect(content.paddingTop).toBe(0);
+  });
+
+  it("insets a stored size at the default step", () => {
+    // The bug guarded: a hint's frame takes the field's horizontal padding from
+    // the control size, and a stored name the scale no longer carries indexed
+    // the scale raw — the padding collapsed to `undefined`, so the placeholder
+    // sat against the border it was meant to clear.
+    const stored = hintFrame(testTheme, {
+      size: "xl" as ControlSize,
+      align: "center",
+      origin: "field",
+    });
+    const fallback = hintFrame(testTheme, {
+      size: "md",
+      align: "center",
+      origin: "field",
+    });
+    expect(stored).toStrictEqual(fallback);
+    expect(stored.paddingLeft).toBe(
+      testTheme.borderWidth.thin + testTheme.density.controlPaddingX.md,
+    );
   });
 
   it("puts the hint in a label with a derived locator", () => {
