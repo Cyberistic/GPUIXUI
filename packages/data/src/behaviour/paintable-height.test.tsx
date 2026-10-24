@@ -194,7 +194,6 @@ describe("a height the layout cannot paint", () => {
     expect(bodyHeightFor(200)).toBe(200);
   });
 
-
   it("paints the rows of a windowed table's body", () => {
     const measured = windowedBodyRowsFor(undefined);
     expect(measured).toBeGreaterThan(0);
@@ -203,6 +202,8 @@ describe("a height the layout cannot paint", () => {
     expect(windowedBodyRowsFor(Number.NaN)).toBe(measured);
   });
 
+  // TODO: a window given no paintable height still paints no rows — it needs
+  // the height it painted reported back into its window (TODO.md, `packages/data`).
   it("keeps a tree inside the pane it sits in", () => {
     const measured = treeHeightFor(undefined);
     expect(measured).toBe(PANE_HEIGHT);
@@ -211,5 +212,4 @@ describe("a height the layout cannot paint", () => {
     // overflowed it instead of scrolling inside it.
     expect(treeHeightFor(Number.NaN)).toBe(measured);
   });
-
 });
