@@ -5015,6 +5015,20 @@ derived from it, the readout template, the ids the example and `TreeView` derive
 the probe held to the fixture, and this section). Evidence:
 `.artifacts/live/data-tree-{revealed,expanded}.png`.
 
+The **offscreen** `data-tree-core` scenario mounts the same example, and its ids
+come from the fixture too: it reads `DATA_TREE_READOUT`, derives every row from
+`dataTreeRow` and prints the readout line with `dataTreeReadout`, so a rename in
+the example moves both hosts at once. Before that, the example's readout became
+`data-tree-readout` (so a batched window cannot read the windowed tree's screen
+as this one's) while the offscreen scenario still read `tree-readout` — it read
+`""` and failed `the tree paints its roots and one open folder` on master.
+`src/scenarios/data-tree.test.ts` (3 cases) holds the scenario to the fixture:
+the example's declared readout id must be `DATA_TREE_READOUT`, the scenario must
+read it through the constant and carry no `"tree-readout"` or `"tree-row-"`
+literal, and its row and readout lines must come from `dataTreeRow` and
+`dataTreeReadout` (measured both ways: a restored `text(ctx, "tree-readout")`
+fails the first case, a hand-written `"tree-row-readme.md"` the second).
+
 ### `virtual-table-lifecycle` — measured on 0.11.0 here
 
 **What does the shipped virtualized table actually retain, and what does it

@@ -18,9 +18,27 @@ import * as Option from "effect/Option";
 import { examples } from "@gpuixui/data/examples";
 import type { Smoke } from "@gpuixui/testing";
 import type { ScenarioBody } from "../types.js";
+import {
+  DATA_TREE_COLLAPSE,
+  DATA_TREE_EXPAND,
+  DATA_TREE_INITIAL,
+  DATA_TREE_READOUT,
+  DATA_TREE_REVEAL,
+  DATA_TREE_ROWS_ALL,
+  DATA_TREE_ROWS_OPEN,
+  dataTreeReadout,
+  dataTreeRow,
+} from "../live/data-tree.js";
 
 const text = (ctx: Smoke.SmokeContext, id: string): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.text(id)), () => "");
+
+/** The example's readout line, so the scenario cannot print another spelling. */
+const readout = (rows: number, active: string): string =>
+  dataTreeReadout({ rows, active: Option.some(active) });
+
+/** A row's chevron slot: the inset a nested row is measured by. */
+const rowSlot = (key: string): string => `${dataTreeRow(key)}-slot`;
 
 const TreeExample = examples["tree"];
 const ExpandableRowsExample = examples["expandable-rows"];
@@ -32,23 +50,23 @@ export const dataTreeScenario: ScenarioBody = {
       // `src` starts open, so the tree paints its children and `docs` stays shut.
       yield* ctx.expectContains(
         "the tree paints its roots and one open folder",
-        text(ctx, "tree-readout"),
-        "5 rows · active=src",
+        text(ctx, DATA_TREE_READOUT),
+        DATA_TREE_INITIAL,
       );
       yield* ctx.expectEqual(
         "the closed folder's child paints nothing",
-        ctx.host.bounds("tree-row-readme.md") === null,
+        ctx.host.bounds(dataTreeRow("readme.md")) === null,
         true,
       );
 
       // A nested row insets one step: the chevron slot is the row's own inset.
       const parentSlot = yield* ctx.expectSome(
         "the parent's chevron slot painted",
-        Option.fromNullishOr(ctx.host.bounds("tree-row-src-slot")),
+        Option.fromNullishOr(ctx.host.bounds(rowSlot("src"))),
       );
       const childSlot = yield* ctx.expectSome(
         "the child's chevron slot painted",
-        Option.fromNullishOr(ctx.host.bounds("tree-row-components-slot")),
+        Option.fromNullishOr(ctx.host.bounds(rowSlot("components"))),
       );
       yield* ctx.expectNear(
         "a child insets 16px under its parent",
@@ -58,23 +76,23 @@ export const dataTreeScenario: ScenarioBody = {
       );
 
       // A press opens the folder it lands on.
-      ctx.host.click("tree-row-docs");
+      ctx.host.click(dataTreeRow("docs"));
       yield* ctx.expectContains(
         "the press opened the folder it hit",
-        text(ctx, "tree-readout"),
-        "7 rows · active=docs",
+        text(ctx, DATA_TREE_READOUT),
+        readout(7, "docs"),
       );
       yield* ctx.expectSome(
         "the opened folder's child painted",
-        Option.fromNullishOr(ctx.host.bounds("tree-row-readme.md")),
+        Option.fromNullishOr(ctx.host.bounds(dataTreeRow("readme.md"))),
       );
 
       // A press on a file moves the cursor and takes the focus the arrow key
       // needs; the next row is then one key away.
-      ctx.host.click("tree-row-readme.md");
+      ctx.host.click(dataTreeRow("readme.md"));
       yield* ctx.expectContains(
         "the press moved the cursor to the file",
-        text(ctx, "tree-readout"),
+        text(ctx, DATA_TREE_READOUT),
         "active=readme.md",
       );
       const focusedAfterPress = yield* ctx.expectSome(
@@ -84,12 +102,12 @@ export const dataTreeScenario: ScenarioBody = {
       yield* ctx.expectEqual(
         "the pressed row holds native focus",
         focusedAfterPress,
-        "tree-row-readme.md",
+        dataTreeRow("readme.md"),
       );
       ctx.host.key("down");
       yield* ctx.expectContains(
         "the arrow moved the cursor",
-        text(ctx, "tree-readout"),
+        text(ctx, DATA_TREE_READOUT),
         "active=guide.md",
       );
       const focusedAfterKey = yield* ctx.expectSome(
@@ -99,7 +117,7 @@ export const dataTreeScenario: ScenarioBody = {
       yield* ctx.expectEqual(
         "the arrow moved native focus with the cursor",
         focusedAfterKey,
-        "tree-row-guide.md",
+        dataTreeRow("guide.md"),
       );
 
       // Left steps out of a file to its parent, and a second Left closes the
@@ -107,44 +125,44 @@ export const dataTreeScenario: ScenarioBody = {
       ctx.host.key("left");
       yield* ctx.expectContains(
         "Left stepped out to the parent folder",
-        text(ctx, "tree-readout"),
+        text(ctx, DATA_TREE_READOUT),
         "active=docs",
       );
       ctx.host.key("left");
       yield* ctx.expectContains(
         "Left closed the branch but kept the row",
-        text(ctx, "tree-readout"),
-        "5 rows · active=docs",
+        text(ctx, DATA_TREE_READOUT),
+        readout(DATA_TREE_ROWS_OPEN, "docs"),
       );
 
       // Type-ahead jumps to the first match after the cursor.
-      ctx.host.click("tree-expand");
+      ctx.host.click(DATA_TREE_EXPAND);
       yield* ctx.expectContains(
         "expand all opened every branch",
-        text(ctx, "tree-readout"),
-        "11 rows",
+        text(ctx, DATA_TREE_READOUT),
+        `${DATA_TREE_ROWS_ALL} rows`,
       );
       // A press on a visible row takes the focus the typed key needs: the
       // button above took it when it was pressed.
-      ctx.host.click("tree-row-index.ts");
+      ctx.host.click(dataTreeRow("index.ts"));
       ctx.host.key("r");
       yield* ctx.expectContains(
         "a typed prefix moved the cursor to the row it names",
-        text(ctx, "tree-readout"),
+        text(ctx, DATA_TREE_READOUT),
         "active=readme.md",
       );
 
       // A reveal opens the path to a deep row and moves the cursor to it.
-      ctx.host.click("tree-collapse");
-      ctx.host.click("tree-reveal");
+      ctx.host.click(DATA_TREE_COLLAPSE);
+      ctx.host.click(DATA_TREE_REVEAL);
       yield* ctx.expectContains(
         "the reveal moved the cursor to the deep row",
-        text(ctx, "tree-readout"),
+        text(ctx, DATA_TREE_READOUT),
         "active=row.tsx",
       );
       yield* ctx.expectSome(
         "the reveal opened the path, so the row paints",
-        Option.fromNullishOr(ctx.host.bounds("tree-row-row.tsx")),
+        Option.fromNullishOr(ctx.host.bounds(dataTreeRow("row.tsx"))),
       );
     }),
 };

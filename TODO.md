@@ -12128,6 +12128,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     §Limitations, the README's surface paragraph, the `Key-value displays`
     inventory row and `propertyName`'s JSDoc. No native scenario applies — the
     reading is the real renderer's. Owner: data.
+  - [x] Read a **blank sparkline colour as the documented swatch** — `color` is
+    a stored preference as often as a literal, and `color ?? seriesColour(…)`
+    only covers an **absent** prop: a saved `""` (or a whitespace run) reached
+    `style.color`, the runtime dropped the malformed value, and the line painted
+    no tint while its description still read the values — a chart that vanished
+    but announced itself. `chosenColour` reads a blank colour as the theme's
+    first categorical swatch and keeps any colour the caller wrote as written.
+    `behaviour/chart.test.tsx` gains `draws a sparkline whose stored colour is
+    blank in the first series colour` (a blank and a whitespace colour, read
+    off the layer's painted style); direction measured: with the `??` restored
+    the case receives `""` where `#A7A9FF` is required. Docs:
+    `docs/charts.mdx`'s `color` row and §Limitations, the README's sparkline
+    paragraph, the `Sparkline` JSDoc and the Charts inventory row. No native
+    scenario applies — the paint is the real renderer's. Owner: data.
   - [x] Keep an **expandable row's keys to the row that holds focus** — the
     disclosure row answered Enter/Space on every key its handler heard, and a
     key is dispatched along the **focus path**
