@@ -16,7 +16,10 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
-import type { PrimitiveMessages } from "../src/core/messages.js";
+import type {
+  MessagesSource,
+  PrimitiveMessages,
+} from "../src/core/messages.js";
 import { Button } from "../src/components/Button.js";
 import { MessagesProvider } from "../src/components/MessagesProvider.js";
 import { OTPField } from "../src/components/OTPField.js";
@@ -300,6 +303,58 @@ it("keeps the shipped state word when the table's says nothing", async () => {
   // The tab stop keeps a name a reader can reach: an empty `Group` would be the
   // unnamed stop `DEFAULT_SCROLL_NAME` exists to prevent.
   expect(named(runtime, "Group", "Scroll region")).toBe(true);
+});
+
+it("keeps a tree a stored words table reaches, and the words it lost", async () => {
+  // The bug guarded: the words are interface copy an app may keep in a settings
+  // record, and a decoded table is JSON — `null` for the field it never
+  // carried, and no functions at all, because JSON cannot encode a sentence.
+  // `resolveMessages` read `messages.selection` straight off the value, so the
+  // provider (`messages={null}` here) threw `Cannot read properties of null
+  // (reading 'selection')` while rendering and the window painted no control.
+  // A `null` table is absence: the table above stands. A stored table reaches
+  // the seam without a cast, and every shape it can lose — a row, a group, a
+  // sentence, a name — keeps the table above it.
+  const runtime = await openWindow();
+  const stored: MessagesSource = {
+    selection: { checked: "sélectionné", unchecked: null, mixed: null },
+    starName: null,
+    loading: null,
+    scrollRegion: null,
+  };
+  runtime.render(
+    <Surface messages={french}>
+      <MessagesProvider messages={stored}>
+        <MessagesProvider messages={null}>
+          <Stack direction="column" gap="sm">
+            <Checkbox testId="checked" label="Notify" defaultChecked />
+            <Checkbox testId="unchecked" label="Preview" />
+            <Rating testId="rating" label="Qualité" max={2} defaultValue={1} />
+            <Progress testId="bar" label="Import" />
+            <ScrollArea
+              axis="vertical"
+              testId="scroller"
+              viewportTestId="scroller-port"
+              style={{ height: 60 }}
+            >
+              <Text>rows</Text>
+            </ScrollArea>
+          </Stack>
+        </MessagesProvider>
+      </MessagesProvider>
+    </Surface>,
+  );
+
+  // The row the stored pack translated is its own; the row it lost is the table
+  // above the provider, not the shipped English.
+  expect(announced(runtime, "Notify")).toBe("sélectionné");
+  expect(announced(runtime, "Preview")).toBe("décoché");
+  // A sentence JSON cannot carry is absent, so the table's own names the stars.
+  expect(announced(runtime, "étoile 1 sur 2")).toBe("plein");
+  expect(announced(runtime, "étoile 2 sur 2")).toBe("vide");
+  // The two scalar keys a pack never filled keep the table's.
+  expect(announced(runtime, "Import")).toBe("chargement");
+  expect(named(runtime, "Group", "Zone de défilement")).toBe(true);
 });
 
 it("keeps the shipped words when a caller names none", async () => {

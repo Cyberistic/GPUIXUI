@@ -230,11 +230,16 @@ names the selection states, `press` the toggle states, `star` a rating star's fi
 and `starName` its name template, `scrollRegion` a focusable scroller's default
 name and `codeDigit` a code cell's sentence — once for the whole tree, because
 this runtime announces state through `aria-valuetext` and has no
-`aria-checked`/`aria-pressed`/`aria-busy`. A named group replaces its default
-group whole and a group left out keeps the default. `MessagesProvider` is the
-same seam without a theme, for a sub-tree in another language — it extends the
-table above it rather than resetting it — and `useMessages` reads the resolved
-table. A **formatter** a caller passes for one bar is words too: `Progress`'s
+`aria-checked`/`aria-pressed`/`aria-busy`. A group's rows merge with the table
+above the provider: a group left out — or written `undefined` or `null` — keeps
+it, and a row a stored table lost keeps that table's word. `MessagesProvider` is
+the same seam without a theme, for a sub-tree in another language — it extends
+the table above it rather than resetting it — and `useMessages` reads the
+resolved table. `MessagesSource` is the shape a stored table takes, so a decoded
+table (JSON writes `null` for the field a record never carried, and cannot carry
+a sentence) reaches the provider without a cast: the sentences it lacks inherit,
+and a table written as `null` is absence whole. A **formatter** a caller passes
+for one bar is words too: `Progress`'s
 `formatValue`/`loadingText` and `Meter`'s `formatValue` go through
 `spokenText`, so an answer that says nothing (a locale table with no row for
 this measurement) leaves the component's own words standing instead of

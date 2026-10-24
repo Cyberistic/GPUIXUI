@@ -22,6 +22,7 @@ import {
 import {
   defaultMessages,
   resolveMessages,
+  type MessagesSource,
   type PrimitiveMessages,
 } from "../core/messages.js";
 
@@ -30,12 +31,15 @@ const MessagesContext = createContext<PrimitiveMessages>(defaultMessages);
 /** {@link MessagesProvider} props. */
 export interface MessagesProviderProps {
   /**
-   * The words to announce. A named group replaces its inherited group whole; a
-   * group left out — or written `undefined` — keeps the table above this
-   * provider, so an optional group a caller forwards cannot erase it. Omit the
-   * prop to keep that table untouched.
+   * The words to announce. A group's rows merge with the table above this
+   * provider, so a group left out — or written `undefined` or `null` — keeps it
+   * rather than erasing it, and a row a stored translation lost keeps that
+   * table's word. Omit the prop to keep that table untouched. A stored table is
+   * the shape a settings record holds ([`MessagesSource`]) — JSON writes `null`
+   * where it carried nothing, so a decoded table needs no cast and never takes
+   * the tree down.
    */
-  readonly messages?: Partial<PrimitiveMessages>;
+  readonly messages?: MessagesSource | null;
   readonly children: ReactNode;
 }
 

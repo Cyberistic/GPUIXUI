@@ -51,20 +51,21 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 
 ## Page contract
 
-Each page opens with frontmatter (`title`, `description`) and carries exactly
-the three sections below: the preview above them, one usage example, the API
-tables and at most three runtime limits. Measurement stories, verification
-citations, keyboard tables, theming prose and related links are not page
-content — they live in `COMPONENTS.md`, the inventory record's `tests` list and
-the playground's probe records. A page cannot invent a section the table does
-not name, and a row cannot promise a section no page carries — `src/docs.test.ts`
-reads this table and every page together.
+Each page opens with frontmatter (`title`, `description`) and carries the three
+required sections below, plus the optional section when it applies: the preview
+above them, one usage example, the API tables and at most three runtime limits.
+Measurement stories, verification citations, keyboard tables, theming prose and
+related links are not page content — they live in `COMPONENTS.md`, the inventory
+record's `tests` list and the playground's probe records. A page cannot invent a
+section the table does not name, and a row cannot promise a section no page
+carries — `src/docs.test.ts` reads this table and every page together.
 
 | Section | Required | What it carries |
 | ------- | -------- | --------------- |
 | `## Usage` | yes | a TSX snippet importing from the public package root |
 | `## API` | yes | prop, type, default, consequence; the variants, sizes and states are the `Type` column |
 | `## Limitations` | yes | at most three measured gaps and the honest alternative |
+| `## Words` | no | the copy table a provider's `messages` seam replaces, and how a stored one merges |
 
 Every component takes the caller's `className` (compiled through the recipe
 registry, after the component's own rules) and `style` (merged last); its `## API`

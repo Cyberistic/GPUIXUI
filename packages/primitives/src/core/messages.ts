@@ -144,34 +144,96 @@ export const rangeThumbNames = (
 };
 
 /**
+ * A value as a store hands it back.
+ *
+ * JSON has no `undefined`, so a group, a row or a function slot a record never
+ * carried arrives as `null`. A function slot is not widened to a value: JSON
+ * cannot carry a sentence, so a stored table leaves the three functions out
+ * rather than writing something this release could call.
+ */
+type Stored<T> = T extends (...args: never[]) => unknown
+  ? T | null
+  : T extends object
+    ? { readonly [K in keyof T]?: Stored<T[K]> } | null
+    : T | null;
+
+/**
+ * A words table as a store hands it back.
+ *
+ * The words are interface copy, and an application that keeps its copy in a
+ * settings record reads the table back from `JSON.parse` — a value whose groups
+ * and rows may be `null`. A provider accepts this shape so a decoded table
+ * reaches the seam **without a cast** (`AGENTS.md` §2), the rule
+ * `ThemeOverridesSource` follows for a stored theme.
+ */
+export type MessagesSource = {
+  readonly [K in keyof PrimitiveMessages]?: Stored<PrimitiveMessages[K]>;
+};
+
+/** The rows of one words group, read row by row against the table above. */
+const selectionRows = (
+  stored: Stored<SelectionWords> | undefined,
+  inherited: SelectionWords,
+): SelectionWords => ({
+  checked: stored?.checked ?? inherited.checked,
+  unchecked: stored?.unchecked ?? inherited.unchecked,
+  mixed: stored?.mixed ?? inherited.mixed,
+});
+
+const pressRows = (
+  stored: Stored<PressWords> | undefined,
+  inherited: PressWords,
+): PressWords => ({
+  pressed: stored?.pressed ?? inherited.pressed,
+  notPressed: stored?.notPressed ?? inherited.notPressed,
+});
+
+const starRows = (
+  stored: Stored<StarWords> | undefined,
+  inherited: StarWords,
+): StarWords => ({
+  checked: stored?.checked ?? inherited.checked,
+  half: stored?.half ?? inherited.half,
+  unchecked: stored?.unchecked ?? inherited.unchecked,
+});
+
+const loadingRows = (
+  stored: Stored<LoadingWords> | undefined,
+  inherited: LoadingWords,
+): LoadingWords => ({
+  busy: stored?.busy ?? inherited.busy,
+  indeterminate: stored?.indeterminate ?? inherited.indeterminate,
+});
+
+/**
  * The table a provider paints: the caller's keys over the table above it.
  *
- * A group named whole replaces its inherited group whole; a group left out
- * keeps it, so `messages={{ press: … }}` does not silence a checkbox. **A key
- * written `undefined` inherits too**, the rule `extendTheme` applies to a
- * theme's groups: a caller forwarding an optional group it never received must
- * not erase it. Three of these keys are sentences a component calls
- * (`starName`, `codeDigit`, `rangeEnd`), so a hole there is a render that
- * throws, and a hole in `selection` silently speaks the shipped English inside a
- * localised tree.
+ * A **group** merges row by row, so `messages={{ press: … }}` does not silence
+ * a checkbox and a stored group that lost a row keeps the table above it —
+ * while a row it wrote blank keeps the shipped word (`spokenWord`). A key a
+ * caller forwards as `undefined` inherits, the rule `extendTheme` applies to a
+ * theme's groups, and the whole table may be `null` — a record whose `messages`
+ * field was never written — which is the same absence. Three of these keys are
+ * sentences a component calls (`starName`, `codeDigit`, `rangeEnd`), so a hole
+ * there is a render that throws and a table with no sentences inherits them.
  *
  * The defaults are returned **as they are** when nothing is overridden, so the
  * shipped table has one identity rather than a copy per provider.
  */
 export const resolveMessages = (
-  messages?: Partial<PrimitiveMessages>,
+  messages?: MessagesSource | null,
   inherited: PrimitiveMessages = defaultMessages,
 ): PrimitiveMessages =>
-  messages === undefined
+  messages === undefined || messages === null
     ? inherited
     : {
-        selection: messages.selection ?? inherited.selection,
-        press: messages.press ?? inherited.press,
-        star: messages.star ?? inherited.star,
+        selection: selectionRows(messages.selection, inherited.selection),
+        press: pressRows(messages.press, inherited.press),
+        star: starRows(messages.star, inherited.star),
         starName: messages.starName ?? inherited.starName,
         scrollRegion: messages.scrollRegion ?? inherited.scrollRegion,
         codeDigit: messages.codeDigit ?? inherited.codeDigit,
-        loading: messages.loading ?? inherited.loading,
+        loading: loadingRows(messages.loading, inherited.loading),
         rangeEnd: messages.rangeEnd ?? inherited.rangeEnd,
       };
 

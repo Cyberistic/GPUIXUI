@@ -15,7 +15,7 @@ import {
   useTheme as useTokensTheme,
   useThemePresence,
 } from "@gpuixui/tokens/react";
-import type { PrimitiveMessages } from "../core/messages.js";
+import type { MessagesSource } from "../core/messages.js";
 import type { Density, PrimitiveTheme } from "../core/index.js";
 import { withDensity } from "./internal.js";
 import { MessagesProvider } from "./MessagesProvider.js";
@@ -43,11 +43,12 @@ export interface ThemeProviderProps {
   readonly density?: Density;
   /**
    * The words the controls below announce — a localised interface's copy. A
-   * named group replaces its inherited group whole (`selection`, `press`), and
-   * a group left out or written `undefined` keeps it; `MessagesProvider` does
-   * the merge, so a nested provider can extend a table instead of replacing it.
+   * stored table is the shape a settings record holds ([`MessagesSource`]), and
+   * a group's rows merge with the table above, so a group left out, written
+   * `undefined` or written `null` keeps it; `MessagesProvider` does the merge,
+   * so a nested provider can extend a table instead of replacing it.
    */
-  readonly messages?: Partial<PrimitiveMessages>;
+  readonly messages?: MessagesSource | null;
   readonly children: ReactNode;
 }
 

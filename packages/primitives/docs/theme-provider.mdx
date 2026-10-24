@@ -24,8 +24,33 @@ import { darkTheme } from "@gpuixui/tokens";
 | ---- | ---- | ------- | ----------- |
 | `theme` | `PrimitiveTheme` | required | every colour, size, radius and font a primitive paints |
 | `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
-| `messages` | `Partial<PrimitiveMessages>` | the shipped English | the words a control announces |
+| `messages` | `MessagesSource \| null` | the shipped English | the words a control announces; see §Words |
 | `children` | `ReactNode` | — | the tree that may render primitives |
+
+## Words
+
+A control's state word is interface copy, and this runtime has no `aria-checked`,
+`aria-pressed`, `aria-busy` or `aria-valuenow`: a checkbox, a switch, a toggle, a
+rating star and a busy action announce `aria-valuetext` or `aria-description`
+instead, so a localised interface owns those words.
+
+| Key | Words | Announced by |
+| --- | ----- | ------------ |
+| `selection` | `checked`, `unchecked`, `mixed` | Checkbox, CheckboxGroup, RadioGroup, Switch |
+| `press` | `pressed`, `notPressed` | Toggle, ToggleGroup |
+| `star` | `checked`, `half`, `unchecked` | Rating |
+| `loading` | `busy`, `indeterminate` | a busy Button/IconButton and its Spinner, an indeterminate Progress |
+| `starName(index, max)` | the sentence naming one star | Rating |
+| `codeDigit(index, label)` | the sentence naming one code cell | OTPField |
+| `rangeEnd(label, end)` | the sentence naming one end | RangeSlider |
+| `scrollRegion` | the default name of a focusable scroller | ScrollArea |
+
+A group's rows merge with the table above the provider: a row left out — or
+written `null` — keeps that table's word, and a row written blank keeps the
+shipped word. `MessagesSource` is the shape a stored table takes, so a decoded
+one needs no cast; JSON cannot carry the three sentences, so they are absent and
+inherit, and a table written as `null` (a settings record whose `messages` field
+was never set) is absence whole — the table above stands.
 
 ## Limitations
 

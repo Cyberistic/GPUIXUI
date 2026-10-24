@@ -2,7 +2,8 @@
  * The page contract for `packages/primitives/docs`, and the evidence a page no
  * longer carries.
  *
- * Every page is three sections — usage, API, limitations — so this suite holds
+ * Every page is three required sections — usage, API, limitations — plus the
+ * optional words table where a page has copy to explain, so this suite holds
  * that shape, the props each type declares, the names snippets import, the
  * paths and plans they cite, and the probe records the rows print. Measurement
  * stories and verification citations were pruned from the pages; the guards for
@@ -758,6 +759,36 @@ describe("the primitives docs page contract", () => {
             ),
       ),
     ).toEqual([]);
+  });
+
+  it("keeps the words section its citations name, and the rules in it", () => {
+    // The bug guarded: the README and `core/messages.ts`'s header both send a
+    // reader to `docs/theme-provider.mdx` §Words, and no page carried that
+    // section — so the one place the merge rule is taught (a group's rows over
+    // the table above, a stored table as absence, the sentences JSON cannot
+    // carry) was a citation to nothing, while the code it describes kept the
+    // rule. The section exists now and the contract table names it.
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => expect.fail("theme-provider.mdx has no ## Words section"),
+    );
+    const missing = Arr.filter(
+      [
+        "merge with the table above the provider",
+        "written `null`",
+        "shipped word",
+        "JSON cannot carry the three sentences",
+        "absence whole",
+      ],
+      (phrase) => !words.includes(phrase),
+    );
+    expect(missing).toEqual([]);
+    // Both citations still point at it, and the contract names the heading so
+    // the page-contract case above accepts the extra section.
+    expect(read("README.md")).toContain("| `## Words` | no |");
+    expect(
+      readFileSync(new URL("../src/core/messages.ts", docsDir), "utf8"),
+    ).toContain("§Words");
   });
 
   it("documents the caller's className on every primitive page", () => {

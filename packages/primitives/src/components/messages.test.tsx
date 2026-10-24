@@ -30,6 +30,7 @@ import {
   resolveMessages,
   selectionWord,
   starWord,
+  type MessagesSource,
   type PrimitiveMessages,
 } from "../core/messages.js";
 import { initValueState, type ValueState } from "../core/state.js";
@@ -158,6 +159,44 @@ describe("resolveMessages", () => {
     expect(resolved.starName(1, 2)).toBe("étoile 1 sur 2");
     expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
     expect(resolved.loading).toEqual(french.loading);
+  });
+
+  it("reads a words table a store handed back, without a cast", () => {
+    // The bug guarded: `messages` is interface copy an application may keep in
+    // a settings record, and JSON writes `null` for the field it never carried —
+    // so a provider handed the decoded table read `messages.selection` straight
+    // off it and threw `TypeError: Cannot read properties of null (reading
+    // 'selection')` out of the render, which took every control in the tree
+    // with it. A `null` table is absence, the rule `extendTheme` follows for a
+    // stored theme: the table above the provider stands, unchanged.
+    expect(resolveMessages(null)).toBe(defaultMessages);
+    // A stored pack carries only the string groups: JSON cannot encode the
+    // three sentences, so they are absent (and inherit), and a group the pack
+    // never filled is `null` (and inherits whole).
+    const stored: MessagesSource = {
+      selection: { checked: "coché", unchecked: null, mixed: null },
+      press: null,
+      starName: null,
+      scrollRegion: null,
+    };
+    const resolved = resolveMessages(stored, french);
+    // The row the pack translated is the caller's; the rows it lost — and the
+    // group it never carried — stay the table above the provider, not English.
+    expect(resolved.selection.checked).toBe("coché");
+    expect(resolved.selection.unchecked).toBe("décoché");
+    expect(resolved.selection.mixed).toBe("partiel");
+    expect(resolved.press).toEqual(french.press);
+    expect(resolved.starName(1, 3)).toBe("étoile 1 sur 3");
+    expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
+    expect(resolved.scrollRegion).toBe("Zone de défilement");
+    // A stored row written blank is the other absence: the shipped word stands,
+    // so a control's only announcement is never empty.
+    expect(
+      selectionWord(
+        "checked",
+        resolveMessages({ selection: { checked: "" } }, french).selection,
+      ),
+    ).toBe("checked");
   });
 });
 

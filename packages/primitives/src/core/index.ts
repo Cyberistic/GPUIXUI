@@ -30,6 +30,7 @@ export {
 } from "./messages.js";
 export type {
   LoadingWords,
+  MessagesSource,
   PressWords,
   PrimitiveMessages,
   RangeEndWords,
