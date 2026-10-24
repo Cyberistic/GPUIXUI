@@ -7989,7 +7989,7 @@ control or an empty one does.
 | `Enter`, `Enter` | the first reopens (`edits=2`, `editing=true`), the second closes it with **no** commit (`commits=1`): an unchanged draft calls nothing |
 | `Enter`, `cmd-a`, `y` | the draft reached the caller (`draft=y editing=true`) while the value stayed `x` |
 | `Escape` | `value=x commits=1 draft=y editing=false` — the draft is discarded, the focus returns to the display, and the display still paints `x` |
-| the disabled twin, pressed | the window focuses it (`tabIndex: -1` keeps it out of the Tab walk, not out of a press) and it reports `edits=0 commits=0`; `Enter` opens nothing |
+| the disabled twin, pressed | the window focuses it — the press-focus rule `button-activation-lifecycle` measured on a disabled `Button` — and it reports `edits=0 commits=0`; `Enter` opens nothing |
 | the empty twin | paints `Name this project`; `Enter` on an unchanged empty draft commits nothing; `p` then `Enter` commits `value=p`, `draft=p`, and the placeholder is replaced |
 
 Four rules a rename flow can plan on:
@@ -8004,9 +8004,10 @@ Four rules a rename flow can plan on:
    is **empty**, so the probe reads the draft from `onChange`, which is what a
    consumer's state holds; reading the input's text would assert `""` against a
    component that works.
-4. **A disabled control still takes the press focus.** `tabIndex: -1` removes it
-   from the Tab order, but a press gives it the window's focus; the contract is
-   that it refuses to open, which the `Enter` step proves. Its blur route is not
+4. **A disabled control still takes the press focus.** This is the library-wide
+   press-focus rule `button-activation-lifecycle` and `date-picker-lifecycle`
+   measured — `tabIndex: -1` removes the control from the Tab walk only — and the
+   contract is that it refuses to open, which the `Enter` step proves. Its blur route is not
    claimed here: this window delivers **no blur** at all on any route
    (`blur-delivery-lifecycle`), so the component's blur commit stays the
    renderer suite's measurement.
