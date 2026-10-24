@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { ReactElement } from "react";
 import type { SvgProps } from "@gpuix/react";
 import { Icon } from "./Icon.js";
-import { icons } from "./registry.js";
+import type { IconName } from "./names.js";
+import { FALLBACK_ICON, icons } from "./registry.js";
 import { ICON_SIZES } from "./sizes.js";
 
 /**
@@ -81,6 +82,25 @@ describe("Icon", () => {
 
   it("defaults to the middle size rather than the largest", () => {
     const { props } = render({ name: "x", color: "#000" });
+    expect(props.style?.width).toBe(ICON_SIZES.md);
+  });
+
+  it("paints the placeholder mark for a name the set no longer carries", () => {
+    // The bug guarded: `name` is a stored value as often as a literal — a saved
+    // toolbar, a workspace layout, an action record — so a name a release
+    // renamed or dropped arrives as a string the union does not name. `Icon`
+    // read `icons[name]` and wrote the `undefined` straight into `source`: the
+    // element kept its box and its `Image` node while painting nothing (measured
+    // in the runtime suite), so an icon-only button showed a blank square while
+    // it announced its action. A stored name paints the `help` mark, and the
+    // caller's label still names the action.
+    const { props } = render({
+      name: "floppy" as IconName,
+      color: "#123456",
+      label: "Save",
+    });
+    expect(props.source).toBe(icons[FALLBACK_ICON]);
+    expect(props["aria-label"]).toBe("Save");
     expect(props.style?.width).toBe(ICON_SIZES.md);
   });
 

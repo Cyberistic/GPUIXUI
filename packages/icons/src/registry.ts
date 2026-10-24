@@ -15,7 +15,7 @@
  */
 
 import * as R from "effect/Record";
-import type { IconName } from "./names.js";
+import { isIconName, type IconName } from "./names.js";
 
 /** A self-contained icon: fixed geometry, no colour of its own. */
 export type IconMarkup = string;
@@ -83,6 +83,7 @@ const shapes = {
   grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
   "grip-vertical":
     '<circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/>',
+  help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
   image:
     '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
@@ -155,3 +156,22 @@ export const icons: Record<IconName, IconMarkup> = R.map(
   shapes,
   (shape) => `<svg ${ATTRIBUTES}>${shape}</svg>`,
 );
+
+/** The mark a name the set does not carry paints instead. */
+export const FALLBACK_ICON = "help" satisfies IconName;
+
+/**
+ * The mark a name paints, or the placeholder when the set does not carry it.
+ *
+ * `name` is `unknown` because it is often a stored value rather than a literal —
+ * a saved toolbar, a workspace layout or an action record keeps the name a
+ * release may rename or drop. Reading the registry with such a name answered
+ * `undefined`, and `Icon` wrote that to `source`: measured on
+ * `@gpuix/native@0.11.0`, the element kept its 24×24 box and its `Image`
+ * accessibility node while **painting nothing** — a named image of nothing, so
+ * an icon-only button read as its action and showed an empty square. A name the
+ * set does not carry paints {@link FALLBACK_ICON}, a mark that reads as "unknown"
+ * instead of as the action the caller meant.
+ */
+export const iconMarkup = (name: unknown): IconMarkup =>
+  isIconName(name) ? icons[name] : icons[FALLBACK_ICON];

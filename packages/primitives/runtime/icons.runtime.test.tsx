@@ -103,6 +103,21 @@ it("paints an icon whose stored size name the scale no longer carries", async ()
   expect(bounds.height).toBe(ICON_SIZES.md);
 });
 
+it("paints a mark for a stored name the set no longer carries", async () => {
+  // The bug this guards: `name` is a stored value as often as a literal, so a
+  // release that renames or drops an icon reaches `Icon` as a string the union
+  // no longer names. The registry read answered `undefined`, which the runtime
+  // painted as an **empty 24×24 box** inside a live `Image` node — an icon-only
+  // button read as its action and showed a blank square. The red/blue pair is
+  // the proof: two tints of an empty frame are byte-identical, so a difference
+  // can only come from a mark having painted.
+  const runtime = await openWindow();
+  const stored = "floppy" as IconName;
+  const captured = await Effect.runPromise(tintedFrames(runtime, stored));
+  expect(sameBytes(captured.blue, captured.red)).toBe(false);
+  expect(boundsOfIcon(runtime).width).toBe(ICON_SIZES.xl);
+});
+
 it("takes a decorative icon out of the accessibility tree and keeps a named one", async () => {
   const runtime = await openWindow();
   mount(runtime, <Icon name="check" color="#123456" testId={ICON} />);

@@ -1,3 +1,5 @@
+import * as Arr from "effect/Array";
+
 /**
  * The icon names, in the order documentation and navigation should show them.
  *
@@ -41,6 +43,7 @@ export const ICON_NAMES = [
   "git-branch",
   "grid",
   "grip-vertical",
+  "help",
   "home",
   "image",
   "info",
@@ -88,3 +91,17 @@ export const ICON_NAMES = [
 
 /** Every icon this library can render. */
 export type IconName = (typeof ICON_NAMES)[number];
+
+/** The names, typed for a membership test over a decoded value. */
+const ICON_SET: ReadonlyArray<string> = ICON_NAMES;
+
+/**
+ * Whether a value names an icon the set carries.
+ *
+ * `name` is `unknown` because it is often a stored value rather than a literal:
+ * a saved toolbar, a workspace layout or an action record keeps the name a
+ * release may rename or drop, and the type only protects the callers who write
+ * a name in source.
+ */
+export const isIconName = (name: unknown): name is IconName =>
+  typeof name === "string" && Arr.contains(ICON_SET, name);

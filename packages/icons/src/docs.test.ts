@@ -23,6 +23,7 @@ import * as Result from "effect/Result";
 import * as R from "effect/Record";
 import * as Tokens from "@gpuixui/tokens";
 import { ICON_NAMES } from "./names.js";
+import { FALLBACK_ICON, iconMarkup, icons } from "./registry.js";
 import { ICON_SIZES, iconPixels } from "./sizes.js";
 
 const page = readFileSync(new URL("../docs/icon.mdx", import.meta.url), "utf8");
@@ -86,6 +87,25 @@ describe("the icon page", () => {
       readmeTeaches: true,
       unknownName: ICON_SIZES.md,
       defaultStep: ICON_SIZES.md,
+    });
+  });
+
+  it("teaches the answer a stored name gets", () => {
+    // The name is a stored value as often as a literal — a saved toolbar, a
+    // workspace layout, an action record — and the registry read used to paint
+    // an empty box for a name the set no longer carries. The page and the README
+    // say what such a name resolves to now, held to the resolver's own answer so
+    // the words cannot drift from the behaviour.
+    expect({
+      pageTeaches: section("API").includes("paints the `help` mark"),
+      readmeTeaches: /answers the `help` mark/.test(readme),
+      unknownName: iconMarkup("floppy"),
+      placeholder: icons[FALLBACK_ICON],
+    }).toEqual({
+      pageTeaches: true,
+      readmeTeaches: true,
+      unknownName: icons[FALLBACK_ICON],
+      placeholder: icons[FALLBACK_ICON],
     });
   });
 

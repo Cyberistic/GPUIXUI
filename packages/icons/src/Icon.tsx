@@ -1,11 +1,15 @@
 import type { ReactElement } from "react";
 import type { SvgProps } from "@gpuix/react";
-import { icons } from "./registry.js";
+import { iconMarkup } from "./registry.js";
 import type { IconName } from "./names.js";
 import { iconPixels, type IconSize } from "./sizes.js";
 
 export interface IconProps {
-  /** Which icon to paint. */
+  /**
+   * Which icon to paint. A name the set does not carry paints the `help` mark:
+   * `name` is often a stored value, and a registry miss used to paint an empty
+   * box inside a live `Image` node (see `iconMarkup`).
+   */
   readonly name: IconName;
   /**
    * Tint. GPUix paints a monochrome `<svg>` in `style.color`, so the icon
@@ -64,7 +68,7 @@ export const Icon = ({
   };
   return (
     <svg
-      source={icons[name]}
+      source={iconMarkup(name)}
       role={named === undefined ? "presentation" : "img"}
       aria-label={named}
       testId={testId}

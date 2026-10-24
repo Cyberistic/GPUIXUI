@@ -30,7 +30,9 @@ same `colors` roles).
 | ------ | ---------- |
 | `Icon` | the component: `name`, `color`, `size?`, `label?`, `testId?` |
 | `ICON_NAMES` / `IconName` | every name, sorted; the source of truth for which icons exist |
+| `isIconName` | the membership guard for a decoded name |
 | `icons` | markup by name, for a library that renders the `<svg>` itself |
+| `iconMarkup` / `FALLBACK_ICON` | the resolver a stored name goes through, and the `help` mark it paints when the name is absent |
 | `ICON_SIZES` / `iconPixels` | the `xs`…`xl` scale and its resolver |
 
 Two rules the component enforces, because both are silent bugs otherwise:
@@ -54,6 +56,20 @@ with the text beside it. A count the runtime cannot paint and a **name the scale
 does not carry** — a stored preference from another release — both resolve to
 `md` through `iconPixels`, which takes the decoded value as `unknown`.
 
+## Names
+
+`ICON_NAMES` is the set, and TypeScript rejects an unknown `name` — but a name is
+often a **stored value**: a saved toolbar, a workspace layout, an action record.
+A release that renames or drops an icon therefore reaches `Icon` as a string the
+union no longer names. `iconMarkup` reads the registry with that decoded value
+and answers the `help` mark for a name the set does not carry, because the
+registry read used to answer `undefined`: measured on `@gpuix/native@0.11.0`,
+the element kept its 24×24 box and its `Image` accessibility node while
+**painting nothing**, so an icon-only button read as its action and showed a
+blank square. A name the set does not carry now paints a mark that reads as
+"unknown", and the caller's `label` still names the action. `isIconName` is the
+same membership test, for a caller filtering its own stored list.
+
 ## Conventions for the markup
 
 - 24x24 `viewBox`, geometry only, on the Lucide grid, copied from the release the
@@ -75,7 +91,7 @@ malformed icon fails the suite rather than shipping.
 ## Documentation and example
 
 - `docs/icon.mdx` — the icon page: API and limitations. The size scale, the
-  naming rules and provenance live in this README (§Sizes, §Conventions,
+  naming rules and provenance live in this README (§Sizes, §Names, §Conventions,
   §Provenance), which the docs suite reads.
 - `packages/primitives/examples/icons.example.tsx` — a runnable status strip and
   the size scale, mounted in the real renderer by

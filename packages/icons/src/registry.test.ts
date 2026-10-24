@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
-import { ICON_NAMES } from "./names.js";
-import { icons } from "./registry.js";
+import { ICON_NAMES, isIconName } from "./names.js";
+import { FALLBACK_ICON, iconMarkup, icons } from "./registry.js";
 
 /**
  * Guards the icon registry's structure, not its art.
@@ -104,5 +104,32 @@ describe("icon names", () => {
   it("has a registry entry for every declared name", () => {
     const missing = Arr.filter(ICON_NAMES, (name) => !R.has(icons, name));
     expect(missing).toEqual([]);
+  });
+
+  it("reads a stored name the set does not carry as the placeholder mark", () => {
+    // The bug guarded: a name is a stored value as often as a literal, so a
+    // release that renames or drops an icon reaches `iconMarkup` as a string the
+    // union no longer names. The registry read answered `undefined`, which the
+    // runtime painted as an empty box inside a live `Image` node; a decoded name
+    // now paints the placeholder. `undefined` and a non-string are the same
+    // absence — a saved record whose field a store wrote `null` into.
+    expect(iconMarkup("check")).toBe(icons.check);
+    expect(iconMarkup("floppy")).toBe(icons[FALLBACK_ICON]);
+    expect(iconMarkup(undefined)).toBe(icons[FALLBACK_ICON]);
+    expect(iconMarkup(null)).toBe(icons[FALLBACK_ICON]);
+    expect(iconMarkup(7)).toBe(icons[FALLBACK_ICON]);
+  });
+
+  it("ships the placeholder the resolver names", () => {
+    expect(ICON_NAMES).toContain(FALLBACK_ICON);
+    expect(icons[FALLBACK_ICON]).toContain("<circle");
+  });
+
+  it("narrows only a name the set carries", () => {
+    // `isIconName` is what a caller with its own stored list filters through, so
+    // it must answer the same membership the resolver reads.
+    expect(
+      Arr.map(["check", "floppy", "", "Check", 7, undefined], isIconName),
+    ).toEqual([true, false, false, false, false, false]);
   });
 });

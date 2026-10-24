@@ -1,6 +1,6 @@
 ---
 title: Icons
-description: 76 monochrome icons, their size scale and the two accessibility rules
+description: 77 monochrome icons, their size scale and the two accessibility rules
 ---
 
 ## Usage
@@ -22,7 +22,7 @@ const theme = useTheme();
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `name` | `IconName` | required | which icon; TypeScript rejects an unknown name |
+| `name` | `IconName` | required | which icon; TypeScript rejects an unknown name, and a **stored** name the set does not carry paints the `help` mark |
 | `color` | `string` | required | the tint; pass a theme role |
 | `size` | `IconSize \| number` | `"md"` | a named step or raw pixels; a name the scale does not carry resolves to `md` |
 | `label` | `string` | none | accessible name; a non-blank label promotes the icon to an image |
