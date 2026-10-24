@@ -202,10 +202,7 @@ describe("density", () => {
 describe("a type role is read through one seam", () => {
   /** The type group without the `body` role, as a store hands it back. */
   const withoutBody = (): Partial<PrimitiveTheme["typography"]> => {
-    const typography: Partial<PrimitiveTheme["typography"]> = {
-      ...testTheme.typography,
-    };
-    delete typography.body;
+    const { body: _body, ...typography } = testTheme.typography;
     return typography;
   };
 

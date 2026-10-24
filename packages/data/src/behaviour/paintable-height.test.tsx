@@ -194,10 +194,6 @@ describe("a height the layout cannot paint", () => {
     expect(bodyHeightFor(200)).toBe(200);
   });
 
-  // TODO: a window with no bound needs the height it painted reported back
-  // into its window. Until that seam exists, `NaN` reads as no height and the
-  // grid paints none of the rows its pane holds.
-  it.todo("paints the rows of a windowed table");
 
   it("paints the rows of a windowed table's body", () => {
     const measured = windowedBodyRowsFor(undefined);
@@ -216,6 +212,4 @@ describe("a height the layout cannot paint", () => {
     expect(treeHeightFor(Number.NaN)).toBe(measured);
   });
 
-  // TODO: same seam as the windowed table above.
-  it.todo("paints the rows of a windowed tree");
 });

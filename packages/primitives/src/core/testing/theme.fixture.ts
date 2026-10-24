@@ -13,7 +13,12 @@
  * exercised in `runtime/theme.runtime.test.tsx`.
  */
 
-import type { FontWeight, PrimitiveTheme, TextRole, TextStyle } from "../theme.js";
+import type {
+  FontWeight,
+  PrimitiveTheme,
+  TextRole,
+  TextStyle,
+} from "../theme.js";
 
 /** A distinct opaque colour per index, so two roles can never compare equal. */
 const shade = (index: number): string =>
@@ -179,6 +184,11 @@ export const testThemeDark: PrimitiveTheme = {
  * fabricates its incomplete themes the same way (`incomplete.test.ts`), because
  * the type system cannot describe the value a store produces.
  */
+/** A type group a fixture can remove a role from, which the type itself forbids. */
+type MutableTypeGroup = {
+  -readonly [Role in keyof PrimitiveTheme["typography"]]?: PrimitiveTheme["typography"][Role];
+};
+
 export const themeWithoutRole = (
   role: TextRole,
   theme: PrimitiveTheme = testTheme,
