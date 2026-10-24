@@ -13341,7 +13341,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 394/394
+`[x]` `[██████████]` 395/395
+
+`[x]` Hold a page's **limits to the three facts the template allows** — the
+      policy says a curated page's `## Limitations` are "at most three one-line
+      runtime facts" and nothing counted them: `avatar.mdx` carried a fourth,
+      "**Stored values are read failsafe**", which restated two rows the page's
+      own API table already documents (`size` and `status` each state the
+      fallback), so the section that is meant to be the limits had become a
+      second list of behaviour — and the policy's own sentence ("a section that
+      restates the API belongs in the commit or the source comment") was the
+      rule the page broke. The bullet is gone and the facts live where a
+      consumer reads a prop's consequence. `component-page.test.ts` gains
+      `keep the limits to the three facts the template allows`: it reads each
+      page's section up to the next heading, counts the bullets, fails a page
+      with none and a page over `MAX_LIMITATIONS`, and requires the policy's
+      sentence and `avatar.mdx`'s presence so a reader that resolves no section
+      cannot pass. `docs/preview-strategy.md` states the cap is enforced and
+      where the fact belongs. Directions measured: appending a fourth bullet
+      back to `avatar.mdx` fails
+      `expected [ 'avatar.mdx: 4 limitations' ] to deeply equal []`; green, the
+      file is 18/18 and the docs suite 199 files / 2 028 tests with `check-types`
+      reporting no error in `apps/docs`. No native scenario applies — a page's
+      prose and the guard that counts it.
 
 `[x]` Search the **reference's rendered markup once per module, not once per
       symbol** — `public-api.test.tsx`'s `prints every symbol the packages
@@ -20568,6 +20590,30 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion`: **read the two optional objects a caller may have stored
+as their empty shapes** — a timing options object and a spring sample are both
+configs as often as literals, and both were read field-first. `motionTimingOf`
+and `motionTiming` evaluated `options.phase` before anything else, so a settings
+row a store never wrote (JSON keeps `null` for it) threw
+`TypeError: Cannot read properties of null (reading 'phase')` out of the render
+that built a surface's timing — including the `motionTiming("fast", null)` a
+stored preference row reaches through `MotionTimingOptions.preference`; and
+`retarget` read `sample.value`/`sample.velocity` straight off a saved mid-flight
+sample, so `retarget(null, 2)` threw
+`TypeError: Cannot read properties of null (reading 'value')` out of the render
+that resumed a panel's run. Both read through `?.` now: an absent timing options
+object is the house timing (`standard` phase, `animated` preference), a phase or
+preference it nulled falls back the same way, and an absent sample or an
+unreadable value/velocity is a standstill (`0`) whose target keeps the sample's
+own value. Proof: `timing.test.ts`'s `reads an options object the caller does not
+have as the house timing` (null, undefined, nulled phase, nulled preference, both
+entry points) and `spring.test.ts`'s `reads a sample the caller does not have as
+a standstill it can retarget` (absent sample, nulled velocity, unreadable target,
+the kept value). Directions measured: with the direct reads restored both cases
+fail on the exact `TypeError`s above, while the package is 15 files / **209**
+tests and `check-types` clean. Docs: the README's spring paragraph and the
+`motionTimingOf` snippet/paragraph teach both repairs. No native scenario
+applies — two pure readers over the shape a store hands back.
 `[x]` `@gpuixui/motion`: **the README's composition was painted on the one element
 that cannot take it** — `presenceMotion` answers the runtime's `motion` prop
 (`initial`, `animate`, `transition`), and the README's three-step example — the

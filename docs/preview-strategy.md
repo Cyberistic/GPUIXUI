@@ -1156,7 +1156,9 @@ Every page in `content/docs/components/` follows this order. Sections that do no
 
 The page is the sentence, the preview, the example, the API and the limits. A
 rationale, a measured story or a section that restates the API belongs in the
-commit or the source comment instead.
+commit or the source comment instead. That cap is enforced: a page carrying a
+fourth limit fails `component-page.test.ts`, and a fact a prop's Consequence
+already states is the API's, not the limits'.
 
 A page whose component has a **variant axis** prints a **Variants** table at
 the end of **API reference** — one row per member of the recipe's union, one

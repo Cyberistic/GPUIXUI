@@ -45,6 +45,9 @@ const required = [
   "Limitations",
 ] as const;
 
+/** The template's cap on a page's limits: "at most three one-line runtime facts". */
+const MAX_LIMITATIONS = 3;
+
 const policy = readFileSync(new URL("docs/preview-strategy.md", repo), "utf8");
 
 /**
@@ -589,6 +592,33 @@ describe("the curated component pages", () => {
     });
 
     expect(missing).toEqual([]);
+  });
+
+  it("keep the limits to the three facts the template allows", () => {
+    // Bug guarded: the policy says a page's Limitations are "at most three
+    // one-line runtime facts", and nothing counted them — `avatar.mdx` grew a
+    // fourth bullet that restated two API rows the page already documents, so
+    // the section drifted from "the limits" into a second list of behaviour.
+    const limits = pages.flatMap((name) => {
+      const body = source(name);
+      const start = body.indexOf("## Limitations");
+      if (start === -1) return [];
+      const rest = body.slice(start + "## Limitations".length);
+      const end = rest.indexOf("\n## ");
+      const section = end === -1 ? rest : rest.slice(0, end);
+      const facts = section
+        .split("\n")
+        .filter((line) => line.startsWith("- ") && line.trim() !== "-");
+
+      if (facts.length === 0) return [`${name}: no limitation is stated`];
+      return facts.length > MAX_LIMITATIONS
+        ? [`${name}: ${facts.length} limitations`]
+        : [];
+    });
+
+    expect(pages).toContain("avatar.mdx");
+    expect(policy).toContain("at most three one-line runtime facts");
+    expect(limits).toEqual([]);
   });
 
   it("requires every permanent section its policy declares, in its order", () => {
