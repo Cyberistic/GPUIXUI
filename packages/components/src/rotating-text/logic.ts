@@ -10,6 +10,20 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+
+/**
+ * The phrases a rotation carries, read at the boundary.
+ *
+ * A rotation is composed from a saved list as often as a literal — a marketing
+ * line restored with the page's copy, a locale row swapped for its key — so a
+ * record's `null` reaches the prop, and `phrases.length` threw out of the first
+ * render while an entry a store left empty painted a text node that said
+ * nothing. Only a real list is a list; an entry that is not text is dropped, so
+ * one hole cannot take the rotation down or blank a frame.
+ */
+export const phrasesOf = (value: unknown): ReadonlyArray<string> =>
+  Arr.isArray(value) ? Arr.filter(value, P.isString) : [];
 
 /** A phrase count as a usable length: a broken number reads as empty. */
 const lengthOf = (count: number): number =>

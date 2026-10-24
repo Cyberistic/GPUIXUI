@@ -2,13 +2,38 @@
  * The rotation's index rules, without a renderer.
  *
  * The bugs these guard: a rotation that runs past the end of a shortened list, a
- * negative or fractional index from a stored preference, and an empty list that
- * makes the phrase lookup throw.
+ * negative or fractional index from a stored preference, an empty list that
+ * makes the phrase lookup throw, and a phrase list a saved record wrote as
+ * something other than text.
  */
 
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { at, nextIndex, phraseAt } from "./logic.js";
+import { at, nextIndex, phraseAt, phrasesOf } from "./logic.js";
+
+describe("phrasesOf", () => {
+  it("keeps the phrases a list carries, in order", () => {
+    expect(phrasesOf(["Faster", "Safer"])).toEqual(["Faster", "Safer"]);
+  });
+
+  it("reads a list a record did not carry as no phrases", () => {
+    expect(phrasesOf(null)).toEqual([]);
+    expect(phrasesOf(undefined)).toEqual([]);
+    expect(phrasesOf("Faster")).toEqual([]);
+    expect(phrasesOf({ phrases: ["Faster"] })).toEqual([]);
+  });
+
+  it("drops an entry that is not text, keeping its neighbours", () => {
+    expect(phrasesOf(["Faster", null, 42, "Safer"])).toEqual([
+      "Faster",
+      "Safer",
+    ]);
+  });
+
+  it("paints no phrase from a list this release cannot read", () => {
+    expect(phraseAt(phrasesOf(null), 0)).toEqual(Option.none());
+  });
+});
 
 describe("nextIndex", () => {
   it("wraps at the end of the list", () => {

@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a line that never advances; an interval that fires
  * forever for a single phrase; a step that drops the callback; a rotation that
- * stops under the reduced preference even though the phrase is content; and a
- * fade that still runs when the reader asked for less motion.
+ * stops under the reduced preference even though the phrase is content; a fade
+ * that still runs when the reader asked for less motion; and a phrase list or a
+ * name that arrived from a saved record as something other than text.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -108,6 +109,66 @@ describe("RotatingText", () => {
     try {
       expect(a11yNodes(page.renderer).map((node) => node.name)).toContain(
         "Why teams pick us",
+      );
+    } finally {
+      page.unmount();
+    }
+  });
+
+  // The bug guarded: a page restored from storage carries `null` where it kept
+  // no copy, so `phrases` reached the render as a record's shape rather than a
+  // list and `phrases.length` threw before a single frame painted.
+  it("keeps the frame when a saved phrase list is absent", () => {
+    const page = renderComponent(
+      <RotatingText
+        testId="rotating"
+        phrases={null as unknown as ReadonlyArray<string>}
+        intervalMs={60}
+      />,
+    );
+    try {
+      expect(page.renderer.findByTestId("rotating")).toBeDefined();
+      expect(painted(page)).toBe("");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  // The bug guarded: an i18n row that lost its key is `null` inside an
+  // otherwise good list, and the rotation painted that hole as a blank frame
+  // with no name instead of stepping over it.
+  it("steps over an entry a stored record left empty", async () => {
+    const onIndexChange = vi.fn();
+    const page = renderComponent(
+      <RotatingText
+        testId="rotating"
+        phrases={["Faster", null as unknown as string, "Safer"]}
+        intervalMs={60}
+        onIndexChange={onIndexChange}
+      />,
+    );
+    try {
+      expect(painted(page)).toBe("Faster");
+      await waitFor(() => expect(onIndexChange).toHaveBeenCalledWith(1));
+      expect(painted(page)).toBe("Safer");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  // The bug guarded: a label restored blank painted a text node whose name was
+  // a run of spaces, so assistive technology met an unnamed phrase.
+  it("names the phrase when the stored label arrived blank", () => {
+    const page = renderComponent(
+      <RotatingText
+        testId="rotating"
+        phrases={["Faster", "Safer"]}
+        label="  "
+      />,
+    );
+    try {
+      expect(a11yNodes(page.renderer).map((node) => node.name)).toContain(
+        "Faster",
       );
     } finally {
       page.unmount();

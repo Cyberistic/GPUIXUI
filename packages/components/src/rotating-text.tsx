@@ -15,6 +15,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useEffect, useRef } from "react";
@@ -22,7 +23,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
-import { at, nextIndex, phraseAt } from "./rotating-text/logic.js";
+import { at, nextIndex, phraseAt, phrasesOf } from "./rotating-text/logic.js";
 
 /** What a rotation draws at one frame. */
 export interface RotatingTextState {
@@ -82,28 +83,32 @@ export const RotatingText = ({
   const theme = useTheme();
   const timing = useSurfaceTiming("fast");
   const interval = intervalOf(Option.fromNullishOr(intervalMs));
+  // A saved phrase list arrives as a record's shape, not this prop's: read it
+  // once, so every reader below (the index, the phrase and the timer) shares the
+  // list that actually paints.
+  const list = phrasesOf(phrases);
   const [rawIndex, setIndex] = useControllableState({
     value: indexProp,
     defaultValue: defaultIndex,
     onChange: onIndexChange,
   });
-  const index = at(rawIndex, phrases.length);
-  const phrase = Option.getOrElse(phraseAt(phrases, index), () => "");
+  const index = at(rawIndex, list.length);
+  const phrase = Option.getOrElse(phraseAt(list, index), () => "");
 
   // The timer must outlive a parent re-render: the setter and the index it
   // advances from are read from a ref, so only the span and the phrase count
   // restart it.
-  const latest = useRef({ index, length: phrases.length, setIndex });
-  latest.current = { index, length: phrases.length, setIndex };
+  const latest = useRef({ index, length: list.length, setIndex });
+  latest.current = { index, length: list.length, setIndex };
 
   useEffect(() => {
-    if (phrases.length < 2) return;
+    if (list.length < 2) return;
     const handle = setInterval(() => {
       const next = latest.current;
       next.setIndex(nextIndex(next.index, next.length));
     }, interval);
     return () => clearInterval(handle);
-  }, [interval, phrases.length]);
+  }, [interval, list.length]);
 
   const state: RotatingTextState = { phrase, index };
 
@@ -111,7 +116,7 @@ export const RotatingText = ({
     <text
       key={index}
       {...rest}
-      aria-label={label ?? phrase}
+      aria-label={accessibleName(label) ?? accessibleName(phrase)}
       motion={{
         initial: { opacity: 0 },
         animate: { opacity: 1 },
