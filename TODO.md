@@ -3364,8 +3364,12 @@ a merge over a stored theme.
       (`edits=0`), and printing `21 checks` in the README fails the count case by
       name. Green: `--only inline-edit-lifecycle` 1/1 on 0.11.0 (9.5–9.9 s over
       three runs), the four captures `inline-edit-{rest,editing,committed,empty-committed}.png`,
-      the playground suite 135 files / 1 376 tests, `build` and `check-types`
-      clean. Docs: `apps/playground/README.md` §`inline-edit-lifecycle` and the
+      the playground suite 135 files / 1 376 tests and `playground build`
+      clean. `playground check-types` was red on `packages/tokens/src/theme.ts`
+      only — the tokens workstream's in-flight edit, two unused imports at the
+      first run and a stored-series assignment at the second — so this probe's
+      files were typed by the build that passed, not by a clean whole-tree check.
+      Docs: `apps/playground/README.md` §`inline-edit-lifecycle` and the
       input row of §The critical interactions.
 
 `[ ]` Cite the **window measurement on the InlineEdit page and inventory row** —
