@@ -205,8 +205,8 @@ export const renderRadioGroup = (
   // the old `value`, so a base taken from it would recompute every arrow from
   // the option the reader left: the focus would stall on the first row it
   // reached and the stop would stay behind it, so `Tab` from the focused row
-  // re-entered the group instead of leaving. A row that became disabled while
-  // focused takes no keys, so the value's row is the base again.
+  // re-entered the group instead of leaving. A row disabled while focused is
+  // not a destination either, so the value's row is the base again.
   const from = Option.getOrElse(
     Option.filter(focused, (index) => !isDisabled(index)),
     () => activeIndex,
