@@ -12270,7 +12270,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 380/380
+`[x]` `[██████████]` 381/381
+
+`[x]` Wait for the **surface the palette probe measures** before pressing —
+      `palette-switch-probe.ts` pressed the sidebar's Light button as soon as
+      *it* carried React props, while the page's previews hydrate after the
+      sidebar: a press in that window updated the group and the URL while the
+      page's own hydration render landed afterwards, so all three surfaces kept
+      the server's dark palette and the probe reported `pressing Light left no
+      surface in light mode` with `Light` pressed — a failure against a page a
+      reader could not yet have clicked. `ready` now also requires the first
+      `.gx-demo[data-mode]` to carry React's props, so the press happens on the
+      page the probe measures. Measured on the served build: the
+      first-hydration press left three `dark` surfaces with `Light` pressed (the
+      element's props read `light`, its DOM did not), and the same press 250 ms
+      later read `light` on all three; after the fix the probe prints
+      `light: 3 of 3 surfaces painted #F2F2F7` and exits `0`.
+      `palette-switch.test.ts` gains `waits for the surface it measures, not
+      only the switch`, and removing the surface check fails it by name.
+      `docs/preview-strategy.md` §The palette switch is a measured click records
+      the window, today's measurement and the negative control it already
+      carried. No native scenario applies — a browser probe's precondition.
 
 `[x]` Make the **tree preview one tab stop, as its page promises** — the
       `TreeView` page teaches "one tab stop and arrow keys", and the drawing

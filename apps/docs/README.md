@@ -427,7 +427,7 @@ scripts/chrome-session.ts           The headless-Chrome page every probe drives,
 scripts/live-surface-probe.ts       Drives headless Chrome to prove a real GPUix frame paints
 scripts/live-route-probe.ts         Holds /live to the same rule, and a press to the renderer's path
 scripts/preview-press-probe.ts      Presses a hydrated preview and reads the carousel's own state
-scripts/palette-switch-probe.ts     Presses the Palette group and reads every surface's palette back
+scripts/palette-switch-probe.ts     Presses the Palette group once the surface it measures is hydrated, and reads every surface's palette back
 scripts/platform-switch-probe.ts    Presses Windows then macOS and reads every surface's platform, height and URL back
 scripts/docs-theme-probe.ts         Presses the docs theme toggle and holds every preview on the library's palette
 scripts/search-probe.ts             Presses the search dialog, types three queries and requires Enter to open the result

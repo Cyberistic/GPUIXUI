@@ -79,6 +79,24 @@ describe("the switch's press path", () => {
     expect(pressAt).toBeGreaterThan(readyAt);
   });
 
+  it("waits for the surface it measures, not only the switch", () => {
+    // Bug guarded: the sidebar's group hydrates before the page's previews, and
+    // a press in that window updated the group while the page's own hydration
+    // render landed afterwards — the surfaces kept the server's palette, so the
+    // probe reported "pressing Light left no surface in light mode" against a
+    // page a reader could not yet have clicked. Measured on the served build:
+    // the first hydration read pressed Light while every surface stayed `dark`,
+    // and the same press 250 ms later read `light` on all three.
+    const start = probe.indexOf("const ready = ");
+    const end = probe.indexOf("const press = ");
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const body = probe.slice(start, end);
+    expect(body).toContain(".gx-demo[data-mode]");
+    const surfacePart = body.slice(body.indexOf("const surface"));
+    expect(surfacePart).toContain("__reactProps");
+  });
+
   it("presses both palettes and reads every surface", () => {
     // One direction would pass on a group that only lights one palette, or on
     // a page whose single preview never re-resolved.

@@ -305,7 +305,11 @@ provider — so the click is measured rather than assumed.
 
 `apps/docs/scripts/palette-switch-probe.ts` presses the group on the served
 Button page. It waits for the **Light** button to carry `__reactProps.onClick`
-(the same hydration precondition as the press probe), reads every preview
+**and for a preview surface to carry React's props**, because the sidebar
+hydrates before the page's previews: a press inside that window updates the
+group while the page's own hydration render lands afterwards, so the surfaces
+keep the server's palette and the probe reads a page a reader could not yet have
+clicked. It reads every preview
 surface's `data-mode`, `data-platform` and the `--background` variable the bridge
 wrote, and holds each against `platformTheme(themes[mode], platform)` — so the
 expected fill is the library's own value, and a palette edit moves the probe with
@@ -318,6 +322,14 @@ dev or preview server up:
 nub run --filter @gpuixui/docs dev
 nub apps/docs/scripts/palette-switch-probe.ts
 ```
+
+The window is measured, not assumed. On the served build, pressing at the
+button's first hydration left all three surfaces on `dark` while the group read
+`Light` (the page's props said `light`, its DOM did not), and the same press
+250 ms later read `light` on all three — so the probe's precondition is the
+surface, and `src/lib/palette-switch.test.ts` fails when only the button is
+waited for. Measured 2026-10-24 against `vite preview` on this box:
+`light: 3 of 3 surfaces painted #F2F2F7` (the macOS page), exit `0`.
 
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the

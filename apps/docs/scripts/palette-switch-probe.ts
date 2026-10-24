@@ -94,7 +94,15 @@ const countSurfaces = (mode: string): string => `(() => {
   return all.length + ":" + lit.length;
 })()`;
 
-/** Whether the palette button with this label carries React's own handler. */
+/**
+ * Whether the switch and the surface it measures are hydrated.
+ *
+ * The sidebar's group hydrates before the page's previews: a press inside that
+ * window updates the group while the page's own hydration render lands
+ * afterwards, so the surfaces keep the server's palette and the probe reads a
+ * page a reader could not yet have clicked. The surface's props are the
+ * precondition the measurement needs, not only the button's handler.
+ */
 const ready = (label: string): string => `(() => {
   const button = [...document.querySelectorAll('[aria-label="${paletteGroup}"] button')].find(
     (node) => node.textContent === ${JSON.stringify(label)},
@@ -103,7 +111,10 @@ const ready = (label: string): string => `(() => {
   const props = Object.entries(button).find(([key]) =>
     key.startsWith("__reactProps"),
   )?.[1];
-  return props !== undefined && typeof props.onClick === "function"
+  if (props === undefined || typeof props.onClick !== "function") return "cold";
+  const surface = document.querySelector(".gx-demo[data-mode]");
+  if (surface === null) return "no-surface";
+  return Object.keys(surface).some((key) => key.startsWith("__reactProps"))
     ? "ready"
     : "cold";
 })()`;
@@ -162,7 +173,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     );
     if (hydrated === undefined) {
       console.error(
-        `FAIL the palette switch never hydrated within ${budget} ms (its Light button carries no React onClick)`,
+        `FAIL the palette switch or its preview never hydrated within ${budget} ms (the Light button or the surface it measures carries no React props)`,
       );
       return 1;
     }
