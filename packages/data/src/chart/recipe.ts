@@ -22,9 +22,22 @@ export const CHART_AXIS_LABEL = "text-xs text-muted-foreground";
 /** The row of category labels under the plot. */
 export const CHART_CATEGORIES = "flex flex-row shrink-0";
 
-/** One category label, centred in its slot. */
+/**
+ * One category's slot, centred and clipped.
+ *
+ * A slot is `plot width / labels`, so a label longer than its slot would paint
+ * over the label beside it — the runtime clips a box only when it is told to
+ * (`sidebar-clip-lifecycle`, and the `Rating` half star's measured clip). The
+ * clip is what makes two neighbouring categories readable, and it is the
+ * documented limitation rather than an ellipsis alone: a slot too narrow for its
+ * word stops at its edge.
+ */
 export const CHART_CATEGORY =
-  "flex flex-row justify-center text-xs text-muted-foreground";
+  "flex flex-row justify-center overflow-hidden text-xs text-muted-foreground";
+
+/** One category's words: one line, cut at the slot it is given. */
+export const CHART_CATEGORY_LABEL =
+  "text-xs text-muted-foreground text-ellipsis whitespace-nowrap";
 
 /** The legend: a row of swatches and labels. */
 export const CHART_LEGEND = "flex flex-row flex-wrap items-center gap-3";
@@ -34,6 +47,3 @@ export const CHART_LEGEND_ITEM = "flex flex-row items-center gap-1.5";
 
 /** A legend's colour swatch. */
 export const CHART_SWATCH = "rounded-sm shrink-0";
-
-/** A legend or category label. */
-export const CHART_LABEL = "text-xs text-muted-foreground";

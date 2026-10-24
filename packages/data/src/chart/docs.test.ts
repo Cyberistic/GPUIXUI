@@ -8,6 +8,10 @@
  * examples and documented nowhere. The reader fails by name in both
  * directions: a prop a type gains without a row, and a row no type declares.
  *
+ * The last case holds the one claim about the labels' box: a category label
+ * wider than its slot is clipped, which the paint did not do while the
+ * inventory row said it did.
+ *
  * `node:fs` is test-only, the shape `sort/docs.test.ts` uses: this checks the
  * repository's Markdown from a plain vitest suite.
  */
@@ -21,6 +25,26 @@ const read = (path: string): string =>
 
 const page = read("../../docs/charts.mdx");
 const source = read("./chart.tsx");
+const recipe = read("./recipe.ts");
+const inventory = read("../../../../COMPONENTS.md");
+
+/** The value a recipe constant is declared with. */
+const recipeConstant = (name: string): string => {
+  const body = new RegExp(`export const ${name} =\\s*([\\s\\S]*?);\\n`).exec(
+    recipe,
+  );
+  if (body?.[1] === undefined) throw new Error(`no ${name} in recipe.ts`);
+  return body[1];
+};
+
+/** The inventory's `Charts` row, found by its own prefix. */
+const chartsRow = (): string => {
+  const row = inventory
+    .split("\n")
+    .find((line) => line.startsWith("| Charts |"));
+  if (row === undefined) throw new Error("COMPONENTS.md has no Charts row");
+  return row;
+};
 
 /** One page section and the props type it documents. */
 interface Section {
@@ -128,5 +152,27 @@ describe("the charts page's API tables", () => {
           Arr.length(documentedProps(sectionOf(page, section.heading))) === 0,
       ),
     ).toEqual([]);
+  });
+
+  it("clips a category label to its slot, and says so", () => {
+    // A slot is the plot's width divided by the number of labels, so the words
+    // are often wider than the box they sit in. Measured, "September" in a
+    // 50px slot painted a 63px run from 6.5px before the slot's left edge, over
+    // the category beside it — while the inventory row claimed such a label is
+    // clipped. The paint is three together: the slot clips, the label's box is
+    // the slot, and the label is one line. The page and the row have to say
+    // what the paint does.
+    expect(recipeConstant("CHART_CATEGORY")).toContain("overflow-hidden");
+    expect(recipeConstant("CHART_CATEGORY_LABEL")).toContain("text-ellipsis");
+    expect(recipeConstant("CHART_CATEGORY_LABEL")).toContain(
+      "whitespace-nowrap",
+    );
+    // The label's own width is its slot, which is what gives it an edge to end
+    // at. Without it the run keeps its intrinsic width and only the parent's
+    // clip hides it.
+    expect(source).toContain("CHART_CATEGORY_LABEL");
+    expect(source).toMatch(/width: slot,\s*\n\s*textAlign: "center"/);
+    expect(page).toContain("clipped at the slot's edge");
+    expect(chartsRow()).toContain("clipped");
   });
 });

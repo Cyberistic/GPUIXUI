@@ -55,7 +55,7 @@ import {
   CHART_AXIS_LABEL,
   CHART_CATEGORIES,
   CHART_CATEGORY,
-  CHART_LABEL,
+  CHART_CATEGORY_LABEL,
   CHART_LEGEND,
   CHART_LEGEND_ITEM,
   CHART_PLOT,
@@ -359,7 +359,12 @@ const ChartFrame = ({
           >
             <text
               style={{
-                ...recipeStyle(CHART_LABEL, theme),
+                ...recipeStyle(CHART_CATEGORY_LABEL, theme),
+                // The label's own box is the slot: a word longer than its
+                // category needs a box with an edge to ellipsis at, and the
+                // slot clips whatever still runs past it. Without both, the
+                // run painted over the neighbouring label.
+                width: slot,
                 textAlign: "center",
               }}
             >

@@ -16,6 +16,8 @@
  *   totals, so every stack claims a value the axis does not name;
  * - a scale measured over values that draw nowhere, so a stray value past the
  *   last label flattens every painted bar;
+ * - a category label wider than its slot painting over the label beside it, so
+ *   two neighbouring readings were unreadable;
  * - a sparkline drawn from a different colour than the chart's first series.
  */
 
@@ -376,6 +378,52 @@ describe("the charts", () => {
     const text = paintedText(root);
     expect(text).toContain("1250");
     expect(text).toContain("5000");
+  });
+
+  it("clips a category label to the slot it is given", () => {
+    // A slot is the plot's width divided by the number of labels, so the words
+    // a caller hands over are often wider than the box they sit in. Nothing
+    // bounded the run: the label painted over the category beside it, so two
+    // neighbouring readings were unreadable — and the inventory row's claim
+    // that such a label is clipped was false. The label's own box is its slot
+    // now, on one line, and the slot clips whatever still runs past it.
+    root = renderData(
+      <BarChart
+        aria-label="Long category names"
+        labels={["September", "October", "November", "December"]}
+        series={[{ key: "revenue", label: "Revenue", values: [3, 6, 4, 8] }]}
+        width={200}
+        height={100}
+        testId="chart-clipped-labels"
+      />,
+    );
+    settle(root);
+
+    // Four labels over a 200px plot: 50px each, side by side.
+    const slot = requireBounds(root, "chart-clipped-labels-label-0");
+    const next = requireBounds(root, "chart-clipped-labels-label-1");
+    expect(slot.width).toBe(50);
+    expect(next.x).toBe(slot.x + slot.width);
+
+    // The label's box is the slot — a word longer than it has an edge to stop
+    // at instead of painting into its neighbour.
+    const text = root.renderer.findByTestId("chart-clipped-labels-label-0");
+    if (text === null || text === undefined) {
+      throw new Error("behaviour: no first category slot");
+    }
+    const labelId = text.children[0];
+    if (labelId === undefined) {
+      throw new Error("behaviour: the category slot paints no label");
+    }
+    const label = root.renderer.getElementBounds(labelId);
+    expect(label).toMatchObject({ x: slot.x, width: slot.width });
+    // …and the slot is told to clip, because the runtime clips a box only when
+    // the box says so (the rule the sidebar and the half-star glyph follow).
+    expect(requireStyle(root, "chart-clipped-labels-label-0").overflow).toBe(
+      "hidden",
+    );
+    // The word still paints: the clip is a boundary, not an omission.
+    expect(paintedText(root)).toContain("September");
   });
 
   it("puts a line's points over the labels it draws under", () => {

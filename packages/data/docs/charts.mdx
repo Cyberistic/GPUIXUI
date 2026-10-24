@@ -96,3 +96,7 @@ import {
 - One tint per layer: two colours inside one series need two layers.
 - No tooltips, hover readouts or zoom.
 - No animation between data sets.
+- A category label longer than its slot is clipped at the slot's edge, so two
+  neighbouring categories never paint over each other. The slot is the plot's
+  width divided by the number of labels: shorten the label or widen the plot to
+  read one in full. `src/behaviour/chart.test.tsx` holds the box.

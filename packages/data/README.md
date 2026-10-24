@@ -539,6 +539,13 @@ side is often computed, so `chartBox` reads one the geometry cannot lay out
 viewBox, the axis column's height, the plot's box and every label's slot width
 are built from it, and a `NaN` would have reached all four as `0`.
 
+A category label is bounded by the slot it is given: the label's own box is the
+slot, on one line, and the slot declares `overflow: "hidden"` — the clip the
+runtime applies only when a box asks for it (the rule the sidebar and the
+`Rating` half star measured). A word longer than its category is therefore cut
+at the slot's edge rather than painting over the category beside it; shorten the
+label or widen the plot to read one in full.
+
 The picture announces its numbers: the chart is a group named by `aria-label`,
 each series is an image named by its label, and the values travel in
 `aria-description` (`Q1 32, Q2 48`) — a value past the last label is not
