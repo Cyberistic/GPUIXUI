@@ -2679,7 +2679,8 @@
 @media (prefers-reduced-motion: reduce) {
   .gx-btn,
   .gx-spinner,
-  .gx-toast-card {
+  .gx-toast-card,
+  .gx-toast-leaving {
     transition: none;
     animation: none;
   }
@@ -5206,6 +5207,12 @@
   font-size: 14px;
   line-height: 20px;
   animation: gx-collapse-in 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-collapse-content {
+    animation: none;
+  }
 }
 
 @keyframes gx-collapse-in {
@@ -10468,6 +10475,12 @@
 .gx-copybutton-glyph {
   display: inline-block;
   animation: gx-roll-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-copybutton-glyph {
+    animation: none;
+  }
 }
 
 /* ---- ripple button: a wash spreading from the press point. ---- */

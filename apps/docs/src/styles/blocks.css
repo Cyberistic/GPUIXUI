@@ -1153,6 +1153,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .gx-dash-bar,
+  .gx-dash-column,
   .gx-dash-segment,
   .gx-dash-donut-segment {
     animation: none;

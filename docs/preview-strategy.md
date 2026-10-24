@@ -198,6 +198,23 @@ What it settled, measured on macOS 15.8.1 x86_64 with headless Google Chrome
 
 That is the spike's feasibility half. The route built on it is §The live surface.
 
+### A preview honours the reader's motion preference
+
+A drawing repeats the library's motion — a chart grows in, a toast leaves, a
+spinner turns, a skeleton pulses — and the native side collapses that motion
+when the reader asks for less. A browser drawing is not the runtime, so each one
+carries its own `@media (prefers-reduced-motion: reduce)` rule. The rule is
+`animation: none`, never a shorter duration: the drawing keeps the state it
+arrives at and loses the journey, which is what the preference asks for.
+
+The guard (`src/lib/preview-motion.test.ts`) reads every animation in
+`src/styles/*.css`, takes the class each selector animates and requires it in a
+reduced-motion block of the same sheet, so a new animated part cannot ship
+without one. Read before the guard, four
+animated parts kept moving under the preference: a chart column growing, a
+leaving toast sliding out, a collapsing body fading in and a copy button's glyph
+rolling. Four rules stop them now.
+
 ### The live surface
 
 `/live` is the strongest preview the mission allows: the real renderer, in the
