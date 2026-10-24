@@ -24,6 +24,7 @@ import {
   fadeFromAnchor,
   fadeFromSide,
   fadeOnly,
+  moveTiming,
   transitionWindowMs,
   type SurfaceTiming,
 } from "./presence.js";
@@ -130,6 +131,29 @@ describe("the mount window", () => {
     expect(transitionWindowMs({ duration: 0.2, delay: Number.NaN })).toBe(
       motionLevels.normal,
     );
+  });
+});
+
+describe("a movement between resting states", () => {
+  it("eases at both ends, not like a surface arriving", () => {
+    // The bug this guards: the tab pill and the carousel dot are not entering or
+    // leaving — they move from one resting place to another — and both painted
+    // the *enter* curve (`easeOut`), so the timing table's third phase had no
+    // consumer. The curve is read from the table rather than restated.
+    expect(moveTiming("normal", "animated")).toEqual({
+      duration: motionLevels.normal / 1000,
+      ease: "easeInOut",
+    });
+    expect(moveTiming("normal", "animated")).toEqual(
+      motionTiming("normal", { phase: "standard" }),
+    );
+    expect(moveTiming("fast", "animated")).not.toEqual(
+      motionTiming("fast", { phase: "enter" }),
+    );
+  });
+
+  it("lands at once under the reduced preference", () => {
+    expect(moveTiming("fast", "reduced")).toEqual({ duration: 0 });
   });
 });
 

@@ -18,6 +18,7 @@ import {
   contrastRatio,
   disabledAction,
 } from "@gpuixui/tokens";
+import { motionLevels } from "@gpuixui/motion/timing";
 import { useState } from "react";
 import {
   Carousel,
@@ -547,6 +548,32 @@ describe("Carousel", () => {
 
       expect(dotWidth(gallery, "dots-0")).toBe(DOT_REST);
       expect(dotWidth(gallery, "dots-2")).toBe(DOT_ACTIVE);
+    } finally {
+      gallery.unmount();
+    }
+  });
+
+  it("eases the dot's growth at both ends, as a movement between resting states", async () => {
+    // The bug this guards: a dot growing from the 6px circle to the 18px pill is
+    // a movement between two resting states — the timing table's `standard`
+    // phase — and it painted the *enter* curve (`easeOut`). At half the level a
+    // between-states movement is 12px wide; an arriving surface is already ~14px.
+    const gallery = renderComponent(<StatefulGallery />);
+
+    try {
+      settle(gallery);
+      await waitFor(() => expect(dotWidth(gallery, "dots-0")).toBe(DOT_ACTIVE));
+      expect(dotWidth(gallery, "dots-2")).toBe(DOT_REST);
+
+      gallery.renderer.clockPause();
+      clickCentreOf(gallery, "dots-2");
+      await delay();
+      gallery.renderer.clockFastForward(motionLevels.fast / 2);
+      await delay();
+
+      const grown = dotWidth(gallery, "dots-2");
+      expect(grown).toBeGreaterThan(DOT_REST);
+      expect(grown).toBeLessThan(DOT_REST + 7);
     } finally {
       gallery.unmount();
     }

@@ -334,6 +334,67 @@ describe("the shared presence table", () => {
 });
 
 /**
+ * The two movements the timing table names, and the seam hook both read.
+ *
+ * The bug this guards: the table defines `standard` as "a movement between two
+ * resting states", and the tab pill and the carousel indicator are exactly that
+ * — but both painted the *enter* curve, so the table's third phase had no
+ * consumer and a selection eased like a surface arriving. The behaviour suites
+ * measure the curve each one paints; this suite holds them to the one reader,
+ * so a movement cannot quietly go back to `useSurfaceTiming(…).enter` or write
+ * a curve of its own.
+ */
+const movements: ReadonlyArray<{
+  readonly path: string;
+  readonly level: string;
+}> = [
+  { path: "src/tabs.tsx", level: "normal" },
+  { path: "src/carousel.tsx", level: "fast" },
+];
+
+/** One scanned source, or a broken suite when it was not read. */
+const sourceOf = (path: string): string =>
+  Option.getOrElse(
+    Option.map(
+      Arr.findFirst(sources, (source) => source.path === path),
+      (source) => source.body,
+    ),
+    () => {
+      throw new Error(`presence contract: ${path} was not read`);
+    },
+  );
+
+describe("the movement between resting states", () => {
+  it("reads the standard phase in one place, under the provider's preference", () => {
+    const seam = seamBody();
+    expect(seam).toContain(
+      'motionTiming(level, { phase: "standard", preference })',
+    );
+    expect(seam).toContain("export const useMoveTiming = (");
+    expect(seam).toContain("moveTiming(level, useMotionPreference())");
+    // A surface that arrives still reads the arrival timing, so the movement is
+    // a second reader of the table rather than a replacement for the first.
+    expect(seam).toContain("export { useSurfacePresence, useSurfaceTiming");
+  });
+
+  it("is composed by both movements, at the level their records print", () => {
+    const missing = Arr.filter(
+      movements,
+      ({ path, level }) =>
+        !Str.includes(`useMoveTiming("${level}")`)(sourceOf(path)),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("no longer reads the arrival curve for a movement", () => {
+    const arriving = Arr.filter(movements, ({ path }) =>
+      Str.includes("timing.enter")(sourceOf(path)),
+    );
+    expect(arriving).toEqual([]);
+  });
+});
+
+/**
  * The runtime's own motion typing, where the animatable field list is declared.
  *
  * This package depends on `@gpuix/react`, not on the native binding, so the
@@ -844,13 +905,13 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
   },
   {
     surface: "Tabs pill",
-    prints: ["width", "normal"],
-    paints: [{ file: "src/tabs.tsx", marker: 'useSurfaceTiming("normal")' }],
+    prints: ["width", "normal", "standard"],
+    paints: [{ file: "src/tabs.tsx", marker: 'useMoveTiming("normal")' }],
   },
   {
     surface: "Carousel indicator",
-    prints: ["width", "fast"],
-    paints: [{ file: "src/carousel.tsx", marker: 'useSurfaceTiming("fast")' }],
+    prints: ["width", "fast", "standard"],
+    paints: [{ file: "src/carousel.tsx", marker: 'useMoveTiming("fast")' }],
   },
   {
     surface: "Page transition",

@@ -35,6 +35,12 @@
  * samplers, which no fade samples. What stays here is the GPUix half: the
  * shield, which is a host element the runtime paints.
  *
+ * A movement that is neither an arrival nor a departure — a tab pill sliding
+ * between triggers, a carousel dot growing into its neighbour — is the timing
+ * table's third phase, `standard`, and this module composes it as
+ * {@link moveTiming} from the motion package's own `motionTiming`: it is a
+ * curve, not a frame or a window, so it adds no table of its own.
+ *
  * The runtime is given geometry as a *between* value (the offset), so a headless
  * suite can read the movement in element bounds; the fade itself is a paint value
  * the native tree does not expose, and the live probes are what prove it.
@@ -55,6 +61,7 @@ import {
   type PresenceHitRule,
   type PresenceSide,
   type PresenceTiming,
+  type PresenceTransition,
 } from "@gpuixui/motion/presence";
 import {
   MotionProvider,
@@ -64,6 +71,11 @@ import {
   type MotionProviderProps,
   type SurfacePresence,
 } from "@gpuixui/motion/react/presence";
+import {
+  motionTiming,
+  type MotionLevel,
+  type MotionPreference,
+} from "@gpuixui/motion/timing";
 
 /**
  * The preference provider is the motion package's, re-published here because
@@ -108,6 +120,28 @@ export type { PresenceHitRule };
  * this module keeps one import for the surfaces that use it.
  */
 export { useSurfacePresence, useSurfaceTiming, type SurfacePresence };
+
+/**
+ * The timing a movement between two resting states runs on.
+ *
+ * The timing table names three phases: a surface arrives decelerating
+ * (`enter`), leaves accelerating (`exit`), and a thing that moves from one
+ * resting place to another — a tab pill travelling between triggers, a carousel
+ * dot growing out of its neighbour — eases at both ends (`standard`). The latter
+ * is not presence, so it has no frame of its own; it is the curve the runtime
+ * paints between the two boxes the surface already measured.
+ *
+ * The preference is the provider's, the same one every surface reads, so a
+ * reduced reader lands on the new place instead of travelling to it.
+ */
+export const moveTiming = (
+  level: MotionLevel,
+  preference: MotionPreference,
+): PresenceTransition => motionTiming(level, { phase: "standard", preference });
+
+/** {@link moveTiming} under the nearest provider's preference. */
+export const useMoveTiming = (level: MotionLevel): PresenceTransition =>
+  moveTiming(level, useMotionPreference());
 
 /** The `motion` prop a surface paints for its current presence. */
 export const presenceMotion = (

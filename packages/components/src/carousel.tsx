@@ -58,7 +58,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { useSurfaceTiming } from "./internal/presence.js";
+import { useMoveTiming } from "./internal/presence.js";
 import {
   controlRing,
   keyboardRing,
@@ -378,7 +378,7 @@ export const CarouselIndicators = ({
 }: CarouselIndicatorsProps) => {
   const { active, count, goTo } = useCarousel();
   const theme = useTheme();
-  const timing = useSurfaceTiming("fast");
+  const move = useMoveTiming("fast");
 
   if (count === 0) return null;
 
@@ -426,7 +426,7 @@ export const CarouselIndicators = ({
                 animate: {
                   width: selected ? DOT_ACTIVE_WIDTH : DOT_REST_WIDTH,
                 },
-                transition: timing.enter,
+                transition: move,
               }}
               style={{
                 height: DOT_HEIGHT,
@@ -480,7 +480,7 @@ export const carouselMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the track does not travel between slides: the frame sizes itself to the slide on screen, so a travel would lay every slide out in one box and take its height from the tallest slide",
-    "the active indicator grows between the 6px dot and the 18px pill on the runtime's clock (`fast`, 160 ms); the two inks change with the selection in the same frame, because `motion` interpolates numbers and has no colour",
+    "the active indicator grows between the 6px dot and the 18px pill on the runtime's clock (`fast`, 160 ms) through the timing table's `standard` phase, because it moves between two resting states rather than arriving; the two inks change with the selection in the same frame, because `motion` interpolates numbers and has no colour",
     "no swipe gesture (no drag host feature) and no scroll snap",
     "no auto-advance or thumbnails in v1",
     "only the slide on screen is mounted, so a slide's local state does not survive a visit (the pinned renderer ignores `display: none`, so a mounted spare slide would paint and keep its tab stops)",

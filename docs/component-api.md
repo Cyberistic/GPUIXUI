@@ -515,16 +515,20 @@ the tree a level's window later.
 | Preview card | fade + 4px from the trigger's side | `fast` (160 ms) |
 | Toast | fade + a 16px rise in, then a fade + 16px slide to the right out | its own timing: 220 ms in, 180 ms out (`motionTimingOf`) |
 | Accordion panel | height from 0 to the body's measured height, plus a fade | `normal` |
-| Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes | `normal` |
-| Carousel indicator | `width` between the 6px dot and the 18px pill (both dots retarget from the widths on screen) | `fast` (160 ms) |
+| Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes, on the `standard` phase (it eases at both ends) | `normal` |
+| Carousel indicator | `width` between the 6px dot and the 18px pill, on the `standard` phase (both dots retarget from the widths on screen) | `fast` (160 ms) |
 | Page transition | the outgoing view fades and travels 16px out, the incoming one travels in from the far edge | `normal` (200 ms) |
 
 A surface that **enters** or **leaves** moves through the seam's frames; the two
 that only ever move **between two resting states** — the tab pill and the
 carousel's indicator — are motion targets retargeted from the box (or width) on
-screen, with `initial: false` so a mount paints at rest. Neither travels the
-whole box: the tab pill is the library's one sliding surface, and a carousel
-track cannot slide while the frame is sized by the slide on screen.
+screen, with `initial: false` so a mount paints at rest. A movement between two
+resting states is the timing table's third phase: both read `useMoveTiming` from
+the seam, which resolves `motionTiming(level, { phase: "standard" })` —
+`easeInOut`, easing at both ends — under the provider's preference, rather than
+the `enter` curve a surface arriving paints. Neither travels the whole box: the
+tab pill is the library's one sliding surface, and a carousel track cannot slide
+while the frame is sized by the slide on screen.
 
 **The preference is the application's.** GPUix exposes no reduced-motion query,
 so `MotionProvider` takes it:

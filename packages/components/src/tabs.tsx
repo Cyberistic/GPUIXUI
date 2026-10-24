@@ -89,7 +89,7 @@ import {
   isUp,
   swallowsDefault,
 } from "./internal/key.js";
-import { useSurfaceTiming } from "./internal/presence.js";
+import { useMoveTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -468,7 +468,7 @@ export const TabsList = ({
   } = useTabsContext();
   const [origin, setOrigin] = useState<Option.Option<TabBox>>(Option.none());
   const probe = useRef<PublicInstance | null>(null);
-  const timing = useSurfaceTiming("normal");
+  const move = useMoveTiming("normal");
   assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
@@ -621,7 +621,7 @@ export const TabsList = ({
               // retargets from the box on screen, which is the slide.
               initial: false,
               animate: indicatorBox(anchoredAt, box),
-              transition: timing.enter,
+              transition: move,
             }}
             style={{
               position: "absolute",
@@ -833,7 +833,7 @@ export const tabsMeta = {
   limitations: [
     "no aria-orientation, aria-controls or aria-labelledby in 0.11.0; the panel is named by its value",
     "the trigger/panel relationship is positional, not semantic",
-    "the selected surface is measured through onLayout and slides by retargeting its left/top/width/height; the runtime has no transform, so the movement is a box interpolation, and reduced motion is the caller's MotionProvider policy",
+    "the selected surface is measured through onLayout and slides by retargeting its left/top/width/height on the timing table's `standard` phase, because it moves between two resting states rather than arriving; the runtime has no transform, so the movement is a box interpolation, and reduced motion is the caller's MotionProvider policy",
     "no zIndex: the surface stays behind the triggers by being their earlier sibling",
   ],
   docs: "docs/tabs.mdx",

@@ -67,6 +67,7 @@ import {
 } from "../internal/interaction.js";
 import { MotionProvider } from "../motion.js";
 import { MotionProvider as PackageMotionProvider } from "@gpuixui/motion/react";
+import { motionLevels } from "@gpuixui/motion/timing";
 import { renderComponent } from "../internal/test-root.js";
 import {
   presenceStyle,
@@ -870,6 +871,52 @@ describe("a tab pill", () => {
     // ...and it settles exactly on the trigger's own box.
     expect(where(page.renderer, "tabs-indicator", "x")).toBe(target);
     page.unmount();
+  });
+
+  it("eases between two resting places instead of arriving", async () => {
+    // The bug this guards: the pill is not a surface entering the window — it
+    // moves from one resting place to another, which the timing table names
+    // `standard` and eases at both ends. It painted the *enter* curve
+    // (`easeOut`), so at the move's own midpoint an arriving surface sits at ~68%
+    // of the distance while a between-states movement sits at 50%.
+    const page = renderComponent(
+      <Page>
+        <Tabs defaultValue="one">
+          <TabsList label="Views">
+            <TabsTrigger testId="one" value="one">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger testId="two" value="two">
+              Activity
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="one">Overview</TabsContent>
+          <TabsContent value="two">Activity</TabsContent>
+        </Tabs>
+      </Page>,
+    );
+
+    try {
+      settle(page);
+      await waitFor(() =>
+        expect(painted(page.renderer, "tabs-indicator")).toBe(true),
+      );
+      const from = where(page.renderer, "tabs-indicator", "x");
+      const target = where(page.renderer, "two", "x");
+
+      page.renderer.clockPause();
+      clickCentreOf(page, "two");
+      await delay();
+      page.renderer.clockFastForward(motionLevels.normal / 2);
+      await delay();
+
+      const share =
+        (where(page.renderer, "tabs-indicator", "x") - from) / (target - from);
+      expect(share).toBeGreaterThan(0.4);
+      expect(share).toBeLessThan(0.6);
+    } finally {
+      page.unmount();
+    }
   });
 });
 
