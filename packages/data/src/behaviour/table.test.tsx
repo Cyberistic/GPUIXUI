@@ -607,6 +607,60 @@ describe("resizable columns", () => {
     expect(received.every((width) => width >= 80 && width <= 120)).toBe(true);
   });
 
+  it("steps from the width it announces, not the width it was handed", () => {
+    // Bug guarded: the announcement and the drag read the caller's width through
+    // `readableWidth` and clamp it to the column's bounds, while the key path
+    // stepped from the raw prop. A consumer that does not clamp — the rule the
+    // drag case above measures — hands over a width past the maximum (or below
+    // the minimum), so the announced track was 640 while Left computed
+    // `clamp(700 - 16)` and handed back the same 640: the column could be
+    // dragged narrower but its keyboard never moved it, on either side.
+    const received: number[] = [];
+    root = renderData(
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "row",
+          width: 400,
+          height: 40,
+        }}
+      >
+        <TableColumnDivider
+          width={700}
+          minWidth={80}
+          maxWidth={640}
+          onResize={(width) => received.push(width)}
+          label="Resize the test column"
+          testId="divider-wide"
+        />
+        <TableColumnDivider
+          width={40}
+          minWidth={80}
+          maxWidth={640}
+          onResize={(width) => received.push(width)}
+          label="Resize the test column"
+          testId="divider-narrow"
+        />
+      </div>,
+    );
+    settle(root);
+
+    expect(announcedWidth(root, "divider-wide")).toBe("640 pixels");
+    const wide = findId(root, "divider-wide");
+    root.renderer.nativeSimulateKeyDown(wide, "left");
+    root.renderer.nativeSimulateKeyUp(wide, "left");
+    root.renderer.flush();
+    expect(received.at(-1)).toBe(624);
+
+    expect(announcedWidth(root, "divider-narrow")).toBe("80 pixels");
+    const narrow = findId(root, "divider-narrow");
+    root.renderer.nativeSimulateKeyDown(narrow, "right");
+    root.renderer.nativeSimulateKeyUp(narrow, "right");
+    root.renderer.flush();
+    expect(received.at(-1)).toBe(96);
+  });
+
   it("announces the floor for a track the grid cannot measure", () => {
     // Bug guarded: `aria-valuetext` printed the raw number, so a computed width
     // the layout cannot paint (`NaN`) was announced as `NaN pixels` — the one

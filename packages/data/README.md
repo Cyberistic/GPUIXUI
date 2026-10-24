@@ -235,9 +235,12 @@ is not a finite number is read as the default (80/640/16) rather than a NaN
 track, and a width the grid cannot read is the column's own minimum: a width is
 often computed, and `NaN` orders below every number, so clamping it would
 collapse the track — `resizeColumn` leaves such a column alone while a key press
-steps from its floor, and the divider **announces and drags from** that floor
-(`readableWidth`) rather than publishing `NaN pixels` or refusing to grow. The
-page is `docs/column-configuration.mdx`.
+steps from its floor. **One number drives the announcement, the drag and the
+arrows** (`readableWidth` + the column's bounds): a width past the bounds reads
+as the bound, so a consumer that does not clamp still steps from the width the
+divider shows instead of landing back on the bound it already announced, and a
+computed `NaN` never publishes `NaN pixels` or refuses to grow. The page is
+`docs/column-configuration.mdx`.
 
 The divider's **name** is content, like every other column's words: a locale
 table missing its row or a saved label answers `""`, and the control is a

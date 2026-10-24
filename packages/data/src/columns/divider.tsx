@@ -27,9 +27,12 @@
  *
  * It is a control, not a decoration: it is a tab stop, the arrows step it, Home
  * and End name its bounds, and `aria-valuetext` announces the width because
- * 0.11.0 has no `aria-valuenow`. A width the track cannot measure (`NaN`) is
- * announced and pressed from as the column's floor — the number its keys already
- * step from — rather than as `NaN pixels`.
+ * 0.11.0 has no `aria-valuenow`. One number drives all three: the width read
+ * through the column's own bounds. A width the track cannot measure (`NaN`) is
+ * the column's floor, and a width outside the bounds is the bound itself — the
+ * number the announcement names is the one a drag starts from and the one the
+ * arrows step from, so a consumer that does not clamp still resizes by a step
+ * rather than landing back on the bound it was already shown.
  *
  * Its **name** is content the same way: a blank label reads as
  * {@link DEFAULT_RESIZE_LABEL}, and a name that says which column is composed
@@ -82,8 +85,10 @@ export interface TableColumnDividerProps {
   /**
    * The column's current width, in pixels.
    *
-   * A width the divider cannot measure (`NaN`) reads as the column's floor: the
-   * number it announces and starts a drag from.
+   * The announcement, a drag's starting width and an arrow's step all read it
+   * through the column's bounds: a width the divider cannot measure (`NaN`)
+   * reads as the floor, and one outside the bounds as the bound, so a consumer
+   * that does not clamp still steps.
    */
   readonly width: number;
   /** The narrowest width the drag may reach. Defaults to 80. */
@@ -179,7 +184,11 @@ export const TableColumnDivider = ({
       }}
       onKeyDown={(event: EventPayload) => {
         if (isColumnResizeKey(event.key)) {
-          onResize(resizeWidthByKey(width, event.key, bounds, step));
+          // The same number the divider announces and a drag starts from: a
+          // consumer that does not clamp hands over a width past its own
+          // bounds, and stepping from it would clamp every press back to the
+          // bound the reader is already standing on.
+          onResize(resizeWidthByKey(track, event.key, bounds, step));
         }
       }}
     />

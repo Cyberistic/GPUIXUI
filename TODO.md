@@ -11805,6 +11805,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the clip is the runtime rule the sidebar and half-star probes measured, and
     the chart paint's own `chart-surface-lifecycle` is unchanged.
     Owner: data.
+  - [x] Step a **column divider from the width it announces** — `TableColumnDivider`
+    reads the caller's `width` through `readableWidth` and clamps it to the
+    column's bounds for the `aria-valuetext` announcement and for the width a drag
+    starts from, while `onKeyDown` stepped from the raw prop: a consumer that does
+    not clamp — the rule the drag case already measures — handed over 700 at a
+    640 maximum, so the strip announced `640 pixels` and Left computed
+    `clamp(700 − 16)` → 640, the number already shown. The column could be
+    dragged narrower but its keyboard never moved it at all, and a 40 at an 80
+    minimum jumped to 80 in one press instead of stepping from the floor. The key
+    path reads the same `track` now, so the announcement, the drag and the arrows
+    are one number. `src/behaviour/table.test.tsx` gains `steps from the width it
+    announces, not the width it was handed` (33 in the file): 700/640max steps
+    Left to 624 and 40/80min steps Right to 96, each after reading the announced
+    width. Direction measured: at HEAD the case fails `expected 640 to be 624`;
+    restored, the behaviour suite is 165/165 and the unit suite 246/246 with
+    `check-types` clean. Docs: `docs/column-configuration.mdx` §Resizing (one
+    number drives all three, both out-of-bounds sides) and its divider table and
+    §Limitations, the package README's divider paragraph, and the Tier 3
+    Resizable columns row. No native scenario applies — the keys and the
+    announcement are read off the real renderer, and `column-resize-lifecycle`
+    measures a width inside its bounds, where nothing moved.
+    Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
