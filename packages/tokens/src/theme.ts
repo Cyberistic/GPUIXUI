@@ -199,8 +199,11 @@ export interface DensityOverrides {
 }
 
 /**
- * A partial theme. Every group is optional; omitted groups inherit from the
- * base theme. Elevation arrays replace rather than concatenate.
+ * A partial theme. Every group a theme carries is overridable except its `mode`
+ * and `contrast` variant — those two are what the numbers mean, so a caller that
+ * wants the other one asks `getTheme` for it — and a group added to {@link Theme}
+ * without an override fails the package's type check. Omitted groups inherit
+ * from the base theme. Elevation arrays replace rather than concatenate.
  */
 export interface ThemeOverrides {
   /** Override the theme name. */
