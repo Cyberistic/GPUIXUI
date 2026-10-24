@@ -104,6 +104,7 @@ export {
   seriesColour,
   seriesDescription,
   seriesMax,
+  seriesName,
   stackedBarMarks,
   stackedScale,
   tickLabel,

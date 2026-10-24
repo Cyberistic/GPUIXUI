@@ -49,7 +49,7 @@ import {
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `series` | `ChartSeries[]` | — | `{ key, label, values }` per series |
+| `series` | `ChartSeries[]` | — | `{ key, label, values }` per series; a blank label reads as `key` |
 | `labels` | `string[]` | — | one label per category |
 | `width` | `number` | `320` | the plot's width, in pixels |
 | `height` | `number` | `160` | the plot's height, in pixels |
@@ -64,7 +64,7 @@ import {
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `data` | `ChartDatum[]` | — | `{ key, label, value }` per slice |
+| `data` | `ChartDatum[]` | — | `{ key, label, value }` per slice; a blank label reads as `key` |
 | `size` | `number` | `160` | the ring's box, in pixels |
 | `legend` | `boolean` | `true` | paints the legend under the ring |
 | `className` | `string` | — | joined after the recipe |
@@ -87,7 +87,7 @@ import {
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `items` | `ChartLegendItem[]` | — | `{ key, label, color }` per series |
+| `items` | `ChartLegendItem[]` | — | `{ key, label, color }` per series; a blank label reads as `key` |
 | `testId` | `string` | — | the legend's locator; a swatch is `-swatch-<key>` |
 | `aria-label` | `string` | — | the legend's group name |
 

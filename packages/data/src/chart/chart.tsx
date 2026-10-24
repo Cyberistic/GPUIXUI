@@ -42,6 +42,7 @@ import {
   linePath,
   seriesColour,
   seriesDescription,
+  seriesName,
   stackedBarMarks,
   stackedScale,
   tickLabel,
@@ -92,6 +93,7 @@ export const CHART_AXIS_WIDTH = 36;
 /** One legend entry. */
 export interface ChartLegendItem {
   readonly key: string;
+  /** The row's words. A blank label reads as `key`. */
   readonly label: string;
   /** A theme colour, usually a swatch from `seriesColors`. */
   readonly color: string;
@@ -141,7 +143,7 @@ export const ChartLegend = ({
               color: theme.colors.mutedForeground,
             }}
           >
-            {item.label}
+            {seriesName(item.label, item.key)}
           </text>
         </div>
       ))}
@@ -329,7 +331,7 @@ const ChartFrame = ({
                   key={one.key}
                   chartTestId={testId}
                   seriesKey={one.key}
-                  label={one.label}
+                  label={seriesName(one.label, one.key)}
                   description={seriesDescription(one.values, labels)}
                   colour={seriesColour(palette, index)}
                   marks={layers[index] ?? []}
@@ -440,6 +442,7 @@ export const LineChart = (props: LineChartProps) => (
 /** One slice of a ring. */
 export interface ChartDatum {
   readonly key: string;
+  /** The datum's name in the legend and in its image's accessible name. A blank label reads as `key`. */
   readonly label: string;
   readonly value: number;
 }
@@ -508,7 +511,7 @@ export const DonutChart = ({
             key={one.key}
             chartTestId={testId}
             seriesKey={one.key}
-            label={one.label}
+            label={seriesName(one.label, one.key)}
             description={seriesDescription([one.value])}
             colour={seriesColour(palette, index)}
             marks={segments[index] ?? []}

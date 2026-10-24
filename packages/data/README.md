@@ -529,6 +529,10 @@ a legend entry never stands without its number. A `Sparkline` is
 one image, not a group of them: the caller's `aria-label` names it and its values
 are its description. A name is a stored value as often as a literal, so a blank
 one reads as the documented `Trend` rather than publishing an unnamed image.
+The same rule covers the series: a series or ring datum with no words reads as
+its **key** — `seriesName`, the one reading the image's name and the legend row
+share — so a saved chart configuration cannot paint a nameless row beside an
+unnamed image.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

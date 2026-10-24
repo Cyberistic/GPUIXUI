@@ -16,12 +16,14 @@
  * raise the axis and shrink every painted bar.
  */
 
+import { spokenText } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
 /** One series: a stable key, its label, and one value per category. */
 export interface ChartSeries {
   readonly key: string;
+  /** The series' name in the legend and in its image's accessible name. A blank label reads as `key`. */
   readonly label: string;
   readonly values: ReadonlyArray<number>;
 }
@@ -521,6 +523,18 @@ export const donutMarks = (
   values: ReadonlyArray<number>,
   box: ChartBox,
 ): ReadonlyArray<ChartMark> => Arr.flatten(donutSegments(values, box));
+
+/**
+ * The words a series, a ring datum or a legend row is named by.
+ *
+ * A label is content before it is a literal: an i18n table missing its row
+ * answers `""`, and a saved chart configuration can restore a series with no
+ * words. A blank label therefore reads as its **key** — the identity the caller
+ * stores the series by, and the one word that is always there — so a series is
+ * never an unnamed image beside a nameless legend row.
+ */
+export const seriesName = (label: string, key: string): string =>
+  spokenText(Option.fromNullishOr(label), key);
 
 /**
  * The words a series paints, category by category.

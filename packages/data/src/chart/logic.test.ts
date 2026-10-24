@@ -37,6 +37,7 @@ import {
   niceCeiling,
   seriesColour,
   seriesDescription,
+  seriesName,
   stackedBarMarks,
   stackedScale,
   tickLabel,
@@ -426,5 +427,14 @@ describe("the words a series announces", () => {
   it("reads a word-sized series with no labels as its values", () => {
     expect(seriesDescription([3, 6, 2])).toBe("3, 6, 2");
     expect(seriesDescription([])).toBe("");
+  });
+
+  it("reads a blank series name as the key it is stored by", () => {
+    // A label is content: an i18n table missing its row answers `""`, and a
+    // saved chart configuration can restore a series with no words. The image
+    // used to be named by the blank label, and the legend painted a blank row.
+    expect(seriesName("", "revenue")).toBe("revenue");
+    expect(seriesName("   ", "cost")).toBe("cost");
+    expect(seriesName("  Revenue  ", "revenue")).toBe("Revenue");
   });
 });

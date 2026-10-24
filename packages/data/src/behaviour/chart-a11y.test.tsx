@@ -29,7 +29,12 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
-import { BarChart, DonutChart, Sparkline } from "../chart/chart.js";
+import {
+  BarChart,
+  ChartLegend,
+  DonutChart,
+  Sparkline,
+} from "../chart/chart.js";
 
 let root: DataTestRoot | undefined;
 
@@ -217,5 +222,64 @@ describe("a chart's accessibility tree", () => {
       const node = root?.renderer.findByTestId(`chart-zero-layer-${layer}`);
       expect(node?.customProps?.source).not.toContain("<rect");
     });
+  });
+
+  it("reads a blank series label as the key the series is stored by", () => {
+    // Bug guarded: a series' label is content — an i18n table missing its row
+    // answers `""` and a saved chart configuration restores a series with no
+    // words — and the layer is named by it, so a blank one published an image
+    // with no name and a legend row with nothing in it while the series was
+    // still painted and its values still described. The key is the identity the
+    // caller stores the series by, and the one word that is always there.
+    const tree = treeOf(
+      <BarChart
+        aria-label="Revenue"
+        labels={["Q1", "Q2"]}
+        series={[
+          { key: "revenue", label: "", values: [3, 6] },
+          { key: "cost", label: "   ", values: [1, 2] },
+        ]}
+        testId="chart-blank"
+      />,
+    );
+
+    const images = withRole(tree, tree.root, "Image");
+    expect(Arr.map(images, (id) => wordsOf(tree, id).label)).toEqual([
+      "revenue",
+      "cost",
+    ]);
+    // The legend paints the same words the images are named by.
+    const words = root?.renderer.getAllText() ?? [];
+    expect(words).toEqual(expect.arrayContaining(["revenue", "cost"]));
+  });
+
+  it("reads a blank ring datum and a blank legend item by their keys", () => {
+    const tree = treeOf(
+      <div>
+        <DonutChart
+          aria-label="Traffic by source"
+          data={[
+            { key: "direct", label: "", value: 40 },
+            { key: "referral", label: "  ", value: 60 },
+          ]}
+          testId="ring-blank"
+        />
+        <ChartLegend
+          items={[{ key: "sessions", label: "", color: "#3355FF" }]}
+          testId="legend-blank"
+        />
+      </div>,
+    );
+
+    const ring = withRole(tree, tree.root, "Image");
+    expect(Arr.map(ring, (id) => wordsOf(tree, id).label)).toEqual([
+      "direct",
+      "referral",
+    ]);
+    const words = root?.renderer.getAllText() ?? [];
+    // Both legends paint the key: the ring's two rows and the standalone one.
+    expect(words).toContain("direct");
+    expect(words).toContain("referral");
+    expect(words).toContain("sessions");
   });
 });
