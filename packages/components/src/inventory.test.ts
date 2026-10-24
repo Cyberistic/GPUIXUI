@@ -93,6 +93,10 @@ const rowsBetween = (
 const tier2Rows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 2", "## Tier 3");
 
+/** The Tier 1 rows, whose components live in `@gpuixui/primitives`. */
+const tier1Rows = (): ReadonlyArray<Row> =>
+  rowsBetween("## Tier 1", "## Tier 2");
+
 /** The animated primitives plan 600 lands, held to the same contract. */
 const animatedRows = (): ReadonlyArray<Row> =>
   rowsBetween("## Animated primitives (plan 600)", "## Blocked by the runtime");
@@ -582,6 +586,19 @@ const cropFixture = (): CropFixture => {
   };
 };
 
+/** The checks the `radio-group` fixture says its probe asserts. */
+const radioChecks = (): number =>
+  Number(
+    /\bRADIO_CHECKS = (\d+);/.exec(
+      readFileSync(
+        fileURLToPath(
+          new URL("apps/playground/src/live/radio-group.ts", repoRoot),
+        ),
+        "utf8",
+      ),
+    )?.[1] ?? Number.NaN,
+  );
+
 /** The live probe ids the playground registers, read from its own registry. */
 const probeIds = (): ReadonlyArray<string> => {
   const source = readFileSync(
@@ -735,6 +752,27 @@ describe("the measured target rows", () => {
       ],
       (claim) => expect(capabilities, claim).toContain(claim),
     );
+  });
+
+  // A Tier 1 component's behaviour lives in `@gpuixui/primitives`' suite, but
+  // the disc a press paints, the ring a keyboard focus paints and the roving
+  // base are a window's to measure: the row has to name the probe that did.
+  it("cites the disc, the ring and the skip the radio probe measured", () => {
+    const checks = radioChecks();
+    expect(Number.isFinite(checks)).toBe(true);
+    expect(
+      readmeSection("### `radio-group-lifecycle` — measured on 0.11.0 here"),
+    ).toContain(`${checks} checks, \`--only radio-group-lifecycle\``);
+
+    const notes = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(tier1Rows(), (row) => row.name === "Radio groups"),
+        (row) => row.notes,
+      ),
+      () => "",
+    );
+    expect(notes).toContain("`radio-group-lifecycle`");
+    expect(notes).toContain(`${checks} checks`);
   });
 
   it("records the drop a file upload composes", () => {
