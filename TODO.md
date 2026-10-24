@@ -19858,5 +19858,7 @@ directions measured: all five fail at `HEAD` with the exact `TypeError`s above
 and pass with the reads. Green: 29 unit files / 246 cases, 19 behaviour files /
 164 cases, `check-types`, `check:tests`, `oxlint` and `oxfmt` clean. Docs: the
 five pages' API and Limitations sections and the README's §The data surfaces.
-No native scenario applies — the throw is the render's, read in the real
-renderer the behaviour suite drives. Owner: data.
+The shipped surfaces were re-run in a window on this tree:
+`--only property-panel-lifecycle --only inspector-lifecycle` is **2/2 green** on
+0.11.0 (705 ms / 840 ms). The nullish slot has no probe path — the throw is the
+render's, read in the real renderer the behaviour suite drives. Owner: data.
