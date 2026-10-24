@@ -9,6 +9,11 @@
  * `--background` variable the bridge wrote, the group's pressed position and the
  * address bar a link would carry.
  *
+ * It first presses **before** the page content hydrates, while the switch is
+ * still disabled, and requires the press to be refused: a press in that window
+ * used to move the group and the URL while every preview kept the server's
+ * palette, and no later render recovered it.
+ *
  * Run (a dev or preview server is already up):
  * `nub apps/docs/scripts/palette-switch-probe.ts`
  * `--url <url>`, `--timeout <ms>` (hydration budget), `--chrome <path>`.
@@ -129,6 +134,72 @@ const press = (label: string): string => `(() => {
   return "pressed";
 })()`;
 
+/**
+ * The state a press made before the page content mounted is judged by.
+ *
+ * `gate` is whether the button was still disabled at the instant of the press,
+ * and the two choices are what the group said before and after it, read in the
+ * same synchronous turn so hydration cannot land between the read and the click.
+ */
+export interface EarlyPress {
+  readonly gate: "closed" | "open";
+  readonly before: string;
+  readonly after: string;
+  readonly search: string;
+}
+
+/** Read the probe's early-press readout; `undefined` when it is not one. */
+export const parseEarlyPress = (text: string): EarlyPress | undefined => {
+  const [gate, before, after, search] = text.split("|");
+  if (
+    (gate !== "closed" && gate !== "open") ||
+    before === undefined ||
+    after === undefined ||
+    search === undefined
+  )
+    return undefined;
+  return { gate, before, after, search };
+};
+
+/**
+ * Press **Light** at the first instant the button exists.
+ *
+ * The page is read before the switch has anything to repaint, so the press is
+ * the one a reader makes on the styled switch as soon as it paints. One read,
+ * one click: the whole point is that this happens before hydration, so a poll
+ * that waited for React's handler would measure the wrong page.
+ */
+export const earlyPress = (): string => `(() => {
+  const group = document.querySelector('[aria-label="${paletteGroup}"]');
+  const buttons = [...(group?.querySelectorAll("button") ?? [])];
+  const button = buttons.find((node) => node.textContent === "Light");
+  if (button === undefined) return "no-button";
+  const pressed = () =>
+    buttons
+      .filter((node) => node.getAttribute("aria-pressed") === "true")
+      .map((node) => node.textContent ?? "")
+      .join(",");
+  const before = pressed();
+  const gate = button.disabled === true ? "closed" : "open";
+  button.click();
+  return [gate, before, pressed(), location.search].join("|");
+})()`;
+
+/** Poll `read` every few milliseconds until it stops answering `waitingFor`. */
+const quickly = async (
+  read: () => Promise<string>,
+  waitingFor: string,
+  timeout: number,
+): Promise<string | undefined> => {
+  const started = Date.now();
+  let value = await read().catch(() => waitingFor);
+  while (value === waitingFor && Date.now() - started < timeout) {
+    await new Promise((wait) => setTimeout(wait, 10));
+    value = await read().catch(() => waitingFor);
+  }
+  return value === waitingFor ? undefined : value;
+};
+
 /** Poll `read` until `accept` holds, or the budget runs out. */
 const until = async (
   read: () => Promise<string>,
@@ -166,6 +237,47 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const failures: Array<string> = [];
 
   try {
+    // The refusal is measured before the switch can act, so it has to be the
+    // first thing this session does. A preview build can be fast enough that the
+    // content has mounted before the probe's first read; a fresh document is a
+    // new chance to see the gate, and the address is reset so a press that did
+    // land cannot carry a palette into the next attempt.
+    let refused: EarlyPress | undefined;
+    for (let attempt = 0; attempt < 8 && refused === undefined; attempt += 1) {
+      if (attempt > 0) {
+        await session.page.run(
+          `localStorage.clear(); location.replace(${JSON.stringify(url)})`,
+        );
+      }
+      const read = await quickly(
+        () => session.page.text(earlyPress()),
+        "no-button",
+        budget,
+      );
+      const early = read === undefined ? undefined : parseEarlyPress(read);
+      if (early === undefined) break;
+      if (early.gate === "closed") {
+        refused = early;
+        break;
+      }
+    }
+
+    if (refused === undefined) {
+      failures.push(
+        "the palette switch was never pressed while the page content was unmounted, so its gate was not measured",
+      );
+    } else if (refused.before !== "Dark" || refused.after !== "Dark") {
+      failures.push(
+        `a press on the disabled switch moved the palette from ${JSON.stringify(refused.before)} to ${JSON.stringify(refused.after)}`,
+      );
+    } else if (refused.search.includes("mode=light")) {
+      failures.push(
+        `a press on the disabled switch wrote mode=light (${refused.search})`,
+      );
+    } else {
+      console.log("early: the disabled switch refused the press");
+    }
+
     const hydrated = await until(
       () => session.page.text(ready("Light")),
       (state) => state === "ready",

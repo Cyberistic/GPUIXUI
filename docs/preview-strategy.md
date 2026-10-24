@@ -331,6 +331,21 @@ surface, and `src/lib/palette-switch.test.ts` fails when only the button is
 waited for. Measured 2026-10-24 against `vite preview` on this box:
 `light: 3 of 3 surfaces painted #F2F2F7` (the macOS page), exit `0`.
 
+Waiting is not a fix a reader benefits from, though: the switch is painted and
+styled long before the previews hydrate. So the switch itself is **closed until
+the content it repaints reports itself** — `PlatformSwitch` disables both
+groups while `PlatformProvider`'s `contentReady` is false, and the
+`ContentMounted` marker inside `DocsView`'s `<Suspense>`, after the page
+content, is what opens them. The probe presses **Light** at the first instant
+the button exists and requires the press to be refused: the group still reads
+`Dark`, the address bar carries no `mode=light`, and the surfaces stay on the
+dark page. It prints `early: the disabled switch refused the press`; a press
+that moved the group while the previews kept the server's palette is the bug,
+and the same session then proves the enabled press works. A preview build can
+hydrate before the probe's first read, so the probe reopens the document (eight
+attempts, address reset each time) until it observes the closed gate; a run
+that never observes it fails rather than passing on the wrong page.
+
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the
 Default platform's light page fill, with the dark page `#11141A` before the

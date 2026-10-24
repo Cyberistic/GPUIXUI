@@ -60,12 +60,23 @@ interface PlatformState {
   readonly mode: ThemeMode;
   /** The library theme the three resolve to. */
   readonly theme: Theme;
+  /**
+   * Whether the page content — the previews a choice changes — has mounted.
+   *
+   * The sidebar hydrates before the page: a choice made in that window moves
+   * the group and the URL while every preview keeps the server's palette, and
+   * no later render recovers it. So the choice buttons stay disabled until the
+   * content boundary reports itself.
+   */
+  readonly contentReady: boolean;
   /** Choose a platform. */
   readonly setPlatform: (platform: PlatformName) => void;
   /** Choose a look; `native` keeps the platform's own style. */
   readonly setLook: (look: LookName) => void;
   /** Choose a palette. */
   readonly setMode: (mode: ThemeMode) => void;
+  /** Report that the page content the choices act on has mounted. */
+  readonly markContentMounted: () => void;
 }
 
 const PlatformContext = createContext<PlatformState | null>(null);
@@ -109,6 +120,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   // Resolved in the initializer rather than an effect: the first render already
   // paints the visitor's platform, so no page opens on a theme it then replaces.
   const [choice, setChoice] = useState<PreviewChoice>(() => opening(search));
+  // A choice made before the page content hydrates would repaint the switch and
+  // the URL while every preview kept the server's palette, so the boundary
+  // below the switch reports when there is something to repaint.
+  const [contentReady, setContentReady] = useState(false);
+  const markContentMounted = useCallback(() => setContentReady(true), []);
 
   // The URL is the source of truth: a shared link carries every choice, and a
   // navigation that drops a parameter restores the remembered one and puts it
@@ -142,11 +158,13 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     () => ({
       ...choice,
       theme,
+      contentReady,
+      markContentMounted,
       setPlatform: (next) => choose({ ...choice, platform: next }),
       setLook: (next) => choose({ ...choice, look: next }),
       setMode: (next) => choose({ ...choice, mode: next }),
     }),
-    [choice, theme, choose],
+    [choice, theme, choose, contentReady, markContentMounted],
   );
 
   return (
@@ -179,6 +197,7 @@ function ChoiceGroup<T extends string>({
   label,
   choices,
   selected,
+  disabled,
   onSelect,
 }: {
   readonly label: string;
@@ -187,6 +206,8 @@ function ChoiceGroup<T extends string>({
     readonly label: string;
   }>;
   readonly selected: T;
+  /** Refuse a choice while the content it repaints has not mounted. */
+  readonly disabled: boolean;
   readonly onSelect: (value: T) => void;
 }) {
   return (
@@ -195,6 +216,7 @@ function ChoiceGroup<T extends string>({
         <button
           aria-pressed={selected === choice.value}
           className="gx-platform-option"
+          disabled={disabled}
           key={choice.value}
           onClick={() => onSelect(choice.value)}
           type="button"
@@ -206,13 +228,18 @@ function ChoiceGroup<T extends string>({
   );
 }
 
-/**
- * The switch itself: the platforms the library names, the palette the previews
- * paint, and the theme they resolve to.
- */
-export function PlatformToggle() {
-  const { mode, platform, theme, setMode, setPlatform } = usePlatform();
-
+/** The switch's markup, given the state it reads — so the gate is testable. */
+export function PlatformSwitch({
+  contentReady,
+  mode,
+  platform,
+  theme,
+  setMode,
+  setPlatform,
+}: Pick<
+  PlatformState,
+  "contentReady" | "mode" | "platform" | "theme" | "setMode" | "setPlatform"
+>) {
   return (
     <div className="gx-platform not-prose">
       <p className="gx-platform-title">Platform</p>
@@ -221,6 +248,7 @@ export function PlatformToggle() {
           value: option,
           label: platformLabel(option),
         }))}
+        disabled={!contentReady}
         label="Platform style"
         onSelect={setPlatform}
         selected={platform}
@@ -231,6 +259,7 @@ export function PlatformToggle() {
           value: option,
           label: modeLabel(option),
         }))}
+        disabled={!contentReady}
         label="Preview palette"
         onSelect={setMode}
         selected={mode}
@@ -240,4 +269,28 @@ export function PlatformToggle() {
       </p>
     </div>
   );
+}
+
+/**
+ * The switch itself: the platforms the library names, the palette the previews
+ * paint, and the theme they resolve to.
+ */
+export function PlatformToggle() {
+  return <PlatformSwitch {...usePlatform()} />;
+}
+
+/**
+ * Reports that the content after it has mounted, so the switch can act on it.
+ *
+ * A marker rather than a hook on the page: it sits inside the same `Suspense`
+ * boundary as the page content and after it, so its effect only runs once there
+ * is a preview to repaint. On the server and during hydration it reports
+ * nothing, which is why the choice buttons start disabled.
+ */
+export function ContentMounted() {
+  const { markContentMounted } = usePlatform();
+
+  useEffect(markContentMounted, [markContentMounted]);
+
+  return null;
 }

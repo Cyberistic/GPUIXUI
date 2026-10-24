@@ -23,6 +23,7 @@ import { PageExample } from "@/components/docs/page-example";
 import { mainContentId } from "@/components/skip-link";
 import { RelatedStrip } from "@/components/docs/related-strip";
 import {
+  ContentMounted,
   PlatformProvider,
   PlatformToggle,
 } from "@/components/docs/platform-toggle";
@@ -257,6 +258,9 @@ export function DocsView({ data }: { data: DocsPageData }) {
               url={data.url}
             />
           )}
+          {/* Reports the content above has mounted, so the switch in the
+              sidebar can enable the choices that repaint it. */}
+          <ContentMounted />
         </Suspense>
       </DocsLayout>
     </PlatformProvider>

@@ -12329,27 +12329,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 381/382
+`[x]` `[██████████]` 382/382
 
-`[ ]` Gate the **preview switch on the content it changes** — a palette press
+`[x]` Gate the **preview switch on the content it changes** — a palette press
       made in the window between the sidebar's hydration and the page previews'
-      hydration updates the group and the URL while every preview surface keeps
-      the server's palette, and no later render recovers it: measured on the
-      served build (2026-10-24), pressing **Light** as soon as the sidebar's
-      button carried React props left all three surfaces on `dark` (the
-      element's props read `light`, its DOM did not), three runs out of three,
-      with and without `?platform=&mode=` in the URL; the same press 250 ms
-      later painted `light` on all three. A reader who clicks the visible,
-      styled switch before the page content hydrates gets a switch that says
-      **Light** beside dark previews until they press another axis. The probe now
-      waits for the surface it measures (`palette-switch-probe.ts`), so it
-      reports the page a reader can actually use; the fix is the switch's own:
-      disable the choice buttons until the content boundary reports it mounted
-      (a marker rendered inside `DocsView`'s `<Suspense>`, after the page
-      content), and verify in a browser that an early press is refused rather
-      than lost. Evidence: `.agents/slop/scratch/probe-palette-timing.ts`
-      (press at 0/250/750/1500/3000 ms after the button's props appear) and
-      `probe-palette-zero.ts` (both URLs, three runs each).
+      hydration updated the group and the URL while every preview surface kept
+      the server's palette, and no later render recovered it (measured on the
+      served build: pressing **Light** as soon as the sidebar's button carried
+      React props left all three surfaces on `dark`; the same press 250 ms later
+      painted `light` on all three). The fix is the switch's own: `PlatformSwitch`
+      disables both groups while `PlatformProvider`'s `contentReady` is false, and
+      the `ContentMounted` marker inside `DocsView`'s `<Suspense>` — after the page
+      content — is what opens them on mount. `palette-switch-probe.ts` now presses
+      **Light** at the first instant the button exists and requires the refusal
+      (group still `Dark`, no `mode=light` in the address bar), reopening the
+      document up to eight times when a preview build hydrates before the first
+      read. Measured 2026-10-24 against the dev server: `early: the disabled
+      switch refused the press`, then `light: 3 of 3 surfaces painted #F2F2F7`,
+      exit `0`. Directions measured: with `disabled={disabled}` stripped the gate
+      case fails (`expected [] to have a length of 6`), and with `contentReady`
+      initialised `true` the probe fails (`the palette switch was never pressed
+      while the page content was unmounted`). `palette-switch.test.ts` is 17/17,
+      the docs suite **189 files / 1 946 tests** green, and `check-types` clean.
+      `docs/preview-strategy.md` §The palette switch is a measured click records
+      the gate and the early press. No native scenario applies — a browser
+      switch and its markup.
 
 `[x]` Wait for the **surface the palette probe measures** before pressing —
       `palette-switch-probe.ts` pressed the sidebar's Light button as soon as
@@ -19101,6 +19105,41 @@ numbers).
       Text row, and `examples/typography.example.tsx` gains the end-aligned
       footer the runtime suite mounts.
 
+`[x]` `packages/primitives`: **a layout primitive could not be measured where
+      it was painted** — `Box`, `Stack`, `Grid` and `Spacer` painted one element
+      each and published no host props at all, so a caller who needed the box
+      (a panel's size, a row's height, the content a scroll reading divides by),
+      the instance (a restored scroll offset, a reveal) or the automation id had
+      to wrap the primitive in a `div` — and in a flex parent the wrapper is the
+      item, so a `grow`ing or `stretch`ing child inside it has to repeat its own
+      flex facts on the wrapper and the box measured is no longer the box
+      composed. `ElementHostProps` is the runtime's own trio — `ref`, `aria-id`,
+      `onLayout` — and all four primitives extend it; a text field's
+      `FieldHostProps` is the same type, so the library has one vocabulary for
+      "the element outside this library may need". The example's drop target now
+      states the size it was actually given, read from its own layout event.
+      Proof: `presentational.test.tsx`'s `hand the runtime's host props to the
+      element they paint` reads `aria-id` and `onLayout` off all four rendered
+      elements and their absence when the caller gives neither, and
+      `runtime/layout.runtime.test.tsx`'s `measures and holds a layout primitive
+      where it is painted` reads the painted box back through the primitive's
+      own event (two rows and the theme's gap: 56px) and the `ref` back as the
+      runtime's instance, with `runtime/examples.runtime.test.tsx`'s `measures
+      the layout example's drop target where the primitive paints it` reading the
+      caption against the frame's box. Directions measured: with the four
+      components' host props removed, the unit case fails (`the element tree did
+      not carry what this test asserts on`), the layout case reads `expected
+      undefined to strictly equal { width: 1256, height: 56 }` and the example
+      paints `Drop a layer here—` instead of `322 × 30`; restored, the package
+      is 57 files / **1 185** unit tests and the runtime suite 22 files / **337**
+      cases with `check-types` clean. Docs: the API tables on `box.mdx`,
+      `stack.mdx`, `grid.mdx` and `spacer.mdx` (held by `docs.test.ts`'s
+      page-to-props case, which failed first by naming every missing row), the
+      package README (the layout paragraph and the capability table) and the
+      `COMPONENTS.md` Spacers/Stack/Grid/Boxes rows, whose Stack row also lost a
+      `useStack` that no longer exists. No playground scenario applies — the
+      measurement is the runtime's own `onLayout`, read in the package suite.
+
 ## Animated primitives (plan 600)
 
 `[x]` `[██████████]` 9/9
@@ -19963,3 +20002,5 @@ The shipped surfaces were re-run in a window on this tree:
 render's, read in the real renderer the behaviour suite drives. Owner: data.
 
 `[x]` `packages/editor`: **a stored tab mode the release no longer ships sent Tab out of the field** — `CodeEditor` passed the caller's `tabMode` straight into `tabInserts`, which answers `mode === "insert" && indent.length > 0`, so a preference restored from storage under a name a release renamed (`"indent"`, an older spelling, an upper-cased `"INSERT"`) read as *not* insert: the field swallowed nothing and Tab moved the focus to the next control, while the prop documents `"insert"` as its default and the same component already reads `indent` and a stored draft failsafe. `code-editor/logic.ts` now owns `TAB_MODES`/`TabModes` (`Schema.Literals`, the `TabMode` type derived from it) with `isTabMode` and `tabModeOf`, which answers the documented `"insert"` for a name this release does not carry; the component resolves it **once** into `mode`, so the key decision, its JSDoc and its page cannot disagree. Proof: `src/code-editor/logic.test.ts` gains `keeps the two modes this release ships` and `reads a stored mode name it does not ship as the documented default` (a renamed, upper-cased and padded name, `undefined`, `null`, a number), and `src/behaviour/code-editor.test.tsx` gains `keeps Tab inserting for a stored tab mode name it does not ship` — a real Tab between two buttons: the focus lands on the field, a second Tab stays there, and the document gains the two-space indent. Directions measured: with the raw comparison restored the window case fails `expected { _tag: 'Some', value: 'code-editor' } to deeply equal { _tag: 'Some', value: 'after' }` (the old read), and the unit cases fail by name without the guard; restored, `@gpuixui/editor` is 7 files / **74 unit** and 5 files / **56 behaviour** cases green with `check-types`, `oxlint` and `oxfmt` clean. Docs `packages/editor/docs/code-editor.mdx` §API/§Limitations and the `Code editor integration` row (16 → 17 native cases) state the fallback. No native scenario applies — the key decision is driven by the package's real-renderer behaviour suite, and `editor-surface` paints the read-only highlight route this change does not touch.
+
+`[x]` `packages/components`: **a stored type role took the animated text down with its caret** — `TypingText`'s `caretStyle` read `theme.typography[role].lineHeight` straight off the type group while the string beside it painted through `textStyle`, the seam that answers the library's `body` step for a role this release does not carry. A `role` restored from storage (a saved text style, an i18n record) under a renamed name (`"banner"`) therefore left the caret's lookup with no step to read: measured with `caret` on, the whole surface failed to mount — the string's own name was absent from the a11y tree and no caret painted — where the same component paints the text alone through the seam. `caretStyle` now reads the line through `textStyle(theme, role)`, so the caret and the string share one answer for a stored role. Proof: `src/behaviour/typing-text.test.tsx` gains `paints a caret for a stored role the type scale does not carry` (a stored `"banner"`: the string's name in the a11y tree, the caret a 2-point box at `textStyle(darkTheme, "body").lineHeight`). Direction measured: with the raw read restored the case fails `expected undefined to be 20` (no caret and no name at all); restored, the file is 7/7. Docs: `packages/components/docs/typing-text.mdx` §Limitations, the `role` JSDoc and the `Typing text` row (6 → 7 native cases). Green on the files this change touches: `src/typing-text/logic.test.ts`, `src/api.test.ts`, `src/docs.test.ts`, `src/catalogue.test.ts`, `src/inventory.test.ts` are 69/70 with the one red case being the in-flight `media-player-lifecycle` row another workstream is updating (the README's 63-check count against the page's 51), and `check-types`, `oxlint` and `oxfmt` are clean. No native scenario applies — the caret is the renderer's own painted tree, and the probes pass no `role`.
