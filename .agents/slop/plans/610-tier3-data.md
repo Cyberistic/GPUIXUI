@@ -687,6 +687,16 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   three holed cases fail at `HEAD` on the empty render, and after it the file
   is 11/11 with `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the
   README's chart paragraph and the Charts inventory row.
+- **A category label is read at its slot**: a `labels` list is stored data like
+  a series list, and a hole where a name belongs was interpolated into the
+  description (`null 6`) while the paint showed a blank slot; filtering it away
+  would shift every later value under the wrong label. `textsOf` keeps the slot
+  and reads a non-text entry as no words, and `seriesDescription` reads a blank
+  or whitespace label as no category, so the datum is announced by its number
+  alone. `src/internal/list.test.ts` (3 cases), a `chart/logic.test.ts` case and
+  a window case in `src/behaviour/chart-a11y.test.tsx`; directions measured:
+  the old description reads `Q1 3, null 6` in the unit case and `Q1 3,  6` in
+  the window. 250 unit / 177 behaviour, `check-types` clean.
 
 ## 5. Acceptance
 

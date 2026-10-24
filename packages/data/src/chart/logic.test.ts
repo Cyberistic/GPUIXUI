@@ -429,6 +429,16 @@ describe("the words a series announces", () => {
     expect(seriesDescription([])).toBe("");
   });
 
+  it("reads a label a store wrote as a hole as no label, not the word null", () => {
+    // A category list is stored data: a hole or a whitespace entry names no
+    // category. The description used to interpolate the JS value itself, so a
+    // reader heard `null 6` — words the caller never supplied.
+    // @ts-expect-error — a label list a store wrote with a hole.
+    expect(seriesDescription([3, 6], ["Q1", null])).toBe("Q1 3, 6");
+    expect(seriesDescription([3, 6], ["Q1", "   "])).toBe("Q1 3, 6");
+    expect(seriesDescription([3, 6], ["", "Q2"])).toBe("3, Q2 6");
+  });
+
   it("reads a blank series name as the key it is stored by", () => {
     // A label is content: an i18n table missing its row answers `""`, and a
     // saved chart configuration can restore a series with no words. The image

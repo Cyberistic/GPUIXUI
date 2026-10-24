@@ -282,4 +282,31 @@ describe("a chart's accessibility tree", () => {
     expect(words).toContain("referral");
     expect(words).toContain("sessions");
   });
+
+  it("keeps a category's slot when its stored label is a hole", () => {
+    // Bug guarded: a label list is stored data, and a store can write a hole
+    // where a category's name belongs. The description painted the JS word
+    // `null` as the category's name ("null 6") — a datum the caller never
+    // wrote — while the paint showed a blank slot. The slot stays (the bar
+    // above it still draws) and the datum reads as its number alone.
+    const tree = treeOf(
+      <div>
+        <BarChart
+          testId="holed"
+          aria-label="Revenue"
+          // @ts-expect-error — a label list a store wrote with a hole.
+          labels={["Q1", null]}
+          series={[{ key: "revenue", label: "Revenue", values: [3, 6] }]}
+        />
+      </div>,
+    );
+
+    const images = withRole(tree, tree.root, "Image");
+    expect(images).toHaveLength(1);
+    expect(wordsOf(tree, images[0] ?? "").description).toBe("Q1 3, 6");
+    // The category keeps its own track: filtering the hole would move the
+    // second value under the first label.
+    expect(root?.renderer.findByTestId("holed-label-1")).not.toBe(undefined);
+    expect(root?.renderer.getAllText() ?? []).not.toContain("null");
+  });
 });

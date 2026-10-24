@@ -42,3 +42,18 @@ export const recordsOf = <A extends { readonly key: string }>(
     listOf(value),
     (entry) => P.isObject(entry) && P.isString(entry.key),
   );
+
+/**
+ * The entries of a saved text list, at their own slots.
+ *
+ * A category list is stored data like any other: a store that wrote a hole (or
+ * a number where a word belongs) still has a **slot** there, and a chart draws
+ * a value in every slot its labels name. Filtering the entry away would shift
+ * every later value under the wrong label, so an entry that is not text reads
+ * as no words at its own slot — the geometry stays aligned and the paint says
+ * nothing.
+ */
+export const textsOf = (
+  value: ReadonlyArray<string> | undefined,
+): ReadonlyArray<string> =>
+  Arr.map(listOf(value), (entry) => (P.isString(entry) ? entry : ""));

@@ -2630,7 +2630,38 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 177/177
+`[x]` `[██████████]` 178/178
+
+`[x]` Mount the **shipped `DockLayout`** in a window, and measure the tree a tab
+      press reports — Tier 4's *Tabbed panels* and *Nested panel arrangements*
+      rows cited `docking-nested`, which composes the playground's own
+      `SplitPane` inside a scenario and never mounts `@gpuixui/dock`'s
+      `DockLayout`, so the package's tree had no window evidence at all. The
+      `dock-layout-lifecycle` probe mounts the shipped layout on a 640×320 stage
+      — one horizontal split whose children are two tab groups — and measured
+      32 checks on 0.11.0: each group paints its own share of the 634-point pane
+      space (221.9 and 412.1, the divider between them), opens the tab the tree
+      names and mounts no other, each body's own fill reaches the captured
+      frame, and a press on a trigger — addressable only by the words it paints,
+      through the new `AsyncSmokeHost.clickText`/`textPress` verb — repaints its
+      group. **It also found a real contract gap**: `onLayoutChange` documents
+      "the next tree", and a group reports `setActiveTab(node, node.id, tab.id)`
+      — the node it changed — so `onLayoutChange={setLayout}` (the package
+      README's own call) replaces the whole tree with that group: pressing
+      `Logs` reports `layout=tabs:editor reports=tabs:editor changes=1` and
+      drops `explorer`, and a press on the tab already shown reports a node too.
+      The probe pins the measured behaviour (a component fix flips those checks),
+      and the row records the two address limits read from the source: no child
+      `testId` is derived (`PanelGroup` and `SplitPane` derive theirs), and the
+      strip answers no key. Directions measured: the README printing 31 checks
+      fails the guard by name, and `splitWidths` reading the full width instead
+      of the space minus the divider fails `derives each pane from the split's
+      own share arithmetic` (`expected 412.1 to be 412.1` on the second pane,
+      first pane 224 vs 221.9). Green: the probe is 1/1 live, the guard file
+      passes, and `nub run --filter playground test` is green beside it. Docs:
+      `apps/playground/README.md` §`dock-layout-lifecycle`, the *Tabbed panels*,
+      *Nested panel arrangements* and *Docking layouts* rows in `COMPONENTS.md`,
+      and the dock-owner row in `TODO.md` → Interlocks.
 
 `[x]` Make the **playground shell drivable from the keyboard** — every sidebar row
       and palette button was a `role="button"` surface with `tabIndex: 0` and an
@@ -11274,7 +11305,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     description reads `Q1 3, 6`, the second category's slot still exists, and
     no text node reads `null`. Directions measured: with the old description
     restored the unit case reads `Q1 3, null 6` and the window case
-    `Q1 3,  6`; green, the package is 249 unit / 177 behaviour with
+    `Q1 3,  6`; green, the package is 250 unit / 177 behaviour with
     `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the README's
     chart paragraph and the Charts row. No native scenario applies — the words
     are read off the real renderer. Owner: data.

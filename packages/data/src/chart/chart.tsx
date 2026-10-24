@@ -29,7 +29,7 @@ import { seriesColors } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { listOf, recordsOf } from "../internal/list.js";
+import { listOf, recordsOf, textsOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { textStyle, useTheme } from "../theme.js";
 import {
@@ -299,7 +299,7 @@ const ChartFrame = ({
     // where a series carried no values, and the geometry would throw on it.
     values: listOf(one.values),
   }));
-  const categories = listOf(labels);
+  const categories = textsOf(labels);
   const scale = scaleOf(rows, categories.length);
   const palette = seriesColors(theme);
   const layers = marks(rows, categories, box, scale);

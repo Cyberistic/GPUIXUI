@@ -590,7 +590,11 @@ the rest of the chart paints. A list is stored twice, so an **entry** is read
 too: `recordsOf` keeps the records that name themselves with a `key`, so a
 series, ring datum or legend row whose slot the store wrote as a hole
 (`[null, { … }]`) paints nothing while its neighbours paint, rather than
-dereferencing `null` and taking the chart down.
+dereferencing `null` and taking the chart down. A **label** list is read the
+same way but keeps its slots: a `labels` entry that is not text names no
+category, paints a blank slot and leaves its datum announced by the number
+alone — filtering it would move every later value under the wrong label, and
+interpolating it announced the word `null`.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

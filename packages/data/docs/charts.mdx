@@ -99,8 +99,12 @@ import {
   An **entry** inside a stored list is data too: a `series`, `data` or `items`
   list whose hole the store wrote (`[null, { … }]`) paints the records it can
   read and drops the hole, and an entry that is not a keyed record is not a
-  series, a datum or a legend row (`recordsOf`). `src/behaviour/chart-boundary.test.tsx`
-  holds both shapes.
+  series, a datum or a legend row (`recordsOf`). A `labels` entry that is not
+  text keeps its slot — filtering it would move every later value under the
+  wrong label — and reads as no words: the painted label is blank and the datum
+  is announced by its number alone (`Q1 3, 6`), never by the word `null`
+  (`textsOf`). `src/behaviour/chart-boundary.test.tsx`
+  and `src/behaviour/chart-a11y.test.tsx` hold both shapes.
 - One tint per layer: two colours inside one series need two layers.
 - No tooltips, hover readouts or zoom.
 - No animation between data sets.

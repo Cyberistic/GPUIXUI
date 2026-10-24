@@ -19,6 +19,7 @@
 import { spokenText } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 
 /** One series: a stable key, its label, and one value per category. */
 export interface ChartSeries {
@@ -545,7 +546,9 @@ export const seriesName = (label: string, key: string): string =>
  * category is read as `label value` (`Q1 32`), a value with no label as the
  * number alone, and a value that is not a number as `no value` rather than the
  * zero the geometry substitutes — a reader should not be told a datum is zero
- * when the caller never supplied one.
+ * when the caller never supplied one. A label is stored content too: a hole the
+ * store wrote, or whitespace, names no category, so that datum reads as its
+ * number alone rather than as the word `null`.
  */
 export const seriesDescription = (
   values: ReadonlyArray<number>,
@@ -558,7 +561,13 @@ export const seriesDescription = (
         ? `${Math.round(value * 100) / 100}`
         : "no value";
       const label = labels[index];
-      return label === undefined ? readout : `${label} ${readout}`;
+      // A label is stored content: a hole the store wrote, or a word that is
+      // only spaces, names no category. The word `null` is not a category a
+      // reader was given, so such a datum reads as its number alone — the rule
+      // an absent label already follows.
+      return P.isString(label) && label.trim().length > 0
+        ? `${label} ${readout}`
+        : readout;
     }),
     ", ",
   );
