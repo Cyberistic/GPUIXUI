@@ -63,6 +63,10 @@ render(
 
 Only `CardHeader`, `CardContent` and `CardFooter` nest directly in `Card`.
 
+`render` takes **one** element — a fragment at the root paints only its last
+child and reports nothing — so keep an app shell's toolbar, body and status bar
+as siblings inside one wrapper.
+
 ## Run it natively
 
 ```sh

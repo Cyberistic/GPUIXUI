@@ -324,6 +324,62 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(doc.slice(doc.indexOf("## 5."))).toContain("`motion-interruption`");
   });
 
+  it("records the one child a window's root paints, from the mount seam", () => {
+    // A root fragment paints its **last** child and reports nothing, so an app
+    // shell that returns `<><Toolbar /><Body /></>` at the root paints the body
+    // and loses the toolbar silently. The live runner hit it while adding a
+    // mount marker; the record and the page must carry the rule and the counts.
+    const readme = read("apps/playground/README.md");
+    const section = readme
+      .slice(readme.indexOf("### One window, one probe at a time"))
+      .replace(/\s+/g, " ");
+    expect(section).not.toBe("");
+
+    // The measurement's own words, so a re-measure rewords both documents.
+    const measured =
+      /a root `Fragment` of (\w+) divs renders the (\w+) alone, and (\w+) children of a root fragment render only the (\w+)/.exec(
+        section,
+      );
+    expect(measured?.slice(1)).toEqual(["two", "second", "nine", "ninth"]);
+
+    const row = rowFor("Render root");
+    expect(row?.verdict).toBe("supported, with limits");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("**last** child");
+    expect(evidence).toContain("src/live/mount-marker.test.tsx");
+    expect(evidence).toContain("no error");
+    expect(
+      (measured?.slice(1) ?? []).filter((word) => !evidence.includes(word)),
+    ).toEqual([]);
+    expect(row?.workaround).toContain("one element");
+
+    // The page is a summary of the record, not a second copy: the rule, the
+    // last child and the action a reader takes.
+    const pageRow = runtimePage
+      .split("\n")
+      .find((line) => line.startsWith("| One host element at the window root"));
+    expect(pageRow).toContain("**last** child");
+    expect(pageRow).toContain("ninth");
+    expect(pageRow).toContain("one element");
+  });
+
+  it("owes only probes a registry declares, in one sentence", () => {
+    // The list is the whole debt, so it ends its sentence. A merge once left
+    // "the record does not owe." after it, which reads as both a promise and a
+    // retraction; the ids themselves must all be real probes.
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
+    const owed = /The probes the record owes: \(([^)]*)\)\./.exec(keeping);
+    expect(owed).not.toBeNull();
+
+    const ids = [...(owed?.[1] ?? "").matchAll(/`([^`]+)`/g)].map(
+      (match) => match[1] ?? "",
+    );
+    expect(ids.length).toBeGreaterThanOrEqual(100);
+
+    const registered = registeredProbes();
+    expect(ids.filter((id) => !registered.has(id))).toEqual([]);
+  });
+
   it("records the chrome the shipped shell parts paint, from the probe", () => {
     // The record's Application-menu row can only say "draw an in-window menu";
     // whether the shipped parts actually paint one was only in the playground's

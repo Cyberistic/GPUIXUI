@@ -65,4 +65,13 @@ describe("the getting-started page", () => {
     expect(page).toContain("<ThemeProvider theme={themes.dark}>");
     expect(page).toContain("render(<App />, { terminal: true });");
   });
+
+  it("teaches the one element render takes", () => {
+    // The first page a reader writes a root on: a fragment at the root paints
+    // only its last child and reports nothing, so `<><Toolbar /><Body /></>`
+    // loses the toolbar silently (docs/gpuix-capabilities.md, "Render root").
+    const prose = page.replace(/\s+/g, " ");
+    expect(prose).toContain("`render` takes **one** element");
+    expect(prose).toContain("paints only its last child");
+  });
 });
