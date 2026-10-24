@@ -2996,18 +2996,23 @@ a merge over a stored theme.
       `Smoke.runScenarios`/`runAsyncScenarios`' mount seam now admits a
       `SmokeHostError` (the runner may fail to confirm a mount); `async-smoke.test.ts`
       gains `records a mount that never confirms its view as errored, and keeps
-      going`. `src/live/mount-marker.test.tsx` (5 cases) holds the seam: the
-      marker and view render in one commit, the root keeps one host child, the
-      wait names that scenario's marker after the render, another probe's marker
-      cannot satisfy it, and the box is inert. Directions measured: deleting the
-      wait fails two cases (`expected [ 'render' ] to deeply equal [ 'render', … ]`),
-      removing the marker fails the first (`expected [ 'probe-view' ] to include
-      'live-probe-data-tree-lifecycle'`). Green on 0.11.0:
-      `--only virtual-tree-lifecycle --only data-tree-lifecycle --only
+      going` (measured failing with the mount error ignored: `erroredDetail` is
+      `undefined`). `src/live/mount-marker.test.tsx` (5 cases) holds the seam:
+      the marker and view render in one commit, the root keeps one host child,
+      the wait names that scenario's marker after the render, another probe's
+      marker cannot satisfy it, and the box is inert. Directions measured:
+      deleting the wait fails two cases (`expected [ 'render' ] to deeply equal
+      [ 'render', … ]`), removing the marker fails the first
+      (`expected [ 'probe-view' ] to include
+      'live-probe-data-tree-lifecycle'`). Green on 0.11.0, in **one** batched
+      window: `--only virtual-tree-lifecycle --only data-tree-lifecycle --only
       drawer-lifecycle --only floating-reflow-lifecycle --only
       split-pane-lifecycle --only dock-layout-lifecycle` 6/6, and
-      `--only dock-layout-lifecycle` alone 9.3 s as before. Docs:
-      `apps/playground/README.md` §One window, one probe at a time.
+      `--only app-chrome-lifecycle --only movable-tabs-lifecycle` 2/2; the two
+      heavy probes alone read their recorded times (`dock-layout-lifecycle`
+      9.3 s, `app-chrome-lifecycle` 3.7 s). The full headless suite is **48/48**
+      with every capability verified. Docs: `apps/playground/README.md` §One
+      window, one probe at a time.
 
 `[x]` Read the **offscreen data-tree scenario's ids from the fixture** — the
       example's readout became `data-tree-readout` (`220d23ae8`, so a batched
