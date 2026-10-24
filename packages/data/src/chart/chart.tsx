@@ -24,6 +24,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { spokenText } from "@gpuixui/primitives/core";
 import { seriesColors } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
@@ -75,6 +76,15 @@ const DEFAULT_SPARKLINE_WIDTH = 120;
 
 /** The height of a sparkline's plot when the caller names none. */
 const DEFAULT_SPARKLINE_HEIGHT = 32;
+
+/**
+ * The name a sparkline paints when the caller names none.
+ *
+ * The name is a stored value as often as a literal (a locale table with a
+ * missing row, a preference a store saved empty), so a blank one reads as this
+ * word rather than an unnamed image — the rule `spokenText` applies.
+ */
+export const DEFAULT_SPARKLINE_LABEL = "Trend";
 
 /** The y-axis column's width: a measurement of the widest tick it holds. */
 export const CHART_AXIS_WIDTH = 36;
@@ -544,7 +554,8 @@ export interface SparklineProps extends Omit<Props, "children"> {
  * no series list, so the caller's `aria-label` names the single layer and the
  * values travel in its description. A wrapper that also claimed `role="img"`
  * made a reader hear the sparkline twice — measured, the tree held two `Image`
- * nodes with the same name.
+ * nodes with the same name. A blank name is absence, so the image takes
+ * {@link DEFAULT_SPARKLINE_LABEL} — a default only covers an absent prop.
  */
 export const Sparkline = ({
   values,
@@ -580,7 +591,10 @@ export const Sparkline = ({
         <ChartLayer
           chartTestId={testId}
           seriesKey="sparkline"
-          label={ariaLabel ?? "Trend"}
+          label={spokenText(
+            Option.fromNullishOr(ariaLabel),
+            DEFAULT_SPARKLINE_LABEL,
+          )}
           description={seriesDescription(values)}
           colour={color ?? seriesColour(seriesColors(theme), 0)}
           marks={Option.match(d, {

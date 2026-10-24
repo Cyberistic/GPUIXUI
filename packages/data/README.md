@@ -518,7 +518,8 @@ still reads `Q1 0, Q2 -4` rather than vanishing from the tree. A ring follows
 the same rule per datum: a zero paints no slice and still reads `Referral 0`, so
 a legend entry never stands without its number. A `Sparkline` is
 one image, not a group of them: the caller's `aria-label` names it and its values
-are its description.
+are its description. A name is a stored value as often as a literal, so a blank
+one reads as the documented `Trend` rather than publishing an unnamed image.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

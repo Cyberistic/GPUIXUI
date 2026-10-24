@@ -76,6 +76,27 @@ describe("a chart's accessibility tree", () => {
     expect(wordsOf(tree, images[0] ?? "").label).toBe("Trend");
   });
 
+  it("reads a blank name as the word Trend the page documents", () => {
+    // Bug guarded: `aria-label` is a stored value as often as a literal — a
+    // locale table with a missing row, a preference a store saved empty — and
+    // the default was written as `ariaLabel ?? "Trend"`, which only covers an
+    // **absent** prop. A blank name reached the image while the page promised
+    // the word, so the sparkline was announced by nothing.
+    const tree = treeOf(<Sparkline aria-label="" values={[3, 6]} />);
+
+    const images = withRole(tree, tree.root, "Image");
+    expect(images).toHaveLength(1);
+    expect(wordsOf(tree, images[0] ?? "").label).toBe("Trend");
+  });
+
+  it("reads a whitespace name as the word Trend the page documents", () => {
+    const tree = treeOf(<Sparkline aria-label="   " values={[3, 6]} />);
+
+    const images = withRole(tree, tree.root, "Image");
+    expect(images).toHaveLength(1);
+    expect(wordsOf(tree, images[0] ?? "").label).toBe("Trend");
+  });
+
   it("describes a bar series by the labels it paints", () => {
     const tree = treeOf(
       <BarChart
