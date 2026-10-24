@@ -635,6 +635,64 @@ describe("a partial a store handed back", () => {
     expect(retinted.elevation).not.toBe(darkTheme.elevation);
   });
 
+  it("reads a base a store truncated past a whole group", () => {
+    // The cast is the storage boundary: a store hands back the type's shape with
+    // groups missing, which is the class `incomplete.test.ts` reports. The merge
+    // read each lost group straight off the base, so the type scale threw
+    // `Cannot read properties of null (reading 'sans')` and the density box
+    // `(reading 'name')` from the one seam a restored brand reaches.
+    const stored = (groups: Partial<Record<keyof Theme, unknown>>): Theme =>
+      ({ ...darkTheme, ...groups }) as Theme;
+
+    const typeLost = extendTheme(stored({ typography: null }), {
+      typography: { body: { fontSize: 15 } },
+    });
+    expect(typeLost.typography.body.fontSize).toBe(15);
+    expect(typeLost.typography.body.lineHeight).toBe(
+      darkTheme.typography.body.lineHeight,
+    );
+    expect(typeLost.typography.sans).toBe(darkTheme.typography.sans);
+
+    const densityLost = extendTheme(stored({ density: null }), {
+      density: { rowHeight: 30 },
+    });
+    expect(densityLost.density.rowHeight).toBe(30);
+    expect(densityLost.density.controlHeight).toEqual(
+      darkTheme.density.controlHeight,
+    );
+
+    const regionLost = extendTheme(
+      stored({
+        colors: null,
+        spacing: null,
+        radius: null,
+        borderWidth: null,
+        iconSize: null,
+      }),
+      { radius: { md: 6 } },
+    );
+    expect(regionLost.radius.md).toBe(6);
+    // A flat group stays as the base wrote it: the roles an override does not
+    // name stay absent for the gate, which is what `paletteToTokens` relies on.
+    expect(regionLost.spacing).toBeNull();
+    expect(regionLost.colors).toBeNull();
+
+    // A style over the same base completes the two complete types, and invents
+    // no flat role: its palette is partial by design, so the gate still names
+    // what the restored brand lost.
+    const styled = platformTheme(
+      stored({ typography: null, density: null, colors: null, radius: null }),
+      "darwin",
+    );
+    const complete = platformTheme(darkTheme, "darwin");
+    expect(styled.typography.sans).toBe(complete.typography.sans);
+    expect(styled.radius).toEqual(complete.radius);
+    expect(styled.density).toEqual(complete.density);
+    expect(styled.colors.primary).toBe(complete.colors.primary);
+    expect(styled.colors.foreground).toBeUndefined();
+    expect(auditTheme(styled).passed).toBe(false);
+  });
+
   it("teaches the shape a store hands back on every surface", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8")
@@ -652,6 +710,19 @@ describe("a partial a store handed back", () => {
       expect(text, name).toContain("ThemeOverridesSource");
       expect(text, name).toContain("JSON has no `undefined`");
     });
+    // A base a store truncated past the two complete types is read as the
+    // library's own for the merge; a flat group stays absent for the gate.
+    Object.entries(surfaces).forEach(([name, text]) => {
+      expect(text, name).toContain("base a store truncated");
+      expect(text, name).toContain("reading 'sans'");
+      expect(text, name).toContain("flat group");
+    });
+    expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
+      "base.typography ?? identity.typography",
+    );
+    expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
+      "base.density ?? identity.density",
+    );
     // The catalogue names the two failures the rule retires, so a reader can
     // tell an absence they fixed from a cast they worked around.
     expect(surfaces["COMPONENTS.md"]).toContain(

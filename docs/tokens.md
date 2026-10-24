@@ -4532,6 +4532,14 @@ Merge rules:
   JSON.parse(saved))` reads it without a cast. Kept as a value, a `null` role is
   a colour the `Theme` type promises and the renderer cannot paint, and a `null`
   group reached the merge as an object it could not open;
+- a **base** a store truncated past the type scale or the density box is read as
+  the identity theme of the base's own mode and contrast for that group, because
+  neither type has a partial form for an override to edit. Reading the lost group
+  directly threw `Cannot read properties of null (reading 'sans')` from the one
+  seam a restored brand reaches; a painter would have answered the library's own
+  value (`textStyle`, `nativeTextTheme`). A flat group stays as the base wrote
+  it, so a role an override does not name is still absent for the gate — the
+  `paletteToTokens` rule that no colour is invented;
 - colour, spacing, radius, border width and icon overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight; `bodyStrong` is its own role, so a brand that changes the

@@ -1478,6 +1478,11 @@ no `undefined`, so the partial a store hands back carries `null` for a group or 
 role it never kept. `ThemeOverridesSource` is that shape, which is what lets
 `extendTheme(base, JSON.parse(saved))` restore a stored brand without a cast and
 without handing the renderer a `null` role.
+A **base** a store truncated past the type scale or the density box is read as
+the identity theme of its own mode and contrast for that group: neither type has
+a partial form for an override to edit, and reading the lost group directly threw
+`Cannot read properties of null (reading 'sans')`. A flat group stays as the base
+wrote it, so a role an override does not name is still absent for the gate.
 Every group a theme carries is an override except `mode` and `contrast`: those
 two are what its numbers mean, so a caller that wants another asks `getTheme`
 for it. Nothing mutates the base, so a theme can be created once at

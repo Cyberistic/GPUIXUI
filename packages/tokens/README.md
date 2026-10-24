@@ -118,7 +118,12 @@ any theme. Neither mutates its base. Groups merge key by key — a key written a
 is the same absence: JSON has no `undefined`, so the partial a store hands back
 carries `null` for a group or a role it never kept. `ThemeOverridesSource` is
 that shape, so `extendTheme(base, JSON.parse(saved))` needs no cast and hands the
-renderer no `null` colour. Typography
+renderer no `null` colour. A **base** a store truncated past the type scale or
+the density box is read as the identity theme of its own mode and contrast for
+that group, because neither type has a partial form for an override to edit —
+reading the lost group directly threw `Cannot read properties of null (reading
+'sans')`. A flat group stays as the base wrote it, so a role an override does not
+name is still absent for the gate. Typography
 merges field by field, elevation levels replace whole arrays, a `density`
 override merges each control size so raising `md` keeps `sm` and `lg`, a
 platform's `switch` paint replaces whole (the three slots are one control's

@@ -604,6 +604,14 @@ export function getTheme(
  * handed back instead of erasing a role or throwing on a nulled group
  * ({@link ThemeOverridesSource}).
  *
+ * A **base** a store truncated past the type scale or the density box is read
+ * as the identity theme of the base's own mode and contrast for that group — the
+ * values a painter answers anyway — because neither type has a partial form for
+ * an override to edit. Reading the lost group directly threw
+ * `Cannot read properties of null (reading 'sans')`. A flat group stays as the
+ * base wrote it, so a role an override does not name is still absent for the
+ * gate.
+ *
  * @example
  * ```ts
  * const brand = extendTheme(darkTheme, {
@@ -616,6 +624,16 @@ export function extendTheme(
   base: Theme,
   overrides: ThemeOverridesSource,
 ): Theme {
+  // A whole group a store truncated past reads as the identity theme of the
+  // base's own mode and contrast **for the two groups a merge cannot express
+  // partially**: a type scale and a density box are complete types, so an
+  // override edits the library's own where a painter would have answered it
+  // (`textStyle`, `nativeTextTheme`). Reading the lost group threw
+  // `Cannot read properties of null (reading 'sans')` out of the one seam a
+  // restored brand reaches. A flat group stays as the base wrote it — the roles
+  // an override does not name stay absent for the gate, which is the `no colour
+  // is invented` rule `paletteToTokens` relies on.
+  const identity = getTheme(themeModeOf(base), themeContrastOf(base));
   const colors = overlay(base.colors, overrides.colors);
   // A level's strength is its share of the shadow role, so a brand that retints
   // the role retints every shadow it inherits. A level passed in `elevation`
@@ -626,14 +644,17 @@ export function extendTheme(
       ? base.elevation
       : elevationWithTint(base.elevation, colors.shadow);
   return {
-    name: overrides.name ?? base.name,
+    name: overrides.name ?? base.name ?? "Theme",
     mode: base.mode,
     contrast: base.contrast,
     colors,
-    typography: mergeTypography(base.typography, overrides.typography),
+    typography: mergeTypography(
+      base.typography ?? identity.typography,
+      overrides.typography,
+    ),
     spacing: overlay(base.spacing, overrides.spacing),
     radius: overlay(base.radius, overrides.radius),
-    density: mergeDensity(base.density, overrides.density),
+    density: mergeDensity(base.density ?? identity.density, overrides.density),
     elevation: overlay(elevation, overrides.elevation),
     borderWidth: overlay(base.borderWidth, overrides.borderWidth),
     iconSize: overlay(base.iconSize, overrides.iconSize),
@@ -704,7 +725,7 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
   const applies = contrast === style.contrast;
   const mode = themeModeOf(base);
   const themed = extendTheme(base, {
-    name: `${base.name} · ${style.label}`,
+    name: `${base.name ?? "Theme"} · ${style.label}`,
     typography: { sans: style.sans, mono: style.mono },
     radius: style.radius,
     density: style.density,
