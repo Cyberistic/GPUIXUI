@@ -3,10 +3,11 @@
  *
  * A preference restored from storage is `unknown`: a settings row, a URL
  * parameter or a persisted workspace can carry a mode, a contrast variant, a
- * platform, a look, a density, a control size or a status tone that this build
- * no longer ships. Each axis has an ordered index beside its guard, so a
- * consumer narrows the stored value and falls back to a readable default
- * instead of retyping the union or casting the value.
+ * platform, a look, a density, a control size, a status tone or the type role a
+ * saved document was written with that this build no longer ships. Each axis has
+ * an ordered index beside its guard, so a consumer narrows the stored value and
+ * falls back to a readable default instead of retyping the union or casting the
+ * value.
  *
  * The example is executed in [`guards.test.ts`](./guards.test.ts).
  */
@@ -22,6 +23,7 @@ import {
 } from "./scale.js";
 import { isStatusTone, statusTone, type StatusToneStyle } from "./styles.js";
 import { getTheme, isThemeContrast, isThemeMode, type Theme } from "./theme.js";
+import { isTextRole, type TextRole } from "./typography.js";
 
 /** `value` when `guard` accepts it, the readable `fallback` otherwise. */
 export const orDefault = <A>(
@@ -61,3 +63,16 @@ export const platformFromStoredChoice = (value: unknown): PlatformName =>
 /** Resolve a stored look to one this library ships. */
 export const lookFromStoredChoice = (value: unknown): RetroName =>
   orDefault(isRetroName, "aero", value);
+
+/**
+ * Resolve the role a saved document carries to one this release's scale paints.
+ *
+ * A markdown node, a rich-text span or a restored inspector row stores the role
+ * it was written with, so a release that renames or drops a role hands the
+ * painter a name the union no longer carries. `textStyle` reads that name as
+ * `body` on its own; narrowing here is what keeps the *document's* intent —
+ * a heading stays the default body role only where the scale has nothing better
+ * to say, and the consumer knows which value it substituted.
+ */
+export const textRoleFromStoredChoice = (value: unknown): TextRole =>
+  orDefault(isTextRole, "body", value);

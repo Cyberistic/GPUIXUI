@@ -151,6 +151,14 @@ steps this identity ships and a variable face's `450` or a display role's `800`
 is a value a brand may set — the gate holds it finite, not to the shipped four
 (§9).
 
+A role name is **content**: a saved markdown node, a rich-text span or a
+restored inspector row carries the role it was written with, so `textRoles` is
+the ordered index and `isTextRole` narrows a stored value to one this release
+ships. `textStyle` reads a name the index does not carry as `body` — the rule the
+primitives' own `typeOf` follows — rather than the `TypeError` an `undefined`
+lookup threw mid-render; a theme that lost the role itself is the gate's
+business, not a second fallback (§9, `docs/tokens.md` §Typography).
+
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.

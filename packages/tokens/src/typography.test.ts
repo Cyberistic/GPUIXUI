@@ -1,18 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { typography, type FontWeight, type TextRole } from "./typography.js";
+import {
+  textRoles,
+  typography,
+  type FontWeight,
+  type TextRole,
+} from "./typography.js";
 
-const roles: readonly TextRole[] = [
-  "caption",
-  "label",
-  "body",
-  "bodyStrong",
-  "code",
-  "codeBlock",
-  "h3",
-  "h2",
-  "h1",
-  "display",
-];
+const roles: readonly TextRole[] = textRoles;
 
 const ascendingPairs = [
   ["caption", "label"],

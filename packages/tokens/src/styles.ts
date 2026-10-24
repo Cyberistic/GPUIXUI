@@ -9,7 +9,7 @@ import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
 import type { ControlSize } from "./scale.js";
 import type { Theme, ThemeContrast } from "./theme.js";
-import type { FontWeight, TextRole } from "./typography.js";
+import { isTextRole, type FontWeight, type TextRole } from "./typography.js";
 
 /** Text style properties accepted by GPUix's `StyleDesc`. */
 export interface TextStyleProperties {
@@ -39,6 +39,13 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
 /**
  * Resolve a typographic role to inline style properties.
  *
+ * A role name is content as often as a literal, so a name this release does not
+ * ship reads as `body` rather than a lookup that answers `undefined`: the first
+ * property read used to be `TypeError: Cannot read properties of undefined
+ * (reading 'fontSize')` in the middle of a render. Narrow a stored role with
+ * `isTextRole` before it reaches here; a theme that lost the role itself is the
+ * gate's business (`missingTokens` names it).
+ *
  * @example
  * ```tsx
  * <text style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}>
@@ -47,12 +54,13 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
  * ```
  */
 export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
-  const style = theme.typography[role];
+  const name = isTextRole(role) ? role : "body";
+  const style = theme.typography[name];
   return {
     fontSize: style.fontSize,
     lineHeight: style.lineHeight,
     fontWeight: style.fontWeight,
-    fontFamily: theme.typography[roleFamily[role]],
+    fontFamily: theme.typography[roleFamily[name]],
   };
 }
 

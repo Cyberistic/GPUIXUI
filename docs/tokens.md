@@ -756,6 +756,26 @@ import { textStyle } from "@gpuixui/tokens";
 </text>;
 ```
 
+A role name is **content before it is a literal**: a saved markdown node, a
+rich-text span or a restored inspector row carries the heading level it was
+written with, so a release that renames or drops a role hands the painter a string
+the union no longer names. `textRoles` is the ordered index of the ten roles in
+the table above, and `isTextRole` narrows a stored value to one this release
+ships. `textStyle` reads a name the index does not carry as **`body`**, so the run
+still paints at the base role instead of taking the window down — before, the
+lookup answered `undefined` and the first property read was `TypeError: Cannot
+read properties of undefined (reading 'fontSize')` mid-render. The
+`@gpuixui/primitives` seam (`typeOf`) follows the same rule. A **theme** that lost
+the role it names is a different absence: the gate refuses that theme by path
+(`missingTokens`, §Numbers), so nothing here guesses a second scale.
+
+```ts
+import { isTextRole, textStyle } from "@gpuixui/tokens";
+
+const role = isTextRole(node.role) ? node.role : "body";
+const style = textStyle(theme, role);
+```
+
 ### Platform styles
 
 `platformStyles` is the one place a platform is decided, and
@@ -4322,9 +4342,10 @@ diffable against shadcn. `override-scope.test.ts` reads both halves.
 
 ### Persisted choices
 
-Seven unions are choices a consumer stores — a settings row, a URL parameter, a
-saved workspace. Each has an **ordered index** and a guard that takes `unknown`,
-so a restored value neither needs the union retyped nor a cast:
+Eight unions are choices a consumer stores or carries — a settings row, a URL
+parameter, a saved workspace, the role a saved document was written with. Each
+has an **ordered index** and a guard that takes `unknown`, so a restored value
+neither needs the union retyped nor a cast:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -4335,13 +4356,14 @@ so a restored value neither needs the union retyped nor a cast:
 | density preset | `densityNames` | `isDensityName` |
 | control size | `controlSizes` | `isControlSize` |
 | status tone | `statusTones` | `isStatusTone` |
+| type role | `textRoles` | `isTextRole` |
 
 The unions derive from the indexes, so adding a mode, platform or tone is one
 edit at the owner and every consumer loop — including this package's own tests —
 covers it. The indexes are held to the data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
-density preset has a metric for every control size, and every tone has its own
-soft roles (`guards.test.ts`).
+density preset has a metric for every control size, every tone has its own soft
+roles and every type role is a key of the scale (`guards.test.ts`).
 
 ```ts
 import { getTheme, isThemeContrast, isThemeMode } from "@gpuixui/tokens";
@@ -4356,13 +4378,14 @@ const themeFromStored = (stored: {
   );
 ```
 
-`src/persisted-choices.example.ts` resolves all seven axes the same way, and
+`src/persisted-choices.example.ts` resolves all eight axes the same way, and
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
-an unknown pair keeps the light one.
+an unknown pair keeps the light one, and a document's dropped `subtitle` role
+reads as `body`.
 
-The **resolvers refuse** a value outside these indexes rather than answering
-around it — the sentence names the value, the values this release ships and the
-guard that prevents it:
+The **theme resolvers refuse** a value outside these indexes rather than
+answering around it — the sentence names the value, the values this release ships
+and the guard that prevents it:
 
 | Resolver | A value it does not ship once | Now |
 | -------- | ----------------------------- | --- |
@@ -4374,6 +4397,11 @@ guard that prevents it:
 
 `themeFromStored`, above, is the route that never throws: it narrows each axis
 before the resolver sees it.
+
+A **paint seam** is the one exception, and it is deliberate: `textStyle` is called
+mid-render, so it reads a role the scale does not carry as `body` instead of
+throwing and emptying the window (§Typography). Narrow a stored role with
+`isTextRole` where the caller can tell the reader what it substituted.
 
 ## React binding
 

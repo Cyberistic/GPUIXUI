@@ -7,7 +7,9 @@
  * so a settings row or a URL parameter had to retype the union or cast the value
  * (`AGENTS.md` §2 forbids the cast), and a suite that looped over `["light",
  * "dark"]` kept testing two variants after a third shipped. The authored looks
- * added a seventh axis — a stored look — on the same contract.
+ * added a seventh axis — a stored look — on the same contract, and the type
+ * scale's roles are the eighth: a saved document stores the role a run was
+ * written with, so the index and guard serve content as well as preferences.
  *
  * Two directions fail here: a guard that accepts something outside its index,
  * and an index that no longer matches the records it selects (a mode added to
@@ -33,11 +35,13 @@ import {
   themeModes,
   themes,
 } from "./theme.js";
+import { isTextRole, textRoles, typography } from "./typography.js";
 import {
   controlSizeFromStoredChoice,
   densityFromStoredChoice,
   lookFromStoredChoice,
   platformFromStoredChoice,
+  textRoleFromStoredChoice,
   themeFromStoredChoice,
   toneFromStoredChoice,
 } from "./persisted-choices.example.js";
@@ -57,6 +61,7 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isControlSize", guard: isControlSize, index: controlSizes },
   { name: "isStatusTone", guard: isStatusTone, index: statusTones },
   { name: "isRetroName", guard: isRetroName, index: retroNames },
+  { name: "isTextRole", guard: isTextRole, index: textRoles },
 ];
 
 /** Values no guard may accept, whatever its index holds. */
@@ -121,6 +126,23 @@ describe("indexes match the data they select", () => {
     expect(new Set(retroNames)).toEqual(new Set(Object.keys(retroStyles)));
   });
 
+  /**
+   * The type scale is the last name a component paints from, and its index is
+   * the scale's own keys minus the two families: a role the scale grew must be
+   * listed (the package's type check refuses it otherwise), a role it dropped
+   * must leave the index, and a family is not a role.
+   */
+  it("names every role of the type scale", () => {
+    const scaleRoles = Object.keys(typography).filter(
+      (key) => key !== "sans" && key !== "mono",
+    );
+
+    expect(new Set(textRoles)).toEqual(new Set(scaleRoles));
+    expect(textRoles).toHaveLength(scaleRoles.length);
+    expect(isTextRole("sans")).toBe(false);
+    expect(isTextRole("mono")).toBe(false);
+  });
+
   it("gives every density preset a metric for every control size", () => {
     densityNames.forEach((preset) => {
       expect(
@@ -163,6 +185,9 @@ describe("a stored choice resolves without a cast", () => {
     expect(platformFromStoredChoice("beos")).toBe("default");
     expect(lookFromStoredChoice("luna")).toBe("luna");
     expect(lookFromStoredChoice("aqua")).toBe("aero");
+    expect(textRoleFromStoredChoice("h2")).toBe("h2");
+    expect(textRoleFromStoredChoice("subtitle")).toBe("body");
+    expect(textRoleFromStoredChoice(3)).toBe("body");
     expect(toneFromStoredChoice(getTheme("dark"), "purple").background).toBe(
       statusTone(getTheme("dark"), "info").background,
     );

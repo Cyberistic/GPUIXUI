@@ -878,16 +878,19 @@ describe("the density override the pages teach", () => {
 });
 
 /**
- * The catalogue's Persisted choices section says the resolvers refuse a value
- * outside an index, and the claim is read back from the code that decides it:
- * the lookups answered `undefined` for a dropped mode, the **default** palette
- * for an unrecognised contrast (a restored `HIGH` silently losing its contrast),
- * and `Cannot read properties of undefined (reading 'contrast')` for a style the
- * release does not ship.
+ * The catalogue's Persisted choices section says the theme resolvers refuse a
+ * value outside an index, and the claim is read back from the code that decides
+ * it: the lookups answered `undefined` for a dropped mode, the **default**
+ * palette for an unrecognised contrast (a restored `HIGH` silently losing its
+ * contrast), and `Cannot read properties of undefined (reading 'contrast')` for
+ * a style the release does not ship. The type scale is the one axis whose paint
+ * seam is total instead — a role name is content, and throwing mid-render empties
+ * the window — so the page must say which rule each seam follows.
  */
 describe("the resolvers refuse an axis they do not ship", () => {
   const themeSource = read("./theme.ts");
   const retroSource = read("./retro.ts");
+  const stylesSource = read("./styles.ts");
 
   it("asks each axis's own guard before it resolves", () => {
     expect(themeSource).toContain("if (!isThemeMode(mode)) {");
@@ -900,7 +903,7 @@ describe("the resolvers refuse an axis they do not ship", () => {
     const flat = catalogue.replace(/\s+/g, " ");
 
     expect(flat).toContain(
-      "The **resolvers refuse** a value outside these indexes",
+      "The **theme resolvers refuse** a value outside these indexes",
     );
     [
       "isThemeMode",
@@ -912,7 +915,42 @@ describe("the resolvers refuse an axis they do not ship", () => {
       expect(flat, guard).toContain(guard);
     });
     expect(readme.replace(/\s+/g, " ")).toContain(
-      "The resolvers refuse a value outside an index",
+      "The theme resolvers refuse a value outside an index",
+    );
+  });
+
+  /**
+   * A stored role is the axis a **paint** seam reads, so the rule is the
+   * opposite one and the failure was the opposite too: the lookup answered
+   * `undefined`, and `textStyle` threw
+   * `TypeError: Cannot read properties of undefined (reading 'fontSize')` in the
+   * middle of a render — a document with one role this release renamed emptied
+   * the window. The page, the README and the design system each state the
+   * fallback, the guard, and the measured error it replaced; the source is held
+   * to the same sentence.
+   */
+  it("reads a stored role as the body role, and says so on every page", () => {
+    expect(stylesSource).toContain(
+      'const name = isTextRole(role) ? role : "body";',
+    );
+
+    const pages = [catalogue, readme, designSystem].map((page) =>
+      page.replace(/\s+/g, " "),
+    );
+
+    pages.forEach((page, index) => {
+      expect(page, `page ${index}`).toContain("`isTextRole`");
+      expect(page, `page ${index}`).toContain("`textRoles`");
+    });
+    expect(pages[0]).toContain(
+      "reads a name the index does not carry as **`body`**",
+    );
+    expect(pages[0]).toContain(
+      "Cannot read properties of undefined (reading 'fontSize')",
+    );
+    expect(pages[1]).toContain("is total on the name");
+    expect(pages[2]).toContain(
+      "reads a name the index does not carry as `body`",
     );
   });
 });

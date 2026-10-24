@@ -150,8 +150,8 @@ A complete, executed example lives in
 
 ## Persisted choices
 
-Seven axes are choices a consumer stores, and each has an ordered index beside a
-guard that takes `unknown`:
+Eight axes are choices a consumer stores or carries, and each has an ordered index
+beside a guard that takes `unknown`:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -162,14 +162,16 @@ guard that takes `unknown`:
 | density preset | `densityNames` | `isDensityName` |
 | control size | `controlSizes` | `isControlSize` |
 | status tone | `statusTones` | `isStatusTone` |
+| type role | `textRoles` | `isTextRole` |
 
 The unions derive from the indexes, so a settings row iterates the axis and a
 restored preference narrows without retyping the union or casting. Each index is
 held to the data it selects — every mode has both contrast variants, every
-platform a style, every look a style, every preset a metric per size — by
+platform a style, every look a style, every preset a metric per size, every type
+role a key of the scale — by
 [`src/guards.test.ts`](./src/guards.test.ts), and
 [`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
-all seven.
+all eight.
 
 ```ts
 import { getTheme, isThemeMode } from "@gpuixui/tokens";
@@ -178,14 +180,20 @@ const mode = isThemeMode(stored.mode) ? stored.mode : "light";
 const theme = getTheme(mode);
 ```
 
-The resolvers refuse a value outside an index instead of answering around it:
-`getTheme` names an unshipped mode (the lookup answered `undefined`) or contrast
-variant (it painted the default palette, so a restored `HIGH` lost its contrast),
-`platformTheme` and `retroTheme` name an unshipped style (the lookup threw
-`Cannot read properties of undefined (reading 'contrast')`), and
+The theme resolvers refuse a value outside an index instead of answering around
+it: `getTheme` names an unshipped mode (the lookup answered `undefined`) or
+contrast variant (it painted the default palette, so a restored `HIGH` lost its
+contrast), `platformTheme` and `retroTheme` name an unshipped style (the lookup
+threw `Cannot read properties of undefined (reading 'contrast')`), and
 `extendTheme`/`createTheme` name an unshipped density preset. Each message names
 the value, the values this release ships and the guard — narrowing first is the
 route that never throws.
+
+`textStyle` is a **paint** seam, so it is total on the name: a role the scale does
+not carry reads as `body` rather than throwing `Cannot read properties of
+undefined (reading 'fontSize')` mid-render, the rule `@gpuixui/primitives`' own
+`typeOf` follows. Narrow a stored role with `isTextRole` where the caller can tell
+the reader what it substituted.
 
 ## High contrast
 

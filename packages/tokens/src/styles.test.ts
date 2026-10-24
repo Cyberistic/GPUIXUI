@@ -35,6 +35,7 @@ import {
   themes,
 } from "./theme.js";
 import { controlSizes } from "./scale.js";
+import type { TextRole } from "./typography.js";
 
 const tones = statusTones;
 
@@ -80,6 +81,36 @@ describe("textStyle", () => {
     expect(controlHeight(compact, "md")).not.toBe(
       controlHeight(lightTheme, "md"),
     );
+  });
+
+  /**
+   * A role name is content before it is a literal: a saved markdown node, a
+   * rich-text span or a restored inspector row carries a heading level, and a
+   * release that renames or drops a role hands `textStyle` a string the union no
+   * longer names. The lookup answered `undefined`, so the first property read
+   * threw `TypeError: Cannot read properties of undefined (reading 'fontSize')`
+   * and took the window down mid-render. A role the scale does not carry reads as
+   * `body` — the rule `@gpuixui/primitives`' `typeOf` already follows — so the
+   * text still paints at the base role instead of painting nothing at all.
+   */
+  it("reads a role the scale does not carry as the body role", () => {
+    // The cast is the storage boundary: a document's role is unknown input.
+    const stored = JSON.parse('"subtitle"') as TextRole;
+
+    expect(textStyle(lightTheme, stored)).toEqual(
+      textStyle(lightTheme, "body"),
+    );
+    // The family follows the role that paints, not the name that arrived.
+    expect(textStyle(lightTheme, stored).fontFamily).toBe(
+      lightTheme.typography.sans,
+    );
+    // And a role the scale does carry is still its own.
+    expect(textStyle(lightTheme, "h1")).toEqual({
+      fontSize: lightTheme.typography.h1.fontSize,
+      lineHeight: lightTheme.typography.h1.lineHeight,
+      fontWeight: lightTheme.typography.h1.fontWeight,
+      fontFamily: lightTheme.typography.sans,
+    });
   });
 });
 

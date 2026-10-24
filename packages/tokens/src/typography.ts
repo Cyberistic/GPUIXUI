@@ -54,6 +54,54 @@ export interface Typography {
 /** A typographic role name, excluding the font family fields. */
 export type TextRole = Exclude<keyof Typography, "sans" | "mono">;
 
+/**
+ * The type roles in documentation order — largest to smallest, with the two mono
+ * roles last.
+ *
+ * A role name is content before it is a literal: a saved markdown node, a
+ * rich-text span or a restored inspector row carries one, so the index is what a
+ * consumer iterates and what {@link isTextRole} checks a restored value against.
+ */
+export const textRoles = [
+  "display",
+  "h1",
+  "h2",
+  "h3",
+  "body",
+  "bodyStrong",
+  "label",
+  "caption",
+  "code",
+  "codeBlock",
+] as const satisfies readonly TextRole[];
+
+/**
+ * A role the index does not list, as a build error.
+ *
+ * `TextRole` derives from `Typography`, so a role added to the scale is one edit
+ * away from shipping unlisted — and a role the index does not name is one
+ * `isTextRole` refuses and a consumer's loop never paints. The assignment below
+ * fails the package's type check with the missing role named.
+ */
+type EveryRoleListed<Listed extends TextRole> =
+  Exclude<TextRole, Listed> extends never
+    ? true
+    : ["a text role is missing from the index", Exclude<TextRole, Listed>];
+
+const roleIndex: EveryRoleListed<(typeof textRoles)[number]> = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void roleIndex;
+
+/**
+ * Narrow unknown input — a saved document's role, a stored inspector row — to a
+ * role of this release's type scale.
+ *
+ * The scale's own list is the membership test, so a role added to the scale is
+ * accepted without a second list to edit and a name a release dropped is refused.
+ */
+export const isTextRole = (value: unknown): value is TextRole =>
+  textRoles.some((role) => role === value);
+
 const text = (
   fontSize: number,
   lineHeight: number,
