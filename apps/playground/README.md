@@ -2553,16 +2553,16 @@ The option order is the measurement: `ada`, `grace`, a disabled `alan`, then
 | State | Measured |
 | ----- | -------- |
 | at rest | the trigger paints `Assign reviewer`, the readout is `value=none changes=0 presses=0`, and no list is in the tree |
-| one press on the trigger | the list paints one `4`px gap below the trigger on its start edge and the focus moves **into the search field** (`combobox-input`) |
+| one press on the trigger | the list paints one `4`px gap below the trigger on its start edge — read once the `200`ms entry has run, because a box read on the first paint is mid-tween — and the focus moves **into the search field** (`combobox-input`) |
 | typing `gr` | only `combobox-option-grace` paints; the other four rows are gone |
-| `Enter` | selects the highlighted match (`value=grace changes=1`), the trigger repaints `Grace Hopper`, the list unpaints and the focus returns to the trigger |
+| `Enter` | selects the highlighted match (`value=grace changes=1`), the trigger repaints `Grace Hopper`, the list stays painted for its exit window and then unpaints, and the focus returns to the trigger |
 | three `down`s then `Enter` | skips the disabled row and chooses `linus` (`value=linus changes=2`) |
 | typing `ala` | the disabled `Alan Turing` row paints; `Enter` changes nothing and leaves the list open |
-| `Escape` | closes the list, returns the focus to the trigger and leaves `linus` selected |
+| `Escape` | closes the list (its box leaves on the exit tween), returns the focus to the trigger and leaves `linus` selected |
 | typing `zzz` | no row paints and the empty slot reads `No matches` |
 | an outside press | reaches the control beside the list (`presses=1`) and dismisses it |
 
-27 checks, `--only combobox-lifecycle`, green on 0.11.0.
+28 checks, `--only combobox-lifecycle`, green on 0.11.0.
 
 One timing rule came out of it, and it is the component's, not the harness's:
 the arrow highlight is React state, so a key that acts on the highlight must
@@ -2578,6 +2578,13 @@ settle between the last arrow and `Enter` fails the same check with
 `got "value=grace changes=1"`. Also measured while building: the first outside
 control sat under the open list, so the press reached the list (`presses=0`);
 the target now sits beside the combobox.
+
+The popup's exit is the newest measurement. The list stays painted for its
+`normal` level after a choice, an `Escape` or an outside press, so the probe
+polls for the settled state (`settleGone`) instead of asserting the box is gone
+one paint later — measured on this box, a fixed `260`ms read still found the
+ghost, because the window's frames are slower than the runner's sleeps. The
+placement check above gained the matching fix for the entrance.
 
 Evidence: `.artifacts/live/combobox-open.png`,
 `.artifacts/live/combobox-filtered.png`, `.artifacts/live/combobox-selected.png`,

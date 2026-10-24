@@ -443,7 +443,11 @@ describe("Combobox", () => {
 
     picker.rerender(<Picker disabled onValueChange={onValueChange} />);
     await settle();
-    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    // The popup closes at once and is painted for its exit window, so the claim
+    // is that the box goes rather than that it has already gone.
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
 
     // Re-enabling brings no surface back on its own, and the trigger still
     // refuses while it is disabled.
@@ -665,7 +669,7 @@ describe("Combobox", () => {
 const frame = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 30));
 
-describe("the popup's entrance", () => {
+describe("the popup's entrance and exit", () => {
   it("travels down into place when it opens below its trigger", async () => {
     // The bugs this guards: a popup that pops into place while every other
     // anchored panel fades and travels, and a travel that points at the wrong
@@ -745,6 +749,90 @@ describe("the popup's entrance", () => {
     await frame();
 
     expect(requireBounds(picker, "combobox-content").y).toBe(first);
+    picker.unmount();
+  });
+
+  it("travels back out the side it opened at while it leaves", async () => {
+    // The bug this guards: the popup used to be GPUix's own content, which
+    // returns nothing the moment the root closes — so a combobox was the one
+    // floating surface that vanished while every other one ran its exit. The
+    // exit is the entrance's frames reversed: below its trigger the popup starts
+    // above its resting place and leaves the same 4px.
+    const picker = renderComponent(<Picker />);
+    picker.renderer.clockPause();
+    await open(picker);
+    picker.renderer.clockFastForward(400);
+    await frame();
+    const resting = requireBounds(picker, "combobox-content").y;
+
+    picker.renderer.simulateKeystrokes("escape");
+    await frame();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.renderer.clockFastForward(400);
+    await frame();
+    expect(requireBounds(picker, "combobox-content").y).toBe(resting - 4);
+    picker.renderer.clockResume();
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
+    picker.unmount();
+  });
+
+  it("keeps the rows it was showing while it leaves", async () => {
+    // The popup owns the query, and a close used to clear it in the same commit
+    // as the flag — so a surface kept for its exit would have flashed the
+    // unfiltered list it no longer matched, under the reader's own dismissal.
+    const picker = renderComponent(<Picker />);
+    await open(picker);
+    type(picker, "cam");
+    await settle();
+    expect(picker.renderer.getAllText()).toContain("Camera");
+
+    picker.renderer.simulateKeystrokes("escape");
+    await frame();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    const texts = picker.renderer.getAllText();
+    expect(texts).toContain("Camera");
+    expect(texts).not.toContain("Calendar");
+
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
+    picker.unmount();
+  });
+
+  it("does not answer a press in a dismissed popup", async () => {
+    // The pointer half: the popup stays painted for its exit while its own
+    // hitbox is gone, so the seam's shield is what stops a row's ghost selecting
+    // a value the reader has already dismissed.
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Picker onValueChange={onValueChange} />);
+    await open(picker);
+    await settle();
+
+    picker.renderer.simulateKeystrokes("escape");
+    await frame();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    clickCentreOf(picker, "combobox-option-camera");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
+    picker.unmount();
+  });
+
+  it("leaves at once under reduced motion", async () => {
+    const picker = renderComponent(
+      <MotionProvider preference="reduced">
+        <Picker />
+      </MotionProvider>,
+    );
+    await open(picker);
+    picker.renderer.simulateKeystrokes("escape");
+    await frame();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
     picker.unmount();
   });
 });

@@ -71,8 +71,21 @@ Combobox
 | `ComboboxItem` | `style` | `StateStyle<ComboboxItemState>` | recipe |
 | `ComboboxEmpty` | `children` | `ReactNode` | `No matches` |
 
+## Motion
+
+The popup enters and leaves on the house `normal` level: a fade plus 4px of
+travel from the side it opened at, the direction its entrance already used. It is
+the one floating surface whose box is ours rather than the runtime's
+`ComboboxContent`, which renders nothing the moment the root closes — so the
+component keeps the box mounted for its exit window, paints the seam's leaving
+guard over it, and stops it taking presses while it fades. The query is cleared
+once the box is gone, not when the flag closes, so a filtered list keeps the rows
+it was dismissed with instead of reflowing under the reader. `MotionProvider
+preference="reduced"` removes the journey: the box is gone in the frame it closes.
+
 ## Limitations
 
 - No group headers, and no fetching: a remote list is the caller's, through `onQueryChange`/`shouldFilter` (§Remote options).
 - Create-new is single-select and offered only when nothing matches.
 - No `aria-activedescendant`; `aria-selected` is the signal.
+- The rows a leaving popup shows are the runtime's list read with the query it was dismissed with, not a snapshot the component took: a caller that changes `options` during those 200 ms sees the change under the fade.

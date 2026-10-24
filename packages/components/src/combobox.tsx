@@ -16,7 +16,6 @@
 
 import {
   Combobox as HeadlessCombobox,
-  ComboboxContent as HeadlessContent,
   ComboboxEmpty as HeadlessEmpty,
   ComboboxInput as HeadlessInput,
   ComboboxItem as HeadlessItem,
@@ -30,6 +29,7 @@ import {
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import {
+  FloatingLayer,
   mergeStyles,
   resolveStyle,
   type FloatingContentProps,
@@ -87,7 +87,14 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { fadeFromAnchor, useSurfaceTiming } from "./internal/presence.js";
+import {
+  fadeFromAnchor,
+  PresenceShield,
+  presenceMotion,
+  presenceStyle,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -119,6 +126,8 @@ interface ComboboxContextValue {
   readonly isDisabled: (value: string) => boolean;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
+  /** Close the popup; a leaving one stays painted for its exit tween. */
+  readonly close: () => void;
   /** An outside press already moved focus, so do not restore it. */
   readonly noteOutsidePress: () => void;
 }
@@ -248,6 +257,33 @@ export const Combobox = ({
   const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
+  /**
+   * The label the runtime is about to write into the search field.
+   *
+   * A single selection is published as the label of the chosen option — the
+   * runtime's own `ComboboxInput` shows it — and that is not a query the reader
+   * typed. Storing it would re-filter the list the popup is leaving, and the
+   * written value comes back as a host change (which the runtime reads as a new
+   * search and reopens on). The write is recognised by the label the selection
+   * names and dropped, so the field keeps the query the reader dismissed with.
+   */
+  const labelWrite = useRef<Option.Option<string>>(Option.none());
+  // The popup's own presence: `open` publishes at once (the trigger stops
+  // claiming to be expanded and focus returns), while the box it painted stays
+  // mounted for its exit tween.
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
+
+  /**
+   * The query belongs to the box on screen, not to the flag: a leaving popup
+   * keeps the rows, the input and the create row the reader dismissed instead
+   * of flashing the unfiltered list on its way out. The next open clears it,
+   * because every open is a new search.
+   */
+  useLayoutEffect(() => {
+    if (presence.mounted) return;
+    setQuery("");
+  }, [presence.mounted]);
 
   // A remote list needs the query, not only the rows, and the caller's handler
   // is usually an inline closure over its own draft: keeping it in a ref lets
@@ -310,11 +346,11 @@ export const Combobox = ({
   // A popup already open when the caller disables the combobox closes with it:
   // the trigger refuses every route, so a surface left mounted paints rows no
   // press can choose. A layout effect retires it before the frame paints, and
-  // the query is dropped with it so re-enabling does not reopen on a stale one.
+  // the close path drops the query with the surface, so re-enabling does not
+  // reopen on a stale one.
   useLayoutEffect(() => {
     if (!disabled) return;
     setOpen(false);
-    setQuery("");
   }, [disabled]);
 
   /** Close, restoring focus only for the paths that should (Escape, select). */
@@ -336,9 +372,15 @@ export const Combobox = ({
     return pushDismissLayer((event) => {
       restoreFocus.current = event.eventType === "keyDown";
       setOpen(false);
-      setQuery("");
     }, depth);
   }, [depth, open]);
+
+  // The label write lands in the same event as the selection that names it; a
+  // commit that ends without one (a multi-select toggle) drops the marker, so a
+  // later keystroke is never mistaken for it.
+  useLayoutEffect(() => {
+    labelWrite.current = Option.none();
+  });
 
   return (
     <ComboboxContext.Provider
@@ -356,6 +398,7 @@ export const Combobox = ({
             (option) => option.disabled === true,
           ),
         trigger,
+        close: () => setOpen(false),
         registerTrigger: (instance) => {
           trigger.current = instance;
         },
@@ -368,10 +411,14 @@ export const Combobox = ({
         items={items}
         value={selected}
         onValueChange={(next) => {
+          // The label this selection publishes into the search field, recorded
+          // before the runtime writes it (`labelWrite`).
+          labelWrite.current = Option.fromNullishOr(
+            typeof next === "string" ? labelFor(next) : null,
+          );
           if (typeof next === "string" && isCreateRow(next)) {
             onCreate?.(createRowQuery(next));
             restoreFocus.current = true;
-            setQuery("");
             setOpen(false);
             return;
           }
@@ -381,8 +428,13 @@ export const Combobox = ({
         inputValue={query}
         onInputValueChange={(next) => {
           // GPUix writes the selected label into the input as it closes a
-          // single-select; that is not a query the user typed.
-          if (open) setQuery(next);
+          // single-select; that is not a query the user typed, so the field
+          // keeps the words the reader searched with.
+          const written = labelWrite.current;
+          labelWrite.current = Option.none();
+          if (!open) return;
+          if (Option.exists(written, (label) => label === next)) return;
+          setQuery(next);
         }}
         open={open}
         onOpenChange={(next) => {
@@ -393,7 +445,6 @@ export const Combobox = ({
             return;
           }
           setOpen(false);
-          setQuery("");
         }}
         multiple={multiple}
         disabled={disabled}
@@ -498,10 +549,15 @@ export interface ComboboxContentProps extends FloatingContentProps {
 }
 
 /**
- * The popup. It renders while the combobox is open, anchored by GPUix, and
- * arrives on the house entrance: a fade plus 4px of travel out from the side it
- * was asked to open at. There is no exit tween — the runtime's own content
- * unmounts the moment the root closes, so there is no box left to fade.
+ * The popup. It stays painted for its exit tween and travels out the way it
+ * arrived: a fade plus 4px of travel from the side it opened at.
+ *
+ * The box is ours rather than GPUix's `ComboboxContent`, because that part
+ * returns nothing the moment the root closes, so a popup built from it can enter
+ * but never leave. The runtime still owns the state — the rows, the ranking, the
+ * active row and every key are its context — so this part only paints the
+ * surface, keeps it mounted for its exit window, and stops it taking presses
+ * while it leaves.
  */
 export const ComboboxContent = ({
   side = "bottom",
@@ -517,32 +573,40 @@ export const ComboboxContent = ({
   ...rest
 }: ComboboxContentProps) => {
   const theme = useTheme();
-  const { noteOutsidePress, open, trigger } = useCombobox();
+  const { close, noteOutsidePress, open, trigger } = useCombobox();
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    open,
+    // The exit tween keeps the measured side, so a popup that flipped does not
+    // jump back while it fades out.
+    open: presence.mounted,
     side,
     align,
     margin: collisionPadding,
     trigger,
     surface,
   });
-  const timing = useSurfaceTiming("normal");
   assertParts(comboboxContent, children);
 
-  // The house entrance, entry only: GPUix's own `ComboboxContent` renders
-  // nothing while the root is closed, so there is no box to keep mounted for an
-  // exit tween. A surface's first motion frame is committed when its host
-  // mounts, one commit before the measured flip can move it, so the travel
-  // follows the side this popup was asked to open at; a popup the component
-  // flips above its trigger keeps the entrance its requested side owns
-  // (`behaviour/combobox.test.tsx`, "the popup's entrance").
+  // The box is on screen while the flag is open **or** while its exit window is
+  // still running. The open half is belt and braces over the seam's own
+  // layout-effect mount: it keeps the entry on the commit the flag changes,
+  // which is the frame the popup's first box is measured in.
+  if (!open && !presence.mounted) return null;
+
+  // A surface's first motion frame is committed when its host mounts, one commit
+  // before the measured flip can move it, so the travel follows the side this
+  // popup was asked to open at; a popup the component flips above its trigger
+  // keeps the entrance its requested side owns (`behaviour/combobox.test.tsx`,
+  // "the popup's entrance and exit").
   const frames = fadeFromAnchor(side, 4);
 
   return (
-    <HeadlessContent
+    <FloatingLayer
       testId="combobox-content"
+      motion={presenceMotion(frames, presence)}
       side={placement.side}
       align={placement.align}
       sideOffset={sideOffset}
@@ -550,25 +614,25 @@ export const ComboboxContent = ({
       collisionPadding={collisionPadding}
       ref={setSurface}
       {...rest}
-      motion={{
-        initial: frames.initial,
-        animate: frames.animate,
-        transition: timing.enter,
-      }}
       onMouseDownOutside={(event) => {
         noteOutsidePress();
         onMouseDownOutside?.(event);
+        close();
       }}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(COMBOBOX_CONTENT, className), theme), {
           maxHeight: 280,
           overflowY: "scroll",
+          // A positioned box is what the leaving guard is inset against.
+          position: "relative",
+          ...presenceStyle(presence.present),
         }),
         style,
       )}
     >
       <DismissScope>{children}</DismissScope>
-    </HeadlessContent>
+      <PresenceShield present={presence.present} />
+    </FloatingLayer>
   );
 };
 
@@ -797,7 +861,7 @@ export const comboboxMeta = {
     "create-new is single-select only, is offered when the query matches no option, and reports the query — the caller adds the option and owns the selection",
     "async is the caller's: onQueryChange reports each search and shouldFilter={false} paints the rows a remote search already chose and ranked; the component neither fetches nor debounces",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
-    "the popup has an entry tween only (a fade plus 4px out from its measured side): the runtime's ComboboxContent renders nothing while closed, so a closing popup cannot stay mounted for an exit",
+    "the popup is the one surface whose rows are the runtime's own list: it keeps them for its exit, so a dismissed popup fades in the state it was dismissed in rather than re-filtering under the reader",
   ],
   docs: "docs/combobox.mdx",
   example: "examples/combobox.example.tsx",

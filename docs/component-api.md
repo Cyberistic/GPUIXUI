@@ -510,7 +510,7 @@ the tree a level's window later.
 | Drawer | fade + 12px from its own edge | `slow` |
 | Popover, Dropdown menu, Context menu, submenu | fade + 8px / 4px from the trigger's (or row's) side | `normal` (200 ms) |
 | Navigation menu | fade + 4px out from its trigger's side | `normal` |
-| Combobox popup | fade + 4px out from the requested side (entry only; a flipped popup keeps its first frame) | `normal` |
+| Combobox popup | fade + 4px out from the requested side (a flipped popup keeps the first frame it mounted with; the rows it showed are kept for the exit) | `normal` |
 | Mention suggestions | fade + 4px out from its field's bottom (entry only) | `normal` |
 | Preview card | fade + 4px from the trigger's side | `fast` (160 ms) |
 | Toast | fade + a 16px rise in, then a fade + 16px slide to the right out | its own timing: 220 ms in, 180 ms out (`motionTimingOf`) |
