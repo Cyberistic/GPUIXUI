@@ -47,6 +47,11 @@ Drawer
     └── (close control)
 ```
 
+The close control is painted in the box around the surface's own scroller, not
+inside it, so a body longer than the drawer scrolls under the control instead of
+carrying the one visible way out of the panel (`src/behaviour/drawer.test.tsx`
+scrolls a 30-row body and holds the control's box).
+
 ## API
 
 | Part | Renders | Props |

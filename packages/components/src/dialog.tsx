@@ -254,6 +254,14 @@ export const DialogContent = ({
     ref,
   );
   const contentId = content?.id;
+  // The surface's outline: the scroller plus the box's own close control. The
+  // Tab trap and the keys belong here rather than to the scroller, because the
+  // close control sits outside it and must stay a stop and a way out.
+  const [outline, setOutline] = useState<PublicInstance | undefined>(undefined);
+  const outlineRef = useCallback((next: PublicInstance | null) => {
+    setOutline(next ?? undefined);
+  }, []);
+  const trapId = outline?.id ?? contentId;
   useModalFocus(contentId, initialFocus, open, restoreTarget);
 
   if (!presence.mounted) return null;
@@ -264,7 +272,7 @@ export const DialogContent = ({
   const close = () => setOpen(false);
 
   const handleKeyDown = (event: KeyEvent): void => {
-    handleModalKeyDown({ event, contentId, renderer, onKeyDown });
+    handleModalKeyDown({ event, contentId: trapId, renderer, onKeyDown });
   };
 
   const available = window.width - 2 * theme.spacing["3xl"];
@@ -292,8 +300,15 @@ export const DialogContent = ({
         )}
       >
         {/* The shield's box lives outside the surface's own scroller, so a
-            dialog scrolled down cannot carry the leaving guard off screen. */}
+            dialog scrolled down cannot carry the leaving guard off screen. The
+            close control lives here for the same reason. */}
         <div
+          ref={outlineRef}
+          onMouseDownOutside={(event) => {
+            onMouseDownOutside?.(event);
+            dismissTopLayer(event);
+          }}
+          onKeyDown={handleKeyDown}
           style={{
             position: "relative",
             display: "flex",
@@ -308,11 +323,6 @@ export const DialogContent = ({
             ref={setContentElement}
             testId={testId}
             motion={presenceMotion(fadeFrom("top", 8), presence)}
-            onMouseDownOutside={(event) => {
-              onMouseDownOutside?.(event);
-              dismissTopLayer(event);
-            }}
-            onKeyDown={handleKeyDown}
             style={mergeStyles(
               mergeStyles(
                 overlaySurfaceStyle(DIALOG_CONTENT, className, theme, "lg"),
@@ -331,22 +341,29 @@ export const DialogContent = ({
             )}
           >
             <DismissScope>{children}</DismissScope>
-            {showClose ? (
+          </div>
+          {showClose ? (
+            // The motion's travel is written to `top`, so the placement lives
+            // on the wrapper and the control rides it.
+            <div
+              style={{
+                position: "absolute",
+                top: theme.spacing.lg,
+                right: theme.spacing.lg,
+                display: "flex",
+              }}
+            >
               <IconButton
                 label="Close"
                 size="sm"
                 testId="dialog-close"
                 onClick={close}
-                style={{
-                  position: "absolute",
-                  top: theme.spacing.lg,
-                  right: theme.spacing.lg,
-                }}
+                motion={presenceMotion(fadeFrom("top", 8), presence)}
               >
                 <Icon name="x" size="sm" color={theme.colors.foreground} />
               </IconButton>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
           <PresenceShield present={presence.present} />
         </div>
       </div>

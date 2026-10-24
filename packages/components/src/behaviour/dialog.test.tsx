@@ -33,6 +33,7 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  settle,
   settleMotion,
   waitFor,
 } from "../internal/interaction.js";
@@ -313,6 +314,51 @@ describe("Dialog", () => {
     clickCentreOf(dialog, "open");
     clickCentreOf(dialog, "dialog-close");
 
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
+
+    dialog.unmount();
+  });
+
+  it("keeps its close control outside the body's scroller", async () => {
+    // The bug this guards: the control was painted inside the surface's own
+    // `overflow: "scroll"` box, so a body longer than the dialog carried the
+    // one visible way out off the top of the surface (measured in a window at
+    // 44 at rest and −932 at the body's clamped end).
+    const LongDialog = () => (
+      <div style={{ display: "flex", padding: 20 }}>
+        <Dialog defaultOpen>
+          <DialogContent label="Long body" testId="dialog">
+            <DialogHeader>
+              <DialogTitle>Thirty rows</DialogTitle>
+            </DialogHeader>
+            {Array.from({ length: 30 }, (_, index) => (
+              <div key={index} style={{ height: 40 }}>
+                <text>{`row ${index}`}</text>
+              </div>
+            ))}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+    const dialog = renderComponent(<LongDialog />);
+    settleMotion(dialog);
+
+    const surface = requireBounds(dialog, "dialog");
+    const rest = requireBounds(dialog, "dialog-close");
+
+    dialog.renderer.scrollTo(
+      dialog.renderer.findByTestId("dialog")?.id ?? -1,
+      0,
+      -400,
+    );
+    settle(dialog);
+
+    expect(requireBounds(dialog, "dialog")).toEqual(surface);
+    expect(requireBounds(dialog, "dialog-close")).toEqual(rest);
+    // The way out still works from where the reader scrolled to.
+    clickCentreOf(dialog, "dialog-close");
     await waitFor(() =>
       expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
     );

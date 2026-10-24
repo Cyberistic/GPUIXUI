@@ -27,6 +27,7 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  settle,
   settleMotion,
   waitFor,
 } from "../internal/interaction.js";
@@ -172,6 +173,47 @@ describe("Drawer", () => {
 
     drawer.renderer.simulateKeystrokes("shift-tab");
     expect(focusedTestId(drawer)).toEqual(Option.some("drawer-close"));
+
+    drawer.unmount();
+  });
+
+  it("keeps its close control outside the body's scroller", async () => {
+    // The same bug the Dialog guards: the control was painted inside the
+    // surface's `overflow: "scroll"` box, so a long body scrolled the one
+    // visible way out of the panel.
+    const LongDrawer = () => (
+      <Drawer defaultOpen>
+        <DrawerContent label="Long body" testId="drawer" side="right">
+          <DrawerHeader>
+            <DrawerTitle>Thirty rows</DrawerTitle>
+          </DrawerHeader>
+          {Array.from({ length: 30 }, (_, index) => (
+            <div key={index} style={{ height: 40 }}>
+              <text>{`row ${index}`}</text>
+            </div>
+          ))}
+        </DrawerContent>
+      </Drawer>
+    );
+    const drawer = renderComponent(<LongDrawer />);
+    settleMotion(drawer);
+
+    const surface = requireBounds(drawer, "drawer");
+    const rest = requireBounds(drawer, "drawer-close");
+
+    drawer.renderer.scrollTo(
+      drawer.renderer.findByTestId("drawer")?.id ?? -1,
+      0,
+      -400,
+    );
+    settle(drawer);
+
+    expect(requireBounds(drawer, "drawer")).toEqual(surface);
+    expect(requireBounds(drawer, "drawer-close")).toEqual(rest);
+    clickCentreOf(drawer, "drawer-close");
+    await waitFor(() =>
+      expect(drawer.renderer.findByTestId("drawer")).toBeUndefined(),
+    );
 
     drawer.unmount();
   });

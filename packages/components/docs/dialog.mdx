@@ -50,6 +50,11 @@ Dialog
     └── (close control)
 ```
 
+The close control is painted in the box around the surface's own scroller, not
+inside it, so a body longer than the dialog scrolls under the control instead of
+carrying the one visible way out of the surface (`src/behaviour/dialog.test.tsx`
+scrolls a 30-row body and holds the control's box).
+
 ## API
 
 | Part | Prop | Type | Default |
