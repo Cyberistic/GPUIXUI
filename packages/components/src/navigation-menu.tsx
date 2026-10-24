@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * NavigationMenu: a horizontal nav whose items open one anchored panel.
  *

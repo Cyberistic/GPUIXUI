@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ColorPicker: discrete swatches and a HEX field.
  *

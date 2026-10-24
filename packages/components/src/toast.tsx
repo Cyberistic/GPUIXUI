@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The toast system's public surface: one provider, one hook, one viewport.
  *

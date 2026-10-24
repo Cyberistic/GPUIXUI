@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The frame every decorative field shares.
  *

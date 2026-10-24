@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The containment depth an overlay surface carries into the dismiss stack.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Button` and `IconButton`: this package's names for the one styled action.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The toast viewport: a paint-order stack in the bottom-right corner.
  *

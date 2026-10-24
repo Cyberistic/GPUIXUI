@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Alert: a persistent, in-flow message about the current context.
  *

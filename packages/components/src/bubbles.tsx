@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Bubbles: a decorative field of bubbles rising through a clipped box.
  *

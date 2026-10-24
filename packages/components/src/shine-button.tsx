@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ShineButton: a sheen that travels across the action while it is hovered.
  *

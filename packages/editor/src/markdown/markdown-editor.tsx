@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `MarkdownEditor`: markdown **source** on the left and its rendered preview on
  * the right, with a source-only and a preview-only view.

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Keyboard shortcuts: a cheat sheet of chords, rendered as keycaps.
  *

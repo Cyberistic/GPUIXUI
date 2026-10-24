@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * HighlightText: a phrase with a marker wash that sweeps across its matches.
  *

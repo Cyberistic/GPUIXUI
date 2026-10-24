@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MotionGrid: a grid whose cells travel to their new slots when the order
  * changes.

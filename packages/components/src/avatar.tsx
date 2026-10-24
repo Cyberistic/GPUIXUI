@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Avatar`: a person or entity, as a picture with an initials fallback.
  *

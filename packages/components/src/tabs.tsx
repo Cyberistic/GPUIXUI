@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Tabs: a roving-focus tab list and the panels it switches.
  *

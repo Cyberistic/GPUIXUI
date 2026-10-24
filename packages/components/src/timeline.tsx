@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Timeline: a read-only rail of events.
  *

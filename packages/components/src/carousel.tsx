@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Carousel: discrete slide stepping, with an animated selection indicator.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MessageScroller: follow new content while the reader is at the end, and leave
  * them alone when they are not.

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Badge: a short status label.
  *

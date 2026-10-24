@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ToastProvider: the one place where the toast store meets React.
  *

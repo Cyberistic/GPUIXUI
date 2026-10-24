@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * PinnedList: a sectioned scroll region whose section headers stay on screen.
  *

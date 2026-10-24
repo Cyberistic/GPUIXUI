@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `CropArea`: a picture with a draggable crop hole and a painted mask.
  *

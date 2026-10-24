@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The menu surface's shared appearance and keyboard rules.
  *

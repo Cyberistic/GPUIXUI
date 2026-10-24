@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * RotatingText: one line whose phrase changes on a timer.
  *

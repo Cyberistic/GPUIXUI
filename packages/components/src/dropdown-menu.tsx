@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * DropdownMenu: a list of actions anchored to the control that opened it.
  *

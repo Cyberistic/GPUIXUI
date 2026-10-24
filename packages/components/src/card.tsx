@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Card: a bounded surface that groups related content.
  *

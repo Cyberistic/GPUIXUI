@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Field: the label, control and message block around one input.
  *

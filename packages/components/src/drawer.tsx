@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Drawer: a modal panel anchored to a window edge.
  *

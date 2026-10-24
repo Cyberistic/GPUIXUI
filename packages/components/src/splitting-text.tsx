@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * SplittingText: a headline that arrives unit by unit.
  *

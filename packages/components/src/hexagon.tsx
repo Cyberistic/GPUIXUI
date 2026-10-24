@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Hexagon: a flat-top hexagon grid generated for the box it fills.
  *

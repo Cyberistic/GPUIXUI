@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ConfirmDialog: the safety workflow, not a styled box.
  *

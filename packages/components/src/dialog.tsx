@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Dialog: a modal surface that takes the window until it is dismissed.
  *

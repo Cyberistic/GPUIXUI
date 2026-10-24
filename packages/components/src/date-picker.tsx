@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * DatePicker: one day, chosen from a month grid in a popover.
  *

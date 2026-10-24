@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Popover: a floating panel anchored to the control that opened it.
  *

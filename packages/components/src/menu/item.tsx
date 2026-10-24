@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Menu rows: an action, a checkbox action, a separator, a group and a label.
  *

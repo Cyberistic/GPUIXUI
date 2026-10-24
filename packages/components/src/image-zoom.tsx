@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ImageZoom: a picture that magnifies under the pointer and pans with it.
  *

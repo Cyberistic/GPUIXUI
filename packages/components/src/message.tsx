@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Message: one row of a conversation (plan 207).
  *

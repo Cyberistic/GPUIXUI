@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * List and ListItem: a vertical collection of rows, optionally single- or
  * multi-selectable with a roving tab stop.

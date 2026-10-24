@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * HotkeyRecorder: bind a keyboard chord to an action.
  *

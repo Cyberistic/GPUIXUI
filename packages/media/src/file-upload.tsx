@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `FileUpload`: a queue of files, each with a lifecycle, progress, retry and
  * remove.

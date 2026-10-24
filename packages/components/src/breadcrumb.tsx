@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Breadcrumb: the trail to the current page, with an optional collapsed middle.
  *

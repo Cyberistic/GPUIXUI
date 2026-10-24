@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * AvatarGroup: a facepile — overlapping avatars plus the count it stands for.
  *

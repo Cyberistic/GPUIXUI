@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Particles: a decorative field of drifting motes.
  *

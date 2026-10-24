@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ThemeToggler: the control that switches the application between its light and
  * dark theme.

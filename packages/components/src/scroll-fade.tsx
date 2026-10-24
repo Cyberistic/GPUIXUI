@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ScrollFade: a scroll box that fades its top and bottom edges while there is
  * more content beyond them.

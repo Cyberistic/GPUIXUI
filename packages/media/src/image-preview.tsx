@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `ImagePreview`: an `<img>` surface with a loading state, an error state, a
  * caption and a pointer zoom.

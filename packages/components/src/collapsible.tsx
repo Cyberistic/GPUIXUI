@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Collapsible: one section that reveals its content on demand.
  *

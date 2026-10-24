@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * EmptyState: the "nothing here yet" panel for a list, table or panel.
  *

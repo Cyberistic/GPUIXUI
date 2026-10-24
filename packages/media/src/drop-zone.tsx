@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `DropZone`: a labelled area that accepts an OS file drop and offers a pick.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * GravityStars: a decorative field of stars falling toward a seeded well.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The one way a behaviour suite renders: the real GPUix test renderer, under one
  * theme, at a fixed window size so bounds assertions are stable (plan 110 §10).

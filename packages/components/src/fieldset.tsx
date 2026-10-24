@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Fieldset: a named group of fields.
  *

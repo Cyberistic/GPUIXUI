@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The motion preference: one provider, one hook.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * GradientText: a phrase painted as a colour ramp.
  *

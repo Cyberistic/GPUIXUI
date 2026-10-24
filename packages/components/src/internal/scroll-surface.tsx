@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The measured scroll box behind `ScrollProgress` and `ScrollFade`.
  *

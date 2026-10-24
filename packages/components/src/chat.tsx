@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Chat: the conversation scaffold (plan 207).
  *

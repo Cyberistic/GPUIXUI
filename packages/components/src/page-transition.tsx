@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * PageTransition: one region that swaps between views on the house entrance.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * SlidingNumber: a number whose digits roll into place like a mechanical counter.
  *

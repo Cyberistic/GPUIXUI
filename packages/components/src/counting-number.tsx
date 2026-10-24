@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CountingNumber: a number that counts to its value instead of jumping.
  *

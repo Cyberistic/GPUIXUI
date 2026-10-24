@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Gradient: a two-stop gradient surface that breathes between two ramps.
  *

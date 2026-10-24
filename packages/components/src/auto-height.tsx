@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * AutoHeight: a reveal that grows to what its content measures.
  *

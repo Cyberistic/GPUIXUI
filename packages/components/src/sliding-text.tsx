@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Sliding text: a value that slides horizontally into place when it changes.
  *

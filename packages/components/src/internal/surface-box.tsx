@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The box a pointer is read against, kept fresh when a layout above moves it.
  *

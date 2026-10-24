@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CodeBlock: source, terminal output or a log, highlighted by `@tanstack/highlight`.
  *

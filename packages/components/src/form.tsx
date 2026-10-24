@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Form: schema validation and the submit lifecycle around a group of fields.
  *

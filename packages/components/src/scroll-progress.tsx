@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ScrollProgress: a reading line over a scroll box, at the fraction the reader
  * has travelled.

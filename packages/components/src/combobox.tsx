@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Combobox: a searchable single- or multi-select built on GPUix's headless
  * combobox, with our own ranking from `combobox/logic.ts`.

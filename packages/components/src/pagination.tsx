@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Pagination: previous/next controls around a stable-width page window.
  *

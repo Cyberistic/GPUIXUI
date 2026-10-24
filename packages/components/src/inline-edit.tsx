@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * InlineEdit: rename a value where it is displayed.
  *

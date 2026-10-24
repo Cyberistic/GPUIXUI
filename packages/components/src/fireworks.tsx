@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Fireworks: a decorative field of small bursts.
  *

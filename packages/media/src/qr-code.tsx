@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `QrCode`: a QR symbol painted from the package's own encoder.
  *

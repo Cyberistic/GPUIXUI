@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CopyButton: the press that asks the application to copy something.
  *

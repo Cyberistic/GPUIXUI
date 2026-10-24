@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * TimePicker: one time of day, entered as an `HH:mm` hour and minute segment.
  *

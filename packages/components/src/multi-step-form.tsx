@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `MultiStepForm`: a wizard shell over the shipped `Stepper`, with a gate on
  * every step and a submit that only the last step offers.

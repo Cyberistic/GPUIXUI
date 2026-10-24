@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * SearchInput: a single-line search field with a clear affordance.
  *

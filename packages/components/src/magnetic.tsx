@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Magnetic: content that leans toward the pointer while it is over the surface.
  *

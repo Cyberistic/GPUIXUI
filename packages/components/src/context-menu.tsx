@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ContextMenu: the shared menu rows, positioned at the pointer.
  *

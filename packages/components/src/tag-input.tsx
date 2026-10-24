@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * TagInput: a set of tokens entered through a field.
  *

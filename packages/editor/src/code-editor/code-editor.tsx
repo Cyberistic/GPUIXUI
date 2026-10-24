@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CodeEditor: a real `<textarea>` with a read-only highlight layer behind it.
  *

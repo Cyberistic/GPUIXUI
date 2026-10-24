@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * DiffViewer: two sources compared into a unified or split diff.
  *

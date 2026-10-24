@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Glyph: a wall of characters generated for the box it fills.
  *

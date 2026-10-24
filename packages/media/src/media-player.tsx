@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `MediaPlayer`: a clip's frames and a transport, composed from what this
  * runtime actually gives a player.

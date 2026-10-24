@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The motion seam: how a surface enters and leaves.
  *

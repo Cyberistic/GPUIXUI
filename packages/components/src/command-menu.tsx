@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CommandMenu: a searchable action list inside the dialog.
  *

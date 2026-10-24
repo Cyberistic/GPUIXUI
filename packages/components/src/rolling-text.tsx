@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * RollingText: a value that rolls vertically from the old one to the new one.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * RippleButton: an action whose press spreads a wash from the pointer.
  *

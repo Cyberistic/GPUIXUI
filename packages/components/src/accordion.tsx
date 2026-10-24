@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Accordion: stacked sections where one — or several — can be open.
  *

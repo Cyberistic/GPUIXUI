@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * PreviewCard: a rich card shown on hover, or on a press.
  *

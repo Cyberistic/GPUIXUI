@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Reveal: content that fades and travels into place when it is shown.
  *

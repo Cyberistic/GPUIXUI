@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The shared submenu parts: one secondary level behind a menu row.
  *
