@@ -24,13 +24,41 @@ import { HotkeyRecorder } from "@gpuixui/components";
 | `label` | `string` | — |
 | `value` | `string \| null` | `null` |
 | `onChange` | `(value: string \| null) => void` | — |
+| `onRecordingChange` | `(recording: boolean) => void` | — |
 | `placeholder` | `string` | `"Click to record"` |
 | `disabled` | `boolean` | `false` |
 | `style` | `StateStyle<HotkeyRecorderState>` | — |
 | `className` | `string` | — |
 
+## Gating your own bindings
+
+A recorded key is swallowed with `preventDefault`, which removes the element's
+default action — **not** the window's. GPUix still delivers the key to an
+application-level `onKeyDown`, measured by the playground's
+`hotkey-recorder-lifecycle` probe (`window=shift,k` on the press that stored
+`Mod+Shift+K`), so the app owns the gate:
+
+```tsx
+const [recording, setRecording] = useState(false);
+
+<AppShell
+  onKeyDown={(event) => {
+    if (recording) return;
+    dispatchShortcut(event);
+  }}
+>
+  <HotkeyRecorder
+    label="Toggle command palette"
+    value={hotkey}
+    onChange={setHotkey}
+    onRecordingChange={setRecording}
+  />
+</AppShell>;
+```
+
 ## Limitations
 
-- A recorded key is swallowed; the app's own binding does not fire.
+- `preventDefault` stops the element's default action; the key still reaches an application-level handler, so gate your own bindings on `onRecordingChange`.
+- A chord the operating system intercepts before the window never arrives.
 - Clearing is a control, not `Backspace`.
 - No conflict detection against already-bound chords.

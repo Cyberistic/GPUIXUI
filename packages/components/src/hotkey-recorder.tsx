@@ -32,7 +32,7 @@ import {
   normalizeHotkey,
   toTanstackPlatform,
 } from "@gpuixui/keyboard";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   activationHandlers,
   isActivation,
@@ -61,6 +61,13 @@ export interface HotkeyRecorderProps extends Omit<
   readonly value?: string | null;
   /** A captured chord, or `null` when cleared. */
   readonly onChange: (value: string | null) => void;
+  /**
+   * Reports the armed state as it changes, so a caller can suspend its own
+   * bindings while the recorder listens. `preventDefault` removes the element's
+   * default action, not the window's: a key pressed while recording is still
+   * delivered to an application-level handler, so the gate is the caller's.
+   */
+  readonly onRecordingChange?: (recording: boolean) => void;
   /** Shown while no chord is bound. Default `"Click to record"`. */
   readonly placeholder?: string;
   readonly disabled?: boolean;
@@ -81,6 +88,7 @@ export const HotkeyRecorder = ({
   label,
   value = null,
   onChange,
+  onRecordingChange,
   placeholder = "Click to record",
   disabled = false,
   className,
@@ -99,6 +107,16 @@ export const HotkeyRecorder = ({
   // A chord capture owns the keyup that follows it: Space is a chord while
   // recording, not the other half of an activation.
   const captured = useRef(false);
+  // The armed state is reported on a transition only, through a ref so a caller
+  // passing an inline callback is not called again on every render.
+  const report = useRef(onRecordingChange);
+  report.current = onRecordingChange;
+  const wasRecording = useRef(false);
+  useEffect(() => {
+    if (wasRecording.current === recording) return;
+    wasRecording.current = recording;
+    report.current?.(recording);
+  }, [recording]);
 
   const start = (): void => {
     if (disabled) return;
@@ -137,7 +155,10 @@ export const HotkeyRecorder = ({
         onKeyDown?.(event);
         if (disabled) return;
         if (recording) {
-          // A recorded chord must not also reach the application or the system.
+          // The element's default action is refused; the key still reaches an
+          // application-level handler (the `hotkey-recorder-lifecycle` probe
+          // measured `window=shift,k`), which is why the armed state is
+          // reported and the caller gates its own bindings.
           event.preventDefault();
           captured.current = true;
           if (isDismiss(event)) {
@@ -221,7 +242,7 @@ export const hotkeyRecorderMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "a recorded key is swallowed with preventDefault, so it does not also run the application's binding; a chord the operating system intercepts before the window still fires",
+    "a recorded key is swallowed with preventDefault, so the element's default does not also run — but the key still reaches an application-level handler, so an app suspends its own bindings while `onRecordingChange` reports the recorder armed (the `hotkey-recorder-lifecycle` probe measured the app handler still hearing the chord); a chord the operating system intercepts before the window still fires",
     "clearing is a control, not Backspace: the test renderer emits no key event for Backspace/Delete",
     "mod is the platform's primary modifier; a secondary modifier keeps its own token",
   ],

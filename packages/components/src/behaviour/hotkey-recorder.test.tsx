@@ -10,7 +10,11 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { HotkeyRecorder } from "../hotkey-recorder.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  waitFor,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -19,10 +23,12 @@ const Harness = ({
   initial = null,
   disabled = false,
   onChange,
+  onRecordingChange,
 }: {
   readonly initial?: string | null;
   readonly disabled?: boolean;
   readonly onChange?: (value: string | null) => void;
+  readonly onRecordingChange?: (recording: boolean) => void;
 }) => {
   const [value, setValue] = useState<string | null>(initial);
   return (
@@ -36,6 +42,7 @@ const Harness = ({
           setValue(next);
           onChange?.(next);
         }}
+        onRecordingChange={onRecordingChange}
       />
       <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
         Elsewhere
@@ -206,5 +213,75 @@ describe("HotkeyRecorder", () => {
       lightTheme.colors.border,
     );
     light.unmount();
+  });
+
+  // The bug this guards: the page and the meta promised that a recorded key
+  // never ran the app's own binding, while `preventDefault` removes only the
+  // element's default action — an app-level handler still hears the chord, so
+  // it needs a signal to gate its bindings while the recorder listens.
+  it("reports the armed state as it changes", async () => {
+    const onRecordingChange = vi.fn();
+    const recorder = renderComponent(
+      <Harness onRecordingChange={onRecordingChange} />,
+    );
+    try {
+      expect(onRecordingChange).not.toHaveBeenCalled();
+
+      clickCentreOf(recorder, "recorder");
+      await waitFor(() =>
+        expect(onRecordingChange).toHaveBeenLastCalledWith(true),
+      );
+
+      recorder.renderer.simulateKeystrokes("ctrl-shift-k");
+      await waitFor(() =>
+        expect(onRecordingChange).toHaveBeenLastCalledWith(false),
+      );
+      expect(onRecordingChange).toHaveBeenCalledTimes(2);
+    } finally {
+      recorder.unmount();
+    }
+  });
+
+  it("reports the armed state when a recording is cancelled", async () => {
+    const onRecordingChange = vi.fn();
+    const recorder = renderComponent(
+      <Harness onRecordingChange={onRecordingChange} />,
+    );
+    try {
+      clickCentreOf(recorder, "recorder");
+      await waitFor(() =>
+        expect(onRecordingChange).toHaveBeenLastCalledWith(true),
+      );
+
+      recorder.renderer.simulateKeystrokes("escape");
+      await waitFor(() =>
+        expect(onRecordingChange).toHaveBeenLastCalledWith(false),
+      );
+    } finally {
+      recorder.unmount();
+    }
+  });
+
+  // The measured answer the docs now teach: the key a recorder captures still
+  // reaches a handler above it, so the app's gate is what keeps a binding from
+  // firing.
+  it("lets an application-level handler hear a recorded chord", () => {
+    const onAppKey = vi.fn();
+    const recorder = renderComponent(
+      <div onKeyDown={onAppKey}>
+        <Harness />
+      </div>,
+    );
+    try {
+      clickCentreOf(recorder, "recorder");
+      recorder.renderer.focusElement(
+        recorder.renderer.findByTestId("recorder")?.id ?? -1,
+      );
+      recorder.renderer.simulateKeystrokes("ctrl-shift-k");
+
+      expect(onAppKey).toHaveBeenCalled();
+    } finally {
+      recorder.unmount();
+    }
   });
 });
