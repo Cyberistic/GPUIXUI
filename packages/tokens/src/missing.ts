@@ -100,6 +100,26 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
 /**
+ * A stored **nested** scale as the record its steps are read from.
+ *
+ * A numeric group is not the only place a theme keeps a scale: `density` holds
+ * two of them (`controlHeight`, `controlPaddingX`), and a type role is a record
+ * of three numbers. A store can lose one of those records the way it loses a
+ * group — JSON writes `null`, a hand-edited theme drops the key, an export
+ * writes a string where the record belongs — and the reports walk the steps a
+ * theme carries, so a value that is not a record carries none: the gate names
+ * the absent steps by path ({@link missingTokens}), and the report reads through
+ * this predicate instead of `Object.entries(undefined)` or `[size]` on `null`.
+ *
+ * The predicate narrows without a cast, which is why it is a guard rather than a
+ * reader: `invalidNumbers` and `invalidScales` index the record it matched.
+ */
+export const isStepRecord = (
+  scale: unknown,
+): scale is Readonly<Record<string, unknown>> =>
+  typeof scale === "object" && scale !== null && !Array.isArray(scale);
+
+/**
  * A stored value as a group source: the object it is, or an empty one when the
  * store wrote no theme at all. `missingTokens` is the report a caller runs
  * **before** it trusts a decoded value, so a `null` (no saved theme), a string

@@ -1351,6 +1351,109 @@ describe("a theme that lost a whole numeric group", () => {
   });
 });
 
+describe("a control-size scale the theme does not carry", () => {
+  // The bug this guards: `density` is not one scale but a record of two —
+  // `controlHeight` and `controlPaddingX` — and the report read them straight
+  // off the group (`density.controlHeight[size]`,
+  // `Object.entries(density.controlPaddingX)`), so a stored theme whose density
+  // record lost one — JSON writes `null` where a theme never carried it, a
+  // hand-edited theme drops the key, an export writes a string where the record
+  // belongs — threw `TypeError: Cannot read properties of undefined (reading
+  // 'sm')` and `Cannot convert undefined or null to object` out of the report.
+  // Every other scale walks only the steps a theme carries and leaves the
+  // absence to the gate's named refusal (`missingTokens`); these two did not.
+  const lostScale = (
+    metric: "controlHeight" | "controlPaddingX",
+    shape: "dropped" | "nulled" | "string",
+  ): Theme => {
+    const { [metric]: _gone, ...rest } = lightTheme.density;
+    const density =
+      shape === "dropped"
+        ? rest
+        : { ...rest, [metric]: shape === "nulled" ? null : "md" };
+
+    return { ...lightTheme, density } as unknown as Theme;
+  };
+  const metrics = ["controlHeight", "controlPaddingX"] as const;
+  const shapes = ["dropped", "nulled", "string"] as const;
+
+  it("skips the scale it cannot read, instead of throwing", () => {
+    metrics.forEach((metric) =>
+      shapes.forEach((shape) => {
+        const stored = lostScale(metric, shape);
+
+        expect(invalidNumbers(stored), `${metric} ${shape}`).toEqual([]);
+        // The direction the report is *not*: the runtime's own TypeError.
+        expect(() => invalidNumbers(stored), `${metric} ${shape}`).not.toThrow(
+          TypeError,
+        );
+      }),
+    );
+  });
+
+  it("names every step of the lost scale as the gate's refusal", () => {
+    metrics.forEach((metric) => {
+      expect(() => auditTheme(lostScale(metric, "dropped"))).toThrow(
+        `\`density.${metric}.sm\``,
+      );
+      expect(() => auditTheme(lostScale(metric, "nulled"))).toThrow(
+        `\`density.${metric}.md\``,
+      );
+    });
+  });
+
+  it("still reports the scale the theme carries beside the one it lost", () => {
+    // The skip is per scale, not per group: a control height under the press
+    // floor is still the report it was while the padding scale is gone.
+    const stored = {
+      ...lostScale("controlPaddingX", "dropped"),
+      density: {
+        ...lightTheme.density,
+        controlPaddingX: undefined,
+        controlHeight: { sm: 20, md: 32, lg: 36 },
+      },
+    } as unknown as Theme;
+
+    expect(invalidNumbers(stored)).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 20,
+        rule: "pressable",
+      },
+    ]);
+  });
+
+  it("leaves an absent step inside a carried scale to the refusal too", () => {
+    // The same rule one rung down: the walk reports the steps a theme carries,
+    // so a dropped `md` is `missingTokens`' line and not a `finite` finding
+    // with no value to show.
+    const stored = {
+      ...lightTheme,
+      density: {
+        ...lightTheme.density,
+        controlHeight: { sm: 28, lg: 36 },
+      },
+    } as unknown as Theme;
+
+    expect(invalidNumbers(stored)).toEqual([]);
+    expect(() => auditTheme(stored)).toThrow(
+      "`density.controlHeight.md` is missing",
+    );
+  });
+
+  it("is what the catalogue promises the reports do", () => {
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      "`invalidNumbers` walks only the control-size scales a theme carries",
+    );
+  });
+});
+
 describe("a length a store wrote as something else", () => {
   // The bug this guards: `inspectLengths` skipped every entry that was not a
   // number — a guard written for the family names beside a type role, which

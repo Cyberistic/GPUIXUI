@@ -1922,6 +1922,15 @@ An **absent** step is a different report: a key a store dropped or wrote as
 report runs (§Paint-ready values), because a component reads the step by name and
 cannot paint around one.
 
+An **absent control-size scale** is the same rule one level down. `density` holds
+two scales — `controlHeight` and `controlPaddingX` — so a store can lose one of
+them whole: dropped, kept as `null` (JSON has no `undefined`), or written as a
+string where the record belongs. `invalidNumbers` walks only the control-size
+scales a theme carries, and the gate names every step of the lost one
+(`density.controlHeight.sm`…); reading through it was the report's own
+`TypeError: Cannot read properties of undefined (reading 'sm')`, the absence
+this page says never reaches a report.
+
 ```ts
 import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
 
@@ -2034,8 +2043,12 @@ finite is skipped here and reported once by `invalidNumbers`, which owns it. A
 type role a restored theme does not carry is skipped for the same reason a
 missing elevation level is: the step is not a rung, so the roles either side of
 it are compared with each other and the report names the step it is actually
-measured against. The absence itself is the gate's refusal, not this report's
-(§Paint-ready values).
+measured against. A role a store wrote as `null` is that same absence. A
+control-size scale a restored theme does not carry is skipped too: `density`
+holds two scales rather than one, and a store can lose either whole — dropped,
+`null`, or a string where the record belongs — so the ladder has no rungs to
+compare on that axis. The absence itself is the gate's refusal, not this
+report's (§Paint-ready values), which names every step of the lost scale.
 
 Elevation is the one ladder whose rung is not a single token. A level is a
 geometry plus a share of the `shadow` role, so its depth is the distance the

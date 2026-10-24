@@ -46,7 +46,7 @@ import {
   elevationLevels,
   elevationShadow,
 } from "./elevation.js";
-import { requireGroups } from "./missing.js";
+import { isStepRecord, requireGroups } from "./missing.js";
 import {
   controlSizes,
   type BorderWidth,
@@ -220,6 +220,22 @@ const sized = (
   controlSizes.map((size) => [`${prefix}.${size}`, read(size)] as const);
 
 /**
+ * A stored step's value as the number the ladder compares, or `NaN` for one the
+ * store did not write as a number.
+ *
+ * `NaN` is the value `ordered` already skips — it cannot be laid out, so it is
+ * `invalidNumbers`' report rather than a rung — which is why a scale a store lost
+ * or wrote as `"compact"` reads as no rung at all instead of throwing the
+ * runtime's `TypeError` out of the walk.
+ */
+const stepNumber = (value: unknown): number =>
+  typeof value === "number" ? value : Number.NaN;
+
+/** The value a stored scale carries for a step, read only through a record. */
+const stepValue = (scale: unknown, key: string): number =>
+  stepNumber(isStepRecord(scale) ? scale[key] : undefined);
+
+/**
  * The distance a level's shadow reaches below the box it lifts. The blur spreads
  * in every direction and the spread grows the box the blur starts from, so the
  * softest edge sits `offsetY + blurRadius + spreadRadius` below the surface.
@@ -353,19 +369,23 @@ export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
       // A role the theme does not carry is not a rung: comparing across the gap
       // would report the steps either side of a name nothing can select.
       typeKeys.flatMap((role) => {
-        const style = theme.typography[role];
-        return style === undefined
-          ? []
-          : [[`${role}.fontSize`, style.fontSize] as const];
+        const style: unknown = theme.typography[role];
+        return isStepRecord(style)
+          ? [[`${role}.fontSize`, stepNumber(style.fontSize)] as const]
+          : [];
       }),
     ),
     ...ordered(
       "density",
-      sized("controlHeight", (size) => theme.density.controlHeight[size]),
+      sized("controlHeight", (size) =>
+        stepValue(theme.density.controlHeight, size),
+      ),
     ),
     ...ordered(
       "density",
-      sized("controlPaddingX", (size) => theme.density.controlPaddingX[size]),
+      sized("controlPaddingX", (size) =>
+        stepValue(theme.density.controlPaddingX, size),
+      ),
     ),
     ...ordered("elevation", elevationSteps(theme.elevation)),
   ];

@@ -971,7 +971,11 @@ its text and geometry instead of taking the window down. The two numeric reports
 make that refusal themselves: a group is
 the one absence a walk cannot step around, so `invalidNumbers` and
 `invalidScales` name it the way the gate does instead of throwing
-`TypeError: Cannot convert undefined or null to object`. A font family is refused the same way when it is blank: the gate
+`TypeError: Cannot convert undefined or null to object`. A **nested scale** is
+the same case one level down: `density` holds `controlHeight` and
+`controlPaddingX` as records, a store can lose either whole, and both reports
+walk only the scales a theme carries while the gate names every step of the lost
+one. A font family is refused the same way when it is blank: the gate
 asks every font family to name a face, because `sans: ""` is present but paints
 the renderer's fallback for every text role instead of the face the theme states.
 The required steps are derived from the scales the package ships, so a role or
@@ -1107,8 +1111,10 @@ Each report is also a function of its own:
   level's shadow reaches below its box. Every value can be layable while the name
   still lies: a `sm` control taller than its `lg`, a dialog as square as a card,
   or a dialog casting a tighter shadow than a menu. A type role or elevation
-  level the theme does not carry is not a rung, so the steps either side of it
-  are compared with each other rather than read through it. It is one of the
+  level the theme does not carry is not a rung — a role a store wrote as `null`
+  included — so the steps either side of it are compared with each other rather
+  than read through it, and a control-size scale the theme does not carry has no
+  rungs to compare at all. It is one of the
   audit's fourteen reports (`audit.scales`), so a theme whose ladder lies fails
   `auditTheme`; it found the Windows style's `xl` radius equal to
   its `lg`, and that pair is a deliberate **alias** — Fluent 2 rounds a control

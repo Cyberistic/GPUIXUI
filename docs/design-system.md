@@ -1236,7 +1236,11 @@ audited yet, and the gate is what refuses it. The two numeric reports make that
 refusal themselves: a group is
 the one absence a walk cannot step over, so `invalidNumbers` and `invalidScales`
 name it rather than reading `Object.entries(undefined)` and throwing the
-runtime's `TypeError`. A key a store **kept without a value** is that same absence: a
+runtime's `TypeError`. A **nested scale** is the same case one level down:
+`density` holds `controlHeight` and `controlPaddingX` as records rather than as
+flat keys, so a store can lose either whole — dropped, `null`, or a string where
+the record belongs — and both reports walk only the scales a theme carries while
+the gate names every step of the lost one. A key a store **kept without a value** is that same absence: a
 `null` token is not a number the renderer can lay out, so it is refused by its
 path rather than read as present, while the number report would skip it. A **font family** is refused the same way when it is blank: the
 gate asks every font family to name a face, and `sans: ""` is present but says

@@ -389,7 +389,43 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 249/249
+`[x]` `[██████████]` 250/250
+
+`[x]` Read a **control-size scale a store lost** as no rungs, not a `TypeError`
+— `density` is not one scale but a record of two (`controlHeight`,
+`controlPaddingX`), and both numeric reports read them straight off the group
+(`theme.density.controlHeight[size]`, `Object.entries(density.controlPaddingX)`),
+so a stored theme whose density record lost one — JSON writes `null` where a
+theme never carried it, a hand-edited theme drops the key, a design-tool export
+writes a string where the record belongs — threw `TypeError: Cannot read
+properties of undefined (reading 'sm')` and `Cannot convert undefined or null to
+object` out of a report a consumer runs on its own, and `invalidScales` read a
+`typography` role a store wrote as `null` the same way
+(`Cannot read properties of null (reading 'fontSize')`). Every other scale walks
+only the steps a theme carries and leaves absence to the gate's named refusal
+(`missingTokens` names `density.controlHeight.sm`…); these did not. `missing.ts`
+now owns `isStepRecord`, the one predicate for a stored nested scale (a record,
+or no steps), and both reports read through it: a lost control-size scale is no
+rungs, `inspectLengths` walks only a record it was handed, and a role that is not
+a record is not a rung — so the reports answer `[]` beside the gate's refusal
+instead of crashing, while a scale the theme still carries is compared as before.
+`numbers.test.ts` gains `a control-size scale the theme does not carry` (5 cases:
+both metrics dropped/`null`/written as a string skip without a `TypeError`; the
+gate names every step of the lost scale; a control height beside a lost padding
+scale is still reported; an absent step inside a carried scale is the gate's line
+and not a `finite` finding with no value; the catalogue sentence) and
+`scales.test.ts` `a control-size scale the theme does not carry` (4) plus
+`a type role a store wrote as something else` (2). Directions measured: with the
+reads restored, **6** cases fail by name on the exact `TypeError`s (four
+`Cannot read properties of undefined (reading 'sm')`/`null (reading 'sm')`, one
+`Cannot convert undefined or null to object`, one `Cannot read properties of null
+(reading 'fontSize')`) and the absent-step case reads `[{ group: 'density', … }]`
+where it wants `[]`; restored, 50 files / **3 095** tests with `check-types`,
+`check:tests`, `check:exports` and `oxfmt` (touched files) clean. Docs:
+`docs/tokens.md` §Numbers and §Scale order, `docs/design-system.md` §11, the
+package README §Completeness/§`invalidScales`, the `Token numbers` and
+`Scale order` rows (case count 36). No native scenario applies — two report
+walks and the prose that teaches them.
 
 `[x]` **Restore a stored whole theme from its own labels**, and keep the density box's preset name — `extendTheme` keeps its base's `mode` and `contrast` by design, and that is right for a brand, but a whole theme read back from storage carries the labels it was saved from: `extendTheme(lightTheme, JSON.parse(saved))` restored a dark theme's roles onto a theme that still called itself `light`, and `themeModeOf` — the seam `seriesColors`/`syntaxColors`/`platformTheme` read — handed it the **light** chart scale and the light code palette on its dark fills, while `themeColors`'s own documented shape (`colors: { primary: null }`) did not type-check because `ColourSource` admitted only strings at the group level. A stored `density` had the second half: a whole theme is serialised as a complete box, but the merge read it as a partial override and kept the **base** preset's `name` over the stored metrics, so `/docs/themes`' active-preset row (and the token-scale table) highlighted `comfortable` for a restored compact theme. `restoreTheme(stored)` starts from the shipped theme the saved labels name — through the total `themeModeOf`/`themeContrastOf`, so an unshipped mode is read from its page and an unshipped contrast variant is the strict one — then applies the saved groups with `extendTheme`; `ThemeOverrides.density` accepts a whole `Density` box and `mergeDensity` replaces the base's when a shipped name and every metric are present, while a partial override still merges size by size and keeps the base name; `ColourSource` admits the values a store and a hand-edited literal write, so the seam's documented `{ primary: null }` call compiles. `theme.test.ts`'s `restoreTheme` suite (8 cases) holds the label choice, a round-trip of all 18 shipped, high-contrast, platform and authored themes (`toEqual`, `mode`, contrast variant), the density name, an unshipped `Dark` read from its page, an unshipped `HIGH` held to the strict floors, the label-less store, and the five teaching surfaces. Directions measured: a naive `restoreTheme` that always extends `lightTheme` fails 5 cases by name; deleting `mergeDensity`'s whole-box branch fails 2 (the round-trip naming the theme, and the density case with `expected 'comfortable' to be 'compact'`). Green: 50 files / **3 084** tests, `check-types`, `oxlint`, `oxfmt` (touched files), `check:tests` and `check:exports` clean. Docs: `docs/tokens.md` §Theme API (the restore path + the whole-box rule), `docs/design-system.md` §11, the package README §Extending a theme and the `Theme extension` row. No native scenario applies — a merge, two labels and the type of their input.
 

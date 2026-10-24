@@ -77,7 +77,7 @@
  */
 
 import type { BoxShadow, Elevation } from "./elevation.js";
-import { requireGroups } from "./missing.js";
+import { isStepRecord, requireGroups } from "./missing.js";
 import { controlSizes, targetSize, type ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { TextRole, Typography } from "./typography.js";
@@ -254,13 +254,13 @@ const inspect = (
  * refuses by path (`missingTokens`) before any report runs, so it is not a value
  * this walk inspects twice.
  */
-const inspectLengths = <Scale extends object>(
+const inspectLengths = (
   group: NumberGroup,
-  scale: Scale,
+  scale: unknown,
   rule: SingleRule,
   prefix = "",
 ): readonly InvalidNumber[] =>
-  Object.entries(scale).flatMap(([key, value]) =>
+  Object.entries(isStepRecord(scale) ? scale : {}).flatMap(([key, value]) =>
     value === undefined || value === null
       ? []
       : inspect(group, `${prefix}${key}`, value, rule),
@@ -462,11 +462,20 @@ const inspectControlHeights = (
   iconSize: NumberSource["iconSize"],
 ): readonly InvalidNumber[] => {
   const ceiling = contentCeiling(typography, iconSize, controlRoles);
+  const heights: unknown = density.controlHeight;
   return controlSizes.flatMap((size: ControlSize) => {
     const path = `controlHeight.${size}`;
-    const value = density.controlHeight[size];
+    const value = isStepRecord(heights) ? heights[size] : undefined;
+    // A scale the theme lost, and a step inside one it lost, are the gate's
+    // refusal by path — not a second report here, the rule `inspectLengths`
+    // follows.
+    if (value === undefined || value === null) {
+      return [];
+    }
     const pressable = inspect("density", path, value, "pressable");
-    return pressable.length > 0 ? pressable : missingFit(path, value, ceiling);
+    return pressable.length > 0 || typeof value !== "number"
+      ? pressable
+      : missingFit(path, value, ceiling);
   });
 };
 
@@ -486,9 +495,12 @@ const inspectRowHeight = (
   typography: NumberSource["typography"],
   iconSize: NumberSource["iconSize"],
 ): readonly InvalidNumber[] => {
-  const value = density.rowHeight;
+  const value: unknown = density.rowHeight;
+  if (value === undefined || value === null) {
+    return [];
+  }
   const pressable = inspect("density", "rowHeight", value, "pressable");
-  return pressable.length > 0
+  return pressable.length > 0 || typeof value !== "number"
     ? pressable
     : missingFit(
         "rowHeight",

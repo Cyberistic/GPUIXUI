@@ -724,6 +724,117 @@ describe("a theme that lost a whole numeric group", () => {
   });
 });
 
+describe("a type role a store wrote as something else", () => {
+  // The bug this guards: the role skip tested `undefined` only, while JSON
+  // writes `null` for a key a theme never carried — the absence the rest of the
+  // package reads as one. A stored theme whose `typography.body` came back
+  // `null` threw `TypeError: Cannot read properties of null (reading
+  // 'fontSize')` out of the ladder, so the report could not run beside the gate
+  // that names the role.
+  const nulledRole = (role: keyof Theme["typography"]): Theme =>
+    ({
+      ...lightTheme,
+      typography: { ...lightTheme.typography, [role]: null },
+    }) as unknown as Theme;
+
+  it("skips the nulled role, instead of throwing", () => {
+    (["body", "h2", "display"] as const).forEach((role) =>
+      expect(invalidScales(nulledRole(role)), role).toEqual([]),
+    );
+  });
+
+  it("names the role as the gate's refusal", () => {
+    expect(() => auditTheme(nulledRole("body"))).toThrow(
+      "`typography.body` is missing",
+    );
+  });
+});
+
+describe("a control-size scale the theme does not carry", () => {
+  // The bug this guards: `invalidScales` reads the first rung of each density
+  // scale (`theme.density.controlHeight[size]`), and `density` holds two scales
+  // rather than one, so a stored theme whose density record lost
+  // `controlHeight` or `controlPaddingX` — dropped, kept as `null` (JSON has no
+  // `undefined`) or written as a string where the record belongs — threw
+  // `TypeError: Cannot read properties of null (reading 'sm')` from the report.
+  // A ladder with no rungs is the absence `missingTokens` names step by step.
+  const lostScale = (
+    metric: "controlHeight" | "controlPaddingX",
+    shape: "dropped" | "nulled" | "string",
+  ): Theme => {
+    const { [metric]: _gone, ...rest } = lightTheme.density;
+    const density =
+      shape === "dropped"
+        ? rest
+        : { ...rest, [metric]: shape === "nulled" ? null : "md" };
+
+    return { ...lightTheme, density } as unknown as Theme;
+  };
+  const metrics = ["controlHeight", "controlPaddingX"] as const;
+  const shapes = ["dropped", "nulled", "string"] as const;
+
+  it("reads a scale it cannot open as no rungs, instead of throwing", () => {
+    metrics.forEach((metric) =>
+      shapes.forEach((shape) => {
+        const stored = lostScale(metric, shape);
+
+        expect(invalidScales(stored), `${metric} ${shape}`).toEqual([]);
+        expect(() => invalidScales(stored), `${metric} ${shape}`).not.toThrow(
+          TypeError,
+        );
+      }),
+    );
+  });
+
+  it("still compares the scale the theme carries", () => {
+    // The skip is per scale: an inverted control height is still the report it
+    // was while the padding scale is gone.
+    const stored = {
+      ...lightTheme,
+      density: {
+        ...lightTheme.density,
+        controlPaddingX: undefined,
+        controlHeight: { sm: 36, md: 32, lg: 28 },
+      },
+    } as unknown as Theme;
+
+    expect(invalidScales(stored)).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.md",
+        value: 32,
+        previous: { path: "controlHeight.sm", value: 36 },
+      },
+      {
+        group: "density",
+        path: "controlHeight.lg",
+        value: 28,
+        previous: { path: "controlHeight.md", value: 32 },
+      },
+    ]);
+  });
+
+  it("names every step of the lost scale as the gate's refusal", () => {
+    expect(() => auditTheme(lostScale("controlHeight", "dropped"))).toThrow(
+      "`density.controlHeight.sm`",
+    );
+    expect(() => auditTheme(lostScale("controlPaddingX", "nulled"))).toThrow(
+      "`density.controlPaddingX.lg`",
+    );
+  });
+
+  it("is what the catalogue promises the report does", () => {
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      "A control-size scale a restored theme does not carry is skipped",
+    );
+  });
+});
+
 describe("a level a store wrote as something else", () => {
   // The bug this holds: the scale report read a level's shadow directly and
   // destructured it, so a stored theme whose entry a store dropped (`null` —
