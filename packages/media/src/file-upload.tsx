@@ -28,6 +28,7 @@ import {
   emptyQueue,
   enqueue,
   fail,
+  filesOf,
   findItem,
   remove,
   reportProgress,
@@ -47,7 +48,7 @@ export type UploadFunction = (
 export interface FileUploadProps extends Omit<Props, "children"> {
   /** The transfer, called once per file with a `0…1` progress reporter. */
   readonly upload: UploadFunction;
-  /** The files to upload. Adding a new id starts it; removing drops it. */
+  /** The files to upload. Adding a new id starts it; removing drops it. A value that is not a list — a saved queue's `null` — carries no files. */
   readonly files: ReadonlyArray<UploadFile>;
   /** Called when the reader removes a row, so the caller drops it from `files`. */
   readonly onRemoveFile?: (id: string) => void;
@@ -215,12 +216,13 @@ export const FileUpload = (props: FileUploadProps): ReactElement => {
   );
 
   useEffect(() => {
+    const requested = filesOf(files);
     const retained = Arr.filter(queue.items, (item) =>
-      Arr.some(files, (file) => file.id === item.id),
+      Arr.some(requested, (file) => file.id === item.id),
     );
     const seeded = enqueue(
       { attempts: queue.attempts, items: retained },
-      files,
+      requested,
     );
     const idle = Arr.filter(seeded.items, (item) => item.status === "idle");
     const started = Arr.reduce(idle, seeded, (state, item) =>

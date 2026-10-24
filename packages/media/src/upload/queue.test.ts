@@ -17,6 +17,7 @@ import {
   emptyQueue,
   enqueue,
   fail,
+  filesOf,
   findItem,
   remove,
   reportProgress,
@@ -43,6 +44,21 @@ const uploading = (id: string): UploadQueue =>
   start(enqueue(emptyQueue, [file(id)]), id);
 
 describe("upload queue", () => {
+  it("reads a stored file list structurally, keeping only files with an id", () => {
+    // The bug guarded: the component's effect read the caller's list directly,
+    // so a saved queue's `null` reached `Arr.some`/`Arr.reduce` and threw out of
+    // the effect that seeds the queue, taking the surface down; and an entry a
+    // record wrote without a text id queued a row no remove action could name.
+    expect(filesOf(null)).toEqual([]);
+    expect(filesOf({ id: "notes.txt" })).toEqual([]);
+    expect(filesOf([{ id: "notes.txt" }])).toEqual([
+      { id: "notes.txt", name: "notes.txt" },
+    ]);
+    expect(
+      filesOf([{ id: "" }, { id: 4 }, { id: "b.txt", name: "  b.txt  " }]),
+    ).toEqual([{ id: "b.txt", name: "  b.txt  " }]);
+  });
+
   it("names a file by its id when the stored name is blank", () => {
     // The bug guarded: a file record restored with no name reached the row and
     // its remove action, which published "Remove null" and painted a nameless

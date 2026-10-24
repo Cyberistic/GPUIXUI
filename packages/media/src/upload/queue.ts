@@ -16,6 +16,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { accessibleName } from "../name.js";
 
 /** A file's lifecycle within the queue. */
@@ -49,6 +50,44 @@ export interface UploadQueue {
 }
 
 export const emptyQueue: UploadQueue = { attempts: 0, items: [] };
+
+/**
+ * A file a stored queue wrote: an id, and the name it carried when it had one.
+ *
+ * The ids are the queue's identity and must be text a row can be addressed by;
+ * a record's missing or `null` name is absence, so the file's id stands in —
+ * the rule `enqueue` already applies to a blank one.
+ */
+class StoredFile extends Schema.Class<StoredFile>("StoredFile")({
+  id: Schema.NonEmptyString,
+  name: Schema.optionalKey(Schema.NullOr(Schema.String)),
+}) {}
+
+const decodeStoredFile = Schema.decodeUnknownOption(StoredFile);
+
+/**
+ * The files a caller's list carries, read at the boundary.
+ *
+ * `files` is a queue as often as a literal — a batch a store restored, a set
+ * kept while a dialog closed — so a record's `null` reaches the component and
+ * `Arr.some`/`Arr.reduce` threw out of the effect that starts the queue, taking
+ * the whole surface down. Only a list is a list, and an entry without a text id
+ * is not a file: it is dropped, so one malformed record cannot hide the rest.
+ */
+export const filesOf = (value: unknown): ReadonlyArray<UploadFile> =>
+  Arr.isArray(value)
+    ? Arr.getSomes(
+        Arr.map(value, (entry) =>
+          Option.map(decodeStoredFile(entry), (file) => ({
+            id: file.id,
+            name: Option.getOrElse(
+              Option.fromNullishOr(file.name),
+              () => file.id,
+            ),
+          })),
+        ),
+      )
+    : [];
 
 const withItems = (
   state: UploadQueue,
