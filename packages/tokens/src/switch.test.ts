@@ -35,6 +35,7 @@ import {
   themes,
   type ControlSize,
   type SwitchAuditSource,
+  type SwitchBoxSource,
   type SwitchMetrics,
   type Theme,
 } from "./index.js";
@@ -460,6 +461,71 @@ describe("the box a declared switch is drawn in", () => {
     );
     expect(switchMetricsAt(apple, stored).width).toBeGreaterThan(0);
   });
+
+  /**
+   * A box is a **stored** value as often as an authored one — a saved platform
+   * style, a settings row, a theme file — and the resolver took only the
+   * authored `SwitchMetrics`: a consumer holding what the store returned could
+   * call it solely through a cast (`AGENTS.md` §2), and the box was scaled as
+   * whatever it said. Measured on the old resolver: a lost height became `NaN`
+   * (the batch drops it, so the switch painted no box), a `null` height a
+   * zero-height box, a `"38"` width a coerced 30, and at `md` the value came
+   * back exactly as the store wrote it. The report already named the slot; the
+   * resolver now answers the same absence instead of a box the renderer cannot
+   * draw.
+   */
+  it("reads the box a store hands back, and answers nothing for one that lost a slot", () => {
+    const storedBox: SwitchBoxSource = {
+      width: 38,
+      height: 22,
+      knob: 20,
+      inset: 1,
+      border: 0,
+    };
+
+    expect(switchMetricsAt(storedBox, "md")).toEqual(apple);
+    expect(switchMetricsAt(storedBox, "sm")).toEqual(
+      switchMetricsAt(apple, "sm"),
+    );
+    // Each shape a store writes for a lost or unreadable slot is no box: a
+    // dropped key, a length the export wrote as a string, a negative edge.
+    expect(
+      switchMetricsAt({ ...storedBox, height: null }, "md"),
+    ).toBeUndefined();
+    expect(
+      switchMetricsAt({ ...storedBox, width: "38" }, "sm"),
+    ).toBeUndefined();
+    expect(switchMetricsAt({ ...storedBox, border: -1 }, "md")).toBeUndefined();
+    expect(switchMetricsAt(null, "md")).toBeUndefined();
+    expect(switchMetricsAt(undefined, "sm")).toBeUndefined();
+
+    // And the port is the report's own source: a decoded theme's box reaches
+    // the resolver without a cast.
+    const restored: SwitchAuditSource = {
+      colors: lightTheme.colors,
+      switchMetrics: { ...storedBox, knob: null },
+    };
+    expect(switchMetricsAt(restored.switchMetrics, "lg")).toBeUndefined();
+    expect(switchMetricFailures(restored)).toEqual([
+      { slot: "knob", value: null, rule: "finite" },
+    ]);
+  });
+
+  /**
+   * A slot the rule already refused was compared again by the fit half: a zero
+   * height earned the `positive` line the box's rule owes and a `fits` line
+   * beside it, so one number read as two defects. The fit relations read only
+   * the numbers the report did not name, which is what the resolver's own
+   * comment promises.
+   */
+  it("names a slot once, even when it fails both its rule and the fit", () => {
+    expect(
+      switchMetricFailures({ switchMetrics: { ...apple, height: 0 } }),
+    ).toEqual([{ slot: "height", value: 0, rule: "positive" }]);
+    expect(
+      switchMetricFailures({ switchMetrics: { ...apple, inset: -1 } }),
+    ).toEqual([{ slot: "inset", value: -1, rule: "nonNegative" }]);
+  });
 });
 
 describe("the pages that teach the declared paint", () => {
@@ -513,11 +579,24 @@ describe("the pages that teach the declared paint", () => {
     expect(catalogue).toContain("53×29");
     expect(designSystem).toContain("29px track");
     expect(catalogue).toContain("21px");
+    // The box a store hands back is the same absence: each page names the shape
+    // the resolver takes and the answer a lost slot gets, so a reader restoring
+    // a style learns why the derived box paints instead of a scaled `NaN`.
+    [
+      [catalogue, "catalogue"],
+      [designSystem, "design system"],
+      [readme, "readme"],
+    ].forEach(([page, name]) => {
+      expect(page, name).toContain("SwitchBoxSource");
+      expect(page, name).toContain("answers nothing");
+      expect(page, name).toContain("NaN");
+    });
     // The inventory row records the box beside the paint.
     const row = inventoryRow("Platform styles");
     expect(row).toContain("switchMetricFailures");
     expect(row).toContain("switchMetricSlots");
     expect(row).toContain("21px");
+    expect(row).toContain("SwitchBoxSource");
   });
 
   it("teaches the extension route a brand owns the paint through", () => {

@@ -141,29 +141,48 @@ export interface SwitchMetricFailure {
   readonly needs?: number;
 }
 
-/** One number of a box, when it is a number the renderer can lay out. */
+/**
+ * Whether one box number is a length the renderer can draw.
+ *
+ * The rule is per slot — a drawn size has to be positive, an inset or an edge
+ * may be zero — and it is stated once here, so the report and the resolver
+ * cannot disagree about which boxes are drawable.
+ */
+const drawable = (slot: SwitchMetric, value: unknown): value is number =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  (switchMetricRules[slot] === "positive" ? value > 0 : value >= 0);
+
+/**
+ * One number of a box, when it is a length the renderer can lay out.
+ *
+ * A slot the box's own rule refuses is `undefined` here rather than the value
+ * the store wrote, so the fit relations compare only numbers the report did not
+ * already name — a zero height was measured against the knob as well as
+ * reported as the slot that has to grow, and one number earned two lines.
+ */
 const boxNumber = (
   box: SwitchBoxSource,
   slot: SwitchMetric,
 ): number | undefined => {
   const value: unknown = box[slot];
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
-    : undefined;
+  return drawable(slot, value) ? value : undefined;
 };
 
 /** Every drawn number of a box, each held to its own rule. */
 const boxValues = (box: SwitchBoxSource): readonly SwitchMetricFailure[] =>
   switchMetricSlots.flatMap((slot): ReadonlyArray<SwitchMetricFailure> => {
     const value: unknown = box[slot];
-    const rule = switchMetricRules[slot];
-    const layable =
-      typeof value === "number" &&
-      Number.isFinite(value) &&
-      (rule === "positive" ? value > 0 : value >= 0);
-    return layable
+    return drawable(slot, value)
       ? []
-      : [{ slot, value, rule: typeof value === "number" ? rule : "finite" }];
+      : [
+          {
+            slot,
+            value,
+            rule:
+              typeof value === "number" ? switchMetricRules[slot] : "finite",
+          },
+        ];
   });
 
 /**
@@ -218,6 +237,41 @@ const boxFit = (box: SwitchBoxSource): readonly SwitchMetricFailure[] => {
 };
 
 /**
+ * The five numbers a box carries, or nothing when it lost one.
+ *
+ * The box a store hands back is not the authored {@link SwitchMetrics}: a saved
+ * style, a settings row or a theme file can keep the box it was written from,
+ * and JSON has no `undefined` — a dropped key arrives as `null`, a design-tool
+ * export writes `"38"` where a length belongs, and a hand edit writes `-1` where
+ * the box's own rule asks for a length. The old resolver scaled whatever it was
+ * handed: measured, a lost height became `NaN` (the batch drops it), a `null`
+ * height a **zero-height** box, a `"38"` width a silently coerced 30, and at
+ * `md` the value came back exactly as the store wrote it. A box that lost any of
+ * its five is not one the primitive can draw, so the resolver answers nothing
+ * and the caller keeps the derived box the report describes —
+ * `switchMetricFailures` names the slot to repair.
+ */
+const boxNumbers = (
+  box: SwitchBoxSource | null | undefined,
+): SwitchMetrics | undefined => {
+  if (box === undefined || box === null) {
+    return undefined;
+  }
+  const width = boxNumber(box, "width");
+  const height = boxNumber(box, "height");
+  const knob = boxNumber(box, "knob");
+  const inset = boxNumber(box, "inset");
+  const border = boxNumber(box, "border");
+  return width === undefined ||
+    height === undefined ||
+    knob === undefined ||
+    inset === undefined ||
+    border === undefined
+    ? undefined
+    : { width, height, knob, inset, border };
+};
+
+/**
  * The box a platform switch paints at a control size.
  *
  * `md` is the platform's published control; `sm` and `lg` scale it
@@ -229,6 +283,13 @@ const boxFit = (box: SwitchBoxSource): readonly SwitchMetricFailure[] => {
  * large switch drew the knob one pixel through the pill's edge. The edge is
  * drawn outside that gap, which is why `border` does not enter it.
  *
+ * **A box is a stored value as often as an authored one**, so the resolver takes
+ * the shape a store hands back (`SwitchBoxSource`) and answers **nothing** for a
+ * box that lost a number or wrote one the box's rule refuses — the absence the
+ * report names, and the same answer `elevationShadow` gives a lost level. A
+ * complete box scales exactly as it always did, because the five steps are read
+ * as the numbers they are.
+ *
  * @example
  * ```ts
  * import { platformStyles, switchMetricsAt } from "@gpuixui/tokens";
@@ -237,26 +298,38 @@ const boxFit = (box: SwitchBoxSource): readonly SwitchMetricFailure[] => {
  * // { width: 38, height: 22, knob: 20, inset: 1, border: 0 }
  * ```
  */
-export const switchMetricsAt = (
+export function switchMetricsAt(
   metrics: SwitchMetrics,
   size: ControlSize,
-): SwitchMetrics => {
+): SwitchMetrics;
+export function switchMetricsAt(
+  metrics: SwitchBoxSource | null | undefined,
+  size: ControlSize,
+): SwitchMetrics | undefined;
+export function switchMetricsAt(
+  metrics: SwitchBoxSource | null | undefined,
+  size: ControlSize,
+): SwitchMetrics | undefined {
+  const box = boxNumbers(metrics);
+  if (box === undefined) {
+    return undefined;
+  }
   const scale = switchScale[isControlSize(size) ? size : "md"];
-  if (scale === 1) return metrics;
-  const height = Math.round(metrics.height * scale);
-  const inset = Math.round(metrics.inset * scale);
+  if (scale === 1) return box;
+  const height = Math.round(box.height * scale);
+  const inset = Math.round(box.inset * scale);
   return {
-    width: Math.round(metrics.width * scale),
+    width: Math.round(box.width * scale),
     height,
     // A round knob inside the track's inner height, never taller than it.
     knob: Math.max(
       0,
-      Math.min(Math.round(metrics.knob * scale), height - inset * 2),
+      Math.min(Math.round(box.knob * scale), height - inset * 2),
     ),
     inset,
-    border: metrics.border,
+    border: box.border,
   };
-};
+}
 
 /**
  * The declared switch paint's silhouette on the strip it stands on.

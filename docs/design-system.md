@@ -875,7 +875,12 @@ of travel, the distance the knob slides. That guard found the proportional
 scale's own arithmetic: `switchMetricsAt` rounded the knob and the inset apart
 and drew Adwaita's large switch as a 22px knob in a 29px track whose two insets
 took 8, one pixel through the pill's edge; the knob is fitted to the track's
-inner height now. A
+inner height now. A box a **store** hands back is read as the box it is:
+`switchMetricsAt` takes its storage shape (`SwitchBoxSource`) and answers nothing
+for one that lost a number or wrote one the box's rule refuses, rather than
+scaling a missing height into the `NaN` the batch drops (or a `null` into a
+zero-height pill, a `"38"` width into a coerced 30) — the absence the report
+names, and the answer that keeps a restored style on the derived box. A
 switch a store wrote as `null` is the "declares none" the accent
 switch answers: a saved theme carries `null` where it declared no paint, and the
 report measures the toggle the theme actually paints rather than reading a slot

@@ -722,7 +722,12 @@ family cannot derive those fills, so the declaration is separate; the primitives
 draw the platform's box only for a theme that carries it, and an authored look
 that declares none keeps the library's accent toggle. `switchMetricsAt` keeps a
 proportional `sm`/`lg` scale of the published `md` box and fits the knob to the
-track's inner height. Those three colours are
+track's inner height. A box is a stored value as often as an authored one, so the
+resolver takes the shape a store hands back (`SwitchBoxSource`) and answers nothing
+for a box that lost a number or wrote one the box's rule refuses — a lost
+height used to scale into `NaN` (dropped by the batch, so no box painted), a
+`null` height into a zero-height box and a `"38"` width into a coerced 30 — the
+absence the report names. Those three colours are
 **measured**, because they enter a theme through no role: `switchFailures(theme)`
 holds the knob on each track and each track (or its edge) on the four strips a
 switch stands on (the page, a card, a popover and a muted toolbar) to the
