@@ -9,8 +9,8 @@
  * `TypeError: Cannot read properties of undefined (reading 'xs')` and took the
  * surface down. A paint seam runs mid-render and cannot throw, so every part
  * reads the primitives' published reader (`spaceValue`, `borderWidthOf`,
- * `radiusValue`, `rowHeightOf`), which answers the library's number for the
- * group the theme lost.
+ * `radiusValue`, `iconStepValue`, `rowHeightOf`), which answers the library's
+ * number for the group the theme lost.
  *
  * Examples are excluded: a demo composes like an application and owns the theme
  * it paints; the library's parts are what a consumer cannot fix.
@@ -20,13 +20,20 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /** A numeric group a part must not index directly. */
-const groups = ["spacing", "radius", "borderWidth", "density"] as const;
+const groups = [
+  "spacing",
+  "radius",
+  "borderWidth",
+  "iconSize",
+  "density",
+] as const;
 
 /** Every published reader that answers a group the theme lost. */
 const readers = [
   "spaceValue",
   "borderWidthOf",
   "radiusValue",
+  "iconStepValue",
   "rowHeightOf",
 ] as const;
 
@@ -79,7 +86,12 @@ describe("the numeric groups a paint reads", () => {
       .join("\n");
     const used = readers.filter((reader) => all.includes(`${reader}(theme`));
     expect(used).toEqual(
-      expect.arrayContaining(["spaceValue", "borderWidthOf", "rowHeightOf"]),
+      expect.arrayContaining([
+        "spaceValue",
+        "borderWidthOf",
+        "iconStepValue",
+        "rowHeightOf",
+      ]),
     );
     // And the scan sees the shapes it is meant to reject, and nothing else:
     // a metered value handed in as an argument is a reader's own call.

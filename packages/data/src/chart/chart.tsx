@@ -24,7 +24,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { spokenText } from "@gpuixui/primitives/core";
+import { iconStepValue, spokenText } from "@gpuixui/primitives/core";
 import { seriesColors } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
@@ -142,8 +142,8 @@ export const ChartLegend = ({
             }
             style={{
               ...recipeStyle(CHART_SWATCH, theme),
-              width: theme.iconSize.xs,
-              height: theme.iconSize.xs,
+              width: iconStepValue(theme, "xs"),
+              height: iconStepValue(theme, "xs"),
               backgroundColor: item.color,
             }}
           />

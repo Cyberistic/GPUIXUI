@@ -741,9 +741,10 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   pass by reading nothing. Directions measured: restoring `theme.spacing.xs` in
   `surfaces/stat-card.tsx` fails `surfaces/stat-card.tsx: theme.spacing`.
   Examples are excluded — a demo composes like an app and owns its theme. The
-  chart legend dot's `theme.iconSize.xs` is the recorded exception (no
-  icon-step reader exists; `TODO.md` → Interlocks). Docs: the README's Styling
-  section and rules table.
+  chart legend dot's `theme.iconSize.xs` was the one exception until the
+  primitives published `iconStepValue`; the dot reads it now and the guard holds
+  `iconSize` beside the other four groups. Docs: the README's Styling section
+  and rules table.
 
 ## 5. Acceptance
 
