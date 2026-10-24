@@ -178,6 +178,7 @@ import {
   MOTION_INTERRUPT_REST,
   MOTION_MID_WIDTH,
   MOTION_REST_WIDTH,
+  MOTION_TRAVEL_CUT,
   continuesFrom,
   isTravellingBetween,
   motionInterruptReadout,
@@ -3968,9 +3969,9 @@ const MotionProbe = (): ReactNode => {
  * travel of the value painted before the press.
  *
  * `duration: 3` is the transition `motion-geometry` also drives, so the two
- * probes measure the same declaration. The cut is timed at 1.2s, where the
- * window painted **212** of the 120 → 400 travel; the reverse cut, 1.2s into a
- * 400 → 120 run, painted **307**.
+ * probes measure the same declaration. The cut lands at a quarter of the
+ * travel, where the window painted **191.5** on the way out and **329.5** on
+ * the way back; the frame after each press painted **192** and **329.5**.
  */
 const MotionInterruptProbe = (): ReactNode => {
   const theme = useTheme();
@@ -5407,6 +5408,30 @@ const settledWidth = (
   settleUntil(
     boxWidth(ctx, testId),
     (width) => Math.abs(width - target) <= 1,
+    200,
+  );
+
+/** The painted height of `testId`; `NaN` while it paints nothing. */
+const boxHeight = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<number, Smoke.SmokeHostError> =>
+  Effect.map(ctx.host.bounds(testId), (bounds) =>
+    Option.match(Option.fromNullishOr(bounds), {
+      onNone: () => Number.NaN,
+      onSome: (box) => box.height,
+    }),
+  );
+
+/** Waits for a travelling box to paint `target`, then reports what it read. */
+const settledHeight = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+  target: number,
+): Effect.Effect<number, Smoke.SmokeHostError> =>
+  settleUntil(
+    boxHeight(ctx, testId),
+    (height) => Math.abs(height - target) <= 1,
     200,
   );
 
@@ -9536,7 +9561,9 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.click("motion-toggle");
     const growSamples = yield* motionSamples(ctx);
-    yield* Effect.sleep(Duration.millis(900));
+    // The declared duration is not a wall-clock promise: under load the same
+    // transition ran for seconds. Wait for the target, not for 900ms.
+    yield* settledHeight(ctx, "motion-box", 240);
     const grown = yield* paintedBox(ctx, "motion-box");
 
     yield* ctx.expectEqual(
@@ -9556,9 +9583,14 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       240,
       1,
     );
+    // The completion lands a frame after the target does.
+    const grownReadout = yield* settleUntil(
+      ctx.host.text("motion-readout"),
+      (text) => text.includes("completes=1"),
+    );
     yield* ctx.expectContains(
       "onMotionComplete reports the end of the run",
-      yield* ctx.host.text("motion-readout"),
+      grownReadout,
       "completes=1",
     );
 
@@ -9572,7 +9604,7 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.click("motion-toggle");
     const shrinkSamples = yield* motionSamples(ctx);
-    yield* Effect.sleep(Duration.millis(900));
+    yield* settledHeight(ctx, "motion-box", 40);
     const back = yield* paintedBox(ctx, "motion-box");
     yield* ctx.expectEqual(
       "the reverse run paints an intermediate frame too",
@@ -9585,9 +9617,13 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       40,
       1,
     );
+    const shrunkReadout = yield* settleUntil(
+      ctx.host.text("motion-readout"),
+      (text) => text.includes("completes=2"),
+    );
     yield* ctx.expectContains(
       "each run reports one completion",
-      yield* ctx.host.text("motion-readout"),
+      shrunkReadout,
       "completes=2",
     );
 
@@ -9603,10 +9639,10 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // animation clock, so a capture taken between a press and its samples makes
     // the next run complete in one step (measured: `240, 238, 40, 40`).
     yield* ctx.host.click("motion-toggle");
-    yield* Effect.sleep(Duration.millis(900));
+    yield* settledHeight(ctx, "motion-box", 240);
     yield* ctx.host.capture("motion-grown");
     yield* ctx.host.click("motion-toggle");
-    yield* Effect.sleep(Duration.millis(900));
+    yield* settledHeight(ctx, "motion-box", 40);
     yield* ctx.host.capture("motion-shrunk");
   });
 
@@ -9633,8 +9669,14 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(MOTION_INTERRUPT_IDS.probe);
     // A previous probe's capture stalls this one's clock; settle first so the
-    // first press starts a run from a known frame.
+    // clock is running, then spend one full run on a prime: the first
+    // animation after a capture has completed in a single frame (measured when
+    // this probe runs after `motion-geometry`).
     yield* Effect.sleep(Duration.millis(800));
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
+    yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_FAR_WIDTH);
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.rest);
+    yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_REST_WIDTH);
 
     const rest = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
     yield* ctx.expectNear(
@@ -9650,13 +9692,19 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     // ── A rising run cut downward ──────────────────────────────────────────
-    // The runtime runs the declared 3s, so 1.2s is a third of the way.
+    // Cut at a measured fraction of the travel, not a fixed time: the same
+    // declaration has run in a fraction of a second and in seconds, and a
+    // fixed cut sat past the landing on the fast one.
     yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
-    yield* Effect.sleep(Duration.millis(1200));
-    const rising = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    const rising = yield* settleUntil(
+      boxWidth(ctx, MOTION_INTERRUPT_IDS.box),
+      (width) => width >= MOTION_REST_WIDTH + MOTION_TRAVEL_CUT,
+      200,
+      Duration.millis(20),
+    );
     yield* ctx.expectEqual(
       "the run to the far target is still travelling when it is cut",
-      isTravellingBetween(rising.width, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
+      isTravellingBetween(rising, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
       true,
     );
 
@@ -9664,7 +9712,7 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const cutDown = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
     yield* ctx.expectEqual(
       "a cut target continues from the width on screen",
-      continuesFrom(rising.width, cutDown.width),
+      continuesFrom(rising, cutDown.width),
       true,
     );
     // A poll, not a fixed wait: `motion-geometry` measured the same declared
@@ -9701,11 +9749,15 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     yield* ctx.host.click(MOTION_INTERRUPT_IDS.rest);
-    yield* Effect.sleep(Duration.millis(1200));
-    const falling = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    const falling = yield* settleUntil(
+      boxWidth(ctx, MOTION_INTERRUPT_IDS.box),
+      (width) => width <= MOTION_FAR_WIDTH - MOTION_TRAVEL_CUT,
+      200,
+      Duration.millis(20),
+    );
     yield* ctx.expectEqual(
       "the run back to rest is still travelling when it is cut",
-      isTravellingBetween(falling.width, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
+      isTravellingBetween(falling, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
       true,
     );
 
@@ -9713,7 +9765,7 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const cutUp = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
     yield* ctx.expectEqual(
       "a cut in the other direction continues from the width on screen too",
-      continuesFrom(falling.width, cutUp.width),
+      continuesFrom(falling, cutUp.width),
       true,
     );
     yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_FAR_WIDTH);

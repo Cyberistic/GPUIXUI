@@ -404,7 +404,7 @@ describe("the probe asks the questions the section answers", () => {
     // platform's thickness. Both are the component's defaults, not the probe's:
     // it passes no knob for that case, so the painter is what decides.
     expect(scrollArea).toContain(
-      "scrollbarColor: scrollbarColor ?? theme.colors.scrollbar",
+      'scrollbarColor: scrollbarColor ?? colorRole(theme, "scrollbar")',
     );
     expect(scrollArea).toContain(
       "viewport.scrollbarWidth = scrollbarWidth ?? part.scrollbarWidth",

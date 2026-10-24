@@ -59,11 +59,11 @@ describe("the widths the interruption is read against", () => {
       120, 240, 400,
     ]);
     // The two failure shapes are the interrupted run's start and its old
-    // target. Measured, the cut values were 212 rising and 307 falling, so the
-    // nearest failure is 93 points away; the tolerance must stay under it or a
-    // restart could pass as a continuation.
+    // target. Measured, the cut values were 191.5 rising and 329.5 falling, so
+    // the nearest failure is 70.5 points away; the tolerance must stay under
+    // it or a restart could pass as a continuation.
     expect(CONTINUATION_TOLERANCE).toBeLessThan(
-      Math.abs(307 - MOTION_FAR_WIDTH),
+      Math.abs(329.5 - MOTION_FAR_WIDTH),
     );
   });
 
@@ -77,12 +77,12 @@ describe("the widths the interruption is read against", () => {
 
   it("reads a travelling width and refuses a settled endpoint", () => {
     // The two widths the window painted mid-flight, measured on 0.11.0.
-    expect(isTravellingBetween(212, MOTION_REST_WIDTH, MOTION_FAR_WIDTH)).toBe(
-      true,
-    );
-    expect(isTravellingBetween(307, MOTION_REST_WIDTH, MOTION_FAR_WIDTH)).toBe(
-      true,
-    );
+    expect(
+      isTravellingBetween(191.5, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
+    ).toBe(true);
+    expect(
+      isTravellingBetween(329.5, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
+    ).toBe(true);
     // The shapes a jump would paint.
     expect(isTravellingBetween(120, MOTION_REST_WIDTH, MOTION_FAR_WIDTH)).toBe(
       false,
@@ -93,23 +93,25 @@ describe("the widths the interruption is read against", () => {
   });
 
   it("accepts a width that continues, and rejects both failure shapes", () => {
-    // The window's own samples: 212 → 212.5 rising, 307 → 306.5 falling.
-    expect(continuesFrom(212, 212.5)).toBe(true);
-    expect(continuesFrom(307, 306.5)).toBe(true);
+    // The window's own samples: 191.5 → 192 rising, 329.5 → 329.5 falling.
+    expect(continuesFrom(191.5, 192)).toBe(true);
+    expect(continuesFrom(329.5, 329.5)).toBe(true);
     // A restart on the rising cut paints the run's start instead.
-    expect(continuesFrom(212, MOTION_REST_WIDTH)).toBe(false);
+    expect(continuesFrom(191.5, MOTION_REST_WIDTH)).toBe(false);
     // A finish-first paints the abandoned target instead.
-    expect(continuesFrom(212, MOTION_FAR_WIDTH)).toBe(false);
+    expect(continuesFrom(191.5, MOTION_FAR_WIDTH)).toBe(false);
     // On the falling cut the two shapes swap: its start is 400, its target 120.
-    expect(continuesFrom(307, MOTION_FAR_WIDTH)).toBe(false);
-    expect(continuesFrom(307, MOTION_REST_WIDTH)).toBe(false);
+    expect(continuesFrom(329.5, MOTION_FAR_WIDTH)).toBe(false);
+    expect(continuesFrom(329.5, MOTION_REST_WIDTH)).toBe(false);
   });
 
   it("rejects a near-miss just outside the tolerance", () => {
     // One point past the tolerance is a second frame of travel, not a
     // measurement the cut could pass on.
-    expect(continuesFrom(212, 212 + CONTINUATION_TOLERANCE + 1)).toBe(false);
-    expect(continuesFrom(212, 212 + CONTINUATION_TOLERANCE)).toBe(true);
+    expect(continuesFrom(191.5, 191.5 + CONTINUATION_TOLERANCE + 1)).toBe(
+      false,
+    );
+    expect(continuesFrom(191.5, 191.5 + CONTINUATION_TOLERANCE)).toBe(true);
   });
 });
 
@@ -142,12 +144,12 @@ describe("the motion-interruption probe's record", () => {
         Number.NaN,
     );
     expect(printed).toBe(direct.length + painted.length);
-    expect(printed).toBe(20);
+    expect(printed).toBe(18);
   });
 
   it("prints the widths the window painted, both directions", () => {
     Arr.forEach(
-      ["**120**", "**212**", "**212.5**", "**307**", "**306.5**"],
+      ["**120**", "**191.5**", "**192**", "**329.5**"],
       (measured) => {
         expect(flat).toContain(measured);
       },
@@ -196,6 +198,8 @@ describe("the probe asks the question the section answers", () => {
     expect(motionInterruptSteps).not.toMatch(/millis\(3\d{3}\)/);
     expect(motionInterruptSteps).not.toContain("settleNumber(");
     const settles = motionInterruptSteps.match(/settledWidth\(/g) ?? [];
-    expect(settles.length).toBe(4);
+    // Prime out, prime back, the first cut's landing, the far landing, the
+    // second cut's landing, and the capture's rest.
+    expect(settles.length).toBe(6);
   });
 });

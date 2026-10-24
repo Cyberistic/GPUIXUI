@@ -39,6 +39,17 @@ export const MOTION_MID_WIDTH = 240;
 export const MOTION_FAR_WIDTH = 400;
 
 /**
+ * How far into a run the target is cut, in points of travel.
+ *
+ * A fraction of the travel rather than a time: the same declaration has
+ * painted a run in a fraction of a second and in seconds, and a fixed cut
+ * landed past the end of a fast one. A quarter keeps the first reading of a
+ * 20ms poll well inside `isTravelling`'s band, and the cut is still 80–200
+ * points clear of both failure shapes.
+ */
+export const MOTION_TRAVEL_CUT = (MOTION_FAR_WIDTH - MOTION_REST_WIDTH) * 0.25;
+
+/**
  * The most a painted width may move in the frame a retarget lands in.
  *
  * A frame of travel at the measured pace is well under ten points; the

@@ -1691,7 +1691,7 @@ What it settles:
    component must drive its next step from `onMotionComplete`, never from a
    timer that assumes the number.
 
-**Two measured probe caveats**, both recorded in the steps' header:
+**Three measured probe caveats**, all recorded in the steps' header:
 
 - A screenshot stalls the animation clock, and the run then completes early once
   frames resume: with a capture taken between the press and its samples the box
@@ -1702,6 +1702,16 @@ What it settles:
   (`expected true, got false`); with an 800ms settle after `waitFor` the same
   three-probe selection passed three times in a row. The probe settles first for
   that reason, and samples eight times so one unlucky frame cannot decide it.
+- **A fixed sleep cannot wait for the landing**, because point 4 is true of the
+  probe as well as of a consumer: on a loaded box on 2026-10-24 the same
+  transition ran for seconds, and the 900ms settle failed
+  `the box lands on the animated target height` twice in a row with
+  `expected 240 ± 1, got 119` — the live suite's `layout` capability read
+  `failed` on a tree where only the box's load had changed. The steps now
+  **wait for the painted target** (`settledHeight`) in both directions and for
+  each completion a frame after it (`settleUntil` on the readout), so the
+  machine's load cannot decide a check. The sample table above is the run this
+  section was written from; the checks only require *a* travelling frame.
 
 ### `motion-interruption` — measured on 0.11.0 here
 
@@ -1710,35 +1720,38 @@ capability record's *Animation interruption* row says "a target change starts
 the next transition from the current visible value", and no probe had changed a
 target while a box was moving — while a collapsible sidebar a reader reopens
 before it closed, and a split pane dragged while its width is still travelling,
-both depend on it. A 120-wide box is driven to 400 and cut to 240 1.2s in; then,
-after it settles, driven to 120 and cut back to 400 1.2s in. The cuts point in
-opposite directions, so both failure shapes are one width apart from the truth:
-a restart paints the interrupted run's start (120) and a finish-first paints its
-old target (400, or 120 on the way back).
+both depend on it. A 120-wide box is driven to 400 and cut to 240 **a quarter of
+the way in**; then, after it settles, driven to 120 and cut back to 400 a
+quarter of the way back. The cuts point in opposite directions, so both failure
+shapes are one width apart from the truth: a restart paints the interrupted
+run's start (120) and a finish-first paints its old target (400, or 120 on the
+way back).
 
 | Step | Width the window painted |
 | ---- | ------------------------ |
 | mount | **120** |
-| press `far`, 1.2s | **212** — travelling, not yet at 400 |
-| press `mid` | **212.5** — continues from the width on screen: not 120, not 400 |
+| press `far`, cut at a quarter | **191.5** — travelling, not yet at 400 |
+| press `mid` | **192** — continues from the width on screen: not 120, not 400 |
 | settled | **240**, the target it was cut to |
 | press `far`, settled | **400** |
-| press `rest`, 1.2s | **307** — travelling back down |
-| press `far` | **306.5** — continues from the width on screen again |
+| press `rest`, cut at a quarter | **329.5** — travelling back down |
+| press `far` | **329.5** — continues from the width on screen again |
 | settled | **400** |
 
-20 checks, `--only motion-interruption`, green twice consecutively here (~14.9s
-each). Captures: `.artifacts/live/motion-interrupt-far.png`,
-`motion-interrupt-rest.png`.
+18 checks, `--only motion-interruption`, green in two consecutive runs here
+(~20s each), and green again twice when run after `motion-geometry` in one
+window (~23s) — the first animation after another probe's capture can complete
+in one frame, so the probe spends one run priming the clock. Captures:
+`.artifacts/live/motion-interrupt-far.png`, `motion-interrupt-rest.png`.
 
 What it settles:
 
 1. **A retarget starts from the painted value, in both directions.** The cut
-   runs read 212.5 and 306.5 against the 212 and 307 the box was painting the
-   frame before — one frame of travel, not the 120-point jump a restart would
-   paint nor the 120–140-point jump a finish-first would.
+   runs read 192 and 329.5 against the 191.5 and 329.5 the box was painting the
+   frame before — one frame of travel, not the 70–200-point jump a restart or a
+   finish-first would paint.
 2. **The new run is re-timed from the cut, against the declared duration.** The
-   212 → 240 cut took as long to land as a full run (the probe polls up to 8s);
+   192 → 240 cut took as long to land as a full run (the probe polls up to 8s);
    a consumer must not budget the remaining distance as time, and an animation
    that reverses under the reader's pointer keeps the run's whole easing. This
    is why `settleWidth` polls instead of sleeping the declared duration: the
