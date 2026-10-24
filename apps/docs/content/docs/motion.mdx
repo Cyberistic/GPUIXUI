@@ -45,7 +45,7 @@ motionTimingOf(220); // { duration: 0.22, ease: "easeInOut" }
 motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
 ```
 
-A duration that is not positive and finite is the house surface arrival (`motionLevels.normal`) rather than a `NaN` on the runtime, and the options object is a config as often as a literal: `null` is the house timing, a phase it does not name is `standard`, and a preference is read by the policy in **Reduced motion**.
+A duration that is not positive and finite — or one past the clock the renderer schedules (`1e300` ms) — is the house surface arrival (`motionLevels.normal`) rather than a `NaN` on the runtime, and the options object is a config as often as a literal: `null` is the house timing, a phase it does not name is `standard`, and a preference is read by the policy in **Reduced motion**.
 
 ## Springs
 

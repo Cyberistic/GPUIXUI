@@ -20902,9 +20902,11 @@ fails the case by name; restored, the file is 44/44 and
       completing at the original 200 ms), executes the duration rules (`NaN`,
       infinity, `1e300` → `300`; `1e12` kept; `0`/negative an instant assignment;
       `transitionEquals` true for a repaired declaration), carries the sibling
-      rule the same release landed on Inertia (`inertia(1e300)` is the house
-      coast, `inertia(1e12)` keeps its 1e9-second constant), and holds the row to
-      `motion.ts`'s own `export const`/`export class` names, both ways.
+      rules the same release landed on Inertia and `motionTimingOf`
+      (`inertia(1e300)` is the house coast and `inertia(1e12)` keeps its
+      1e9-second constant; `motionTimingOf(1e300)` is the house arrival and
+      `1e12` keeps its 1e9 seconds), and holds the row to `motion.ts`'s own
+      `export const`/`export class` names, both ways.
       Directions measured: against the committed page all three fail by name
       (`expected [ 'DEFAULT_TWEEN_MS' ] to deeply equal []`, the missing
       `## Values`, and the missing `Number.MAX_SAFE_INTEGER`); restored, the file

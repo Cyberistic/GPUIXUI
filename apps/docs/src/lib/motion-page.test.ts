@@ -374,6 +374,10 @@ describe("the motion page", () => {
       ease: "easeInOut",
     });
     expect(motionTimingOf(-5)).toEqual(motionTimingOf(motionLevels.normal));
+    // A duration past the clock is the same refusal as an unreadable one; a
+    // large duration the clock can name keeps its own seconds.
+    expect(motionTimingOf(1e300)).toEqual(motionTimingOf(motionLevels.normal));
+    expect(motionTimingOf(1e12)).toEqual({ duration: 1e9, ease: "easeInOut" });
     // A config a store never wrote is the timing a caller who states nothing
     // gets, not a throw.
     expect(motionTimingOf(220, null)).toEqual(motionTimingOf(220));
@@ -385,6 +389,7 @@ describe("the motion page", () => {
 
     expect(page).toContain("`motionTimingOf`");
     expect(page).toContain("not positive and finite");
+    expect(page).toContain("past the clock the renderer schedules");
     expect(page).toContain("config as often as a literal");
     expect(page).toContain("`motionLevels.normal`");
     expect(page).toContain("`standard`");
