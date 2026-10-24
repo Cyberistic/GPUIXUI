@@ -860,6 +860,21 @@ describe("the density override the pages teach", () => {
   it("names the override type the catalogue points a brand at", () => {
     expect(catalogue).toContain("`DensityOverrides`");
   });
+
+  /**
+   * A preset name is a stored preference, and the page taught only the merge —
+   * so a reader whose settings row carried a preset this release dropped had no
+   * way to know the lookup answered `undefined` and handed back a theme with no
+   * density group. The rule is read back from the page and from the source that
+   * makes it.
+   */
+  it("says a preset name this release does not ship is refused", () => {
+    const flat = catalogue.replace(/\s+/g, " ");
+
+    expect(themeSource).toContain("if (!isDensityName(override)) {");
+    expect(flat).toContain("is not a density preset");
+    expect(flat).toContain("Narrow a restored name with `isDensityName`");
+  });
 });
 
 /**

@@ -3584,6 +3584,17 @@ export const roomier = extendTheme(lightTheme, {
 });
 ```
 
+A preset name is a **stored preference** as often as a literal, so a name this
+release does not ship is refused rather than merged: `extendTheme` and
+`createTheme` answer `` `cosy` is not a density preset: compact, comfortable,
+spacious are the presets this release ships ``. The lookup that read the preset
+record with the name answered `undefined` and returned a theme with **no density
+group** — the first control beside it then read `Cannot read properties of
+undefined (reading 'controlHeight')`, and the gate's group refusal told the
+caller to rebuild a theme they had just built with `extendTheme`. Narrow a
+restored name with `isDensityName` (§Persisted choices) before it reaches a
+theme.
+
 `densityPresets` holds all three presets and `defaultDensity` is
 `densityPresets.comfortable`, the preset the built-in themes carry.
 
@@ -4271,7 +4282,9 @@ Merge rules:
 - `density` accepts a preset name or `DensityOverrides`; a partial override keeps
   the base preset name and merges `controlHeight` and `controlPaddingX` size by
   size, so raising one size inherits the rest rather than dropping the steps the
-  audit gate requires;
+  audit gate requires. A preset name this release does not ship is **refused**,
+  naming the value and the presets that ship, rather than merged into a theme
+  with no density group (§Density);
 - `mode` is not overridable — `extendTheme` keeps the base mode;
 - `contrast` is not overridable either, and for the same reason: a mode and a
   variant are what a theme's numbers mean, so a caller that wants the other one

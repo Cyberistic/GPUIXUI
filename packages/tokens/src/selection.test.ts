@@ -512,9 +512,7 @@ describe("the tones the wash is painted on", () => {
     const styles = placements.length / excludedPairs.length;
 
     expect(seam).toContain(`Measured over the ${styles}`);
-    expect(seam).toContain(
-      `every one of the ${placements.length} placements`,
-    );
+    expect(seam).toContain(`every one of the ${placements.length} placements`);
     expect(seam).toContain(`**${under.length} under the floor`);
     expect(seam).toContain(
       `Light · Omarchy's secondary line on a selected row at ${tightest.washed.toFixed(2)}:1`,

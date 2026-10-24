@@ -21,8 +21,10 @@ import {
 import {
   borderWidth,
   defaultDensity,
+  densityNames,
   densityPresets,
   iconSize,
+  isDensityName,
   radius,
   spacing,
   type BorderWidth,
@@ -346,6 +348,16 @@ const mergeDensity = (
     return base;
   }
   if (typeof override === "string") {
+    // A preset name is a stored preference as often as a literal, so the type
+    // cannot vouch for it. The lookup it used to be answered `undefined` and
+    // returned a theme with no density group: the first control beside it read
+    // `Cannot read properties of undefined (reading 'controlHeight')`, and the
+    // gate blamed a stored theme rather than the name.
+    if (!isDensityName(override)) {
+      throw new Error(
+        `\`${override}\` is not a density preset: ${densityNames.join(", ")} are the presets this release ships. A restored or configured choice is narrowed with \`isDensityName\` before it reaches a theme.`,
+      );
+    }
     return densityPresets[override];
   }
   return {

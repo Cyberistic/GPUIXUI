@@ -1964,6 +1964,28 @@ the brand case. Docs in `docs/tokens.md` §Platform styles,
 (which also stopped printing the retired `#E3E3E8` off track). No native
 scenario applies — a box the primitives' own suite paints and a report over it.
 
+`[x]` Refuse a **density preset this release does not ship**, at the merge that
+read it — a preset name is a stored preference as often as a literal, so
+`extendTheme`/`createTheme` can be handed a name the union no longer carries;
+`densityPresets[override]` answered `undefined` and the constructor returned a
+theme with **no density group**, so the first control beside it read the
+runtime's `TypeError: Cannot read properties of undefined (reading
+'controlHeight')` while the gate's group refusal told the caller to rebuild a
+theme they had just built with `extendTheme` — exactly the failure
+`missingTokens` exists to name. `mergeDensity` now runs the published
+`isDensityName` membership test and throws a sentence naming the value and the
+three presets that ship, with the restore route (`isDensityName`, §Persisted
+choices), so the boundary fails instead of the first paint. Proof:
+`theme.test.ts` gains `refuses a density preset this release does not ship`,
+which resolves a stored settings row (`JSON.parse('{"density":"cosy"}')`, the
+cast being the storage boundary) and requires the sentence, then drives every
+shipped preset to prove the guard rejects no member; `docs.test.ts`'s density
+suite gains `says a preset name this release does not ship is refused`, which
+reads the guard in `theme.ts` and the rule on `docs/tokens.md` §Density and its
+merge list. Directions measured: with the bare lookup restored, both cases fail
+by name (`refuses a density preset…`, `says a preset name…`); restored, the two
+files are 93/93. No native scenario applies — a constructor's precondition.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 160/160

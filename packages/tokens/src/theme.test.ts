@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { almostBrandAudit } from "./theme-audit.example.js";
 import { resolveBrandTheme, resolveTheme } from "./high-contrast.example.js";
-import { densityPresets, type BoxShadow } from "./index.js";
+import { densityNames, densityPresets, type BoxShadow } from "./index.js";
 import {
   auditTheme,
   createTheme,
@@ -191,6 +191,30 @@ describe("extendTheme", () => {
   it("applies a density preset", () => {
     const custom = extendTheme(lightTheme, { density: "compact" });
     expect(custom.density).toEqual(densityPresets.compact);
+  });
+
+  /**
+   * A preset name is a stored preference as often as a literal, so a name this
+   * release does not ship reaches the merge through a decoder or a cast. The
+   * lookup used to answer `undefined`, `extendTheme` returned a theme with **no**
+   * density group, and the first control beside it read `Cannot read properties
+   * of undefined (reading 'controlHeight')` — the failure the presence rule
+   * exists to prevent, with a gate message telling the caller to rebuild a theme
+   * they had just built with `extendTheme`.
+   */
+  it("refuses a density preset this release does not ship", () => {
+    // The cast is the storage boundary: a settings row is unknown input.
+    const stored = JSON.parse('{"density":"cosy"}') as ThemeOverrides;
+
+    expect(() => extendTheme(lightTheme, stored)).toThrow(
+      /`cosy` is not a density preset: compact, comfortable, spacious/,
+    );
+    // The membership test is the guard's, so it cannot reject a shipped preset.
+    densityNames.forEach((name) => {
+      expect(extendTheme(lightTheme, { density: name }).density).toEqual(
+        densityPresets[name],
+      );
+    });
   });
 
   it("keeps the base density name for a partial override", () => {
