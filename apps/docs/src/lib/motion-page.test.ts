@@ -156,9 +156,11 @@ const valueExports = [
   ),
 ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
-/** The values `timing.ts` exports. */
+/** The values `timing.ts` exports, and the types a caller hands it. */
 const timingExports = [
-  ...read("packages/motion/src/timing.ts").matchAll(/^export const (\w+)/gm),
+  ...read("packages/motion/src/timing.ts").matchAll(
+    /^export (?:const|interface|type|class) (\w+)/gm,
+  ),
 ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
 interface Level {
@@ -290,6 +292,40 @@ describe("the motion page", () => {
     expect(page).toContain("`options.reducedMotion` is the per-run override");
     expect(page).toContain("in both directions");
     expect(page).toContain("`reducedMotionOf(override, preference)`");
+  });
+
+  it("teaches the stored preference the composing rule shares", () => {
+    // Bug guarded: `reducedMotionOf` is published as *the* rule a composing
+    // package reuses, and it compared the preference with `=== "reduced"` while
+    // `preferenceOf` reads a present value that is not a name as reduced — so a
+    // package composing the rule with its own decoded settings row animated a
+    // reader who asked for less motion. The page named the rule and never said
+    // the two readers agree, or what a renamed value gets.
+    const stored = ["animated", "reduced", "Reduced", "", 42, null, undefined];
+
+    expect(stored.map((value) => reducedMotionOf(undefined, value))).toEqual(
+      stored.map((value) => preferenceOf(value) === "reduced"),
+    );
+    expect(reducedMotionOf(undefined, "Reduced")).toBe(true);
+    expect(reducedMotionOf(undefined, null)).toBe(false);
+    expect(reducedMotionOf(true, "Reduced")).toBe(true);
+
+    expect(page).toContain("reads the **same** policy");
+    expect(page).toContain('`reducedMotionOf(undefined, "Reduced")`');
+    expect(page).toContain(
+      "only an absent preference keeps the animated answer",
+    );
+
+    // The timing row names the port a decoded config is handed to, and that
+    // type is the port because both fields take what a store wrote.
+    const options =
+      read("packages/motion/src/timing.ts")
+        .split("interface MotionTimingOptions")[1]
+        ?.split("\n}")[0] ?? "";
+
+    expect(options).toContain("phase?: unknown");
+    expect(options).toContain("preference?: unknown");
+    expect(timingRow()).toContain("`MotionTimingOptions`");
   });
 
   it("teaches the wait a no-journey timing drops", () => {

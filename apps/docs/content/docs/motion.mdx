@@ -13,7 +13,7 @@ GPUix tweens a numeric style field on its own clock. `@gpuixui/motion` adds clos
 | inertia | `inertia`, `project`, `sampleInertia` |
 | value | `MotionValue` with `DEFAULT_TWEEN_MS`, `instant`, `tween`, `springTransition`, `transitionEquals` |
 | React | `useSpring`, `useTransition`, `useInertia`, `useMotion`, `useSurfaceTiming`, `useSurfacePresence`, `useMotionPreference`, `MotionProvider` |
-| timing | `motionLevels`, `motionEasings`, `motionTiming`, `motionTimingOf`, `preferenceOf`, `reducedMotionOf` |
+| timing | `motionLevels`, `motionEasings`, `motionTiming`, `motionTimingOf`, `preferenceOf`, `reducedMotionOf`, `MotionTimingOptions` |
 | presence | `fadeFrom`, `fadeFromSide`, `fadeFromAnchor`, `fadeOnly`, `presenceTiming`, `presenceTimingOf`, `presenceMotion`, `presenceStyle`, `transitionWindowMs`, `exitWindowMs`, `delayedTiming` |
 
 The package publishes six entry points: the root (`spring`, `easing`, `timeline`, `inertia`, `MotionValue`), `@gpuixui/motion/react`, `@gpuixui/motion/react/presence` (the provider and the two presence hooks, published without the physics), `@gpuixui/motion/timing`, `@gpuixui/motion/timeline` and `@gpuixui/motion/presence`.
@@ -148,6 +148,8 @@ The preference is a setting your application persists, so the provider decodes w
 - A value that is present and is not one of those names — a renamed setting, an old release's string — takes `"reduced"`. The two mistakes are not equal: animating a reader who asked for less motion is the failure the policy exists to prevent, while a lost journey the application can see is one a developer fixes.
 
 The provider is the default for **every** hook below it, the physics hooks included: `useMotion`, `useSpring`, `useTransition` and `useInertia` read it, so a tree wrapped for a reader who asked for less motion does not count up, tween a width or release a coast unless a caller overrides it. `options.reducedMotion` is the per-run override and wins in both directions — a decorative animation can be silenced in an animated tree, and one that must move keeps moving in a reduced one — and `reducedMotionOf(override, preference)` is the rule, so a package composing the table does not re-decide what less motion means.
+
+That rule reads the **same** policy rather than comparing the string, so a package that composes it with its own decoded settings row cannot answer differently from the provider: `reducedMotionOf(undefined, "Reduced")` — a value a release renamed — is `true`, and only an absent preference keeps the animated answer. `MotionTimingOptions` is the port: a decoded `phase` and `preference` reach it without being asserted into either union.
 
 A reduced run is a zero-duration assignment.
 
