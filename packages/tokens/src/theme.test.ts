@@ -318,7 +318,8 @@ describe("extendTheme", () => {
   it("replaces the switch a platform style declares, whole", () => {
     // The switch is a value of the theme, not a fixed control: a consumer that
     // starts from a platform style and owns its toggle names all three slots,
-    // because a half-declared one paints the slots it lost with nothing.
+    // because a half-declared one is not a declaration — the primitive keeps the
+    // accent toggle and `switchFailures` names the lost slot.
     const apple = platformTheme(darkTheme, "darwin");
     expect(apple.switch).toBeDefined();
     const house: SwitchColors = {

@@ -91,8 +91,9 @@ export const platformAccent = (
  * Own the platform's toggle as well as its palette. The switch is a value of the
  * theme, not a fixed control: `darwin` declares Apple's green on, grey off and
  * white knob, and a brand that wants its own toggle replaces the three slots
- * together. A half-declared switch paints the slots it lost with nothing, which
- * is why the override is one value rather than a partial.
+ * together. A half-declared switch is not a declaration — the primitive painter
+ * is whole or none, so it keeps the accent toggle and `switchFailures` names the
+ * lost slot — which is why the override is one value rather than a partial.
  */
 export const resolveSwitchTheme = (mode: ThemeMode): Theme =>
   extendTheme(platformTheme(themes[mode], "darwin"), {

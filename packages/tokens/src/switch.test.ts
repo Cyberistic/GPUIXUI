@@ -54,6 +54,8 @@ const primitivePaint = read(
 const primitiveSuite = read(
   "../../../packages/primitives/src/core/selection.test.ts",
 );
+/** The seam's own JSDoc, with line wrapping and comment stars removed. */
+const seam = read("./theme.ts").replace(/\s+/g, " ").replace(/ \* /g, " ");
 
 /** One exported seam of the primitive painter, from its name to its closing brace. */
 const painter = (name: string): string => {
@@ -612,6 +614,32 @@ describe("the pages that teach the declared paint", () => {
     expect(readme).toContain("platform's `switch` paint replaces whole");
     expect(resolveSwitchTheme("light").switch?.on).toBe("#16A34A");
     expect(resolveSwitchTheme("dark").switch?.off).toBe("#3B3B40");
+  });
+
+  it("teaches the toggle a slot the painter cannot read falls back to", () => {
+    // The seam described the fallback as "a slot the renderer cannot read
+    // paints nothing", while the painter is whole-or-none: `declaredPaint`
+    // yields `Option.none` for a table that lost a slot, `switchTheme`
+    // normalises it to no declaration, and the control keeps the accent
+    // toggle — the same fallback the pages teach. The seam's own words are
+    // held to the painter so the type a brand reads cannot promise a half
+    // switch.
+    expect(seam).not.toContain(
+      "a slot the renderer cannot read paints nothing",
+    );
+    expect(seam).toContain("a slot it cannot read is not a declaration");
+    expect(seam).toContain("keeps the accent toggle");
+    expect(primitivePaint).toContain(
+      "A declaration is **whole** or it is nothing",
+    );
+    // The pages teach the same fallback, and none of them describes a half
+    // switch painting nothing.
+    expect(catalogue).toContain("keeps that toggle");
+    expect(catalogue).toContain("half-declared switch is not a declaration");
+    expect(designSystem).toContain("half-declared switch is no declaration");
+    [catalogue, designSystem, seam].forEach((page) => {
+      expect(page).not.toContain("slots it lost");
+    });
   });
 
   it("holds the paint half to the seam the primitives read", () => {

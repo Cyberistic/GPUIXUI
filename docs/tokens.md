@@ -4738,10 +4738,10 @@ Merge rules:
   `invalidNumbers` reports a strong role that does not follow as `emphasis`;
 - elevation levels **replace** the whole shadow array;
 - a `switch` paint **replaces** the three slots whole. It is one control's paint
-  rather than three roles — a half-declared switch paints the slots it lost with
-  nothing, and `switchFailures` names the slot — so a brand that starts from a
-  platform style names all three (`{ on, off, knob }`) and a theme that carries
-  none keeps the accent switch;
+  rather than three roles — a half-declared switch is not a declaration: the
+  primitive painter is whole-or-none, keeps the accent toggle and `switchFailures`
+  names the slot — so a brand that starts from a platform style names all three
+  (`{ on, off, knob }`) and a theme that carries none keeps the accent switch;
 - `density` accepts a preset name, a **whole box** — the shape a stored theme
   writes, its preset `name` and every metric — or `DensityOverrides` to edit the
   metrics. A whole box replaces the base's; a partial override keeps the base

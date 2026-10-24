@@ -252,11 +252,12 @@ export interface ThemeOverrides {
    * Replace the platform switch paint whole, or declare one on a theme that
    * carries none. A style declares one when its platform's toggle is not the
    * accent family (`PlatformStyle.switch`); an application that starts from that
-   * style and wants its own toggle names all three slots here, because a slot
-   * the renderer cannot read paints nothing — `switchFailures` names the slot a
-   * paint lost. A theme that carries none keeps the accent switch, and an
-   * override written as `undefined` inherits the base's paint rather than
-   * erasing it.
+   * style and wants its own toggle names all three slots here, because the
+   * primitive painter is **whole or none** — a slot it cannot read is not a
+   * declaration, so the control keeps the accent toggle rather than painting a
+   * half switch, and `switchFailures` names the slot to repair. A theme that
+   * carries none keeps the accent switch, and an override written as `undefined`
+   * inherits the base's paint rather than erasing it.
    */
   readonly switch?: SwitchColors;
   /** Replace the platform switch box whole, or declare one on a theme. */
@@ -709,10 +710,10 @@ export function extendTheme(
       overrides.syntax == null
         ? base.syntax
         : syntaxPalette(overrides.syntax, syntaxColors(base)),
-    // A switch is one control's paint in three slots; a half-declared one paints
-    // the slots it lost with nothing, so an override replaces the set whole. An
-    // override that names none keeps the base's declaration — the accent switch
-    // when the base carries none.
+    // A switch is one control's paint in three slots; the primitive painter is
+    // whole or none, so an override replaces the set whole. An override that
+    // names none keeps the base's declaration — the accent switch when the base
+    // carries none.
     switch: overrides.switch ?? base.switch,
     switchMetrics: overrides.switchMetrics ?? base.switchMetrics,
   };
