@@ -857,7 +857,10 @@ off. `PlatformStyle.switch` is the paint, `PlatformStyle.switchMetrics` the box,
 primitive draws the platform's box only when the theme carries the paint.
 `switchMetricsAt(metrics, size)` keeps a proportional `sm` (0.8) and `lg` (1.2)
 scale of the published `md` box and fits the knob to the track's inner height,
-so every size keeps the knob inside the track. **A box is a stored value as often
+so every size keeps the knob inside the track. An authored look that declares
+none clears both, so Luna over macOS keeps Luna's chrome and the library's
+toggle.
+**A box is a stored value as often
 as an authored one** — a saved platform style, a settings row, a theme file — so
 the resolver takes the shape a store hands back (`SwitchBoxSource`) and answers
 nothing for a box that lost a number or wrote one the box's rule refuses: a
@@ -866,8 +869,6 @@ a `null` height into a zero-height box, and a `"38"` width into a coerced 30,
 while `md` handed the stored value back untouched. The report already names the
 slot (`switchMetricFailures`); the resolver now answers the same absence, the
 rule `elevationShadow` follows for a lost level.
-An authored look that declares none clears both, so Luna over macOS keeps Luna's
-chrome and the library's toggle.
 
 **That paint is measured like a role, because it is not one.**
 `switchPaintRoles` (`on`, `off`, `knob`) and `switchPlacements` are the table:
