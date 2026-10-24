@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 246/246
+`[x]` `[██████████]` 247/247
 
 `[x]` Read a **partial the store handed back** in the extension mechanism —
 `extendTheme(base, overrides)` documented that "a key written as `undefined`
