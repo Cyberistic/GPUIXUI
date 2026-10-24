@@ -262,7 +262,7 @@ describe("the status a package page reports", () => {
     });
 
     expect(missing).toEqual([]);
-    expect(curatedPages.length).toBe(38);
+    expect(curatedPages.length).toBe(39);
   });
 
   it("mounts the status strip on both component page frames", () => {

@@ -138,6 +138,7 @@ const PAGE_PARTS: Readonly<
       ],
     },
   ],
+  "auth.mdx": [],
   "avatar.mdx": [{ part: null, types: ["AvatarProps"] }],
   "badge.mdx": [{ part: null, types: ["BadgeProps"] }],
   "breadcrumb.mdx": [

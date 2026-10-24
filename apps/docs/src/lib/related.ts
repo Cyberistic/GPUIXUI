@@ -231,6 +231,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   {
     name: "Form composition",
     pages: [
+      component("auth", "Auth"),
       component("field", "Field and inline validation"),
       component("fieldset", "Fieldset"),
       component("form", "Form"),

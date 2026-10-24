@@ -235,6 +235,7 @@ default).
 | Message | done | partial | blocked by clipboard and HTML anchor (unfiled) — Copy is the caller's handler and a citation opens through a callback. |
 | Fieldset | done | partial | blocked by `fieldset` and `aria-disabled` (unfiled) — `role="group"` is named by the legend; disable each control. |
 | Form | done | partial | blocked by a native form host (unfiled) — the form owns its value through `@tanstack/form-core` and the caller submits the decoded value. |
+| Auth | done (composed) | partial | blocked by `aria-describedby` (unfiled) — four recipe cards over `Card` and the primitives (sign in, sign up, password reset, one-time code), documented as examples rather than a package component; the message sits beside the field. |
 | Navigation Menu | done | partial | blocked by HTML anchor, `aria-haspopup` and a touch signal (unfiled) — links are buttons with `onSelect`; a press opens the panel. |
 | Preview Card | done | partial | blocked by window focus delivery and `aria-haspopup` (unfiled) — hover or a press opens; Enter/Space on the trigger is the keyboard path. |
 | Drawer | done | partial | blocked by `aria-modal`, `aria-labelledby` and `transform` (unfiled, #102) — an anchored veil and 12px edge travel; no swipe-to-dismiss (no drag host). |

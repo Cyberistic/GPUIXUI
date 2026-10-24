@@ -1,14 +1,13 @@
 ---
 title: Auth
-description: The auth surface — sign in, sign up, password reset and a one-time code, composed from the card and the primitives.
+description: Sign in, sign up, password reset and a one-time code, composed from the card and the primitives.
 ---
 
-The auth surface is a set of **recipes**, not a component: four cards a product
-composes from `@gpuixui/components/card` and the primitives, in the shape
-shadcn/ui presents its auth blocks. Each card owns one job and one status row, so
-copy the recipe, wire its handlers and ship it. The
-[sign-in page](/docs/blocks/sign-in) is the page-level composition of the same
-parts.
+<ComponentPreview name="auth-sign-in" />
+
+Four recipes rather than a component: each card composes `Card` and the
+primitives, owns one job and one status row, and ships with its handlers. The
+[sign-in page](/docs/blocks/sign-in) is the page-level composition.
 
 ## Examples
 
@@ -18,11 +17,9 @@ every state lives in a reserved row, so the card never moves.
 
 ### Sign in
 
-Email, password, a way to the reset card, the primary action, a divider and two
-OAuth buttons. Submit empty fields for the error state, or a well-formed address
-and password for the success state.
-
-<ComponentPreview name="auth-sign-in" />
+The preview at the top of this page: email, password, a way to the reset card,
+the primary action, a divider and two OAuth buttons. Submit empty fields for the
+error state, or a well-formed address and password for the success state.
 
 ### Sign up
 
@@ -55,20 +52,15 @@ The cards need the primitives and the card surface. Both are workspace packages:
 
 <Install packageName="@gpuixui/components" importName="Card" />
 
+<ComponentSource name="auth" file="apps/docs/src/components/docs/auth-blocks.tsx" />
+
 ## Usage
 
 A sign-in card is a `Card` with a header, a column of fields and a footer. The
 same shape carries all four recipes; only the fields and the callbacks change.
 
 ```tsx
-import {
-  Button,
-  Input,
-  Label,
-  Separator,
-  Stack,
-  Text,
-} from "@gpuixui/primitives";
+import { Button, Input, Label, Separator, Stack, Text } from "@gpuixui/primitives";
 import {
   Card,
   CardContent,
@@ -134,67 +126,21 @@ export function SignInCard() {
 
 ## API reference
 
-| Part | Renders | Props |
-| ---- | ------- | ----- |
-| `Card` | a bordered or elevated surface | `variant`, `style`, `className` |
-| `CardHeader` | the title block | `children` |
-| `CardContent` | the body block | `children` |
-| `CardFooter` | the footer row | `children` |
-| `Input` | a single-line field | `label`, `placeholder`, `value`, `defaultValue`, `invalid`, `fullWidth`, `disabled` |
-| `Checkbox` | a labelled box | `label`, `checked`, `defaultChecked`, `disabled` |
-| `OTPField` | six cells in a group | `label`, `value`, `onValueChange`, `onComplete`, `invalid` |
-| `Separator` | a rule with an optional caption | `label`, `orientation` |
-| `Button` | an action with a pressed and busy state | `variant`, `size`, `fullWidth`, `loading`, `disabled` |
-| `Stack` | one-dimensional layout | `direction`, `gap`, `align`, `justify`, `grow` |
+The cards are recipes: their parts' props are on each part's own page. What a
+recipe adds is its callback set, listed under [Recipes](#recipes).
 
-## Theming
+## Recipes
 
-The cards read the semantic roles only: `card` for the surface, `border` for its
-edge, `foreground` for the title, `muted-foreground` for the description and the
-footer, `primary` for the action and the links, and `destructive` for the error
-note. The status row keeps its height in every state, so a message changes
-colour and outline only.
+| Member | Contract |
+| ------ | -------- |
+| `LoginPage` | `onSubmit`, `onProvider`, `pending`, `error` |
+| `SignupPage` | `onSubmit`, `pending`, `error` |
+| `ForgotPasswordPage` | `onSubmit`, `pending` |
+| `OtpPage` | `onSubmit`, `onResend` |
+| `SignInPage` | the full page — navbar, form card and quote panel — over the same callbacks |
 
-The browser reproduction adds no colour of its own: the mark is the site's mask
-in the `primary` role, and the illustration on the
-[sign-in page](/docs/blocks/sign-in) is a gradient and two rings mixed from the
-same role. Switching the platform or the palette therefore repaints the whole
-surface.
+## Limitations
 
-## Accessibility and limitations
-
-Each field is named by a visible `Label`; the one-time-code group is labelled
-"Verification code", and each cell carries its own position. The preview's
-status row is `aria-live="polite"`, so a submission result is announced without
-stealing focus.
-
-The runtime's budget is the cross-cutting contract on
-[Accessibility](/docs/accessibility): a component publishes the seven attributes
-the runtime supports and refuses the rest. The cards therefore do not promise
-`aria-describedby` or an error association beyond the label; a page that needs
-one must render the message beside the field and keep the copy in the field's
-`description`.
-
-## Dependencies
-
-| Package | Why |
-| ------- | --- |
-| `@gpuixui/primitives` | the fields, the actions, the divider, the layout and the type |
-| `@gpuixui/components` | the card surface and its four parts |
-
-The reproduction is HTML and CSS; the shipped cards render through GPUix, not
-the DOM.
-
-## Related
-
-- [Card](/docs/components/card) — the surface every recipe composes.
-- [Field](/docs/components/field) — one message slot and submit-time validation.
-- [Form](/docs/components/form) — the submit lifecycle a real sign-in wires to.
-- [Button](/docs/components/button) — the primary action and its busy state.
-
-## Status
-
-There is no `COMPONENTS.md` row for Auth: the cards are recipes over shipped
-parts, not a component. Each part's status is its own row in the inventory — the
-[Card](/docs/components/card) and [Form](/docs/components/form) pages print
-theirs — and the recipes add no behaviour beyond those parts.
+- No `aria-describedby` and no error association beyond the visible label; a page that needs one renders the message beside the field and keeps the copy in the field's `description`.
+- The previews are HTML reproductions of the native geometry; in an app the cards render through GPUix.
+- The one-time-code cells are six tab stops, not a roving group.

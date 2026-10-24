@@ -1,3 +1,4 @@
+import auth from "./auth-blocks.tsx?raw";
 import accordion from "../../../../../packages/components/src/accordion.tsx?raw";
 import alert from "../../../../../packages/components/src/alert.tsx?raw";
 import avatar from "../../../../../packages/components/src/avatar.tsx?raw";
@@ -44,6 +45,7 @@ import tooltip from "../../../../../packages/primitives/src/components/Tooltip.t
  * page honest without making the native package a browser dependency.
  */
 export const componentSources = {
+  auth,
   accordion,
   alert,
   avatar,
