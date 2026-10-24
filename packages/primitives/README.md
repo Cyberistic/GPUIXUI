@@ -400,6 +400,15 @@ cells painted rather than from the raw prop; `core/otp.test.ts`,
 `components/OTPField.test.tsx` and `runtime/otp.runtime.test.tsx` hold the unit,
 the tree and the window.
 
+**The cell count is the same kind of saved setting**, and text is not a number
+there either: `length` went through `otpLength` alone, so a record that kept it
+as `"4"` painted **one** cell — a four-digit field with a one-character box —
+and `onComplete` fired on the first character, a verifier handed a
+one-character code. `otpCellCount` (`core/otp.ts`) reads only a real number as a
+count (`storedNumber`'s rule) and answers the documented six cells for a stored
+shape it cannot read, while a number that cannot be laid out still resolves to
+the one-cell floor the page documents; the same three suites hold it.
+
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.
 

@@ -30,7 +30,7 @@ const [code, setCode] = useState("");
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `length` | `number` | `6` | number of cells; a nonsense value resolves to at least one |
+| `length` | `number` | `6` | number of cells; a stored value that is not a number is six, and a number that cannot be laid out resolves to one |
 | `value` | `string` | — | controlled code, normalised to letters/digits; a stored value that is not text is no code |
 | `defaultValue` | `string` | — | initial code when uncontrolled; a stored value that is not text is no code |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |

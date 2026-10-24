@@ -136,6 +136,21 @@ describe("OTPField", () => {
     expect(expectSome(hostProp(cell(element, 0), "tabIndex"))).toBe(0);
   });
 
+  it("draws the documented six cells for a stored length that is not a number", () => {
+    // Bug guarded: a cell count is a setting saved beside the form, and a
+    // record can keep it as text. Read through `otpLength` alone, a stored
+    // `"4"` painted **one** cell, so the field asked for a four-digit code and
+    // painted a one-character box. Only a real number is a count, so the
+    // stored shape paints the documented six.
+    const element = render(
+      { length: "4" as unknown as number, label: "Verification code" },
+      "",
+    );
+    expect(cellsOf(element)).toHaveLength(6);
+    // The control: a real count is still the field it names.
+    expect(cellsOf(render({ length: 4 }, ""))).toHaveLength(4);
+  });
+
   it("keeps one cell in the tab order: the one the code has reached", () => {
     // The bug: every cell was tabIndex=0, so Tab walked through all six.
     const tabStops = (value: string, length = 4) =>

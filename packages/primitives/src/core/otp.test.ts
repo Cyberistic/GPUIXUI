@@ -16,10 +16,32 @@ import * as Option from "effect/Option";
 import {
   applyOtpInput,
   decideOtpKey,
+  DEFAULT_OTP_LENGTH,
   normalizeOtp,
+  otpCellCount,
   otpCells,
   otpLength,
 } from "./otp.js";
+
+describe("otpCellCount", () => {
+  it("draws the documented six cells for a length that is not a number", () => {
+    // Bug guarded: a cell count is a setting saved beside the form, and a
+    // record can keep it as text. Read through `otpLength` alone, a stored
+    // `"4"` painted **one** cell and called the code complete on its first
+    // character — a verifier handed a one-character code.
+    expect(otpCellCount("4")).toBe(DEFAULT_OTP_LENGTH);
+    expect(otpCellCount(null)).toBe(DEFAULT_OTP_LENGTH);
+    expect(otpCellCount(undefined)).toBe(DEFAULT_OTP_LENGTH);
+    expect(otpCellCount({ cells: 4 })).toBe(DEFAULT_OTP_LENGTH);
+  });
+
+  it("keeps a real count, and one that cannot be laid out as one cell", () => {
+    expect(otpCellCount(4)).toBe(4);
+    expect(otpCellCount(0)).toBe(1);
+    expect(otpCellCount(Number.NaN)).toBe(1);
+    expect(otpCellCount(2.7)).toBe(2);
+  });
+});
 
 describe("normalizeOtp", () => {
   it("keeps letters and digits and drops separators", () => {

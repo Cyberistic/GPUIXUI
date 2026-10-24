@@ -2264,7 +2264,19 @@ describe("the primitives API tables", () => {
       code: rule.includes("export const normalizeOtp = (value: unknown"),
       value: rows("value").includes(stored),
       initial: rows("defaultValue").includes(stored),
-    }).toEqual({ guarded: true, code: true, value: true, initial: true });
+      // The cell count is the same kind of stored setting: text is not a count.
+      count: rule.includes("storedNumber(length)"),
+      length: rows("length").includes(
+        "a stored value that is not a number is six",
+      ),
+    }).toEqual({
+      guarded: true,
+      code: true,
+      value: true,
+      initial: true,
+      count: true,
+      length: true,
+    });
   });
 
   it("reads a composed props type through extends, an alias and Omit", () => {

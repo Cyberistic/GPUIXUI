@@ -92,8 +92,10 @@ export type { StarBox, StarState } from "./rating.js";
 
 export {
   applyOtpInput,
+  DEFAULT_OTP_LENGTH,
   decideOtpKey,
   normalizeOtp,
+  otpCellCount,
   otpCells,
   otpLength,
 } from "./otp.js";

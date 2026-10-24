@@ -188,6 +188,32 @@ it("paints a stored code that is not text as an empty field a reader can still f
   );
 });
 
+it("draws the documented six cells for a stored length that is not a number", async () => {
+  // The bug guarded: a cell count is a setting saved beside the form, and a
+  // record can keep it as text. Read through `otpLength` alone, a stored `"2"`
+  // painted **one** cell and called the code complete on its first character —
+  // a verifier handed a one-character code. Only a real number is a count, so
+  // the stored shape paints the documented six and completes at six.
+  // The cast is the storage boundary: the record wrote the count as text.
+  const stored = { length: "2" } as unknown as { readonly length?: number };
+  const field = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      length={stored.length}
+      autoFocus
+      onChange={field.onChange}
+      onComplete={field.onComplete}
+    />,
+  );
+  expect(cells(runtime)).toHaveLength(6);
+  Arr.forEach(["1", "2", "3", "4", "5"], (digit) => runtime.type(digit));
+  expect(field.complete).toStrictEqual([]);
+  runtime.type("6");
+  expect(field.complete).toStrictEqual(["123456"]);
+});
+
 it("moves native focus into the next cell as a character lands", async () => {
   const runtime = await mount(
     <OTPField testId="otp" label="Verification code" autoFocus />,

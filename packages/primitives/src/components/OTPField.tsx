@@ -55,8 +55,8 @@ import {
   applyOtpInput,
   decideOtpKey,
   normalizeOtp,
+  otpCellCount,
   otpCells,
-  otpLength,
   type OtpEdit,
 } from "../core/otp.js";
 import { accessibleName, spokenSentence } from "../core/a11y.js";
@@ -90,7 +90,14 @@ export interface OTPFieldProps
     InteractionProps,
     FieldHostProps,
     HelpProps {
-  /** Number of cells. Defaults to 6. */
+  /**
+   * Number of cells. Defaults to 6.
+   *
+   * A length is a setting saved beside the form as often as a literal, so a
+   * stored value that is not a number is the documented **six** cells
+   * ({@link otpCellCount}) while a number that cannot be laid out — `NaN`, an
+   * infinity, zero or a negative count — resolves to one.
+   */
   readonly length?: number;
   /** Controlled code. Omit to let the field hold its own. */
   readonly value?: string;
@@ -196,7 +203,7 @@ export const otpFieldPart = (
   focus: OTPFieldFocus,
   handlers: OTPFieldHandlers,
 ): OTPFieldPart => {
-  const limit = otpLength(props.length ?? 6);
+  const limit = otpCellCount(props.length);
   const disabled = props.disabled === true;
   const resolved = recipeTw.classesToStyle(
     fieldSquareClass({ size: controlSize(props.size), invalid: props.invalid }),
@@ -371,7 +378,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   const theme = useTheme();
   const messages = useMessages();
   const { renderer } = useGpuix();
-  const limit = otpLength(props.length ?? 6);
+  const limit = otpCellCount(props.length);
   const cellIds = useRef<Map<number, number>>(new Map());
   /** Whether the current key's native edit just emptied this cell. */
   const emptiedByEdit = useRef(false);

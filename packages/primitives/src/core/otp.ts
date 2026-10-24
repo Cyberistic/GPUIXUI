@@ -21,11 +21,31 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
-import { storedText } from "./stored.js";
+import { storedNumber, storedText } from "./stored.js";
 
 /** A usable cell count: a whole number, at least one. */
 export const otpLength = (length: number): number =>
   Math.max(1, Math.trunc(Number.isFinite(length) ? length : 1));
+
+/** The cells a field draws when it was given no length. */
+export const DEFAULT_OTP_LENGTH = 6;
+
+/**
+ * The cells a field draws from the length it was given.
+ *
+ * A cell count is a setting saved beside the form as often as a literal, and a
+ * record can keep it as text (a settings field, a decoder's answer). Only a
+ * real number is a count (`storedNumber`'s rule), so a stored shape this
+ * release cannot read is the documented **six** cells rather than the one-cell
+ * floor a number that cannot be laid out keeps: read raw, a saved `"4"` painted
+ * one cell and called the code complete on its first character — a verifier
+ * handed a one-character code.
+ */
+export const otpCellCount = (length: unknown): number =>
+  Option.match(storedNumber(length), {
+    onNone: () => DEFAULT_OTP_LENGTH,
+    onSome: otpLength,
+  });
 
 /**
  * Keep letters and digits, drop separators, truncate to `length`.
