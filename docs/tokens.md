@@ -3663,6 +3663,16 @@ and the tables; the probe is the paint. Evidence:
 | `4xl` | 48 |
 | `5xl` | 64 |
 
+`spacingSteps` is the scale as an ordered index — the order the table above
+prints and the order a spacing picker iterates — and `isSpacingStep` narrows a
+restored value with it. A spacing step is a stored choice as often as a literal:
+a saved panel records its inset, a restored toolbar its gap, a layout record the
+spacer between two regions. A name this release does not ship is **absence**
+rather than a substituted step, the answer every layout prop already documents
+for an omitted value and the one `packages/primitives`' `spaceStep` returns,
+because the step decides geometry the caller owns and the window has nothing to
+paint until they decide (§[Persisted choices](#persisted-choices)).
+
 ## Radius
 
 | Token | Pixels | Use |
@@ -3677,6 +3687,15 @@ and the tables; the probe is the paint. Evidence:
 This is the default theme's scale. A platform style replaces it —
 macOS 6/10/14/18, Linux 4/6/12/16, Windows 4/4/8/8 — so a Windows control reads
 squarer than a macOS one. `full` stays rounded everywhere.
+
+`radiusSteps` is that scale as an ordered index and `isRadiusStep` narrows a
+restored corner with it. A corner is a stored choice as often as a literal — a
+saved panel's radius, a restored placeholder's shape — and a name this release
+does not ship is **absence**, the answer each painter documents (a `Box` and a
+scroll frame paint none, a `Skeleton` keeps its own `sm`). Whether the active
+theme paints a step is the theme's question: the index says which names this
+release ships, and `packages/primitives`' `radiusStep` reads the theme's group
+(§[Persisted choices](#persisted-choices)).
 
 ## Density
 
@@ -4547,11 +4566,11 @@ diffable against shadcn. `override-scope.test.ts` reads both halves.
 
 ### Persisted choices
 
-Ten unions are choices a consumer stores or carries — a settings row, a URL
+Twelve unions are choices a consumer stores or carries — a settings row, a URL
 parameter, a saved workspace, the role a saved document was written with, the
-lift a saved panel was raised to or an identity mark's diameter. Each has an
-**ordered index** and a guard that takes `unknown`, so a restored value neither
-needs the union retyped nor a cast:
+lift a saved panel was raised to, an identity mark's diameter, a panel's inset or
+a restored corner. Each has an **ordered index** and a guard that takes `unknown`,
+so a restored value neither needs the union retyped nor a cast:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -4565,6 +4584,8 @@ needs the union retyped nor a cast:
 | type role | `textRoles` | `isTextRole` |
 | elevation level | `elevationLevels` | `isElevationLevel` |
 | avatar size | `avatarSizes` | `isAvatarSize` |
+| spacing step | `spacingSteps` | `isSpacingStep` |
+| corner radius | `radiusSteps` | `isRadiusStep` |
 
 The unions derive from the indexes, so adding a mode, platform or tone is one
 edit at the owner and every consumer loop — including this package's own tests —
@@ -4572,7 +4593,8 @@ covers it. The indexes are held to the data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
 density preset has a metric for every control size, every tone has its own soft
 roles, every type role is a key of the type scale, every elevation level a key
-of the elevation scale and every avatar size a key of the diameter record
+of the elevation scale, every avatar size a key of the diameter record, and the
+spacing and radius indexes are the two scales' own keys in documentation order
 (`guards.test.ts`; §Elevation holds the index itself to the shipped scale).
 
 ```ts
@@ -4588,11 +4610,14 @@ const themeFromStored = (stored: {
   );
 ```
 
-`src/persisted-choices.example.ts` resolves all ten axes the same way, and
+`src/persisted-choices.example.ts` resolves all twelve axes the same way, and
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
 an unknown pair keeps the light one, a document's dropped `subtitle` role reads
-as `body`, a saved panel's dropped lift reads as `md`, and a saved avatar's
-dropped `xl` step reads as `md`.
+as `body`, a saved panel's dropped lift reads as `md`, a saved avatar's dropped
+`xl` step reads as `md`, and the two layout names read as **absence** rather than
+a substituted step — `spacingStepFromStoredChoice` and
+`radiusStepFromStoredChoice` answer `undefined`, because a step decides geometry
+the caller owns (§Spacing, §Radius).
 
 The **theme resolvers refuse** a value outside these indexes rather than
 answering around it — the sentence names the value, the values this release ships
@@ -4616,10 +4641,10 @@ step instead of throwing or painting nothing — `textStyle` reads a role as `bo
 control size as `md` (§Density), `elevationShadow` reads a level this release
 does not ship as `md` (§Elevation), `avatarPixels` reads a diameter step as `md`
 (§Borders, icons and identity marks) and `statusTone` reads a tone this release
-does not ship as `info` (§Status tones). Narrow a stored role, size, tone, level
-or avatar step with `isTextRole`, `isControlSize`, `isStatusTone`,
-`isElevationLevel` or `isAvatarSize` where the caller can tell the reader what it
-substituted.
+does not ship as `info` (§Status tones). Narrow a stored role, size, tone, level,
+avatar step, inset or corner with `isTextRole`, `isControlSize`, `isStatusTone`,
+`isElevationLevel`, `isAvatarSize`, `isSpacingStep` or `isRadiusStep` where the
+caller can tell the reader what it substituted.
 
 A theme's **mode** is a stated value of the same kind, and a whole theme is
 documented as storable. `themeModeOf(theme)` reads a mode this release does not

@@ -23,6 +23,13 @@
  * The avatar scale is the tenth: an identity mark's size is a stored preference
  * as often as a literal, and `avatarSize` ships as a fixed record with no index
  * and no guard, so a saved size could only reach it through a cast.
+ *
+ * The two layout scales are the last two: a saved panel's inset and a restored
+ * placeholder's corner are stored names the catalogue already teaches, and the
+ * package that owns the persisted-choice contract had no index for either — the
+ * primitives hand-rolled their membership from the theme, so a token consumer had
+ * to cast a restored step. `spacingSteps`/`isSpacingStep` and
+ * `radiusSteps`/`isRadiusStep` close each axis, held to their scales here.
  */
 import { describe, expect, it } from "vitest";
 import { elevationLevels, isElevationLevel } from "./elevation.js";
@@ -37,6 +44,12 @@ import {
   isAvatarSize,
   isControlSize,
   isDensityName,
+  isRadiusStep,
+  isSpacingStep,
+  radius,
+  radiusSteps,
+  spacing,
+  spacingSteps,
 } from "./scale.js";
 import { isStatusTone, statusTone, statusTones } from "./styles.js";
 import {
@@ -56,6 +69,8 @@ import {
   elevationFromStoredChoice,
   lookFromStoredChoice,
   platformFromStoredChoice,
+  radiusStepFromStoredChoice,
+  spacingStepFromStoredChoice,
   textRoleFromStoredChoice,
   themeFromStoredChoice,
   toneFromStoredChoice,
@@ -79,6 +94,8 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isTextRole", guard: isTextRole, index: textRoles },
   { name: "isElevationLevel", guard: isElevationLevel, index: elevationLevels },
   { name: "isAvatarSize", guard: isAvatarSize, index: avatarSizes },
+  { name: "isSpacingStep", guard: isSpacingStep, index: spacingSteps },
+  { name: "isRadiusStep", guard: isRadiusStep, index: radiusSteps },
 ];
 
 /** Values no guard may accept, whatever its index holds. */
@@ -175,6 +192,22 @@ describe("indexes match the data they select", () => {
     expect(avatarSizes).toHaveLength(Object.keys(avatarSize).length);
   });
 
+  /**
+   * The layout scales' indexes are the scales' own keys in documentation order:
+   * a step the scale grows must be listed (the package's type check refuses it
+   * otherwise), a step it drops must leave the index, and the order a picker
+   * iterates is the order the catalogue prints.
+   */
+  it("names every step of the spacing scale", () => {
+    expect(Object.keys(spacing)).toEqual([...spacingSteps]);
+    expect(new Set(spacingSteps)).toEqual(new Set(Object.keys(spacing)));
+  });
+
+  it("names every corner of the radius scale", () => {
+    expect(Object.keys(radius)).toEqual([...radiusSteps]);
+    expect(new Set(radiusSteps)).toEqual(new Set(Object.keys(radius)));
+  });
+
   it("gives every density preset a metric for every control size", () => {
     densityNames.forEach((preset) => {
       expect(
@@ -226,6 +259,11 @@ describe("a stored choice resolves without a cast", () => {
     expect(avatarSizeFromStoredChoice("lg")).toBe("lg");
     expect(avatarSizeFromStoredChoice("xl")).toBe("md");
     expect(avatarSizeFromStoredChoice(32)).toBe("md");
+    expect(spacingStepFromStoredChoice("lg")).toBe("lg");
+    expect(spacingStepFromStoredChoice("roomy")).toBeUndefined();
+    expect(radiusStepFromStoredChoice("full")).toBe("full");
+    expect(radiusStepFromStoredChoice("pill")).toBeUndefined();
+    expect(radiusStepFromStoredChoice(6)).toBeUndefined();
     expect(toneFromStoredChoice(getTheme("dark"), "purple").background).toBe(
       statusTone(getTheme("dark"), "info").background,
     );

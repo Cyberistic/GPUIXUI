@@ -36,6 +36,67 @@ export const spacing: Spacing = {
   "5xl": 64,
 };
 
+/**
+ * The spacing steps, in the order the scale is documented.
+ *
+ * A spacing step is a stored choice as often as a literal — a saved panel's
+ * inset, a restored toolbar's gap, a spacer in a layout record — so a value
+ * restored from storage is `unknown` and this index is what a consumer narrows
+ * it with, without retyping the union or casting the value. It is the **release's
+ * vocabulary**: whether the active theme paints a step is the theme's question,
+ * and a paint seam that needs the number asks its own scale (the primitives'
+ * `spaceStep` reads the theme's group, and `missingTokens` refuses a theme that
+ * lost one).
+ */
+export const spacingSteps = [
+  "2xs",
+  "xs",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+  "2xl",
+  "3xl",
+  "4xl",
+  "5xl",
+] as const satisfies readonly (keyof Spacing)[];
+
+/** A step of the spacing scale, by name. */
+export type SpacingStep = (typeof spacingSteps)[number];
+
+/**
+ * A spacing step the index forgets, as a build error.
+ *
+ * The scale is the source of truth for its steps and the index is how a stored
+ * one is narrowed, so a step added to `Spacing` without a line here would be a
+ * step no consumer can narrow. The assignment below fails the package's type
+ * check with the missing step named.
+ */
+type EverySpacingStepListed<Listed extends SpacingStep> =
+  Exclude<keyof Spacing, Listed> extends never
+    ? true
+    : [
+        "a spacing step is missing from the index",
+        Exclude<keyof Spacing, Listed>,
+      ];
+
+const spacingIndex: EverySpacingStepListed<(typeof spacingSteps)[number]> =
+  true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void spacingIndex;
+
+/**
+ * Narrow unknown input — a restored inset, a saved layout's gap — to a step of
+ * this release's spacing scale.
+ *
+ * Membership is the index's, not the record's: `name in spacing` also answers
+ * true for the names `Object.prototype` carries (`toString`, `constructor`), so
+ * a persisted name would pass the guard and the lookup would hand the runtime a
+ * method where a length belongs.
+ */
+export const isSpacingStep = (value: unknown): value is SpacingStep =>
+  spacingSteps.some((step) => step === value);
+
 /** Corner radius scale in pixels. */
 export interface Radius {
   /** Square corners. */
@@ -61,6 +122,53 @@ export const radius: Radius = {
   xl: 12,
   full: 9999,
 };
+
+/**
+ * The corners of the radius scale, in the order the scale is documented.
+ *
+ * A corner is a stored choice as often as a literal — a saved panel's radius,
+ * a restored placeholder's shape — so this is the index a consumer narrows a
+ * restored value with, beside {@link isRadiusStep}. As with the spacing scale it
+ * is the **release's vocabulary**: a theme still owns which numbers it paints
+ * (a theme a store truncated paints the library's number for a step it lost, and
+ * a name no release carries has no number at all).
+ */
+export const radiusSteps = [
+  "none",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+  "full",
+] as const satisfies readonly (keyof Radius)[];
+
+/** A corner of the radius scale, by name. */
+export type RadiusStep = (typeof radiusSteps)[number];
+
+/**
+ * A corner the index forgets, as a build error — the spacing index's rule.
+ */
+type EveryRadiusStepListed<Listed extends RadiusStep> =
+  Exclude<keyof Radius, Listed> extends never
+    ? true
+    : [
+        "a radius step is missing from the index",
+        Exclude<keyof Radius, Listed>,
+      ];
+
+const radiusIndex: EveryRadiusStepListed<(typeof radiusSteps)[number]> = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void radiusIndex;
+
+/**
+ * Narrow unknown input — a restored corner, a saved panel's radius — to a corner
+ * of this release's radius scale.
+ *
+ * The index's membership, not the record's, for the reason {@link isSpacingStep}
+ * states: `name in radius` answers true for `toString` too.
+ */
+export const isRadiusStep = (value: unknown): value is RadiusStep =>
+  radiusSteps.some((step) => step === value);
 
 /** Border thickness in pixels. */
 export interface BorderWidth {

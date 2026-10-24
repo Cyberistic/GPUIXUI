@@ -20,10 +20,14 @@ import {
   isAvatarSize,
   isControlSize,
   isDensityName,
+  isRadiusStep,
+  isSpacingStep,
   densityPresets,
   type AvatarSizeName,
   type ControlSize,
   type Density,
+  type RadiusStep,
+  type SpacingStep,
 } from "./scale.js";
 import { isStatusTone, statusTone, type StatusToneStyle } from "./styles.js";
 import { getTheme, isThemeContrast, isThemeMode, type Theme } from "./theme.js";
@@ -76,6 +80,31 @@ export const elevationFromStoredChoice = (value: unknown): ElevationLevel =>
  */
 export const avatarSizeFromStoredChoice = (value: unknown): AvatarSizeName =>
   orDefault(isAvatarSize, "md", value);
+
+/**
+ * Resolve a saved layout's inset or gap to a step this release ships.
+ *
+ * A stored spacing step decides geometry the caller owns — a panel's inset, a
+ * toolbar's gap — so a name this release dropped is **absence**, not a
+ * substituted step: every layout prop already means "no inset" when the value is
+ * omitted, and the primitives' `spaceStep` reads the same absence. The window has
+ * nothing to paint until the caller decides, so a `md` invented here would move a
+ * panel the saved layout never asked to move.
+ */
+export const spacingStepFromStoredChoice = (
+  value: unknown,
+): SpacingStep | undefined => (isSpacingStep(value) ? value : undefined);
+
+/**
+ * Resolve a saved panel's corner to one this release ships.
+ *
+ * The radius scale's absence rule: a dropped corner name is no corner, the answer
+ * each painter documents (a `Box` and a scroll frame paint none, a `Skeleton`
+ * keeps its own `sm`), and the primitives' `radiusStep` returns it too.
+ */
+export const radiusStepFromStoredChoice = (
+  value: unknown,
+): RadiusStep | undefined => (isRadiusStep(value) ? value : undefined);
 
 /** Resolve a stored status tone to the roles a soft surface needs. */
 export const toneFromStoredChoice = (

@@ -389,7 +389,40 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 240/240
+`[x]` `[██████████]` 241/241
+
+`[x]` Give the **two layout scales the index and guard the persisted-choice
+contract promises** — the catalogue's table named ten axes and the design system
+enumerated seven, while the two scales those same pages teach as stored names had
+neither: `spaceStep`/`radiusStep`'s own JSDoc in `packages/primitives` says "a
+spacing step is a stored choice as often as a literal — a saved panel's inset, a
+restored toolbar's gap, a layout record's spacer" and "a corner is a stored
+choice as often as a literal — a saved panel's radius", so a token consumer
+narrowing one could only cast it, which `AGENTS.md` §2 forbids, and a picker had
+no ordered list to iterate. `scale.ts` now carries `spacingSteps`/`isSpacingStep`
+and `radiusSteps`/`isRadiusStep`, each index held to its scale by a type-level
+guard (a step added to `Spacing` or `Radius` without a line fails `check-types`
+naming it) and by `guards.test.ts`'s order-and-set cases; the guards' membership
+is the index's, not `name in scale`, so `toString` never passes. The two axes
+read **absence** for a name this release does not ship — not a substituted step —
+because a layout step decides geometry the caller owns, the answer every layout
+prop documents and the one the primitives' seams return;
+`spacingStepFromStoredChoice`/`radiusStepFromStoredChoice` execute that in
+`persisted-choices.example.ts` and `guards.test.ts` runs them. The table is
+twelve axes on `docs/tokens.md` §Persisted choices and the README, §Spacing and
+§Radius teach each index beside their scales, and `docs/design-system.md` §11's
+stale seven-axis sentence now names every index (the drift the new guard
+catches). `docs.test.ts` gains `the persisted-choice axes` (3 cases): the
+catalogue's own table must print twelve rows whose index and guard are real
+exports and run in `guards.test.ts`, both pages must name every index, and both
+layout axes must be taught as absence. Directions measured: dropping the two
+table rows fails `expected [ …(9) ] to have a length of 12 but got 10`; restoring
+the seven-axis sentence fails naming `design system themeContrasts`; removing
+`5xl` from `spacingSteps` fails `names every step of the spacing scale` and
+`check-types` with `Type 'boolean' is not assignable to type '["a spacing step is
+missing from the index", "5xl"]'`. Green: 50 files / **3 064** tests,
+`check-types`, `oxlint`, `oxfmt` and `check:tests` clean. No native scenario
+applies — a boundary index and the prose that teaches it.
 
 `[x]` State the **order a style and a brand compose in** — `applyStyle(base, style)`
 composes: a style names some roles, and the roles it does not name stay the
@@ -2457,7 +2490,37 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 170/170
+`[x]` `[██████████]` 171/171
+
+`[x]` Measure the **shipped `LogViewer`** in a window — Tier 4's *Log viewers*
+      row cited the headless `log-viewer` scenario, which measures the runtime's
+      virtual list around a probe-local list; no window had mounted
+      `@gpuixui/files`' component, painted its toolbar or flipped its controlled
+      `followTail`. The `log-viewer-lifecycle` probe mounts it over 240 lines of
+      24-point rows in a 240-point viewport and reads the frame: rows **230–239**
+      paint at rest with the tail on screen; an append of 40 follows it
+      (**270–279**); a wheel up (positive `deltaY`, towards the head) moves the
+      anchor to **260** and paints **260–269**, and two appends land without
+      moving the reader or painting a new tail; the level filter keeps one
+      level's rows (**350, 355, … 395**) and drops the trace row **399**.
+      **Two measured rules**: the follow flag is a **hold and a jump** — flipping
+      `followTail` on returns the list to the tail in the same press (anchor
+      **360**) with no second scroll, which corrects the headless scenario's
+      inference that a toggle is "app state plus a scroll" (its header now cites
+      the window half) — and a wheel up **does not fight the flag**, so a log
+      pane keeps its own follow state. **35 checks**, `--only
+      log-viewer-lifecycle`, green on 0.11.0 here (~4.4–5.6 s, one capture).
+      Fixture `src/live/log-viewer.ts`, probe `src/live/log-viewer-probe.tsx`,
+      guard `src/live/log-viewer.test.ts` (10 cases: the level cycle read from
+      the package's own `LOG_LEVELS`, the derived filter tails, the readout
+      shape, the assertion-site count with the repeated anchor helper, the
+      locator set, the shipped mount and its controlled props, the registry, and
+      the README's windows, anchors and check count). Directions measured: a
+      README check count of 34 fails the record case by name, and a filter cycle
+      that puts a non-error on 395 fails the derived-tail case. Docs:
+      `apps/playground/README.md` §`log-viewer-lifecycle`,
+      `.artifacts/live/log-viewer-tail.png`, the `Log viewers` row in
+      `COMPONENTS.md` and the headless scenario's header.
 
 `[x]` Measure the **shipped `Accordion`** in a window — every accordion rule was
       an offscreen tree read (one section open, a disabled header refused, arrows
@@ -9542,6 +9605,7 @@ this time.
 
 ## Interlocks (cross-workstream dependencies)
 
+| Verify **the two `PropertyPanel`s and `FileTree` as the surfaces the inventory names** — `packages/files` ships `FileTree`, `PropertyPanel` and `LogViewer` with only three pure-logic tests and no `.test.tsx` anywhere in the package, and three inventory rows cite live evidence that does not mount the surface they name: Tier 3 *Property panels* (`@gpuixui/data`'s `PropertyPanel`) and Tier 4 *Inspector panels* / *Property editors* (`@gpuixui/files`' `PropertyPanel`) all cite `inspector-lifecycle`, whose `InspectorPanel` is composed in the probe from primitives (`apps/playground/src/live/scenarios.tsx`), and *File trees* cites `virtual-tree-lifecycle`, which mounts `@gpuixui/data`'s `TreeView`. The playground's `log-viewer-lifecycle` (35 checks, 0.11.0) now measures the files package's `LogViewer`, so one of the three surfaces has a window half; the other two and the behaviour suites are open | files/components (`packages/files/src/{tree,property}/`, `packages/data/src/surfaces/property-panel.tsx`) + playground (`property-panel-lifecycle`, `file-tree-lifecycle`) | open — measured 2026-10-24 by the playground workstream; the two probes are its next units, and the rows should cite them once they run |
 | Cite the **shipped player's paint** in the media row — `COMPONENTS.md`'s *Video / audio player + waveform* row says the paint route "is the live `media-frame-lifecycle` probe's, which composes the same pieces in a window", and the `media-player-lifecycle` probe (51 checks, 0.11.0) now paints the **shipped** `MediaPlayer` itself: the frame the playhead names, a 200×32 waveform silhouette, the clock and fill, the four seek keys and the disabled refusal. The row's evidence sentence should cite this probe beside the composition one | media (`COMPONENTS.md`, docs `media-player.mdx`) | **resolved 2026-10-24 (components)** — the player row now cites `media-player-lifecycle` (51 checks, 0.11.0) with the facts it measured — the 240×135 frame the playhead names, the 200×32 `mutedForeground` silhouette, the `0:00 / 0:04` clock, the four seek keys and the disabled refusal — and `packages/media/docs/media-player.mdx` §Limitations opens with the same sentence; `packages/components/src/inventory.test.ts`'s `cites the shipped player's own paint in its row and its page` derives the 51 from the README's own close-out line and fails when either surface prints another number, drops the probe id, or loses one of the three measured facts |
 | Restore the **charts probe citation** the page prune removed — `packages/data/docs/charts.mdx` names `chart-surface-lifecycle` **0** times at `HEAD` (`e065c733` pruned the pages), while `apps/playground/src/live/chart-surface.test.ts`'s `cites the probe where the shipped charts are called window-verified` requires it on the page and both the `Charts` inventory row and the package README already carry it. `nub run --filter playground test` is therefore red at `HEAD` on that one case (1 failed / 4 passed in the file), not on a playground change | data (`packages/data/docs/charts.mdx`) | **resolved 2026-10-24** — the page's §Usage states the drawing route (one layer per series, tinted through `style.color`, because the runtime has no chart host and an `<svg>` is one tinted mask) and cites `chart-surface-lifecycle` as the probe that measures the shipped components in a real window. `src/live/chart-surface.test.ts` now passes 5/5; the direction was measured by restoring the pruned page, which fails `cites the probe where the shipped charts are called window-verified` |
 | Give the **chart parts the page never named their own tables** — `packages/data/docs/charts.mdx` documented only the series charts' shared `ChartProps` table, and the sentence that said so ("The series charts … share one contract") was pruned with the prose, so the page a consumer opens for `DonutChart`, `Sparkline` and `ChartLegend` never named `data`, `size`, `values`, `color` or `items`; the page's own snippet passed every one of them. The page now carries one table per shipped part (`BarChart` · `StackedBar` · `LineChart`, then `DonutChart`, `Sparkline`, `ChartLegend`), with the `className` row the package's other pages document, and the `Charts` row's `docs/charts.mdx` §Accessibility citation (a section the prune removed) names the page's tables | data (`packages/data/docs/charts.mdx`, `packages/data/src/chart/docs.test.ts`, `COMPONENTS.md`) | **resolved 2026-10-24** — `src/chart/docs.test.ts` (3 cases) reads each section's table against its type in both directions and holds the six shipped names; directions measured: dropping the `values` row fails `` `Sparkline`: values ``, a `pinFirst` row fails `` `ChartLegend`: pinFirst ``, and a `probe` field on `ChartProps` fails `documents every prop each chart part declares`. Package 211 unit cases and `check-types` green |

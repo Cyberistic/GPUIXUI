@@ -1132,6 +1132,104 @@ describe("the avatar step", () => {
 });
 
 /**
+ * The persisted-choice contract is one list, and the surfaces that teach it
+ * drifted apart: the catalogue's table named ten axes while the design system
+ * enumerated seven, and the two layout scales the catalogue documents as stored
+ * names — a saved inset, a restored corner — had no index or guard in the package
+ * that owns the contract, so a token consumer could only cast one (the
+ * primitives hand-rolled their membership). The catalogue's table is the source
+ * here: every row's index and guard must be a real export and must run in
+ * `guards.test.ts`, the README and design system must name every index, and both
+ * pages must teach the two layout axes' absence rule.
+ */
+describe("the persisted-choice axes", () => {
+  const section = (page: string, heading: string): string => {
+    const start = page.indexOf(heading);
+    const end = page.indexOf("\n## ", start + heading.length);
+    return start === -1 ? "" : page.slice(start, end === -1 ? undefined : end);
+  };
+
+  const table = section(catalogue, "### Persisted choices");
+  const rows = table
+    .split("\n")
+    .filter(
+      (line) =>
+        line.startsWith("| ") &&
+        !line.startsWith("| Axis") &&
+        !line.startsWith("| ---"),
+    )
+    .map((line) => line.split("|").map((cell) => cell.trim()))
+    // The axis table is the one whose third column is a guard; the resolver
+    // table below it has no `is*` cell and is a different list.
+    .filter((cells) => (cells[3] ?? "").startsWith("`is"))
+    .map((cells) => ({
+      axis: cells[1] ?? "",
+      index: (cells[2] ?? "").replaceAll("`", ""),
+      guard: (cells[3] ?? "").replaceAll("`", ""),
+    }));
+  const guardsSuite = read("./guards.test.ts");
+
+  it("prints one row per axis, exported and swept", () => {
+    expect(rows).toHaveLength(12);
+    rows.forEach(({ axis, index, guard }) => {
+      expect(declared, axis).toContain(index);
+      expect(declared, axis).toContain(guard);
+      // The prose table and the executed sweep are one contract: an axis the
+      // table teaches with no guard in the suite is a value nobody holds.
+      expect(guardsSuite, axis).toContain(guard);
+    });
+  });
+
+  it("names every axis's index on the README and the design system", () => {
+    rows.forEach(({ index }) => {
+      expect(readme, `README ${index}`).toContain(`\`${index}\``);
+      expect(designSystem, `design system ${index}`).toContain(`\`${index}\``);
+    });
+    expect(section(catalogue, "### Persisted choices")).toContain(
+      "Twelve unions",
+    );
+    expect(section(readme, "## Persisted choices")).toContain("Twelve axes");
+  });
+
+  /**
+   * A layout step is not a paint name: a paint seam substitutes its documented
+   * default because the window must paint, while an inset or a corner decides
+   * geometry the caller owns, so a dropped name is absence. Both pages say so,
+   * and the catalogue teaches each scale's index where it prints it.
+   */
+  it("teaches the two layout axes as absence, and their indexes", () => {
+    expect(section(catalogue, "## Spacing")).toContain(
+      "`spacingSteps` is the scale as an ordered index",
+    );
+    expect(section(catalogue, "## Radius")).toContain(
+      "`radiusSteps` is that scale as an ordered index",
+    );
+    expect(section(catalogue, "### Persisted choices")).toContain(
+      "spacingStepFromStoredChoice",
+    );
+
+    const flatten = (page: string): string => page.replace(/\s+/g, " ");
+    // The design system enumerates the indexes; the catalogue and the README
+    // carry the guard column, and the design system names the two new pairs.
+    [catalogue, readme, designSystem].forEach((page, index) => {
+      expect(flatten(page), `page ${index}`).toContain("`spacingSteps`");
+      expect(flatten(page), `page ${index}`).toContain("`radiusSteps`");
+    });
+    [catalogue, readme].forEach((page, index) => {
+      const flattened = flatten(page);
+      expect(flattened, `page ${index}`).toContain("`isSpacingStep`");
+      expect(flattened, `page ${index}`).toContain("`isRadiusStep`");
+    });
+    const system = flatten(designSystem);
+    expect(system).toContain("`spacingSteps`/`isSpacingStep`");
+    expect(system).toContain("`radiusSteps`/`isRadiusStep`");
+    expect(flatten(catalogue)).toContain(
+      "a name this release does not ship is **absence**",
+    );
+  });
+});
+
+/**
  * `bodyStrong` is `body`'s emphasis at the same size and leading, and the
  * typography merge is per role, so an example that raises the body size has to
  * raise the pair — and the gate now says so: `invalidNumbers` reports a strong
