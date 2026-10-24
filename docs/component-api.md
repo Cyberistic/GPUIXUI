@@ -578,7 +578,10 @@ reduced preference paints the resting frame with no travel (including a setting
 turned on mid-entry, a dismissed notice and a dismissed panel removed at once,
 and a staggered `Reveal` that drops its delay with the duration), the accordion
 grows from zero to its measured height, and the tab pill lands exactly on the
-next trigger's box. A press through a leaving
+next trigger's box. A modal **reopened mid-exit** keeps the instance it had, so
+the run retargets from the frame on screen, and the timer the cancelled leave
+armed cannot unmount a surface its owner holds open
+(`keeps the instance a re-open finds, and outlives the leave it cancelled`). A press through a leaving
 box is measured on the context menu and on a dismissed modal's veil, and a press
 on a control inside a leaving page view is measured in
 `page-transition.test.tsx`'s `stops a leaving view taking presses while it

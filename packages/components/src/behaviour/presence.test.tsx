@@ -279,6 +279,60 @@ describe("a modal surface", () => {
     expect(where(page.renderer, "dialog", "y")).toBe(entering);
     page.unmount();
   });
+
+  /** A modal a case opens and dismisses by the state its owner holds. */
+  const ControlledDialog = ({ open }: { readonly open: boolean }) => (
+    <Page>
+      <Dialog open={open} onOpenChange={() => undefined}>
+        <DialogTrigger testId="open">Rename</DialogTrigger>
+        <DialogContent label="Rename" testId="dialog" size="sm">
+          <DialogFooter>
+            <DialogClose testId="cancel">Cancel</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Page>
+  );
+
+  it("keeps the instance a re-open finds, and outlives the leave it cancelled", async () => {
+    // The bug this guards: a leave arms a timer for the exit's whole window, and
+    // re-opening has to cancel it — otherwise the surface the reader just
+    // reopened unmounts when the interrupted leave would have ended. The README
+    // promises the mounted instance is kept, so the run retargets from the frame
+    // on screen instead of restarting at the entry frame.
+    const page = renderComponent(<ControlledDialog open={false} />);
+    page.rerender(<ControlledDialog open />);
+    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
+    page.renderer.clockPause();
+    page.renderer.clockFastForward(400);
+    await delay();
+    const rest = where(page.renderer, "dialog", "y");
+
+    page.rerender(<ControlledDialog open={false} />);
+    await delay();
+    page.renderer.clockFastForward(100);
+    await delay();
+    const leaving = where(page.renderer, "dialog", "y");
+    expect(leaving).toBeGreaterThan(rest);
+
+    page.rerender(<ControlledDialog open />);
+    await delay();
+    // The same instance: the run retargets from the frame on screen, so no
+    // entry frame is painted again.
+    expect(where(page.renderer, "dialog", "y")).toBe(leaving);
+    // The leave it interrupted armed a 320 ms timer; a stale one would unmount
+    // the reopened surface while its owner still holds it open.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(painted(page.renderer, "dialog")).toBe(true);
+    page.renderer.clockFastForward(400);
+    await delay();
+    expect(where(page.renderer, "dialog", "y")).toBe(rest);
+
+    page.renderer.clockResume();
+    page.rerender(<ControlledDialog open={false} />);
+    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(false));
+    page.unmount();
+  });
 });
 
 describe("the preference", () => {
