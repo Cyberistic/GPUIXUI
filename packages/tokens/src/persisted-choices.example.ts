@@ -3,15 +3,16 @@
  *
  * A preference restored from storage is `unknown`: a settings row, a URL
  * parameter or a persisted workspace can carry a mode, a contrast variant, a
- * platform, a look, a density, a control size, a status tone or the type role a
- * saved document was written with that this build no longer ships. Each axis has
- * an ordered index beside its guard, so a consumer narrows the stored value and
- * falls back to a readable default instead of retyping the union or casting the
- * value.
+ * platform, a look, a density, a control size, a status tone, the type role a
+ * saved document was written with or the elevation a saved panel was raised to
+ * that this build no longer ships. Each axis has an ordered index beside its
+ * guard, so a consumer narrows the stored value and falls back to a readable
+ * default instead of retyping the union or casting the value.
  *
  * The example is executed in [`guards.test.ts`](./guards.test.ts).
  */
 
+import { isElevationLevel, type ElevationLevel } from "./elevation.js";
 import { isPlatformName, type PlatformName } from "./platforms.js";
 import { isRetroName, type RetroName } from "./retro.js";
 import {
@@ -49,6 +50,18 @@ export const densityFromStoredChoice = (value: unknown): Density =>
 /** Resolve a stored control size to a size this library renders. */
 export const controlSizeFromStoredChoice = (value: unknown): ControlSize =>
   orDefault(isControlSize, "md", value);
+
+/**
+ * Resolve the level a saved panel was raised to.
+ *
+ * A workspace layout or a settings row stores the lift a surface had, so a
+ * release that renames or drops a level hands the painter a name the union no
+ * longer carries. `elevationShadow` reads that name as `md` on its own;
+ * narrowing here is what keeps the saved intent — a dialog's `lg` stays `lg`
+ * — and tells the consumer which value it substituted.
+ */
+export const elevationFromStoredChoice = (value: unknown): ElevationLevel =>
+  orDefault(isElevationLevel, "md", value);
 
 /** Resolve a stored status tone to the roles a soft surface needs. */
 export const toneFromStoredChoice = (

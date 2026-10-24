@@ -3688,7 +3688,12 @@ import { elevationShadow } from "@gpuixui/tokens";
 ```
 
 `elevationShadow(theme, level)` returns the level's shadow, or `undefined` for
-the reserved empty `overlay` level (which `boxShadow` accepts). A level the theme
+the reserved empty `overlay` level (which `boxShadow` accepts). A level **name**
+is content as often as a literal — a saved workspace or a panel layout raises a
+surface with the level it stored — so a name this release does not ship reads as
+the default lift, `md`, rather than a raised panel that silently paints flat;
+`isElevationLevel` narrows a stored one where the caller can tell the reader
+what it substituted. A level the theme
 does not carry — a theme restored from storage that predates it — resolves to
 `undefined` too, so a raised surface paints flat instead of throwing where
 `invalidShadowColors`/`auditTheme` already named the absence
@@ -4402,10 +4407,10 @@ diffable against shadcn. `override-scope.test.ts` reads both halves.
 
 ### Persisted choices
 
-Eight unions are choices a consumer stores or carries — a settings row, a URL
-parameter, a saved workspace, the role a saved document was written with. Each
-has an **ordered index** and a guard that takes `unknown`, so a restored value
-neither needs the union retyped nor a cast:
+Nine unions are choices a consumer stores or carries — a settings row, a URL
+parameter, a saved workspace, the role a saved document was written with or the
+lift a saved panel was raised to. Each has an **ordered index** and a guard that
+takes `unknown`, so a restored value neither needs the union retyped nor a cast:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -4417,13 +4422,15 @@ neither needs the union retyped nor a cast:
 | control size | `controlSizes` | `isControlSize` |
 | status tone | `statusTones` | `isStatusTone` |
 | type role | `textRoles` | `isTextRole` |
+| elevation level | `elevationLevels` | `isElevationLevel` |
 
 The unions derive from the indexes, so adding a mode, platform or tone is one
 edit at the owner and every consumer loop — including this package's own tests —
 covers it. The indexes are held to the data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
 density preset has a metric for every control size, every tone has its own soft
-roles and every type role is a key of the scale (`guards.test.ts`).
+roles, every type role is a key of the scale and every elevation level a shadow
+in it (`guards.test.ts`).
 
 ```ts
 import { getTheme, isThemeContrast, isThemeMode } from "@gpuixui/tokens";
@@ -4438,10 +4445,10 @@ const themeFromStored = (stored: {
   );
 ```
 
-`src/persisted-choices.example.ts` resolves all eight axes the same way, and
+`src/persisted-choices.example.ts` resolves all nine axes the same way, and
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
-an unknown pair keeps the light one, and a document's dropped `subtitle` role
-reads as `body`.
+an unknown pair keeps the light one, a document's dropped `subtitle` role reads
+as `body`, and a saved panel's dropped lift reads as `md`.
 
 The **theme resolvers refuse** a value outside these indexes rather than
 answering around it — the sentence names the value, the values this release ships
@@ -4461,9 +4468,11 @@ before the resolver sees it.
 A **paint seam** is the one exception, and it is deliberate: a paint seam is
 called mid-render, so it reads a name the scale does not carry as its default
 step instead of throwing or painting nothing — `textStyle` reads a role as `body`
-(§Typography) and `controlHeight`/`controlPaddingX`/`switchMetricsAt` read a
-control size as `md` (§Density). Narrow a stored role or size with `isTextRole`
-or `isControlSize` where the caller can tell the reader what it substituted.
+(§Typography), `controlHeight`/`controlPaddingX`/`switchMetricsAt` read a
+control size as `md` (§Density), and `elevationShadow` reads a level this
+release does not ship as `md` (§Elevation). Narrow a stored role, size or level
+with `isTextRole`, `isControlSize` or `isElevationLevel` where the caller can
+tell the reader what it substituted.
 
 A theme's **mode** is a stated value of the same kind, and a whole theme is
 documented as storable. `themeModeOf(theme)` reads a mode this release does not

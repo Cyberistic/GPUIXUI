@@ -49,6 +49,7 @@ import {
   invalidShadowColors,
   lightElevation,
   type BoxShadow,
+  type ElevationLevel,
 } from "./elevation.js";
 import {
   createTheme,
@@ -150,6 +151,23 @@ describe("elevationShadow", () => {
   it("is undefined for the reserved overlay level", () => {
     expect(elevationShadow(lightTheme, "overlay")).toBeUndefined();
     expect(elevationShadow(darkTheme, "overlay")).toBeUndefined();
+  });
+
+  it("reads a level this release does not ship as the default lift", () => {
+    // The cast is the storage boundary: a saved workspace or a panel layout
+    // raises a surface with the level it stored, and a release that renames or
+    // drops a level hands the paint a name the union no longer carries.
+    const stored = "xl" as ElevationLevel;
+
+    expect(elevationShadow(lightTheme, stored)).toBe(
+      lightTheme.elevation.md[0],
+    );
+    expect(elevationShadow(darkTheme, stored)).toBe(darkTheme.elevation.md[0]);
+    // A level this release *ships* keeps its own answer: `overlay` is a name,
+    // not an absence, and a theme that lost `md` stays absent rather than
+    // inventing a shadow the store never carried.
+    expect(elevationShadow(lightTheme, "overlay")).toBeUndefined();
+    expect(elevationShadow({ elevation: {} }, stored)).toBeUndefined();
   });
 
   it("follows a high-contrast theme's elevation", () => {

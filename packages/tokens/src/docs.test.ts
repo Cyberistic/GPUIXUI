@@ -990,6 +990,33 @@ describe("the resolvers refuse an axis they do not ship", () => {
       expect(page).toContain("read a size this release does not ship as `md`"),
     );
   });
+
+  /**
+   * An elevation level is the fourth name a paint seam reads, and its failure
+   * was silent too: `elevationLevels` was the ordered index a surface picker
+   * iterates, but it had no guard, so a saved workspace that stored a level
+   * this release dropped could only be narrowed with a cast — and
+   * `elevationShadow` answered `undefined`, a raised panel that painted flat
+   * while every report stayed empty. The three pages state the fallback and the
+   * guard beside the control-size rule they belong to.
+   */
+  it("reads a stored elevation level as the default lift, and says so", () => {
+    expect(read("./elevation.ts")).toContain(
+      'isElevationLevel(level) ? level : "md"',
+    );
+
+    const pages = [catalogue, readme, designSystem].map((page) =>
+      page.replace(/\s+/g, " "),
+    );
+
+    pages.forEach((page, index) => {
+      expect(page, `page ${index}`).toContain("`isElevationLevel`");
+      expect(page, `page ${index}`).toContain("`elevationShadow`");
+      expect(page, `page ${index}`).toMatch(
+        /level this release does not ship as \*?`md`/,
+      );
+    });
+  });
 });
 
 /**

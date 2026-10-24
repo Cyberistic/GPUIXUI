@@ -437,7 +437,12 @@ designed as **one** shadow, read with `elevationShadow(theme, level)`; the
 runtime also accepts a shadow list, but the scale does not use one, so a level
 cannot render half of itself. A level the theme does not carry resolves to
 `undefined` — a flat surface the audit has already named, not a throw on first
-paint (§9). Each level paints the `shadow` role at its designed
+paint (§9). A level *name* is content as often as a literal: a saved workspace
+or a panel layout raises a surface with the level it stored, so `elevationLevels`
+is the ordered index and `isElevationLevel` narrows a restored value, while
+`elevationShadow` reads a level this release does not ship as `md` — the default
+lift — rather than a raised panel that silently paints flat. Each level paints
+the `shadow` role at its designed
 strength — 8%, 12% and 16% over a pale canvas, 40%, 65% and 80% over a dark one —
 so retinting that one role retints every shadow a theme inherits. `extendTheme`
 restates the scale a **stored** theme carries level by level: a level the theme

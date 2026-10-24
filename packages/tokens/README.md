@@ -153,8 +153,8 @@ A complete, executed example lives in
 
 ## Persisted choices
 
-Eight axes are choices a consumer stores or carries, and each has an ordered index
-beside a guard that takes `unknown`:
+Nine axes are choices a consumer stores or carries, and each has an ordered index
+beside a guard that takes `unknown`: 
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -166,15 +166,16 @@ beside a guard that takes `unknown`:
 | control size | `controlSizes` | `isControlSize` |
 | status tone | `statusTones` | `isStatusTone` |
 | type role | `textRoles` | `isTextRole` |
+| elevation level | `elevationLevels` | `isElevationLevel` |
 
 The unions derive from the indexes, so a settings row iterates the axis and a
 restored preference narrows without retyping the union or casting. Each index is
 held to the data it selects — every mode has both contrast variants, every
 platform a style, every look a style, every preset a metric per size, every type
-role a key of the scale — by
+role a key of the scale, every elevation level a shadow — by
 [`src/guards.test.ts`](./src/guards.test.ts), and
 [`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
-all eight.
+all nine.
 
 ```ts
 import { getTheme, isThemeMode } from "@gpuixui/tokens";
@@ -198,9 +199,11 @@ undefined (reading 'fontSize')` mid-render, the rule `@gpuixui/primitives`' own
 `typeOf` follows. The control-size seams follow the same rule and read a size this
 release does not ship as `md` — `controlHeight`/`controlPaddingX` answered
 `undefined` where they declare a number, and `switchMetricsAt` scaled the
-platform's box by `undefined` into a `NaN` that painted nothing. Narrow a stored
-role or size with `isTextRole` or `isControlSize` where the caller can tell the
-reader what it substituted.
+platform's box by `undefined` into a `NaN` that painted nothing. `elevationShadow`
+reads a level this release does not ship as `md` too, rather than a raised panel
+that silently paints flat. Narrow a stored role, size or level with `isTextRole`,
+`isControlSize` or `isElevationLevel` where the caller can tell the reader what it
+substituted.
 
 A whole theme is storable, so its **mode** is a stated value before it is a union.
 There is no strict reading of light and dark, so `themeModeOf(theme)` reads a mode

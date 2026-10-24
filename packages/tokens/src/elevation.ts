@@ -68,6 +68,19 @@ export const elevationLevels = [
 ] as const satisfies readonly ElevationLevel[];
 
 /**
+ * Narrow unknown input — a stored level, a URL parameter — to an elevation
+ * level this release ships.
+ *
+ * A level name is content as often as a literal: a saved workspace, a panel
+ * layout or a settings row raises a surface with the level it stored. A
+ * consumer iterates {@link elevationLevels} instead of retyping the union, and
+ * narrows a restored value before a surface takes it, so a name from a release
+ * that renamed or dropped a level never needs a cast.
+ */
+export const isElevationLevel = (value: unknown): value is ElevationLevel =>
+  elevationLevels.some((level) => level === value);
+
+/**
  * Whether a stored value is one shadow. Only the shape every read depends on is
  * checked: a level is a list of objects, and a list a store wrote can carry a
  * `null` or a number where an entry belongs. The numbers themselves are
@@ -102,6 +115,13 @@ const shadowColor = (shadow: unknown): string | undefined =>
  * elevation scale — in which case every level paints nothing, the same answer
  * one level up.
  *
+ * A level **name** is a different absence: a saved workspace or a panel layout
+ * raises a surface with the level it stored, so a name this release does not
+ * ship reads as the default lift (`md`) rather than a surface that silently
+ * paints flat — the rule `textStyle`, `controlHeight` and `iconPixels` follow.
+ * Narrow a stored name with {@link isElevationLevel} where the caller can tell
+ * the reader what it substituted.
+ *
  * @example
  * ```tsx
  * <div style={{ boxShadow: elevationShadow(theme, "md") }} />
@@ -111,7 +131,8 @@ export function elevationShadow(
   theme: { readonly elevation?: Partial<Elevation> },
   level: ElevationLevel,
 ): BoxShadow | undefined {
-  const shadows: unknown = theme.elevation?.[level];
+  const shadows: unknown =
+    theme.elevation?.[isElevationLevel(level) ? level : "md"];
   const first: unknown = Array.isArray(shadows) ? shadows[0] : undefined;
   return isShadow(first) ? first : undefined;
 }

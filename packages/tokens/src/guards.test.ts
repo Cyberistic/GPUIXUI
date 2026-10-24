@@ -14,8 +14,14 @@
  * Two directions fail here: a guard that accepts something outside its index,
  * and an index that no longer matches the records it selects (a mode added to
  * `themeModes` without a theme, a density preset without a metric per size).
+ *
+ * Elevation is the ninth: `elevationLevels` was the ordered index a surface
+ * picker iterates, and a saved workspace raises a surface with the level it
+ * stored, so a name from a release that dropped one had no guard to narrow it
+ * and `elevationShadow` answered a flat surface.
  */
 import { describe, expect, it } from "vitest";
+import { elevationLevels, isElevationLevel } from "./elevation.js";
 import { isPlatformName, platformNames, platformStyles } from "./platforms.js";
 import { isRetroName, retroNames, retroStyles } from "./retro.js";
 import {
@@ -39,6 +45,7 @@ import { isTextRole, textRoles, typography } from "./typography.js";
 import {
   controlSizeFromStoredChoice,
   densityFromStoredChoice,
+  elevationFromStoredChoice,
   lookFromStoredChoice,
   platformFromStoredChoice,
   textRoleFromStoredChoice,
@@ -62,6 +69,7 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isStatusTone", guard: isStatusTone, index: statusTones },
   { name: "isRetroName", guard: isRetroName, index: retroNames },
   { name: "isTextRole", guard: isTextRole, index: textRoles },
+  { name: "isElevationLevel", guard: isElevationLevel, index: elevationLevels },
 ];
 
 /** Values no guard may accept, whatever its index holds. */
@@ -188,6 +196,9 @@ describe("a stored choice resolves without a cast", () => {
     expect(textRoleFromStoredChoice("h2")).toBe("h2");
     expect(textRoleFromStoredChoice("subtitle")).toBe("body");
     expect(textRoleFromStoredChoice(3)).toBe("body");
+    expect(elevationFromStoredChoice("lg")).toBe("lg");
+    expect(elevationFromStoredChoice("xxl")).toBe("md");
+    expect(elevationFromStoredChoice(null)).toBe("md");
     expect(toneFromStoredChoice(getTheme("dark"), "purple").background).toBe(
       statusTone(getTheme("dark"), "info").background,
     );
