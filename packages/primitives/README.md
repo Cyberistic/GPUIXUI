@@ -333,8 +333,9 @@ Reference:
 The same absence rule holds on the **paint** side: `visibleCopy` reports whether
 a string has a visible character, and the paint sites that read copy — `Label`'s
 `description`, a group option's `description`, `fieldHint`'s placeholder and the
-caption a `ProgressLabel`/`MeterLabel` falls back to — paint nothing for a blank
-one. A string that came from data blank is common, and painted verbatim it was
+caption a `ProgressLabel`/`MeterLabel` paints (its child, or the stored label
+behind a **child that says nothing**, through `captionCopy`) — paint nothing for
+a blank one. A string that came from data blank is common, and painted verbatim it was
 not free: an empty `<text>` still pays its column's gap and a run of spaces lays
 out a whole line (measured on 0.11.0: 0px for `""`, 16px for `"   "`), so a label
 grew by a blank line while the control announced nothing. Real copy is painted

@@ -835,6 +835,40 @@ describe("the primitives docs page contract", () => {
     ).toEqual([]);
   });
 
+  it("keeps a caption's stored label when its child says nothing", () => {
+    // The bug guarded: a caption part read `children ?? label`, and a default
+    // covers only an **absent** child — the copy an i18n table leaves blank
+    // arrived as `""` or a run of spaces, which both hid the stored label the
+    // part documents as its default and laid out a full blank line (measured in
+    // a window: a painted caption row against none). `captionCopy` reads both
+    // halves, and each page states the fallback beside the label rule.
+    const parts = Arr.map(["Progress", "Meter"], (name) =>
+      readFileSync(
+        fileURLToPath(
+          new URL(`../src/components/${name}.tsx`, import.meta.url),
+        ),
+        "utf8",
+      ),
+    );
+    expect(
+      Arr.filter(
+        parts,
+        (part) =>
+          !part.includes("captionCopy(children, part.label)") ||
+          part.includes("children ?? part.label"),
+      ),
+    ).toEqual([]);
+    expect(
+      Arr.filter(
+        ["progress.mdx", "meter.mdx"],
+        (page) =>
+          !read(page).includes(
+            "a caption child that says nothing falls back to it",
+          ),
+      ),
+    ).toEqual([]);
+  });
+
   it("names the one opt-out a busy word has, and how a bar's words differ", () => {
     // The bug guarded: `Button`, `Toggle` and `IconButton` publish the busy word
     // as the action's description and the spinner's name, and a blank

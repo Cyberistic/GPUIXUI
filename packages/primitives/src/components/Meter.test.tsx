@@ -191,6 +191,29 @@ describe("Meter", () => {
     );
   });
 
+  it("keeps the stored label for a child that says nothing", () => {
+    // The bug guarded: `children ?? label` covered only an **absent** child, so
+    // a caption's own copy a translation table left blank — `""` or a run of
+    // spaces — both hid the meter's label and laid out a full blank line
+    // (16px on 0.11.0), while the rule the part documents is that a child
+    // defaults to the label. A child that says nothing is absence now, and the
+    // label it documents stands.
+    const named = meterPart({ value: 68, label: "Disk usage" }, testTheme);
+    expect(textOf(renderMeterLabel({ children: "" }, named))).toBe(
+      "Disk usage",
+    );
+    expect(textOf(renderMeterLabel({ children: "   " }, named))).toBe(
+      "Disk usage",
+    );
+    // Both halves blank: no caption element at all.
+    const unnamed = meterPart({ value: 68, label: "  " }, testTheme);
+    expect(renderMeterLabel({ children: "   " }, unnamed)).toBeNull();
+    // A caller's own spacing is still painted exactly as written.
+    expect(textOf(renderMeterLabel({ children: "  Memory  " }, named))).toBe(
+      "  Memory  ",
+    );
+  });
+
   it("lets a caller's className restyle the frame", () => {
     // The bug guarded: the frame's own column layout was merged *after* the
     // caller's classes, so `className="flex-row"` compiled and then lost to the

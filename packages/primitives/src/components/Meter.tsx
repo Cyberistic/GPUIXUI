@@ -25,7 +25,12 @@ import {
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { accessibleName, spokenText, visibleCopy } from "../core/a11y.js";
+import {
+  accessibleName,
+  captionCopy,
+  spokenText,
+  visibleCopy,
+} from "../core/a11y.js";
 import {
   progressSizeOf,
   progressToneOf,
@@ -194,7 +199,11 @@ export const MeterIndicator = (props: MeterIndicatorProps): ReactElement =>
 
 /** {@link MeterLabel} props. */
 export interface MeterLabelProps {
-  /** Visible text. Defaults to the meter's `label`. */
+  /**
+   * Visible text. Defaults to the meter's `label`; a child that says nothing —
+   * `""` or spaces, the row an i18n table never filled — falls back to it
+   * rather than painting a blank line.
+   */
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -204,9 +213,10 @@ export const renderMeterLabel = (
   { children, testId }: MeterLabelProps,
   part: MeterPart,
 ): ReactElement | null => {
-  // A blank label is absence, so no element is painted at all: an empty
-  // `<text>` still pays the frame's gap, and spaces lay out a full line.
-  const copy = children ?? part.label;
+  // A caption says something or it paints nothing: an empty `<text>` still pays
+  // the frame's gap, and spaces lay out a full line, so a child that arrived
+  // blank falls through to the stored label the prop documents as its default.
+  const copy = captionCopy(children, part.label);
   return copy === undefined ? null : (
     <Text role="caption" tone="muted" testId={testId}>
       {copy}

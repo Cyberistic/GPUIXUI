@@ -441,6 +441,28 @@ describe("Progress", () => {
     );
   });
 
+  it("keeps the stored label for a child that says nothing", () => {
+    // The bug guarded: `children ?? label` covered only an **absent** child, so
+    // a caption's own copy a translation table left blank — `""` or a run of
+    // spaces — both hid the bar's label and laid out a full blank line (16px on
+    // 0.11.0), while the part documents the label as its default. A child that
+    // says nothing is absence now, and the label it documents stands.
+    const named = progressPart({ value: 42, label: "Uploading" }, testTheme, 0);
+    expect(textOf(renderProgressLabel({ children: "" }, named))).toBe(
+      "Uploading",
+    );
+    expect(textOf(renderProgressLabel({ children: "   " }, named))).toBe(
+      "Uploading",
+    );
+    // Both halves blank: no caption element at all.
+    const unnamed = progressPart({ value: 42, label: "  " }, testTheme, 0);
+    expect(renderProgressLabel({ children: "   " }, unnamed)).toBeNull();
+    // A caller's own spacing is still painted exactly as written.
+    expect(textOf(renderProgressLabel({ children: "  Saving  " }, named))).toBe(
+      "  Saving  ",
+    );
+  });
+
   it("lays the bar's segments in a row", () => {
     // The bug guarded: the track was a block, so the indeterminate lead and the
     // fill stacked — the moving fill never left the start of the bar and every

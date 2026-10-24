@@ -14,7 +14,13 @@
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { accessibleName, fieldHelp, spokenText, visibleCopy } from "./a11y.js";
+import {
+  accessibleName,
+  captionCopy,
+  fieldHelp,
+  spokenText,
+  visibleCopy,
+} from "./a11y.js";
 
 describe("accessibleName", () => {
   it("publishes a real name, trimmed", () => {
@@ -60,6 +66,27 @@ describe("visibleCopy", () => {
           (accessibleName(sample) === undefined),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("captionCopy", () => {
+  it("falls back to the stored label for a child that says nothing", () => {
+    // The bug guarded: a caption part painted `children ?? label`, and a default
+    // covers only an **absent** child — the copy a translation table leaves
+    // blank arrived as `""` or a run of spaces, hiding the stored label and
+    // laying out a full blank line (16px on 0.11.0).
+    expect(captionCopy("", "Uploading")).toBe("Uploading");
+    expect(captionCopy("   ", "Uploading")).toBe("Uploading");
+    // Both halves blank: no copy at all, so no caption element paints.
+    expect(captionCopy("   ", "  ")).toBeUndefined();
+    expect(captionCopy(undefined, "Uploading")).toBe("Uploading");
+  });
+
+  it("paints the caller's own text and composed children as given", () => {
+    expect(captionCopy("  Saving  ", "Uploading")).toBe("  Saving  ");
+    const node = { type: "span" };
+    expect(captionCopy(node, "Uploading")).toBe(node);
+    expect(captionCopy(0, "Uploading")).toBe(0);
   });
 });
 

@@ -29,7 +29,12 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { cn } from "@gpuixui/tw";
-import { accessibleName, spokenText, visibleCopy } from "../core/a11y.js";
+import {
+  accessibleName,
+  captionCopy,
+  spokenText,
+  visibleCopy,
+} from "../core/a11y.js";
 import { storedNumber } from "../core/stored.js";
 import {
   defaultMessages,
@@ -318,7 +323,11 @@ export const ProgressIndicator = (
 
 /** {@link ProgressLabel} props. */
 export interface ProgressLabelProps {
-  /** Visible text. Defaults to the progress's `label`. */
+  /**
+   * Visible text. Defaults to the progress's `label`; a child that says
+   * nothing — `""` or spaces, the row an i18n table never filled — falls back
+   * to it rather than painting a blank line.
+   */
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -328,9 +337,10 @@ export const renderProgressLabel = (
   { children, testId }: ProgressLabelProps,
   part: ProgressPart,
 ): ReactElement | null => {
-  // A blank label is absence, so no element is painted at all: an empty
-  // `<text>` still pays the frame's gap, and spaces lay out a full line.
-  const copy = children ?? part.label;
+  // A caption says something or it paints nothing: an empty `<text>` still pays
+  // the frame's gap, and spaces lay out a full line, so a child that arrived
+  // blank falls through to the stored label the prop documents as its default.
+  const copy = captionCopy(children, part.label);
   return copy === undefined ? null : (
     <Text role="caption" tone="muted" testId={testId}>
       {copy}

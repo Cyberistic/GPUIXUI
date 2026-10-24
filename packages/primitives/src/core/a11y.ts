@@ -36,6 +36,26 @@ export const visibleCopy = (text: string | undefined): string | undefined =>
   accessibleName(text) === undefined ? undefined : text;
 
 /**
+ * The copy a caption part paints: the caller's own child when it says
+ * something, otherwise the component's stored label.
+ *
+ * Both halves are copy an i18n table fills as often as a literal, so a missing
+ * row arrives as `""` or a run of spaces — and a caption is painted, so the
+ * spaces lay out a whole line while an empty one measures nothing. A child that
+ * says nothing is therefore **absence**, which falls through to the label the
+ * part documents as its default (the precedence `fieldHelp` keeps between a
+ * field's own help and its hint). A child the caller composes — an element, a
+ * number — is content rather than copy and is painted as given.
+ */
+export const captionCopy = <Child>(
+  children: Child | undefined,
+  label: string | undefined,
+): Child | string | undefined =>
+  typeof children === "string"
+    ? (visibleCopy(children) ?? visibleCopy(label))
+    : (children ?? visibleCopy(label));
+
+/**
  * The words a caller's formatter supplies, or the component's own when it says nothing.
  *
  * A component that announces a measurement asks its caller for the sentence — a

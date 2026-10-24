@@ -304,6 +304,37 @@ it("paints no caption line for a Progress label that arrived blank", async () =>
   expect(runtime.allText()).toContain("Uploading");
 });
 
+it("keeps a Progress's stored label for a caption child that says nothing", async () => {
+  // The bug guarded: a caption's `children` is copy a caller forwards from an
+  // i18n table as often as a literal, and the blank rule had only reached the
+  // stored `label` — `children ?? label` covers an absent child, not one that
+  // arrived as `""` or spaces. So a missing translation both **hid** the bar's
+  // label and laid out a blank 16px caption row, while the label prop documents
+  // the part's default. A child that says nothing falls through to the label
+  // now, and a bar with no copy at all still paints no caption.
+  const runtime = await openWindow();
+  const composed = (label: string, child: string) => (
+    <Surface>
+      <Progress testId="pg" value={42} label={label}>
+        <ProgressTrack testId="track">
+          <ProgressIndicator />
+        </ProgressTrack>
+        <ProgressLabel testId="caption">{child}</ProgressLabel>
+      </Progress>
+    </Surface>
+  );
+  runtime.render(composed("Uploading", "   "));
+  expect(runtime.allText()).toContain("Uploading");
+  expect(runtime.allText()).not.toContain("   ");
+  // Both halves blank: the caption element is absent, so nothing is laid out.
+  runtime.render(composed("  ", "   "));
+  expect(runtime.bounds("caption")).toStrictEqual(Option.none());
+  // A child that says something is still the caller's words.
+  runtime.render(composed("Uploading", "Saving"));
+  expect(runtime.allText()).toContain("Saving");
+  expect(runtime.allText()).not.toContain("Uploading");
+});
+
 it("paints a caller's Progress composition from the same resolved state", async () => {
   const runtime = await openWindow();
   runtime.render(

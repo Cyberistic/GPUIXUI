@@ -766,6 +766,29 @@ it("paints no caption line for a meter label that arrived blank", async () => {
   expect(named.allText()).toContain("Disk");
 });
 
+it("keeps a meter's stored label for a caption child that says nothing", async () => {
+  // The bug guarded: a caption's `children` is copy a caller forwards from an
+  // i18n table as often as a literal, and the blank rule had only reached the
+  // stored `label` — `children ?? label` covers an absent child, not one that
+  // arrived as `""` or spaces. So a missing translation both hid the meter's
+  // label and laid out a blank 16px caption row, while the label prop documents
+  // the part's default. A child that says nothing falls through to the label
+  // now, and a meter with no copy at all still paints no caption.
+  const composed = (label: string, child: string) => (
+    <Meter testId="m" label={label} value={25}>
+      <MeterLabel testId="caption">{child}</MeterLabel>
+    </Meter>
+  );
+  const blankChild = await mount(composed("Disk", "   "));
+  expect(blankChild.allText()).toContain("Disk");
+  expect(blankChild.allText()).not.toContain("   ");
+  const bothBlank = await mount(composed("  ", "   "));
+  expect(bothBlank.bounds("caption")).toStrictEqual(Option.none());
+  const caller = await mount(composed("Disk", "Memory"));
+  expect(caller.allText()).toContain("Memory");
+  expect(caller.allText()).not.toContain("Disk");
+});
+
 it("keeps a meter out of the tab order", async () => {
   const runtime = await mount(
     <Stack direction="row">

@@ -24,7 +24,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `buffer` | `number` | none | 0–100 held-ahead point; paints the segment between `value` and itself, and a stored value that is not a number paints no segment |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role; a stored name the table does not carry reads as `primary` |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm`; a stored name the table does not carry reads as `md` |
-| `label` | `string` | none | accessible name, and `ProgressLabel`'s default text; a blank label is no name and paints no caption line |
+| `label` | `string` | none | accessible name, and `ProgressLabel`'s default text; a blank label is no name, and a caption child that says nothing falls back to it rather than painting a blank line |
 | `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share; a blank answer keeps the default |
 | `loadingText` | `string` | `loading.indeterminate` (`"loading"`) | what an indeterminate bar says instead of a percentage; a blank one keeps the provider's |
 | `reducedMotion` | `boolean` | the motion provider | holds the indeterminate segment; no effect with `value`. The prop overrides the provider |
