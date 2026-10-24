@@ -162,9 +162,10 @@ A surface that enters and leaves reads one table, exported from
   against; an **axis** it does not name takes the house vertical `top` for the
   same reason, so a builder handed a stored name arrives vertically instead of
   falling through to `left`; a distance it cannot read (a failed measurement
-  reaching the table as `NaN` or an infinity) is **no travel** — the frame
-  carries `0` on its axis instead of a number the runtime paints as nothing, so
-  the surface fades in place rather than losing the movement it asked for;
+  reaching the table as `NaN` or an infinity) or one the renderer refuses (an
+  inset past a 32-bit float) is **no travel** — the frame carries `0` on its
+  axis instead of a description the runtime rejects whole, so the surface fades
+  in place rather than losing every frame it asked for;
 - `presenceTiming(level, preference)` gives the enter and exit tween at one
   level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"` (and
   under a stored preference the union does not name, the rule `preferenceOf`
@@ -187,10 +188,13 @@ A surface that enters and leaves reads one table, exported from
   paints its own surface composes the table instead of restating the three
   fields. Both halves are read as stored values too: `PresenceFramesInput` and
   `PresenceTimingInput` are the shapes a decoded config has, a frame field the
-  runtime cannot paint (a `NaN` from a failed measurement) is **dropped** so the
-  element keeps the value its own style states, and a phase the value does not
-  name is **no frame** — the runtime takes `animate` as a required target and
-  paints a non-finite inset as nothing, so neither may reach it;
+  runtime cannot paint — a `NaN` from a failed measurement, an inset past a
+  32-bit float, a negative size, an opacity outside `0..1` — is **dropped** so
+  the element keeps the value its own style states and the readable fields
+  beside it still travel (the renderer validates the whole description and
+  paints no frame for one it refuses, so one bad field used to take the run
+  with it), and a phase the value does not name is **no frame** — the runtime
+  takes `animate` as a required target, so neither may reach it;
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds
   a box stays mounted for, including the wait a delayed run sits out first; a
   field that cannot be scheduled adds no time (a negative wait never shortens the
@@ -470,6 +474,18 @@ resting frame — the target, or the coast's projected rest — rather than the
 run as complete. A destination changed under the preference is read the same way
 on every render, not only the mount's first: the value, the zero velocity and the
 completion edge belong to the frame that names it.
+
+A **frame** handed to the runtime is read the same way, and the range is the
+renderer's: `validate_style` in the binding requires every inset to be finite and
+to fit a 32-bit float, a `width`/`height`/`borderRadius` to be non-negative and
+`opacity` to be `0..1`, and it rejects the **whole description** for one it
+refuses — the element then paints its own style and no motion frame at all. The
+presence table therefore drops a field outside that grammar instead of passing it
+through: one stored `opacity: 1.5` or a negative measured height used to lose the
+readable `top` beside it, so an entering surface appeared without its fade and a
+leaving one kept its resting look for its exit window. A distance built by
+`fadeFrom`/`fadeFromAnchor`/`fadeFromSide` is read the same way, so a builder
+still publishes a description the runtime accepts.
 
 ## The runtime's declarative timing
 

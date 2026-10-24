@@ -486,6 +486,33 @@ describe("the presence table the README teaches", () => {
     // the library's own surfaces paint through — and the section says so.
     expect(section).toContain("the same object is its `motion` prop");
   });
+  it("holds a stored frame to the grammar the renderer validates", () => {
+    // The bug this guards: the renderer validates the **whole** motion
+    // description and paints no frame for one it refuses — an inset past a
+    // 32-bit float, a negative size, an opacity outside `0..1` — while the
+    // presence table dropped only non-finite fields. One out-of-range field a
+    // caller had stored therefore took the readable fields beside it with it:
+    // measured in a window, a surface asking for 8px of travel moved 0.
+    const presence = sources.find(({ name }) => name === "presence.ts")?.text;
+    expect(presence, "presence.ts was not read").toBeDefined();
+    [
+      "const RENDERABLE_MAX",
+      "const readOpacity",
+      "const readSize",
+      "readOpacity(frame.opacity)",
+      "readSize(frame.height)",
+      "readInset(frame.top)",
+      "readInset(frame.left)",
+      "readInset(offset) ?? 0",
+    ].forEach((marker) => expect(presence).toContain(marker));
+
+    // The page teaches the rule where a consumer of the table meets it, and
+    // names the renderer's own bound rather than a value of its own.
+    const section = readme.split("## The presence table")[1] ?? "";
+    expect(section).toContain("32-bit float");
+    expect(section).toContain("negative size");
+    expect(section).toContain("opacity outside `0..1`");
+  });
 });
 
 describe("the imports the README teaches", () => {

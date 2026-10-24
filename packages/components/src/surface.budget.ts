@@ -160,10 +160,14 @@ export const surfaceBudget = {
    * renderer's grammar before it is handed over. 34 KiB → 35 KiB when
    * `presenceTabStop` joined `internal/presence.tsx`: the one rule a surface's
    * own control reads to leave the Tab order while its ghost paints, beside the
-   * shield that takes the press. Measured 35 024 bytes with
+   * shield that takes the press. 35 KiB → 37 KiB when a **frame** is read
+   * through that same grammar (`readOpacity`/`readSize`/`readInset`): the
+   * renderer rejects a whole description for one field outside its range, so a
+   * stored frame field the runtime refuses is dropped where it used to take the
+   * readable fields beside it. Measured 37 740 bytes with
    * `nub scripts/surface.ts --entry src/motion-grid.tsx`.
    */
-  familyMotion: { modules: 4, bytes: 35 * 1024 },
+  familyMotion: { modules: 4, bytes: 37 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

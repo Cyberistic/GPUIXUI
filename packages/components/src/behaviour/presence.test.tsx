@@ -20,7 +20,13 @@ import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
+import type { MotionProps } from "@gpuix/react";
 import type { TestRoot } from "@gpuix/react/testing";
+import { presenceMotion as motionOfPresence } from "@gpuixui/motion/presence";
+import type {
+  PresenceFramesInput,
+  PresenceTiming,
+} from "@gpuixui/motion/presence";
 import {
   Accordion,
   AccordionContent,
@@ -1859,6 +1865,86 @@ describe("the seam's mount window", () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
       // The longer window still ends, so the timer was re-armed rather than lost.
       expect(painted(page.renderer, "seam-window")).toBe(false);
+    } finally {
+      page.unmount();
+    }
+  });
+});
+
+/**
+ * A host element painted on one motion description, at a fixed box.
+ *
+ * The description is handed over whole — not through a component — because the
+ * value under test is what the seam publishes to the runtime, and the runtime's
+ * own validation is what decides whether the element moves at all.
+ */
+const MotionProbe = ({
+  testId,
+  motion,
+}: {
+  readonly testId: string;
+  readonly motion: MotionProps;
+}) => (
+  <div style={{ position: "relative", height: 40 }}>
+    <div
+      testId={testId}
+      motion={motion}
+      style={{ position: "absolute", left: 0, height: 10, width: 10 }}
+    />
+  </div>
+);
+
+/** The description a frame set becomes for an entering surface. */
+const entering = (
+  frames: PresenceFramesInput,
+  timing: PresenceTiming = { enter: { duration: 10 }, exit: { duration: 10 } },
+): MotionProps => motionOfPresence(frames, true, timing);
+
+describe("a frame the renderer refuses", () => {
+  /**
+   * The bug this guards: the runtime validates the **whole** motion
+   * description and paints no frame for one it rejects
+   * (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s `validate_style`:
+   * every inset must be finite and fit a 32-bit float, a size must be
+   * non-negative, and `opacity` must be `0..1`). The seam dropped a field it
+   * could not read only when it was non-finite, so one out-of-range field a
+   * caller had stored — a designer's `1.5` opacity, a negative measured height —
+   * rejected the description and the surface painted **no** motion at all: an
+   * entering one appeared without its fade and a leaving one kept its resting
+   * look for its exit window, including the fields beside it that were readable.
+   */
+  it("drops the field, not the whole surface's motion", async () => {
+    const page = renderComponent(
+      <div>
+        <MotionProbe
+          testId="readable"
+          motion={entering({
+            initial: { opacity: 0, top: 8 },
+            animate: { opacity: 1, top: 0 },
+            exit: { opacity: 0 },
+          })}
+        />
+        <MotionProbe
+          testId="refused"
+          motion={entering({
+            initial: { opacity: 2, top: 8 },
+            animate: { opacity: 1, top: 0 },
+            exit: { opacity: 0 },
+          })}
+        />
+      </div>,
+    );
+    try {
+      page.renderer.clockPause();
+      await delay();
+      const readable = where(page.renderer, "readable", "y");
+      const refused = where(page.renderer, "refused", "y");
+      page.renderer.clockFastForward(20_000);
+      await delay();
+      // Both travel the 8px they ask for; the refused field is beside the one
+      // that names the travel, so losing it would take the whole run with it.
+      expect(readable - where(page.renderer, "readable", "y")).toBe(8);
+      expect(refused - where(page.renderer, "refused", "y")).toBe(8);
     } finally {
       page.unmount();
     }

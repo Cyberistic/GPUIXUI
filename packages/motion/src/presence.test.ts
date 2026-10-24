@@ -247,6 +247,43 @@ describe("the motion prop", () => {
   });
 });
 
+describe("a frame a caller stored", () => {
+  it("drops a field the renderer refuses, not the frame beside it", () => {
+    // The bug this guards: the renderer validates the whole motion description
+    // and paints no frame for one it refuses (`validate_style`: every inset fits
+    // a 32-bit float, a size is non-negative, `opacity` is `0..1`). The seam
+    // dropped only non-finite fields, so one stored out-of-range value beside a
+    // readable one lost the readable one's travel too — measured in a window, the
+    // surface asked for 8px and moved 0.
+    const read = presenceMotion(
+      {
+        initial: { opacity: 2, height: -1, top: 8, left: 4e38 },
+        animate: { opacity: 1, height: 24, top: 0, left: 0 },
+        exit: { opacity: 0 },
+      },
+      true,
+      { enter: { duration: 0.2 }, exit: { duration: 0.2 } },
+    );
+    expect(read.initial).toEqual({ top: 8 });
+    expect(read.animate).toEqual({ opacity: 1, height: 24, top: 0, left: 0 });
+    // A value just inside the bound is a frame, not an overflow: the repair
+    // drops what the renderer refuses rather than everything that is large.
+    expect(
+      presenceMotion({ initial: { top: 3e38, opacity: 1 } }, true, {
+        enter: { duration: 0.2 },
+        exit: { duration: 0.2 },
+      }).initial,
+    ).toEqual({ top: 3e38, opacity: 1 });
+    // A distance the renderer refuses is no travel, so a builder still publishes
+    // a description it accepts instead of one that paints nothing.
+    expect(fadeFrom("top", 4e38).initial).toEqual({ opacity: 0, top: 0 });
+    expect(fadeFromAnchor("left", 4e38).initial).toEqual({
+      opacity: 0,
+      left: 0,
+    });
+  });
+});
+
 describe("a timing a caller stored", () => {
   it("reads a phase the value does not name as no journey", () => {
     // The bug this guards: a missing phase was handed over as `{}`, which the

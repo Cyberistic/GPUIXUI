@@ -12092,6 +12092,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `aria-label` row, the package README's sparkline paragraph, the
     `Sparkline` JSDoc and the Charts inventory row state the fallback.
     Owner: data.
+  - [x] Read a **blank key-value label as the key it is stored by** — a
+    key-value entry's label is content: a saved object answers `""` (or
+    whitespace) for a row a migration lost the title from, and `KeyValue`
+    painted it straight into the fixed label column, so the value sat beside an
+    empty cell and the row never said what it named — the shape the property
+    panel's rows already read through `propertyName`, which the list did not.
+    `KeyValue` now reads every label through that one seam (the panel's rows
+    and the entries share it), so a blank label paints and announces the key.
+    `behaviour/surface-a11y.test.tsx` gains `reads a blank key-value label as
+    the key it is stored by` (both a blank and a whitespace label, read off the
+    rendered tree); direction measured: with the raw `entry.label` restored the
+    case fails `expected [ '120', '80' ] to deeply equal [ 'width', '120',
+    'height', '80' ]`. Docs: `docs/key-value.mdx`'s `label` row and
+    §Limitations, the README's surface paragraph, the `Key-value displays`
+    inventory row and `propertyName`'s JSDoc. No native scenario applies — the
+    reading is the real renderer's. Owner: data.
   - [x] Keep an **expandable row's keys to the row that holds focus** — the
     disclosure row answered Enter/Space on every key its handler heard, and a
     key is dispatched along the **focus path**
@@ -20694,6 +20710,30 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion` + `packages/components`: **a frame field the renderer refuses
+rejected the whole description** — the runtime validates a motion description whole
+(`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s `validate_style`: every inset
+finite and inside a 32-bit float, `width`/`height`/`borderRadius` non-negative, `opacity`
+in `0..1`) and paints **no** frame for one it refuses, while the presence table dropped a
+frame field only when it was non-finite. One stored out-of-range field — a designer's
+`opacity: 1.5`, a negative measured height, a `4e38` travel — therefore took the readable
+fields beside it: an entering surface appeared without its fade and a leaving one kept its
+resting look for its exit window. `frameOf` reads each field through the renderer's grammar
+(`readOpacity`, `readSize`, `readInset` over `RENDERABLE_MAX`) and `travelOf` reads a
+distance past the bound as no travel, so a builder still publishes a description the
+runtime accepts. Proof: `packages/components/src/behaviour/presence.test.tsx`'s
+`drops the field, not the whole surface's motion` mounts a readable frame and one carrying
+`opacity: 2` on the real renderer, freezes the clock and requires both to travel 8px —
+measured at HEAD as readable `8` / refused `0` (the description rejected, the box painted
+at its own style), green after — plus `packages/motion/src/presence.test.ts`'s
+`drops a field the renderer refuses, not the frame beside it` (each refused field, the
+readable control, the bound inside/outside and both builders) and `docs.test.ts`'s
+`holds a stored frame to the grammar the renderer validates`, which keeps the README's
+presence-table sentence tied to the readers. Green: motion 15 files / **211** tests with
+`check-types` clean, and the components' `presence.test.tsx` **41/41**. Docs:
+`packages/motion/README.md` §The presence table / §Inputs the runtime can paint, the
+`presence.ts` JSDocs and the `Motion` row in `COMPONENTS.md`. No live scenario applies —
+the renderer's validation is the installed binding's, and the behaviour suite drives it.
 `[x]` `@gpuixui/motion`: **read the two optional objects a caller may have stored
 as their empty shapes** — a timing options object and a spring sample are both
 configs as often as literals, and both were read field-first. `motionTimingOf`

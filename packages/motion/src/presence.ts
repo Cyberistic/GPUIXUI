@@ -112,18 +112,48 @@ export interface PresenceHitRule {
 }
 
 /**
+ * The largest magnitude the renderer paints in a motion style field.
+ *
+ * `validate_style` checks every inset against a 32-bit float and **rejects the
+ * whole description** for one it refuses (`@gpuix/native@0.11.0`,
+ * `packages/native/src/motion.rs`), so a number past this bound is not a large
+ * frame — it is no motion at all.
+ */
+const RENDERABLE_MAX = 3.402_823_466_385_288_6e38;
+
+/** A frame's inset, read as the renderer accepts it: finite, inside a float. */
+const readInset = (value: number | null | undefined): number | undefined =>
+  value !== null &&
+  value !== undefined &&
+  Number.isFinite(value) &&
+  Math.abs(value) <= RENDERABLE_MAX
+    ? value
+    : undefined;
+
+/** A frame's opacity, read as the renderer accepts it: a share of `0..1`. */
+const readOpacity = (value: number | null | undefined): number | undefined => {
+  const share = readInset(value);
+  return share !== undefined && share >= 0 && share <= 1 ? share : undefined;
+};
+
+/** A frame's size, read as the renderer accepts it: non-negative. */
+const readSize = (value: number | null | undefined): number | undefined => {
+  const size = readInset(value);
+  return size !== undefined && size >= 0 ? size : undefined;
+};
+
+/**
  * The distance a frame travels, read from a caller's number.
  *
  * An offset is caller arithmetic — the measured gap between a trigger and the
  * surface it opens — so a failed measurement is a number the runtime cannot
  * paint: it draws a non-finite inset as nothing, which leaves the entry and exit
  * frames carrying no start offset at all, and the travel the caller asked for is
- * silently gone. A distance no formula can read is therefore **no travel**; the
- * surface still fades, at the axis and direction it named. A negative offset is a
- * direction, not an unusable number, so it is kept.
+ * silently gone. A distance no formula can read, or one the renderer refuses, is
+ * therefore **no travel**; the surface still fades, at the axis and direction it
+ * named. A negative offset is a direction, not an unusable number, so it is kept.
  */
-const travelOf = (offset: number): number =>
-  Number.isFinite(offset) ? offset : 0;
+const travelOf = (offset: number): number => readInset(offset) ?? 0;
 
 /**
  * The inset a frame travels on, read from a value a caller may have stored.
@@ -238,17 +268,21 @@ export const fadeFromAnchor = (
  * is where a frame's zero would have put it — and a phase the value does not
  * name is **no frame**, the answer {@link presenceTimingOf} gives a phase it
  * does not name.
+ *
+ * Dropped, not passed through, because the renderer validates the **whole**
+ * description and paints no frame for one it refuses: every inset must fit a
+ * 32-bit float, a size must be non-negative and `opacity` must be `0..1`
+ * ({@link RENDERABLE_MAX}), so one out-of-range field beside a readable one used
+ * to take the readable one's travel with it.
  */
 const frameOf = (
   frame: PresenceFrameInput | null | undefined,
 ): PresenceFrame => {
   if (typeof frame !== "object" || frame === null) return {};
-  const read = (value: number | null | undefined): number | undefined =>
-    value !== null && Number.isFinite(value) ? value : undefined;
-  const opacity = read(frame.opacity);
-  const height = read(frame.height);
-  const top = read(frame.top);
-  const left = read(frame.left);
+  const opacity = readOpacity(frame.opacity);
+  const height = readSize(frame.height);
+  const top = readInset(frame.top);
+  const left = readInset(frame.left);
   return {
     ...(opacity === undefined ? {} : { opacity }),
     ...(height === undefined ? {} : { height }),
@@ -431,10 +465,11 @@ export const delayedTiming = (
  * Both halves are read from values a caller may have stored, because this module
  * is a published entry for a consumer painting its own surface: a timing the
  * value does not name is **no transition** ({@link presenceTimingOf}) and a frame
- * it cannot paint is dropped or no frame at all ({@link framesOf}), so a decoded
- * config cannot hand the runtime `undefined` where its target belongs or a
- * non-finite inset it paints as nothing. A readable pair is passed through as it
- * was given.
+ * it cannot paint is dropped or no frame at all ({@link framesOf}) — including a
+ * field outside the renderer's own range, which rejects the whole description —
+ * so a decoded config cannot hand the runtime `undefined` where its target
+ * belongs or a value it paints as nothing. A readable pair is passed through as
+ * it was given.
  */
 export const presenceMotion = (
   frames: PresenceFramesInput | null | undefined,
