@@ -1462,6 +1462,11 @@ without a cast, and the reports one group at a time name their own shape:
 `switchFailures` all read a nulled or truncated group rather than a promised
 one. A numeric group or a step the store lost is still the refusal
 `missingTokens` names, because no report can describe a token nothing carries.
+A store that kept **no theme** at all — the `null` JSON writes for a row never
+written, the `undefined` a settings value reads as — is that refusal one level
+up: the gate reads it as **the empty source**, so it names every numeric group
+rather than throwing a `TypeError` read off the absence, and
+`auditTheme(restoreTheme(null))` is the passing theme those absences stand for.
 
 `disabledFade` is the one report those floors do not reach: a fade is a
 mechanism rather than a readability claim, so `disabledFadeFailures` holds every

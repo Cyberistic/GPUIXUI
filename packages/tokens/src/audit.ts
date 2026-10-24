@@ -174,6 +174,13 @@ export interface ThemeAudit {
  * {@link missingTokens}, so a caller deciding whether to restore a stored theme
  * reads the absence as data instead of catching this function's error.
  *
+ * **A store with no saved theme is that absence at its widest**: JSON writes
+ * `null` for a row never written and a settings value that never held one reads
+ * as `undefined`, so the gate takes both and reads them as the empty source
+ * {@link missingTokens} already describes — every numeric group missing, named
+ * in the refusal. Reading the labels before that refusal threw
+ * `TypeError: Cannot read properties of null (reading 'contrast')` instead.
+ *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *
  * @example
@@ -185,24 +192,31 @@ export interface ThemeAudit {
  * ```
  */
 export function auditTheme(
-  theme: ThemeAuditSource,
-  floors: ContrastFloors = contrastFloorsFor(theme),
+  theme: ThemeAuditSource | null | undefined,
+  floors?: ContrastFloors,
 ): ThemeAudit {
-  requireTokens(theme);
-  const invalidRoles = invalidColorRoles(theme);
-  const invalidShadows = invalidShadowColors(theme);
-  const numbers = invalidNumbers(theme);
-  const scales = invalidScales(theme);
-  const toggle = switchFailures(theme);
-  const contrast = contrastFailures(theme, floors);
-  const decorative = decorativeFailures(theme);
-  const series = seriesFailures(theme);
-  const syntax = syntaxFailures(theme, floors);
-  const selection = selectionFailures(theme, floors);
-  const indicators = indicatorFailures(theme, floors);
-  const highlight = highlightFailures(theme, floors);
-  const disabledFade = disabledFadeFailures(theme);
-  const keyboardDim = keyboardDimFailures(theme);
+  // A store that kept no theme at all (`null` for a row never written, the
+  // `undefined` a settings value reads as) is the empty source `missingTokens`
+  // names every group missing for, so the refusal below is the answer rather
+  // than a `TypeError` reading a label off the absence. The floors are read
+  // after it, from the source the gate actually measures.
+  const source: ThemeAuditSource = theme ?? {};
+  requireTokens(source);
+  const contract = floors ?? contrastFloorsFor(source);
+  const invalidRoles = invalidColorRoles(source);
+  const invalidShadows = invalidShadowColors(source);
+  const numbers = invalidNumbers(source);
+  const scales = invalidScales(source);
+  const toggle = switchFailures(source);
+  const contrast = contrastFailures(source, contract);
+  const decorative = decorativeFailures(source);
+  const series = seriesFailures(source);
+  const syntax = syntaxFailures(source, contract);
+  const selection = selectionFailures(source, contract);
+  const indicators = indicatorFailures(source, contract);
+  const highlight = highlightFailures(source, contract);
+  const disabledFade = disabledFadeFailures(source);
+  const keyboardDim = keyboardDimFailures(source);
   return {
     invalidRoles,
     invalidShadows,

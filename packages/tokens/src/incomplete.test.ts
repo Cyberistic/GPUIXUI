@@ -64,6 +64,7 @@ import {
   nativeTextTheme,
   platformNames,
   platformTheme,
+  restoreTheme,
   retroNames,
   retroTheme,
   selectionOn,
@@ -1729,5 +1730,42 @@ describe("the shape a store hands back", () => {
       expect(text, surface).toContain("ThemeAuditSource");
       expect(text, surface).toContain("StoredTheme");
     }
+  });
+
+  it("answers a store that kept no theme with its own refusal, not a TypeError", () => {
+    // The bug this guards: `auditTheme` read its default floors — and with them
+    // `theme.contrast` — before `requireTokens` ran, so the gate at the end of a
+    // store flow threw `TypeError: Cannot read properties of null (reading
+    // 'contrast')` for a settings row that was never written, while
+    // `missingTokens` and `restoreTheme` already answered the same value as no
+    // theme at all.
+    [null, undefined].forEach((absent) => {
+      expect(() => auditTheme(absent)).toThrow(
+        "`spacing`, `radius`, `borderWidth`, `iconSize`, `typography`, `density` are missing",
+      );
+      expect(() => auditTheme(absent)).not.toThrow(TypeError);
+      // The readable half of that refusal is the same value, one seam earlier.
+      expect(missingTokens(absent).every(({ kind }) => kind === "group")).toBe(
+        true,
+      );
+    });
+
+    // The theme those absences stand for is a passing one.
+    expect(auditTheme(restoreTheme(null)).passed).toBe(true);
+  });
+
+  it("teaches the no-theme absence where the gate is described", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const surfaces = {
+      catalogue: read("../../../docs/tokens.md"),
+      designSystem: read("../../../docs/design-system.md"),
+      readme: read("../README.md"),
+      gate: read("./audit.ts"),
+    };
+
+    Object.entries(surfaces).forEach(([surface, text]) => {
+      expect(text, surface).toContain("the empty source");
+    });
   });
 });

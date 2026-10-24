@@ -1539,7 +1539,11 @@ resolved theme before it ships and assert `passed` in the package's own tests.
 The gate and its reports take the **shape a store hands back** in their types as
 well as at runtime — `ThemeAuditSource` composes the ports each report reads, so
 `auditTheme(stored)` on a `StoredTheme` (what `restoreTheme` takes) needs no
-cast, and a nulled or truncated group is measured rather than promised.
+cast, and a nulled or truncated group is measured rather than promised. A store
+that kept no theme at all — JSON's `null`, an `undefined` settings row — is
+**the empty source**: the gate names every numeric group in its refusal rather
+than throwing a `TypeError` on a label, and `restoreTheme(null)` is the theme
+that absence stands for.
 
 Two of those checks are about the theme's own **structure** rather than its
 colours: `invalidScales(theme)` holds every named ladder to its order — spacing,

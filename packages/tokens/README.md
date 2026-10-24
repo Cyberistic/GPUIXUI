@@ -908,7 +908,12 @@ in [`src/system-theme.example.ts`](./src/system-theme.example.ts).
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
 CSS validation and lint, and `passed` is true only when all fourteen reports are
-empty. The floors follow the theme's own `contrast` variant, so a brand built
+empty. A stored value that is not a theme at all — the `null` JSON keeps for a
+settings row never written, the `undefined` one that never held a theme — is
+**the empty source**: the gate names every numeric group in its refusal rather
+than throwing a `TypeError` on a label, and `restoreTheme(null)` is the theme
+that absence stands for. The floors follow the theme's own `contrast` variant, so
+a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, every report that takes
 floors starts from it (so `contrastFailures(theme)`, `selectionFailures(theme)`

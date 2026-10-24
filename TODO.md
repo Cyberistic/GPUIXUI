@@ -389,7 +389,30 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 252/252
+`[x]` `[██████████]` 253/253
+
+`[x]` Answer a **store that kept no theme** at the gate, not a `TypeError` —
+`auditTheme(theme, floors = contrastFloorsFor(theme))` evaluated its default
+argument before `requireTokens`, so the label read (`theme.contrast`) ran on the
+value first: a settings row never written (`JSON.parse`'s `null`) or a value that
+never held a theme (`undefined`) threw `TypeError: Cannot read properties of
+null (reading 'contrast')` out of the seam both token pages end a store flow on,
+while `missingTokens` and `restoreTheme` already answered the same value as no
+theme. `auditTheme` takes the absence in its type
+(`ThemeAuditSource | null | undefined`), reads it as **the empty source** the
+presence report describes, and takes its default floors after `requireTokens`,
+so the answer is the gate's own sentence naming all six numeric groups rather
+than a crash about a label. `incomplete.test.ts` gains `answers a store that
+kept no theme with its own refusal, not a TypeError` (both absences, the
+readable `missingTokens` half, and `auditTheme(restoreTheme(null))` passing) and
+`teaches the no-theme absence where the gate is described` (the two pages, the
+README and the seam must say "the empty source"). Directions measured: with the
+old default argument restored the first case fails on the exact `TypeError`, and
+removing the sentence from `docs/tokens.md` fails the second by name; restored,
+50 files / **3 104** tests with `check-types`, `check:tests`, `oxlint` and
+`oxfmt` clean. Docs: `docs/tokens.md` §Checking your own theme,
+`docs/design-system.md` §11, the package README and the gate's own JSDoc. No
+native scenario applies — a reader over the value a store handed back.
 
 `[x]` Let the **gate and its reports take the shape a store hands back** —
 `StoredTheme` is the value `restoreTheme` is documented to take (the labels a
@@ -12835,23 +12858,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
       names both modules. `theming.mdx` gains **Take a platform style**, the
       sentence that a deleted key inherits the base theme's value, and the
       `applyStyle`/`auditTheme` route beside the copy.
-      `src/lib/platform-style-source.test.tsx` (11 cases) evaluates every emitted
+      `src/lib/platform-style-source.test.tsx` (12 cases) evaluates every emitted
       file and compares it with the table **field for field and key for key**, so
       a dropped optional table or radius step fails rather than shipping a
       look-alike; it also holds every `radiusSteps` member, the identity's
-      absence, the header's table name and apply/audit route, determinism, the
-      page mount and prose, and the four tabs in the markup. Directions measured:
-      deleting the `syntax` line from the serialiser fails the darwin, linux and
-      win32 cases (`expected { …(8) } to deeply equal { …(9) }`); removing
-      `<PlatformStyleSource />` from the page fails `mounts the control the page
-      teaches`; restored, 11/11. Measured in a served page (dev server, headless
-      Chrome 155, macOS x86_64): `data-platform-style` reads `darwin` with
-      `"Menlo"`, the **Linux** tab reads `linux` with `"DejaVu Sans Mono"`,
-      **Windows** reads `win32` with `"Consolas"`, and **Default** returns
-      `default` with `"Menlo"`. `nub run --filter @gpuixui/docs test`: 197 files
-      / 2 009 tests green; `build`, `check-types` and `oxfmt` clean on the touched
-      files. No native scenario applies — a docs page generated from the token
-      package's own table.
+      absence, an authored look's `series` (the one optional table the platform
+      styles do not carry), the header's table name and apply/audit route,
+      determinism, the page mount and prose, and the four tabs in the markup.
+      Directions measured: deleting the `syntax` line from the serialiser fails
+      the darwin, linux and win32 cases (`expected { …(8) } to deeply equal
+      { …(9) }`), deleting the `series` line fails `prints the optional tables an
+      authored look declares`, and removing `<PlatformStyleSource />` from the
+      page fails `mounts the control the page teaches`; restored, 12/12.
+      Measured in a served page (dev server, headless Chrome 155, macOS
+      x86_64): `data-platform-style` reads `darwin` with `"Menlo"`, the **Linux**
+      tab reads `linux` with `"DejaVu Sans Mono"`, **Windows** reads `win32` with
+      `"Consolas"`, and **Default** returns `default` with `"Menlo"`.
+      `nub run --filter @gpuixui/docs test` is 197 files / 2 010 tests with one
+      foreign case red — `stepper-preview.test.ts` reads
+      `packages/components/src/stepper.tsx`, which another workstream is editing
+      in place (it now contains `Math.max`), so excluding that file the suite is
+      196 / 1 999 green — and `build`, `check-types` and `oxfmt` are clean on the
+      touched files. No native scenario applies — a docs page generated from the
+      token package's own table.
 
 `[x]` Read the **icon gallery from the package's public entry** — the site
       imported `packages/icons/src/names` and `packages/icons/src/registry`
