@@ -345,8 +345,8 @@ differs from the role it starts from (`tone="primary"` paints `brandText`, as
 The **layout primitives are the caller's element**: `Box`, `Stack`, `Grid` and
 `Spacer` extend `ElementHostProps`, the runtime's `ref`/`aria-id`/`onLayout`, so
 a panel is measured, named for automation and held where it is painted. A text
-field hands the same trio to its native element (`FieldHostProps` is that
-type) — one vocabulary for "the element outside this library may need".
+field hands the same trio to its native element under the name `FieldHostProps`
+— one vocabulary for "the element outside this library may need".
 
 ### What GPUix does not provide, and what this package does instead
 
