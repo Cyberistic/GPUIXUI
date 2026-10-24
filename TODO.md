@@ -418,8 +418,11 @@ Verification.
       `oxlint` and `oxfmt` clean and the workspace type check green. Docs:
       `docs/tokens.md` §Theme API (the rule in the merge list),
       `docs/design-system.md` §11, the package README §Extending a theme and the
-      `Theme extension` row. No native scenario applies — a merge rule, one
-      reader and the prose that teaches it.
+      `Theme extension` row. Verified in a runtime: the four theme scenarios
+      re-run green (headless `theme-color-roles`, `theme-type-and-shadow`,
+      `theme-platform`, `theme-look`, 4/4) because `applyStyle`'s name reader is
+      on the path they paint; the merge rule and its prose have no scenario of
+      their own.
 
 `[x]` Answer a **surface name this release does not ship** with the brand that
       reads everywhere — `brandTextOn` read the surface straight out of the
