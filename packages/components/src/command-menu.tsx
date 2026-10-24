@@ -51,6 +51,7 @@ import {
 } from "@gpuixui/primitives/hint";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
+import { presenceTabStop } from "./internal/presence.js";
 import {
   assertParts,
   type PartChildren,
@@ -99,6 +100,11 @@ interface CommandMenuContextValue {
   readonly runActive: () => void;
   readonly handleKeyDown: (event: EventPayload) => void;
   readonly registerInput: (instance: PublicInstance | null) => void;
+  /**
+   * Whether the palette is open, so a part the library paints can drop its own
+   * Tab stop for the exit window the dialog keeps painted.
+   */
+  readonly present: boolean;
 }
 
 const CommandMenuContext = createContext<CommandMenuContextValue | undefined>(
@@ -275,6 +281,7 @@ export const CommandMenu = ({
         query,
         setQuery: writeQuery,
         matches,
+        present: open,
         isActive: (action) =>
           Option.exists(activeAction, (current) => current.id === action.id),
         run,
@@ -328,7 +335,7 @@ export const CommandMenuInput = ({
   className,
 }: CommandMenuInputProps) => {
   const theme = useTheme();
-  const { query, setQuery, runActive, handleKeyDown, registerInput } =
+  const { query, setQuery, runActive, handleKeyDown, registerInput, present } =
     useCommandMenu();
 
   const fieldStyle: StyleDesc = {
@@ -357,6 +364,10 @@ export const CommandMenuInput = ({
         ref={registerInput}
         testId="command-input"
         aria-label={label}
+        // The dismissed palette stays painted for the dialog's exit window, and
+        // the runtime decides its Tab order element by element: a field the
+        // library paints is not a stop a reader can land on as it unmounts.
+        {...presenceTabStop(present)}
         // The hint is painted, so the runtime's `aria_placeholder` left with
         // the prop; the empty field announces the same words as help.
         aria-description={fieldHelp({ placeholder }, query)}

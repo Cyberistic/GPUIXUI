@@ -6,8 +6,9 @@
  * (and focus that leaves a duration late because the surface stayed mounted); a
  * reduced-motion run that still animates; an accordion that mounts its body
  * instantly; a tab pill that jumps between triggers although both boxes
- * were measured; and a context menu whose exit tween still swallowed a press
- * meant for the control underneath it.
+ * were measured; a context menu whose exit tween still swallowed a press
+ * meant for the control underneath it; and a dismissed palette's field that
+ * stayed in the window's Tab order while the panel was a ghost.
  *
  * A headless assertion can read **geometry** (the native tree reports bounds, not
  * the painted opacity), so every case moves the surface on purpose: the offset
@@ -71,6 +72,11 @@ import {
   settleMotion,
   waitFor,
 } from "../internal/interaction.js";
+import {
+  CommandMenu,
+  CommandMenuInput,
+  CommandMenuList,
+} from "../command-menu.js";
 import { MotionProvider } from "../motion.js";
 import { MotionProvider as PackageMotionProvider } from "@gpuixui/motion/react";
 import { motionLevels } from "@gpuixui/motion/timing";
@@ -258,6 +264,50 @@ describe("a modal surface", () => {
 
       expect(tabWalk(page, "before", 5)).not.toContain("drawer-close");
       expect(tabWalk(page, "before", 5)).not.toContain("cancel");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps a dismissed command palette's field out of the window's tab order", async () => {
+    // The same rule inside the palette: the dialog keeps the panel painted for
+    // its exit, and the search field is the one control the **library** paints
+    // in it. The shield takes the press, but the runtime decides the Tab order
+    // element by element, so a reader who pressed Escape and then Tabbed landed
+    // on a field that unmounted under the keyboard.
+    const Palette = () => {
+      const [open, setOpen] = useState(true);
+      return (
+        <Page>
+          <Button testId="before">Before</Button>
+          <CommandMenu
+            open={open}
+            onOpenChange={setOpen}
+            actions={[{ id: "save", label: "Save", perform: () => undefined }]}
+          >
+            <CommandMenuInput />
+            <CommandMenuList />
+          </CommandMenu>
+        </Page>
+      );
+    };
+    const page = renderComponent(<Palette />);
+    try {
+      await waitFor(() =>
+        expect(painted(page.renderer, "command-menu")).toBe(true),
+      );
+      // While the palette is open the field is a stop, or the ghost walk below
+      // could pass on a tree that never had one.
+      expect(tabWalk(page, "before", 6)).toContain("command-input");
+
+      page.renderer.focusElement(
+        page.renderer.findByTestId("command-input")?.id ?? -1,
+      );
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "command-menu")).toBe(true);
+
+      expect(tabWalk(page, "before", 6)).not.toContain("command-input");
     } finally {
       page.unmount();
     }

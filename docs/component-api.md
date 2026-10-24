@@ -591,7 +591,11 @@ on a control inside a leaving page view is measured in
 `page-transition.test.tsx`'s `stops a leaving view taking presses while it
 fades` — the shield's own case. A dismissed notice keeps the action it was
 thrown with in the box it had, and that painted action answers nothing
-(`keeps the action a dismissed notice was thrown with`).
+(`keeps the action a dismissed notice was thrown with`). A dismissed command
+palette keeps the dialog's exit painted, so the field the **library** paints
+there drops its own Tab stop for that window
+(`keeps a dismissed command palette's field out of the window's tab order`); the
+rows are highlighted rather than focused, so they were never stops.
 `src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host
 that composes the presence seam paints `pointerEvents` from it, and a deferred

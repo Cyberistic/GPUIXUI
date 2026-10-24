@@ -48,3 +48,4 @@ CommandMenu
 - No `aria-activedescendant` or `aria-controls`; the highlight is visual.
 - `shortcut` is display only; the component binds no keys.
 - `actions` and `recents` read from a saved state are read at the boundary: an `actions` value that is not a list paints the empty state, a `recents` value that is not a list carries no recents, and an entry that is not an id is dropped.
+- The palette leaves on the dialog's `slow` exit (320 ms, a fade and an 8px rise). The field it paints is the library's control, so it drops its own Tab stop for that window: pressing Escape and then Tab walks past the field instead of landing on one that is about to unmount. Rows are highlighted, not focused, so they were never stops; a control a caller composes into the palette keeps its stop until the runtime publishes an inherited `inert`.
