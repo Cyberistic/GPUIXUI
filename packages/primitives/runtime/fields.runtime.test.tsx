@@ -1478,6 +1478,11 @@ it("paints no tip for copy that says nothing", async () => {
             <Text>Spaces</Text>
           </div>
         </Tooltip>
+        <Tooltip content={null} testId="null-tip">
+          <div testId="null-target" tabIndex={0} style={{ display: "flex" }}>
+            <Text>Unwritten</Text>
+          </div>
+        </Tooltip>
         <Tooltip content="A hint" testId="tip">
           <div testId="target" tabIndex={0} style={{ display: "flex" }}>
             <Text>Hover me</Text>
@@ -1490,8 +1495,12 @@ it("paints no tip for copy that says nothing", async () => {
   runtime.settleMotion();
   runtime.hover("spaces-target");
   runtime.settleMotion();
+  runtime.hover("null-target");
+  runtime.settleMotion();
   expect(runtime.bounds("blank-tip")).toStrictEqual(Option.none());
   expect(runtime.bounds("spaces-tip")).toStrictEqual(Option.none());
+  // A field a record never carried arrives as `null`, not `""`.
+  expect(runtime.bounds("null-tip")).toStrictEqual(Option.none());
   // The same hover on a tip with copy is the control: it paints its box.
   runtime.hover("target");
   runtime.settleMotion();

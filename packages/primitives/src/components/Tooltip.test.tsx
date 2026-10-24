@@ -199,6 +199,10 @@ describe("Tooltip accessibility", () => {
     expect(
       elementChildren(render({ content: "   ", children: <div /> })),
     ).toHaveLength(1);
+    // A never-written field is the shape JSON hands back, which is `null`.
+    expect(
+      elementChildren(render({ content: null, children: <div /> })),
+    ).toHaveLength(1);
     // A tip with copy is the control: the same tree paints the surface.
     expect(
       elementChildren(render({ content: "A hint", children: <div /> })),
