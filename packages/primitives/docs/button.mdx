@@ -38,6 +38,7 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here |
 | `ref` | `Ref<PublicInstance>` | — | the element itself |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state, forwarded through `ActionHostProps` |
+| `tabIndex` | `number` | `0`, or `-1` while `disabled` | the action's Tab stop. A surface that keeps its box painted through an exit tween names `-1`, so its own still-painted actions are not walkable; an explicit stop wins in both directions |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }`, merged last |
 | `testId` | `string` | — | stable locator |

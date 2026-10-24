@@ -329,6 +329,46 @@ it("skips a disabled busy Button in the tab order, and focuses it from code", as
   expect(runtime.focused()).toStrictEqual(Option.some("busy"));
 });
 
+it("walks past an action a leaving surface has taken out of the Tab order", async () => {
+  // The bug this guards: the runtime decides the Tab order element by element,
+  // and the stop was hardcoded to `disabled ? -1 : 0`. A surface that keeps its
+  // box painted for its exit tween therefore kept its own action a walkable
+  // stop after it was dismissed, and a traversal then left the window's focus on
+  // an element that unmounted with the surface. `tabIndex` is the caller's now.
+  //
+  // A `-1` stop is not a disabled control: the action still takes a press.
+  const runtime = await openWindow();
+  let calls = 0;
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button
+          testId="leaving"
+          tabIndex={-1}
+          onActivate={() => {
+            calls += 1;
+          }}
+        >
+          Save
+        </Button>
+        <Button testId="after">Cancel</Button>
+      </Stack>
+    </Surface>,
+  );
+  const stop = Option.flatMap(runtime.element("leaving"), (element) =>
+    Option.fromNullishOr(element.customProps?.tabIndex),
+  );
+  expect(stop).toStrictEqual(Option.some(-1));
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.some("after"));
+  // Out of the Tab order, still addressable from code — the stop a trigger's
+  // focus target needs once its surface is a ghost.
+  runtime.focus("leaving");
+  expect(runtime.focused()).toStrictEqual(Option.some("leaving"));
+  runtime.click("leaving");
+  expect(calls).toBe(1);
+});
+
 it("paints a disabled filled Button with the measured pair, not a fade", async () => {
   // The bug: a disabled filled action faded itself to 50%, which composites the
   // label into the surface behind the control — under the disabled floor on the

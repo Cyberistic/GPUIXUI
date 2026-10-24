@@ -82,6 +82,8 @@ export interface IconButtonProps
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly testId?: string;
+  /** The action's Tab stop; see `ButtonProps.tabIndex`. */
+  readonly tabIndex?: number;
 }
 
 /**
@@ -112,6 +114,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
     style,
     className,
     testId,
+    tabIndex,
     // The trigger props, forwarded as they arrive (`ActionHostProps`).
     ...host
   } = props;
@@ -138,6 +141,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
     style,
     className,
     testId,
+    tabIndex,
   };
 };
 

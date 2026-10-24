@@ -137,6 +137,22 @@ export interface ButtonProps
   readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
+  /**
+   * The action's Tab stop. Defaults to `0`, or `-1` while `disabled`.
+   *
+   * A caller that owns the surface an action sits in names `-1` while that
+   * surface leaves: a dismissed overlay keeps its box painted for its exit
+   * tween, and the runtime decides the Tab order element by element, so a
+   * control still painted there would otherwise be a stop a reader can walk
+   * into after the surface is gone. `-1` is addressable from code and out of the
+   * Tab order — the runtime builds a `-1` element's focus handle with
+   * `tab_stop(false)` — so the same stop serves a trigger's focus target.
+   *
+   * An explicit stop wins in both directions: `tabIndex={-1}` on an enabled
+   * action, and `tabIndex={0}` on a disabled one. The default is the pair the
+   * `disabled` rule documents, not a second policy on top of the caller's.
+   */
+  readonly tabIndex?: number;
 }
 
 /** Whether the button currently holds focus, and how it learns that it does. */
@@ -182,6 +198,7 @@ export const renderButton = (
     className,
     children,
     testId,
+    tabIndex,
     onClick,
     onKeyDown,
     onKeyUp,
@@ -262,7 +279,10 @@ export const renderButton = (
         // after an error both need that stop, and the runtime builds a `-1`
         // element's focus handle with `tab_stop(false)`. The two props together
         // are the common `disabled={pending} loading={pending}` pair.
-        disabled === true ? -1 : 0
+        //
+        // A caller's stop wins: a surface that is leaving names `-1` while its
+        // box is still painted for the exit tween.
+        tabIndex ?? (disabled === true ? -1 : 0)
       }
       testId={testId}
       onClick={composePress(busy, onClick, activate)}

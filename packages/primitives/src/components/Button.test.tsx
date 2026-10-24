@@ -583,6 +583,32 @@ describe("Button", () => {
     );
   });
 
+  it("lets the surface an action sits in name its Tab stop", () => {
+    // The bug this guards: the stop was hardcoded to `disabled ? -1 : 0`, so a
+    // surface that keeps its box painted for its exit tween could not take its
+    // own controls out of the Tab order: a dismissed overlay's action stayed a
+    // stop while the surface was a ghost, and a walk then left the window's
+    // focus on an element that unmounted with it. `packages/components`' fix
+    // spreads `presenceTabStop` into its own close controls, and it was inert
+    // until this prop existed.
+    //
+    // An explicit stop is the caller's word in both directions — the disabled
+    // default is the pair this rule documents, not a second policy over it.
+    expect(hostProp(resting({}), "tabIndex")).toStrictEqual(Option.some(0));
+    expect(hostProp(resting({ tabIndex: -1 }), "tabIndex")).toStrictEqual(
+      Option.some(-1),
+    );
+    expect(
+      hostProp(resting({ disabled: true, tabIndex: 0 }), "tabIndex"),
+    ).toStrictEqual(Option.some(0));
+    // A `-1` stop is not a disabled control: the action still runs.
+    const acted = vi.fn();
+    const leaving = resting({ tabIndex: -1, onActivate: acted });
+    expect(hostProp(leaving, "tabIndex")).toStrictEqual(Option.some(-1));
+    press(leaving, "enter", "down");
+    expect(acted).toHaveBeenCalledTimes(1);
+  });
+
   it("declares the keyboard ring once, so focus does not repaint the chrome", () => {
     // The bug: focus merged a shadow ring, so a mouse press looked like a Tab and
     // the resting style changed when focus moved.

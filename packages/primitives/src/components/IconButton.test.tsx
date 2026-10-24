@@ -246,4 +246,23 @@ describe("IconButton", () => {
       "ghost",
     );
   });
+
+  it("carries the Tab stop a leaving surface names", () => {
+    // The bug guarded: the icon action narrows `Button`'s props, and a surface
+    // that keeps its close action painted through an exit tween takes it out of
+    // the Tab order with `tabIndex={-1}`. Dropped here, the prop never reaches
+    // the element and the ghost's own controls stay walkable.
+    expect(
+      hostProp(
+        resting({ label: "Close", icon: glyph, tabIndex: -1 }),
+        "tabIndex",
+      ),
+    ).toStrictEqual(Option.some(-1));
+    expect(
+      hostProp(resting({ label: "Close", icon: glyph }), "tabIndex"),
+    ).toStrictEqual(Option.some(0));
+    expect(
+      iconButtonProps({ label: "Close", icon: glyph, tabIndex: -1 }).tabIndex,
+    ).toBe(-1);
+  });
 });

@@ -45,6 +45,7 @@ const theme = useTheme();
 | `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the control can be a `Tooltip` trigger |
 | `ref` | `Ref<PublicInstance>` | — | the element itself |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state, forwarded through `ActionHostProps` |
+| `tabIndex` | `number` | `0`, or `-1` while `disabled` | the action's Tab stop; see `Button`'s row — a leaving surface names `-1` for the close action it keeps painted |
 | `className` | `string` | — | a Tailwind string joined after the recipe |
 | `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }`, merged last |
 | `testId` | `string` | — | stable locator |
