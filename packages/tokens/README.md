@@ -201,13 +201,19 @@ undefined (reading 'fontSize')` mid-render, the rule `@gpuixui/primitives`' own
 `typeOf` follows. The control-size seams follow the same rule and read a size this
 release does not ship as `md` — `controlHeight`/`controlPaddingX` answered
 `undefined` where they declare a number, and `switchMetricsAt` scaled the
-platform's box by `undefined` into a `NaN` that painted nothing. `elevationShadow`
-reads a level this release does not ship as `md` too, rather than a raised panel
-that silently paints flat, and `statusTone` reads a tone this release does not
-ship as `info` — the family the boundary narrowing substitutes — rather than
-answering `undefined` to a caller that destructures it. Narrow a stored role, size,
-tone or level with `isTextRole`, `isControlSize`, `isStatusTone` or
-`isElevationLevel` where the caller can tell the reader what it substituted.
+platform's box by `undefined` into a `NaN` that painted nothing. The same pair is
+total on the **group**: both take a `DensitySource`, so a density group a store
+truncated past answers `undefined` — no box, which the runtime lays out at the
+caller's content — rather than `TypeError: Cannot read properties of undefined
+(reading 'controlHeight')` from the first control a surface lays out, while a
+`Theme` still answers a height outright and the gate refuses such a theme by name
+(`missingTokens`). `elevationShadow` reads a level this release does not ship as
+`md` too, rather than a raised panel that silently paints flat, and `statusTone`
+reads a tone this release does not ship as `info` — the family the boundary
+narrowing substitutes — rather than answering `undefined` to a caller that
+destructures it. Narrow a stored role, size, tone or level with `isTextRole`,
+`isControlSize`, `isStatusTone` or `isElevationLevel` where the caller can tell
+the reader what it substituted.
 
 A whole theme is storable, so its **mode** is a stated value before it is a union.
 There is no strict reading of light and dark, so `themeModeOf(theme)` reads a mode

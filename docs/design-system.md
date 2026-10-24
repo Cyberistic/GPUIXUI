@@ -1165,9 +1165,13 @@ the theme lost paints nothing, `elevationShadow` returns `undefined` for a
 level — or a whole scale — it does not carry, `brandText`/`statusTone`
 answer `undefined` when the roles they derive from are gone, as do
 `selectionOn` (for a surface, the wash or the page it cannot read), the action
-fills `filledHover`/`filledPressed`, the disabled pair `disabledAction` and the
-programmatic ring `focusRing` — a `Theme` still answers a colour outright — so
-no surface throws on the defect
+fills `filledHover`/`filledPressed`, the disabled pair `disabledAction`, the
+programmatic ring `focusRing` and the numeric pair `controlHeight`/
+`controlPaddingX` — both take a `DensitySource`, so a density group the theme
+lost is no box, not a
+`TypeError` from the first control a surface lays out, and a size this release
+does not ship is still the `md` step — while a `Theme` still answers a colour or
+a height outright — so no surface throws on the defect
 the report just
 explained (§7). The **retint** keeps the same rule: `extendTheme` restates a
 stored scale level by level, so a level the theme lost stays absent and the report

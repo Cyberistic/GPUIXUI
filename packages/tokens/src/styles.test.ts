@@ -23,6 +23,7 @@ import {
   statusTones,
   isStatusTone,
   textStyle,
+  type DensitySource,
   type FilledAction,
   type FilledRole,
   type StatusTone,
@@ -151,6 +152,46 @@ describe("control metrics", () => {
       controlPaddingX(lightTheme, "md"),
     );
     expect(controlHeight(lightTheme, stored)).toBeGreaterThan(0);
+  });
+
+  /**
+   * A density group is a group a store can lose — a theme that predates the
+   * scale, or a `JSON` round-trip truncated past it — and both metrics read
+   * `theme.density.controlHeight[size]` off it: `TypeError: Cannot read
+   * properties of undefined (reading 'controlHeight')` from the first control a
+   * caller laid out, out of two helpers whose job is a number. They answer
+   * absence now, the rule `statusTone`, `focusRing`, `filledHover` and
+   * `selectionOn` follow for the colour roles: the runtime paints the box the
+   * caller sized, and `missingTokens` is what refuses the theme.
+   */
+  it("answers a density the theme lost as no box, not a throw", () => {
+    // These shapes are the storage boundary: a restored theme is unknown input,
+    // and `DensitySource` is the port it reads through.
+    const lost: DensitySource = { density: null };
+    const empty: DensitySource = { density: {} };
+    const noGroup: DensitySource = {};
+
+    [lost, empty, noGroup].forEach((theme) => {
+      expect(controlHeight(theme, "md")).toBeUndefined();
+      expect(controlPaddingX(theme, "md")).toBeUndefined();
+    });
+    // A theme still carrying one metric answers that one and not the other.
+    expect(
+      controlHeight({ density: { controlHeight: { md: 30 } } }, "md"),
+    ).toBe(30);
+    expect(
+      controlPaddingX({ density: { controlHeight: { md: 30 } } }, "md"),
+    ).toBeUndefined();
+    // A stored length that is not a finite number is the same absence.
+    const stored: DensitySource = JSON.parse(
+      '{"density":{"controlHeight":{"md":"8"},"controlPaddingX":{"md":null}}}',
+    );
+    expect(controlHeight(stored, "md")).toBeUndefined();
+    expect(controlPaddingX(stored, "md")).toBeUndefined();
+    // A complete theme is unchanged by the seam.
+    expect(controlHeight(lightTheme, "md")).toBe(
+      lightTheme.density.controlHeight.md,
+    );
   });
 });
 

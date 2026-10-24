@@ -964,12 +964,16 @@ describe("the resolvers refuse an axis they do not ship", () => {
    * rule `iconPixels` follows, and every surface that teaches the density says so.
    */
   it("reads a stored control size as the default step, and says so", () => {
+    // Both metrics read the step through the seam that answers a density group
+    // the theme lost as well, so this is the one place the default lands.
+    expect(stylesSource).toContain('isControlSize(size) ? size : "md"');
     expect(stylesSource).toContain(
-      'theme.density.controlHeight[isControlSize(size) ? size : "md"]',
+      'densityMetric(theme, "controlHeight", size)',
     );
     expect(stylesSource).toContain(
-      'theme.density.controlPaddingX[isControlSize(size) ? size : "md"]',
+      'densityMetric(theme, "controlPaddingX", size)',
     );
+    expect(stylesSource).toContain("theme.density?.[metric]");
     expect(read("./switch.ts")).toContain(
       'switchScale[isControlSize(size) ? size : "md"]',
     );
@@ -989,6 +993,40 @@ describe("the resolvers refuse an axis they do not ship", () => {
     [pages[1], pages[2]].forEach((page) =>
       expect(page).toContain("read a size this release does not ship as `md`"),
     );
+  });
+
+  /**
+   * A density group is the numeric group a surface can still reach: the gate
+   * refuses a theme that lost it, but a paint happens before an audit, and both
+   * metrics read `theme.density.controlHeight[size]` off the group they were
+   * never given — `TypeError: Cannot read properties of undefined (reading
+   * 'controlHeight')` from the first control laid out, out of two helpers whose
+   * job is a number. They take a `DensitySource` now and answer no box, the rule
+   * every colour seam follows, and each surface says so.
+   */
+  it("answers a density the theme lost as no box, and says so", () => {
+    expect(stylesSource).toContain("export interface DensitySource");
+    expect(stylesSource).toContain("theme.density?.[metric]");
+    expect(stylesSource).toContain("Number.isFinite(value)");
+
+    const pages = [catalogue, readme, designSystem].map((page) =>
+      page.replace(/\s+/g, " "),
+    );
+    pages.forEach((page, index) => {
+      expect(page, `page ${index}`).toContain("`DensitySource`");
+      expect(page, `page ${index}`).toContain("`controlHeight`");
+    });
+    expect(pages[0]).toContain(
+      "density group the theme lost answers `undefined`",
+    );
+    expect(pages[1]).toContain("density group a store truncated past answers");
+    expect(pages[2]).toContain("a density group the theme lost is no box");
+
+    const inventory = readFileSync(
+      new URL("../../../COMPONENTS.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(inventory).toContain("**The pair is total on the group as well**");
   });
 
   /**

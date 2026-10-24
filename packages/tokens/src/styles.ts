@@ -65,6 +65,47 @@ export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
 }
 
 /**
+ * A theme, or anything shaped like one, as the density metrics read it.
+ *
+ * A density group is a group a store can lose: JSON writes `null` where a theme
+ * carried none, and a saved theme that predates the scale has neither. The
+ * colour roles have the same port in {@link ColourSource} and the type group in
+ * `TypeSource` (`packages/primitives/src/core/theme.ts`), for the same reason.
+ */
+export interface DensitySource {
+  readonly density?: {
+    readonly controlHeight?: Readonly<
+      Partial<Record<ControlSize, number>>
+    > | null;
+    readonly controlPaddingX?: Readonly<
+      Partial<Record<ControlSize, number>>
+    > | null;
+  } | null;
+}
+
+/**
+ * The number a density table holds for a step, or nothing where the theme paints
+ * none.
+ *
+ * A value that is not a finite number is the same absence: a stored theme that
+ * wrote `"8"` where a length belongs is reported by `inspectLengths`, and the
+ * runtime drops the string rather than painting it, so the seam answers no box
+ * instead of handing one over.
+ */
+const densityMetric = (
+  theme: DensitySource,
+  metric: "controlHeight" | "controlPaddingX",
+  size: ControlSize,
+): number | undefined => {
+  const scale = theme.density?.[metric];
+  if (scale === undefined || scale === null) return undefined;
+  const value = scale[isControlSize(size) ? size : "md"];
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
+};
+
+/**
  * Control or input height for a size at the theme's density.
  *
  * A control size is a stored preference as often as a literal — a toolbar's
@@ -73,13 +114,41 @@ export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
  * which a caller spread into `style.height` as a `number` and the serialiser
  * dropped: the box laid out at its content's height. Narrow a stored size with
  * `isControlSize` where the caller can tell the reader what it substituted.
+ *
+ * A {@link Theme} carries the group, so the answer is a height outright. A
+ * source that may have lost it — a theme restored from storage — answers
+ * `undefined`, and the runtime paints the box the caller did not size, rather
+ * than throwing from the first control it lays out.
  */
-export const controlHeight = (theme: Theme, size: ControlSize): number =>
-  theme.density.controlHeight[isControlSize(size) ? size : "md"];
+export function controlHeight(theme: Theme, size: ControlSize): number;
+export function controlHeight(
+  theme: DensitySource,
+  size: ControlSize,
+): number | undefined;
+export function controlHeight(
+  theme: DensitySource,
+  size: ControlSize,
+): number | undefined {
+  return densityMetric(theme, "controlHeight", size);
+}
 
-/** Horizontal control padding for a size at the theme's density. */
-export const controlPaddingX = (theme: Theme, size: ControlSize): number =>
-  theme.density.controlPaddingX[isControlSize(size) ? size : "md"];
+/**
+ * Horizontal control padding for a size at the theme's density.
+ *
+ * The same two answers {@link controlHeight} gives: the `md` step for a size
+ * this release does not ship, and no padding for a density group the theme lost.
+ */
+export function controlPaddingX(theme: Theme, size: ControlSize): number;
+export function controlPaddingX(
+  theme: DensitySource,
+  size: ControlSize,
+): number | undefined;
+export function controlPaddingX(
+  theme: DensitySource,
+  size: ControlSize,
+): number | undefined {
+  return densityMetric(theme, "controlPaddingX", size);
+}
 
 /**
  * The four status colour families a component can announce, in documentation

@@ -36,6 +36,8 @@ import {
   contrastPairs,
   contrastRatio,
   controlFocusRing,
+  controlHeight,
+  controlPaddingX,
   defaultDensity,
   densityNames,
   densityPresets,
@@ -69,6 +71,7 @@ import {
   themes,
   type BoxShadow,
   type Density,
+  type DensitySource,
   type ElevationLevel,
   type Theme,
   type ThemeColors,
@@ -467,6 +470,12 @@ describe("an absent colour group", () => {
     // The programmatic focus ring and the disabled pair are paint seams too.
     expect(focusRing(theme)).toBeUndefined();
     expect(disabledAction(theme)).toBeUndefined();
+    // A control's box is the numeric pair with the same rule: a density group a
+    // store truncated past sizes nothing rather than throwing from the first
+    // control a surface lays out.
+    const unDensed: DensitySource = omit(lightTheme, "density");
+    expect(controlHeight(unDensed, "md")).toBeUndefined();
+    expect(controlPaddingX(unDensed, "md")).toBeUndefined();
     // The inventory records the pair as the seam it is, so a reader checking a
     // stored theme finds both names beside the others.
     const inventory = readFileSync(

@@ -1518,6 +1518,19 @@ paint helpers that derive a colour from roles read the same seam: `brandText`,
 gone — the absence rule `elevationShadow` follows for a level — while a `Theme`
 still answers a colour outright, because its type carries the group.
 
+The **numeric paint seams** answer the same way. A control's box and its
+horizontal padding are read through `controlHeight` and `controlPaddingX`, and
+both take a `DensitySource` — a theme, or the shape a store handed back — so a
+density group the theme lost answers `undefined` rather than
+`TypeError: Cannot read properties of undefined (reading 'controlHeight')` from
+the first control a surface lays out. The two answers compose: a size this
+release does not ship is still the `md` step, and a group that is gone is no box
+at all. A stored value that is not a finite number is the same absence, because
+the runtime drops a `"8"` where a length belongs (§Numbers reports it). The gate
+still refuses a theme that lost the group — `missingTokens` names it — but a
+surface can paint a theme nobody has audited yet, so the seam cannot be the
+refusal.
+
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the
 contracts that measure a pair or a placement take the same colour source: a pair
