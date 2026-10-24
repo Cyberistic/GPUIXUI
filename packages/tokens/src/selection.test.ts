@@ -870,10 +870,10 @@ describe("the wash a theme cannot derive", () => {
     // The seam list a reader checks a stored theme against names every paint
     // helper, so a page that drops this one sends them to an unlisted throw.
     expect(catalogue).toContain(
-      "`brandTextOn`, `selectionOn` and `statusTone`",
+      "`brandTextOn`, `filledHover`, `filledPressed`, `selectionOn` and `statusTone`",
     );
     expect(design).toContain(
-      "`selectionOn` for a surface, the wash or the page",
+      "`selectionOn` (for a surface, the wash or the page",
     );
     expect(readme).toContain("the surface, the wash or the page it steps");
     expect(inventory).toContain("A stored theme is read as the absence it is");

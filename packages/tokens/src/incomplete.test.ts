@@ -41,6 +41,8 @@ import {
   densityPresets,
   elevationShadow,
   extendTheme,
+  filledHover,
+  filledPressed,
   highlightFailures,
   invalidColorRoles,
   invalidNumbers,
@@ -456,6 +458,10 @@ describe("an absent colour group", () => {
     // The selection wash is derived per surface — the helper a message's own
     // tint asks — and the roles it moves are read through the same seam.
     expect(selectionOn(theme, "background")).toBeUndefined();
+    // The action fills answer the same way, so a filled control keeps its
+    // resting paint instead of losing the window.
+    expect(filledHover(theme, "primary")).toBeUndefined();
+    expect(filledPressed(theme, "primary")).toBeUndefined();
   });
 
   it("reads every shipped style as whole", () => {

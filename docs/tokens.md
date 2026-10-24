@@ -379,7 +379,10 @@ holds each one to `decorativeFloor` against the fill it replaces; the
 not change. `filledFeedback(source, role, state)` is the derivation on its own for
 a source that may be a theme restored from storage: it answers `undefined` when
 the source lacks the role or the `foreground` it moves toward, and that placement
-is reported unmeasurable rather than skipped.
+is reported unmeasurable rather than skipped. `filledHover`/`filledPressed` are
+the same rule under the `Theme` overload that answers a colour outright, so a
+stored theme that lost the role answers `undefined` too and a control keeps the
+resting fill its recipe paints instead of losing the window.
 
 The check is reachable, not theoretical. The step is 12% / 18% of the way toward
 `foreground`, which assumes the foreground is far from the action fill — true in
@@ -1496,10 +1499,10 @@ every pair, strip and mark is reported unmeasurable, and `auditTheme` returns a
 failing report with the other groups still measured instead of throwing
 `TypeError: Cannot read properties of undefined (reading 'background')`. The
 paint helpers that derive a colour from roles read the same seam: `brandText`,
-`brandTextOn`, `selectionOn` and `statusTone` answer `undefined` when the roles
-they move are gone — the absence rule `elevationShadow` follows for a level —
-while a `Theme` still answers a colour outright, because its type carries the
-group.
+`brandTextOn`, `filledHover`, `filledPressed`, `selectionOn` and `statusTone`
+answer `undefined` when the roles they move are gone — the absence rule
+`elevationShadow` follows for a level — while a `Theme` still answers a colour
+outright, because its type carries the group.
 
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the

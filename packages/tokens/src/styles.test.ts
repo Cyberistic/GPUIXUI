@@ -16,6 +16,7 @@ import { statusToneStyles } from "./status-tone.example.js";
 import {
   controlHeight,
   controlPaddingX,
+  filledFeedback,
   filledHover,
   filledPressed,
   statusTone,
@@ -304,6 +305,36 @@ describe("filled action fills", () => {
         ).toMatch(/^#[0-9A-F]{6}$/);
       });
     });
+  });
+
+  it("reads a theme that lost the colour group as no fill, not a throw", () => {
+    // A stored theme can predate the whole group. The derivation answers
+    // `undefined` — the rule `filledFeedback` already followed — so a component
+    // keeps the resting fill its recipe paints instead of losing the window.
+    expect(filledHover({}, "primary")).toBeUndefined();
+    expect(filledPressed({}, "primary")).toBeUndefined();
+    // One role missing is the same absence: there is no fill to move.
+    expect(
+      filledHover({ colors: { primary: "#5F4BDB" } }, "primary"),
+    ).toBeUndefined();
+    // A complete theme keeps the derivation it always had.
+    filledRoles.forEach((role) => {
+      expect(filledHover(lightTheme, role)).toBe(
+        filledFeedback(lightTheme, role, "hover"),
+      );
+      expect(filledPressed(lightTheme, role)).toBe(
+        filledFeedback(lightTheme, role, "pressed"),
+      );
+    });
+    // The pages a consumer reads before trusting a stored theme say so.
+    const page = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    expect(page("../../../docs/tokens.md")).toContain(
+      "a control keeps the resting fill",
+    );
+    expect(page("../../../COMPONENTS.md")).toContain(
+      "both helpers delegate to `filledFeedback`",
+    );
   });
 
   it("moves every channel from the fill toward the theme's foreground", () => {

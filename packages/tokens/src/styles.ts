@@ -486,34 +486,49 @@ export function filledFeedback(
  * perceptibility floor, so a theme whose `foreground` sits on its own action
  * role cannot ship a hover that paints nothing.
  *
+ * A theme restored from storage that lost the role or the `foreground` it moves
+ * toward answers `undefined` rather than throwing — the rule
+ * {@link filledFeedback} and {@link statusTone} follow, so a control keeps its
+ * resting fill instead of losing the window — while a `Theme` answers a colour
+ * outright.
+ *
  * @example
  * ```tsx
  * <div style={{ backgroundColor: filledHover(theme, "primary") }} />
  * ```
  */
-export function filledHover(theme: Theme, role: FilledRole): string {
-  return blend(
-    theme.colors[role],
-    theme.colors.foreground,
-    readableStep(theme, role, HOVER_STEP),
-  );
+export function filledHover(theme: Theme, role: FilledRole): string;
+export function filledHover(
+  source: FilledFeedbackSource,
+  role: FilledRole,
+): string | undefined;
+export function filledHover(
+  source: FilledFeedbackSource,
+  role: FilledRole,
+): string | undefined {
+  return filledFeedback(source, role, "hover");
 }
 
 /**
  * The fill a filled role paints while it is pressed. The press is a further
  * step from the fill than the hover, so a held control reads as held — unless
  * the role's label floor stops the step short, which the accent face does in
- * three shipped styles (see `docs/tokens.md` §Action fills).
+ * three shipped styles (see `docs/tokens.md` §Action fills). A theme a store
+ * truncated answers `undefined`, the absence rule {@link filledHover} follows.
  *
  * @example
  * ```tsx
  * <div style={{ backgroundColor: filledPressed(theme, "accent") }} />
  * ```
  */
-export function filledPressed(theme: Theme, role: FilledRole): string {
-  return blend(
-    theme.colors[role],
-    theme.colors.foreground,
-    readableStep(theme, role, PRESS_STEP),
-  );
+export function filledPressed(theme: Theme, role: FilledRole): string;
+export function filledPressed(
+  source: FilledFeedbackSource,
+  role: FilledRole,
+): string | undefined;
+export function filledPressed(
+  source: FilledFeedbackSource,
+  role: FilledRole,
+): string | undefined {
+  return filledFeedback(source, role, "pressed");
 }
