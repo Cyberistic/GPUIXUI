@@ -5555,7 +5555,7 @@ resolver preconditions.
       Fixture `src/live/modal-scroll.ts` (the row counts, the two viewports, the
       dialog's 232-point chrome, the wheel, the row width, the ids and both
       readouts) + `ModalScrollProbe`/`modalScrollSteps` in
-      `src/live/scenarios.tsx` + `modal-scroll.test.ts` (11 cases: the derived
+      `src/live/scenarios.tsx` + `modal-scroll.test.ts` (13 cases: the derived
       clamps, the veil geometry against the runner's window and the component's
       `MAX_WIDTH.md`, the readouts, the `occlude` rule in the primitives, the
       registry and wiring, the derived 29-check count and the section). One
