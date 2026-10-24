@@ -89,10 +89,10 @@ export interface VirtualTreeProps<T> extends Omit<
    * A definite viewport height, in pixels.
    *
    * A height the layout cannot paint reads as **no height**
-   * ({@link paintableSize}), so the caller's layout owns the viewport. Measured
-   * before the rule: a `NaN` height left the runtime list with no bound, and
-   * the tree painted **no row at all** against the **7** it paints with a
-   * readable height.
+   * ({@link paintableSize}): the tree takes its bounded column's share and
+   * windows against the height it measured, so a computed value cannot leave
+   * the window at `0` (`behaviour/paintable-height.test.tsx`). An auto-height
+   * or non-flex parent gives it no viewport and it paints no rows.
    */
   readonly height: number;
   /**

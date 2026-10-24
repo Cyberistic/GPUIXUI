@@ -333,8 +333,10 @@ paint (omitted, or a computed `NaN`) reads as no height: `VirtualTable` fills
 its container and windows against the measured viewport frame, and `VirtualTree`
 measures the column it fills and draws the list at that height — the runtime's
 `<virtual-list>` paints no surface of its own and reports no `onLayout`
-(measured on 0.11.0), so the list cannot measure itself. In a 320px pane both
-paint the window they paint at `height={320}` (8 table rows, 10 tree rows);
+(measured on 0.11.0), so the list cannot measure itself. The pane must bound the
+column's height; an auto-height or non-flex parent gives the surface no viewport
+and it paints no rows. In a 320px pane both paint the window they paint at
+`height={320}` (8 table rows, 10 tree rows);
 `behaviour/paintable-height.test.tsx` holds both.
 
 **A row height the window cannot divide is the row this package paints.**

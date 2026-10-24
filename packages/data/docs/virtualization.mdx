@@ -54,11 +54,21 @@ computed pane measure has before the first layout — reads as **no height**, so
 the surface takes the share of its pane that the layout hands out and windows
 against the height that box painted:
 
+```tsx
+<div style={{ display: "flex", flexDirection: "column", height: 320 }}>
+  <VirtualTree aria-label="Files" rows={tree.rows} labelOf={labelOf} />
+</div>
+```
+
 - `VirtualTable` fills its container and windows against the measured viewport
   frame, exactly as it does with a height;
 - `VirtualTree` measures the column it fills and draws the list at that height.
   The runtime's `<virtual-list>` paints no surface of its own, so it reports no
   `onLayout` (measured on 0.11.0) — the list cannot measure itself.
+
+The pane must bound the column's height. A surface with no viewport at all — an
+auto-height or non-flex parent — has nothing to fill and paints no rows, which
+is the same state as a window with no bound.
 
 In a 320px pane both paint the window they paint at `height={320}`: 8 table rows
 and 10 tree rows in `behaviour/paintable-height.test.tsx`.

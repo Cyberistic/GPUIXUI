@@ -215,10 +215,12 @@ export interface VirtualTableProps extends Omit<
    * A definite table height, in pixels.
    *
    * A height the layout cannot paint reads as **no height**
-   * ({@link paintableSize}), so the table's own measured frame sizes it.
-   * Measured before the rule: a `NaN` height left the table unbounded and the
-   * windowed body with no bound, and the table painted **no row at all**
-   * against the **8** it paints with a readable height.
+   * ({@link paintableSize}): the table fills the column it sits in and its
+   * measured viewport frame sizes the body, so a computed value cannot leave
+   * the window at `0` (`behaviour/paintable-height.test.tsx`). Measured before
+   * the rule: a `NaN` height left the table unbounded and the windowed body
+   * with no bound, and the table painted **no row at all** against the **8** it
+   * paints with a readable height.
    */
   readonly height: number;
   /**
