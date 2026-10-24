@@ -79,7 +79,7 @@ import {
 } from "../command-menu.js";
 import { MotionProvider } from "../motion.js";
 import { MotionProvider as PackageMotionProvider } from "@gpuixui/motion/react";
-import { motionLevels } from "@gpuixui/motion/timing";
+import { motionLevels, motionTimingOf } from "@gpuixui/motion/timing";
 import { renderComponent } from "../internal/test-root.js";
 import {
   presenceStyle,
@@ -1995,6 +1995,52 @@ describe("a frame the renderer refuses", () => {
       // that names the travel, so losing it would take the whole run with it.
       expect(readable - where(page.renderer, "readable", "y")).toBe(8);
       expect(refused - where(page.renderer, "refused", "y")).toBe(8);
+    } finally {
+      page.unmount();
+    }
+  });
+});
+
+/** The description a surface built from a millisecond duration paints. */
+const storedDuration = (durationMs: number): MotionProps =>
+  motionOfPresence(
+    { initial: { top: 8 }, animate: { top: 0 }, exit: { top: 8 } },
+    true,
+    {
+      enter: motionTimingOf(durationMs, { phase: "enter" }),
+      exit: { duration: 0 },
+    },
+  );
+
+describe("a duration the renderer refuses", () => {
+  /**
+   * The bug this guards: the binding converts a transition's seconds into a
+   * `Duration` and rejects the **whole** description for a value it cannot
+   * represent (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s
+   * `validate_seconds`; its own suite pins `duration: 1e300` as refused), which
+   * paints no frame at all. `motionTimingOf` read only finiteness and sign, so a
+   * surface built from a stored duration above the clock's range was handed a
+   * description the runtime refused: measured on the painted box, it asked for
+   * 8px of travel and moved 0 — no fade and no travel, at either end.
+   */
+  it("travels on a stored duration past the clock, read as the house arrival", async () => {
+    const page = renderComponent(
+      <div>
+        <MotionProbe testId="scheduled" motion={storedDuration(220)} />
+        <MotionProbe testId="past" motion={storedDuration(1e300)} />
+      </div>,
+    );
+    try {
+      page.renderer.clockPause();
+      await delay();
+      const scheduled = where(page.renderer, "scheduled", "y");
+      const past = where(page.renderer, "past", "y");
+      page.renderer.clockFastForward(20_000);
+      await delay();
+      // The readable duration travels; the past-clock one is read as the house
+      // arrival, so it travels the same 8px instead of painting no frame.
+      expect(scheduled - where(page.renderer, "scheduled", "y")).toBe(8);
+      expect(past - where(page.renderer, "past", "y")).toBe(8);
     } finally {
       page.unmount();
     }

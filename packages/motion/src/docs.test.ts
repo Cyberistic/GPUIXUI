@@ -172,6 +172,14 @@ describe("the level table the timing seam describes", () => {
       motionTimingOf(180, { phase: "exit", preference: "reduced" }),
     ).toEqual({ duration: 0 });
     expect(motionTimingOf(Number.NaN)).toEqual(motionTiming("normal"));
+    // The clock the renderer schedules: a stored duration past it is the house
+    // arrival too, because the binding refuses a description whose seconds it
+    // cannot represent and paints no frame at all. The page prints the call, so
+    // the rule is not left to a source read.
+    expect(readme).toContain(
+      "motionTimingOf(1e300); // the same house timing: no clock can schedule it",
+    );
+    expect(motionTimingOf(1e300)).toEqual(motionTiming("normal"));
   });
 });
 

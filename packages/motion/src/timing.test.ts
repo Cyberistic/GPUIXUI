@@ -294,6 +294,23 @@ describe("motionTimingOf", () => {
     });
   });
 
+  it("reads a duration past the clock the renderer schedules as the house arrival", () => {
+    // The bug this guards: the binding converts a transition's seconds into a
+    // `Duration` and rejects the **whole** description for a value it cannot
+    // represent (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s
+    // `validate_seconds`), and its own suite pins `duration: 1e300` as refused.
+    // A refused description paints no frame at all, so a surface built from a
+    // stored duration above the clock's range appeared without its fade and
+    // left without its travel. `motionTimingOf` read only finiteness and sign;
+    // `presenceTimingOf` already reads the same field as no journey.
+    const house = { duration: 0.2, ease: "easeInOut" } as const;
+    expect(motionTimingOf(1e300)).toEqual(house);
+    expect(motionTimingOf(1e19)).toEqual(house);
+    // A large duration inside the clock is kept, so the rule cannot pass by
+    // discarding every value past a house level.
+    expect(motionTimingOf(1e12)).toEqual({ duration: 1e9, ease: "easeInOut" });
+  });
+
   it("reads an options object the caller does not have as the house timing", () => {
     // The bug this guards: `options` is a config as often as a literal, and a
     // settings row the store never wrote reads back as `null` (JSON has no

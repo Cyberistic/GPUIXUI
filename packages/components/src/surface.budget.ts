@@ -172,10 +172,14 @@ export const surfaceBudget = {
    * readable fields beside it. 37 KiB → 38 KiB when `delayedTiming` reads a
    * wait through the same range (`waitSeconds`): a stored pace that converts
    * past the renderer's `Duration` range rejects the whole description, so the
-   * staggering arrival would paint no frame at all. Measured 38 871 bytes with
-   * `nub scripts/surface.ts --entry src/motion-grid.tsx`.
+   * staggering arrival would paint no frame at all. 38 KiB → 39 KiB when the
+   * clock's bound moved to `duration.ts` (`schedulableSeconds`), which the
+   * timing entry point reads as well as the presence table: a duration past the
+   * renderer's range is no journey at either door, not a description refused
+   * whole. Measured 39 512 bytes with
+   * `nub scripts/surface.ts --entry src/motion-grid.tsx` (5 modules, 39 KiB).
    */
-  familyMotion: { modules: 4, bytes: 38 * 1024 },
+  familyMotion: { modules: 5, bytes: 39 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

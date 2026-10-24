@@ -13,6 +13,7 @@
  * no preference and the timing does.
  */
 
+import { schedulableSeconds } from "./duration.js";
 import {
   isMotionEasing,
   motionTiming,
@@ -301,24 +302,6 @@ const framesOf = (
 });
 
 /**
- * A duration or wait in the seconds the runtime reads, read from a stored field.
- *
- * The renderer converts a transition's seconds into a `Duration` and rejects a
- * description whose value it cannot represent — `NaN`, an infinity, a negative
- * number, or one past the range a clock can show — which paints no frame at all.
- * A field that is not a positive time inside that range is therefore **no time**,
- * the same reading {@link transitionWindowMs} takes of the field.
- */
-const secondsOf = (value: number | null | undefined): number | undefined =>
-  value !== null &&
-  value !== undefined &&
-  Number.isFinite(value) &&
-  value > 0 &&
-  value <= SCHEDULABLE_SECONDS
-    ? value
-    : undefined;
-
-/**
  * A phase read as the run the runtime accepts.
  *
  * A phase the value does not name used to be handed over as `{}`, which the
@@ -333,9 +316,9 @@ const secondsOf = (value: number | null | undefined): number | undefined =>
 const transitionOf = (
   transition: PresenceTransitionInput | null | undefined,
 ): PresenceTransition => {
-  const duration = secondsOf(transition?.duration);
+  const duration = schedulableSeconds(transition?.duration);
   if (duration === undefined) return { duration: 0 };
-  const delay = secondsOf(transition?.delay);
+  const delay = schedulableSeconds(transition?.delay);
   const ease = transition?.ease;
   return {
     duration,
@@ -387,19 +370,14 @@ export const presenceTiming = (
 /**
  * A timing field in milliseconds.
  *
- * A duration or wait that cannot run is no time at all: a field that is not a
- * number, not positive, or a seconds value the conversion overflows contributes
- * nothing. A negative wait must never subtract from the journey it precedes — a
- * window shorter than its tween opens a leaving box for shorter than it paints —
- * and an overflowed conversion reaches a timer as `Infinity`, which fires at once.
+ * A duration or wait that cannot run is no time at all: the field is read
+ * through the clock's own rule ({@link schedulableSeconds}), so a value outside
+ * it contributes nothing. A negative wait must never subtract from the journey
+ * it precedes — a window shorter than its tween opens a leaving box for shorter
+ * than it paints.
  */
-const milliseconds = (seconds: number | undefined): number => {
-  if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) {
-    return 0;
-  }
-  const ms = seconds * 1000;
-  return Number.isFinite(ms) ? ms : 0;
-};
+const milliseconds = (seconds: number | null | undefined): number =>
+  (schedulableSeconds(seconds) ?? 0) * 1000;
 
 /**
  * The window a run occupies, in whole milliseconds.
@@ -430,16 +408,6 @@ export const exitWindowMs = (
 ): number => transitionWindowMs(presenceTimingOf(timing).exit);
 
 /**
- * The largest wait, in seconds, the renderer can schedule.
- *
- * The renderer converts a transition's seconds into a `Duration` and refuses a
- * description whose value it cannot represent — non-finite, negative, or past
- * the range a clock can show — and a refused description paints **no** frame.
- * This is the same bound {@link transitionWindowMs} reads a duration against.
- */
-const SCHEDULABLE_SECONDS = Number.MAX_SAFE_INTEGER;
-
-/**
  * A millisecond wait as the seconds the renderer schedules.
  *
  * A stagger's pace is caller arithmetic, so a finite value can still convert to
@@ -447,11 +415,8 @@ const SCHEDULABLE_SECONDS = Number.MAX_SAFE_INTEGER;
  * is refused whole and the arrival paints no frame, so it is **no wait** — the
  * rule {@link transitionWindowMs} already applies to a duration.
  */
-const waitSeconds = (delayMs: number): number | undefined => {
-  if (!Number.isFinite(delayMs) || delayMs <= 0) return undefined;
-  const seconds = delayMs / 1000;
-  return seconds <= SCHEDULABLE_SECONDS ? seconds : undefined;
-};
+const waitSeconds = (delayMs: number): number | undefined =>
+  schedulableSeconds(delayMs / 1000);
 
 /**
  * A house timing that waits `delayMs` before it runs — a stagger.

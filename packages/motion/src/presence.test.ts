@@ -182,6 +182,10 @@ describe("the hold window", () => {
     expect(transitionWindowMs({ duration: -0.32 })).toBe(0);
     expect(transitionWindowMs({ duration: 1e308 })).toBe(0);
     expect(transitionWindowMs({ duration: 1e305, delay: 1e305 })).toBe(0);
+    // The clock, not only the arithmetic: a duration past the range the
+    // renderer schedules is a transition it refuses whole, so a leaving box
+    // holds no window for it rather than one no timer can take.
+    expect(transitionWindowMs({ duration: 1e17 })).toBe(0);
   });
 });
 

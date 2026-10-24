@@ -524,10 +524,14 @@ A surface with its own feel names its duration instead of borrowing a level:
 value, so `@gpuixui/components`' toast arrives over 220 ms and leaves over 180 ms
 without dragging another surface along (or the reverse). It is the one place a
 duration becomes a timing, so the reduced rule cannot be re-implemented beside
-it, and a duration that is not positive and finite reads as the house surface
-arrival (`normal`) rather than reaching the runtime as `NaN`. The options object
-is a config as often as a literal, so one a store never wrote (`null`) is the
-house timing a caller who states nothing gets, and a phase or preference it
+it, and a duration that is not positive and finite — or one past the clock the
+renderer schedules — reads as the house surface arrival (`normal`) rather than a
+description the runtime refuses whole. The clock is the renderer's:
+`Duration::try_from_secs_f64` rejects a description whose seconds it cannot
+represent, and a refused description paints no frame at all, so a stored
+duration past `Number.MAX_SAFE_INTEGER` seconds is no journey. The options
+object is a config as often as a literal, so one a store never wrote (`null`) is
+the house timing a caller who states nothing gets, and a phase or preference it
 zeroed falls back the same way instead of throwing in the render:
 
 ```ts
@@ -536,6 +540,7 @@ import { motionTimingOf } from "@gpuixui/motion/timing";
 motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }
 motionTimingOf(180, { phase: "exit", preference: "reduced" }); // { duration: 0 }
 motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
+motionTimingOf(1e300); // the same house timing: no clock can schedule it
 motionTimingOf(200, null); // the same house timing: an absent config
 ```
 

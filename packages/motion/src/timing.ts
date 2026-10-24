@@ -15,6 +15,8 @@
  * only the journey is removed (openGpui's `MotionPreference::Reduced`).
  */
 
+import { schedulableSeconds } from "./duration.js";
+
 /** The durations the library's surfaces share, in milliseconds. */
 export const motionLevels = {
   /** A step indicator's tick. */
@@ -207,15 +209,30 @@ const phaseOf = (phase: MotionPhase): MotionPhase =>
   namesPhase(phase) ? phase : "standard";
 
 /**
+ * The milliseconds a timing can run.
+ *
+ * A duration is caller arithmetic — a stored preference, a stagger's pace — so
+ * one the renderer's clock cannot schedule is not a long journey: the runtime
+ * converts the seconds into a `Duration` and refuses the **whole** description,
+ * which paints no frame at all ({@link schedulableSeconds}). It takes the house
+ * surface arrival, the answer an unreadable duration already gets.
+ */
+const runnableMs = (durationMs: number): number =>
+  schedulableSeconds(durationMs / 1000) === undefined
+    ? motionLevels.normal
+    : durationMs;
+
+/**
  * A named millisecond duration and phase as the runtime's timing, in seconds.
  *
  * This is the one place a timing is built from a duration, so a surface that
  * moves on a duration outside {@link motionLevels} still keeps the shared
  * reduced rule here instead of re-implementing it: under the reduced preference
  * the duration is zero and no easing is named, so the target is painted without
- * a transition. A duration that is not positive and finite reads as the house
- * surface arrival ({@link motionLevels.normal}), the timing a surface that asked
- * for nothing moves with.
+ * a transition. A duration that is not positive and finite — or one past the
+ * clock the renderer schedules — reads as the house surface arrival
+ * ({@link motionLevels.normal}), the timing a surface that asked for nothing
+ * moves with, rather than a description the runtime refuses whole.
  *
  * The options are a caller's config as often as a literal, so an **absent
  * object** — JSON has no `undefined`, so a settings row this never carried reads
@@ -229,12 +246,8 @@ export const motionTimingOf = (
 ): MotionTiming => {
   const phase = options?.phase ?? "standard";
   if (preferenceOf(options?.preference) === "reduced") return { duration: 0 };
-  const ms =
-    Number.isFinite(durationMs) && durationMs > 0
-      ? durationMs
-      : motionLevels.normal;
   return {
-    duration: ms / 1000,
+    duration: runnableMs(durationMs) / 1000,
     ease: motionEasings[phaseOf(phase)],
   };
 };
