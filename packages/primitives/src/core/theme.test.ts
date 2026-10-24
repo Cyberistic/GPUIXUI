@@ -5,12 +5,17 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  defaultDensity as libraryDensity,
+  iconSize as libraryIconSize,
   isTextRole as tokenTextRole,
   keyboardFocusRing,
+  radius as libraryRadius,
+  spacing as librarySpacing,
   textRoles,
   typography as libraryScale,
 } from "@gpuixui/tokens";
-import { sliderInset, sliderTrackStyle } from "./style.js";
+import { sliderInset, sliderThumbStyle, sliderTrackStyle } from "./style.js";
+import { stackStyle } from "./layout.js";
 import { controlStyle } from "./style.js";
 import { keyboardRing } from "./focus.js";
 import {
@@ -23,12 +28,19 @@ import {
 import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import {
+  controlHeightOf,
+  controlPaddingOf,
   controlSize,
   elevationLevel,
   familyOf,
+  iconSideOf,
   isSpaceStep,
   isTextRole,
+  radiusValue,
+  rowHeightOf,
+  scaleValue,
   spaceStep,
+  spaceValue,
   typeOf,
   type ControlSize,
   type PrimitiveTheme,
@@ -318,6 +330,178 @@ describe("a spacing step is a stored choice", () => {
     expect(spaceStep({}, "lg")).toBeUndefined();
     // The test theme's group is the one every other case reads.
     expect(spaceStep({ spacing: testTheme.spacing }, "lg")).toBe("lg");
+  });
+});
+
+describe("a numeric group a store gave back", () => {
+  // Bug guarded: a theme restored from storage writes `null` for a group it
+  // did not carry and JSON has no `undefined`, so every painter that indexed a
+  // scale directly threw `TypeError: Cannot read properties of null (reading
+  // 'md')` from the first layout that asked for a gap — one truncated theme
+  // emptied the window. The type seam (`typeOf`, `familyOf`) already answers
+  // the library's own role for a group it lost; the numeric groups answer the
+  // library's own numbers the same way, and the gate still refuses the theme.
+  // The cast is the storage boundary: a stored theme is decoded JSON, where a
+  // group it did not carry is `null` rather than absent.
+  const stored = (group: Record<string, unknown>): PrimitiveTheme =>
+    ({ ...testTheme, ...group }) as unknown as PrimitiveTheme;
+
+  it("paints the library's number for a group the theme lost", () => {
+    expect(spaceValue({}, "md")).toBe(librarySpacing.md);
+    expect(spaceValue({ spacing: null }, "4xl")).toBe(librarySpacing["4xl"]);
+    expect(radiusValue({}, "md")).toBe(libraryRadius.md);
+    expect(radiusValue({ radius: null }, "full")).toBe(libraryRadius.full);
+    expect(iconSideOf({}, "md")).toBe(libraryIconSize.md);
+    expect(iconSideOf({ iconSize: null }, "sm")).toBe(libraryIconSize.sm);
+    expect(controlHeightOf({}, "md")).toBe(libraryDensity.controlHeight.md);
+    expect(controlPaddingOf({}, "lg")).toBe(libraryDensity.controlPaddingX.lg);
+    expect(rowHeightOf({})).toBe(libraryDensity.rowHeight);
+    expect(rowHeightOf({ density: null })).toBe(libraryDensity.rowHeight);
+    // The generic reader behind them is the same rule for any table.
+    expect(scaleValue(null, librarySpacing, "xs")).toBe(librarySpacing.xs);
+    expect(scaleValue({ xs: Number.NaN }, librarySpacing, "xs")).toBe(
+      librarySpacing.xs,
+    );
+  });
+
+  it("keeps the theme's own number, and reads a nulled step as the library's", () => {
+    // A brand's scale is the one that paints: the numbers below differ from the
+    // library's own in every group, so a fallback that ignored the theme cannot
+    // pass this case. (The test fixture mirrors the library's scale, which is
+    // why the brand is written out.)
+    const brand = stored({
+      spacing: { ...testTheme.spacing, md: 42 },
+      radius: { ...testTheme.radius, md: 7 },
+      iconSize: { ...testTheme.iconSize, lg: 18 },
+      density: {
+        ...testTheme.density,
+        controlHeight: { ...testTheme.density.controlHeight, sm: 30 },
+        controlPaddingX: { ...testTheme.density.controlPaddingX, sm: 9 },
+        rowHeight: 26,
+      },
+    });
+    expect(spaceValue(brand, "md")).toBe(42);
+    expect(radiusValue(brand, "md")).toBe(7);
+    expect(iconSideOf(brand, "lg")).toBe(18);
+    expect(controlHeightOf(brand, "sm")).toBe(30);
+    expect(controlPaddingOf(brand, "sm")).toBe(9);
+    expect(rowHeightOf(brand)).toBe(26);
+    // A key a store kept without a value is a token that is not there.
+    const nulledStep = {
+      spacing: { ...testTheme.spacing, md: null },
+    } as unknown as PrimitiveTheme["spacing"];
+    expect(spaceValue({ spacing: nulledStep }, "md")).toBe(librarySpacing.md);
+  });
+
+  it("reads a stored size name as the default step before it falls back", () => {
+    // A size name this release does not carry is `md` (the rule every control
+    // documents), and a lost scale is the library's `md` — one answer either way.
+    const renamed = "huge" as ControlSize;
+    expect(iconSideOf({}, renamed)).toBe(libraryIconSize.md);
+    expect(controlHeightOf({}, renamed)).toBe(libraryDensity.controlHeight.md);
+    expect(controlPaddingOf({}, renamed)).toBe(
+      libraryDensity.controlPaddingX.md,
+    );
+  });
+
+  it("keeps every painter on its feet with the groups a store lost", () => {
+    const lost: PrimitiveTheme = stored({
+      spacing: null,
+      radius: null,
+      iconSize: null,
+      density: null,
+    });
+    const control = controlStyle(
+      { variant: buttonVariants.primary, size: "md" },
+      lost,
+    );
+    expect(control.height).toBe(libraryDensity.controlHeight.md);
+    expect(control.paddingLeft).toBe(libraryDensity.controlPaddingX.md);
+    expect(control.gap).toBe(librarySpacing.sm);
+    expect(control.borderRadius).toBe(libraryRadius.md);
+    expect(stackStyle({ direction: "row", gap: "md" }, lost).gap).toBe(
+      librarySpacing.md,
+    );
+    expect(
+      selectionBoxStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        lost,
+      ),
+    ).toStrictEqual(
+      selectionBoxStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        testTheme,
+      ),
+    );
+    expect(sliderTrackStyle({ size: "md" }, lost).height).toBe(
+      sliderTrackStyle({ size: "md" }, testTheme).height,
+    );
+    expect(sliderThumbStyle({ size: "md" }, lost).width).toBe(
+      sliderThumbStyle({ size: "md" }, testTheme).width,
+    );
+    expect(
+      radioDotStyle({ state: "checked", size: "sm", accent: "primary" }, lost)
+        .width,
+    ).toBe(
+      radioDotStyle(
+        { state: "checked", size: "sm", accent: "primary" },
+        testTheme,
+      ).width,
+    );
+    expect(
+      selectionTargetStyle(
+        { state: "unchecked", size: "sm", accent: "primary" },
+        lost,
+      ),
+    ).toStrictEqual(
+      selectionTargetStyle(
+        { state: "unchecked", size: "sm", accent: "primary" },
+        testTheme,
+      ),
+    );
+    expect(switchBox("md", lost).width).toBe(switchBox("md", testTheme).width);
+    expect(switchBox("md", lost).inset).toBe(testTheme.spacing["2xs"]);
+  });
+
+  it("is the read every painter takes a numeric group through", () => {
+    // A second direct read would be a second rule, and the painter would throw
+    // on the theme the seam survives.
+    const read =
+      /\.(spacing|radius|iconSize)\s*\[|\.(spacing|radius|iconSize)\.[A-Za-z]|\.density\.(controlHeight|controlPaddingX|rowHeight)/;
+    const offenders = Arr.filter(walk(sourceDir), (path) => {
+      if (path.endsWith(join("core", "theme.ts"))) return false;
+      return read.test(readFileSync(path, "utf8"));
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it("teaches the fallback where a consumer hands a theme over", () => {
+    const read = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+    const readme = read("../../README.md");
+    const page = read("../../docs/theme-provider.mdx");
+    expect({
+      readers: Arr.every(
+        [
+          "scaleValue",
+          "spaceValue",
+          "radiusValue",
+          "iconSideOf",
+          "controlHeightOf",
+          "rowHeightOf",
+        ],
+        (name) => readme.includes(name),
+      ),
+      rule:
+        readme.includes("the **library's**") &&
+        readme.includes("typeOf`/`familyOf") &&
+        readme.includes("mid-render"),
+      gate: readme.includes("missingTokens"),
+      page:
+        page.includes("library's own numbers") &&
+        page.includes("missingTokens") &&
+        page.includes("extendTheme"),
+    }).toEqual({ readers: true, rule: true, gate: true, page: true });
   });
 });
 

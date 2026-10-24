@@ -11097,6 +11097,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
     applies — the name is read off the renderer's own tree, and the shipped
     example's headers carry real labels.
     Owner: data.
+  - [x] Read a **blank series name as the key the series is stored by** — every
+    chart layer is an `<svg role="img">` named by its series label and the legend
+    paints that label beside its swatch, so a blank one published an image with
+    no name and a legend row with nothing in it while the series was still
+    painted and its values still described: measured in the renderer, a
+    two-series bar chart with `label: ""` and `label: "   "` reported the images'
+    names as `''` and `'  '`. A label is content — an i18n table missing its row
+    answers `""`, a saved chart configuration can restore a series with no words
+    — so `chart/logic.ts` gains `seriesName(label, key)`, the one reading the
+    image's name and the legend row share, which reads a blank label as the
+    `key` the caller stores the series by. `ChartFrame`'s layers, `DonutChart`'s
+    slices and `ChartLegend`'s rows all read it. `src/behaviour/chart-a11y.test.tsx`
+    gains two window cases (a blank and a whitespace series label, a blank ring
+    datum and a standalone legend item) and `src/chart/logic.test.ts` the pure
+    case; directions measured: before the reading the two window cases fail with
+    `expected [ '', '  ' ] to deeply equal [ 'revenue', 'cost' ]` (and
+    `[ 'direct', 'referral' ]`), and the unit case fails on `''`. Green:
+    the package is 29 files / **228** unit cases and 18 files / **152** behaviour
+    cases. Docs: `docs/charts.mdx`'s `series`/`data`/`items` rows, the README's
+    chart paragraph and the Charts inventory row state the fallback.
+    No native scenario applies — the names are read off the renderer's tree, and
+    the shipped `chart-surface-lifecycle` paint is unchanged.
+    Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
@@ -17750,6 +17773,8 @@ Both are specified in ; each fix starts with a plan under .
 - [x] Tabs: a measured shared indicator on the **native** component — the rail renders one `tabs-indicator` surface instead of a card background per trigger; each trigger reports its painted box through `onLayout` and a 1×1 `tabs-origin` probe reports where the rail's absolute children start, so the pill's box is exactly the selected trigger's (asserted in both orientations and both themes; 19 native behaviour tests + an `indicator.ts` unit suite). No `transform`, so it jumps rather than slides — the docs demo's slide stays a browser illustration.
 
 ## Salvage gaps (from `.agents/slop/salvage-queue/`)
+
+`[x]` `packages/primitives`: **a theme a store gave back emptied the window** — every painter indexed the theme's numeric tables raw (`theme.spacing[...]`, `theme.radius[...]`, `theme.iconSize[...]`, `theme.density.controlHeight[...]`), and a theme restored from storage arrives with `null` where it did not carry a group (JSON has no `undefined`), so the first layout that asked for a gap threw `TypeError: Cannot read properties of null (reading 'md')` mid-render — measured on a stored theme that lost `spacing`, `radius`, `density` and `iconSize` — while the type seam (`typeOf`, `familyOf`) already answers the library's own role for a group it lost. `core/theme.ts` gains `scaleValue` and the five readers over it — `spaceValue`, `radiusValue`, `iconSideOf`, `controlHeightOf`/`controlPaddingOf` and `rowHeightOf` — and every direct index in `core/` and `components/` now goes through one of them: the theme's own number wins, a lost or `null` group and a `null` step answer the **library's** scale, and a stored step *name* still answers absence through `spaceStep` (a different question, unchanged). The gate still refuses such a theme (`missingTokens` names the group or step), so a consumer is still told to rebuild it; a paint seam simply never throws mid-render. Proof: `theme.test.ts`'s `a numeric group a store gave back` (6 cases: every reader on a lost and a `null` group, a brand's own numbers across all five readers plus a `null`ed step, a renamed size name resolving to `md` before it falls back, every painter on a theme that lost all four groups, a source scan that keeps a direct index out of the package, and the two documents); directions measured — restoring the raw read in `stackStyle` fails the painter case with the exact `TypeError … (reading 'md')`, and dropping the theme's own number from `scaleValue` fails the brand case (`expected 8 to be 42`). Green: 57 files / **1 160** tests, `check-types`, `check:tests` and `lint` clean. Docs: the package README's stored-choices list, `docs/theme-provider.mdx` §Limitations, and the guard reads both. No native scenario applies — every shipped theme is complete, so no paint moved; the seam is what a truncated one would paint.
 
 
 `[x]` `packages/primitives`: **a `NumberField` gesture had no end** — its only value channel was `onValueChange`, which reports every frame, so a scrub across the spin column fired one value per four pixels and a caller that saved or fetched did that work dozens of times per drag; the sibling `Slider` gained `onValueCommit` for exactly this reason, while the field only offered `onSubmit` (Enter, and only when the caller had a form). `onValueCommit` now reports the value a whole gesture finished with: one per scrub release (the value the drag ended on, with the release's own click consumed so the gesture is not counted twice), one per stepper press, one per arrow or page key that moved the value, and one when a typed edit ends on a readable value (blur or Enter, before `onSubmit`). A key at a bound and text that is not a number produced no new value, so neither commits, and a field merely focused and left holds nothing the reader produced and commits nothing. Proof: `runtime/number-field.runtime.test.tsx` gains four cases (the drag's frames reaching `onValueChange` with `onValueCommit` empty until release, then exactly `[60]`; a stepper and an arrow with one commit each and none at the ceiling; Enter with one commit that the blur does not repeat; a blur that commits `42` for a readable edit and nothing for `abc`), each measured failing with the three calls removed (`4 failed | 314 passed`). The same page's §Absence also said the first step lands **on** the range's floor while the value channel already starts there and the step adds one to it: it now states the measured floor → floor + step (`min={72}`/`step={12}` reports `84`), and `NumberField.test.tsx` holds that case (measured failing as `expected +0 to be 72` with the part's clamp removed). Docs: `docs/number-field.mdx` §API/§Keyboard/§Absence and the new commit paragraph, the mounted example prints the last committed gesture, and the `Number Field` row records the channel. Green: the package 56 files / 1 073 tests, runtime 21 files / 318 tests, `check-types` clean. No native scenario applies beyond the renderer cases — the pointer/keyboard path is the harness's, which the suite uses.

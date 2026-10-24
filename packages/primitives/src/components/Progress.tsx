@@ -50,6 +50,7 @@ import {
   type ProgressSpec,
   type ProgressTone,
 } from "../core/style.js";
+import { spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import {
   progressBufferClass,
@@ -183,7 +184,7 @@ const frameStyle = (theme: PrimitiveTheme): StyleDesc => ({
   width: "100%",
   display: "flex",
   flexDirection: "column",
-  gap: theme.spacing["2xs"],
+  gap: spaceValue(theme, "2xs"),
 });
 
 /** {@link ProgressTrack} props. */

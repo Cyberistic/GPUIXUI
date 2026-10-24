@@ -63,6 +63,7 @@ import { spokenWord } from "../core/a11y.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { scrollTarget } from "../core/scroll.js";
 import { scrollAxis, type ScrollSpec } from "../core/style.js";
+import { rowHeightOf } from "../core/theme.js";
 import type { PrimitiveTheme, RadiusStep, SpaceStep } from "../core/theme.js";
 import { scrollClass, scrollFrameClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -350,7 +351,7 @@ const useScrollKeyboard = (axis: ScrollSpec["axis"], theme: PrimitiveTheme) => {
         axis,
         { x: offsets?.[0] ?? 0, y: offsets?.[1] ?? 0 },
         {
-          line: theme.density.rowHeight,
+          line: rowHeightOf(theme),
           page: { width: box.width, height: box.height },
         },
       ),

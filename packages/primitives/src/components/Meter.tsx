@@ -33,6 +33,7 @@ import {
   type ProgressTone,
 } from "../core/style.js";
 import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
+import { spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { progressFillClass, progressTrackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -118,7 +119,7 @@ const frameStyle = (theme: PrimitiveTheme): StyleDesc => ({
   width: "100%",
   display: "flex",
   flexDirection: "column",
-  gap: theme.spacing["2xs"],
+  gap: spaceValue(theme, "2xs"),
 });
 
 /** {@link MeterTrack} props. */

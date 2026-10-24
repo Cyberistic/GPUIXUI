@@ -34,7 +34,15 @@ import type {
 } from "./theme.js";
 import { controlRing } from "./focus.js";
 import { pressWash } from "./pointer.js";
-import { controlSize, familyOf, typeOf } from "./theme.js";
+import {
+  controlHeightOf,
+  controlPaddingOf,
+  familyOf,
+  iconSideOf,
+  radiusValue,
+  spaceValue,
+  typeOf,
+} from "./theme.js";
 import { fieldVariant } from "./variants.js";
 
 /**
@@ -109,8 +117,8 @@ export const controlStyle = (
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const { variant, size } = spec;
-  const height = theme.density.controlHeight[controlSize(size)];
-  const padding = theme.density.controlPaddingX[controlSize(size)];
+  const height = controlHeightOf(theme, size);
+  const padding = controlPaddingOf(theme, size);
   const label = typeOf(theme, "label");
   const rest = paint(variant.background, theme);
   const border =
@@ -123,9 +131,9 @@ export const controlStyle = (
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing[CONTROL_GAP],
+    gap: spaceValue(theme, CONTROL_GAP),
     height,
-    borderRadius: theme.radius.md,
+    borderRadius: radiusValue(theme, "md"),
     fontSize: label.fontSize,
     lineHeight: label.lineHeight,
     fontWeight: label.fontWeight,
@@ -430,16 +438,19 @@ export const surfaceStyle = (
   };
   const sides = paddingSides(spec);
   if (spec.paddingX === undefined && spec.paddingY === undefined) {
-    if (sides.top !== undefined) style.padding = theme.spacing[sides.top];
+    if (sides.top !== undefined) style.padding = spaceValue(theme, sides.top);
   } else {
-    if (sides.top !== undefined) style.paddingTop = theme.spacing[sides.top];
+    if (sides.top !== undefined)
+      style.paddingTop = spaceValue(theme, sides.top);
     if (sides.right !== undefined)
-      style.paddingRight = theme.spacing[sides.right];
+      style.paddingRight = spaceValue(theme, sides.right);
     if (sides.bottom !== undefined)
-      style.paddingBottom = theme.spacing[sides.bottom];
-    if (sides.left !== undefined) style.paddingLeft = theme.spacing[sides.left];
+      style.paddingBottom = spaceValue(theme, sides.bottom);
+    if (sides.left !== undefined)
+      style.paddingLeft = spaceValue(theme, sides.left);
   }
-  if (spec.radius !== undefined) style.borderRadius = theme.radius[spec.radius];
+  if (spec.radius !== undefined)
+    style.borderRadius = radiusValue(theme, spec.radius);
   if (spec.border === true) {
     style.borderWidth = theme.borderWidth.thin;
     style.borderColor = theme.colors.border;
@@ -472,7 +483,7 @@ export interface RuleSpec {
 
 /** A separator: one border, on the theme's border colour, never a literal. */
 export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
-  const inset = spec.inset === undefined ? 0 : theme.spacing[spec.inset];
+  const inset = spec.inset === undefined ? 0 : spaceValue(theme, spec.inset);
   return spec.orientation === "horizontal"
     ? {
         height: theme.borderWidth.thin,
@@ -618,8 +629,8 @@ export const progressTrackStyle = (
   display: "flex",
   flexDirection: "row",
   width: "100%",
-  height: theme.spacing[PROGRESS_HEIGHT[progressSizeOf(spec.size)]],
-  borderRadius: theme.radius.full,
+  height: spaceValue(theme, PROGRESS_HEIGHT[progressSizeOf(spec.size)]),
+  borderRadius: radiusValue(theme, "full"),
   backgroundColor: theme.colors.muted,
   overflow: "hidden",
 });
@@ -631,7 +642,7 @@ export const progressFillStyle = (
 ): StyleDesc => ({
   height: "100%",
   width: `${progressPercent(spec.value ?? 0)}%`,
-  borderRadius: theme.radius.full,
+  borderRadius: radiusValue(theme, "full"),
   backgroundColor: paint(progressTones[progressToneOf(spec.tone)], theme),
 });
 
@@ -660,7 +671,7 @@ const isVertical = (spec: Pick<SliderSpec, "orientation">): boolean =>
  * off it.
  */
 export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
-  Math.round(theme.iconSize[controlSize(size)] / 2);
+  Math.round(iconSideOf(theme, size) / 2);
 
 /**
  * The slider's hit area.
@@ -679,7 +690,7 @@ export const sliderTrackStyle = (
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const inset = sliderInset(spec.size, theme);
-  const control = theme.density.controlHeight[controlSize(spec.size)];
+  const control = controlHeightOf(theme, spec.size);
   const style: StyleDesc = isVertical(spec)
     ? {
         display: "flex",
@@ -716,9 +727,9 @@ export const sliderRailStyle = (
 ): StyleDesc =>
   isVertical(spec)
     ? {
-        width: theme.spacing.xs,
+        width: spaceValue(theme, "xs"),
         height: "100%",
-        borderRadius: theme.radius.full,
+        borderRadius: radiusValue(theme, "full"),
         backgroundColor: theme.colors.muted,
         display: "flex",
         // The runtime has no `column-reverse`, so the track reverses its parts
@@ -731,8 +742,8 @@ export const sliderRailStyle = (
       }
     : {
         width: "100%",
-        height: theme.spacing.xs,
-        borderRadius: theme.radius.full,
+        height: spaceValue(theme, "xs"),
+        borderRadius: radiusValue(theme, "full"),
         backgroundColor: theme.colors.muted,
         display: "flex",
         flexDirection: "row",
@@ -751,7 +762,7 @@ export const sliderFillStyle = (
     ? { width: "100%", height: share }
     : { width: share, height: "100%" };
   style.flexShrink = 0;
-  style.borderRadius = theme.radius.full;
+  style.borderRadius = radiusValue(theme, "full");
   style.backgroundColor =
     spec.invalid === true ? theme.colors.destructive : theme.colors.primary;
   style.pointerEvents = "none";
@@ -772,13 +783,13 @@ export const sliderThumbStyle = (
   spec: SliderSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = theme.iconSize[controlSize(spec.size)];
+  const side = iconSideOf(theme, spec.size);
   const half = Math.round(side / 2);
   const style: StyleDesc = {
     width: side,
     height: side,
     flexShrink: 0,
-    borderRadius: theme.radius.full,
+    borderRadius: radiusValue(theme, "full"),
     backgroundColor: theme.colors.input,
     borderWidth: theme.borderWidth.strong,
     borderColor:
@@ -813,7 +824,7 @@ export const numberInputStyle = (): StyleDesc => ({
 export const numberStepperColumnStyle = (theme: PrimitiveTheme): StyleDesc => ({
   display: "flex",
   flexDirection: "column",
-  width: theme.iconSize.md + theme.spacing.sm,
+  width: iconSideOf(theme, "md") + spaceValue(theme, "sm"),
   height: "100%",
   flexShrink: 0,
 });
@@ -832,7 +843,7 @@ export const numberStepperStyle = (
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
-    borderRadius: theme.radius.sm,
+    borderRadius: radiusValue(theme, "sm"),
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
   };
   if (spec.disabled !== true) {
@@ -868,10 +879,10 @@ export const ratingStarStyle = (
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: theme.spacing["2xs"],
+    padding: spaceValue(theme, "2xs"),
     minWidth: targetSize.minimum,
     minHeight: targetSize.minimum,
-    borderRadius: theme.radius.full,
+    borderRadius: radiusValue(theme, "full"),
     cursor: interactive ? "pointer" : "not-allowed",
   };
   if (spec.disabled === true) style.opacity = disabledOpacity;
@@ -912,7 +923,7 @@ export const ratingPartialCellStyle = (theme: PrimitiveTheme): StyleDesc => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: theme.spacing["2xs"],
+  padding: spaceValue(theme, "2xs"),
   minWidth: targetSize.minimum,
 });
 
@@ -940,7 +951,7 @@ export const otpGroupStyle = (theme: PrimitiveTheme): StyleDesc => ({
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  gap: theme.spacing.sm,
+  gap: spaceValue(theme, "sm"),
 });
 
 export interface OtpCellSpec {

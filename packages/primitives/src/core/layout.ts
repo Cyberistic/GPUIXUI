@@ -8,7 +8,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import type { PrimitiveTheme, SpaceStep } from "./theme.js";
+import { spaceValue, type PrimitiveTheme, type SpaceStep } from "./theme.js";
 import { surfaceStyle, type SurfaceSpec } from "./style.js";
 
 export const STACK_DIRECTIONS = ["row", "column"] as const;
@@ -72,7 +72,7 @@ export const stackStyle = (
     display: "flex",
     flexDirection: spec.direction,
   };
-  if (spec.gap !== undefined) style.gap = theme.spacing[spec.gap];
+  if (spec.gap !== undefined) style.gap = spaceValue(theme, spec.gap);
   if (spec.align !== undefined) style.alignItems = alignToFlex[spec.align];
   if (spec.justify !== undefined)
     style.justifyContent = justifyToFlex[spec.justify];
@@ -150,7 +150,7 @@ export const gridStyle = (spec: GridSpec, theme: PrimitiveTheme): StyleDesc => {
   if (spec.rows !== undefined) {
     style.gridTemplateRows = trackCount(spec.rows);
   }
-  if (spec.gap !== undefined) style.gap = theme.spacing[spec.gap];
+  if (spec.gap !== undefined) style.gap = spaceValue(theme, spec.gap);
   if (spec.grow === true) style.flexGrow = 1;
   return style;
 };

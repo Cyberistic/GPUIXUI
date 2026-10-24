@@ -43,7 +43,7 @@ import {
   type PressWords,
   type PrimitiveMessages,
 } from "../core/messages.js";
-import { controlSize } from "../core/theme.js";
+import { controlSize, iconSideOf } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
@@ -201,7 +201,7 @@ export const renderToggle = (
     >
       {props.loading === true ? (
         <Spinner
-          size={theme.iconSize.sm}
+          size={iconSideOf(theme, "sm")}
           accent={toggleSpinnerAccent(state.current, props.disabled === true)}
           label={loadingWord}
           reducedMotion={props.reducedMotion}

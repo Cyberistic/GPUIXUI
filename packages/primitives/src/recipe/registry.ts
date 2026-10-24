@@ -27,7 +27,15 @@ import { switchBox, switchThumbOffset } from "../core/selection.js";
 import { pressWash } from "../core/pointer.js";
 import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
-import { familyOf, typeOf } from "../core/theme.js";
+import {
+  controlHeightOf,
+  controlPaddingOf,
+  familyOf,
+  iconSideOf,
+  radiusValue,
+  typeOf,
+  spaceValue,
+} from "../core/theme.js";
 
 /** A class-string step name → the theme key it resolves to. */
 const SPACING_STEP: Readonly<Partial<Record<string, SpaceStep>>> = {
@@ -79,13 +87,13 @@ const spacingStep = (value: string | undefined): SpaceStep | undefined =>
 const controlSize = (value: string | undefined): ControlSize | undefined =>
   value === undefined ? undefined : CONTROL_SIZE[value];
 
-/** The square icon side for a control size: `theme.iconSize[size]`. */
+/** The square icon side for a control size, read through the theme seam. */
 const iconSide = (
   theme: Theme,
   value: string | undefined,
 ): number | undefined => {
   const size = controlSize(value);
-  return size === undefined ? undefined : theme.iconSize[size];
+  return size === undefined ? undefined : iconSideOf(theme, size);
 };
 
 /** Half the icon side, rounded: `round(iconSize[size] / 2)`. */
@@ -260,78 +268,80 @@ export const recipeTw = createTw({
     // Scale-step families → theme values, falling back to the built-in table.
     gap: (theme, value) => {
       const step = spacingStep(value);
-      return step === undefined ? undefined : { gap: theme.spacing[step] };
+      return step === undefined ? undefined : { gap: spaceValue(theme, step) };
     },
     p: (theme, value) => {
       const step = spacingStep(value);
-      return step === undefined ? undefined : { padding: theme.spacing[step] };
+      return step === undefined
+        ? undefined
+        : { padding: spaceValue(theme, step) };
     },
     pl: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { paddingLeft: theme.spacing[step] };
+        : { paddingLeft: spaceValue(theme, step) };
     },
     pr: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { paddingRight: theme.spacing[step] };
+        : { paddingRight: spaceValue(theme, step) };
     },
     pt: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { paddingTop: theme.spacing[step] };
+        : { paddingTop: spaceValue(theme, step) };
     },
     pb: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { paddingBottom: theme.spacing[step] };
+        : { paddingBottom: spaceValue(theme, step) };
     },
     ml: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { marginLeft: theme.spacing[step] };
+        : { marginLeft: spaceValue(theme, step) };
     },
     mr: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { marginRight: theme.spacing[step] };
+        : { marginRight: spaceValue(theme, step) };
     },
     mt: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { marginTop: theme.spacing[step] };
+        : { marginTop: spaceValue(theme, step) };
     },
     mb: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined
         ? undefined
-        : { marginBottom: theme.spacing[step] };
+        : { marginBottom: spaceValue(theme, step) };
     },
     top: (theme, value) => {
       const step = spacingStep(value);
-      return step === undefined ? undefined : { top: theme.spacing[step] };
+      return step === undefined ? undefined : { top: spaceValue(theme, step) };
     },
     left: (theme, value) => {
       const step = spacingStep(value);
-      return step === undefined ? undefined : { left: theme.spacing[step] };
+      return step === undefined ? undefined : { left: spaceValue(theme, step) };
     },
     h: (theme, value) => {
       const size = value === undefined ? undefined : CONTROL_SIZE[value];
       return size === undefined
         ? undefined
-        : { height: theme.density.controlHeight[size] };
+        : { height: controlHeightOf(theme, size) };
     },
     px: (theme, value) => {
       const size = value === undefined ? undefined : CONTROL_SIZE[value];
       const padding =
-        size === undefined ? undefined : theme.density.controlPaddingX[size];
+        size === undefined ? undefined : controlPaddingOf(theme, size);
       return padding === undefined
         ? undefined
         : { paddingLeft: padding, paddingRight: padding };
@@ -339,14 +349,14 @@ export const recipeTw = createTw({
     size: (theme, value) => {
       const size = value === undefined ? undefined : CONTROL_SIZE[value];
       const side =
-        size === undefined ? undefined : theme.density.controlHeight[size];
+        size === undefined ? undefined : controlHeightOf(theme, size);
       return side === undefined ? undefined : { width: side, height: side };
     },
     rounded: (theme, value) => {
       const step = value === undefined ? undefined : RADIUS_STEP[value];
       return step === undefined
         ? undefined
-        : { borderRadius: theme.radius[step] };
+        : { borderRadius: radiusValue(theme, step) };
     },
     type: (theme, value) => {
       const role = value === undefined ? undefined : TEXT_ROLE[value];
@@ -447,10 +457,10 @@ export const recipeTw = createTw({
       const size = controlSize(value);
       return size === undefined
         ? undefined
-        : { width: theme.density.controlHeight[size] };
+        : { width: controlHeightOf(theme, size) };
     },
     "w-stepper-column": (theme) => ({
-      width: theme.iconSize.md + theme.spacing.sm,
+      width: iconSideOf(theme, "md") + spaceValue(theme, "sm"),
     }),
     // The pressable-target floor (WCAG 2.2 SC 2.5.8) a drawn control sits in.
     // A fixed minimum, like `targetSize` itself — not a theme group.
@@ -460,11 +470,15 @@ export const recipeTw = createTw({
     }),
     "h-space": (theme, value) => {
       const step = spacingStep(value);
-      return step === undefined ? undefined : { height: theme.spacing[step] };
+      return step === undefined
+        ? undefined
+        : { height: spaceValue(theme, step) };
     },
     "w-space": (theme, value) => {
       const step = spacingStep(value);
-      return step === undefined ? undefined : { width: theme.spacing[step] };
+      return step === undefined
+        ? undefined
+        : { width: spaceValue(theme, step) };
     },
   },
 });

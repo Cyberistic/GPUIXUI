@@ -58,7 +58,7 @@ import {
   isPlainKey,
   swallowKeyDefault,
 } from "../core/keyboard.js";
-import { controlSize } from "../core/theme.js";
+import { controlSize, iconSideOf } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   variantSpinnerAccent,
@@ -278,7 +278,7 @@ export const renderButton = (
     >
       {loading === true ? (
         <Spinner
-          size={theme.iconSize.sm}
+          size={iconSideOf(theme, "sm")}
           accent={variantSpinnerAccent(variant, disabled)}
           label={loadingWord}
           reducedMotion={reducedMotion}

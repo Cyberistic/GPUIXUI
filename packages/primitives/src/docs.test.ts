@@ -1498,6 +1498,12 @@ describe("the primitives docs page contract", () => {
       ),
       "utf8",
     );
+    // The line the scroller moves is the theme's row, read through the seam
+    // that answers a lost density group with the library's own row.
+    const rowSeam = readFileSync(
+      fileURLToPath(new URL("../src/core/theme.ts", import.meta.url)),
+      "utf8",
+    );
     /** One number the probe fixture declares, or `NaN` when the line moved. */
     const declared = (pattern: string): number =>
       Option.getOrElse(
@@ -1568,7 +1574,8 @@ describe("the primitives docs page contract", () => {
       source:
         scene.includes("One line of content — the theme's `rowHeight`") &&
         scene.includes("current + direction * metrics.line") &&
-        painter.includes("line: theme.density.rowHeight"),
+        painter.includes("line: rowHeightOf(theme)") &&
+        rowSeam.includes("theme.density?.rowHeight"),
       row:
         row.includes("`keyboard-scroll-lifecycle`") &&
         row.includes("one theme row per arrow"),

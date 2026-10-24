@@ -29,6 +29,10 @@ import { darkTheme } from "@gpuixui/tokens";
 
 ## Limitations
 
-- The density override is a whole group, not a partial patch.
+- The density override is a whole group, not a partial patch. A theme restored
+  from storage is decoded JSON, where a numeric group it did not carry is
+  `null`; a lost group paints the library's own numbers rather than throwing
+  from the first layout that asks for a gap, and the gate still refuses it — run
+  `missingTokens` and rebuild it with `extendTheme`.
 - No built-in light/dark toggle and no persistence.
 - Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.

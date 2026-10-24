@@ -17,7 +17,7 @@ import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { visibleCopy } from "../core/a11y.js";
 import type { RuleSpec } from "../core/style.js";
-import { spaceStep } from "../core/theme.js";
+import { spaceStep, spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { separatorClass, separatorGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -97,8 +97,8 @@ export const renderSpacer = (
       : {
           flexShrink: 0,
           flexGrow: 0,
-          width: theme.spacing[step],
-          height: theme.spacing[step],
+          width: spaceValue(theme, step),
+          height: spaceValue(theme, step),
         };
   return (
     <div

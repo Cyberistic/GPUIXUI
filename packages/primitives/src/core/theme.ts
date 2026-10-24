@@ -8,14 +8,20 @@
  */
 
 import {
+  defaultDensity as libraryDensity,
+  iconSize as libraryIconSize,
   isControlSize,
   isElevationLevel,
   isTextRole,
+  radius as libraryRadius,
+  spacing as librarySpacing,
   typography as libraryTypography,
   type ControlSize,
   type ElevationLevel,
 } from "@gpuixui/tokens";
 import type {
+  Density,
+  IconSize,
   Radius,
   Spacing,
   TextRole,
@@ -134,6 +140,120 @@ export const spaceStep = (
   theme: SpaceSource,
   step: unknown,
 ): SpaceStep | undefined => (isSpaceStep(theme, step) ? step : undefined);
+
+/**
+ * The number a theme's table paints for a step, or the library's own.
+ *
+ * Every numeric group a theme carries is a table of numbers read by name — the
+ * spacing, radius and icon scales, a density preset's control metrics — and a
+ * theme a store gave back may have lost the whole table (`null` where JSON has
+ * no `undefined`) or one step in it. The theme's own number wins; otherwise the
+ * library's scale answers, which is the rule {@link typeOf} and
+ * {@link familyOf} already follow for the type group.
+ *
+ * A paint seam runs mid-render, so it never throws: reading a lost table
+ * directly threw `TypeError: Cannot read properties of null (reading 'md')` and
+ * took the tree down from the first layout that asked for a gap, which is the
+ * one outcome a control cannot recover from. The gate is the seam that refuses
+ * such a theme — `@gpuixui/tokens`' `missingTokens` names the group or the step
+ * and the release it must be rebuilt from — while the paint answers the numbers
+ * the library would have given it.
+ *
+ * A step **name** is a different question: {@link spaceStep} asks whether the
+ * theme paints a stored name at all, and answers absence when it does not.
+ */
+export const scaleValue = <Step extends string>(
+  scale: Readonly<Partial<Record<Step, number>>> | null | undefined,
+  library: Readonly<Record<Step, number>>,
+  step: Step,
+): number => {
+  const value = scale === null || scale === undefined ? undefined : scale[step];
+  return P.isNumber(value) && Number.isFinite(value) ? value : library[step];
+};
+
+/** The length a spacing step paints: the theme's, or the library's. */
+export const spaceValue = (theme: SpaceSource, step: SpaceStep): number =>
+  scaleValue(theme.spacing, librarySpacing, step);
+
+/**
+ * A theme's radius group, or the shape a stored corner is measured against.
+ *
+ * The same port the spacing group has: a theme restored from storage can lose
+ * the whole group, and JSON writes `null` where it carried none.
+ */
+export interface RadiusSource {
+  readonly radius?: Radius | null;
+}
+
+/** The corner a radius step paints: the theme's, or the library's. */
+export const radiusValue = (theme: RadiusSource, step: RadiusStep): number =>
+  scaleValue(theme.radius, libraryRadius, step);
+
+/**
+ * A theme's density group, or the shape a stored metric is measured against.
+ *
+ * A density preset carries the control box every interactive part is built at,
+ * so a theme that lost it has no height to give a button and no padding to give
+ * a field; the library's default preset answers those numbers.
+ */
+export interface DensitySource {
+  readonly density?: Density | null;
+}
+
+/** The height a control is built at: the theme's density's, or the library's. */
+export const controlHeightOf = (
+  theme: DensitySource,
+  size: ControlSize,
+): number =>
+  scaleValue(
+    theme.density?.controlHeight,
+    libraryDensity.controlHeight,
+    controlSize(size),
+  );
+
+/**
+ * The horizontal padding a control is built at: the theme's, or the library's.
+ *
+ * The size name is read through {@link controlSize}, so a size a release
+ * dropped is the documented `md` step rather than a lookup that answers nothing.
+ */
+export const controlPaddingOf = (
+  theme: DensitySource,
+  size: ControlSize,
+): number =>
+  scaleValue(
+    theme.density?.controlPaddingX,
+    libraryDensity.controlPaddingX,
+    controlSize(size),
+  );
+
+/**
+ * The height a row is built at: the theme's density's, or the library's.
+ *
+ * A scroller moves one row per arrow key and a list paints its rows at this
+ * height, so a theme that lost the metric answers the library's row rather than
+ * handing the key handler a `NaN`.
+ */
+export const rowHeightOf = (theme: DensitySource): number => {
+  const height = theme.density?.rowHeight;
+  return P.isNumber(height) && Number.isFinite(height)
+    ? height
+    : libraryDensity.rowHeight;
+};
+
+/** A theme's icon-size group, or the shape a stored side is measured against. */
+export interface IconSizeSource {
+  readonly iconSize?: IconSize | null;
+}
+
+/**
+ * The side an icon paints at a control size: the theme's, or the library's.
+ *
+ * The size name is read through {@link controlSize}, so a stored size a release
+ * dropped is the `md` step rather than a lookup that answers nothing.
+ */
+export const iconSideOf = (theme: IconSizeSource, size: ControlSize): number =>
+  scaleValue(theme.iconSize, libraryIconSize, controlSize(size));
 
 /**
  * A theme, or anything shaped like one, as the type scale reads it.

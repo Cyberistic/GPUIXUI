@@ -49,7 +49,7 @@ import {
   type SelectionState,
 } from "../core/selection.js";
 import { controlRing } from "../core/focus.js";
-import { controlSize } from "../core/theme.js";
+import { controlSize, iconSideOf } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import { selectionBoxClass } from "../recipe/index.js";
@@ -181,7 +181,7 @@ export const renderCheckboxIndicator = (
       {props.children ?? (
         <Icon
           name={markName(spec.state)}
-          size={theme.iconSize.sm}
+          size={iconSideOf(theme, "sm")}
           color={selectionMarkColor(spec, theme)}
         />
       )}

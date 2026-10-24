@@ -15,7 +15,7 @@ import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import { motionLevels } from "@gpuixui/motion/timing";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
-import { typeOf } from "./theme.js";
+import { radiusValue, typeOf } from "./theme.js";
 
 /** How many steps a pulse visits before repeating. */
 export const PULSE_STEPS = 2;
@@ -120,8 +120,8 @@ export const skeletonStyle = (
   flexShrink: 0,
   borderRadius:
     spec.circle === true
-      ? theme.radius.full
-      : theme.radius[spec.radius ?? "sm"],
+      ? radiusValue(theme, "full")
+      : radiusValue(theme, spec.radius ?? "sm"),
   backgroundColor: theme.colors.skeleton,
 });
 
@@ -247,7 +247,7 @@ export const spinnerDotStyle = (
   width: spec.size,
   height: spec.size,
   flexShrink: 0,
-  borderRadius: theme.radius.full,
+  borderRadius: radiusValue(theme, "full"),
   opacity: dot.opacity,
   backgroundColor: accentColor(spec.accent, theme),
 });
@@ -289,7 +289,7 @@ export const indeterminateFillStyle = (
 ): StyleDesc => ({
   width: `${segment}%`,
   height: "100%",
-  borderRadius: theme.radius.full,
+  borderRadius: radiusValue(theme, "full"),
   backgroundColor: color,
 });
 

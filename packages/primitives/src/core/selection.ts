@@ -26,7 +26,7 @@ import {
   targetSize,
 } from "@gpuixui/tokens";
 import type { SwitchColors } from "@gpuixui/tokens";
-import { controlSize } from "./theme.js";
+import { iconSideOf, radiusValue, spaceValue } from "./theme.js";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
@@ -205,7 +205,7 @@ export const selectionBoxStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = theme.iconSize[controlSize(spec.size)];
+  const side = iconSideOf(theme, spec.size);
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true
@@ -218,7 +218,10 @@ export const selectionBoxStyle = (
     width: side,
     height: side,
     flexShrink: 0,
-    borderRadius: spec.shape === "circle" ? theme.radius.full : theme.radius.sm,
+    borderRadius:
+      spec.shape === "circle"
+        ? radiusValue(theme, "full")
+        : radiusValue(theme, "sm"),
     borderWidth: theme.borderWidth.thin,
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : undefined,
@@ -283,12 +286,13 @@ export const switchBox = (
   if (theme.switch !== undefined && metrics !== undefined) {
     return switchMetricsAt(metrics, size);
   }
-  const iconSide = theme.iconSize[controlSize(size)];
+  const iconSide = iconSideOf(theme, size);
+  const inset = spaceValue(theme, "2xs");
   return {
     width: Math.round(iconSide * 1.75),
     height: iconSide,
-    knob: iconSide - theme.spacing["2xs"] * 2,
-    inset: theme.spacing["2xs"],
+    knob: iconSide - inset * 2,
+    inset,
     border: theme.borderWidth.thin,
   };
 };
@@ -307,7 +311,7 @@ export const selectionTargetStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = theme.iconSize[controlSize(spec.size)];
+  const side = iconSideOf(theme, spec.size);
   const inset = targetInset(side);
   return {
     display: "flex",
@@ -482,7 +486,7 @@ export const switchTrackStyle = (
     width: box.width,
     height: box.height,
     flexShrink: 0,
-    borderRadius: theme.radius.full,
+    borderRadius: radiusValue(theme, "full"),
     borderWidth: box.border,
     borderColor: edge,
     backgroundColor: fill,
@@ -539,7 +543,7 @@ export const switchThumbStyle = (
     width: box.knob,
     height: box.knob,
     flexShrink: 0,
-    borderRadius: theme.radius.full,
+    borderRadius: radiusValue(theme, "full"),
     pointerEvents: "none",
     backgroundColor:
       paint?.backgroundColor ??
@@ -560,12 +564,12 @@ export const radioDotStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const side = Math.round(theme.iconSize[controlSize(spec.size)] / 2);
+  const side = Math.round(iconSideOf(theme, spec.size) / 2);
   return {
     width: side,
     height: side,
     flexShrink: 0,
-    borderRadius: theme.radius.full,
+    borderRadius: radiusValue(theme, "full"),
     backgroundColor: selectionMarkColor(spec, theme),
   };
 };

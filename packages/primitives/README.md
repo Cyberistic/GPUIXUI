@@ -143,6 +143,20 @@ and each is read through a membership test rather than indexed raw:
   whole keyboard contract was dead on a name. `decideMove` itself also answers
   `None` for an axis the table does not carry, so a consumer calling it directly
   cannot be emptied by a stored name.
+- the **theme itself** is what a store gave back, and a numeric group it did not
+  carry arrives as `null` rather than absent (JSON has no `undefined`). Every
+  painter read `theme.spacing[...]`, `theme.radius[...]`, `theme.iconSize[...]`
+  and `theme.density.controlHeight[...]` directly, so one truncated theme threw
+  `TypeError: Cannot read properties of null (reading 'md')` from the first
+  layout that asked for a gap and emptied the window. `scaleValue` and the five
+  readers over it (`spaceValue`, `radiusValue`, `iconSideOf`,
+  `controlHeightOf`/`controlPaddingOf`, `rowHeightOf`) paint the theme's own
+  number and otherwise the **library's** — the rule `typeOf`/`familyOf` already
+  follow for the type group — so a paint seam never throws mid-render. The gate
+  still refuses the theme: `missingTokens` names the group or the step and the
+  release to rebuild it from. `theme.test.ts` holds the readers, every painter
+  and a source scan that keeps a direct index out of the rest of the package;
+  `docs/theme-provider.mdx` states the rule where a consumer hands a theme over.
 
 `theme.test.ts`, `Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`,
 `Switch.test.tsx`, `presentational.test.tsx`, `Progress.test.tsx`,
