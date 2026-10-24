@@ -96,7 +96,10 @@ it. Four rules are the ones a window measured (`pointer-capture`,
 
 The arrows step the focused divider by `step` (16px), and Home/End name the
 column's own bounds; every route clamps, because a reader can hold an arrow
-against a bound exactly as a pointer can drag past it.
+against a bound exactly as a pointer can drag past it. A width the strip cannot
+measure (`NaN`) is read as the column's floor: it is the number the divider
+announces and the width a drag starts from, so a computed track never publishes
+`NaN pixels` or refuses to grow.
 
 ## API
 
@@ -121,7 +124,7 @@ menu both announce `Columns` then (`src/behaviour/surface-a11y.test.tsx`).
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number` | — | the column's current width |
+| `width` | `number` | — | the column's current width; an unreadable one reads as the column's floor |
 | `minWidth` | `number` | `80` | the narrowest a drag may reach |
 | `maxWidth` | `number` | `640` | the widest a drag may reach |
 | `onResize` | `(width: number) => void` | — | receives every clamped width |
@@ -146,4 +149,5 @@ menu both announce `Columns` then (`src/behaviour/surface-a11y.test.tsx`).
 
 - The menu is `DropdownMenu`; its keyboard contract is the component's.
 - The last visible column's row is disabled rather than absent.
-- The divider is a `separator` tab stop announcing `aria-valuetext`.
+- The divider is a `separator` tab stop announcing `aria-valuetext`; a width it
+  cannot measure is announced as the column's floor.

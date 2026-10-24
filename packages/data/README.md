@@ -221,7 +221,9 @@ is not a finite number is read as the default (80/640/16) rather than a NaN
 track, and a width the grid cannot read is the column's own minimum: a width is
 often computed, and `NaN` orders below every number, so clamping it would
 collapse the track — `resizeColumn` leaves such a column alone while a key press
-steps from its floor. The page is `docs/column-configuration.mdx`.
+steps from its floor, and the divider **announces and drags from** that floor
+(`readableWidth`) rather than publishing `NaN pixels` or refusing to grow. The
+page is `docs/column-configuration.mdx`.
 
 A **cell's own `width` is the same kind of number**, and it is read by the
 layout rather than by a reducer: `TableHeaderCell`/`TableCell` take the track a

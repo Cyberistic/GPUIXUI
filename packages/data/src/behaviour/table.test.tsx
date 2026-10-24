@@ -607,6 +607,65 @@ describe("resizable columns", () => {
     expect(received.every((width) => width >= 80 && width <= 120)).toBe(true);
   });
 
+  it("announces the floor for a track the grid cannot measure", () => {
+    // Bug guarded: `aria-valuetext` printed the raw number, so a computed width
+    // the layout cannot paint (`NaN`) was announced as `NaN pixels` — the one
+    // channel 0.11.0 has for a number, carrying nothing a reader can use. The
+    // key path already reads an unreadable width as the column's floor, so the
+    // announcement names that same number.
+    root = renderData(
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "row",
+          width: 400,
+          height: 40,
+        }}
+      >
+        <TableColumnDivider
+          width={Number.NaN}
+          onResize={() => {}}
+          label="Resize the test column"
+          testId="divider"
+        />
+      </div>,
+    );
+    settle(root);
+
+    expect(announcedWidth(root, "divider")).toBe("80 pixels");
+  });
+
+  it("drags from the floor when the track cannot be measured", () => {
+    // The drag reads its starting width at the press. `NaN` read there clamped
+    // every gesture back to the floor, so a right drag grew nothing while the
+    // divider still announced a width; the press now starts from the floor the
+    // announcement names.
+    const received: number[] = [];
+    root = renderData(
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "row",
+          width: 400,
+          height: 40,
+        }}
+      >
+        <TableColumnDivider
+          width={Number.NaN}
+          onResize={(width) => received.push(width)}
+          label="Resize the test column"
+          testId="divider"
+        />
+      </div>,
+    );
+    settle(root);
+
+    drag(root, "divider", 40);
+    expect(received.at(-1)).toBe(120);
+  });
+
   it("refuses a press that is not the primary button", () => {
     const root = mount();
     const { x, y, width, height } = boundsOf(root, "files-divider-name");

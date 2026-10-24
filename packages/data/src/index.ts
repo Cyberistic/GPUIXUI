@@ -205,6 +205,7 @@ export {
   isColumnResizeKey,
   isColumnVisible,
   moveColumn,
+  readableWidth,
   resetColumns,
   resizeColumn,
   resizeWidthByKey,

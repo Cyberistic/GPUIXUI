@@ -2322,7 +2322,9 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 163/163
+`[x]` `[██████████]` 164/164
+
+`[x]` Press a **menu-bar trigger the way a pointer does**, and name the ordering the press was depending on — `app-chrome-lifecycle` was **red on master** after the shell's hover-open pass (`ebc30b67f`): `a press on File paints its dropdown` read `expected a value, got none`, and the capture showed the trigger on its *hover* wash with no panel. The automation's `click` dispatches a down/up at the element's centre with **no** preceding move, so the runtime delivered the trigger's `onMouseEnter` *after* the press, and `AppMenu` wrote the state it read at render (`setState(hoverOpen(state, …))`) over the open the press had just set. The probe now makes the gesture a pointer makes — park on the readout, move onto the trigger, press — and the same window is 47/47 green (`--only app-chrome-lifecycle`, 3.6 s). The component's stale read is recorded for the shell workstream in `TODO.md` → Interlocks with the measured evidence (the one-line functional update was applied, run green and reverted). `app-chrome.test.ts` gains `presses a trigger the way a pointer reaches one` (the three `pressTrigger` sites, the park, no bare `click(triggerId(`, and the README paragraph), measured failing both ways: dropping the park fails the case by name, and reverting one press to a bare click fails `expected 2 to be 3`. Docs: `apps/playground/README.md` §`app-chrome-lifecycle`. The headless renderer cannot reproduce it — its `click` dispatches no move either, and no offscreen scenario mounts the shell's bar, which is why the window was the only place it showed.
 
 `[x]` Measure the **shipped `Drawer`** in a window — the one modal whose edge,
       veil and dismissal are all paint and hit-testing, and whose claims were
@@ -9723,6 +9725,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Cite the **`Rating` window measurement** in its row and page — `COMPONENTS.md`'s Tier 1 *Rating* row and `packages/primitives/docs/rating.mdx` teach the four-star paint (`primary` filled, `mutedForeground` empty, `destructive` on a failure) and the half star's clip from the element tree and each icon's `style.color`; the live `rating-lifecycle` probe (47 checks, 0.11.0) measured the inks in a frame: an unrated **24×24** star paints **0** primary and **196** muted pixels, a star at `1` **270** primary and none muted, a star at `0.5` **168** primary in its left half and **0** primary/**98** muted in its right, a failure **274** destructive, and a disabled star **282** of the half-opacity composite at no undimmed primary. It also measured the keyboard path (`3` → `3.5` → `3` → `0.5` → `5`, a clamped Right that reports nothing, and Delete's clear and report) and that a press on the disabled group moves the keyboard path away from the interactive one. The row and the page should cite the probe and keep the honest limits (a half star is a clipped glyph, not a tint) | primitives (`COMPONENTS.md`'s Rating row, `packages/primitives/docs/rating.mdx`) | **resolved 2026-10-24** — the `COMPONENTS.md` Rating row and `packages/primitives/docs/rating.mdx` §Limitations cite the probe and print what the frame measured: an unrated star **0** primary / **196** muted, a star at `1` **270** primary and no muted, a half star **168** primary in its left half and **0** primary / **98** muted in its right, a failure **274** destructive, a disabled star **282** of the half-opacity composite at no undimmed primary — plus the keyboard path (`3` → `3.5` → `3` → `0.5` → `5`, a clamped Right, `Delete`'s clear) and the rule that a press takes the focus (and with it the keyboard path) with it. The honest limit is kept: a half star is a **clipped glyph**, not a tint. `src/docs.test.ts` gains `keeps the window that measured a rating's inks registered and recorded`, which derives the count from the probe's own `RATING_CHECKS` and the record's close-out line, reads the six pixel counts off the record, and requires the id, the count and every count on both the row and the page. Directions measured: deleting the page's measurement bullet fails `page`, and stripping the row's sentence fails `row`; restored, the file is 43/43 and the package 57 files / 1 138 tests green. |
 
+| Read the **menu bar's state at the event, not at the render** — `AppMenu`'s `onMouseEnter` writes `hoverOpen(state, …)` with the state captured by the render that installed it (`packages/shell/src/app-menu/app-menu.tsx:291`), so an entry the runtime delivers in the same batch as a press overwrites the open the press just set and the dropdown never paints. Measured by the playground's `app-chrome-lifecycle` on 0.11.0, 2026-10-24: a press with no preceding pointer move (the automation's `click` dispatches a down/up at the trigger's centre and no move) leaves the panel unpainted (`a press on File paints its dropdown: expected a value, got none`), and `onMouseEnter={() => setState((current) => hoverOpen(current, specs, index))}` makes the same press 47/47 green — the one-line change was measured and reverted, so the fix is proven, not guessed. A window can deliver that order too (a click that arrives with no move in that window — a pointer already resting on the trigger when the window opens), so the stale read is the component's. The probe half landed 2026-10-24: `app-chrome-lifecycle` presses the way a pointer does (park → enter → press) and is green again, `app-chrome.test.ts` fails when any menubar press loses its move (`expected 2 to be 3`) or its park, and `apps/playground/README.md` §`app-chrome-lifecycle` records the ordering and the fix | shell (one functional update in `app-menu.tsx`) | **open — the probe is green; the component still closes a menu for a press delivered without a move** |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -10404,6 +10408,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `status`; after it the file is 10/10. `docs/advanced-filter.mdx`'s `fields`
     row, the README's blank-name paragraph and the Advanced filtering row state
     the fallback. Owner: data.
+  - [x] Announce and drag a **column width the divider cannot measure** from the
+    floor it steps from — `TableColumnDivider` published `aria-valuetext={`${width}
+    pixels`}` and stored the same raw width at the press, and a width is often
+    computed (a stored size, a measurement taken before the first layout), so a
+    `NaN` reached 0.11.0's only numeric channel as **`NaN pixels`** and every
+    drag clamped straight back to the floor — a right drag grew nothing while
+    the strip still claimed a width. `columns/logic.ts`'s private `measuredWidth`
+    is now the exported `readableWidth` (the reader `resizeWidthByKey` already
+    stepped from), and the divider announces, drags from and steps from the one
+    clamped number. `behaviour/table.test.tsx` gains `announces the floor for a
+    track the grid cannot measure` and `drags from the floor when the track
+    cannot be measured` (32 cases in the file). Directions measured: before the
+    fix the cases fail `expected 'NaN pixels' to be '80 pixels'` and
+    `expected 80 to be 120`; after it the behaviour suite is 147/147, the unit
+    suite 221/221 and `check-types` clean. `docs/column-configuration.mdx` §The
+    drag and API, the README's resize paragraph, the `TableColumnDivider` JSDoc
+    and the Resizable columns row state the rule. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid

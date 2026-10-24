@@ -27,7 +27,9 @@
  *
  * It is a control, not a decoration: it is a tab stop, the arrows step it, Home
  * and End name its bounds, and `aria-valuetext` announces the width because
- * 0.11.0 has no `aria-valuenow`.
+ * 0.11.0 has no `aria-valuenow`. A width the track cannot measure (`NaN`) is
+ * announced and pressed from as the column's floor — the number its keys already
+ * step from — rather than as `NaN pixels`.
  *
  * Only the **primary** button arms the drag: the runtime delivers `mouseDown`
  * for all three buttons while `onClick` is the primary one's, so a right press —
@@ -48,6 +50,7 @@ import {
   COLUMN_KEY_STEP,
   clampWidth,
   isColumnResizeKey,
+  readableWidth,
   resizeWidthByKey,
   widthBounds,
 } from "./logic.js";
@@ -60,7 +63,12 @@ interface ResizePress {
 
 /** {@link TableColumnDivider} props. */
 export interface TableColumnDividerProps {
-  /** The column's current width, in pixels. */
+  /**
+   * The column's current width, in pixels.
+   *
+   * A width the divider cannot measure (`NaN`) reads as the column's floor: the
+   * number it announces and starts a drag from.
+   */
   readonly width: number;
   /** The narrowest width the drag may reach. Defaults to 80. */
   readonly minWidth?: number;
@@ -104,6 +112,9 @@ export const TableColumnDivider = ({
 }: TableColumnDividerProps) => {
   const theme = useTheme();
   const bounds = widthBounds(minWidth, maxWidth);
+  // The width the divider can read: a computed `NaN` is announced and dragged
+  // from as the column's floor, the number its keys already step from.
+  const track = clampWidth(readableWidth(width, bounds), bounds);
   const press = useRef<Option.Option<ResizePress>>(Option.none());
 
   return (
@@ -111,7 +122,7 @@ export const TableColumnDivider = ({
       testId={testId}
       role="separator"
       aria-label={label}
-      aria-valuetext={`${width} pixels`}
+      aria-valuetext={`${track} pixels`}
       tabIndex={0}
       style={mergeStyles(
         recipeStyle(cn(TABLE_COLUMN_DIVIDER, className), theme),
@@ -122,7 +133,7 @@ export const TableColumnDivider = ({
       )}
       onMouseDown={(event: EventPayload) => {
         if (!primaryButton(event)) return;
-        press.current = Option.some({ x: event.x ?? 0, width });
+        press.current = Option.some({ x: event.x ?? 0, width: track });
       }}
       onMouseMove={(event: EventPayload) =>
         Option.match(press.current, {

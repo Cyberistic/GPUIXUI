@@ -127,9 +127,15 @@ export const clampWidth = (width: number, bounds: ColumnWidthBounds): number =>
  * a key step would land on the floor instead of stepping. Reading it as the
  * floor keeps both operations honest: a resize leaves the column alone, and an
  * arrow walks from a legal width.
+ *
+ * A divider reads through this too, so the width it **announces** (`aria-valuetext`
+ * is 0.11.0's only channel for a number) and the width a press starts from are
+ * the number its keys already step from, rather than `NaN pixels`.
  */
-const measuredWidth = (width: number, bounds: ColumnWidthBounds): number =>
-  globalThis.Number.isNaN(width) ? bounds.minWidth : width;
+export const readableWidth = (
+  width: number,
+  bounds: ColumnWidthBounds,
+): number => (globalThis.Number.isNaN(width) ? bounds.minWidth : width);
 
 /** `width` clamped to the column's own bounds. */
 export const clampColumnWidth = (width: number, column: ColumnDef): number =>
@@ -179,7 +185,7 @@ export const resizeWidthByKey = (
   const by = readable(step, COLUMN_KEY_STEP);
   // A width the divider cannot read is the narrowest legal track, so an arrow
   // steps from it rather than snapping back to it.
-  const from = measuredWidth(width, bounds);
+  const from = readableWidth(width, bounds);
   return pipe(
     Match.value(key),
     Match.when("left", () => clampWidth(from - by, bounds)),
