@@ -5363,7 +5363,44 @@ scenario applies — a box the primitives' own suite paints and a report over it
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 22/22
+`[x]` `[██████████]` 23/23
+
+`[x]` `packages/primitives` + `packages/icons`: **the gates were red after the
+      docs prune, and a switch geometry bug fell out of the same run.** The
+      operator's e065c733 rewrote every package page to usage, API and
+      limitations and removed the page-claim suites it had deleted the prose
+      for — except this workstream's six files, which still read sections no
+      page carries (**28 failures**: `docs.test.ts` 21, `inventory.test.ts` 3,
+      `labelling.test.ts` 1, `core/loading.test.ts` 1, `core/selection.test.ts`
+      1, `core/theme.test.ts` 1) plus four in `packages/icons/src/docs.test.ts`.
+      The contract is three sections now (`docs/README.md` §Page contract, held
+      by `holds the page contract to the sections the pages carry`), and every
+      surviving claim was retargeted to what still carries it — an API-row
+      consequence, the inventory record, the playground probe record or the
+      source — rather than deleted. The probe-registry/record cases remain
+      (`keeps the window that painted the vertical slider registered and
+      recorded`, its scroll-region sibling and `keeps the reveal probe…`), the
+      role/tone sweep reads the `COMPONENTS.md` row and `renderText`'s published
+      heading role, and the spoken-word/sentence rules stay read off
+      `core/messages.ts` and the painters. Two inventory records now match the
+      compact rows (`Button groups`/`Rating` are `yes`), the switch row's
+      pending-state sentence is matched case-insensitively, the Button page's
+      `Not adopting …` limitation is the claim the suite reads, and the icon
+      page's size/provenance guards moved to the README sections that still
+      print them. **The geometry bug**: `switchThumbTravel` had stopped
+      subtracting the track's two borders when 46c1894c moved the knob to
+      `switchBox().knob`, so a bordered switch (every non-platform theme)
+      painted its checked knob one border-width nearer the edge than the resting
+      one — the runtime case measured `[15, 1]` against the resting `[3, 13]`.
+      Fixed; `core/selection.test.ts` gains `keeps the knob's gap to each edge
+      equal in both states` (every size on the test theme and Apple's borderless
+      box) and the window case is green again. Directions measured: with the
+      borders dropped the unit case fails `expected 23 to be 21` and the window
+      case `expected [ 15, 1 ] to deeply equal [ 13, 3 ]`; restored, the package
+      is 56 files / 1 101 unit and 21 files / 323 runtime green, icons 4 files /
+      33 green, `check-types` and `check:tests` clean. `docs.test.ts` is 222
+      lines shorter. No native scenario applies beyond the runtime suite — the
+      switch box is measured there.
 
 `[x]` `packages/primitives`: **a stored control size painted a control with no
       box** — a control size is one of the seven choices a consumer stores
@@ -11436,12 +11473,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
       No native scenario applies — a page and a source read.
 
 `[ ]` Hold the **remaining package pages** to the props their parts declare —
-      `packages/data/docs` has one gap (`TableSortHeader.testId`), and
-      `packages/files`, `packages/shell` and `packages/dock` name their parts in
-      prose no table resolves. Editor and media already have their own `## API`
-      prop guards; primitives and icons hold theirs. Owner: data / files / shell
-      / dock. The docs app should not carry a known-gap list for another
-      workstream's files.
+      `packages/data`'s last gap is closed: `docs/table-sorting.mdx` documented
+      ten of `TableSortHeader`'s eleven props (`testId` was the missing one — the
+      handle an app locates the header by), and `src/sort/docs.test.ts` holds the
+      page's `TableSortHeader` rows to `TableSortHeaderShape` plus the two
+      callbacks in both directions (measured: deleting the `testId` row fails
+      `expected [ 'testId' ] to deeply equal []`, a bogus `pinFirst` row fails
+      `expected [ 'pinFirst' ] to deeply equal []`; the package is 208 unit cases
+      green). `packages/files`, `packages/shell` and `packages/dock` still name
+      their parts in prose no table resolves. Editor and media already have their
+      own `## API` prop guards; primitives and icons hold theirs. Owner:
+      files / shell / dock. The docs app should not carry a known-gap list for
+      another workstream's files.
 
 `[x]` Publish the **page index an agent reads instead of the sidebar** — the
       site's map existed only as a sidebar (for a reader) and a `sitemap.xml`

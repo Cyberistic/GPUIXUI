@@ -545,6 +545,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   the empty-state case fails `expected 'Name' to contain 'No rows'`; with the
   normaliser it is 9/9 in the file. The virtualization page, the README
   paragraph and the Virtualized tables row teach the rule.
+- **A page lists the props its type declares**: `docs/table-sorting.mdx` was the
+  only page a consumer reads for `TableSortHeader`, and nothing held its API
+  table to the type — it documented ten of eleven props, missing `testId` (the
+  handle a behaviour suite and an app locate the header by). The row is added
+  and `src/sort/docs.test.ts` measures both directions: every field
+  `TableSortHeaderShape` declares plus the two callbacks (`onSort`,
+  `onSortPress`) must have a row, and no row may name a prop the header does not
+  take. Directions measured: deleting the `testId` row fails
+  `expected [ 'testId' ] to deeply equal []`, and a bogus `pinFirst` row fails
+  the second case. It is the data half of the remaining package-page interlock;
+  `packages/files`, `packages/shell` and `packages/dock` keep theirs.
 - **An unbound window takes its pane and reads the height back**: a windowed
   surface has no natural height, so a height the layout cannot paint (omitted,
   or a computed `NaN`) left `useVirtualRows` at `0` and mounted only the

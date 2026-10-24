@@ -45,6 +45,7 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
 | `TableSortHeader` | `initialDirection` | `"asc" \| "desc"` | `"asc"` | the direction a first press starts at |
 | `TableSortHeader` | `width` | `number` | — | a fixed track; a resizable column needs one |
 | `TableSortHeader` | `align` | `"left" \| "center" \| "right"` | `"left"` | where the label sits across the track |
+| `TableSortHeader` | `testId` | `string` | — | the header cell's test id; the press control is `${testId}-sort` |
 | `TableSortHeader` | `resize` | `TableColumnResizeProps` | — | the divider's bounds and callback |
 | `useTable` | `sort` | `Option<SortState>` | — | the primary sort |
 | `useTable` | `sortOrder` | `SortOrder` | `[]` | every field in the order, primary first |
