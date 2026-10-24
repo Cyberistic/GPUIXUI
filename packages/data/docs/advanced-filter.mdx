@@ -28,7 +28,7 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 | `fields` | `AdvancedFilterField[]` | — | the fields a clause may name |
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
-| `title` | `string` | `Filters` | the title above the builder |
+| `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
 | `testId` | `string` | — | the builder's id; a clause is `${testId}-${slot}-…` |
 
 | Export | What it does |

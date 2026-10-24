@@ -43,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@gpuixui/components/dropdown-menu";
 import { Button, Input } from "@gpuixui/primitives";
+import { spokenText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -92,7 +93,10 @@ export interface AdvancedFilterProps extends Omit<
   readonly tree: FilterTree;
   /** Receives every edited tree. */
   readonly onChange: (next: FilterTree) => void;
-  /** The title above the builder. Defaults to `Filters`. */
+  /**
+   * The title above the builder. Defaults to `Filters`; a blank title is the
+   * default, because a default only covers an absent prop.
+   */
   readonly title?: string;
   readonly className?: string;
   /**
@@ -119,6 +123,9 @@ export const comparisonLabels: Readonly<Record<Comparison, string>> = {
   greaterThan: "greater than",
   lessThan: "less than",
 };
+
+/** The title a builder is shown under when the caller names none. */
+export const DEFAULT_FILTER_TITLE = "Filters";
 
 /** The words a group is shown by. */
 export const groupLabels: Readonly<Record<"all" | "any" | "not", string>> = {
@@ -501,13 +508,14 @@ export const AdvancedFilter = ({
   fields,
   tree,
   onChange,
-  title = "Filters",
+  title,
   className,
   style,
   testId,
   ...rest
 }: AdvancedFilterProps) => {
   const theme = useTheme();
+  const heading = spokenText(Option.fromNullishOr(title), DEFAULT_FILTER_TITLE);
   /**
    * The tree this build can paint.
    *
@@ -548,7 +556,7 @@ export const AdvancedFilter = ({
         aria-level={3}
         style={recipeStyle("text-xs font-medium text-muted-foreground", theme)}
       >
-        {title}
+        {heading}
       </text>
       <text style={recipeStyle(FILTER_SENTENCE, theme)}>
         {Option.match(shown, {

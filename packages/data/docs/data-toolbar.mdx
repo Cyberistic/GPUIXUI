@@ -26,3 +26,5 @@ import { DataToolbar } from "@gpuixui/data";
 - The toolbar does not own the query; it reports a debounced value.
 - A pending query is dropped when the toolbar unmounts.
 - It lays children out in one row only.
+- A blank `search.label` reads as `Search`: a locale table's missing row is
+  absence, not an unnamed field.

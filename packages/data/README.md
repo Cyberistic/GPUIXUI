@@ -556,7 +556,10 @@ import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "
 They announce what they paint: the key-value list is a named `List` of
 `ListItem`s, the statistic card is a `Group` named by its `aria-label`, both
 titles are headings, and every primitive label or value is a `Label` node
-(`src/behaviour/surface-a11y.test.tsx`).
+(`src/behaviour/surface-a11y.test.tsx`). A documented default covers a **blank**
+name as well as an absent one: the filter field and the toolbar's search field
+read `Filter rows` and `Search`, the builder's title reads `Filters`, and a
+property panel's blank title paints no heading rather than an unnamed one.
 
 The advanced filter's state is a **predicate tree**, not a string: a predicate
 (field, comparison, value), an `all`, an `any` and a `not`. The tree is the

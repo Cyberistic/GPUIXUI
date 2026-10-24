@@ -22,8 +22,10 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Input } from "@gpuixui/primitives";
+import { spokenText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import { Debouncer } from "@tanstack/pacer";
+import * as Option from "effect/Option";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
@@ -37,7 +39,10 @@ export interface ToolbarSearch {
   readonly onValueChange: (next: string) => void;
   /** The hint a reader sees in the empty field. */
   readonly placeholder?: string;
-  /** The field's accessible name. Defaults to `Search`. */
+  /**
+   * The field's accessible name. Defaults to `Search`; a blank name is the
+   * default, because a default only covers an absent prop.
+   */
   readonly label?: string;
   /**
    * How long the query waits before it is reported, in milliseconds.
@@ -63,6 +68,9 @@ export interface DataToolbarProps extends Omit<Props, "children"> {
 
 /** How long a toolbar's query waits by default. */
 export const DEFAULT_SEARCH_DEBOUNCE_MS = 150;
+
+/** The name a toolbar's search field is announced by when none is given. */
+export const DEFAULT_SEARCH_LABEL = "Search";
 
 /**
  * The wait the debouncer can schedule.
@@ -120,7 +128,10 @@ export const DataToolbar = ({
     >
       {search === undefined ? undefined : (
         <Input
-          label={search.label ?? "Search"}
+          label={spokenText(
+            Option.fromNullishOr(search.label),
+            DEFAULT_SEARCH_LABEL,
+          )}
           placeholder={search.placeholder ?? "Search…"}
           value={search.value}
           onValueChange={(next) => {

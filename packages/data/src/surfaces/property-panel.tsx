@@ -24,6 +24,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Input } from "@gpuixui/primitives";
+import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
@@ -55,7 +56,10 @@ export interface EditablePropertyRow {
 
 /** {@link PropertyPanel} props. */
 export interface PropertyPanelProps extends Omit<Props, "children"> {
-  /** The panel's title. */
+  /**
+   * The panel's title. Omit it — or pass a blank name — and the panel paints no
+   * heading, rather than an unnamed one.
+   */
   readonly title?: string;
   /** The rows, in the order they paint. */
   readonly rows: ReadonlyArray<PropertyRow>;
@@ -83,6 +87,7 @@ export const PropertyPanel = ({
   ...rest
 }: PropertyPanelProps) => {
   const theme = useTheme();
+  const heading = accessibleName(title);
   const entries: ReadonlyArray<KeyValueEntry> = rows.map((row) =>
     isEditable(row)
       ? {
@@ -114,14 +119,14 @@ export const PropertyPanel = ({
         style,
       )}
     >
-      {title === undefined ? undefined : (
+      {heading === undefined ? undefined : (
         <div style={recipeStyle(SURFACE_HEADER, theme)}>
           <text
             role="heading"
             aria-level={3}
             style={recipeStyle("text-xs font-medium", theme)}
           >
-            {title}
+            {heading}
           </text>
         </div>
       )}

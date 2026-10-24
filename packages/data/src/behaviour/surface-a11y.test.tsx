@@ -13,20 +13,31 @@
  * they hold the announced shape rather than a screenshot: a key-value list is a
  * named `List` of `ListItem`s, a statistic card is a named `Group` whose reading
  * is a `Label`, and a property panel announces its title and rows.
+ *
+ * A documented default is not a name until it covers the blank string a locale
+ * table or a saved record hands over: a default only applies to an *absent*
+ * prop, so these surfaces also read an empty label as the words they document —
+ * and a panel's blank title as no heading, not an unnamed one.
  */
 
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
+import { DEFAULT_FILTER_LABEL, TableFilterField } from "../filter/field.js";
 import { decodeA11yTree, onlyRole, withRole } from "../internal/a11y.js";
 import {
   renderData,
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
-import { AdvancedFilter } from "../surfaces/advanced-filter.js";
+import {
+  AdvancedFilter,
+  DEFAULT_FILTER_TITLE,
+} from "../surfaces/advanced-filter.js";
 import { KeyValue } from "../surfaces/key-value.js";
+import { emptyTree } from "../surfaces/logic.js";
 import { PropertyPanel } from "../surfaces/property-panel.js";
 import { StatCard } from "../surfaces/stat-card.js";
+import { DataToolbar, DEFAULT_SEARCH_LABEL } from "../surfaces/toolbar.js";
 
 let root: DataTestRoot | undefined;
 
@@ -158,5 +169,58 @@ describe("the data surfaces announce what they paint", () => {
     expect(Arr.map(combinator, (node) => node.aria.description)).toEqual([
       "Change how this group combines its clauses",
     ]);
+  });
+
+  it("reads a blank field name as the documented default", () => {
+    const tree = treeOf(
+      <TableFilterField
+        value=""
+        onValueChange={() => {}}
+        label=""
+        testId="blank-filter"
+      />,
+    );
+
+    // A locale table with a missing row answers `""`; the default only covers
+    // an absent prop, so the field used to publish no name at all.
+    expect(nameOf(tree, onlyRole(tree, "TextInput"))).toBe(
+      DEFAULT_FILTER_LABEL,
+    );
+  });
+
+  it("reads a blank toolbar search name as the documented default", () => {
+    const tree = treeOf(
+      <DataToolbar
+        testId="blank-toolbar"
+        search={{ value: "", onValueChange: () => {}, label: "" }}
+      />,
+    );
+
+    expect(nameOf(tree, onlyRole(tree, "TextInput"))).toBe(
+      DEFAULT_SEARCH_LABEL,
+    );
+  });
+
+  it("reads a blank builder title as the default and a blank panel title as absent", () => {
+    const tree = treeOf(
+      <div>
+        <AdvancedFilter
+          fields={[]}
+          tree={emptyTree}
+          onChange={() => {}}
+          title=""
+        />
+        <PropertyPanel rows={[]} title="" />
+      </div>,
+    );
+
+    // The builder's blank title reads as its documented words…
+    expect(
+      Arr.map(
+        withRole(tree, tree.root, "Heading"),
+        (id) => tree.nodes[id]?.aria.value,
+      ),
+    ).toEqual([DEFAULT_FILTER_TITLE]);
+    // …while the panel's blank title is absence: no second, unnamed heading.
   });
 });

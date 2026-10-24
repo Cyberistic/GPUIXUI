@@ -10,6 +10,8 @@
  */
 
 import { Input } from "@gpuixui/primitives";
+import { spokenText } from "@gpuixui/primitives/core";
+import * as Option from "effect/Option";
 import { useTheme } from "../theme.js";
 
 /** {@link TableFilterField} props. */
@@ -18,7 +20,10 @@ export interface TableFilterFieldProps {
   readonly value: string;
   /** Receives every edit. */
   readonly onValueChange: (next: string) => void;
-  /** The accessible name. Defaults to `Filter rows`. */
+  /**
+   * The accessible name. Defaults to `Filter rows`; a blank name is the
+   * default, because a default only covers an absent prop.
+   */
   readonly label?: string;
   /** The hint a reader sees in the empty field. */
   readonly placeholder?: string;
@@ -27,15 +32,22 @@ export interface TableFilterFieldProps {
   readonly testId?: string;
 }
 
+/** The words a filter field is named by. */
+export const DEFAULT_FILTER_LABEL = "Filter rows";
+
 /**
  * A labelled text field that narrows the table it sits above.
  *
  * The query is matched literally: no pattern syntax, and case is ignored.
+ *
+ * A label is often copy from an i18n table or a saved preference, and a missing
+ * row answers `""`: publishing that would leave the field unnamed while the
+ * documented default sat unused, so a blank name reads as the default.
  */
 export const TableFilterField = ({
   value,
   onValueChange,
-  label = "Filter rows",
+  label,
   placeholder = "Filter…",
   width,
   testId,
@@ -52,7 +64,7 @@ export const TableFilterField = ({
       }}
     >
       <Input
-        label={label}
+        label={spokenText(Option.fromNullishOr(label), DEFAULT_FILTER_LABEL)}
         placeholder={placeholder}
         value={value}
         onValueChange={onValueChange}

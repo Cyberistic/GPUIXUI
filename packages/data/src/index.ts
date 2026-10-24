@@ -164,7 +164,7 @@ export type {
   TableSelectionHeaderProps,
 } from "./selection/column.js";
 
-export { TableFilterField } from "./filter/field.js";
+export { DEFAULT_FILTER_LABEL, TableFilterField } from "./filter/field.js";
 export type { TableFilterFieldProps } from "./filter/field.js";
 
 export { constructGrid, gridFeatures } from "./grid-core.js";
@@ -271,12 +271,17 @@ export type {
   ReadonlyPropertyRow,
 } from "./surfaces/property-panel.js";
 
-export { DataToolbar, DEFAULT_SEARCH_DEBOUNCE_MS } from "./surfaces/toolbar.js";
+export {
+  DataToolbar,
+  DEFAULT_SEARCH_DEBOUNCE_MS,
+  DEFAULT_SEARCH_LABEL,
+} from "./surfaces/toolbar.js";
 export type { DataToolbarProps, ToolbarSearch } from "./surfaces/toolbar.js";
 
 export {
   AdvancedFilter,
   comparisonLabels,
+  DEFAULT_FILTER_TITLE,
   groupLabels,
 } from "./surfaces/advanced-filter.js";
 export type {
