@@ -40,7 +40,26 @@ import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 | `Native`  | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port: the synchronous offscreen host, with the `testId` lookups, ancestor-bounds fallback, subtree text join, style decode and drag synthesis this package can test without a renderer |
 | `Pixels`  | `decodePng` (inflate injected), `encodePng` (deflate injected), `pixelAt`, `countColour`, `boundsOfColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State`   | `runCommands` — replay a component runtime's commands and query the final state |
+| `Source`  | `indexProps`, `propsOf`, `declarationIn`, `typeNames`, `PropsRoot`, `PropsIndex`, `DeclaredType` — the repository read of a package's props declarations the two page contracts share: an interface's own fields through `extends`, an alias's intersection or union, a parenthesised branch, an `Omit`, and the quoted `"aria-id"` |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
+
+## The shared props reader
+
+`Source` is a **test-time repository read**, not a runtime port: `indexProps`
+walks the `.ts`/`.tsx` sources under one or more roots and files every interface
+and type alias by name and declaring package. `propsOf(name, index, from?)`
+answers every prop a type carries — its own fields, its `extends` parents, an
+alias's intersection or union, a parenthesised branch, an `Omit` that subtracts,
+and the quoted `"aria-id"` — and answers `[]` for a name no root declares,
+because that is the runtime's own surface (`Props`, `ChildProps`, the floating
+helpers).
+
+Two packages declare a name of their own (`FieldProps` is a labelled field in
+`@gpuixui/components` and the input contract in `@gpuixui/primitives`), so the
+index keeps a declaration per package and `from` picks the package a page
+belongs to before the roots' own order. It is the `./source` subpath so the two
+page contracts can import the reader without a build step; the root subpath
+stays the compiled package.
 
 ## Adapting a host
 

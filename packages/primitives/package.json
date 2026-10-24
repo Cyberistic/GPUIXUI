@@ -45,6 +45,7 @@
     "@effect/platform-node": "catalog:",
     "@gpuix/react": "catalog:",
     "@gpuixui/config": "workspace:*",
+    "@gpuixui/testing": "workspace:*",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

@@ -17,6 +17,7 @@
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { Source } from "@gpuixui/testing";
 import { lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -1980,7 +1981,7 @@ describe("the primitives docs page contract", () => {
       ),
       rowNames,
     );
-    const declared = propsOf("TooltipProviderProps", declaredTypes());
+    const declared = Source.propsOf("TooltipProviderProps", types);
 
     expect({
       section: start >= 0,
@@ -2067,189 +2068,10 @@ const PAGE_PROPS: Readonly<Record<string, ReadonlyArray<string>>> = {
   "tooltip.mdx": ["TooltipProps", "TooltipProviderProps"],
 };
 
-/**
- * An interface header, however its `extends` list is wrapped.
- *
- * The body is found by brace balance rather than a character class, because a
- * prop's doc comment contains braces of its own.
- */
-const INTERFACE_HEADER =
-  /(?:^|\n)(?:export\s+)?interface\s+(\w+)(?:<[^>]*>)?(?:\s+extends\s+([^{]+))?\s*\{/g;
-
-/** A type alias header; its body is taken up to the terminating `;`. */
-const TYPE_ALIAS = /(?:^|\n)(?:export\s+)?type\s+(\w+)(?:<[^>]*>)?\s*=\s*/g;
-
-/** `readonly name?:` and `readonly "aria-id"?:`, the shape every prop is written in. */
-const PROP_SIGNATURE =
-  /(?:readonly\s+|^[ \t]*)(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/gm;
-
-/** The prop names one object type's body declares. */
-const signatureNames = (body: string): ReadonlyArray<string> =>
-  Arr.filterMap([...body.matchAll(PROP_SIGNATURE)], (match) => {
-    const name = match[1] ?? match[2];
-    return name === undefined ? Result.failVoid : Result.succeed(name);
-  });
-
-/**
- * The text between a `{` and its matching `}`, comments and all.
- *
- * A bracket scan at an index is the one place an index walk says more than a
- * combinator can: it stops at the first balanced close instead of visiting the
- * rest of the file.
- */
-const balancedBody = (source: string, open: number): Option.Option<string> => {
-  let depth = 0;
-  for (let index = open; index < source.length; index += 1) {
-    if (source[index] === "{") depth += 1;
-    else if (source[index] === "}") {
-      depth -= 1;
-      if (depth === 0) return Option.some(source.slice(open + 1, index));
-    }
-  }
-  return Option.none();
-};
-
-/** A props type as the source declares it: fields, parents, or an alias body. */
-interface DeclaredType {
-  readonly props: ReadonlyArray<string>;
-  readonly parents: ReadonlyArray<string>;
-  readonly alias?: string;
-}
-
-/**
- * Every props declaration the package's own source carries, by type name.
- *
- * This is a test-time repository read, the boundary `inventory.test.ts` and
- * `docs.test.ts`'s citation scan already use; the package's runtime source
- * stays on Effect's platform services.
- */
-const declaredTypes = (): ReadonlyMap<string, DeclaredType> => {
-  const types = new Map<string, DeclaredType>();
-  Arr.forEach(
-    Arr.filter(
-      readdirSync(new URL("./", import.meta.url), {
-        recursive: true,
-        encoding: "utf8",
-      }),
-      (name) => /\.tsx?$/.test(name) && !name.includes(".test."),
-    ),
-    (name) => {
-      const source = readFileSync(new URL(name, import.meta.url), "utf8");
-      Arr.forEach([...source.matchAll(INTERFACE_HEADER)], (match) => {
-        const open = (match.index ?? 0) + match[0].length - 1;
-        Option.match(balancedBody(source, open), {
-          onNone: () => {},
-          onSome: (body) =>
-            types.set(match[1] ?? "", {
-              props: signatureNames(body),
-              parents: Arr.filter(
-                Arr.map((match[2] ?? "").split(","), (parent) =>
-                  parent.trim().replace(/<[\s\S]*$/, ""),
-                ),
-                Str.isNonEmpty,
-              ),
-            }),
-        });
-      });
-      Arr.forEach([...source.matchAll(TYPE_ALIAS)], (match) => {
-        const start = (match.index ?? 0) + match[0].length;
-        Option.match(aliasBody(source, start), {
-          onNone: () => {},
-          onSome: (alias) =>
-            types.set(match[1] ?? "", { props: [], parents: [], alias }),
-        });
-      });
-    },
-  );
-  return types;
-};
-
-/**
- * An alias body, up to the `;` that ends it at its own level.
- *
- * Only bracketing is tracked: a function type's `=>` would look like the close
- * of a generic to a `<>` counter, and a `;` inside an inline object is behind
- * a `{`. This is the same first-balanced-close scan as {@link balancedBody}.
- */
-const aliasBody = (source: string, start: number): Option.Option<string> => {
-  let depth = 0;
-  for (let index = start; index < source.length; index += 1) {
-    const char = source[index] ?? "";
-    if ("{([".includes(char)) depth += 1;
-    else if ("})]".includes(char)) depth -= 1;
-    else if (char === ";" && depth === 0)
-      return Option.some(source.slice(start, index));
-  }
-  return Option.none();
-};
-
-/** The members of an intersection or union, split only at its own level. */
-const typeParts = (body: string): ReadonlyArray<string> => {
-  const opened = HashSet.fromIterable(["{", "(", "["]);
-  const closed = HashSet.fromIterable(["}", ")", "]"]);
-  const initial: {
-    readonly parts: ReadonlyArray<string>;
-    readonly current: string;
-    readonly depth: number;
-  } = { parts: [], current: "", depth: 0 };
-  const scanned = Arr.reduce(Arr.fromIterable(body), initial, (state, char) => {
-    const depth = HashSet.has(opened, char)
-      ? state.depth + 1
-      : HashSet.has(closed, char)
-        ? state.depth - 1
-        : state.depth;
-    return state.depth === 0 && (char === "&" || char === "|")
-      ? { parts: [...state.parts, state.current], current: "", depth }
-      : { parts: state.parts, current: `${state.current}${char}`, depth };
-  });
-  return Arr.filter(
-    Arr.map([...scanned.parts, scanned.current], Str.trim),
-    Str.isNonEmpty,
-  );
-};
-
-/**
- * Every prop a type carries, through `extends`, an alias intersection and
- * `Omit`.
- *
- * A name the package does not declare is the runtime's own surface (`Props`,
- * and what `ActionHostProps` omits it from): its properties are not this
- * package's to document, so it contributes nothing. `seen` keeps a cycle from
- * recursing, and the result is deduplicated by the caller.
- */
-const propsOf = (
-  name: string,
-  types: ReadonlyMap<string, DeclaredType>,
-  seen: HashSet.HashSet<string> = HashSet.empty(),
-): ReadonlyArray<string> => {
-  if (HashSet.has(seen, name)) return [];
-  const next = HashSet.add(seen, name);
-  const declared = types.get(name);
-  if (declared === undefined) return [];
-  if (declared.alias === undefined)
-    return [
-      ...declared.props,
-      ...Arr.flatMap(declared.parents, (parent) =>
-        propsOf(parent, types, next),
-      ),
-    ];
-  return Arr.flatMap(typeParts(declared.alias), (part) => {
-    if (part.startsWith("{")) return signatureNames(part);
-    const omit = /^Omit<([\w.]+)\s*,\s*([\s\S]+)>$/.exec(part);
-    if (omit !== null) {
-      const removed = Arr.map(
-        [...(omit[2] ?? "").matchAll(/"([^"]+)"/g)],
-        (match) => match[1] ?? "",
-      );
-      return Arr.filter(
-        propsOf(omit[1] ?? "", types, next),
-        (prop) => !Arr.contains(removed, prop),
-      );
-    }
-    const named = /^([A-Za-z_]\w*)/.exec(part)?.[1];
-    return named === undefined ? [] : propsOf(named, types, next);
-  });
-};
+/** The package's own props declarations, read once. */
+const types = Source.indexProps([
+  { pkg: "primitives", dir: new URL("./", import.meta.url) },
+]);
 
 describe("the primitives API tables", () => {
   it("documents every prop a component declares", () => {
@@ -2259,7 +2081,6 @@ describe("the primitives API tables", () => {
     // `rating` and `slider` — because each page lists the props it remembers.
     // The page contract reads `## API` prop tables only, so an unmapped page or
     // a new prop is reported instead of drifting.
-    const types = declaredTypes();
     const pageSet = HashSet.fromIterable(pages);
     const problems = [
       ...Arr.flatMap(R.keys(PAGE_PROPS), (page) =>
@@ -2270,7 +2091,7 @@ describe("the primitives API tables", () => {
         if (names === undefined) return [`${page}: no props type is mapped`];
         const documented = HashSet.fromIterable(propTableNames(read(page)));
         return Arr.flatMap(names, (name) => {
-          const props = propsOf(name, types);
+          const props = Source.propsOf(name, types);
           if (props.length === 0)
             return [`${page}: ${name} declares no prop this suite can read`];
           return Arr.filterMap([...new Set(props)], (prop) =>
@@ -2290,13 +2111,12 @@ describe("the primitives API tables", () => {
     // intersection, and an `Omit` that must subtract. Measured against the
     // package's real declarations, so a reader that quietly resolves nothing
     // cannot pass by reading no types at all.
-    const types = declaredTypes();
-    const button = propsOf("ButtonProps", types);
+    const button = Source.propsOf("ButtonProps", types);
     expect({
-      own: Arr.contains(propsOf("TextProps", types), "truncate"),
+      own: Arr.contains(Source.propsOf("TextProps", types), "truncate"),
       parent: Arr.contains(button, "onFocus"),
-      alias: Arr.contains(propsOf("TextAreaProps", types), "minRows"),
-      omitted: Arr.contains(propsOf("TextAreaProps", types), "onSubmit"),
+      alias: Arr.contains(Source.propsOf("TextAreaProps", types), "minRows"),
+      omitted: Arr.contains(Source.propsOf("TextAreaProps", types), "onSubmit"),
       // The runtime's own prop surface is opaque here by design.
       runtime: Arr.contains(button, "aria-expanded"),
     }).toEqual({

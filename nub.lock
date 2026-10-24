@@ -361,6 +361,9 @@ importers:
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../config
+      '@gpuixui/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@types/node':
         specifier: ^26.1.1
         version: 26.6.5
@@ -734,6 +737,9 @@ importers:
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../config
+      '@gpuixui/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0

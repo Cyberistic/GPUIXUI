@@ -36,6 +36,7 @@
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@gpuixui/config": "workspace:*",
+    "@gpuixui/testing": "workspace:*",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.0",
     "react": "^19.2.0",
