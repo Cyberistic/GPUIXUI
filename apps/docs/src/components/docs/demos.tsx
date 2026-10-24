@@ -39,6 +39,7 @@ import {
   frozenColumnsDemoSource,
 } from "./frozen-columns-demo";
 import { DataToolbarDemo, dataToolbarDemoSource } from "./data-toolbar-demo";
+import { TableFilterDemo, tableFilterDemoSource } from "./table-filter-demo";
 import {
   AdvancedFilterDemo,
   advancedFilterDemoSource,
@@ -3153,6 +3154,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   "data-toolbar-demo": {
     render: DataToolbarDemo,
     source: dataToolbarDemoSource,
+  },
+  "table-filter-demo": {
+    render: TableFilterDemo,
+    source: tableFilterDemoSource,
   },
   "hotkey-recorder-demo": {
     render: HotkeyRecorderDemo,
