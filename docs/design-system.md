@@ -1203,7 +1203,8 @@ explained (§7). The type, document and report seams take that same source:
 `NativeTextSource`, and `SeriesSource`/`SyntaxSource`/`FindHighlightSource` the
 stored mode, variant and radius a decode hands back, so the decoded theme a
 surface paints or measures reaches them without a cast to `Theme`, and
-`ColourSource` admits the `null` group JSON writes.
+`ColourSource` admits the `null` group JSON writes and a role a literal or a
+store wrote as anything but a colour.
 **The token helper and the paint path answer differently, by
 design:** `@gpuixui/primitives` resolves a control's box through its own
 `controlHeightOf`/`controlPaddingOf` (`packages/primitives/src/core/theme.ts`),
@@ -1440,6 +1441,12 @@ The extension mechanism is deliberately small:
   **base theme**, never to another resolved style: a style is a look over a
   base, not a layer over a look (§5), and a brand is `extendTheme` over the
   result.
+- `restoreTheme(stored)` — rebuild the theme a store handed back: the shipped
+  theme its saved `mode` and `contrast` name, with the saved groups applied over
+  it. It is the one seam that reads those two labels, because `extendTheme` keeps
+  its base's by design — a saved dark theme under the light base painted the dark
+  roles on a theme that still said light and handed it the light chart and code
+  tables. A stored density box keeps its preset name with it.
 - `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
   (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
   colour, a selection wash). It chooses each filled role's on-colour by

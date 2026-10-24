@@ -25,6 +25,7 @@ import {
 import { pageMode } from "./luminance.js";
 import {
   borderWidth,
+  controlSizes,
   defaultDensity,
   densityNames,
   densityPresets,
@@ -307,11 +308,14 @@ export interface ThemeOverrides {
   /** Override individual radii. */
   readonly radius?: Partial<Radius>;
   /**
-   * Use a density preset, or override density metrics. A partial override
-   * keeps the base preset's name and merges each control size, so a brand that
-   * raises one size inherits the others.
+   * Use a density preset, replace the box with a whole one, or override its
+   * metrics. A preset name and a **complete box** — the shape a stored theme
+   * writes, its own `name` and every metric — replace the base's box, so the
+   * preset a theme reports is the one it paints. A partial override keeps the
+   * base preset's name and merges each control size, so a brand that raises one
+   * size inherits the others.
    */
-  readonly density?: DensityName | DensityOverrides;
+  readonly density?: DensityName | Density | DensityOverrides;
   /** Replace individual elevation levels. */
   readonly elevation?: Partial<Elevation>;
   /** Override border thicknesses. */
@@ -462,9 +466,35 @@ const mergeTypography = (
   };
 };
 
+/**
+ * Whether an override is a **whole density box** rather than a partial one.
+ *
+ * A theme is serialised with the box it painted, so a store hands back the
+ * preset's `name` and every metric; a brand edits the sizes it cares about and
+ * leaves the name to the base. The name alone does not tell them apart — an
+ * override may edit a preset's metrics and keep its name — so a box is whole
+ * only when it carries a shipped name **and** every metric, which is the shape
+ * nothing would have to inherit. A box that names a preset this release does not
+ * ship is read as a partial override: its metrics still land, and the base
+ * preset's name is the only one the theme can truthfully report.
+ */
+const isDensityBox = (value: {
+  readonly name?: unknown;
+  readonly controlHeight?: Partial<Record<ControlSize, unknown>> | null;
+  readonly controlPaddingX?: Partial<Record<ControlSize, unknown>> | null;
+  readonly rowHeight?: unknown;
+}): value is Density =>
+  isDensityName(value.name) &&
+  typeof value.rowHeight === "number" &&
+  controlSizes.every(
+    (size) =>
+      typeof value.controlHeight?.[size] === "number" &&
+      typeof value.controlPaddingX?.[size] === "number",
+  );
+
 const mergeDensity = (
   base: Density,
-  override: DensityName | Stored<DensityOverrides> | null | undefined,
+  override: Stored<ThemeOverrides["density"]> | null | undefined,
 ): Density => {
   if (override === undefined || override === null) {
     return base;
@@ -481,6 +511,12 @@ const mergeDensity = (
       );
     }
     return densityPresets[override];
+  }
+  // A whole box replaces the base's, so a stored theme reports the preset it
+  // painted rather than the base's name over the stored metrics — a row reading
+  // `density.name` highlighted the wrong preset for a restored platform style.
+  if (isDensityBox(override)) {
+    return override;
   }
   return {
     name: base.name,
@@ -670,6 +706,65 @@ export function extendTheme(
     switch: overrides.switch ?? base.switch,
     switchMetrics: overrides.switchMetrics ?? base.switchMetrics,
   };
+}
+
+/**
+ * A stored theme as a boundary decodes it: the overrides a store keeps, plus the
+ * two labels that say which base they belong on.
+ *
+ * It is {@link ThemeOverridesSource} — the shape whose groups and roles may be
+ * `null` — with the `mode` and `contrast` a saved `Theme` also carries. Neither
+ * label is a value of the theme an override can move; here they are read once,
+ * to choose the base {@link restoreTheme} starts from.
+ */
+export type StoredTheme = ThemeOverridesSource & {
+  /** The mode the theme was saved from, as the store wrote it. */
+  readonly mode?: unknown;
+  /** The contrast variant it was saved from, as the store wrote it. */
+  readonly contrast?: unknown;
+};
+
+/**
+ * Rebuild a theme a store handed back: the shipped theme its own mode and
+ * contrast variant name, with the stored values merged on top.
+ *
+ * {@link extendTheme} keeps its base's `mode` and `contrast` by design — they are
+ * what the numbers mean, so an override may not move them — but a whole theme
+ * saved to storage carries the labels it was saved from. Passing that value to
+ * `extendTheme` under a fixed base therefore restored a dark theme's roles onto
+ * a theme that still called itself light: every surface painted dark while
+ * `theme.mode` said light, and the painting seams that read the mode through
+ * `themeModeOf` handed it the **light** chart scale and the light code palette
+ * on its dark fills. This seam reads the stored labels first, so the base is the
+ * one they name, and then merges the stored groups with the same rules
+ * `extendTheme` applies: a group or a role written as `null` inherits, a
+ * complete density box keeps its preset name, and nothing is mutated.
+ *
+ * The labels are read through {@link themeModeOf} and {@link themeContrastOf},
+ * the total reads a painter makes, so a label this release no longer ships is
+ * read from the page the theme carries (the upper-cased `Dark` one store wrote)
+ * and an unshipped contrast variant is held to the **strict** one rather than
+ * downgrading a high-contrast palette. A label the theme does not carry at all
+ * restores onto the light default theme, the mode `getTheme` starts from.
+ *
+ * Nothing is decoded here: the application's boundary still turns its own file
+ * or column into {@link StoredTheme}, and {@link missingTokens} and
+ * {@link auditTheme} still own whether the result is complete and shippable.
+ *
+ * @example
+ * ```ts
+ * import { auditTheme, restoreTheme } from "@gpuixui/tokens";
+ *
+ * const saved = decodeTheme(JSON.parse(fromStorage)); // your boundary
+ * const theme = restoreTheme(saved);
+ * auditTheme(theme).passed;
+ * ```
+ */
+export function restoreTheme(stored: StoredTheme): Theme {
+  return extendTheme(
+    getTheme(themeModeOf(stored), themeContrastOf(stored)),
+    stored,
+  );
 }
 
 /**

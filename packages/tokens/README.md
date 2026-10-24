@@ -142,6 +142,22 @@ looks stacked mix their colours and `auditTheme` rejects the result
 `extendTheme(platformTheme(themes.dark, "win32"), { … })` — never base, style,
 style.
 
+A **whole theme a store handed back** is restored from its own labels.
+`extendTheme` keeps its base's `mode` and `contrast` by design, so a saved theme
+passed to it under a fixed base lands on the wrong theme: the dark roles paint on
+a theme that still says light, and the painting seams read the light chart and
+code tables for it. `restoreTheme(stored)` starts from the shipped theme the
+saved `mode` and `contrast` name (through `themeModeOf`/`themeContrastOf`, so a
+label this release does not ship is read from its page) and applies the saved
+groups with `extendTheme`. A stored density box keeps its preset name, so the
+preset a theme reports is the one it paints.
+
+```ts
+import { restoreTheme } from "@gpuixui/tokens";
+
+const theme = restoreTheme(decodeTheme(JSON.parse(saved))); // your boundary decodes
+```
+
 A brand that changes a fill owns its **on-colour** too, per mode. Dark themes
 pair a light fill with dark text, so the brand's dark fill is a light violet with
 the near-black iris on it; light themes pair a dark fill with a white label. The
@@ -239,7 +255,8 @@ and step, and `missingTokens` stays the refusal. Their input is the source a
 store hands back — `TypeSource` for `textStyle`, `NativeTextSource` for
 `nativeAccent`/`nativeTextTheme` — so a decoded theme paints without a cast to
 `Theme`, and `ColourSource.colors` admits the `null` JSON keeps for a group a
-theme never carried. The collection and highlight readers take the storage shapes
+theme never carried and a role a store or a hand-edited literal wrote as anything
+but a colour. The collection and highlight readers take the storage shapes
 too: `SeriesSource`, `SyntaxSource`/`SyntaxAuditSource` and `FindHighlightSource`
 resolve a stated mode or variant this release does not ship through
 `themeModeOf`/`themeContrastOf`, and a `null` radius group is no corner.

@@ -194,11 +194,28 @@ export interface ThemeColors {
 /**
  * A theme, or anything shaped like one, as the checks that read colours see it:
  * the group may be absent or `null`, because a store can lose it and JSON has no
- * `undefined`.
+ * `undefined`, and a role may be **any** value, because a hand-edited literal or
+ * a design-tool export can carry a number or an object where a colour belongs.
+ * {@link themeColors} keeps only the strings, which is what {@link invalidColorRoles}
+ * reports by — so the shape this seam documents is the shape its type accepts.
+ *
+ * A role written as `null` is the same absence JSON writes for one a theme never
+ * carried, and it is why the fields are `unknown` rather than `string | null`:
+ * the seam admits the absence and answers it, and no caller needs a cast to hand
+ * over what a store returned.
  */
 export interface ColourSource {
-  readonly colors?: Partial<ThemeColors> | null;
+  readonly colors?: Partial<Record<keyof ThemeColors, unknown>> | null;
 }
+
+/**
+ * Whether every value the group carries is a colour string — the fast path, so a
+ * complete theme's group is handed back as the object it already is.
+ */
+const isRoleTable = (
+  colors: Partial<Record<keyof ThemeColors, unknown>>,
+): colors is Partial<ThemeColors> =>
+  Object.values(colors).every((value) => typeof value === "string");
 
 /**
  * The semantic roles a theme carries.
@@ -230,7 +247,7 @@ export function themeColors(theme: ColourSource): Partial<ThemeColors> {
   if (colors === undefined || colors === null) {
     return {};
   }
-  return Object.values(colors).every((value) => typeof value === "string")
+  return isRoleTable(colors)
     ? colors
     : colorRoles.reduce<Partial<ThemeColors>>((roles, role) => {
         const value = colors[role];

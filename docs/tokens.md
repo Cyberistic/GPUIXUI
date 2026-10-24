@@ -1552,7 +1552,9 @@ role)` accepts a `TypeSource`, and `nativeAccent`/`nativeTextTheme` a
 `null`, a role partial, and the mode a name this release may not ship. Each
 answers the library's own value (or no accent), so a decoded theme paints
 without the cast to `Theme` these seams used to require; `ColourSource.colors`
-admits the `null` JSON keeps for a group a theme never carried. The collection
+admits the `null` JSON keeps for a group a theme never carried, and a role a
+store or a hand-edited literal wrote as anything but a colour — `themeColors`
+keeps only the strings. The collection
 and highlight readers accept the storage shapes too: `SeriesSource`,
 `SyntaxSource`/`SyntaxAuditSource` and `FindHighlightSource` resolve a stated
 mode or variant this release does not ship through `themeModeOf`/
@@ -4551,12 +4553,14 @@ Merge rules:
   nothing, and `switchFailures` names the slot — so a brand that starts from a
   platform style names all three (`{ on, off, knob }`) and a theme that carries
   none keeps the accent switch;
-- `density` accepts a preset name or `DensityOverrides`; a partial override keeps
-  the base preset name and merges `controlHeight` and `controlPaddingX` size by
-  size, so raising one size inherits the rest rather than dropping the steps the
-  audit gate requires. A preset name this release does not ship is **refused**,
-  naming the value and the presets that ship, rather than merged into a theme
-  with no density group (§Density);
+- `density` accepts a preset name, a **whole box** — the shape a stored theme
+  writes, its preset `name` and every metric — or `DensityOverrides` to edit the
+  metrics. A whole box replaces the base's; a partial override keeps the base
+  preset name and merges `controlHeight` and `controlPaddingX` size by size, so
+  raising one size inherits the rest rather than dropping the steps the audit
+  gate requires. A preset name this release does not ship is **refused**, naming
+  the value and the presets that ship, rather than merged into a theme with no
+  density group (§Density);
 - `mode` is not overridable — `extendTheme` keeps the base mode;
 - `contrast` is not overridable either, and for the same reason: a mode and a
   variant are what a theme's numbers mean, so a caller that wants the other one
@@ -4575,6 +4579,28 @@ A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary. Once decoded, the partial it yields is a
 `ThemeOverridesSource`: every group and role may be `null`, and extending a
 shipped theme with it restores the values the store kept.
+
+**A stored whole theme is restored from its own labels.** `extendTheme` keeps its
+base's `mode` and `contrast` by design, so a saved theme cannot be passed to it
+under a fixed base: `extendTheme(lightTheme, savedDark)` paints every dark role
+but still calls itself light, and the seams that read the mode
+(`themeModeOf`) hand it the **light** chart scale and the light code palette on
+its dark fills. `restoreTheme(saved)` starts from the shipped theme the saved
+`mode` and `contrast` name — read through the same total readers a painter uses,
+so a label this release does not ship is read from the page the theme carries and
+an unshipped variant is held to the strict one — and then applies the saved
+groups with `extendTheme`. Every shipped, high-contrast, platform and authored
+theme round-trips through it equal, its density box's preset name included. It
+decodes nothing: the boundary still decodes, and `missingTokens`/`auditTheme`
+still own whether the result is complete and shippable.
+
+```ts
+import { auditTheme, restoreTheme } from "@gpuixui/tokens";
+
+const saved = decodeTheme(JSON.parse(fromStorage)); // your boundary
+const theme = restoreTheme(saved);
+auditTheme(theme).passed;
+```
 
 #### What an override reaches
 

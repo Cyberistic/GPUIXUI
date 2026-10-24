@@ -15,20 +15,26 @@ import { densityNames, densityPresets, type BoxShadow } from "./index.js";
 import { pageMode, relativeLuminance } from "./luminance.js";
 import {
   auditTheme,
+  contrastFloorsFor,
   createTheme,
   darkTheme,
   extendTheme,
   getTheme,
   highContrastDarkTheme,
+  highContrastFloors,
   highContrastLightTheme,
   highContrastThemes,
   invalidNumbers,
   lightTheme,
   platformNames,
   platformTheme,
+  restoreTheme,
+  retroNames,
+  retroTheme,
   seriesColors,
   switchFailures,
   syntaxColors,
+  themeContrastOf,
   themeContrasts,
   themeModeOf,
   themeModes,
@@ -495,6 +501,132 @@ describe("createTheme", () => {
 
   it("defaults to the default-contrast palette", () => {
     expect(createTheme({ mode: "light" }).contrast).toBe("default");
+  });
+});
+
+/**
+ * A whole theme is documented as storable, so it is read back through
+ * `JSON.parse` and rebuilt. `extendTheme` cannot do that alone: it keeps its
+ * base's `mode` and `contrast` by design, so a saved dark theme passed to it
+ * under the light base painted every dark role on a theme that still said light —
+ * and `themeModeOf`, which the chart and code seams read, then handed it the
+ * light scale and the light palette. A stored density box had a second half of
+ * the same shape: it arrived as a complete box rather than a preset name, and the
+ * merge kept the *base* preset's name over the stored metrics, so a row that
+ * highlights `density.name` pointed at the wrong preset.
+ */
+describe("restoreTheme", () => {
+  const stored = (theme: Theme): Theme => JSON.parse(JSON.stringify(theme));
+
+  it("starts from the theme its own labels name", () => {
+    const restored = restoreTheme(stored(darkTheme));
+
+    expect(restored.mode).toBe("dark");
+    expect(restored.contrast).toBe("default");
+    expect(restored.colors).toEqual(darkTheme.colors);
+    expect(auditTheme(restored).passed).toBe(true);
+
+    // The path this replaces: the same value under the light base is a
+    // light-labelled theme painting dark roles, and the seam a chart and a code
+    // block read resolves the light tables for it.
+    const mislabelled = extendTheme(lightTheme, stored(darkTheme));
+    expect(mislabelled.mode).toBe("light");
+    expect(seriesColors(mislabelled)).toEqual(seriesColors(lightTheme));
+    expect(seriesColors(restored)).toEqual(seriesColors(darkTheme));
+  });
+
+  it("round-trips every shipped theme, platform and look", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) => [
+        platformTheme(themes.light, platform),
+        platformTheme(themes.dark, platform),
+      ]),
+      ...retroNames.flatMap((look) => [
+        retroTheme(themes.light, look),
+        retroTheme(themes.dark, look),
+      ]),
+    ];
+
+    shipped.forEach((theme) => {
+      const restored = restoreTheme(stored(theme));
+      expect(restored, theme.name).toEqual(theme);
+      expect(themeModeOf(restored), theme.name).toBe(themeModeOf(theme));
+      expect(themeContrastOf(restored), theme.name).toBe(
+        themeContrastOf(theme),
+      );
+    });
+  });
+
+  it("keeps the density box's preset name, not the base's", () => {
+    const saved = stored(platformTheme(themes.light, "darwin"));
+
+    expect(saved.density.name).toBe("compact");
+    expect(restoreTheme(saved).density).toEqual(densityPresets.compact);
+    // The rule it completes: an override that names only metrics still edits the
+    // base preset, so a brand's `md` keeps the name it was built from.
+    const partial = extendTheme(lightTheme, { density: { rowHeight: 30 } });
+    expect(partial.density.name).toBe(lightTheme.density.name);
+    expect(partial.density.rowHeight).toBe(30);
+  });
+
+  it("reads a stored mode this release does not ship from its page", () => {
+    const restored = restoreTheme({ ...stored(darkTheme), mode: "Dark" });
+
+    expect(restored.mode).toBe("dark");
+    expect(restored.colors).toEqual(darkTheme.colors);
+  });
+
+  it("holds a stored variant this release does not ship to the strict one", () => {
+    const restored = restoreTheme({
+      ...stored(highContrastDarkTheme),
+      contrast: "HIGH",
+    });
+
+    expect(restored.contrast).toBe("high");
+    expect(contrastFloorsFor(restored)).toEqual(highContrastFloors);
+    expect(restored.colors).toEqual(highContrastDarkTheme.colors);
+  });
+
+  it("answers the default theme for a store with no labels and no page", () => {
+    const partial = restoreTheme({ colors: { primary: "#123456" } });
+
+    expect(partial.mode).toBe("light");
+    expect(partial.contrast).toBe("default");
+    expect(partial.colors.primary).toBe("#123456");
+    expect(partial.colors.background).toBe(lightTheme.colors.background);
+    expect(restoreTheme({})).toEqual(lightTheme);
+  });
+
+  it("reads the page when the labels are absent rather than wrong", () => {
+    const { mode: _mode, ...unlabelled } = stored(darkTheme);
+
+    expect(restoreTheme(unlabelled).mode).toBe("dark");
+    expect(restoreTheme(unlabelled).colors).toEqual(darkTheme.colors);
+  });
+
+  it("teaches the restore path and the defect it closes", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const surfaces: Readonly<Record<string, string>> = {
+      "docs/tokens.md": read("../../../docs/tokens.md"),
+      "docs/design-system.md": read("../../../docs/design-system.md"),
+      "packages/tokens/README.md": read("../README.md"),
+      "packages/tokens/src/theme.ts": read("./theme.ts"),
+      "COMPONENTS.md": read("../../../COMPONENTS.md"),
+    };
+
+    Object.entries(surfaces).forEach(([name, text]) => {
+      expect(text, name).toContain("restoreTheme");
+      expect(text, name).toContain("keeps its base's");
+    });
+    // The stored density box is the same defect one group down: the rule that a
+    // complete box replaces the base's has to be taught where it is decided.
+    expect(surfaces["docs/tokens.md"]).toContain("whole box");
+    expect(surfaces["COMPONENTS.md"]).toContain("whole density box");
   });
 });
 
