@@ -1,4 +1,8 @@
-import { createMiddleware, createStart } from "@tanstack/react-start";
+import {
+  createCsrfMiddleware,
+  createMiddleware,
+  createStart,
+} from "@tanstack/react-start";
 
 /**
  * Cache policy for the docs Worker.
@@ -57,6 +61,20 @@ const cachePolicy = createMiddleware().server(async ({ next, request }) => {
   };
 });
 
+/**
+ * Same-origin validation for every server function call.
+ *
+ * The two server functions on this site are GET readers (`loadDocsPage`,
+ * `readPageMarkdown`), but they are still RPC endpoints: a cross-site page can
+ * call them and read the response unless the request's origin is checked.
+ * TanStack's own guidance is to install this middleware rather than trust the
+ * browser's same-origin policy; the filter scopes it to server functions so a
+ * document request pays nothing.
+ */
+const serverFnOrigin = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
+});
+
 export const startInstance = createStart(() => ({
-  requestMiddleware: [cachePolicy],
+  requestMiddleware: [serverFnOrigin, cachePolicy],
 }));

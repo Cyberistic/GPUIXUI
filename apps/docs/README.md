@@ -103,7 +103,7 @@ plugins/page-dependencies-plugin.ts Build-time module: the packages each package
 plugins/page-source-plugin.ts       Build-time module: each package page's module, as a lazy loader
 plugins/package-graph-plugin.ts     Build-time module: the package graph behind the architecture table
 
-src/start.ts                        TanStack Start instance and the Worker cache policy
+src/start.ts                        TanStack Start instance, the Worker cache policy and the server functions' origin check
 src/router.tsx                      The router instance
 src/routes/__root.tsx               The document shell, icons and the Fumadocs provider
 src/routes/index.tsx                The landing page at /

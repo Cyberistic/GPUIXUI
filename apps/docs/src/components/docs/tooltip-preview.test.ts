@@ -313,7 +313,12 @@ describe("the tooltip preview", () => {
     expect(house).toContain(
       'motionTiming(level, { phase: "exit", preference })',
     );
-    expect(house).toContain("transitionWindowMs(timing.exit)");
+    // A timing restored from storage may have lost its `exit` phase, so the
+    // window is read through `presenceTimingOf` rather than `timing.exit`.
+    expect(house).toContain(
+      "transitionWindowMs(presenceTimingOf(timing).exit)",
+    );
+    expect(house).toContain("export const presenceTimingOf");
     expect(seam).toContain("presenceStyle");
     expect(seam).toContain("surfaceTiming");
     expect(read(motionTiming)).toContain("fast: 160");

@@ -14,7 +14,7 @@ GPUix tweens a numeric style field on its own clock. `@gpuixui/motion` adds clos
 | value | `MotionValue` with `instant`, `tween`, `springTransition`, `transitionEquals` |
 | React | `useSpring`, `useTransition`, `useInertia`, `useMotion`, `useSurfaceTiming`, `useSurfacePresence`, `useMotionPreference`, `MotionProvider` |
 | timing | `motionLevels`, `motionEasings`, `motionTiming`, `motionTimingOf`, `preferenceOf` |
-| presence | `fadeFrom`, `fadeFromSide`, `fadeFromAnchor`, `fadeOnly`, `presenceTiming`, `presenceMotion`, `presenceStyle`, `transitionWindowMs`, `exitWindowMs`, `delayedTiming` |
+| presence | `fadeFrom`, `fadeFromSide`, `fadeFromAnchor`, `fadeOnly`, `presenceTiming`, `presenceTimingOf`, `presenceMotion`, `presenceStyle`, `transitionWindowMs`, `exitWindowMs`, `delayedTiming` |
 
 The package publishes five entry points: the root (`spring`, `easing`, `timeline`, `inertia`, `MotionValue`), `@gpuixui/motion/react`, `@gpuixui/motion/timing`, `@gpuixui/motion/timeline` and `@gpuixui/motion/presence`.
 
@@ -80,6 +80,8 @@ if (!presence.mounted) return null; // render until the exit has run
 ```
 
 `presenceMotion(frames, present, timing)` returns the `motion` prop the surface paints. `presenceStyle(present, rest)` takes the pointer rule: `"target"` for an overlay, which blocks the pointer behind it, and `"wrapper"` for a reveal, which paints no surface of its own and so paints nothing at rest.
+
+A timing read back from storage goes through `presenceTimingOf`: a record that lost a phase reads as no transition for that phase, so a surface closes at once instead of throwing on a run that is not there.
 
 | Frames | Shape |
 | ------ | ----- |

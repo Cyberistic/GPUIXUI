@@ -78,6 +78,13 @@ const reactRow = (): string => {
   return page.slice(start, end);
 };
 
+/** The page's own presence row, between its bars. */
+const presenceRow = (): string => {
+  const start = page.indexOf("| presence |");
+  const end = page.indexOf("|", start + 12);
+  return page.slice(start, end);
+};
+
 interface Level {
   readonly name: string;
   readonly ms: string;
@@ -117,7 +124,7 @@ describe("the motion page", () => {
 
   it("documents the presence seam every surface takes its journey from", () => {
     const missing = presenceValues.filter(
-      (name) => !page.includes(`\`${name}\``),
+      (name) => !presenceRow().includes(`\`${name}\``),
     );
 
     expect(presenceValues.length).toBeGreaterThanOrEqual(8);
