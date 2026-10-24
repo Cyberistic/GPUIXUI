@@ -46,6 +46,8 @@ const [open, setOpen] = useState<string | null>(null);
 
 ## API
 
+### `TableExpandableRow`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `expanded` | `boolean` | `false` | the panel under the row paints |
@@ -54,8 +56,11 @@ const [open, setOpen] = useState<string | null>(null);
 | `detail` | `ReactNode` | — | the panel painted under the row while it is open |
 | `toggleWidth` | `number` | `32` | the expander track's width |
 | `detailTestId` | `string` | — | the panel's test id |
-| `tabIndex` | `number` | `0` | the row's place in the Tab order; a disabled row takes `-1` |
+| `selected` | `boolean` | `false` | the row is chosen: it paints the selection wash (from `TableRow`) |
 | `disabled` | `boolean` | `false` | refuses the press and the keys, and paints no pointer state |
+| `tabIndex` | `number` | `0` | the row's place in the Tab order; a disabled row takes `-1` |
+| `instanceRef` | `Ref<PublicInstance>` | — | the row's painted element, for moving native focus to it |
+| `className` | `string` | — | joined after the row's recipe |
 
 ## Limitations
 

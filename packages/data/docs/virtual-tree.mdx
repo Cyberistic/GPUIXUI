@@ -23,6 +23,8 @@ const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
 
 ## API
 
+### `VirtualTree`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `rows` | `TreeRow<T>[]` | — | the **whole** flattened set, in paint order |
@@ -36,6 +38,8 @@ const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
 | `rowHeight` | `number` | the density's `rowHeight` | every row paints exactly this height |
 | `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report, for a readout or pagination |
+| `instanceRef` | `(instance: PublicInstance \| null) => void` | — | the list's painted element, for a probe that reads its scroll anchor |
+| `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the tree; each row is `${testId}-row-${key}` and its chevron slot `${testId}-row-${key}-slot` |
 
 ## Limitations

@@ -10451,6 +10451,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
     fails `ToolbarSearch: debounceMs`, and an invented `probe` row fails
     `KeyValue: probe`. Green: the package is 28 files / **224** tests. The five
     inventory rows name the guard. Owner: data.
+  - [x] Hold the **tree, expandable-row, frozen-grid and windowed-tree pages**
+    to their types too — the five surface pages landed with a guard and these
+    four were the rest of the lane: `tree-view.mdx`, `expandable-rows.mdx`,
+    `frozen-columns.mdx` and `virtual-tree.mdx` were tied to nothing, and
+    measured, **six props the interfaces declare were undocumented** —
+    `TreeView.className`, `VirtualTree.className` and `instanceRef`, and the
+    `className`, `selected` and `instanceRef` a `TableExpandableRow` inherits
+    from `TableRowProps`. The reader moved to `src/internal/docs.ts`
+    (`declaredProps`, `documentedProps`, `undocumentedProps`) so the whole lane
+    has one rule, and it now reads a generic interface (`TreeViewProps<T>`), an
+    `extends` clause, a parent type named as a second reference and the
+    `Omit` that takes the parent's `children` away; the runtime `Props` surface
+    stays opaque, so a frozen grid's `style`/`ref`/`aria-label` rows are
+    allowed rather than invented. `src/surfaces/docs.test.ts` now imports the
+    shared reader, and `src/docs-pages.test.ts` (2 cases) holds the four pages
+    plus the negative control that `children` is the one field the row's
+    `Omit` refuses. Each page gains its `### ` heading (the headings are parts
+    the docs index already resolves) and the missing rows. Directions measured:
+    removing the tree's `className` row fails `TreeView: className`, and an
+    invented `probe` row fails `FrozenTable: probe is not declared`; after the
+    fix the package is 29 files / **226** tests and the docs site's
+    `component-index` guard is green in its 1 856-test suite. The four
+    inventory rows name the guard. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid

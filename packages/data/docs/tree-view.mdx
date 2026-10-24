@@ -29,6 +29,8 @@ const tree = useExpandedRows({
 
 ## API
 
+### `TreeView`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `rows` | `TreeRow<T>[]` | — | the visible rows, in paint order |
@@ -39,6 +41,7 @@ const tree = useExpandedRows({
 | `onActivate` | `(row: TreeRow<T>) => void` | — | a press or Enter on a row |
 | `renderRow` | `(row: TreeRow<T>) => ReactNode` | `labelOf` as text | paints a row's content |
 | `height` | `number` | — | a definite height; the rows scroll inside it |
+| `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the tree's locator |
 
 ## Limitations
