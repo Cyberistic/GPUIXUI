@@ -27,10 +27,10 @@ import { reducedMotionOf, stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { skeletonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle, useStep } from "./internal.js";
+import { mergeStyle, useStep, type ElementHostProps } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface SkeletonProps extends SkeletonSpec {
+export interface SkeletonProps extends SkeletonSpec, ElementHostProps {
   /**
    * Paint one frame and schedule no interval. Defaults to the motion
    * provider's preference (`MotionProvider`); the runtime exposes none of its
@@ -44,11 +44,23 @@ export interface SkeletonProps extends SkeletonSpec {
 }
 
 export const renderSkeleton = (
-  { style, className, testId, reducedMotion, ...spec }: SkeletonProps,
+  {
+    style,
+    className,
+    testId,
+    reducedMotion,
+    ref,
+    "aria-id": controlId,
+    onLayout,
+    ...spec
+  }: SkeletonProps,
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => (
   <div
+    ref={ref}
+    aria-id={controlId}
+    onLayout={onLayout}
     testId={testId}
     style={mergeStyle(
       mergeStyle(

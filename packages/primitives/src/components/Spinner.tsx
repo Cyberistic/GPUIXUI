@@ -35,11 +35,11 @@ import { reducedMotionOf, stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle, useStep } from "./internal.js";
+import { mergeStyle, useStep, type ElementHostProps } from "./internal.js";
 import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface SpinnerProps {
+export interface SpinnerProps extends ElementHostProps {
   /**
    * Dot side: a step on the theme's icon scale, or raw pixels for a mark that
    * is not lining up with text. Defaults to the theme's `md` icon step.
@@ -70,6 +70,9 @@ export const renderSpinner = (
     style,
     className,
     testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
   }: SpinnerProps,
   theme: PrimitiveTheme,
   step: number,
@@ -99,8 +102,11 @@ export const renderSpinner = (
   const name = accessibleName(label ?? busyWord(messages.loading));
   return (
     <div
+      ref={ref}
       role={name === undefined ? "presentation" : "status"}
       aria-label={name}
+      aria-id={controlId}
+      onLayout={onLayout}
       testId={testId}
       style={group}
     >

@@ -37,11 +37,11 @@ import { spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { progressFillClass, progressTrackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, type ElementHostProps } from "./internal.js";
 import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface MeterProps {
+export interface MeterProps extends ElementHostProps {
   readonly value: number;
   /** Defaults to 0. */
   readonly min?: number;
@@ -245,10 +245,13 @@ export const renderMeter = (
   const part = meterPart(props, theme);
   return (
     <div
+      ref={props.ref}
       role="meter"
       aria-label={accessibleName(props.label)}
+      aria-id={props["aria-id"]}
       aria-valuetext={part.valueText}
       testId={props.testId}
+      onLayout={props.onLayout}
       style={mergeStyle(
         mergeStyle(
           frameStyle(theme),

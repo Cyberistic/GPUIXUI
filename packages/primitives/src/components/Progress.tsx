@@ -59,12 +59,12 @@ import {
   progressTrackClass,
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle, useStep } from "./internal.js";
+import { mergeStyle, useStep, type ElementHostProps } from "./internal.js";
 import { useMessages } from "./MessagesProvider.js";
 import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ProgressProps {
+export interface ProgressProps extends ElementHostProps {
   /**
    * 0–100. Omit for an indeterminate bar.
    *
@@ -368,7 +368,16 @@ export const renderProgress = (
   step: number,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  const { label, style, className, children, testId } = props;
+  const {
+    label,
+    style,
+    className,
+    children,
+    testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
+  } = props;
   const part = progressPart(
     props,
     theme,
@@ -377,10 +386,13 @@ export const renderProgress = (
   );
   return (
     <div
+      ref={ref}
       role="progressbar"
       aria-label={accessibleName(label)}
+      aria-id={controlId}
       aria-valuetext={part.valueText}
       testId={testId}
+      onLayout={onLayout}
       style={mergeStyle(
         mergeStyle(
           frameStyle(theme),

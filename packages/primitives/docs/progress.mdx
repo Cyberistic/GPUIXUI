@@ -31,6 +31,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
+| `ref` / `aria-id` / `onLayout` | host props | none | the root frame itself: the box a layout measures, the instance a caller holds, and the author id an automation host addresses |
 | `testId` | `string` | — | stable locator, on the root |
 
 A widget record kept in JSON stores a share it never learned as `null` rather than `undefined`. That reads as **absent**, like an omitted prop: the bar paints the moving segment and says the loading word, while `0` remains the empty share it names. A share that is not a number at all is the same absence — text a store wrote, or a field a decoder could not read — because the library does not turn text into a number here (`parseNumberText` is the explicit seam that does). Read as a measurement it would paint `width: "NaN%"` and announce `"NaN%"`: a bar with no fill that still claims a value.

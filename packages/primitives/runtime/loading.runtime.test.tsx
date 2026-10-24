@@ -27,6 +27,7 @@ import {
   ProgressValue,
   type ProgressProps,
 } from "../src/components/Progress.js";
+import { Meter } from "../src/components/Meter.js";
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
 import { Stack } from "../src/components/Stack.js";
@@ -509,6 +510,77 @@ it("pulses a Skeleton's opacity between both of its states", async () => {
   expect(
     Arr.every(opacities, (value) => value === "1" || value === "0.6"),
   ).toBe(true);
+});
+
+it("measures and names a status leaf where it is painted", async () => {
+  // The bug guarded: the four status leaves painted one element each and
+  // published only a `testId`, so a caller could not measure the box a
+  // placeholder reserves, hold the bar's own instance, or name the node an
+  // automation host reads — and a wrapper would become the flex item that
+  // paints, so the box measured would not be the box composed. They take the
+  // runtime's own trio now, the rule every layout leaf follows.
+  const runtime = await openWindow();
+  const boxes: Array<{ width: number; height: number }> = [];
+  const refs: Array<number> = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Skeleton
+          testId="placeholder"
+          height={24}
+          ref={(instance) => {
+            Option.match(Option.fromNullishOr(instance), {
+              onNone: () => {},
+              onSome: (held) => refs.push(held.id),
+            });
+          }}
+          onLayout={(event) =>
+            boxes.push({ width: event.width ?? 0, height: event.height ?? 0 })
+          }
+        />
+        <Progress
+          testId="upload"
+          label="Upload"
+          value={40}
+          aria-id="upload-bar"
+        />
+        <Meter
+          testId="disk"
+          label="Disk"
+          value={4}
+          max={8}
+          aria-id="disk-meter"
+        />
+        <Spinner testId="busy" label="Working" aria-id="busy-dot" />
+      </Stack>
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const painted = Option.getOrElse(runtime.bounds("placeholder"), () =>
+    expect.fail("the runtime painted no box for the placeholder"),
+  );
+  // The reported box is the painted one, and the placeholder holds its side.
+  expect(Option.getOrUndefined(Arr.last(boxes))).toStrictEqual({
+    width: painted.width,
+    height: painted.height,
+  });
+  expect(painted.height).toBe(24);
+  const held = Option.getOrElse(Arr.head(refs), () =>
+    expect.fail("the skeleton's ref never ran"),
+  );
+  expect(
+    Option.map(runtime.element("placeholder"), (element) => element.id),
+  ).toStrictEqual(Option.some(held));
+  // Each node that reaches the accessibility tree carries the author id, so an
+  // automation host can address the status rather than guess at its text.
+  const addressed = (role: string, label: string): string | undefined =>
+    Option.getOrElse(a11yNode(runtime.a11y(), { role, label }), () =>
+      expect.fail(`the runtime painted no ${role} named ${label}`),
+    ).aria?.author_id;
+  expect(addressed("ProgressIndicator", "Upload")).toBe("upload-bar");
+  expect(addressed("Meter", "Disk")).toBe("disk-meter");
+  expect(addressed("Status", "Working")).toBe("busy-dot");
 });
 
 it("leaves no unnamed status node for a silent spinner", async () => {

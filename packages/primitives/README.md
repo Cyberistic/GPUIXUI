@@ -426,9 +426,13 @@ The **layout primitives are the caller's element**: `Box`, `Stack`, `Grid` and
 a panel is measured, named for automation and held where it is painted. `Text`
 takes the same trio, because a run of type is the other leaf a caller measures —
 the height a heading wraps to and the node an automation host addresses belong
-to the `<text>`, not to a wrapper that would become the flex item. A text field
-hands the same trio to its native element under the name `FieldHostProps` — one
-vocabulary for "the element outside this library may need".
+to the `<text>`, not to a wrapper that would become the flex item. The four
+**status leaves** — `Progress`, `Meter`, `Skeleton` and `Spinner` — take it too:
+the box a placeholder reserves is the box it stands in for, a bar's instance is
+the one a caller holds, and the author id reaches the `progressbar`, `meter` and
+`status` nodes an automation host reads. A text field hands the same trio to its
+native element under the name `FieldHostProps` — one vocabulary for "the element
+outside this library may need".
 
 ### What GPUix does not provide, and what this package does instead
 

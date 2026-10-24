@@ -39,6 +39,8 @@ import {
   type ButtonGroupOrientation,
 } from "./ButtonGroup.js";
 import { labelledBy, renderLabel } from "./Label.js";
+import { renderMeter } from "./Meter.js";
+import { renderProgress } from "./Progress.js";
 import {
   DEFAULT_SCROLL_NAME,
   renderScrollArea,
@@ -934,6 +936,64 @@ describe("type", () => {
 });
 
 describe("loading", () => {
+  it("hand the runtime's host props to the status leaves they paint", () => {
+    // The bug guarded: the four status leaves painted one element each and
+    // published only a `testId`, so a caller could not measure the box a
+    // placeholder reserves, hold a bar's instance or name the node for
+    // automation without wrapping it — and the wrapper becomes the flex item
+    // that paints, so the box measured is not the box composed. They take the
+    // runtime's trio now, the rule every layout leaf follows.
+    const onLayout = () => {};
+    const hold = () => {};
+    const painted = [
+      renderProgress(
+        { value: 40, "aria-id": "progress", onLayout, ref: hold },
+        testTheme,
+        0,
+      ),
+      renderMeter(
+        { value: 4, max: 8, "aria-id": "meter", onLayout, ref: hold },
+        testTheme,
+      ),
+      renderSkeleton(
+        { "aria-id": "skeleton", onLayout, ref: hold },
+        testTheme,
+        0,
+      ),
+      renderSpinner(
+        { "aria-id": "spinner", onLayout, ref: hold },
+        testTheme,
+        0,
+      ),
+    ];
+    expect(
+      Arr.map(painted, (element) => expectSome(hostProp(element, "aria-id"))),
+    ).toStrictEqual(["progress", "meter", "skeleton", "spinner"]);
+    Arr.forEach(painted, (element) => {
+      expect(hostProp(element, "onLayout")).toStrictEqual(
+        Option.some(onLayout),
+      );
+      expect(hostProp(element, "ref")).toStrictEqual(Option.some(hold));
+    });
+    // A leaf given none of the trio invents none of it.
+    expect(
+      Arr.map(
+        [
+          renderProgress({ value: 40 }, testTheme, 0),
+          renderMeter({ value: 4 }, testTheme),
+          renderSkeleton({}, testTheme, 0),
+          renderSpinner({}, testTheme, 0),
+        ],
+        (element) => hostProp(element, "onLayout"),
+      ),
+    ).toStrictEqual([
+      Option.none(),
+      Option.none(),
+      Option.none(),
+      Option.none(),
+    ]);
+  });
+
   it("pulses a skeleton rather than painting the surface it stands in for", () => {
     const opacities = Arr.map([0, 1], (step) =>
       expectSome(numberIn(renderSkeleton({}, testTheme, step), "opacity")),
