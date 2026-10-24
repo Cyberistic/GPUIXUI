@@ -21,6 +21,7 @@ import {
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { TextRole } from "../core/theme.js";
 import * as primitives from "../index.js";
 import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
@@ -529,6 +530,25 @@ describe("type", () => {
     expect(expectSome(hostTag(element))).toBe("text");
     expect(numberIn(element, "fontSize")).toStrictEqual(
       Option.some(testTheme.typography.h2.fontSize),
+    );
+  });
+
+  it("paints a role name the scale does not carry as the body role", () => {
+    // The bug guarded: `role` is content before it is a literal — a saved
+    // markdown node or a restored inspector row carries the role it was written
+    // with — and `ROLE_CLASS[name]` answered `undefined`, so the run asked the
+    // compiler for `type-undefined` and painted no size, leading or weight at
+    // all instead of the body role every run of text defaults to.
+    const stored = renderText({ role: "h4" as TextRole }, testTheme);
+    const fallback = renderText({ role: "body" }, testTheme);
+    expect(numberIn(stored, "fontSize")).toStrictEqual(
+      numberIn(fallback, "fontSize"),
+    );
+    expect(numberIn(stored, "lineHeight")).toStrictEqual(
+      numberIn(fallback, "lineHeight"),
+    );
+    expect(numberIn(stored, "fontWeight")).toStrictEqual(
+      numberIn(fallback, "fontWeight"),
     );
   });
 

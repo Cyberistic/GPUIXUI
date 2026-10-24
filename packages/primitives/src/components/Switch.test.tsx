@@ -14,7 +14,11 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Icon } from "@gpuixui/icons";
 import { platformTheme, targetSize, themes } from "@gpuixui/tokens";
-import { switchThumbInset, switchThumbTravel } from "../core/selection.js";
+import {
+  switchThumbInset,
+  switchThumbTravel,
+  type SelectionAccent,
+} from "../core/selection.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import type { ControlSize } from "../core/theme.js";
@@ -102,6 +106,29 @@ describe("Switch", () => {
     );
     expect(expectSome(hostStyle(trackOf(stored), "height"))).toBe(
       testTheme.iconSize.md,
+    );
+  });
+
+  it("paints an accent name the table does not carry as the brand", () => {
+    // The bug guarded: a stored accent reached `SELECTION_ROLE[name]` in the
+    // track recipe and threw on its first slot, so a saved settings row's
+    // switch emptied the window instead of painting the brand it defaults to.
+    const stored = renderSwitch(
+      { accent: "brand" as SelectionAccent },
+      testTheme,
+      checked(true),
+      idle,
+      vi.fn(),
+    );
+    const fallback = renderSwitch(
+      { accent: "primary" },
+      testTheme,
+      checked(true),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyleRecord(trackOf(stored)))).toEqual(
+      expectSome(hostStyleRecord(trackOf(fallback))),
     );
   });
 

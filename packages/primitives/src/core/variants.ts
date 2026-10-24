@@ -14,6 +14,7 @@
  * happens in `style.ts`.
  */
 
+import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
 import {
   brandText,
@@ -36,6 +37,32 @@ export const BUTTON_VARIANTS = [
 ] as const;
 
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+
+/** The table's names, as a list a stored value can be checked against. */
+const VARIANT_NAMES: ReadonlyArray<string> = BUTTON_VARIANTS;
+
+/**
+ * Whether a value names a button variant.
+ *
+ * A variant is a stored choice as often as a literal — an action record, a
+ * saved toolbar, a workspace layout — so a name a release renamed or dropped
+ * arrives as a string the union no longer names. The table's own list is the
+ * membership test, the rule `isControlSize` and `isTextRole` follow, so a
+ * second list of the names cannot drift from the paint.
+ */
+export const isButtonVariant = (value: unknown): value is ButtonVariant =>
+  typeof value === "string" && Arr.contains(VARIANT_NAMES, value);
+
+/**
+ * The variant a control paints with: the name, or the documented default.
+ *
+ * The paint seams are called mid-render, and an unknown name reached
+ * `buttonVariants[name].filledAction` — a `TypeError` that emptied the window
+ * instead of painting the action. A name the table does not carry is `primary`,
+ * the default every button documents.
+ */
+export const buttonVariantOf = (value: unknown): ButtonVariant =>
+  isButtonVariant(value) ? value : "primary";
 
 /**
  * Hover and press for a control whose fill is a solid action role.
@@ -168,7 +195,7 @@ export const buttonVariants: Record<ButtonVariant, ControlVariant> = {
 export const actionOnColor = (
   theme: PrimitiveTheme,
   variant: ButtonVariant,
-): string => buttonVariants[variant].foreground(theme);
+): string => buttonVariants[buttonVariantOf(variant)].foreground(theme);
 
 const FILLED_SPINNER_ACCENT: Readonly<
   Partial<Record<ButtonVariant, SpinnerAccent>>
@@ -194,10 +221,12 @@ const FILLED_SPINNER_ACCENT: Readonly<
 export const variantSpinnerAccent = (
   variant: ButtonVariant,
   disabled = false,
-): SpinnerAccent =>
-  disabled && paintsFilledSurface(variant)
+): SpinnerAccent => {
+  const name = buttonVariantOf(variant);
+  return disabled && paintsFilledSurface(name)
     ? "on-disabled"
-    : (FILLED_SPINNER_ACCENT[variant] ?? "primary");
+    : (FILLED_SPINNER_ACCENT[name] ?? "primary");
+};
 
 /**
  * The spinner accent that reads on a toggle's current face.
@@ -231,7 +260,7 @@ export const toggleSpinnerAccent = (
  * variant inherits the rule.
  */
 export const paintsFilledSurface = (variant: ButtonVariant): boolean =>
-  buttonVariants[variant].filledAction !== undefined;
+  buttonVariants[buttonVariantOf(variant)].filledAction !== undefined;
 
 /**
  * A field: an input, a textarea, a select trigger.
@@ -268,6 +297,23 @@ export const variantTable: ReadonlyArray<{
 export const TOGGLE_VARIANTS = ["default", "outline"] as const;
 
 export type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];
+
+/** The toggle table's names, as a list a stored value can be checked against. */
+const TOGGLE_NAMES: ReadonlyArray<string> = TOGGLE_VARIANTS;
+
+/** Whether a value names a toggle variant. */
+export const isToggleVariant = (value: unknown): value is ToggleVariant =>
+  typeof value === "string" && Arr.contains(TOGGLE_NAMES, value);
+
+/**
+ * The variant a toggle paints with: the name, or the documented default.
+ *
+ * A stored name the table does not carry reached `TOGGLE_PAINT[name].rest` and
+ * threw, so a saved toolbar's toggle emptied the window instead of painting the
+ * default face.
+ */
+export const toggleVariantOf = (value: unknown): ToggleVariant =>
+  isToggleVariant(value) ? value : "default";
 
 /** No chrome at rest; the accent fill is what says "this mode is on". */
 const toggleRest: ControlVariant = {

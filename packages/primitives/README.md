@@ -54,6 +54,30 @@ action with no height class beside the **32px** default it documents;
 `theme.test.ts` holds the rule and derives the components that must take their
 size through it, and `runtime/controls.runtime.test.tsx` proves the painted box.
 
+The other three names a control is given are stored choices for the same reason,
+and each is read through a membership test rather than indexed raw:
+
+- a **`variant`** is written into an action record, a saved toolbar or a
+  workspace layout, so `isButtonVariant`/`buttonVariantOf` and
+  `isToggleVariant`/`toggleVariantOf` (`core/variants.ts`) read a name the table
+  does not carry as `primary`/`default`. Indexed raw, the name reached
+  `buttonVariants[name].filledAction` and threw `TypeError: Cannot read
+  properties of undefined`, so a saved record emptied the window.
+- an **`accent`** is a stored preference beside the size, so
+  `isSelectionAccent`/`selectionAccentOf` (`core/selection.ts`) read an unknown
+  name as `primary`; the recipe's destructuring threw on its first slot and the
+  derived hover/press fill had no role to move.
+- a **type `role`** is content before it is a literal — a saved markdown node or
+  a restored inspector row carries the role it was written with — so `textClass`
+  reads a name the scale does not carry as `body`, the answer `typeOf` gives.
+  The class name otherwise became `type-undefined`, which resolves to no size,
+  leading or weight at all: the run painted the runtime's default face instead of
+  body copy.
+
+`Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`, `Switch.test.tsx` and
+`presentational.test.tsx` each hold one of these answers, and each case was
+measured failing on its raw read before the guard landed.
+
 The **words** a control announces are interface copy, so they ride the provider
 too: `messages={{ selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" } }}`
 names the selection states, `press` the toggle states, `star` a rating star's fill

@@ -18,6 +18,7 @@ import { targetInset, targetSize } from "@gpuixui/tokens";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import type { ControlSize } from "../core/theme.js";
+import type { SelectionAccent } from "../core/selection.js";
 import {
   checkboxState,
   renderCheckbox,
@@ -89,6 +90,33 @@ describe("Checkbox", () => {
     );
     expect(expectSome(hostStyle(drawingOf(stored), "width"))).toBe(
       testTheme.iconSize.md,
+    );
+  });
+
+  it("paints an accent name the table does not carry as the brand", () => {
+    // The bug guarded: `accent` is a stored preference too, and the recipe read
+    // `SELECTION_ROLE[name].bg` — a name a release renamed threw on the
+    // destructuring, emptying the window instead of painting the brand every
+    // selection control defaults to.
+    const stored = renderCheckbox(
+      { accent: "brand" as SelectionAccent },
+      testTheme,
+      checked(true),
+      idle,
+      vi.fn(),
+    );
+    const fallback = renderCheckbox(
+      { accent: "primary" },
+      testTheme,
+      checked(true),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyleRecord(drawingOf(stored)))).toEqual(
+      expectSome(hostStyleRecord(drawingOf(fallback))),
+    );
+    expect(expectSome(hostStyle(drawingOf(stored), "backgroundColor"))).toBe(
+      testTheme.colors.primary,
     );
   });
 

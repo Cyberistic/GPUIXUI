@@ -105,6 +105,29 @@ export type SelectionState = (typeof SELECTION_STATES)[number];
 export const SELECTION_ACCENTS = ["primary", "destructive"] as const;
 export type SelectionAccent = (typeof SELECTION_ACCENTS)[number];
 
+/** The accents as a list a stored value can be checked against. */
+const ACCENT_NAMES: ReadonlyArray<string> = SELECTION_ACCENTS;
+
+/**
+ * Whether a value names a selection accent.
+ *
+ * An accent is a stored preference like a control size, so a name a release
+ * renamed arrives as a string the union no longer names.
+ */
+export const isSelectionAccent = (value: unknown): value is SelectionAccent =>
+  typeof value === "string" && Arr.contains(ACCENT_NAMES, value);
+
+/**
+ * The accent a selection control paints with: the name, or the brand.
+ *
+ * The recipes and the derived fills are paint seams called mid-render, and an
+ * unknown name reached `SELECTION_ROLE[name].bg` (a destructuring `TypeError`)
+ * and `filledHover(theme, name)` — one missing name emptied the window instead
+ * of painting the brand every selection control defaults to.
+ */
+export const selectionAccentOf = (value: unknown): SelectionAccent =>
+  isSelectionAccent(value) ? value : "primary";
+
 export interface SelectionSpec {
   readonly state: SelectionState;
   readonly size: ControlSize;
@@ -161,8 +184,8 @@ const feedbackFill = (
 ): StyleDesc => ({
   backgroundColor:
     phase === "hover"
-      ? filledHover(theme, spec.accent)
-      : filledPressed(theme, spec.accent),
+      ? filledHover(theme, selectionAccentOf(spec.accent))
+      : filledPressed(theme, selectionAccentOf(spec.accent)),
   borderColor: "transparent",
 });
 

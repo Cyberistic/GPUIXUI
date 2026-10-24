@@ -135,9 +135,11 @@ export type {
 } from "./layout.js";
 
 export {
+  isSelectionAccent,
   radioDotStyle,
   SELECTION_ACCENTS,
   SELECTION_STATES,
+  selectionAccentOf,
   selectionBoxStyle,
   selectionMarkColor,
   switchThumbStyle,
@@ -238,10 +240,14 @@ export type {
 export {
   actionOnColor,
   buttonVariants,
+  buttonVariantOf,
   BUTTON_VARIANTS,
   fieldVariant,
   hasPointerFeedback,
+  isButtonVariant,
+  isToggleVariant,
   TOGGLE_VARIANTS,
+  toggleVariantOf,
   toggleVariants,
   variantKey,
   variantTable,

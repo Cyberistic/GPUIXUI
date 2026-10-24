@@ -5689,7 +5689,7 @@ answers.
       (~6.5–10 s). Fixture `src/live/image-zoom.ts` (the PNG, the marks, the two
       hover points, the invariants over a measured box, the mapping and the
       readout) + `image-zoom-probe.tsx` (the view and the steps) +
-      `image-zoom.test.ts` (16 cases: the decoded bytes against the declarations
+      `image-zoom.test.ts` (22 cases: the decoded bytes against the declarations
       in both directions, the background, the hover point on the mark's centre,
       the invariants measured failing for a still, a centred and a half-panned
       box, the mapping round trip, the paint prediction, the outside-picture
@@ -8604,6 +8604,39 @@ answers.
       `Slider`/`Range slider` rows. No live scenario applies — the pointer route
       it rides is `pointer-capture`'s and `slider-vertical-lifecycle`'s, both
       already measured in a window.
+
+`[x]` `packages/primitives`: **three stored style names were indexed raw, and
+      each one emptied the window** — a control `size` has had a total reader
+      since `controlSize` (`core/theme.ts`), while the other three names a
+      control is given were still table lookups: `Button`/`IconButton`/
+      `ToggleGroup`'s `variant` reached `buttonVariants[name].filledAction`
+      (`TypeError: Cannot read properties of undefined (reading
+      'filledAction')`) and `TOGGLE_PAINT[name].rest`, a selection control's
+      `accent` reached the recipe's `SELECTION_ROLE[name].bg` destructuring and
+      `filledHover(theme, name)` (`TypeError: Cannot destructure property 'bg'
+      …`), and `Text`'s stored `role` became the class `type-undefined`, which
+      the compiler refuses, so the run painted no size, leading or weight at
+      all. Each is a stored choice as much as a size is — an action record, a
+      saved toolbar, a restored inspector row, a settings preference — so
+      `core/variants.ts` gains `isButtonVariant`/`buttonVariantOf` (→ `primary`)
+      and `isToggleVariant`/`toggleVariantOf` (→ `default`), `core/selection.ts`
+      gains `isSelectionAccent`/`selectionAccentOf` (→ `primary`), and
+      `textClass` reads its role through the published `isTextRole` (→ `body`,
+      the answer `typeOf` already gives). The membership lists are derived from
+      the shipped tables (`BUTTON_VARIANTS`, `TOGGLE_VARIANTS`,
+      `SELECTION_ACCENTS`), never a second list, and every paint seam that reads
+      a raw table goes through the reader — `buttonClass`, `toggleClass`,
+      `actionOnColor`, `paintsFilledSurface`, `variantSpinnerAccent`, the four
+      selection recipes, `feedbackFill` — so the groups and the icon button are
+      covered without a per-component copy. Proof: `Button.test.tsx`,
+      `Toggle.test.tsx`, `Checkbox.test.tsx`, `Switch.test.tsx` and
+      `presentational.test.tsx` each gain one case; all five were measured
+      failing on the raw reads with the exact `TypeError`s above and the
+      `None`/`Some` body metrics, and the package is 56 files / **1 110** tests
+      green with `check-types`, `lint` and `check:tests` clean. Docs: the
+      `variant`/`accent`/`role` API rows on the seven pages and the package
+      README's stored-choice paragraph. No native scenario applies — the names
+      paint the boxes the other suites already read in a window.
 
 `[x]` `packages/components`: **a hover delay the caller could not supply opened
       the surface at once** — `PreviewCard` and `NavigationMenu` each scheduled

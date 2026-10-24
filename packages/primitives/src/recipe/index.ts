@@ -10,6 +10,7 @@
 
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
+import { isTextRole } from "../core/theme.js";
 import type { SpinnerAccent } from "../core/loading.js";
 import { trackCount } from "../core/layout.js";
 import type {
@@ -34,7 +35,12 @@ import type {
   TextTone,
 } from "../core/style.js";
 import type { ElevationLevel, RadiusStep, SpaceStep } from "../core/theme.js";
-import { paintsFilledSurface } from "../core/variants.js";
+import { selectionAccentOf } from "../core/selection.js";
+import {
+  buttonVariantOf,
+  paintsFilledSurface,
+  toggleVariantOf,
+} from "../core/variants.js";
 import type { ButtonVariant, ToggleVariant } from "../core/variants.js";
 
 // ── Button ───────────────────────────────────────────────────────────
@@ -101,14 +107,16 @@ export const buttonClass = (
   variant: ButtonVariant,
   size: ControlSize,
   options: ButtonRecipeOptions = {},
-): string =>
-  cn(
+): string => {
+  const name = buttonVariantOf(variant);
+  return cn(
     BUTTON_BASE,
-    BUTTON_VARIANT[variant],
-    paintsFilledSurface(variant) ? FILLED_DISABLED : UNFILLED_DISABLED,
+    BUTTON_VARIANT[name],
+    paintsFilledSurface(name) ? FILLED_DISABLED : UNFILLED_DISABLED,
     options.square === true ? BUTTON_SQUARE[size] : BUTTON_SIZE[size],
     options.fullWidth === true && "w-full",
   );
+};
 
 // ── Input ────────────────────────────────────────────────────────────
 
@@ -190,11 +198,20 @@ export interface TextRecipeOptions {
   readonly selectable?: boolean;
 }
 
-/** The class string a `Text` resolves from its role, tone and modifiers. */
-export const textClass = (options: TextRecipeOptions): string =>
-  cn(
-    `type-${ROLE_CLASS[options.role]}`,
-    familyOf(options.role),
+/**
+ * The class string a `Text` resolves from its role, tone and modifiers.
+ *
+ * A role is content before it is a literal — a saved markdown node or a restored
+ * inspector row carries the role it was written with — so a name the scale does
+ * not carry reads as `body`, the answer `typeOf` gives and the default every run
+ * of text documents. Read here rather than at the component because the class is
+ * the paint seam: `type-undefined` resolves to no size, leading or weight at all.
+ */
+export const textClass = (options: TextRecipeOptions): string => {
+  const role = isTextRole(options.role) ? options.role : "body";
+  return cn(
+    `type-${ROLE_CLASS[role]}`,
+    familyOf(role),
     TONE_CLASS[options.tone],
     options.align === undefined ? undefined : ALIGN_CLASS[options.align],
     options.selectable === true ? "select-text" : "select-none",
@@ -203,8 +220,9 @@ export const textClass = (options: TextRecipeOptions): string =>
     // role's own leading: `clamp-body-2` and `clamp-h1-2` are different boxes.
     options.clamp === undefined
       ? undefined
-      : `clamp-${ROLE_CLASS[options.role]}-${clampLines(options.clamp)}`,
+      : `clamp-${ROLE_CLASS[role]}-${clampLines(options.clamp)}`,
   );
+};
 
 // ── Stack ────────────────────────────────────────────────────────────
 
@@ -333,7 +351,7 @@ export const toggleClass = (
 ): string =>
   cn(
     BUTTON_BASE,
-    TOGGLE_PAINT[variant][pressed ? "pressed" : "rest"],
+    TOGGLE_PAINT[toggleVariantOf(variant)][pressed ? "pressed" : "rest"],
     // A pressed toggle wears the accent face, which the disabled contract
     // measures like a filled action; at rest it has no fill to collapse into.
     pressed ? FILLED_DISABLED : UNFILLED_DISABLED,
@@ -551,7 +569,7 @@ export const selectionBoxClass = ({
   invalid,
 }: SelectionRecipeInput): string => {
   const filled = state !== "unchecked";
-  const { bg, fg } = SELECTION_ROLE[accent];
+  const { bg, fg } = SELECTION_ROLE[selectionAccentOf(accent)];
   return cn(
     "flex items-center justify-center shrink-0 border cursor-pointer",
     `size-icon-${size}`,
@@ -589,7 +607,7 @@ export const radioDotClass = ({
     "shrink-0 rounded-full",
     `size-dot-${size}`,
     filled
-      ? `bg-${SELECTION_ROLE[accent].fg}`
+      ? `bg-${SELECTION_ROLE[selectionAccentOf(accent)].fg}`
       : invalid === true
         ? "bg-destructive"
         : "bg-muted-foreground",
@@ -604,7 +622,7 @@ export const switchTrackClass = ({
   invalid,
 }: SelectionRecipeInput): string => {
   const filled = state !== "unchecked";
-  const { bg } = SELECTION_ROLE[accent];
+  const { bg } = SELECTION_ROLE[selectionAccentOf(accent)];
   return cn(
     // The thumb is absolutely positioned inside this pill, so it is the
     // positioning context and its own size comes from the derived token.
@@ -641,7 +659,9 @@ export const switchThumbClass = ({
     `switch-thumb-${size}`,
     `size-thumb-${size}`,
     filled ? `switch-thumb-on-${size}` : undefined,
-    filled ? `bg-${SELECTION_ROLE[accent].fg}` : "bg-foreground",
+    filled
+      ? `bg-${SELECTION_ROLE[selectionAccentOf(accent)].fg}`
+      : "bg-foreground",
   );
 };
 

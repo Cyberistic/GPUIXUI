@@ -91,6 +91,25 @@ describe("Button", () => {
     );
   });
 
+  it("paints a variant name the table does not carry as the default action", () => {
+    // The bug guarded: `variant` is a stored choice as often as a literal (an
+    // action record, a saved toolbar, a workspace layout), so a name a release
+    // renamed reached `buttonVariants[name].filledAction` and threw mid-render —
+    // the window emptied instead of the action painting the default it
+    // documents. The fallback is `primary`, the component's own default.
+    const stored = resting({
+      variant: "brand" as ButtonVariant,
+      children: "Save",
+    });
+    const fallback = resting({ variant: "primary", children: "Save" });
+    expect(expectSome(hostStyleRecord(stored))).toEqual(
+      expectSome(hostStyleRecord(fallback)),
+    );
+    expect(expectSome(hostStyle(stored, "backgroundColor"))).toBe(
+      testTheme.colors.primary,
+    );
+  });
+
   it("activates on Enter key down, never on key up", () => {
     const onActivate = vi.fn();
     const element = resting({ onActivate });

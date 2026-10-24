@@ -22,6 +22,7 @@ import {
 } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { ToggleVariant } from "../core/variants.js";
 import { renderToggle, type ToggleState } from "./Toggle.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
@@ -45,6 +46,29 @@ const focused: FocusState = {
 };
 
 describe("Toggle", () => {
+  it("paints a variant name the table does not carry as the default face", () => {
+    // The bug guarded: `variant` is a stored preference, so a name a release
+    // renamed reached `TOGGLE_PAINT[name]` and threw on its first slot — a
+    // saved toolbar toggle emptied the window instead of painting the default.
+    const stored = renderToggle(
+      { variant: "segmented" as ToggleVariant, label: "Bold" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    const fallback = renderToggle(
+      { variant: "default", label: "Bold" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyleRecord(stored))).toEqual(
+      expectSome(hostStyleRecord(fallback)),
+    );
+  });
+
   it("is a button that announces its pressed state instead of aria-pressed", () => {
     const element = renderToggle(
       { label: "Bold" },
