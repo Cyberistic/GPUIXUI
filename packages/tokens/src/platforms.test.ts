@@ -177,7 +177,9 @@ describe("platformStyles", () => {
     expect(
       pages["docs/tokens.md"],
       "the catalogue names the three systems and the identity",
-    ).toContain("offers the three operating systems and the library's `default`");
+    ).toContain(
+      "offers the three operating systems and the library's `default`",
+    );
     expect(
       pages["docs/design-system.md"],
       "the design system says three of the four names are systems",
