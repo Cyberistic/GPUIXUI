@@ -25,6 +25,7 @@ import {
   ProgressLabel,
   ProgressTrack,
   ProgressValue,
+  type ProgressProps,
 } from "../src/components/Progress.js";
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
@@ -370,6 +371,55 @@ it("moves an indeterminate Progress's segment over time", async () => {
     () => expect.fail("the Progress painted no track"),
   );
   expect(offsets.every((x) => x === undefined || x >= trackBox.x)).toBe(true);
+});
+
+it("reads a stored Progress share it cannot read as absence, not as NaN%", async () => {
+  // The bug guarded: a dashboard stores a widget's share, and `progressPart`
+  // read it through `Option.fromNullishOr`, which refuses only `null` and
+  // `undefined`. A record whose share arrived as text was therefore a
+  // measurement: the fill's width became "NaN%", which the window paints as no
+  // box at all, the bar announced "NaN%", and `Progress`'s step timer read the
+  // same field as determinate so the segment never moved. A share that is not a
+  // number is absence now — the moving segment, the loading word, and a timer
+  // that drives it.
+  const runtime = await openWindow();
+  // The cast is the storage boundary: a saved share is whatever the record wrote.
+  const stored = { value: "half" } as unknown as ProgressProps;
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" label="Uploading" {...stored} />
+    </Surface>,
+  );
+  const wordOf = (): string =>
+    Option.getOrElse(a11yValueOf(runtime.a11y(), { label: "Uploading" }), () =>
+      expect.fail("the Progress announced no value"),
+    );
+  expect(wordOf()).toBe("loading");
+  const fillOffsets = await sample(
+    runtime,
+    () => {
+      const track = Arr.head(childrenOf(runtime, "pg"));
+      const fill = Option.flatMap(track, (id) =>
+        Option.fromNullishOr(childrenOfId(runtime, id)[1]),
+      );
+      return Option.getOrUndefined(
+        Option.flatMap(fill, (id) =>
+          Option.map(runtime.boundsOfId(id), (box) => box.x),
+        ),
+      );
+    },
+    6,
+  );
+  expect(new Set(fillOffsets).size).toBeGreaterThan(1);
+  // A share the store wrote as a number is still the measurement it says.
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" value={40} label="Uploading" />
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
+    Option.some("40%"),
+  );
 });
 
 it("announces an indeterminate Progress in the caller's word", async () => {

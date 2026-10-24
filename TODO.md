@@ -7071,7 +7071,35 @@ a merge over a stored theme.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 24/24
+`[x]` `[██████████]` 25/25
+
+`[x]` `packages/primitives`: **a saved bar's share read as `NaN%`, and a timer
+      that disagreed with the paint** — `progressPart` read `value` and `buffer`
+      through `Option.fromNullishOr`, which refuses only `null`/`undefined`, so a
+      widget record whose share arrived as text was a measurement and
+      `progressPercent` answered `NaN` (`Number.isNaN` is `true` only for a
+      numeric `NaN`): the fill's `width` became `"NaN%"` — no painted box at all
+      in a window — the bar announced `"NaN%"`, and `Progress`'s step timer read
+      the same field as determinate, so the segment it did paint froze. The read
+      is `storedNumber` (`core/stored.ts`) now, shared by the paint and the
+      timer, and `progressPercent` takes the stored shape (`unknown`) and answers
+      empty for anything that is not a number — the rule its own doc already
+      claimed, while `NaN` stays the `0%` share it names and `Infinity` the whole
+      track. `Progress.test.tsx` gains `reads a stored share it cannot read as
+      absence, not as NaN%`, `stored.test.ts` the reader's own table and
+      `style.test.ts` the seam's; `runtime/loading.runtime.test.tsx` adds
+      `reads a stored Progress share it cannot read as absence, not as NaN%`,
+      which reads the announcement and then samples the moving segment's `x`.
+      Directions measured: with the old reads restored the unit case fails
+      `expected 'NaN%' to be 'loading'` and the seam case `expected NaN to be
+      +0`; with only the timer on the old read the window case fails `expected 1
+      to be greater than 1`, and with only the value read restored it fails
+      `expected 'NaN%' to be 'loading'`. Green: 59 files / 1 216 unit, 22 files /
+      348 runtime, `check-types`, `oxlint` and `oxfmt` clean. Docs:
+      `docs/progress.mdx` §API and its stored-record paragraph, the package
+      README's stored-choice list
+      and the `Progress` inventory row. No live scenario applies — the window
+      case is the `TestRenderer` measurement.
 
 `[x]` `packages/primitives`: **one `Button` loaded a physics engine it never
       sampled** — `@gpuixui/motion` publishes two React entries, the full one
@@ -13277,7 +13305,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 393/393
+`[x]` `[██████████]` 394/394
+
+`[x]` Search the **reference's rendered markup once per module, not once per
+      symbol** — `public-api.test.tsx`'s `prints every symbol the packages
+      publish, with the file it lives in` asked `markup.includes(row.module)`
+      for all **2 325** symbols against the **1 350 648-character** page
+      `renderToStaticMarkup` produces, so one assertion scanned ~3.1 GB and
+      took **3 382 ms** alone; under the full suite's 199 workers it crossed
+      vitest's 5 s default and the docs gate went red on
+      `Test timed out in 5000ms` (reproduced twice: the full package run and a
+      standalone `-t` run). The rows now group by **290** distinct modules and
+      the markup is searched once per module, so the same assertion takes
+      **104 ms** in a file whose 15 cases finish in 3.2 s; a module the page
+      stops printing still fails by name, once per symbol that lives in it. Both
+      directions measured: the per-row search timed out at 5 806 ms in a
+      measurement case (`rows=2325 modules=290 markup=1 350 648`) while the
+      per-module form answers in 114 ms; restored, 15/15. `nub run --filter
+      @gpuixui/docs test` is **199 files / 2 024 tests** green. No native
+      scenario applies — a site test's search plan over its own rendered page.
 
 `[x]` Link **every mounted collection's package** from the dependency line —
       `page-dependencies.ts` named the four packages whose pages the site writes

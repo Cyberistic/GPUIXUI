@@ -30,6 +30,7 @@ import * as Option from "effect/Option";
 import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { cn } from "@gpuixui/tw";
 import { accessibleName, spokenText, visibleCopy } from "../core/a11y.js";
+import { storedNumber } from "../core/stored.js";
 import {
   defaultMessages,
   indeterminateWord,
@@ -68,8 +69,10 @@ export interface ProgressProps {
    * 0–100. Omit for an indeterminate bar.
    *
    * A stored `null` — how JSON keeps a field that was never written — is
-   * absence too, so a restored widget paints the indeterminate segment instead
-   * of a bar pinned at 0%. `0` is still the empty share it says it is.
+   * absence too, and so is a value that is not a number (text a record wrote, a
+   * `NaN` a measurement produced): the bar paints the moving segment instead of
+   * a bar pinned at 0% or a fill with no width. `0` is still the empty share it
+   * says it is.
    */
   readonly value?: number;
   /**
@@ -144,12 +147,13 @@ export const progressPart = (
   step: number,
   messages: PrimitiveMessages = defaultMessages,
 ): ProgressPart => {
-  // A stored `null` is absence, the rule `useControlState` already applies to
-  // every value control: JSON keeps an omitted field as `null`, so a restored
-  // widget that never learned its share would otherwise paint a bar at 0% —
-  // the one position that reads as "not started" — and announce "0%" instead of
-  // the loading word, while the step timer it feeds ran as indeterminate.
-  const measurement = Option.fromNullishOr(value);
+  // A share is read as the data a store hands back: `null` (JSON's field a
+  // record never wrote) is absence, and so is a value that is not a number —
+  // text a store wrote, or a `NaN` a measurement produced. Both paint the moving
+  // segment and say the loading word, because a determinate bar pinned at 0% is
+  // the position that reads as "nothing received", and a `NaN` share painted no
+  // fill at all while announcing "NaN%".
+  const measurement = storedNumber(value);
   const determinate = Option.isSome(measurement);
   const percent = Option.match(measurement, {
     onNone: () => 0,
@@ -160,9 +164,10 @@ export const progressPart = (
     determinate,
     percent,
     // A buffer is a place on the bar, so it needs one: an indeterminate bar has
-    // none, and a buffer behind the value has nothing left to say.
+    // none, a buffer behind the value has nothing left to say, and a buffer that
+    // is not a number is not a place.
     bufferPercent: determinate
-      ? Option.match(Option.fromNullishOr(buffer), {
+      ? Option.match(storedNumber(buffer), {
           onNone: () => undefined,
           onSome: (held) => Math.max(percent, progressPercent(held)),
         })
@@ -408,14 +413,16 @@ export const Progress = (props: ProgressProps): ReactElement => {
     props.reducedMotion,
     useMotionPreference(),
   );
+  // The timer reads the share through the same seam the paint does: a share the
+  // bar cannot read is absence there, so it must animate here too — a stored
+  // text share painted the moving segment at one frozen frame while the timer
+  // counted it as determinate.
+  const animates =
+    progressAnimates(storedNumber(props.value)) && !reducedMotion;
   return renderProgress(
     { ...props, reducedMotion },
     useTheme(),
-    useStep(
-      SPINNER_SEGMENTS,
-      STEP_INTERVAL_MS,
-      progressAnimates(Option.fromNullishOr(props.value)) && !reducedMotion,
-    ),
+    useStep(SPINNER_SEGMENTS, STEP_INTERVAL_MS, animates),
     useMessages(),
   );
 };

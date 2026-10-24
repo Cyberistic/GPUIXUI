@@ -20,8 +20,8 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `number` | — | 0–100 determinate fill; omit for indeterminate, and a stored `null` reads as omitted |
-| `buffer` | `number` | none | 0–100 held-ahead point; paints the segment between `value` and itself |
+| `value` | `number` | — | 0–100 determinate fill; omit for indeterminate, and a stored `null` — or any value that is not a number — reads as omitted |
+| `buffer` | `number` | none | 0–100 held-ahead point; paints the segment between `value` and itself, and a stored value that is not a number paints no segment |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role; a stored name the table does not carry reads as `primary` |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm`; a stored name the table does not carry reads as `md` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text; a blank label is no name and paints no caption line |
@@ -33,7 +33,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
 
-A widget record kept in JSON stores a share it never learned as `null` rather than `undefined`. That reads as **absent**, like an omitted prop: the bar paints the moving segment and says the loading word, while `0` remains the empty share it names.
+A widget record kept in JSON stores a share it never learned as `null` rather than `undefined`. That reads as **absent**, like an omitted prop: the bar paints the moving segment and says the loading word, while `0` remains the empty share it names. A share that is not a number at all is the same absence — text a store wrote, or a field a decoder could not read — because the library does not turn text into a number here (`parseNumberText` is the explicit seam that does). Read as a measurement it would paint `width: "NaN%"` and announce `"NaN%"`: a bar with no fill that still claims a value.
 
 ## Limitations
 

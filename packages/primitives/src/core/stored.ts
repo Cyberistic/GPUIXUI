@@ -46,3 +46,16 @@ export const storedTextList = (
   Arr.isArray(value)
     ? Option.some(Arr.filter(value, P.isString))
     : Option.none();
+
+/**
+ * A stored number, or absence for a value that is not one.
+ *
+ * A measurement a store keeps — a bar's share, a count, a pixel size — comes back
+ * as whatever the record carried. Text is not a number this library coerces
+ * (`parseNumberText` is the one seam that reads text as a number, and it is
+ * explicit about it), so `"42"` is absence and only a real number is a
+ * measurement. What a *number* then means — `NaN`'s share, `Infinity`'s
+ * position — is the arithmetic's decision, made once by the seam that paints it.
+ */
+export const storedNumber = (value: unknown): Option.Option<number> =>
+  typeof value === "number" ? Option.some(value) : Option.none();

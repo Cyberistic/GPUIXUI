@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { storedNumber } from "../core/stored.js";
 import { PROGRESS_TONES, type ProgressTone } from "../core/style.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -164,6 +165,57 @@ describe("Progress", () => {
     expect(progressPart(stored, testTheme, 0).bufferPercent).toBe(undefined);
     // Zero is still the empty share it says it is.
     expect(announced(renderProgress({ value: 0 }, testTheme, 0))).toBe("0%");
+  });
+
+  it("reads a stored share it cannot read as absence, not as NaN%", () => {
+    // The bug guarded: a dashboard stores a widget's share, and `progressPart`
+    // read it through `Option.fromNullishOr`, which refuses only `null` and
+    // `undefined`. A record whose share arrived as text was therefore a
+    // measurement: `progressPercent` forwarded it through `Math.max`, the fill's
+    // width became "NaN%", and the bar announced "NaN%" — while `Progress`'s own
+    // step timer read the same field as determinate and never moved it. A share
+    // that is not a number is absence now, the answer this bar already gives a
+    // share it never learned.
+    // The cast is the storage boundary: a saved share is whatever the record wrote.
+    const stored = { value: "half" } as unknown as ProgressProps;
+    const element = renderProgress(stored, testTheme, 0);
+    expect(announced(element)).toBe("loading");
+    expect(progressPart(stored, testTheme, 0).determinate).toBe(false);
+    expect(progressPart(stored, testTheme, 0).percent).toBe(0);
+    expect(storedNumber(stored.value)).toStrictEqual(Option.none());
+    // The indeterminate composition: a lead spacer and the moving segment.
+    expect(elementChildren(trackOf(element))).toHaveLength(2);
+    // A numeric string is text, not a measurement: nothing coerces it.
+    expect(
+      announced(
+        renderProgress(
+          { value: "42" } as unknown as ProgressProps,
+          testTheme,
+          0,
+        ),
+      ),
+    ).toBe("loading");
+    // A readable share is unchanged, an unreadable buffer is no segment, and a
+    // `NaN` is still a number whose share the clamp reads as empty — the rule
+    // this bar already kept.
+    expect(announced(renderProgress({ value: 40 }, testTheme, 0))).toBe("40%");
+    expect(announced(renderProgress({ value: Number.NaN }, testTheme, 0))).toBe(
+      "0%",
+    );
+    const buffered = progressPart(
+      { value: 40, buffer: "70" } as unknown as ProgressProps,
+      testTheme,
+      0,
+    );
+    expect(buffered.determinate).toBe(true);
+    expect(buffered.percent).toBe(40);
+    expect(buffered.bufferPercent).toBeUndefined();
+    expect(
+      elementChildren(trackOf(renderProgress({ value: 40 }, testTheme, 0))),
+    ).toHaveLength(1);
+    // The shared reader agrees with the bar's own answers.
+    expect(storedNumber(42)).toStrictEqual(Option.some(42));
+    expect(storedNumber(null)).toStrictEqual(Option.none());
   });
 
   it("says the value in the caller's words, in the announcement and the part", () => {

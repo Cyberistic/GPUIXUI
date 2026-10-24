@@ -599,6 +599,21 @@ describe("progress", () => {
     expect(progressPercent(Number.POSITIVE_INFINITY)).toBe(100);
   });
 
+  it("reads a share that is not a number as empty, not as a NaN width", () => {
+    // The bug guarded: `Number.isNaN` answers `true` only for a numeric `NaN`,
+    // so a share a record wrote as text passed the guard, went through
+    // `Math.max` and answered `NaN`. The fill's width became `"NaN%"` — which
+    // the runtime paints as no width at all — and the announced share read
+    // `"NaN%"`, while the seam's own doc promised an unreadable value was empty.
+    expect(progressPercent("half")).toBe(0);
+    expect(progressPercent("42")).toBe(0);
+    expect(progressPercent(undefined)).toBe(0);
+    expect(progressPercent(null)).toBe(0);
+    // The readable numbers keep their answers.
+    expect(progressPercent(42)).toBe(42);
+    expect(progressPercent(Number.POSITIVE_INFINITY)).toBe(100);
+  });
+
   it("paints the fill at the clamped percentage", () => {
     const over = progressFillStyle(
       { value: 250, tone: "primary", size: "md" },

@@ -608,12 +608,19 @@ export const scrollStyle = (spec: ScrollSpec): StyleDesc => {
 /**
  * Clamp a progress value to the 0–100 the track can actually paint.
  *
- * A value that is not a number at all is treated as empty rather than full: an
- * unknown progress must never look finished. Infinity means "past the end",
- * which is the whole track.
+ * A share reaches a bar from a saved record as often as from a literal, so it is
+ * read as the data it is: a number is clamped, `Infinity` means "past the end"
+ * and is the whole track, and anything else is **empty** — a numeric `NaN`, text
+ * a store wrote, an absent field. `Number.isNaN` answers `true` only for a
+ * numeric `NaN`, so a share written as text passed the guard and left `Math.max`
+ * as `NaN`: the fill's width became `"NaN%"`, which the runtime paints as no
+ * width at all, and the announced share read `"NaN%"`. An unknown progress must
+ * never look finished.
  */
-export const progressPercent = (value: number): number =>
-  Number.isNaN(value) ? 0 : Math.min(100, Math.max(0, value));
+export const progressPercent = (value: unknown): number =>
+  typeof value === "number" && !Number.isNaN(value)
+    ? Math.min(100, Math.max(0, value))
+    : 0;
 
 export const PROGRESS_TONES = [
   "primary",

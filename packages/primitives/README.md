@@ -124,7 +124,14 @@ and each is read through a membership test rather than indexed raw:
   value control reads a stored value that way. The measurement and the timer
   share one `Option` now, the `null` paints the loading word and the moving
   segment, and `0` is still the empty share it says it is; `Progress.test.tsx`
-  holds both directions.
+  holds both directions. **A share that is not a number is the same absence**:
+  `Option.fromNullishOr` refused only `null`/`undefined`, so a record whose share
+  arrived as text was a measurement, and `progressPercent` answered `NaN` — the
+  fill's `width` became `"NaN%"` (no painted box in a window) while the bar
+  announced `"NaN%"` and the timer counted it as determinate, so nothing moved.
+  `storedNumber` (`core/stored.ts`) is that read now, used by the paint and the
+  timer alike, and `progressPercent` clamps an unreadable share to empty; a
+  `NaN` is still a number whose share the clamp reads as `0%`.
 - an **elevation level** is saved with the panel it raises (a workspace record,
   a settings row), so `elevationLevel` (`core/theme.ts`) reads a name the scale
   does not carry as `md`, the default lift `elevationShadow` already answers,

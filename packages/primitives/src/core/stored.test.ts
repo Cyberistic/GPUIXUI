@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { storedList, storedText, storedTextList } from "./stored.js";
+import {
+  storedList,
+  storedNumber,
+  storedText,
+  storedTextList,
+} from "./stored.js";
 
 describe("storedText", () => {
   it("keeps a string as written and reads every non-string as absence", () => {
@@ -10,6 +15,31 @@ describe("storedText", () => {
     expect(storedText(undefined)).toBeUndefined();
     expect(storedText(7)).toBeUndefined();
     expect(storedText({ value: "x" })).toBeUndefined();
+  });
+});
+
+describe("storedNumber", () => {
+  it("keeps a number a store wrote and reads everything else as absence", () => {
+    // The bug guarded: a measurement a store keeps — a bar's share, a count —
+    // was read with `Option.fromNullishOr`, which refuses only `null` and
+    // `undefined`. A share written as text therefore counted as a measurement
+    // and reached `Math.max` as `NaN`. Text is not a number this library
+    // coerces: `parseNumberText` is the one seam that reads text as a number,
+    // and it is explicit about it.
+    expect(storedNumber(42.5)).toStrictEqual(Option.some(42.5));
+    expect(storedNumber(0)).toStrictEqual(Option.some(0));
+    expect(storedNumber(-3)).toStrictEqual(Option.some(-3));
+    // A bar past its end, and a share the clamp reads as empty, are still
+    // numbers: what they mean is the arithmetic's decision.
+    expect(storedNumber(Number.POSITIVE_INFINITY)).toStrictEqual(
+      Option.some(Number.POSITIVE_INFINITY),
+    );
+    expect(Option.isSome(storedNumber(Number.NaN))).toBe(true);
+    expect(storedNumber("42")).toStrictEqual(Option.none());
+    expect(storedNumber("")).toStrictEqual(Option.none());
+    expect(storedNumber(null)).toStrictEqual(Option.none());
+    expect(storedNumber(undefined)).toStrictEqual(Option.none());
+    expect(storedNumber({ value: 42 })).toStrictEqual(Option.none());
   });
 });
 
