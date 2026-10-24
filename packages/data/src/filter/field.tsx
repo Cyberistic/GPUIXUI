@@ -11,7 +11,7 @@
  */
 
 import { Input } from "@gpuixui/primitives";
-import { spaceValue, spokenText } from "@gpuixui/primitives/core";
+import { spaceValue, spokenText, visibleCopy } from "@gpuixui/primitives/core";
 import * as Option from "effect/Option";
 import { useTheme } from "../theme.js";
 
@@ -26,7 +26,7 @@ export interface TableFilterFieldProps {
    * default, because a default only covers an absent prop.
    */
   readonly label?: string;
-  /** The hint a reader sees in the empty field. */
+  /** The hint a reader sees in the empty field. Defaults to `Filter…`; a blank hint is that default too, because a default only covers an absent prop. */
   readonly placeholder?: string;
   /** The field's width, in pixels. */
   readonly width?: number;
@@ -35,6 +35,9 @@ export interface TableFilterFieldProps {
 
 /** The words a filter field is named by. */
 export const DEFAULT_FILTER_LABEL = "Filter rows";
+
+/** The hint a filter field shows when the caller names none. */
+export const DEFAULT_FILTER_PLACEHOLDER = "Filter…";
 
 /**
  * A labelled text field that narrows the table it sits above.
@@ -49,7 +52,7 @@ export const TableFilterField = ({
   value,
   onValueChange,
   label,
-  placeholder = "Filter…",
+  placeholder,
   width,
   testId,
 }: TableFilterFieldProps) => {
@@ -66,7 +69,7 @@ export const TableFilterField = ({
     >
       <Input
         label={spokenText(Option.fromNullishOr(label), DEFAULT_FILTER_LABEL)}
-        placeholder={placeholder}
+        placeholder={visibleCopy(placeholder) ?? DEFAULT_FILTER_PLACEHOLDER}
         value={value}
         onValueChange={onValueChange}
         size="sm"

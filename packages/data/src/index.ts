@@ -169,7 +169,11 @@ export type {
   TableSelectionHeaderProps,
 } from "./selection/column.js";
 
-export { DEFAULT_FILTER_LABEL, TableFilterField } from "./filter/field.js";
+export {
+  DEFAULT_FILTER_LABEL,
+  DEFAULT_FILTER_PLACEHOLDER,
+  TableFilterField,
+} from "./filter/field.js";
 export type { TableFilterFieldProps } from "./filter/field.js";
 
 export {

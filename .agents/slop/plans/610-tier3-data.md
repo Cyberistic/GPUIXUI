@@ -813,6 +813,15 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   (5 cases) mounts both absences with a readable list as the control; the three
   absence cases fail at the old reads by name. 198 behaviour green (193 before).
 
+- **A filter field's blank hint reads as `Filter…`**: `placeholder = "Filter…"`
+  as a destructuring default only covers an absent prop, so a locale table's
+  missing row reached `<input>` as `""` and the field painted no hint at all
+  (a run of spaces laid out a full empty line). It reads through `visibleCopy`
+  and the default is exported as `DEFAULT_FILTER_PLACEHOLDER` — the rule the
+  toolbar's search already follows. `src/behaviour/filter-field.test.tsx`
+  (2 cases); the blank case fails on the old default (`expected '' to contain
+  'Filter…'`).
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

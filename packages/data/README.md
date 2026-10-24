@@ -281,6 +281,13 @@ const table = useTable({
 });
 ```
 
+The field's **hint is copy too**: `placeholder` is read through `visibleCopy`,
+so a locale table's missing row (`""`) or a saved run of spaces paints
+`DEFAULT_FILTER_PLACEHOLDER` (`Filter…`) rather than an empty field with no
+hint — the rule the toolbar's search field already follows. Measured before the
+read, a blank hint painted nothing while the package's own default sat unused
+(`behaviour/filter-field.test.tsx`).
+
 A **column set can be saved and restored**. `columnConfig(columns.state)` writes
 the order, the hidden ids and the widths; `restoreColumns(FILE_COLUMNS, saved)`
 applies them to the definitions the current release ships, and
