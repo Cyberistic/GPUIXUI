@@ -641,6 +641,11 @@ export function createTheme(config: ThemeConfig): Theme {
  * ordinary theme: layer `extendTheme` on top to keep the look but change a
  * value.
  *
+ * A style is a look over a base, not a layer over a look. Every palette here is
+ * partial and designed against its own base, so two styles stacked mix their
+ * colours and the gate rejects the result (`compose.test.ts` holds the measured
+ * pairs). The order is base, style, brand.
+ *
  * @example
  * ```tsx
  * import { applyStyle, platformStyles, themes } from "@gpuixui/tokens";

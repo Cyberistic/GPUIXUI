@@ -125,6 +125,14 @@ coverage is held by a type-level guard in `theme.ts` — a group added to `Theme
 without an override fails the type check — and `theme.test.ts` proves each one
 reaches its group and no other.
 
+A style is a look over a base, not a layer over a look: `platformTheme` and
+`retroTheme` overlay a *partial* palette that is designed against the base it
+lands on, and a theme does not record that it already wears one, so two shipped
+looks stacked mix their colours and `auditTheme` rejects the result
+(`compose.test.ts` derives both directions). The order is base, style, brand —
+`extendTheme(platformTheme(themes.dark, "win32"), { … })` — never base, style,
+style.
+
 A brand that changes a fill owns its **on-colour** too, per mode. Dark themes
 pair a light fill with dark text, so the brand's dark fill is a light violet with
 the near-black iris on it; light themes pair a dark fill with a white label. The

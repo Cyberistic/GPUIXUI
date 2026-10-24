@@ -205,6 +205,15 @@ other shipped theme. `applyStyle(base, style)` is the single merge rule behind
 both, so a brand can author a look of its own as data rather than forking a
 component or adding a platform name.
 
+**The order is base, style, brand.** A style is a look over a base, not a layer
+over a look: its palette is partial and designed against the base it lands on,
+so two shipped looks stacked mix their colours and the gate rejects the mix.
+`compose.test.ts` derives both halves from `auditTheme` — every style over every
+shipped base passes, and the catalogue's two stacked pairs fail — so a brand is
+always `extendTheme(platformTheme(…), { … })` or `extendTheme(retroTheme(…), { … })`,
+never a second `applyStyle` over the result. The catalogue states the measured
+pairs under [Platform styles](./tokens.md#platform-styles).
+
 A high-contrast theme is the one combination that keeps its own palette: it takes
 the families, radii and density but no platform colour, because accessibility
 outranks the platform look. Each platform style declares the `contrast` variant

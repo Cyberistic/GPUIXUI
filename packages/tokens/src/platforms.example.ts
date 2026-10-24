@@ -74,7 +74,10 @@ export const resolveHouseTheme = (mode: ThemeMode): Theme =>
             selection: "#6A45F03D",
           }),
     },
-    radius: { md: 6, lg: 10 },
+    // A raised rung owns the one above it: the platform's `lg` and `xl` are
+    // equal (Fluent's surfaces corner at 8), so a brand whose card corners at
+    // 10 names `xl` too, or the ladder reports `lg` above `xl`.
+    radius: { md: 6, lg: 10, xl: 12 },
   });
 
 /** The accent each platform style paints a primary action with. */

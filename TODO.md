@@ -389,28 +389,39 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 239/240
+`[x]` `[██████████]` 240/240
 
-`[ ]` State the **order a style and a brand compose in** — `applyStyle(base, style)`
-is the extension mechanism both `platformTheme` and `retroTheme` read, and it
+`[x]` State the **order a style and a brand compose in** — `applyStyle(base, style)`
 composes: a style names some roles, and the roles it does not name stay the
-base's. Two *shipped looks* therefore mix their partial palettes, and the gate
+base's, so two *shipped looks* stacked mix their partial palettes and the gate
 rejects the result. Measured 2026-10-24:
-`applyStyle(retroTheme(lightTheme, "luna"), platformStyles.win32)` fails **5**
+`applyStyle(retroTheme(themes.light, "luna"), platformStyles.win32)` fails **5**
 placements — `ring` on the platform's `secondary` at **2.90:1** under the 3:1
-boundary floor, and four decorative ones under 1.05:1 (`disabled` on `accent`
-1.03:1, `infoSoft` on the page 1.01:1, `warningSoft` on the page 1.05:1);
-`applyStyle(retroTheme(darkTheme, "omarchy"), platformStyles.linux)` fails
+boundary floor, and four decorative ones under 1.05:1 — and
+`applyStyle(retroTheme(themes.dark, "omarchy"), platformStyles.linux)` fails
 **25** (6 contrast, 5 decorative, 5 selection, 9 highlight), including selection
-washes that hide their text — the tightest printed **5.60:1** under the 7:1 body
-floor. The safe order the catalogue already uses is style first, brand second
-(`extendTheme(platformTheme(themes.dark, "win32"), { … })`), and every style over
-a built-in base passes. Decide and hold one: state the ordering rule on both
-token pages and the package README — a style is a look over a base, not a layer
-over a look — with a guard that derives the passing base × style matrix and the
-failing two-look pair from `auditTheme`, or add a named whole-look route and
-document when each is used. Evidence: `.agents/slop/scratch/probe-compose.ts`
-(`probe-style-over-style.ts` carries the whole matrix). Owner: tokens-theme.
+washes that hide their text. The order is held as the API's own: **base, style,
+brand** — `extendTheme(platformTheme(themes.dark, "win32"), { … })`, a brand over
+a resolved style — so a style is a look over a base, not a layer over a look, and
+no second route was added. The sentence is on `docs/tokens.md` (§Platform styles,
+now five rules), `docs/design-system.md` §5, the package README §Extending a
+theme, the `applyStyle` JSDoc and the `Theme extension` inventory row.
+`compose.test.ts` (13 cases) derives both halves from `auditTheme`: every base ×
+style (4 shipped themes × 4 platforms + 3 looks, split into 8 cases so no case
+runs 28 audits inside the 2 s budget) passes; the two stacked pairs are pinned by
+their report counts; `resolveHouseTheme`/`resolveRetroBrand` are held to the
+whole gate; the four prose surfaces must carry the rule and the order; the
+catalogue must print the rejected pair. Directions measured: breaking Luna
+light's `primary` fails the matrix, which names the look and the base it was
+applied to; dropping the order phrase from the README fails the rule case; and
+swapping the stacked pair for an idempotent `luna` → `luna` fails the stack case
+on `passed: true`. The brand case found a real defect in the documented example:
+`resolveHouseTheme` raised Windows' `lg` to 10 while leaving `xl` at 8 (Fluent's
+deliberate `lg`/`xl` alias), so the example failed `scales` while it was
+documented as passing only the contrast and decorative contracts; the example and
+the catalogue snippet now name `xl: 12`, and the example is held to the full
+gate. Green: 3 059 tests, `check-types` clean, `check:tests` clean for this file
+(the run reports one foreign probe, `packages/components/src/behaviour/zz-combobox-select-probe.test.tsx`, owned by another workstream). No native scenario applies — a composition rule and the prose that teaches it.
 
 `[x]` Read a **theme a store truncated as the base the palette mapper asks** —
 `paletteToTokens` asked its base two questions (which ink reads on a filled role

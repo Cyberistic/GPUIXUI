@@ -935,7 +935,7 @@ Each `darwin` set and all three dark sets carry their own `secondary`, because
 designed for (`"default"` today), and `platformTheme` applies a palette only where
 that matches the base theme's variant.
 
-Four rules the mechanism keeps:
+Five rules the mechanism keeps:
 
 - **A high-contrast theme keeps its colours.** A palette is designed against one
   variant's floors, so `platformTheme` applies the families, radii and density
@@ -950,6 +950,18 @@ Four rules the mechanism keeps:
 - **Every platform palette is measured on the same role pairs as the built-in
   themes.** `platforms.test.ts` holds all six platform themes to the contrast
   floors, so a platform cannot ship unreadable text.
+- **A style goes over a base, not over a look.** A style is a look over a base,
+  not a layer over a look: every palette here is partial and designed against
+  the base it lands on, and a theme does not record that it already wears one —
+  so stacking two shipped looks mixes their colours. `applyStyle(retroTheme(themes.light, "luna"), platformStyles.win32)`
+  fails the gate on a `ring` the platform paints over Luna's `secondary` at
+  **2.90:1** (under the 3:1 boundary floor) and four decorative placements under
+  1.05:1, and `applyStyle(retroTheme(themes.dark, "omarchy"), platformStyles.linux)`
+  fails on 6 contrast, 5 decorative, 5 selection and 9 highlight placements. The
+  order is base, style, brand — a brand is `extendTheme` over the resolved style
+  (`extendTheme(platformTheme(themes.dark, "win32"), { … })`), never a second
+  style. `compose.test.ts` derives both halves from `auditTheme`: every
+  base × style passes and those two stacked pairs fail.
 
 ```tsx
 import { platformTheme, themes } from "@gpuixui/tokens";
@@ -1026,7 +1038,10 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
     selectedForeground: "#DDD3FF",
     selection: "#8A6EFF3D",
   },
-  radius: { md: 6, lg: 10 },
+  // A raised rung owns the one above it: the Windows style corners `lg` and
+  // `xl` at 8 (Fluent's control/surface pair), so a brand whose card corners at
+  // 10 names `xl` too, or the ladder reports `lg` above `xl`.
+  radius: { md: 6, lg: 10, xl: 12 },
 });
 ```
 
