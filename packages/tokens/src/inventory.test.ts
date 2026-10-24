@@ -466,16 +466,9 @@ describe("the position each surface gives a report in the gate", () => {
  * is always handed a complete table. The report is the other half: the gate
  * still refuses a token the store lost, and the row must say both rather than
  * sending a reader to a host default that no longer happens.
- *
- * The row also printed `syntax.test.ts` (13 cases) after the suite had grown, so
- * the count is read from the file, the rule `highlight.test.ts`'s row follows.
  */
 describe("the Syntax palette row", () => {
   const source = readFileSync(new URL("./syntax.ts", import.meta.url), "utf8");
-  const suite = readFileSync(
-    new URL("./syntax.test.ts", import.meta.url),
-    "utf8",
-  );
   const notes = rows.find(
     (entry) => entry.capability === "Syntax palette",
   )?.notes;
@@ -491,11 +484,46 @@ describe("the Syntax palette row", () => {
       "would otherwise paint its own colour for that token",
     );
   });
+});
 
-  it("prints the case count its suite runs", () => {
-    const cases = suite.match(/\bit\(/g)?.length ?? 0;
+/**
+ * Guards the **case count** each row prints for its suite.
+ *
+ * A row that says "(13 cases)" is telling a reader how much of the contract the
+ * file holds, and three had aged: `syntax.test.ts` printed 13 while it ran 22,
+ * `apply-style.test.ts` printed 8 while it ran 10, and `incomplete.test.ts`
+ * printed 8 while it ran 80. The count is read from the file rather than
+ * remembered, the rule `highlight.test.ts`'s own row already follows — so a case
+ * added to one of these suites moves the row or fails this check by name.
+ */
+describe("the case count a row prints for its suite", () => {
+  const claims = rows.flatMap((row) =>
+    [...row.notes.matchAll(/`([\w./-]+\.test\.tsx?)` \((\d+) cases?\)/g)].map(
+      (match) => ({
+        row: row.capability,
+        file: match[1] ?? "",
+        printed: Number(match[2]),
+      }),
+    ),
+  );
 
-    expect(cases).toBeGreaterThan(10);
-    expect(notes).toContain(`\`syntax.test.ts\` (${cases} cases)`);
+  it("finds the counts the table prints", () => {
+    // A regex that stops matching would pass the case below on an empty list.
+    expect(claims.length).toBeGreaterThan(5);
+  });
+
+  it("is the count the file runs", () => {
+    const stale = claims.flatMap(({ row, file, printed }) => {
+      const path = new URL(`./${file}`, import.meta.url);
+      if (!existsSync(path)) {
+        return [`${row}: ${file} is not a file in this package`];
+      }
+      const cases = readFileSync(path, "utf8").match(/\bit\(/g)?.length ?? 0;
+      return cases === printed
+        ? []
+        : [`${row}: ${file} prints ${printed}, runs ${cases}`];
+    });
+
+    expect(stale).toEqual([]);
   });
 });

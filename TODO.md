@@ -464,16 +464,21 @@ Verification.
       (tenth), `indicators` "its seventh contract" (eleventh), the disabled fade
       "the gate's ninth report" (thirteenth) and the keyboard dim "its tenth"
       (fourteenth) — and both pages carried the dim's "tenth". `inventory.test.ts`
-      grows 9 → **15 cases**: the gate's order is read from `auditTheme`'s own
+      grows 9 → **16 cases**: the gate's order is read from `auditTheme`'s own
       keys with a claim per row and for the two pages, the word lists must cover
-      every report, the `audit.syntax` count is derived, the palette rule is read
-      against `syntax.ts` (`syntaxPalette(theme.syntax, table)`,
-      `namesColour(value)`), and the suite's case count is read from the file.
-      Directions measured: with the stale rows and pages restored, five cases fail
-      by name (the four ordinals and the report count the row prints); restored,
-      53 files / **3 158** tests green with
+      every report, the `audit.syntax` count is derived, and the palette rule is
+      read against `syntax.ts` (`syntaxPalette(theme.syntax, table)`,
+      `namesColour(value)`). Two more **case counts** the table prints had aged
+      the same way — `apply-style.test.ts` printed 8 while it runs 10 and
+      `incomplete.test.ts` printed 8 while it runs 80 — so one case reads every
+      `file.test.ts` (N cases) claim in the table (**7**) against the file's own
+      `it(` count.
+      Directions measured: with the stale rows and pages restored, six cases fail
+      by name (the four ordinals, the report count and a stale case count);
+      restored,
+      53 files / **3 159** tests green with
       `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs:
-      `COMPONENTS.md`'s row, `docs/tokens.md` §The dim a control paints while Tab
+      `COMPONENTS.md`'s rows, `docs/tokens.md` §The dim a control paints while Tab
       is elsewhere and `docs/design-system.md` §8. No native scenario applies —
       printed figures a suite derives.
 
