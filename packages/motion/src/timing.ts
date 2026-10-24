@@ -59,6 +59,11 @@ export type MotionEasingName = (typeof motionEasingNames)[number];
 /** The easings the runtime accepts: five names, or a cubic-bezier tuple. */
 export type MotionEasing = MotionEasingName | MotionCurve;
 
+/** Whether a value is one of the five easing names the runtime accepts. */
+export const isMotionEasingName = (
+  value: unknown,
+): value is MotionEasingName => motionEasingNames.some((name) => name === value);
+
 /** A value a curve can read: a finite number. */
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -78,9 +83,7 @@ const isUnitControl = (value: unknown): boolean =>
  * `[0, 1]` (the renderer solves the curve in time, so `y` may overshoot).
  */
 export const isMotionEasing = (value: unknown): value is MotionEasing => {
-  if (typeof value === "string") {
-    return motionEasingNames.some((name) => name === value);
-  }
+  if (typeof value === "string") return isMotionEasingName(value);
   const curve: ReadonlyArray<unknown> = Array.isArray(value) ? value : [];
   if (curve.length !== 4) return false;
   const [x1, y1, x2, y2] = curve;
@@ -96,6 +99,10 @@ export const isMotionEasing = (value: unknown): value is MotionEasing => {
  * The easing each phase uses, by the physics it describes: a surface arrives
  * decelerating and leaves accelerating, and a movement between two resting
  * states eases at both ends.
+ *
+ * Each name is a curve the package also samples: `easing.ts`'s `motionCurve`
+ * hands the same name the control points the runtime resolves it to, so a
+ * movement sampled in JavaScript eases exactly as the runtime tween beside it.
  */
 export const motionEasings: Readonly<Record<MotionPhase, MotionEasingName>> = {
   enter: "easeOut",

@@ -38,8 +38,10 @@ describe("sampleKeyframes", () => {
       keyframe(0.5, 50, easeOut),
       keyframe(1, 100),
     ];
-    // Segment [0, 0.5] with local progress 0.5 → easeOut(0.5) = 0.875.
-    expect(sampleKeyframes(frames, 0.25)).toBeCloseTo(50 * 0.875, 5);
+    // Segment [0, 0.5] with local progress 0.5 → `easeOut(0.5)`, the renderer's
+    // own curve (0.685), not the linear progress the sampler would use if it
+    // ignored the upper stop's easing.
+    expect(sampleKeyframes(frames, 0.25)).toBeCloseTo(50 * easeOut(0.5), 5);
   });
 
   it("lands on the value a segment ends at, whatever curve it names", () => {

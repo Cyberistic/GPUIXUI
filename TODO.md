@@ -10908,6 +10908,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | A **switch's thumb eases on the arrival curve, not the between-states phase** — `packages/primitives/src/components/Switch.tsx`'s `THUMB_SLIDE` is `{ duration: 0.15, ease: "easeOut" }`, a literal of its own, while the timing table names `standard` (`easeInOut`) for "a movement between two resting states" — the class the tab pill and the carousel dot adopted on 2026-10-24 through `useMoveTiming` — and a knob's two positions are exactly that: one resting place to the other. Read it as the table's phase (`motionTimingOf(150, { phase: "standard" })`, from `@gpuixui/motion/timing`, which `core/motion.ts` already imports for the preference type) so the primitives and the components cannot ease one movement two ways, and hold it the way the components' cases do: sample the thumb at half its window on the paused motion clock, where `easeOut` has travelled further than `easeInOut` | primitives (`packages/primitives/src/components/Switch.tsx`) | open — found 2026-10-24 while landing the stored-transition read in `@gpuixui/motion`; `runtime/switch.runtime.test.tsx` measures where the thumb lands, not the curve it takes |
 
 | Read the **fixed pinned-title measurement in the comment that cites it** — `packages/components/src/behaviour/pinned-list.test.tsx`'s `lets a press through the held header reach the row under it` still opens with "Measured in a window by `pinned-list-lifecycle` (`presses` stayed 1)", the reading from before the fix. The probe now measures `presses=2,0` (the row hears the press under the held title), so the comment describes the defect the case guards rather than the state it proves. Say the pre-fix window read `presses` stayed at `1` and that the probe now reads `presses=2,0`; the test itself is unchanged. | components (`packages/components/src/behaviour/pinned-list.test.tsx`) | open — found 2026-10-24 when the playground flipped `pinned-list-lifecycle`; the probe and `apps/playground/README.md` §`pinned-list-lifecycle` already read the fixed contract |
+| Read the **easing names the site teaches as the curves the package paints** — the motion package's `easing.ts` now carries the binding's own curves for `linear`/`ease`/`easeIn`/`easeOut`/`easeInOut` and publishes `motionCurve(name)`, because the named curves used to be polynomials that merely shared the runtime's names (`easeOut` painted 0.875 at its midpoint where the runtime paints 0.685). `/docs/motion`'s module table still reads `easing | linear, easeIn/easeOut/easeInOut, circ*, back*, anticipate, bezier` — it omits `ease` and `motionCurve` — so a reader of the site cannot learn the one bridge between the timing table's name and a sampled curve | docs-site (`apps/docs/content/docs/motion.mdx`; `motion-page.test.ts` should hold the `easing` row to `packages/motion/src/easing.ts`'s exports the way it holds the React row to `react.ts`) | **open** — found 2026-10-24 while landing the runtime curves in `@gpuixui/motion`; the package README teaches it (§The names are the runtime's curves, in both halves). |
 
 ## Phase D — data and workspace components
 
@@ -21031,6 +21032,37 @@ scenario applies — the timings are pure values.
       still names an existing test). The `COMPONENTS.md` hunk was swept into `c39b19773`
       (tokens) by the shared-index hazard; this commit carries the guard that makes it true.
       No native scenario applies — a typings read and pure frame builders.
+`[x]` `@gpuixui/motion`: **one easing name meant two different curves** — the timing table
+      hands the runtime the *name* `"easeOut"` (decaying entry, accelerating exit, both-ended
+      between two resting states), which the binding resolves to
+      `cubic-bezier(0, 0, 0.58, 1)` — **0.685** at its midpoint. The package's own `easeOut`
+      was a cubic polynomial, `1 - (1 - t)³` — **0.875** there — and `easeIn`/`easeInOut` were
+      the same kind of labelled lookalike, so a movement this package samples in JavaScript
+      beside a runtime tween of the same phase traced a different path from the surface it moved
+      with, and neither half showed which one was wrong (the components' own suites already
+      quote the runtime's ~68% while the exported curve said 87.5%). `easing.ts` now carries
+      the binding's control points as one table (`linear`, `ease`, `easeIn`, `easeOut`,
+      `easeInOut` — `packages/native/src/motion.rs` → `ease` at `@gpuix/native@0.11.0`), the
+      named exports are its entries, and the new `motionCurve(name)` is the bridge a consumer
+      needs: the timing table's name and the sampled curve resolve through the same table. A
+      name this release does not carry is the linear progress — the fallback `eased` already
+      takes — because the runtime rejects a description naming an easing it does not know;
+      `isMotionEasingName` (in `timing.ts`, read by `isMotionEasing`) is the membership guard.
+      Proof: `easing.test.ts` gains `traces the renderer's own curve for every easing name it
+      accepts`, whose oracle is the binding's own algorithm (20 bisection steps, output clamped
+      to `[0, 1]`), plus `resolves a phase's name to the curve that name stands for` (identity,
+      so both halves share one table, and the linear fallback); `timing.test.ts` gains the guard
+      case. Directions measured: with the three polynomials restored, `traces the renderer's own
+      curve…` fails `easeIn at 0.1: expected 0.001 to be close to 0.017026` and `samples the
+      known midpoints` fails `0.125 to be close to 0.315357`; with the binding curves the
+      package is 15 files / **197** tests, `check-types` and `check:tests` clean, and the
+      components' `counting-number`, `motion-hooks`, `presence`, `tabs` and `carousel` behaviour
+      suites are green (the only consumer of a sampled curve is `CountingNumber`, whose default
+      tween now eases as the tweened boxes beside it do). Docs: `packages/motion/README.md`
+      §The names are the runtime's curves, in both halves, the `easing.ts` JSDoc and the layout
+      table's `easing.ts`/`timing.ts` rows. The site page's `easing` row still lists the old
+      names and no `motionCurve` — recorded in `TODO.md` → Interlocks. No native scenario
+      applies — pure curves; the live `surface-fade` probe measures the runtime's own.
 
 ## TanStack cores
 

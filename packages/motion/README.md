@@ -15,11 +15,11 @@ keyframes, momentum, and reduced-motion-as-policy.
 | Module | Purpose |
 | ------ | ------- |
 | `spring.ts` | Closed-form under/critical/over-damped spring with velocity, rest thresholds, presets, and retarget |
-| `easing.ts` | `linear`, `easeIn/Out/InOut`, `circIn/Out/InOut`, `backIn/Out/InOut`, `anticipate`, `bezier` |
+| `easing.ts` | `linear`, `ease`, `easeIn/Out/InOut` and `motionCurve` — the renderer's own curves for the names it accepts — plus `circIn/Out/InOut`, `backIn/Out/InOut`, `anticipate`, `bezier` |
 | `timeline.ts` | Keyframes with offsets, `stagger`, and a keyed `Sequence` driver |
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
-| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, and `motionEasingNames`/`isMotionEasing`, the renderer's easing grammar a stored transition is read against |
+| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, and `motionEasingNames`/`isMotionEasing`/`isMotionEasingName`, the renderer's easing grammar a stored transition is read against |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
 | `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers — the physics hooks; it re-exports `useMotionPreference`, `useSurfaceTiming` / `useSurfacePresence` and the provider from the presence half below |
 | `react/presence.ts` | The presence half of the React entry (entry `@gpuixui/motion/react/presence`): `useSurfaceTiming` / `useSurfacePresence` and `MotionProvider`, published without the physics a fade never samples |
@@ -478,6 +478,34 @@ fallback: the surface arrival `normal` (200 ms) and the between-states curve,
 instead of handing the runtime a `NaN` duration, an absent easing, or a method
 where a curve belongs. A reduced run is still an instant assignment whatever the
 tables hold.
+
+### The names are the runtime's curves, in both halves
+
+The timing table hands the runtime a **name**; a movement this package samples
+needs a function. `easing.ts`'s `motionCurve` resolves the same name to the same
+curve, so the two halves of one transition trace one path:
+
+```ts
+import { motionCurve } from "@gpuixui/motion";
+
+motionCurve("easeOut")(0.5); // 0.6846 — cubic-bezier(0, 0, 0.58, 1), the renderer's default
+motionCurve("easeIn")(0.5); // 0.3154 — cubic-bezier(0.42, 0, 1, 1)
+motionCurve("ease")(0.5); // 0.8024 — cubic-bezier(0.25, 0.1, 0.25, 1)
+motionCurve("easeInOut")(0.5); // 0.5 — cubic-bezier(0.42, 0, 0.58, 1)
+```
+
+The control points are the binding's own (`ease`, in
+`packages/native/src/motion.rs` at `@gpuix/native@0.11.0`), and `easeOut`,
+`easeIn` and `easeInOut` are those curves rather than cubic polynomials that
+merely share their names: a labelled lookalike painted 0.875 where the runtime
+paints 0.685, so a number counted beside a tweened box eased at a different
+speed from the box. `linear` returns the progress itself, the one curve a
+control-point pair cannot describe. A name this release does not carry is the
+linear progress — the fallback `eased` takes for a curve it cannot call — because
+the runtime rejects a description naming an easing it does not know, so there is
+no curve to imitate. `circ*`, `back*` and `anticipate` are this package's
+additions and have no runtime name; pass them to `tween()`/`keyframe()`, not to a
+`transition` prop.
 
 Import the subpath, not the barrel: a consumer that only needs a timing should
 not load the spring and timeline maths (`@gpuixui/components` imports exactly

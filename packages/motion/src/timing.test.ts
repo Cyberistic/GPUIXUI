@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isMotionEasing,
+  isMotionEasingName,
   motionEasingNames,
   motionEasings,
   motionLevels,
@@ -104,6 +105,20 @@ describe("phases", () => {
     expect(isMotionEasing([0, 0, 0.5])).toBe(false);
     expect(isMotionEasing(null)).toBe(false);
     expect(isMotionEasing({})).toBe(false);
+  });
+
+  it("answers a name only for the five the grammar carries", () => {
+    // `motionCurve` reads a stored name through this guard to pick the curve
+    // the runtime resolves it to, so membership is the list's own rather than a
+    // table lookup: `toString` must not name a curve the runtime never paints.
+    motionEasingNames.forEach((name) => {
+      expect(isMotionEasingName(name)).toBe(true);
+    });
+    ["easeOutBack", "EaseOut", "", "toString", "__proto__"].forEach((name) => {
+      expect(isMotionEasingName(name)).toBe(false);
+    });
+    expect(isMotionEasingName([0.2, 0, 0.4, 1])).toBe(false);
+    expect(isMotionEasingName(null)).toBe(false);
   });
 });
 
