@@ -63,7 +63,7 @@ export interface TypingTextProps extends Omit<Props, "children" | "style"> {
   readonly label?: string;
   /** Called once, after the last character (and once on mount when instant). */
   readonly onComplete?: () => void;
-  /** A typographic role from the theme. Default `"body"`. */
+  /** A typographic role from the theme. Default `"body"`; a stored name the type scale does not carry reads as the default, and the caret follows it. */
   readonly role?: TextRole;
   /** A Tailwind class string, joined after the resting style so it wins. */
   readonly className?: string;
@@ -77,10 +77,17 @@ interface Progress {
   readonly revealed: number;
 }
 
-/** The caret's one measurement: a rule as tall as the role's line. */
+/**
+ * The caret's one measurement: a rule as tall as the role's line.
+ *
+ * The line is read through `textStyle`, the seam the string beside it already
+ * paints through: that answers the library's `body` step for a stored role this
+ * release does not carry, so a renamed role cannot throw out of the first frame
+ * while the text it belongs to paints.
+ */
 const caretStyle = (theme: Theme, role: TextRole) => ({
   width: 2,
-  height: theme.typography[role].lineHeight,
+  height: textStyle(theme, role).lineHeight,
   backgroundColor: theme.colors.primary,
   borderRadius: 1,
 });

@@ -38,3 +38,4 @@ import { TypingText } from "@gpuixui/components";
 - Real-time reveal, not synced to the renderer clock.
 - The caret cannot follow a wrapped line.
 - No per-glyph paint or stagger.
+- **A stored `role` the type scale does not carry paints `"body"`**: the string and its caret both read the role through `textStyle`, so a preference a release renamed keeps the text paintable instead of taking the surface down.

@@ -15,6 +15,7 @@ import { describe, expect, it, vi } from "vitest";
 import { a11yNodes } from "../internal/a11y.js";
 import { waitFor } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+import { darkTheme, textStyle } from "../internal/theme.js";
 import { MotionProvider } from "../motion.js";
 import { TypingText } from "../typing-text.js";
 
@@ -105,6 +106,39 @@ describe("TypingText", () => {
     try {
       expect(painted(page)).toBe("Instant");
       await waitFor(() => expect(complete).toHaveBeenCalledTimes(1));
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints a caret for a stored role the type scale does not carry", () => {
+    // The bug guarded: `caretStyle` indexed `theme.typography[role]` raw while
+    // the string beside it read the same prop through `textStyle`, so a role
+    // restored from storage under a name this release does not ship left the
+    // lookup with no step to read: measured with `caret` on, the whole surface
+    // failed to mount (no string name, no caret) where the text alone had
+    // always painted through the seam.
+    const page = renderComponent(
+      <TypingText
+        testId="typing"
+        text="Hi"
+        speed={30}
+        caret
+        // A store keeps the name it wrote; this release does not declare it.
+        // @ts-expect-error — the value a saved role actually carries
+        role="banner"
+      />,
+    );
+    try {
+      // The whole surface was down at HEAD, not only the caret: the throw
+      // happened while the component rendered, so not even the string's name
+      // reached the tree.
+      expect(a11yNodes(page.renderer).map((node) => node.name)).toContain("Hi");
+      const caret = page.renderer.getElement(
+        page.renderer.findByTestId("typing")?.children[1] ?? -1,
+      );
+      expect(caret?.style.height).toBe(textStyle(darkTheme, "body").lineHeight);
+      expect(caret?.style.width).toBe(2);
     } finally {
       page.unmount();
     }
