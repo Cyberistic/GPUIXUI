@@ -336,6 +336,30 @@ describe("the presence table the README teaches", () => {
     const missing = exported.filter((name) => !readme.includes(`\`${name}`));
     expect(missing).toEqual([]);
   });
+
+  it("places the React half of the table in the package that publishes it", () => {
+    // The bug this guards: the mounted window and the surface timing moved into
+    // this package when the presence table was shared — `@gpuixui/motion/react`
+    // publishes `useSurfacePresence` and `useSurfaceTiming` — but the README
+    // still said the React half "stays with the package that owns a tree" and
+    // taught neither hook. A consumer painting its own surface was told the one
+    // hook that keeps a leaving box mounted lived somewhere else, and the
+    // package that owns it documented neither.
+    const react = exportedNames("src/react.ts");
+    expect(react.has("useSurfacePresence")).toBe(true);
+    expect(react.has("useSurfaceTiming")).toBe(true);
+
+    // The presence section is where a consumer looks for the table's halves.
+    const section = readme.split("## The presence table")[1] ?? "";
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("`useSurfacePresence`");
+    expect(section).toContain("`useSurfaceTiming`");
+
+    // And the React half is not sent to another package.
+    expect(readme).not.toMatch(
+      /React half[^.]*stays with the package that owns a tree/,
+    );
+  });
 });
 
 describe("the imports the README teaches", () => {

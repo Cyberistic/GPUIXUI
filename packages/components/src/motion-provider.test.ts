@@ -30,6 +30,9 @@ const seam = readFileSync(
   "utf8",
 );
 
+/** The package's own motion entry, which re-publishes the provider. */
+const entry = readFileSync(new URL("./motion.tsx", import.meta.url), "utf8");
+
 describe("the motion preference", () => {
   it("is the motion package's provider and hook, not a copy", () => {
     expect(MotionProvider).toBe(PackageProvider);
@@ -41,5 +44,21 @@ describe("the motion preference", () => {
     // preference, and every surface below one provider silently animates.
     expect(seam).not.toContain("createContext(");
     expect(seam).toContain('from "@gpuixui/motion/react"');
+  });
+
+  it("names the subpaths the frames and the mounted window live on", () => {
+    // The bug this guards: the entry said the frames and the mount window live
+    // in `internal/presence.tsx`, but both moved to the motion package when the
+    // presence table was shared — the frames to `@gpuixui/motion/presence`, the
+    // mounted window to `@gpuixui/motion/react` — and this package's seam only
+    // re-publishes them. A reader told the seam owns the rule would look for
+    // it here and find a re-export.
+    expect(entry).toContain("@gpuixui/motion/presence");
+    expect(entry).toContain("@gpuixui/motion/react");
+    expect(entry).not.toContain("the frames and the mount window live in");
+    // The seam really does re-publish both halves, so the entry's claim and the
+    // code agree.
+    expect(seam).toContain('from "@gpuixui/motion/presence"');
+    expect(seam).toContain("useSurfacePresence");
   });
 });

@@ -77,9 +77,8 @@ export {
  * leaves reads as being pulled away. The preference is the provider's, so a
  * surface reads the one flag the whole tree states.
  */
-export const useSurfaceTiming = (
-  level: MotionLevel,
-): PresenceTiming => presenceTiming(level, useMotionPreference());
+export const useSurfaceTiming = (level: MotionLevel): PresenceTiming =>
+  presenceTiming(level, useMotionPreference());
 
 /** A surface's mount and presence state while it enters or leaves. */
 export interface SurfacePresence {

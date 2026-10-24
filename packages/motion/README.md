@@ -21,7 +21,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
 | `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
-| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers, `useMotionPreference` |
+| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers, `useMotionPreference`, and the presence hooks `useSurfaceTiming` / `useSurfacePresence` |
 | `provider.ts` | `MotionProvider` — the one reduced-motion preference every package reads |
 
 ## Spring
@@ -149,8 +149,45 @@ A surface that enters and leaves reads one table, exported from
 
 The table is renderer-neutral and has no React or GPUix import, so a component
 package and a primitive package compose the same one rather than agreeing by
-hand. The React half — the mounted window, the preference provider and the
-leaving shield — stays with the package that owns a tree.
+hand. Its **React half** is published here as well, on
+`@gpuixui/motion/react`: the surface timing (`useSurfaceTiming`), the mounted
+window (`useSurfacePresence`) and the preference provider (`MotionProvider`). A
+timer and a React tree need a package that owns a tree, and this one already
+does — so a consumer painting its own surface finds the whole table in one
+package. The one half that stays with the component package is the **leaving
+shield**: it is a GPUix host element the runtime paints, so it belongs to the
+package that renders one.
+
+A surface composes the table in three steps — the timing, the frames and the
+mounted window:
+
+```tsx
+import { motion } from "@gpuix/react";
+import { fadeFromAnchor, presenceMotion } from "@gpuixui/motion/presence";
+import { useSurfacePresence, useSurfaceTiming } from "@gpuixui/motion/react";
+
+function Panel({ open }: { open: boolean }) {
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
+  // `mounted` keeps the box painted for its exit tween; `present` is the
+  // resting frame's target, so a leaving surface takes no presses.
+  if (!presence.mounted) return null;
+  return (
+    <motion.div
+      motion={presenceMotion(fadeFromAnchor("bottom", 4), presence)}
+      style={{ pointerEvents: presence.present ? "auto" : "none" }}
+    />
+  );
+}
+```
+
+`useSurfaceTiming(level)` reads the nearest provider, so the level a surface
+moves at is one line and the preference is one flag for the whole tree.
+`useSurfacePresence(open, timing)` publishes `mounted` (render the surface at
+all), `present` (the resting frame's target) and the timing it moves with; the
+box unmounts when the exit tween's whole window has elapsed — the tween plus
+the wait it sits out first. Re-opening during the exit keeps the same
+instance, so the run retargets instead of restarting.
 
 Each hook returns `{ value, velocity, complete }`. Map `value` onto a GPUix
 `MotionStyle` numeric field — `width`, `height`, `top`, `right`, `bottom`,
