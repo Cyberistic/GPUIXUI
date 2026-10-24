@@ -279,19 +279,26 @@ export const intervalTimer: SystemThemeTimer = {
  * A pace is configuration as often as a literal: an application reads it from a
  * settings row or an environment variable, which is a string before it is a
  * number, so `Number(...)` hands `NaN` over as readily as `2000`. `setInterval`
- * reads `NaN`, `0` and a negative delay as its 1 ms floor, so an unreadable pace
- * would read and decode the platform's theme file a thousand times a second while
- * the window looked correct. A pace that is not a finite positive number reads as
- * this one instead.
+ * honours a delay from 1 to 2 147 483 647 ms and silently runs every other one
+ * at its 1 ms floor, so an unreadable pace would read and decode the platform's
+ * theme file a thousand times a second while the window looked correct. A pace
+ * outside that range — `NaN`, `0`, a negative delay, a sub-millisecond one, or
+ * one past the timer's 32-bit limit — reads as this one instead.
  */
 export const systemThemePollMs = 2000;
 
+/** The longest delay `setInterval` honours, in milliseconds. */
+const maxTimerMs = 2 ** 31 - 1;
+
 /**
- * The pace a watch runs at: the caller's `every` when it is a finite number of
- * positive milliseconds, and {@link systemThemePollMs} otherwise.
+ * The pace a watch runs at: the caller's `every` when the platform's timer can
+ * honour it — a finite number of milliseconds from 1 through
+ * {@link maxTimerMs} — and {@link systemThemePollMs} otherwise.
  */
 const paceOf = (every: number): number =>
-  Number.isFinite(every) && every > 0 ? every : systemThemePollMs;
+  Number.isFinite(every) && every >= 1 && every <= maxTimerMs
+    ? every
+    : systemThemePollMs;
 
 /** What {@link watchSystemTheme} needs. */
 export interface WatchSystemThemeOptions {
@@ -317,9 +324,9 @@ export interface WatchSystemThemeOptions {
   readonly onChange: (theme: Theme) => void;
   /**
    * Milliseconds between polls. The runtime has no file watcher to subscribe to.
-   * A pace that is not a finite positive number reads as
-   * {@link systemThemePollMs}, because `setInterval` reads an unusable delay as
-   * its 1 ms floor and would read the platform's file in a loop.
+   * A pace outside the 1 – 2 147 483 647 ms range `setInterval` honours reads as
+   * {@link systemThemePollMs}, because the timer reads every other delay as its
+   * 1 ms floor and would read the platform's file in a loop.
    */
   readonly every: number;
   /** Poll mechanism; `setInterval` unless the caller supplies its own. */
@@ -383,9 +390,9 @@ const paletteKey = (palette: SystemPalette | undefined): string =>
  */
 export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
   const { read, base, baseFor, onChange, timer = intervalTimer } = options;
-  // The pace a watch runs at. A value that is not a finite positive number is
-  // the 1 ms floor `setInterval` reads an unusable delay as, so it is read as
-  // the documented pace rather than handed on.
+  // The pace a watch runs at. A delay outside the timer's own 1 … 2^31-1 ms
+  // range is the 1 ms floor it reads every other value as, so it is read as the
+  // documented pace rather than handed on.
   const every = paceOf(options.every);
   let applied: string | undefined;
   const tick = (): void => {

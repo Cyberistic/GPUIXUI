@@ -361,10 +361,12 @@ describe("the palette a desktop hands over", () => {
     );
 
     // The poll's pace has the same kind of fallback, and the pages state it
-    // beside the pace they pass: `setInterval` reads an unusable delay as 1 ms.
+    // beside the pace they pass: `setInterval` honours 1 … 2 147 483 647 ms and
+    // reads every other delay as its 1 ms floor, so the range is the rule.
     [catalogue, readme, inventory].forEach((page) => {
       expect(flat(page)).toContain("systemThemePollMs");
       expect(flat(page)).toContain("1 ms floor");
+      expect(flat(page)).toContain("2 147 483 647");
     });
   });
 
@@ -680,6 +682,50 @@ describe("following a palette", () => {
       timer,
     });
     expect(paces.at(-1)).toBe(250);
+  });
+
+  it("bounds a pace the platform's timer cannot honour, not only a value that is not a number", () => {
+    // `setInterval` honours 1 … 2 147 483 647 ms and silently runs every other
+    // delay at its 1 ms floor: `0.5` and `2 ** 31` both measured as a 1 ms
+    // interval in this runtime. The guard tested only `NaN`, `0` and a negative
+    // value, so a settings row that stored a pace in seconds (`0.5`) or a
+    // deliberately rare monthly cadence (`2 ** 31`) read and decoded the
+    // platform's theme file every millisecond while its window looked right.
+    const paces: Array<number> = [];
+    const timer: SystemThemeTimer = {
+      poll: (every) => {
+        paces.push(every);
+        return () => {};
+      },
+    };
+    [0.5, 2 ** 31, Number.MAX_SAFE_INTEGER].forEach((every) => {
+      watchSystemTheme({
+        read: () => nightPalette,
+        base: darkTheme,
+        onChange: () => {},
+        every,
+        timer,
+      });
+    });
+
+    expect(paces).toEqual([
+      systemThemePollMs,
+      systemThemePollMs,
+      systemThemePollMs,
+    ]);
+
+    // Both ends of the platform's own range pass through unchanged, so the
+    // bound is the timer's rather than a narrower policy of this package's.
+    [1, 2 ** 31 - 1].forEach((every) => {
+      watchSystemTheme({
+        read: () => nightPalette,
+        base: darkTheme,
+        onChange: () => {},
+        every,
+        timer,
+      });
+    });
+    expect(paces.slice(-2)).toEqual([1, 2 ** 31 - 1]);
   });
 
   it("prints the case count its own suite runs", () => {

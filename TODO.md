@@ -371,7 +371,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 221/221
+`[x]` `[██████████]` 222/222
 
 `[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
 (`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
@@ -2240,6 +2240,8 @@ deeply equal [ 2000, 2000, 2000, 2000 ]`; restored, the package is 49 files /
 Docs in `docs/tokens.md` §Following a change, the package README §System palettes
 and the `System palettes` row. No native scenario applies — a numeric read
 handed to the timer.
+
+`[x]` Bound the **system-theme poll to the range the platform's timer honours** — `paceOf` read a pace as unusable only when it was not a finite positive number, so `0.5` and `2 ** 31` were handed to `setInterval` unchanged — and the timer accepts only **1 … 2 147 483 647 ms**, reading every other delay as its **1 ms floor**: measured in this runtime, `setInterval(…, 0.5)` answers `_idleTimeout` **1**, `2 ** 31` answers **1** beside a `TimeoutOverflowWarning`, and `2 ** 31 - 1` is the largest delay it keeps. A settings row that stored its pace in seconds (`0.5`) or a deliberately rare monthly cadence (`2 ** 31`) therefore read and decoded the platform's theme file every millisecond while the window looked right — the exact failure the pace guard exists to prevent, one step outside the values it tested. `paceOf` now requires `Number.isFinite(every) && every >= 1 && every <= 2 ** 31 - 1` and reads anything else as `systemThemePollMs`. `system-theme.test.ts` gains `bounds a pace the platform's timer cannot honour, not only a value that is not a number` (three unhonourable paces by value, then both ends of the platform's range through the injected timer) and the page case requires the range on the catalogue, the README and the `System palettes` row. Directions measured: with the finite-positive predicate restored, the case fails `expected [ 0.5, 2147483648, 9007199254740991 ] to deeply equal [ 2000, 2000, 2000 ]`; restored, the file is 30/30 and the package 49 files / **3 001** tests with `check-types`, `oxlint` and `oxfmt` clean. Docs: `docs/tokens.md` §Following a change, `packages/tokens/README.md` §System palettes and the row. No native scenario applies — a numeric read handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

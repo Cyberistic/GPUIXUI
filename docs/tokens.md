@@ -1291,9 +1291,10 @@ and every field the shape offers is compared (the stated `mode` included), so a
 desktop that moves only its border, its selection colour or its mode still
 reaches the window — and an `undefined` read applies the base theme, which is how
 a deleted system theme returns the window to the application's own. The pace is
-configuration as often as a literal, so an `every` that is not a finite positive
-number reads as `systemThemePollMs` (2000): `setInterval` treats `NaN`, `0` and a
-negative delay as its 1 ms floor, and an unreadable pace would read and decode
+configuration as often as a literal, so an `every` outside the 1 – 2 147 483 647 ms
+range `setInterval` honours reads as `systemThemePollMs` (2000): the timer treats
+`NaN`, `0`, a negative delay, a sub-millisecond one and one past its 32-bit limit
+as the 1 ms floor, and an unreadable pace would read and decode
 the platform's file a thousand times a second while the window looked right. `read` is the
 boundary: decode the platform's file there, and answer `undefined` rather than
 throw when it is missing or unreadable. A throw is a defect in that boundary, and

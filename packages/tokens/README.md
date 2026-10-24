@@ -783,10 +783,11 @@ the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark.
 the base with the palette; without it every palette keeps the one base the watch
 started with. A change is recorded once `onChange` has returned, so a callback
 that throws is retried next tick rather than leaving the window on its old theme.
-The pace is configuration as often as a literal, so an `every` that is not a
-finite positive number reads as `systemThemePollMs` (2000): `setInterval` reads
-`NaN`, `0` and a negative delay as its 1 ms floor, so an unreadable pace would
-decode the platform's file in a loop.
+The pace is configuration as often as a literal, so an `every` outside the
+1 – 2 147 483 647 ms range `setInterval` honours reads as `systemThemePollMs`
+(2000): the timer reads `NaN`, `0`, a negative delay, a sub-millisecond one and
+one past its 32-bit limit as the 1 ms floor, so an unreadable pace would decode
+the platform's file in a loop.
 
 **Omarchy's `colors.toml` ships decoded.** `decodeOmarchyPalette(source)` reads
 the file `omarchy-theme-set` stages at
