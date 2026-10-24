@@ -1177,6 +1177,44 @@ it("moves a RadioGroup's single tab stop with its selection", async () => {
   expect(tabFromBefore()).toBe("Beta");
 });
 
+it("keeps a declined controlled RadioGroup's arrows and tab stop on the row that holds focus", async () => {
+  // The bug guarded: the key contract read its base from the *selected* value,
+  // so a controlled group whose owner declined a choice — a save still in
+  // flight, a rule the row has to confirm — recomputed every arrow from the
+  // value it still held. The reader's focus stalled on the first row an arrow
+  // reached, and because the tab stop stayed on the old value's row, `Tab` from
+  // the focused row re-entered the group instead of leaving it.
+  const reported: string[] = [];
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        value="a"
+        onValueChange={(next) => {
+          reported.push(next);
+        }}
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+          { value: "c", label: "Gamma" },
+        ]}
+      />
+      <Switch testId="after" label="After" />
+    </Surface>,
+  );
+  runtime.keyDown("rg", "down");
+  expect(focusedLabel(runtime)).toBe("Beta");
+  keyDownFocused(runtime, "down");
+  expect(focusedLabel(runtime)).toBe("Gamma");
+  expect(reported).toStrictEqual(["b", "c"]);
+  // The owner still holds Alpha: what moved is the reader's focus and the stop.
+  expect(announced(runtime, "Alpha")).toBe("checked");
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.some("after"));
+});
+
 /**
  * A key down delivered to whatever already holds focus.
  *

@@ -186,7 +186,7 @@ default).
 | Text areas | done | partial | blocked by native field props (unfiled) — filter or cap at the boundary; Enter inserts a newline by design. |
 | Checkboxes | done | partial | blocked by `aria-checked` (unfiled) — the state is announced through `aria-valuetext` (`mixed` for indeterminate). |
 | Checkbox group | done | partial | blocked by `aria-checked` and `aria-multiselectable` (unfiled) — one roving stop; each option's state is announced through `aria-valuetext`. |
-| Radio groups | done | partial | blocked by `aria-checked` (unfiled) — each row's state is announced through `aria-valuetext`; help rides `aria-description`. |
+| Radio groups | done | partial | blocked by `aria-checked` (unfiled) — each row's state is announced through `aria-valuetext`; help rides `aria-description`. The arrows and the single tab stop continue from the row that **holds focus**, so a controlled group whose owner declined a choice cannot stall the reader on the option they left (`RadioGroup.test.tsx`; a window measures the second downward step and the `Tab` that leaves the group). |
 | Selects | done | partial | blocked by `aria-activedescendant` (unfiled) — the closed trigger announces its choice through `aria-valuetext`; the list is a 320px scroller whose rows reveal themselves. |
 | Switches | done | partial | blocked by `aria-checked` (unfiled) — the state is announced through `aria-valuetext`; no pending state, so disable the switch while a request is in flight. |
 | Progress | done | partial | blocked by `aria-valuenow` (unfiled) — the value is announced through `aria-valuetext`; `formatValue` and `loadingText` supply the words. |

@@ -3,8 +3,10 @@
  *
  * A radio group navigates with the arrow keys and holds **one** tab stop: the
  * arrow selects and moves native focus with it, the way the platform behaves.
- * Each item is the same three-state paint as a checkbox with the circle shape,
- * so the two controls cannot drift.
+ * The keys and the stop continue from the row that **holds focus**, so a
+ * controlled group whose owner has not applied the choice yet cannot stall the
+ * reader on the option they left. Each item is the same three-state paint as a
+ * checkbox with the circle shape, so the two controls cannot drift.
  *
  * Focus is tracked **per item**, not on the wrapper: GPUix dispatches an event
  * to the element that owns the handler, so a wrapper never sees a child's
@@ -197,12 +199,23 @@ export const renderRadioGroup = (
   // A focus the group no longer draws is not focus: the option holding it was
   // filtered out or the list shrank, so no row can carry the ring or the state.
   const focused = focusedOption(count, focus.focusedIndex);
-  // The stop the group asked for may be a disabled row, which takes no focus;
-  // moving to the first option a user can reach is what keeps the group in the
-  // tab order.
-  const stopIndex = Option.getOrElse(
-    rovingIndex(count, Option.some(activeIndex), isDisabled),
+  // A reader's keys continue from the row that holds focus — the rule its two
+  // siblings (`CheckboxGroup`, `ToggleGroup`) already read the stop from. A
+  // controlled group whose owner has not applied the choice yet still carries
+  // the old `value`, so a base taken from it would recompute every arrow from
+  // the option the reader left: the focus would stall on the first row it
+  // reached and the stop would stay behind it, so `Tab` from the focused row
+  // re-entered the group instead of leaving. A row that became disabled while
+  // focused takes no keys, so the value's row is the base again.
+  const from = Option.getOrElse(
+    Option.filter(focused, (index) => !isDisabled(index)),
     () => activeIndex,
+  );
+  // The stop may land on a disabled row, which takes no focus; moving to the
+  // first option a user can reach is what keeps the group in the tab order.
+  const stopIndex = Option.getOrElse(
+    rovingIndex(count, Option.some(from), isDisabled),
+    () => from,
   );
   const select = (index: number): boolean => {
     const option = options[index];

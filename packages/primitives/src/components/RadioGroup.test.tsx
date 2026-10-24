@@ -135,6 +135,58 @@ describe("RadioGroup", () => {
     expect(handlers.onFocusMove).toHaveBeenCalledWith(1);
   });
 
+  it("continues from the row that holds focus when the owner has not applied the choice", () => {
+    // The bug guarded: the key contract started from the *selected* value, so a
+    // controlled group whose owner declined a choice — a save still in flight, a
+    // rule the row has to confirm — sent every arrow from the value it still
+    // held: the focus stalled on the first row an arrow reached, and the tab
+    // stop stayed on the old value's row, so Tab from the focused row re-entered
+    // the group instead of leaving it. Its two siblings (`CheckboxGroup`,
+    // `ToggleGroup`) already read the stop from the focus.
+    const onSelect = vi.fn();
+    const handlers = radioHandlers(onSelect);
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      // The owner still holds Alpha while the reader's focus has reached Beta.
+      text("alpha"),
+      0,
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      handlers,
+    );
+    expect(rows(element).map(stopOf)).toEqual([-1, 0, -1]);
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(handlers.onFocusMove).toHaveBeenCalledWith(2);
+    expect(onSelect).toHaveBeenCalledWith("gamma");
+    expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
+    expect(onSelect).toHaveBeenLastCalledWith("beta");
+  });
+
+  it("falls back to the value's row when the focused row can no longer take keys", () => {
+    // A row disabled while focused keeps no ring and refuses every key, so it is
+    // not where the next arrow starts: the value's row is, because that is where
+    // the reader's keyboard path resumes. Without the rule the stop would jump
+    // to the first row the group draws instead of the chosen one.
+    const handlers = radioHandlers(vi.fn());
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta", disabled: true },
+          { value: "gamma", label: "Gamma" },
+        ],
+      },
+      testTheme,
+      text("gamma"),
+      2,
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      handlers,
+    );
+    expect(rows(element).map(stopOf)).toEqual([-1, "absent", 0]);
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(handlers.onFocusMove).toHaveBeenCalledWith(0);
+  });
+
   it("jumps focus to the option Home lands on", () => {
     const handlers = radioHandlers(vi.fn());
     const element = renderRadioGroup(
