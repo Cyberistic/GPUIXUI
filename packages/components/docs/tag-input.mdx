@@ -47,3 +47,4 @@ TagInput
 - Controlled only.
 - `max` is a whole count: a fractional cap is floored, and a cap that cannot be read (`NaN`, an infinity) is no cap at all.
 - No Backspace-on-empty removal.
+- A token list read from storage is read at the boundary: a `value` that is not a list carries no tokens, and an entry that is not text is dropped, so a saved record's `null` does not throw out of the edit that adds the next token.

@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { addTokens, removeToken, splitDraft } from "./logic.js";
+import { addTokens, removeToken, splitDraft, tokensOf } from "./logic.js";
 
 describe("splitDraft", () => {
   it("trims and drops empty tokens", () => {
@@ -80,5 +80,24 @@ describe("removeToken", () => {
 
   it("is a no-op for an absent token", () => {
     expect(removeToken(["a"], "b")).toEqual(["a"]);
+  });
+});
+
+describe("tokensOf", () => {
+  it("reads the tokens a store kept", () => {
+    expect(tokensOf(["design", "docs"])).toEqual(["design", "docs"]);
+  });
+
+  it("answers no tokens for a value that is not a list", () => {
+    // A saved record writes `null` for the field it never carried; appending to
+    // that value threw out of the edit that would have added the first token.
+    expect(tokensOf(null)).toEqual([]);
+    expect(tokensOf(undefined)).toEqual([]);
+    expect(tokensOf("design")).toEqual([]);
+    expect(tokensOf({ 0: "design" })).toEqual([]);
+  });
+
+  it("drops an entry that is not text, keeping the tokens beside it", () => {
+    expect(tokensOf(["design", null, 2, "docs"])).toEqual(["design", "docs"]);
   });
 });

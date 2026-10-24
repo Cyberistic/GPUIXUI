@@ -210,4 +210,29 @@ describe("TagInput", () => {
 
     tags.unmount();
   });
+
+  it("adds the first token to a group whose saved token list is not a list", () => {
+    // The tokens are saved with the control — a settings pane, a tag field in a
+    // record — and JSON writes `null` for a list a record never carried. The add
+    // rule reduced over that value, so typing the first token threw out of the
+    // edit instead of reporting it.
+    const onValueChange = vi.fn();
+    const tags = renderComponent(
+      <TagInput
+        label="Tags"
+        // @ts-expect-error — the list a store wrote where it carried no tokens.
+        value={null}
+        onValueChange={onValueChange}
+      >
+        <TagInputField testId="tag-field" placeholder="Add a tag" />
+      </TagInput>,
+    );
+
+    type(tags, "design");
+    tags.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["design"]);
+
+    tags.unmount();
+  });
 });

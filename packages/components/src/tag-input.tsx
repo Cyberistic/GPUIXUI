@@ -43,7 +43,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
+import { addTokens, removeToken, splitDraft, tokensOf } from "./tag-input/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
@@ -81,7 +81,7 @@ const useTagInput = (): TagInputContextValue => {
 
 /** {@link TagInput} props. */
 export interface TagInputProps extends Omit<Props, "children"> {
-  /** The tokens. The caller owns them; chips are rendered from this list. */
+  /** The tokens. The caller owns them; chips are rendered from this list. A value that is not a list — a saved record's `null` — carries no tokens, and an entry that is not text is dropped. */
   readonly value: ReadonlyArray<string>;
   /** Every accepted token list, including a removal. */
   readonly onValueChange: (value: ReadonlyArray<string>) => void;
@@ -118,8 +118,13 @@ export const TagInput = ({
   const [draft, setDraft] = useState("");
   assertParts(tagInputRoot, children);
 
+  // The tokens are a saved list as often as literals: a record's `null` is read
+  // as no tokens here, once, so adding the first one cannot throw out of the
+  // edit that carries it.
+  const tokens = tokensOf(value);
+
   const add = (incoming: ReadonlyArray<string>): void => {
-    onValueChange(addTokens(value, incoming, { allowDuplicates, max }));
+    onValueChange(addTokens(tokens, incoming, { allowDuplicates, max }));
   };
 
   const commit = (): void => {
@@ -145,14 +150,14 @@ export const TagInput = ({
   };
 
   const context: TagInputContextValue = {
-    tokens: value,
+    tokens,
     draft,
     disabled,
     editDraft,
     addDraft: commit,
     remove: (token) => {
       if (disabled) return;
-      onValueChange(removeToken(value, token));
+      onValueChange(removeToken(tokens, token));
     },
   };
 

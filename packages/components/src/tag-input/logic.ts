@@ -7,6 +7,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 
@@ -17,6 +18,19 @@ export interface AddRules {
   /** The maximum number of tokens; additions past it are refused. */
   readonly max?: number;
 }
+
+/**
+ * The tokens a caller's value carries, read at the boundary.
+ *
+ * A token list is saved with the control — a saved settings pane, a tag field in
+ * a record — so JSON's `null` for a field a record never carried reaches the
+ * component, and appending to it threw out of the edit that would have added the
+ * first token. Only a list is a list, and a value that is not text is not a
+ * token: it is dropped, so an older shape cannot poison the list a later edit
+ * reports.
+ */
+export const tokensOf = (value: unknown): ReadonlyArray<string> =>
+  Arr.isArray(value) ? Arr.filter(value, P.isString) : [];
 
 /** The tokens in a draft: split on commas, trimmed, empties dropped. */
 export const splitDraft = (draft: string): ReadonlyArray<string> =>
