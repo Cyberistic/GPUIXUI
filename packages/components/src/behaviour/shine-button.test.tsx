@@ -5,7 +5,8 @@
  * starts inside the control (a pop); halves that do not travel together; a
  * layer that outlives its sweep; a re-entry that does not restart the sweep; a
  * reduced-motion reader who still gets the journey; a disabled action that
- * shines; and a sheen painted in the action's own fill, where it would vanish.
+ * shines — including one disabled under a sheen already crossing; and a sheen
+ * painted in the action's own fill, where it would vanish.
  *
  * The motion clock is paused for the frame readings, so the band's position is
  * the declared fraction rather than wherever real time had got. Its removal is a
@@ -56,6 +57,13 @@ const Hoverable = ({ reduced }: { readonly reduced: boolean }) => (
       Ship
     </ShineButton>
   </MotionProvider>
+);
+
+/** The same, for a control disabled while it is already wearing a sheen. */
+const Disablable = ({ disabled }: { readonly disabled: boolean }) => (
+  <ShineButton testId="action" style={{ width }} disabled={disabled}>
+    Ship
+  </ShineButton>
 );
 
 /** Every painted half of the sheen. */
@@ -190,6 +198,36 @@ describe("ShineButton", () => {
       hoverCentreOf(page, "action");
       settle(page);
 
+      expect(shines(page)).toHaveLength(0);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("drops a sheen already crossing when the action is disabled", async () => {
+    // A sheen marks a hover, so it belongs to a control that can still answer
+    // one: a disabled action keeps no band, and the rule is about the control
+    // rather than only about the pointer that entered it. The sweep's removal is
+    // a real timer, so this half polls: the animated band would still be
+    // crossing for the rest of its 500 ms window.
+    const page = renderComponent(<Disablable disabled={false} />);
+    try {
+      page.renderer.clockPause();
+      hoverCentreOf(page, "action");
+      settle(page);
+      page.renderer.clockFastForward(250);
+      settle(page);
+      expect(shines(page)).toHaveLength(2);
+
+      page.rerender(<Disablable disabled />);
+      settle(page);
+
+      // Well inside the window the animated sweep would still be running.
+      await waitFor(() => expect(shines(page)).toHaveLength(0), 80);
+
+      // Re-enabling waits for the next entry rather than reviving the sweep.
+      page.rerender(<Disablable disabled={false} />);
+      settle(page);
       expect(shines(page)).toHaveLength(0);
     } finally {
       page.unmount();

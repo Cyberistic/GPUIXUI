@@ -74,10 +74,12 @@ export const ShineButton = ({
   const windowMs = transitionWindowMs(timing);
 
   // A sheen is pure journey, so a reader who turns the preference on mid-sweep
-  // keeps no band: it goes with the travel the setting removed.
+  // keeps no band: it goes with the travel the setting removed. An action that
+  // becomes disabled under a sweep can no longer answer the hover it marks, so
+  // the band goes with the control instead of crossing an inert action.
   useEffect(() => {
-    if (preference === "reduced") setSweeping(false);
-  }, [preference]);
+    if (preference === "reduced" || disabled) setSweeping(false);
+  }, [disabled, preference]);
 
   useEffect(() => {
     if (!sweeping || preference === "reduced") return;
@@ -151,7 +153,7 @@ export const shineButtonMeta = {
   limitations: [
     "the sheen travels on inset left, not a transform: the runtime scales nothing (upstream issue #102)",
     "the band is two two-stop gradients, because 0.11.0's LinearGradientBackground takes exactly two stops",
-    "a reduced-motion reader and a keyboard reader get no sheen; the hover fill and the focus ring are the remaining feedback",
+    "a reduced-motion reader, a keyboard reader and a disabled action get no sheen — including a band already crossing when the action is disabled; the hover fill and the focus ring are the remaining feedback",
     "one sweep per hover entry; a repeating sheen needs the caller to re-enter or its own timer",
   ],
   docs: "docs/shine-button.mdx",

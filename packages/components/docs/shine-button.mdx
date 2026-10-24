@@ -38,4 +38,5 @@ import { ShineButton } from "@gpuixui/components/shine-button";
 
 - Inset travel, not a scaled layer.
 - Two stops, two halves; the runtime's gradient accepts two.
-- One sweep per entry.
+- One sweep per entry: a repeating sheen needs the caller to re-enter or its own timer.
+- A reduced-motion reader, a keyboard reader and a disabled action get no sheen; the control's hover fill and focus ring are the feedback that remains. A band already crossing when the action is disabled goes with it — the action can no longer answer the hover the band marks — and re-enabling waits for the next entry rather than reviving the old sweep.

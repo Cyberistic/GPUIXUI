@@ -17898,6 +17898,23 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `packages/components`: **a sheen survived the control that could no longer answer its hover** —
+`ShineButton`'s band is hover feedback and its own suite states the rule ("paints no sheen on a
+disabled action"), but the only cleanup effect read the reduced-motion preference: the `enter`
+handler returns early for `disabled` and nothing dropped a sweep already crossing. A hovered action
+whose caller then disabled it kept the two halves travelling for the rest of the level's window
+(500 ms at the default `notice`) across a control that refuses every route — the same class the
+LiquidButton wash had (`a disabled action kept the wash it was already wearing`), and the one sibling
+the record did not name. The effect now reads `disabled` with the preference, so the band goes in the
+commit that makes the action inert, and re-enabling waits for the next entry instead of reviving it.
+Proof: `src/behaviour/shine-button.test.tsx`'s `drops a sheen already crossing when the action is
+disabled` hovers at a paused motion clock, advances 250 ms into the sweep, re-renders the same tree
+`disabled` and requires no painted half well inside the window, then re-enables and requires the band
+still absent. Directions measured at `HEAD`: `expected [ { id: 3, type: 'div', …(7) }, …(1) ] to have
+a length of +0 but got 2`; with the guard the file is 8/8. Docs: the record's limitation, the pkg
+page's §Limitations (it taught neither the preference nor the disabled rule) and the `COMPONENTS.md`
+row, which was a one-line stub and now states the measured sweep. No live scenario applies — no probe
+mounts `ShineButton`; the behaviour suite reads the real renderer.
 `[x]` Hold the **per-surface motion table to its painters**, and teach the package's
 duration entry point — the sonner toast rewrite moved the card to a 16px rise in on
 its own 220 ms and a 16px slide right on a 180 ms exit, and `docs/component-api.md`
