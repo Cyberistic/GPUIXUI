@@ -495,10 +495,9 @@ describe("the motion page", () => {
     // a reader could not learn how steps are placed, or that `sample` and
     // `complete` read one clock — the two used to disagree about a clock before
     // the sequence and a sequence with nothing left to run.
-    const sequence = new Sequence<string>().at("title", 0, 120).append(
-      "body",
-      180,
-    );
+    const sequence = new Sequence<string>()
+      .at("title", 0, 120)
+      .append("body", 180);
 
     expect(sequence.duration()).toBe(300);
     expect(sequence.sample(-5).map((step) => step.state)).toEqual([
@@ -533,9 +532,9 @@ describe("the motion page", () => {
     expect(inward.settled).toBe(false);
     expect(inward.velocity).toBe(-200);
     // Moving into it is the rest it stops at.
-    expect(sampleInertia(inertia(350, { max: 100 }), 100, 200, 50).settled).toBe(
-      true,
-    );
+    expect(
+      sampleInertia(inertia(350, { max: 100 }), 100, 200, 50).settled,
+    ).toBe(true);
 
     // A declaration a store wrote is read the way the samplers read it.
     expect(inertia(Number.NaN)).toEqual(coast);
@@ -548,7 +547,9 @@ describe("the motion page", () => {
     expect(project(coast, 1.7e308, 1.7e308)).toBe(1.7e308);
 
     expect(page).toContain("## Inertia");
-    expect(page).toContain(`project(coast, 0, 600); // ${project(coast, 0, 600)}`);
+    expect(page).toContain(
+      `project(coast, 0, 600); // ${project(coast, 0, 600)}`,
+    );
     expect(page).toContain(
       `sampleInertia(coast, 0, 600, 350).value; // ${sampleInertia(coast, 0, 600, 350).value.toFixed(1)}`,
     );
