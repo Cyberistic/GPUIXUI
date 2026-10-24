@@ -62,6 +62,17 @@ export const tokenRole: Readonly<Record<HighlightTokenClass, SyntaxRole>> = {
 };
 
 /**
+ * The language a stored value names.
+ *
+ * A language is a preference an app persists beside its draft, so it arrives
+ * untyped like an indent or a value; the tokenizer reads the id through
+ * `.trim()`, so a number or an object threw out of the render. An id that is
+ * not text is the tokenizer's plain fallback — the paint an unknown id gets.
+ */
+export const languageOf = (language: unknown): string =>
+  typeof language === "string" ? language : "";
+
+/**
  * The source as one run per token, in order. The runs' text concatenated is the
  * source itself, newlines included — the invariant the highlight layer paints
  * from, so a reader never sees a character the tokenizer ate.
@@ -71,12 +82,14 @@ export const tokenRole: Readonly<Record<HighlightTokenClass, SyntaxRole>> = {
  */
 export const codeRuns = (
   source: string,
-  language: string,
+  language: unknown,
 ): ReadonlyArray<HighlightRun> =>
-  Arr.map(tokenize(source, { lang: language }).tokens, ({ className, value }) =>
-    className === undefined
-      ? { text: value }
-      : { text: value, role: tokenRole[className] },
+  Arr.map(
+    tokenize(source, { lang: languageOf(language) }).tokens,
+    ({ className, value }) =>
+      className === undefined
+        ? { text: value }
+        : { text: value, role: tokenRole[className] },
   );
 
 /** The line endings a code row splits on. */
@@ -91,7 +104,7 @@ const LINE_ENDINGS = /\r\n?|\n/;
  */
 export const codeLines = (
   source: string,
-  language: string,
+  language: unknown,
 ): ReadonlyArray<ReadonlyArray<HighlightRun>> => {
   const rows: Array<Array<HighlightRun>> = [];
   let current: Array<HighlightRun> = [];

@@ -125,6 +125,22 @@ describe("CodeEditor", () => {
     editor.unmount();
   });
 
+  it("paints the source plain when the stored language is not text", () => {
+    // The bug guarded: a language restored beside the draft as a number
+    // reached `@tanstack/highlight`, which reads the id through `.trim()`, so
+    // the editor threw `value.trim is not a function` out of the render instead
+    // of painting the plain fallback an unknown id gets.
+    const editor = render(
+      <CodeEditor
+        defaultValue="const a = 1"
+        language={42 as unknown as string}
+      />,
+    );
+    expect(editor.renderer.getAllText()).toContain("const a = 1");
+    expect(valueOf(editor)).toBe("const a = 1");
+    editor.unmount();
+  });
+
   it("names the field when the stored label is blank", () => {
     // The bug guarded: a label restored from an i18n table with a missing row
     // published `aria-label=""`, so the editor had no name in the a11y tree.

@@ -71,7 +71,7 @@ export interface CodeEditorProps {
   readonly defaultValue?: string;
   /** Every edit, including Tab and Enter insertions. */
   readonly onValueChange?: (value: string) => void;
-  /** The tokenizer's language id (`"tsx"`, `"rust"`). Unknown ids paint plain text. */
+  /** The tokenizer's language id (`"tsx"`, `"rust"`). An unknown id, or one that is not text, paints plain text. */
   readonly language?: string;
   /** Number every row in a gutter. Default `true`. */
   readonly lineNumbers?: boolean;
@@ -143,7 +143,7 @@ export const CodeEditor = ({
 
   const syntax = syntaxColors(theme);
   const metrics = textStyle(theme, "codeBlock");
-  const lines = codeLines(value, language ?? "");
+  const lines = codeLines(value, language);
   const gutterWidth =
     Math.ceil(
       String(Math.max(1, lines.length)).length * metrics.fontSize * MONO_DIGIT,

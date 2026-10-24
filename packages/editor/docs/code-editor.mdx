@@ -25,7 +25,7 @@ import { CodeEditor } from "@gpuixui/editor";
 | `value` | `string` | — | The controlled text. A stored value that is not text reads as an empty document. |
 | `defaultValue` | `string` | `""` | The uncontrolled starting text. A stored value that is not text reads as an empty document. |
 | `onValueChange` | `(value: string) => void` | — | Every edit, including Tab and Enter. |
-| `language` | `string` | — | The tokenizer's language id. |
+| `language` | `string` | — | The tokenizer's language id. An unknown id, or one that is not text, paints plain text. |
 | `lineNumbers` | `boolean` | `true` | Number the rows in a gutter. |
 | `tabMode` | `"insert" \| "focus"` | `"insert"` | What Tab does. |
 | `indent` | `string` | `"  "` | The string Tab inserts. An empty string leaves Tab as the platform traversal, and a value that is not a string reads as the default. |
@@ -45,5 +45,6 @@ import { CodeEditor } from "@gpuixui/editor";
 - **Tab and Enter insert at the end**, because the runtime exposes no caret position.
 - **Tab only swallows the traversal when it inserts something**: an empty `indent` leaves the platform's Tab, so a field is never a keyboard trap, and an indent restored from storage that is not a string reads as the default `"  "`.
 - **A stored draft that is not text paints an empty document**: a `value` or `defaultValue` restored from storage as `null` reads through `draftOf`, so the tokenizer and the gutter paint the empty state instead of throwing out of the render.
+- **A stored `language` that is not text paints plain text**: the id is read through `languageOf` before the tokenizer sees it, so a preference saved as a number or an object is the same plain fallback an unknown id gets instead of a `.trim()` throw.
 - **A blank `label` reads as `"Code editor"`**: the name is read through the same absence rule as every other name, so a stored empty string cannot publish an unnamed field.
 - No native host, so pixel-exact layer alignment is unverified.

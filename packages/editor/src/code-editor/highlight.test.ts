@@ -29,6 +29,17 @@ describe("codeRuns", () => {
     ]);
   });
 
+  it("reads a language that is not text as the plain fallback", () => {
+    // The bug guarded: a language is a preference an app persists beside its
+    // draft, and the tokenizer reads the id through `.trim()`, so a stored
+    // number or object threw `value.trim is not a function` out of the render
+    // instead of painting the plain fallback an unknown id gets.
+    const source = "const a = 1;\nconst b = 2;";
+    expect(codeRuns(source, 42)).toEqual([{ text: source }]);
+    expect(codeRuns(source, { id: "ts" })).toEqual([{ text: source }]);
+    expect(codeRuns(source, null)).toEqual([{ text: source }]);
+  });
+
   it("never loses a character: the runs concatenate to the source", () => {
     const source = 'const a = 1;\nconst b = "two";\n// end\n';
     const joined = codeRuns(source, "ts")
@@ -49,5 +60,9 @@ describe("codeLines", () => {
   it("drops the single empty row a trailing newline would make", () => {
     expect(codeLines("a\n", "plaintext")).toEqual([[{ text: "a" }]]);
     expect(codeLines("a\n\n", "plaintext")).toEqual([[{ text: "a" }], []]);
+  });
+
+  it("paints one plain row per line for a language that is not text", () => {
+    expect(codeLines("a\nb", 42)).toEqual([[{ text: "a" }], [{ text: "b" }]]);
   });
 });
