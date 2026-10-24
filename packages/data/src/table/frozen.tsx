@@ -17,7 +17,10 @@
  *   leaves the frozen column where it is; a vertical mirror must not reset the
  *   data pane's `x`, so the body's last `scrollX` is carried into the call.
  * - **Height** — the frozen pane's header and rows paint the same height as the
- *   data pane's, because both use the table's own header and row recipes.
+ *   data pane's, because both use the table's own header and row recipes. The
+ *   composition's own box is the caller's height, or the pane it fills when that
+ *   height cannot paint: two row scrollers handed no bound paint nothing at all
+ *   (`behaviour/paintable-height.test.tsx`).
  *
  * A press on a frozen cell is the caller's: `frozenRow` renders the same
  * `TableRow` the data pane does, including `selected` and `onClick`, so choosing
@@ -58,7 +61,10 @@ import {
   type PublicInstance,
 } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import * as Option from "effect/Option";
 import { Fragment, useRef, useState, type ReactNode } from "react";
+import { paneFill, usePaintedHeight } from "../internal/painted.js";
+import { paintableSize } from "../internal/size.js";
 import { DEFAULT_HEADER_HEIGHT } from "./frame.js";
 import {
   DEFAULT_EMPTY_MESSAGE,
@@ -70,7 +76,16 @@ import {
 
 /** {@link FrozenTable} props. Generics are per row, like `useTable`'s. */
 export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
-  /** A definite height: the panes are two scrollers and need a bound. */
+  /**
+   * A definite height: the panes are two scrollers and need a bound.
+   *
+   * A height the layout cannot paint reads as **no height**
+   * ({@link paintableSize}): the composition takes the share of the pane it
+   * sits in and bounds both scrollers from the height that box painted.
+   * Measured before the rule, in a 320-point pane: a `NaN` height painted both
+   * row scrollers at **0 points** against the **276** the same grid paints with
+   * a readable one, so the grid showed no row at all.
+   */
   readonly height: number;
   /** The frozen pane's width, in pixels. */
   readonly frozenWidth: number;
@@ -137,6 +152,7 @@ export const FrozenTable = <Row,>({
   frozenTestId,
   bodyTestId,
   viewportTestId,
+  onLayout,
   style,
   ...rest
 }: FrozenTableProps<Row>) => {
@@ -145,6 +161,14 @@ export const FrozenTable = <Row,>({
   const body = useRef<PublicInstance | null>(null);
   const syncing = useRef(false);
   const bodyX = useRef(0);
+  // The box the composition was given: the caller's height when it paints, and
+  // otherwise the height this box measured in the pane it fills. A height
+  // nothing could be read from is no height, so the layout owns the box and the
+  // two scrollers are bounded from what it painted (`internal/painted.ts`).
+  const bound = paintableSize(height);
+  const painted = usePaintedHeight(onLayout);
+  const box = Option.orElse(bound, () => painted.measured);
+  const boxHeight = Option.getOrUndefined(box);
   const [frozenHeaderHeight, setFrozenHeaderHeight] = useState(0);
   const [dataHeaderHeight, setDataHeaderHeight] = useState(0);
   // The panes' headers are the caller's rows, so their heights can differ by a
@@ -153,7 +177,9 @@ export const FrozenTable = <Row,>({
   const measuredHeader = Math.max(frozenHeaderHeight, dataHeaderHeight);
   const headerHeight =
     measuredHeader === 0 ? DEFAULT_HEADER_HEIGHT : measuredHeader;
-  const bodyHeight = Math.max(0, height - headerHeight);
+  const bodyHeight = Option.getOrUndefined(
+    Option.map(box, (size) => Math.max(0, size - headerHeight)),
+  );
 
   // The source's own change arrives inside `scrollTo`, so the flag stops the
   // target mirroring it back (`data-grid-frozen-column`). A vertical mirror
@@ -176,14 +202,16 @@ export const FrozenTable = <Row,>({
   return (
     <div
       {...rest}
+      onLayout={painted.onLayout}
       role="table"
       style={mergeStyles(
         {
+          ...paneFill(bound),
           display: "flex",
           flexDirection: "row",
-          height,
           minHeight: 0,
           overflow: "hidden",
+          ...(boxHeight === undefined ? {} : { height: boxHeight }),
         },
         style,
       )}
@@ -196,7 +224,7 @@ export const FrozenTable = <Row,>({
           flexBasis: frozenWidth,
           display: "flex",
           flexDirection: "column",
-          height,
+          height: boxHeight,
           minHeight: 0,
         }}
       >
@@ -223,7 +251,7 @@ export const FrozenTable = <Row,>({
           flexShrink: 1,
           flexBasis: 0,
           minWidth: 0,
-          height,
+          height: boxHeight,
           display: "flex",
           flexDirection: "column",
         }}
@@ -240,7 +268,7 @@ export const FrozenTable = <Row,>({
               flexBasis: contentWidth,
               display: "flex",
               flexDirection: "column",
-              height,
+              height: boxHeight,
               minHeight: 0,
             }}
           >

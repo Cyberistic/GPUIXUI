@@ -58,7 +58,7 @@ import {
 } from "react";
 import { useTheme } from "../theme.js";
 import { paintableSize } from "../internal/size.js";
-import { paneFill, usePaintedHeight } from "./measured.js";
+import { paneFill, usePaintedHeight } from "../internal/painted.js";
 import type { TreeCursor, TreeRow } from "../tree/logic.js";
 import { TreeRowView } from "../tree/row.js";
 import { useTree } from "../tree/use-tree.js";

@@ -53,10 +53,28 @@ const rowText = (name: string): string =>
     onSome: (line) => line,
   });
 
-/** The prop names a `Props` interface declares, in source order. */
+/**
+ * The prop names a `Props` interface declares, in source order.
+ *
+ * The body is read by its **balanced** braces: an interface's JSDoc may cite
+ * another symbol (`{@link paintableSize}`), and a slice to the first `}` ended
+ * at the citation and read no prop at all.
+ */
 const propsOf = (interfaceName: string): ReadonlyArray<string> => {
   const start = frozenSource.indexOf(`interface ${interfaceName}`);
-  const body = frozenSource.slice(start, frozenSource.indexOf("}", start));
+  const open = frozenSource.indexOf("{", start);
+  let depth = 0;
+  let end = open;
+  for (let at = open; at < frozenSource.length; at += 1) {
+    const character = frozenSource[at];
+    if (character === "{") depth += 1;
+    if (character === "}") depth -= 1;
+    if (depth === 0) {
+      end = at;
+      break;
+    }
+  }
+  const body = frozenSource.slice(open, end);
   return [...body.matchAll(/readonly (\w+)/g)].map(([, name]) => name ?? "");
 };
 

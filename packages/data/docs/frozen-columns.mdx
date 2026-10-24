@@ -42,7 +42,7 @@ import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `height` | `number` | — | the grid's definite height |
+| `height` | `number` | — | the grid's definite height; one the layout cannot paint reads as no height (see below) |
 | `frozenWidth` | `number` | — | the frozen pane's width |
 | `contentWidth` | `number` | — | the scrolling columns' total width |
 | `rows` | `ReadonlyArray<Row>` | — | the records, in paint order |
@@ -54,6 +54,24 @@ import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data
 | `empty` | `ReactNode` | `No rows` | the data pane's empty message, wrapped in a `TableEmpty` row |
 | `frozenTestId` / `bodyTestId` / `viewportTestId` | `string` | — | locators for a probe |
 | `style` / `testId` / `ref` / `aria-label` | host props | — | on the grid |
+
+## The grid's box
+
+`height` bounds both row scrollers: the frozen pane's and the data pane's each
+get the caller's height less the taller of the two measured headers, so a record
+keeps one `y` across the seam.
+
+A height is often computed — a share of a window, a pane's measured box, a value
+read from storage before the first layout — and one the layout cannot paint
+(`NaN`, an infinity, a negative) reads as **no height**: the composition takes
+the share of the pane it sits in and bounds both scrollers from the height that
+box painted. A height that does paint is the caller's, exactly.
+
+Measured in the renderer on 0.11.0: in a 320-point pane, `height={NaN}` painted
+both row scrollers at **0 points** against the **276** the same grid paints with
+a readable height, so the grid showed no row at all and neither pane could
+scroll. `src/behaviour/paintable-height.test.tsx` holds the case beside the four
+other bounded surfaces, and the rule itself lives in `internal/size.ts`.
 
 ## Limitations
 

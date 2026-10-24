@@ -60,7 +60,7 @@ import {
 } from "../table/table.js";
 import { useMeasuredBodyHeight } from "../table/frame.js";
 import { paintableSize } from "../internal/size.js";
-import { paneFill } from "./measured.js";
+import { paneFill } from "../internal/painted.js";
 import { VirtualList, type VisibleRange } from "./list.js";
 import {
   useVirtualRows,

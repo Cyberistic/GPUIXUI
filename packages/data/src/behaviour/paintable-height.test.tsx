@@ -43,6 +43,7 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import { FrozenTable } from "../table/frozen.js";
 import {
   Table,
   TableBody,
@@ -243,6 +244,67 @@ const windowedTreeRowsFor = (height: number | undefined): number =>
     (mounted) => paintedRows(mounted, "node "),
   );
 
+/** The records the frozen composition paints in both panes. */
+const FROZEN_ROWS = Arr.map(Arr.range(0, 19), (index) => ({
+  id: `record-${index}`,
+  name: `record-${index}`,
+}));
+
+/** The row height both frozen panes paint. */
+const FROZEN_ROW_HEIGHT = 32;
+
+/** The frozen composition in a pane it has to fill, given a height to read. */
+const Frozen = ({ height }: { readonly height: number }) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", height: WINDOW_PANE }}
+  >
+    <FrozenTable
+      height={height}
+      frozenWidth={180}
+      contentWidth={420}
+      rows={FROZEN_ROWS}
+      rowKey={(row) => row.id}
+      aria-label="Records"
+      frozenTestId="paintable-frozen"
+      bodyTestId="paintable-frozen-body"
+      frozenHeader={
+        <TableRow>
+          <TableHeaderCell width={180}>Name</TableHeaderCell>
+        </TableRow>
+      }
+      frozenRow={(row) => (
+        <TableRow style={{ height: FROZEN_ROW_HEIGHT }}>
+          <TableCell width={180}>
+            <text>{row.name}</text>
+          </TableCell>
+        </TableRow>
+      )}
+      header={
+        <TableRow>
+          <TableHeaderCell width={140}>Status</TableHeaderCell>
+        </TableRow>
+      }
+      row={() => (
+        <TableRow style={{ height: FROZEN_ROW_HEIGHT }}>
+          <TableCell width={140}>
+            <text>tracked</text>
+          </TableCell>
+        </TableRow>
+      )}
+    />
+  </div>
+);
+
+/** The heights the frozen composition's two row scrollers paint. */
+const frozenPanesFor = (height: number): ReadonlyArray<number> =>
+  withRoot(
+    () => renderData(<Frozen height={height} />),
+    (mounted) => [
+      requireBounds(mounted, "paintable-frozen").height,
+      requireBounds(mounted, "paintable-frozen-body").height,
+    ],
+  );
+
 describe("a height the layout cannot paint", () => {
   it("keeps the row scroller's measured frame", () => {
     // The frame: the table's own height less its header.
@@ -300,5 +362,20 @@ describe("a height the layout cannot paint", () => {
     expect(windowedTreeRowsFor(undefined)).toBeGreaterThanOrEqual(
       Math.ceil(WINDOW_PANE / 37),
     );
+  });
+
+  it("keeps the frozen composition's two scrollers inside their pane", () => {
+    const bounded = frozenPanesFor(WINDOW_PANE);
+    // Both panes take the caller's height less their header, and the pair
+    // agrees so a record keeps one `y` across the seam.
+    expect(bounded[0]).toBeGreaterThan(100);
+    expect(bounded[0]).toBe(bounded[1]);
+
+    // Measured before the fix: both scrollers painted **0 points** against the
+    // **276** a readable height gives them, so a 320-point pane showed no row
+    // at all and neither scroller had anything to scroll.
+    expect(frozenPanesFor(Number.NaN)).toEqual(bounded);
+    expect(frozenPanesFor(Number.POSITIVE_INFINITY)).toEqual(bounded);
+    expect(frozenPanesFor(Number.NEGATIVE_INFINITY)).toEqual(bounded);
   });
 });

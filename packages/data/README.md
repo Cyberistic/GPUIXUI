@@ -27,6 +27,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | ---- | -------- | ---------------------- |
 | No `position: "sticky"` | `data-grid-fixed-header`, `table-lifecycle` | The header is a **sibling** of the row scroller, and both sit inside **one** horizontal scroller. A header moved into the row scroller painted at `y = -36`. |
 | A frozen column is two scrollers | `data-grid-frozen-column`, `frozen-column-lifecycle` | `FrozenTable` puts the frozen column in its own vertical scroller beside the data pane and mirrors both ways through `onScrollChange` → `renderer.scrollTo`, guarded by a ref. The sideways pan is the data pane's alone, and a pressed frozen cell chooses the record for the whole grid. A zero-row grid paints `TableEmpty` (`No rows` by default) in the data pane instead of the body's loading skeleton. |
+| A bounded surface needs a height it can paint | `behaviour/paintable-height.test.tsx` | A height is often computed, and the runtime drops one it cannot lay out. `Table`, `VirtualTable`, `VirtualTree`, `TreeView` and `FrozenTable` read it through `paintableSize`: a height that is not finite, or is negative, is **no height**, so the surface takes the pane's share and measures the box it painted. Measured in a 320-point pane, `FrozenTable height={NaN}` painted both row scrollers at **0 points** against the **276** a readable height gives them. |
 | No `transform` | upstream issue #102 | Column resize and row moves change `left`/`width`, never a transform. |
 | No canvas drawing | `chart-raster` | A chart is stacked `<svg>` (one tint each) or an `<img>` pixel buffer; see §Charts in plan 610. |
 | Wheel moves every scrollable ancestor | `nested-scroll-lifecycle` | The table's `height` bounds the table; the body owns the vertical wheel. |
@@ -252,7 +253,11 @@ A **pinned column** is `FrozenTable`, not a column attribute: the runtime paints
 no `position: "sticky"`, so the frozen column is its own vertical scroller beside
 the data pane and the two are mirrored through `onScrollChange` →
 `renderer.scrollTo` with a re-entrancy guard (`data-grid-frozen-column`,
-`frozen-column-lifecycle`). The sideways pan is the data pane's alone, and a
+`frozen-column-lifecycle`). Both scrollers take the grid's `height` less the
+taller of the two measured headers; a height the layout cannot paint is **no
+height**, so the composition bounds them from the box it painted in the pane it
+fills (`behaviour/paintable-height.test.tsx`). The sideways pan is the data
+pane's alone, and a
 press on a frozen cell chooses the record for the whole grid. An empty set is
 the grid's too: the data pane paints `TableEmpty` — `No rows` when the caller
 names no `empty`, a string as that cell's own text — because a body with no
@@ -337,7 +342,10 @@ measures the column it fills and draws the list at that height — the runtime's
 column's height; an auto-height or non-flex parent gives the surface no viewport
 and it paints no rows. In a 320px pane both paint the window they paint at
 `height={320}` (8 table rows, 10 tree rows);
-`behaviour/paintable-height.test.tsx` holds both.
+`behaviour/paintable-height.test.tsx` holds both. The frozen composition reads
+the same rule: its two scrollers are bounded by the grid's `height`, or by the
+box it measured in the pane — a `NaN` height used to paint both at **0 points**
+against the **276** a readable height gives them.
 
 **A row height the window cannot divide is the row this package paints.**
 `rowHeight` (and the list's `estimatedItemHeight`) is often computed, and a
