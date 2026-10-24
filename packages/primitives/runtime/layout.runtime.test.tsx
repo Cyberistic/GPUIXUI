@@ -30,6 +30,8 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text, type TextProps } from "../src/components/Text.js";
 import type { RuleSpec, ScrollAxis } from "../src/core/style.js";
+import type { StackDirection } from "../src/core/layout.js";
+import { stackStyle } from "../src/core/layout.js";
 import type {
   Density,
   ElevationLevel,
@@ -283,6 +285,41 @@ it("stacks a column Stack's children by the theme's gap", async () => {
         {card("a", 40, 20)}
         {card("b", 40, 20)}
       </Stack>
+    </Surface>,
+  );
+  const a = boundsOf(runtime, "a");
+  const b = boundsOf(runtime, "b");
+  expect(a.x).toBe(b.x);
+  expect(b.y - a.y).toBe(20 + testTheme.spacing.sm);
+});
+
+// Bug guarded: `stackStyle` is published for a consumer that paints its own
+// layout (a custom pane, a split), and a direction saved with that layout
+// arrives as a string the union may no longer name. Read raw, the resolver
+// handed the renderer `flexDirection: "vertical"` — not a value its flex
+// grammar carries, so the pane painted as a **row** — while the class recipe the
+// shipped `Stack` uses drew a column for the same name. One reader answers the
+// column both paths paint.
+it("paints the axis stackStyle answers for a stored direction", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="none"
+        testId="pane"
+        // The cast is the storage boundary: a saved direction is one string.
+        style={stackStyle(
+          {
+            direction: "vertical" as StackDirection,
+            gap: "sm",
+            align: "start",
+          },
+          testTheme,
+        )}
+      >
+        {card("a", 40, 20)}
+        {card("b", 40, 20)}
+      </Box>
     </Surface>,
   );
   const a = boundsOf(runtime, "a");

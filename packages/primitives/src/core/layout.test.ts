@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { boxStyle, fieldRows, gridStyle, stackStyle } from "./layout.js";
+import * as Arr from "effect/Array";
+import {
+  boxStyle,
+  fieldRows,
+  gridStyle,
+  isStackDirection,
+  stackDirection,
+  stackStyle,
+} from "./layout.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
 /**
@@ -19,6 +27,47 @@ describe("stackStyle", () => {
     expect(stackStyle({ direction: "row" }, testTheme).flexDirection).toBe(
       "row",
     );
+  });
+
+  // Bug guarded: `direction` is stored with the layout that draws it (a saved
+  // workspace records each pane's axis), and the two paint paths read it
+  // differently — the class recipe drew a column for anything that was not
+  // `row`, while this resolver handed the runtime the stored string, which its
+  // flex grammar does not carry and quietly laid out as a row. One reader now
+  // answers the column the shipped painter already drew.
+  it("reads a stored direction this release does not carry as the column it painted", () => {
+    const stored: ReadonlyArray<unknown> = [
+      "vertical",
+      "horizontal",
+      "ROW",
+      "",
+      "row-reverse",
+      null,
+      2,
+      { axis: "row" },
+    ];
+    expect(stackDirection(undefined)).toBe("column");
+    expect(stackDirection("row")).toBe("row");
+    expect(stackDirection("column")).toBe("column");
+    Arr.forEach(stored, (value) => {
+      expect(stackDirection(value), String(value)).toBe("column");
+      // The cast is the storage boundary: a saved direction is one string.
+      expect(
+        stackStyle({ direction: value as "row" | "column" }, testTheme)
+          .flexDirection,
+        String(value),
+      ).toBe("column");
+    });
+  });
+
+  it("tests membership against the two axes the runtime draws", () => {
+    expect(isStackDirection("row")).toBe(true);
+    expect(isStackDirection("column")).toBe(true);
+    // A name the union does not carry, including one inherited from `Object`.
+    expect(isStackDirection("row-reverse")).toBe(false);
+    expect(isStackDirection("toString")).toBe(false);
+    expect(isStackDirection(null)).toBe(false);
+    expect(isStackDirection(0)).toBe(false);
   });
 
   it("takes the gap from the theme's spacing scale, not from a literal", () => {

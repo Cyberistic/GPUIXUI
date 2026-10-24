@@ -199,6 +199,17 @@ and each is read through a membership test rather than indexed raw:
   `recipe.test.ts`, `presentational.test.tsx` and
   `runtime/layout.runtime.test.tsx` hold a stored name to the shipped
   `horizontal` tree (measured in a window: the rule's height was `0`).
+- a **stack `direction`** is stored with the layout that draws it — a saved
+  workspace records each pane's axis — and it was read the same two ways: the
+  class recipe drew a **column** for anything that was not `row`, while
+  `stackStyle` handed the renderer the stored string, which its flex grammar
+  does not carry and painted as a **row**. One `StackSpec` therefore had two
+  axes depending on which paint a consumer used. `isStackDirection`/
+  `stackDirection` (`core/layout.ts`) read the name once, as the column the
+  shipped painter already drew, and both `stackStyle` and `stackClass` read
+  through it; `layout.test.ts`, `recipe.test.ts`'s equivalence case and
+  `runtime/layout.runtime.test.tsx` (a window, the exported resolver painted
+  through a `Box`) hold a stored name to the column.
 - an **option list** and a **saved selection** are what a store hands back, so
   JSON's `null` (a field a record never set) and a deleted record (`null` inside
   an array) reach the data props. `Select`'s `options`, the three groups'

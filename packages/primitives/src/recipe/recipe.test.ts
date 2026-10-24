@@ -51,6 +51,7 @@ import {
   stackStyle,
   type BoxSpec,
   type GridSpec,
+  type StackDirection,
   type StackSpec,
 } from "../core/layout.js";
 import type {
@@ -430,6 +431,32 @@ describe("Stack recipe", () => {
         repainted,
       ).style.gap,
     ).toBe(99);
+  });
+
+  // Bug guarded: a direction is stored with the layout that draws it, and the
+  // two paint paths read it differently — the class recipe drew a column for
+  // anything that was not `row`, while `stackStyle` handed the runtime the
+  // stored string, which its flex grammar does not carry and quietly laid out as
+  // a row. One reader answers the column the shipped painter already drew.
+  it("agrees with stackStyle on a stored direction this release does not carry", () => {
+    const stored: ReadonlyArray<unknown> = [
+      "vertical",
+      "horizontal",
+      "ROW",
+      "",
+      "row-reverse",
+      null,
+    ];
+    Arr.forEach(stored, (value) => {
+      // The cast is the storage boundary: a saved direction is one string.
+      const spec: StackSpec = { direction: value as StackDirection };
+      const painted = recipeTw.classesToStyle(
+        stackClass(spec),
+        testTheme,
+      ).style;
+      expect(painted, String(value)).toEqual(stackStyle(spec, testTheme));
+      expect(painted.flexDirection, String(value)).toBe("column");
+    });
   });
 });
 

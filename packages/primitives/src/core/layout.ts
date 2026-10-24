@@ -8,11 +8,31 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
+import * as Arr from "effect/Array";
+import * as P from "effect/Predicate";
 import { spaceValue, type PrimitiveTheme, type SpaceStep } from "./theme.js";
 import { surfaceStyle, type SurfaceSpec } from "./style.js";
 
 export const STACK_DIRECTIONS = ["row", "column"] as const;
 export type StackDirection = (typeof STACK_DIRECTIONS)[number];
+
+/** Whether a value names a stack axis. */
+export const isStackDirection = (value: unknown): value is StackDirection =>
+  P.isString(value) && Arr.contains(STACK_DIRECTIONS, value);
+
+/**
+ * The axis a Stack paints.
+ *
+ * A direction is stored with the layout that draws it — a saved workspace
+ * records the axis each pane runs on — so a name this release renamed or
+ * dropped arrives as a string the union no longer names. Read twice, the two
+ * paint paths disagreed: the class recipe drew a **column** for anything that
+ * was not `row`, while the core resolver handed the runtime the stored string,
+ * which its flex grammar does not carry and quietly laid out as a row. The name
+ * is resolved once here, as the column the shipped painter already drew.
+ */
+export const stackDirection = (value: unknown): StackDirection =>
+  isStackDirection(value) ? value : "column";
 
 /** Where children sit across the axis. */
 export const STACK_ALIGNS = [
@@ -51,6 +71,11 @@ const justifyToFlex: Record<StackJustify, string> = {
 };
 
 export interface StackSpec {
+  /**
+   * The main axis. A stored name this release does not carry paints a
+   * **column**, the axis the class recipe has always fallen back to
+   * ({@link stackDirection}).
+   */
   readonly direction: StackDirection;
   /** Distance between children, on the theme's spacing scale. */
   readonly gap?: SpaceStep;
@@ -70,7 +95,7 @@ export const stackStyle = (
 ): StyleDesc => {
   const style: StyleDesc = {
     display: "flex",
-    flexDirection: spec.direction,
+    flexDirection: stackDirection(spec.direction),
   };
   if (spec.gap !== undefined) style.gap = spaceValue(theme, spec.gap);
   if (spec.align !== undefined) style.alignItems = alignToFlex[spec.align];

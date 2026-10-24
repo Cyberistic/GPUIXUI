@@ -124,6 +124,8 @@ export type {
 export {
   boxStyle,
   gridStyle,
+  isStackDirection,
+  stackDirection,
   stackStyle,
   STACK_ALIGNS,
   STACK_DIRECTIONS,

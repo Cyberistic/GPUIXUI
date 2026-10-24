@@ -7271,7 +7271,30 @@ a merge over a stored theme.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 26/26
+`[x]` `[██████████]` 27/27
+
+`[x]` `packages/primitives`: **one `StackSpec`, two axes** — a `direction` is
+      stored with the layout that draws it (a saved workspace records each
+      pane's axis), and the two paint paths read it differently: the class
+      recipe drew a **column** for anything that was not `row`
+      (`directionClass`'s ternary), while `stackStyle` handed the renderer the
+      stored string, which its flex grammar does not carry and painted as a
+      **row** — measured in a window through the exported resolver painted on a
+      `Box`, the two 40×20 children sat side by side (`x = 12` and `58`, where
+      the column wants both at `12`). `isStackDirection`/`stackDirection`
+      (`core/layout.ts`) resolve the name once, as the column the shipped
+      painter already drew, and both `stackStyle` and `stackClass` read through
+      it; both are published from the package root beside the other paint
+      readers. Directions measured: `layout.test.ts` compares `stackDirection`'s
+      answer for `"vertical"`, `"horizontal"`, `"ROW"`, `""`, `"row-reverse"`,
+      `null`, a number and an object, `recipe.test.ts`'s new equivalence case
+      fails at HEAD with `expected { flexDirection: 'vertical' } to deeply equal
+      { flexDirection: 'column' }`, and the window case fails at HEAD on
+      `expected 12 to be 58`. Green: the package is 59 files / **1 225** tests,
+      `runtime/layout.runtime.test.tsx` **39/39**, `check-types`, `oxlint`,
+      `oxfmt`, `check:tests` and `check:exports` clean. Docs: `docs/stack.mdx`'s
+      `direction` row, the README's stored-choice list and the `Stack / layout
+      primitives` row.
 
 `[x]` `packages/primitives`: **a stored `null` painted one line and one star** —
       `Text`'s `clamp` and `Rating`'s `max` are optional counts a saved node or

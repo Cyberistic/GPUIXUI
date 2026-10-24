@@ -13,12 +13,11 @@ import { cn } from "@gpuixui/tw";
 import { elevationLevel, isTextRole, radiusStep } from "../core/theme.js";
 import { spinnerAccentOf } from "../core/loading.js";
 import type { SpinnerAccent } from "../core/loading.js";
-import { trackCount } from "../core/layout.js";
+import { stackDirection, trackCount } from "../core/layout.js";
 import type {
   BoxSpec,
   GridSpec,
   StackAlign,
-  StackDirection,
   StackJustify,
   StackSpec,
 } from "../core/layout.js";
@@ -250,8 +249,8 @@ const JUSTIFY_TO_CLASS: Readonly<Record<StackJustify, string>> = {
   around: "justify-around",
 };
 
-const directionClass = (direction: StackDirection): string =>
-  direction === "row" ? "flex-row" : "flex-col";
+const directionClass = (direction: unknown): string =>
+  stackDirection(direction) === "row" ? "flex-row" : "flex-col";
 
 /** The class string a `Stack` resolves from its layout spec. */
 export const stackClass = (spec: StackSpec): string =>
