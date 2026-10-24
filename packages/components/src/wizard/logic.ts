@@ -20,6 +20,17 @@ export interface StepGate {
 }
 
 /**
+ * A step's gate as a saved record writes it.
+ *
+ * `StepGate` is the shape a caller writes; a definition restored from storage
+ * carries whatever the record held — `null` for a field it never carried, a
+ * name a release renamed — so the boundary read takes the value itself.
+ */
+export interface StepGateSource {
+  readonly gate?: unknown;
+}
+
+/**
  * Whether a stored entry is a step: an object naming itself with a text id.
  *
  * The id is the step's identity — the indicator's key and the name a refusal is
@@ -80,11 +91,21 @@ export const previousStep = (step: number): number =>
 export const isLastStep = (step: number, count: number): boolean =>
   count > 0 && stepOf(step, count) === count;
 
-/** The gate's refusal at one step, or `None` when the step may be left. */
+/**
+ * The gate's refusal at one step, or `None` when the step may be left.
+ *
+ * A workflow is composed from a saved definition as often as it is written in
+ * code, and JSON writes `null` for a field a record never carried — a step
+ * merged from that record hands the wizard `gate: null`. Only a function is a
+ * gate: anything else (the `null` a store wrote, a field a release renamed) is
+ * no gate, so the step moves instead of the press throwing out of the handler.
+ */
 export const gateMessage = (
-  step: StepGate | undefined,
-): Option.Option<string> =>
-  step?.gate === undefined ? Option.none() : step.gate();
+  step: StepGateSource | null | undefined,
+): Option.Option<string> => {
+  const gate = step?.gate;
+  return typeof gate === "function" ? gate() : Option.none();
+};
 
 /** The sentence a refusal paints when the gate's own message says nothing. */
 export const REFUSAL_FALLBACK = "This step is not complete yet.";

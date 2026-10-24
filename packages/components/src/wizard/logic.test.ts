@@ -65,6 +65,21 @@ describe("gateMessage", () => {
       true,
     );
   });
+
+  it("reads a gate a stored definition did not carry as no gate", () => {
+    // The bug guarded: a step merged from a saved definition hands the wizard
+    // the `null` JSON writes for a field the record never carried. The old read
+    // tested `undefined` only and called it, so the step's own Next press threw
+    // `gate is not a function` instead of moving the workflow on.
+    expect(Option.isNone(gateMessage({ gate: null }))).toBe(true);
+    // A field a release renamed, read from the same record.
+    expect(Option.isNone(gateMessage({ gate: "always" }))).toBe(true);
+    expect(Option.isNone(gateMessage(null))).toBe(true);
+    // A real gate is still consulted.
+    expect(
+      Option.getOrNull(gateMessage({ gate: () => Option.some("Still") })),
+    ).toBe("Still");
+  });
 });
 
 describe("refusalText", () => {

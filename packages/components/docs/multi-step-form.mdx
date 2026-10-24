@@ -52,7 +52,7 @@ Each entry of `steps` is a `MultiStep`:
 | `title` | `string` | required | The step's name in the indicator and in the content's announcement; a blank title reads as its position (`Step 2`). |
 | `description` | `string` | — | One line of supporting copy in the indicator; a blank line paints nothing. |
 | `content` | `ReactNode` | required | Mounted only while the step is current. |
-| `gate` | `() => Option.Option<string>` | — | Runs before the step moves and before the last step submits; the message it returns keeps the reader put, and a message that says nothing paints the shipped sentence instead of an empty alert. |
+| `gate` | `() => Option.Option<string>` | — | Runs before the step moves and before the last step submits; the message it returns keeps the reader put, and a message that says nothing paints the shipped sentence instead of an empty alert. A `gate` that is not a function — the `null` a saved record wrote for a field it never carried — is no gate, so the step moves. |
 
 ## API
 
@@ -84,6 +84,10 @@ A gate's message is copy on the same rule. `Some("")` still **refuses** the move
   record never carried paints nothing rather than throwing on `steps.length`,
   and an entry without a text `id` is not a step — it is dropped while its
   neighbours paint.
+- **A stored gate is consulted only when it is a function**: `gateMessage` reads
+  the step's `gate` (`StepGateSource`), so the `null` JSON writes for a gate the
+  record never carried, or a field a release renamed, makes the step **move**
+  instead of throwing `gate is not a function` from the press.
 - **The draft is the caller's**: the component stores the step index and a
   refusal per step `id`, so a caller that reorders `steps` never paints one
   step's message under another.

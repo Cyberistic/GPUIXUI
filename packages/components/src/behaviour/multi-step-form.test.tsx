@@ -218,6 +218,38 @@ describe("MultiStepForm", () => {
     wizard.unmount();
   });
 
+  it("moves past a step whose stored gate is not a function", () => {
+    // The bug guarded: a workflow composed from a saved definition merges the
+    // record's `gate: null` into a step, and the gate read trusted it to be a
+    // function — the step's own Next press threw `gate is not a function` and
+    // the workflow never moved, where a step with no gate is a step that moves.
+    const wizard = renderComponent(
+      <MultiStepForm
+        testId="wizard"
+        onSubmit={() => undefined}
+        steps={[
+          {
+            id: "name",
+            title: "Name",
+            // @ts-expect-error — the gate a store wrote where it carried none.
+            gate: null,
+            content: <text testId="step-one">Name step</text>,
+          },
+          {
+            id: "review",
+            title: "Review",
+            content: <text testId="step-two">Review step</text>,
+          },
+        ]}
+      />,
+    );
+    clickCentreOf(wizard, "multi-step-next");
+    const painted = text(wizard);
+    wizard.unmount();
+    expect(painted).toContain("Review step");
+    expect(painted).not.toContain("Name step");
+  });
+
   it("goes back, clears a refusal, and refuses to go back from the first step", () => {
     const wizard = renderComponent(<Harness />);
     clickCentreOf(wizard, "make-ready");
