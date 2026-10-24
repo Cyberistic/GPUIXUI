@@ -6,6 +6,15 @@ import {
   toggleColumn,
   visibleColumns,
 } from "@gpuixui/data/columns/logic";
+import {
+  axisTicks,
+  chartBox,
+  chartScale,
+  linePath,
+  seriesColour,
+  tickLabel,
+} from "@gpuixui/data/chart/logic";
+import { seriesColors, themes } from "@gpuixui/tokens";
 import { createWindowCalculator, rowIndex } from "@gpuixui/data/virtual/window";
 import {
   UNREADABLE_TREE,
@@ -36,6 +45,21 @@ import {
   resizedColumn,
   toggledColumn,
 } from "./column-configuration-demo";
+import {
+  CHART_AXIS,
+  CHART_HEIGHT,
+  CHART_LABELS,
+  CHART_LABEL_ROW,
+  CHART_SERIES,
+  CHART_WIDTH,
+  ChartDemoBody,
+  chartCeiling,
+  chartDrawing,
+  chartPlot,
+  chartTicks,
+  seriesBars,
+  seriesLine,
+} from "./charts-demo";
 import {
   VIRTUAL_COUNT,
   VIRTUAL_OVERDRAW,
@@ -268,6 +292,74 @@ describe("the Column configuration preview", () => {
       expect(html).toContain(`aria-valuenow="${column.width}"`);
     }
     expect(html).toContain("no hidden columns");
+  });
+});
+
+describe("the Charts preview", () => {
+  const drawing = chartDrawing(themes.dark, "bars");
+  const bars = markup(<ChartDemoBody mode="bars" theme={themes.dark} />);
+  const lines = markup(<ChartDemoBody mode="lines" theme={themes.dark} />);
+
+  it("lays the bars out with the package's box, scale and marks", () => {
+    expect(chartPlot).toEqual(
+      chartBox(CHART_WIDTH, CHART_HEIGHT, { width: 320, height: 160 }),
+    );
+    expect(chartCeiling).toBe(chartScale(CHART_SERIES, CHART_LABELS.length));
+    expect(chartTicks).toEqual(axisTicks(chartCeiling, 4));
+    expect(drawing.bars).toEqual(CHART_SERIES.map(seriesBars));
+
+    const marks = Arr.filter(
+      drawing.bars.flat(),
+      (mark): mark is Extract<typeof mark, { kind: "rect" }> =>
+        mark.kind === "rect",
+    );
+    expect(bars.match(/<rect /g)).toHaveLength(marks.length);
+    // Every bar stands on the plot's floor, inside the package's box.
+    Arr.forEach(marks, (mark) => {
+      expect(mark.x + mark.width).toBeLessThanOrEqual(chartPlot.width);
+      expect(mark.y + mark.height).toBe(chartPlot.height);
+    });
+  });
+
+  it("paints each series in the theme's own categorical order", () => {
+    const palette = seriesColors(themes.dark);
+    expect(drawing.palette).toEqual(palette);
+
+    CHART_SERIES.forEach((_series, index) => {
+      expect(bars).toContain(`fill="${seriesColour(palette, index)}"`);
+      expect(lines).toContain(`stroke="${seriesColour(palette, index)}"`);
+    });
+  });
+
+  it("draws the line the package computes when the reader asks", () => {
+    expect(drawing.lines).toEqual(
+      CHART_SERIES.map((series) =>
+        linePath(series.values, chartPlot, chartCeiling, CHART_LABELS.length),
+      ),
+    );
+    expect(lines).not.toContain("<rect ");
+    CHART_SERIES.forEach((series) => {
+      const path = seriesLine(series);
+      expect(Option.isSome(path)).toBe(true);
+      if (Option.isNone(path)) return;
+      expect(lines).toContain(`d="${path.value}"`);
+    });
+  });
+
+  it("prints the axis its own ticks read as", () => {
+    const step = chartCeiling / 4;
+    expect(bars).toContain(
+      `viewBox="0 0 ${CHART_WIDTH + CHART_AXIS} ${CHART_HEIGHT + CHART_LABEL_ROW}"`,
+    );
+    Arr.forEach(chartTicks, (tick) => {
+      expect(bars).toContain(`>${tickLabel(tick, step)}</text>`);
+    });
+    Arr.forEach(CHART_LABELS, (label) => {
+      expect(bars).toContain(`>${label}</text>`);
+    });
+    Arr.forEach(CHART_SERIES, (series) => {
+      expect(bars).toContain(series.label);
+    });
   });
 });
 

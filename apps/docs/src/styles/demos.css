@@ -6258,6 +6258,61 @@
   background: var(--ring);
 }
 
+/* ---- data lane: the Charts page. The geometry is `@gpuixui/data`'s chart
+   logic and the swatches are the theme's categorical order; only the paint is
+   the browser's. ---- */
+.gx-chart-frame,
+.gx-chart-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.gx-chart-demo {
+  max-width: none;
+}
+
+.gx-chart-plot {
+  width: 100%;
+  height: auto;
+}
+
+.gx-chart-grid {
+  stroke: var(--divider-card);
+  stroke-width: 1;
+}
+
+.gx-chart-tick {
+  fill: var(--muted-foreground);
+  font-size: 10px;
+}
+
+.gx-chart-legend {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-chart-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
 /* ---- stepper: mirrors components/src/stepper.tsx ----
    The marker is `controlHeight(theme, "md")` round and takes the fill
    `markerPalette` names per derived status: `secondary` with its own

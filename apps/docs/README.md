@@ -204,6 +204,7 @@ src/components/docs/table-rule-demos.tsx  The sorting and selection pages' drawi
 src/components/docs/advanced-filter-demo.tsx The query builder's tree, its sentence and a refused stored query
 src/components/docs/virtualization-demo.tsx The window calculator's mounted rows and their offsets
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
+src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
 src/components/docs/stat-card-demo.tsx    The metric card's derived reading, its trend roles and the box a reader measures
 src/components/docs/table-demo.tsx        The table's browser renderings and their source strings
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate

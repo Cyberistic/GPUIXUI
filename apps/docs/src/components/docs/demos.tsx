@@ -41,6 +41,7 @@ import {
   ColumnConfigurationDemo,
   columnConfigurationDemoSource,
 } from "./column-configuration-demo";
+import { ChartDemo, chartsDemoSource } from "./charts-demo";
 import { DockLayoutDemo, dockLayoutDemoSource } from "./dock-layout-demo";
 import { PanelGroupDemo, panelGroupDemoSource } from "./panel-group-demo";
 import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
@@ -2969,6 +2970,7 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: ColumnConfigurationDemo,
     source: columnConfigurationDemoSource,
   },
+  "charts-demo": { render: ChartDemo, source: chartsDemoSource },
   "timeline-states": { render: TimelineStates, source: timelineStatesSource },
   "timeline-workflow": {
     render: TimelineWorkflow,

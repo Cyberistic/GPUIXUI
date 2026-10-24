@@ -199,6 +199,7 @@ describe("the preview strategy document", () => {
 
     expect(withDemo).toEqual([
       "packages/data/docs/advanced-filter.mdx",
+      "packages/data/docs/charts.mdx",
       "packages/data/docs/column-configuration.mdx",
       "packages/data/docs/property-panel.mdx",
       "packages/data/docs/stat-card.mdx",
@@ -227,7 +228,7 @@ describe("the preview strategy document", () => {
     ]);
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("Property panels");
-    expect(policy).toContain("The data lane draws seven surfaces");
+    expect(policy).toContain("The data lane draws eight surfaces");
     expect(policy).toContain("the media lane draws all six of its surfaces");
     expect(policy).toContain("the editor lane draws all four of its own");
     expect(policy).toContain("the files lane draws its three surfaces");
