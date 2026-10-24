@@ -113,4 +113,19 @@ describe("the column page's API tables", () => {
     expect(readme).toContain("columnName(column.label, column.id)");
     expect(readme).not.toContain("Resize the ${column.label");
   });
+
+  it("teaches the configuration the controller restores", () => {
+    // Bug guarded: a saved column set is data the release may not recognise.
+    // The page, the seam and the hook must agree that the reader exists, that
+    // the hook reads the caller's `stored` value, and that the page names both
+    // the save and the restore.
+    const logic = read("./logic.ts");
+    expect(logic).toContain("export const columnConfig");
+    expect(logic).toContain("export const restoreColumns");
+    expect(controller).toContain("restoreColumns(columns, stored)");
+    expect(page).toContain("## Saving and restoring");
+    expect(page).toContain("columnConfig");
+    expect(page).toContain("restoreColumns");
+    expect(page).toContain("`stored`");
+  });
 });

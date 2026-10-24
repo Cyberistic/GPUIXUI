@@ -27,8 +27,11 @@
 
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as Number from "effect/Number";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 
@@ -375,3 +378,98 @@ export const resizeColumn = (
 /** Return every column to its definition: order, visibility and width. */
 export const resetColumns = (defs: ReadonlyArray<ColumnDef>): ColumnState =>
   initialColumns(defs);
+
+/** What a store keeps about one table's columns. */
+export interface ColumnConfig {
+  /** Every column id, in paint order (hidden columns included). */
+  readonly order: ReadonlyArray<string>;
+  /** The ids that do not paint. */
+  readonly hidden: ReadonlyArray<string>;
+  /** Each column's width, by id. */
+  readonly widths: Readonly<Record<string, number>>;
+}
+
+/** The configuration to persist: the order, the hidden ids and the widths. */
+export const columnConfig = (state: ColumnState): ColumnConfig => ({
+  order: Arr.map(state.columns, (column) => column.id),
+  hidden: hiddenColumns(state),
+  widths: R.fromEntries(
+    Arr.map(state.columns, (column) => [column.id, column.width] as const),
+  ),
+});
+
+/** A record a store wrote, read as its keys and whatever they carry. */
+const StoredColumnConfig = Schema.Record(Schema.String, Schema.Unknown);
+
+const decodeStoredColumnConfig = Schema.decodeUnknownOption(StoredColumnConfig);
+
+/** One field of a stored configuration, or absence when it is not a record. */
+const storedField = (stored: unknown, key: string): unknown =>
+  Option.match(decodeStoredColumnConfig(stored), {
+    onNone: () => undefined,
+    onSome: (record) => Option.getOrUndefined(R.get(record, key)),
+  });
+
+/** The text ids a store wrote: anything else is no id. */
+const storedIds = (stored: unknown): ReadonlyArray<string> =>
+  Arr.isArray(stored) ? Arr.filter(stored, P.isString) : [];
+
+/** A width a track can paint: a readable number, else the definition's own. */
+const storedWidth = (stored: unknown, fallback: number): number =>
+  P.isNumber(stored) && globalThis.Number.isFinite(stored) ? stored : fallback;
+
+/**
+ * Restore a saved configuration over the definitions this release ships.
+ *
+ * A stored configuration is data, not a `ColumnState`: a saved order names the
+ * columns of the release that wrote it, and this release may have added,
+ * renamed or dropped one. The saved order is therefore applied to the ids that
+ * still exist — a dropped id is skipped and a new column follows the saved
+ * ones in its definition's place — while every label, accessor and bound comes
+ * from the current definition. A saved width is clamped to the column's own
+ * bounds and a width that is not a finite number reads as the definition's;
+ * a hidden id that no longer exists hides nothing. The last visible column
+ * cannot be hidden, the rule {@link setColumnVisible} follows.
+ */
+export const restoreColumns = (
+  defs: ReadonlyArray<ColumnDef>,
+  stored: unknown,
+): ColumnState => {
+  const byId = HashMap.fromIterable(
+    Arr.map(defs, (column) => [column.id, column] as const),
+  );
+  const savedOrder = Arr.dedupe(
+    Arr.filter(storedIds(storedField(stored, "order")), (id) =>
+      HashMap.has(byId, id),
+    ),
+  );
+  const rest = Arr.filter(
+    Arr.map(defs, (column) => column.id),
+    (id) => !Arr.contains(savedOrder, id),
+  );
+  const widths = Option.getOrElse(
+    decodeStoredColumnConfig(storedField(stored, "widths")),
+    () => ({}),
+  );
+  const ordered = Arr.getSomes(
+    Arr.map(Arr.appendAll(savedOrder, rest), (id) => HashMap.get(byId, id)),
+  );
+  const withWidths: ColumnState = {
+    columns: Arr.map(ordered, (column) => ({
+      ...column,
+      width: clampColumnWidth(
+        storedWidth(
+          Option.getOrUndefined(R.get(widths, column.id)),
+          column.width,
+        ),
+        column,
+      ),
+      visible: true,
+    })),
+  };
+  return Arr.reduce(
+    storedIds(storedField(stored, "hidden")),
+    withWidths,
+    (state, id) => setColumnVisible(state, id, false),
+  );
+};

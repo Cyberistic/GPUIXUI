@@ -103,6 +103,37 @@ measure (`NaN`) is read as the column's floor: it is the number the divider
 announces and the width a drag starts from, so a computed track never publishes
 `NaN pixels` or refuses to grow.
 
+## Saving and restoring
+
+A reader's column set is worth remembering, and a saved set is **data**: the
+release that reads it may have added, renamed or dropped a column since, and a
+store writes `null` for a field it never set. Two functions are the boundary —
+`columnConfig` saves, `restoreColumns` reads:
+
+```tsx
+import { columnConfig, restoreColumns, useColumns } from "@gpuixui/data";
+
+// Save what the reader configured (order, hidden ids and widths).
+const saved = columnConfig(columns.state);
+
+// Restore it at mount; the hook reads the configuration once.
+const columns = useColumns({ columns: FILE_COLUMNS, stored });
+
+// A controlled grid can read the same data without the hook.
+const state = restoreColumns(FILE_COLUMNS, saved);
+```
+
+`restoreColumns` applies the saved **order**, **hidden ids** and **widths** to
+the definitions the current release ships: a saved id this release dropped is
+skipped, and a column the release added follows the saved ones in its
+definition's place. Every label, accessor and bound comes from the current
+definition, never from the store. A saved width is clamped to the column's own
+bounds, and a width that is not a finite number reads as the definition's; a
+hidden id that no longer exists hides nothing, and the last visible column
+cannot be hidden. A stored value that is not a configuration reads as the
+shipped columns, so a corrupt or missing record opens the table rather than
+taking it down.
+
 ## API
 
 ### `ColumnMenu`
@@ -149,6 +180,13 @@ that resizes a column unnamed while its width stayed announced. A name that
 should say *which* column is composed from the column's own words, the way the
 header composes it (`columnName`); `src/behaviour/surface-a11y.test.tsx` mounts
 an empty and a whitespace label and reads both names off the tree.
+
+### `useColumns` options
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `columns` | `ReadonlyArray<ColumnDef>` | — | the definitions, in paint order |
+| `stored` | `unknown` | — | a configuration `columnConfig` saved; read once at mount through `restoreColumns` |
 
 ### `useColumns`
 

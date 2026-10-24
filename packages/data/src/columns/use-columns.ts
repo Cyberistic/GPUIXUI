@@ -28,6 +28,7 @@ import {
   isColumnVisible,
   moveColumn,
   resizeColumn,
+  restoreColumns,
   setColumnVisible,
   toggleColumn,
   visibleColumns,
@@ -39,6 +40,16 @@ import {
 /** What {@link useColumns} needs: the column definitions, in paint order. */
 export interface UseColumnsOptions {
   readonly columns: ReadonlyArray<ColumnDef>;
+  /**
+   * A configuration a store handed back — what {@link columnConfig} saved.
+   *
+   * Read once, at mount, through {@link restoreColumns}: the saved order,
+   * hidden ids and widths are applied to the definitions this release ships, so
+   * a column added since the save still appears and a dropped one is skipped.
+   * `reset` still restores the definitions, because a reset is "give me the
+   * shipped columns", not "give me the configuration I loaded".
+   */
+  readonly stored?: unknown;
 }
 
 /** Everything a table's parts read from {@link useColumns}. */
@@ -73,9 +84,10 @@ export interface ColumnController {
 /** Hold one table's column order, visibility and widths. */
 export const useColumns = ({
   columns,
+  stored,
 }: UseColumnsOptions): ColumnController => {
   const [state, setState] = useState<ColumnState>(() =>
-    initialColumns(columns),
+    restoreColumns(columns, stored),
   );
   const hidden = useMemo(() => hiddenColumns(state), [state]);
 

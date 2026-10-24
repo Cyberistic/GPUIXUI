@@ -16,10 +16,12 @@
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
   COLUMN_KEY_STEP,
   clampColumnWidth,
   clampWidth,
+  columnConfig,
   columnOffset,
   columnWidth,
   contentWidth,
@@ -30,6 +32,7 @@ import {
   moveColumn,
   resizeColumn,
   resizeWidthByKey,
+  restoreColumns,
   setColumnVisible,
   toggleColumn,
   visibleColumns,
@@ -304,5 +307,104 @@ describe("column configuration", () => {
     expect(clampColumnWidth(10_000, { id: "x", label: "X", width: 100 })).toBe(
       640,
     );
+  });
+});
+
+/**
+ * The configuration a store keeps, restored over the definitions a release
+ * ships.
+ *
+ * A saved column set is data: the release that reads it may have added,
+ * renamed or dropped a column since, and a store writes `null` for a field it
+ * never set. Dereferencing it would take the first frame down, and applying it
+ * whole would paint a column the grid no longer has — or drop one it now does.
+ */
+describe("a saved column configuration", () => {
+  /** A value through the JSON a store writes and reads back. */
+  const StoredJson = Schema.fromJsonString(Schema.Unknown);
+  const throughStore = (value: unknown): unknown =>
+    Schema.decodeSync(StoredJson)(Schema.encodeSync(StoredJson)(value));
+
+  it("saves the order, the hidden ids and the widths, and restores them", () => {
+    const state = resizeColumn(
+      setColumnVisible(
+        moveColumn(initialColumns(defs), "size", -2),
+        "status",
+        false,
+      ),
+      "size",
+      120,
+    );
+    const saved = throughStore(columnConfig(state));
+    const restored = restoreColumns(defs, saved);
+    expect(restored).toEqual(state);
+  });
+
+  it("applies the saved order and leaves the definition's words and bounds", () => {
+    const restored = restoreColumns(defs, {
+      order: ["size", "name"],
+      widths: { size: 120 },
+    });
+    expect(Arr.map(restored.columns, (column) => column.id)).toEqual([
+      "size",
+      "name",
+      "status",
+    ]);
+    const size = restored.columns[0];
+    expect(size).toMatchObject({ label: "Size", minWidth: 70, width: 120 });
+  });
+
+  it("skips an id this release dropped and appends one it added", () => {
+    const current: ReadonlyArray<ColumnDef> = [
+      ...defs,
+      { id: "owner", label: "Owner", width: 140 },
+    ];
+    const restored = restoreColumns(current, {
+      order: ["size", "gone", "name"],
+      hidden: ["gone"],
+    });
+    expect(Arr.map(restored.columns, (column) => column.id)).toEqual([
+      "size",
+      "name",
+      "status",
+      "owner",
+    ]);
+    expect(hiddenColumns(restored)).toEqual([]);
+  });
+
+  it("reads a width it cannot paint as the definition's own", () => {
+    const restored = restoreColumns(defs, {
+      widths: { name: NaN, status: Infinity, size: "120" },
+    });
+    expect(Arr.map(restored.columns, (column) => column.width)).toEqual([
+      260, 110, 90,
+    ]);
+  });
+
+  it("clamps a saved width to the column's own bounds", () => {
+    const restored = restoreColumns(defs, { widths: { size: 10_000 } });
+    expect(columnWidth(restored, "size")).toEqual(Option.some(200));
+  });
+
+  it("keeps one column painted when the saved set hides them all", () => {
+    const restored = restoreColumns(defs, {
+      hidden: ["name", "status", "size"],
+    });
+    expect(Arr.map(visibleColumns(restored), (column) => column.id)).toEqual([
+      "size",
+    ]);
+  });
+
+  it("reads a state that is not a configuration as the shipped columns", () => {
+    expect(
+      Arr.map([null, undefined, 42, "columns"], (stored) =>
+        restoreColumns(defs, stored),
+      ),
+    ).toEqual([
+      initialColumns(defs),
+      initialColumns(defs),
+      initialColumns(defs),
+      initialColumns(defs),
+    ]);
   });
 });

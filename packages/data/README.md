@@ -34,6 +34,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | Chord presses arrive on `click` | `modifier-select-lifecycle` | Selection reads `event.modifiers.{shift,cmd,ctrl}`; the anchor rules are `selection/logic`. |
 | A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the core still holds the chosen ids, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
 | A sort is an order | `grid-core.test.ts`, `table.test.tsx` | A plain header press replaces the order; a Shift press appends the field as the next tie-break or flips it where it already sits. The core's sorted model walks every entry in turn, so records the primary sort ties are ordered by the second. |
+| A restored state is read, not dereferenced | `grid-core.test.ts` | `constructGrid` is the seam a store-driven grid builds with, so its state is stored data: JSON writes a slice that was never set as `null`. `readGridState` reads each slice — a sorting list that is not a list is **no sort** and an entry that names no column is dropped, a query that is not text is **no query**, a chosen set keeps only the ids set to `true`, and a `hiddenColumns` list that is not a list of text ids hides nothing. Measured before: `globalFilter: null` threw `Cannot read properties of null (reading 'trim')`, `sorting: null` threw `state.sorting is not iterable`, and a `[null]` entry threw `Cannot read properties of null (reading 'id')` — the grid could not reopen with the state it saved. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds, and only a **primary** press arms it: the runtime delivers `mouseDown` for all three buttons, so a right press — the context-menu gesture — and a middle one would otherwise start a resize. **A move that holds no primary button ends the gesture** (`pressedButton`): a window the pointer left reports no release, and a hover must never resize the column by the pointer's travel — `table.test.tsx`'s lost-release case releases outside the window and hovers the strip. |
 | A bound, a step or a width the grid cannot read is legal | `columns/logic.test.ts` | A column's width is often computed (a stored size, a measurement, a fraction of the table), and a non-finite bound used to clamp every width to NaN, taking `contentWidth` and every later offset with it. `widthBounds` reads a non-finite minimum/maximum as 80/640 and `resizeWidthByKey` reads a non-finite step as 16. A width that is NaN is not clamped: it reads as the column's own minimum, so an arrow steps **from** it rather than snapping to it, and `resizeColumn` leaves the column alone instead of collapsing a 260px track to its floor because a drag computed no width. |
@@ -64,7 +65,7 @@ src/
   selection/  press modes, range + anchor, retention, neighbour step,
               the header/row checkbox column
   filter/     TableFilterField (the field above the rows)
-  grid-core   the @tanstack/table-core features and constructGrid
+  grid-core   the @tanstack/table-core features, constructGrid and readGridState
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
               VirtualTable, VirtualTree, useVirtualRows and the window calculator
@@ -91,7 +92,9 @@ them. The window arithmetic is **`@tanstack/virtual-core`'s** — this package
 hands it the scroll offset and the viewport and reads the range back — so the
 grid's windowing is the same one a browser grid uses, driven without a DOM.
 An application driving a grid from Effect or its own store builds the same table
-with `constructGrid`.
+with `constructGrid`, whose `state` is read through `readGridState`: a restored
+record narrows and sorts the set instead of taking the build down, because a
+store hands back `null` for a slice JSON never wrote.
 
 ## Usage
 
@@ -271,6 +274,18 @@ const table = useTable({
   hiddenColumns: columns.hidden,
 });
 ```
+
+A **column set can be saved and restored**. `columnConfig(columns.state)` writes
+the order, the hidden ids and the widths; `restoreColumns(FILE_COLUMNS, saved)`
+applies them to the definitions the current release ships, and
+`useColumns({ columns, stored })` reads that configuration once at mount. A
+saved id the release dropped is skipped and a column it added follows the saved
+ones, so a stored set from an older build still opens the table; a saved width
+is clamped to the column's own bounds, a width that is not a finite number
+reads as the definition's, a hidden id that no longer exists hides nothing, and
+a value that is not a configuration reads as the shipped columns. Reset still
+restores the definitions rather than the saved set. The page is
+`docs/column-configuration.mdx` §Saving and restoring.
 
 A **pinned column** is `FrozenTable`, not a column attribute: the runtime paints
 no `position: "sticky"`, so the frozen column is its own vertical scroller beside
