@@ -50,15 +50,28 @@ const table = useTable({ rows: files, keyOf: (row) => row.id, columns });
 
 ## API
 
+### `TableSelectionHeader`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `checked` | `boolean` | — | whether the box paints a check |
-| `indeterminate` | `boolean` | `false` | header only: paints a dash for a partial set |
-| `onCheckedChange` | `(selected: boolean) => void` | — | the box's next state |
-| `label` | `string` | header: `Select every row`; row: required | the box's accessible name |
-| `width` | `number` | `40` | the track width |
+| `checked` | `boolean` | — | whether every visible record is chosen |
+| `indeterminate` | `boolean` | `false` | paints a dash when only some visible records are chosen |
+| `onCheckedChange` | `(selected: boolean) => void` | — | the box's next state: choose every visible record, or clear the set |
+| `label` | `string` | `Select every row` | the box's accessible name |
+| `width` | `number` | `40` | the track width; the body box must match it |
 | `disabled` | `boolean` | `false` | refuses the press |
-| `testId` | `string` | — | the box's id; the target is `${testId}-target` and the cell `${testId}-cell` |
+| `testId` | `string` | — | the box's id; the header cell is `${testId}-cell` and its target `${testId}-target` |
+
+### `TableSelectionCell`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `checked` | `boolean` | — | whether this record is chosen |
+| `onCheckedChange` | `(selected: boolean) => void` | — | the box's next state; a controlled table flips the record's membership |
+| `label` | `string` | — | the record's accessible name, e.g. `Select file-001.ts`; required |
+| `width` | `number` | `40` | the track width; the header box must match it |
+| `disabled` | `boolean` | `false` | refuses the press |
+| `testId` | `string` | — | the box's id; the cell is `${testId}-cell` and its target `${testId}-target` |
 
 ## Limitations
 

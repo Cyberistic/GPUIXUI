@@ -561,6 +561,16 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   adding a `pinFirst` row fails `` `ChartLegend`: pinFirst ``. The `Charts` row's
   `docs/charts.mdx` §Accessibility citation pointed at a section the page prune
   removed; it names the page's tables now.
+- **A merged table cannot say which box takes the prop**: the same prune left
+  `docs/table-selection.mdx`'s one API table describing both selection boxes,
+  and the page never named `TableSelectionHeader` or `TableSelectionCell` in its
+  API at all — so a reader could not tell that `indeterminate` is the header's
+  partial set or that a row box's `label` is required to name the record.
+  The page now carries one table per box, with each type's own default for
+  `width`/`label`, and `src/selection/docs.test.ts` (3 cases) holds each table
+  to its type in both directions plus the header-only prop. Directions measured:
+  dropping the `indeterminate` row fails the type case and the header-only case,
+  and adding it to the row's table fails the invented-prop case.
 - **A page lists the props its type declares**: `docs/table-sorting.mdx` was the
   only page a consumer reads for `TableSortHeader`, and nothing held its API
   table to the type — it documented ten of eleven props, missing `testId` (the
