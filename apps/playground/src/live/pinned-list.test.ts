@@ -108,7 +108,9 @@ describe("the pinned-list fixture", () => {
     expect(section).toContain(
       "| a press on the row **under the held title** | `presses=2,0` — the press reaches the row |",
     );
-    expect(section).toContain("The opt-out belongs to the element that paints.");
+    expect(section).toContain(
+      "The opt-out belongs to the element that paints.",
+    );
     expect(section).toContain("filled cover");
     expect(section).not.toContain("`presses` stays `1`");
   });

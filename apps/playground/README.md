@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-134 probes a real window can prove, of which twenty-nine mount shipped
+135 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7665,6 +7665,76 @@ selection disc` (`expected true, got false`) — the sampled row is then a quart
 of the group's width, so the ring read follows the axis the group declares.
 Evidence: `.artifacts/live/radio-{rest,choice,ring}.png`.
 
+### `ripple-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/components` `RippleButton` in a window, pressed by a
+real pointer at a fraction of its own box. The package's renderer suite reads
+the ripple layer's reported box and its declarations; the wash's colour, the
+layer's roundness, the clip and the hit test are a window's to measure.
+
+The action is mounted at **240x160** (at `32,68` in a 900-point window) with no
+visible label, so the disc is the only paint inside its box. Two presses are
+measured: one at **35%** across and half way down — where the disc's birth
+point is not the element's centre — and one at 75% for the hit test. The
+renderer's motion clock is frozen before each press, and **one capture per
+disc**: the layer's removal is a real timer, so a measurement that needed two
+screenshots of one tween could outlive it.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | the action paints the theme's `primary` role under the press point and everywhere else; no `ripple` element is mounted |
+| the pointer over it | the fill under the press point is a **different** role — a filled action repaints on hover, so the wash is measured over the colour the glass shows, not the palette's |
+| a press, frozen clock | `presses=1`, the action still paints its hover fill, and the disc's box is **under one point** wide: a frozen clock grows nothing |
+| a second press, frozen clock | `presses=2`, a second disc mounts |
+| the clock stepped | a 56.5-point disc whose box is square and whose centre is the press point (116, 148) |
+| its paint | a wash of `actionOnColor(theme, "primary")` at **0.064** — every measurable channel agrees, so it is the action's own ink rather than a second colour |
+| the disc's box corners | the action's fill at all four, so the layer is a circle and not a square |
+| a point beside the disc | the action's own fill |
+| more clock | the disc's box reaches **201** points, starting **16.5** points past the action's left edge |
+| its paint | the same ink at **0.0327** — the wash fades as the disc arrives |
+| outside the action | the page's `background` role, so the control clips the disc rather than letting it spill |
+| inside the action's edge | **0.0327**, the same wash the centre carries |
+| a press over the painted disc | `presses=3`: the layer takes no pointer input, and the press reaches the action under it |
+| the clock resumed | both discs unmount, and the action returns to its hover fill |
+
+Four rules the window settles:
+
+1. **The disc is the action's ink, not a colour beside it.** Every channel where
+   the ink and the fill differ enough to measure answers the same share, so a
+   second colour, a translucent fill or the ink itself fails; a layer painted in
+   the action's own fill is caught by the wash band (0.01 to 0.12).
+2. **The circle is the box's inscribed circle.** `borderRadius` grows with the
+   disc, so the disc's own box corners are the fill — a square layer fails.
+3. **The control clips it.** The disc's reported box reaches past the action's
+   left edge while the page paints there, so `overflow: hidden` is doing the work
+   the migration's `position: relative` wrapper asks for.
+4. **The layer is inert.** A second press aimed at a point the grown disc covers
+   still reaches the action, and the ripple mounts again.
+
+The fill the wash is measured over is the role `filled-action-dim` already
+proved a filled action repaints to under the pointer, and the frames come from
+the renderer's own motion clock — the clock `motion-geometry` samples a box's
+travel on.
+
+```sh
+nub apps/playground/dist/live/run.js --only ripple-lifecycle
+```
+
+51 checks, `--only ripple-lifecycle`, one window and five captures
+(`ripple-rest`, `ripple-hover`, `ripple-small`, `ripple-clip`, `ripple-after`),
+green on 0.11.0 here (three runs, 7.7–9.9 s). Fixture `src/live/ripple-button.ts`
++ probe `src/live/ripple-button-probe.tsx` + `ripple-button.test.ts` (the wash
+algebra on the two measured samples, the frame arithmetic, the circle's corner
+rule, the clock discipline, the count, the registry entry and this section).
+Three negative controls measured, exit `1` each and restored green: reading the
+fill as the disc's paint fails
+`the wash is faint: the ink at a share, not the ink itself` (`expected true, got
+false`); sampling the disc's box corners at its centre fails
+`every corner of the disc's box paints the action's fill, so the layer is round`
+(`expected 0, got 4`); and sampling the clip point **inside** the action fails
+`the action clips the disc: the page paints outside its own box` (`expected
+true, got false`). Evidence: `.artifacts/live/ripple-{rest,hover,small,clip,after}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7919,7 +7989,7 @@ narrower. Each deviation is deliberate and measured:
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
   `color-picker-lifecycle` and `mention-input-lifecycle` and
-  `radio-group-lifecycle` (76 probes, each run alone).
+  `radio-group-lifecycle` and `ripple-lifecycle` (77 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,

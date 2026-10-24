@@ -840,6 +840,12 @@ export const liveRegistry = [
       "Input: the shipped RadioGroup paints its choice as a primary disc and its keyboard ring around the focused row, is one Tab stop, steps with the arrows and type-ahead over a disabled row, and continues from the focused row when its owner declines a choice",
     capability: "input",
   },
+  {
+    id: "ripple-lifecycle",
+    title:
+      "Layout: the shipped RippleButton's disc is the label's own ink at a faint share, a circle born on the press point, clipped by the control and faded as it arrives, and it never takes the press it marks",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
