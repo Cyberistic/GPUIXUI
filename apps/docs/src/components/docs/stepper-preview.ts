@@ -3,12 +3,14 @@
  * workflow rule that decides whether the value may move.
  *
  * `Stepper` owns one rule — a step below `value` is complete, the value itself
- * is current, the rest are upcoming — and it clamps nothing: `value={0}` leaves
- * every step upcoming and `value={4}` on three steps paints all of them
- * complete, because the comparison is made against the raw number. The rest of
- * the flow (which step the reader may leave, and whether the last one submits)
- * is the app's, which the page says and this module encodes, so
- * `stepper-preview.test.ts` can fail on both.
+ * is current, the rest are upcoming — over a finite value it never clamps:
+ * `value={0}` leaves every step upcoming and `value={4}` on three steps paints
+ * all of them complete. The one value it repairs is one no step can answer:
+ * `NaN` or an infinity (arithmetic over a step index before a total arrived)
+ * reads as the first step, because a stepper mid-computation still paints
+ * somewhere. The rest of the flow (which step the reader may leave, and whether
+ * the last one submits) is the app's, which the page says and this module
+ * encodes, so `stepper-preview.test.ts` can fail on both.
  */
 
 /** Where a step sits relative to the current one, as the component derives it. */
@@ -28,12 +30,22 @@ export const STEPS: ReadonlyArray<StepSpec> = [
 ];
 
 /**
- * The component's `statusOf`: the raw comparison, with no clamp.
+ * The current step the component resolves, mirroring `currentStep` in
+ * `packages/components/src/stepper/logic.ts`: a finite value stays the
+ * caller's, including one below the first step or past the last.
+ */
+export const currentStep = (value: number): number =>
+  Number.isFinite(value) ? value : 1;
+
+/**
+ * The component's `statusOf`: the comparison over the resolved current step.
  *
  * `step` is the step's own 1-based `value` and `current` the root's.
  */
-export const stepStatus = (current: number, step: number): StepStatus =>
-  step < current ? "complete" : step === current ? "current" : "upcoming";
+export const stepStatus = (current: number, step: number): StepStatus => {
+  const at = currentStep(current);
+  return step < at ? "complete" : step === at ? "current" : "upcoming";
+};
 
 /** Every step's status for a root value, in step order. */
 export const statuses = (

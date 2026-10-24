@@ -25,6 +25,14 @@ import {
  * Next that moves the value before the check passes still looks like a form.
  * The status rule is therefore held to the component's own source, and the gate
  * is measured on the flow it must refuse.
+ *
+ * Bug guarded: the component learned to repair a `value` no step can answer
+ * (`NaN` or an infinity, from arithmetic over a step index) as the first step,
+ * while the preview kept the raw comparison and claimed it "clamps nothing" —
+ * so a page a reader lands on painted no current marker for a state the
+ * shipped stepper paints at step one. The guard also failed on every `Math.max`
+ * in the module, which the step-name fallback now legitimately uses; it reads
+ * the status rule's own body instead.
  */
 
 const component = readFileSync(
@@ -35,19 +43,39 @@ const component = readFileSync(
   "utf8",
 );
 
+/** The body of one exported function, up to the next export or EOF. */
+const bodyOf = (name: string): string => {
+  const start = component.indexOf(`export const ${name}`);
+  expect(start, `no ${name} in the component's logic`).toBeGreaterThan(-1);
+  const rest = component.slice(start);
+  const end = rest.indexOf("\nexport ", 1);
+  return end === -1 ? rest : rest.slice(0, end);
+};
+
 /** The status the rule names, derived independently of the preview's copy. */
-const expected = (current: number, step: number): string =>
-  step < current ? "complete" : step === current ? "current" : "upcoming";
+const expected = (current: number, step: number): string => {
+  const at = Number.isFinite(current) ? current : 1;
+  return step < at ? "complete" : step === at ? "current" : "upcoming";
+};
 
 describe("the preview's derived status", () => {
   it("matches the comparison the component makes, for every step and value", () => {
     // The rule itself is read from the painter, so a component that clamped or
     // reordered its comparison cannot leave the preview teaching the old one.
-    expect(component).toContain(
-      'step < at ? "complete" : step === at ? "current" : "upcoming"',
-    );
+    expect(bodyOf("statusOf")).toContain("const at = currentStep(current);");
 
-    const values = [-1, 0, 1, 2, 3, 4, 5];
+    const values = [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      -1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+    ];
     const steps = [1, 2, 3];
     const drifted = values.flatMap((current) =>
       steps.flatMap((step) =>
@@ -62,19 +90,39 @@ describe("the preview's derived status", () => {
     expect(drifted).toEqual([]);
   });
 
-  it("leaves a value the steps do not bound unclamped, as the component does", () => {
-    // The component compares the raw number, so a value below the first step
-    // leaves every step upcoming and one past the last completes every step.
-    // A preview that clamped would look right at 1…3 and lie about the edge.
-    expect(component).not.toContain("Math.min");
-    expect(component).not.toContain("Math.max");
+  it("reads a value it cannot name as the first step, and clamps no finite one", () => {
+    // The component's one repair: an unreadable current value is the first
+    // step. A finite value stays raw, including below the first and past the
+    // last — a preview that clamped would look right at 1…3 and lie about the
+    // edges.
+    expect(bodyOf("currentStep")).toContain(
+      "Number.isFinite(value) ? value : 1",
+    );
+    expect(bodyOf("statusOf")).not.toContain("Math.");
 
+    expect(statuses(Number.NaN)).toEqual(["current", "upcoming", "upcoming"]);
+    expect(statuses(Number.POSITIVE_INFINITY)).toEqual([
+      "current",
+      "upcoming",
+      "upcoming",
+    ]);
     expect(statuses(0)).toEqual(["upcoming", "upcoming", "upcoming"]);
     expect(statuses(STEPS.length + 1)).toEqual([
       "complete",
       "complete",
       "complete",
     ]);
+  });
+
+  it("teaches the value it repairs on the page a reader lands on", () => {
+    const page = readFileSync(
+      new URL("../../../content/docs/components/stepper.mdx", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(page).toContain("`NaN`");
+    expect(page).toContain("reads as the first step");
+    expect(page).toContain("never clamped");
   });
 
   it("marks one current step for every value inside the range", () => {

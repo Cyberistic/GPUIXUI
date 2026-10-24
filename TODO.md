@@ -12883,7 +12883,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 386/386
+`[x]` `[██████████]` 387/387
+
+`[x]` Teach the **value a stepper cannot read** on the stepper page, and repair
+      the preview that answered it the old way — the components workstream made
+      `currentStep` resolve `NaN`/an infinity (arithmetic over a step index
+      before a total arrived) to the **first step**, while
+      `src/components/docs/stepper-preview.ts` still compared the raw number and
+      its header claimed the component "clamps nothing", so the page a reader
+      lands on painted **no current marker** for a value the shipped `Stepper`
+      paints at step one. The preview now routes through a `currentStep` mirror,
+      and `stepper-preview.test.ts` reads the rule out of the component's own
+      `statusOf`/`currentStep` bodies (`const at = currentStep(current);`,
+      `Number.isFinite(value) ? value : 1`, no `Math.` in the status) instead of
+      banning every `Math.max` in the module — the step-name fallback
+      legitimately uses one, which is what had turned the docs suite red on
+      `master`. The curated page's `## API reference` teaches the repair beside
+      the finite rule (`0` leaves every step upcoming, past the last completes
+      them all), and the `value` row names it. Directions measured: with the raw
+      comparison restored the matrix and edge cases fail (`expected [
+      'upcoming', 'upcoming', 'upcoming' ] to deeply equal [ 'current',
+      'upcoming', 'upcoming' ]`), and removing the page paragraph fails the
+      teaching case by name (`to contain '`NaN`'`); restored, the file is 12/12
+      and the docs suite is 197 files / 2 013 tests green. No native scenario
+      applies — a browser drawing and the page that explains it.
 
 `[x]` Give the Theming page **the platform style it tells a reader to copy** —
       §Platform styles said a platform style is an ordinary table a consumer can

@@ -34,11 +34,16 @@ Stepper
 
 ## API reference
 
+A finite `value` is never clamped: `0` leaves every step upcoming and a value
+past the last step completes them all. A value no step can answer — `NaN` or an
+infinity, from arithmetic over a step index before a total arrived — reads as
+the first step, because a stepper mid-computation still paints somewhere.
+
 ### `Stepper`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `number` | — | the current step, 1-based; steps below it are complete |
+| `value` | `number` | — | the current step, 1-based; steps below it are complete, and a value the caller cannot read reads as the first step |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | a row of steps, or a column for a sidebar |
 | `label` | `string` | none | the list's accessible name (`aria-label`) |
 | `children` | `ReactNode` | — | `StepperStep` parts, in order |
