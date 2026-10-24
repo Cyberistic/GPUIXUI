@@ -57,6 +57,8 @@ import {
   elevationLevel,
   familyOf,
   iconSideOf,
+  iconStepValue,
+  isIconStep,
   isSpaceStep,
   isRadiusStep,
   isTextRole,
@@ -483,6 +485,28 @@ describe("a numeric group a store gave back", () => {
     );
   });
 
+  it("reads an icon step, not a control size, for a glyph painter", () => {
+    // A control size's side and an icon step's side are different questions:
+    // `sm` is a 14px control and `xs` a 12px glyph. A chart's legend dot names
+    // the icon scale, so it reads the theme's own step here.
+    const brand = stored({ iconSize: { ...testTheme.iconSize, xs: 10 } });
+    expect(iconStepValue(brand, "xs")).toBe(10);
+    expect(iconStepValue(testTheme, "xs")).toBe(libraryIconSize.xs);
+    expect(iconStepValue(testTheme, "xl")).toBe(libraryIconSize.xl);
+    expect(iconStepValue(testTheme, "xl")).not.toBe(
+      iconSideOf(testTheme, "lg"),
+    );
+    // A group a store lost, and a step name this release does not carry, both
+    // answer the library's default step.
+    expect(iconStepValue({}, "lg")).toBe(libraryIconSize.lg);
+    expect(iconStepValue({ iconSize: null }, "lg")).toBe(libraryIconSize.lg);
+    expect(iconStepValue(testTheme, "huge")).toBe(libraryIconSize.md);
+    expect(iconStepValue(testTheme, 18)).toBe(libraryIconSize.md);
+    expect(isIconStep("xs")).toBe(true);
+    expect(isIconStep("huge")).toBe(false);
+    expect(isIconStep(12)).toBe(false);
+  });
+
   it("paints the library's border width for a group the theme lost", () => {
     expect(borderWidthOf({}, "thin")).toBe(libraryBorderWidth.thin);
     expect(borderWidthOf({}, "strong")).toBe(libraryBorderWidth.strong);
@@ -636,6 +660,7 @@ describe("a numeric group a store gave back", () => {
       spaceValue: primitives.spaceValue === spaceValue,
       radiusValue: primitives.radiusValue === radiusValue,
       iconSideOf: primitives.iconSideOf === iconSideOf,
+      iconStepValue: primitives.iconStepValue === iconStepValue,
       controlHeightOf: primitives.controlHeightOf === controlHeightOf,
       controlPaddingOf: primitives.controlPaddingOf === controlPaddingOf,
       rowHeightOf: primitives.rowHeightOf === rowHeightOf,
@@ -644,6 +669,7 @@ describe("a numeric group a store gave back", () => {
       spaceValue: true,
       radiusValue: true,
       iconSideOf: true,
+      iconStepValue: true,
       controlHeightOf: true,
       controlPaddingOf: true,
       rowHeightOf: true,

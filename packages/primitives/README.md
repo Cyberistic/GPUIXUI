@@ -211,7 +211,8 @@ and each is read through a membership test rather than indexed raw:
   `TypeError: Cannot read properties of null (reading 'md')` from the first
   layout that asked for a gap and emptied the window. `scaleValue` and the
   readers over it (`spaceValue`, `radiusValue`, `iconSideOf`,
-  `controlHeightOf`/`controlPaddingOf`, `rowHeightOf`, `borderWidthOf`) paint
+  `controlHeightOf`/`controlPaddingOf`, `rowHeightOf`, `borderWidthOf`,
+  `iconStepValue`) paint
   the theme's own number and otherwise the **library's** — the rule
   `typeOf`/`familyOf` already
   follow for the type group — so a paint seam never throws mid-render. The gate
@@ -220,7 +221,12 @@ and each is read through a membership test rather than indexed raw:
   root**, with their source ports (`SpaceSource`, `RadiusSource`,
   `IconSizeSource`, `DensitySource`, `BorderWidthSource`), so a row or table
   painter in another package takes `rowHeightOf`/`spaceValue`/`iconSideOf`
-  instead of indexing a group the theme may not carry. `theme.test.ts` holds the
+  instead of indexing a group the theme may not carry. **A glyph is an icon
+  step, not a control size**: `iconSideOf` answers a control's derived side
+  (`sm` is 14px), while `iconStepValue` reads `theme.iconSize`'s own step
+  (`xs` is 12px) and is what a chart legend dot or any mark beside a caption
+  takes; a stored name the scale does not carry reads as `md`, the rule
+  `iconPixels` follows. `theme.test.ts` holds the
   readers and every painter, holds each published one to the entry and its
   answer, and a source scan keeps a direct index out of the rest of the package;
   `docs/theme-provider.mdx` states the rule where a consumer hands a theme over.

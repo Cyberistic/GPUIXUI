@@ -287,6 +287,8 @@ export {
   elevationLevel,
   familyOf,
   iconSideOf,
+  iconStepValue,
+  isIconStep,
   isRadiusStep,
   isSpaceStep,
   isTextRole,

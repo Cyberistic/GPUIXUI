@@ -312,6 +312,36 @@ export interface IconSizeSource {
 export const iconSideOf = (theme: IconSizeSource, size: ControlSize): number =>
   scaleValue(theme.iconSize, libraryIconSize, controlSize(size));
 
+/** Every icon step the library's scale names, for a stored value's membership read. */
+const ICON_STEPS: ReadonlyArray<string> = R.keys(libraryIconSize);
+
+/**
+ * Whether a value names an icon step.
+ *
+ * An icon step is stored as often as a control size — a saved toolbar's glyph
+ * size, a restored chart's legend — so a name a release renamed or dropped
+ * arrives as a string the union no longer names.
+ */
+export const isIconStep = (step: unknown): step is keyof IconSize =>
+  P.isString(step) && Arr.contains(ICON_STEPS, step);
+
+/**
+ * The side an **icon step** paints at: the theme's, or the library's.
+ *
+ * {@link iconSideOf} answers a *control* size (`sm`/`md`/`lg`), whose derived
+ * sides are not the icon scale's: a 12px glyph is `xs` on this scale while a
+ * `sm` control is 14px. A painter that means a glyph — a chart's legend dot, a
+ * mark beside a caption — names the icon step and reads it here, so the theme's
+ * own `iconSize` reaches it and a stored name the scale does not carry reads as
+ * `md`, the rule `iconPixels` follows.
+ */
+export const iconStepValue = (theme: IconSizeSource, step: unknown): number =>
+  scaleValue(
+    theme.iconSize,
+    libraryIconSize,
+    isIconStep(step) ? step : "md",
+  );
+
 /**
  * A theme, or anything shaped like one, as the type scale reads it.
  *
