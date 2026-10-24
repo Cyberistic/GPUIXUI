@@ -29,12 +29,12 @@ import {
   paddingSides,
   progressSizeOf,
   progressToneOf,
+  scrollAxis,
   textToneOf,
 } from "../core/style.js";
 import type {
   ProgressSize,
   ProgressTone,
-  ScrollSpec,
   SliderOrientation,
   SurfaceTone,
   TextTone,
@@ -381,13 +381,20 @@ export const separatorGroupClass = "flex flex-row items-center gap-sm";
 
 // ── ScrollArea ───────────────────────────────────────────────────────
 
-/** The class string a scroll container resolves from its axis. */
-export const scrollClass = (axis: ScrollSpec["axis"]): string =>
-  axis === "horizontal"
+/**
+ * The class string a scroll container resolves from its axis.
+ *
+ * The axis is read through `scrollAxis`, so a stored name the union does not
+ * carry paints the documented `vertical` region rather than both scrollbars.
+ */
+export const scrollClass = (axis: unknown): string => {
+  const resolved = scrollAxis(axis);
+  return resolved === "horizontal"
     ? "overflow-y-hidden overflow-x-scroll"
-    : axis === "vertical"
+    : resolved === "vertical"
       ? "overflow-y-scroll overflow-x-hidden"
       : "overflow-y-scroll overflow-x-scroll";
+};
 
 /** The frame around a scroll area: its padding is outside the scroller. */
 export const scrollFrameClass = (spec: {

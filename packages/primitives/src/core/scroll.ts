@@ -16,7 +16,7 @@
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
-import type { ScrollSpec } from "./style.js";
+import { scrollAxis, type ScrollAxis } from "./style.js";
 
 /** A scroll offset in the runtime's coordinate space: 0 at the start, negative after. */
 export interface ScrollOffset {
@@ -68,7 +68,7 @@ const MOVES: Record<string, Move> = {
   end: { x: -1, y: -1, size: "end" },
 };
 
-const scrolls = (axis: ScrollSpec["axis"], side: "x" | "y"): boolean =>
+const scrolls = (axis: ScrollAxis, side: "x" | "y"): boolean =>
   axis === "both" || axis === (side === "x" ? "horizontal" : "vertical");
 
 /**
@@ -79,7 +79,7 @@ const scrolls = (axis: ScrollSpec["axis"], side: "x" | "y"): boolean =>
  * would otherwise have no key that moves more than a line. `None` is a
  * container that scrolls neither — a page has nowhere to go.
  */
-const pageAxis = (axis: ScrollSpec["axis"]): Option.Option<"x" | "y"> =>
+const pageAxis = (axis: ScrollAxis): Option.Option<"x" | "y"> =>
   scrolls(axis, "y")
     ? Option.some("y")
     : scrolls(axis, "x")
@@ -122,18 +122,24 @@ const next = (
  * `None` means the key is not a scroll key, or it asks for an axis this container
  * does not scroll — a caller must leave that event alone rather than swallow a
  * key it did not use.
+ *
+ * The axis is read through {@link scrollAxis}, the rule the paint follows: a
+ * stored name the union does not carry is the region's documented `vertical`,
+ * so a restored layout cannot leave the tab stop answering no key at all while
+ * the surface still paints a scrollbar.
  */
 export const scrollTarget = (
   key: string,
-  axis: ScrollSpec["axis"],
+  axis: unknown,
   current: ScrollOffset,
   metrics: ScrollMetrics,
-): Option.Option<ScrollOffset> =>
-  Option.flatMap(R.get(MOVES, key), (move) => {
-    const paged = move.size === "page" ? pageAxis(axis) : Option.none();
+): Option.Option<ScrollOffset> => {
+  const resolved = scrollAxis(axis);
+  return Option.flatMap(R.get(MOVES, key), (move) => {
+    const paged = move.size === "page" ? pageAxis(resolved) : Option.none();
     /** Whether this move travels along `side`, and the container scrolls it. */
     const takes = (side: "x" | "y"): boolean =>
-      scrolls(axis, side) &&
+      scrolls(resolved, side) &&
       Match.value(move.size).pipe(
         Match.when("start", () => true),
         Match.when("end", () => true),
@@ -148,6 +154,7 @@ export const scrollTarget = (
         })
       : Option.none();
   });
+};
 
 /** How far a box falls outside the viewport that holds it, in each direction. */
 const outside = (

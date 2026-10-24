@@ -23,7 +23,7 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` |
+| `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll`; a stored name this release does not carry reads as the default, in the paint and in the keys (`scrollAxis`) |
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad deltas |
 | `onScrollChange` | `(event: EventPayload) => void` | none | the absolute offset after any move |
 | `onLayout` | `(event: EventPayload) => void` | none | the scroller's painted box (`width`/`height`), reported on mount and on a size change; a composed `ScrollAreaViewport` defaults to it |

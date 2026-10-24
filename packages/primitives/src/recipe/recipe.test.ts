@@ -537,6 +537,25 @@ describe("ScrollArea recipe", () => {
       ).toEqual(scrollStyle({ axis }));
     });
   });
+
+  // Bug guarded: the class builder read the axis raw, so a stored name matched
+  // neither branch and fell through to both scrollbars while `scrollStyle` (the
+  // exported resolver) painted the same, and the key contract painted nothing
+  // at all. Both paint paths read the documented `vertical` now.
+  it("paints the documented axis for a stored name the union does not carry", () => {
+    expect(
+      recipeTw.classesToStyle(scrollClass("sideways"), testTheme).style,
+    ).toEqual(scrollStyle({ axis: "vertical" }));
+    expect(
+      recipeTw.classesToStyle(scrollClass("sideways"), testTheme).style,
+    ).toStrictEqual(
+      recipeTw.classesToStyle(scrollClass("vertical"), testTheme).style,
+    );
+    expect(
+      recipeTw.classesToStyle(scrollClass("horizontal"), testTheme).style
+        .overflowX,
+    ).toBe("scroll");
+  });
 });
 
 describe("ButtonGroup recipe", () => {

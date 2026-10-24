@@ -84,6 +84,12 @@ and each is read through a membership test rather than indexed raw:
   body copy. The membership test is `@gpuixui/tokens`' own `textRoles`/`isTextRole`
   (this package re-exports it), so a role the scale grows is read here without a
   second list to edit.
+- a **scroll `axis`** is a restored panel's or a split-pane record's, so
+  `isScrollAxis`/`scrollAxis` (`core/style.ts`) read a name the union does not
+  carry as the documented `vertical` — the same answer in the class recipe, the
+  exported `scrollStyle` resolver and the key contract (`core/scroll.ts`). Read
+  raw, an unknown name painted **both** scrollbars while the keys matched no
+  axis at all, so the region's one tab stop moved nothing.
 - a **text `tone`** is written into an audit row, a saved message or a settings
   record, so `isTextTone`/`textToneOf` (`core/style.ts`) read a name the table
   does not carry as `default`; the class string otherwise lost its colour and

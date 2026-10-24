@@ -22,6 +22,7 @@ import {
 } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import type {
   ColorRef,
   ControlSize,
@@ -489,8 +490,33 @@ export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
       };
 };
 
+/** The axes a scroll container can paint. */
+export const SCROLL_AXES = ["vertical", "horizontal", "both"] as const;
+
+/** The overflow axes a scroll container paints. */
+export type ScrollAxis = (typeof SCROLL_AXES)[number];
+
+const SCROLL_AXIS_NAMES: ReadonlyArray<string> = SCROLL_AXES;
+
+/** Whether a value names a scroll axis. */
+export const isScrollAxis = (value: unknown): value is ScrollAxis =>
+  P.isString(value) && Arr.contains(SCROLL_AXIS_NAMES, value);
+
+/**
+ * The axis a scroll container paints and moves on.
+ *
+ * An axis is a stored layout choice as often as a literal — a restored panel, a
+ * split-pane record, a workspace layout — so a name this release renamed or
+ * dropped arrives as a string the union no longer names. `ScrollArea` documents
+ * `vertical` as its default, so that is what such a name reads as; read raw, an
+ * unknown name painted **both** scrollbars and left the keyboard contract with
+ * no axis to move on, so the one tab stop in the region answered no key at all.
+ */
+export const scrollAxis = (value: unknown): ScrollAxis =>
+  isScrollAxis(value) ? value : "vertical";
+
 export interface ScrollSpec {
-  readonly axis: "vertical" | "horizontal" | "both";
+  readonly axis: ScrollAxis;
 }
 
 /**
@@ -502,10 +528,13 @@ export interface ScrollSpec {
  * `scrollbarColor`/`scrollbarWidth` (verified on 0.11.0). There is still no
  * fade mask and no per-part thumb to configure.
  */
-export const scrollStyle = (spec: ScrollSpec): StyleDesc => ({
-  overflowY: spec.axis === "horizontal" ? "hidden" : "scroll",
-  overflowX: spec.axis === "vertical" ? "hidden" : "scroll",
-});
+export const scrollStyle = (spec: ScrollSpec): StyleDesc => {
+  const axis = scrollAxis(spec.axis);
+  return {
+    overflowY: axis === "horizontal" ? "hidden" : "scroll",
+    overflowX: axis === "vertical" ? "hidden" : "scroll",
+  };
+};
 
 /**
  * Clamp a progress value to the 0–100 the track can actually paint.

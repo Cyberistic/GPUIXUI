@@ -70,6 +70,29 @@ describe("scrollTarget", () => {
     );
   });
 
+  // Bug guarded: `ScrollArea`'s axis is a stored layout choice, and the key
+  // contract read it raw — a name the union does not carry matched neither
+  // branch of `scrolls`, so every key answered `None` while the paint fell
+  // through to **both** scrollbars. The region was a tab stop that moved
+  // nothing; it reads the documented `vertical` now, in step with the paint.
+  it("reads a stored axis as the region's documented axis", () => {
+    // The parameter is `unknown` because a saved axis arrives as one string.
+    const stored: unknown = "sideways";
+    expect(scrollTarget("down", stored, at(0, -100), metrics)).toStrictEqual(
+      Option.some(at(0, -132)),
+    );
+    expect(scrollTarget("pagedown", stored, at(0, -10), metrics)).toStrictEqual(
+      Option.some(at(0, -70)),
+    );
+    // A vertical region still leaves the sideways keys alone.
+    expect(scrollTarget("right", stored, at(0, 0), metrics)).toStrictEqual(
+      Option.none(),
+    );
+    expect(scrollTarget("down", "horizontal", at(0, 0), metrics)).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("moves both axes of a two-axis region", () => {
     expect(scrollTarget("down", "both", at(-40, -40), metrics)).toStrictEqual(
       Option.some(at(-40, -72)),

@@ -28,6 +28,7 @@ import {
 import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
+import type { ScrollAxis } from "../src/core/style.js";
 import type { Density } from "../src/core/theme.js";
 import { a11yNode, a11yNodes, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
@@ -310,6 +311,45 @@ it("scrolls a focused ScrollArea with the keyboard", async () => {
   expect(
     Option.isSome(a11yNode(runtime.a11y(), { role: "Group", label: "Rows" })),
   ).toBe(true);
+});
+
+// Bug guarded: `ScrollArea`'s axis is a stored layout choice as often as a
+// literal (a restored panel, a split-pane record), and read raw a name this
+// release does not carry painted **both** scrollbars and matched neither branch
+// of the key contract, so the region's tab stop moved nothing. It reads as the
+// documented `vertical` now, in both paint and keys.
+it("scrolls a region whose stored axis this release does not carry", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        // The cast is the storage boundary: a saved axis is one string.
+        axis={"sideways" as ScrollAxis}
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        label="Rows"
+      >
+        {card("tall", 400, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  // The region is the documented tab stop, and its keys move it down the one
+  // axis it paints. Read raw, the stored name matched no axis, so every key
+  // answered `None` and this offset never moved.
+  runtime.keyDown("s", "down");
+  expect(runtime.focused()).toStrictEqual(Option.some("s"));
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -testTheme.density.rowHeight }),
+  );
+  runtime.keyDown("s", "pagedown");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -(testTheme.density.rowHeight + 60) }),
+  );
+  // A sideways key is still not this region's.
+  runtime.keyDown("s", "right");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -(testTheme.density.rowHeight + 60) }),
+  );
 });
 
 it("leaves a chorded scroll key to the platform", async () => {

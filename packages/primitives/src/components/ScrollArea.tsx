@@ -62,7 +62,7 @@ import { isPlainKey } from "../core/keyboard.js";
 import { spokenWord } from "../core/a11y.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { scrollTarget } from "../core/scroll.js";
-import type { ScrollSpec } from "../core/style.js";
+import { scrollAxis, type ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme, RadiusStep, SpaceStep } from "../core/theme.js";
 import { scrollClass, scrollFrameClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -110,7 +110,7 @@ const useScrollPart = (name: string): ScrollPart => {
 /** The scroll facts a scroll area resolves once, for its root and viewport. */
 export const scrollPart = (
   {
-    axis = "vertical",
+    axis: requestedAxis,
     onScroll,
     onScrollChange,
     onLayout,
@@ -133,7 +133,7 @@ export const scrollPart = (
   onScrollKey?: (event: KeyEvent) => void,
 ): ScrollPart => ({
   theme,
-  axis,
+  axis: scrollAxis(requestedAxis),
   onScroll,
   onScrollChange,
   onLayout,

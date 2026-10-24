@@ -23,6 +23,9 @@ import {
   progressTrackStyle,
   PROGRESS_TONES,
   ruleStyle,
+  SCROLL_AXES,
+  isScrollAxis,
+  scrollAxis,
   scrollStyle,
   sliderFillStyle,
   sliderInset,
@@ -33,6 +36,7 @@ import {
   textStyle,
   TEXT_TONES,
   type ControlSpec,
+  type ScrollAxis,
 } from "./style.js";
 import { buttonVariants, BUTTON_VARIANTS, fieldVariant } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
@@ -518,6 +522,25 @@ describe("scrollStyle", () => {
     // `scrollbar` role becomes the runtime's `scrollbarColor` (proven in
     // `presentational.test.tsx` and `layout.runtime.test.tsx`).
     expect(Object.keys(both)).not.toContain("scrollbarColor");
+  });
+
+  // Bug guarded: an axis is a stored layout choice (a restored panel, a
+  // split-pane record), and the union that names the three axes had no guard,
+  // so a name this release does not carry fell through `scrollStyle`'s two
+  // ternaries as **both** scrollbars — the opposite of the `vertical` default
+  // the page documents — while `scrollTarget` read the same name as *no* axis
+  // at all, leaving the region's tab stop answering no key.
+  it("paints the documented axis for a stored name the union does not carry", () => {
+    // The cast is the storage boundary: a saved axis is a string, not a union.
+    const stored = "sideways" as ScrollAxis;
+    expect(scrollStyle({ axis: stored })).toStrictEqual(
+      scrollStyle({ axis: "vertical" }),
+    );
+    expect(scrollAxis(stored)).toBe("vertical");
+    expect(isScrollAxis(stored)).toBe(false);
+    expect(SCROLL_AXES).toStrictEqual(["vertical", "horizontal", "both"]);
+    // The axis itself is still the caller's.
+    expect(scrollStyle({ axis: "horizontal" }).overflowX).toBe("scroll");
   });
 });
 
