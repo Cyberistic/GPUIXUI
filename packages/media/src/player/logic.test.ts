@@ -16,6 +16,7 @@ import {
   formatClock,
   isFinished,
   MEDIA_SEEK_STEP_MS,
+  peaksOf,
   progressWidth,
   seekPlayhead,
   stepOf,
@@ -142,5 +143,32 @@ describe("the waveform", () => {
     expect(waveformSvg([], 20, 16)).toBe("");
     expect(waveformSvg([0.5], 0, 16)).toBe("");
     expect(waveformSvg([0.5], 20, Number.NaN)).toBe("");
+  });
+
+  it("reads only a list as a clip's samples", () => {
+    // The bug guarded: `peaks` is a decode's output or a saved record's field,
+    // so a store that carried no samples writes `null` and an older shape can
+    // be a number or an object. Handing any of them to the drawing threw out of
+    // the render (`self.map is not a function`) and took the whole player down.
+    expect(peaksOf([0.2, 0.8])).toStrictEqual([0.2, 0.8]);
+    expect(peaksOf([])).toStrictEqual([]);
+    expect(peaksOf(null)).toStrictEqual([]);
+    expect(peaksOf(undefined)).toStrictEqual([]);
+    expect(peaksOf(3)).toStrictEqual([]);
+    expect(peaksOf({})).toStrictEqual([]);
+    expect(peaksOf({ 0: 0.5, 1: 1 })).toStrictEqual([]);
+    expect(peaksOf("abcd")).toStrictEqual([]);
+    expect(waveformSvg(peaksOf(3), 20, 16)).toBe("");
+  });
+
+  it("reads a stored sample that is not a number as silence", () => {
+    // A list whose entries a save wrote as something else keeps its shape — the
+    // sample exists, it is just unreadable — so it draws a flat point rather
+    // than being dropped and shifting every later peak one slot left.
+    const stored = [0.5, "loud", null, Number.NaN];
+    expect(peaksOf(stored)).toHaveLength(4);
+    expect(waveformSvg(peaksOf(stored), 20, 16)).toBe(
+      waveformSvg([0.5, 0, 0, 0], 20, 16),
+    );
   });
 });

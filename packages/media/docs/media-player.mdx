@@ -99,3 +99,8 @@ and Space and leaves the tab order while disabled.
 - **Values that cannot be laid out read as defaults**: a stored `duration` that
   is not positive is a zero-length clip, and a stored `tickMs`, `seekStep`,
   `width`, `height` or `trackWidth` that is not positive reads as its default.
+- **A stored `peaks` must be a list**: `peaks` is a decode's output or a saved
+  record's field, so a value that is not a list — `null`, a number, an object
+  from an older shape — paints no waveform rather than throwing out of the
+  render, and a list whose entry is not a number keeps its shape and draws a
+  flat point (`peaksOf`).

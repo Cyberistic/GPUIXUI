@@ -13,6 +13,7 @@
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 
 /** The interval a playing clip advances its playhead by. */
 export const MEDIA_TICK_MS = 100;
@@ -130,6 +131,21 @@ export const seekPlayhead = (
 /** A share read as a waveform sample: `0…1`, with anything unreadable at zero. */
 const sampleOf = (value: number): number =>
   Number.isFinite(value) ? Math.min(Math.max(value, 0), 1) : 0;
+
+/**
+ * The samples a waveform draws, read at the boundary.
+ *
+ * A clip's `peaks` arrive from a saved record as often as from a decode: a
+ * store writes `null` where it carried no samples, and a shape from an older
+ * release may be any JSON value at all. The waveform is drawn from a list, so
+ * anything else is no waveform — the rule the level, the quiet zone and the
+ * duration already follow — and a sample that is not a number draws silence
+ * rather than a path full of `NaN` that paints nothing.
+ */
+export const peaksOf = (value: unknown): ReadonlyArray<number> =>
+  Arr.isArray(value)
+    ? Arr.map(value, (sample) => (P.isNumber(sample) ? sample : 0))
+    : [];
 
 /** A coordinate printed at a hundredth of a point, so a path is stable. */
 const round2 = (value: number): number => Math.round(value * 100) / 100;

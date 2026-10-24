@@ -125,6 +125,25 @@ describe("renderMediaPlayer", () => {
     expect(findByTestId(tree(), "media-waveform")).toStrictEqual(Option.none());
   });
 
+  it("paints no waveform, and the whole player, for samples that are not a list", () => {
+    // A clip's peaks are a decode's output or a saved record's field; a store
+    // that carried an object, a number or a string reaches the render untyped.
+    // The bug guarded: the drawing read `.length` and `.map` off that value and
+    // threw out of the render, so the clock and the transport vanished with it.
+    const stored = { 0: 0.5, 1: 1 } as unknown as ReadonlyArray<number>;
+    const root = tree({ peaks: stored });
+    expect(findByTestId(root, "media-waveform")).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        elementProp(
+          expectSome(findByTestId(root, "media-seek")),
+          "aria-valuetext",
+        ),
+      ),
+    ).toBe("0:01 / 0:04");
+    expect(expectSome(findByTestId(root, "media-play"))).toBeDefined();
+  });
+
   it("forwards the transport's two handlers", () => {
     const surface = surfaceOf();
     const root = tree({}, { playing: false, playhead: 0 }, surface);

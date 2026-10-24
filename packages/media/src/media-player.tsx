@@ -39,6 +39,7 @@ import {
   isFinished,
   MEDIA_SEEK_STEP_MS,
   MEDIA_TICK_MS,
+  peaksOf,
   progressWidth,
   seekPlayhead,
   stepOf,
@@ -84,7 +85,11 @@ export interface MediaPlayerProps extends Omit<Props, "children"> {
   readonly height?: number;
   /** The progress track's width in points. Default `200`. */
   readonly trackWidth?: number;
-  /** The clip's amplitude samples, `0…1`, drawn as a waveform. */
+  /**
+   * The clip's amplitude samples, `0…1`, drawn as a waveform. A value that is
+   * not a list paints no waveform, and a sample that is not a number draws
+   * silence.
+   */
   readonly peaks?: ReadonlyArray<number>;
   /** The playhead to start from. Default `0`. */
   readonly defaultPlayhead?: number;
@@ -189,7 +194,7 @@ export const renderMediaPlayer = (
   const boxWidth = sideOf(width, DEFAULT_WIDTH);
   const boxHeight = sideOf(height, DEFAULT_HEIGHT);
   const barWidth = sideOf(trackWidth, DEFAULT_TRACK_WIDTH);
-  const waveform = waveformSvg(peaks ?? [], barWidth, WAVEFORM_HEIGHT);
+  const waveform = waveformSvg(peaksOf(peaks), barWidth, WAVEFORM_HEIGHT);
 
   return (
     <div
