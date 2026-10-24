@@ -170,8 +170,9 @@ export interface UseTableOptions<Row extends RowData> {
    * record.
    *
    * Read **once, at mount**, through `readGridState`, the seam a store-driven
-   * grid already uses: a saved workspace reopens a grid sorted, narrowed and
-   * chosen the way the reader left it, and a record this release cannot read
+   * grid already uses: a saved workspace reopens a grid sorted, narrowed,
+   * chosen and paged the way the reader left it, and a record this release
+   * cannot read
    * reads as the slice it can — a sorting list that is not a list is no sort, an
    * entry that names no column is dropped, a query that is not text is no query,
    * and a chosen set keeps only the ids set to `true`. A later edit is the
@@ -186,10 +187,12 @@ export interface UseTableOptions<Row extends RowData> {
   /**
    * How many rows one page paints.
    *
-   * Omit it for **one page holding every filtered row** — the table earlier
-   * releases shipped, and what `stored` names when the saved grid had no page
-   * size. A size the grid cannot lay out (`NaN`, zero, a negative) is that one
-   * page too, because a page of no row paints nothing.
+   * Read **once, at mount**, like the other starting slices of the controller
+   * state: a later change is `setPageSize`, which keeps the reader's top row in
+   * view. Omit it for **one page holding every filtered row** — the table
+   * earlier releases shipped, and what `stored` names when the saved grid had no
+   * page size. A size the grid cannot lay out (`NaN`, zero, a negative) is that
+   * one page too, because a page of no row paints nothing.
    *
    * The page a reader is on is controller state, not an option: `pageIndex`,
    * `pageCount`, `setPageIndex`, `setPageSize`, `nextPage` and `previousPage`
