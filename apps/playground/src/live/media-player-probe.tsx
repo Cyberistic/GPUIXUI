@@ -275,13 +275,7 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // ---- the waveform's own paint ----
     const waveArea =
       PLAYER_WAVEFORM.width * PLAYER_WAVEFORM.height * scale * scale;
-    const wavePaper = yield* countIn(
-      ctx,
-      rest,
-      waveform,
-      scale,
-      PLAYER_PAGE,
-    );
+    const wavePaper = yield* countIn(ctx, rest, waveform, scale, PLAYER_PAGE);
     yield* ctx.expectEqual(
       "the waveform paints ink of its own",
       waveArea - wavePaper > 0,

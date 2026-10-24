@@ -217,9 +217,7 @@ describe("the probe", () => {
     expect(probe).toContain(
       "progressWidth(held.playhead, PLAYER_CLIP_MS, PLAYER_TRACK.width)",
     );
-    expect(probe).toContain(
-      "progressWidth(\n        3 * PLAYER_SEEK_STEP_MS,",
-    );
+    expect(probe).toContain("progressWidth(\n        3 * PLAYER_SEEK_STEP_MS,");
     expect(probe).toContain("timeLabel(PLAYER_CLIP_MS, PLAYER_CLIP_MS)");
   });
 
@@ -253,9 +251,7 @@ describe("the record", () => {
     expect(section).toContain("playing=true");
     expect(section).toContain(timeLabel(PLAYER_CLIP_MS, PLAYER_CLIP_MS));
     expect(section).toContain(frameHex(3 * PLAYER_SEEK_STEP_MS));
-    expect(section).toContain(
-      `${PLAYER_POSTER.width}×${PLAYER_POSTER.height}`,
-    );
+    expect(section).toContain(`${PLAYER_POSTER.width}×${PLAYER_POSTER.height}`);
     expect(section).toContain(
       `${PLAYER_WAVEFORM.width}×${PLAYER_WAVEFORM.height}`,
     );
