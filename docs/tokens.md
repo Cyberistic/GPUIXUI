@@ -3628,10 +3628,13 @@ Density changes control height, horizontal padding and row height only. Type
 and spacing are unaffected.
 
 **What reads it.** The primitives compile their recipes against a registry that
-resolves a control's height, side and horizontal padding from the theme
-(`theme.density.controlHeight[size]` and `controlPaddingX` in
-`packages/primitives/src/recipe/registry.ts`), so a density switch resizes them.
-The components package compiles against `@gpuixui/tw`'s **default** registry —
+resolves a control's height, side and horizontal padding through the density
+seam (`controlHeightOf`/`controlPaddingOf` in
+`packages/primitives/src/core/theme.ts`, called from
+`packages/primitives/src/recipe/registry.ts`), which paints the theme's own
+numbers and the library's preset for a theme a store gave back without the
+group, so a density switch resizes them and a truncated theme lays its controls
+out instead of throwing. The components package compiles against `@gpuixui/tw`'s **default** registry —
 shadcn's fixed metrics (`h-9` = 36, `px-4` = 16) — by decision (ADR 0006), and
 keeps density for the one thing that has to line up with the controls beside it:
 a control's box (`controlHeight`, in the fields, menu and command rows, the
@@ -3654,7 +3657,9 @@ a dense list row and the base a normal row adds `spacing.md` to
 (`packages/components/src/list.tsx`), a tree row and its virtual twin
 (`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`), a log
 viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a scroller
-moves per arrow key (`packages/primitives/src/components/ScrollArea.tsx`), with
+moves per arrow key (`packages/primitives/src/components/ScrollArea.tsx`, through
+the primitives' `rowHeightOf` in `packages/primitives/src/core/theme.ts`, which
+answers the library's row for a theme that lost the group), with
 `@gpuixui/tw` exposing the same step as its `row-height` utility
 (`packages/tw/src/calc.ts`). A **menu row** is a `controlHeight.sm` box
 (`packages/components/src/menu/item.tsx`) and a **data-table row** is laid out by

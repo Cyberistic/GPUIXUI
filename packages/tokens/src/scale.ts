@@ -206,8 +206,11 @@ export interface Density {
    * a log viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a
    * scroller moves per arrow key
    * (`packages/primitives/src/components/ScrollArea.tsx`); `@gpuixui/tw` also
-   * registers it as its `row-height` utility (`packages/tw/src/calc.ts`). A
-   * **menu** row is a `controlHeight.sm` box
+   * registers it as its `row-height` utility (`packages/tw/src/calc.ts`). The
+   * scroller takes the primitives' `rowHeightOf` seam rather than the group
+   * (`packages/primitives/src/core/theme.ts`), which paints this step and the
+   * library's row for a theme a store gave back without the group. A **menu**
+   * row is a `controlHeight.sm` box
    * (`packages/components/src/menu/item.tsx`) and a data-table row is laid out
    * by its cells, so neither reads this step. Every preset sets it to
    * `controlHeight.md`, so a row and the default control beside it share a

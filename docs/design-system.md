@@ -249,8 +249,11 @@ switch's box into a `NaN` that painted nothing. `isControlSize` narrows a stored
 size where the caller can tell the reader what it substituted (§11).
 
 **Only control geometry follows it in both packages.** The primitives compile
-their recipes against a density-driven registry, so a control's box, side and
-padding are the theme's. The components package compiles against `@gpuixui/tw`'s
+their recipes against a density-driven registry, which resolves a control's box,
+side and padding through the density seam — `controlHeightOf`/`controlPaddingOf`
+in `packages/primitives/src/core/theme.ts`, called from
+`packages/primitives/src/recipe/registry.ts` — answering the library's preset
+for a theme that lost the group. The components package compiles against `@gpuixui/tw`'s
 default registry — shadcn's fixed metrics — and keeps density only where a box has
 to line up with the density-driven controls beside it: a control's
 `controlHeight` (the fields, menu and command rows, the accordion trigger, tabs,

@@ -76,29 +76,58 @@ const sourcesIn = (root: string): ReadonlyArray<readonly [string, string]> => {
 };
 
 /**
- * The sources that build a box at `theme.density.rowHeight`, derived from the
- * tree rather than listed by hand. `@gpuixui/tw` is included because its
- * `row-height` utility resolves the same step for a caller's class name; the
- * tokens package is not, because its reader is the report below rather than a
- * paint.
+ * Whether a source builds a box at the row height. Two routes reach the step:
+ * the theme's own group (`density.rowHeight`) and the primitives' density seam
+ * (`rowHeightOf(theme)`), which reads the same step and paints the library's
+ * row for a theme a store gave back without the group. The data package's own
+ * `rowHeightOf` normalises a caller's number and never takes the theme, so it
+ * is not mistaken for the token's reader.
+ */
+const readsRowHeight = (text: string): boolean =>
+  text.includes("density.rowHeight") || /rowHeightOf\(\s*theme\s*\)/.test(text);
+
+/**
+ * The sources that build a box at the row height, derived from the tree rather
+ * than listed by hand. `@gpuixui/tw` is included because its `row-height`
+ * utility resolves the same step for a caller's class name; the tokens package
+ * is not, because its reader is the report below rather than a paint.
  */
 const rowHeightReaders = (): ReadonlyArray<string> =>
   ["components", "data", "files", "primitives", "tw"].flatMap((pkg) =>
     sourcesIn(`../../${pkg}/src/`)
-      .filter(([, text]) => text.includes("density.rowHeight"))
+      .filter(([, text]) => readsRowHeight(text))
       .map(([path]) => `packages/${pkg}/src/${path}`),
   );
 
 describe("the density both packages read", () => {
   const primitives = read("../../primitives/src/recipe/registry.ts");
+  const density = read("../../primitives/src/core/theme.ts");
   const components = read("../../components/src/internal/recipe.ts");
 
-  it("reads the theme's metrics in the primitives' registry", () => {
-    // The primitives' class strings name steps, and the registry resolves the
-    // box, its side and its padding against the active density.
-    expect(primitives).toContain("theme.density.controlHeight[size]");
-    expect(primitives).toContain("theme.density.controlPaddingX[size]");
-    expect(primitives).toContain("theme.density.controlHeight[size]");
+  /**
+   * Whether a source resolves a control's box through the primitives' density
+   * seam rather than indexing the theme's group.
+   */
+  const resolvesDensity = (text: string): boolean =>
+    text.includes("controlHeightOf(theme, size)") &&
+    text.includes("controlPaddingOf(theme, size)") &&
+    !text.includes("theme.density.controlHeight[");
+
+  it("resolves a control's box through the primitives' density seam", () => {
+    // The class strings name steps; the registry asks the seam for the box, its
+    // side and its padding, and the seam paints the theme's own numbers or the
+    // library's preset for a density group a store gave back without.
+    expect(resolvesDensity(primitives)).toBe(true);
+    // The shape the seam replaced: it answered `undefined` for a theme a store
+    // gave back without the group, so the first control laid out with no box.
+    expect(
+      resolvesDensity("{ height: theme.density.controlHeight[size] }"),
+    ).toBe(false);
+
+    expect(density).toContain("theme.density?.controlHeight");
+    expect(density).toContain("theme.density?.controlPaddingX");
+    expect(density).toContain("libraryDensity.controlHeight");
+    expect(density).toContain("libraryDensity.controlPaddingX");
   });
 
   it("reads the default registry in the components' seam", () => {
@@ -135,6 +164,18 @@ describe("the pages that teach density", () => {
     });
   });
 
+  it("names the seam a control's box is resolved through, and its fallback", () => {
+    // The catalogue taught the registry's raw index expression, which is now a
+    // seam: a theme a store gave back without the group paints the library's
+    // preset instead of answering `undefined` for the first control laid out.
+    const catalogue = pages["docs/tokens.md"];
+    expect(catalogue).toContain("controlHeightOf");
+    expect(catalogue).toContain("packages/primitives/src/core/theme.ts");
+    expect(catalogue).toContain("library's preset");
+    expect(catalogue).not.toContain("theme.density.controlHeight[size]");
+    expect(pages["docs/design-system.md"]).toContain("controlHeightOf");
+  });
+
   it("retracts the claim that every component reads the scales", () => {
     // The sentence a consumer followed to a density switch that resized nothing.
     Object.entries(pages).forEach(([page, text]) => {
@@ -163,6 +204,9 @@ describe("the row height's readers", () => {
         "packages/tw/src/calc.ts",
       ]),
     );
+    // The data package's own normaliser takes a caller's number, not the theme,
+    // so it is not a reader of this step.
+    expect(readsRowHeight("rowHeightOf(namedRowHeight)")).toBe(false);
   });
 
   it("names every one of those sources in the step's own documentation", () => {
@@ -175,6 +219,20 @@ describe("the row height's readers", () => {
         path,
       ),
     );
+  });
+
+  it("resolves a scroller's line through the primitives' density seam", () => {
+    // The one reader inside the primitives takes the seam that answers the
+    // library's row for a theme a store truncated past the density group, so a
+    // keypress cannot reach a raw group read mid-screen.
+    expect(read("../../primitives/src/components/ScrollArea.tsx")).toContain(
+      "rowHeightOf(theme)",
+    );
+    expect(read("../../primitives/src/core/theme.ts")).toContain(
+      "libraryDensity.rowHeight",
+    );
+    expect(read("./scale.ts")).toContain("rowHeightOf");
+    expect(pages["docs/tokens.md"]).toContain("rowHeightOf");
   });
 
   it("leaves a menu row and a table row to the steps they do read", () => {
