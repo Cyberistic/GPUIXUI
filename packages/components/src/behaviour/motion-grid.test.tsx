@@ -11,7 +11,8 @@
  * receiving presses at the box it is painted in.
  *
  * The motion clock is paused before a read, so a mid-travel claim is the frame
- * named rather than wherever real time had got.
+ * named rather than wherever real time had got; and a cell list a store handed
+ * back as `null`, which threw before a cell painted.
  */
 
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
@@ -363,6 +364,61 @@ describe("MotionGrid", () => {
       expect(nodesWithRole(unnamed.renderer, "group")).toEqual([]);
     } finally {
       unnamed.unmount();
+    }
+  });
+
+  it("paints a grid whose stored cell list is not a list", () => {
+    // The bug guarded: a grid restored with a saved layout carries JSON's `null`
+    // for a list its record never carried, and `Arr.length`/`items.map` threw
+    // out of the render, taking the page with it where no cells paints an empty
+    // frame.
+    const page = renderComponent(
+      <div>
+        <text testId="before">Before</text>
+        <MotionGrid
+          testId="grid"
+          // @ts-expect-error — the list a store wrote where it carried none.
+          items={null}
+          {...grid}
+        />
+      </div>,
+    );
+    try {
+      // The sibling is the counter: a render that threw takes the tree with it.
+      expect(page.renderer.getAllText()).toContain("Before");
+      expect(page.renderer.findByTestId("motion-grid-cell-a")).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps the cells beside a stored entry that names none", () => {
+    // A deleted record leaves `null` inside the list, and an id that is not
+    // text has no key a reorder can keep: the cell threw on that id while its
+    // neighbours painted.
+    const page = mount(
+      <MotionGrid
+        testId="grid"
+        items={[
+          // @ts-expect-error — a deleted record a store left in the list.
+          null,
+          // @ts-expect-error — an id a store wrote as something else.
+          { id: 42, content: null },
+          ...cells("a", "b"),
+        ]}
+        {...grid}
+      />,
+    );
+    try {
+      // The two readable cells keep their slots: the malformed entry did not
+      // take a place in the row.
+      const first = at(page, "a");
+      const second = at(page, "b");
+      expect(second.x - first.x).toBe(110);
+      expect(second.y).toBe(first.y);
+      expect(page.renderer.findByTestId("motion-grid-cell-42")).toBeUndefined();
+    } finally {
+      page.unmount();
     }
   });
 });

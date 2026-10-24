@@ -37,6 +37,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 import {
   motionGridHeight,
+  itemsOf,
   motionGridLayout,
   motionGridRows,
   motionGridSlot,
@@ -67,7 +68,7 @@ export interface MotionGridState {
 
 /** {@link MotionGrid} props. */
 export interface MotionGridProps extends Omit<Props, "children" | "style"> {
-  /** The cells, in reading order. A cell's key is its `id`. */
+  /** The cells, in reading order. A cell's key is its `id`: a value that is not a list — a saved layout's `null` — paints no cells, and an entry without a text id is not a cell. */
   readonly items: ReadonlyArray<MotionGridItem>;
   /** Columns across the frame. Default `3`; floored and at least `1`. */
   readonly columns?: number;
@@ -100,7 +101,7 @@ export interface MotionGridProps extends Omit<Props, "children" | "style"> {
  * at the slot's edge.
  */
 export const MotionGrid = ({
-  items,
+  items: storedItems,
   columns,
   cellWidth,
   rowHeight,
@@ -112,6 +113,7 @@ export const MotionGrid = ({
   ...rest
 }: MotionGridProps) => {
   const theme = useTheme();
+  const items = itemsOf(storedItems);
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level).enter;
   const layout = motionGridLayout({

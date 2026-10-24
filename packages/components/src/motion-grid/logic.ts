@@ -13,6 +13,7 @@
  * painted widths no longer add up to the frame.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
 /** The columns a grid uses when the caller names none. */
@@ -26,6 +27,46 @@ export const motionGridRowHeight = 120;
 
 /** The space between two columns and between two rows, in pixels. */
 export const motionGridGap = 12;
+
+/**
+ * Whether a stored entry is a cell: an object naming itself with a text id.
+ *
+ * The id is the cell's key — the element a reorder keeps so its slot change
+ * tweens instead of remounting — so an entry without one is not a cell. Nothing
+ * else is read here: a cell's content is a React node, which no structural read
+ * can describe.
+ */
+const isCell = <Cell extends { readonly id: string }>(
+  entry: unknown,
+): entry is Cell => {
+  if (typeof entry !== "object" || entry === null || !("id" in entry)) {
+    return false;
+  }
+  const id = entry.id;
+  return typeof id === "string" && id.trim().length > 0;
+};
+
+/**
+ * The cells a caller's list carries, read at the boundary.
+ *
+ * A grid is composed in code as often as it is restored with a saved layout,
+ * and JSON writes `null` for a list a record never carried: `Arr.length` and
+ * `items.map` over that value threw before a cell painted. Only a real list is a
+ * list, and an entry that does not name itself is dropped while its neighbours
+ * paint, so one malformed record cannot take the frame down; an empty list
+ * paints the empty frame.
+ */
+export const itemsOf = <Cell extends { readonly id: string }>(
+  value: ReadonlyArray<Cell> | null | undefined,
+): ReadonlyArray<Cell> => {
+  const list = Option.getOrElse(
+    Option.filter(Option.fromNullishOr(value), (entries): boolean =>
+      Arr.isArray(entries),
+    ),
+    () => [],
+  );
+  return Arr.filter(list, isCell);
+};
 
 export interface MotionGridLayout {
   /** Columns across the frame; at least one. */

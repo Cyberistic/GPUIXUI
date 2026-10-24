@@ -22,7 +22,7 @@ import {
   motionGridRowHeight,
   motionGridRows,
   motionGridSlot,
-  motionGridWidth,
+  motionGridWidth,  itemsOf,
 } from "./logic.js";
 
 /** The suite's grid: 3 columns of 100 × 80 with 10 px gaps. */
@@ -161,5 +161,35 @@ describe("motionGridSlot", () => {
       expect(slot.left + slot.width).toBeLessThanOrEqual(width);
       expect(slot.top + slot.height).toBeLessThanOrEqual(height);
     });
+  });
+
+  it("reads a stored cell list as cells, and nothing for anything else", () => {
+    // The bug guarded: a grid restored with a saved layout carries JSON's `null`
+    // for a list its record never carried, and `Arr.length`/`items.map` threw
+    // before a cell painted.
+    const first = { id: "a" } as const;
+    const second = { id: "b" } as const;
+    expect(itemsOf([first, second])).toEqual([first, second]);
+    expect(itemsOf(null)).toEqual([]);
+    expect(itemsOf(undefined)).toEqual([]);
+    expect(itemsOf([])).toEqual([]);
+  });
+
+  it("drops an entry that names no cell, keeping the ones beside it", () => {
+    // The id is the cell's key, so an entry a store left as `null` or wrote a
+    // number into has no element a reorder can keep.
+    const first = { id: "a" } as const;
+    const second = { id: "b" } as const;
+    expect(
+      itemsOf([
+        // @ts-expect-error — a deleted record a store left in the list.
+        null,
+        first,
+        // @ts-expect-error — an id a store wrote as something else.
+        { id: 42 },
+        { id: "   " },
+        second,
+      ]),
+    ).toEqual([first, second]);
   });
 });

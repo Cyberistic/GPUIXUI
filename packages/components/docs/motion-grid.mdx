@@ -30,7 +30,7 @@ import { MotionGrid } from "@gpuixui/components/motion-grid";
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `items` | `ReadonlyArray<MotionGridItem>` | — |
+| `items` | `ReadonlyArray<MotionGridItem>` (a value that is not a list reads as none; an entry without a text `id` is dropped) | — |
 | `columns` | `number` | `3` |
 | `cellWidth` | `number` | `160` |
 | `rowHeight` | `number` | `120` |
@@ -45,3 +45,4 @@ import { MotionGrid } from "@gpuixui/components/motion-grid";
 - No cell sizes its row; the caller names both.
 - Inset movement, no `transform`.
 - A fixed number of columns.
+- **A stored cell list is read**: a grid restored with a saved layout carries JSON's `null` for a list its record never carried, so a value that is not a list paints an empty frame instead of throwing from the first cell, and an entry without a text `id` is not a cell — it is dropped while its neighbours keep their slots (`itemsOf`).
