@@ -27,6 +27,7 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import { accessibleName, visibleCopy } from "@gpuixui/primitives/core";
 import {
   cn,
   MESSAGE_ACTIONS,
@@ -92,6 +93,19 @@ const AUTHOR: Readonly<Record<MessageVariant, string>> = {
  */
 const rowVariant = (variant: unknown): MessageVariant =>
   Schema.is(MessageVariants)(variant) ? variant : "assistant";
+
+/**
+ * The rows a saved reply's slot carries: only a list is a list.
+ *
+ * `toolCalls` and `sources` are conversation data as often as literals — a
+ * transcript restored from storage writes `null` where it carried no slot, and a
+ * record from an older shape may carry another value there. `.map` and `.length`
+ * on it threw out of the render and took the whole row down, where the rule is
+ * that a slot with nothing to show paints nothing (the reading `peaks` follows
+ * in the media player).
+ */
+const listOf = <A,>(value: ReadonlyArray<A> | undefined): ReadonlyArray<A> =>
+  Array.isArray(value) ? value : [];
 
 /** How a tool call ended. */
 export type MessageToolStatus = "running" | "complete" | "error";
@@ -229,19 +243,25 @@ export interface MessageContentState {
 export interface MessageContentProps extends Omit<Props, "children" | "style"> {
   /** The body: prose, or a `<markdown>` element from the consumer. */
   readonly children?: ReactNode;
-  /** Collapsed reasoning, closed by default. */
+  /** Collapsed reasoning, closed by default. A blank one paints no panel. */
   readonly reasoning?: string;
-  /** The tool calls the reply made, in order. */
+  /**
+   * The tool calls the reply made, in order. A value that is not a list — a
+   * saved record's `null` — carries no calls.
+   */
   readonly toolCalls?: ReadonlyArray<MessageToolCall>;
-  /** The citations the reply used. */
+  /**
+   * The citations the reply used. A value that is not a list — a saved record's
+   * `null` — carries no citations.
+   */
   readonly sources?: ReadonlyArray<MessageSource>;
   /** Show the streaming marker while tokens are still arriving. */
   readonly streaming?: boolean;
-  /** The marker's copy. Default `"Streaming…"`. */
+  /** The marker's copy. Default `"Streaming…"`; a blank one reads as the default. */
   readonly streamingLabel?: string;
-  /** The reasoning disclosure's copy. Default `"Reasoning"`. */
+  /** The reasoning disclosure's copy. Default `"Reasoning"`; a blank one reads as the default. */
   readonly reasoningLabel?: string;
-  /** The citations list's accessible name. Default `"Sources"`. */
+  /** The citations list's accessible name. Default `"Sources"`; a blank one reads as the default. */
   readonly sourcesLabel?: string;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -355,6 +375,15 @@ export const MessageContent = ({
   const theme = useTheme();
   const { variant } = useMessage();
   assertParts(messageContent, children);
+  // The slots and their copy arrive with a saved reply: a slot that is not a
+  // list carries nothing, and a name or a sentence that is blank reads as its
+  // documented words rather than painting an unnamed list or an empty line.
+  const calls = listOf(toolCalls);
+  const citations = listOf(sources);
+  const thought = visibleCopy(reasoning);
+  const streamingWord = accessibleName(streamingLabel) ?? "Streaming…";
+  const reasoningWord = accessibleName(reasoningLabel) ?? "Reasoning";
+  const citationsWord = accessibleName(sourcesLabel) ?? "Sources";
 
   return (
     <div
@@ -366,8 +395,8 @@ export const MessageContent = ({
         resolveStyle(style, { variant, streaming }),
       )}
     >
-      {reasoning === undefined ? null : (
-        <Reasoning text={reasoning} label={reasoningLabel} />
+      {thought === undefined ? null : (
+        <Reasoning text={thought} label={reasoningWord} />
       )}
       <div
         testId="message-bubble"
@@ -378,16 +407,16 @@ export const MessageContent = ({
       >
         {children}
       </div>
-      {toolCalls.map((call) => (
+      {calls.map((call) => (
         <ToolCall key={call.name} call={call} />
       ))}
-      {sources.length === 0 ? null : (
+      {citations.length === 0 ? null : (
         <div
           role="list"
-          aria-label={sourcesLabel}
+          aria-label={citationsWord}
           style={recipeStyle(MESSAGE_SOURCES, theme)}
         >
-          {sources.map((source) => (
+          {citations.map((source) => (
             <div
               key={source.label}
               role="listitem"
@@ -406,7 +435,7 @@ export const MessageContent = ({
           ))}
         </div>
       )}
-      {streaming ? <StreamingMarker label={streamingLabel} /> : null}
+      {streaming ? <StreamingMarker label={streamingWord} /> : null}
     </div>
   );
 };
@@ -535,6 +564,7 @@ export const messageMeta = {
     "no aria-labelledby or aria-describedby, so a tool call's result and a citation's href are not associated with the row that names them",
     "no clipboard write, so Copy is the consumer's handler; the runtime's own path is a read-only field the user copies",
     "a citation is a labelled row, not a link: there is no anchor element, and opening an href is the consumer's callback surface",
+    "a reply restored from storage is read structurally: a slot that is not a list (`toolCalls`/`sources` as `null`) carries nothing, a blank label or sentence reads as its documented words, and a role a release renamed reads as the `assistant` default",
   ],
   docs: "docs/message.mdx",
   example: "examples/message.example.tsx",

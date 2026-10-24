@@ -58,6 +58,11 @@ MessageRoot
 - Reasoning grows through a measured height.
 - No clipboard write; `onCopy` is the consumer's path.
 - A citation is a row, not a link.
+- A slot restored from a saved reply that is not a list (`toolCalls`/`sources`
+  as `null`) carries nothing, so the reply still paints instead of unmounting.
+- A blank slot name or sentence — `streamingLabel`, `reasoningLabel`,
+  `sourcesLabel`, `reasoning` — reads as its documented words, or paints no
+  panel for the reasoning slot, rather than publishing an unnamed list.
 - A `variant` restored from a saved transcript that this release no longer
   ships reads as the documented `assistant` default, so the row keeps its
   author name, its mirror and its body box instead of painting an unnamed

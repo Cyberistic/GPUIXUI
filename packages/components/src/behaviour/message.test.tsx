@@ -178,6 +178,79 @@ describe("Message", () => {
     root.unmount();
   });
 
+  it("paints no slot for a saved reply whose slots are not lists", () => {
+    // The slots are conversation data: a transcript restored from storage writes
+    // `null` where it carried no tool calls or citations, and the row read
+    // `.map`/`.length` off the prop, so one absent slot threw out of the render
+    // and took the whole reply — avatar, prose, actions — down instead of
+    // painting the reply without it.
+    const root = renderComponent(
+      <div style={{ width: 520, padding: 24 }}>
+        <MessageRoot testId="row" variant="assistant">
+          <MessageAvatar />
+          <MessageContent
+            testId="content"
+            // @ts-expect-error — a slot a store wrote as absent.
+            toolCalls={null}
+            // @ts-expect-error — a slot a store wrote as absent.
+            sources={null}
+          >
+            <text>The layout pass is done.</text>
+          </MessageContent>
+        </MessageRoot>
+      </div>,
+    );
+
+    expect(root.renderer.findByText("The layout pass is done.")).toBeDefined();
+    expect(nodesWithRole(root.renderer, "list")).toHaveLength(0);
+    expect(root.renderer.findByTestId("row")).toBeDefined();
+
+    root.unmount();
+  });
+
+  it("reads a blank slot name or sentence as the documented words", () => {
+    // The three labels are copy like every other name in the library, and a
+    // default covers only `undefined`: an i18n row with a missing key reached
+    // the citations list as an empty accessible name, the reasoning trigger as
+    // an icon with no word, and the streaming marker as a dot that said nothing
+    // — while a whitespace sentence painted a full blank line in the panel.
+    const root = renderComponent(
+      <div style={{ width: 520, padding: 24 }}>
+        <MessageRoot variant="assistant">
+          <MessageAvatar />
+          <MessageContent
+            reasoning="Checked the layout pass."
+            reasoningLabel="   "
+            sources={[{ label: "Docs" }]}
+            sourcesLabel=""
+            streaming
+            streamingLabel="  "
+          >
+            <text>Body</text>
+          </MessageContent>
+        </MessageRoot>
+        <MessageRoot variant="assistant">
+          <MessageContent reasoning="   ">
+            <text>Body</text>
+          </MessageContent>
+        </MessageRoot>
+      </div>,
+    );
+
+    const lists = nodesWithRole(root.renderer, "list").map((node) => node.name);
+    expect(lists).toContain("Sources");
+    expect(root.renderer.findByText("Reasoning")).toBeDefined();
+    expect(root.renderer.findByText("Streaming…")).toBeDefined();
+    // Exactly one disclosure: the row whose sentence says nothing paints none,
+    // where the whitespace used to be an unnamed trigger and a blank line.
+    expect(
+      root.renderer.getAllText().filter((line) => line === "Reasoning"),
+    ).toHaveLength(1);
+    expect(root.renderer.findByText("   ")).toBeUndefined();
+
+    root.unmount();
+  });
+
   it("mirrors a user row and leaves an assistant row leading", () => {
     const user = renderComponent(<Row variant="user" />);
     expect(user.renderer.findByTestId("row")?.style.flexDirection).toBe(
