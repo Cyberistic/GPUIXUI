@@ -49,6 +49,7 @@ const colourPicker = "packages/components/src/color-picker.tsx";
 const colourHex = "packages/components/src/color/hex.ts";
 const tagLogic = "packages/components/src/tag-input/logic.ts";
 const comboboxLogic = "packages/components/src/combobox/logic.ts";
+const commandLogic = "packages/components/src/menu/fuzzy.ts";
 
 const storedValues: ReadonlyArray<StoredValue> = [
   { page: "badge.mdx", prop: "variant", source: badge, reader: "variantOf" },
@@ -200,6 +201,22 @@ const boundaries: ReadonlyArray<StoredBoundary> = [
     fallback: "Option.none()",
     clause: "a stored value that is neither text nor a list means uncontrolled",
   },
+  {
+    page: "command-menu.mdx",
+    prop: "actions",
+    source: commandLogic,
+    reader: "commandListOf",
+    fallback: "[]",
+    clause: "a stored value that is not a list paints the empty state",
+  },
+  {
+    page: "command-menu.mdx",
+    prop: "recents",
+    source: commandLogic,
+    reader: "recentIdsOf",
+    fallback: "[]",
+    clause: "a stored value that is not a list carries no recents",
+  },
 ];
 
 /** The fallback a boundary reader answers with, read out of its own branch. */
@@ -220,6 +237,23 @@ const rowOf = (text: string, prop: string): string | undefined =>
     .find((line) =>
       new RegExp(`^\\| (?:[^|]+ \\| )?\`${prop}\` \\|`).test(line),
     );
+
+/**
+ * The line that documents a prop inside the API reference.
+ *
+ * A page whose parts share one dense table (`CommandMenu`'s `Part | Renders |
+ * Props`) names its props inside a cell rather than one row each, so the prop is
+ * looked up across the section's table lines instead.
+ */
+const apiLineOf = (text: string, prop: string): string | undefined => {
+  const start = text.indexOf("## API reference");
+  if (start === -1) return undefined;
+  const rest = text.slice(start + 1);
+  const end = rest.indexOf("\n## ");
+  return (end === -1 ? rest : rest.slice(0, end))
+    .split("\n")
+    .find((line) => line.startsWith("|") && line.includes(`\`${prop}\``));
+};
 
 describe("a value a store kept", () => {
   it("reads each default from the guard the component runs", () => {
@@ -278,24 +312,24 @@ describe("a value a store kept", () => {
 /**
  * The list a store kept.
  *
- * A palette, a token list, a picker's rows and its selection are saved with the
- * workspace as often as they are literals, so a record's `null` reaches the
- * component. Each picker reads the saved value at its boundary and answers a
- * list or an absence; the curated page owns the URL, so the package page that
- * documents the answer is never served. This case derives each reader's own
- * fallback branch and holds the served page's row to the clause that says what
- * it paints.
+ * A palette, a token list, a picker's rows and selection and a command
+ * palette's actions and recents are saved with the workspace as often as they
+ * are literals, so a record's `null` reaches the component. Each picker reads
+ * the saved value at its boundary and answers a list or an absence; the curated
+ * page owns the URL, so the package page that documents the answer is never
+ * served. This case derives each reader's own fallback branch and holds the
+ * served page's row to the clause that says what it paints.
  */
 describe("a list a store kept", () => {
   it("teaches the boundary each picker reads a saved value at", () => {
     const policy = read("docs/preview-strategy.md");
-    const page = (name: string): string =>
-      read(`apps/docs/content/docs/components/${name}`);
 
     expect(
       boundaries.flatMap((boundary) => {
         const branch = branchOf(read(boundary.source), boundary.reader);
-        const row = rowOf(page(boundary.page), boundary.prop);
+        const page = pageText(boundary.page);
+        const row =
+          rowOf(page, boundary.prop) ?? apiLineOf(page, boundary.prop);
         const gaps: Array<string> = [];
         if (branch !== boundary.fallback)
           gaps.push(`the reader answers ${String(branch)}`);
@@ -305,8 +339,9 @@ describe("a list a store kept", () => {
       }),
     ).toEqual([]);
 
-    // Six boundaries, six clauses: a page cannot pass by printing one sentence
-    // six times, and the list cannot shrink without the table losing a row.
+    // Eight boundaries, eight clauses: a page cannot pass by printing one
+    // sentence eight times, and the list cannot shrink without the table
+    // losing a row.
     expect(new Set(boundaries.map((boundary) => boundary.clause)).size).toBe(
       boundaries.length,
     );

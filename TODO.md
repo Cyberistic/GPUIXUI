@@ -13571,7 +13571,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 398/398
+`[x]` `[██████████]` 399/399
+
+`[x]` Teach the **command palette's saved lists** on the page the site serves —
+      `CommandMenu` reads an `actions` list a registry is still loading (or a
+      saved toolbar restored) and a `recents` history saved with the workspace
+      through `commandListOf`/`recentIdsOf`, and the components workstream
+      documented both on `packages/components/docs/command-menu.mdx`, which the
+      curated page shadows. The served page's one dense
+      `Part | Renders | Props` table now carries both answers, and
+      `stored-value-page.test.ts` gained the pair — plus `apiLineOf`, which
+      resolves a prop named **inside** a shared table cell rather than in a row
+      of its own — so the boundary table is eight entries over six pages.
+      Directions measured: with the two clauses removed the case names
+      `command-menu.mdx: actions — a stored value that is not a list paints the
+      empty state` and the `recents` twin; restored, the file is 5/5 and
+      `component-page` joins it green (23/23). No native scenario applies — a
+      page and the readers it teaches.
 
 `[x]` Hold the **style merge's contrast rule to its meaning, not one
       expression** — the tokens workstream's stored-style pass reads a style's

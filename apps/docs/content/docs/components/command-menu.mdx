@@ -66,7 +66,7 @@ CommandMenu
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `CommandMenu` | the composed `Dialog` surface | `open` (required), `onOpenChange` (required), `actions` (required), `recents`, `filter`, `children` |
+| `CommandMenu` | the composed `Dialog` surface | `open` (required), `onOpenChange` (required), `actions` (required; a stored value that is not a list paints the empty state), `recents` (a stored value that is not a list carries no recents), `filter`, `children` |
 | `CommandMenuInput` | host `<input>` | `placeholder` (default `"Type a command…"`), `label` (default `"Search commands"`), `className` |
 | `CommandMenuList` | scrolling match column | `className`; the root's ranked matches are its content |
 | `CommandMenuItem` | one runnable row | `action` (required), `className` |
