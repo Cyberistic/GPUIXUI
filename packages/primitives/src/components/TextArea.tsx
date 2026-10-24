@@ -39,12 +39,20 @@ export type TextAreaProps = Omit<FieldProps, "onSubmit"> &
     /**
      * Minimum visible rows; the field grows to fit. A fractional or unusable
      * count is read as a whole row, never dropped (`fieldRows`).
+     *
+     * A saved count that is not a number — JSON's `null` for a field the record
+     * never carried, or text a store wrote — is **absence**, so the runtime's
+     * own height answers.
      */
     readonly minRows?: number;
     /**
      * Rows after which the field scrolls instead of growing. A fractional or
      * unusable count is read as a whole row, and the cap is never below
      * `minRows`.
+     *
+     * A saved count that is not a number is absence here too, and that matters
+     * more on this side: a cap read as one row collapsed a six-line restored
+     * field to a single row.
      */
     readonly maxRows?: number;
   };

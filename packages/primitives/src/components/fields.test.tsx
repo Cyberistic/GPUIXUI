@@ -16,7 +16,7 @@ import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import type { ControlSize } from "../core/theme.js";
 import { renderInput, type FieldState } from "./Input.js";
-import { renderTextArea } from "./TextArea.js";
+import { renderTextArea, type TextAreaProps } from "./TextArea.js";
 import type { FocusState } from "./internal.js";
 import { changeEvent } from "./testing/event.js";
 import {
@@ -236,6 +236,20 @@ describe("TextArea", () => {
     expect(expectSome(hostTag(element))).toBe("textarea");
     expect(expectSome(hostProp(element, "minRows"))).toBe(3);
     expect(expectSome(hostProp(element, "maxRows"))).toBe(8);
+  });
+
+  it("leaves a saved row count it cannot read to the runtime", () => {
+    // The bug guarded: a text area's row floor and cap are saved with the form,
+    // and JSON keeps a field a record never carried as `null`. Read with
+    // `=== undefined`, that `null` reached `fieldRows` as **one row**, so a
+    // restored field published `maxRows: 1` and the runtime painted a six-line
+    // box as a single row. The host props must be absent instead, so the
+    // runtime's own height control answers.
+    // The cast is the storage boundary: a saved record stores absence as null.
+    const stored = { minRows: null, maxRows: null } as unknown as TextAreaProps;
+    const area = renderTextArea(stored, testTheme, draft(""), idle, vi.fn());
+    expect(hostProp(area, "minRows")).toStrictEqual(Option.none());
+    expect(hostProp(area, "maxRows")).toStrictEqual(Option.none());
   });
 
   it("has no submit handler, which the runtime would trade the newline for", () => {

@@ -9,7 +9,9 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import { storedNumber } from "./stored.js";
 import { spaceValue, type PrimitiveTheme, type SpaceStep } from "./theme.js";
 import { surfaceStyle, type SurfaceSpec } from "./style.js";
 
@@ -135,6 +137,20 @@ export interface FieldRows {
 }
 
 /**
+ * A saved row count: a real number is a count, anything else is absence.
+ *
+ * A text area's row floor and cap are saved with the form that draws them, and
+ * JSON keeps a field a record never carried as `null` rather than absent. Read
+ * with `=== undefined`, that `null` reached the whole-row rule as **one row** —
+ * and a cap of one made a six-line field collapse to a single row (measured in a
+ * window: 38px against the 128px the same field paints with no cap). Only a
+ * number is a count, the rule `storedNumber` follows; what a number then means
+ * is {@link trackCount}'s decision.
+ */
+const rowCount = (count: unknown): Option.Option<number> =>
+  Option.map(storedNumber(count), trackCount);
+
+/**
  * The row floor and cap a text area hands the runtime.
  *
  * `minRows`/`maxRows` are caller arithmetic — a measured height divided by a
@@ -142,21 +158,23 @@ export interface FieldRows {
  * dropped entirely rather than floored, so a `2.5` row floor painted one row
  * (fewer than `minRows={2}`) and a `2.5` row cap painted the whole six-line
  * field. Both go through {@link trackCount}, the package's whole-count rule, so
- * a fraction floors, a count below one is one, and a count that is not a number
- * is one. An absent count stays absent: the field's own height control is the
- * answer there. A cap never sits below its floor, because the runtime paints
- * the floor anyway — raising it states the box the field actually draws.
+ * a fraction floors, a count below one is one, and a count that is there but
+ * cannot be laid out (`NaN`, an infinity) is one. An absent count — omitted,
+ * `null`, or text a store wrote — stays absent: the field's own height control
+ * is the answer there ({@link rowCount}). A cap never sits below its floor,
+ * because the runtime paints the floor anyway — raising it states the box the
+ * field actually draws.
  */
-export const fieldRows = (
-  minRows: number | undefined,
-  maxRows: number | undefined,
-): FieldRows => {
-  const floor = minRows === undefined ? undefined : trackCount(minRows);
-  const cap = maxRows === undefined ? undefined : trackCount(maxRows);
+export const fieldRows = (minRows: unknown, maxRows: unknown): FieldRows => {
+  const floor = rowCount(minRows);
+  const cap = rowCount(maxRows);
+  const raised = Option.match(Option.all([floor, cap]), {
+    onNone: () => cap,
+    onSome: ([floorRows, capRows]) => Option.some(Math.max(capRows, floorRows)),
+  });
   return {
-    minRows: floor,
-    maxRows:
-      cap === undefined || floor === undefined ? cap : Math.max(cap, floor),
+    minRows: Option.getOrUndefined(floor),
+    maxRows: Option.getOrUndefined(raised),
   };
 };
 

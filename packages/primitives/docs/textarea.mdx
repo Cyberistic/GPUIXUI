@@ -29,8 +29,8 @@ const help = "Markdown is not interpreted.";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `minRows` | `number` | runtime default | visible floor, in whole rows: a fraction floors, an unusable count reads as one |
-| `maxRows` | `number` | runtime default | rows after which the field scrolls, in whole rows: a fraction floors, an unusable count reads as one, and a cap below `minRows` is raised to it |
+| `minRows` | `number` | runtime default | visible floor, in whole rows: a fraction floors, an unusable count reads as one, and a saved value that is not a number (JSON's `null`, text) leaves the runtime's own height |
+| `maxRows` | `number` | runtime default | rows after which the field scrolls, in whole rows: a fraction floors, an unusable count reads as one, a saved value that is not a number leaves the runtime's own height (a cap read as one row collapsed a restored six-line field), and a cap below `minRows` is raised to it |
 | `value` | `string` | — | controlled text |
 | `defaultValue` | `string` | `""` | initial text when uncontrolled |
 | `onValueChange` | `(value: string) => void` | none | called after each edit |

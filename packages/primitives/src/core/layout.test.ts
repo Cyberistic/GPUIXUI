@@ -184,6 +184,27 @@ describe("fieldRows", () => {
     // cap of 2 described a box the field never drew (it painted four rows).
     expect(fieldRows(4, 2)).toEqual({ minRows: 4, maxRows: 4 });
   });
+
+  it("leaves a saved row count it cannot read to the runtime", () => {
+    // The bug guarded: the row floor and cap are saved with the form that draws
+    // them, and JSON keeps a field the record never carried as `null`. Compared
+    // with `undefined`, that `null` reached the whole-row rule as **one row** —
+    // and a cap is not a floor, so a restored six-line text area with
+    // `maxRows: null` collapsed to a single row (measured in a window: 38px
+    // against the 128px the same field paints with no cap). Text a store wrote
+    // is not a count either (`storedNumber`'s rule), and the two counts are
+    // read independently: a lost cap does not take the floor with it.
+    expect(fieldRows(null, null)).toEqual({
+      minRows: undefined,
+      maxRows: undefined,
+    });
+    expect(fieldRows("3", "8")).toEqual({
+      minRows: undefined,
+      maxRows: undefined,
+    });
+    expect(fieldRows(null, 8)).toEqual({ minRows: undefined, maxRows: 8 });
+    expect(fieldRows(3, null)).toEqual({ minRows: 3, maxRows: undefined });
+  });
 });
 
 describe("boxStyle", () => {

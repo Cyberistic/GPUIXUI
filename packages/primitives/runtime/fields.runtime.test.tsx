@@ -30,7 +30,7 @@ import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
-import { TextArea } from "../src/components/TextArea.js";
+import { TextArea, type TextAreaProps } from "../src/components/TextArea.js";
 import { Tooltip, TooltipProvider } from "../src/components/Tooltip.js";
 import { a11yNode, a11yValueOf, type Bounds, type Runtime } from "./harness.js";
 import {
@@ -440,6 +440,33 @@ it("sizes a TextArea by whole rows when a count is fractional", async () => {
   const whole = await heightOf({ defaultValue: six });
   expect(await heightOf({ minRows: 2.5 })).toBe(floor);
   expect(await heightOf({ maxRows: 2.5, defaultValue: six })).toBe(capped);
+  expect(capped).toBeLessThan(whole);
+});
+
+it("keeps a restored TextArea's own height for a row count a store never wrote", async () => {
+  // The bug guarded: a text area's row cap is saved with the form that draws
+  // it, and JSON keeps a field the record never carried as `null` rather than
+  // absent. Compared with `=== undefined`, that `null` reached `fieldRows` as
+  // the whole-count rule's **one row**, and a cap is not a floor: a restored
+  // six-line notes field collapsed to a single row (measured here at 38px
+  // against the 128px the same field paints with no cap), so the reader saw one
+  // line of six and the rest scrolled out of a box one row tall.
+  const heightOf = async (props: TextAreaProps): Promise<number> => {
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <TextArea testId="area" {...props} />
+      </Surface>,
+    );
+    return boundsOf(runtime, "area").height;
+  };
+  const six = "a\nb\nc\nd\ne\nf";
+  // The cast is the storage boundary: a saved record stores absence as null.
+  const stored = { maxRows: null } as unknown as TextAreaProps;
+  const restored = await heightOf({ ...stored, defaultValue: six });
+  const whole = await heightOf({ defaultValue: six });
+  const capped = await heightOf({ maxRows: 2, defaultValue: six });
+  expect(restored).toBe(whole);
   expect(capped).toBeLessThan(whole);
 });
 

@@ -140,9 +140,16 @@ and each is read through a membership test rather than indexed raw:
   (`core/style.ts`) reads `null` as **no clamp** — the prop's documented
   default — and `ratingMax` (`components/Rating.tsx`) reads it as the default
   **five**, while a count that is there and cannot be laid out keeps its floor
-  (one line, one star). `style.test.ts`, `presentational.test.tsx`,
-  `Rating.test.tsx`, `layout.runtime.test.tsx` and `rating.runtime.test.tsx`
-  hold both directions.
+  (one line, one star). A **text area's row floor and cap** are that same saved
+  count, and the cap is not a floor: `fieldRows` (`core/layout.ts`) compared
+  each with `undefined` and handed a stored `null` to the whole-row rule, so
+  `maxRows: null` became a cap of **one row** and a restored six-line field
+  collapsed to a single row (measured in a window: **38px** against the
+  **128px** the same field paints with no cap). `rowCount` reads only a real
+  number as a count (`storedNumber`'s rule) and leaves text to the runtime's
+  own height. `style.test.ts`, `presentational.test.tsx`, `Rating.test.tsx`,
+  `layout.test.ts`, `fields.test.tsx`, `layout.runtime.test.tsx`,
+  `rating.runtime.test.tsx` and `fields.runtime.test.tsx` hold both directions.
 - an **elevation level** is saved with the panel it raises (a workspace record,
   a settings row), so `elevationLevel` (`core/theme.ts`) reads a name the scale
   does not carry as `md`, the default lift `elevationShadow` already answers,
