@@ -551,7 +551,11 @@ it toward the near-white text. `selectionOn(theme, surface)` derives the wash
 for that surface: the theme's own selection moved toward the page by the
 smallest 2% step that keeps the wash visible and the text readable, at the same
 share. All 72 tint placements resolve (light tints keep the designed role); a
-surface no step can serve keeps the designed wash and the gate reports it.
+surface no step can serve keeps the designed wash and the gate reports it. A
+theme restored from storage that lost the surface, the wash or the page it steps
+toward answers `undefined` rather than throwing, the rule `statusTone` and
+`brandText` follow: the runtime drops the property and the host paints its own
+default, while `invalidColorRoles` names the absence.
 
 ## Find highlights
 

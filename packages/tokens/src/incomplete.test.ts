@@ -57,6 +57,7 @@ import {
   platformTheme,
   retroNames,
   retroTheme,
+  selectionOn,
   statusTone,
   switchFailures,
   textStyle,
@@ -452,6 +453,9 @@ describe("an absent colour group", () => {
     // The `Theme` overload still answers outright for a complete theme.
     expect(brandText(theme)).toBeUndefined();
     expect(statusTone(theme, "destructive")).toBeUndefined();
+    // The selection wash is derived per surface — the helper a message's own
+    // tint asks — and the roles it moves are read through the same seam.
+    expect(selectionOn(theme, "background")).toBeUndefined();
   });
 
   it("reads every shipped style as whole", () => {

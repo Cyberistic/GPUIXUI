@@ -1496,9 +1496,10 @@ every pair, strip and mark is reported unmeasurable, and `auditTheme` returns a
 failing report with the other groups still measured instead of throwing
 `TypeError: Cannot read properties of undefined (reading 'background')`. The
 paint helpers that derive a colour from roles read the same seam: `brandText`,
-`brandTextOn` and `statusTone` answer `undefined` when the roles they move are
-gone — the absence rule `elevationShadow` follows for a level — while a `Theme`
-still answers a colour outright, because its type carries the group.
+`brandTextOn`, `selectionOn` and `statusTone` answer `undefined` when the roles
+they move are gone — the absence rule `elevationShadow` follows for a level —
+while a `Theme` still answers a colour outright, because its type carries the
+group.
 
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the
@@ -4137,6 +4138,14 @@ to the page, and the tightest resolved placement is 7.00:1 of text under a
 1.05:1 wash (the two era looks' warning tints). A surface no step can serve
 — a fully transparent wash, say — keeps the theme's own role rather than
 inventing one, and `selectionFailures` reports the pair it breaks.
+
+A theme restored from storage that lost a role this derivation moves — the
+surface's fill, the `selection` wash, or the page it steps toward — answers
+`undefined` rather than throwing, the same absence rule `statusTone` and
+`brandText` follow: the runtime drops a property it was not handed, so the host
+paints its own default and `invalidColorRoles` is the line that names the role.
+The `Theme` overload still answers a colour outright, because its type carries
+the roles.
 
 ```ts
 import { selectionOn, statusTone, type StatusTone, type Theme } from "@gpuixui/tokens";

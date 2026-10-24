@@ -1139,9 +1139,10 @@ even when a stored table is short, and a `syntax` palette that names only some
 tokens is reported token by token rather than left to the host's own colours.
 The paint follows the same rule: a role
 the theme lost paints nothing, `elevationShadow` returns `undefined` for a
-level — or a whole scale — it does not carry, and `brandText`/`statusTone` answer
-`undefined` when the roles they derive from are gone (a `Theme` still answers a
-colour outright), so no surface throws on the defect
+level — or a whole scale — it does not carry, and `brandText`/`statusTone`
+answer `undefined` when the roles they derive from are gone, as does
+`selectionOn` for a surface, the wash or the page it cannot read (a `Theme`
+still answers a colour outright), so no surface throws on the defect
 the report just
 explained (§7). The **retint** keeps the same rule: `extendTheme` restates a
 stored scale level by level, so a level the theme lost stays absent and the report

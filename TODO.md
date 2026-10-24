@@ -371,7 +371,27 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 222/222
+`[x]` `[██████████]` 223/223
+
+`[x]` Derive the **selection wash from the roles a theme still carries** — `selectionOn`
+(`selection.ts`) read the surface, the text role, the `selection` wash and the page straight
+from `theme.colors`, so a theme a store truncated past the colour group threw `TypeError:
+Cannot read properties of undefined (reading 'background')` from inside a message's own paint
+— `messageSelection` hands the answer into `selectionColor`, and the docs' per-tone snippet
+calls it too — while every sibling derivation (`statusTone`, `brandText`, `brandTextOn`,
+`dividerOn`, `pointerWash`) answers `undefined` and `invalidColorRoles` names the absence. It
+reads the one `themeColors` seam now and answers `undefined` when the fill, the wash or the
+page it steps toward is gone; the `Theme` overload still answers a colour outright, the
+pattern `statusTone` already follows, and a loose colour-source overload returns
+`string | undefined` so a caller holding a stored theme can see the absence. `selection.test.ts`
+gains `the wash a theme cannot derive` (4 cases: the whole group, each role it moves, the
+shipped themes still returning their authored role, and the three pages stating the rule);
+`incomplete.test.ts`'s `paints nothing through the seams the reports share` names it beside
+the other paint helpers. Directions measured: with the direct group reads restored, 3 cases
+fail by name (`TypeError: Cannot read properties of undefined (reading 'background')`) and
+the two files are 109/109 with it. Docs: `docs/tokens.md` §Text selection and §Paint-ready
+values, `docs/design-system.md` §9, the package README, and the `Text selection wash` row.
+No native scenario applies — a pure derivation and its absence rule.
 
 `[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
 (`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
@@ -9641,6 +9661,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Teach the **stagger's other door** on `/docs/motion` — the page lists `delayedTiming` in the presence row of its module table and never states the rule, while the package now drops a wait for *any* journey the timing cannot run (a reduced zero, an absent/unreadable/not-positive duration), since the runtime waits a delay out before an instant assignment. `packages/motion/README.md` §The presence table and `docs/component-api.md` §11 carry it; a reader of the site can only learn the rule from the package. One paragraph under §Presence beside the frames table, with the four no-journey shapes and the reason the delay rides with them, and a `motion-page.test.ts` case holding it to `presence.ts`'s `milliseconds(timing.duration) === 0` the way the file's other cases hold their sentences to the seam | docs-site (`apps/docs/content/docs/motion.mdx`) | **resolved 2026-10-24** — §Presence gains the paragraph beside the frames table: a stagger's wait is dropped for every journey the timing cannot run — an absent duration, one the arithmetic cannot read (`NaN`), one that is not positive (the zero a reduced run takes) and one whose seconds overflow the millisecond conversion — because the runtime sits a wait out *before* an instant assignment, so keeping it would hold the box at its first frame for exactly the wait the reduced policy removed; a wait that cannot be scheduled itself adds nothing. `motion-page.test.ts` gains `teaches the wait a no-journey timing drops`, which executes `delayedTiming` over the five shapes and requires each to be returned unchanged while a readable run keeps its 0.08s wait, then holds the page to the rule. Directions measured: deleting the paragraph fails by name (`expected '--- title: Motion…' to contain '**A wait rides with a journey that ac…'`); green, the file is 8/8. No native scenario applies — a page and a pure seam |
 | Cite the **carousel's window measurement** in its row and page — `COMPONENTS.md`'s Tier 2 *Carousel* row says only "blocked by `transform` and scroll snap (#102) — discrete stepping; only the slide on screen mounts", and `packages/components/docs/carousel.mdx` has no §Verification. The playground's `carousel-lifecycle` (97 checks, 0.11.0) measured the three paint claims: only the mounted slide contributes fill and label ink to a capture (the other two rows paint **0** at every index); the frame is **360×122 / 162 / 102** as the slide on screen changes (its origin and width hold), so a travelling track would paint the tallest slide's 162 on every step; and the indicator's two inks swap in the press's own frame while its widths travel — the chosen dot is an **18×6** `primary` pill and the others **6×6** `mutedForeground` dots, read inside each 24px target (the antialiased ends cost a point: 5 and 17). The row should cite the probe and keep the honest limits (no swipe, no scroll snap, no auto-advance, a slide's local state does not survive a visit), and the page should gain §Verification with the measured heights and the inks-before-widths rule | components (`COMPONENTS.md`'s Carousel row, `packages/components/docs/carousel.mdx`) | **resolved 2026-10-24** — the row and the page's §Limitations cite `carousel-lifecycle` (97 checks, 0.11.0): the two slides not on screen paint 0 fill and 0 ink at every index, the frame takes the slide's height (122 → 162 → 102) while its origin and width hold, and the indicator's inks swap before its widths (18×6 `primary` pill, 6×6 `mutedForeground` dots inside 24px targets), beside the limits kept (no swipe, drag or scroll snap, no auto-advance, a slide's local state does not survive a visit). `inventory.test.ts`'s `cites the paint and the frame the carousel probe measured` holds both surfaces |
+
+| Make the **find wash total on a stored theme** — `findHighlight(theme)` reads `theme.colors.primary` and `theme.radius.sm` straight off the theme, so a theme a store truncated past the `colors` group throws `TypeError: Cannot read properties of undefined (reading 'background')` out of `sharesFor` on a `HighlightText`'s first paint, while every neighbouring derivation (`statusTone`, `brandText`, `brandTextOn`, `dividerOn`, `pointerWash`, and now `selectionOn`) answers `undefined` and `highlightFailures` reports the absence. Its `FindHighlight` carries two required strings, so the honest fix is the loose-overload shape `statusTone` uses: `findHighlight(theme: Theme)` keeps its answer for a complete theme, a colour-source overload answers `FindHighlight | undefined`, and `washFor` (`packages/components/src/highlight-text/wash.ts`) drops the wash when it is absent instead of reading `.color` off it | tokens-theme (the seam and its test) + components (`highlight-text/wash.ts`) | open — measured 2026-10-24: `findHighlight({ ...lightTheme, colors: undefined })` throws `TypeError: Cannot read properties of undefined (reading 'background')` while `brandText(...)` and `selectionOn(...)` answer `undefined`. One coordinated change: the overload, an absence case in `highlight.test.ts`, and `washFor`'s absence branch |
 
 ## Phase D — data and workspace components
 

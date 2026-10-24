@@ -260,6 +260,14 @@ export function selectionFailures(
  * transparent, for instance — keeps the theme's own wash: the cue is not
  * removed, and {@link selectionFailures} reports the pair it breaks.
  *
+ * A theme restored from storage that lost a role this derivation moves — the
+ * surface's fill, the wash, the page it steps toward — answers `undefined`
+ * rather than throwing, the rule {@link statusTone} and {@link brandText}
+ * follow: the runtime drops a property it was not handed, so the host paints
+ * its own default and `invalidColorRoles` is the line that names the absence.
+ * The `Theme` overload still answers a colour outright, because its type
+ * carries the roles.
+ *
  * The text floor follows the theme's own contrast variant (7:1 in both, through
  * `contrastFloorsFor`), the same rule the gate uses.
  *
@@ -283,12 +291,28 @@ export function selectionFailures(
 export function selectionOn(
   theme: Theme,
   surface: keyof ThemeColors,
+  floors?: ContrastFloors,
+): string;
+export function selectionOn(
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  surface: keyof ThemeColors,
+  floors?: ContrastFloors,
+): string | undefined;
+export function selectionOn(
+  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  surface: keyof ThemeColors,
   floors: ContrastFloors = contrastFloorsFor(theme),
-): string {
-  const fill = theme.colors[surface];
-  const text = theme.colors[bodyRoleOn(surface)];
-  const carries = (wash: string): boolean => {
-    const composed = blend(fill, wash, alphaOf(wash));
+): string | undefined {
+  const colors = themeColors(theme);
+  const fill = colors[surface];
+  const wash = colors.selection;
+  const page = colors.background;
+  if (fill === undefined || wash === undefined || page === undefined) {
+    return undefined;
+  }
+  const text = colors[bodyRoleOn(surface)];
+  const carries = (candidate: string): boolean => {
+    const composed = blend(fill, candidate, alphaOf(candidate));
     const legible = contrastRatio(text, composed);
     const visible = contrastRatio(composed, fill);
     return (
@@ -298,7 +322,7 @@ export function selectionOn(
   };
   return (
     Array.from({ length: WASH_STEPS + 1 }, (_, step) =>
-      blend(theme.colors.selection, theme.colors.background, step / WASH_STEPS),
-    ).find(carries) ?? theme.colors.selection
+      blend(wash, page, step / WASH_STEPS),
+    ).find(carries) ?? wash
   );
 }

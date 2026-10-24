@@ -46,6 +46,7 @@ import {
   lightTheme,
   platformTheme,
   themes,
+  type Theme,
 } from "./theme.js";
 
 const shippedThemes = [
@@ -807,6 +808,75 @@ describe("the wash a status message can carry", () => {
     expect(catalogue).toContain(`${tightestWash.visible.toFixed(2)}:1`);
     expect(catalogue).toContain(`${reach} of the way`);
     expect(design).toContain("selectionOn");
+  });
+});
+
+/**
+ * The absence half of a paint seam.
+ *
+ * The bug this holds: `selectionOn` read the surface, the text role, the wash
+ * and the page straight from `theme.colors`, so a theme a store truncated past
+ * the colour group threw `TypeError: Cannot read properties of undefined
+ * (reading 'selection')` from inside a message's own paint — while every sibling
+ * derivation (`statusTone`, `brandText`, `dividerOn`) answers `undefined` and the
+ * gate reports the absence instead of throwing. A stored theme is the one way a
+ * complete theme becomes incomplete, and `messageSelection` hands the answer
+ * straight into `selectionColor`.
+ */
+describe("the wash a theme cannot derive", () => {
+  /** A theme as storage hands it back: the type says complete, the value is not. */
+  const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
+    ({ ...lightTheme, ...overrides }) as Theme;
+
+  const page = (path: string): string => read(path).replace(/\s+/g, " ");
+
+  it("answers undefined for a theme that lost the whole colour group", () => {
+    // Both readings of the absence: the value a store writes (`null`/none) and
+    // a source that never carried the group at all.
+    expect(
+      selectionOn(stored({ colors: undefined }), "background"),
+    ).toBeUndefined();
+    expect(selectionOn({}, "infoSoft")).toBeUndefined();
+  });
+
+  it("answers undefined for each role the derivation moves", () => {
+    const without = (role: keyof typeof lightColors) =>
+      stored({ colors: { ...lightTheme.colors, [role]: undefined } });
+
+    expect(selectionOn(without("selection"), "background")).toBeUndefined();
+    expect(selectionOn(without("background"), "background")).toBeUndefined();
+    expect(selectionOn(without("infoSoft"), "infoSoft")).toBeUndefined();
+  });
+
+  it("still reads a complete theme's own wash", () => {
+    // The absence rule is the group, not a quieter answer: a shipped theme keeps
+    // returning the translucent role the design authored.
+    Object.values(themes).forEach((theme) => {
+      const wash = selectionOn(theme, "background");
+
+      expect(wash, theme.name).toBe(theme.colors.selection);
+      expect(alphaOf(wash)).toBeCloseTo(alphaOf(theme.colors.selection), 5);
+    });
+  });
+
+  it("says so wherever the wash is taught", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const design = page("../../../docs/design-system.md");
+    const readme = page("../README.md");
+    const inventory = page("../../../COMPONENTS.md");
+
+    expect(catalogue).toContain("lost a role this derivation moves");
+    expect(catalogue).toContain("answers `undefined` rather than throwing");
+    // The seam list a reader checks a stored theme against names every paint
+    // helper, so a page that drops this one sends them to an unlisted throw.
+    expect(catalogue).toContain(
+      "`brandTextOn`, `selectionOn` and `statusTone`",
+    );
+    expect(design).toContain(
+      "`selectionOn` for a surface, the wash or the page",
+    );
+    expect(readme).toContain("the surface, the wash or the page it steps");
+    expect(inventory).toContain("A stored theme is read as the absence it is");
   });
 });
 
