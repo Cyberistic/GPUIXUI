@@ -120,6 +120,23 @@ const rowTokens = (): ReadonlyArray<string> =>
     .flatMap((cell) => [...cell.matchAll(/`([^`]+)`/g)])
     .map((match) => match[1] ?? "");
 
+const modalFixture = read("apps/playground/src/live/modal-scroll.ts");
+const runtimePage = read("apps/docs/content/docs/runtime.mdx");
+
+/** One numeric constant the fixture exports. */
+const fixtureNumber = (name: string): number => {
+  const found = new RegExp(`export const ${name} = (-?\\d+)`).exec(
+    modalFixture,
+  );
+  return Number(found?.[1] ?? Number.NaN);
+};
+
+/** A number as the record prints it: thousands separated by a space. */
+const grouped = (value: number): string => {
+  const text = String(Math.abs(value)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return value < 0 ? `-${text}` : text;
+};
+
 describe("docs/gpuix-capabilities.md", () => {
   it("parses every limit row with a known verdict", () => {
     expect(rows.length).toBeGreaterThanOrEqual(40);
@@ -179,5 +196,53 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(
       Array.from(new Set(cited)).filter((id) => !keeping.includes(id)),
     ).toEqual([]);
+  });
+
+  it("records the wheel a modal contains, from its fixture", () => {
+    // The probe measured that an `occlude` layer is a wall, which is the reason
+    // a modal over a scrolling page needs no scroll lock. Every figure the
+    // record prints is the fixture's own arithmetic, so a changed row count or
+    // viewport fails here instead of leaving a stale measurement behind.
+    const pageRows = fixtureNumber("MODAL_PAGE_ROWS");
+    const rowHeight = fixtureNumber("MODAL_ROW_HEIGHT");
+    const bodyRows = fixtureNumber("BODY_ROWS");
+    const pageViewport = fixtureNumber("PAGE_VIEWPORT");
+    const dialogViewport = fixtureNumber("DIALOG_VIEWPORT");
+    const chrome = fixtureNumber("DIALOG_CHROME_HEIGHT");
+    expect([
+      pageRows,
+      rowHeight,
+      bodyRows,
+      pageViewport,
+      dialogViewport,
+      chrome,
+    ]).toEqual([40, 40, 30, 472, 456, 232]);
+
+    const pageContent = pageRows * rowHeight;
+    const dialogContent = bodyRows * rowHeight + chrome;
+    const pageClamp = Math.min(0, pageViewport - pageContent);
+    const dialogClamp = Math.min(0, dialogViewport - dialogContent);
+    expect([pageContent, dialogContent, pageClamp, dialogClamp]).toEqual([
+      1600, 1432, -1128, -976,
+    ]);
+
+    const row = rowFor("Modal scroll containment");
+    expect(row?.verdict).toBe("supported");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("`modal-scroll-lifecycle`");
+    expect(evidence).toContain("src/live/modal-scroll.ts");
+    expect(evidence).toContain(grouped(pageContent));
+    expect(evidence).toContain(grouped(dialogContent));
+    expect(evidence).toContain(`**${grouped(pageClamp)}**`);
+    expect(evidence).toContain(`**${grouped(dialogClamp)}**`);
+    expect(evidence).toContain("`occlude`");
+    expect(evidence).toContain("`onScroll`");
+    expect(row?.workaround).toContain("no scroll lock");
+
+    // The page is a summary of the record, not a second copy: it names the
+    // rule, the probe and the consequence a reader acts on.
+    expect(runtimePage).toContain("`modal-scroll-lifecycle`");
+    expect(runtimePage).toContain("no scroll lock");
+    expect(runtimePage).toContain("occlude");
   });
 });

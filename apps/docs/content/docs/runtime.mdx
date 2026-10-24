@@ -16,6 +16,16 @@ description: What GPUix 0.11.0 provides, what it does not, and the workaround fo
 | Tray / menu bar | Not supported | ship an in-window menu |
 | Native view / webview | Not supported | use `markdown`/`code`/`diff` surfaces |
 
+## A window measured
+
+The matrix above is built from the typings. Some rules a reader needs are not in
+a type, so a probe in a window measured them; `docs/gpuix-capabilities.md`
+carries the detail.
+
+| Rule | What a window measured | Use instead |
+| ---- | ---------------------- | ----------- |
+| A modal contains the wheel | the shipped `DialogContent` paints one `<anchored occlude>` veil over the page, and it is a wall: a wheel on the veil moves neither the page nor the modal body, a wheel inside the body scrolls it by its delta and clamps against its own content, and `Escape` leaves the page where the reader left it (`modal-scroll-lifecycle`, 35 checks) | mount the shipped `Dialog`; no scroll lock is needed. Read the body's own `onScrollChange`, and keep a close control outside the scrolling body |
+
 ## The browser build
 
 The pinned release ships a 19.2 MiB wasm renderer beside the `.node` binding; [/live](/live) paints through it. A second `init()` fails with `GPUIX web is already running`. The previews on this site are a browser approximation.
