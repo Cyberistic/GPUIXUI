@@ -6,6 +6,13 @@ import {
   sampleInertia,
 } from "../../../../packages/motion/src/inertia.js";
 import {
+  DEFAULT_TWEEN_MS,
+  MotionValue,
+  springTransition,
+  transitionEquals,
+  tween,
+} from "../../../../packages/motion/src/motion.js";
+import {
   delayedTiming,
   presenceTiming,
 } from "../../../../packages/motion/src/presence.js";
@@ -123,9 +130,27 @@ const easingRow = (): string => {
   return page.slice(start, end);
 };
 
+/** The duration a tween declaration actually runs. */
+const tweenDuration = (transition: ReturnType<typeof tween>): number =>
+  transition.kind === "tween" ? transition.durationMs : Number.NaN;
+
+/** The page's own value row, between its bars. */
+const valueRow = (): string => {
+  const start = page.indexOf("| value |");
+  const end = page.indexOf("|", start + 9);
+  return page.slice(start, end);
+};
+
 /** The values `easing.ts` exports. */
 const easingExports = [
   ...read("packages/motion/src/easing.ts").matchAll(/^export const (\w+)/gm),
+].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
+
+/** The values and the class `motion.ts` exports. */
+const valueExports = [
+  ...read("packages/motion/src/motion.ts").matchAll(
+    /^export (?:const|class) (\w+)/gm,
+  ),
 ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
 /** The values `timing.ts` exports. */
@@ -557,5 +582,99 @@ describe("the motion page", () => {
       "a surface released *on* a wall with its velocity pointing back into the range",
     );
     expect(page).toContain("an inverted bound pair is swapped");
+  });
+
+  it("holds the value row to the values and class the module exports", () => {
+    // Bug guarded: the row listed four of the module's five values, so a
+    // reader scanning the module table never learned the house duration exists.
+    const row = valueRow();
+    const listed = [...row.matchAll(/`(\w+)`/g)].flatMap((match) =>
+      match[1] === undefined ? [] : [match[1]],
+    );
+
+    expect(valueExports.length).toBeGreaterThanOrEqual(6);
+    expect(row).not.toBe("");
+    expect(valueExports.filter((name) => !listed.includes(name))).toEqual([]);
+    expect(listed.filter((name) => !valueExports.includes(name))).toEqual([]);
+  });
+
+  it("teaches the value a tween retains and the frames it reports", () => {
+    // Bug guarded: `MotionValue` was named in the module table and nowhere
+    // else, so a reader could not learn that the caller owns the clock, what
+    // a frame reports, or that `complete` is a one-shot edge.
+    const value = new MotionValue(0);
+    value.animate(100, tween(200, linear));
+
+    const half = value.sample(100);
+    // Re-declaring the run in flight is a no-op, so the completing frame is
+    // still the original 200 ms rather than a run restarted at 100 ms.
+    value.animate(100, tween(200, linear));
+    const end = value.sample(200);
+
+    expect(half.value).toBe(50);
+    expect(half.active).toBe(true);
+    expect(half.complete).toBe(false);
+    expect(end.value).toBe(100);
+    expect(end.active).toBe(false);
+    expect(end.complete).toBe(true);
+    // The completing edge is one frame only, not a state a caller reads again.
+    expect(value.sample(300).complete).toBe(false);
+
+    expect(page).toContain("## Values");
+    expect(page).toContain("const value = new MotionValue(0);");
+    expect(page).toContain(
+      `value.sample(100); // ${half.value} — still running`,
+    );
+    expect(page).toContain(
+      `value.sample(200); // ${end.value} — the completing frame`,
+    );
+    expect(page).toContain(
+      "`sample(elapsedMs, reducedMotion?)` advances the run",
+    );
+    expect(page).toContain("`complete` is a one-shot edge");
+  });
+
+  it("teaches the duration a tween keeps, and the house run", () => {
+    // Bug guarded: a stored duration past the integer milliseconds a clock can
+    // name churned a frame for the life of the tree, and the page never stated
+    // the repair. The rule is the clock's, so a large duration it can name is
+    // kept rather than replaced by a house ceiling.
+    expect(DEFAULT_TWEEN_MS).toBe(300);
+    expect(tweenDuration(tween())).toBe(DEFAULT_TWEEN_MS);
+    expect(tweenDuration(tween(Number.NaN))).toBe(DEFAULT_TWEEN_MS);
+    expect(tweenDuration(tween(Number.POSITIVE_INFINITY))).toBe(
+      DEFAULT_TWEEN_MS,
+    );
+    expect(tweenDuration(tween(1e300))).toBe(DEFAULT_TWEEN_MS);
+    expect(tweenDuration(tween(1e12, linear))).toBe(1e12);
+    expect(tweenDuration(tween(0))).toBe(0);
+    expect(tweenDuration(tween(-5))).toBe(0);
+
+    // A zero duration is the instant assignment it says it is.
+    const immediate = new MotionValue(0);
+    immediate.animate(100, tween(0));
+    expect(immediate.sample(0)).toEqual({
+      value: 100,
+      velocity: 0,
+      active: false,
+      complete: true,
+    });
+    // The comparison reads the duration the sampler runs, so a repaired
+    // declaration does not restart a value that is already moving.
+    expect(transitionEquals(tween(Number.NaN), tween())).toBe(true);
+    expect(transitionEquals(tween(200, linear), tween(200, linear))).toBe(true);
+    expect(transitionEquals(tween(200, linear), tween(300, linear))).toBe(
+      false,
+    );
+    expect(transitionEquals(springTransition(springPhysics({})), tween())).toBe(
+      false,
+    );
+
+    expect(page).toContain("`Number.MAX_SAFE_INTEGER`");
+    expect(page).toContain(
+      "a zero or negative duration is an instant assignment",
+    );
+    expect(page).toContain("a large duration the clock can still name is kept");
+    expect(page).toContain("`transitionEquals(left, right)`");
   });
 });

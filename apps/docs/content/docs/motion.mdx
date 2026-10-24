@@ -1,6 +1,6 @@
 ---
 title: Motion
-description: Springs, easing, keyframes, inertia and reduced motion, sampled from a clock you own.
+description: Springs, retained values, easing, keyframes, inertia and reduced motion, sampled from a clock you own.
 ---
 
 GPUix tweens a numeric style field on its own clock. `@gpuixui/motion` adds closed-form springs, retargeting, keyframes, inertia and reduced-motion policy. It is pure: every function samples at an elapsed time you pass in.
@@ -11,7 +11,7 @@ GPUix tweens a numeric style field on its own clock. `@gpuixui/motion` adds clos
 | easing | `linear`, `ease`, `easeIn`, `easeOut`, `easeInOut`, `circIn`/`circOut`/`circInOut`, `backIn`/`backOut`/`backInOut`, `anticipate`, `bezier`, `motionCurve` |
 | timeline | `keyframe`, `sampleKeyframes`, `stagger`, `Sequence` |
 | inertia | `inertia`, `project`, `sampleInertia` |
-| value | `MotionValue` with `instant`, `tween`, `springTransition`, `transitionEquals` |
+| value | `MotionValue` with `DEFAULT_TWEEN_MS`, `instant`, `tween`, `springTransition`, `transitionEquals` |
 | React | `useSpring`, `useTransition`, `useInertia`, `useMotion`, `useSurfaceTiming`, `useSurfacePresence`, `useMotionPreference`, `MotionProvider` |
 | timing | `motionLevels`, `motionEasings`, `motionTiming`, `motionTimingOf`, `preferenceOf`, `reducedMotionOf` |
 | presence | `fadeFrom`, `fadeFromSide`, `fadeFromAnchor`, `fadeOnly`, `presenceTiming`, `presenceTimingOf`, `presenceMotion`, `presenceStyle`, `transitionWindowMs`, `exitWindowMs`, `delayedTiming` |
@@ -113,6 +113,23 @@ project(inertia(350, { max: 100 }), 0, 600); // 100 — a wall is the rest
 The rest a release projects is `position + velocity × tau`, clamped to its bounds; `sampleInertia` decelerates toward it and reports `settled` once the speed reaches `0.001`. A bound is a wall the coast stops at only while it moves into it — a surface released *on* a wall with its velocity pointing back into the range is at the start of a journey, not the end of one, so it travels inward instead of being reported settled at the far rest.
 
 An `Inertia` is structural too: a time constant that cannot run takes the house 350 ms, an inverted bound pair is swapped, an unreadable position or velocity is a standstill, and a declaration carrying no object at all is the house coast. A rest the arithmetic cannot represent has no frame to paint: the coast lands on the nearest finite destination — a wall in the direction it was thrown, else the frame it was released from.
+
+## Values
+
+`MotionValue` retains one scalar and samples it at the elapsed time you pass, so a resumed panel is read at the frame it was saved at and no timer lives in the value:
+
+```ts
+import { linear, MotionValue, tween } from "@gpuixui/motion";
+
+const value = new MotionValue(0);
+value.animate(100, tween(200, linear));
+value.sample(100); // 50 — still running
+value.sample(200); // 100 — the completing frame
+```
+
+`animate(target, transition)` retargets from the frame on screen, and a repeated declaration is a no-op so a re-render cannot restart the run. `set(value)` assigns at once and retires the declaration, and `coast(inertia, velocity?)` releases the retained velocity — or the one you pass — through `sampleInertia`. `sample(elapsedMs, reducedMotion?)` advances the run and returns `{ value, velocity, active, complete }`; `complete` is a one-shot edge on the frame that finishes the run, and a reduced sample finishes at the target immediately.
+
+`tween(durationMs?, easing?)` names the house `DEFAULT_TWEEN_MS` (`300`) and `easeOut` when you name neither. A duration that cannot run — `NaN`, an infinity, or a value past `Number.MAX_SAFE_INTEGER` (about 285 000 years) — is the house duration, because its frames would stay finite and the run would never complete; a zero or negative duration is an instant assignment, and a large duration the clock can still name is kept. `springTransition(physics)` builds the same declaration from a spring, and `transitionEquals(left, right)` compares two declarations by the run they sample — the duration a tween actually uses and the physics a spring actually reads — so a repaired field does not restart a value. A declaration a store handed over without a run at all is the house tween, the rule every other structural config in the package follows.
 
 ## Reduced motion
 
