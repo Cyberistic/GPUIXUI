@@ -169,7 +169,13 @@ describe("the target sizes' adoption", () => {
       row.includes("height: height ?? theme.density.rowHeight") ||
         row.includes("height ?? rowHeightOf(theme)"),
     ).toBe(true);
-    expect(row).toContain("width: theme.iconSize.md");
+    // The chevron's slot is the icon scale's, read directly or through the
+    // primitives' paint-side `iconSideOf` seam, which answers the same step and
+    // the library's for a theme a store gave back without the group.
+    expect(
+      row.includes("width: theme.iconSize.md") ||
+        row.includes('width: iconSideOf(theme, "md")'),
+    ).toBe(true);
     // The glyph passes the press through, so the row it sits in receives it.
     expect(read("packages/icons/src/icon.tsx")).toContain(
       'pointerEvents: "none"',

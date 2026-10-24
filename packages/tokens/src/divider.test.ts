@@ -462,7 +462,13 @@ describe("a rule on the row it crosses", () => {
     expect(table).toContain('pointerWash(theme, "active", "accent")');
     expect(table).toContain('pointerWash(theme, "active", "hover")');
     expect(table).toContain("dividerOn(theme, surface)");
-    expect(table).toContain("borderBottomWidth: theme.borderWidth.thin");
+    // The rule's width is the border scale's, read directly or through the
+    // primitives' paint-side `borderWidthOf` seam, which answers the same step
+    // and the library's for a theme a store gave back without the group.
+    expect(
+      table.includes("borderBottomWidth: theme.borderWidth.thin") ||
+        table.includes('borderBottomWidth: borderWidthOf(theme, "thin")'),
+    ).toBe(true);
     // Both pages teach the helper, the press and the counts. The totals are
     // derived, not typed: a rule is drawn on every style × (three washes + two
     // presses), so a style or a state added to the table fails here until the

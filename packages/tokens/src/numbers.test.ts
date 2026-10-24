@@ -926,7 +926,13 @@ describe("a row's box fits the line it paints", () => {
       tree.includes("height: height ?? theme.density.rowHeight") ||
         tree.includes("height ?? rowHeightOf(theme)"),
     ).toBe(true);
-    expect(tree).toContain("width: theme.iconSize.md");
+    // The chevron's slot is the icon scale's, read directly or through the
+    // primitives' paint-side `iconSideOf` seam, which answers the same step and
+    // the library's for a theme a store gave back without the group.
+    expect(
+      tree.includes("width: theme.iconSize.md") ||
+        tree.includes('width: iconSideOf(theme, "md")'),
+    ).toBe(true);
     expect(log).toContain('textStyle(theme, "code")');
     expect(log).toContain("theme.density.rowHeight");
   });

@@ -12,11 +12,23 @@
  * record the scope and this suite reads both halves.
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
+
+/**
+ * The list family's sources: the painter and any box helper it grows. A row's
+ * height is a measurement whether it is read in `list.tsx` or behind it, so the
+ * assertion follows the family rather than one path; `density-adoption.test.ts`
+ * owns the derived reader set and the rule for the two-line row.
+ */
+const listSources = ["list.tsx", "list/row.ts"]
+  .map((path) => new URL(`../../components/src/${path}`, import.meta.url))
+  .filter((url) => existsSync(url))
+  .map((url) => readFileSync(url, "utf8"))
+  .join("\n");
 
 const pages = {
   "docs/tokens.md": read("../../../docs/tokens.md").replace(/\s+/g, " "),
@@ -60,8 +72,8 @@ describe("the scope of an override", () => {
       "theme.radius.full",
     );
     expect(read("../../components/src/tabs.tsx")).toContain("controlHeight(");
-    expect(read("../../components/src/list.tsx")).toContain(
-      "theme.density.rowHeight",
+    expect(listSources, "the list measures its row box").toMatch(
+      /density\.rowHeight|rowHeightOf\(/,
     );
     expect(read("../../components/src/drawer.tsx")).toContain("theme.spacing.");
   });
