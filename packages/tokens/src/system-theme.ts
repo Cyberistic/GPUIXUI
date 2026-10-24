@@ -272,6 +272,27 @@ export const intervalTimer: SystemThemeTimer = {
   },
 };
 
+/**
+ * The pace an unusable `every` is read as, in milliseconds — the cadence every
+ * example in this package shows.
+ *
+ * A pace is configuration as often as a literal: an application reads it from a
+ * settings row or an environment variable, which is a string before it is a
+ * number, so `Number(...)` hands `NaN` over as readily as `2000`. `setInterval`
+ * reads `NaN`, `0` and a negative delay as its 1 ms floor, so an unreadable pace
+ * would read and decode the platform's theme file a thousand times a second while
+ * the window looked correct. A pace that is not a finite positive number reads as
+ * this one instead.
+ */
+export const systemThemePollMs = 2000;
+
+/**
+ * The pace a watch runs at: the caller's `every` when it is a finite number of
+ * positive milliseconds, and {@link systemThemePollMs} otherwise.
+ */
+const paceOf = (every: number): number =>
+  Number.isFinite(every) && every > 0 ? every : systemThemePollMs;
+
 /** What {@link watchSystemTheme} needs. */
 export interface WatchSystemThemeOptions {
   /**
@@ -294,7 +315,12 @@ export interface WatchSystemThemeOptions {
   readonly baseFor?: (palette: SystemPalette) => Theme;
   /** Called with a new theme whenever the palette changes. */
   readonly onChange: (theme: Theme) => void;
-  /** Milliseconds between polls. The runtime has no file watcher to subscribe to. */
+  /**
+   * Milliseconds between polls. The runtime has no file watcher to subscribe to.
+   * A pace that is not a finite positive number reads as
+   * {@link systemThemePollMs}, because `setInterval` reads an unusable delay as
+   * its 1 ms floor and would read the platform's file in a loop.
+   */
   readonly every: number;
   /** Poll mechanism; `setInterval` unless the caller supplies its own. */
   readonly timer?: SystemThemeTimer;
@@ -381,5 +407,5 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
     applied = key;
   };
   tick();
-  return timer.poll(every, tick);
+  return timer.poll(paceOf(every), tick);
 }

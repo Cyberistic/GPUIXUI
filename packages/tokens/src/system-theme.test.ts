@@ -31,8 +31,10 @@ import {
   intervalTimer,
   paletteMode,
   paletteToTokens,
+  systemThemePollMs,
   watchSystemTheme,
   type SystemPalette,
+  type SystemThemeTimer,
 } from "./system-theme.js";
 import {
   darkTheme,
@@ -357,6 +359,13 @@ describe("the palette a desktop hands over", () => {
     expect(flat(design)).toContain(
       "`paletteMode` reads a system palette's stated mode",
     );
+
+    // The poll's pace has the same kind of fallback, and the pages state it
+    // beside the pace they pass: `setInterval` reads an unusable delay as 1 ms.
+    [catalogue, readme, inventory].forEach((page) => {
+      expect(flat(page)).toContain("systemThemePollMs");
+      expect(flat(page)).toContain("1 ms floor");
+    });
   });
 
   it("follows the palette's page without a base to hand", () => {
@@ -630,6 +639,47 @@ describe("following a palette", () => {
     });
     manual.tick();
     expect(applied).toHaveLength(1);
+  });
+
+  it("reads an unusable poll pace as the documented one", () => {
+    // The pace is configuration as often as a literal — a settings row or an
+    // environment variable is a string before it is a number — and `setInterval`
+    // reads `NaN`, `0` and a negative delay as its 1 ms floor, so an unreadable
+    // pace read and decoded the platform's theme file a thousand times a second
+    // while the window looked correct.
+    const paces: Array<number> = [];
+    const timer: SystemThemeTimer = {
+      poll: (every) => {
+        paces.push(every);
+        return () => {};
+      },
+    };
+    [Number.NaN, 0, -5, Number.POSITIVE_INFINITY].forEach((every) => {
+      watchSystemTheme({
+        read: () => nightPalette,
+        base: darkTheme,
+        onChange: () => {},
+        every,
+        timer,
+      });
+    });
+
+    expect(paces).toEqual([
+      systemThemePollMs,
+      systemThemePollMs,
+      systemThemePollMs,
+      systemThemePollMs,
+    ]);
+
+    // A usable pace passes through unchanged, so a caller's own cadence stands.
+    watchSystemTheme({
+      read: () => nightPalette,
+      base: darkTheme,
+      onChange: () => {},
+      every: 250,
+      timer,
+    });
+    expect(paces.at(-1)).toBe(250);
   });
 
   it("prints the case count its own suite runs", () => {

@@ -371,7 +371,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 220/220
+`[x]` `[██████████]` 221/221
 
 `[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
 (`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
@@ -2217,6 +2217,29 @@ and the second throws the exact `Error: \`Dark\` is not a theme mode …` out of
 `docs/tokens.md` §System palettes, `docs/design-system.md` §11, the package
 README §System palettes and the `System palettes` row. No native scenario applies
 — a pure name read and the theme it selects.
+
+`[x]` Read an **unusable poll pace as the documented one** — `watchSystemTheme`
+handed `every` straight to the injected timer, and the default timer is
+`setInterval`, which reads `NaN`, `0` and a negative delay as its **1 ms floor**.
+A pace is configuration as often as a literal — a settings row or an environment
+variable is a string before it is a number, so `Number(...)` hands `NaN` over as
+readily as `2000` — and an unreadable one made the poll read and decode the
+platform's theme file about a thousand times a second while the window looked
+correct: no report, no error, just a hot loop on the reader's disk. `paceOf`
+reads a value that is not a finite positive number as the new exported
+`systemThemePollMs` (`2000`, the cadence every example in the package shows) and
+hands a usable pace through unchanged, so a caller's own switch interval keeps
+its value; it is the rule `TypingText` already follows for a pace it cannot run.
+`system-theme.test.ts` gains `reads an
+unusable poll pace as the documented one` (four unusable paces by value and one
+usable `250` through the injected timer) and the page case above now requires all
+three surfaces to print the constant and the reason. Directions measured: with
+the raw `every` restored, the case fails `expected [ NaN, +0, -5, Infinity ] to
+deeply equal [ 2000, 2000, 2000, 2000 ]`; restored, the package is 49 files /
+**3 000** tests with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean.
+Docs in `docs/tokens.md` §Following a change, the package README §System palettes
+and the `System palettes` row. No native scenario applies — a numeric read
+handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -9571,6 +9594,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Cite the **`ImageZoom` probe**, and square its magnified corner — the `image-zoom-lifecycle` live probe (54 checks, 0.11.0) measured that the shipped component magnifies and pans as documented: a 240×160 frame at the default 1.6× paints a **384×256** picture at **−36,−72** for a pointer at `60,120` and at **−120,−72** for `200,120`, the pointed mark stays under the pointer, the marks outside the window vanish, and the mark's exact paint grows **30×30 → 48×48** device pixels, so the `<img>` host really scales its buffer. It also measured a fidelity gap: the resting picture carries the frame's radius on the image itself, so the frame's corner is the page, while magnified the runtime **clips an overflowing child square** and the corner paints the picture's own `#2B3240`. The package page (`packages/components/docs/image-zoom.mdx` §Limitations) and the `Image zoom` row in `COMPONENTS.md` should cite the probe for the magnification and pan, and state the corner rule; rounding the magnified corner needs a runtime change (a rounded clip on an overflowing child) or a component-side mask — no mask exists in 0.11.0, so the honest fix is documentation | components (`packages/components/docs/image-zoom.mdx`, `COMPONENTS.md`'s Image zoom row) | open — measured 2026-10-24 by the playground's `image-zoom-lifecycle`; fixture, probe, README section and guards are landed in the playground workstream (`apps/playground/README.md` §`image-zoom-lifecycle`, `.artifacts/live/image-zoom-{rest,mark,other,returned}.png`) |
 | Say that **a system palette's stated mode is read from the page** on `/docs/dark-mode` — the site's page says `paletteMode(palette)` "returns the mode the palette states and falls back to the page's lightness only when it states none", and the seam now also reads a stated mode **this release does not ship** (an upper-cased `Dark` a consumer's decoder writes) from the page, because the documented call site hands the answer to `getTheme`, which refuses a name it does not know; the sentence should say so and name the reason | docs-site (`apps/docs/content/docs/dark-mode.mdx`) | open — the seam, its tests and the token pages landed 2026-10-24 (`paletteMode`, `system-theme.test.ts`'s four new cases); the sentence is this page's |
+
+| Teach the **stagger's other door** on `/docs/motion` — the page lists `delayedTiming` in the presence row of its module table and never states the rule, while the package now drops a wait for *any* journey the timing cannot run (a reduced zero, an absent/unreadable/not-positive duration), since the runtime waits a delay out before an instant assignment. `packages/motion/README.md` §The presence table and `docs/component-api.md` §11 carry it; a reader of the site can only learn the rule from the package. One paragraph under §Presence beside the frames table, with the four no-journey shapes and the reason the delay rides with them, and a `motion-page.test.ts` case holding it to `presence.ts`'s `milliseconds(timing.duration) === 0` the way the file's other cases hold their sentences to the seam | docs-site (`apps/docs/content/docs/motion.mdx`) | **open** |
 
 ## Phase D — data and workspace components
 
@@ -18097,6 +18122,33 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/components`: **a live value could starve its own swap** — `RollingText` and `SlidingText` time the half that swaps the value with a wall-clock timer sized to the exit half of `level`, and that timer's effect depended on `pending` as well as the phase, so every value that arrived mid-exit re-armed it from the newest arrival. A value changing faster than one swap — a live counter or a percentage fed by a stream, the case the shared `requestSwap` JSDoc promises ("a clock that ticks faster than a swap lands on the newest value") — therefore pushed the swap back on every update: the outgoing value travelled out of the clip and nothing replaced it, a blank one-line box until the value stopped changing (measured: the a11y tree still read `v1` after six changes 60 ms apart at the `notice` level, and `getAllText()` was empty). The window belongs to the exit the change started, not to the value that replaces its pending one; `settleSwap` already reads the newest pending value when it fires, so the `pending` dependency was the whole defect. Both effects now key on the phase and the window only. Proof: `behaviour/rolling-text.test.tsx` and `behaviour/sliding-text.test.tsx` gain `keeps swapping while the value keeps changing` (paused motion clock, six values 60 ms apart, then the clip must hold a newer value and land on the last within its window); measured at `HEAD` both fail with `expected [ 'v1', … ] to not include 'v1'`, restored 19/19 across the two files (three consecutive runs). Docs: both package pages gain **A value that keeps changing** (the window is the exit half of `level`, a live counter still swaps every window, reduced swaps at once) and the shared `requestSwap` JSDoc states the timer rule. No native scenario applies — the timer is the component's and the suites read the real renderer.
 
 `[x]` `@gpuixui/motion`: **a stored preference the union did not name animated the reader** — the reduced-motion setting is the one policy an application **persists** (it reads the motion setting back from a settings row or a config blob and hands it to `MotionProvider`), and the provider published whatever it was handed while every surface read it as `preference === "reduced"`. A row that came back as a name this release does not carry — a renamed setting, a checkbox column written as `"1"` or `"true"`, a `"Reduced"` a hand-edited config holds — was a value outside `MotionPreference`, `useMotionPreference()` handed it to consumers as if it were one, and the timing built from it animated: a reader who asked for less motion got the journey with nothing on screen to show the request was lost (`motionTiming("normal", { preference: "Reduced" })` answered the animated 200 ms, and a `Reveal` under that provider painted its 12px entry offset). `timing.ts` now owns the read (`preferenceOf`): the two names are themselves, an **absent** (nullish) value is the house `"animated"` a tree stating nothing has always moved with, and a value that is **present and not a name** is `"reduced"` — the fail-safe direction, because animating a reader who asked for less motion is the failure the policy exists to prevent while a journey the application can see it lost is one a developer fixes. `motionTimingOf` reads it, so `motionTiming`/`presenceTiming`/`useSurfaceTiming` and the provider all answer the same policy. Proof: `timing.test.ts`'s `a preference the table does not carry` (2 cases: four unnamed shapes and both entry points, then absence and the two names), `presence.test.ts`'s `takes the reduced policy for a preference the table does not carry`, `provider.test.tsx`'s `publishes only a name the library carries`, and `packages/components/src/behaviour/presence.test.tsx`'s `fails safe when the stored preference is not a name the library carries` — a `Reveal` under `preference={"Reduced"}` paints at rest with `{ duration: 0 }`, while a fresh mount under `preference={null}` (a `NULL` column) still paints its 12px arrival and the animated 200 ms. Directions measured: with the provider publishing the raw value the provider case fails `expected 'Reduced' to be 'reduced'`; with `motionTimingOf` comparing the raw value the timing case fails `expected { duration: 0.2, ease: 'easeInOut' } to deeply equal { duration: +0 }`, the presence case `expected { duration: 0.32, ease: 'easeOut' } …`, and the painted case `expected 12 to be close to +0`; restored, the motion package is 14 files / **180 tests** green with `check-types` clean. Docs: `packages/motion/README.md` §Layout / §React hooks / §The presence table, `packages/components/README.md` §Motion and `docs/component-api.md` §11 state the rule and its fail-safe direction. No native scenario applies — the preference is a React value the behaviour suite reads in the real renderer.
+
+`[x]` `@gpuixui/motion`: **a wait outlived a journey the timing could not run** —
+`delayedTiming` dropped a stagger only for a duration of exactly zero, while
+`PresenceTransition` is exported and structural (the door `transitionWindowMs`
+already repairs), so a timing built by hand or decoded from storage arrives with
+an absent, unreadable or not-positive duration — `{ duration: NaN }`, `{}`,
+`{ duration: -0.2 }`, or a seconds value whose conversion overflows. Each kept
+the wait, and the runtime waits a delay out *before* an instant assignment, so a
+staggered arrival sat at its first frame — often opacity 0 and a zero height —
+for the whole stagger and then appeared: exactly the failure the reduced rule was
+written to prevent, reached through the other door. `delayedTiming` now reads the
+duration with the module's own `milliseconds` conversion, the same reading
+`transitionWindowMs` takes, so no schedulable travel is no journey and the delay
+and the mount window cannot disagree about what a run is. Proof:
+`src/presence.test.ts`'s `drops the wait with a journey the timing cannot run`
+(the four no-journey shapes plus a readable control that must keep its wait).
+Directions measured: at `HEAD` the case fails `expected { duration: NaN, delay:
+0.08 } to be { duration: NaN }`, and an over-correction that drops every delay
+fails `adds the wait in seconds when the run can still travel`
+(`expected { duration: 0.2, ease: 'easeOut' } to deeply equal …`). Restored, the
+package is 14 files / **181 tests** green with `check-types` clean. No shipped
+surface moves: `Reveal`, the avatar group's discs and `SplittingText`'s units
+compose `useSurfaceTiming`'s timings, which are always a positive duration or the
+reduced zero. `presence-contract.test.ts`'s deletion guard moves with the rule
+(`milliseconds(timing.duration) === 0`). Docs: `packages/motion/README.md` §The
+presence table and `docs/component-api.md` §11 state both doors. No native
+scenario applies — the timings are pure values.
 
 ## TanStack cores
 
