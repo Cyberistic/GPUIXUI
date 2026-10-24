@@ -7,8 +7,8 @@
  * 2026-10-24, `applyStyle(retroTheme(lightTheme, "luna"), platformStyles.win32)`
  * fails 5 placements (a `ring` on the platform's `secondary` at **2.90:1** under
  * the 3:1 boundary floor, and four decorative placements under 1.05:1) and
- * `applyStyle(retroTheme(darkTheme, "omarchy"), platformStyles.linux)` fails 25
- * (6 contrast, 5 decorative, 5 selection and 9 highlight, including selection
+ * `applyStyle(retroTheme(darkTheme, "omarchy"), platformStyles.linux)` fails 24
+ * (5 contrast, 5 decorative, 5 selection and 9 highlight, including selection
  * washes that hide the text they select). The safe order is base, style, brand —
  * `extendTheme(platformTheme(themes.dark, "win32"), { … })` — and a style is a
  * look over a base, not a layer over a look.
@@ -144,7 +144,7 @@ describe("composing a style and a brand", () => {
       passed: false,
     });
     expect(report(omarchyOverLinux)).toEqual({
-      contrast: 6,
+      contrast: 5,
       decorative: 5,
       selection: 5,
       highlight: 9,

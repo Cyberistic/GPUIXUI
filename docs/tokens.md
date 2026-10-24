@@ -957,7 +957,7 @@ Five rules the mechanism keeps:
   fails the gate on a `ring` the platform paints over Luna's `secondary` at
   **2.90:1** (under the 3:1 boundary floor) and four decorative placements under
   1.05:1, and `applyStyle(retroTheme(themes.dark, "omarchy"), platformStyles.linux)`
-  fails on 6 contrast, 5 decorative, 5 selection and 9 highlight placements. The
+  fails on 5 contrast, 5 decorative, 5 selection and 9 highlight placements. The
   order is base, style, brand — a brand is `extendTheme` over the resolved style
   (`extendTheme(platformTheme(themes.dark, "win32"), { … })`), never a second
   style. `compose.test.ts` derives both halves from `auditTheme`: every
@@ -4342,13 +4342,30 @@ is the same trade the saturated tones above leave out.
 `selectionOn(theme, surface)` derives the wash for the surface the run actually
 paints on: the theme's own `selection`, moved toward the page — the role
 furthest from body ink in both modes — by the smallest 2% step that keeps the
-wash visible (1.05:1) and the text readable (the theme's body floor) on *that*
-surface, at the same translucent share. All 72 tint placements resolve: the
-light tints keep the theme's own wash, the dark ones move as far as 70% of the way
-to the page, and the tightest resolved placement is 7.00:1 of text under a
-1.05:1 wash (the two era looks' warning tints). A surface no step can serve
-— a fully transparent wash, say — keeps the theme's own role rather than
-inventing one, and `selectionFailures` reports the pair it breaks.
+wash visible (1.05:1) and **every ink the surface carries** readable (the
+theme's body floor) on *that* surface, at the same translucent share.
+
+A message carries two. Its description paints the page ink; its title and
+leading glyph paint the tone's own readable role (`statusTone(theme,
+tone).foreground`). The derivation read the page's alone, and measured that left
+the title's ink under the body floor in **35 of the 72** tint placements —
+Omarchy light's `successSoft` at **5.71:1** — while the designed role never
+carried it at all (**43 of the 72**, the worst Windows dark's `warningSoft` at
+**5.18:1**). Both are read now, so neither half of a message can be buried. The
+same rule found two content surfaces hiding a composed run: Linux dark's popover
+held a `Text` painted `foreground` at **6.82:1** and Luna dark's at **6.90:1**
+inside the designed role, because the role designed for that surface is
+`popoverForeground`; both derive now.
+
+All 72 tint placements resolve: a tint keeps the designed role only where it
+already carries both inks (28 of the 72), the dark ones move as far as
+70% of the way to the page, and the tightest resolved placement is 7.00:1 of
+text under a 1.05:1 wash (the two era looks' warning tints). One tint had no
+answer at all: Omarchy dark's `infoSoftForeground` sat 0.03 above its floor on
+its own tint, so no visible wash could keep it, and that ink takes one step
+toward white (`#B2CAFF`, 7.48:1 on the tint). A surface no step can serve — a
+fully transparent wash, say — keeps the theme's own role rather than inventing
+one, and `selectionFailures` reports the pair it breaks.
 
 A theme restored from storage that lost a role this derivation moves — the
 surface's fill, the `selection` wash, or the page it steps toward — answers

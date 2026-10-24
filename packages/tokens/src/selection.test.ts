@@ -597,19 +597,35 @@ describe("the tones the wash is painted on", () => {
  *
  * The bug this guards: `selection` is authored for the content tones, and a
  * selectable run inside an `Alert` sits on the tone's `xSoft` tint — a content
- * tone, but one the designed wash cannot serve. Every light tint carries it; 32
- * of the 36 dark placements fall under the body floor (Windows dark's
- * `warningSoft` at 5.21:1), because the accent a dark wash is drawn from is
- * lighter than the tint and moves it toward the near-white text. Nothing painted
- * or measured that placement, so selectable message copy shipped unreadable with
- * every report empty. `selectionOn` derives the wash for the surface the run
- * actually paints on.
+ * tone, but one the designed wash cannot serve. Every light tint carries the
+ * page ink; 32 of the 36 dark placements fall under the body floor (Windows
+ * dark's `warningSoft` at 5.21:1), because the accent a dark wash is drawn from
+ * is lighter than the tint and moves it toward the near-white text. Nothing
+ * painted or measured that placement, so selectable message copy shipped
+ * unreadable with every report empty. `selectionOn` derives the wash for the
+ * surface the run actually paints on.
+ *
+ * A message carries **two** inks, and the second was the one nobody read: its
+ * description is the page ink (the pair above), while its title and leading
+ * glyph paint the tone's own readable role (`AlertTitle`/`AlertIcon` spread
+ * `tone.foreground`). Measured, that ink sat under the body floor inside the
+ * wash derived for the page ink in 35 of the 72 tint placements — Omarchy
+ * light's `successSoft` at 5.71:1 — and the designed wash never carried it at
+ * all (43 of the 72, the worst Windows dark's `warningSoft` at 5.18:1). The two
+ * styles whose popover ink differs from the page's had the same hole: Linux
+ * dark's and Luna dark's popovers held a composed `Text` painted `foreground`
+ * at 6.82:1 and 6.90:1 inside the designed role. `selectionOn` reads every ink
+ * the surface carries, so neither half of a message can be buried.
  */
 describe("the wash a status message can carry", () => {
   const styles = [...shippedThemes, ...platformThemes, ...retroThemes];
   const softTints = statusTones.map((tone) => `${tone}Soft` as const);
 
-  /** The two jobs, measured on the composite a reader sees. */
+  /** The tint's own readable role — the ink its title and glyph paint. */
+  const copyInk = (theme: (typeof styles)[number], tint: string): string =>
+    theme.colors[`${tint}Foreground` as keyof typeof theme.colors] as string;
+
+  /** The two jobs, measured on the composite a reader sees, for both inks. */
   const over = (
     theme: (typeof styles)[number],
     tint: (typeof softTints)[number],
@@ -622,10 +638,40 @@ describe("the wash a status message can carry", () => {
     return {
       theme,
       tint,
+      /** The ink the message's description paints. */
       body: contrastRatio(theme.colors.foreground, composed) ?? 0,
+      /** The ink its title and glyph paint. */
+      copy: contrastRatio(copyInk(theme, tint), composed) ?? 0,
       visible: contrastRatio(composed, fill) ?? 0,
       floor: floors.body,
     };
+  };
+
+  /**
+   * The derivation this seam used to run, kept as the measure of the defect: it
+   * held the page ink readable and nothing else.
+   */
+  const pageInkWash = (
+    theme: (typeof styles)[number],
+    tint: (typeof softTints)[number],
+  ): string => {
+    const fill = theme.colors[tint];
+    const floor =
+      theme.contrast === "high" ? highContrastFloors.body : contrastFloors.body;
+    const carried = (candidate: string): boolean => {
+      const composed = blend(fill, candidate, alphaOf(candidate));
+      const legible = contrastRatio(theme.colors.foreground, composed);
+      const visible = contrastRatio(composed, fill);
+      return (
+        (legible === undefined || legible >= floor) &&
+        (visible === undefined || visible >= decorativeFloor)
+      );
+    };
+    return (
+      Array.from({ length: 51 }, (_, step) =>
+        blend(theme.colors.selection, theme.colors.background, step / 50),
+      ).find(carried) ?? theme.colors.selection
+    );
   };
 
   it("paints the alert's copy on the tint it measures", () => {
@@ -663,47 +709,84 @@ describe("the wash a status message can carry", () => {
     expect(tightest.body).toBeCloseTo(5.21, 2);
   });
 
+  it("reads the ink a message's title paints, not the page's only", () => {
+    const before = styles.flatMap((theme) =>
+      softTints.map((tint) => ({
+        mode: theme.mode,
+        ...over(theme, tint, pageInkWash(theme, tint)),
+      })),
+    );
+    const buried = before.filter(({ copy, floor }) => copy < floor);
+    const tightest = buried.reduce((a, b) => (b.copy < a.copy ? b : a));
+
+    // The wash that served the description left the title under the floor in 35
+    // of the 72 tint placements, across both modes.
+    expect(buried).toHaveLength(35);
+    expect(
+      buried.filter(({ mode }) => mode === "light").length,
+    ).toBeGreaterThan(0);
+    expect(tightest.tint).toBe("successSoft");
+    expect(tightest.theme.name).toBe("Light · Omarchy");
+    expect(tightest.copy).toBeCloseTo(5.71, 2);
+
+    // The designed role never carried that ink either.
+    const designed = styles.flatMap((theme) =>
+      softTints.map((tint) => over(theme, tint, theme.colors.selection)),
+    );
+    expect(designed.filter(({ copy, floor }) => copy < floor)).toHaveLength(43);
+  });
+
   it("derives a wash the copy can be selected with", () => {
     const after = styles.flatMap((theme) =>
       softTints.map((tint) => over(theme, tint, selectionOn(theme, tint))),
     );
     const broken = after.filter(
-      ({ body, floor, visible }) => body < floor || visible < decorativeFloor,
+      ({ body, copy, floor, visible }) =>
+        body < floor || copy < floor || visible < decorativeFloor,
     );
     const tightestBody = after.reduce((a, b) => (b.body < a.body ? b : a));
+    const tightestCopy = after.reduce((a, b) => (b.copy < a.copy ? b : a));
     const tightestWash = after.reduce((a, b) =>
       b.visible < a.visible ? b : a,
     );
 
-    // Every one of the 64 placements resolves; nothing is excluded, because the
-    // wash is asked to serve the surface it is painted on.
+    // Every placement resolves for both inks the tint carries; nothing is
+    // excluded, because the wash is asked to serve the surface it is painted on.
     expect(broken).toEqual([]);
     expect(after).toHaveLength(styles.length * softTints.length);
     expect(tightestBody.body).toBeCloseTo(7, 1);
+    expect(tightestCopy.copy).toBeCloseTo(7, 1);
     expect(tightestWash.visible).toBeCloseTo(decorativeFloor, 1);
   });
 
   it("keeps the designed wash wherever it already carries the surface", () => {
-    const content = [
-      "input",
-      "background",
-      "card",
-      "popover",
-      "muted",
-    ] as const;
-    const lights = styles.filter((theme) => theme.mode === "light");
+    const content = ["input", "background", "card", "muted"] as const;
 
+    // A content tone whose designed role already carries both inks keeps it.
     styles.forEach((theme) => {
       content.forEach((surface) => {
         expect(selectionOn(theme, surface)).toBe(theme.colors.selection);
       });
     });
-    expect(lights.length).toBeGreaterThan(0);
-    lights.forEach((theme) => {
-      softTints.forEach((tint) => {
-        expect(selectionOn(theme, tint)).toBe(theme.colors.selection);
-      });
-    });
+
+    // The one content surface that does not: a popover holds a composed `Text`
+    // painted the page's `foreground` while the role designed for it is
+    // `popoverForeground`, and on two styles the designed wash dropped that run
+    // under the floor (Linux dark 6.82:1, Luna dark 6.90:1).
+    const moved = styles
+      .filter(
+        (theme) => selectionOn(theme, "popover") !== theme.colors.selection,
+      )
+      .map((theme) => theme.name);
+    expect(moved).toEqual(["Dark · Linux", "Dark · Windows XP (Luna)"]);
+
+    // A tint keeps the designed role only where it already carries both inks.
+    const kept = styles.flatMap((theme) =>
+      softTints.filter(
+        (tint) => selectionOn(theme, tint) === theme.colors.selection,
+      ),
+    );
+    expect(kept).toHaveLength(28);
   });
 
   it("keeps the designed share and moves only toward the page", () => {
@@ -781,6 +864,23 @@ describe("the wash a status message can carry", () => {
         ).indexOf(wash);
       });
     const reach = `${Math.max(...steps) * 2}%`;
+    // The second ink, and the hole the single-ink derivation left: its numbers
+    // are the sweep's too, so a palette or a seam edit moves the pages with it.
+    const buriedCopy = designed.filter(({ copy, floor }) => copy < floor);
+    const tightestCopy = buriedCopy.reduce((a, b) => (b.copy < a.copy ? b : a));
+    const beforeCopy = styles
+      .flatMap((theme) =>
+        softTints.map((tint) => over(theme, tint, pageInkWash(theme, tint))),
+      )
+      .filter(({ copy, floor }) => copy < floor);
+    const tightestBefore = beforeCopy.reduce((a, b) =>
+      b.copy < a.copy ? b : a,
+    );
+    const kept = styles.flatMap((theme) =>
+      softTints.filter(
+        (tint) => selectionOn(theme, tint) === theme.colors.selection,
+      ),
+    ).length;
 
     [catalogue, design, readme, inventory].forEach((page) => {
       const prose = flat(page);
@@ -792,7 +892,34 @@ describe("the wash a status message can carry", () => {
       expect(prose).toContain(`All ${derived.length} tint placements resolve`);
       expect(prose).not.toContain("30 of the 32");
       expect(prose).not.toContain("All 64 tint");
+      // The second ink is on every surface, with the sweep's numbers.
+      expect(prose).toContain(`${tightestCopy.copy.toFixed(2)}:1`);
+      expect(prose).toContain(`${buriedCopy.length} of the ${derived.length}`);
+      expect(prose).toContain(`${beforeCopy.length} of the ${derived.length}`);
+      expect(prose).toContain(tightestBefore.copy.toFixed(2));
+      expect(prose).toContain(tightestBefore.tint);
+      expect(prose).toContain(`${kept} of the ${derived.length}`);
+      // The claim the fix retired: the light tints do not all keep the role.
+      expect(prose).not.toContain("light tints keep the designed role");
+      expect(prose).not.toContain(
+        "(the light tints keep the theme's own wash)",
+      );
     });
+    // The popover half and the one tint whose ink had no answer are spelled out
+    // where a consumer reads the rule, not only in the suite.
+    [catalogue, design, readme].forEach((page) => {
+      const prose = flat(page);
+      expect(prose).toContain("6.82");
+      expect(prose).toContain("6.90");
+      expect(prose).toContain("#B2CAFF");
+      expect(prose).toContain("7.48");
+    });
+    // The one ink that had no answer at all: its headroom on its own tint is the
+    // number the pages print, read from the palette rather than typed beside it.
+    const omarchy = retroTheme(themes.dark, "omarchy");
+    expect(
+      contrastRatio(omarchy.colors.infoSoftForeground, omarchy.colors.infoSoft),
+    ).toBeCloseTo(7.48, 2);
     // The inventory's own clause names the suite's measurements, and it kept
     // the pre-look pair after the paragraph above it moved: "30/5.21" and the
     // "64-placement sweep" described a table the suite had already outgrown.

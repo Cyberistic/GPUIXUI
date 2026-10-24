@@ -630,13 +630,23 @@ but 32 of the 36 dark placements fall under the body floor (Windows dark's
 `warningSoft` at 5.21:1), because the accent is lighter than the tint and moves
 it toward the near-white text. `selectionOn(theme, surface)` derives the wash
 for that surface: the theme's own selection moved toward the page by the
-smallest 2% step that keeps the wash visible and the text readable, at the same
-share. All 72 tint placements resolve (light tints keep the designed role); a
-surface no step can serve keeps the designed wash and the gate reports it. A
-theme restored from storage that lost the surface, the wash or the page it steps
-toward answers `undefined` rather than throwing, the rule `statusTone` and
-`brandText` follow: the runtime drops the property and the host paints its own
-default, while `invalidColorRoles` names the absence.
+smallest 2% step that keeps the wash visible and **every ink the surface
+carries** readable, at the same share. A message carries two — its description
+is the page ink and its title is the tone's own readable role — and the
+derivation read the page's alone, which left the title under the floor in 35 of
+the 72 tint placements (Omarchy light's `successSoft` at 5.71:1) while the
+designed role never carried it at all (43 of the 72, the worst Windows dark's
+`warningSoft` at 5.18:1). The same rule found a composed `Text` painted
+`foreground` inside Linux dark's popover at 6.82:1 and Luna dark's at 6.90:1, so
+both derive. All 72 tint placements resolve (a tint keeps the designed role only
+where it already carries both inks — 28 of the 72); a surface no step can serve
+keeps the designed wash and the gate reports it. One tint had no answer at all,
+so Omarchy dark's `infoSoftForeground` takes one step toward white (`#B2CAFF`,
+7.48:1 on its own tint) for the headroom a visible wash needs. A theme restored from storage
+that lost the surface, the wash or the page it steps toward answers `undefined`
+rather than throwing, the rule `statusTone` and `brandText` follow: the runtime
+drops the property and the host paints its own default, while `invalidColorRoles`
+names the absence.
 
 ## Find highlights
 

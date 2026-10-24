@@ -962,10 +962,21 @@ under the body floor (Windows dark's `warningSoft` at 5.21:1), because the accen
 a dark wash is drawn from is lighter than the tint and moves it toward the
 near-white text — and no share can be both that weak and visible on the page.
 `selectionOn(theme, surface)` is the answer: the theme's own selection moved
-toward the page by the smallest 2% step that keeps the wash a 1.05:1 cue and the
-copy at the theme's body floor on that surface, at the same share. All 72 tint
-placements resolve — the light tints keep the designed role — and a surface no
-step can serve keeps the designed wash, which the gate reports.
+toward the page by the smallest 2% step that keeps the wash a 1.05:1 cue and
+**every ink the surface carries** at the theme's body floor on that surface, at
+the same share. A message carries two: its description is the page ink, and its
+title and leading glyph are the tone's own readable role. The derivation read the
+page's alone, which left the title under the floor in 35 of the 72 tint
+placements (Omarchy light's `successSoft` at 5.71:1) while the designed role
+never carried it at all (43 of the 72, the worst Windows dark's `warningSoft` at
+5.18:1). Both are read now, and the same gap is closed on two content surfaces: a
+composed `Text` in Linux dark's popover sat at 6.82:1 and in Luna dark's at
+6.90:1 inside the designed role. All 72 tint placements resolve — a tint keeps
+the designed role only where it already carries both inks (28 of the 72) — and a
+surface no step can serve keeps the designed wash, which the gate reports. One
+tint had no answer at all: Omarchy dark's `infoSoftForeground` sat 0.03 above its
+floor on its own tint, so no visible wash could keep it; that ink takes one step
+toward white (`#B2CAFF`, 7.48:1 on the tint).
 
 A **find highlight** is the other wash a reader meets behind text, and the one
 surface a host paints from a palette this package does not own: a search's

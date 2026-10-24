@@ -427,13 +427,16 @@ describe("status text on a surface", () => {
         )
         .map(({ theme, tone }) => `${theme} ${tone}`),
     ).toEqual([]);
-    // The catalogue prints this placement, so a palette edit moves both.
+    // The tightest placement is the canary: a palette edit that lowers a tone's
+    // page text on a quiet strip moves this line (Omarchy dark's `infoSoft` ink
+    // took a step toward white for the selection wash, so Luna's success line on
+    // the toolbar is the one left closest to the floor).
     const tightest = placements.reduce((low, next) =>
       (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
     );
     expect(
       `${tightest.theme} ${tightest.tone} ${printedRatio(tightest.ratio)}`,
-    ).toBe("Dark · Omarchy info 8.22:1");
+    ).toBe("Light · Omarchy success 8.57:1");
   });
 });
 

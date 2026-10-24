@@ -304,7 +304,11 @@ const omarchyColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> =
       info: "#7AA2F7",
       infoForeground: "#13141C",
       infoSoft: "#23345A",
-      infoSoftForeground: "#A9C4FF",
+      // The tint's own ink carries a selectable run, and the selection wash has
+      // to stay visible on the tint: at `#A9C4FF` this ink sat 0.03 above the
+      // body floor on its own fill, so no visible wash could keep it readable.
+      // One step toward white leaves the headroom the wash needs (7.48:1).
+      infoSoftForeground: "#B2CAFF",
       successSoft: "#23331F",
       successSoftForeground: "#B9E88A",
       warningSoft: "#3A3018",

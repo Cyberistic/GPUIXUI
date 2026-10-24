@@ -70,6 +70,22 @@
  * jobs hold. Every shipped style and every tint resolves (the light tints keep
  * the theme's own wash), so a message's copy can be selectable without the
  * cascade that would follow from repainting four tint roles in eight styles.
+ *
+ * **Every ink a surface carries is read, not the page's alone.** The derivation
+ * holds one ink readable, and for a status tint it was the page's `foreground`:
+ * measured, that left the ink the tint's own copy is actually painted in — the
+ * tone's `xSoftForeground` — under the body floor in **35 of the 72** tint
+ * placements across the 18 shipped styles, because a wash derived for the page
+ * ink is not a wash derived for the tint's (base dark `infoSoft` **6.59:1**,
+ * Omarchy light `successSoft` **5.71:1**). The same gap existed on the two
+ * styles whose popover ink differs from the page's: Linux dark's popover holds a
+ * composed `Text` painted `foreground` at **6.82:1** inside the wash derived for
+ * `popoverForeground`. A surface holds every ink a run on it can paint — the
+ * role its own copy uses, and the page role any composed `Text` keeps — so
+ * {@link selectionOn} reads them all. One tint had no answer at all: Omarchy
+ * dark's `infoSoftForeground` sat **0.03** above the floor on its own tint, so no
+ * visible wash could keep it; that ink takes one step toward white
+ * (`#B2CAFF`, 7.48:1 on the tint).
  */
 
 import {
@@ -87,6 +103,7 @@ import {
   type ContrastSource,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
+import { statusTones } from "./styles.js";
 import type { Theme } from "./theme.js";
 
 /**
@@ -174,13 +191,27 @@ const washOver = (
 const WASH_STEPS = 50;
 
 /**
- * The role a surface paints its body copy in, read from the pair table so a
- * content surface's own text role is used rather than the page's.
+ * The inks a surface can carry: the role its own copy is painted in, and the
+ * page role any composed `Text` on it keeps.
+ *
+ * A content tone's own role is the body pair {@link selectionPairs} already
+ * measures there. A status tint is not in that table — its copy is the tone's
+ * readable role (`statusTone(theme, tone).foreground`, the `xSoftForeground` the
+ * contrast table measures on the tint), so that role is read beside the page
+ * ink. Reading only one of them is what buried the tint's copy in 35 of the 72
+ * placements and a composed run on two popovers (see the module note).
  */
-const bodyRoleOn = (surface: keyof ThemeColors): keyof ThemeColors =>
-  selectionPairs.find(
-    (pair) => pair.background === surface && pair.floor === "body",
-  )?.foreground ?? "foreground";
+const inksOn = (surface: keyof ThemeColors): readonly (keyof ThemeColors)[] => {
+  const pair = selectionPairs.find(
+    (entry) => entry.background === surface && entry.floor === "body",
+  )?.foreground;
+  const tone = statusTones.find((name) => `${name}Soft` === surface);
+  return [
+    ...(tone === undefined ? [] : [`${tone}SoftForeground` as const]),
+    ...(pair === undefined ? [] : [pair]),
+    "foreground",
+  ];
+};
 
 /**
  * Every selection wash in a theme that misses one of its two floors.
@@ -250,9 +281,13 @@ export function selectionFailures(
  * wash cannot serve — a message's own `xSoft` tint, where the dark palettes leave
  * the designed wash at 5.21:1 — asks this instead: the theme's own selection,
  * moved toward the page (away from the body ink) by the smallest 2% step that
- * keeps the wash visible and the text readable on *that* surface. The page is
- * the anchor because it is the role furthest from body text in both modes, so a
- * step toward it can only lower the wash's interference with the ink.
+ * keeps the wash visible and **every ink the surface can carry** readable on
+ * *that* surface. A status tint carries two: its own readable role (the tone's
+ * `xSoftForeground`, the ink a message's copy paints) and the page's
+ * `foreground`, which any composed `Text` on it keeps; a content tone carries its
+ * body pair's role and the page ink the same way. The page is the anchor because
+ * it is the role furthest from body text in both modes, so a step toward it can
+ * only lower the wash's interference with the ink.
  *
  * It returns the theme's own selection where that already carries the surface
  * (every light status tint, and every content tone in the shipped styles), and a
@@ -311,14 +346,16 @@ export function selectionOn(
   if (fill === undefined || wash === undefined || page === undefined) {
     return undefined;
   }
-  const text = colors[bodyRoleOn(surface)];
+  const inks = inksOn(surface).map((role) => colors[role]);
   const carries = (candidate: string): boolean => {
     const composed = blend(fill, candidate, alphaOf(candidate));
-    const legible = contrastRatio(text, composed);
     const visible = contrastRatio(composed, fill);
     return (
-      (legible === undefined || legible >= floors.body) &&
-      (visible === undefined || visible >= decorativeFloor)
+      (visible === undefined || visible >= decorativeFloor) &&
+      inks.every((ink) => {
+        const legible = contrastRatio(ink, composed);
+        return legible === undefined || legible >= floors.body;
+      })
     );
   };
   return (

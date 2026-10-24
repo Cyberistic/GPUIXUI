@@ -389,7 +389,50 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 253/253
+`[x]` `[██████████]` 254/254
+
+`[x]` Read **every ink a status tint carries** in the derived selection wash,
+not the page's alone — `selectionOn(theme, surface)` moved the theme's own
+selection toward the page until the surface's body role read on it, and the role
+it read was `bodyRoleOn(surface)`: the content pair's role, or `foreground` for
+any surface the pair table does not name. A status tint is not in that table, so
+the derivation measured the page ink on `xSoft` while the alert's **title and
+leading glyph paint the tone's own readable role** (`AlertTitle`/`AlertIcon`
+spread `statusTone(...).foreground`, `xSoftForeground`), and its description
+paints the page ink: two inks on one fill, one of them measured. Measured over
+the 18 shipped, high-contrast, platform and authored styles on 2026-10-24, the
+wash derived for the page ink left the title's ink under the body floor in **35
+of the 72** tint placements (tightest Omarchy light's `successSoft` at
+**5.71:1**, high-contrast dark's `infoSoft` 5.80:1, base dark's `infoSoft`
+6.59:1) and the designed role never carried it at all (**43 of the 72**, the
+worst Windows dark's `warningSoft` at **5.18:1**); the same single-ink read left
+a composed `Text` painted `foreground` at **6.82:1** inside Linux dark's popover
+and **6.90:1** inside Luna dark's, whose designed role is `popoverForeground`.
+`selection.ts` now reads the tint's own role **and** the page role for a tint
+(`inksOn`), and the pair's role beside the page ink for a content tone, so the
+search serves every ink the surface can hold; `retro.ts` gives Omarchy dark's
+`infoSoftForeground` the headroom a visible wash needs (`#A9C4FF` → `#B2CAFF`,
+**7.48:1** on its tint, where the old value sat 0.03 above the floor and no
+visible step could keep it). `selection.test.ts` gains `reads the ink a
+message's title paints, not the page's only` (the pre-fix derivation reproduced
+locally: 35/5.71 and the designed 43/5.18), extends `derives a wash the copy can
+be selected with` to both inks (all 72 resolve; tightest copy 7.00:1 at Dark ·
+Linux's `successSoft`, tightest page ink 7.00:1 and tightest wash 1.05:1 at the
+Aero look's `warningSoft`), pins the two popovers and the 28 tints that keep the
+designed role in `keeps the designed wash wherever it already carries the
+surface`, and holds the pages to the new numbers plus the Omarchy ink's measured
+headroom. Directions measured: with the page-ink-only derivation restored, three
+cases fail by name (`derives a wash…`, `keeps the designed wash…`, `states the
+tint contract…`); with Omarchy's old ink restored, the same three fail on the
+1.000:1 wash the fallback returns. Fallout corrected: `compose.test.ts`'s
+stacked-pair count (the Omarchy ink fixed one contrast placement, 25 → 24) and
+`contrast.test.ts`'s tightest status-on-a-toolbar pin (Omarchy dark's ink
+improved, so Luna's success line is now tightest at 8.57:1). Green: 50 files /
+**3 105** tests, `check-types` clean; `@gpuixui/components`' `selection`,
+`alert` and `theme-high-contrast` behaviour suites pass against the same seam.
+Docs: `docs/tokens.md` §Text selection, `docs/design-system.md` §8, the package
+README §Text selection and the `Text selection wash` row. No native scenario
+applies — a pure derivation over values and the prose that teaches it.
 
 `[x]` Answer a **store that kept no theme** at the gate, not a `TypeError` —
 `auditTheme(theme, floors = contrastFloorsFor(theme))` evaluated its default
@@ -2745,7 +2788,41 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 180/180
+`[x]` `[██████████]` 181/181
+
+`[x]` Give the **playground sidebar one roving stop and the arrows a route** —
+      every scenario row was `tabIndex: 0`, so the one surface the docs send a
+      reader to cost a keyboard reader **one press per scenario** (48 rows) to
+      leave the list for the stage, and no key moved between rows: the shell's
+      own list behaved worse than the library's `List`, `Tabs` and dock rails,
+      which each carry one stop and a clamped cursor. `src/sidebar.ts` owns the
+      rule as data — `sidebarCursor(key, cursor, count)` steps `down`/`up` and
+      jumps on `home`/`end`, **clamping** at both ends (the rule
+      `grid-focus-lifecycle` measured) and answering `none` for every other key,
+      an empty list, or a stale cursor — and it is `Match` + `Option` +
+      `Number.clamp`, not an index walk. The list is now its own component: the
+      open row carries `tabIndex: 0`, every other row `-1`, and a move sets a
+      ref the layout effect reads once committed, where it calls
+      `renderer.focusElement` and the row's own `scrollIntoView` — the reveal the
+      runtime does not do for free (`focus-reveal-lifecycle`), called after the
+      `tabIndex` commit because a call from the key handler moved nothing
+      (`virtual-tree-lifecycle`). `shell-selection` grew the keyboard half and
+      measured **67 checks** on 0.11.0 (`--only shell-selection`, 1/1, 1.8 s):
+      the palette's walk reaches the open row, **one more Tab leaves the list**
+      for the stage's field, a step back lands on the row and a second step back
+      reaches the palette's last button (so no other row is a stop), `down` opens
+      the next entry and carries the fill, the accent, the native focus and the
+      unmount with it, `up` returns, and `End`/`Home` open the ends and **reveal
+      the row they landed on** — the last row starts outside the list's box and
+      is inside it after `End`. Directions measured, `exit 1` each and restored
+      green: every row at `tabIndex: 0` fails `one more Tab leaves the list for
+      the stage`, dropping the arrow branch fails `an arrow opens the entry after
+      the open one` (`got "Input editing, onChange and onSubmit"`), and dropping
+      the reveal call fails `End reveals the row it opened`. Guards:
+      `src/sidebar.test.ts` (5 cases — both clamps, Home/End, every key the list
+      does not own, an empty list, a stale cursor) and `shell-selection.test.ts`
+      (7 cases, the roving shape, all four keys and the page's rule added).
+      Docs: `apps/playground/README.md` §The shell's selection.
 
 `[x]` Page the **files package's examples** in the gallery — `examples-mount`
       merged the components' registry and the shell package's three examples, so
@@ -10657,7 +10734,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Take the **physics-free presence entry in the primitives** — `@gpuixui/motion` publishes `@gpuixui/motion/react/presence` (the provider and the two presence hooks, without the spring/inertia/timeline samplers), and `packages/components`' seam composes it so a family that only enters and leaves pays **4 modules / 29 KiB** of motion instead of 13 / 101 KiB (measured with `nub scripts/surface.ts --entry src/motion-grid.tsx`). `packages/primitives` still imports `useMotionPreference` from `@gpuixui/motion/react` in `src/components/Spinner.tsx` (and its Tooltip's presence seam from the same entry), so every components family that reaches a primitive button — `popover.tsx` measured at 12 motion modules — still loads the physics through the primitives. Changing the two import sites to `@gpuixui/motion/react/presence` closes it; the entries publish the same bindings, so nothing else moves | primitives (owns `src/components/Spinner.tsx` and `src/core/presence.ts`) | open — the motion package's half landed 2026-10-24 (`packages/motion/src/entries.test.ts`, the components seam, `docs/component-api.md` §11); the primitives' swap is the remaining half |
 
-| Adopt the **`standard` phase for the two movements between resting states** — the timing table defines three phases and names `standard` (easeInOut) as "a movement between two resting states", and `docs/component-api.md` §11 names exactly two such movements (the tab pill and the carousel indicator), but both read `useSurfaceTiming(level).enter` (easeOut, the *arrival* curve), so the table's third phase has no consumer and the two movements ease like surfaces entering. The shape is a `useMoveTiming(level)` on `@gpuixui/motion/react/presence` (the table's phase, the provider's preference) composed by both surfaces, with the light entry's export count, the motion README's export table and `/docs/motion` taught in the same pass | motion | **open** — reads clean today (`timing.test.ts` holds the curve, and no suite holds a surface to the phase it should use), so this is a design-adoption gap rather than a defect |
+| Adopt the **`standard` phase for the two movements between resting states** — the timing table defines three phases and names `standard` (easeInOut) as "a movement between two resting states", and `docs/component-api.md` §11 names exactly two such movements (the tab pill and the carousel indicator), but both read `useSurfaceTiming(level).enter` (easeOut, the *arrival* curve), so the table's third phase has no consumer and the two movements ease like surfaces entering. The shape is a `useMoveTiming(level)` on `@gpuixui/motion/react/presence` (the table's phase, the provider's preference) composed by both surfaces, with the light entry's export count, the motion README's export table and `/docs/motion` taught in the same pass | motion | **resolved 2026-10-24** — the hook landed on the components' seam rather than the motion package's React entry, because publishing a new binding there would have owed a `/docs/motion` row that another workstream owns; the seam's `moveTiming(level, preference)` composes the motion package's own `motionTiming(level, { phase: "standard" })` (the table's phase, no restated curve) and `useMoveTiming(level)` reads it under `useMotionPreference()`, so no public export or entry count moved and the motion README already teaches the between-states rule. `TabsList` paints the pill's `left`/`top`/`width`/`height` retarget on `useMoveTiming("normal")` and `CarouselIndicators` the dot's `width` on `useMoveTiming("fast")`. Proof: `src/internal/presence.test.ts` gains `a movement between resting states` (2 cases: the evaluated curve equals `motionTiming(level, { phase: "standard" })` and not the enter curve; reduced is `{ duration: 0 }`), and both behaviour suites sample the move at **half its window** on the paused motion clock — the tab pill at **0.50** of the travel (`0.685` for the arrival curve, measured) and the dot at **12px** of its 6→18 growth (**14px**, measured). Directions measured with the seam's phase switched to `"enter"`: `eases between two resting places instead of arriving` fails `expected 0.6853932584269663 to be less than 0.6` and `eases the dot's growth at both ends…` fails `expected 14 to be less than 14`; restored, carousel 18/18, presence 39/39, the package 104 files / 993 unit and 99 files / 1 067 behaviour tests green, `check-types` and `check:tests` clean. `src/presence-contract.test.ts` gains `the movement between resting states` (3 cases: the seam's one reader and preference, both surfaces at the level their records print, no movement reading `timing.enter`) and its per-surface table now holds the two rows to `useMoveTiming`; the `Tabs`/`Carousel` records print the phase. No native scenario applies beyond the two renderer cases — the easing is sampled there. |
 | Fix the **`DockLayout` it renders from reporting a node where a tree is promised** — measured 2026-10-24 by the playground's `dock-layout-lifecycle` (32 checks, 0.11.0) on the shipped `@gpuixui/dock` layout: `onLayoutChange` is documented as "the next tree after a tab switch or a resize", and both handlers report the **node they changed** (`DockTabsView`'s `onLayoutChange?.(setActiveTab(node, node.id, tab.id))`, `DockSplitView`'s `{ ...node, size }`), so `onLayoutChange={setLayout}` — the call `packages/dock/README.md` and `panel-group.mdx` document — replaces the whole tree with one group. Measured: a split of two tab groups, pressing `Logs` reports `layout=tabs:editor reports=tabs:editor changes=1` and `explorer` leaves the stage; a press on the tab a group already shows reports a node too, so the report is wrong even when the switch is a no-op. The fix is for the view to splice the changed node back into the tree it was handed (`replaceNode(root, next)` by id) and keep `onLayoutChange`'s signature. The same probe measured two address limits: `DockLayout` derives its parts' ids from a `testId` it never passes to a node view (unlike `PanelGroup`'s `${testId}-pane-${id}` and `SplitPane`'s `${testId}-divider`, whose roots receive one), so the documented "stable locator for automation" reaches the root alone (the probe presses a trigger by the words it paints), and the trigger answers `onClick` only with no arrow-key route on the strip | dock (`packages/dock/src/dock-layout.tsx`) | open — measured 2026-10-24 by the playground workstream; the probe pins the current report, so a fix flips its checks, and `apps/playground/README.md` §`dock-layout-lifecycle` plus the Tier 4 *Tabbed panels* and *Nested panel arrangements* rows record it |
 
 ## Phase D — data and workspace components
