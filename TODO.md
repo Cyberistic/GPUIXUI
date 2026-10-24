@@ -296,7 +296,28 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Icons (`@gpuixui/icons`)
 
-`[x]` `[██████████]` 2/2
+`[x]` `[██████████]` 3/3
+
+`[x]` Read a **stored icon name as the placeholder mark, not an empty box** —
+`name` is a stored value as often as a literal (a saved toolbar, a workspace
+layout, an action record), and `Icon` read `icons[name]` directly, so a name from
+a release that renamed or dropped an icon answered `undefined` and `source` went
+with it: measured in a window, the element kept its 24×24 box **and** its `Image`
+accessibility node while painting nothing (two tints of the frame are
+byte-identical), so an icon-only button read as its action and showed a blank
+square. `iconMarkup` (`registry.ts`) takes the decoded value as `unknown` and
+answers the new `help` mark — a glyph that reads as "unknown", with the caller's
+`label` still naming the action — `isIconName` (`names.ts`) is the membership
+guard, and `FALLBACK_ICON` names the placeholder; the set is 76 → **77** names.
+Directions measured: with `icons[name]` restored, `registry.test.ts`'s stored-name
+case, `Icon.test.ts`'s placeholder case, `docs.test.ts`'s stored-name case and the
+window case `paints a mark for a stored name the set no longer carries` all fail
+(`expected undefined to be '<svg …'`, `expected true to be false`), while the
+green tree is 38/38 in the package and 9/9 in `runtime/icons.runtime.test.tsx`.
+Docs: `docs/icon.mdx`'s API `name` row and description count, the package README's
+new §Names and API exports, and the `COMPONENTS.md` Icons row. The set index
+(`apps/docs/content/docs/primitives/index.mdx`, docs-site) prints the derived
+count, so its one numeral moved with the set.
 
 `[x]` Read a **stored size name as the default step, not a vanished box** —
 `Icon`'s `size` and `Spinner`'s dot side both resolve through `iconPixels`, and
