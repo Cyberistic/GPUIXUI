@@ -389,7 +389,39 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 245/245
+`[x]` `[██████████]` 246/246
+
+`[x]` Read a **partial the store handed back** in the extension mechanism —
+`extendTheme(base, overrides)` documented that "a key written as `undefined`
+inherits", and `undefined` is the one absence a store never writes: JSON keeps
+`null` for a group it never carried and for a role it never filled, so
+`extendTheme(lightTheme, JSON.parse(saved))` threw
+`TypeError: Cannot convert undefined or null to object` out of `overlay` on the
+first nulled group, and a nulled *role* was never refused at all — it landed in
+the returned theme as `null`, a value `Theme` promises is a colour and the
+renderer paints as nothing, while every report then called the palette
+unmeasurable instead of the merge having kept the base's role. `overlay` and
+`mergeTypography`/`mergeDensity` now treat `null` exactly as `undefined` (a
+nulled group is the base's group, a nulled role the base's role, a nulled
+`colors.shadow` no retint rather than a restatement of the base's tint), and
+`ThemeOverridesSource` names that shape — a stored partial or a whole decoded
+theme reaches the extension mechanism without a cast, which is what the
+catalogue's "rebuilt from a shipped one with `extendTheme`" sentence asks a
+consumer to do. `theme.test.ts` gains `a partial a store handed back` (4 cases):
+every group nulled one at a time keeps the base's (the list is the suite's own
+`overridableGroups`), a nulled role in each group keeps the base's value, a
+defined value beside a nulled one still lands and a nulled shadow skips the
+retint while a real one restates the levels, and a fourth holds the rule on the
+catalogue, the design system, the README, the seam and the `Theme extension`
+row. Directions measured: with the old merge 3 cases fail — the group case with
+`TypeError: Cannot convert undefined or null to object` at `overlay`, the role
+case with `expected null to be '#A7A9FF'` — and dropping `ThemeOverridesSource`
+from one page fails the fourth by name; restored, the package is 50 files /
+**3 074** tests with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean,
+and the whole workspace type-checks. Docs: `docs/tokens.md` §Theme API (the
+merge rules and the decoded-theme paragraph), `docs/design-system.md` §11, the
+package README §Extending a theme and the `Theme extension` row. No native
+scenario applies — a pure merge and the type of its input.
 
 `[x]` Refuse a stored mode, variant or host **against the index that owns the
 names** — `getTheme`'s two refusals spelled their lists out ("light, dark are the
