@@ -316,36 +316,39 @@ export const switchTargetStyle = (spec: SelectionSpec): StyleDesc => ({
  * How far a switch thumb travels between its two positions.
  *
  * The track is a fixed ratio of the icon side, so the travel is the track's
- * width less one knob and both included borders: the same number a measured
- * drag would produce, without the measurement. It keeps the knob's gap to each
- * edge equal in the two states.
+ * width less one knob and both included gaps: the same number a measured drag
+ * would produce, without the measurement. A declared platform box measures its
+ * inset from the track's outer edge (Fluent's 12px knob at a 4px inset is
+ * exactly its 20px track), so the border is part of the gap rather than a
+ * second subtraction; the offset below converts the gap to the padding-box
+ * value `left` is measured from.
  */
 export const switchThumbTravel = (
   spec: SelectionSpec,
   theme: SwitchPaintTheme,
 ): number => {
   const box = switchBox(spec.size, theme);
-  // The knob's `left` is measured from the padding box, so the track's two
-  // borders are outside the distance the knob can travel: a bordered theme
-  // that dropped them left the checked knob one border too close to its edge.
-  return box.width - box.knob - box.inset * 2 - box.border * 2;
+  return box.width - box.knob - box.inset * 2;
 };
 
 /**
- * A switch thumb's offset from the track's left edge.
+ * A switch thumb's `left` offset from the track's padding box.
  *
- * The resting offset is {@link switchThumbInset}; a filled track adds the whole
- * travel, so the two positions differ by exactly the distance between them and
- * the thumb never drifts out of the pill. It is an offset rather than
- * `justifyContent` because the runtime can animate a `left` inset (it cannot
- * animate a flex alignment), which is what makes the knob slide.
+ * The resting position is the authored gap less the border the runtime paints
+ * inside the track's box; a filled track adds the whole travel, so the two
+ * positions differ by exactly the distance between them and the thumb never
+ * drifts out of the pill. It is an offset rather than `justifyContent` because
+ * the runtime can animate a `left` inset (it cannot animate a flex alignment),
+ * which is what makes the knob slide.
  */
 export const switchThumbOffset = (
   spec: SelectionSpec,
   theme: SwitchPaintTheme,
-): number =>
-  switchThumbInset(spec, theme) +
-  (filled(spec) ? switchThumbTravel(spec, theme) : 0);
+): number => {
+  const box = switchBox(spec.size, theme);
+  const rest = box.inset - box.border;
+  return rest + (filled(spec) ? switchThumbTravel(spec, theme) : 0);
+};
 
 /**
  * The fill a platform's own switch paints, or nothing for the accent family.
@@ -504,9 +507,10 @@ export const switchThumbStyle = (
   const box = switchBox(spec.size, source);
   return {
     position: "absolute",
-    // The knob is centred from its box, never from the inset: a platform's
-    // inset is a horizontal gap, and the two dimensions need not agree.
-    top: (box.height - box.knob) / 2,
+    // The knob is centred inside the track's padding box, never from the inset:
+    // a platform's inset is a horizontal gap, and the two dimensions need not
+    // agree. The two borders are outside the box `top` is measured from.
+    top: (box.height - box.border * 2 - box.knob) / 2,
     left: switchThumbOffset(spec, source),
     width: box.knob,
     height: box.knob,

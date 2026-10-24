@@ -22,7 +22,6 @@ import {
   selectionTargetStyle,
   switchBox,
   switchTargetStyle,
-  switchThumbInset,
   switchThumbStyle,
   switchThumbTravel,
   switchTrackStyle,
@@ -287,7 +286,9 @@ describe("switch", () => {
     expect(Number(on.left) - Number(off.left)).toBe(
       switchThumbTravel(spec(), testTheme),
     );
-    expect(off.left).toBe(switchThumbInset(spec(), testTheme));
+    expect(off.left).toBe(
+      switchBox("md", testTheme).inset - switchBox("md", testTheme).border,
+    );
     expect(on.top).toBe(off.top);
   });
 
@@ -296,8 +297,10 @@ describe("switch", () => {
     // the knob's journey, while a child's `left` is measured from the padding
     // box — so a bordered theme (every switch that is not a platform's own)
     // painted the checked knob one border-width nearer its edge than the
-    // resting one. Read off the painted style: the padding box less the knob
-    // and the inset is the same inset on both sides.
+    // resting one. `top` had the same mistake: centring it on the border box
+    // left the knob one border higher than the gap below it. Read off the
+    // painted style: the padding box less the knob and the inset is the same
+    // inset on both sides, and the knob is centred in the padding box.
     const themes = [testTheme, platformTheme(lightTheme, "darwin")];
     Arr.forEach(["sm", "md", "lg"] as const, (size) => {
       Arr.forEach(themes, (theme) => {
@@ -306,9 +309,16 @@ describe("switch", () => {
         const box = switchBox(size, theme);
         const padding =
           Number(switchTrackStyle(rest, theme).width) - box.border * 2;
-        expect(Number(switchThumbStyle(rest, theme).left)).toBe(box.inset);
+        expect(Number(switchThumbStyle(rest, theme).left)).toBe(
+          box.inset - box.border,
+        );
         expect(Number(switchThumbStyle(checked, theme).left) + box.knob).toBe(
-          padding - box.inset,
+          padding - (box.inset - box.border),
+        );
+        const thumb = switchThumbStyle(rest, theme);
+        expect(thumb.top).toBe((box.height - box.border * 2 - box.knob) / 2);
+        expect(Number(thumb.top) * 2 + box.knob).toBe(
+          box.height - box.border * 2,
         );
       });
     });
@@ -529,15 +539,15 @@ describe("the platform switch boxes", () => {
       expect(box).toEqual({ width, height, knob, inset, border });
       expect(thumb.width).toBe(knob);
       expect(thumb.height).toBe(knob);
-      expect(thumb.left).toBe(inset);
-      expect(thumb.top).toBe((height - knob) / 2);
+      expect(thumb.left).toBe(inset - border);
+      expect(thumb.top).toBe((height - knob) / 2 - border);
 
       // Negative control: the top follows the track and knob, not a literal.
       const taller = switchThumbStyle(spec(), {
         ...theme,
         switchMetrics: { ...metrics, height: height + 2 },
       });
-      expect(taller.top).toBe((height + 2 - knob) / 2);
+      expect(taller.top).toBe((height + 2 - knob) / 2 - border);
       expect(taller.top).not.toBe(thumb.top);
 
       // Negative control: the knob's side comes from the box, not the track.

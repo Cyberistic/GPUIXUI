@@ -44,7 +44,7 @@ import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { reducedMotionOf, stillTransition } from "../core/motion.js";
 import {
   switchTargetStyle,
-  switchThumbInset,
+  switchThumbOffset,
   switchThumbPaint,
   switchTrackPaint,
   type SelectionAccent,
@@ -182,7 +182,7 @@ export const renderSwitchThumb = (
   );
   const left = P.isNumber(style.left)
     ? style.left
-    : switchThumbInset(spec, theme);
+    : switchThumbOffset(spec, theme);
   return (
     <motion.div
       initial={false}

@@ -18,7 +18,11 @@ import * as Option from "effect/Option";
 import { MotionProvider } from "@gpuixui/motion/react";
 import { Switch } from "../src/components/Switch.js";
 import { Stack } from "../src/components/Stack.js";
-import { switchThumbInset, switchThumbTravel } from "../src/core/selection.js";
+import {
+  switchThumbInset,
+  switchThumbTravel,
+  switchBox,
+} from "../src/core/selection.js";
 import type { Bounds, Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
@@ -66,9 +70,9 @@ it("slides the thumb to the far edge when the state changes", async () => {
   );
   const rest = thumbOf(runtime);
   const travel = switchThumbTravel(spec, testTheme);
-  // `left` is measured from the padding box, so the painted offset from the
-  // track's own edge is the inset plus its border.
-  const inset = switchThumbInset(spec, testTheme) + testTheme.borderWidth.thin;
+  // `left` is measured from the padding box while the authored inset is from
+  // the track's outer edge, so the painted offset is the inset itself.
+  const inset = switchThumbInset(spec, testTheme);
   expect(rest.x).toBe(trackOf(runtime).x + inset);
 
   runtime.click("s");
@@ -117,9 +121,28 @@ it("keeps the knob's gap to each edge equal in both states", async () => {
   // The checked knob mirrors the resting one: the same edge gap, on the other
   // side. A travel computed without the borders leaves them unequal.
   expect(gaps()).toEqual([rest[1], rest[0]]);
-  expect(rest[0]).toBe(
-    testTheme.borderWidth.thin + switchThumbInset(spec, testTheme),
+  expect(rest[0]).toBe(switchThumbInset(spec, testTheme));
+});
+
+it("centres the knob between the track's top and bottom edges", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Switch testId="s" label="Airplane mode" />
+    </Surface>,
   );
+  const track = trackOf(runtime);
+  const thumb = thumbOf(runtime);
+  const top = thumb.y - track.y;
+  const bottom = track.y + track.height - (thumb.y + thumb.height);
+  // `top` is measured from the padding box exactly as `left` is, so the painted
+  // gap includes the border on each side: a top computed on the border box
+  // leaves the knob one border-width high and the bottom gap too small.
+  const box = switchBox(spec.size, testTheme);
+  const centred =
+    testTheme.borderWidth.thin + (box.height - box.border * 2 - box.knob) / 2;
+  expect(top).toBe(bottom);
+  expect(top).toBe(centred);
 });
 
 it("lands the thumb at once under the provider's reduced preference", async () => {

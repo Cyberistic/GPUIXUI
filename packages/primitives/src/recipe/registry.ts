@@ -386,7 +386,7 @@ export const recipeTw = createTw({
       if (size === undefined) return undefined;
       const box = switchBox(size, theme);
       return {
-        top: (box.height - box.knob) / 2,
+        top: (box.height - box.border * 2 - box.knob) / 2,
         left: switchThumbOffset(
           { state: "unchecked", size, accent: "primary" },
           theme,

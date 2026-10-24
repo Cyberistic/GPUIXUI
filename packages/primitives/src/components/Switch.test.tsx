@@ -195,7 +195,7 @@ describe("SwitchThumb", () => {
       switchThumbInset(
         { state: "unchecked", size: "md", accent: "primary" },
         testTheme,
-      ),
+      ) - testTheme.borderWidth.thin,
     );
     expect(animatedLeft(off)).toBe(numberAt(off, "left"));
     expect(animatedLeft(on)).toBe(numberAt(on, "left"));
