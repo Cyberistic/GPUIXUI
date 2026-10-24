@@ -672,6 +672,22 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `check-types` and `check:tests` clean. Docs: `docs/charts.mdx` §Limitations,
   the README's chart paragraph and the Charts row.
 
+- **An entry inside a chart's saved list is read, not dereferenced**: the
+  stored-list read guarded the **slot** (`listOf`), while each part still read
+  every entry field by field — `ChartFrame`'s `one.values`, `ChartLegend`'s
+  `item.key`/`item.color`, `DonutChart`'s `one.value` — so a saved dashboard
+  that wrote a hole in a list (`[null, { … }]`: a series a release dropped, a
+  record an older shape saved) threw `Cannot read properties of null (reading
+  'values')`, `(reading 'key')` or `(reading 'value')` out of the render and
+  took the chart down. A list is stored **twice**; `recordsOf`
+  (`internal/list.ts`) keeps only the entries that are records naming
+  themselves with a `key`, so a hole or an entry of another kind paints
+  nothing while its neighbours paint. `src/behaviour/chart-boundary.test.tsx`
+  gains four cases (11 in the file). Directions measured: before the read the
+  three holed cases fail at `HEAD` on the empty render, and after it the file
+  is 11/11 with `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the
+  README's chart paragraph and the Charts inventory row.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

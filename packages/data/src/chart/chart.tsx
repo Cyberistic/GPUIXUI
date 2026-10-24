@@ -29,7 +29,7 @@ import { seriesColors } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { listOf } from "../internal/list.js";
+import { listOf, recordsOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { textStyle, useTheme } from "../theme.js";
 import {
@@ -107,7 +107,8 @@ export interface ChartLegendProps extends Omit<Props, "children"> {
    *
    * A saved legend writes `null` where it carried no rows, so only a list is a
    * list: a slot with no list paints no rows rather than throwing out of the
-   * render.
+   * render. An entry the store wrote as a hole or as something other than a
+   * keyed record is not a row either (`recordsOf`).
    */
   readonly items: ReadonlyArray<ChartLegendItem>;
   readonly testId?: string;
@@ -126,7 +127,7 @@ export const ChartLegend = ({
   ...rest
 }: ChartLegendProps) => {
   const theme = useTheme();
-  const rows = listOf(items);
+  const rows = recordsOf(items);
   return (
     <div
       {...rest}
@@ -166,7 +167,8 @@ export interface ChartProps extends Omit<Props, "children"> {
    * The series, painted in the theme's categorical order.
    *
    * A saved chart writes `null` where it carried no series, so only a list is a
-   * list: a chart with no series paints its frame and no layer.
+   * list: a chart with no series paints its frame and no layer. An entry the
+   * store wrote as a hole is not a series (`recordsOf`).
    */
   readonly series: ReadonlyArray<ChartSeries>;
   /**
@@ -275,8 +277,9 @@ const ChartFrame = ({
   /**
    * The geometry, per series.
    *
-   * The series and labels are the lists this frame read (see `listOf`), so a
-   * geometry function never receives the stored absence the props may carry.
+   * The series and labels are the lists this frame read (`recordsOf` and
+   * `listOf`), so a geometry function never receives the stored absence the
+   * props may carry.
    */
   readonly marks: (
     series: ReadonlyArray<ChartSeries>,
@@ -290,7 +293,7 @@ const ChartFrame = ({
     width: DEFAULT_CHART_WIDTH,
     height: DEFAULT_CHART_HEIGHT,
   });
-  const rows = Arr.map(listOf(series), (one) => ({
+  const rows = Arr.map(recordsOf(series), (one) => ({
     ...one,
     // A series' own list is a stored field too: a saved chart writes `null`
     // where a series carried no values, and the geometry would throw on it.
@@ -492,7 +495,8 @@ export interface DonutChartProps extends Omit<Props, "children"> {
    * One slice per datum, in the theme's categorical order.
    *
    * A saved ring writes `null` where it carried no data, so only a list is a
-   * list: a ring with no data paints its empty frame.
+   * list: a ring with no data paints its empty frame. An entry the store wrote
+   * as a hole is not a datum (`recordsOf`).
    */
   readonly data: ReadonlyArray<ChartDatum>;
   /** The plot's size, in pixels. Defaults to `160` square. */
@@ -531,7 +535,7 @@ export const DonutChart = ({
     height: DEFAULT_DONUT_SIZE,
   });
   const palette = seriesColors(theme);
-  const slices = listOf(data);
+  const slices = recordsOf(data);
   const segments = donutSegments(
     Arr.map(slices, (one) => one.value),
     box,

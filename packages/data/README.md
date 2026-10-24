@@ -586,7 +586,11 @@ only a list is a list, and a saved configuration whose `series`, `labels`,
 `data`, `values` or legend `items` is `null` paints its empty frame instead of
 throwing out of the render and taking the surface down. A series' own `values`
 is read the same way, so a saved series with no samples paints no layer while
-the rest of the chart paints.
+the rest of the chart paints. A list is stored twice, so an **entry** is read
+too: `recordsOf` keeps the records that name themselves with a `key`, so a
+series, ring datum or legend row whose slot the store wrote as a hole
+(`[null, { … }]`) paints nothing while its neighbours paint, rather than
+dereferencing `null` and taking the chart down.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

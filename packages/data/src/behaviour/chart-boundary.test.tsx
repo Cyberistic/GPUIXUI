@@ -9,6 +9,13 @@
  * threw out of the render and took the whole surface down instead of painting
  * an empty frame. The rule the surfaces already follow is `listOf`: only a list
  * is a list, and a slot with no list paints no marks.
+ *
+ * A list is stored data **twice**: the slot can be absent, and an entry inside
+ * it can be the hole a store wrote (`[null, { … }]` — a removed series, a
+ * record an older shape saved). `listOf` guards the slot, so every part still
+ * dereferenced each entry (`one.values`, `one.key`, `one.value`) and one hole
+ * took the chart down. The rule is `recordsOf`: only a record that names itself
+ * with a `key` is a series, a datum or a legend row.
  */
 
 import type { ReactNode } from "react";
@@ -127,5 +134,74 @@ describe("a chart whose stored list is null", () => {
       </div>,
     );
     expect(paintedText(mounted)).toContain("after");
+  });
+
+  it("paints the series of a stored list whose first entry is a hole", () => {
+    const mounted = mount(
+      <div>
+        <BarChart
+          testId="chart"
+          aria-label="Revenue"
+          labels={["Q1"]}
+          // @ts-expect-error — a hole a store wrote inside the list.
+          series={[null, { key: "revenue", label: "Revenue", values: [8] }]}
+        />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("after");
+    expect(mounted.renderer.findByTestId("chart-layer-revenue")).not.toBe(
+      undefined,
+    );
+  });
+
+  it("paints the rows of a legend whose stored entry is a hole", () => {
+    const mounted = mount(
+      <div>
+        <ChartLegend
+          // @ts-expect-error — a hole a store wrote inside the list.
+          items={[null, { key: "revenue", label: "Revenue", color: "#5F4BDB" }]}
+        />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("Revenue");
+  });
+
+  it("paints the slices of a ring whose stored datum is a hole", () => {
+    const mounted = mount(
+      <div>
+        <DonutChart
+          testId="ring"
+          aria-label="Traffic"
+          // @ts-expect-error — a hole a store wrote inside the list.
+          data={[null, { key: "direct", label: "Direct", value: 3 }]}
+        />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("after");
+    expect(mounted.renderer.findByTestId("ring-layer-direct")).not.toBe(
+      undefined,
+    );
+  });
+
+  it("paints no series for an entry that is not a record", () => {
+    const mounted = mount(
+      <div>
+        <BarChart
+          testId="chart"
+          aria-label="Revenue"
+          labels={["Q1"]}
+          // @ts-expect-error — an entry a store wrote as something else.
+          series={[42, { key: "revenue", label: "Revenue", values: [8] }]}
+        />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("after");
+    expect(mounted.renderer.findByTestId("chart-layer-revenue")).not.toBe(
+      undefined,
+    );
   });
 });

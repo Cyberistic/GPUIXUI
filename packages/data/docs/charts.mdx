@@ -95,8 +95,12 @@ import {
 
 - A chart's lists are stored data: only a list paints, so a saved `series`,
   `labels`, `data`, `values` or legend `items` a record wrote as `null` paints
-  the empty frame, and a series whose own `values` is `null` paints no layer
-  (`src/behaviour/chart-boundary.test.tsx` holds it).
+  the empty frame, and a series whose own `values` is `null` paints no layer.
+  An **entry** inside a stored list is data too: a `series`, `data` or `items`
+  list whose hole the store wrote (`[null, { … }]`) paints the records it can
+  read and drops the hole, and an entry that is not a keyed record is not a
+  series, a datum or a legend row (`recordsOf`). `src/behaviour/chart-boundary.test.tsx`
+  holds both shapes.
 - One tint per layer: two colours inside one series need two layers.
 - No tooltips, hover readouts or zoom.
 - No animation between data sets.
