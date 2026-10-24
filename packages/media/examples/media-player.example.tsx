@@ -3,7 +3,9 @@
  *
  * The frames are generated here because the runtime has no playback host: the
  * caller owns decoding, and this screen hands the player one colour per second.
- * The same player without `frameAt` is the audio-style form.
+ * The same player without `frameAt` is the audio-style form. Press the progress
+ * track to seek to that share of the clip, drag it while the primary button is
+ * held, or use Home/End/Left/Right on the seek pad.
  */
 
 import * as Option from "effect/Option";
