@@ -235,18 +235,30 @@ export const exitWindowMs = (timing: PresenceTiming): number =>
 /**
  * A house timing that waits `delayMs` before it runs — a stagger.
  *
- * The delay is named in milliseconds and handed to the runtime in seconds. A
- * reduced timing (a zero duration) drops the delay with the journey: the runtime
- * waits a delay out *before* an instant assignment, so keeping it would hold a
- * resting frame back by exactly the wait the preference removes. A delay that
- * cannot be scheduled (negative, infinite, `NaN`) adds nothing, and the timing
- * is returned as it was, so an unstaggered run keeps the object it was given.
+ * The delay is named in milliseconds and handed to the runtime in seconds. It
+ * goes with the journey: the runtime waits a delay out *before* an instant
+ * assignment, so a timing the reader's preference collapsed to zero duration
+ * drops it rather than holding a resting frame back by exactly the wait the
+ * reduced policy removes.
+ *
+ * A journey the timing cannot run at all drops it for the same reason, and that
+ * is the same reading {@link transitionWindowMs} takes of a duration — no
+ * schedulable travel is no journey. A stored timing that never carried a
+ * duration, or carries one that is unreadable or not positive, is therefore
+ * painted at once instead of sitting at its first frame for the wait: the two
+ * halves of the module cannot disagree about what a run is.
+ *
+ * A delay that cannot be scheduled (negative, infinite, `NaN`) adds nothing, and
+ * the timing is returned as it was, so an unstaggered run keeps the object it
+ * was given.
  */
 export const delayedTiming = (
   timing: PresenceTransition,
   delayMs: number,
 ): PresenceTransition =>
-  timing.duration === 0 || !Number.isFinite(delayMs) || delayMs <= 0
+  milliseconds(timing.duration) === 0 ||
+  !Number.isFinite(delayMs) ||
+  delayMs <= 0
     ? timing
     : { ...timing, delay: delayMs / 1000 };
 

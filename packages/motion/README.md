@@ -155,8 +155,10 @@ A surface that enters and leaves reads one table, exported from
   a box stays mounted for, including the wait a delayed run sits out first; a
   field that cannot be scheduled adds no time (a negative wait never shortens the
   journey) and a window the arithmetic cannot represent is no window at all;
-- `delayedTiming` adds a stagger and drops it with a reduced journey, since the
-  runtime waits out a delay before an instant assignment too;
+- `delayedTiming` adds a stagger and drops it with the journey: a reduced
+  timing, and any duration the run cannot travel (absent, unreadable, or not
+  positive), takes the wait with it, since the runtime waits out a delay before
+  an instant assignment too;
 - `presenceStyle` is the leaving pointer rule — a surface takes no presses while
   it fades, and a wrapper paints nothing at rest so it never covers its content.
 

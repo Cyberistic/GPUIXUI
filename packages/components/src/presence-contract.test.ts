@@ -294,10 +294,15 @@ describe("the house timing", () => {
     });
   });
 
-  it("still drops the delay under a reduced timing, so the rule cannot pass by deletion", () => {
+  it("still drops the delay with a journey the timing cannot run, so the rule cannot pass by deletion", () => {
     const shared = motionSource("presence.ts");
     expect(Str.includes("export const delayedTiming")(shared)).toBe(true);
-    expect(Str.includes("timing.duration === 0")(shared)).toBe(true);
+    // The rule is the module's own reading of a duration, not a literal zero:
+    // a stored timing whose duration is absent, unreadable or not positive is
+    // no journey either, and the window conversion reads it the same way.
+    expect(Str.includes("milliseconds(timing.duration) === 0")(shared)).toBe(
+      true,
+    );
     expect(Str.includes("delay: delayMs / 1000")(shared)).toBe(true);
   });
 });

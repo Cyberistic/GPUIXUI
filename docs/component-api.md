@@ -547,12 +547,16 @@ the failure the policy exists to prevent.
 
 **A stagger is a delay on the same timing, and it goes with the journey.**
 `delayedTiming` (in the seam) adds one in the seconds the runtime reads, and it
-drops the delay when the duration is zero: the runtime waits a delay out *before*
-an instant assignment, so a kept delay holds a reduced surface at its first frame
-for the whole stagger. `Reveal`'s `delayMs`, the avatar group's discs and
-`SplittingText`'s units compose it, and `src/presence-contract.test.ts` holds the
-rule to that one implementation — a component that spreads a delay onto a timing
-itself re-implements the reduced rule.
+drops the delay with a journey the timing cannot travel: a reduced timing's zero
+duration, and equally a duration that is absent, unreadable or not positive — the
+rule `transitionWindowMs` already takes of a duration, so the delay and the mount
+window cannot disagree about what a run is. The runtime waits a delay out
+*before* an instant assignment, so a kept delay holds a reduced (or unreadable)
+surface at its first frame for the whole stagger. `Reveal`'s `delayMs`, the
+avatar group's discs and `SplittingText`'s units compose it, and
+`src/presence-contract.test.ts` holds the rule to that one implementation — a
+component that spreads a delay onto a timing itself re-implements the reduced
+rule.
 
 **The preference is read on every render**, so turning it on settles a run that
 is already moving: an entry interrupted half-way jumps to its resting frame

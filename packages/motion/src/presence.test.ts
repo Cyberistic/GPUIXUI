@@ -20,6 +20,7 @@ import {
   presenceStyle,
   presenceTiming,
   transitionWindowMs,
+  type PresenceTransition,
 } from "./presence.js";
 import { motionTiming } from "./timing.js";
 
@@ -201,6 +202,29 @@ describe("a staggered arrival", () => {
     expect(delayedTiming(enter, 0)).toBe(enter);
     expect(delayedTiming(enter, Number.NaN)).toBe(enter);
     expect(delayedTiming(enter, Number.POSITIVE_INFINITY)).toBe(enter);
+  });
+
+  it("drops the wait with a journey the timing cannot run", () => {
+    // The bug this guards: the delay was dropped only for a duration of exactly
+    // zero, so every other no-journey timing kept it. `PresenceTransition` is
+    // exported and structural, so a timing built by hand or decoded from storage
+    // arrives with an absent, unreadable or negative duration — and the runtime
+    // waits the delay out *before* the instant assignment, holding the surface
+    // at its first frame for exactly the wait the run never needed.
+    const unreadable = { duration: Number.NaN } as const;
+    const absent: PresenceTransition = {};
+    const notPositive = { duration: -0.2 } as const;
+    const overflowed = { duration: 1e308 } as const;
+    expect(delayedTiming(unreadable, 80)).toBe(unreadable);
+    expect(delayedTiming(absent, 80)).toBe(absent);
+    expect(delayedTiming(notPositive, 80)).toBe(notPositive);
+    expect(delayedTiming(overflowed, 80)).toBe(overflowed);
+    // A readable run keeps its wait, so the rule cannot pass by dropping every
+    // delay.
+    expect(delayedTiming({ duration: 0.2 }, 80)).toEqual({
+      duration: 0.2,
+      delay: 0.08,
+    });
   });
 });
 

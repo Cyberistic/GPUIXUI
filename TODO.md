@@ -10790,6 +10790,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
     verification: `--only data-table-lifecycle` 1/1 in a real window, whose drag
     step then widened the shipped column, so a captured move really reports the
     held button. Owner: data.
+  - [x] Bound the **frozen composition's two scrollers by a height it can
+    paint** — `FrozenTable` wrote the caller's `height` into its own box and
+    subtracted the header from it for both row scrollers, so a height nothing
+    could be read from (`NaN`, an infinity, a negative — a pane's share, a
+    measurement taken before the first layout) was dropped by the runtime and
+    `Math.max(0, NaN - header)` made the difference `NaN` too. Measured in the
+    renderer in a 320-point pane: `height={NaN}` painted both row scrollers at
+    **0 points** against the **276** the same grid paints with a readable height,
+    so the grid showed no row at all and neither pane could scroll — the rule
+    `Table`, `VirtualTable`, `VirtualTree` and `TreeView` already follow, in the
+    one shipped grid that had not adopted it. The composition now reads the
+    height through `paintableSize`, takes the share of the pane it sits in
+    (`paneFill`) and bounds both scrollers from the box it measured; the
+    painted-height seam moved from `virtual/measured.ts` to `internal/painted.ts`
+    because it has a third consumer. `src/behaviour/paintable-height.test.tsx`
+    gains `keeps the frozen composition's two scrollers inside their pane`
+    (bounded height, `NaN`, ±infinity; the two panes equal, so a record keeps
+    one `y` across the seam), and the README suite's `propsOf` reads an
+    interface body by its **balanced** braces so a JSDoc citation
+    (`{@link paintableSize}`) can no longer hide every prop. Directions
+    measured: at `HEAD` the case fails `expected [ 0, 0 ] to deeply equal
+    [ 276, 276 ]`; with the fix the behaviour suite is 140/140 and the unit
+    suite 221/221, `check-types` clean. `docs/frozen-columns.mdx` §The grid's
+    box, the README's runtime-rules row and §A window with no height, and the
+    Tier 3 Tables row state the rule. Owner: data.
   - [ ] The **second sort press** in the live `data-table-lifecycle` probe can
     read `name-asc` where it expects `name-desc`: measured 2026-10-24 on
     `5afe679d`, one run failed at `a second press flips the direction` with
