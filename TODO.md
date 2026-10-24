@@ -10817,14 +10817,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
     suite 221/221, `check-types` clean. `docs/frozen-columns.mdx` §The grid's
     box, the README's runtime-rules row and §A window with no height, and the
     Tier 3 Tables row state the rule. Owner: data.
-  - [ ] The **second sort press** in the live `data-table-lifecycle` probe can
-    read `name-asc` where it expects `name-desc`: measured 2026-10-24 on
-    `5afe679d`, one run failed at `a second press flips the direction` with
-    `60 rows · 2 selected · cols=name,status,size · w=260 · content=460 ·
-    name-asc` and the immediate rerun passed 1/1, so either the press landed
-    before the first press's re-render committed or the probe's settle is too
-    short for a loaded box. Find out which (log the click's delivery) before
-    loosening the wait, and keep the live scenario honest.
+  - [x] Wait for the **order a sort press produces** instead of sleeping between
+    the two presses — the live `data-table-lifecycle` step clicked the Name
+    header, slept `SETTLE` (120 ms) and clicked again, and one run failed at `a
+    second press flips the direction` reading `name-asc` (measured 2026-10-24 on
+    `5afe679d`, passing on an immediate rerun). The signature is a slow frame,
+    not a lost press: the first press's read had already asserted `name-asc`, so
+    the second press landed before the first press's re-render committed. A host
+    click is delivered natively and the app commits on a later frame, so the step
+    now polls the readout for the token each press produces
+    (`settleUntil(readout, …)`, bounded at ~2 s) — a genuinely lost press still
+    fails, on the token it settled on, and a slow frame no longer can.
+    `src/live/data-table.test.ts` gains `waits for the order each sort press
+    produces`, which holds the probe to the two `pressSort` calls and refuses the
+    click-then-sleep shape. Directions measured: with the old click-then-sleep
+    step restored the guard case fails by name (`waits for the order each sort
+    press produces`); the live probe is green twice in a row on the fixed build
+    (`--only data-table-lifecycle`, 1/1 at 10 917 ms and 11 572 ms, a real
+    window). `apps/playground/README.md`'s §`data-table-lifecycle` carries the
+    fourth harness note. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
