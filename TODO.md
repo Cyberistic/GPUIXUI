@@ -3043,10 +3043,8 @@ a merge over a stored theme.
       (`expected true, got false`, exit `1`), restored green (three runs,
       13.2–16.8 s). Docs: `apps/playground/README.md`
       §`radio-group-lifecycle`, `.artifacts/live/radio-{rest,choice,ring}.png`.
-      Note: the tree's `playground build` is red only on other workstreams'
-      in-flight `packages/data`/`packages/tokens` type errors while this probe's
-      emitted build ran; the suite and `check-types` for these files are
-      otherwise clean.
+      Verified on the final tree: `playground build` and `check-types` green, the
+      full playground suite 129 files / 1 286 tests green, `check:tests` clean.
 
 `[x]` Wait for the **probe it is about to measure** in a batched live run — the
       live runner mounted each selected probe into one keyed window and then slept
