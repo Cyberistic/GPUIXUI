@@ -407,6 +407,19 @@ describe("aspect ratio", () => {
       ),
     ).toStrictEqual([free, free, free, free]);
   });
+
+  it("reshapes a stored hole inside a frame its origin leaves no room in", () => {
+    // A stored rectangle near an edge has no drag to anchor; shaping it to the
+    // ratio's minimum must move it inside the frame, not paint it past the edge.
+    const narrow = { width: 100, height: 400 };
+    const stored = new CropRect({ x: 76, y: 0, width: 24, height: 24 });
+    expect(boxes(clampCrop(stored, narrow, 24, 4))).toStrictEqual({
+      x: 4,
+      y: 0,
+      width: 96,
+      height: 24,
+    });
+  });
 });
 
 describe("moveCrop", () => {

@@ -154,8 +154,10 @@ const fitRatio = (
   const width = Math.max(minWidth, Math.min(wanted, cap));
   const height = width / ratio;
   return new CropRect({
-    x: movesLeft ? anchor.x - width : anchor.x,
-    y: movesTop ? anchor.y - height : anchor.y,
+    // A shaped stored hole has no drag to anchor, so it is nudged inside a
+    // frame whose origin leaves too little room for the ratio's minimum.
+    x: clamp(movesLeft ? anchor.x - width : anchor.x, 0, maxW - width),
+    y: clamp(movesTop ? anchor.y - height : anchor.y, 0, maxH - height),
     width,
     height,
   });
