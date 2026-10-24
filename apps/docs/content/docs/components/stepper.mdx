@@ -56,7 +56,7 @@ the first step, because a stepper mid-computation still paints somewhere.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | this step's position, 1-based, on the root's scale |
-| `label` | `string` | — | the step's name and its accessible name |
+| `label` | `string` | — | the step's name and its accessible name; a blank name reads as `Step` and the step's position |
 | `description` | `string` | none | one line of support copy under the name |
 | `style` | `StateStyle<StepperStepState>` | — | resolved against the derived status, merged last |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
@@ -64,6 +64,6 @@ the first step, because a stepper mid-computation still paints somewhere.
 
 ## Limitations
 
-- The root is a list named when `label` is given; every step is a `listitem` named by its `label`.
+- The root is a list named when `label` is given; every step is a `listitem` named by its `label`, and a blank label reads as `Step` plus the step's position (`Step 2` for the second) rather than publishing an unnamed item.
 - `@gpuix/native@0.11.0` has no `aria-current`, so the current step carries `aria-selected` — the same substitution Pagination uses.
 - The number marker is visual: the step's accessible name does not include it, so a screen reader hears "Billing", not "2 Billing".

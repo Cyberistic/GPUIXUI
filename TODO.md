@@ -12883,7 +12883,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 387/387
+`[x]` `[██████████]` 388/388
+
+`[x]` Name a **step the caller left blank** on the stepper page — the same
+      components pass made `stepName` derive `Step` and the step's position for
+      a title that arrived blank (an i18n row, a data table), while the curated
+      page still said every step is a `listitem` named by its `label` and gave
+      `label` the consequence "the step's name and its accessible name"; a
+      reader could pass `label=""` and expect an unnamed item the component no
+      longer publishes. The `StepperStep` `label` row and the first Limitations
+      bullet now teach the fallback (`Step 2` for the second), and
+      `stepper-preview.test.ts` gains `names a step the caller left blank, as
+      the component does`, which derives the `Step ${` template from the
+      component's own `stepName` body before holding the page to it. Direction
+      measured: restoring the old bullet fails by name (the assertion's
+      `to contain 'a blank label reads as Step plus th…'`); restored, the file
+      is 13/13. No native scenario applies — a page sentence and the source it
+      describes.
 
 `[x]` Teach the **value a stepper cannot read** on the stepper page, and repair
       the preview that answered it the old way — the components workstream made
@@ -12904,9 +12920,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       comparison restored the matrix and edge cases fail (`expected [
       'upcoming', 'upcoming', 'upcoming' ] to deeply equal [ 'current',
       'upcoming', 'upcoming' ]`), and removing the page paragraph fails the
-      teaching case by name (`to contain '`NaN`'`); restored, the file is 12/12
-      and the docs suite is 197 files / 2 013 tests green. No native scenario
-      applies — a browser drawing and the page that explains it.
+      teaching case by name (the assertion's `to contain 'NaN'`); restored, the
+      file is 13/13 and the docs suite is 197 files / 2 014 tests green. No
+      native scenario applies — a browser drawing and the page that explains it.
 
 `[x]` Give the Theming page **the platform style it tells a reader to copy** —
       §Platform styles said a platform style is an ordinary table a consumer can

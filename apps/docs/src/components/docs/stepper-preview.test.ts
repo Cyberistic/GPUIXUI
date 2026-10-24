@@ -43,6 +43,12 @@ const component = readFileSync(
   "utf8",
 );
 
+/** The curated page a reader lands on, flattened for sentence checks. */
+const page = readFileSync(
+  new URL("../../../content/docs/components/stepper.mdx", import.meta.url),
+  "utf8",
+).replace(/\s+/g, " ");
+
 /** The body of one exported function, up to the next export or EOF. */
 const bodyOf = (name: string): string => {
   const start = component.indexOf(`export const ${name}`);
@@ -115,14 +121,20 @@ describe("the preview's derived status", () => {
   });
 
   it("teaches the value it repairs on the page a reader lands on", () => {
-    const page = readFileSync(
-      new URL("../../../content/docs/components/stepper.mdx", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
-
     expect(page).toContain("`NaN`");
     expect(page).toContain("reads as the first step");
     expect(page).toContain("never clamped");
+  });
+
+  it("names a step the caller left blank, as the component does", () => {
+    // The component derives a titleless step's name from its position; the
+    // page said every step is named by its label, which is false for a blank
+    // one and would leave a reader with an unnamed list item.
+    expect(bodyOf("stepName")).toContain("`Step ${");
+    expect(page).toContain(
+      "a blank label reads as `Step` plus the step's position",
+    );
+    expect(page).toContain("(`Step 2` for the second)");
   });
 
   it("marks one current step for every value inside the range", () => {
