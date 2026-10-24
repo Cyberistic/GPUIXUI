@@ -302,4 +302,35 @@ describe("the record", () => {
     );
     expect(readme).toContain("`second-window-lifecycle`");
   });
+
+  it("points the three sections that rest on the rule at the attempt", () => {
+    // `portal-layer`, `drag-reorder` and `movable-tabs-lifecycle` each state
+    // "one window per process" as the reason their interaction stops where it
+    // does. The rule used to be an inference from the typings; now that this
+    // probe measured it, a section that keeps the claim without the attempt
+    // sends a reader to a guess.
+    const sections = Arr.map(
+      [
+        "### `portal-layer`",
+        "### `drag-reorder`",
+        "### `movable-tabs-lifecycle`",
+      ],
+      (heading) => {
+        const start = readme.indexOf(heading);
+        const end = readme.indexOf("\n### ", start + 1);
+        return start === -1
+          ? ""
+          : readme.slice(start, end === -1 ? undefined : end);
+      },
+    );
+    expect(Arr.filter(sections, (section) => section === "")).toEqual([]);
+    expect(
+      Arr.filter(
+        sections,
+        (section) =>
+          !section.includes("one window per process") ||
+          !section.includes("`second-window-lifecycle`"),
+      ),
+    ).toEqual([]);
+  });
 });

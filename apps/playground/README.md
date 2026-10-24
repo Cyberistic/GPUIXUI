@@ -2571,9 +2571,11 @@ pointing the portal at the clipping box instead of the layer fails
 `.artifacts/live/portal-reattached.png`.
 
 What it still does not prove: a **detached tab in its own window**. The binding
-opens one window per process, and there is no drag host feature, so a portal
-moves a tab to another layer in the same window — the piece that was missing —
-not to a new OS window.
+opens one window per process — `second-window-lifecycle` attempted a second
+`init()` while this probe's window was running and read the platform's refusal
+(`A GPUI application already exists on this thread`) — and there is no drag host
+feature, so a portal moves a tab to another layer in the same window — the piece
+that was missing — not to a new OS window.
 
 ### `loading-row-correction` — measured on 0.11.0 here
 
@@ -2740,7 +2742,8 @@ drops=0`. 21 checks, `--only drag-reorder`, green on 0.11.0. Capture:
 
 What is still absent, and why this is not a drag-and-drop component: there is no
 drag host feature (no drag image, no cross-application payload, no drag between
-windows — the binding opens one window per process), and `onFileDrop` is the
+windows — the binding opens one window per process, which
+`second-window-lifecycle` measured by attempting it), and `onFileDrop` is the
 only OS drop path. A row reorder is therefore the caller's own pointer gesture,
 which is what this probe composes.
 
@@ -4058,11 +4061,12 @@ The capability record's **Opacity** row now cites this probe.
 ### `movable-tabs-lifecycle` — measured on 0.11.0 here
 
 **What a tab move costs a dock.** Tier 4's *detachable / movable tabs* row is
-`partial` because the binding opens one window per process; the half a window
-can prove is the move inside it. `workspace-tab-drag` measured the state
-arithmetic in a `TestRenderer`; this probe asks what a real pointer and a real
-key do. The fixture is two 280px strips 24px apart, each with its own selected
-panel and an editable field.
+`partial` because the binding opens one window per process (the
+`second-window-lifecycle` probe attempted a second `init()` and read the
+platform's refusal); the half a window can prove is the move inside it.
+`workspace-tab-drag` measured the state arithmetic in a `TestRenderer`; this
+probe asks what a real pointer and a real key do. The fixture is two 280px
+strips 24px apart, each with its own selected panel and an editable field.
 
 | State | Measured |
 | ----- | -------- |
