@@ -534,3 +534,41 @@ describe("toggleGroupItems", () => {
     expect(expectSome(elementProp(glyph, "name"))).toBe("check");
   });
 });
+
+describe("a toggle group's row locators", () => {
+  it("names each row from its value and leaves the group's own id on the wrapper", () => {
+    // The bug guarded: `testId` landed on the wrapper, so a probe could address
+    // the toolbar and never press one mode. The derived locator makes a
+    // data-option row a subject a test can name.
+    const element = render(
+      {
+        options,
+        testId: "format",
+        itemTestId: (value) => `format-${value}`,
+      },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+    expect(expectSome(hostProp(element, "testId"))).toBe("format");
+    expect(
+      Arr.map(rows(element), (row) =>
+        Option.getOrElse(hostProp(row, "testId"), () => "unnamed"),
+      ),
+    ).toEqual(["format-bold", "format-italic", "format-underline"]);
+  });
+
+  it("paints no row locator when the caller derives none", () => {
+    const element = render(
+      { options, testId: "format" },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+    expect(
+      Arr.filter(rows(element), (row) =>
+        Option.isSome(hostProp(row, "testId")),
+      ),
+    ).toHaveLength(0);
+  });
+});

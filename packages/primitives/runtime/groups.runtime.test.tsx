@@ -32,6 +32,7 @@ import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
+import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import {
   a11yDescriptionOf,
   a11yNodes,
@@ -315,4 +316,76 @@ it("paints every group option at the pressable floor", async () => {
       targetSize.minimum,
     );
   });
+});
+
+it("addresses a data-option row by the locator its value derives", async () => {
+  // The bug this guards: a group forwarded its `testId` to the wrapper, which
+  // paints the group and takes no focus, and passed none to the rows it builds
+  // — so a probe could address the group and never press one choice, and had to
+  // recognise a row by the text it paints (a contains match, which also hits
+  // the text inside it). `itemTestId` derives one locator per value; the press
+  // and the keyboard must then both reach the row it names.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="before" label="Before" />
+      </Stack>
+      <RadioGroup
+        testId="plan"
+        label="Pick"
+        defaultValue="a"
+        itemTestId={(value) => `plan-${value}`}
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+      <CheckboxGroup
+        testId="channels"
+        label="Channels"
+        defaultValue={["push"]}
+        itemTestId={(value) => `channel-${value}`}
+        options={[
+          { value: "push", label: "Push" },
+          { value: "sms", label: "SMS" },
+        ]}
+      />
+      <ToggleGroup
+        testId="format"
+        label="Format"
+        itemTestId={(value) => `format-${value}`}
+        options={[
+          { value: "bold", label: "Bold" },
+          { value: "italic", label: "Italic" },
+        ]}
+      />
+    </Surface>,
+  );
+  const row = (locator: string) =>
+    Option.getOrElse(runtime.element(locator), () =>
+      expect.fail(`the runtime retained no row at ${locator}`),
+    );
+
+  // The group keeps its own locator; each row is the element its value names.
+  expect(Option.isSome(runtime.element("plan"))).toBe(true);
+  expect(row("plan-b").customProps?.["aria-label"]).toBe("Beta");
+  expect(row("channel-sms").customProps?.["aria-label"]).toBe("SMS");
+  expect(row("format-italic").customProps?.["aria-label"]).toBe("Italic");
+
+  // A press on the row the locator names reaches the control.
+  runtime.clickElement(row("channel-sms"));
+  runtime.flush();
+  expect(announced(runtime, "SMS")).toBe("checked");
+  runtime.clickElement(row("format-italic"));
+  runtime.flush();
+  expect(announced(runtime, "Italic")).toBe("pressed");
+
+  // The keyboard continues from the row, and the window reports the same
+  // locator this contract derives — which is what lets a probe read the focus.
+  focusOn(runtime, "Alpha");
+  runtime.keyDown("plan-a", "down");
+  runtime.flush();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("plan-b");
+  expect(announced(runtime, "Beta")).toBe("checked");
 });

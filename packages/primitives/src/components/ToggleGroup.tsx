@@ -174,7 +174,17 @@ interface ToggleGroupBase extends InteractionProps, FieldHostProps, HelpProps {
   readonly itemStyle?: StateStyle<ToggleItemState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /** The group's own locator. A row is named by `itemTestId`. */
   readonly testId?: string;
+  /**
+   * One locator per option row, derived from its value.
+   *
+   * A row is a control of its own and the group's `testId` lands on the
+   * unfocusable wrapper, so without this an automation host can address the
+   * group but never press one mode (`Select`'s `itemTestId` is the same
+   * contract). The derivation is a function because rows are data.
+   */
+  readonly itemTestId?: (value: string) => string;
 }
 
 /** At most one mode on; the value and its report are one string. */
@@ -353,6 +363,7 @@ export const renderToggleGroup = (
             aria-description={optionHelp(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={pressedValueText(pressed, messages.press)}
+            testId={props.itemTestId?.(option.value)}
             tabIndex={
               disabled
                 ? undefined

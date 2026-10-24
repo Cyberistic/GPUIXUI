@@ -44,7 +44,8 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last |
 | `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row, merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own; yours runs first |
-| `testId` | `string` | — | stable locator |
+| `testId` | `string` | — | stable locator for the group (the wrapper) |
+| `itemTestId` | `(value: string) => string` | — | per-row locator, derived from its value |
 
 ## Limitations
 

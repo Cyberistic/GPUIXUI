@@ -715,3 +715,48 @@ describe("a radio group's address and help", () => {
     expect(expectSome(hostProp(gamma, "aria-id"))).toBe("plan-group");
   });
 });
+
+describe("a radio group's row locators", () => {
+  it("names each row from its value and leaves the group's own id on the wrapper", () => {
+    // The bug guarded: `testId` landed on the wrapper, which paints the group
+    // and takes no focus, and every row it built carried none — so a native
+    // probe could address the group and never press one choice. The derived
+    // locator is what makes a data-option row a subject a test can name.
+    const element = renderRadioGroup(
+      {
+        options,
+        testId: "plan",
+        itemTestId: (value) => `plan-${value}`,
+      },
+      testTheme,
+      text("beta"),
+      1,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(expectSome(hostProp(element, "testId"))).toBe("plan");
+    expect(
+      Arr.map(rows(element), (row) =>
+        Option.getOrElse(hostProp(row, "testId"), () => "unnamed"),
+      ),
+    ).toEqual(["plan-alpha", "plan-beta", "plan-gamma"]);
+  });
+
+  it("paints no row locator when the caller derives none", () => {
+    // A caller passing only `testId` still gets a group whose rows are
+    // unaddressable rather than rows named after something nobody wrote.
+    const element = renderRadioGroup(
+      { options, testId: "plan" },
+      testTheme,
+      text("beta"),
+      1,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(
+      Arr.filter(rows(element), (row) =>
+        Option.isSome(hostProp(row, "testId")),
+      ),
+    ).toHaveLength(0);
+  });
+});

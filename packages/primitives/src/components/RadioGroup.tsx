@@ -143,7 +143,17 @@ export interface RadioGroupProps
   readonly itemStyle?: StateStyle<RadioItemState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
+  /** The group's own locator. A row is named by `itemTestId`. */
   readonly testId?: string;
+  /**
+   * One locator per option row, derived from its value.
+   *
+   * A row is a control of its own and the group's `testId` lands on the
+   * unfocusable wrapper, so without this an automation host can address the
+   * group but never press one choice (`Select`'s `itemTestId` is the same
+   * contract). The derivation is a function because rows are data.
+   */
+  readonly itemTestId?: (value: string) => string;
 }
 
 /** What a `RadioGroup` tells its `style` callback. */
@@ -345,6 +355,7 @@ export const renderRadioGroup = (
             aria-description={optionHelp(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={selectionValueText(current, messages.selection)}
+            testId={props.itemTestId?.(option.value)}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
             onLayout={addressed ? props.onLayout : undefined}
             onClick={composePress(disabled, props.onClick, () => {

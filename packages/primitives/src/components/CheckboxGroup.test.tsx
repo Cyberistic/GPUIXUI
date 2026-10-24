@@ -609,3 +609,41 @@ describe("checkboxGroupItems", () => {
     ).toEqual(["SMS", "Charges apply"]);
   });
 });
+
+describe("a checkbox group's row locators", () => {
+  it("names each row from its value and leaves the group's own id on the wrapper", () => {
+    // The bug guarded: `testId` landed on the wrapper, so a native probe could
+    // address the group and never press one choice. The derived locator makes a
+    // data-option row a subject a test can name.
+    const element = render(
+      {
+        options,
+        testId: "channels",
+        itemTestId: (value) => `channel-${value}`,
+      },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+    expect(expectSome(hostProp(element, "testId"))).toBe("channels");
+    expect(
+      Arr.map(rows(element), (row) =>
+        Option.getOrElse(hostProp(row, "testId"), () => "unnamed"),
+      ),
+    ).toEqual(["channel-email", "channel-push", "channel-sms"]);
+  });
+
+  it("paints no row locator when the caller derives none", () => {
+    const element = render(
+      { options, testId: "channels" },
+      [],
+      Option.none(),
+      handlers(vi.fn()),
+    );
+    expect(
+      Arr.filter(rows(element), (row) =>
+        Option.isSome(hostProp(row, "testId")),
+      ),
+    ).toHaveLength(0);
+  });
+});
