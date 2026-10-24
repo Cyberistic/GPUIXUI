@@ -936,7 +936,11 @@ same floors a mark painted beside it does, and `auditTheme` returns
 when the accent or the body pair cannot carry it. The active match is the one place this system
 asks the secondary floor (4.5:1; 7:1 in high contrast) of body text, because a
 stronger wash is the only difference a text host can paint between the match the
-reader is on and the ones around it; the pair is then held 1.05:1 apart. The
+reader is on and the ones around it; the pair is then held 1.05:1 apart. A theme
+restored from storage that lost the accent, the ink, a strip or the corner
+answers `undefined` from `findHighlight` instead of throwing — the rule
+`selectionOn` and `statusTone` follow — so a host keeps its own wash and the
+gate names the absence. The
 shipped `HighlightText` takes that pair as its default wash and the playground's
 `search-highlights` and `search-virtual-document` scenarios spread it into every
 host spec, so a search inside the library paints the theme's marks; the

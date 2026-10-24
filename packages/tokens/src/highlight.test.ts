@@ -425,6 +425,48 @@ describe("an accent the surfaces cannot carry", () => {
   });
 });
 
+describe("the pair a stored theme cannot derive", () => {
+  const absence = "lost the accent, the ink, a strip or the corner";
+
+  it("answers no pair for a theme that lost a role it derives from, not a throw", () => {
+    // A stored theme can predate a group. The derivation answers `undefined`
+    // rather than throwing mid-render — the rule `selectionOn` and `statusTone`
+    // follow — so a host keeps its own wash and the gate names the absence,
+    // instead of a search losing the window on its first paint.
+    expect(findHighlight({})).toBeUndefined();
+    // Every role the derivation reads is the absence on its own: the accent it
+    // washes with, the ink the wash must keep readable, each strip it is
+    // measured on, and the corner step the wash takes.
+    const lost = (
+      ["primary", "foreground", ...highlightSurfaces] as const
+    ).filter((role) => {
+      const stored = { ...lightTheme, ...withoutColour(lightTheme, role) };
+      return findHighlight(stored) !== undefined;
+    });
+
+    expect(lost).toEqual([]);
+    expect(findHighlight({ ...lightTheme, radius: undefined })).toBeUndefined();
+
+    // A theme that carries them all still answers the pair it always did.
+    const unanswered = everyStyle
+      .filter(([, theme]) => findHighlight(theme) === undefined)
+      .map(([name]) => name);
+
+    expect(unanswered).toEqual([]);
+    expect(findHighlight(lightTheme)?.radius).toBe(lightTheme.radius.sm);
+    expect(findHighlight(lightTheme)?.color).toBe(
+      alpha(lightTheme.colors.primary, highlightShares.match),
+    );
+
+    // The pages a consumer reads before trusting a stored theme say so.
+    const unansweredPages = [catalogue, readme, designSystem].filter(
+      (page) => !page.includes(absence),
+    ).length;
+
+    expect(unansweredPages).toBe(0);
+  });
+});
+
 describe("the call site a consumer copies", () => {
   it("hands a host the theme's pair and radius", () => {
     const spec = searchHighlight(darkTheme);

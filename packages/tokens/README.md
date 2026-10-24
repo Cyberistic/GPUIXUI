@@ -591,8 +591,12 @@ strips a search runs over. `highlightFailures(theme, floors?)` reports a
 the surface cannot tell apart from the resting ones at 1.05:1, which is the one
 job a wash cannot do for a body pair already sitting on the floor. `auditTheme`
 returns this list as `audit.highlight` and folds it into `passed`, so the
-documented gate cannot pass a theme whose matches vanish. A runnable example
-lives in [`src/highlight.example.ts`](./src/highlight.example.ts).
+documented gate cannot pass a theme whose matches vanish. A stored theme that
+lost the accent, the ink, a strip or the corner answers `undefined` from
+`findHighlight` rather than throwing — the rule `selectionOn` and `statusTone`
+follow — so the host keeps its own wash and `invalidColorRoles` names the role.
+A runnable example lives in
+[`src/highlight.example.ts`](./src/highlight.example.ts).
 
 ## Platform styles
 

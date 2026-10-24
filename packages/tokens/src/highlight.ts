@@ -52,6 +52,7 @@ import {
   type ContrastFloors,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
+import type { Radius } from "./scale.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /**
@@ -214,6 +215,19 @@ const sharesFor = (
 };
 
 /**
+ * What {@link findHighlight} reads: the roles it washes with and against, and
+ * the one corner step a wash takes. A {@link Theme} is one; a theme restored
+ * from storage that predates a group is the other, which is why every field is
+ * optional.
+ */
+export interface FindHighlightSource extends ColourSource {
+  /** The variant whose floors the pair is held to, when the theme states one. */
+  readonly contrast?: ThemeContrast;
+  /** The scale's tightest step, which the wash's corner takes. */
+  readonly radius?: Partial<Radius>;
+}
+
+/**
  * The highlight a theme paints: the runtime's two strengths, held to the theme's
  * own floors, and the tightest corner the radius scale carries.
  *
@@ -222,6 +236,14 @@ const sharesFor = (
  * required to hold: {@link highlightFailures} reports a pair whose text, or whose
  * two strengths, the surfaces cannot carry, and the docs page says which floor
  * each one answers to.
+ *
+ * A theme restored from storage that lost a role the derivation reads — the
+ * accent, the ink the wash must keep readable, one of the four strips, or the
+ * `radius.sm` step — answers `undefined` rather than throwing, the rule
+ * {@link selectionOn} and {@link statusTone} follow: the host keeps the wash it
+ * paints on its own and `invalidColorRoles` names the absence, instead of a
+ * search losing the window on its first paint. A `Theme` answers a pair
+ * outright, because its type carries every role and the step.
  *
  * @example
  * ```tsx
@@ -233,15 +255,34 @@ const sharesFor = (
  */
 export function findHighlight(
   theme: Theme,
-  floors: ContrastFloors = contrastFloorsFor(theme),
-): FindHighlight {
-  const { match, active } = sharesFor(theme.colors, floors);
+  floors?: ContrastFloors,
+): FindHighlight;
+export function findHighlight(
+  source: FindHighlightSource,
+  floors?: ContrastFloors,
+): FindHighlight | undefined;
+export function findHighlight(
+  source: FindHighlightSource,
+  floors: ContrastFloors = contrastFloorsFor(source),
+): FindHighlight | undefined {
+  const colors = themeColors(source);
+  const primary = colors.primary;
+  // A wash hugs the glyphs it marks, so it takes the tightest corner the
+  // scale carries rather than the runtime's own 2px, which is no step.
+  const radius = source.radius?.sm;
+  if (
+    primary === undefined ||
+    colors.foreground === undefined ||
+    radius === undefined ||
+    highlightSurfaces.some((fill) => colors[fill] === undefined)
+  ) {
+    return undefined;
+  }
+  const { match, active } = sharesFor(colors, floors);
   return {
-    color: alpha(theme.colors.primary, match),
-    activeColor: alpha(theme.colors.primary, active),
-    // A wash hugs the glyphs it marks, so it takes the tightest corner the
-    // scale carries rather than the runtime's own 2px, which is no step.
-    radius: theme.radius.sm,
+    color: alpha(primary, match),
+    activeColor: alpha(primary, active),
+    radius,
   };
 }
 

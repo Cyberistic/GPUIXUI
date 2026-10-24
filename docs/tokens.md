@@ -4250,6 +4250,13 @@ wash costs the text the ratio it just met. A theme restored from storage is read
 as the absence it is: a missing role or strip reports rather than throws, and
 `invalidColorRoles` names the role.
 
+`findHighlight(theme)` answers `undefined` for a stored theme that
+lost the accent, the ink, a strip or the corner — the same rule `selectionOn`
+and `statusTone` follow, because the pair is a derivation over roles the theme
+may no longer carry and a paint seam called mid-render must not throw. A host
+then keeps the wash it paints on its own and the gate names the absence; a
+`Theme` answers the pair outright.
+
 **It is one of the gate's reports.** `auditTheme(theme)` returns
 `highlightFailures(theme, floors)` as `audit.highlight` and folds it into
 `passed`, so a brand that runs only the documented gate cannot ship a search
