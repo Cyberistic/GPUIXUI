@@ -32,7 +32,7 @@ import { PinnedList } from "@gpuixui/components/pinned-list";
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `sections` | `ReadonlyArray<PinnedListSection>` | — |
+| `sections` | `ReadonlyArray<PinnedListSection>` (a value that is not a list reads as none; an entry without a text `title` is dropped) | — |
 | `headerHeight` | `number` | `32` |
 | `surfaceColor` | `string` | theme `background` |
 | `className` | `string` | — |
@@ -52,3 +52,4 @@ import { PinnedList } from "@gpuixui/components/pinned-list";
 - Vertical only; the scrollbar's thumb takes no pointer input.
 - One line per header.
 - A section's height is measured once and kept with the section's **title**, so reordering `sections` places every header by the rows it actually holds. A section that changes height reports again; a section with no readable report yet counts as `0`, so its header sits at the start until the layout arrives.
+- **A stored section list is read**: a sectioned list is restored with a saved layout as often as it is written in code, so a value that is not a list — JSON's `null` for one a record never carried — paints an empty list rather than throwing from the first header, and an entry without a text `title` is not a section: it is dropped while its neighbours paint (`sectionsOf`).

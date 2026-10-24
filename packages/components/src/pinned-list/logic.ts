@@ -21,6 +21,53 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { ReactNode } from "react";
+
+/** One section of a pinned list. */
+export interface PinnedListSection {
+  /** The section's title. It is also the section's key. */
+  readonly title: string;
+  readonly children?: ReactNode;
+}
+
+/**
+ * Whether a stored entry is a section: an object naming itself with a text
+ * title.
+ *
+ * The title is the section's identity — the key its measured height is kept
+ * with, the group's accessible name and the words its header paints — so an
+ * entry without one is not a section. Nothing else is read here: a section's
+ * content is React nodes, which no structural read can describe.
+ */
+const isSection = (entry: unknown): entry is PinnedListSection => {
+  if (typeof entry !== "object" || entry === null || !("title" in entry)) {
+    return false;
+  }
+  const title = entry.title;
+  return typeof title === "string" && title.trim().length > 0;
+};
+
+/**
+ * The sections a caller's list carries, read at the boundary.
+ *
+ * A sectioned list is composed in code as often as it is restored with a saved
+ * layout, and JSON writes `null` for a list a record never carried: `Arr.map`
+ * over that value threw `self is not iterable` before the first header painted.
+ * Only a real list is a list, and an entry that does not name itself is dropped
+ * while its neighbours paint, so one malformed record cannot take the list
+ * down; the empty list paints nothing.
+ */
+export const sectionsOf = (
+  value: ReadonlyArray<PinnedListSection> | null | undefined,
+): ReadonlyArray<PinnedListSection> => {
+  const list = Option.getOrElse(
+    Option.filter(Option.fromNullishOr(value), (entries): boolean =>
+      Arr.isArray(entries),
+    ),
+    () => [],
+  );
+  return Arr.filter(list, isSection);
+};
 
 /** One section's measured height, in content space. */
 export interface PinnedSectionHeight {

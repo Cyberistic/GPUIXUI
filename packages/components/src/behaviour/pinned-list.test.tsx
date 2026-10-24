@@ -6,7 +6,9 @@
  * section and paints over the next; a header painted twice (the bug the spacer
  * exists to prevent); a layer that swallows the press on the row under a held
  * header; a header that paints the page role on a list sitting on a card; and a
- * list whose measurements never reach the overlay, so no header paints at all.
+ * list whose measurements never reach the overlay, so no header paints at all;
+ * and a section list a store handed back as `null` or with a hole in it, which
+ * threw before the first header painted.
  */
 
 import { describe, expect, it } from "vitest";
@@ -297,6 +299,67 @@ describe("PinnedList", () => {
       ]);
       expect(groups.filter((name) => name === "Scroll region")).toHaveLength(1);
       expect(nodesWithRole(page.renderer, "heading")).toEqual([]);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints nothing for a stored section list that is not a list", () => {
+    // The bug guarded: a sectioned list restored with a saved layout carries
+    // JSON's `null` for the list its record never held, and `Arr.map` over it
+    // threw `self is not iterable` from the render, taking the screen with it
+    // where the empty list paints nothing.
+    const page = renderComponent(
+      <div>
+        <text testId="before">Before</text>
+        <PinnedList
+          testId="list"
+          style={{ height: 160, width: 300 }}
+          // @ts-expect-error — the list a store wrote where it carried none.
+          sections={null}
+        />
+      </div>,
+    );
+    try {
+      settle(page);
+      settle(page);
+      // The sibling is the counter: a render that threw takes the tree with it.
+      expect(page.renderer.getAllText()).toContain("Before");
+      expect(has(page, "pinned-section-0")).toBe(false);
+      expect(has(page, "pinned-header-0")).toBe(false);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps the sections beside a stored entry that names none", () => {
+    // A deleted record leaves `null` inside the list, and a title that is not
+    // text has no key for the section's measured height and no words for its
+    // header: the row threw on that title while its neighbours painted.
+    const page = renderComponent(
+      <PinnedList
+        testId="list"
+        style={{ height: 160, width: 300 }}
+        sections={[
+          // @ts-expect-error — a deleted record a store left in the list.
+          null,
+          // @ts-expect-error — a title a store wrote as something else.
+          { title: 42 },
+          { title: "Today", children: <div style={{ height: 200 }} /> },
+        ]}
+      />,
+    );
+    try {
+      settle(page);
+      settle(page);
+      const groups = nodesWithRole(page.renderer, "group").map(
+        (node) => node.name,
+      );
+      expect(groups.filter((name) => name !== "Scroll region")).toEqual([
+        "Today",
+      ]);
+      expect(has(page, "pinned-section-0")).toBe(true);
+      expect(has(page, "pinned-section-1")).toBe(false);
     } finally {
       page.unmount();
     }

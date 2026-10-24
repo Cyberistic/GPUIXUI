@@ -26,26 +26,23 @@ import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { measuredHeight } from "./internal/measure.js";
 import { ScrollSurface } from "./internal/scroll-surface.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 import {
   headerHeightOf,
   pinnedHeaders,
+  sectionsOf,
   type PinnedHeaderFrame,
+  type PinnedListSection,
 } from "./pinned-list/logic.js";
 
-/** One section of a pinned list. */
-export interface PinnedListSection {
-  /** The section's title. It is also the section's key. */
-  readonly title: string;
-  readonly children?: ReactNode;
-}
+export type { PinnedListSection } from "./pinned-list/logic.js";
 
 /** {@link PinnedList} props. */
 export interface PinnedListProps {
-  /** The sections, in scroll order. */
+  /** The sections, in scroll order. A value that is not a list — a saved layout's `null` — paints an empty list, and an entry without a text title is not a section. */
   readonly sections: ReadonlyArray<PinnedListSection>;
   /** The scroller's locator, for a probe or an automation host. */
   readonly testId?: string;
@@ -80,7 +77,7 @@ export interface PinnedListProps {
  * the title twice, once in the wrong place.
  */
 export const PinnedList = ({
-  sections,
+  sections: storedSections,
   headerHeight,
   surfaceColor,
   className,
@@ -91,6 +88,7 @@ export const PinnedList = ({
   onLayout,
 }: PinnedListProps) => {
   const theme = useTheme();
+  const sections = sectionsOf(storedSections);
   const header = headerHeightOf(Option.fromNullishOr(headerHeight));
   const surface = surfaceColor ?? theme.colors.background;
   // One measured height per section, keyed by the section's own title — the key

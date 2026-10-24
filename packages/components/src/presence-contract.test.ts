@@ -589,7 +589,7 @@ describe("the motion grammar", () => {
     expect(ripple).toContain("borderRadius");
   });
 
-  it("holds the Motion row to that grammar, not to a suite that never names it", () => {
+  it("holds the Motion row to that grammar, and to the suites it cites", () => {
     const inventory = readEntry("../../COMPONENTS.md");
     expect(inventory.failures).toEqual([]);
     const row = Option.getOrElse(
@@ -609,7 +609,16 @@ describe("the motion grammar", () => {
     );
     expect(row).not.toEqual("");
     expect(row).toContain("presence-contract.test.ts");
-    expect(row).not.toContain("timing.test.ts");
+    // The reduced-preference sentence is the motion package's own suite: the row
+    // teaches a reader that composing packages share one policy, so it names the
+    // file that holds it. Both citations must resolve on disk.
+    expect(row).toContain("timing.test.ts");
+    expect(
+      readFileSync(
+        new URL("../../motion/src/timing.test.ts", import.meta.url),
+        "utf8",
+      ),
+    ).toContain("reducedMotionOf");
     // The four movements and the gap, in the row a reader learns the limit from.
     const text = Str.toLowerCase(row);
     Arr.forEach(["opacity", "size", "position", "radius"], (claim) => {

@@ -7,7 +7,8 @@
  * measured (so every header stacks at the top of the first frame); a `NaN`
  * header height or offset reaching the runtime as a style value; and content
  * tops folded from painted `y`s, which already carry the shift they would feed
- * back into.
+ * back into; and a section list a store handed back as `null`, which threw
+ * before the first header painted.
  */
 
 import * as Option from "effect/Option";
@@ -17,6 +18,7 @@ import {
   pinnedHeaderHeight,
   pinnedHeaders,
   sectionBands,
+  sectionsOf,
 } from "./logic.js";
 
 /** Two 200px sections with a 32px header each. */
@@ -90,5 +92,36 @@ describe("pinnedHeaders", () => {
     // A bounce past the start is the start, not a negative scroll.
     expect(pinnedHeaders(heights, Number.NaN, 32)[0]?.top).toBe(0);
     expect(pinnedHeaders(heights, 40, 32)[0]?.top).toBe(0);
+  });
+
+  it("reads a stored section list as sections, and nothing for anything else", () => {
+    // A sectioned list is composed in code as often as it is restored with a
+    // saved layout, and JSON writes `null` for a list a record never carried:
+    // `Arr.map` over it threw `self is not iterable` from the first render.
+    const today = { title: "Today" } as const;
+    const yesterday = { title: "Yesterday" } as const;
+    expect(sectionsOf([today, yesterday])).toEqual([today, yesterday]);
+    expect(sectionsOf(null)).toEqual([]);
+    expect(sectionsOf(undefined)).toEqual([]);
+    expect(sectionsOf([])).toEqual([]);
+  });
+
+  it("drops an entry that names no section, keeping the ones beside it", () => {
+    // A deleted record leaves `null` inside the list, and an entry whose title
+    // is not text has no key for its measured height and no words for its
+    // header: the row threw on that title while its neighbours painted.
+    const today = { title: "Today" } as const;
+    const yesterday = { title: "Yesterday" } as const;
+    expect(
+      sectionsOf([
+        // @ts-expect-error — a deleted record a store left in the list.
+        null,
+        today,
+        // @ts-expect-error — a title a store wrote as something else.
+        { title: 42 },
+        { title: "   " },
+        yesterday,
+      ]),
+    ).toEqual([today, yesterday]);
   });
 });

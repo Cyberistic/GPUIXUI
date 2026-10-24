@@ -411,6 +411,7 @@ Verification.
       `docs/design-system.md` §11 and the runnable example. No native scenario
       applies — prose and a painter's contract; the primitive suite already
       paints all four states.
+
 `[x]` Read a **syntax palette as the tokens a store or a brand wrote**, not as a
       table that replaced the shipped one whole — `extendTheme` copied an
       override's `syntax` and `syntaxColors` handed it to a host as-is, so a
@@ -3215,7 +3216,44 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 192/192
+`[x]` `[██████████]` 193/193
+
+`[x]` Measure the **shipped `DiffViewer`'s paint, pairing and clip in a window** —
+      the editor package's page claims an added line tints the `success` soft
+      role and a removed line the `destructive` one, a split diff pairs one
+      change per row with a blank cell for the side that ran out, and a line that
+      outgrows its surface is clipped rather than wrapped; its suites read the
+      reported tree, and the headless `editor-surface` scenario mounted the raw
+      `<diff>` host rather than the wrapper. The `diff-viewer-lifecycle` probe
+      (**98 checks**, 0.11.0, ~4.3 s) mounts four viewers bounded to 420 points
+      on a `card` page: the unified surface's five rows are **418×18** and each
+      paints its marker, both gutters and the line (` 11const total = add(1,
+      2);` … `+4console.log(summary);`), the removed row fills with `#7E1D21`
+      and the added with `#0E5135` across the whole row while a context row
+      paints `#11141A` and neither tint; the split surface paints **4** rows with
+      the replacement's removed and added tints on **one** row and the appended
+      line's blank left cell painting the surface; the cells are content-sized,
+      so the removed tint ends at **59%** and the added gutter begins at **61%**
+      — past the row's midpoint — and that added line is **clipped** at the
+      surface's edge, while the appended line that fits ends before it; a
+      **176**-character addition stays one **18**-point row inside the caller's
+      **420**-point bound, painted whole and clipped rather than wrapped, and
+      `lineNumbers={false}` removes both gutters; an unchanged source paints one
+      context row with no tint. Fixture `src/live/diff-viewer.ts` + probe
+      `diff-viewer-probe.tsx` + `diff-viewer.test.ts` (18 cases: the component's
+      ids and paint, the rows derived from its own logic, the palette roles, the
+      band sampling, the registry and wiring, the count and the README section).
+      Directions measured, exit `1` each and restored green: expecting the
+      pushed added line to end before the surface fails
+      `the pushed added line is clipped at the surface's edge` (`expected 0, got
+      550`), and reading the split sides at the row's midpoint fails `the right
+      band paints none of the removed role` (`expected 0, got 2379`). Green:
+      `--only diff-viewer-lifecycle` 1/1 (98 checks, 4.3 s), the four captures
+      `diff-{unified,split,long,same}.png`, `playground build` and
+      `check-types` clean, the playground suite 133 files / 1 348 tests green.
+      Docs: `apps/playground/README.md` §`diff-viewer-lifecycle` and the *Diff
+      viewer* row in `COMPONENTS.md`; the page's split-cell limit is the editor
+      owner's interlock row below.
 
 `[x]` Measure the **shipped `HotkeyRecorder`'s chord in a window** — the
       catalogue's *Hotkey-recorder input* row had only the renderer suite, and
