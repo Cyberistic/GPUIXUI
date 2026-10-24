@@ -103,6 +103,32 @@ export const parseReadout = (text: string): Readout | undefined => {
 export const platformOf = (value: string): PlatformName | undefined =>
   platformNames.find((name) => name === value);
 
+/**
+ * Whether two CSS colours are the same paint.
+ *
+ * A production build minifies the stylesheet, so the six-digit fill this file
+ * reads from the source arrives in the page as its three-digit form; comparing
+ * the strings failed a correct palette the moment the probe was pointed at a
+ * built server. The comparison is the paint, not the spelling: hex is
+ * case-folded and a three-digit form is expanded, and a value that is not a
+ * colour compares by its trimmed text so an unexpected function or keyword
+ * still reports.
+ */
+export const samePaint = (
+  painted: string,
+  declared: string | undefined,
+): boolean => {
+  if (declared === undefined) return false;
+  const canonical = (value: string): string => {
+    const text = value.trim().toLowerCase();
+    const hex = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/.exec(text)?.[1];
+    if (hex === undefined || hex.length !== 3) return text;
+    return `#${[...hex].map((digit) => digit + digit).join("")}`;
+  };
+
+  return canonical(painted) === canonical(declared);
+};
+
 /** The page fill the library's own palette paints on a platform. */
 export const expectedBackground = (
   mode: ThemeMode,
@@ -272,7 +298,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       failures.push("the page reported nothing the probe could read");
     } else {
       const expected = chromeBackground(opening.scheme);
-      if (opening.chrome !== expected) {
+      if (!samePaint(opening.chrome, expected)) {
         failures.push(
           `the ${opening.scheme} chrome painted ${opening.chrome}, not the sheet's ${expected ?? "missing"} value`,
         );
@@ -306,7 +332,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       );
     } else {
       const expected = chromeBackground(next.scheme);
-      if (next.chrome !== expected) {
+      if (!samePaint(next.chrome, expected)) {
         failures.push(
           `the ${next.scheme} chrome painted ${next.chrome}, not the sheet's ${expected ?? "missing"} value`,
         );

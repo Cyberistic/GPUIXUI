@@ -67,13 +67,22 @@ describe("the gallery's entries", () => {
     // compiles with React's JSX runtime. Those two modules have to stay the
     // package's published data, not a copy: if the index stops exporting either
     // one, the gallery is reading something the package no longer offers.
+    //
+    // The check reads the **name inside the export list**, not the list's exact
+    // text: the index adds a sibling to a module's `export { … }` whenever the
+    // package grows, and a string match for the previous list failed the gallery
+    // while both names were still published.
     const index = readFileSync(
       new URL("../../../../packages/icons/src/index.ts", import.meta.url),
       "utf8",
     );
+    const publishes = (name: string, module: string): boolean =>
+      new RegExp(
+        `export\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*"${module}"`,
+      ).test(index);
 
-    expect(index).toContain('export { ICON_NAMES } from "./names.js"');
-    expect(index).toContain('export { icons } from "./registry.js"');
+    expect(publishes("ICON_NAMES", "./names.js")).toBe(true);
+    expect(publishes("icons", "./registry.js")).toBe(true);
   });
 });
 

@@ -6,6 +6,7 @@ import {
   expectedBackground,
   parsePreview,
   parseReadout,
+  samePaint,
   samePreviews,
 } from "../../scripts/docs-theme-probe";
 
@@ -120,6 +121,21 @@ describe("the chrome's fills", () => {
     expect(probe).toContain("readFileSync");
   });
 
+  it("compares the paint a minified sheet serves, not its spelling", () => {
+    // Bug guarded: the probe read `#ffffff` from the source sheet while a
+    // production build serves it as `#fff`, so a correct palette failed with
+    // "the light chrome painted #fff, not the sheet's #ffffff value" the moment
+    // the probe was pointed at a built server. The comparison is the paint.
+    expect(samePaint("#fff", "#ffffff")).toBe(true);
+    expect(samePaint("#FFFFFF", "#ffffff")).toBe(true);
+    expect(samePaint("#0a0a0a", "#0a0a0a")).toBe(true);
+    expect(samePaint("#fff", "#000")).toBe(false);
+    expect(samePaint("#fff", undefined)).toBe(false);
+    expect(samePaint("rgb(255, 255, 255)", "#ffffff")).toBe(false);
+    expect(probe).toContain("samePaint(opening.chrome, expected)");
+    expect(probe).toContain("samePaint(next.chrome, expected)");
+  });
+
   it("derives a preview's fill from the library palette, not from the docs sheet", () => {
     // The two palettes are the point of the probe: a preview is held to the
     // library's `background` role for the mode and platform it reports.
@@ -173,6 +189,15 @@ describe("the policy", () => {
     expect(policy).toContain("[data-theme-toggle]");
     expect(policy).toContain("does not follow the docs chrome's theme");
     expect(policy).toContain("FAIL a preview followed the docs theme");
+  });
+
+  it("records the served build's minified paint and the comparison it needs", () => {
+    // Bug guarded: the policy promised the chrome was held to the sheet, and
+    // the string comparison broke on the build the probe is run against.
+    expect(policy).toContain("by paint,\n  not by spelling");
+    expect(policy).toContain("samePaint");
+    expect(policy).toContain("three-digit form");
+    expect(policy).toContain("served build");
   });
 
   it("names the probe in the site's ledger", () => {

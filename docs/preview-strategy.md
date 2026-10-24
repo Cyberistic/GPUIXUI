@@ -412,7 +412,10 @@ served Button page once per direction. It waits for the toggle to carry
 
 - the scheme `<html>` carries (`light`/`dark`),
 - the chrome's computed `--background`, held to the value `app.css` declares for
-  that scheme (read from the sheet, never a hex of the probe's own),
+  that scheme (read from the sheet, never a hex of the probe's own) **by paint,
+  not by spelling** — a served build minifies the sheet, so the source's
+  six-digit fill arrives as its three-digit form and
+  `samePaint` compares the colour rather than the string,
 - the scheme `localStorage` remembers,
 - every `.gx-demo[data-mode]` surface's `mode:platform:fill`, each fill held to
   `platformTheme(themes[mode], platform).colors.background` — the library's own
@@ -431,7 +434,13 @@ nub apps/docs/scripts/docs-theme-probe.ts
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against the dev server: `light: chrome #ffffff, 3 previews stayed on dark darwin
 at #1C1C1E`, exit `0` — the chrome in its light palette while three previews
-stayed on the library's dark macOS page, then back to light. The negative
+stayed on the library's dark macOS page, then back to light. Re-measured
+2026-10-24 against a **served build** (`vite preview`) after a palette that was
+correct reported `the light chrome painted #fff, not the sheet's #ffffff value`:
+the minifier serves three digits, the paint comparison passes, and the probe
+prints `light: chrome #fff, 3 previews stayed on dark darwin at #1C1C1E` /
+`PASS the docs theme switch repaints its own chrome and leaves every preview on
+the library's palette`. The negative
 control is the hydration budget: `--timeout 500` prints
 `FAIL the docs theme toggle never hydrated within 500 ms (it carries no React
 onClick)` and exits `1`. A preview that followed the chrome fails the other way —
@@ -439,8 +448,8 @@ onClick)` and exits `1`. A preview that followed the chrome fails the other way 
 light:darwin:#F6F8FA)` — so a page whose drawings inherited the docs skin cannot
 pass on the chrome's own readout. `src/lib/docs-theme-switch.test.ts` holds the
 readout parser (a truncated line and an unreadable preview are refused, not
-guessed), the comparison, both presses, the sheet-derived fills, this section and
-the command.
+guessed), the comparison, both presses, the sheet-derived fills, the paint
+comparison, this section and the command.
 
 ### Pages the package writes
 
