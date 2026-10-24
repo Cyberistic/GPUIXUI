@@ -32,7 +32,7 @@ import { overlaySurfaceStyle } from "../internal/overlay.js";
 import { PresenceShield } from "../internal/presence.js";
 import { useTheme, type Theme } from "../internal/theme.js";
 import { typedChar } from "../typeahead.js";
-import { useMenuContext, type MenuContextValue } from "./state.js";
+import { MenuLeaving, useMenuContext, type MenuContextValue } from "./state.js";
 
 /** The floating surface every menu paints: the shared `MENU_CONTENT` recipe
  * compiled against the default registry, with the caller's `className` last. */
@@ -149,7 +149,9 @@ export const MenuSurface = ({
         style,
       )}
     >
-      <DismissScope>{children}</DismissScope>
+      <MenuLeaving.Provider value={leaving}>
+        <DismissScope>{children}</DismissScope>
+      </MenuLeaving.Provider>
       <PresenceShield present={!leaving} />
     </div>
   );

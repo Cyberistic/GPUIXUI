@@ -75,6 +75,25 @@ export const MenuContext = createContext<MenuContextValue | undefined>(
   undefined,
 );
 
+/**
+ * Whether the surface a row sits in is painted only for its exit.
+ *
+ * A leaving surface stops taking presses — the seam's `presenceStyle` removes its
+ * own hitbox and `PresenceShield` covers the content — but the runtime's Tab
+ * order is decided element by element, and neither a `pointerEvents` rule nor the
+ * shield removes a descendant's `tabIndex`. Measured on 0.11.0: with a menu open,
+ * the window's order is trigger, the controls after it, then the rows; press
+ * Escape (the row ghosts for its exit) and two Tabs land on a row that unmounts
+ * under the keyboard, which leaves the window with no focused element. A row
+ * therefore reads this flag and drops its own stop while its surface leaves,
+ * which is the only route this runtime offers — the flag cannot reach caller
+ * content, so a control a consumer puts inside a modal ghost keeps its stop.
+ */
+export const MenuLeaving = createContext(false);
+
+/** Whether the menu a part sits in is painted only for its exit. */
+export const useMenuLeaving = (): boolean => useContext(MenuLeaving);
+
 /** The menu a part belongs to. Throws when there is none (plan 110 §8.6). */
 export const useMenuContext = (): MenuContextValue => {
   const value = useContext(MenuContext);

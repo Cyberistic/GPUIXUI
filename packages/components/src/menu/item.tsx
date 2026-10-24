@@ -44,7 +44,7 @@ import {
   type PartsContract,
 } from "../internal/parts.js";
 import { useMergedRef } from "../internal/ref.js";
-import { useMenuContext } from "./state.js";
+import { useMenuContext, useMenuLeaving } from "./state.js";
 
 /** How much emphasis a row carries. `destructive` asks before it is used. */
 export type MenuItemTone = "default" | "destructive";
@@ -181,6 +181,9 @@ export const MenuItem = ({
   // registers, and depending on it would re-register in a loop.
   const { activeId, register, noteFocus, close, closeSubmenu } =
     useMenuContext();
+  // A row of a surface that is only painted for its exit leaves the window's Tab
+  // order with it: the row cannot be pressed, so it must not be a stop either.
+  const leaving = useMenuLeaving();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -226,7 +229,7 @@ export const MenuItem = ({
       aria-label={Str.isEmpty(searchable) ? undefined : searchable}
       {...rest}
       ref={setRow}
-      tabIndex={disabled ? -1 : 0}
+      tabIndex={disabled || leaving ? -1 : 0}
       onFocus={(event) => {
         if (instance !== undefined) noteFocus(instance.id);
         onFocus?.(event);

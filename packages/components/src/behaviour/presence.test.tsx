@@ -17,6 +17,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import type { TestRoot } from "@gpuix/react/testing";
@@ -102,6 +103,27 @@ const delay = (): Promise<void> =>
 /** Whether `testId` is painted at all. */
 const painted = (renderer: TestRoot["renderer"], testId: string): boolean =>
   renderer.findByTestId(testId) !== undefined;
+
+/**
+ * The test ids the window's Tab order visits after `from`, one per move.
+ *
+ * `focusNext` is the runtime's own traversal, so this reads the order a reader's
+ * Tab key follows rather than the tree order a suite could mistake for it. The
+ * moves are synchronous: a ghost only lives for its exit window, so a walk that
+ * waited between steps would watch the surface it measures unmount.
+ */
+const tabWalk = (
+  page: ReturnType<typeof renderComponent>,
+  from: string,
+  steps: number,
+): ReadonlyArray<string> => {
+  const start = page.renderer.findByTestId(from);
+  if (start !== undefined) page.renderer.focusElement(start.id);
+  return Arr.makeBy(steps, () => {
+    page.renderer.focusNext();
+    return Option.getOrElse(focusedTestId(page), () => "none");
+  });
+};
 
 /** The painted y (or x) of `testId`, failing when nothing was painted. */
 const where = (
@@ -1485,6 +1507,91 @@ describe("a control inside a leaving surface", () => {
       expect(behindPress).not.toHaveBeenCalled();
 
       await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps a dismissed menu's rows out of the window's tab order", async () => {
+    // The keyboard twin of the case above. The seam stops a leaving surface
+    // taking presses, and the runtime decides its Tab order element by element:
+    // neither `pointerEvents` nor the shield reaches a child's `tabIndex` or the
+    // traversal. Measured on 0.11.0 with this page, the order is the trigger,
+    // the control after it, then the menu's rows — so a reader who pressed
+    // Escape and then two Tabs landed on a row that unmounted under them, and
+    // the window kept no focused element. A row of a surface that is only
+    // painted for its exit drops its own stop; the first walk is the control,
+    // because the same rows must stay reachable while the menu is open.
+    const page = renderComponent(
+      <Page>
+        <Button testId="before">Before</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger testId="open">Actions</DropdownMenuTrigger>
+          <DropdownMenuContent testId="menu" label="Actions">
+            <DropdownMenuItem testId="rename">Rename</DropdownMenuItem>
+            <DropdownMenuItem testId="delete">Delete</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button testId="after">After</Button>
+      </Page>,
+    );
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
+      settle(page);
+      const live = tabWalk(page, "before", 4);
+      expect(live).toEqual(expect.arrayContaining(["rename", "delete"]));
+
+      // The walk ends on a row, so Escape is delivered inside the menu: the
+      // dismissal returns the focus to the trigger and the rows become a ghost.
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(Option.getOrElse(focusedTestId(page), () => "none")).toBe("open");
+      expect(painted(page.renderer, "menu")).toBe(true);
+
+      const ghost = tabWalk(page, "before", 6);
+      expect(ghost).not.toContain("rename");
+      expect(ghost).not.toContain("delete");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("does the same for a context menu, which paints the shared surface", async () => {
+    // The Dropdown composes its own floating layer around the rows; the context
+    // menu and the submenu paint `MenuSurface`, whose provider is the second
+    // half of the flag. This case holds that half: the same row is a stop while
+    // the menu is open and none once it is only painted for its exit.
+    const page = renderComponent(
+      <Page>
+        <Button testId="before">Before</Button>
+        <ContextMenu>
+          <ContextMenuTrigger testId="row" style={{ width: 200, height: 32 }}>
+            <text>Project</text>
+          </ContextMenuTrigger>
+          <ContextMenuContent testId="menu" label="Project actions">
+            <ContextMenuItem testId="open-project">Open</ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+        <Button testId="after">After</Button>
+      </Page>,
+    );
+    try {
+      const row = Option.getOrElse(boundsOf(page, "row"), () => {
+        throw new Error("behaviour: the trigger painted no box");
+      });
+      page.renderer.nativeSimulateClick(row.x + 10, row.y + row.height / 2, 2);
+      await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
+      // Three moves end on the row, so Escape is delivered inside the surface.
+      expect(tabWalk(page, "before", 3)).toContain("open-project");
+
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "menu")).toBe(true);
+      expect(page.renderer.findByTestId("menu")?.style.pointerEvents).toBe(
+        "none",
+      );
+      expect(tabWalk(page, "before", 6)).not.toContain("open-project");
     } finally {
       page.unmount();
     }

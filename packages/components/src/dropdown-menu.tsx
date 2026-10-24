@@ -61,6 +61,7 @@ import {
 } from "./menu/item.js";
 import {
   MenuContext,
+  MenuLeaving,
   useMenuContext,
   useMenuState,
   type MenuCloseReason,
@@ -349,7 +350,9 @@ export const DropdownMenuContent = ({
         style,
       )}
     >
-      <DismissScope>{children}</DismissScope>
+      <MenuLeaving.Provider value={!presence.present}>
+        <DismissScope>{children}</DismissScope>
+      </MenuLeaving.Provider>
       <PresenceShield present={presence.present} />
     </FloatingLayer>
   );

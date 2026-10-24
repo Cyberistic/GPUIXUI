@@ -128,6 +128,15 @@ export const presenceMotion = (
  * as a child of the box that fades — the wrapper a reveal paints already owns
  * such a box (`position: "relative"`), and a surface whose root is not positioned
  * must make it so before it can shield its content.
+ *
+ * A press is the half this layer can take. The runtime's **Tab order** is decided
+ * element by element, and neither `pointerEvents` nor a covered box removes a
+ * descendant's stop: measured on `@gpuix/native@0.11.0`, a dismissed menu's rows
+ * stayed stops at the end of the window's order, so a reader who pressed Escape
+ * and then two Tabs landed on a row that unmounted under the keyboard. A control
+ * has to drop its own stop, which is why the menu family carries `MenuLeaving`
+ * (`menu/state.ts`) and its rows read it. Content a consumer composes inside a
+ * modal ghost keeps its stops until this runtime publishes an inherited `inert`.
  */
 export const PresenceShield = ({ present }: { readonly present: boolean }) =>
   present ? null : (
