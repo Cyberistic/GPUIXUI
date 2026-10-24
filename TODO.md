@@ -389,7 +389,37 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 266/266
+`[x]` `[██████████]` 267/267
+
+`[x]` Read a **theme name a store wrote** as a name, not as a value to trim —
+      `extendTheme` interpolated `overrides.name` and `styleName` trimmed the
+      base's, so the stored route
+      `restoreTheme(JSON.parse('{"mode":"dark","name":42}'))` returned a `Theme`
+      whose `name` was the **number 42** (a field the type promises is a string),
+      and the next `applyStyle`/`platformTheme` over that theme threw
+      `TypeError: base.name.trim is not a function` — the seat a window applies a
+      platform style at, before its first frame. A name is content (a picker's
+      row, a preview's header), so `nameOf` — the reader the two families already
+      used, now shared — takes a non-blank string as a name and everything else
+      as *no* name: a value that names nothing inherits the base's, a base that
+      carries none is `Theme`, and `ThemeOverridesSource["name"]` is `unknown`
+      (the storage port `ContrastSource.contrast` and `SystemPalette.mode`
+      already are), so a decoder's value reaches the merge without a cast.
+      `theme.test.ts` gains `a theme name a store wrote` (4 cases: seven
+      unreadable names inherit, a family that names none, the restore-then-apply
+      route, and the four teaching surfaces) and `apply-style.test.ts` `reads a
+      base whose name is not a name, instead of throwing` (a style applied to a
+      theme a store assembled, with the authored case unchanged). Directions
+      measured: with HEAD's `theme.ts` restored the five cases fail by name —
+      `expected [ 42, 'Dark', … ] to deeply equal`, `expected [ [ 42, 42 ], … ]
+      to deeply equal [ [ '.SystemUIFont', 'Menlo' ], … ]`, `expected 42 to be
+      'Dark'`, the seam's missing phrase, and the exact `TypeError` — while the
+      fixed tree is 53 files / **3 137** tests with `check-types`, `check:tests`,
+      `oxlint` and `oxfmt` clean and the workspace type check green. Docs:
+      `docs/tokens.md` §Theme API (the rule in the merge list),
+      `docs/design-system.md` §11, the package README §Extending a theme and the
+      `Theme extension` row. No native scenario applies — a merge rule, one
+      reader and the prose that teaches it.
 
 `[x]` Answer a **surface name this release does not ship** with the brand that
       reads everywhere — `brandTextOn` read the surface straight out of the
