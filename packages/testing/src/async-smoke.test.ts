@@ -157,4 +157,39 @@ describe("runAsyncScenarios", () => {
       );
     }),
   );
+
+  it.effect(
+    "records a mount that never confirms its view as errored, and keeps going",
+    () =>
+      Effect.gen(function* () {
+        const report = yield* runAsyncScenarios(
+          inertHost,
+          [
+            probe("never-mounted", (ctx) =>
+              ctx.expectEqual("focus", "stale", "stale"),
+            ),
+            probe("mounted", (ctx) => ctx.expectEqual("focus", "own", "own")),
+          ],
+          { host: "fixture window", startedAt: 0 },
+          (scenario) =>
+            scenario.id === "never-mounted"
+              ? Effect.fail(
+                  new SmokeHostError({
+                    verb: `waitFor mount ${scenario.id}`,
+                    cause: "the marker never painted",
+                  }),
+                )
+              : Effect.void,
+        );
+
+        // A mount that cannot prove its own view has no evidence: it must not
+        // read as a pass, and the next probe still runs.
+        expect(isFailed(report, 0)).toBe(false);
+        expect(Option.getOrUndefined(erroredDetail(report, 0))).toContain(
+          "waitFor mount never-mounted: the marker never painted",
+        );
+        expect(Arr.length(report.scenarios)).toBe(2);
+        expect(Option.getOrUndefined(statusOf(report, "focus"))).toBe("failed");
+      }),
+  );
 });

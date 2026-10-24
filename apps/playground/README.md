@@ -97,6 +97,26 @@ probe, not for the capability, and the summary says so in words
 (`(unverified: the run did not cover every probe of that capability)`) so a
 green scoped line is not read as a red one.
 
+### One window, one probe at a time
+
+A live run mounts every selected probe into **one** keyed window, and each mount
+waits for a marker rendered in the same commit — `live-probe-<id>`, a 1×1 inert
+box inside a full-window `live-probe-root` frame — before the probe's first step.
+The marker is the fix for a measured race: with a fixed settle,
+`--only virtual-tree-lifecycle --only data-tree-lifecycle` read the windowed
+tree's `visible=4000 expanded=40 …` as the plain tree's readout 327 ms into a
+mount that takes 814 ms alone (2026-10-24). Because the marker carries the
+scenario's own id, no other probe's screen can satisfy the wait; a marker that
+never paints is a `SmokeHostError` and the probe is reported `errored`, not
+passed.
+
+The marker has to live **inside** one host element because the runtime renders
+only the **last** child of a top-level fragment — measured on 0.11.0: a root
+`Fragment` of two divs renders the second alone, and nine children of a root
+fragment render only the ninth (`src/live/mount-marker.test.tsx` holds the
+runner to one root child for that reason). The 1×1 box is absolute, unfilled and
+`pointerEvents: "none"`, so it moves nothing and paints nothing a probe measures.
+
 `dev` and `smoke` both **preflight first**: they import the native binding only
 after asking whether it loads, so a host without one gets a one-line remedy and
 exit `2`, never a stack trace.

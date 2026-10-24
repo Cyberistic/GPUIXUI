@@ -48,6 +48,7 @@ export { EXIT };
 import { createLiveHost } from "./host.js";
 import { liveRegistry, type LiveProbeMeta } from "./registry.js";
 import { liveProbeBodies, type LiveProbeBody } from "./scenarios.js";
+import { mountMarkerView, mountMarker } from "./mount-marker.js";
 import {
   withWindowKeyProvider,
   withWindowSelectionProvider,
@@ -74,6 +75,8 @@ interface WindowHandlers {
 
 const TITLE = "GPUIXUI live smoke";
 const WINDOW = { width: 900, height: 520 } as const;
+/** The single host element the window mounts: a full-window, unpainted frame. */
+export const ROOT_VIEW = "live-probe-root";
 /** Two frames plus the protocol round-trip, so a keyed view switch has painted. */
 const SETTLE = Duration.millis(60);
 
@@ -157,15 +160,26 @@ const unavailable = (error: NoWindowError): string =>
     "\n",
   );
 
-/** Mounts one probe's view in the window, keyed so no tree reconciles onto the last. */
-const mount =
+/**
+ * Mounts one probe's view in the window, keyed so no tree reconciles onto the
+ * last, and waits for the marker rendered in the **same commit** before the
+ * probe's first step.
+ *
+ * The wait is the fix for a shared window: a fixed settle let a probe read the
+ * previous probe's screen. The marker carries this scenario's id, so only this
+ * mount can satisfy it.
+ */
+export const mountProbe =
   (
     root: Pick<Root, "render">,
     registrar: FontRegistrar,
     selected: ReadonlyArray<LiveProbe>,
     windowHandlers: WindowHandlers,
     facts: WindowFacts,
-  ): ((scenario: { readonly id: string }) => Effect.Effect<void>) =>
+    waitFor: (testId: string) => Effect.Effect<void, Smoke.SmokeHostError>,
+  ): ((scenario: {
+    readonly id: string;
+  }) => Effect.Effect<void, Smoke.SmokeHostError>) =>
   (scenario) =>
     Effect.gen(function* () {
       const probe = Arr.findFirst(
@@ -184,22 +198,34 @@ const mount =
       const view = Option.map(probe, (found) => found.view);
       yield* Effect.sync(() =>
         root.render(
+          // One **host** child at the root, and the marker inside it: the
+          // runtime renders only the last child of a top-level fragment
+          // (measured on 0.11.0), so a marker beside the view there would hide
+          // one of them.
           createElement(
             Fragment,
             { key: scenario.id },
             createElement(
-              ThemeProvider,
-              { theme: palettes.dark },
-              withWindowFacts(
-                facts,
-                withWindowSelectionProvider(
-                  windowHandlers.selection,
-                  withWindowKeyProvider(
-                    windowHandlers.key,
-                    Option.match(view, {
-                      onNone: () => null,
-                      onSome: (render) => render(),
-                    }),
+              "div",
+              {
+                testId: ROOT_VIEW,
+                style: { width: WINDOW.width, height: WINDOW.height },
+              },
+              createElement(
+                ThemeProvider,
+                { theme: palettes.dark },
+                mountMarkerView(scenario.id),
+                withWindowFacts(
+                  facts,
+                  withWindowSelectionProvider(
+                    windowHandlers.selection,
+                    withWindowKeyProvider(
+                      windowHandlers.key,
+                      Option.match(view, {
+                        onNone: () => null,
+                        onSome: (render) => render(),
+                      }),
+                    ),
                   ),
                 ),
               ),
@@ -207,6 +233,9 @@ const mount =
           ),
         ),
       );
+      yield* waitFor(mountMarker(scenario.id));
+      // The marker proves the commit; one more settle covers the layout pass a
+      // probe's first measurement reads.
       yield* Effect.sleep(SETTLE);
     });
 
@@ -324,7 +353,7 @@ export const program = (
         startedAt,
         coverage: Smoke.coverageOf(liveProbes()),
       },
-      mount(root, renderer, selected, windowHandlers, facts),
+      mountProbe(root, renderer, selected, windowHandlers, facts, host.waitFor),
     );
 
     yield* fileSystem.writeFileString(

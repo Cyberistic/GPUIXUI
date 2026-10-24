@@ -863,7 +863,7 @@ const runBody = <
   },
 >(
   scenario: S,
-  mount: Option.Option<(scenario: S) => Effect.Effect<void>>,
+  mount: Option.Option<(scenario: S) => Effect.Effect<void, SmokeHostError>>,
   steps: (
     checks: CheckSink,
   ) => Effect.Effect<void, SmokeAssertionError | SmokeHostError>,
@@ -892,7 +892,9 @@ const runBody = <
 const runScenario = (
   host: SmokeHost,
   scenario: SmokeScenario,
-  mount: Option.Option<(scenario: SmokeScenario) => Effect.Effect<void>>,
+  mount: Option.Option<
+    (scenario: SmokeScenario) => Effect.Effect<void, SmokeHostError>
+  >,
 ): Effect.Effect<ScenarioResult> =>
   runBody(scenario, mount, (checks) =>
     scenario.steps({ host, ...assertions(checks) }),
@@ -901,7 +903,9 @@ const runScenario = (
 const runAsyncScenario = (
   host: AsyncSmokeHost,
   scenario: AsyncSmokeScenario,
-  mount: Option.Option<(scenario: AsyncSmokeScenario) => Effect.Effect<void>>,
+  mount: Option.Option<
+    (scenario: AsyncSmokeScenario) => Effect.Effect<void, SmokeHostError>
+  >,
 ): Effect.Effect<ScenarioResult> =>
   runBody(scenario, mount, (checks) =>
     scenario.steps({ host, ...assertions(checks) }),
@@ -1044,13 +1048,15 @@ const reportOf = (
  *
  * `beforeEach` is the mount seam: a native runner renders the scenario's own
  * view before its `steps` run. It is optional so the platform-free tests need
- * no renderer.
+ * no renderer, and it may fail with a {@link SmokeHostError} — a window runner
+ * waits for the view's mount marker, and a marker that never paints is a host
+ * failure the report must record rather than a hang or a pass.
  */
 export const runScenarios = (
   host: SmokeHost,
   scenarios: ReadonlyArray<SmokeScenario>,
   meta: RunMeta,
-  beforeEach?: (scenario: SmokeScenario) => Effect.Effect<void>,
+  beforeEach?: (scenario: SmokeScenario) => Effect.Effect<void, SmokeHostError>,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {
     const mount = Option.fromNullishOr(beforeEach);
@@ -1067,13 +1073,17 @@ export const runScenarios = (
  *
  * The window runner owns the mount seam, so a probe's view is rendered in the
  * real window before its steps run; the checks and the exit code are identical
- * to the headless suite.
+ * to the headless suite. The seam may fail with a {@link SmokeHostError}: a
+ * window that cannot confirm the probe's own view mounted has no evidence for
+ * that probe, which the report records as `errored`.
  */
 export const runAsyncScenarios = (
   host: AsyncSmokeHost,
   scenarios: ReadonlyArray<AsyncSmokeScenario>,
   meta: RunMeta,
-  beforeEach?: (scenario: AsyncSmokeScenario) => Effect.Effect<void>,
+  beforeEach?: (
+    scenario: AsyncSmokeScenario,
+  ) => Effect.Effect<void, SmokeHostError>,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {
     const mount = Option.fromNullishOr(beforeEach);
