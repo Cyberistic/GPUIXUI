@@ -11983,7 +11983,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 376/376
+`[x]` `[██████████]` 377/377
+
+`[x]` Draw the **two tree pages that showed no tree** — `tree-view.mdx` and
+      `virtual-tree.mdx` shipped props, keyboard notes and limitations and no
+      drawing, so the one data surface a reader most needs to see expanded
+      arborically was prose. A package page is the package's Markdown, so the
+      site mounts both from `src/lib/package-preview.ts`, and each runs the
+      package's own rules: `src/components/docs/tree-demo.tsx` reads
+      `useExpandedRows` over `flattenTree` and `treeCursorMove`, a typed prefix
+      through `typeAheadRow`, and the windowed page mounts
+      `createWindowCalculator`'s slice of the whole 1 884-row set, so a cursor
+      move or a reveal mounts the row it names. Both drawings share one tree
+      skin and one browser-key table (`src/components/docs/tree-keys.ts`), which
+      the files lane's tree now reads too; the frame, readout and hint classes
+      are `.gx-demo-*` rather than the files lane's own.
+      `src/components/docs/tree-demo.test.tsx` (9 cases) holds the rows, the
+      cursor moves, the type-ahead, the readout, the window (at the top, at
+      offset 900 and at the reveal) and the browser-key map to the package.
+      Directions measured: replacing `flattenTree` with a roots-only walk fails
+      six cases by name (`expected 'docs' to be 'docs/components/tw'`,
+      `expected 12 to be 1884`, …), and a fixed `Arr.range(0, 10)` window fails
+      `holds the whole graph…` and `clamps an offset…`.
+      `preview-strategy.test.ts` and `docs/preview-strategy.md` now say the data
+      lane draws ten surfaces and name both pages and the seams.
+      Verified in a browser on the dev server (`/docs/data-display/tree-view`,
+      `/docs/data-display/virtual-tree`): 11 rows painted, ArrowDown moves to
+      `@gpuixui/tw`, End to `@gpuixui/playground`, typed `f` to `fumadocs-ui`, a
+      chevron collapse takes 11 rows to 2; `End` in the virtual page moves the
+      window to `1874–1884` and paints its active row, a branch collapse shrinks
+      the set from 1 884 to 1 728 rows and recomputes the window, and
+      `Reveal the last row` mounts the last row. The docs suite is **189 files /
+      1 935 tests** green with `check-types` and `build` clean.
+      No native scenario applies — browser drawings over the package's own pure
+      controller and window arithmetic, which `packages/data` tests itself.
+      Also fixes a fresh interlock: `component-page.test.ts` failed on
+      `select.mdx: the page: SelectProps.align has no API row` because the
+      primitives' `Select` gained `align`; the curated page prints the row now.
 
 `[x]` Print the **locators the colour picker derives** — the page's `testId`
       row answered "the stable locators above" while the page printed no list,

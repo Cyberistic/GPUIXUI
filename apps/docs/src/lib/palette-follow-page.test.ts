@@ -172,10 +172,15 @@ describe("the dark-mode page's palette follow", () => {
   it("teaches the wash a desktop's selection becomes", () => {
     // A desktop's selection is a filled pair; the role here is a translucent
     // wash behind a run that keeps its own text, so the share is the theme's.
-    expect(systemTheme).toContain(
-      "alpha(selection, alphaOf(base.colors.selection))",
+    // The share is read off the theme's own `selection` role whatever the
+    // helper calls its parameter: a rename of that argument is not a change of
+    // answer, and pinning the name fails the page for a refactor.
+    expect(systemTheme).toMatch(
+      /alpha\(selection, alphaOf\([A-Za-z.]+\.selection\)\)/,
     );
-    expect(systemTheme).toContain("selectionWash(palette.selection, base)");
+    expect(systemTheme).toMatch(
+      /selectionWash\(palette\.selection, [A-Za-z]+\)/,
+    );
     expect(page).toContain("translucent **wash**");
     expect(page).toContain("base theme's own share");
   });

@@ -619,9 +619,10 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws eight surfaces — Property panels on its own page, the
-sorting, selection, advanced-filter, virtualization, column-configuration and
-charts pages through the site's table, and the statistic card through it too: the
+The data lane draws ten surfaces — Property panels on its own page, the
+sorting, selection, advanced-filter, virtualization, column-configuration,
+tree-view, virtual-tree and charts pages through the site's table, and the
+statistic card through it too: the
 header cycle is `@gpuixui/data`'s `pressSortOrder`, the
 painted order is its own row model (`constructGrid`, the core `useTable` runs
 on), a row press is its `pressSelection` over the visible keys, so the deploy
@@ -639,7 +640,15 @@ hides, moves and keyboard-resizes through `toggleColumn`, `moveColumn`,
 same visible list. The chart page's bars, paths and axis come from the
 package's `chartBox`, `chartScale`, `axisTicks`, `groupedBarMarks` and
 `linePath`, with the swatches in the theme's `seriesColors` order, so a
-platform switch repaints the series in the palette it ships. Property panels
+platform switch repaints the series in the palette it ships. The two tree pages
+are the tree's own: the rows are `flattenTree`, the cursor is the package's
+`useExpandedRows` over `treeCursorMove`, a typed prefix is `typeAheadRow`, and
+the windowed page mounts the package's `createWindowCalculator` slice of the
+whole set, so a cursor move or a reveal mounts the row it names before the
+focus moves. That drawing passes `rowHeight={37}` and prints it, so its window
+is exact for the rows it paints; a caller who leaves the prop out gets the
+theme's density row, which a browser page cannot read from the preview surface.
+Property panels
 was the first drawer outside the component
 and primitive lanes — one object read by a preview, a field, a table and a
 metric card, every one of which the browser can draw honestly.

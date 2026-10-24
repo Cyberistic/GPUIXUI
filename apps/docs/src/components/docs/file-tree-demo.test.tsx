@@ -16,10 +16,10 @@ import {
   openCursor,
   rowId,
   selectionReadout,
-  treeKeyOf,
   withActive,
   workspaceTree,
 } from "./file-tree-demo";
+import { treeKeyOf } from "./tree-keys";
 
 /**
  * The File trees preview.
@@ -102,11 +102,11 @@ describe("the FileTree preview", () => {
       active: Option.some("src/index.ts"),
     };
 
-    expect(rowId("src/index.ts")).toBe("gx-filetree-src-index-ts");
+    expect(rowId("src/index.ts")).toBe("gx-tree-src-index-ts");
     expect(markup(cursor)).toContain(
-      'aria-activedescendant="gx-filetree-src-index-ts"',
+      'aria-activedescendant="gx-tree-src-index-ts"',
     );
-    expect(markup(cursor)).toContain('id="gx-filetree-src-index-ts"');
+    expect(markup(cursor)).toContain('id="gx-tree-src-index-ts"');
 
     // A press moves the roving tab stop onto the row it chose.
     expect(Option.getOrNull(withActive(cursor, "readme.md").active)).toBe(

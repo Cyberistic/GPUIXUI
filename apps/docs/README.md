@@ -203,6 +203,8 @@ src/components/docs/table-preview.ts      The table preview's copy of the packag
 src/components/docs/table-rule-demos.tsx  The sorting and selection pages' drawings over the package's row model
 src/components/docs/advanced-filter-demo.tsx The query builder's tree, its sentence and a refused stored query
 src/components/docs/virtualization-demo.tsx The window calculator's mounted rows and their offsets
+src/components/docs/tree-demo.tsx         The two tree drawings: the package's controller and its window calculator
+src/components/docs/tree-keys.ts          The browser keys both tree drawings report as the package's own
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
 src/components/docs/stat-card-demo.tsx    The metric card's derived reading, its trend roles and the box a reader measures

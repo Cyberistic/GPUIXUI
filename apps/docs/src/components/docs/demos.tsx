@@ -38,6 +38,12 @@ import {
   virtualizationDemoSource,
 } from "./virtualization-demo";
 import {
+  DependencyTreeDemo,
+  VirtualTreeDemo,
+  treeViewDemoSource,
+  virtualTreeDemoSource,
+} from "./tree-demo";
+import {
   ColumnConfigurationDemo,
   columnConfigurationDemoSource,
 } from "./column-configuration-demo";
@@ -2965,6 +2971,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "virtualization-demo": {
     render: VirtualizationDemo,
     source: virtualizationDemoSource,
+  },
+  "tree-view-demo": { render: DependencyTreeDemo, source: treeViewDemoSource },
+  "virtual-tree-demo": {
+    render: VirtualTreeDemo,
+    source: virtualTreeDemoSource,
   },
   "column-configuration-demo": {
     render: ColumnConfigurationDemo,

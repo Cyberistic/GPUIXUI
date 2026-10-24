@@ -244,13 +244,13 @@ export function FilesPropertyPanelDemo() {
   const [record, setRecord] = useState<PropertyRecord>(panelRecord);
 
   return (
-    <div className="gx-files-demo">
+    <div className="gx-demo-frame">
       <PropertyPanelFrame
         onChange={setRecord}
         record={record}
         rows={PANEL_ROWS}
       />
-      <p className="gx-files-readout">{recordReadout(record)}</p>
+      <p className="gx-demo-readout">{recordReadout(record)}</p>
     </div>
   );
 }

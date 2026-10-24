@@ -10,7 +10,6 @@ import {
   flattenTree,
   treeCursorMove,
   type TreeCursor,
-  type TreeKey,
   type TreeRow,
 } from "@gpuixui/data/tree/logic";
 import {
@@ -26,6 +25,7 @@ import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import { useState, type KeyboardEvent } from "react";
 import { BrowserIcon } from "./browser-icon";
+import { treeKeyOf } from "./tree-keys";
 
 /**
  * Browser preview for the File trees page.
@@ -91,22 +91,6 @@ export const openCursor = (): TreeCursor => ({
   active: Option.some("src/index.ts"),
 });
 
-/** The browser key names the tree answers, and the package's own names for them. */
-const TREE_KEYS: Readonly<Record<string, TreeKey>> = {
-  ArrowUp: "up",
-  ArrowDown: "down",
-  ArrowRight: "right",
-  ArrowLeft: "left",
-  Home: "home",
-  End: "end",
-  Enter: "enter",
-  " ": "space",
-};
-
-/** The package key a browser key names, or `None` when it is not the tree's. */
-export const treeKeyOf = (key: string): Option.Option<TreeKey> =>
-  Option.fromNullishOr(TREE_KEYS[key]);
-
 /** The keys chosen, in the order they are reported. */
 export const chosenKeys = (state: SelectionState): ReadonlyArray<string> =>
   Arr.sort(Arr.fromIterable(state.selected), Order.String);
@@ -121,7 +105,7 @@ export const selectionReadout = (state: SelectionState): string => {
 
 /** The id a row's element carries, so the tree can name its active row. */
 export const rowId = (key: string): string =>
-  `gx-filetree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
+  `gx-tree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
 
 /** The cursor with `key` as the row the keyboard stands on. */
 export const withActive = (cursor: TreeCursor, key: string): TreeCursor => ({
@@ -179,7 +163,7 @@ export function FileTreeFrame({
     <div
       aria-activedescendant={active === undefined ? undefined : rowId(active)}
       aria-label="Workspace files"
-      className="gx-filetree"
+      className="gx-tree"
       onKeyDown={onKeyDown}
       role="tree"
       tabIndex={0}
@@ -193,7 +177,7 @@ export function FileTreeFrame({
             aria-expanded={row.hasChildren ? row.expanded : undefined}
             aria-level={row.depth + 1}
             aria-selected={chosen}
-            className="gx-filetree-row"
+            className="gx-tree-row"
             data-chosen={chosen ? "true" : "false"}
             data-current={current ? "true" : "false"}
             data-icon={glyphOf(node, row.expanded)}
@@ -207,7 +191,7 @@ export function FileTreeFrame({
               aria-label={
                 row.expanded ? `Collapse ${node.name}` : `Expand ${node.name}`
               }
-              className="gx-filetree-chevron"
+              className="gx-tree-chevron"
               data-branch={row.hasChildren ? "true" : "false"}
               disabled={!row.hasChildren}
               onClick={(event) => {
@@ -219,14 +203,14 @@ export function FileTreeFrame({
               {row.expanded ? "▾" : "▸"}
             </button>
             <BrowserIcon
-              className="gx-filetree-glyph"
+              className="gx-tree-glyph"
               name={glyphOf(node, row.expanded)}
             />
-            <span className="gx-filetree-name">{node.name}</span>
+            <span className="gx-tree-name">{node.name}</span>
             <input
               aria-label={`Choose ${node.name}`}
               checked={chosen}
-              className="gx-filetree-box"
+              className="gx-tree-box"
               onChange={() => press(row, true)}
               onClick={(event) => event.stopPropagation()}
               type="checkbox"
@@ -245,7 +229,7 @@ export function FileTreeDemo() {
   const [selection, setSelection] = useState<SelectionState>(emptySelection);
 
   return (
-    <div className="gx-files-demo">
+    <div className="gx-demo-frame">
       <FileTreeFrame
         cursor={cursor}
         onCursorChange={setCursor}
@@ -253,8 +237,8 @@ export function FileTreeDemo() {
         roots={roots}
         selection={selection}
       />
-      <p className="gx-files-readout">{selectionReadout(selection)}</p>
-      <p className="gx-files-hint">
+      <p className="gx-demo-readout">{selectionReadout(selection)}</p>
+      <p className="gx-demo-hint">
         Press a row to choose it, or its box to add it. Focus the tree and use ↑
         ↓ ← →, Home and End; Enter or Space flips a folder.
       </p>

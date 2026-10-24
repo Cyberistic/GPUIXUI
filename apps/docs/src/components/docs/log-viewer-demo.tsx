@@ -166,7 +166,7 @@ export function LogViewerFrame({
           </div>
         ))}
       </div>
-      <p className="gx-files-readout">
+      <p className="gx-demo-readout">
         {shown.length} of {entries.length} rows painted
         {follow ? " · following the tail" : " · scrolled where you left it"}
       </p>
@@ -181,7 +181,7 @@ export function LogViewerDemo() {
   const [follow, setFollow] = useState(true);
 
   return (
-    <div className="gx-files-demo">
+    <div className="gx-demo-frame">
       <LogViewerFrame
         enabled={enabled}
         follow={follow}
@@ -197,7 +197,7 @@ export function LogViewerDemo() {
         >
           Append a line
         </button>
-        <span className="gx-files-hint">
+        <span className="gx-demo-hint">
           The caller owns the lines; follow mode anchors the list on the tail.
         </span>
       </div>
