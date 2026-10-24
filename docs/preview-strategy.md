@@ -451,6 +451,62 @@ readout parser (a truncated line and an unreadable preview are refused, not
 guessed), the comparison, both presses, the sheet-derived fills, the paint
 comparison, this section and the command.
 
+### The search path is measured
+
+Search is the site's component search, and it was the one interaction with a
+unit guard on every piece and no measurement of the path a reader walks: open
+the dialog, type, press Enter. Three properties only a browser shows — that a
+hydrated trigger opens it, that the controlled input accepts a synthesised
+query, and that the highlighted result is a navigation path rather than a
+picture of one.
+
+`apps/docs/scripts/search-probe.ts` presses `button[data-search]` on the served
+Button page, waits for the trigger to carry `__reactProps.onClick` (the same
+hydration precondition as the press probe), and types three queries. Each query
+asserts a different part of the index:
+
+- `slider` is a page only `@gpuixui/primitives` writes,
+- `button` is a component with two addresses — the curated page must answer and
+  the retired `/docs/primitives/button` must not (`curated-twins.ts`),
+- `architecture` is a page only the site writes.
+
+It reads the options from `role="option"` ids (a page row's id is its URL), the
+highlighted one from the input's `aria-activedescendant`, and then presses
+Enter and requires `location.pathname` to become that page. Run it with a dev or
+preview server up:
+
+```sh
+nub run --filter @gpuixui/docs dev
+nub apps/docs/scripts/search-probe.ts
+```
+
+Measured 2026-10-24 on master, macOS 15.8.1 x86_64, headless Google Chrome
+155.0.8059.80 against the dev server: the dialog opened with **7** suggestions
+(the `links` the root provider passes), `slider → /docs/primitives/slider`,
+`button → /docs/components/button` (not `/docs/primitives/button`), and
+`architecture → /docs/architecture`; Enter on `architecture` opened
+`/docs/architecture` and took the dialog off the screen. Exit `0`.
+
+Two mechanisms are measured rather than assumed, and both have bitten:
+
+- **The input is controlled by React**, which keeps its own value tracker.
+  Assigning `input.value` and dispatching `input` leaves React believing
+  nothing changed and the options on the opening suggestions; the probe writes
+  through `HTMLInputElement.prototype`'s setter, which is what makes the event
+  carry a value React reads.
+- **A closed dialog is still mounted.** Radix keeps it for the exit frame, so
+  presence is not openness: the probe reads `data-state` and treats anything
+  but `open` as closed.
+
+The negative controls are the two failures a probe can hide. `--timeout 500`
+prints `FAIL the search trigger never hydrated within 500 ms (it carries no
+React onClick)` and exits `1`; an expectation the index does not answer prints
+`<query> never returned <page>`. `src/lib/search-probe.test.ts` holds the
+probe's premise to the site — every expected address is a served page, every
+refused one is the retired twin of the page it expects, and each query appears
+in prose on the page it must find — plus the typing and submit order, this
+section and the site's ledger.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those

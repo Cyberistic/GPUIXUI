@@ -16853,6 +16853,42 @@ inventory's measured-row suite holds its figures to the probe's own fixture
 (`name`/`min`/`divider`/`control`/`DRAG_STEPS`/`CONTROL_MOVES`) — both new cases
 measured failing before the row edit.
 
+`[x]` Measure the **search dialog a reader actually walks** — every other
+critical interaction on the site has a browser probe (a preview press, the
+platform switch, the palette switch, the docs theme toggle), while search — the
+site's component search — had unit guards on the index, the shadowing rule and
+the response shape and **nothing pressed the dialog**: whether a hydrated trigger
+opens it, whether a synthesised query reaches the controlled input, and whether
+the highlighted result navigates were all unmeasured. `apps/docs/scripts/search-probe.ts`
+presses `button[data-search]` on the served Button page after waiting for the
+trigger's own React handler, types three queries — `slider` (a page only the
+package writes), `button` (two addresses: the curated page must answer and the
+retired `/docs/primitives/button` must not) and `architecture` (a page only the
+site writes) — reads the `role="option"` ids whose page rows are their URLs, and
+then presses Enter and requires `location.pathname` to become the result.
+Measured 2026-10-24 on master against the dev server: the dialog opened with
+**7** suggestions, `slider → /docs/primitives/slider`,
+`button → /docs/components/button` with no `/docs/primitives/button` row,
+`architecture → /docs/architecture`, and Enter opened `/docs/architecture` and
+took the dialog off the screen, exit `0`. Two mechanisms are measured rather
+than assumed: **React keeps its own value tracker** (assigning `input.value`
+directly types nothing; the prototype's setter plus an `input` event is what
+reaches its handler) and **Radix keeps a closed dialog mounted for its exit**
+(the probe reads `data-state`, not presence). Directions measured: a false
+expectation fails `slider never returned /docs/primitives/slider-old` while the
+other two cases pass, and `--timeout 500` prints
+`FAIL the search trigger never hydrated within 500 ms (it carries no React onClick)`
+and exits `1`. `src/lib/search-probe.test.ts` (7 cases) holds the probe's
+premise to the site — every expected address is a served page, every refused one
+is the retired twin of the page it expects, and each query appears in prose on
+the page it must find — plus the typing and submit order, the readout parser
+(a truncated line is refused, not padded), the policy section and the ledger
+row. Docs: `docs/preview-strategy.md` §The search path is measured and the
+`apps/docs/README.md` ledger. Green: the docs suite is 174 files / 1 817 tests;
+`check-types` reports 164 errors in `packages/icons` and `packages/primitives`
+from another workstream's in-flight migration and none naming these files. No
+native scenario applies — a browser probe over the docs app.
+
 `[x]` Hold the **Checkbox and Switch announcement** to the helper, not a literal
 pair — the primitives moved the two state words behind a messages provider
 (`selectionValueText(current, messages.selection)` and
