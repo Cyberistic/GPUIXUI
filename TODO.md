@@ -19543,6 +19543,30 @@ scenario applies — the timings are pure values.
       publishes an inherited `inert`, and a page could teach that beside §11's pointer rule.
       No native scenario applies — the traversal is the renderer's own, measured here.
 
+`[x]` Hold the **Motion inventory row to the runtime's motion grammar** — the design-system
+      row promised "opacity, size, position and radius tween; rotation and scale do not" and
+      cited `timing.test.ts`, a suite that holds the five durations and never names a style
+      field; a reader following it finds no proof, and a `@gpuix/native` bump could add or drop
+      a field while the row stayed as written. The grammar is the runtime's, so it is read from
+      the installed typings (`apps/playground/node_modules/@gpuix/native/dist/host.d.ts`, with
+      the docs app's copy as the fallback, because this package depends on `@gpuix/react` and
+      not on the binding). `src/presence-contract.test.ts` gains **the motion grammar** (4
+      cases): `MotionStyle`'s eight fields are pinned and the transform family is refused with
+      a negative control (a declaration that publishes `transform`/`rotate` is reported, so "no
+      transform" cannot pass by reading nothing); every frame `fadeFrom`/`fadeFromSide`/
+      `fadeFromAnchor`/`fadeOnly` emit is held inside that grammar; the tab pill's
+      `indicatorBox` and the ripple's `rippleFrames` are **driven** so each movement the row
+      prints has a painter that really emits its field; and the row itself must name this case,
+      refuse `timing.test.ts`, keep the four movements and cite `MotionStyle`. Directions
+      measured: restoring `timing.test.ts` fails the row case (`expected '| Motion | done |
+      partial | blocked b…' to contain 'presence-contract.test.ts'`), and deleting
+      `borderRadius` from `rippleFrames` fails the painter case (`expected [ 'width', 'height',
+      'left', …(7) ] to include 'borderRadius'`). Green: `src/presence-contract.test.ts` 21/21,
+      `check-types` clean, `check:tests` clean and the tokens `inventory.test.ts` 9/9 (the row
+      still names an existing test). The `COMPONENTS.md` hunk was swept into `c39b19773`
+      (tokens) by the shared-index hazard; this commit carries the guard that makes it true.
+      No native scenario applies — a typings read and pure frame builders.
+
 ## TanStack cores
 
 

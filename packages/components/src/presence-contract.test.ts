@@ -36,12 +36,20 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import {
+  fadeFrom,
+  fadeFromAnchor,
+  fadeFromSide,
+  fadeOnly,
+} from "@gpuixui/motion/presence";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
+import { rippleFrames } from "./ripple-button/logic.js";
+import { indicatorBox } from "./tabs/indicator.js";
 
 const packageRoot = new URL("../", import.meta.url);
 
@@ -318,6 +326,227 @@ describe("the shared presence table", () => {
     expect(seam).not.toContain("export const fadeFrom");
     expect(seam).not.toContain("export const presenceStyle");
     expect(seam).not.toContain("const milliseconds");
+  });
+});
+
+/**
+ * The runtime's own motion typing, where the animatable field list is declared.
+ *
+ * This package depends on `@gpuix/react`, not on the native binding, so the
+ * installed copy the workspace pins is read from a package that links it (the
+ * playground, whose binding recipe `apps/playground/README.md` documents, or the
+ * docs app). The first copy that reads wins; a checkout where neither is
+ * installed fails below rather than skipping the claim.
+ */
+const runtimeHost = Arr.findFirst(
+  [
+    readEntry(
+      "../../apps/playground/node_modules/@gpuix/native/dist/host.d.ts",
+    ),
+    readEntry("../../apps/docs/node_modules/@gpuix/native/dist/host.d.ts"),
+  ],
+  (read) => read.sources.length === 1,
+);
+
+/**
+ * The fields a `MotionStyle` declaration carries.
+ *
+ * The declaration is read from text rather than the type, because the claim the
+ * inventory makes is about what the **runtime** animates: `@gpuixui/motion`
+ * emits numbers and records them, and only the renderer's grammar decides
+ * whether the field is paint. Reading the installed typings is how the row's
+ * limit stays the runtime's instead of a memory of one release.
+ */
+const motionFieldsIn = (typings: string): ReadonlyArray<string> => {
+  const declared = Option.flatMap(
+    Option.fromNullishOr(
+      /export interface MotionStyle \{([\s\S]*?)\n\}/.exec(typings),
+    ),
+    (match) => Option.fromNullishOr(match[1]),
+  );
+  return Option.getOrElse(
+    Option.map(declared, (fields) =>
+      Arr.filterMap(Str.split("\n")(fields), (line) =>
+        Option.match(
+          Option.fromNullishOr(/^\s+(\w+)\?: number;$/.exec(line)?.[1]),
+          {
+            onNone: () => Result.failVoid,
+            onSome: Result.succeed,
+          },
+        ),
+      ),
+    ),
+    () => [],
+  );
+};
+
+/** The fields the installed runtime's `MotionStyle` declares. */
+const motionFields = (): ReadonlyArray<string> =>
+  Option.getOrElse(
+    Option.map(runtimeHost, (read) =>
+      motionFieldsIn(
+        Option.getOrElse(
+          Option.map(Arr.head(read.sources), (source) => source.body),
+          () => "",
+        ),
+      ),
+    ),
+    () => [],
+  );
+
+/**
+ * The movements the runtime has no key for — the gap the inventory row prints.
+ *
+ * `transform` is upstream issue #102; a filter is not a numeric motion field at
+ * all. A runtime that publishes one of these turns the row's limit into a stale
+ * claim, so the list is derived from the typings, not remembered beside them.
+ */
+const unrepresentable = [
+  "transform",
+  "transformOrigin",
+  "rotate",
+  "scale",
+  "translate",
+  "skew",
+  "filter",
+] as const;
+
+/** The fields of those movements a declaration actually carries. */
+const unrepresentableIn = (
+  fields: ReadonlyArray<string>,
+): ReadonlyArray<string> =>
+  Arr.filter(unrepresentable, (name) => Arr.contains(fields, name));
+
+/** Every side the presence builders accept, so each one's frames are read. */
+const sides = ["top", "right", "bottom", "left"] as const;
+
+describe("the motion grammar", () => {
+  it("reads the runtime's animatable fields, so the row's limit is the runtime's", () => {
+    // The bug this guards: the inventory's Motion row promised that opacity,
+    // size, position and radius tween and that rotation and scale do not, and
+    // cited `timing.test.ts` — a suite that holds the house durations and never
+    // names a style field. A reader following it finds no such proof, and a
+    // `@gpuix/native` bump could add or drop a field without the row noticing.
+    expect(Option.isSome(runtimeHost)).toBe(true);
+    Arr.forEach(Option.toArray(runtimeHost), (read) => {
+      expect(read.failures).toEqual([]);
+      expect(read.sources).toHaveLength(1);
+    });
+    expect(motionFields()).toEqual([
+      "width",
+      "height",
+      "opacity",
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "borderRadius",
+    ]);
+    expect(unrepresentableIn(motionFields())).toEqual([]);
+    // The rule has to be able to report a field, or "no transform" passes by
+    // reading nothing: a declaration that publishes one is the control.
+    const patched = [
+      "export interface MotionStyle {",
+      "    width?: number;",
+      "    transform?: number;",
+      "    rotate?: number;",
+      "}",
+    ].join("\n");
+    expect(unrepresentableIn(motionFieldsIn(patched))).toEqual([
+      "transform",
+      "rotate",
+    ]);
+  });
+
+  it("keeps every frame the seam paints inside that grammar", () => {
+    // The frames are the table's own builders, so a field added to one of them
+    // must be a movement the renderer can paint; the runtime drops a whole
+    // motion description it cannot read, so an unknown key would silently
+    // remove the fade rather than fail.
+    const frames = [
+      fadeFrom("top", 8),
+      fadeFrom("left", 8),
+      fadeOnly,
+      ...Arr.map(sides, (side) => fadeFromSide(side, 12)),
+      ...Arr.map(sides, (side) => fadeFromAnchor(side, 4)),
+    ];
+    const painted = Arr.flatMap(frames, (frame) =>
+      Arr.flatMap(Object.values(frame), (phase) => Object.keys(phase)),
+    );
+    expect(painted.length).toBeGreaterThan(6);
+    const fields = motionFields();
+    expect(
+      Arr.filter(painted, (field) => !Arr.contains(fields, field)),
+    ).toEqual([]);
+  });
+
+  it("makes each movement the inventory promises a painter", () => {
+    // A movement the row prints has to be a field the runtime knows and a frame
+    // a surface actually paints. The frames are driven rather than read as
+    // prose, so a comment that still names `borderRadius` cannot stand in for
+    // the disc that no longer tweens it.
+    const fields = motionFields();
+    const presenceKeys = Arr.flatMap([fadeFrom("top", 8), fadeOnly], (frames) =>
+      Arr.flatMap(Object.values(frames), (frame) => Object.keys(frame)),
+    );
+    const pill = Object.keys(
+      indicatorBox(
+        { x: 10, y: 20, width: 100, height: 40 },
+        { x: 15, y: 20, width: 50, height: 30 },
+      ),
+    );
+    const ripple = Arr.flatMap(
+      Object.values(rippleFrames({ x: 10, y: 10 }, 20)),
+      (frame) => Object.keys(frame),
+    );
+    const painted = [
+      ["opacity", presenceKeys],
+      ["size", [...pill, ...ripple]],
+      ["position", [...presenceKeys, ...pill]],
+      ["radius", ripple],
+    ] as const;
+    Arr.forEach(painted, ([movement, keys]) => {
+      expect(movement.length).toBeGreaterThan(0);
+      expect(keys.length).toBeGreaterThan(0);
+      // Every key a painter emits is a movement the runtime animates, and the
+      // movement the row names is among them.
+      expect(Arr.filter(keys, (key) => !Arr.contains(fields, key))).toEqual([]);
+    });
+    expect(presenceKeys).toContain("opacity");
+    expect(pill).toContain("width");
+    expect(pill).toContain("height");
+    expect(pill).toContain("left");
+    expect(ripple).toContain("borderRadius");
+  });
+
+  it("holds the Motion row to that grammar, not to a suite that never names it", () => {
+    const inventory = readEntry("../../COMPONENTS.md");
+    expect(inventory.failures).toEqual([]);
+    const row = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(
+          Str.split("\n")(
+            Option.getOrElse(
+              Option.map(Arr.head(inventory.sources), (source) => source.body),
+              () => "",
+            ),
+          ),
+          (line) => Str.startsWith("| Motion |")(line),
+        ),
+        (line) => line,
+      ),
+      () => "",
+    );
+    expect(row).not.toEqual("");
+    expect(row).toContain("presence-contract.test.ts");
+    expect(row).not.toContain("timing.test.ts");
+    // The four movements and the gap, in the row a reader learns the limit from.
+    const text = Str.toLowerCase(row);
+    Arr.forEach(["opacity", "size", "position", "radius"], (claim) => {
+      expect(text).toContain(claim);
+    });
+    expect(text).toContain("transform");
+    expect(row).toContain("MotionStyle");
   });
 });
 
