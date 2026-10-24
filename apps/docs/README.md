@@ -40,6 +40,7 @@ themes.mdx                   The live token editor, its audit and its copy outpu
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/dashboard.mdx         An activity dashboard composed from the library
 blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated quote panel
+blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/kanban.mdx            A project task board: sidebar, four counted columns, cards that move
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
@@ -255,12 +256,13 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
-src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Kanban, Settings dialog, File manager and Email inbox
+src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Dashboard management, Kanban, Settings dialog, File manager and Email inbox
 src/components/docs/block-preview.tsx     A block's browser rendering
 src/components/docs/block-icons.tsx       The glyphs the block previews draw
 src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
 src/components/docs/auth-blocks.tsx       The auth examples, the sign-in page and their recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/dashboard-management.tsx The console block's browser reproduction and recipe
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
