@@ -180,15 +180,34 @@ describe("the dark-mode page's palette follow", () => {
   it("teaches the wash a desktop's selection becomes", () => {
     // A desktop's selection is a filled pair; the role here is a translucent
     // wash behind a run that keeps its own text, so the share is the theme's.
-    // The share is read off the theme's own `selection` role whatever the
-    // helper calls its parameter: a rename of that argument is not a change of
-    // answer, and pinning the name fails the page for a refactor.
-    expect(systemTheme).toMatch(
-      /alpha\(selection, alphaOf\([A-Za-z.]+\.selection\)\)/,
+    // The share is read off the base theme's own `selection` role whatever the
+    // helper calls its parameters — the palette's value and the base's roles
+    // are both local names — so a rename is not a change of answer and pinning
+    // the names fails the page for a refactor, while a share taken from another
+    // role still fails.
+    const signature =
+      /const selectionWash = \(\s*(\w+): string,\s*(\w+): ThemeColors\s*\)/.exec(
+        systemTheme,
+      );
+    const value = signature?.[1];
+    const roles = signature?.[2];
+    const read = /const (\w+) = colour\(palette\.selection\)/.exec(
+      systemTheme,
+    )?.[1];
+
+    expect(signature === null).toBe(false);
+    expect(
+      value === undefined || roles === undefined || read === undefined,
+    ).toBe(false);
+    if (value === undefined || roles === undefined || read === undefined)
+      return;
+
+    expect(systemTheme).toContain(
+      `alpha(${value}, alphaOf(${roles}.selection))`,
     );
-    expect(systemTheme).toMatch(
-      /selectionWash\(palette\.selection, [A-Za-z]+\)/,
-    );
+    // A cleared field names no colour, so the palette's selection reaches the
+    // wash through the boundary read rather than as a fill.
+    expect(systemTheme).toContain(`selectionWash(${read}, ${roles})`);
     expect(page).toContain("translucent **wash**");
     expect(page).toContain("base theme's own share");
   });

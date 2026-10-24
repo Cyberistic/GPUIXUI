@@ -66,7 +66,9 @@ describe("the Statistic card preview", () => {
     expect(trendTone).toMatch(
       /(?:theme\.colors|themeColors\(theme\))\.mutedForeground/,
     );
-    expect(trendTone).not.toMatch(/colors\.(?:success|destructive)(?![A-Za-z])/);
+    expect(trendTone).not.toMatch(
+      /colors\.(?:success|destructive)(?![A-Za-z])/,
+    );
 
     expect(trendRole("up")).toBe("successSoftForeground");
     expect(trendRole("down")).toBe("destructiveSoftForeground");

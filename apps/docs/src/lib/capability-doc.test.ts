@@ -472,6 +472,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(pageRow).toContain(`${checks} checks`);
     expect(pageRow).toContain("one stop");
 
-    expect(doc.slice(doc.indexOf("## 5."))).toContain("`radio-group-lifecycle`");
+    expect(doc.slice(doc.indexOf("## 5."))).toContain(
+      "`radio-group-lifecycle`",
+    );
   });
 });
