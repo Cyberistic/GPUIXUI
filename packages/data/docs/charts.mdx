@@ -11,7 +11,14 @@ chart is one layer per series, each tinted through `style.color`. The
 window.
 
 ```tsx
-import { BarChart, DonutChart, LineChart, Sparkline, StackedBar } from "@gpuixui/data";
+import {
+  BarChart,
+  ChartLegend,
+  DonutChart,
+  LineChart,
+  Sparkline,
+  StackedBar,
+} from "@gpuixui/data";
 
 <BarChart
   aria-label="Revenue against cost by quarter"
@@ -28,9 +35,17 @@ import { BarChart, DonutChart, LineChart, Sparkline, StackedBar } from "@gpuixui
 <StackedBar aria-label="Revenue and cost" labels={QUARTERS} series={[revenue, cost]} />;
 <DonutChart aria-label="Traffic by source" data={sources} size={160} />;
 <Sparkline aria-label="Revenue trend" values={revenue.values} />;
+<ChartLegend
+  items={[
+    { key: "revenue", label: "Revenue", color: series1 },
+    { key: "cost", label: "Cost", color: series2 },
+  ]}
+/>;
 ```
 
 ## API
+
+### `BarChart` · `StackedBar` · `LineChart`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
@@ -41,8 +56,40 @@ import { BarChart, DonutChart, LineChart, Sparkline, StackedBar } from "@gpuixui
 | `legend` | `boolean` | `series.length > 1` | paints the legend under the labels |
 | `axis` | `boolean` | `true` | paints the y-axis tick column |
 | `ticks` | `number` | `4` | how many steps the y axis divides into |
+| `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the chart's locator; the plot is `-plot`, the axis column `-axis`, a series layer `-layer-<key>` |
-| `aria-label` | `string` | — | the group's name; a sparkline's own image name |
+| `aria-label` | `string` | — | the group's name |
+
+### `DonutChart`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `data` | `ChartDatum[]` | — | `{ key, label, value }` per slice |
+| `size` | `number` | `160` | the ring's box, in pixels |
+| `legend` | `boolean` | `true` | paints the legend under the ring |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the chart's locator; a slice is `-layer-<key>` |
+| `aria-label` | `string` | — | the group's name |
+
+### `Sparkline`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `values` | `number[]` | — | one point each, in paint order |
+| `width` | `number` | `120` | the plot's width, in pixels |
+| `height` | `number` | `32` | the plot's height, in pixels |
+| `color` | `string` | the first categorical swatch | the line's colour |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the sparkline's locator |
+| `aria-label` | `string` | `Trend` | the single image's name |
+
+### `ChartLegend`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `items` | `ChartLegendItem[]` | — | `{ key, label, color }` per series |
+| `testId` | `string` | — | the legend's locator; a swatch is `-swatch-<key>` |
+| `aria-label` | `string` | — | the legend's group name |
 
 ## Limitations
 

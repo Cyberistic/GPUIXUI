@@ -545,6 +545,22 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   the empty-state case fails `expected 'Name' to contain 'No rows'`; with the
   normaliser it is 9/9 in the file. The virtualization page, the README
   paragraph and the Virtualized tables row teach the rule.
+- **A chart part a page never named has no consumer**: `docs/charts.mdx`
+  documented the series charts' shared contract and nothing else, so the page a
+  reader opens for `DonutChart`, `Sparkline` and `ChartLegend` never named
+  `data`, `size`, `values`, `color` or `items`, and the pre-prune sentence that
+  said which types the one table covered was gone with the prose. The page now
+  carries one table per shipped part (`BarChart` · `StackedBar` · `LineChart`
+  share `ChartProps`; then `DonutChart`, `Sparkline`, `ChartLegend`), including
+  the `className` row every other part of the package documents. A route
+  without a tint is a colour the theme does not own; a chart part without a
+  table is a prop the reader cannot look up. `src/chart/docs.test.ts` (3 cases)
+  reads each table against the type in both directions (a declared prop with no
+  row, a row no type declares) and holds the six shipped names. Directions
+  measured: dropping the `values` row fails `` `Sparkline`: values ``, and
+  adding a `pinFirst` row fails `` `ChartLegend`: pinFirst ``. The `Charts` row's
+  `docs/charts.mdx` §Accessibility citation pointed at a section the page prune
+  removed; it names the page's tables now.
 - **A page lists the props its type declares**: `docs/table-sorting.mdx` was the
   only page a consumer reads for `TableSortHeader`, and nothing held its API
   table to the type — it documented ten of eleven props, missing `testId` (the
