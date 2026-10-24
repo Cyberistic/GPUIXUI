@@ -22,6 +22,10 @@ import { describe, expect, it } from "vitest";
 import { cssFontStack } from "./fonts";
 import { resolvePlatformTheme } from "./platform";
 import { toCssVars } from "./theme-css";
+import {
+  THUMB_SLIDE_CSS_EASE,
+  THUMB_SLIDE_MS,
+} from "../components/docs/switch-preview";
 
 /**
  * The bridge, and the preview style sheets that consume it.
@@ -460,8 +464,10 @@ describe("preview style sheets", () => {
     expect(block(css, ".gx-switch-thumb")).toContain(
       "var(--switch-knob-size, calc(var(--icon-size-md) - 4px))",
     );
+    // The slide is the component's, so the style sheet reads the preview's
+    // constants rather than printing a duration and a curve of its own.
     expect(block(css, ".gx-switch-thumb")).toContain(
-      "transition: left 150ms ease-out",
+      `transition: left ${THUMB_SLIDE_MS}ms ${THUMB_SLIDE_CSS_EASE}`,
     );
   });
 

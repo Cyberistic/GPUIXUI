@@ -18,8 +18,10 @@ import {
  * so the preview takes both from the theme bridge (`--icon-size-*`,
  * `--target-size`). The band owns the role, the tab stop and the ring; the
  * pill and the knob take no pointer input, exactly as `decorative()` strips it
- * from the native track and thumb. The slide is the component's 150 ms
- * `easeOut` on the knob's `left` inset, and `reducedMotion` paints the landing.
+ * from the native track and thumb. The slide is the component's 160 ms
+ * `easeInOut` on the knob's `left` inset — the timing table's `standard` curve
+ * for a movement between two resting states — and `reducedMotion` paints the
+ * landing.
  *
  * The preview is a browser rendering: the native switch announces its state
  * through `aria-valuetext` because the runtime has no `aria-checked`, which the

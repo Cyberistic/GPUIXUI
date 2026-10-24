@@ -3686,7 +3686,7 @@
   color: var(--background);
   box-shadow: var(--switch-knob-shadow, none);
   pointer-events: none;
-  transition: left 150ms ease-out;
+  transition: left 160ms ease-in-out;
 }
 
 .gx-switch[data-size="sm"] .gx-switch-thumb {

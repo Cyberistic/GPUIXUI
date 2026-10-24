@@ -56,7 +56,7 @@ Switch
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the checked fill and the knob's on-colour |
 | `label` | `string` | none | the accessible name; a visible `Label` does not supply it |
 | `description` | `string` | none | announced help (`aria-description`); wins over a tooltip's text |
-| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | the knob lands on its position instead of sliding there; the prop wins |
+| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | the knob lands on its position instead of sliding there; the slide is the timing table's `fast` level (160 ms) on its `standard` curve; the prop wins |
 | `style` | `StateStyle<SwitchState>` | — | resolved against the live state and merged last |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | stable locator |

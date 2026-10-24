@@ -8,10 +8,13 @@
  * app composition — the component has no idea a second switch exists — so it
  * lives here where a test can fail it.
  *
- * The slide is the component's: 150 ms `easeOut` on the thumb's `left` inset,
- * which the caller may turn into a zero-duration landing with `reducedMotion`.
- * The duration is read from `Switch.tsx` by the test, so the preview's CSS
- * cannot claim a slide the component does not paint.
+ * The slide is the component's: `Switch.tsx` declares
+ * `motionTiming("fast", { phase: "standard" })` for the thumb's `left` inset,
+ * so the preview paints the `fast` level's 160 ms on the timing table's
+ * `standard` curve (`easeInOut`), which a caller may turn into a zero-duration
+ * landing with `reducedMotion`. Both the duration and the curve are read from
+ * that declaration by the test, so the preview's CSS cannot claim a slide the
+ * component does not paint.
  */
 
 /** What the settings panel holds. */
@@ -81,10 +84,16 @@ export const describeSync = (settings: SyncSettings): string => {
 /**
  * The thumb's slide, in milliseconds — `Switch.tsx`'s `THUMB_SLIDE` duration.
  *
- * `reducedMotion` paints the same two positions with no duration, because the
- * runtime exposes no preference and the caller supplies its own.
+ * The component takes that duration from the timing table's `fast` level, so
+ * the preview's number is the table's and not a copy of a literal. The curve is
+ * `standard`'s `easeInOut`, which {@link THUMB_SLIDE_CSS_EASE} spells for the
+ * style sheet. `reducedMotion` paints the same two positions with no duration,
+ * because the runtime exposes no preference and the caller supplies its own.
  */
-export const THUMB_SLIDE_MS = 150;
+export const THUMB_SLIDE_MS = 160;
+
+/** The curve `standard` names, in the CSS spelling the preview transitions on. */
+export const THUMB_SLIDE_CSS_EASE = "ease-in-out";
 
 /** The slide the preview paints for a motion preference. */
 export const slideMs = (reducedMotion: boolean): number =>
