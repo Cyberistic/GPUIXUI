@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Sliding number example: a counter and a price whose digits roll.
  *

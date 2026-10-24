@@ -10,9 +10,10 @@
  * touched. The `@jsxImportSource @gpuix/react` pragma pins each file's JSX to the
  * runtime it was written for.
  *
- * `@gpuixui/primitives` and `@gpuixui/icons` hold the same rule for their own
- * files; `packages/data`, `dock`, `files` and `shell` are recorded in `TODO.md`
- * as their owners' work, so this walk covers the three packages this lane writes.
+ * `@gpuixui/primitives`, `@gpuixui/icons` and `@gpuixui/data` hold the same rule
+ * for their own files; `packages/dock`, `files` and `shell` are recorded in
+ * `TODO.md` as their owners' work, so this walk covers the three packages this
+ * lane writes.
  *
  * `node:fs` is the test-time repository boundary `docs.test.ts` already uses.
  */
@@ -42,22 +43,27 @@ const jsxRuntime = (config: string): Option.Option<string> =>
 /** The runtime a file's opening line pins, when it pins one. */
 const pinnedRuntime = (source: string): Option.Option<string> =>
   Option.flatMap(Arr.head(Str.split("\n")(source)), (line) =>
-    Option.fromNullishOr(/^\/\*\* @jsxImportSource (\S+) \*\/$/.exec(line)?.[1]),
+    Option.fromNullishOr(
+      /^\/\*\* @jsxImportSource (\S+) \*\/$/.exec(line)?.[1],
+    ),
   );
 
 /**
  * The published `.tsx` files of a package, relative to it.
  *
  * A test file is compiled by its own package only, so it is never the JSX a
- * consumer's program sees; the files published under `src` are.
+ * consumer's program sees. Both trees a package exports are: `src` (the `.`
+ * entry) and `examples` (the `./examples` entry).
  */
 const publishedTsx = (root: URL): ReadonlyArray<string> =>
-  Arr.filter(
-    readdirSync(fileURLToPath(new URL("src/", root)), {
-      recursive: true,
-      encoding: "utf8",
-    }),
-    (file) => Str.endsWith(".tsx")(file) && !Str.endsWith(".test.tsx")(file),
+  Arr.flatMap(["src", "examples"], (tree) =>
+    Arr.filter(
+      readdirSync(fileURLToPath(new URL(`${tree}/`, root)), {
+        recursive: true,
+        encoding: "utf8",
+      }).map((file) => `${tree}/${file}`),
+      (file) => Str.endsWith(".tsx")(file) && !Str.endsWith(".test.tsx")(file),
+    ),
   );
 
 /** The fault one file has, or none when it pins the runtime it should. */
@@ -66,7 +72,7 @@ const pinFault = (
   file: string,
   runtime: string,
 ): Result.Result<string, void> =>
-  Option.match(pinnedRuntime(text(root, `src/${file}`)), {
+  Option.match(pinnedRuntime(text(root, file)), {
     onNone: () => Result.succeed(`${file}: pins no JSX runtime`),
     onSome: (name) =>
       name === runtime

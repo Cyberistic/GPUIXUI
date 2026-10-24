@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Counting number example: a dashboard metric that counts up.
  *

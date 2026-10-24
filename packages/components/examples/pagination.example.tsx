@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Pagination example: a results footer driven by real page state.
  *

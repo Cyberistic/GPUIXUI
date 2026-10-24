@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Accordion example: a five-question FAQ in single, non-collapsible mode.
  *

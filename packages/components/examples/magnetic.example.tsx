@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Magnetic example: a row of workspace cards whose contents lean toward the
  * pointer, and the same row under the reduced preference.

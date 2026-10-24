@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Toast example: three outcomes from one Save button.
  *

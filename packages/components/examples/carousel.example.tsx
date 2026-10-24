@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Carousel example: a three-panel gallery with previous/next controls.
  *

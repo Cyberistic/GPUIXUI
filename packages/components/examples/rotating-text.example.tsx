@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Rotating text example: a value proposition that cycles.
  *

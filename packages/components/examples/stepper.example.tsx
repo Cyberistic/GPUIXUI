@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Stepper example: a three-step checkout, horizontal and vertical.
  *

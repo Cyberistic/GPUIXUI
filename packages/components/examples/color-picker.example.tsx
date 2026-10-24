@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Color picker example: choose an accent from swatches or HEX.
  *

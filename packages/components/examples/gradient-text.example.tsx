@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Gradient text example: three ramps on one page.
  *

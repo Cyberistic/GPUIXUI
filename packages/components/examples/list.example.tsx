@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * List example: a recent-files panel with single selection, and a reviewers
  * panel with multiple selection.

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * SearchInput example: filter a file list as you type.
  *

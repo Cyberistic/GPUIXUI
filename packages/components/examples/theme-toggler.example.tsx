@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ThemeToggler example: the control re-provides the theme it reports.
  *

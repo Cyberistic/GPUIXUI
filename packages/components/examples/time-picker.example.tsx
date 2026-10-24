@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * TimePicker example: a standup time with a 15-minute arrow step.
  *

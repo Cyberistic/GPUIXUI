@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Countdown example: an offer that expires.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * DiffViewer example: the same edit as a unified and a split diff.
  *

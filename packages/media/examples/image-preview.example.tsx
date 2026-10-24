@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ImagePreview example: the three states, over one frame size.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Hexagon example: a hexagon field behind a workspace hero, and the same field
  * stilled under the reduced preference.

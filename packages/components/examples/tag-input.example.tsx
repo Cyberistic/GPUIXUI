@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Tag input example: a tag editor with a cap.
  *

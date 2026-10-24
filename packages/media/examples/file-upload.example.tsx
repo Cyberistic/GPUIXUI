@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * FileUpload example: a queue over a fake transfer, one file failing.
  *

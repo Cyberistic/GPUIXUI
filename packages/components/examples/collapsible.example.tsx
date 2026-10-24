@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Collapsible example: advanced run options inside a card.
  *

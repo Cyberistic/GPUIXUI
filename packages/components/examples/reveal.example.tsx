@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Reveal example: a settings section arriving, and a notice that leaves.
  *

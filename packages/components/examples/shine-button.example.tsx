@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Shine button example: a build toolbar whose actions catch the light as the
  * pointer crosses them, and the same primary action under the reduced

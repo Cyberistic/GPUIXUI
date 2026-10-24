@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Message example: the four slots a reply can carry, in one transcript.
  *

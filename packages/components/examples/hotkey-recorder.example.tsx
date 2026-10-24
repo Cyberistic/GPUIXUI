@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Hotkey recorder example: bind the command-palette chord.
  *

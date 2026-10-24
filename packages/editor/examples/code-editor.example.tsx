@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CodeEditor example: a controlled, highlighted editor over a small source.
  *

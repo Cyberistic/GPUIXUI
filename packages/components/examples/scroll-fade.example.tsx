@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ScrollFade example: release notes longer than the box that holds them.
  *

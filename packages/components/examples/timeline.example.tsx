@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Timeline example: a deploy history.
  *

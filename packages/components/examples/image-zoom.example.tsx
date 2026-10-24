@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Image zoom example: a harbour chart a reader can magnify, and the same chart
  * at a stronger magnification under the reduced preference.

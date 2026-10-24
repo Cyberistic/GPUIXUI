@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Auto height example: a settings disclosure that grows to its content.
  *

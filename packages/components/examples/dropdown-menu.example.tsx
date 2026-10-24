@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Dropdown menu example: a file row with a small actions menu.
  *

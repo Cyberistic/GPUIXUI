@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MediaPlayer example: a four-frame clip with a waveform and a transport.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CodeBlock example: a themed snippet, a short one with a header, and the
  * clipboard path the runtime does not own.

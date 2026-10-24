@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Chat example: a conversation driven by the same state machine the components
  * use, with a scripted reply — no model is called.

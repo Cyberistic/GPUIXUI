@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Typing text example: a deploy log that types itself in.
  *

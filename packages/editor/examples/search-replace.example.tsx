@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * SearchReplace example: a find-and-replace bar over a controlled text.
  *

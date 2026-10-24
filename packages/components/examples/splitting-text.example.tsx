@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Splitting text example: a headline that arrives word by word.
  *

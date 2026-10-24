@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MultiStepForm example: a three-step workspace wizard with a gate per step.
  *

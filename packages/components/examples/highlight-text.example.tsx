@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Highlight text example: a marker that sweeps across a query's matches.
  *

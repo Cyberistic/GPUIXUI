@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Context menu example: a project row whose right click offers actions.
  *

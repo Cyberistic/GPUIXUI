@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Bubbles example: a launch panel under a rising field.
  *

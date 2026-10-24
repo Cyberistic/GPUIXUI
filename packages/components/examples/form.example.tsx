@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Form example: a signup form that validates against a schema and shows a real
  * success state.

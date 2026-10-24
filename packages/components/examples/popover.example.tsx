@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Popover example: choosing which columns a table shows.
  *

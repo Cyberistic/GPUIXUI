@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Glyph example: a character wall behind a launch panel, and the same wall
  * stilled under the reduced preference.

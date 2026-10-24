@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * EmptyState example: a collection with nothing in it, twice.
  *

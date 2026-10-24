@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Dialog example: deleting a workspace, with a real cancel and a busy confirm.
  *

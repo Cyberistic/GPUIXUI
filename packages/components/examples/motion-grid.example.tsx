@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MotionGrid example: a board of tools whose cards change places.
  *

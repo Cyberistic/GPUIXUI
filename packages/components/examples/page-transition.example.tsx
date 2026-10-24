@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * PageTransition example: a three-step form whose body swaps with the house
  * transition.

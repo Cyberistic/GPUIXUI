@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Motion example: the same dialog and accordion with the reader's preference.
  *

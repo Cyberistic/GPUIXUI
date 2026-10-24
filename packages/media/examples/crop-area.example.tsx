@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CropArea example: a controlled crop over a picture with a live readout.
  *

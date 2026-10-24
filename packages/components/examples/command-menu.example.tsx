@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Command menu example: a ⌘K-style palette over three groups, with recents.
  *

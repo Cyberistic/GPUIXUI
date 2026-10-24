@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Card example: a plan card with figures and a footer.
  *

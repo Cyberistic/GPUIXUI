@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Inline edit example: rename a workspace where its name is shown.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * CopyButton example: an API token a reader can copy, a renamed confirmation and
  * a disabled action.

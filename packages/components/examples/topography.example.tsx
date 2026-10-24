@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Topography example: a contour map behind a launch panel, and the same field
  * stilled under the reduced preference.

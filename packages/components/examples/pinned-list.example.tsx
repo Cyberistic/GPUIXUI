@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * PinnedList example: a settings page's sectioned scroll region.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Fieldset example: a billing address group, and the same group while saving.
  *

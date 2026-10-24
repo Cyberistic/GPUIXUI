@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Rolling text example: a counter that rolls, and a status that drops in.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Fireworks example: a release celebration behind the confirmation.
  *

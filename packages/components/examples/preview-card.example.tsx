@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Preview card example: a document link that previews its content.
  *

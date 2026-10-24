@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Liquid button example: a save bar whose actions flood from whichever edge the
  * pointer crosses into them, and the same action under the reduced preference.

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MarkdownEditor example: one controlled document, three views.
  *

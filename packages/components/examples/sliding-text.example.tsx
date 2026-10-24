@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Sliding text example: a status board whose value slides across its box.
  *

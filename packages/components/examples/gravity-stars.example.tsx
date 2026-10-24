@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * GravityStars example: a launch panel with a field of falling stars behind it,
  * and the same field stilled under the reduced preference.

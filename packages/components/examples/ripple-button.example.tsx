@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Ripple button example: three actions that mark the press where it landed.
  *

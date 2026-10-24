@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Drawer example: filters at the right edge and a details sheet at the bottom.
  *

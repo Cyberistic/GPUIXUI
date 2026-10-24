@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * MessageScroller example: a conversation that follows new rows and leaves a
  * reader who scrolled up alone.

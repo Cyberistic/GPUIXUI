@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Tabs example: account settings, three panels, one disabled tab.
  *

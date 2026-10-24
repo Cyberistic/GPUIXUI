@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * QrCode example: one URL at three sizes and a value the symbol refuses.
  *

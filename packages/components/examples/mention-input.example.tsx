@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Mention input example: a comment composer with three people.
  *

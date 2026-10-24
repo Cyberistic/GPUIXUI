@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * DatePicker example: a booking window with a summary.
  *

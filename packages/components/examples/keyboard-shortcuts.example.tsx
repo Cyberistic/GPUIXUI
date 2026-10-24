@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Keyboard shortcuts example: the same editor chords with macOS and Windows
  * glyphs, which is what the docs platform toggle does. `mod` is the

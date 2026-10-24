@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Particles example: a launch panel with the field behind its content.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Alert example: an updater banner you can dismiss, and a failure with a retry.
  *

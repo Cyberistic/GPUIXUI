@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Avatar example: a members panel and a facepile.
  *

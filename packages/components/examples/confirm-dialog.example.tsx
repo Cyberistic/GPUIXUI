@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * ConfirmDialog example: a destructive action with the consequence named.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * DropZone example: a drop target that reports dropped files, and a pick route.
  *

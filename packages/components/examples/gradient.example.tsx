@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Gradient example: a hero band that breathes, and the same ramp stilled.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Navigation menu example: a product nav with two panels.
  *
