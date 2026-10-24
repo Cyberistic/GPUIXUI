@@ -48,7 +48,7 @@ Alert
 
 | Part | Prop | Type | Default | Consequence |
 | ---- | ---- | ---- | ------- | ----------- |
-| `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` | the surface, edge and readable colour every part inherits |
+| `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` — a stored name the union does not carry | the surface, edge and readable colour every part inherits |
 | `Alert` | `children` | parts | — | the composition; a part outside the root throws |
 | any part | `className` | `string` | — | joined after that part's recipe; `style` still merges last |
 | `AlertLink` | `onSelect` | `() => void` | — | the text action's handler, on click, `Enter` or `Space` |

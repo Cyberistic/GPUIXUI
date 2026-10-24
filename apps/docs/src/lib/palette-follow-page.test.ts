@@ -127,13 +127,21 @@ describe("the dark-mode page's palette follow", () => {
 
   it("records a change only after the callback returned", () => {
     // A callback that throws must not leave the window on the previous theme
-    // with the change marked as delivered, so the key is written after it.
+    // with the change marked as delivered, so the record is written after it.
+    // The seam compares the palette it read rather than a joined key, so the
+    // guard follows the declaration instead of naming the value's shape.
     const tick = systemTheme.split("const tick = (): void => {")[1] ?? "";
+    const recorded = /let (\w+): SystemPalette \| undefined/.exec(
+      systemTheme,
+    )?.[1];
     const delivered = tick.indexOf("onChange(");
-    const recorded = tick.indexOf("applied = key;");
+    const written =
+      recorded === undefined
+        ? -1
+        : tick.search(new RegExp(`\\b${recorded} = `));
 
     expect(delivered).toBeGreaterThan(-1);
-    expect(recorded).toBeGreaterThan(delivered);
+    expect(written).toBeGreaterThan(delivered);
     expect(page).toContain("recorded once `onChange` returns");
     expect(page).toContain("next tick");
   });

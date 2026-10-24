@@ -1,0 +1,140 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+/**
+ * The value a store kept, on the pages the site serves.
+ *
+ * A variant, size, tone, axis or activation is stored with the workspace as
+ * often as it is a literal, so it arrives as a name a later release renamed or
+ * dropped. Every one of these components reads the stored value through a guard
+ * (`Schema.is(...) ? value : "<default>"`) because the raw table read painted
+ * the wrong thing: a badge with no ink, a card with no boundary, a tab set laid
+ * out vertical, a menu row that threw out of its matcher.
+ *
+ * The components workstream measured each fallback and documented it on the
+ * **package** page, and the site's curated page owns the same URL for all of
+ * them, so the package files are shadowed and never served. This guard derives
+ * each default from the guard function itself and holds the served page's own
+ * prop row to it, so a page cannot teach a union without the answer a restored
+ * value gets.
+ */
+
+const repo = new URL("../../../../", import.meta.url);
+
+const read = (path: string): string =>
+  readFileSync(new URL(path, repo), "utf8");
+
+/** One prop whose stored value the component reads through a guard. */
+interface StoredValue {
+  /** The curated page the site serves. */
+  readonly page: string;
+  /** The prop as the page's table names it. */
+  readonly prop: string;
+  /** The module the guard lives in. */
+  readonly source: string;
+  /** The guard function's name. */
+  readonly reader: string;
+}
+
+const badge = "packages/components/src/badge.tsx";
+const card = "packages/components/src/card.tsx";
+const mentionMenu = "packages/components/src/menu/item.tsx";
+const tabs = "packages/components/src/tabs/logic.ts";
+const stepper = "packages/components/src/stepper/logic.ts";
+const alertTone = "packages/components/src/internal/theme.ts";
+
+const storedValues: ReadonlyArray<StoredValue> = [
+  { page: "badge.mdx", prop: "variant", source: badge, reader: "variantOf" },
+  { page: "badge.mdx", prop: "size", source: badge, reader: "sizeOf" },
+  { page: "card.mdx", prop: "variant", source: card, reader: "variantOf" },
+  { page: "alert.mdx", prop: "tone", source: alertTone, reader: "toneOf" },
+  {
+    page: "tabs.mdx",
+    prop: "orientation",
+    source: tabs,
+    reader: "orientationOf",
+  },
+  {
+    page: "tabs.mdx",
+    prop: "activation",
+    source: tabs,
+    reader: "activationOf",
+  },
+  {
+    page: "stepper.mdx",
+    prop: "orientation",
+    source: stepper,
+    reader: "orientationOf",
+  },
+  {
+    page: "dropdown-menu.mdx",
+    prop: "tone",
+    source: mentionMenu,
+    reader: "menuToneOf",
+  },
+  {
+    page: "context-menu.mdx",
+    prop: "tone",
+    source: mentionMenu,
+    reader: "menuToneOf",
+  },
+];
+
+const pageText = (name: string): string =>
+  read(`apps/docs/content/docs/components/${name}`);
+
+/** The default a guard answers for a name it does not carry. */
+const fallbackOf = (source: string, reader: string): string | undefined => {
+  const start = new RegExp(`const ${reader} =`).exec(source);
+  if (start === null) return undefined;
+  const body = source.slice(start.index, start.index + 400);
+  return /\? value : "([a-z]+)"/.exec(body)?.[1];
+};
+
+/** The table row that documents a prop, from its name cell. */
+const rowOf = (text: string, prop: string): string | undefined =>
+  text
+    .split("\n")
+    .find((line) =>
+      new RegExp(`^\\| (?:[^|]+ \\| )?\`${prop}\` \\|`).test(line),
+    );
+
+describe("a value a store kept", () => {
+  it("reads each default from the guard the component runs", () => {
+    expect(
+      storedValues.flatMap((value) =>
+        fallbackOf(read(value.source), value.reader) === undefined
+          ? [`${value.source}: ${value.reader}`]
+          : [],
+      ),
+    ).toEqual([]);
+
+    // The fallbacks are not one word: a modal card keeps its edge, a badge its
+    // ink, a tab set its horizontal axis and a menu row its default emphasis.
+    expect(
+      new Set(
+        storedValues.map((value) =>
+          fallbackOf(read(value.source), value.reader),
+        ),
+      ).size,
+    ).toBeGreaterThanOrEqual(5);
+  });
+
+  it("teaches the answer in the served page's own prop row", () => {
+    expect(
+      storedValues.flatMap((value) => {
+        const row = rowOf(pageText(value.page), value.prop);
+        const fallback = fallbackOf(read(value.source), value.reader);
+        if (row === undefined)
+          return [`${value.page}: no \`${value.prop}\` row`];
+        if (fallback === undefined) return [`${value.page}: ${value.prop}`];
+
+        const gaps: Array<string> = [];
+        if (!row.includes(`\`"${fallback}"\``)) gaps.push(fallback);
+        if (!/stored name the union does not carry/.test(row))
+          gaps.push("rule");
+        return gaps.map((gap) => `${value.page}: ${value.prop} — ${gap}`);
+      }),
+    ).toEqual([]);
+  });
+});
