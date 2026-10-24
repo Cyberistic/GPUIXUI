@@ -45,6 +45,7 @@ import {
   nativeTextFills,
   nativeTextTheme,
   type NativeTextFill,
+  type NativeTextSource,
 } from "./native-text.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
@@ -1848,6 +1849,43 @@ describe("a theme a store gave back", () => {
     expect(brand.metrics.codeLineHeight).toBe(28);
     expect(brand.metrics.mdCodeRadius).toBe(12);
     expect(brand.metrics.diffRowPaddingX).toBe(24);
+  });
+
+  /**
+   * The source is what a store handed back, not a `Theme`.
+   *
+   * The seam was total on the groups — a lost type, radius or spacing group
+   * painted the library's own values — but its parameter was `Theme`, so a
+   * consumer holding the value `JSON.parse` returned could hand it over only
+   * through a cast, which `AGENTS.md` §2 forbids. `NativeTextSource` is the
+   * storage port: the colour, type, radius and spacing groups may be absent or
+   * `null`, and the mode may be a name this release does not ship. The calls
+   * below compile without a cast; deleting the port and restoring the `Theme`
+   * parameter fails `check-types` on them (TS2305 and TS2345).
+   */
+  it("paints the shape a store hands back, without a cast", () => {
+    const stored: NativeTextSource = {
+      colors: { background: "#11141A" },
+      typography: {
+        sans: "Inter",
+        body: { fontSize: 18, lineHeight: 26, fontWeight: 500 },
+      },
+      radius: null,
+      spacing: null,
+      mode: "Dark",
+    };
+    const host = nativeTextTheme(stored);
+
+    // The page decides the mode when the stored name is one this release does
+    // not ship, and each lost group paints the library's own value.
+    expect(host.appearance).toBe("dark");
+    expect(host.fontSans).toBe("Inter");
+    expect(host.metrics.mdTextSize).toBe(18);
+    expect(host.metrics.mdCodeRadius).toBe(lightTheme.radius.lg);
+    expect(host.metrics.diffRowPaddingX).toBe(lightTheme.spacing.xl);
+    // No brand role means no derived accent: the host paints its own mark.
+    expect(host.accent).toBeUndefined();
+    expect(nativeAccent(stored)).toBeUndefined();
   });
 
   // 47 roles × both fills: the broad guard a role added to the colour group must

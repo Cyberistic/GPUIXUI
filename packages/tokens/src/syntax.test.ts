@@ -287,7 +287,8 @@ describe("the syntax palette", () => {
     // shipping the palette reaches the block with no component-side table. A seam
     // that stopped filling it would put the runtime's own dark palette back.
     const seam = read("./native-text.ts");
-    expect(seam).toContain("syntax: syntaxColors(theme)");
+    expect(seam).toContain("syntax: syntaxColors({");
+    expect(seam).toContain("syntax: theme.syntax");
     const codeBlock = read("../../components/src/code-block.tsx");
     expect(codeBlock).toContain("syntaxColors(theme)");
     expect(codeBlock).toContain("bg-background");

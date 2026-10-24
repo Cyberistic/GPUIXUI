@@ -48,6 +48,23 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
 };
 
 /**
+ * A theme, or anything shaped like one, as the type scale paints it.
+ *
+ * The group may be absent or `null` because a store can lose it, and a role may
+ * be a partial record or `null` because JSON has no `undefined`. This is the
+ * storage boundary {@link textStyle} accepts, so a decoded theme paints without
+ * a cast to `Theme`.
+ */
+export interface TypeSource {
+  readonly typography?:
+    | ({
+        readonly sans?: string | null;
+        readonly mono?: string | null;
+      } & Partial<Record<TextRole, Readonly<Partial<TextStyle>> | null>>)
+    | null;
+}
+
+/**
  * Resolve a typographic role to inline style properties.
  *
  * A role name is content as often as a literal, so a name this release does not
@@ -61,6 +78,9 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
  * surface can paint one nobody has audited yet, the rule `@gpuixui/primitives`'
  * `typeOf`/`familyOf` already follow.
  *
+ * The input is a {@link TypeSource}, the shape a store hands back, so a decoded
+ * theme is painted without the cast to `Theme` the type group used to require.
+ *
  * @example
  * ```tsx
  * <text style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}>
@@ -68,7 +88,10 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
  * </text>
  * ```
  */
-export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
+export function textStyle(
+  theme: TypeSource,
+  role: TextRole,
+): TextStyleProperties {
   const name = isTextRole(role) ? role : "body";
   const authored: unknown = theme.typography?.[name];
   const style = isTextStyle(authored) ? authored : shippedTypography[name];

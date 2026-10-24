@@ -224,7 +224,11 @@ caller's content — rather than `TypeError: Cannot read properties of undefined
 (`missingTokens`). `textStyle` and `nativeTextTheme` are total on the type,
 radius and spacing groups for the same reason: a surface can paint a theme nobody
 has audited yet, so a lost role or group paints the library's own role, family
-and step, and `missingTokens` stays the refusal. `elevationShadow` reads a level this release does not ship as
+and step, and `missingTokens` stays the refusal. Their input is the source a
+store hands back — `TypeSource` for `textStyle`, `NativeTextSource` for
+`nativeAccent`/`nativeTextTheme` — so a decoded theme paints without a cast to
+`Theme`, and `ColourSource.colors` admits the `null` JSON keeps for a group a
+theme never carried. `elevationShadow` reads a level this release does not ship as
 `md` too, rather than a raised panel that silently paints flat, `avatarPixels`
 reads a diameter step this release does not ship as `md` rather than handing the
 renderer `undefined` (which it drops, so the mark painted with no side), and

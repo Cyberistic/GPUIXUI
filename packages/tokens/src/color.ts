@@ -193,10 +193,11 @@ export interface ThemeColors {
 
 /**
  * A theme, or anything shaped like one, as the checks that read colours see it:
- * the group may be absent, because a store can lose it.
+ * the group may be absent or `null`, because a store can lose it and JSON has no
+ * `undefined`.
  */
 export interface ColourSource {
-  readonly colors?: Partial<ThemeColors>;
+  readonly colors?: Partial<ThemeColors> | null;
 }
 
 /**

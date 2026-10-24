@@ -70,7 +70,7 @@
  * instead of handing the host one.
  */
 
-import { blend, themeColors } from "./color.js";
+import { blend, themeColors, type ColourSource } from "./color.js";
 import { opaqueRgb } from "./measure.js";
 import {
   contrastFloorsFor,
@@ -78,11 +78,29 @@ import {
   type ContrastFloors,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
-import { radius, spacing } from "./scale.js";
-import { statusTone, textStyle } from "./styles.js";
+import { radius, spacing, type Radius, type Spacing } from "./scale.js";
+import { statusTone, textStyle, type TypeSource } from "./styles.js";
 import { syntaxColors, type SyntaxColors } from "./syntax.js";
-import { themeModeOf, type Theme, type ThemeMode } from "./theme.js";
+import { themeModeOf, themeContrastOf, type ThemeMode } from "./theme.js";
 import { typography } from "./typography.js";
+
+/**
+ * A theme, or anything shaped like one, as the native text seams read it.
+ *
+ * A host is handed the theme an application currently paints, which is often a
+ * value restored from storage: the colour, type, radius and spacing groups may
+ * be absent or `null`, and the mode may be a name this release does not ship.
+ * Each is read through a seam that answers the library's own value, or no
+ * accent, so this is the shape a store hands back rather than a complete
+ * `Theme` — the rule `missingTokens` follows for the same reason.
+ */
+export interface NativeTextSource extends TypeSource, ColourSource {
+  readonly radius?: Readonly<Partial<Radius>> | null;
+  readonly spacing?: Readonly<Partial<Spacing>> | null;
+  readonly mode?: unknown;
+  readonly contrast?: unknown;
+  readonly syntax?: SyntaxColors;
+}
 
 /**
  * A numeric step a stored theme may have lost, or one it wrote as something the
@@ -103,7 +121,7 @@ const stepOf = <Step extends string>(
 };
 
 /** The font family a theme paints with, or the library's own face. */
-const familyOf = (theme: Theme, family: "sans" | "mono"): string => {
+const familyOf = (theme: TypeSource, family: "sans" | "mono"): string => {
   const name: unknown = theme.typography?.[family];
   return typeof name === "string" && name.trim() !== ""
     ? name
@@ -414,7 +432,8 @@ const ACCENT_STEPS = 50;
  * derived text colours follow. A theme that lost its `primary` answers
  * `undefined`, so the host paints its own mark colour rather than a guess; a
  * fill a stored theme lost does not constrain the step, because nothing is
- * painted there to measure.
+ * painted there to measure. The input is a {@link NativeTextSource}, the shape a
+ * store hands back, so a decoded theme is read without a cast to `Theme`.
  *
  * @example
  * ```ts
@@ -424,10 +443,10 @@ const ACCENT_STEPS = 50;
  * ```
  */
 export function nativeAccent(
-  theme: Theme,
-  floors: ContrastFloors = contrastFloorsFor(theme),
+  source: NativeTextSource,
+  floors: ContrastFloors = contrastFloorsFor(source),
 ): string | undefined {
-  const colors = themeColors(theme);
+  const colors = themeColors(source);
   const primary = colors.primary;
   // A theme that lost its brand has no accent to derive: the host paints its own
   // mark colour, the rule every absent role follows.
@@ -473,6 +492,8 @@ export function nativeAccent(
  *
  * The object does not paint a field's value on its own: pass the role as the
  * element's `color` beside it, the pair the contrast table measures on the fill.
+ * The input is a {@link NativeTextSource}, the shape a store hands back, so a
+ * decoded theme is painted without a cast to `Theme`.
  *
  * **A role the theme lost is dropped, not read.** A theme restored from storage
  * can predate a role this release added, and `auditTheme` reports that absence
@@ -506,10 +527,15 @@ export function nativeAccent(
  * ```
  */
 export function nativeTextTheme(
-  theme: Theme,
+  theme: NativeTextSource,
   fill: NativeTextFill = "input",
 ): NativeTextTheme {
   const colors = themeColors(theme);
+  // The mode and variant are stated values a store may have written in a name
+  // this release does not ship, so both are read through their seams once and
+  // handed to the appearance and the syntax palette together.
+  const mode = themeModeOf(theme);
+  const contrast = themeContrastOf(theme);
   // A tone is three roles; one a store lost is a tone the host has no ink for,
   // and the runtime paints its own green or red rather than a guessed role.
   const added = statusTone({ colors }, "success");
@@ -523,7 +549,7 @@ export function nativeTextTheme(
   const h3 = textStyle(theme, "h3");
   const caption = textStyle(theme, "caption");
   return {
-    appearance: themeModeOf(theme),
+    appearance: mode,
     bg: colors[fill],
     text: colors.inputForeground,
     textMuted: colors.mutedForeground,
@@ -592,7 +618,7 @@ export function nativeTextTheme(
     codeText: colors.foreground,
     codeWash: colors.muted,
     border: colors.border,
-    syntax: syntaxColors(theme),
+    syntax: syntaxColors({ colors, mode, contrast, syntax: theme.syntax }),
     // The runtime reads a code block's token colours from here and paints its
     // own dark-default palette when the field is absent, so a light theme's
     // block would be highlighted for a dark canvas.

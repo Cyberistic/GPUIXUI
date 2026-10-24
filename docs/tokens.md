@@ -1546,6 +1546,14 @@ paint helpers that derive a colour from roles read the same seam: `brandText`,
 gone — the absence rule `elevationShadow` follows for a level — while a `Theme`
 still answers a colour outright, because its type carries the group.
 
+**The type and document seams take that same source.** `textStyle(source, role)`
+accepts a `TypeSource`, and `nativeAccent`/`nativeTextTheme` a
+`NativeTextSource` — the colour, type, radius and spacing groups absent or
+`null`, a role partial, and the mode a name this release may not ship. Each
+answers the library's own value (or no accent), so a decoded theme paints
+without the cast to `Theme` these seams used to require; `ColourSource.colors`
+admits the `null` JSON keeps for a group a theme never carried.
+
 **The primitives reach every role through one seam.** `@gpuixui/primitives` does
 not read `theme.colors` in a painter: `colorRole(theme, role)` in
 `packages/primitives/src/core/theme.ts` is the one read, and it answers

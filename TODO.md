@@ -389,7 +389,30 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 241/241
+`[x]` `[██████████]` 242/242
+
+`[x]` Read a **stored theme in the type and document paint seams without a
+cast** — `textStyle`, `nativeAccent` and `nativeTextTheme` were total on a theme
+a store truncated past (a lost or nulled type, colour, radius or spacing group
+painted the library's own role, family and step, and no accent without a
+`primary`), and all three declared `Theme` — so the consumer the catalogue
+describes, one holding the value `JSON.parse` returned, could paint it only
+through a cast, which `AGENTS.md` §2 forbids, and a stored theme's `mode`
+(`"Dark"`) could not be passed at all. `TypeSource` (`styles.ts`) is the type
+port and `NativeTextSource` (`native-text.ts`) the document port — the groups
+absent or `null`, a role partial, the mode unknown — and `ColourSource.colors`
+now admits the `null` JSON writes for a group a theme never carried;
+`nativeTextTheme` narrows the mode and variant once through
+`themeModeOf`/`themeContrastOf` and hands `syntaxColors` the projection it takes.
+`styles.test.ts` gains `reads the shape a store hands back, without a cast` and
+`native-text.test.ts` `paints the shape a store hands back, without a cast`;
+directions measured: restoring the three `Theme` parameters fails `check-types`
+with **6** errors on the two cases (TS2740 in `styles.test.ts`, TS2739 twice in
+`native-text.test.ts`), green with the ports. `syntax.test.ts`'s painter case
+follows the seam's projection (`syntax: syntaxColors({` and `syntax:
+theme.syntax`). Green: 50 files / **3 066** tests, `check-types` clean. Docs:
+`docs/tokens.md` §Paint-ready values, `docs/design-system.md` §9 and the package
+README. No native scenario applies — a type port and two pure seams.
 
 `[x]` Give the **two layout scales the index and guard the persisted-choice
 contract promises** — the catalogue's table named ten axes and the design system

@@ -27,6 +27,7 @@ import {
   type FilledAction,
   type FilledRole,
   type StatusTone,
+  type TypeSource,
 } from "./styles.js";
 import {
   darkTheme,
@@ -171,6 +172,42 @@ describe("textStyle", () => {
       lineHeight: 24,
       fontFamily: "Brand",
     });
+  });
+
+  /**
+   * The source is what a store handed back, not a `Theme`.
+   *
+   * The bug this guards: this seam was total on the group — it read a lost or
+   * nulled type group as the library's own — but its parameter was `Theme`, so a
+   * consumer holding the value `JSON.parse` returned could paint it only through
+   * a cast, which `AGENTS.md` §2 forbids and which the page's "a surface can
+   * paint a theme nobody has audited yet" teaches. `TypeSource` is the storage
+   * port: the group absent or `null`, a role partial or `null`. The call below
+   * must compile without a cast; deleting `TypeSource` and restoring the `Theme`
+   * parameter fails `check-types` on it (TS2305 and TS2345), which is the
+   * direction this case is measured in.
+   */
+  it("reads the shape a store hands back, without a cast", () => {
+    const stored: TypeSource = {
+      typography: {
+        body: { fontSize: 18, lineHeight: 26, fontWeight: 500 },
+        sans: "Inter",
+      },
+    };
+    expect(textStyle(stored, "body")).toEqual({
+      fontSize: 18,
+      lineHeight: 26,
+      fontWeight: 500,
+      fontFamily: "Inter",
+    });
+    // A role a store wrote partially is the absence the seam already answers.
+    const partial: TypeSource = { typography: { h1: { fontSize: 40 } } };
+    expect(textStyle(partial, "h1")).toEqual(textStyle(lightTheme, "h1"));
+    // The group itself may be absent or the `null` JSON keeps.
+    const empty: TypeSource = {};
+    const nulled: TypeSource = { typography: null };
+    expect(textStyle(empty, "code")).toEqual(textStyle(lightTheme, "code"));
+    expect(textStyle(nulled, "body")).toEqual(textStyle(lightTheme, "body"));
   });
 });
 
