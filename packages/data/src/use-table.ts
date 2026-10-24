@@ -76,7 +76,12 @@ import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import { useCallback, useMemo, useState } from "react";
 import type { RowData, SortingState } from "@tanstack/table-core";
-import { constructGrid, type GridColumn, type GridTable } from "./grid-core.js";
+import {
+  constructGrid,
+  readGridState,
+  type GridColumn,
+  type GridTable,
+} from "./grid-core.js";
 import { filterByTree, type FilterTree } from "./surfaces/logic.js";
 import {
   allSelected,
@@ -137,6 +142,21 @@ export interface UseTableOptions<Row extends RowData> {
    * `readFilterTree`.
    */
   readonly filterTree?: FilterTree;
+  /**
+   * A state a store handed back — sorting, query and chosen ids in one record.
+   *
+   * Read **once, at mount**, through `readGridState`, the seam a store-driven
+   * grid already uses: a saved workspace reopens a grid sorted, narrowed and
+   * chosen the way the reader left it, and a record this release cannot read
+   * reads as the slice it can — a sorting list that is not a list is no sort, an
+   * entry that names no column is dropped, a query that is not text is no query,
+   * and a chosen set keeps only the ids set to `true`. A later edit is the
+   * controller's state; the record is not re-read.
+   *
+   * `initialSort` is the sorting shorthand, used only when the saved record
+   * names no sorting of its own.
+   */
+  readonly stored?: unknown;
   /** Start sorted, for a table whose natural order is not the source order. */
   readonly initialSort?: SortState;
 }
@@ -226,6 +246,19 @@ const sortingOfOrder = (order: SortOrder): SortingState =>
 const sortingOf = (sort: Option.Option<SortState>): SortingState =>
   sortingOfOrder(Option.toArray(sort));
 
+/**
+ * The sorting a grid opens on.
+ *
+ * A saved record's own list wins — it is the more specific state, and a caller
+ * restoring a workspace should see the order it saved. `initialSort` is the
+ * shorthand for a table whose natural order is not the source order, so it
+ * applies only when the record names no sorting at all.
+ */
+const openingSorting = (
+  saved: SortingState,
+  initialSort: Option.Option<SortState>,
+): SortingState => (saved.length > 0 ? saved : sortingOf(initialSort));
+
 /** The press cycle's primary sort, read back off the core's state. */
 const sortOf = (sorting: SortingState): Option.Option<SortState> =>
   Option.map(Option.fromNullishOr(sorting[0]), (column) => ({
@@ -280,15 +313,20 @@ export const useTable = <Row extends RowData>({
   columns,
   hiddenColumns,
   filterTree,
+  stored,
   initialSort,
 }: UseTableOptions<Row>): TableController<Row> => {
+  // The record a store handed back, read once through the seam a store-driven
+  // grid uses. Each starting slice is the saved one; an unreadable record reads
+  // as no sort, no query and no chosen ids (`readGridState`).
+  const start = useMemo(() => readGridState(stored), [stored]);
   const [sorting, setSorting] = useState<SortingState>(() =>
-    sortingOf(Option.fromNullishOr(initialSort)),
+    openingSorting(start.sorting, Option.fromNullishOr(initialSort)),
   );
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(start.globalFilter);
   const [rowSelection, setRowSelection] = useState<
     Readonly<Record<string, true>>
-  >({});
+  >(start.rowSelection);
   /**
    * The record a Shift range extends from.
    *

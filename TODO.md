@@ -11509,6 +11509,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the README's blank-name paragraph and the Advanced filtering row. No native
     scenario applies — the names and the withheld controls are read off the real
     renderer the behaviour suites drive. Owner: data.
+  - [x] **Reopen a grid from the state a store saved** — `useTable` started every
+    grid at the source order with an empty query and nothing chosen
+    (`initialSort` was the only starting state), so a workspace that saved its
+    sorting, search and selection had no way to hand them back through the
+    shipped controller: `readGridState` existed and was documented for
+    `constructGrid`, but it was reachable only by a caller building the table
+    itself. `useTable({ stored })` now reads the record **once at mount** through
+    that same seam, so the parts paint a grid the reader left sorted, narrowed
+    and chosen; an unreadable record reads as the slice it can (no sort, no
+    query, only the ids set to `true`), and `initialSort` stays the shorthand for
+    a table whose natural order is not the source order, used only when the
+    record names no sorting. `src/behaviour/table-restore.test.tsx` (2 cases)
+    mounts a grid from a saved record and reads the painted order, the narrowed
+    set and the chosen count, then a record whose slices are `null`/a number/a
+    string and reads the source order, the whole set and the one real choice.
+    Direction measured: with the record ignored, both cases fail
+    (`expected '3 rows · 0 selected' to contain '2 rows · 1 selected'`); green,
+    2/2 in the file, the package 254 unit cases and `check-types` clean. Docs:
+    the `stored` JSDoc and the README's restored-state row. No native scenario
+    applies — the record is read by the render the behaviour suite drives.
+    Owner: data.
   - [x] Read a **blank sparkline name as the word the page documents** —
     `Sparkline` fell back to `Trend` with `ariaLabel ?? "Trend"`, and a default
     written that way only covers an **absent** prop: a locale table's missing
