@@ -1,6 +1,4 @@
-import { ICON_NAMES } from "../../../../packages/icons/src/names";
-import { icons } from "../../../../packages/icons/src/registry";
-import type { IconName } from "../../../../packages/icons/src/names";
+import { ICON_NAMES, icons, type IconName } from "@gpuixui/icons";
 
 /**
  * The icon gallery's data.
@@ -11,12 +9,10 @@ import type { IconName } from "../../../../packages/icons/src/names";
  * and ignores the markup's own value, while a browser honours it, so the gallery
  * asks for `currentColor` and the ink comes from the page it sits on.
  *
- * The two modules are imported rather than the package root on purpose: the
- * root also exports `Icon`, a GPUix host element, and the site compiles with
- * React's JSX runtime — type-checking that component here reports a mismatch
- * between the two runtimes for a component the page never mounts. The data is
- * the package's; `icon-gallery.test.ts` holds these imports to the modules the
- * package's own index publishes.
+ * The set is read from the package's public entry, the same surface a consumer
+ * imports. Every published `.tsx` in the package pins the GPUix JSX runtime, so
+ * the root's `Icon` type-checks in this React program without pulling a host
+ * element into a page that never mounts one.
  */
 
 /** One icon as the gallery draws it. */

@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ICON_NAMES } from "../../../../packages/icons/src/names";
-import { icons } from "../../../../packages/icons/src/registry";
+import { ICON_NAMES, icons } from "@gpuixui/icons";
 import {
   filterIcons,
   galleryIcons,
@@ -61,17 +60,27 @@ describe("the gallery's entries", () => {
     ).toEqual([]);
   });
 
-  it("reads the data modules the icon package publishes", () => {
-    // The gallery imports `names.ts` and `registry.ts` rather than the package
-    // root, because the root's `Icon` renders a GPUix host element and this site
-    // compiles with React's JSX runtime. Those two modules have to stay the
-    // package's published data, not a copy: if the index stops exporting either
-    // one, the gallery is reading something the package no longer offers.
+  it("reads the set from the package's public entry, not its internals", () => {
+    // The gallery is a consumer: it imports `@gpuixui/icons`, the entry a product
+    // imports, so a renamed export breaks the site at type-check instead of a
+    // hand-kept path reading a module the package no longer publishes. The
+    // published `.tsx` files pin the GPUix JSX runtime, which is what lets the
+    // root (`Icon` included) type-check in this React program.
     //
     // The check reads the **name inside the export list**, not the list's exact
     // text: the index adds a sibling to a module's `export { … }` whenever the
     // package grows, and a string match for the previous list failed the gallery
     // while both names were still published.
+    const gallery = readFileSync(
+      new URL("./icon-gallery.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(gallery).toContain('from "@gpuixui/icons"');
+    expect(gallery).not.toMatch(
+      /packages\/icons\/src|"\.\/names\.js"|"\.\/registry\.js"/,
+    );
+
     const index = readFileSync(
       new URL("../../../../packages/icons/src/index.ts", import.meta.url),
       "utf8",
@@ -83,6 +92,10 @@ describe("the gallery's entries", () => {
 
     expect(publishes("ICON_NAMES", "./names.js")).toBe(true);
     expect(publishes("icons", "./registry.js")).toBe(true);
+    expect(publishes("IconName", "./names.js")).toBe(false);
+    expect(index).toMatch(
+      /export\s+type\s*\{[^}]*\bIconName\b[^}]*\}\s*from\s*"\.\/names\.js"/,
+    );
   });
 });
 
