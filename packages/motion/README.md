@@ -234,7 +234,7 @@ function Panel({ open }: { open: boolean }) {
   if (!presence.mounted) return null;
   return (
     <motion.div
-      motion={presenceMotion(
+      {...presenceMotion(
         fadeFromAnchor("bottom", 4),
         presence.present,
         presence.timing,
@@ -250,6 +250,15 @@ the timing the phase moves with — because the last one is the journey: `presen
 alone only chooses which frame is the target, so a call without `presence.timing`
 hands the runtime an empty transition and the surface snaps between its frames
 instead of entering and leaving on its level.
+
+`presenceMotion` answers exactly the three fields `motion.div` takes — `initial`,
+`animate` and `transition` — so the call is spread into its props. On a **host**
+element the same object is its `motion` prop (`<div motion={…} />`), which is how
+this library's own surfaces paint: a `FloatingLayer` or an `anchored` layer is a
+host element, not a `motion.div`. What a `motion.div` does **not** take is a
+`motion` prop: its adapter composes its own description from `initial`, `animate`,
+`exit` and `transition`, so a `motion={…}` on it is replaced and the surface never
+moves.
 
 `useSurfaceTiming(level)` reads the nearest provider, so the level a surface
 moves at is one line and the preference is one flag for the whole tree.

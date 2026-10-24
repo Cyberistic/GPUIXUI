@@ -458,6 +458,34 @@ describe("the presence table the README teaches", () => {
     expect(presenceStyle(true)).toEqual({ pointerEvents: "auto" });
     expect(presenceStyle(false)).toEqual({ pointerEvents: "none" });
   });
+
+  it("paints the composition on the element that takes it", () => {
+    // The bug this guards: the README painted the composition as
+    // `motion={presenceMotion(…)}` on a `motion.div`. `presenceMotion` answers
+    // the runtime's `motion` prop — `initial`, `animate` and `transition` —
+    // while `motion.div` takes those three as its own props and composes its
+    // own description from them, so the `motion` prop was replaced and no
+    // `animate` was named: the one example a consumer copies for a surface of
+    // its own never moved.
+    const section = readme.split("A surface composes the table")[1] ?? "";
+    const block = (section.match(/```tsx\n([\s\S]*?)```/) ?? [])[1] ?? "";
+    expect(block).toContain("presenceMotion(");
+
+    // The fields it answers are the three `motion.div` reads — so the call is
+    // spread there, and a `motion={…}` prop can never be what it paints.
+    const painted = presenceMotion(
+      fadeFromAnchor("bottom", 4),
+      true,
+      presenceTiming("normal"),
+    );
+    expect(Object.keys(painted)).toEqual(["initial", "animate", "transition"]);
+    expect(block).toContain("{...presenceMotion(");
+    expect(block).not.toContain("motion={presenceMotion(");
+
+    // A host element takes the same object as its `motion` prop — the mapping
+    // the library's own surfaces paint through — and the section says so.
+    expect(section).toContain("the same object is its `motion` prop");
+  });
 });
 
 describe("the imports the README teaches", () => {
