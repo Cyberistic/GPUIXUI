@@ -335,8 +335,9 @@ neighbour — the gap `invalidNumbers` cannot see, because each value on its own
 is layable — except an equal radius, the one alias the scale permits. It found
 the Windows pair and the pair stayed: `4/4/8/8` is the shipped ladder, and a
 *rung that shrinks* is still a lie (`xl: 6` under `lg: 8` is reported).
-`invalidScales` is not one of the audit's reports yet; §11 says why and what to
-run.
+`invalidScales` is one of the audit's fourteen reports: `auditTheme(theme).scales`
+names the same rung, so a brand that runs the gate cannot ship an inverted
+ladder (§11).
 
 ## 7. Radii, borders and elevation
 

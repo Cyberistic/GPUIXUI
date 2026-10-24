@@ -432,6 +432,33 @@ describe("every rung the ladder walks", () => {
     expect(everyPair("borderWidth", entries)).toEqual([]);
   });
 
+  it("is a report the gate returns, and both pages say so", () => {
+    // The report was a public function *beside* the gate when it landed, and
+    // `docs/design-system.md` §6 kept teaching that after `auditTheme` folded it
+    // in — so a reader was told to run a second check the one call already runs,
+    // while §11 of the same page said the opposite.
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const audit = read("./audit.ts");
+    const pages: Readonly<Record<string, string>> = {
+      "docs/design-system.md": read("../../../docs/design-system.md"),
+      "docs/tokens.md": read("../../../docs/tokens.md"),
+    };
+
+    // The claim is the source's: the report is a field of the audit and of the
+    // one passing result.
+    expect(audit).toContain("scales,");
+    expect(audit).toContain("scales.length === 0");
+
+    Object.entries(pages).forEach(([name, text]) => {
+      expect(text, name).toContain("invalidScales");
+      expect(text, name).toContain("fourteen reports");
+      expect(text, name).not.toContain("not one of the audit's reports");
+    });
+  });
+
   it("compares each icon pair the scale ships, not a sample", () => {
     const entries = Object.entries(lightTheme.iconSize);
 

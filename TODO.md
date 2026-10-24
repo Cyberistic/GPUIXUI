@@ -423,6 +423,24 @@ merge rules and the decoded-theme paragraph), `docs/design-system.md` §11, the
 package README §Extending a theme and the `Theme extension` row. No native
 scenario applies — a pure merge and the type of its input.
 
+`[x]` Say that the **scale report is one the gate runs**, in the direction §11 of
+the same page already stated — `docs/design-system.md` §6 ended the ladder rule
+with "`invalidScales` is not one of the audit's reports yet; §11 says why and
+what to run", while `auditTheme` returns `scales` as one of its fourteen reports
+and folds it into `passed`, `docs/tokens.md` §Scale order says so, and §11 of that
+same page says both structural checks were *once* beside the gate and are now in
+it. A reader was told to run a second check the one gate call already runs, and
+the page contradicted itself two sections later. The sentence now names the
+report (`auditTheme(theme).scales`) and the gate. `scales.test.ts` gains `is a
+report the gate returns, and both pages say so`: it reads `audit.ts` for the
+`scales,` field and its `passed` term, then requires both pages to name
+`invalidScales` and "fourteen reports" and refuses the retracted sentence.
+Directions measured: with the old sentence restored the case fails by name
+(`is a report the gate returns, and both pages say so`); corrected, the file is
+**30/30** and the package 50 files / **3 075** tests with `check-types` and
+`oxfmt` clean. The `Scale order` inventory row's case count moves 29 → 30. No
+native scenario applies — a page sentence and the source it describes.
+
 `[x]` Refuse a stored mode, variant or host **against the index that owns the
 names** — `getTheme`'s two refusals spelled their lists out ("light, dark are the
 modes", "default, high are the variants") while `extendTheme`, `platformTheme`
