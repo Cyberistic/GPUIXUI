@@ -17,6 +17,7 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { MotionProvider } from "@gpuixui/motion/react/presence";
+import { motionLevels } from "@gpuixui/motion/timing";
 import { Switch } from "../src/components/Switch.js";
 import { Stack } from "../src/components/Stack.js";
 import {
@@ -144,6 +145,33 @@ it("centres the knob between the track's top and bottom edges", async () => {
     testTheme.borderWidth.thin + (box.height - box.border * 2 - box.knob) / 2;
   expect(top).toBe(bottom);
   expect(top).toBe(centred);
+});
+
+it("eases the thumb between its two resting places, not as an arriving surface", async () => {
+  // The bug this guards: the slide carried its own literal
+  // `{ duration: 0.15, ease: "easeOut" }`, the *arrival* curve, while a knob
+  // moving from one resting place to the other is the timing table's
+  // `standard` phase (`easeInOut`). At half the window a between-states
+  // movement has travelled half the distance; the arrival curve has already
+  // covered ~0.69 of it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Switch testId="s" label="Airplane mode" />
+    </Surface>,
+  );
+  const rest = thumbOf(runtime);
+  const travel = switchThumbTravel(spec, testTheme);
+
+  runtime.renderer.clockPause();
+  runtime.click("s");
+  runtime.flush();
+  runtime.renderer.clockFastForward(motionLevels.fast / 2);
+  runtime.flush();
+
+  const moved = thumbOf(runtime).x - rest.x;
+  expect(moved).toBeGreaterThan(travel * 0.4);
+  expect(moved).toBeLessThan(travel * 0.6);
 });
 
 it("lands the thumb at once under the provider's reduced preference", async () => {

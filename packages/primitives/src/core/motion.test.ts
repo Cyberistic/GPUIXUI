@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
+import { reducedMotionOf as published } from "@gpuixui/motion/timing";
 import { reducedMotionOf } from "./motion.js";
 
 const components = new URL("../components/", import.meta.url);
@@ -35,6 +36,13 @@ describe("reducedMotionOf", () => {
     // One surface may hold — or move — against the application's default.
     expect(reducedMotionOf(false, "reduced")).toBe(false);
     expect(reducedMotionOf(true, "animated")).toBe(true);
+  });
+
+  it("is the motion package's own rule, not a second copy", () => {
+    // The policy has one home: the motion package publishes `reducedMotionOf`
+    // on the timing subpath the primitives already depend on. A local copy
+    // agrees only until one side is edited.
+    expect(reducedMotionOf).toBe(published);
   });
 
   it("routes every animated control through the one rule", () => {

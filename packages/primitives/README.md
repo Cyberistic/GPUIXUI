@@ -367,7 +367,19 @@ where it paid 12 / 88. Measured on 2026-10-24, a `Button` entry dropped from
 **78 modules / 949 KiB to 70 / 891** and `@gpuixui/components`' `popover.tsx`
 from **94 / 1 023 to 86 / 965**. `core/motion-entry.test.ts` fails when any
 package source imports the full entry, names the file that did, and proves both
-entries export the same bindings.
+entries export the same bindings. `core/motion.ts` also re-exports the motion
+package's `reducedMotionOf` rather than keeping its own copy of the rule;
+`core/motion.test.ts` holds the binding by identity, so the two cannot drift.
+
+### A movement between resting places eases on the standard phase
+
+`Switch`'s thumb travels from one resting offset to the other, which is the
+timing table's `standard` phase (`easeInOut`), not a surface arriving (`enter`).
+`THUMB_SLIDE` reads `motionTiming("fast", { phase: "standard" })`, so the
+primitives and the components cannot ease one between-states movement two ways.
+`runtime/switch.runtime.test.tsx` pauses the motion clock and samples the thumb
+at half the window: it has travelled half its 12px, where the arrival curve
+would already have covered 8px.
 
 ## The JSX runtime is pinned per file
 

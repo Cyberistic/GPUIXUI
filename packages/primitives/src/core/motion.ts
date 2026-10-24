@@ -11,12 +11,12 @@
  */
 
 import type { MotionTransition } from "@gpuix/react";
-import type { MotionPreference } from "@gpuixui/motion/timing";
 
 /**
  * Whether a primitive removes its motion.
  *
- * The application states the preference **once** — `MotionProvider` from
+ * The rule is `@gpuixui/motion`'s, not a copy kept here: the application states
+ * the preference **once** — `MotionProvider` from
  * `@gpuixui/motion/react/presence` — so a tooltip, a switch and a spinner below
  * one provider agree; a control's own `reducedMotion` is the per-control
  * override, and a tree that states neither keeps its motion (the provider's
@@ -24,10 +24,7 @@ import type { MotionPreference } from "@gpuixui/motion/timing";
  * publishes the same provider and hook without the spring, inertia and timeline
  * samplers a fade never samples.
  */
-export const reducedMotionOf = (
-  override: boolean | undefined,
-  preference: MotionPreference,
-): boolean => override ?? preference === "reduced";
+export { reducedMotionOf } from "@gpuixui/motion/timing";
 
 /** The frame a timed indicator paints: the first one when motion is off. */
 export const stillFrame = (step: number, reducedMotion?: boolean): number =>

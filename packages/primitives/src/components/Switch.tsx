@@ -34,6 +34,7 @@ import type {
 import * as P from "effect/Predicate";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { useMotionPreference } from "@gpuixui/motion/react/presence";
+import { motionTiming } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import {
@@ -140,8 +141,15 @@ export interface SwitchState {
   readonly invalid: boolean;
 }
 
-/** The slide between the thumb's two positions: short, and never bouncy. */
-const THUMB_SLIDE: MotionTransition = { duration: 0.15, ease: "easeOut" };
+/**
+ * The slide between the thumb's two positions: a small affordance moving from
+ * one resting place to the other, so the timing table's `standard` phase
+ * (`easeInOut`) is what it eases on — not a surface arriving, which the `enter`
+ * curve belongs to.
+ */
+const THUMB_SLIDE: MotionTransition = motionTiming("fast", {
+  phase: "standard",
+});
 
 /**
  * The knob a switch slides.
