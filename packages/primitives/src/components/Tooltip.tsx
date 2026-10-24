@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Tooltip` — a short label on hover.
  *

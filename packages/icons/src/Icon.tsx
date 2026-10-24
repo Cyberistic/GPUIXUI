@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 import type { ReactElement } from "react";
 import type { SvgProps } from "@gpuix/react";
 import { iconMarkup } from "./registry.js";

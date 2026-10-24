@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `OTPField` — a one-time code in `length` cells.
  *

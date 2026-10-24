@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Toggle` — a button that stays on.
  *

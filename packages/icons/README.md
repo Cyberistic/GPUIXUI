@@ -84,6 +84,11 @@ same membership test, for a caller filtering its own stored list.
 - Only the element types a window probe has painted (`path`, `circle`, `rect`,
   `line`, `polyline`, `polygon`) — a new type paints nothing until something
   measures it.
+- The file pins its own JSX runtime (`@jsxImportSource @gpuix/react`): the
+  package tsconfig already names it, but a consumer that compiles this package
+  from source with its own automatic runtime would otherwise type `Icon`'s
+  `<svg>` against that runtime's props. `packages/primitives/src/jsx-runtime.test.ts`
+  holds this package and `@gpuixui/primitives` to it.
 
 `src/registry.test.ts` enforces all of the above over every entry, so a
 malformed icon fails the suite rather than shipping.

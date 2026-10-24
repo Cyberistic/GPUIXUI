@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The theme context: where a primitive gets the values it draws with.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `CheckboxGroup` — several independent choices that share one tab stop.
  *

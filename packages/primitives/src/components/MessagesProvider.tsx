@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The words a tree announces: the provider seam for {@link PrimitiveMessages}.
  *

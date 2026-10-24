@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Slider` and `RangeSlider` — a value on a track.
  *

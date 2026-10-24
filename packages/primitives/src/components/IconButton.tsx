@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `IconButton` — an icon-only action that must be named.
  *

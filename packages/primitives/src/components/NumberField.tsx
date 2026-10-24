@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `NumberField` — a number in a text field, with steps and bounds.
  *

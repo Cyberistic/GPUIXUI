@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The hint a text host paints when it is empty.
  *

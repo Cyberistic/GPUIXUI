@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `ButtonGroup` — related actions as one control.
  *

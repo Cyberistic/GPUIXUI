@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The pieces a group of controls shares: its option shape, the body each row
  * paints, and the reader that turns item children into the same option list the

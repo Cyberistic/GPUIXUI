@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `TextArea` — a multi-line text field.
  *

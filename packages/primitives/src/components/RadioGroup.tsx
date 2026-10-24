@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `RadioGroup` — one choice from a small set.
  *

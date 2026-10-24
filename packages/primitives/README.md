@@ -206,6 +206,19 @@ namespace and the import closure, and
 `runtime/layout.runtime.test.tsx` mounts the routed export in a window and
 reads its layout and offset back.
 
+## The JSX runtime is pinned per file
+
+Every published `.tsx` file opens with `/** @jsxImportSource @gpuix/react */`, the
+pragma that makes its JSX the runtime's whatever compiler reads it. The package
+tsconfig already sets the same `jsxImportSource`, so the pragma changes nothing
+here — it is for a consumer that compiles these files **from source** with its own
+automatic runtime, which otherwise types every host element against that
+runtime's props. The docs site did exactly that through one type-only import and
+reported **164** errors, all of them a `StyleDesc`, `EventPayload` or `Instance`
+React's element props cannot hold, in files no docs change touched. `jsx-runtime.test.ts`
+holds every published file of this package and `@gpuixui/icons` to the runtime its
+tsconfig names, so a new component file cannot ship without it.
+
 ## Components
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`

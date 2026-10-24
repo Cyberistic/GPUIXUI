@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `ToggleGroup` — a toolbar of related modes.
  *

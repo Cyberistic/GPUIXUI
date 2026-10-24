@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Progress` — a determinate or indeterminate bar.
  *

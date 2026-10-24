@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `ScrollArea` — the one scroll container.
  *
