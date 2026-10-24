@@ -177,14 +177,22 @@ describe("the density both packages read", () => {
     // The exception is what makes the two halves line up: a list row is built at
     // the theme's row height, and a component's control box is a control height.
     // The route to the step is the row's own choice — `readsRowHeight` admits
-    // both the theme's group and the seam that reads it — so a row that takes
-    // the seam does not red this suite, while a row that stops reading the step,
-    // or loses the second line's space, still fails by name.
-    const list = read("../../components/src/list.tsx");
-    expect(readsRowHeight(list), "list.tsx reads no row height").toBe(true);
-    expect(addsSpacingStep(list), "list.tsx adds no second-line space").toBe(
-      true,
-    );
+    // both the theme's group and the seam that reads it — and so is the file:
+    // the box may sit in `list.tsx` or behind it, so the rule follows the list
+    // family rather than one path. One source builds it (a second read is the
+    // drift the seam removes), it adds the second line's space, and a row that
+    // stops reading the step still fails by name.
+    const boxes = sourcesIn("../../components/src/")
+      .filter(([path]) => path === "list.tsx" || path.startsWith("list/"))
+      .filter(([, text]) => readsRowHeight(text));
+    expect(
+      boxes.map(([path]) => `components/src/${path}`),
+      "list sources reading the row height",
+    ).toHaveLength(1);
+    expect(
+      addsSpacingStep(boxes.at(0)?.[1] ?? ""),
+      "the list row adds no second-line space",
+    ).toBe(true);
     const readers = sources("../../components/src/").filter(([, text]) =>
       text.includes("controlHeight("),
     );
