@@ -215,6 +215,7 @@ describe("the status a package page reports", () => {
       rows: [
         { tier: 1, name: "Probe", status: "done", support: "yes", notes: "" },
       ],
+      sections: [],
       malformed: [],
     };
 
@@ -291,6 +292,7 @@ describe("the status a package page reports", () => {
         { tier: 1, name: "Card", status: "done", support: "yes", notes: "" },
         { tier: 2, name: "Cards", status: "done", support: "yes", notes: "" },
       ],
+      sections: [],
       malformed: [],
     };
 

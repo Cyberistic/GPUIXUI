@@ -36,6 +36,7 @@ keyboard.mdx                 The chord grammar, keymaps, sequences, the command 
 examples.mdx                 The example registry, generated from every package's examples
 playground.mdx               The companion native app: run commands, the probe catalogue, where evidence lands
 reference.mdx                The public entry points and the symbols behind them
+status.mdx                   The whole component inventory, generated from COMPONENTS.md
 themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/dashboard.mdx         An activity dashboard composed from the library
@@ -257,6 +258,8 @@ src/components/docs/native-run-note.tsx   The note above a package page: the pla
 src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
+src/components/docs/inventory-cells.tsx   The status badge and note cell the generated component tables share
+src/components/docs/inventory-table.tsx   The whole inventory on /docs/status, grouped by the headings in COMPONENTS.md
 src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes, each package linked to its section entry
 src/components/docs/collection-index.tsx The list a collection route serves when the package writes no landing page
 src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
@@ -381,8 +384,9 @@ src/lib/sitemap.ts                  The sitemap's URL set
 src/lib/llms.ts                     /llms.txt: every page, grouped by the sidebar's section, with its note
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
-src/lib/inventory.ts                Parses the tier tables of COMPONENTS.md into lane rows
+src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections
 src/lib/inventory-data.ts           The parsed inventory, at build time
+src/lib/inventory-page.ts           Groups the inventory by its own headings and joins each row to its page
 src/lib/lane-pages.ts               The pages a lane's packages ship, grouped by package
 src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip (title, plus the address two pages can share), both ways
 src/lib/public-api.ts               Derives the entry points from each package's exports map
@@ -608,6 +612,11 @@ No page restates what the code already says:
 - **Lane pages** (`/docs/layouts`, `/docs/workspace`, `/docs/data-display`) get
   their rows from the tier tables of `COMPONENTS.md` through `<LaneTable>`, so a
   page cannot call a row shipped while the inventory says `todo`.
+- **Implementation status** (`/docs/status`) renders every row grouped by the
+  headings the document uses — the five tiers and the plan 600 animated
+  catalogue, which is not a sixth tier — with the group counts and a link to the
+  page that publishes each row (`src/components/docs/inventory-table.tsx`,
+  `src/lib/inventory-page.ts`).
 - **Typography and Theming** render specimens from the theme itself
   (`<TypeScale>`, `<TokenScales>`), so a token edit moves the page with it.
 - **Styling** (`/docs/styling`) compiles its class reference through

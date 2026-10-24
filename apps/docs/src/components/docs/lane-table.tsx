@@ -1,13 +1,6 @@
 import { laneData } from "../../lib/inventory-data";
-import {
-  groupOf,
-  spans,
-  summarize,
-  supportLabel,
-  type InventoryRow,
-  type LaneGroup,
-  type LaneName,
-} from "../../lib/inventory";
+import { summarize, supportLabel, type LaneName } from "../../lib/inventory";
+import { InventoryNote, InventoryStatus } from "./inventory-cells";
 
 /**
  * The lane's inventory, rendered from `COMPONENTS.md`.
@@ -55,13 +48,13 @@ export function LaneTable({ lane }: { lane: LaneName }) {
               >
                 <td className="px-3 py-2 font-medium">{row.name}</td>
                 <td className="px-3 py-2">
-                  <Status row={row} />
+                  <InventoryStatus row={row} />
                 </td>
                 <td className="px-3 py-2 font-mono text-xs">
                   {supportLabel(row.support)}
                 </td>
                 <td className="px-3 py-2 text-muted-foreground">
-                  <Note text={row.notes} />
+                  <InventoryNote text={row.notes} />
                 </td>
               </tr>
             ))}
@@ -71,40 +64,3 @@ export function LaneTable({ lane }: { lane: LaneName }) {
     </div>
   );
 }
-
-const statusClass: Readonly<Record<LaneGroup, string>> = {
-  shipped: "bg-accent text-accent-foreground",
-  pending: "bg-muted text-muted-foreground",
-  blocked: "bg-destructive/10 text-destructive",
-  unsupported: "bg-destructive/10 text-destructive",
-};
-
-const Status = ({ row }: { readonly row: InventoryRow }) => (
-  <span
-    className={`inline-block whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-medium ${statusClass[groupOf(row.status)]}`}
-  >
-    {row.status}
-  </span>
-);
-
-/** A note with its inline code and bold resolved. */
-const Note = ({ text }: { readonly text: string }) => (
-  <>
-    {spans(text).map((span, index) =>
-      span.code ? (
-        <code
-          className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8em]"
-          key={index}
-        >
-          {span.text}
-        </code>
-      ) : span.strong ? (
-        <strong className="text-foreground" key={index}>
-          {span.text}
-        </strong>
-      ) : (
-        <span key={index}>{span.text}</span>
-      ),
-    )}
-  </>
-);

@@ -8,9 +8,18 @@
  * reports a row it cannot read instead of dropping it.
  */
 
-/** One row of a `COMPONENTS.md` tier table. */
+/**
+ * The section a row belongs to: a tier number, or `"animated"` for the plan 600
+ * catalogue that lives below Tier 5.
+ *
+ * The catalogue is not a tier. The parser used to keep the last tier open
+ * across a non-tier heading, so its 34 rows were counted as Tier 5.
+ */
+export type InventoryTier = number | "animated";
+
+/** One row of a `COMPONENTS.md` component table. */
 export interface InventoryRow {
-  readonly tier: number;
+  readonly tier: InventoryTier;
   readonly name: string;
   readonly status: string;
   /** The GPUix support verdict: `yes`, `partial`, `?` or a note. */
@@ -18,13 +27,22 @@ export interface InventoryRow {
   readonly notes: string;
 }
 
+/** A heading that opens a component table, in document order. */
+export interface InventorySection {
+  readonly tier: InventoryTier;
+  /** The heading's own words, without the `## `. */
+  readonly title: string;
+}
+
 export interface Inventory {
   readonly rows: ReadonlyArray<InventoryRow>;
+  readonly sections: ReadonlyArray<InventorySection>;
   /** Table rows that did not have the four expected cells, with their line. */
   readonly malformed: ReadonlyArray<string>;
 }
 
 const tierHeading = /^## Tier (\d+)/;
+const animatedHeading = /^## Animated primitives\b/;
 const columnHeading = /^\|\s*Component\s*\|\s*Status\s*\|/;
 const rule = /^\|[\s:|-]+\|$/;
 
@@ -45,27 +63,40 @@ const cells = (line: string): ReadonlyArray<string> =>
     .split(cellSeparator)
     .map((cell) => cell.trim().replace(/\\\|/g, "|"));
 
-/** Parse every tier table in the inventory. */
+/** Parse every tier table and the animated catalogue in the inventory. */
 export const parseInventory = (markdown: string): Inventory => {
   const rows: InventoryRow[] = [];
+  const sections: InventorySection[] = [];
   const malformed: string[] = [];
-  // `0` means "no tier table is open"; a table outside a tier is reported.
-  let tier = 0;
+  // A table outside a known section is ignored rather than attached to the
+  // section before it, which is how the animated catalogue became Tier 5.
+  type Section =
+    | { readonly kind: "none" }
+    | { readonly kind: "component"; readonly tier: InventoryTier };
+  let section: Section = { kind: "none" };
   let inTable = false;
 
   markdown.split("\n").forEach((line, index) => {
     const heading = tierHeading.exec(line);
     if (heading !== null) {
-      tier = Number(heading[1]);
+      section = { kind: "component", tier: Number(heading[1]) };
+      sections.push({ tier: section.tier, title: line.slice(3).trim() });
       inTable = false;
       return;
     }
-    if (line.startsWith("#")) {
+    if (animatedHeading.test(line)) {
+      section = { kind: "component", tier: "animated" };
+      sections.push({ tier: section.tier, title: line.slice(3).trim() });
+      inTable = false;
+      return;
+    }
+    if (/^#{1,6}\s/.test(line)) {
+      section = { kind: "none" };
       inTable = false;
       return;
     }
     if (columnHeading.test(line)) {
-      inTable = true;
+      inTable = section.kind === "component";
       return;
     }
     if (!inTable) return;
@@ -78,7 +109,7 @@ export const parseInventory = (markdown: string): Inventory => {
     const row = cells(line);
     const [name, status, support, notes] = row;
     if (
-      tier === 0 ||
+      section.kind === "none" ||
       row.length !== 4 ||
       name === undefined ||
       status === undefined ||
@@ -86,14 +117,14 @@ export const parseInventory = (markdown: string): Inventory => {
       notes === undefined
     ) {
       malformed.push(
-        `line ${index + 1}: expected 4 cells under a tier, found ${row.length}`,
+        `line ${index + 1}: expected 4 cells under a section, found ${row.length}`,
       );
       return;
     }
-    rows.push({ tier, name, status, support, notes });
+    rows.push({ tier: section.tier, name, status, support, notes });
   });
 
-  return { rows, malformed };
+  return { rows, sections, malformed };
 };
 
 /** A composition lane: a whole tier, or the named rows of one. */

@@ -115,15 +115,44 @@ describe("parseInventory", () => {
         "| --------- | ------ | ------------- | ------------------- |",
         "| Toolbars | todo | ? | `div` + Button groups. |",
         "",
-        "## Tier 5 — specialised",
+        "## Blocked by the runtime",
         "",
-        "| Row | GPUix provides | Verdict |",
-        "| --- | -------------- | ------- |",
-        "| Icons | `<svg>` | verified |",
+        "| Component | Status | GPUix support | Notes / limitations |",
+        "| --------- | ------ | ------------- | ------------------- |",
+        "| Not a component row | todo | ? | This table is prose, not an inventory. |",
       ].join("\n"),
     );
 
+    // The old parser kept Tier 4 open across the next heading, so any later
+    // table with the same columns was counted as Tier 4. A stale section is
+    // what made the animated catalogue report as Tier 5.
     expect(parsed.rows.map((row) => row.name)).toEqual(["Toolbars"]);
+    expect(parsed.malformed).toEqual([]);
+  });
+
+  it("reads the animated catalogue as its own section, not the last tier", () => {
+    const parsed = parseInventory(
+      [
+        "## Tier 5 — specialised",
+        "",
+        "| Component | Status | GPUix support | Notes / limitations |",
+        "| --------- | ------ | ------------- | ------------------- |",
+        "| QR code | done | yes | Our encoder. |",
+        "",
+        "## Animated primitives (plan 600)",
+        "",
+        "| Component | Status | GPUix support | Notes / limitations |",
+        "| --------- | ------ | ------------- | ------------------- |",
+        "| Typing text | done | yes | One code point at a time. |",
+        "| Reveal | done | partial | No `transform`. |",
+      ].join("\n"),
+    );
+
+    expect(parsed.rows.map((row) => [row.tier, row.name])).toEqual([
+      [5, "QR code"],
+      ["animated", "Typing text"],
+      ["animated", "Reveal"],
+    ]);
     expect(parsed.malformed).toEqual([]);
   });
 });
@@ -164,6 +193,58 @@ describe("the real inventory", () => {
 
   it("lists every configured lane, so a new lane is checked too", () => {
     expect(Object.keys(lanes)).toEqual([...laneNames]);
+  });
+
+  it("keeps the animated catalogue out of the last tier", () => {
+    // The parser left the last tier open across a non-tier heading, so the 34
+    // plan 600 rows were reported as Tier 5. The document's own headings are
+    // the ground truth: read the two table bodies and compare names.
+    const source = readFileSync(
+      new URL("../../../../COMPONENTS.md", import.meta.url),
+      "utf8",
+    );
+    const section = (heading: string, next: string): ReadonlyArray<string> => {
+      const start = source.indexOf(heading);
+      const end = source.indexOf(next, start);
+      expect(start).toBeGreaterThanOrEqual(0);
+      expect(end).toBeGreaterThan(start);
+      return source
+        .slice(start, end)
+        .split("\n")
+        .filter(
+          (line) =>
+            line.startsWith("|") &&
+            !line.startsWith("| Component") &&
+            !/^\|[\s:|-]+\|$/.test(line),
+        )
+        .map((line) => line.split("|")[1]?.trim() ?? "");
+    };
+
+    const animated = section(
+      "## Animated primitives (plan 600)",
+      "### Declined and covered catalogue entries",
+    );
+    const tierFive = section(
+      "## Tier 5 — specialised",
+      "## Animated primitives",
+    );
+
+    expect(animated.length).toBeGreaterThanOrEqual(30);
+    expect(
+      inventory.rows
+        .filter((row) => row.tier === "animated")
+        .map((row) => row.name),
+    ).toEqual(animated);
+    expect(
+      inventory.rows.filter((row) => row.tier === 5).map((row) => row.name),
+    ).toEqual(tierFive);
+    expect(animated).toContain("Typing text");
+    expect(tierFive).not.toContain("Typing text");
+    expect(
+      inventory.rows.some(
+        (row) => row.name === "Typing text" && row.tier === 5,
+      ),
+    ).toBe(false);
   });
 });
 
@@ -280,6 +361,7 @@ describe("laneView", () => {
       },
       { tier: 3, name: "Tables", status: "todo", support: "?", notes: "" },
     ],
+    sections: [],
     malformed: [],
   };
 
