@@ -31,6 +31,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { fadeOnly, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 import {
   glyphCount,
@@ -48,7 +49,11 @@ export interface GradientTextState {
 
 /** {@link GradientText} props. */
 export interface GradientTextProps extends Omit<Props, "children" | "style"> {
-  /** The phrase to paint. A changed phrase re-samples the ramp. */
+  /**
+   * The phrase to paint. A changed phrase re-samples the ramp, and a value a
+   * saved record left absent paints no glyphs rather than taking the render
+   * down.
+   */
   readonly text: string;
   /** The ramp's first colour. Default the theme's `foreground` role. */
   readonly from?: string;
@@ -132,10 +137,12 @@ export const GradientText = ({
   const timing = useSurfaceTiming(level);
   const start = from ?? theme.colors.foreground;
   const end = to ?? theme.colors.primary;
-  const lines = gradientLines(text, start, end);
+  /** The phrase a saved layout may have lost; JSON writes `null` for it. */
+  const phrase = textOf(text);
+  const lines = gradientLines(phrase, start, end);
   const metrics = textStyle(theme, role);
   const state: GradientTextState = {
-    text,
+    text: phrase,
     glyphs: glyphCount(lines),
     reducedMotion: timing.enter.duration === 0,
   };

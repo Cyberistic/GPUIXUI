@@ -30,6 +30,7 @@ import { GradientText } from "@gpuixui/components/gradient-text";
 
 ## Limitations
 
+- **A stored phrase that is not text paints no glyphs**: `textOf` reads `text` at the boundary, so a `null` a saved record kept no longer throws out of the render.
 - No text fill; the blend is discrete at glyph resolution.
 - No moving ramp; the glyphs would recolour every frame.
 - Hex ends only; a non-hex end paints the run flat.

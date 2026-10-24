@@ -176,6 +176,26 @@ describe("HighlightText", () => {
     }
   });
 
+  it("paints an empty phrase for a stored text that was not text", () => {
+    // The bug guarded: a phrase restored from a saved record is `null` when the
+    // record carried none, and `marksFor` handed it to `String.matchAll`, which
+    // threw `Cannot read properties of null (reading 'matchAll')`.
+    const page = renderComponent(
+      <HighlightText
+        testId="hint"
+        text={null as unknown as string}
+        query="hit"
+      />,
+    );
+    try {
+      expect(page.renderer.findByTestId("hint")).toBeDefined();
+      expect(page.renderer.getAllText().join("")).toBe("");
+      expect(washes(page.renderer)).toEqual([]);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("replays the sweep when the query changes", async () => {
     const page = renderComponent(
       <HighlightText text="native by design" query="native" stepMs={1000} />,

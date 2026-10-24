@@ -134,6 +134,22 @@ describe("GradientText", () => {
     }
   });
 
+  it("paints no glyphs for a stored phrase that was not text", () => {
+    // The bug guarded: a phrase saved with a layout writes `null` for a string
+    // it never carried, and `gradientLines` handed it to `Str.split`, which
+    // threw `Cannot read properties of null (reading 'split')` out of the
+    // render — the whole surface went, not only the ramp.
+    const page = renderComponent(
+      <GradientText testId="gradient-text" text={null as unknown as string} />,
+    );
+    try {
+      expect(page.renderer.findByTestId("gradient-text")).toBeDefined();
+      expect(painted(page).text).toBe("");
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints at rest on the first frame under the reduced preference", () => {
     const reduced = renderComponent(
       <MotionProvider preference="reduced">

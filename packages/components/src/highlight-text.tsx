@@ -38,6 +38,7 @@ import {
 import { washFor } from "./highlight-text/wash.js";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 
 /** What a highlight draws at one frame. */
@@ -53,7 +54,10 @@ export interface HighlightTextState {
 
 /** {@link HighlightText} props. */
 export interface HighlightTextProps extends Omit<Props, "children" | "style"> {
-  /** The phrase to paint. */
+  /**
+   * The phrase to paint. A value a saved record left absent paints an empty
+   * phrase rather than taking the render down.
+   */
   readonly text: string;
   /** The substring to mark; every occurrence, case-insensitively by default. */
   readonly query?: string;
@@ -123,11 +127,13 @@ export const HighlightText = ({
   const theme = useTheme();
   const reducedMotion = useMotionPreference() === "reduced";
   const stepMs = stepOf(Option.fromNullishOr(stepMsProp));
+  /** The phrase a saved record may have lost; JSON writes `null` for it. */
+  const phrase = textOf(text);
   const marks = useMemo(
-    () => marksFor(text, { query, ranges, caseSensitive, wholeWord }),
-    [caseSensitive, query, ranges, text, wholeWord],
+    () => marksFor(phrase, { query, ranges, caseSensitive, wholeWord }),
+    [caseSensitive, phrase, query, ranges, wholeWord],
   );
-  const total = sweepLength(text, marks);
+  const total = sweepLength(phrase, marks);
   const instant = reducedMotion || stepMs === 0;
 
   // A parent that hands the same ranges in a new array must not restart the
@@ -136,7 +142,7 @@ export const HighlightText = ({
     ranges ?? [],
     (range) => `${range[0]}:${range[1]}`,
   ).join(",");
-  const run = `${text}|${query ?? ""}|${rangeKey}|${caseSensitive}|${wholeWord}|${stepMs}`;
+  const run = `${phrase}|${query ?? ""}|${rangeKey}|${caseSensitive}|${wholeWord}|${stepMs}`;
 
   // Progress belongs to the run it was measured for, so a changed query reads as
   // zero immediately instead of flashing the previous mark.
@@ -166,13 +172,13 @@ export const HighlightText = ({
   }, [instant, run, stepMs, total]);
 
   const state: HighlightTextState = {
-    text,
+    text: phrase,
     revealed,
     total,
     complete,
     reducedMotion,
   };
-  const painted = sweptRanges(text, marks, revealed);
+  const painted = sweptRanges(phrase, marks, revealed);
   const wash = washFor(
     theme,
     { color, activeColor, activeIndex },
@@ -199,7 +205,7 @@ export const HighlightText = ({
           color: theme.colors.foreground,
         }}
       >
-        {text}
+        {phrase}
       </text>
     </div>
   );

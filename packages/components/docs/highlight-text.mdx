@@ -42,6 +42,7 @@ negative offset to the runtime's `highlight`, which reads absolute units.
 
 ## Limitations
 
+- **A stored phrase that is not text paints an empty run**: `textOf` reads `text` at the boundary, so a `null` a saved record kept no longer reaches the matcher and throws out of the render.
 - The sweep is a real-time timer, not a motion-clock tween.
 - `ranges` index UTF-16 units; `ranges` wins over `query`.
 - The default wash is the theme's translucent `findHighlight` pair, which holds the matched text to the theme's body floor; a caller's own `color`/`activeColor` is not measured.
