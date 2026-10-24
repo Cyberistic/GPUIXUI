@@ -303,7 +303,10 @@ press on a frozen cell chooses the record for the whole grid. An empty set is
 the grid's too: the data pane paints `TableEmpty` — `No rows` when the caller
 names no `empty`, a string as that cell's own text — because a body with no
 child would paint the loading skeleton and a role-less message would sit outside
-the grid the tree describes. `ColumnMenu`
+the grid the tree describes. A **blank** `empty` reads as `No rows` too
+(`emptyMessage`): a default written `empty ?? "No rows"` only covers an absent
+prop, and a locale table with a missing row answers `""`, which painted a row
+and a cell with no words under them. `ColumnMenu`
 therefore offers no pin row — a pin is a different layout, not something the
 column list can express. The page is `docs/frozen-columns.mdx`; the shipped
 screen is `examples/frozen-table.example.tsx`.
@@ -423,6 +426,9 @@ caller names none — the body's no-children branch is the loading skeleton, and
 caller who said there are no records must not be told the first page is still
 arriving. A string `empty` paints as the cell's own `<text>`, because a raw
 string in a box paints and is never announced (`src/behaviour/table-empty-a11y.test.tsx`).
+A **blank** string reads as `No rows` (`emptyMessage`): the default only covers
+an absent prop, so a locale table's missing row left the empty grid a cell with
+no words under it.
 
 A **loading skeleton counts what it can mount**: `TableBody`'s `rows` and
 `TableSkeleton`'s `rows`/`columns` are often computed — a page size read from a

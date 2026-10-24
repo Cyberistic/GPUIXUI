@@ -34,6 +34,7 @@ export {
   TableRow,
   TableSkeleton,
   TableViewport,
+  emptyMessage,
 } from "./table/table.js";
 export type {
   CellAlign,

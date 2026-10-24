@@ -706,6 +706,14 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   unit cases in `tree/logic.test.ts` and a window case in
   `src/behaviour/tree.test.tsx` hold it (direction measured: the mount paints
   nothing before the reader). 253 unit / 178 behaviour, `check-types` clean.
+- **A blank empty message reads as `No rows`**: `FrozenTable` and `VirtualTable`
+  wrote `empty ?? DEFAULT_EMPTY_MESSAGE`, which only covers an absent prop, so
+  a locale table's missing row (`""`) left the empty grid a row and cell with
+  no words; `emptyMessage` reads a string through `spokenText` and leaves a
+  node whole. One case in `frozen-empty-a11y.test.tsx` and one in
+  `behaviour/virtual-table.test.tsx`; both measured failing on the old `??`
+  (`expected [ 'Name', 'Size' ] to include 'No rows'`). 253 unit / 180
+  behaviour, `check-types` clean.
 
 ## 5. Acceptance
 

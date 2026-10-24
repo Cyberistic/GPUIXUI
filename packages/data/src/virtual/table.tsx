@@ -50,13 +50,13 @@ import {
   type Ref,
 } from "react";
 import {
-  DEFAULT_EMPTY_MESSAGE,
   Table,
   TableBody,
   TableCaption,
   TableEmpty,
   TableHeader,
   TableViewport,
+  emptyMessage,
 } from "../table/table.js";
 import { useMeasuredBodyHeight } from "../table/frame.js";
 import { paintableSize } from "../internal/size.js";
@@ -243,7 +243,9 @@ export interface VirtualTableProps extends Omit<
    * grid as a cell rather than directly under the body's row group — the shape
    * the accessibility tree needs. A string paints as its own text element.
    * Defaults to `DEFAULT_EMPTY_MESSAGE` (`No rows`): an empty set is empty,
-   * not loading, so the body must not paint its skeleton.
+   * not loading, so the body must not paint its skeleton. A **blank** string
+   * reads as that default too ({@link emptyMessage}), because a default only
+   * covers an absent prop.
    */
   readonly empty?: ReactNode;
   /**
@@ -293,7 +295,7 @@ export const VirtualTable = ({
       <TableHeader>{header}</TableHeader>
       {rowCount(count) === 0 ? (
         <TableBody>
-          <TableEmpty>{empty ?? DEFAULT_EMPTY_MESSAGE}</TableEmpty>
+          <TableEmpty>{emptyMessage(empty)}</TableEmpty>
         </TableBody>
       ) : (
         <VirtualTableBody

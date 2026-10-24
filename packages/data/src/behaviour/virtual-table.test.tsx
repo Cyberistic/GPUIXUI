@@ -229,12 +229,13 @@ describe("the virtualized table", () => {
 
 describe("the row count", () => {
   /** A windowed table over a count the caller computed. */
-  const counted = (count: number) => (
+  const counted = (count: number, empty?: string) => (
     <VirtualTable
       height={240}
       aria-label="Rows"
       count={count}
       rowHeight={30}
+      empty={empty}
       header={
         <TableRow>
           <TableHeaderCell width={120} testId="count-header">
@@ -265,6 +266,16 @@ describe("the row count", () => {
     expect(allText(mounted)).toContain("No rows");
 
     mounted.rerender(counted(-3));
+    settle(mounted);
+    expect(allText(mounted)).toContain("No rows");
+  });
+
+  it("reads a blank empty message as the documented No rows", () => {
+    // Bug guarded: a default written `empty ?? "No rows"` only covers an
+    // absent prop, so a locale table's missing row (`""`) left the empty grid
+    // with a message cell that said nothing.
+    const mounted = renderData(counted(0, ""));
+    root = mounted;
     settle(mounted);
     expect(allText(mounted)).toContain("No rows");
   });

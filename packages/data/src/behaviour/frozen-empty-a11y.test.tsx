@@ -113,4 +113,17 @@ describe("the frozen-column grid over no rows", () => {
       ]);
     });
   });
+
+  it("reads a blank message as the documented No rows", () => {
+    // Bug guarded: the default was written `empty ?? DEFAULT_EMPTY_MESSAGE`,
+    // which only covers an **absent** prop. A locale table with a missing row
+    // answers `""`, so the empty grid painted a row and a cell with no words
+    // under them — it could not say why it was empty.
+    Arr.forEach(["", "   "], (blank) =>
+      withEmptyFrozen(blank, (tree, root) => {
+        expect(root.renderer.getAllText()).toContain("No rows");
+        expect(labelValues(tree, onlyRole(tree, "Cell"))).toEqual(["No rows"]);
+      }),
+    );
+  });
 });

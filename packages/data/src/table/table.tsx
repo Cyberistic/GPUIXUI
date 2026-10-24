@@ -37,8 +37,10 @@
 
 import type { Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { spokenText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import type { ReactNode, Ref } from "react";
 import { paintableSize } from "../internal/size.js";
 import { recipeStyle } from "../recipe.js";
@@ -582,6 +584,23 @@ export interface TableEmptyProps extends Omit<Props, "children"> {
 
 /** The words a windowed table shows when its set is empty and none are given. */
 export const DEFAULT_EMPTY_MESSAGE = "No rows";
+
+/**
+ * The words an empty grid paints.
+ *
+ * `empty` is copy as often as a node — a locale table with a missing row answers
+ * `""`, and a saved message can come back blank — while a default written
+ * `empty ?? DEFAULT_EMPTY_MESSAGE` only covers an **absent** prop. A blank
+ * message therefore painted a nameless empty row: a row and a cell in the
+ * accessibility tree with no words under them, which reads as a grid that
+ * failed to say why it is empty. A string is read through `spokenText` (the
+ * rule every painted caption follows); a node is the caller's own and is left
+ * whole.
+ */
+export const emptyMessage = (empty: ReactNode): ReactNode =>
+  P.isString(empty)
+    ? spokenText(Option.fromNullishOr(empty), DEFAULT_EMPTY_MESSAGE)
+    : (empty ?? DEFAULT_EMPTY_MESSAGE);
 
 /**
  * What a table paints when its set is empty: a message, not a blank frame.

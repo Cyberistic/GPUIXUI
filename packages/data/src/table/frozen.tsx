@@ -67,11 +67,11 @@ import { paneFill, usePaintedHeight } from "../internal/painted.js";
 import { paintableSize } from "../internal/size.js";
 import { DEFAULT_HEADER_HEIGHT } from "./frame.js";
 import {
-  DEFAULT_EMPTY_MESSAGE,
   TableBody,
   TableEmpty,
   TableHeader,
   TableViewport,
+  emptyMessage,
 } from "./table.js";
 
 /** {@link FrozenTable} props. Generics are per row, like `useTable`'s. */
@@ -120,7 +120,9 @@ export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
    * It is wrapped in a `TableEmpty` row, so the message sits inside the grid
    * the accessibility tree describes and a string paints as that cell's own
    * text. Defaults to `No rows`: an empty set is not a load, and a body with
-   * no child paints the loading skeleton.
+   * no child paints the loading skeleton. A **blank** string reads as that
+   * default too ({@link emptyMessage}), because a default only covers an
+   * absent prop.
    */
   readonly empty?: ReactNode;
   /** The frozen pane's test id, for a probe that reads its scroller. */
@@ -285,7 +287,7 @@ export const FrozenTable = <Row,>({
               onScrollChange={mirror("body")}
             >
               {rows.length === 0 ? (
-                <TableEmpty>{empty ?? DEFAULT_EMPTY_MESSAGE}</TableEmpty>
+                <TableEmpty>{emptyMessage(empty)}</TableEmpty>
               ) : (
                 rows.map((record) => (
                   <Fragment key={rowKey(record)}>{row(record)}</Fragment>
