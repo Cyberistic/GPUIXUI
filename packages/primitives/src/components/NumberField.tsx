@@ -106,7 +106,9 @@ export interface NumberFieldProps
    * A fixed number of decimals to paint on commit. Omit to paint the value's
    * own decimals — a field must never show a number it does not hold, so a
    * `step` of `0.5` is visible without this. A given precision rounds and pads
-   * the **painted** text; the value reported keeps the number it was given.
+   * the **painted** text; the value reported keeps the number it was given. A
+   * stored value that is not a number (a record's `null`, text) is no precision
+   * at all, the same absence an omitted prop is.
    */
   readonly precision?: number;
   /** Defaults to `md`. */
