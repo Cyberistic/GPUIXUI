@@ -650,10 +650,11 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws twelve surfaces — Property panels on its own page, the
+The data lane draws fourteen surfaces — Property panels on its own page, the
 sorting, selection, advanced-filter, virtualization, column-configuration,
-tree-view, virtual-tree, charts, key-value and data-toolbar pages through the
-site's table, and the statistic card through it too: the
+tree-view, virtual-tree, charts, key-value, data-toolbar, expandable-rows and
+frozen-columns pages through the site's table, and the statistic card through it
+too: the
 header cycle is `@gpuixui/data`'s `pressSortOrder`, the
 painted order is its own row model (`constructGrid`, the core `useTable` runs
 on), a row press is its `pressSelection` over the visible keys, so the deploy
@@ -678,7 +679,15 @@ width a reader picks, and the toolbar's wait is the package's
 (`DEFAULT_SEARCH_DEBOUNCE_MS` for a `NaN`, an infinity or a negative; zero is the
 caller's immediate report) with a blank field name reading as
 `DEFAULT_SEARCH_LABEL` — the rows narrow on the value the field reported, not on
-the keystroke. The two tree pages
+the keystroke. The expandable row is the package's disclosure: the row is the
+toggle (Enter and Space answer it while the row holds focus), the panel is a
+sibling row on the `muted` strip rather than a spanning cell, the expander track
+is `DEFAULT_EXPANDER_WIDTH`, and two rows can be open at once. The frozen column
+is the measured composition rather than a sticky cell: one offset mirrors the
+two scrollers vertically, a vertical mirror carries the data pane's last
+horizontal offset so it is not reset, and the frozen column never pans — with
+the package's `paintableSize` deciding the box, so a `NaN`, an infinity or a
+negative height is the pane's share and zero is a height. The two tree pages
 are the tree's own: the rows are `flattenTree`, the cursor is the package's
 `useExpandedRows` over `treeCursorMove`, a typed prefix is `typeAheadRow`, and
 the windowed page mounts the package's `createWindowCalculator` slice of the

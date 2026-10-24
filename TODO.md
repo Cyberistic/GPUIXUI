@@ -12523,7 +12523,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 383/383
+`[x]` `[██████████]` 384/384
+
+`[x]` Draw the **two table-interaction pages the data lane still left in
+      prose** — `expandable-rows` and `frozen-columns` were the last two
+      `packages/data/docs` pages with no drawing on the site (neither names a
+      `<ComponentPreview>` and `package-preview.ts` had no row), so the two
+      interactions MISSION names as table-level work — a row that opens a panel,
+      and a column that stays while the grid pans — had API tables and no
+      surface. `src/components/docs/expandable-rows-demo.tsx` paints the
+      package's disclosure: the **row is the toggle** (a focused row answers
+      Enter and Space, its chevron is decoration), the panel is a **sibling**
+      row on the `muted` strip rather than a spanning cell, the expander track is
+      the package's `DEFAULT_EXPANDER_WIDTH` (32), and `toggleOpen` opens a row
+      without closing the others — the page's own "two rows can be open at once"
+      limit, drawn. `frozen-columns-demo.tsx` paints the measured composition
+      instead of a sticky cell: `mirroredOffsets` sends one vertical offset to
+      both scrollers, **carries the data pane's last horizontal offset** through
+      a vertical mirror (a reset would jump the grid back to its first column),
+      keeps the frozen column at `scrollLeft: 0`, and takes the box from the
+      package's own `paintableSize` (`NaN`, ±infinity and a negative are the
+      pane's share; zero is a height); a press in either pane selects the record
+      for the whole grid. Both reuse the key-value row skin for their detail
+      facts. `expandable-rows-demo.test.tsx` (6 cases) and
+      `frozen-columns-demo.test.tsx` (6 cases) hold each rule to the package's
+      source and recipes; `preview-strategy.test.ts` names the lane's fourteen
+      surfaces. Directions measured: replacing the append with a replace fails
+      `opens and closes one row without closing the other` (`expected [ 'notes' ]
+      to deeply equal [ 'harbour', 'notes' ]`), dropping `aria-expanded` fails
+      the markup case (`expected [] to have a length of 3 but got +0`), and
+      resetting the carried x fails `mirrors one vertical offset…` (the two-pane
+      pair). Green: the nine touched files are 83/83, `oxlint`/`oxfmt` clean, and
+      the served build answers `/docs/data-display/expandable-rows` **200** with
+      four rows and `panels open`, `/docs/data-display/frozen-columns` **200**
+      with both panes and `frozen column stays`. `check-types` on `apps/docs`
+      still reports **0** errors in `apps/docs/src` (its 88 foreign errors are
+      the in-flight `boxShadow` type change in the packages). No native scenario
+      applies — browser drawings over pure package rules.
 
 `[x]` Draw the **last two unillustrated data pages** — `/docs/data-display`'s
       key-value and data-toolbar pages were the lane's only surfaces with no
@@ -20275,3 +20311,5 @@ render's, read in the real renderer the behaviour suite drives. Owner: data.
 `[x]` `packages/components`: **a stored card variant the library no longer ships painted a surface with no boundary** — `Card` indexed `CARD_VARIANTS[variant]` raw, so a treatment restored from storage under a name a release renamed (`"bordered"`, a store's own word) answered `undefined`, the recipe dropped the entry, and because `CARD_BASE` paints structure and leaves the edge or the lift to the variant **the card painted neither its documented `outline` border nor an elevation shadow** — a section with no boundary on the page, while the same package's `Badge`, `Tabs` and dialogs already read a stored name through their own guard. `CardVariants` (`Schema.Literals`, the `CardVariant` type derived from it) and `variantOf` now answer the documented `outline` for a name the table does not carry, and `Card` resolves it **once** into `treatment`. Proof: `src/behaviour/card.test.tsx` gains `paints the outlined default for a stored variant name it does not ship` (a stored `"bordered"`: the thin border at `borderWidth.thin` and no shadow). Direction measured: with the raw lookup restored the case fails `expected undefined to be 1` while the other five pass; restored, the file is 6/6. Docs: `packages/components/docs/card.mdx` §API/§Limitations and the `Cards` row (5 → 6 native cases) state the fallback. `src/card-page.test.ts` and `src/api.test.ts` stay green; `oxlint`/`oxfmt` are clean, and the package's `check-types` still reports only the other workstream's in-flight `packages/tokens/src/theme.ts` assignments. No native scenario applies — the paint is the renderer's own tree.
 
 `[x]` `packages/primitives`: **a surface that is leaving could not take its own action out of the Tab order** — every overlay keeps its box painted for its exit tween, and the runtime decides the Tab order element by element, so a dismissed `Dialog`'s own close action stayed a walkable stop while the surface was a ghost (measured 2026-10-24: a `focusNext` walk inside the dismissed dialog still reached its actions and then left the window's focus on an element that unmounted with it). The components' fix was written and reverted because `renderButton` hardcoded `tabIndex={disabled === true ? -1 : 0}` and `ActionHostProps` omits `tabIndex`, so the stop a `presenceTabStop(present)` spread named was silently overridden. `ButtonProps`/`IconButtonProps` now take `tabIndex?: number`, resolved once in `renderButton` as `tabIndex ?? (disabled === true ? -1 : 0)` and forwarded by `iconButtonProps`; an explicit stop wins in both directions (`-1` on an enabled action, `0` on a disabled one), and `-1` stays addressable from code because the runtime builds a `-1` element's focus handle with `tab_stop(false)`. Proof: `src/components/Button.test.tsx` gains `lets the surface an action sits in name its Tab stop` (the default, the explicit `-1`, the disabled default overridden, and the action still running on Enter — `press` on a `tabIndex: -1` button calls `onActivate` once) and `src/components/IconButton.test.tsx` `carries the Tab stop a leaving surface names`; `runtime/controls.runtime.test.tsx` gains `walks past an action a leaving surface has taken out of the Tab order`, whose `focusNext` lands on `after`, then `focusElement` reaches the `-1` button and a click still activates it. Directions measured: with the hardcoded expression restored the two unit cases fail on `Some(0)` against `Some(-1)` and the window case fails its stop assertion, and with the `iconButtonProps` forwarding removed only the icon case fails (1/14). Green: `Button`/`IconButton` 49/49, `docs.test.ts` 48/48, `runtime/controls.runtime.test.tsx` 52/52, `check-types` clean. Docs: the `tabIndex` row on `packages/primitives/docs/button.mdx` and `docs/icon-button.mdx`, and the `Buttons`/`Icon buttons` inventory rows. The components' four `presenceTabStop` spreads and one window case per family remain (recorded on the ghost-stop row above).
+
+`[x]` `packages/primitives`: **a saved option list that was not a list took the control down** — a picker's choices and a group's options are saved data as often as literals (a restored settings pane, a picker in a record, a saved toolbar), and JSON keeps a field a record never set as `null` while a deleted record leaves `null` inside the array. `Select` read its required `options` raw — `Arr.map`/`Arr.flatMap` over `null` threw `Cannot read properties of null (reading 'length')` out of the render and took the trigger and every control beside it with it, a `null` entry threw through `isSelectGroup`'s `"options" in entry`, and a group whose list was `null` threw the same way at its rows; the three groups' `options` read each entry at `.value`, so one deleted record unmounted every row, and `ToggleGroup`'s `toggleGroupValues` returned a stored `null`/object as itself, which reached `Arr.contains` as a non-list. `core/stored.ts` owns the two boundary reads (`storedList` — only a real array is a list, one unusable entry is dropped — and `storedText`); `selectEntries` (`Select.tsx`) reads options and group lists, giving a missing or blank name the value it carries and dropping a group whose list is not a list; `groupOptions` (`group.tsx`) is the same read for the three group components, which now fall back to item children only when `options` is absent; `toggleGroupValues` reads a value it cannot use as no values, and `ToggleGroup`'s controlled/default read goes through `Option` so a stored `null` is absence, not an empty choice. Proof: `Select.test.tsx` (3 cases: no list, a dropped entry, a group's list), `CheckboxGroup.test.tsx`/`RadioGroup.test.tsx`/`ToggleGroup.test.tsx` (a dropped entry each) and `ToggleGroup.test.tsx`'s `toggleGroupValues` case; `runtime/fields.runtime.test.tsx` gains two window cases (`paints a Select whose stored option list is not a list`, `drops a stored option record it cannot place, keeping the rows beside it`). Directions measured: with the raw container read restored the unit case fails `TypeError: Cannot read properties of null (reading 'map')` and the window case the same; with the entry guards restored the six other new cases fail with `Cannot use 'in' operator…`/`Cannot read properties of null (reading 'value')` and `expected null to deeply equal []`; restored, the four files are 104/104, the two window cases pass, and the package suite is green. Docs: `docs/select.mdx`, `docs/{checkbox-group,radio-group,toggle-group}.mdx` §Limitations, the README's stored-choices list and the four `COMPONENTS.md` rows state the rule.

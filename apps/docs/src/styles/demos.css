@@ -12845,3 +12845,204 @@
 .gx-toolbar-state[data-state="done"] {
   color: var(--success-soft-foreground);
 }
+
+/* ---- data: the expandable row and the frozen-column composition. The row
+   recipe is `flex flex-row items-center shrink-0` (`TABLE_ROW`) with the table's
+   own `dividerOn` rule inside its box, the panel is a sibling on the `muted`
+   strip (`TABLE_DETAIL_ROW` + `px-3 py-3 text-sm`), and the grid is
+   `TABLE_ROOT`'s card fill with one `input` edge. The frozen column is a second
+   scroller beside the data pane, never a sticky cell. ---- */
+.gx-er {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.gx-er-headrow,
+.gx-er-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+}
+
+.gx-er-headrow {
+  border-bottom: 1px solid var(--divider-card);
+}
+
+.gx-er-row {
+  flex: 0 0 auto;
+  height: var(--row-height);
+  border-bottom: 1px solid var(--divider-card);
+  cursor: pointer;
+}
+
+.gx-er-row:hover {
+  background: var(--hover);
+}
+
+.gx-er-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-er-track {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-er-cell {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-er-headrow .gx-er-cell {
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.gx-er-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-er-detail {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border-bottom: 1px solid var(--divider-card);
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-er-detail-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-fc {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.gx-fc-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.gx-fc-frozen {
+  flex: 0 0 auto;
+  width: 180px;
+  border-right: 1px solid var(--divider-card);
+}
+
+.gx-fc-data {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gx-fc-head {
+  flex: 0 0 auto;
+}
+
+.gx-fc-headrow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: 1px solid var(--divider-card);
+}
+
+.gx-fc-headrow .gx-fc-cell {
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.gx-fc-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.gx-fc-data .gx-fc-body {
+  overflow-x: auto;
+}
+
+.gx-fc-rows {
+  display: flex;
+  flex-direction: column;
+  min-width: 380px;
+}
+
+.gx-fc-row {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  height: var(--row-height);
+  border-bottom: 1px solid var(--divider-card);
+  cursor: pointer;
+}
+
+.gx-fc-row:hover {
+  background: var(--hover);
+}
+
+.gx-fc-row[aria-selected="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+  border-bottom-color: var(--divider-selected);
+}
+
+.gx-fc-cell {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-fc-name {
+  width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-fc-status {
+  width: 120px;
+}
+
+.gx-fc-owner {
+  width: 120px;
+}
+
+.gx-fc-size {
+  width: 140px;
+}

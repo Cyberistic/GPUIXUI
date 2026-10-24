@@ -30,6 +30,14 @@ import { AppMenuDemo, appMenuDemoSource } from "./app-menu-demo";
 import { StatusBarDemo, statusBarDemoSource } from "./status-bar-demo";
 import { StatCardDemo, statCardDemoSource } from "./stat-card-demo";
 import { KeyValueDemo, keyValueDemoSource } from "./key-value-demo";
+import {
+  ExpandableRowsDemo,
+  expandableRowsDemoSource,
+} from "./expandable-rows-demo";
+import {
+  FrozenColumnsDemo,
+  frozenColumnsDemoSource,
+} from "./frozen-columns-demo";
 import { DataToolbarDemo, dataToolbarDemoSource } from "./data-toolbar-demo";
 import {
   AdvancedFilterDemo,
@@ -3134,6 +3142,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "status-bar-demo": { render: StatusBarDemo, source: statusBarDemoSource },
   "stat-card-demo": { render: StatCardDemo, source: statCardDemoSource },
   "key-value-demo": { render: KeyValueDemo, source: keyValueDemoSource },
+  "expandable-rows-demo": {
+    render: ExpandableRowsDemo,
+    source: expandableRowsDemoSource,
+  },
+  "frozen-columns-demo": {
+    render: FrozenColumnsDemo,
+    source: frozenColumnsDemoSource,
+  },
   "data-toolbar-demo": {
     render: DataToolbarDemo,
     source: dataToolbarDemoSource,

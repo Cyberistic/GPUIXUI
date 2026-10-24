@@ -45,6 +45,16 @@ export const packagePreviews: ReadonlyArray<PackagePreview> = [
   { origin: "data", path: "data-toolbar.mdx", demo: "data-toolbar-demo" },
   {
     origin: "data",
+    path: "expandable-rows.mdx",
+    demo: "expandable-rows-demo",
+  },
+  {
+    origin: "data",
+    path: "frozen-columns.mdx",
+    demo: "frozen-columns-demo",
+  },
+  {
+    origin: "data",
     path: "advanced-filter.mdx",
     demo: "advanced-filter-demo",
   },
