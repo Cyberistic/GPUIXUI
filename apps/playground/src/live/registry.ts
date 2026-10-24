@@ -822,6 +822,12 @@ export const liveRegistry = [
       "Tree: the shipped FileTree opens a folder on a press, replaces the selection on a file, adds a row from its checkbox without opening the folder, walks native focus by key and scrolls inside the height it was handed",
     capability: "tree",
   },
+  {
+    id: "color-picker-lifecycle",
+    title:
+      "Input: the shipped ColorPicker paints the theme's six roles as swatches, marks the chosen one with a page-filled pip, commits a typed shorthand as one normal form and refuses a draft it cannot read",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

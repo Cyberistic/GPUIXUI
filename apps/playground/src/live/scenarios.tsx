@@ -1132,6 +1132,7 @@ import { PanelGroupProbe, panelGroupSteps } from "./panel-group-probe.js";
 import { AccordionProbe, accordionSteps } from "./accordion-probe.js";
 import { LogViewerProbe, logViewerSteps } from "./log-viewer-probe.js";
 import { FileTreeProbe, fileTreeSteps } from "./file-tree-probe.js";
+import { ColorPickerProbe, colorPickerSteps } from "./color-picker-probe.js";
 import {
   PropertyPanelProbe,
   propertyPanelSteps,
@@ -30700,5 +30701,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "file-tree-lifecycle",
     view: () => <FileTreeProbe />,
     steps: fileTreeSteps,
+  },
+  "color-picker-lifecycle": {
+    id: "color-picker-lifecycle",
+    view: () => <ColorPickerProbe />,
+    steps: colorPickerSteps,
   },
 };

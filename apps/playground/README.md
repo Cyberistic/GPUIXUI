@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-131 probes a real window can prove, of which twenty-nine mount shipped
+132 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7450,6 +7450,57 @@ until the probe moved onto it — which is why the probe's row presses are
 `src/live/file-tree.ts`, probe `src/live/file-tree-probe.tsx`, guard
 `src/live/file-tree.test.ts`.
 
+### `color-picker-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/components` `ColorPicker` and a second, disabled one:
+six swatches that are the theme's own roles (`primary`, `secondary`, `accent`,
+`muted`, `destructive`, `foreground`), a preview of the value, and a HEX field.
+The behaviour suite reads each cell's `style.backgroundColor`, the `aria-selected`
+attribute and the draft the host holds — which say what was asked for. This probe
+paints them: every cell is counted in its own **inner** square (a quarter inset
+clears a `radius.md` corner on a 28-point `sm` cell), the marker is the page ink
+only the chosen cell holds, and a refused draft is counted off the field's own
+box in the destructive role.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the readout is `value=#a7a9ff changes=0 refused=0` — the caller's `primary`; each of the six cells paints its own role above the probe's **500**-pixel floor (a 14-point inner square is **784** device pixels at this host's 2x) |
+| the marker | `primary` — and only `primary` — paints the page fill inside a body-ink ring, which is what makes the mark survive a cell whose fill is any role; the preview paints the value |
+| press `accent` | the readout is `value=#2e2370 changes=1 refused=0`, the marker moves to `accent` (and leaves `primary`), and the preview repaints |
+| `Space` | the focus is on `muted`; the **press** chooses nothing (`changes=1`), the **release** chooses (`value=#1e222a changes=2`) |
+| `Enter` | the press chooses the focused `destructive` swatch (`changes=3`) |
+| type `f0a`, `Enter` | the field commits one normal form: `value=#ff00aa changes=4`, no swatch carries the marker (no role matches the typed colour) and the preview paints the typed hex |
+| type `zz` | the field's own box paints the destructive border while the draft is unreadable |
+| `Enter` on `zz` | nothing commits (`value=#ff00aa changes=4`) and the destructive paint is gone — the draft returned to the value |
+| press the disabled swatches | `refused=0`: a disabled picker reports nothing |
+| `Tab` from the stop before it | the traversal reaches the stop **after** it, because its six swatches and its read-only field carry `tabIndex: -1` |
+
+**The field needs a frame between the keys and the submit.** The probe types
+three characters into one frame; pressing `Enter` in that same frame submitted
+the draft from **before** the edit, which read as no commit at all
+(`value=#ff6b6b changes=3`). A `SETTLE` between the typing and `Enter` fixes it —
+a reader cannot type inside one frame, so the probe waits where the window
+coalesces. The frame is also what makes the valid draft's border readable before
+the commit: a readable draft paints no destructive ink.
+
+**What the frame cannot say.** The picker's group name and its swatches'
+`aria-label`/`aria-selected` are accessibility-tree facts, and a window's
+automation protocol has no a11y verb (`a11y-tree` is the offscreen measurement),
+so this probe reads the paint and the value channel and leaves the names to
+`src/behaviour/color-picker.test.tsx`.
+
+**The probe can fail.** Reading each cell's **whole** box instead of its inner
+square makes all six corners paint the page: `only the chosen swatch carries the
+marker` fails with `expected "primary", got
+"primary,secondary,accent,muted,destructive,foreground"` (exit `1`). The inset is
+the measurement, not a helper's detail.
+
+47 checks, `--only color-picker-lifecycle`, green on 0.11.0 here (three runs,
+13.2–18.1 s). Evidence:
+`.artifacts/live/color-picker-{rest,chosen,drafted,typed,refused,returned}.png`.
+Fixture `src/live/color-picker.ts`, probe `src/live/color-picker-probe.tsx`,
+guard `src/live/color-picker.test.ts`.
+
 
 ## Terminal mode: the pty probe
 
@@ -7703,8 +7754,8 @@ narrower. Each deviation is deliberate and measured:
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
   `motion-interruption` and `panel-group-lifecycle` and
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
-  `dock-layout-lifecycle` and `file-tree-lifecycle` (73
-  probes, each run alone).
+  `dock-layout-lifecycle` and `file-tree-lifecycle` and
+  `color-picker-lifecycle` (74 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,
