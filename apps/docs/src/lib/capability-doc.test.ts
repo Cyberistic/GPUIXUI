@@ -420,4 +420,58 @@ describe("docs/gpuix-capabilities.md", () => {
     // §5 owes every cited probe a line.
     expect(doc.slice(doc.indexOf("## 5."))).toContain("`app-chrome-lifecycle`");
   });
+
+  it("records the radio group's keys, from the probe", () => {
+    // The record can only say "keep one tab stop"; whether the shipped
+    // `RadioGroup` actually paints a disc for the choice and a ring for the
+    // focus, and where its roving base sits, was only in the playground's
+    // README. The row is the durable claim, so it is held to the fixture, the
+    // probe's own assertion titles, the README's printed numbers and the page.
+    const fixture = read("apps/playground/src/live/radio-group.ts");
+    const probe = read("apps/playground/src/live/radio-group-probe.tsx");
+    const checks = numberIn(fixture, "RADIO_CHECKS");
+    // The fixture's count is the probe's, held by the playground's own suite.
+    expect(checks).toBe(39);
+    expect(fixture).toContain("radioRowId");
+
+    const row = rowFor("Radio group keyboard");
+    expect(row?.verdict).toBe("supported, with limits");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("Composed, not provided");
+    expect(evidence).toContain("`radio-group-lifecycle`");
+    expect(evidence).toContain(`${checks} checks`);
+    expect(evidence).toContain("32x32");
+    expect(evidence).toContain("516x64");
+    // Each rule the row prints is one the probe asserts by name, so the record
+    // cannot teach a behaviour the window never measured.
+    [
+      "a press paints the selection disc, not the keyboard ring",
+      "an arrow past the last row wraps to the first",
+      "one Tab leaves the whole group",
+      "an arrow steps over the disabled row",
+      "the second arrow continues from the focused row, not the kept value",
+    ].forEach((title) => expect(probe).toContain(title));
+    expect(row?.workaround).toContain("one");
+    expect(row?.workaround).toContain("report");
+    expect(row?.workaround).toContain("pixel count");
+
+    // The numbers are the README's own measurement, not a second reading.
+    const section = read("apps/playground/README.md").slice(
+      read("apps/playground/README.md").indexOf("### `radio-group-lifecycle`"),
+    );
+    expect(section).not.toBe("");
+    expect(section).toContain(`${checks} checks`);
+    ["540", "32x32", "4576", "516x64"].forEach((number) =>
+      expect(section).toContain(number),
+    );
+
+    const pageRow = runtimePage
+      .split("\n")
+      .find((line) => line.startsWith("| A radio group is one tab stop"));
+    expect(pageRow).toContain("`radio-group-lifecycle`");
+    expect(pageRow).toContain(`${checks} checks`);
+    expect(pageRow).toContain("one stop");
+
+    expect(doc.slice(doc.indexOf("## 5."))).toContain("`radio-group-lifecycle`");
+  });
 });
