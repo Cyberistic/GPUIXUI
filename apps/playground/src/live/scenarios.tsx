@@ -16,6 +16,7 @@ import {
   useReducer,
   useRef,
   useState,
+  type ReactElement,
 } from "react";
 import { Duration, Effect, flow, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -407,6 +408,23 @@ import {
   initialDrawerFlow,
   type DrawerEvent,
 } from "./drawer.js";
+import {
+  BODY_ROWS,
+  DIALOG_VIEWPORT,
+  MODAL_PAGE_ROWS,
+  MODAL_ROW_HEIGHT,
+  PAGE_ROW_WIDTH,
+  PAGE_VIEWPORT,
+  MODAL_SCROLL_IDS,
+  MODAL_WHEEL,
+  dialogContentHeight,
+  dialogReadout,
+  initialScrollReading,
+  maxOffset,
+  pageContentHeight,
+  pageReadout,
+  type ScrollReading,
+} from "./modal-scroll.js";
 import {
   captureScale,
   describeColour,
@@ -3223,6 +3241,130 @@ const DrawerProbe = (): ReactNode => {
           </DrawerContent>
         </Drawer>
         <Readout testId={DRAWER_IDS.readout}>{drawerReadout(flow)}</Readout>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Whether an open modal contains the wheel.
+ *
+ * The page is a real scroller and so is the shipped modal's own body
+ * (`DialogContent` carries `overflow: "scroll"`). One wheel is aimed at each in
+ * turn and then at the veil between them, and the page's readout says whether
+ * its own handler heard any of them — the question a scroll lock would answer,
+ * which the app cannot implement as a gesture guard because the host publishes
+ * no wheel handler and no `preventDefault`.
+ */
+const ModalScrollProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(initialScrollReading);
+  const [viewport, setViewport] = useState(0);
+  const [dialog, setDialog] = useState(initialScrollReading);
+
+  /** The offset `onScrollChange` reports, leaving the wheel count alone. */
+  const noteOffset =
+    (
+      setter: Dispatch<SetStateAction<ScrollReading>>,
+    ): ((event: EventPayload) => void) =>
+    (event) =>
+      setter((current) => ({
+        ...current,
+        x: event.scrollX ?? 0,
+        y: event.scrollY ?? 0,
+      }));
+
+  /** The gesture `onScroll` reports — one per wheel the scroller heard. */
+  const noteWheel =
+    (
+      setter: Dispatch<SetStateAction<ScrollReading>>,
+    ): ((event: EventPayload) => void) =>
+    () =>
+      setter((current) => ({ ...current, events: current.events + 1 }));
+
+  const rows = (
+    prefix: string,
+    count: number,
+    width?: number,
+  ): ReadonlyArray<ReactElement> =>
+    Array.from({ length: count }, (_, index) => (
+      <div
+        key={index}
+        testId={`${prefix}-row-${index}`}
+        style={{ height: MODAL_ROW_HEIGHT, width }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`${prefix} ${index}`}
+        </text>
+      </div>
+    ));
+
+  return (
+    <div
+      testId={MODAL_SCROLL_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          padding: theme.spacing.md,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing.md,
+        }}
+      >
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger testId={MODAL_SCROLL_IDS.opener}>
+            Open a long dialog
+          </DialogTrigger>
+          <DialogContent
+            label="Scrolling dialog"
+            testId={MODAL_SCROLL_IDS.dialog}
+            onScroll={noteWheel(setDialog)}
+            onScrollChange={noteOffset(setDialog)}
+          >
+            <DialogHeader>
+              <DialogTitle>Thirty rows</DialogTitle>
+              <DialogDescription>
+                Longer than the surface, so the modal owns a scroller.
+              </DialogDescription>
+            </DialogHeader>
+            {rows("dialog", BODY_ROWS)}
+          </DialogContent>
+        </Dialog>
+        <Readout testId={MODAL_SCROLL_IDS.pageReadout}>
+          {pageReadout(page, viewport)}
+        </Readout>
+        <Readout testId={MODAL_SCROLL_IDS.dialogReadout}>
+          {dialogReadout(dialog)}
+        </Readout>
+      </div>
+      <div
+        testId={MODAL_SCROLL_IDS.page}
+        style={{
+          flexGrow: 1,
+          minHeight: 0,
+          overflow: "scroll",
+          backgroundColor: theme.colors.card,
+        }}
+        onScroll={noteWheel(setPage)}
+        onScrollChange={noteOffset(setPage)}
+        onLayout={(event) => setViewport(event.height ?? 0)}
+      >
+        {rows("page", MODAL_PAGE_ROWS, PAGE_ROW_WIDTH)}
       </div>
     </div>
   );
@@ -10825,18 +10967,16 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("nested-inner-row-0");
     yield* Effect.sleep(SETTLE);
 
+    /** A scroller's own offset; `NaN` while it has no scroll handle. */
     const offsetOf = (
       testId: string,
-    ): Effect.Effect<
-      Smoke.Offset,
-      Smoke.SmokeAssertionError | Smoke.SmokeHostError
-    > =>
-      Effect.gen(function* () {
-        return yield* ctx.expectSome(
-          `the ${testId} scroller reports an offset`,
-          Option.fromNullishOr(yield* ctx.host.scrollOffset(testId)),
-        );
-      });
+    ): Effect.Effect<Smoke.Offset, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.scrollOffset(testId), (offset) =>
+        Option.getOrElse(Option.fromNullishOr(offset), () => ({
+          x: Number.NaN,
+          y: Number.NaN,
+        })),
+      );
 
     const innerOffset = yield* offsetOf("nested-inner");
     const outerOffset = yield* offsetOf("nested-outer");
@@ -10969,6 +11109,218 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `page=x0 y${INNER_STEP} events=1`,
     );
     yield* ctx.host.capture("nested-scroll");
+  });
+
+/**
+ * Whether an open modal contains the wheel.
+ *
+ * Every reading is a scroller's own offset, captured by `scrollOffset`, plus the
+ * page's readout of the wheels its `onScroll` heard: a page scroller that moved
+ * without hearing anything would be a paint the probe cannot explain, and a page
+ * that heard a wheel aimed at the modal would be the leak this measures.
+ */
+const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MODAL_SCROLL_IDS.opener);
+    yield* ctx.host.waitFor(MODAL_SCROLL_IDS.page);
+    yield* Effect.sleep(SETTLE);
+
+    /** A scroller's own offset; `NaN` while it has no scroll handle. */
+    const offsetOf = (
+      testId: string,
+    ): Effect.Effect<Smoke.Offset, Smoke.SmokeHostError> =>
+      Effect.map(ctx.host.scrollOffset(testId), (offset) =>
+        Option.getOrElse(Option.fromNullishOr(offset), () => ({
+          x: Number.NaN,
+          y: Number.NaN,
+        })),
+      );
+
+    // ── The page is a scroller the window really moves ───────────
+    // The wheel is aimed at a page row rather than at the page box: a row is
+    // narrow, so its centre is left of the centred modal later on, which is the
+    // point the veil covers.
+    const pageBox = yield* paintedBox(ctx, MODAL_SCROLL_IDS.page);
+    yield* ctx.expectEqual(
+      "the page paints the viewport its rows scroll in",
+      pageBox.height,
+      PAGE_VIEWPORT,
+    );
+    yield* ctx.expectEqual(
+      "the page is a scroller",
+      Number.isNaN((yield* offsetOf(MODAL_SCROLL_IDS.page)).y),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the page starts at the top",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the page's readout starts empty",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.pageReadout),
+      pageReadout(initialScrollReading, pageBox.height),
+    );
+    yield* ctx.host.wheel("page-row-1", 0, MODAL_WHEEL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "a wheel over a page row moves the page, so it is alive before a modal",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      MODAL_WHEEL,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the page's readout counts the wheel it heard",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.pageReadout),
+      pageReadout({ x: 0, y: MODAL_WHEEL, events: 1 }, pageBox.height),
+    );
+    yield* ctx.host.wheel("page-row-10", 0, -MODAL_WHEEL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the page returns to the top",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      0,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the page's readout counts both wheels",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.pageReadout),
+      pageReadout({ x: 0, y: 0, events: 2 }, pageBox.height),
+    );
+
+    // ── The modal opens over the page ────────────────────────────
+    yield* ctx.host.focusElement(MODAL_SCROLL_IDS.opener);
+    yield* ctx.host.click(MODAL_SCROLL_IDS.opener);
+    yield* settlePainted(ctx, MODAL_SCROLL_IDS.dialog);
+    // The surface travels in on its entry level; a box read on the mount's
+    // frame names the journey rather than the resting box.
+    yield* Effect.sleep(Duration.millis(400));
+    yield* ctx.expectEqual(
+      "the open modal takes the focus",
+      yield* focusedAfterPaint(ctx),
+      MODAL_SCROLL_IDS.dialog,
+    );
+    const dialogBox = yield* paintedBox(ctx, MODAL_SCROLL_IDS.dialog);
+    yield* ctx.expectEqual(
+      "the modal's surface paints the height its body scrolls in",
+      dialogBox.height,
+      DIALOG_VIEWPORT,
+    );
+    yield* ctx.expectEqual(
+      "the modal's body is itself a scroller",
+      Option.isSome(
+        Option.fromNullishOr(
+          yield* ctx.host.scrollOffset(MODAL_SCROLL_IDS.dialog),
+        ),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the modal's body paints fewer rows than it holds",
+      dialogBox.height < dialogContentHeight,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the modal's body starts at the top",
+      (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y,
+      0,
+    );
+
+    // ── A wheel on the veil, outside the surface, moves nothing ───────
+    yield* ctx.host.wheel("page-row-10", 0, MODAL_WHEEL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a wheel on the veil leaves the page where the reader left it",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "a wheel on the veil does not scroll the modal's own body",
+      (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the page's handler heard no wheel aimed at the veil",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.pageReadout),
+      pageReadout({ x: 0, y: 0, events: 2 }, pageBox.height),
+    );
+
+    // ── A wheel inside the modal moves the modal, not the page ────────
+    yield* ctx.host.wheel("dialog-row-5", 0, MODAL_WHEEL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the modal's body takes the wheel's own delta",
+      (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y,
+      MODAL_WHEEL,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the page behind the modal stays put",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the page's handler heard no wheel aimed inside the modal",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.pageReadout),
+      pageReadout({ x: 0, y: 0, events: 2 }, pageBox.height),
+    );
+    yield* ctx.expectEqual(
+      "the modal's readout carries the change its own scroller reported",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.dialogReadout),
+      dialogReadout({ x: 0, y: MODAL_WHEEL, events: 1 }),
+    );
+
+    // ── Past the end the modal clamps; the page still does not follow ─────
+    yield* ctx.host.wheel(MODAL_SCROLL_IDS.dialog, 0, MODAL_WHEEL * 100);
+    yield* Effect.sleep(SETTLE);
+    const clamped = (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y;
+    yield* ctx.expectEqual(
+      "the modal's body clamps at its own content's end",
+      clamped,
+      maxOffset(dialogContentHeight, DIALOG_VIEWPORT),
+    );
+    yield* ctx.expectEqual(
+      "the page still has not moved while the modal clamps",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      0,
+    );
+    yield* ctx.host.wheel(MODAL_SCROLL_IDS.dialog, 0, MODAL_WHEEL * 100);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a second wheel past the end leaves the modal where it clamped",
+      (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y,
+      clamped,
+    );
+    yield* ctx.host.capture("modal-scroll");
+
+    // ── Dismissed, the page is exactly where the reader left it ─────────
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape dismisses the modal",
+      yield* settleGone(ctx, MODAL_SCROLL_IDS.dialog),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the page is where the reader left it after the modal closes",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      0,
+    );
+    yield* ctx.host.wheel(MODAL_SCROLL_IDS.page, 0, MODAL_WHEEL * 100);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the page takes the whole wheel once the modal is gone, so it was alive throughout",
+      (yield* offsetOf(MODAL_SCROLL_IDS.page)).y,
+      maxOffset(pageContentHeight, PAGE_VIEWPORT),
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the page's readout counts the wheel that landed after the modal closed",
+      yield* ctx.host.text(MODAL_SCROLL_IDS.pageReadout),
+      pageReadout(
+        { x: 0, y: maxOffset(pageContentHeight, PAGE_VIEWPORT), events: 3 },
+        PAGE_VIEWPORT,
+      ),
+    );
   });
 
 /** The split probe's container width, inside the window. */
@@ -29896,5 +30248,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "qr-matrix",
     view: () => <QrMatrixProbe />,
     steps: qrMatrixSteps,
+  },
+  "modal-scroll-lifecycle": {
+    id: "modal-scroll-lifecycle",
+    view: () => <ModalScrollProbe />,
+    steps: modalScrollSteps,
   },
 };

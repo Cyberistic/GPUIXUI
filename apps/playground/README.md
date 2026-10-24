@@ -42,12 +42,12 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-119 probes a real window can prove, of which twenty-four mount shipped
+120 probes a real window can prove, of which twenty-five mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the collapsible section, the popover,
-the popover's reflow,
+the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail), nine mount
@@ -798,7 +798,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | Critical interaction | Probes | What a window measures |
 | -------------------- | ------ | ---------------------- |
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
-| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in |
+| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle`, `modal-scroll-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in; an open modal's own body scrolls while the page it covers and the veil it paints move nothing |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
 | input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
@@ -6706,6 +6706,67 @@ wrong.
 
 Evidence: `.artifacts/live/qr-matrix.png`.
 
+### `modal-scroll-lifecycle` — measured on 0.11.0 here
+
+**Does an open modal contain the wheel?** Two measured rules meet this question.
+`nested-scroll-lifecycle` showed that one wheel moves **every scrollable
+ancestor** on the hit path, so a list inside a page cannot keep a wheel from
+that page. A modal is not an ancestor of the page: the shipped `Dialog` paints
+its veil and body inside one `<anchored occlude>` layer over the page, and
+`@gpuixui/primitives`' `decorative` documents that `occlude()` "stops the wheel
+too" — a claim no window had measured. It matters because the runtime publishes
+no wheel handler and no `preventDefault`, so a scroll lock consumed by the modal
+is impossible; the only honest options are a wall or app-side compensation.
+The probe mounts a real page scroller (40 rows of 40 points in a **472**-point
+viewport) and the shipped `DialogContent`, which is itself `overflow: "scroll"`
+(30 rows of 40 points inside a **456**-point surface — 1 432 points of content
+counted with its header and padding). Every wheel below is aimed at an element,
+so its coordinates are the runtime's own: the page's rows are narrow, so their
+centre lands left of the centred surface and measures the veil rather than the
+modal.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | page `y=0`, its readout `page=x0 y0 events=0` |
+| a wheel over a page row | the page reaches `-100` and its readout counts `events=1` |
+| the return wheel over another page row | the page is back at `0` with `events=2` |
+| the modal opens | the surface takes the focus, its body is a scroller (`456` tall) and starts at `y=0` |
+| a wheel on the veil, left of the surface | the page stays `0`, the modal's body stays `0`, and the page's `onScroll` count stays `2` |
+| a wheel inside the modal's body | the body reaches `-100`, its readout `dialog=x0 y-100 events=1`, and the page stays `0` with `events=2` |
+| a `-10000` wheel inside the body | the body clamps at `-976` (`1 432 - 456`), the page still `0`, and a second `-10000` wheel leaves the body at `-976` |
+| `Escape` | the modal unpaints, the page is still at `0`, and one more `-10000` wheel clamps it at `-1 128` (`1 600 - 472`) with `events=3` |
+
+Four rules the probe holds:
+
+1. **The veil is a wall against the page.** A wheel aimed at a point the modal
+   covers moves neither the page behind it nor the modal's body: the `occlude`
+   layer stops the hit test, so the ancestor chaining `nested-scroll-lifecycle`
+   measured does not reach the page. A modal needs no scroll lock.
+2. **The modal's own body is the scroller.** The same wheel aimed inside the
+   surface moves the body by its delta, so a long dialog scrolls without a
+   second scroller of the app's.
+3. **The page's handler never hears the gesture.** `onScroll` fires on an
+   ancestor for a wheel aimed inside a descendant, so the unchanged `events=2`
+   is the strongest half of rule 1: no wheel aimed at the modal reached the
+   page's own handler either.
+4. **A dismissal restores nothing, because nothing moved.** The page is exactly
+   where the reader left it after `Escape`, and its next wheel clamps at its own
+   content's end — so the scroller was alive throughout rather than dead under
+   the modal.
+
+29 checks, `--only modal-scroll-lifecycle`, green on 0.11.0 here (~1.5–1.9 s).
+Fixture `src/live/modal-scroll.ts` (the row counts, the wheel delta, the row
+width that keeps a page wheel outside the surface, the ids and the two
+readouts) + `ModalScrollProbe`/`modalScrollSteps` in `src/live/scenarios.tsx` +
+`modal-scroll.test.ts` (the derived clamps, the veil geometry, the registry and
+wiring, the measured check count and this section). **Not measured, and named
+rather than implied**: a non-occluded floating surface (a popover is a
+`FloatingLayer`, which occludes by default) and a page scroller *inside* a modal
+(the ancestor rule would apply again). One negative control measured, exit `1`,
+restored green: expecting the veil wheel to move the page fails
+`a wheel on the veil leaves the page where the reader left it` with
+`expected -100, got 0`. Evidence: `.artifacts/live/modal-scroll.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6950,8 +7011,8 @@ narrower. Each deviation is deliberate and measured:
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
   `media-frame-lifecycle` and `media-player-lifecycle` and
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
-  and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle`
-  (sixty-one probes, each run alone).
+  and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
+  `modal-scroll-lifecycle` (62 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`

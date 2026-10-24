@@ -750,6 +750,12 @@ export const liveRegistry = [
       "Content: a 21×21 matrix paints the same module for module as a grid of boxes and as one tinted svg mask, and its quiet zone stays paper",
     capability: "content",
   },
+  {
+    id: "modal-scroll-lifecycle",
+    title:
+      "Overlay: an open modal contains the wheel — its own body scrolls, the page behind it and the veil it paints move nothing",
+    capability: "modal",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
