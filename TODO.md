@@ -21573,6 +21573,32 @@ numbers).
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
 
+`[x]` `@gpuixui/motion`: **a hold window past the delay a timer keeps ended the
+      exit in its first frame** — `transitionWindowMs` is the value both the
+      seam's `useSurfacePresence` and the toast stack schedule their unmount
+      with (`setTimeout`), and it checked only that the sum was **finite**, while
+      the renderer's clock (`Number.MAX_SAFE_INTEGER` seconds) is far wider than
+      a host timer's delay (a signed 32-bit count of milliseconds). A stored
+      exit of **30 million seconds** is 30 000 000 000 ms — a duration
+      `presenceTimingOf` keeps, so the seam held the box for it and handed
+      `setTimeout` a delay Node clamps to `1`: measured on this box on
+      2026-10-24, a `3 000 000 000` ms timer reports `TimeoutOverflowWarning`
+      ("Timeout duration was set to 1") and fires after **7 ms**. A leaving
+      surface therefore unmounted in the frame it began to leave, and its exit
+      tween painted outside a mounted box — the failure the conversion's own
+      JSDoc promised to prevent ("a number a timer cannot take"). The window now
+      reads the scheduler's bound (`SCHEDULABLE_WINDOW_MS`,
+      `2 147 483 647` ms) as **no window at all**, the answer an unrepresentable
+      sum already gets, so the box unmounts instead of ghosting for a delay no
+      timer can hold. Proof: `src/presence.test.ts`'s `reads a window the
+      scheduler cannot hold as no window at all` (the 30-million-second exit,
+      the bound itself at **2 147 483 647** and one millisecond past it, and a
+      wait beside a readable duration). Direction measured: with the finiteness
+      check restored the case fails `expected 30000000000 to be +0`; restored,
+      the package is 15 files / **220** tests with `check-types` clean. Docs:
+      `packages/motion/README.md` §The presence table states the timer bound
+      beside the arithmetic overflow. No live scenario applies — a pure
+      conversion and the scheduler's own range.
 `[x]` `packages/components`: **a saved phrase list took the rotation down, and a
       hole in it painted a nameless frame** — `RotatingText` read `phrases.length`
       and `phraseAt(phrases, …)` straight off the prop, so a page restored from

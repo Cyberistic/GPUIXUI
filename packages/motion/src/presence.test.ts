@@ -187,6 +187,22 @@ describe("the hold window", () => {
     // holds no window for it rather than one no timer can take.
     expect(transitionWindowMs({ duration: 1e17 })).toBe(0);
   });
+
+  it("reads a window the scheduler cannot hold as no window at all", () => {
+    // The bug this guards: the sum was only checked for *finite*, and the
+    // renderer's clock is wider than a host timer's. Thirty million seconds is
+    // 30 000 000 000 ms — a duration the renderer schedules, so the seam kept
+    // the box for it and handed `setTimeout` a delay Node clamps to `1`
+    // (measured on this box: a 3 000 000 000 ms timer fires after 7 ms), so a
+    // leaving surface unmounted in the frame it began to leave and its exit
+    // tween painted outside a mounted box.
+    expect(transitionWindowMs({ duration: 3e7 })).toBe(0);
+    // The bound itself is the longest delay a timer holds.
+    expect(transitionWindowMs({ duration: 2_147_483.647 })).toBe(2_147_483_647);
+    expect(transitionWindowMs({ duration: 2_147_483.648 })).toBe(0);
+    // A wait beside a readable duration is measured the same way.
+    expect(transitionWindowMs({ duration: 3e7, delay: 0.1 })).toBe(0);
+  });
 });
 
 describe("a staggered arrival", () => {

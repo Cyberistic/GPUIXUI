@@ -206,7 +206,10 @@ A surface that enters and leaves reads one table, exported from
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds
   a box stays mounted for, including the wait a delayed run sits out first; a
   field that cannot be scheduled adds no time (a negative wait never shortens the
-  journey) and a window the arithmetic cannot represent is no window at all;
+  journey) and a window that cannot be scheduled is no window at all — the
+  arithmetic's own overflow, and a sum past the ~24.8 days a host timer accepts,
+  because a longer `setTimeout` is clamped to `1 ms` and would end the exit in
+  the frame it began;
 - `delayedTiming` adds a stagger and drops it with the journey: a reduced
   timing, and any duration the run cannot travel (absent, unreadable, or not
   positive), takes the wait with it, since the runtime waits out a delay before

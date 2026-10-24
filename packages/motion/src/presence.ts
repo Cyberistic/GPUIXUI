@@ -380,20 +380,35 @@ const milliseconds = (seconds: number | null | undefined): number =>
   (schedulableSeconds(seconds) ?? 0) * 1000;
 
 /**
+ * The longest window a host timer holds, in whole milliseconds.
+ *
+ * This conversion is the value an unmount is scheduled with (`setTimeout`, in
+ * `useSurfacePresence` and the toast stack), not with the renderer's clock: a
+ * timer's delay is a signed 32-bit count of milliseconds, so a longer one is
+ * clamped to `1` and fires at once. A window past this bound is therefore **no
+ * window**, the answer an unrepresentable sum already gets — otherwise a
+ * leaving surface unmounts in the frame it begins to leave.
+ */
+const SCHEDULABLE_WINDOW_MS = 2_147_483_647;
+
+/**
  * The window a run occupies, in whole milliseconds.
  *
  * The wait a delayed run sits out first is part of its window — the runtime
  * holds the first frame for it — so a window that counted only the duration
  * would unmount a feedback layer before its journey began. A run with no
  * duration and no wait is no window at all, and so is one whose whole window
- * the arithmetic cannot represent: the box unmounts rather than staying mounted
- * for a number the scheduler cannot take.
+ * cannot be scheduled: a sum the arithmetic cannot represent, or one past the
+ * milliseconds a host timer accepts ({@link SCHEDULABLE_WINDOW_MS}). The box
+ * unmounts rather than staying mounted for a number the scheduler cannot take.
  */
 export const transitionWindowMs = (
   timing: PresenceTransition | null | undefined,
 ): number => {
-  const total = milliseconds(timing?.duration) + milliseconds(timing?.delay);
-  return Number.isFinite(total) ? Math.round(total) : 0;
+  const total = Math.round(
+    milliseconds(timing?.duration) + milliseconds(timing?.delay),
+  );
+  return Number.isFinite(total) && total <= SCHEDULABLE_WINDOW_MS ? total : 0;
 };
 
 /**
