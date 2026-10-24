@@ -275,7 +275,9 @@ export {
   controlSize,
   elevationLevel,
   familyOf,
+  isSpaceStep,
   isTextRole,
+  spaceStep,
   typeOf,
 } from "./theme.js";
 
@@ -292,6 +294,7 @@ export type {
   Radius,
   RadiusStep,
   Spacing,
+  SpaceSource,
   SpaceStep,
   TextRole,
   TextStyle,

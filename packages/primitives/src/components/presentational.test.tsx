@@ -24,7 +24,11 @@ import {
 import { testTheme } from "../core/testing/theme.fixture.js";
 import type { SpinnerAccent } from "../core/loading.js";
 import type { TextTone } from "../core/style.js";
-import type { ElevationLevel, TextRole } from "../core/theme.js";
+import type {
+  ElevationLevel,
+  PrimitiveTheme,
+  TextRole,
+} from "../core/theme.js";
 import * as primitives from "../index.js";
 import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
@@ -246,6 +250,27 @@ describe("layout containers", () => {
     expect(numberIn(renderSpacer({}, testTheme), "flexGrow")).toStrictEqual(
       Option.some(1),
     );
+  });
+
+  it("fills for a stored size name this release does not carry", () => {
+    // Bug guarded: `size` is a name a saved layout stores as often as a
+    // literal, and it was indexed raw — `theme.spacing["roomy"]` is
+    // `undefined`, so the spacer painted a **fixed** item with no side at all
+    // (measured 0px beside a 12px `lg` one) instead of either of the two states
+    // its API documents. The documented default for an omitted step is the
+    // flexible filler, so a name the theme cannot paint reads as that default.
+    // The cast is the storage boundary: a saved step is a string, not a union.
+    const stored = renderSpacer(
+      { size: "roomy" as keyof PrimitiveTheme["spacing"] },
+      testTheme,
+    );
+    expect(stored).toStrictEqual(renderSpacer({}, testTheme));
+    expect(numberIn(stored, "flexGrow")).toStrictEqual(Option.some(1));
+    expect(numberIn(stored, "width")).toStrictEqual(Option.none());
+    // A step the theme does paint is still the caller's.
+    expect(
+      numberIn(renderSpacer({ size: "md" }, testTheme), "width"),
+    ).toStrictEqual(Option.some(testTheme.spacing.md));
   });
 
   it("lets a caller add a class to the gap a spacer draws", () => {

@@ -21,7 +21,7 @@ import { Spacer, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `size` | spacing step | none (flexible) | a fixed square gap on both axes |
+| `size` | spacing step | none (flexible) | a fixed square gap on both axes; `spaceStep` reads a stored step this theme does not carry as the default — a flexible filler — rather than a fixed item with no side |
 | `className` | `string` | — | a Tailwind class string, joined after the fixed gap so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |

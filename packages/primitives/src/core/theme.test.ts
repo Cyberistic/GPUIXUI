@@ -26,7 +26,9 @@ import {
   controlSize,
   elevationLevel,
   familyOf,
+  isSpaceStep,
   isTextRole,
+  spaceStep,
   typeOf,
   type ControlSize,
   type PrimitiveTheme,
@@ -284,6 +286,38 @@ describe("an elevation level is a stored choice", () => {
     // The one reserved level stays itself: the theme ships it empty, and it is
     // not a name that went missing.
     expect(elevationLevel("overlay")).toBe("overlay");
+  });
+});
+
+describe("a spacing step is a stored choice", () => {
+  it("reads a name the theme does not carry as absence, never an index", () => {
+    // A step the theme paints is the step it asked for...
+    expect(spaceStep(testTheme, "md")).toBe("md");
+    expect(spaceStep(testTheme, "5xl")).toBe("5xl");
+    // ...and a name from another release, a padded one, a number a caller
+    // forwarded or an absent value is **absence**: the layout props document an
+    // omitted step as no inset, no gap and no padding, so a name no release
+    // ships must paint that same box rather than an `undefined` the runtime
+    // drops after the paint decided it had a step.
+    expect(spaceStep(testTheme, "normal")).toBeUndefined();
+    expect(spaceStep(testTheme, " md ")).toBeUndefined();
+    expect(spaceStep(testTheme, "")).toBeUndefined();
+    expect(spaceStep(testTheme, 8)).toBeUndefined();
+    expect(spaceStep(testTheme, undefined)).toBeUndefined();
+    expect(spaceStep(testTheme, null)).toBeUndefined();
+    expect(isSpaceStep(testTheme, "normal")).toBe(false);
+    expect(isSpaceStep(testTheme, "lg")).toBe(true);
+  });
+
+  it("takes the theme's group as the authority, and its absence as none", () => {
+    // A theme restored from storage can lose the whole group, and JSON writes
+    // `null` where it carried none: both are absence, not a throw — the token
+    // audit (`missingTokens`) is what refuses such a theme, not a paint seam.
+    expect(spaceStep({ spacing: undefined }, "lg")).toBeUndefined();
+    expect(spaceStep({ spacing: null }, "lg")).toBeUndefined();
+    expect(spaceStep({}, "lg")).toBeUndefined();
+    // The test theme's group is the one every other case reads.
+    expect(spaceStep({ spacing: testTheme.spacing }, "lg")).toBe("lg");
   });
 });
 

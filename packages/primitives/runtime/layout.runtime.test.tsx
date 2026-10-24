@@ -30,7 +30,11 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { ScrollAxis } from "../src/core/style.js";
-import type { Density, ElevationLevel } from "../src/core/theme.js";
+import type {
+  Density,
+  ElevationLevel,
+  PrimitiveTheme,
+} from "../src/core/theme.js";
 import { a11yNode, a11yNodes, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
@@ -273,6 +277,38 @@ it("lets a Spacer push its sibling to the far edge", async () => {
   const frame = boundsOf(runtime, SURFACE);
   expect(b.x + b.width).toBe(frame.x + frame.width - testTheme.spacing.lg);
   expect(a.x - frame.x).toBe(testTheme.spacing.lg);
+});
+
+it("fills for a spacer's stored size name this release does not carry", async () => {
+  // A saved layout stores a step as a string, so a name this release renamed
+  // reached `theme.spacing[name]` and answered `undefined`: the spacer painted
+  // a fixed item with **no side** — measured 0px wide beside a 6px `sm` one —
+  // and the sibling it exists to push sat against the card next to it. The
+  // documented default for an omitted step is the flexible filler, so the
+  // stored name must paint the same row the omitted one does.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row" testId="row">
+        {card("a", 40, 20)}
+        <Spacer size={"roomy" as keyof PrimitiveTheme["spacing"]} />
+        {card("b", 40, 20)}
+      </Stack>
+      <Stack direction="row" testId="fixed-row">
+        {card("c", 40, 20)}
+        <Spacer size="sm" />
+        {card("d", 40, 20)}
+      </Stack>
+    </Surface>,
+  );
+  const b = boundsOf(runtime, "b");
+  const c = boundsOf(runtime, "c");
+  const d = boundsOf(runtime, "d");
+  const frame = boundsOf(runtime, SURFACE);
+  // The stored name fills: the trailing card ends at the frame's inner edge.
+  expect(b.x + b.width).toBe(frame.x + frame.width - testTheme.spacing.lg);
+  // A step the theme paints is still a fixed gap, not a filler.
+  expect(d.x).toBe(c.x + c.width + testTheme.spacing.sm);
 });
 
 it("scrolls a ScrollArea by the wheel's delta", async () => {

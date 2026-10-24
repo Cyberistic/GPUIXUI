@@ -121,6 +121,18 @@ and each is read through a membership test rather than indexed raw:
   core resolver painted the lift. `recipe.test.ts`'s equivalence case,
   `presentational.test.tsx` and `runtime/layout.runtime.test.tsx` hold both
   paths to the one answer, and the reserved `overlay` level still paints none.
+- a **spacing step** is stored with the layout that uses it — a saved panel's
+  inset, a restored toolbar's gap, a spacer in a layout record — so
+  `isSpaceStep`/`spaceStep` (`core/theme.ts`) ask the **theme's own group**
+  whether it paints the name, and answer absence when it does not. Absence is
+  what every layout prop already documents for an omitted step, so a name no
+  release ships paints the same box as one the caller left out; `Spacer` is the
+  one caller whose documented default is not "none" (an omitted `size` is a
+  flexible filler), so a stored step it cannot read fills instead of painting a
+  **fixed** item with no width or height — measured 0px wide beside a 6px `sm`
+  spacer, with the sibling it exists to push sitting against its neighbour.
+  `theme.test.ts`, `presentational.test.tsx` and `runtime/layout.runtime.test.tsx`
+  hold both paths to the one answer.
 - a **group's `orientation`** is a saved layout choice, and it reaches the
   keyboard contract as well as the paint: `isOrientation`/`orientationOf`
   (`core/keyboard.ts`) read a name the arrow table does not carry as the group's
@@ -132,10 +144,11 @@ and each is read through a membership test rather than indexed raw:
   `None` for an axis the table does not carry, so a consumer calling it directly
   cannot be emptied by a stored name.
 
-`Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`, `Switch.test.tsx`,
-`presentational.test.tsx`, `Progress.test.tsx`, `Meter.test.tsx`,
-`RadioGroup.test.tsx`, `CheckboxGroup.test.tsx` and `ToggleGroup.test.tsx` each
-hold one of these answers, and each case was measured failing on its raw read
+`theme.test.ts`, `Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`,
+`Switch.test.tsx`, `presentational.test.tsx`, `Progress.test.tsx`,
+`Meter.test.tsx`, `RadioGroup.test.tsx`, `CheckboxGroup.test.tsx` and
+`ToggleGroup.test.tsx` each hold one of these answers, and each case was
+measured failing on its raw read
 before the guard landed.
 
 The **words** a control announces are interface copy, so they ride the provider

@@ -17,6 +17,7 @@ import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { visibleCopy } from "../core/a11y.js";
 import type { RuleSpec } from "../core/style.js";
+import { spaceStep } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { separatorClass, separatorGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -70,7 +71,13 @@ export const Separator = (props: SeparatorProps): ReactElement =>
   renderSeparator(props, useTheme());
 
 export interface SpacerProps {
-  /** A fixed gap on the spacing scale. Omit for a flexible filler. */
+  /**
+   * A fixed gap on the spacing scale. Omit for a flexible filler.
+   *
+   * The step is a name, so it is read through {@link spaceStep}: a saved
+   * layout's name this release does not carry paints the **flexible** default
+   * the component documents, instead of a fixed item with no side at all.
+   */
   readonly size?: keyof PrimitiveTheme["spacing"];
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the fixed gap so it wins conflicts. */
@@ -83,14 +90,15 @@ export const renderSpacer = (
   { size, style, className, testId }: SpacerProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
+  const step = spaceStep(theme, size);
   const fixed: StyleDesc =
-    size === undefined
+    step === undefined
       ? { flexGrow: 1, flexBasis: 0 }
       : {
           flexShrink: 0,
           flexGrow: 0,
-          width: theme.spacing[size],
-          height: theme.spacing[size],
+          width: theme.spacing[step],
+          height: theme.spacing[step],
         };
   return (
     <div

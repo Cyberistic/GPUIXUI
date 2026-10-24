@@ -1327,6 +1327,37 @@ describe("the primitives docs page contract", () => {
     expect(painter).not.toContain("ELEVATION_SHADOW[spec.elevation]");
   });
 
+  it("fills for a spacer's stored step, and says so", () => {
+    // Bug guarded: `Spacer` indexed the spacing scale with the name, so a step
+    // a saved layout recorded under a name this release renamed resolved to
+    // `undefined` and the spacer painted a **fixed** item with no width or
+    // height — neither of the two states its API documents. The page's Default
+    // column already says an omitted step is flexible, so the paint must read a
+    // stored name as that default, and the page and the catalogue must say it.
+    const page = read("spacer.mdx");
+    expect(page).toContain("| `size` |");
+    expect(page).toContain("spacing step");
+    expect(page).toContain("none (flexible)");
+    expect(page).toContain("stored step");
+    expect(page).toContain("spaceStep");
+
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("../README.md", import.meta.url)),
+      "utf8",
+    );
+    expect(catalogue).toContain("`isSpaceStep`/`spaceStep`");
+    expect(catalogue).toContain("flexible filler");
+
+    const painter = readFileSync(
+      fileURLToPath(
+        new URL("../src/components/Separator.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    expect(painter).toContain("spaceStep(theme, size)");
+    expect(painter).not.toContain("theme.spacing[size]");
+  });
+
   it("paints the value a number field holds when its formatter says nothing", () => {
     // Bug guarded: `formatValue?.(value) ?? displayNumber(...)` read a blank
     // answer as a value, so a locale table's missing row (or a masked format of

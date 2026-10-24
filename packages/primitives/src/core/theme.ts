@@ -22,8 +22,10 @@ import type {
   TextStyle,
   Theme,
 } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 export { isTextRole };
 
@@ -80,6 +82,58 @@ export const elevationLevel = (level: unknown): ElevationLevel | undefined =>
     onNone: () => undefined,
     onSome: (value) => (isElevationLevel(value) ? value : "md"),
   });
+
+/** A step on the spacing scale: `theme.spacing[step]`. */
+export type SpaceStep = keyof Spacing;
+
+/** A step on the radius scale: `theme.radius[step]`. */
+export type RadiusStep = keyof Radius;
+
+/**
+ * A theme's spacing group, or the shape a stored step is measured against.
+ *
+ * The group may be absent — a theme restored from storage can predate the
+ * scale — and a `null` group is the same absence, because JSON has no
+ * `undefined`.
+ */
+export interface SpaceSource {
+  readonly spacing?: Spacing | null;
+}
+
+/**
+ * Whether this theme paints a stored spacing name.
+ *
+ * A spacing step is a stored choice as often as a literal — a saved panel's
+ * inset, a restored toolbar's gap, a layout record's spacer — so a name a
+ * release renamed or dropped arrives as a string the union no longer names.
+ * The group is the authority: a name the **theme** does not carry is one it
+ * cannot paint, whether the token scale dropped it or a hand-built theme never
+ * had it.
+ */
+export const isSpaceStep = (
+  theme: SpaceSource,
+  step: unknown,
+): step is SpaceStep => {
+  const scale = theme.spacing;
+  if (scale === undefined || scale === null || !P.isString(step)) return false;
+  return Arr.some(R.keys(scale), (name) => name === step);
+};
+
+/**
+ * The spacing step a stored name stands for, or **absence** where the theme
+ * paints none.
+ *
+ * Absence is the answer every layout prop already documents for an omitted
+ * step — no inset, no gap, no padding — so a name no release ships paints the
+ * same box as one the caller left out, instead of an `undefined` the runtime
+ * drops after the paint decided it had a step. `Spacer` is the one caller whose
+ * documented default is not "none" (an omitted `size` is a flexible filler), so
+ * it reads this absence as that default.
+ */
+export const spaceStep = (
+  theme: SpaceSource,
+  step: unknown,
+): SpaceStep | undefined => (isSpaceStep(theme, step) ? step : undefined);
 
 /**
  * A theme, or anything shaped like one, as the type scale reads it.
@@ -156,12 +210,6 @@ export const familyOf = (
   const name: unknown = theme.typography?.[family];
   return P.isString(name) && name !== "" ? name : libraryTypography[family];
 };
-
-/** A step on the spacing scale: `theme.spacing[step]`. */
-export type SpaceStep = keyof Spacing;
-
-/** A step on the radius scale: `theme.radius[step]`. */
-export type RadiusStep = keyof Radius;
 
 /**
  * How a colour is reached from a theme.
