@@ -178,6 +178,14 @@ as `horizontal`/`automatic`, the documented defaults.
 `src/behaviour/tabs.test.tsx` drives the painted axis, the `Right` move and the
 automatic selection for a stored `"diagonal"`/`"eager"` set.
 
+An alert's `tone` is saved with the message it tints, so `internal/theme.ts`'s
+`toneOf` reads it once before the class, the palette and the selection wash:
+`Alert` paints the `info` family for a name this release does not ship — the
+family `statusTone` already substitutes — instead of dropping the fill, the edge
+and the wash while the ink stayed the tone's.
+`src/behaviour/alert.test.tsx` holds the fallback and a shipped `danger` alert
+as the negative control.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

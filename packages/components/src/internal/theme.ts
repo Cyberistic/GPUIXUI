@@ -15,6 +15,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
+import * as Schema from "effect/Schema";
 import {
   alpha,
   avatarSize,
@@ -218,7 +219,24 @@ export const disabledFade = (
   disabled ? { opacity: disabledOpacity } : undefined;
 
 /** The four status tones Alert, Badge and Toast expose. */
-export type Tone = "info" | "success" | "warning" | "danger";
+const Tones = Schema.Literals(["info", "success", "warning", "danger"]);
+
+/** The four status tones Alert, Badge and Toast expose. */
+export type Tone = typeof Tones.Type;
+
+/**
+ * The tone a stored name carries, read once at the boundary.
+ *
+ * A tone is content: a notification record, a saved status item or an i18n
+ * table writes the family it was created with, and a release that renames one
+ * hands a component a name `Tones` no longer carries. The class and role tables
+ * then answer `undefined` while the palette beside them already reads the
+ * unknown name as `info` (the rule `statusTone` follows) — so a message painted
+ * its tone's ink on no tint, inside a border with no colour. One read makes the
+ * class, the palette and the wash agree on the family the surface paints.
+ */
+export const toneOf = (value: unknown): Tone =>
+  Schema.is(Tones)(value) ? value : "info";
 
 /** The soft fill, readable text and border for one status tone. */
 export interface ToneStyle {

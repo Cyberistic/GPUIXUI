@@ -25,7 +25,13 @@ import {
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
 import { clickCentreOf } from "../internal/interaction.js";
-import { darkTheme, lightTheme, messageLink, tone } from "../internal/theme.js";
+import {
+  darkTheme,
+  lightTheme,
+  messageLink,
+  messageSelection,
+  tone,
+} from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /** Every tone, so a missing case fails rather than going unnoticed. */
@@ -75,6 +81,53 @@ describe("Alert", () => {
 
       alert.unmount();
     });
+  });
+
+  it("paints a stored tone name it does not carry as the neutral family", () => {
+    // The bug guarded: the root indexed `ALERT_TONES[tone]` and the selection
+    // wash indexed its role table with the same raw name, so a status item a
+    // store wrote under a name this release does not carry (`"critical"`, an
+    // older spelling) dropped the fill, the edge and the tone's ink — the
+    // message painted as page text inside a bare border — while the palette
+    // beside it had already read the unknown name as `info` through
+    // `statusTone`. One boundary read makes the class, the palette and the wash
+    // agree on the tone the message paints.
+    const alert = renderComponent(
+      // @ts-expect-error a stored name is not the union's literal
+      <Alert testId="alert" tone="critical">
+        <AlertTitle testId="alert-title">Heads up</AlertTitle>
+      </Alert>,
+    );
+
+    try {
+      expect(alert.renderer.findByTestId("alert")?.style).toMatchObject({
+        backgroundColor: tone(darkTheme, "info").bg,
+        borderColor: tone(darkTheme, "info").border,
+        color: tone(darkTheme, "info").fg,
+        selectionColor: messageSelection(darkTheme, "info"),
+      });
+      // The title reads the same resolved tone through the context.
+      expect(alert.renderer.findByTestId("alert-title")?.style.color).toBe(
+        tone(darkTheme, "info").fg,
+      );
+    } finally {
+      alert.unmount();
+    }
+  });
+
+  it("keeps a shipped tone when it was stored as one", () => {
+    // The negative control: the guard must not flatten every message to
+    // `info`. A `danger` alert still paints its own fill, edge and wash.
+    const alert = renderComponent(<Alert testId="alert" tone="danger" />);
+
+    try {
+      expect(alert.renderer.findByTestId("alert")?.style).toMatchObject({
+        backgroundColor: tone(darkTheme, "danger").bg,
+        selectionColor: messageSelection(darkTheme, "danger"),
+      });
+    } finally {
+      alert.unmount();
+    }
   });
 
   it("keeps description prose in the foreground colour, not the tone's", () => {

@@ -44,6 +44,7 @@ import {
   messageSelection,
   targetSize,
   tone,
+  toneOf,
   useTheme,
 } from "./internal/theme.js";
 
@@ -79,15 +80,21 @@ export interface AlertProps extends Omit<Props, "children"> {
 /**
  * The tone-tinted surface and the alert live region.
  * Defaults to `info`, so an unqualified alert reads as neutral information.
+ *
+ * A tone is stored with the message (a notification record, a saved status
+ * item), so a name this release no longer carries reads as `info` — the family
+ * the token palette substitutes for it — rather than dropping the class, the
+ * edge and the wash while the ink stays the tone's.
  */
 export const Alert = ({
-  tone: value = "info",
+  tone: requestedTone = "info",
   className,
   children,
   style,
   ...rest
 }: AlertProps) => {
   const theme = useTheme();
+  const value = toneOf(requestedTone);
   const { fg } = tone(theme, value);
   assertParts(alertRoot, children);
 

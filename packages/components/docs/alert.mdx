@@ -41,7 +41,7 @@ Alert
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` |
+| `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"`; a stored name that is none of the four reads as `"info"` |
 | `Alert` | `className` | `string` | — |
 | `Alert` | `children` | `PartChildren` | — |
 | `AlertIcon` | `className` | `string` | — |
@@ -59,3 +59,8 @@ Alert
 - `role="alert"` is a marker, not an announcement: no `aria-live` exists.
 - Put the state in the title and move the focus when it must be noticed.
 - No automatic timeout; an alert stays until dismissed.
+- **A stored `tone` the union does not carry paints `"info"`**: a message a
+  record saved under a name a release renamed (`"critical"`, an older spelling)
+  keeps its fill, its edge and its wash — the surface the token palette
+  substitutes for that name — instead of painting the tone's ink on no tint
+  inside a border with no colour.
