@@ -1,9 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { packageCollections } from "./collection-routes";
-import { collectionPages } from "./collection-pages";
 import { curatedPrimitiveTwins, servedPages } from "./curated-twins";
+import { packageDocsFiles, siteDocsFiles } from "./docs-pages.test-util";
 import {
   llmsContentType,
   llmsSectionOrder,
@@ -28,60 +27,6 @@ import { absoluteUrl } from "./site";
 const root = new URL("../../../../", import.meta.url);
 const docsDir = new URL("apps/docs/content/docs/", root);
 
-interface Frontmatter {
-  readonly title: string;
-  readonly description?: string;
-}
-
-/** The quoted or bare value of a frontmatter key, if the block carries one. */
-const field = (block: string, name: string): string | undefined => {
-  const line = block.split("\n").find((entry) => entry.startsWith(name + ":"));
-  return line
-    ?.slice(name.length + 1)
-    .trim()
-    .replace(/^["']|["']$/g, "");
-};
-
-const frontmatter = (file: string): Frontmatter => {
-  const source = readFileSync(file, "utf8");
-  const block = /^---\n([\s\S]*?)\n---/.exec(source)?.[1] ?? "";
-  const title = field(block, "title");
-
-  if (title === undefined) throw new Error(`${file}: no title`);
-  return { title, description: field(block, "description") };
-};
-
-/** The site's own pages, as the route mounts them. */
-const sitePages = (
-  dir: URL,
-  slugs: ReadonlyArray<string> = [],
-): ReadonlyArray<LlmsPage> =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.isDirectory()) {
-      return sitePages(new URL(`${entry.name}/`, dir), [...slugs, entry.name]);
-    }
-    if (!entry.name.endsWith(".mdx")) return [];
-
-    const name = entry.name.replace(/\.mdx$/, "");
-    const path = name === "index" ? slugs : [...slugs, name];
-    return [
-      {
-        ...frontmatter(new URL(entry.name, dir).pathname),
-        url: `/docs${path.length === 0 ? "" : `/${path.join("/")}`}`,
-      },
-    ];
-  });
-
-const packagedPages = (): ReadonlyArray<LlmsPage> =>
-  packageCollections.flatMap((collection) => {
-    const dir = new URL(`${collection.dir}/`, root);
-    if (!existsSync(dir)) return [];
-    return collectionPages(root, collection).map((name) => ({
-      ...frontmatter(join(dir.pathname, name)),
-      url: `${collection.route}/${name.replace(/\.mdx$/, "")}`,
-    }));
-  });
-
 /** The lines that list a page, as opposed to the document's prose. */
 const entries = (text: string): ReadonlyArray<string> =>
   text.split("\n").filter((line) => line.startsWith("- ["));
@@ -91,8 +36,8 @@ const targetOf = (line: string): string | undefined =>
   /\]\((https:\/\/[^)\s]+)\)/.exec(line)?.[1];
 
 describe("the /llms.txt index", () => {
-  const site = sitePages(docsDir);
-  const packaged = packagedPages();
+  const site = siteDocsFiles();
+  const packaged = packageDocsFiles();
   const text = llmsTxt(site, packaged);
   const listed = entries(text);
 

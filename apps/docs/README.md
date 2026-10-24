@@ -114,6 +114,7 @@ src/routes/docs/$.tsx               Every other docs page, from either collectio
 src/routes/api/search.ts            Fumadocs search endpoint over every mounted collection
 src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
 src/routes/llms[.]txt.ts            /llms.txt, the page index an agent reads instead of the sidebar
+src/routes/llms-full[.]txt.ts       /llms-full.txt, every page as Markdown in one document
 
 src/components/mdx.tsx              The MDX component registry
 src/components/highlighted-code.tsx A render-time code block, in the library's syntax palette
@@ -361,6 +362,7 @@ src/lib/docs-view.tsx               The shared docs layout and the two-collectio
 src/lib/layout.shared.tsx           The nav chrome: brand and top-level links
 src/lib/source.ts                   The Fumadocs collection for content/docs
 src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve for the page guards
+src/lib/docs-pages.test-util.ts     The docs pages the two machine-document guards read from both trees
 src/lib/page-commands.test-util.ts  The shared `nub run` reader the contributing and installation guards hold to the manifests
 src/lib/column-drag.test-util.ts    The column drag both guards print, derived from the probe
 src/lib/floating-reflow.test-util.ts The panel placement both reflow guards print, derived from the probe
@@ -384,6 +386,7 @@ src/lib/site.ts                     The one deployed origin
 src/lib/shared.ts                   App name, docs route and the repository link
 src/lib/sitemap.ts                  The sitemap's URL set
 src/lib/llms.ts                     /llms.txt: every page, grouped by the sidebar's section, with its note
+src/lib/llms-full.ts                /llms-full.txt: every page's own Markdown, in the index's order
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections
@@ -640,6 +643,12 @@ No page restates what the code already says:
   sidebar's sections. It lists the docs pages only: the landing and `/live` are
   routes a reader opens, not pages a model needs to read. `/docs/reference` links
   it.
+- **Whole document** (`/llms-full.txt`) prints every page's own Markdown in the
+  index's order (`src/lib/llms-full.ts`), so a reader that will not open the
+  site can fetch the prose, the API tables and the limits once. The page text is
+  the collection's processed Markdown — the same string the "Copy page" action
+  hands a reader — and both documents share one page list and one section order,
+  so they cannot disagree about which page an address serves.
 
 ## Preview honesty
 

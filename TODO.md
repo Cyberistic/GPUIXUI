@@ -14060,7 +14060,35 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 409/409
+`[x]` `[██████████]` 410/410
+
+`[x]` Serve the **whole documentation as one Markdown document** — `/llms.txt`
+      was the map (a line per page) and `/sitemap.xml` the crawler's list, so a
+      reader that cannot open the site — or an agent that would rather search
+      one text than make 188 requests — had no territory to read. `/llms-full.txt`
+      is generated on request from the same page list and section order as the
+      index: `src/lib/llms-full.ts` owns the document, `servedPageList` and
+      `orderedSections` moved into `llms.ts` so both machine documents read one
+      list and one order, and `src/routes/llms-full[.]txt.ts` is thin the way
+      `/llms.txt` is — the site's pages first, then every mounted package
+      collection, then the section indexes a package route generates. The body is
+      `entry.getText("processed")`, the same string the "Copy page" action hands
+      a reader, with any frontmatter a file still carries taken off; a page with
+      no body prints no doubled blank line, and every block carries a `Source:`
+      line an agent can cite. `llms-full.test.ts` (10 cases) reads both trees from
+      disk through the shared `docs-pages.test-util.ts`, requires one block per
+      served address in the index's order, the curated page in place of the
+      package copy it shadows, the retired primitive twins absent, headings
+      preserved and no second `# ` outside a fence, and the route's precedence,
+      `getText("processed")` read and content type. Directions measured: with
+      `bodyOf`'s frontmatter strip removed, `takes the frontmatter off a body
+      that still carries it` fails (`expected … not to contain 'title: A'`);
+      restored, the file is 10/10. Verified on a served build (`vite preview`):
+      `/llms-full.txt` answers **200** with `text/plain; charset=utf-8`,
+      **188** `Source:` blocks, and its URL list is byte-identical to
+      `/llms.txt`'s **188** entries in the same order. `nub run --filter
+      @gpuixui/docs test` is **202 files / 2 069 tests** green, `check-types` and
+      `build` clean. No native scenario applies — a generated text document.
 
 `[x]` Give the **filter field its own page** — `TableFilterField` was the one
       data part a reader could reach only through the README and the combined

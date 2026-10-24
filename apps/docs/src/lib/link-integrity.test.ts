@@ -82,6 +82,8 @@ const extraRoutes: ReadonlyArray<string> = [
   "/live",
   // The generated page index `/docs/reference` points a machine reader at.
   "/llms.txt",
+  // The same pages as one document, which `/llms.txt` and the page name.
+  "/llms-full.txt",
 ];
 
 const mounted = new Set<string>([

@@ -26,6 +26,62 @@ export interface LlmsPage {
   readonly description?: string;
 }
 
+/**
+ * The pages the site serves: the site's own first, then the packages', once per
+ * address.
+ *
+ * A curated page keeps the URL of the package page it shadows, so the site's
+ * copy is the one that survives — the same precedence the sitemap and the
+ * search index use. A package page a curated page in another section replaces
+ * is not served at all (`curated-twins.ts`), so it is dropped first.
+ */
+export const servedPageList = <Page extends { readonly url: string }>(
+  site: ReadonlyArray<Page>,
+  packaged: ReadonlyArray<Page>,
+): Array<Page> => {
+  const seen = new Set<string>();
+
+  return [...site, ...servedPages(packaged)].filter((page) => {
+    if (seen.has(page.url)) return false;
+    seen.add(page.url);
+    return true;
+  });
+};
+
+/**
+ * The pages grouped by the sidebar's section, in the sidebar's order.
+ *
+ * Both machine documents print the same order, so an agent that knows where a
+ * page sits in one knows where it sits in the other. A section no order names
+ * still prints, after the ones that do.
+ */
+export const orderedSections = <Page extends { readonly url: string }>(
+  pages: ReadonlyArray<Page>,
+): ReadonlyArray<readonly [string, ReadonlyArray<Page>]> => {
+  const bySection = pages.reduce((groups, page) => {
+    const name = sectionFor(page.url);
+    return groups.set(name, [...(groups.get(name) ?? []), page]);
+  }, new Map<string, Page[]>());
+
+  const order = (name: string): number => {
+    const position = llmsSectionOrder.indexOf(name);
+    return position === -1 ? llmsSectionOrder.length : position;
+  };
+
+  return [...bySection.entries()]
+    .toSorted(
+      ([left], [right]) =>
+        order(left) - order(right) || left.localeCompare(right),
+    )
+    .map(
+      ([name, entries]) =>
+        [
+          name,
+          entries.toSorted((left, right) => left.url.localeCompare(right.url)),
+        ] as const,
+    );
+};
+
 /** The sidebar's sections, in the order the sidebar shows them. */
 export const llmsSectionOrder: ReadonlyArray<string> = [
   "Docs",
@@ -79,6 +135,9 @@ const note = (description: string | undefined): string => {
   return text === undefined || text === "" ? "" : `: ${text}`;
 };
 
+/** The address of the whole documentation in one document. */
+export const llmsFullPath = "/llms-full.txt";
+
 /**
  * The document for these pages.
  *
@@ -92,40 +151,17 @@ export const llmsTxt = (
   site: ReadonlyArray<LlmsPage>,
   packaged: ReadonlyArray<LlmsPage>,
 ): string => {
-  const seen = new Set<string>();
-  const pages = [...site, ...servedPages(packaged)].filter((page) => {
-    if (seen.has(page.url)) return false;
-    seen.add(page.url);
-    return true;
-  });
-
-  const bySection = pages.reduce((groups, page) => {
-    const name = sectionFor(page.url);
-    return groups.set(name, [...(groups.get(name) ?? []), page]);
-  }, new Map<string, LlmsPage[]>());
-
-  // A section no order names still prints, after the ones that do.
-  const order = (name: string): number => {
-    const position = llmsSectionOrder.indexOf(name);
-    return position === -1 ? llmsSectionOrder.length : position;
-  };
-
-  const sections = [...bySection.entries()]
-    .toSorted(
-      ([left], [right]) =>
-        order(left) - order(right) || left.localeCompare(right),
-    )
-    .flatMap(([name, entries]) => [
+  const sections = orderedSections(servedPageList(site, packaged)).flatMap(
+    ([name, entries]) => [
       `## ${name}`,
       "",
-      ...entries
-        .toSorted((left, right) => left.url.localeCompare(right.url))
-        .map(
-          (page) =>
-            `- [${label(page.title)}](${absoluteUrl(page.url)})${note(page.description)}`,
-        ),
+      ...entries.map(
+        (page) =>
+          `- [${label(page.title)}](${absoluteUrl(page.url)})${note(page.description)}`,
+      ),
       "",
-    ]);
+    ],
+  );
 
   return [
     `# ${appName}`,
@@ -138,6 +174,8 @@ export const llmsTxt = (
     "to the props its component declares; `COMPONENTS.md` in the repository is the",
     "status record for every component, and a page existing is not a claim that its",
     "component is finished.",
+    "",
+    `Every page above is also served whole, as Markdown, at ${absoluteUrl(llmsFullPath)}.`,
     "",
     ...sections,
   ].join("\n");
