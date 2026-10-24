@@ -1158,6 +1158,63 @@ describe("a theme that lost a type role", () => {
   });
 });
 
+describe("a theme that lost a whole numeric group", () => {
+  // The bug this guards: `invalidNumbers` walks the steps of every numeric
+  // group, and a stored theme that predates a group — the same way one predates
+  // a role or a step — gives it no object to walk. The report threw
+  // `TypeError: Cannot convert undefined or null to object` (and
+  // `Cannot read properties of undefined (reading 'controlHeight')` for the two
+  // grouped scales), naming neither the group nor the release it came from,
+  // while every sister report describes an absent group it cannot measure and
+  // the catalogue promises a stored theme never reaches a `TypeError`. The walk
+  // now makes the gate's own refusal, naming the group once and saying what to
+  // do with it.
+  //
+  // The group list is derived from a theme that carries nothing, so a group
+  // added to the package is covered without a second list.
+  const lost = missingTokens({}).filter(({ kind }) => kind === "group");
+
+  const without = (group: (typeof lost)[number]["group"]) =>
+    ({ ...lightTheme, [group]: undefined }) as unknown as Theme;
+
+  it("refuses every group it lost, by name", () => {
+    expect(lost.length).toBeGreaterThan(0);
+    lost.forEach(({ group }) => {
+      expect(() => invalidNumbers(without(group)), group).toThrow(
+        `a theme must carry every numeric group: \`${group}\` is missing`,
+      );
+      // The direction the message is *not*: the runtime's own TypeError.
+      expect(() => invalidNumbers(without(group)), group).not.toThrow(
+        TypeError,
+      );
+    });
+  });
+
+  it("reads a nulled group as the group it lost", () => {
+    // JSON has no `undefined`: a store keeps the key and writes `null`.
+    const nulled = { ...lightTheme, density: null } as unknown as Theme;
+
+    expect(() => invalidNumbers(nulled)).toThrow(
+      "a theme must carry every numeric group: `density` is missing",
+    );
+  });
+
+  it("still walks a theme that carries every group", () => {
+    expect(invalidNumbers(lightTheme)).toEqual([]);
+  });
+
+  it("is what the catalogue promises the reports do", () => {
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      "a report that cannot open a group makes the same refusal",
+    );
+  });
+});
+
 describe("a length a store wrote as something else", () => {
   // The bug this guards: `inspectLengths` skipped every entry that was not a
   // number — a guard written for the family names beside a type role, which

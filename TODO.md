@@ -350,7 +350,41 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 213/213
+`[x]` `[██████████]` 214/214
+
+`[x]` Make the **two numeric reports refuse a group they cannot open** — `invalidNumbers` and
+`invalidScales` walk every group they measure, so a theme restored from storage that
+predates a whole numeric group gave them no object to open: both threw the runtime's own
+`TypeError: Cannot convert undefined or null to object` (or `Cannot read properties of
+undefined (reading 'controlHeight'/'2xs')`), a message that names neither the group nor the
+release it came from — from two functions whose sister reports describe every absence they
+cannot measure, whose JSDoc documents a stored theme as their input
+(`invalidNumbers(JSON.parse(fromStorage))`), and whose page promises a stored theme never
+reaches a `TypeError`. Only a *report* of the twelve crashed; `auditTheme` was already safe
+because it refuses a missing group first, so the hole was exactly the direct caller.
+The presence rule moved to its own module (`missing.ts` — `missingTokens`, the derived
+required steps and the three refusals; `audit.ts` re-exports the public names, so the
+package surface is unchanged) and the walk now makes the gate's own refusal: the group named
+once and the rebuild instruction. A missing **step** still stays silent-and-refused, the
+rule the suite already held. Proof: `numbers.test.ts` and `scales.test.ts` each gain `a
+theme that lost a whole numeric group` (2 cases + 4 in scales' header): the group list is
+derived from `missingTokens({})` — a theme that carries nothing — so a group added to the
+package is covered without a second list; every group's absence must throw the sentence
+naming it and must **not** throw a `TypeError`; a `null` group (the shape JSON writes) is
+the same refusal; and a complete theme still reports `[]`. Directions measured: with the two
+`requireGroups` calls removed, 3 cases fail by name (`spacing: expected [Function] to throw
+error including 'a theme must carry every numeric group' but got 'Cannot convert undefined
+or null to object'`, the `null` case with `Cannot read properties of null`, `scales` with
+`Cannot read properties of undefined`); restored, 117/117 green and the package 49 files /
+**2 958** tests with `check-types` clean. Also repaired a foreign rename the tokens gate read:
+`contrast.test.ts`'s diff-row case sliced `{mode === "unified"` out of
+`packages/editor/src/diff/diff-viewer.tsx`, which the editor workstream had just renamed to
+`view` (through `modeOf(mode)`, `7622a98c`), so master's tokens suite was red; the case now
+requires the `const view = modeOf(mode);` seam and fails if the slice marker is absent
+instead of slicing from `-1`. Docs: `docs/tokens.md` §Every refusals paragraph gains the
+group rule, the package README's incomplete-theme paragraph names both reports, and the
+`Token numbers` / `Scale order` rows record the refusal (`scales.test.ts` 27 → **29
+cases**). No native scenario applies — a pure precondition on two data reports.
 
 `[x]` Hold the **extension mechanism to every group a theme carries** — the
 mission's promise is that a consumer takes a shipped style and edits *any* of

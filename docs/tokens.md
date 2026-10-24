@@ -1548,6 +1548,15 @@ absence is this refusal's — while a value that **is** there and is not a numbe
 stored `"8"`) is that report's (§Numbers), so either way the gate cannot pass a
 theme whose gaps and glyphs paint nothing.
 
+A **whole group** is the one absence the numeric reports cannot step around: a
+ladder and a number walk both open every group they measure, so a stored theme
+that predates one has nothing to open. `invalidNumbers` and `invalidScales` read
+it as the refusal it is — a report that cannot open a group makes the same
+refusal the gate does, naming the group once and the release to rebuild from —
+rather than reading `Object.entries(undefined)` and throwing the runtime's
+`TypeError: Cannot convert undefined or null to object`, which names neither the
+group nor the fix.
+
 **The three refusals are readable before they are thrown.** A caller holding a
 theme a store handed back — deciding whether to restore it, or which release it
 predates — should not have to call `auditTheme` and catch its error, so

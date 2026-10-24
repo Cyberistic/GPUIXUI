@@ -820,7 +820,10 @@ through it — while `textStyle(theme, "codeBlock")` reads
 at the first paint that asks for the role. So `auditTheme` refuses a theme missing
 a step — or a whole numeric group — and names the path (`typography.codeBlock`,
 `density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
-`extendTheme`. A font family is refused the same way when it is blank: the gate
+`extendTheme`. The two numeric reports make that refusal themselves: a group is
+the one absence a walk cannot step around, so `invalidNumbers` and
+`invalidScales` name it the way the gate does instead of throwing
+`TypeError: Cannot convert undefined or null to object`. A font family is refused the same way when it is blank: the gate
 asks every font family to name a face, because `sans: ""` is present but paints
 the renderer's fallback for every text role instead of the face the theme states.
 The required steps are derived from the scales the package ships, so a role or

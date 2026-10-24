@@ -33,6 +33,7 @@ import {
   invalidNumbers,
   invalidScales,
   lightTheme,
+  missingTokens,
   platformNames,
   platformStyles,
   platformTheme,
@@ -661,6 +662,38 @@ describe("a type role the theme does not carry", () => {
     expect(page).toContain(
       "A type role a restored theme does not carry is skipped",
     );
+  });
+});
+
+describe("a theme that lost a whole numeric group", () => {
+  // The bug this guards: the ladder reads the first rung of every group
+  // directly (`theme.spacing["2xs"]`, `theme.density.controlHeight`), so a
+  // stored theme that lost a whole group threw
+  // `TypeError: Cannot read properties of undefined (reading '2xs')` from a
+  // report whose sibling cases already name an absent rung instead of throwing.
+  // A ladder with no rungs is the one absence the report cannot measure: it now
+  // makes the gate's own refusal, naming the group and the release it predates.
+  const lost = missingTokens({}).filter(({ kind }) => kind === "group");
+
+  it("refuses every group it lost, by name", () => {
+    expect(lost.length).toBeGreaterThan(0);
+    lost.forEach(({ group }) => {
+      const stored = { ...lightTheme, [group]: undefined } as unknown as Theme;
+
+      expect(() => invalidScales(stored), group).toThrow(
+        `a theme must carry every numeric group: \`${group}\` is missing`,
+      );
+      // The direction the message is *not*: the runtime's own TypeError.
+      expect(() => invalidScales(stored), group).not.toThrow(TypeError);
+    });
+  });
+
+  it("still skips a single absent rung in a group it carries", () => {
+    // The counterweight: absence inside a group is skipped, and the gate names
+    // it by path — the rule the type-role case above holds.
+    const { h3: _gone, ...typography } = lightTheme.typography;
+
+    expect(invalidScales({ ...lightTheme, typography })).toEqual([]);
   });
 });
 

@@ -520,8 +520,13 @@ describe("the quiet ink a changed line paints on its tint", () => {
     expect(viewer).toContain(".background");
 
     // Unified mode merges the tint into the row element, which is what makes the
-    // numbers and the marker sit *on* it; a split row tints the code only.
-    const start = viewer.indexOf('{mode === "unified" ? (');
+    // numbers and the marker sit *on* it; a split row tints the code only. The
+    // layout is chosen from `modeOf(mode)` — a stored mode name this release does
+    // not declare reads as the default layout — so the reader holds the seam the
+    // painter composes rather than the prop's raw value.
+    expect(viewer).toContain("const view = modeOf(mode);");
+    const start = viewer.indexOf('{view === "unified" ? (');
+    expect(start).toBeGreaterThan(-1);
     const unified = viewer.slice(start, viewer.indexOf(") : (", start));
     expect(unified).toContain("mergeStyles(");
     expect(unified).toContain("lineStyle(theme, metrics, row.kind)");

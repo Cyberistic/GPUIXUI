@@ -46,6 +46,7 @@ import {
   elevationLevels,
   elevationShadow,
 } from "./elevation.js";
+import { requireGroups } from "./missing.js";
 import {
   controlSizes,
   type BorderWidth,
@@ -304,7 +305,12 @@ const ordered = (
  *
  * An empty array means every named step in the theme is at least as large as the
  * one before it. A value that is not finite is left to `invalidNumbers`, so a
- * broken radius is reported once, by the contract that owns it. An elevation
+ * broken radius is reported once, by the contract that owns it. A **group** the
+ * theme lost is not measured: the ladder has no rungs to compare, so the report
+ * makes the gate's refusal and names the group rather than reading
+ * `Object.entries(undefined)` — the one absence a report cannot describe, while
+ * a single absent step is skipped and refused by name (`missingTokens`) for the
+ * reason the role comment below gives. An elevation
  * level is compared by the reach of the shadow it paints (`offsetY + blurRadius
  * + spreadRadius`), because a level is a geometry rather than one token; a level
  * a theme does not carry, and the reserved empty `overlay`, paint nothing and are
@@ -323,6 +329,7 @@ const ordered = (
  * ```
  */
 export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
+  requireGroups(theme);
   return [
     ...ordered(
       "spacing",

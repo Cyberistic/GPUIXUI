@@ -75,6 +75,7 @@
  */
 
 import type { BoxShadow, Elevation } from "./elevation.js";
+import { requireGroups } from "./missing.js";
 import { controlSizes, targetSize, type ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { TextRole, Typography } from "./typography.js";
@@ -506,7 +507,10 @@ const inspectShadow = (
  * store wrote, because every other rule describes a number and the kind is the
  * finding. An absent step — a key a store dropped or wrote as `null` — is not
  * this report's: it is a `missingTokens` refusal, because a component reads the
- * step by name and cannot paint around it.
+ * step by name and cannot paint around it. A **whole group** is that rule one
+ * level up and the one absence this walk cannot step around — there is no step
+ * to skip in a group that is not there — so the report makes the gate's own
+ * refusal and names the group, instead of reading `Object.entries(undefined)`.
  *
  * @example
  * ```ts
@@ -558,6 +562,7 @@ const inspectShadow = (
  * ```
  */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
+  requireGroups(theme);
   return [
     ...inspectLengths("spacing", theme.spacing, "nonNegative"),
     ...inspectLengths("radius", theme.radius, "nonNegative"),
