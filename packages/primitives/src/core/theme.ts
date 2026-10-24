@@ -336,11 +336,7 @@ export const isIconStep = (step: unknown): step is keyof IconSize =>
  * `md`, the rule `iconPixels` follows.
  */
 export const iconStepValue = (theme: IconSizeSource, step: unknown): number =>
-  scaleValue(
-    theme.iconSize,
-    libraryIconSize,
-    isIconStep(step) ? step : "md",
-  );
+  scaleValue(theme.iconSize, libraryIconSize, isIconStep(step) ? step : "md");
 
 /**
  * A theme, or anything shaped like one, as the type scale reads it.
