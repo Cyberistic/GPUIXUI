@@ -13149,6 +13149,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
       restored, the file is 3/3. No native scenario applies — a page and the
       guards it describes.
 
+`[x]` Teach the **stored side and alignment on the three floating surfaces the
+      site serves** — `Popover`, `DropdownMenu` and `Combobox` read `side` and
+      `align` through `sideOf`/`alignOf` in `internal/placement.ts`, and the
+      component's own JSDoc says why: the pair arrives from persisted UI state
+      as often as a literal, and an unknown name opens the house side rather
+      than reaching a `Match.exhaustive`. Their curated pages printed the union
+      and the default and never the answer a restored value gets, so a reader
+      who saved `side: "end"` had to find the package page — which the curated
+      page shadows — to learn the surface opens on `bottom` with `start`
+      alignment. All six rows now carry it in the Default cell.
+      `stored-value-page.test.ts` adds the six pairs against `sideOf`/`alignOf`
+      (17 stored values over ten pages). Directions measured: at `HEAD` the row
+      case fails naming `popover.mdx: side — rule` and its five siblings;
+      restored, the file is 3/3. No native scenario applies — a page and the
+      guard it describes.
+
 `[x]` Teach **the value a store kept** on the served page's own prop row — a
       variant, size, tone, axis or activation is stored with the workspace as
       often as it is a literal, and each of these components reads the stored
