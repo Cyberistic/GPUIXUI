@@ -178,13 +178,15 @@ describe("the avatar preview's geometry", () => {
 
   it("draws the initials at 40% of the diameter, as the component does", () => {
     expect(component).toContain("Math.round(diameter * 0.4)");
-    // A stored size name reads as `md` through the component's own resolver; a
-    // bare `avatarSize[size]` answered `undefined` for a name a release had
-    // dropped, and the preview pinned that lookup.
+    // A stored size name reads as `md` through the token package's resolver,
+    // which the components' seam re-publishes: a bare `avatarSize[size]`
+    // answered `undefined` for a name a release had dropped, and the preview
+    // pinned that lookup.
     expect(component).toContain("const diameter = avatarPixels(size);");
-    expect(resolver).toContain(
+    expect(scale).toContain(
       "isAvatarSize(size) ? avatarSize[size] : avatarSize.md",
     );
+    expect(resolver).toContain("avatarPixels");
   });
 
   it("draws a 10px dot on the rim, inside the strong edge", () => {

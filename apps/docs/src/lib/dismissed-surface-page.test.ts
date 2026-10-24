@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -34,6 +34,8 @@ interface DismissingSurface {
   readonly name: string;
   /** The page the site serves: the curated file when it shadows the package's. */
   readonly page: string;
+  /** The package page the curated one shadows when the site serves it. */
+  readonly packagePage: string;
   /** The painters that own the element and its stop. */
   readonly painters: ReadonlyArray<string>;
   /** The source fragments that prove the flag exists, one per painter. */
@@ -54,6 +56,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   {
     name: "Dialog",
     page: "dialog.mdx",
+    packagePage: "packages/components/docs/dialog.mdx",
     painters: ["packages/components/src/dialog.tsx"],
     flags: ["tabIndex={presence.present ? undefined : -1}"],
     window: {
@@ -65,6 +68,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   {
     name: "Drawer",
     page: "drawer.mdx",
+    packagePage: "packages/components/docs/drawer.mdx",
     painters: ["packages/components/src/drawer.tsx"],
     flags: ["tabIndex={presence.present ? undefined : -1}"],
     window: {
@@ -76,6 +80,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   {
     name: "Toast",
     page: "toast.mdx",
+    packagePage: "packages/components/docs/toast.mdx",
     painters: ["packages/components/src/toast/viewport.tsx"],
     flags: ["tabIndex={present ? undefined : -1}"],
     window: {
@@ -87,6 +92,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   {
     name: "Navigation menu",
     page: "navigation-menu.mdx",
+    packagePage: "packages/components/docs/navigation-menu.mdx",
     painters: ["packages/components/src/navigation-menu.tsx"],
     flags: ["tabIndex={leaving ? -1 : tabIndex}"],
     window: {
@@ -98,6 +104,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   {
     name: "Dropdown menu",
     page: "dropdown-menu.mdx",
+    packagePage: "packages/components/docs/dropdown-menu.mdx",
     painters: [
       "packages/components/src/menu/item.tsx",
       "packages/components/src/menu/surface.tsx",
@@ -115,6 +122,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   {
     name: "Context menu",
     page: "context-menu.mdx",
+    packagePage: "packages/components/docs/context-menu.mdx",
     painters: [
       "packages/components/src/menu/item.tsx",
       "packages/components/src/context-menu.tsx",
@@ -131,8 +139,17 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   },
 ];
 
-const ownedPage = (name: string): string =>
-  read(`apps/docs/content/docs/components/${name}`);
+/**
+ * The page the site serves for a surface: the curated one when it shadows the
+ * package's file, the package one otherwise.
+ */
+const served = (page: string, packagePage: string): string => {
+  const curated = `apps/docs/content/docs/components/${page}`;
+  return existsSync(new URL(curated, repo)) ? read(curated) : read(packagePage);
+};
+
+const servedPage = (surface: DismissingSurface): string =>
+  served(surface.page, surface.packagePage);
 
 /** The millisecond duration a motion level names, from the package's table. */
 const levelMs = (level: string): number | undefined => {
@@ -191,7 +208,7 @@ describe("the pages that document a dismissed surface", () => {
   it("teaches the keyboard window on every page the site serves", () => {
     expect(
       surfaces.flatMap((surface) => {
-        const text = ownedPage(surface.page);
+        const text = servedPage(surface);
         const ms = windowMs(surface);
         const gaps: Array<string> = [];
 
@@ -211,7 +228,10 @@ describe("the pages that document a dismissed surface", () => {
     // and the page names the rule.
     expect(
       ["dialog", "drawer"].flatMap((name) => {
-        const text = ownedPage(`${name}.mdx`);
+        const text = served(
+          `${name}.mdx`,
+          `packages/components/docs/${name}.mdx`,
+        );
         const cites = text.includes(`src/behaviour/${name}.test.tsx`);
         return /scroller/i.test(text) && cites ? [] : [name];
       }),
@@ -220,7 +240,7 @@ describe("the pages that document a dismissed surface", () => {
 
   it("teaches the bound the toast store keeps, and the history it cannot", () => {
     const depth = defaultDepth();
-    const text = ownedPage("toast.mdx");
+    const text = served("toast.mdx", "packages/components/docs/toast.mdx");
 
     expect(depth).toBe(3);
     expect(text).toContain(`${String(depth)} cards`);
