@@ -10854,9 +10854,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `TypeError: values is not iterable` (`HashSet.fromIterable(42)`); with
     `readGridState` bypassed the two reader cases fail by name
     (`expected [ null, { id: 'size' }, 'name', …(1) ] to deeply equal
-    [ { id: 'size', desc: false } ]`). Unit 246/246 green; `check-types` is red
-    only on the columns workstream's in-flight `src/columns/logic.ts`
-    (`'fallback' is declared but its value is never read`), not on these paths.
+    [ { id: 'size', desc: false } ]`). Unit 246/246 green and `check-types`
+    clean on the landed tree — the columns work that was mid-write when this
+    row was measured (`src/columns/logic.ts`) landed as `bc609a954`, and the
+    red it caused was a temporary edit, not a defect in either path.
     Docs: `docs/table-sorting.mdx` §A saved order is read, the README's restored-
     state row and §Usage, and the Tier 3 Sortable tables row. No native scenario
     applies — a boundary read with no paint path of its own. Owner: data. The
