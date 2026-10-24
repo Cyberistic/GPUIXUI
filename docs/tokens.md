@@ -3634,8 +3634,9 @@ seam (`controlHeightOf`/`controlPaddingOf` in
 `packages/primitives/src/recipe/registry.ts`), which paints the theme's own
 numbers and the library's preset for a theme a store gave back without the
 group, so a density switch resizes them and a truncated theme lays its controls
-out instead of throwing. The components package compiles against `@gpuixui/tw`'s **default** registry —
-shadcn's fixed metrics (`h-9` = 36, `px-4` = 16) — by decision (ADR 0006), and
+out instead of throwing. The components package compiles against
+`@gpuixui/tw`'s **default** registry — shadcn's fixed metrics (`h-9` = 36,
+`px-4` = 16) — by decision (ADR 0006), and
 keeps density for the one thing that has to line up with the controls beside it:
 a control's box (`controlHeight`, in the fields, menu and command rows, the
 accordion trigger, tabs, the stepper, the pickers, the pagination and the
