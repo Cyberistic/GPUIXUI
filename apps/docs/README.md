@@ -27,7 +27,7 @@ dark-mode.mdx                App-owned mode switching, following the desktop's p
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
 accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree, the pressable-target floors and the keyboard dim
-motion.mdx                   Springs, keyframes, inertia, the presence seam, the React hooks and the reduced-motion policy
+motion.mdx                   Springs, the curves a timing name stands for, keyframes, inertia, the presence seam, the React hooks and the reduced-motion policy
 layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps

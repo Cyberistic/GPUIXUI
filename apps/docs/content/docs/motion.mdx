@@ -8,7 +8,7 @@ GPUix tweens a numeric style field on its own clock. `@gpuixui/motion` adds clos
 | Module | Responsibility |
 | ------ | -------------- |
 | spring | `springPhysics`, three presets, `sampleSpring`, `atRest`, `retarget` |
-| easing | `linear`, `easeIn`/`easeOut`/`easeInOut`, `circ*`, `back*`, `anticipate`, `bezier` |
+| easing | `linear`, `ease`, `easeIn`, `easeOut`, `easeInOut`, `circIn`/`circOut`/`circInOut`, `backIn`/`backOut`/`backInOut`, `anticipate`, `bezier`, `motionCurve` |
 | timeline | `keyframe`, `sampleKeyframes`, `stagger`, `Sequence` |
 | inertia | `inertia`, `project`, `sampleInertia` |
 | value | `MotionValue` with `instant`, `tween`, `springTransition`, `transitionEquals` |
@@ -34,6 +34,19 @@ const enter = motionTiming("normal", { phase: "enter" });
 | `normal` | 200 | a popover, menu, panel or tab pill |
 | `slow` | 320 | a dialog or drawer |
 | `notice` | 500 | a toast |
+
+## Curves
+
+The timing table hands the runtime a **name**; a movement this package samples needs a function. `motionCurve(name)` resolves the same name to the same curve, so the two halves of one transition trace one path:
+
+```ts
+import { motionCurve } from "@gpuixui/motion";
+
+motionCurve("easeOut")(0.5); // 0.6846 — cubic-bezier(0, 0, 0.58, 1), the renderer's default
+motionCurve("ease")(0.5); // 0.8024 — cubic-bezier(0.25, 0.1, 0.25, 1)
+```
+
+The five names are the binding's own curves, not cubic polynomials that share their labels — a lookalike paints `0.875` at the midpoint where the runtime paints `0.685`, so a number counted beside a tweened box would run at a different speed from the box. `linear` is the progress itself, the one curve a control-point pair cannot describe, and `bezier(x1, y1, x2, y2)` is the same cubic for your own control points. A name this release does not carry is the linear progress as well: the runtime rejects a description naming an easing it does not know, so there is no curve to imitate.
 
 ## Reduced motion
 

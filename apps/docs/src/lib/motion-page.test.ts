@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { linear, motionCurve } from "../../../../packages/motion/src/easing.js";
 import {
   delayedTiming,
   presenceTiming,
@@ -94,6 +95,18 @@ const timingRow = (): string => {
   const end = page.indexOf("|", start + 10);
   return page.slice(start, end);
 };
+
+/** The page's own easing row, between its bars. */
+const easingRow = (): string => {
+  const start = page.indexOf("| easing |");
+  const end = page.indexOf("|", start + 10);
+  return page.slice(start, end);
+};
+
+/** The values `easing.ts` exports. */
+const easingExports = [
+  ...read("packages/motion/src/easing.ts").matchAll(/^export const (\w+)/gm),
+].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
 /** The values `timing.ts` exports. */
 const timingExports = [
@@ -259,6 +272,46 @@ describe("the motion page", () => {
     expect(page).toContain("`NaN`");
     expect(page).toContain("not positive");
     expect(page).toContain("overflow");
+  });
+
+  it("holds the easing row to the curves the module exports", () => {
+    // Bug guarded: the row wrote its circular and overshooting curves as the
+    // wildcards `circ*` and `back*` and never named `ease` or `motionCurve`, so
+    // the module table a reader scans for a function was both incomplete and
+    // unreadable as a list of imports.
+    const row = easingRow();
+    const listed = [...row.matchAll(/`(\w+)`/g)].flatMap((match) =>
+      match[1] === undefined ? [] : [match[1]],
+    );
+
+    expect(easingExports.length).toBeGreaterThanOrEqual(12);
+    expect(row).not.toBe("");
+    expect(easingExports.filter((name) => !listed.includes(name))).toEqual([]);
+    // A wildcard is not an export: `circ*` would read as `circ` here.
+    expect(listed.filter((name) => !easingExports.includes(name))).toEqual([]);
+  });
+
+  it("teaches the curve a timing name stands for", () => {
+    // Bug guarded: the page listed easing names and never said the sampled
+    // curve under a name is the binding's own curve, while the runtime eases a
+    // tweened box with that name — two halves of one transition could be
+    // sampled at different speeds without a reader being told.
+    const easeOut = motionCurve("easeOut")(0.5).toFixed(4);
+    const ease = motionCurve("ease")(0.5).toFixed(4);
+
+    expect(easeOut).toBe("0.6846");
+    expect(ease).toBe("0.8024");
+    // A name no release carries has no curve to imitate.
+    expect(motionCurve("middle")).toBe(linear);
+
+    expect(page).toContain(`motionCurve("easeOut")(0.5); // ${easeOut}`);
+    expect(page).toContain(`motionCurve("ease")(0.5); // ${ease}`);
+    expect(page).toContain("not cubic polynomials that share their labels");
+    expect(page).toContain("`linear` is the progress itself");
+    expect(page).toContain("`bezier(x1, y1, x2, y2)`");
+    expect(page).toContain(
+      "A name this release does not carry is the linear progress",
+    );
   });
 
   it("prints the five durations motionLevels declares", () => {
