@@ -792,6 +792,12 @@ export const liveRegistry = [
       "Panel: the shipped panel group paints its fractions in a window, collapses from the traversal and frees a share the page shows through, and a focused divider resizes it from the keyboard",
     capability: "panel",
   },
+  {
+    id: "accordion-lifecycle",
+    title:
+      "Input: the shipped Accordion opens one section at a time, refuses a disabled header, moves real focus with the arrows, and reflows by the difference of its measured bodies",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

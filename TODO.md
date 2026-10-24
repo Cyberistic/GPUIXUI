@@ -2446,7 +2446,33 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 169/169
+`[x]` `[██████████]` 170/170
+
+`[x]` Measure the **shipped `Accordion`** in a window — every accordion rule was
+      an offscreen tree read (one section open, a disabled header refused, arrows
+      moving focus), and no window had painted the coordinated section or read
+      the body the measured reveal reports. The `accordion-lifecycle` probe
+      mounts the shipped `@gpuixui/components` `Accordion` in single,
+      non-collapsible mode over four bodies of **120 / 200 / 80 / 60** points
+      with gamma disabled and alpha open at mount. Measured: the open body and
+      its clipping box both settle on **120**; a press on beta reports
+      `open=beta changes=1`, paints beta's **200** body, unmounts alpha's body
+      and clip, and moves delta's header **80** — the difference of the two
+      measured bodies; the press leaves native focus on
+      `accordion-beta-trigger`; `Down` skips the disabled header, both ends wrap,
+      and `Home`/`End` jump to the enabled edges without opening anything;
+      `Enter` opens delta (**60**) and unmounts beta; `Space` on the open
+      section is refused (`changes=3`, delta's body still painted); a press on
+      gamma changes nothing and mounts no body. **29 checks**, `--only
+      accordion-lifecycle`, green on 0.11.0 here (~1.9 s, one capture). Fixture
+      `src/live/accordion.ts`, probe `src/live/accordion-probe.tsx`, guard
+      `src/live/accordion.test.ts` (12 cases: the distinct bodies and the
+      derived shift, the focus chain, the readout shape, the assertion-site
+      count, the locator set, the registry, the README record, and the shipped
+      parts with the content recipe's padding dropped). Docs:
+      `apps/playground/README.md` §`accordion-lifecycle`,
+      `.artifacts/live/accordion-single.png`, and the `Accordions` row in
+      `COMPONENTS.md`.
 
 `[x]` Measure the **shipped `PanelGroup`** in a window — Tier 4's *panel groups*
       row cited a live probe that composed its own two-pane split and a headless
@@ -12000,6 +12026,38 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `Delete` left the value at **5**, because the press owns the keyboard path.
       Evidence: `apps/playground/README.md` §`rating-lifecycle`,
       `.artifacts/live/rating-{rest,chosen}.png`.
+
+`[x]` Measure the **shipped `Accordion`** in a window — its rules were all
+      offscreen reads (one section open, a disabled header refused, arrows moving
+      focus), and no window had painted the coordinated section or measured the
+      body the reveal reports: whether `AutoHeight`'s measured clip and the
+      sections below agree with the two caller heights is a layout fact a tree
+      read cannot answer. The `accordion-lifecycle` probe mounts the shipped
+      `Accordion` in single, non-collapsible mode over four bodies of **120 /
+      200 / 80 / 60** points with gamma disabled: at rest the open body and its
+      clip both paint 120 and the closed sections mount nothing; a press on beta
+      reports `open=beta changes=1`, paints 200, unmounts alpha's body and clip,
+      and moves delta's header **80** — the difference of the two measured
+      bodies; the press leaves native focus on the header it hit; Down skips
+      gamma to delta, Down wraps to alpha, Up wraps to delta, Home/End jump the
+      enabled edges, and the readout stays `open=beta` throughout, so a move
+      opens nothing; Enter opens delta (60) and Space on the open section is
+      refused while its body stays painted; a press on gamma changes nothing and
+      mounts no body. **29 checks**, `--only accordion-lifecycle`, green on
+      0.11.0 here (~1.9 s, one capture). Fixture `src/live/accordion.ts` (the
+      distinct bodies, the derived shift, the unbroken focus chain, the readout
+      and the check count) + probe `src/live/accordion-probe.tsx` +
+      `accordion.test.ts` (12 cases: the scene's arithmetic, the locators, the
+      registry and the section, and that the probe composes the package's parts
+      and drops the content padding). Directions measured: enabling the disabled
+      section fails the probe `Down skips the disabled header: expected
+      "accordion-delta-trigger", got "accordion-gamma-trigger"` (exit `1`), and
+      dropping the subtraction from `accordionShift` fails the fixture case
+      `expected 200 to be 80`; both restored green. Docs:
+      `apps/playground/README.md` §`accordion-lifecycle`,
+      `.artifacts/live/accordion-single.png`, and the `Accordions` row in
+      `COMPONENTS.md` (which now reads `yes (measured)` and prints the probe's
+      facts).
 
 ### Docs information architecture (`docs-site`)
 

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-126 probes a real window can prove, of which twenty-eight mount shipped
+127 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -50,8 +50,8 @@ the command palette, the tabs, the list, the collapsible section, the popover,
 the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
-the modal focus rule and the breadcrumb trail, the image zoom and the pinned
-list), ten mount
+the modal focus rule and the breadcrumb trail, the image zoom, the accordion and
+the pinned list), ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
 action), three mount `@gpuixui/data`'s examples (the table, the virtualized
@@ -7167,6 +7167,39 @@ the sentence and the capture move with it.
 48 checks, `--only panel-group-lifecycle`, green on 0.11.0 (~3.7–7.7 s). Evidence:
 `.artifacts/live/panel-group-{rest,collapsed}.png`.
 
+### `accordion-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/components` `Accordion` in single, non-collapsible
+mode: four sections in a 300-point column, each revealing a body of its own
+height — alpha **120**, beta **200**, gamma **80** (disabled) and delta **60** —
+with alpha open at mount. The behaviour suite holds the state machine offscreen;
+this probe paints the coordinated section and measures what only a window can:
+the body the reveal reports, the clipping box that settles on it, and the
+sections below moving by exactly the difference of the two measured bodies.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the readout is `open=alpha changes=0`; the open body paints **120** and its clipping box settles on it; beta and the disabled gamma mount no body at all |
+| press beta | the readout reports `open=beta changes=1`; beta's body paints **200** and its clip settles there; alpha's body and clip leave the tree; delta's header moves **80** down — the difference of the two measured bodies, inside the probe's one-point tolerance |
+| the press | the header it landed on holds the native focus (`accordion-beta-trigger`) |
+| `Down` | focus skips the disabled section and lands on delta |
+| `Down` again | focus wraps to the first enabled header (alpha) |
+| `Up` | focus wraps to the last enabled header (delta) |
+| `Home` / `End` | focus jumps to the enabled edges (alpha, delta) |
+| after the arrows | the readout still says `open=beta` — a move never opens what it lands on |
+| `Enter` | delta opens (`open=delta`), its body paints **60** and its clip settles there, and beta's body leaves |
+| `Space` on the open section | non-collapsible single mode refuses to close it: the readout reports the attempt (`changes=3`) and delta's body is still painted |
+| press gamma | the disabled header changes nothing (`open=delta changes=3`) and mounts no body |
+| capture `accordion-single` | the section the keyboard left open paints its measured body |
+
+The shift is the measurement, not the arithmetic: the scene derives it from the
+two caller heights (`accordionShift`), and the window has to paint it — a reveal
+that reported the wrong body, or a section that kept its box mounted after the
+close, moves delta's header by a different number and fails the check.
+
+29 checks, `--only accordion-lifecycle`, green on 0.11.0 (~1.9 s). Evidence:
+`.artifacts/live/accordion-single.png`.
+
 
 ## Terminal mode: the pty probe
 
@@ -7344,6 +7377,8 @@ src/live/media-frame-probe.tsx  the player's view and steps (one module)
 src/live/media-player.ts the shipped player's ids, clip, peaks and readout
 src/live/media-player-probe.tsx the shipped player's view and steps (one module)
 src/live/motion-interruption.ts the cut widths, the continuation rule and the readout
+src/live/accordion.ts   the four sections' bodies, the focus chain and the shift a switch produces
+src/live/accordion-probe.tsx the shipped accordion's view and steps (one module)
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -7416,7 +7451,8 @@ narrower. Each deviation is deliberate and measured:
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
-  `motion-interruption` and `panel-group-lifecycle` (68
+  `motion-interruption` and `panel-group-lifecycle` and
+  `accordion-lifecycle` (69
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
