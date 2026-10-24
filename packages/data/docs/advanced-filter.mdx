@@ -23,13 +23,7 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 
 ## API
 
-| Prop | Type | Default | Consequence |
-| ---- | ---- | ------- | ----------- |
-| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name |
-| `tree` | `FilterTree` | — | the tree the builder paints |
-| `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
-| `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
-| `testId` | `string` | — | the builder's id; a clause is `${testId}-${slot}-…` |
+The tree's own readers are exported beside the builder:
 
 | Export | What it does |
 | ------ | ------------ |
@@ -40,6 +34,24 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 | `filterByTree(rows, tree, valueOf)` | the rows a tree keeps |
 | `matchesTree(tree, row, valueOf)` | whether one row matches |
 | `describeTree(tree)` | the sentence a tree reads as |
+
+### `AdvancedFilter`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name |
+| `tree` | `FilterTree` | — | the tree the builder paints |
+| `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
+| `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the builder's id; a clause is `${testId}-${slot}-…` |
+
+### `AdvancedFilterField`
+
+| Field | Type | Consequence |
+| ----- | ---- | ----------- |
+| `field` | `string` | the field a clause reads, and the fallback name when the label is blank |
+| `label` | `string` | the words the builder shows for it |
 
 ## A saved query
 

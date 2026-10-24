@@ -13,13 +13,23 @@ import { StatCard } from "@gpuixui/data";
 
 ## API
 
+### `StatCard`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` | — | what the reading measures |
 | `value` | `ReactNode` | — | the reading, already rendered by the caller |
 | `unit` | `string` | — | the unit, beside the reading |
 | `hint` | `ReactNode` | — | a line under the reading |
-| `trend` | `StatTrend` | — | `{ direction: "up" \| "down" \| "flat", text: string }` |
+| `trend` | `StatTrend` | — | the movement of the reading |
+| `className` | `string` | — | joined after the recipe |
+
+### `StatTrend`
+
+| Field | Type | Consequence |
+| ----- | ---- | ----------- |
+| `direction` | `"up" \| "down" \| "flat"` | which way the reading moved; it chooses the status tone's readable role |
+| `text` | `string` | the trend's own words, e.g. `+12%` |
 
 ## Limitations
 

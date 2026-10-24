@@ -15,11 +15,24 @@ import { DataToolbar } from "@gpuixui/data";
 
 ## API
 
+### `DataToolbar`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `children` | `ReactNode` | — | the controls the row holds |
 | `search` | `ToolbarSearch` | — | the field at the head of the row |
+| `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the field derives from it: `${testId}-search` |
+
+### `ToolbarSearch`
+
+| Field | Type | Default | Consequence |
+| ----- | ---- | ------- | ----------- |
+| `value` | `string` | — | the query the field shows; the toolbar owns no state |
+| `onValueChange` | `(next: string) => void` | — | receives the **debounced** query |
+| `placeholder` | `string` | `Search…` | the hint a reader sees in the empty field |
+| `label` | `string` | `Search` | the field's accessible name; a blank name reads as `Search` |
+| `debounceMs` | `number` | `150` | how long the query waits before it is reported; `0` reports every edit at once, and a value that is not finite or is negative reads as `150` |
 
 ## Limitations
 
