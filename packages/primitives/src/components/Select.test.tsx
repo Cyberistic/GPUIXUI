@@ -30,6 +30,7 @@ import {
   renderSelect,
   renderSelectRow,
   selectContentStyle,
+  selectEntries,
   selectItemStyle,
   selectLabelStyle,
   selectOptions,
@@ -156,6 +157,61 @@ describe("Select groups", () => {
       expectSome(elementProp(label ?? expect.fail("no label"), "children")),
     ).toBe("Fruit");
     expect(optionOf(apple ?? expect.fail("no item")).value).toBe("apple");
+  });
+});
+
+describe("Select's stored list", () => {
+  it("reads a list a store wrote as no list", () => {
+    // The bug guarded: `options` is a saved list as often as a literal, and JSON
+    // keeps a field a record never set as `null`. `Arr.map`/`Arr.flatMap` over it
+    // threw `Cannot read properties of null (reading 'length')` out of the
+    // render, taking the trigger and every other control in the window with it.
+    // @ts-expect-error — a list a store wrote as absent.
+    const element = renderSelect({ options: null, label: "Fruit" }, testTheme);
+    expect(selectEntries(null)).toEqual([]);
+    expect(itemsOf(element)).toEqual([]);
+    expect(
+      elementChildren(element).length,
+      "the trigger and its list are still painted",
+    ).toBe(2);
+    // A record from an older shape is not a list either.
+    expect(selectEntries({ items: grouped })).toEqual([]);
+  });
+
+  it("drops one malformed entry rather than the list beside it", () => {
+    const entries = selectEntries([
+      { value: "apple", label: "Apple" },
+      null,
+      "pear",
+      { label: "No value" },
+      { value: "pear" },
+    ]);
+    // A deleted record leaves `null` in a saved array; an option with no text
+    // value is a record this release cannot place, and one missing name reads as
+    // the value it carries.
+    expect(entries).toEqual([
+      { value: "apple", label: "Apple", disabled: false },
+      { value: "pear", label: "pear", disabled: false },
+    ]);
+    expect(selectOptions(entries).map((option) => option.value)).toEqual([
+      "apple",
+      "pear",
+    ]);
+  });
+
+  it("reads a group's list, and drops a group whose list is not one", () => {
+    const entries = selectEntries([
+      {
+        label: "Fruit",
+        options: [{ value: "apple", label: "Apple" }, null],
+      },
+      { label: "Broken", options: null },
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(isSelectGroup(entries[0] ?? { value: "", label: "" })).toBe(true);
+    expect(selectOptions(entries).map((option) => option.value)).toEqual([
+      "apple",
+    ]);
   });
 });
 

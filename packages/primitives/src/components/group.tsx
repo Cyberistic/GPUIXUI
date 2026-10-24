@@ -23,11 +23,13 @@ import {
 } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import { targetSize } from "@gpuixui/tokens";
 import { accessibleName, visibleCopy } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
+import { storedList, storedText } from "../core/stored.js";
 import {
   decideTypeAhead,
   isTypeAheadKey,
@@ -85,6 +87,49 @@ export const optionItems = <Props extends GroupItemProps>(
       },
     ];
   });
+
+/**
+ * Rich content a stored option can carry.
+ *
+ * The data prop's `content` is normally a literal, but a record can pass
+ * through storage; a value the runtime cannot paint is absence, and the row
+ * falls back to its name pair.
+ */
+const storedContent = (value: unknown): ReactNode | undefined =>
+  isValidElement(value) || P.isString(value) || P.isNumber(value)
+    ? value
+    : undefined;
+
+/** An option a store wrote: it needs a text `value`, and its name says something. */
+const storedOption = (entry: unknown): Option.Option<GroupOption> => {
+  if (!P.isObject(entry)) return Option.none();
+  const value = storedText(entry["value"]);
+  if (value === undefined) return Option.none();
+  const description = storedText(entry["description"]);
+  const content = storedContent(entry["content"]);
+  return Option.some({
+    value,
+    // A missing or blank name reads as the value the row carries, so the row
+    // is never an unnamed control whose words are absent.
+    label: storedText(entry["label"]) ?? value,
+    disabled: entry["disabled"] === true,
+    ...(description === undefined ? {} : { description }),
+    ...(content === undefined ? {} : { content }),
+  });
+};
+
+/**
+ * The option list a data prop carries, read structurally.
+ *
+ * `options` is a saved list as often as a literal — a restored settings pane, a
+ * picker in a record — and JSON keeps a list a record never set as `null` while
+ * a deleted entry leaves `null` in the array. Read raw, both threw out of the
+ * render: `null` at `Arr.length`, and a `null` entry at its `.value`. Only an
+ * array is a list now, and one entry without a text value is dropped rather
+ * than hiding the options beside it (`core/stored.ts`).
+ */
+export const groupOptions = (value: unknown): ReadonlyArray<GroupOption> =>
+  storedList(value, storedOption);
 
 /**
  * The name one option row publishes.

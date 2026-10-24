@@ -95,6 +95,20 @@ describe("toggleGroupValues", () => {
     expect(toggleGroupValues(["bold", "italic"])).toEqual(["bold", "italic"]);
   });
 
+  it("reads a stored value it cannot use as no values, not as itself", () => {
+    // The bug guarded: a saved selection is JSON, so a record that never set one
+    // carries `null` and a deleted member leaves a non-string in the array. The
+    // old read returned the value object unchanged, and `Arr.contains` threw
+    // `Cannot read properties of null (reading 'length')` out of the render.
+    expect(toggleGroupValues(null)).toEqual([]);
+    expect(toggleGroupValues({ bold: true })).toEqual([]);
+    expect(toggleGroupValues(3)).toEqual([]);
+    expect(toggleGroupValues(["bold", null, 2, "italic"])).toEqual([
+      "bold",
+      "italic",
+    ]);
+  });
+
   it("hands a caller the shape its mode implies", () => {
     expect(toggleGroupValue("single", ["bold"])).toBe("bold");
     expect(toggleGroupValue("single", [])).toBe("");
@@ -487,6 +501,18 @@ describe("toggleGroupItems", () => {
     expect(items.map((item) => item.value)).toEqual(["bold", "italic"]);
     expect(items[1]?.content).toBeDefined();
     expect(items[1]?.label).toBe("Italic");
+  });
+
+  it("reads a stored list structurally, dropping a record it cannot place", () => {
+    // The bug guarded: the data prop is a saved list, and JSON leaves `null` in
+    // an array whose record was deleted. Read raw, that entry threw
+    // `Cannot read properties of null (reading 'value')` and took every row
+    // beside it out of the render.
+    const items = toggleGroupItems({
+      // @ts-expect-error — a record a store wrote as absent.
+      options: [null, { value: "bold" }, { label: "No value" }],
+    });
+    expect(items).toEqual([{ value: "bold", label: "bold", disabled: false }]);
   });
 
   it("draws an item's rich content inside its button", () => {

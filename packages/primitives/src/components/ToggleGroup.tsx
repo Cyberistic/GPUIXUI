@@ -45,6 +45,7 @@ import { recipeTw } from "../recipe/registry.js";
 import { pressedValueText } from "./Toggle.js";
 import {
   focusedOption,
+  groupOptions,
   optionBody,
   optionDisabled,
   optionHelp,
@@ -95,19 +96,28 @@ export const toggleGroupItems = (props: {
   readonly options?: ReadonlyArray<ToggleGroupOption>;
   readonly children?: ReactNode;
 }): ReadonlyArray<ToggleGroupOption> =>
-  props.options ?? optionItems(props.children, ToggleGroupItem);
+  props.options === undefined || props.options === null
+    ? optionItems(props.children, ToggleGroupItem)
+    : groupOptions(props.options);
 
 /**
  * The values a controlled or default prop stands for.
  *
  * A `single` group takes one string, a `multiple` group an array — but either
  * shape is accepted by both, because a caller who switches `type` should not
- * have to rewrite the value it passes.
+ * have to rewrite the value it passes. Both are saved selections as often as
+ * literals, so a value this release cannot read is **no values at all**: a
+ * stored `null` (JSON's absence) or a record from an older shape once reached
+ * `Arr.contains` as itself and threw out of the group's render.
  */
-export const toggleGroupValues = (
-  value: string | ReadonlyArray<string>,
-): ReadonlyArray<string> =>
-  P.isString(value) ? (value === "" ? [] : [value]) : value;
+export const toggleGroupValues = (value: unknown): ReadonlyArray<string> =>
+  P.isString(value)
+    ? value === ""
+      ? []
+      : [value]
+    : Arr.isArray(value)
+      ? Arr.filter(value, P.isString)
+      : [];
 
 /** The value a caller's `onValueChange` receives for the group's mode. */
 export function toggleGroupValue(
@@ -368,10 +378,15 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
     else props.onValueChange?.(toggleGroupValue("multiple", next));
   };
   const selected = useControlState<ReadonlyArray<string>>(
-    props.value === undefined ? undefined : toggleGroupValues(props.value),
-    props.defaultValue === undefined
-      ? []
-      : toggleGroupValues(props.defaultValue),
+    // `value` and `defaultValue` are saved selections: JSON keeps a field a
+    // record never set as `null`, which is absence rather than an empty choice.
+    Option.getOrUndefined(
+      Option.map(Option.fromNullishOr(props.value), toggleGroupValues),
+    ),
+    Option.getOrElse(
+      Option.map(Option.fromNullishOr(props.defaultValue), toggleGroupValues),
+      () => [],
+    ),
     notify,
   );
   const options = toggleGroupItems(props);

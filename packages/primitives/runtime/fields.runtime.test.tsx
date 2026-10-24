@@ -523,6 +523,51 @@ it("opens a Select's list and paints its options", async () => {
   expect(runtime.allText()).toContain("Apple");
 });
 
+it("paints a Select whose stored option list is not a list", async () => {
+  // The bug guarded: `options` is a saved list as often as a literal, and JSON
+  // keeps a field a record never set as `null`. `Arr.map`/`Arr.flatMap` over it
+  // threw `Cannot read properties of null (reading 'length')` out of the render,
+  // so the trigger, the label and every control beside the select unmounted.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="stored"
+        label="Fruit"
+        placeholder="Pick one"
+        // @ts-expect-error — a list a store wrote as absent.
+        options={null}
+      />
+    </Surface>,
+  );
+  expect(runtime.allText()).toContain("Pick one");
+  runtime.clickElement(triggerOf(runtime, "stored"));
+  // The list opens empty rather than the control disappearing.
+  expect(runtime.allText()).toContain("Pick one");
+});
+
+it("drops a stored option record it cannot place, keeping the rows beside it", async () => {
+  // The bug guarded: a deleted record leaves `null` in a saved array, and the
+  // raw read threw on the entry's `.value` — the list, its valid rows and the
+  // trigger with them.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="stored-entry"
+        label="Fruit"
+        options={[
+          // @ts-expect-error — a record a store wrote as absent.
+          null,
+          { value: "apple", label: "Apple" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "stored-entry"));
+  expect(runtime.allText()).toContain("Apple");
+});
+
 /** The applied style of the element a `Select` painted as its trigger. */
 const triggerStyle = (runtime: Runtime, testId: string) =>
   Option.getOrElse(runtime.element(testId), () =>

@@ -545,6 +545,20 @@ describe("checkboxGroupItems", () => {
     expect(items[1]?.label).toBe("Push");
   });
 
+  it("reads a stored list structurally, dropping a record it cannot place", () => {
+    // The bug guarded: the data prop is a saved list, and JSON leaves `null` in
+    // an array whose record was deleted. Read raw, that entry threw
+    // `Cannot read properties of null (reading 'value')` and took every row
+    // beside it out of the render.
+    const items = checkboxGroupItems({
+      // @ts-expect-error — a record a store wrote as absent.
+      options: [null, { value: "email" }, { label: "No value" }],
+    });
+    expect(items).toEqual([
+      { value: "email", label: "email", disabled: false },
+    ]);
+  });
+
   it("renders the description and the rich content the item carries", () => {
     const element = render(
       { children: itemChildren },

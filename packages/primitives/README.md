@@ -168,6 +168,18 @@ and each is read through a membership test rather than indexed raw:
   whole keyboard contract was dead on a name. `decideMove` itself also answers
   `None` for an axis the table does not carry, so a consumer calling it directly
   cannot be emptied by a stored name.
+- an **option list** and a **saved selection** are what a store hands back, so
+  JSON's `null` (a field a record never set) and a deleted record (`null` inside
+  an array) reach the data props. `Select`'s `options`, the three groups'
+  `options` and a toggle group's `value`/`defaultValue` were read as their types
+  promise: `null` at `Arr.map`/`Arr.length`, a `null` entry at its `.value` or
+  inside `isSelectGroup`'s `in`. `selectEntries` (`Select.tsx`) and
+  `groupOptions` (`group.tsx`) read only a real array, drop an entry with no
+  text `value` — a missing or blank name reads as that value — and drop a
+  `Select` group whose list is not one; `toggleGroupValues` reads a value it
+  cannot use as **no values**. The shared boundary reads live in
+  `core/stored.ts` (`storedList`, `storedText`). `Select.test.tsx`, the three
+  groups' suites and `runtime/fields.runtime.test.tsx` (a window) hold them.
 - the **theme itself** is what a store gave back, and a numeric group it did not
   carry arrives as `null` rather than absent (JSON has no `undefined`). Every
   painter read `theme.spacing[...]`, `theme.radius[...]`, `theme.iconSize[...]`

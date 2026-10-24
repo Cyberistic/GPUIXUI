@@ -489,6 +489,20 @@ describe("RadioGroupItem", () => {
     expect(items[1]?.label).toBe("Beta");
   });
 
+  it("reads a stored list structurally, dropping a record it cannot place", () => {
+    // The bug guarded: the data prop is a saved list, and JSON leaves `null` in
+    // an array whose record was deleted. Read raw, that entry threw
+    // `Cannot read properties of null (reading 'value')` and took every row
+    // beside it out of the render.
+    const items = radioItems({
+      // @ts-expect-error — a record a store wrote as absent.
+      options: [null, { value: "alpha" }, { label: "No value" }],
+    });
+    expect(items).toEqual([
+      { value: "alpha", label: "alpha", disabled: false },
+    ]);
+  });
+
   it("moves the selection and focus with an arrow, exactly as data options do", () => {
     const onSelect = vi.fn();
     const handlers = radioHandlers(onSelect);

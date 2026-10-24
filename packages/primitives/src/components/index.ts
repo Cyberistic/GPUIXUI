@@ -205,6 +205,7 @@ export {
   isSelectGroup,
   Select,
   selectContentStyle,
+  selectEntries,
   selectItemStyle,
   selectLabelStyle,
   selectOptions,

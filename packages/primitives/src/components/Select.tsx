@@ -45,6 +45,7 @@ import {
 } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import { pipe } from "effect";
 import {
   Select as GpuixSelect,
@@ -61,6 +62,7 @@ import {
 import { accessibleName } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { revealScroll } from "../core/scroll.js";
+import { storedList, storedText } from "../core/stored.js";
 import type { ControlSpec } from "../core/style.js";
 import { colorRole, controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -117,11 +119,53 @@ export type SelectEntry = SelectOption | SelectOptionGroup;
 export const isSelectGroup = (entry: SelectEntry): entry is SelectOptionGroup =>
   "options" in entry;
 
+/** An option a store wrote: it needs a text `value`, and its name says something. */
+const storedOption = (entry: unknown): Option.Option<SelectOption> => {
+  if (!P.isObject(entry)) return Option.none();
+  const value = storedText(entry["value"]);
+  if (value === undefined) return Option.none();
+  return Option.some({
+    value,
+    // A missing or blank name reads as the value it carries: the row and the
+    // closed trigger both announce the option, and an unnamed row is a row a
+    // reader cannot tell from its neighbour.
+    label: storedText(entry["label"]) ?? value,
+    disabled: entry["disabled"] === true,
+  });
+};
+
+/** One entry a store wrote: an option, or a named group of options. */
+const storedEntry = (entry: unknown): Option.Option<SelectEntry> => {
+  if (!P.isObject(entry) || !("options" in entry)) return storedOption(entry);
+  const options = entry["options"];
+  // A group's list is stored with it; one that is not a list is a record this
+  // release cannot place, so the group is dropped rather than painted empty
+  // under a caption that names nothing.
+  return Arr.isArray(options)
+    ? Option.some({
+        label: storedText(entry["label"]) ?? "",
+        options: Arr.getSomes(Arr.map(options, storedOption)),
+      })
+    : Option.none();
+};
+
+/**
+ * The list a `Select` was given, read structurally.
+ *
+ * `options` is a saved list as often as a literal — a restored settings pane, a
+ * picker in a record — and JSON keeps a list a record never set as `null`,
+ * while a deleted record leaves `null` in the array. Read raw, the whole control
+ * threw out of the render: `null` at `Arr.map`, and a `null` entry at its
+ * `.value` or in `isSelectGroup`'s `in`. Only an array is a list now, and one
+ * malformed entry is dropped rather than hiding the options beside it
+ * (`core/stored.ts`).
+ */
+export const selectEntries = (value: unknown): ReadonlyArray<SelectEntry> =>
+  storedList(value, storedEntry);
+
 /** Every option in render order, with the groups flattened. */
-export const selectOptions = (
-  entries: ReadonlyArray<SelectEntry>,
-): ReadonlyArray<SelectOption> =>
-  Arr.flatMap(entries, (entry) =>
+export const selectOptions = (entries: unknown): ReadonlyArray<SelectOption> =>
+  Arr.flatMap(selectEntries(entries), (entry) =>
     isSelectGroup(entry) ? entry.options : [entry],
   );
 
@@ -138,7 +182,7 @@ export const selectOptions = (
  * value behind.
  */
 export const selectValueLabel = (
-  entries: ReadonlyArray<SelectEntry>,
+  entries: unknown,
   value: Option.Option<string>,
 ): Option.Option<string> =>
   pipe(
@@ -439,7 +483,8 @@ export const renderSelect = (
     invalid,
     fullWidth,
   };
-  const items = Arr.map(selectOptions(options), (option) => ({
+  const entries = selectEntries(options);
+  const items = Arr.map(selectOptions(entries), (option) => ({
     value: option.value,
     label: option.label,
     textValue: option.label,
@@ -459,7 +504,7 @@ export const renderSelect = (
   // announcement is the choice the control is showing.
   const announced = Option.getOrUndefined(
     selectValueLabel(
-      options,
+      entries,
       Option.fromNullishOr(selectedValue ?? value ?? defaultValue),
     ),
   );
@@ -518,7 +563,7 @@ export const renderSelect = (
         role="listbox"
         style={selectContentStyle(theme)}
       >
-        {Arr.map(options, (entry, index) =>
+        {Arr.map(entries, (entry, index) =>
           isSelectGroup(entry) ? (
             <Fragment key={`group-${index}`}>
               {index === 0 ? null : (

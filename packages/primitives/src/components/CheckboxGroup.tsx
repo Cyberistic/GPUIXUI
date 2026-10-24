@@ -48,6 +48,7 @@ import { recipeTw } from "../recipe/registry.js";
 import { renderCheckboxIndicator, selectionValueText } from "./Checkbox.js";
 import {
   focusedOption,
+  groupOptions,
   optionBody,
   optionDisabled,
   optionHelp,
@@ -98,7 +99,9 @@ export const checkboxGroupItems = (props: {
   readonly options?: ReadonlyArray<CheckboxGroupOption>;
   readonly children?: ReactNode;
 }): ReadonlyArray<CheckboxGroupOption> =>
-  props.options ?? optionItems(props.children, CheckboxGroupItem);
+  props.options === undefined || props.options === null
+    ? optionItems(props.children, CheckboxGroupItem)
+    : groupOptions(props.options);
 
 export interface CheckboxGroupProps
   extends

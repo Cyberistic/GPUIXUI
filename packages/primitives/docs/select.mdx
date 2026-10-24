@@ -58,4 +58,4 @@ import { Label, Select } from "@gpuixui/primitives";
 
 - No `aria-activedescendant` and no native combobox value: the closed trigger announces its choice through `aria-valuetext`, and an empty select announces nothing.
 - The list is not associated with the trigger by an ARIA attribute (0.11.0 has no `aria-controls`); the trigger says `expanded` and the rows announce themselves.
-- Options are data: no rich options or compound escape hatch.
+- Options are data: no rich options or compound escape hatch. A stored `options` list is read structurally — a list a store wrote as absent (JSON's `null`) paints an empty list instead of taking the control down, an entry with no text `value` (or a group whose list is not a list) is dropped rather than hiding the options beside it, and a missing or blank `label` reads as the option's `value`.

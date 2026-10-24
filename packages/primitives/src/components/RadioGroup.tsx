@@ -52,6 +52,7 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import {
   focusedOption,
+  groupOptions,
   optionBody,
   optionDisabled,
   optionHelp,
@@ -103,7 +104,9 @@ export const radioItems = (props: {
   readonly options?: ReadonlyArray<RadioOption>;
   readonly children?: ReactNode;
 }): ReadonlyArray<RadioOption> =>
-  props.options ?? optionItems(props.children, RadioGroupItem);
+  props.options === undefined || props.options === null
+    ? optionItems(props.children, RadioGroupItem)
+    : groupOptions(props.options);
 
 export interface RadioGroupProps
   extends
