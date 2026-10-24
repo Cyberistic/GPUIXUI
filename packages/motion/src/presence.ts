@@ -314,7 +314,7 @@ const secondsOf = (value: number | null | undefined): number | undefined =>
   value !== undefined &&
   Number.isFinite(value) &&
   value > 0 &&
-  value <= Number.MAX_SAFE_INTEGER
+  value <= SCHEDULABLE_SECONDS
     ? value
     : undefined;
 
@@ -430,6 +430,30 @@ export const exitWindowMs = (
 ): number => transitionWindowMs(presenceTimingOf(timing).exit);
 
 /**
+ * The largest wait, in seconds, the renderer can schedule.
+ *
+ * The renderer converts a transition's seconds into a `Duration` and refuses a
+ * description whose value it cannot represent — non-finite, negative, or past
+ * the range a clock can show — and a refused description paints **no** frame.
+ * This is the same bound {@link transitionWindowMs} reads a duration against.
+ */
+const SCHEDULABLE_SECONDS = Number.MAX_SAFE_INTEGER;
+
+/**
+ * A millisecond wait as the seconds the renderer schedules.
+ *
+ * A stagger's pace is caller arithmetic, so a finite value can still convert to
+ * a wait no clock can sit out (`1e300` ms is `1e297` seconds): that description
+ * is refused whole and the arrival paints no frame, so it is **no wait** — the
+ * rule {@link transitionWindowMs} already applies to a duration.
+ */
+const waitSeconds = (delayMs: number): number | undefined => {
+  if (!Number.isFinite(delayMs) || delayMs <= 0) return undefined;
+  const seconds = delayMs / 1000;
+  return seconds <= SCHEDULABLE_SECONDS ? seconds : undefined;
+};
+
+/**
  * A house timing that waits `delayMs` before it runs — a stagger.
  *
  * The delay is named in milliseconds and handed to the runtime in seconds. It
@@ -445,19 +469,19 @@ export const exitWindowMs = (
  * painted at once instead of sitting at its first frame for the wait: the two
  * halves of the module cannot disagree about what a run is.
  *
- * A delay that cannot be scheduled (negative, infinite, `NaN`) adds nothing, and
- * the timing is returned as it was, so an unstaggered run keeps the object it
- * was given.
+ * A delay that cannot be scheduled (negative, infinite, `NaN`, or a conversion
+ * past the clock's range — {@link waitSeconds}) adds nothing, and the timing is
+ * returned as it was, so an unstaggered run keeps the object it was given.
  */
 export const delayedTiming = (
   timing: PresenceTransition | null | undefined,
   delayMs: number,
-): PresenceTransition =>
-  milliseconds(timing?.duration) === 0 ||
-  !Number.isFinite(delayMs) ||
-  delayMs <= 0
+): PresenceTransition => {
+  const wait = waitSeconds(delayMs);
+  return milliseconds(timing?.duration) === 0 || wait === undefined
     ? (timing ?? {})
-    : { ...timing, delay: delayMs / 1000 };
+    : { ...timing, delay: wait };
+};
 
 /**
  * The `motion` prop a surface paints for its current presence.

@@ -2915,7 +2915,27 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 186/186
+`[x]` `[██████████]` 187/187
+
+`[x]` Read the **offscreen data-tree scenario's ids from the fixture** — the
+      example's readout became `data-tree-readout` (`220d23ae8`, so a batched
+      live window cannot read the windowed tree's screen as the plain tree's),
+      and `src/scenarios/data-tree.tsx` still read `tree-readout`: `data-tree-core`
+      read `""` and failed `the tree paints its roots and one open folder`, so
+      the full headless suite was **47/48** on master. The scenario now imports
+      the fixture's ids and helpers (`DATA_TREE_READOUT`, `DATA_TREE_EXPAND`/
+      `_COLLAPSE`/`_REVEAL`, `DATA_TREE_INITIAL`, `DATA_TREE_ROWS_*`,
+      `dataTreeRow`, `dataTreeReadout`), so the two hosts move together.
+      `src/scenarios/data-tree.test.ts` (3 cases) holds it: the example's declared
+      readout id must be `DATA_TREE_READOUT`, the scenario must read it through
+      the constant with no `"tree-readout"` or `"tree-row-"` literal, and its
+      row/readout lines must come from `dataTreeRow`/`dataTreeReadout`.
+      Directions measured: restoring `text(ctx, "tree-readout")` fails
+      `reads the readout the shipped example prints`, a hand-written
+      `"tree-row-readme.md"` fails `derives every row id from the tree's own id`.
+      Green: `--only data-tree-core` 1/1 and the full headless suite **48/48**
+      with every capability verified. Docs: `apps/playground/README.md`
+      §`data-tree-lifecycle` (the paragraph under the section's evidence).
 
 `[x]` Measure the **shipped `MentionInput`** in a window — the component's three
       window facts had no probe: its suggestion list is a floating layer, its
@@ -20738,6 +20758,20 @@ presence-table sentence tied to the readers. Green: motion 15 files / **211** te
 `packages/motion/README.md` §The presence table / §Inputs the runtime can paint, the
 `presence.ts` JSDocs and the `Motion` row in `COMPONENTS.md`. No live scenario applies —
 the renderer's validation is the installed binding's, and the behaviour suite drives it.
+`[x]` `@gpuixui/motion`: **a wait the clock cannot schedule rejected the staggered
+arrival** — `delayedTiming` dropped a delay only when it was non-finite or not positive,
+and a stagger's pace is caller arithmetic (a stored step, a measured distance), so a
+finite `1e300` ms converted to `1e297` seconds: the renderer's `Duration::try_from_secs_f64`
+overflows it, and a description it refuses paints **no** frame, so the arrival painted
+nothing rather than late. `waitSeconds` reads the conversion through the
+`SCHEDULABLE_SECONDS` bound `secondsOf` already applies to a transition's own duration,
+and a wait past it is no wait. Proof: `src/presence.test.ts`'s `ignores a wait that cannot
+be scheduled` gains the `1e300` ms case and a schedulable `MAX_SAFE_INTEGER` control,
+measured at HEAD as `expected { duration: 0.2, ease: 'easeOut', delay: 1e+297 } to be
+{ duration: 0.2, ease: 'easeOut' }`; green after, 15 files / 211 tests with `check-types`
+clean and the components' surface budget recorded at 38 KiB. Docs: the README's
+`delayedTiming` bullet and the helper's JSDoc. No live scenario applies — a pure
+conversion and the renderer's own range.
 `[x]` `@gpuixui/motion`: **read the two optional objects a caller may have stored
 as their empty shapes** — a timing options object and a spring sample are both
 configs as often as literals, and both were read field-first. `motionTimingOf`

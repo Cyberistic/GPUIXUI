@@ -164,10 +164,13 @@ export const surfaceBudget = {
    * through that same grammar (`readOpacity`/`readSize`/`readInset`): the
    * renderer rejects a whole description for one field outside its range, so a
    * stored frame field the runtime refuses is dropped where it used to take the
-   * readable fields beside it. Measured 37 740 bytes with
+   * readable fields beside it. 37 KiB → 38 KiB when `delayedTiming` reads a
+   * wait through the same range (`waitSeconds`): a stored pace that converts
+   * past the renderer's `Duration` range rejects the whole description, so the
+   * staggering arrival would paint no frame at all. Measured 38 871 bytes with
    * `nub scripts/surface.ts --entry src/motion-grid.tsx`.
    */
-  familyMotion: { modules: 4, bytes: 37 * 1024 },
+  familyMotion: { modules: 4, bytes: 38 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

@@ -202,7 +202,9 @@ A surface that enters and leaves reads one table, exported from
 - `delayedTiming` adds a stagger and drops it with the journey: a reduced
   timing, and any duration the run cannot travel (absent, unreadable, or not
   positive), takes the wait with it, since the runtime waits out a delay before
-  an instant assignment too;
+  an instant assignment too. A wait the clock cannot schedule is no wait either —
+  a stored pace of `1e300` ms converts to seconds `Duration` refuses, and a
+  refused description paints no frame at all rather than a late one;
 - `presenceStyle` is the leaving pointer rule — a surface takes no presses while
   it fades, and a wrapper paints nothing at rest so it never covers its content.
 

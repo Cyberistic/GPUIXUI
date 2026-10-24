@@ -199,11 +199,21 @@ describe("a staggered arrival", () => {
   });
 
   it("ignores a wait that cannot be scheduled", () => {
+    // The bug this guards: a stagger's pace is caller arithmetic, so a finite
+    // wait can still be one no clock can sit out — `1e300` ms converts to
+    // `1e297` seconds, which the renderer refuses (`Duration::try_from_secs_f64`
+    // overflows), and a refused description paints **no** frame at all rather
+    // than a late one. A wait past the schedulable range is therefore no wait.
     const enter = presenceTiming("normal").enter;
     expect(delayedTiming(enter, -1)).toBe(enter);
     expect(delayedTiming(enter, 0)).toBe(enter);
     expect(delayedTiming(enter, Number.NaN)).toBe(enter);
     expect(delayedTiming(enter, Number.POSITIVE_INFINITY)).toBe(enter);
+    expect(delayedTiming(enter, 1e300)).toBe(enter);
+    expect(delayedTiming(enter, Number.MAX_SAFE_INTEGER)).toEqual({
+      ...enter,
+      delay: Number.MAX_SAFE_INTEGER / 1000,
+    });
   });
 
   it("drops the wait with a journey the timing cannot run", () => {
