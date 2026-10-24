@@ -13,6 +13,17 @@ import type { StyleDesc } from "@gpuix/react";
 import { textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 
+/**
+ * Whether `key` activates a `role="button"` surface here.
+ *
+ * Enter and Space are the pair the library's controls answer. Both act on the
+ * key **down** in the playground: its only key source for these probes is the
+ * renderer's synthetic key, which sends a down and no release, and selecting a
+ * sidebar row a second time is the same row.
+ */
+export const isActivationKey = (key: string | undefined): boolean =>
+  key === "enter" || key === " ";
+
 /** A `testId`-addressable string the smoke steps assert against. */
 export const Readout = ({
   testId,
@@ -117,6 +128,11 @@ export const Pressable = ({
       tabIndex={0}
       role="button"
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (!isActivationKey(event.key)) return;
+        event.preventDefault();
+        onClick?.();
+      }}
       style={{
         padding: theme.spacing.md,
         borderRadius: theme.radius.md,

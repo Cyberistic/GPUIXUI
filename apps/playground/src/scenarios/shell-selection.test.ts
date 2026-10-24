@@ -94,6 +94,17 @@ describe("the shell-selection probe", () => {
     expect(palettes.light.colors.accent).not.toBe(palettes.dark.colors.accent);
   });
 
+  it("gives the shell's rows and palette a keyboard route", () => {
+    const shell = source("app.tsx");
+    const handlers = Arr.length(
+      Arr.fromIterable(shell.matchAll(/isActivationKey\(event\.key\)/g)),
+    );
+    expect(handlers).toBe(2);
+    const ui = source("ui.tsx");
+    expect(ui).toContain("export const isActivationKey");
+    expect(ui).toContain("isActivationKey(event.key)");
+  });
+
   it("prints the number of checks the probe asserts", () => {
     const count = asserted(probe);
     expect(count).toBeGreaterThan(20);

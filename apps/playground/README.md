@@ -39,8 +39,9 @@ shortcut probe
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open — `shell-selection`,
-which presses one of those rows and proves the app **opens** it (the header, the
-mounted view and its live field, the selection's paint and the palette switch),
+which proves the app **opens** it on either route — a press, or a key on a row the
+window's traversal reached (the header, the mounted view and its live field, the
+selection's paint and the palette switch),
 `shell-stage-scroll`, which proves a scenario taller than the window can be
 read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
@@ -729,7 +730,7 @@ row), and replacing one occurrence per row fails
 `find-document.test.ts` (7 cases) holds the per-row counts, the offsets, the
 locate rule and replace-all, so a green probe cannot stand on wrong numbers.
 
-## The shell's selection: a press opens the scenario it reaches
+## The shell's selection: a press or a key opens the scenario it reaches
 
 `shell-navigation` proves every entry is reachable; this probe proves one is
 **openable**. It mounts the real `App`, and on 0.11.0 (`--only shell-selection`)
@@ -742,18 +743,22 @@ measured:
 | a press | the header moves to the pressed entry's title, its view mounts with a box, its row paints the accent and the entry the app opened on returns to the page |
 | the mounted view is live | a press into that view's own field and one key reach **its** readout (`value=g`), so the stage mounts the real scenario rather than a picture |
 | the palette switch | pressing `theme-mode-light` repaints the root's fill **and** the selected row's accent to the light palette's own roles |
+| the keyboard route | the rows and the palette buttons are `role="button"` surfaces with `tabIndex: 0`, so the same walk the pointer takes is available to a key: the window's own traversal reaches the first row, `Enter` opens it (the header follows and the pointer's scenario unmounts), and two steps back plus `Enter` switches the palette |
 
-**30 checks**, `--only shell-selection`, green on 0.11.0. Two negative controls
+**42 checks**, `--only shell-selection`, green on 0.11.0. Four negative controls
 measured, `exit 1` each and restored green: removing the sidebar row's `onClick`
 fails `the header names the pressed scenario` (`got "Flex layout, gaps and
-absolute positioning"`), and removing the palette switch's `onSelect` fails
-`the palette switch repaints the shell's root` (`expected "#F6F8FA", got
-"#11141A"`). `shell-selection.test.ts` (5 cases) holds the premises a host with
-no binding cannot: the pressed entry exists and is not the one the app opens on,
-that entry's own view declares both `testId`s, the shell declares every address
-the probe presses and reads, the pressed palette is one the shell offers and
-paints differently from the other, and the count above is the number of
-assertions in the probe's own source.
+absolute positioning"`), removing its `onKeyDown` fails `Enter opens the row that
+holds the focus` (`expected "Flex layout, gaps and absolute positioning", got
+"Input editing, onChange and onSubmit"`), removing the palette switch's
+`onSelect` fails `the palette switch repaints the shell's root` (`expected
+"#F6F8FA", got "#11141A"`), and removing its `onKeyDown` fails `Enter switches
+the palette it landed on`. `shell-selection.test.ts` (6 cases) holds the premises
+a host with no binding cannot: the pressed entry exists and is not the one the
+app opens on, that entry's own view declares both `testId`s, the shell declares
+every address the probe presses and reads, the pressed palette is one the shell
+offers and paints differently from the other, and the count above is the number
+of assertions in the probe's own source.
 
 ## The stage scrolls a tall scenario to its bottom
 
@@ -820,7 +825,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | window size | `getWindowSize()` is the box the layout fills (not the retired 800×600 constant): `useWindowSize()` reads the same pair, and `zoomWindow()` takes a 900×520 window to 1680×923 while the flexible pane reflows and `onLayout` reports the new width (`window-resize-reflow`) |
-| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit: the header, the mounted view and the selection's paint follow, the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
+| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit — and so does `Enter` on a row the window's traversal reached, so the shell is drivable without a pointer: the header, the mounted view and the selection's paint follow, the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row on either route (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
 | content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence

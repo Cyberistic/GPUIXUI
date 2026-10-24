@@ -22,7 +22,7 @@ import { textStyle } from "@gpuixui/tokens";
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { paletteIds, palettes, type PaletteId } from "./palettes.js";
 import type { PlaygroundScenario } from "./types.js";
-import { Body, Readout } from "./ui.js";
+import { Body, Readout, isActivationKey } from "./ui.js";
 
 const PaletteSwitch = ({
   active,
@@ -50,6 +50,11 @@ const PaletteSwitch = ({
             tabIndex={0}
             role="button"
             onClick={() => onSelect(palette)}
+            onKeyDown={(event) => {
+              if (!isActivationKey(event.key)) return;
+              event.preventDefault();
+              onSelect(palette);
+            }}
             style={{
               padding: theme.spacing.xs,
               borderRadius: theme.radius.sm,
@@ -145,6 +150,11 @@ const Shell = ({
               tabIndex={0}
               role="button"
               onClick={() => setSelected(scenario.id)}
+              onKeyDown={(event) => {
+                if (!isActivationKey(event.key)) return;
+                event.preventDefault();
+                setSelected(scenario.id);
+              }}
               style={{
                 padding: theme.spacing.md,
                 borderRadius: theme.radius.md,

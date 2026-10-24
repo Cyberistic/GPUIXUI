@@ -2628,7 +2628,35 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 176/176
+`[x]` `[██████████]` 177/177
+
+`[x]` Make the **playground shell drivable from the keyboard** — every sidebar row
+      and palette button was a `role="button"` surface with `tabIndex: 0` and an
+      `onClick` only, so a reader who never touched the pointer could Tab to a row
+      and then nothing happened: GPUix activates a `div` through no key of its own,
+      and the human playground — the one surface the docs send a reader to — was
+      pointer-only while its own components' controls keep the full contract.
+      `ui.tsx` now exports `isActivationKey` (Enter and Space, on the key **down**
+      because the renderer's synthetic key sends a down and no release, and
+      selecting the same row twice is the same row) and `Pressable` answers it, and
+      the shell's rows and palette buttons answer it too. `shell-selection` grew the
+      keyboard route and measured it on 0.11.0 (42 checks): the palette press leaves
+      the focus on that button, the window's own `focusNext` traversal reaches the
+      first row, `Enter` opens it (the header follows, its row paints the accent and
+      the pointer's scenario unmounts), and two steps back plus `Enter` switches the
+      palette (root fill and selected row follow). Directions measured, `exit 1`
+      each and restored green: removing the row's `onKeyDown` fails `Enter opens the
+      row that holds the focus` (`expected "Flex layout, gaps and absolute
+      positioning", got "Input editing, onChange and onSubmit"`), and removing the
+      palette button's fails `Enter switches the palette it landed on` (`expected
+      "#11141A", got "#F6F8FA"`). `shell-selection.test.ts` gains `gives the shell's
+      rows and palette a keyboard route` (2 `isActivationKey` call sites in the
+      shell, the export and the `Pressable` use in `ui.tsx`); its other premises and
+      the README's printed count stay derived. Green: the full headless suite
+      **48/48** with every capability verified, `nub run --filter playground test`
+      120 files / 1 198 tests, `check-types`, `oxlint`, `oxfmt` and `check:tests`
+      clean. Docs: `apps/playground/README.md` §The shell's selection, the intro and
+      the `shell` measurement row.
 
 `[x]` Prove **the stage scrolls a tall scenario to its bottom** — the shell's
       sidebar scroller has a guard (`shell-navigation`) while the box every

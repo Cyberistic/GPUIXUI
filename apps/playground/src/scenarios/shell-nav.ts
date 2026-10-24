@@ -26,6 +26,31 @@ export const navId = (id: string): string => `nav-${id}`;
 export const inside = (box: Smoke.Bounds, row: Smoke.Bounds): boolean =>
   row.y >= box.y && row.y + row.height <= box.y + box.height;
 
+/**
+ * Tabs forward until `testId` holds the focus, and answers whether it does.
+ *
+ * The window's own traversal is the only way to move focus without pointing at
+ * something, so a keyboard route is proved by walking to the control rather than
+ * by naming it: the walk also proves the control is in the Tab order at all.
+ */
+export const focusTo = (
+  ctx: Smoke.SmokeContext,
+  testId: string,
+  remaining: number = 40,
+  back: boolean = false,
+): Effect.Effect<boolean> =>
+  Effect.gen(function* () {
+    if (ctx.host.focused() === testId) return true;
+    if (remaining <= 0) return false;
+    if (back) {
+      ctx.host.focusPrevious();
+    } else {
+      ctx.host.focusNext();
+    }
+    ctx.host.advance(16);
+    return yield* focusTo(ctx, testId, remaining - 1, back);
+  });
+
 /** The fill the runtime reports for `testId`, or none when it is not painted. */
 export const fillOf = (
   ctx: Smoke.SmokeContext,

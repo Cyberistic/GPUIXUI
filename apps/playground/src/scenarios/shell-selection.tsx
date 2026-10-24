@@ -33,6 +33,7 @@ import { scenarios } from "./index.js";
 import {
   SHELL_LIST,
   fillOf,
+  focusTo,
   inside,
   navId,
   press,
@@ -195,6 +196,72 @@ export const shellSelectionScenario: ScenarioBody = {
           fillOf(ctx, navId(target.id)),
         ),
         palettes.light.colors.accent,
+      );
+
+      // The keyboard route: the shell's rows are `role="button"` surfaces, so a
+      // reader who never touches the pointer must be able to Tab to one and
+      // activate it. The palette press above left the focus on that button, and
+      // the first row is the next stop in tree order.
+      yield* ctx.expectEqual(
+        "the palette press left the focus on that button",
+        ctx.host.focused() === paletteId(TARGET_PALETTE),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the first row is in the Tab order",
+        yield* focusTo(ctx, navId(first.id)),
+        true,
+      );
+
+      ctx.host.key("enter");
+      ctx.host.advance(16);
+
+      yield* ctx.expectEqual(
+        "Enter opens the row that holds the focus",
+        yield* ctx.expectSome(
+          "the header paints its title after Enter",
+          textOf(ctx, "app-title"),
+        ),
+        first.title,
+      );
+      yield* ctx.expectEqual(
+        "the keyboard's row paints the accent",
+        yield* ctx.expectSome(
+          "the keyboard's row paints a fill",
+          fillOf(ctx, navId(first.id)),
+        ),
+        palettes.light.colors.accent,
+      );
+      yield* ctx.expectEqual(
+        "the scenario the pointer opened is unmounted",
+        Option.isNone(Option.fromNullishOr(ctx.host.bounds(TARGET_MARKER))),
+        true,
+      );
+
+      // The palette's own keyboard route: the same walk backwards lands on the
+      // first palette button.
+      yield* ctx.expectEqual(
+        "the walk back reaches the palette",
+        yield* focusTo(ctx, paletteId("dark"), 10, true),
+        true,
+      );
+      ctx.host.key("enter");
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "Enter switches the palette it landed on",
+        yield* ctx.expectSome(
+          "the shell root paints a fill after Enter",
+          fillOf(ctx, "app-shell"),
+        ),
+        palettes.dark.colors.background,
+      );
+      yield* ctx.expectEqual(
+        "the selected row follows the palette back",
+        yield* ctx.expectSome(
+          "the selected row paints a fill after Enter",
+          fillOf(ctx, navId(first.id)),
+        ),
+        palettes.dark.colors.accent,
       );
     }),
 };
