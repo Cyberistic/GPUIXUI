@@ -207,6 +207,8 @@ src/components/docs/tree-demo.tsx         The two tree drawings: the package's c
 src/components/docs/tree-keys.ts          The browser keys both tree drawings report as the package's own
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
+src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint
+src/components/docs/data-toolbar-demo.tsx The toolbar's debounced wait, its blank-name default and the rows it reports
 src/components/docs/stat-card-demo.tsx    The metric card's derived reading, its trend roles and the box a reader measures
 src/components/docs/table-demo.tsx        The table's browser renderings and their source strings
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate

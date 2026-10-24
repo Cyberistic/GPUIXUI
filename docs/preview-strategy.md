@@ -650,10 +650,10 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws ten surfaces — Property panels on its own page, the
+The data lane draws twelve surfaces — Property panels on its own page, the
 sorting, selection, advanced-filter, virtualization, column-configuration,
-tree-view, virtual-tree and charts pages through the site's table, and the
-statistic card through it too: the
+tree-view, virtual-tree, charts, key-value and data-toolbar pages through the
+site's table, and the statistic card through it too: the
 header cycle is `@gpuixui/data`'s `pressSortOrder`, the
 painted order is its own row model (`constructGrid`, the core `useTable` runs
 on), a row press is its `pressSelection` over the visible keys, so the deploy
@@ -671,7 +671,14 @@ hides, moves and keyboard-resizes through `toggleColumn`, `moveColumn`,
 same visible list. The chart page's bars, paths and axis come from the
 package's `chartBox`, `chartScale`, `axisTicks`, `groupedBarMarks` and
 `linePath`, with the swatches in the theme's `seriesColors` order, so a
-platform switch repaints the series in the palette it ships. The two tree pages
+platform switch repaints the series in the palette it ships. The key-value
+list's label column is the package's fixed track (`DEFAULT_LABEL_WIDTH`, which a
+width the layout cannot paint reads as), so its values stay one column at any
+width a reader picks, and the toolbar's wait is the package's
+(`DEFAULT_SEARCH_DEBOUNCE_MS` for a `NaN`, an infinity or a negative; zero is the
+caller's immediate report) with a blank field name reading as
+`DEFAULT_SEARCH_LABEL` — the rows narrow on the value the field reported, not on
+the keystroke. The two tree pages
 are the tree's own: the rows are `flattenTree`, the cursor is the package's
 `useExpandedRows` over `treeCursorMove`, a typed prefix is `typeAheadRow`, and
 the windowed page mounts the package's `createWindowCalculator` slice of the

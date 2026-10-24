@@ -41,6 +41,8 @@ export const packagePreviews: ReadonlyArray<PackagePreview> = [
   { origin: "data", path: "tree-view.mdx", demo: "tree-view-demo" },
   { origin: "data", path: "virtual-tree.mdx", demo: "virtual-tree-demo" },
   { origin: "data", path: "stat-card.mdx", demo: "stat-card-demo" },
+  { origin: "data", path: "key-value.mdx", demo: "key-value-demo" },
+  { origin: "data", path: "data-toolbar.mdx", demo: "data-toolbar-demo" },
   {
     origin: "data",
     path: "advanced-filter.mdx",

@@ -12696,3 +12696,152 @@
   font-size: 11px;
   color: var(--muted-foreground);
 }
+
+/* ---- data: the key-value list and the data toolbar. Both drawings take their
+   resting appearance from `packages/data/src/surfaces/recipe.ts`: a key-value
+   row is `flex flex-row items-center gap-2 py-1` with a fixed label track, and
+   the toolbar is `flex flex-row items-center gap-2 rounded-md border
+   border-input bg-muted px-2 py-1`. The label track and the search field's
+   height are data (a caller width, the density's `sm` control), so they travel
+   in `style` and a variable rather than in the recipe. ---- */
+.gx-kv {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+}
+
+.gx-kv-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 4px 0;
+}
+
+.gx-kv-label {
+  flex: 0 0 auto;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+
+.gx-kv-value {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+/* A segmented group of choices, shared by the data lane's two drawings. */
+.gx-demo-choices {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  align-self: flex-start;
+}
+
+.gx-demo-choice {
+  height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.gx-demo-choice[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-demo-choice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 4px 8px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+/* The field is the primitives' `sm` control: the toolbar takes the search
+   field's own control height from the density the preview carries. */
+.gx-toolbar .gx-field {
+  flex: 1 1 160px;
+  min-width: 0;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.gx-toolbar-rows {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-toolbar-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-sm);
+  height: var(--row-height);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--foreground);
+}
+
+.gx-toolbar-service {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-toolbar-meta {
+  flex: 0 0 auto;
+  color: var(--muted-foreground);
+}
+
+.gx-toolbar-state {
+  flex: 0 0 auto;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+.gx-toolbar-state[data-state="queued"] {
+  color: var(--muted-foreground);
+}
+
+.gx-toolbar-state[data-state="running"] {
+  color: var(--primary);
+}
+
+.gx-toolbar-state[data-state="done"] {
+  color: var(--success-soft-foreground);
+}

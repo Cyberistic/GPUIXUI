@@ -29,6 +29,8 @@ import { ToolbarDemo, toolbarDemoSource } from "./toolbar-demo";
 import { AppMenuDemo, appMenuDemoSource } from "./app-menu-demo";
 import { StatusBarDemo, statusBarDemoSource } from "./status-bar-demo";
 import { StatCardDemo, statCardDemoSource } from "./stat-card-demo";
+import { KeyValueDemo, keyValueDemoSource } from "./key-value-demo";
+import { DataToolbarDemo, dataToolbarDemoSource } from "./data-toolbar-demo";
 import {
   AdvancedFilterDemo,
   advancedFilterDemoSource,
@@ -3131,6 +3133,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "app-menu-demo": { render: AppMenuDemo, source: appMenuDemoSource },
   "status-bar-demo": { render: StatusBarDemo, source: statusBarDemoSource },
   "stat-card-demo": { render: StatCardDemo, source: statCardDemoSource },
+  "key-value-demo": { render: KeyValueDemo, source: keyValueDemoSource },
+  "data-toolbar-demo": {
+    render: DataToolbarDemo,
+    source: dataToolbarDemoSource,
+  },
   "hotkey-recorder-demo": {
     render: HotkeyRecorderDemo,
     source: hotkeyRecorderDemoSource,

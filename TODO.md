@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 247/247
+`[x]` `[██████████]` 248/248
 
 `[x]` Read a **partial the store handed back** in the extension mechanism —
 `extendTheme(base, overrides)` documented that "a key written as `undefined`
@@ -10369,6 +10369,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Adopt a **total density read in the row painters and the class compiler** — the primitives' own rewrite moved every painter onto `spaceValue`/`radiusValue`/`iconSideOf`/`controlHeightOf`/`controlPaddingOf`/`rowHeightOf`, but the readers outside that package still index the group raw: `packages/components/src/list.tsx` (`theme.density.rowHeight`, and `+ theme.spacing.md` for the two-line row), `packages/data/src/tree/row.tsx` (`height: height ?? theme.density.rowHeight`), `packages/data/src/virtual/tree.tsx` (`rowHeightOf(namedRowHeight, theme.density.rowHeight)`) and `packages/files/src/log/log-viewer.tsx` (`namedRowHeight ?? theme.density.rowHeight`). A theme a store gave back without the density group throws `Cannot read properties of undefined (reading 'rowHeight')` from the first row a surface paints, and one that lost only the step builds `undefined + spacing.md` — a `NaN` height the serialiser drops. `packages/tw/src/calc.ts`'s `themeTokenNumber` reads the same group for `--control-height-*`, `--control-padding-*` and `--row-height`, so a class recipe compiled against that theme throws before anything paints. The four row painters can take the primitives' `rowHeightOf(theme)` (the scroller's route; `density-adoption.test.ts`'s derived reader set already accepts it, and the step's JSDoc names every one of them); `@gpuixui/tw` cannot depend on the primitives, so its compiler takes the guard on the group (`theme.density?.controlHeight`, `…?.rowHeight`) and answers `undefined`, the absence its callers already handle | components + data + files + tw | open — read at `HEAD` 2026-10-24 while holding the token refusals to their indexes. No tokens change is needed: the primitives' seam is the paint answer, and an absent group is the gate's refusal (`missingTokens`); this is the paint-side rule the token package documents for `controlHeight`/`controlPaddingX`, applied to the one metric those packages still read raw |
 | Adopt the **avatar guard and resolver this package now publishes** — `packages/components/src/internal/theme.ts` carries its own `isAvatarSize` (a `Object.hasOwn` membership test) and `avatarPixels` (a `md` fallback) because `@gpuixui/tokens` shipped the fixed scale with no index, no guard and no resolver; the token package now exports `avatarSizes`, `isAvatarSize` and `avatarPixels` on the same contract, so the components' pair is a second home for one rule and its guard is a list a consumer of the tokens package cannot reach. Import the three from `@gpuixui/tokens` (the internal seam already re-exports `avatarSize`), delete the local pair, and move `src/behaviour/avatar.test.tsx`'s stored-size case to the token guard so the adoption is measured rather than assumed | components (`packages/components/src/internal/theme.ts`, `src/behaviour/avatar.test.tsx`) | open — found 2026-10-24 while giving the avatar scale its tenth persisted axis; the token half is committed, and the components' behaviour suite still proves the `md` fallback through its own copy |
 
+| Take the **physics-free presence entry in the primitives** — `@gpuixui/motion` publishes `@gpuixui/motion/react/presence` (the provider and the two presence hooks, without the spring/inertia/timeline samplers), and `packages/components`' seam composes it so a family that only enters and leaves pays **4 modules / 29 KiB** of motion instead of 13 / 101 KiB (measured with `nub scripts/surface.ts --entry src/motion-grid.tsx`). `packages/primitives` still imports `useMotionPreference` from `@gpuixui/motion/react` in `src/components/Spinner.tsx` (and its Tooltip's presence seam from the same entry), so every components family that reaches a primitive button — `popover.tsx` measured at 12 motion modules — still loads the physics through the primitives. Changing the two import sites to `@gpuixui/motion/react/presence` closes it; the entries publish the same bindings, so nothing else moves | primitives (owns `src/components/Spinner.tsx` and `src/core/presence.ts`) | open — the motion package's half landed 2026-10-24 (`packages/motion/src/entries.test.ts`, the components seam, `docs/component-api.md` §11); the primitives' swap is the remaining half |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -11170,10 +11172,13 @@ Work that this workstream needs but does not own. Another agent owns each row.
     instead of painting an empty frame. Every chart part now reads its list
     through `listOf`, and `ChartFrame` hands its normalized series and labels to
     the geometry callback so a mark painter cannot receive the stored absence
-    either. `src/behaviour/chart-boundary.test.tsx` (6 cases) mounts each part
+    either — including a series whose own `values` is `null`, which paints no
+    layer while the rest of the chart paints.
+    `src/behaviour/chart-boundary.test.tsx` (7 cases) mounts each part
     with the stored absence and an `after` control beside it. Directions
-    measured: each case fails at `HEAD` with the empty render (all six) and the
-    named TypeErrors, and passes with the read. Green: 246 unit / 171 behaviour
+    measured: each case fails at `HEAD` with the empty render and the named
+    TypeErrors (six from the list read, one from a series' own `values`), and
+    passes with the read. Green: 246 unit / 172 behaviour
     with `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the README's
     stored-list paragraph and the Charts inventory row. No native scenario
     applies — the boundary read is the render the behaviour suite drives.
@@ -12466,7 +12471,49 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 382/382
+`[x]` `[██████████]` 383/383
+
+`[x]` Draw the **last two unillustrated data pages** — `/docs/data-display`'s
+      key-value and data-toolbar pages were the lane's only surfaces with no
+      preview anywhere: both are the package's Markdown, neither names a
+      `<ComponentPreview>`, and `package-preview.ts` had no row, so a reader of
+      the two pages that teach a fixed label column and a debounced search had
+      prose alone. Two drawings land through the site's table
+      (`src/components/docs/key-value-demo.tsx`, `data-toolbar-demo.tsx`), each
+      running the package's own rule rather than a copy: **key-value** paints the
+      label column as the package's fixed track — `DEFAULT_LABEL_WIDTH` imported
+      from `@gpuixui/data`, a width the layout cannot paint (`NaN`, zero, a
+      negative, an infinity) read as that default, a fractional one kept — with a
+      reader picking 120/168/`NaN` and the readout naming which case it is;
+      **data-toolbar** owns no query, reports a debounced value through the same
+      three rules the field has (one report per pause, the last value wins, a
+      cancelled field reports nothing), takes its wait from
+      `DEFAULT_SEARCH_DEBOUNCE_MS` (`NaN`, ±infinity and a negative are the
+      default, zero is the caller's immediate report), names a blank field
+      `DEFAULT_SEARCH_LABEL`, and filters its six records on the **reported**
+      value so the pause is visible. `demo-choice`/`gx-kv-*`/`gx-toolbar-*` live
+      in `demos.css` on tokens only. `key-value-demo.test.tsx` (5 cases) and
+      `data-toolbar-demo.test.tsx` (9 cases) hold each rule to the package's
+      source (the guard expressions, the two constants, the recipe's roles) and
+      the drawings to the page; `preview-strategy.test.ts` now names the data
+      lane's twelve surfaces and both new rows. Directions measured: reverting the
+      label guard fails `reads the label track the package paints` (the array of
+      seven) and dropping the inline track fails `draws every row of the record in
+      one label column` (`expected [] to have a length of 5 but got +0`);
+      returning the raw wait fails `schedules the wait the package documents`
+      (`expected NaN to be 150`) and removing the pre-report cancel fails
+      `reports one value per pause…` (`expected [ 'g', 'ga', 'gat' ] to deeply
+      equal [ 'gat' ]`); the new table rows were red on the strategy case
+      (`expected [ …(31) ] to deeply equal [ …(29) ]`) before the policy said
+      twelve. Green: the seven touched files are 71/71, the docs suite builds,
+      `oxlint` and `oxfmt` clean on them, and the served build answers
+      `/docs/data-display/key-value` **200** with five rows and `label column
+      120px`, `/docs/data-display/data-toolbar` **200** with six rows, the
+      `Search` name and the 150 ms wait. `check-types` on `apps/docs` reports
+      **0** errors in `apps/docs/src`; its 88 foreign errors are the in-flight
+      `boxShadow: BoxShadow[]` change in `packages/{data,components,tokens}`
+      (`apps/docs/README.md` ledger rows added for both modules). No native
+      scenario applies — two browser drawings over pure package rules.
 
 `[x]` Gate the **preview switch on the content it changes** — a palette press
       made in the window between the sidebar's hydration and the page previews'
@@ -19290,6 +19337,33 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion` + `packages/components`: **the presence half shared the physics entry, so
+every fade loaded the spring** — the React half of the presence table was published only on
+`@gpuixui/motion/react`, whose physics hooks drive a retained `MotionValue` and reach the spring,
+inertia and timeline samplers, and the components' one seam composed that entry for two hooks and a
+provider a fade actually needs. `packages/components/src/surface.budget.ts` said the opposite in so
+many words ("reached through its `./timing` subpath, not its barrel … the physics modules are not part
+of an overlay's cost"), so the record and the graph disagreed. The half is its own entry now —
+`@gpuixui/motion/react/presence`, holding `useSurfaceTiming`, `useSurfacePresence` and the provider —
+and `@gpuixui/motion/react` re-exports it, so the two entries publish the same bindings rather than a
+second context. The components seam imports the light entry, and the full React entry stopped
+importing the package barrel (`./index.js`) for the four samplers it uses, which took the keyframe
+sampler out of every consumer's graph as well. Measured with `nub scripts/surface.ts --entry
+src/motion-grid.tsx` (the new `--entry` flag): a family that imports only the seam was **13 modules /
+101 KiB** of motion and is **4 modules / 29 KiB** now. Proof: `packages/motion/src/entries.test.ts` (4
+cases: both entries publish the *same* provider/hook bindings, the light entry's runtime exports are
+exactly the presence four while the full entry still publishes all eight, the light module reaches no
+physics module with the heavy entry as the control, and the manifest declares the subpath);
+`packages/components/src/surface.test.ts`'s `gives a family the presence half of motion, not its
+physics` records the family share in `surfaceBudget.familyMotion` and fails on a sampler rejoining by
+name; `motion-provider.test.ts` and `presence-contract.test.ts` hold the seam to the light import.
+Directions measured: with the seam's import restored to `/react` the family case fails `expected 12 to
+be 4` and the provider case fails on the moved literal, and the motion entry cases fail with the file
+absent. Docs: `packages/motion/README.md` (layout table, §The presence table and its snippet),
+`docs/component-api.md` §11's ownership row, `packages/components/README.md` §Motion,
+`apps/docs/content/docs/motion.mdx` (the entry-point list and §Presence) and `packages/tokens/src/
+docs.test.ts`'s seam guard now name the light entry. No native scenario applies — a module graph and
+two source reads.
 `[x]` `packages/components`: **a glyph wall's node cap did not hold on a short side** — `glyphMaxCells` (240) is the one promise the wall makes about what it costs, because every cell is a `<text>` host the runtime lays out. The cell grew from the box's **area** alone (`ceil(sqrt(width × height / cap))`), and the grid floors each dimension at one cell, so a strip narrower than that estimate painted one column of every row it could fit: measured, a **10 × 6 000** box painted **272** cells and a **10 × 10 000** box **454**, so a decorative rail or a tall hero mounted more than the cap the module and its record state. The cell now also grows to a `glyphMaxCells`th of each side, which bounds the one-column and one-row cases while the area term keeps bounding the ordinary ones; every box that already fitted keeps the caller's cell (400 × 240 is still 18 × 10, 4 000 × 3 000 still 17 × 13). Proof: `src/glyph/logic.test.ts` gains `keeps the cap on a wall that is one cell wide or one cell tall` (five strips) and `holds the cap over every aspect ratio` (a 6 × 6 sweep of sides), both measured failing at `HEAD` with the exact counts (`1x8000: 363 > 240`, `10x6000: 272 > 240`, …); restored, 10/10. Docs: `docs/glyph.mdx` §Limitations states the cap and the aspect rule; the `COMPONENTS.md` row (a one-line stub) now records the measured defect and the bound, and `inventory.test.ts`'s `records the node cap a glyph wall keeps` holds the row's `` `glyphMaxCells` (240) `` to the constant (measured: `(250)` fails it by name). No native scenario applies — a pure layout; the wall's own paint stays `behaviour/glyph.test.tsx`'s.
 `[x]` `packages/components`: **the glyph suite's per-glyph sweep outran the suite's budget** — the first case reads every glyph's painted box through the native renderer (one FFI tree read per cell) over the house cell's 18 × 10 wall, so it cost ~1.6 s alone and crossed the suite's 5 s default twice on a loaded box (measured 5.38 s, `Test timed out in 5000ms`, two runs). The case now fills a **220 × 140** box — the same 10 × 6 claim at the same 22px cell, with the few pixels of slack the text host's line box needs below its last row (a 40px cell on the 400 × 240 box measured the overflow honestly: 247 > 240) — and still measures **every** glyph: 1.55 s → **444 ms**, 7/7. No product change; the seed, reduced and resize cases are untouched.
 `[x]` `@gpuixui/motion`: **a timeline decoded from storage took the render down** — `sampleKeyframes`
