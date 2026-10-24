@@ -10574,11 +10574,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
       package frame…`; pointing a row at a page that does not exist fails three
       cases by name (`expected [ 'files/log-viewer-old.mdx' ] to deeply equal []`)
       and the policy's lane list. Verified on a served build (`vite preview`):
-      `/docs/files/file-tree` renders 20 `role="treeitem"` rows with the set's own
-      glyphs, and `log-viewer`/`property-panel` render their drawings under the
-      "Browser preview" label. Suite 173 files / 1 797 tests green, `check-types`,
-      `build`, `oxlint` and `oxfmt` clean. No native scenario applies — browser
-      drawings over pure package logic, which each package's own suite holds.
+      `/docs/files/file-tree` paints **14** `role="treeitem"` rows with the set's
+      own glyphs (4 `code`, 3 `file`, 3 `folder-open`, 2 `folder`, 2 `settings`),
+      `log-viewer`/`property-panel` render their drawings under the "Browser
+      preview" label, and `?platform=win32` moves the tree's rows and controls
+      (`--row-height` 28 → 32, `--control-height-sm` 24 → 28). Suite 173 files /
+      1 800 tests green, `check-types`, `build`, `oxlint` and `oxfmt` clean.
+      No native scenario applies — browser drawings over pure package logic,
+      which each package's own suite holds.
 
 `[ ]` Draw the **shell lane's three surfaces** — `packages/shell/docs/{toolbar,
       status-bar,app-menu}.mdx` still ship no preview. The shell's reducers are
