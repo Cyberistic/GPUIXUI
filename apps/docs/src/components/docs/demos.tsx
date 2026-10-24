@@ -196,6 +196,12 @@ import {
   tableWorkflowSource,
 } from "./table-demo";
 import {
+  TableSelectionDemo,
+  TableSortingDemo,
+  tableSelectionDemoSource,
+  tableSortingDemoSource,
+} from "./table-rule-demos";
+import {
   TooltipDemo,
   TooltipStates,
   tipStatesSource,
@@ -2927,6 +2933,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "table-states": { render: TableStates, source: tableStatesSource },
   "table-workflow": { render: TableWorkflow, source: tableWorkflowSource },
+  "table-sorting-demo": {
+    render: TableSortingDemo,
+    source: tableSortingDemoSource,
+  },
+  "table-selection-demo": {
+    render: TableSelectionDemo,
+    source: tableSelectionDemoSource,
+  },
   "timeline-states": { render: TimelineStates, source: timelineStatesSource },
   "timeline-workflow": {
     render: TimelineWorkflow,

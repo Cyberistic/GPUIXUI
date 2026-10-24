@@ -36,6 +36,8 @@ export const packagePreviews: ReadonlyArray<PackagePreview> = [
     path: "property-panel.mdx",
     demo: "files-property-panel-demo",
   },
+  { origin: "data", path: "table-sorting.mdx", demo: "table-sorting-demo" },
+  { origin: "data", path: "table-selection.mdx", demo: "table-selection-demo" },
 ];
 
 /** The drawing the site mounts for a package page, when it names one. */

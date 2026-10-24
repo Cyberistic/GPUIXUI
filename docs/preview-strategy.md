@@ -612,9 +612,15 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane's Property panels page was the first drawer outside the component and
-primitive lanes — one object read by a preview, a field, a table and a metric
-card, every one of which the browser can draw honestly.
+The data lane draws its three surfaces too — Property panels on its own page,
+and the sorting and selection pages through the site's table: the header cycle
+is `@gpuixui/data`'s `pressSortOrder`, the painted order is its own row model
+(`constructGrid`, the core `useTable` runs on), and a row press is its
+`pressSelection` over the visible keys, so the deploy queue a reader sorts and
+selects is the records the package would paint. Property panels was the first
+drawer outside the component and primitive lanes — one object read by a preview,
+a field, a table and a metric card, every one of which the browser can draw
+honestly.
 
 **A drawing is mounted from either side.** A package that can write
 `<ComponentPreview>` into its own page does, and the page carries the drawing. A
@@ -1211,9 +1217,10 @@ therefore appears without a docs change, and a step removed fails the suite.
 3. If the demo's state changes (open, selected, loading), give it a real
    interaction path in the demo rather than a static picture of the end state.
 4. If the component publishes a pure logic subpath (`@gpuixui/media/crop/logic`,
-   `@gpuixui/editor/search/logic`, …), run **that** logic in the demo rather
-   than copying it: the paint is the browser's approximation, the arithmetic is
-   the package's. The media and editor demos are the worked examples.
+   `@gpuixui/editor/search/logic`, `@gpuixui/data/grid-core`, …), run **that**
+   logic in the demo rather than copying it: the paint is the browser's
+   approximation, the arithmetic is the package's. The media, editor and
+   table-rule demos are the worked examples.
 5. Run `nub run --filter @gpuixui/docs test` — the style-sheet guards fail on a
    hardcoded colour or an unknown variable.
 6. Run `nub run --filter @gpuixui/docs build` before pushing: an SSR-only error
