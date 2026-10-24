@@ -91,4 +91,16 @@ describe("stepName", () => {
     expect(stepName(" Review ", 2)).toBe("Review");
     expect(stepName("Step 2", 2)).toBe("Step 2");
   });
+
+  it("reads a title that is not text as the step's position", () => {
+    // The bug guarded: a workflow definition restored from storage carries the
+    // field the record kept — a number a settings row wrote, an object a decoder
+    // produced — and `stepName` handed it to `accessibleName`, whose `trim`
+    // threw `self.trim is not a function` out of the first paint. A name is
+    // text or it is nothing.
+    expect(stepName(42, 2)).toBe("Step 2");
+    expect(stepName(null, 3)).toBe("Step 3");
+    expect(stepName({ title: "Name" }, 4)).toBe("Step 4");
+    expect(stepName(["Name"], 5)).toBe("Step 5");
+  });
 });

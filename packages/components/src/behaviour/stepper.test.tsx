@@ -239,6 +239,71 @@ describe("Stepper", () => {
     expect(painted).toEqual(["1", "Account", "2", "Step 2"]);
   });
 
+  it("reads a step's stored copy that is not text as absence", () => {
+    // The bug guarded: a step's title and description are saved with the
+    // workflow as often as they are written here, and a record's number or
+    // object reached `accessibleName`/`visibleCopy`, whose `trim` threw
+    // `self.trim is not a function` out of the paint. The step is named by its
+    // position and paints no description, rather than the screen going down.
+    const stepper = renderComponent(
+      <Stepper value={1} label="Checkout">
+        <StepperStep
+          value={1}
+          // @ts-expect-error — the title a stored workflow wrote.
+          label={42}
+          // @ts-expect-error — the description a stored workflow wrote.
+          description={{ text: "Email" }}
+        />
+      </Stepper>,
+    );
+
+    const items = nodesWithRole(stepper.renderer, "listitem");
+    const names = items.map((item) => item.name);
+    const painted = stepper.renderer.getAllText();
+    stepper.unmount();
+
+    expect(names).toEqual(["Step 1"]);
+    expect(painted).toEqual(["1", "Step 1"]);
+  });
+
+  it("publishes no name for a list a record left blank", () => {
+    // The bug guarded: the root published `aria-label` for every value but
+    // `undefined`, so a blank name from an i18n table reached the runtime as an
+    // empty one — an announcement of nothing, the state `accessibleName`
+    // exists to prevent. A name that says nothing leaves the list unnamed.
+    const blank = renderComponent(
+      <Stepper testId="blank" value={1} label="">
+        <StepperStep value={1} label="Account" />
+      </Stepper>,
+    );
+    const blankName =
+      blank.renderer.findByTestId("blank")?.customProps?.["aria-label"];
+    blank.unmount();
+
+    const stored = renderComponent(
+      // @ts-expect-error — the name a stored panel wrote.
+      <Stepper testId="stored" value={1} label={42}>
+        <StepperStep value={1} label="Account" />
+      </Stepper>,
+    );
+    const storedName =
+      stored.renderer.findByTestId("stored")?.customProps?.["aria-label"];
+    stored.unmount();
+
+    const named = renderComponent(
+      <Stepper testId="named" value={1} label="Checkout">
+        <StepperStep value={1} label="Account" />
+      </Stepper>,
+    );
+    const namedName =
+      named.renderer.findByTestId("named")?.customProps?.["aria-label"];
+    named.unmount();
+
+    expect(blankName).toBeUndefined();
+    expect(storedName).toBeUndefined();
+    expect(namedName).toBe("Checkout");
+  });
+
   it("lets a consumer's style win over the status rule", () => {
     const stepper = renderComponent(
       <Stepper value={1} label="Checkout">

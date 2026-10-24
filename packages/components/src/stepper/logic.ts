@@ -18,6 +18,7 @@
 
 import { accessibleName } from "@gpuixui/primitives/core";
 import * as Schema from "effect/Schema";
+import { textOf } from "../internal/text.js";
 
 /** Where a step sits relative to the current one. */
 export type StepperStatus = "complete" | "current" | "upcoming";
@@ -46,12 +47,16 @@ export const orientationOf = (value: unknown): StepperOrientation =>
  *
  * A title is copy from a data table or an i18n file as often as it is a literal,
  * so a blank one is an absence: an unnamed list item and an announcement opening
- * with a comma are both worse than the step's own position. The root that owns
- * the position derives the name, so the wizard and a direct `StepperStep` cannot
- * disagree about the rule.
+ * with a comma are both worse than the step's own position. A saved workflow is
+ * also a value a decoder wrote, and a field it kept as a number or an object is
+ * not a name at all — `accessibleName` trims a string, so handing it the record's
+ * value threw `self.trim is not a function` out of the first paint. The title is
+ * therefore read as **text or nothing** (`textOf`), the rule every stored draft
+ * follows, before the blank check. The root that owns the position derives the
+ * name, so the wizard and a direct `StepperStep` cannot disagree about the rule.
  */
-export const stepName = (title: string, position: number): string =>
-  accessibleName(title) ??
+export const stepName = (title: unknown, position: number): string =>
+  accessibleName(textOf(title)) ??
   `Step ${Number.isFinite(position) ? Math.max(1, Math.floor(position)) : 1}`;
 
 /**

@@ -49,8 +49,8 @@ Each entry of `steps` is a `MultiStep`:
 | Field | Type | Default | Notes |
 | ----- | ---- | ------- | ----- |
 | `id` | `string` | required | The step's stable key, shared with its indicator row. |
-| `title` | `string` | required | The step's name in the indicator and in the content's announcement; a blank title reads as its position (`Step 2`). |
-| `description` | `string` | — | One line of supporting copy in the indicator; a blank line paints nothing. |
+| `title` | `string` | required | The step's name in the indicator and in the content's announcement; a blank title reads as its position (`Step 2`), and a value a saved record kept as something other than text is no title at all. |
+| `description` | `string` | — | One line of supporting copy in the indicator; a blank line paints nothing, and a non-text field paints the same way. |
 | `content` | `ReactNode` | required | Mounted only while the step is current. |
 | `gate` | `() => Option.Option<string>` | — | Runs before the step moves and before the last step submits; the message it returns keeps the reader put, and a message that says nothing paints the shipped sentence instead of an empty alert. A `gate` that is not a function — the `null` a saved record wrote for a field it never carried — is no gate, so the step moves. |
 
@@ -73,7 +73,7 @@ Each entry of `steps` is a `MultiStep`:
 
 ## Names
 
-`label` names the wizard group; a blank name is an **absence**, so the root is not published with an empty name. The indicator is always named (`Steps` when the wizard is not), a step whose `title` arrived blank is named by its position (`Step 2`) so no list item is unnamed and no announcement opens with a comma, and a title is published trimmed. That rule is the **stepper's** (`stepName` in `stepper/logic.ts`), so a `StepperStep` written directly and the wizard's content announcement cannot disagree about it. A blank `description` paints no line — an empty string lays out a zero-height run, but a run of spaces would lay out a full line. The three action labels are copy too: a blank `nextLabel`, `backLabel` or `submitLabel` reads as its documented default, because a missing i18n row must not paint a blank box as the wizard's only way forward.
+`label` names the wizard group; a blank name is an **absence**, so the root is not published with an empty name. The indicator is always named (`Steps` when the wizard is not), a step whose `title` arrived blank is named by its position (`Step 2`) so no list item is unnamed and no announcement opens with a comma, and a title is published trimmed. That rule is the **stepper's** (`stepName` in `stepper/logic.ts`), so a `StepperStep` written directly and the wizard's content announcement cannot disagree about it. A blank `description` paints no line — an empty string lays out a zero-height run, but a run of spaces would lay out a full line. **A field a record kept as something other than text is no copy at all**: a saved definition's `title: 42` or `description: {}` reads through `textOf` before the blank rule, so the step keeps its position name and paints no description line instead of the render throwing out of `accessibleName`. The three action labels are copy too: a blank `nextLabel`, `backLabel` or `submitLabel` reads as its documented default, because a missing i18n row must not paint a blank box as the wizard's only way forward.
 
 A gate's message is copy on the same rule. `Some("")` still **refuses** the move, so a table with a missing row cannot release a step its author gated, but the painted alert reads `This step is not complete yet.` rather than nothing — an invisible refusal leaves the reader pressing a button that does nothing.
 

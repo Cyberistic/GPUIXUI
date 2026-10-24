@@ -20,7 +20,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { visibleCopy } from "@gpuixui/primitives/core";
+import { accessibleName, visibleCopy } from "@gpuixui/primitives/core";
 import {
   cn,
   STEPPER_DESCRIPTION,
@@ -41,6 +41,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { controlHeight, useTheme, type Theme } from "./internal/theme.js";
 import {
   currentStep,
@@ -131,13 +132,16 @@ export const Stepper = ({
   // An axis saved with the workspace reaches the root as a name this release
   // may not carry; the recipe, the alignment and the context read one answer.
   const orientation = orientationOf(requestedOrientation);
+  // A list's name is copy too: a blank or non-text one is an absence, so the
+  // runtime is handed no `aria-label` rather than an empty name.
+  const name = accessibleName(textOf(label));
   assertParts(stepperRoot, children);
 
   return (
     <StepperContext.Provider value={{ value: currentStep(value), orientation }}>
       <div
         role="list"
-        {...(label === undefined ? {} : { "aria-label": label })}
+        {...(name === undefined ? {} : { "aria-label": name })}
         {...rest}
         style={mergeStyles(
           recipeStyle(
@@ -189,9 +193,10 @@ export const StepperStep = ({
   // A title and a description are copy as often as they are literals (an i18n
   // table's missing row, a workflow record's blank field): a blank title names
   // the step by its position, and a blank or whitespace description paints no
-  // line rather than a zero-height run over a typed blank one.
+  // line rather than a zero-height run over a typed blank one. A record's
+  // non-text field is no copy at all.
   const name = stepName(label, value);
-  const detail = visibleCopy(description);
+  const detail = visibleCopy(textOf(description));
 
   return (
     <div

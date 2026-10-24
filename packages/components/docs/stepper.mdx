@@ -34,7 +34,7 @@ Stepper
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Stepper` | `div` with `role="list"` | `value` (required), `orientation?` (default `"horizontal"`; a stored name that is neither axis reads as `"horizontal"`), `label?`, `className?`, `children` |
+| `Stepper` | `div` with `role="list"` | `value` (required), `orientation?` (default `"horizontal"`; a stored name that is neither axis reads as `"horizontal"`), `label?` (a blank one publishes no name), `className?`, `children` |
 | `StepperStep` | `div` with `role="listitem"` | `value` (required), `label` (required; a blank one reads as the step's position, `Step 2`), `description?` (a blank one paints no line), `style?`, `className?` |
 
 ## Limitations
@@ -47,6 +47,12 @@ Stepper
   so no list item is unnamed and no marker paints with a wordless label beside
   it. A blank or whitespace description paints no line. `MultiStepForm` states
   the same rule for the wizard's own content announcement.
+- **A step's copy is text or nothing**: a workflow restored from storage carries
+  the field the record kept — a number a settings row wrote, an object a decoder
+  produced — and that value is not a title or a description, so the step keeps
+  its position name and paints no description line. The list's own `label`
+  follows the same rule: a blank name publishes no `aria-label` rather than an
+  empty one.
 - **A stored `orientation` the union does not carry paints the horizontal
   axis**: a workflow a record saved as `"column"` keeps a painted axis and its
   alignment instead of falling back to the runtime's own row.

@@ -417,6 +417,46 @@ describe("MultiStepForm", () => {
     expect(painted).toStrictEqual(["Before"]);
   });
 
+  it("names a step whose stored title is not text by its position", () => {
+    // The bug guarded: a workflow composed from a saved definition carries the
+    // field the record kept, so a title the decoder wrote as a number reached
+    // `stepName`'s `accessibleName`, whose `trim` threw
+    // `self.trim is not a function` out of the first paint — the whole wizard
+    // went down. The step is named by its position, and its stored description
+    // paints no line.
+    const wizard = renderComponent(
+      <MultiStepForm
+        testId="wizard"
+        label="Workspace setup"
+        onSubmit={() => undefined}
+        steps={[
+          {
+            id: "name",
+            // @ts-expect-error — the title a stored workflow wrote.
+            title: 42,
+            // @ts-expect-error — the description a stored workflow wrote.
+            description: { text: "A workspace name" },
+            content: <text testId="step-one">Name step</text>,
+          },
+          {
+            id: "review",
+            title: "Review",
+            content: <text testId="step-two">Review step</text>,
+          },
+        ]}
+      />,
+    );
+    const lines = text(wizard);
+    const groups = nodesWithRole(wizard.renderer, "group").map(
+      (node) => node.name,
+    );
+    wizard.unmount();
+
+    expect(lines).toContain("Step 1");
+    expect(lines).toContain("Name step");
+    expect(groups).toContain("Step 1, step 1 of 2");
+  });
+
   it("keeps the steps beside a stored entry that names none", () => {
     // A deleted record leaves `null` inside the list, and an entry whose id is
     // not text has no identity for the indicator's key or the refusal's step:
