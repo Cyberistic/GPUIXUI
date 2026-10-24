@@ -6585,6 +6585,19 @@ the trigger's own `enter`, which toggles the menu; the fix (focus the surface on
 open, or handle Escape on the bar) is recorded in `TODO.md` → Interlocks for the
 shell workstream.
 
+**The press is a pointer's: park, enter, press.** A trigger that follows the
+pointer (`AppMenu` opens a sibling on `onMouseEnter`) hears that entry on the
+**move** a pointer makes before it presses, so the probe parks the pointer on the
+readout, moves it onto the trigger and presses there. The automation's own
+`click` dispatches a down/up at the element's centre with no move, and the entry
+then arrives *after* the press: measured on this tree, the panel stays shut —
+`AppMenu` writes the state it read at render (`hoverOpen(state, …)`), which
+overwrites the open the press just set. A functional update
+(`setState((current) => hoverOpen(current, …))`) opens the same no-move press, so
+the stale read is the component's and is recorded in `TODO.md` → Interlocks for
+the shell workstream. The probe measures the gesture a pointer makes, and
+`app-chrome.test.ts` holds every menubar press to it.
+
 47 checks, `--only app-chrome-lifecycle`, green on 0.11.0 here (~3–5 s, two
 captures). Fixture `src/live/app-chrome.ts` (the ids, the menus and actions, the
 readout and the tolerance) + `app-chrome.test.ts` (the readout parsing, the tone

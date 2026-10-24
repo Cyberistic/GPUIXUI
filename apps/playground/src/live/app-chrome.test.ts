@@ -226,6 +226,30 @@ describe("the probe", () => {
     // so the printed count has the sites as a floor.
     expect(APP_CHROME_CHECKS).toBeGreaterThanOrEqual(sites);
   });
+
+  it("presses a trigger the way a pointer reaches one", () => {
+    // The bug this guards: the automation's `click` dispatches a down/up at the
+    // element's centre with **no** preceding move, so a trigger that follows the
+    // pointer heard its own `onMouseEnter` *after* the press — the probe's
+    // presses depended on an ordering the runtime does not promise. A press is
+    // now park, enter, press: the move is what a pointer makes first.
+    const steps = stepsOf();
+    expect(probe).toContain("const pressTrigger = (");
+    expect(probe).toContain("ctx.host.hover(APP_CHROME_IDS.readout)");
+    expect(probe).toContain("ctx.host.hover(triggerId(menu))");
+    expect(probe).toContain("ctx.host.click(triggerId(menu))");
+    expect(
+      Arr.length(Arr.fromIterable(steps.matchAll(/pressTrigger\(/g))),
+    ).toBe(3);
+    expect(steps).not.toContain("ctx.host.click(triggerId(");
+    expect(sectionOf()).toContain(
+      "The press is a pointer's: park, enter, press",
+    );
+    expect(sectionOf()).toContain("hoverOpen(state, …)");
+    expect(sectionOf()).toContain(
+      "setState((current) => hoverOpen(current, …))",
+    );
+  });
 });
 
 describe("the registry and the record", () => {
