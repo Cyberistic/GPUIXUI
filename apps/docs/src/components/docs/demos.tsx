@@ -19,6 +19,12 @@ import { DropZoneDemo, dropZoneDemoSource } from "./drop-zone-demo";
 import { FileUploadDemo, fileUploadDemoSource } from "./file-upload-demo";
 import { ImagePreviewDemo, imagePreviewDemoSource } from "./image-preview-demo";
 import { MediaPlayerDemo, mediaPlayerDemoSource } from "./media-player-demo";
+import { FileTreeDemo, fileTreeDemoSource } from "./file-tree-demo";
+import { LogViewerDemo, logViewerDemoSource } from "./log-viewer-demo";
+import {
+  FilesPropertyPanelDemo,
+  filesPropertyPanelDemoSource,
+} from "./files-property-panel-demo";
 import { DockLayoutDemo, dockLayoutDemoSource } from "./dock-layout-demo";
 import { PanelGroupDemo, panelGroupDemoSource } from "./panel-group-demo";
 import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
@@ -3059,6 +3065,12 @@ export const demos: Readonly<Record<string, Demo>> = {
   "property-panel-demo": {
     render: PropertyPanelDemo,
     source: propertyPanelDemoSource,
+  },
+  "file-tree-demo": { render: FileTreeDemo, source: fileTreeDemoSource },
+  "log-viewer-demo": { render: LogViewerDemo, source: logViewerDemoSource },
+  "files-property-panel-demo": {
+    render: FilesPropertyPanelDemo,
+    source: filesPropertyPanelDemoSource,
   },
   "hotkey-recorder-demo": {
     render: HotkeyRecorderDemo,

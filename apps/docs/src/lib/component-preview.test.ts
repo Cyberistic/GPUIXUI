@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { platformTheme, themes } from "@gpuixui/tokens";
 import { demos } from "../components/docs/demos";
+import { packagePreviews } from "./package-preview";
 import { toCssVars } from "./theme-css";
 
 /**
@@ -62,12 +63,18 @@ const pages = (): ReadonlyArray<readonly [string, string]> => [
 ];
 
 /** Every demo key a page mounts, with the page it mounts from. */
-const mounts = (): ReadonlyArray<readonly [string, string]> =>
-  pages().flatMap(([name, body]) =>
+const mounts = (): ReadonlyArray<readonly [string, string]> => [
+  ...pages().flatMap(([name, body]) =>
     [...body.matchAll(/<ComponentPreview\s+name="([^"]+)"/g)].flatMap((match) =>
       match[1] === undefined ? [] : [[match[1], name] as const],
     ),
-  );
+  ),
+  // A package page is the package's Markdown, so the site mounts its drawing
+  // from `package-preview.ts`; those rows count as mounts from this side.
+  ...packagePreviews.map(
+    (row) => [row.demo, `${row.origin}/${row.path}`] as const,
+  ),
+];
 
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");

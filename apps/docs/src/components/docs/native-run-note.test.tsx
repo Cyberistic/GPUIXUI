@@ -75,9 +75,9 @@ describe("the native playground note", () => {
 
     expect(previewPages("packages/components/docs")).toBeGreaterThanOrEqual(70);
     expect(previewPages("packages/primitives/docs")).toBeGreaterThanOrEqual(25);
-    // The dock lane draws all three of its surfaces; the files and shell lanes
-    // have no honest browser reproduction yet, so the note's wording has to
-    // stay true for them.
+    // The dock lane draws all three of its surfaces; the files lane draws its
+    // three through the site's table; the shell lane has no honest browser
+    // reproduction yet, so the note's wording has to stay true for it.
     expect(previewPages("packages/dock/docs")).toBe(3);
     expect(previewPages("packages/files/docs")).toBe(0);
     expect(previewPages("packages/shell/docs")).toBe(0);
@@ -100,7 +100,8 @@ describe("the native playground note", () => {
     // old rule.
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("that page's preview is **strategy 3**");
-    expect(policy).toContain("the files and shell lanes still ship none");
+    expect(policy).toContain("the shell lane still ships none");
+    expect(policy).toContain("the files lane draws its three surfaces");
     expect(policy).toContain("the dock lane draws all three of its surfaces");
     expect(policy).toContain("the media lane draws all six of its surfaces");
     expect(policy).toContain("the editor lane draws all four of its own");

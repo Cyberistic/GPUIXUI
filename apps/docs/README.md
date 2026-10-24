@@ -162,6 +162,11 @@ src/components/docs/list-preview.ts       The list preview's arrow order, type-a
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
 src/components/docs/dock-preview.ts       The split preview's rule, read from the dock package's reducers
 src/components/docs/dock-layout-demo.tsx  The dock tree's split, tab strips and presses, on the package's reducers
+src/components/docs/file-tree-demo.tsx     The workspace tree's rows, glyphs and selection, on the files and data packages' rules
+src/components/docs/log-viewer-demo.tsx    The build log's parse, filter and level tints, on the log package's rules
+src/components/docs/files-property-panel-demo.tsx The inspector's four row kinds and the object they repaint, on the property package's record
+src/components/docs/browser-icon.tsx       One icon's shipped markup, painted in the surrounding ink
+src/components/docs/mounted-preview.tsx    The preview a package page gets from the site's own table
 src/components/docs/dock-demo.tsx         The dock's browser rendering and its SplitPane source
 src/components/docs/inline-edit-preview.ts The rename's finish rule, focus reason and the app's name gate
 src/components/docs/inline-edit-demo.tsx  The inline edit's two browser renderings and their source strings
@@ -346,6 +351,7 @@ src/lib/search-tree.ts              The tree search reads: package sections fill
 src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
+src/lib/package-preview.ts          The package pages the site previews, and the demo each one mounts
 src/lib/collection-pages.ts         The pages a mounted collection serves, including one that ships none yet
 src/lib/collection-index.ts         The index a collection route generates when the package writes no landing page
 src/lib/page-tree.ts                Fills and alphabetically sorts each sidebar section

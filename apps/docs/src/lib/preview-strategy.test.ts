@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { packagePreviews } from "./package-preview";
 
 /**
  * `docs/preview-strategy.md` is the site's policy document: the page template,
@@ -181,11 +182,19 @@ describe("the preview strategy document", () => {
     // media lane draws all five of its surfaces. A lane that starts drawing has
     // to ask the policy to say so, and a page that loses its demo has to ask it
     // too.
+    //
+    // A package page may draw through its own `<ComponentPreview>` or through
+    // the site's table (`src/lib/package-preview.ts`), because the package's
+    // Markdown is the package's to write; both count as the page drawing.
     const lanes = ["data", "dock", "editor", "files", "media", "shell"];
+    const siteMounted = packagePreviews.map(
+      (row) => `packages/${row.origin}/docs/${row.path}`,
+    );
     const withDemo = packagePages.filter(
       (path) =>
         lanes.some((lane) => path.startsWith(`packages/${lane}/docs/`)) &&
-        read(path).includes("<ComponentPreview"),
+        (read(path).includes("<ComponentPreview") ||
+          siteMounted.includes(path)),
     );
 
     expect(withDemo).toEqual([
@@ -197,6 +206,9 @@ describe("the preview strategy document", () => {
       "packages/editor/docs/diff-viewer.mdx",
       "packages/editor/docs/markdown-editor.mdx",
       "packages/editor/docs/search-replace.mdx",
+      "packages/files/docs/file-tree.mdx",
+      "packages/files/docs/log-viewer.mdx",
+      "packages/files/docs/property-panel.mdx",
       "packages/media/docs/crop-area.mdx",
       "packages/media/docs/drop-zone.mdx",
       "packages/media/docs/file-upload.mdx",
@@ -208,6 +220,8 @@ describe("the preview strategy document", () => {
     expect(policy).toContain("Property panels");
     expect(policy).toContain("the media lane draws all six of its surfaces");
     expect(policy).toContain("the editor lane draws all four of its own");
+    expect(policy).toContain("the files lane draws its three surfaces");
+    expect(policy).toContain("`src/lib/package-preview.ts`");
   });
 
   it("states the Related rule without a count the pages can outgrow", () => {

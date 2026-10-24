@@ -16,6 +16,7 @@ import { CopyPage } from "@/components/docs/copy-page";
 import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { EditPage } from "@/components/docs/edit-page";
 import { KeyboardStrip } from "@/components/docs/keyboard-strip";
+import { MountedPreview } from "@/components/docs/mounted-preview";
 import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PackageSource } from "@/components/docs/package-source";
 import { PageExample } from "@/components/docs/page-example";
@@ -224,6 +225,7 @@ function PackageContent({
         kind={collection.kind}
         path={`${collection.dir}/${path.replace(/\.mdx$/, "")}.mdx`}
       />
+      <MountedPreview origin={origin} path={path} />
       <MDX components={mdxComponents} />
       <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />
       <PackageSource url={url} />

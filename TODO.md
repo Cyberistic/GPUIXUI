@@ -10471,7 +10471,49 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 368/369
+`[x]` `[██████████]` 369/370
+
+`[x]` Draw the **files lane's three surfaces** — `packages/files/docs/{file-tree,
+      log-viewer,property-panel}.mdx` shipped no preview, so a reader of three
+      shipped components got props and limitations and no drawing. A package page
+      is the package's Markdown, which this workstream may not edit, so the site
+      mounts the drawing **above** it: `src/lib/package-preview.ts` maps
+      (collection, page) → demo and `src/components/docs/mounted-preview.tsx`
+      renders the same registered `ComponentPreview` a curated page reads. The
+      three drawings run the packages' own rules instead of restating them —
+      `buildFileTree`/`fileIcon`, `parseLogLine`/`filterByLevel`/`levelTone`,
+      `propertyRecord`/`setProperty`, over `@gpuixui/data`'s `flattenTree`,
+      `treeCursorMove` and `pressSelection` — so only the paint is the browser's;
+      the tree's rows, glyphs, folder keys and selection, the log's filter, tint
+      and tail, and the panel's four row kinds and the object they repaint are
+      each held to those functions. `browser-icon.tsx` paints an icon from the
+      set's own markup (the gallery now shares it). Guards: `package-preview.test.ts`
+      (4 cases) holds every row to a page the collection mounts, to a registered
+      demo, to one row per page, to no page that mounts its own preview, and to
+      the frame's mount above the Markdown; `component-preview.test.ts` counts
+      site-mounted rows as mounts; `preview-strategy.test.ts` and
+      `native-run-note.test.tsx` hold the policy's lane sentences; the three demo
+      suites (18 cases) run the drawings against the packages. Directions
+      measured: dropping the frame's `<MountedPreview>` fails `is mounted by the
+      package frame…`; pointing a row at a page that does not exist fails three
+      cases by name (`expected [ 'files/log-viewer-old.mdx' ] to deeply equal []`)
+      and the policy's lane list. Verified on a served build (`vite preview`):
+      `/docs/files/file-tree` renders 20 `role="treeitem"` rows with the set's own
+      glyphs, and `log-viewer`/`property-panel` render their drawings under the
+      "Browser preview" label. Suite 173 files / 1 797 tests green, `check-types`,
+      `build`, `oxlint` and `oxfmt` clean. No native scenario applies — browser
+      drawings over pure package logic, which each package's own suite holds.
+
+`[ ]` Draw the **shell lane's three surfaces** — `packages/shell/docs/{toolbar,
+      status-bar,app-menu}.mdx` still ship no preview. The shell's reducers are
+      pure (`splitOverflow`/`moveRoving`, `step`/`hoverOpen`/`dismiss`,
+      `statusToneOf`/`toneForeground`) but import `@gpuixui/primitives`' root,
+      which pulls the native component tree into a browser bundle, so a
+      `@gpuixui/shell/logic` subpath (the shape `@gpuixui/dock/logic` already
+      uses) is the route. Owner: **shell** for that subpath; **docs-site** then
+      adds the demo modules, their CSS and the `package-preview.ts` rows, as the
+      files lane now does. No invented drawing: the strip runs the package's
+      roving and menu reducers, and only the paint is the browser's.
 
 `[x]` Teach a reader to **read the theme editor's audit** — `/docs/themes` said
       what the controls do and nothing about the readout, so the first line an
@@ -10488,27 +10530,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
       fails the case by name (`expected … to contain 'unmeasurable'`), and the
       example is the formatter's string, so a template change fails it.
       No native scenario applies — a page and the formatter it quotes.
-
-`[ ]` Draw the **files and shell lanes** — six pages still ship no preview and
-      are strategy 4 for lack of a drawing, not for lack of a reproducible
-      interaction: `packages/files/docs/{file-tree,log-viewer,property-panel}.mdx`
-      and `packages/shell/docs/{toolbar,status-bar,app-menu}.mdx`. The files
-      package's pure halves are already public and import cleanly through the
-      wildcard subpaths (`buildFileTree`/`fileKindOf`/`fileIcon` at
-      `@gpuixui/files/tree/logic`, `parseLogLine`/`filterByLevel`/`LOG_LEVELS`/
-      `levelTone` at `@gpuixui/files/log/logic`), and the shell's reducers are
-      pure (`splitOverflow`/`moveRoving`, `step`/`hoverOpen`/`dismiss`,
-      `statusToneOf`/`toneForeground`) but import `@gpuixui/primitives`' root,
-      which pulls the native component tree into a browser bundle — a
-      `@gpuixui/shell/logic` subpath (the shape `@gpuixui/dock/logic` already
-      uses) is the route. Owner: **files/shell** for that subpath and for
-      mounting `<ComponentPreview>` on the six pages (this workstream may not
-      edit another package's docs); **docs-site** then adds the `apps/docs`
-      dependencies, the demo modules, their CSS and the registry guard, as the
-      media and editor lanes already do. No invented drawing: the files tree and
-      log viewer run the package's own construction, parsing and filter; the
-      shell strip runs the package's roving and menu reducers, and only the paint
-      is the browser's.
 
 `[x]` Generate the **theme editor's passing readout** from the gate — the
       editor told a reader what a theme had cleared in a hand-written paragraph,

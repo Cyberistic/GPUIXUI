@@ -475,8 +475,12 @@ A page that ships a demo mounts it exactly as a curated page does, so
 that page's preview is **strategy 3**: a browser approximation, labelled, with
 the real API tables and limitations beside it. A page that ships none has only
 its source and limitations: **strategy 4**. A component page ships none when the
-interaction has no honest browser reproduction to draw; today the files and
-shell lanes still ship none, the dock lane draws all three of its surfaces
+interaction has no honest browser reproduction to draw; today the shell lane
+still ships none, the files lane draws its three surfaces (`file-tree`,
+`log-viewer`, `property-panel`)
+through the site's own table — `src/lib/package-preview.ts` mounts the drawing
+above a package page, because the Markdown a package ships is the package's and
+the site may not add a line to it — the dock lane draws all three of its surfaces
 (`split-pane` through `panel-preview`, `panel-group`, `dock-layout`), while the
 media lane draws all six of its surfaces
 (`crop-area`, `qr-code`, `image-preview`, `file-upload`, `drop-zone`,
@@ -487,7 +491,9 @@ and the editor lane draws all four of its own (`code-editor`, `diff-viewer`,
 `resizeSplit`, `resizeSplitByKey`, `setActiveTab`,
 `normalizePanels`, `resizePanels`, `resizePanelsByKey`,
 `togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
-`qr/encode` and `upload/queue`, and `@gpuixui/editor`'s `diff/logic`,
+`qr/encode` and `upload/queue`, `@gpuixui/files`' `tree/logic`, `log/logic` and
+`property/logic` over `@gpuixui/data`'s tree flattening, cursor and selection,
+and `@gpuixui/editor`'s `diff/logic`,
 `markdown/logic` and `search/logic` — so a group's fractions and its resize,
 collapse and step reducers, the crop's masks and handlers, the symbol's modules,
 the queue's lifecycle, the diff's edit script, the fence a preview must close
@@ -499,7 +505,18 @@ the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
 The data lane's Property panels page was the first drawer outside the component and
 primitive lanes — one object read by a preview, a field, a table and a metric
-card, every one of which the browser can draw honestly. Either way
+card, every one of which the browser can draw honestly.
+
+**A drawing is mounted from either side.** A package that can write
+`<ComponentPreview>` into its own page does, and the page carries the drawing. A
+package whose page the site must leave alone is previewed from
+`src/lib/package-preview.ts`: the table names the page (collection and path) and
+the demo, and `src/components/docs/mounted-preview.tsx` mounts it above the page's
+Markdown. The demo is the same registry entry either way, so the label, the
+Preview/Code tabs and the platform switch are identical. One page never draws
+twice — `src/lib/package-preview.test.ts` refuses a row whose page mounts a
+preview of its own, and refuses a row whose page, demo or collection the site
+does not carry. Either way
 the page opens with a note saying the drawing is not the shipped frame and
 naming the command that opens the companion playground — `nub run
 dev:playground`, read from the root manifest rather than typed twice — with a
