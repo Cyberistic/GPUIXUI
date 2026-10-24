@@ -20,9 +20,11 @@ import {
   listAnchorOf,
   modifiedPress,
   rightPress,
+  textPress,
   windowSizeOf,
   type LiveFontRegistrar,
   type PressableLocator,
+  type TextLocator,
 } from "./host.js";
 
 const recorder = (): {
@@ -61,6 +63,36 @@ describe("rightPress", () => {
       // The button is the whole press: no modifier rides along that could turn
       // the aux click into a chorded one.
       expect(sent).toEqual([{ button: 2 }]);
+    });
+  });
+});
+
+describe("textPress", () => {
+  it.effect("presses the element whose painted words the probe names", () => {
+    const asked: Array<string> = [];
+    let presses = 0;
+    const locator = {
+      click: () => {
+        presses += 1;
+        return Promise.resolve();
+      },
+    };
+    const app: TextLocator = {
+      getByText: (text) => {
+        asked.push(text);
+        return locator;
+      },
+    };
+    return Effect.gen(function* () {
+      yield* Effect.tryPromise({
+        try: () => textPress(app, "Logs"),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "textPress", cause }),
+      });
+      // The words reach the protocol exactly as written, at the primary press:
+      // a trimmed label would match a phrase the window never painted.
+      expect(asked).toEqual(["Logs"]);
+      expect(presses).toBe(1);
     });
   });
 });

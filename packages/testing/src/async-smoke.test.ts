@@ -29,6 +29,7 @@ const inertHost: AsyncSmokeHost = {
   zoomWindow: () => Effect.void,
   focused: () => Effect.succeed(null),
   click: () => Effect.void,
+  clickText: () => Effect.void,
   rightClick: () => Effect.void,
   clickWith: () => Effect.void,
   hover: () => Effect.void,

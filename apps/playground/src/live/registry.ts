@@ -810,6 +810,12 @@ export const liveRegistry = [
       "Workspace: the shipped PropertyPanel paints an editable row as a field and a read-only row as text, an edit reports the whole object without losing the text session, and a labelWidth moves the value column",
     capability: "workspace",
   },
+  {
+    id: "dock-layout-lifecycle",
+    title:
+      "Panel: the shipped DockLayout paints a split's tab groups in their shares, and a tab press repaints its group but reports only that group as the tree",
+    capability: "panel",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

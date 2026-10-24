@@ -1127,6 +1127,7 @@ import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import { RatingProbe, ratingSteps } from "./rating-probe.js";
 import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
+import { DockLayoutProbe, dockLayoutSteps } from "./dock-layout-probe.js";
 import { PanelGroupProbe, panelGroupSteps } from "./panel-group-probe.js";
 import { AccordionProbe, accordionSteps } from "./accordion-probe.js";
 import { LogViewerProbe, logViewerSteps } from "./log-viewer-probe.js";
@@ -30681,5 +30682,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "property-panel-lifecycle",
     view: () => <PropertyPanelProbe />,
     steps: propertyPanelSteps,
+  },
+  "dock-layout-lifecycle": {
+    id: "dock-layout-lifecycle",
+    view: () => <DockLayoutProbe />,
+    steps: dockLayoutSteps,
   },
 };

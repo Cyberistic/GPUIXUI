@@ -47,7 +47,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-129 probes a real window can prove, of which twenty-nine mount shipped
+130 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -56,7 +56,8 @@ the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail, the image zoom, the accordion and
-the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer`, one mounts the data package's shipped `PropertyPanel`, ten mount
+the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
+shipped `DockLayout`, ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
 action), three mount `@gpuixui/data`'s examples (the table, the virtualized
@@ -7336,6 +7337,52 @@ Evidence: `.artifacts/live/property-panel-edited.png`. Fixture
 `src/live/property-panel.ts`, probe `src/live/property-panel-probe.tsx`, guard
 `src/live/property-panel.test.ts`.
 
+### `dock-layout-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/dock` `DockLayout` on a 640×320 stage: one horizontal
+split (`size: 0.35`) whose children are two tabbed groups — `explorer`
+(`Files` / `Outline`) and `editor` (`Notes` / `Logs`). Tier 4's *Tabbed panels*
+and *Nested panel arrangements* rows cited `docking-nested`, which mounts the
+playground's own `SplitPane` fixture and never the package's layout, so this is
+the first window measurement of the component the rows name.
+
+The component renders its tab triggers and its divider itself and forwards no
+`testId` to them; the probe presses a trigger by the words it paints
+(`AsyncSmokeHost.clickText`) and owns only each tab's content, which carries the
+address and the fill a check reads.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the layout fills the 640×320 stage; `explorer` paints 0.35 of the 634-point pane space (**221.9**), `editor` starts 6 points after it and paints the remaining **412.1**, and the two shares plus the divider are the stage; each group paints its active tab's content and the tab it did not select paints nothing |
+| capture `dock-layout-rest` | each group's content paints its own fill (red for `explorer`, green for `editor`), so one shared stage-wide content cannot pass |
+| press `Logs` | the readout is `layout=tabs:editor reports=tabs:editor changes=1`: the press reports **the group it changed**, not the tree, so `onLayoutChange={setLayout}` — the call `packages/dock/README.md` documents — replaces the whole tree with that group; `Logs` paints, `Files` leaves the tree and the painted text, and the remaining group takes the whole 640-point stage |
+| press `Reset` | the probe's own control restores the split: the readout is back to `layout=split:root reports=none`, `Files` paints 221.9 again, and `Logs` is gone with the tree |
+| press `Files` (the tab `explorer` already shows) | the readout is `layout=tabs:explorer reports=tabs:explorer changes=2` — a press that changes no tab **still reports a node**, so the defect is the report and not the switch; a second `Reset` restores the split again |
+
+**The contract this measures.** `DockLayout`'s `onLayoutChange` is documented as
+"the next tree after a tab switch or a resize", and `DockTabsView` reports
+`setActiveTab(node, node.id, tab.id)` — the tabs node — while `DockSplitView`
+reports `{ ...node, size: … }` — the split node. Only the node the caller passed
+as the root is the whole tree; every nested group replaces it. The probe pins
+the measured behaviour rather than hiding it, so a component fix updates these
+checks, the `Tabbed panels` and `Nested panel arrangements` rows, and this
+table together; the gap is recorded for the dock owner in `TODO.md` →
+Interlocks with the same evidence.
+
+**Two address limits, read from the source.** The component derives its parts'
+ids from a `testId` it never passes to a node view (unlike `PanelGroup`'s
+`${testId}-pane-${id}` and `SplitPane`'s `${testId}-divider`, whose roots receive
+one), so the props that document "stable locator for automation" reach the root
+alone and a probe must press by text; and the tab trigger answers `onClick`
+only, with no arrow-key route, so the strip takes a native Tab stop that no key
+operates. Both are recorded in the same Interlocks row; neither is measured as
+working here.
+
+32 checks, `--only dock-layout-lifecycle`, green on 0.11.0 here (three runs,
+9.4–10.2 s). Evidence: `.artifacts/live/dock-layout-rest.png`. Fixture
+`src/live/dock-layout.ts`, probe `src/live/dock-layout-probe.tsx`, guard
+`src/live/dock-layout.test.ts`.
+
 
 ## Terminal mode: the pty probe
 
@@ -7588,7 +7635,8 @@ narrower. Each deviation is deliberate and measured:
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
   `motion-interruption` and `panel-group-lifecycle` and
-  `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` (71
+  `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
+  `dock-layout-lifecycle` (72
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples

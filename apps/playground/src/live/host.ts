@@ -115,6 +115,28 @@ export interface PressableLocator {
 }
 
 /**
+ * The locator surface a text press needs: the protocol resolves the words to
+ * the element that paints them, and the press carries no options of its own.
+ */
+export interface TextLocator {
+  readonly getByText: (text: string) => {
+    readonly click: () => Promise<void>;
+  };
+}
+
+/**
+ * Presses the element whose painted words are `text`.
+ *
+ * A part a shipped component renders itself carries no `testId` to address:
+ * `DockLayout`'s tab triggers are the labels they paint. The text is the whole
+ * contract, so it passes through unchanged — a probe that trimmed or lowercased
+ * it would press a phrase the window never painted, or the wrong one when two
+ * labels differ only in case.
+ */
+export const textPress = (app: TextLocator, text: string): Promise<void> =>
+  app.getByText(text).click();
+
+/**
  * Presses a locator's element with the right button.
  *
  * The button number is the whole contract: a primary press (0) fires `onClick`
@@ -260,6 +282,7 @@ export const createLiveHost = ({
         );
       }),
     click: (testId) => call(`click ${testId}`, () => at(testId).click()),
+    clickText: (text) => call(`clickText ${text}`, () => textPress(app, text)),
     rightClick: (testId) =>
       call(`rightClick ${testId}`, () => rightPress(at(testId))),
     clickWith: (testId, modifiers) =>

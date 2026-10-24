@@ -483,6 +483,17 @@ export interface AsyncSmokeHost {
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**
+   * Presses the element the **words** name, for a part that carries no address.
+   *
+   * A shipped component does not always forward a `testId` to every part it
+   * renders: `DockLayout` builds its tab triggers and its divider itself, so a
+   * probe measuring the shipped surface can reach them only by the label they
+   * paint. The protocol resolves the text to its painted centre and presses
+   * there, which is the same hit-tested path a pointer takes — the part's own
+   * handler runs exactly as it would under a cursor.
+   */
+  readonly clickText: (text: string) => Effect.Effect<void, SmokeHostError>;
+  /**
    * Presses `testId` with the **right** button.
    *
    * A context menu is opened by the runtime's aux click, which a primary press

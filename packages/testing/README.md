@@ -101,6 +101,14 @@ exact offset and hand the frame back to live time — the same reading every run
 They are optional because only a window has one; the offscreen renderer exposes
 a clock too, but no scenario has needed to drive it.
 
+A part a shipped component renders itself does not always carry an address: a
+`DockLayout` builds its tab triggers and its divider, and forwards no `testId`
+to them. `clickText(text)` presses the element those **words** paint, resolved
+by the same protocol locator and hit-tested at its painted centre, so a probe
+measuring the shipped surface reaches its parts without the component growing a
+test-only prop. The words pass through unchanged — a trimmed label would match a
+phrase the window never painted.
+
 Keys are three verbs on purpose. `key(keystroke)` presses through the automation
 protocol, which a window delivers as a **key down only** (measured: a probe
 listening on `onKeyDown`/`onKeyUp` saw `space` arrive once, as a press). A
