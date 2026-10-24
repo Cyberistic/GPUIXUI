@@ -11820,7 +11820,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     Left to 624 and 40/80min steps Right to 96, each after reading the announced
     width. Direction measured: at HEAD the case fails `expected 640 to be 624`;
     restored, the behaviour suite is 165/165 and the unit suite 246/246 with
-    `check-types` clean. Docs: `docs/column-configuration.mdx` §Resizing (one
+    `check-types` clean. Docs: `docs/column-configuration.mdx` §The drag (one
     number drives all three, both out-of-bounds sides) and its divider table and
     §Limitations, the package README's divider paragraph, and the Tier 3
     Resizable columns row. No native scenario applies — the keys and the
