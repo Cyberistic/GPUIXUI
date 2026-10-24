@@ -14,7 +14,10 @@
  * the same name, except `accent`, which is what a platform calls the fill our
  * components call `primary`, and `danger`, which is our `destructive`. Every
  * role the palette does not name keeps the base theme's value, so a palette of
- * two colours produces a page and an ink rather than a half-built theme.
+ * two colours produces a page and an ink rather than a half-built theme. A field
+ * a decoder left **blank** — a cleared colour in a theme file, an unset template
+ * variable — names nothing either, so it is one of those (see
+ * {@link paletteToTokens}).
  *
  * It **carries the mode the desktop states**. A platform that says `dark` has
  * answered the question a page's lightness only approximates, so a stated mode
@@ -56,7 +59,13 @@
  * the palette it reads actually changed.
  */
 
-import { alpha, alphaOf, themeColors, type ThemeColors } from "./color.js";
+import {
+  alpha,
+  alphaOf,
+  namesColour,
+  themeColors,
+  type ThemeColors,
+} from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { pageMode } from "./luminance.js";
 import {
@@ -147,17 +156,19 @@ const baseRoles = (base: Theme): ThemeColors => ({
  * The base's page and ink are used only when the palette names neither — a
  * palette that names a fill but no ink still gets a readable on-colour rather
  * than an invented one, and a base a store truncated answers with the identity
- * theme's pair for its mode rather than throwing (see {@link baseRoles}). A pair
- * neither can serve is not repaired here; `auditTheme` reports it.
+ * theme's pair for its mode rather than throwing (see {@link baseRoles}). A
+ * field the desktop left blank names no colour (`{@link namesColour}`), so it is
+ * not a candidate: the base's pair is measured instead of the blank losing every
+ * comparison at 0:1 and the merge then falling back to the base's on-colour for
+ * **its** accent. A pair neither can serve is not repaired here; `auditTheme`
+ * reports it.
  */
 const inkOn = (
   fill: string,
-  palette: SystemPalette,
+  inks: ReadonlyArray<string | undefined>,
   roles: ThemeColors,
 ): string => {
-  const measured = [palette.foreground, palette.background].filter(
-    (candidate): candidate is string => candidate !== undefined,
-  );
+  const measured = inks.filter(namesColour);
   const candidates =
     measured.length > 0 ? measured : [roles.foreground, roles.background];
   return candidates.reduce((best, candidate) =>
@@ -166,6 +177,23 @@ const inkOn = (
       : best,
   );
 };
+
+/**
+ * A palette field the desktop named, or nothing when it left the field blank.
+ *
+ * A palette is decoded at a boundary, not written as a literal: a TOML or JSON
+ * reader writes `""` for a key whose value is empty — a cleared colour in a theme
+ * file, an unset template variable — and a blank names no colour any more than a
+ * `null` role does. Read as a stated fill it erased the base's role and skipped
+ * the mapper's own measurement: a blank ink won {@link inkOn}'s comparison at
+ * 0:1, the merge then dropped it, and the fill kept the base's on-colour for the
+ * base's accent — measured on the light base, a pale `#FFE08A` accent carried
+ * white at 1.29:1 while the base's own inks were there to measure. A **named**
+ * value the renderer cannot parse is not this case: it is handed over as written
+ * for `auditTheme` to report.
+ */
+const colour = (value: string | undefined): string | undefined =>
+  namesColour(value) ? value : undefined;
 
 /**
  * The mode a palette states, or the one its own page implies.
@@ -252,6 +280,14 @@ const selectionWash = (selection: string, roles: ThemeColors): string =>
  * palette names still land, and the roles neither carries stay absent for
  * `auditTheme` to report.
  *
+ * **A field the desktop left blank names no colour.** A palette is decoded at a
+ * boundary, so a cleared value arrives as `""` — or whitespace — rather than as
+ * a missing key. It is read as the role the palette omits, the rule
+ * {@link themeColors} follows for a cleared role: the base keeps it, and the
+ * filled role beside it is measured against the inks that were actually named.
+ * A named value the renderer cannot parse is still handed over as written, for
+ * `auditTheme` to report.
+ *
  * @example
  * ```tsx
  * import { darkTheme, paletteToTokens, type SystemPalette } from "@gpuixui/tokens";
@@ -271,35 +307,43 @@ export function paletteToTokens(
   // base a store truncated answers with the identity theme's roles for its own
   // mode and variant instead of throwing on `null` (see `baseRoles`).
   const roles = baseRoles(base);
+  // A field a decoder left blank names no colour: it is the role the palette
+  // omits, not a fill it chose (see `colour`).
+  const background = colour(palette.background);
+  const foreground = colour(palette.foreground);
+  const muted = colour(palette.muted);
+  const border = colour(palette.border);
+  const accent = colour(palette.accent);
+  const danger = colour(palette.danger);
+  const selection = colour(palette.selection);
+  // The inks the palette actually named. A filled role the palette names without
+  // one is measured against the base's pair rather than a blank.
+  const inks = [foreground, background] as const;
   const colors: Partial<ThemeColors> = {
-    ...(palette.background === undefined
-      ? {}
-      : { background: palette.background }),
-    ...(palette.foreground === undefined
-      ? {}
-      : { foreground: palette.foreground }),
-    ...(palette.muted === undefined
+    ...(background === undefined ? {} : { background }),
+    ...(foreground === undefined ? {} : { foreground }),
+    ...(muted === undefined
       ? {}
       : {
-          muted: palette.muted,
-          mutedForeground: inkOn(palette.muted, palette, roles),
+          muted,
+          mutedForeground: inkOn(muted, inks, roles),
         }),
-    ...(palette.border === undefined ? {} : { border: palette.border }),
-    ...(palette.accent === undefined
+    ...(border === undefined ? {} : { border }),
+    ...(accent === undefined
       ? {}
       : {
-          primary: palette.accent,
-          primaryForeground: inkOn(palette.accent, palette, roles),
+          primary: accent,
+          primaryForeground: inkOn(accent, inks, roles),
         }),
-    ...(palette.danger === undefined
+    ...(danger === undefined
       ? {}
       : {
-          destructive: palette.danger,
-          destructiveForeground: inkOn(palette.danger, palette, roles),
+          destructive: danger,
+          destructiveForeground: inkOn(danger, inks, roles),
         }),
-    ...(palette.selection === undefined
+    ...(selection === undefined
       ? {}
-      : { selection: selectionWash(palette.selection, roles) }),
+      : { selection: selectionWash(selection, roles) }),
   };
   return extendTheme(base, { colors });
 }
@@ -409,9 +453,10 @@ const paletteFields = [
  * The fields are compared as values, not through a string they are joined into:
  * a decoder can report a colour as an empty string where the previous read
  * omitted it — a TOML or JSON reader writes an empty value rather than no key —
- * and the two compose differently, because `paletteToTokens` keeps the base's
- * role for an absent field and states the empty one. A joined key wrote both as
- * `""`, so the window kept the theme it had. Comparing field by field also
+ * and the two are different reads of the palette even though the theme they
+ * compose is the same one (a blank field names no colour, so both keep the
+ * base's role). A joined key wrote both as `""`, so the window was never told
+ * that the decoder's answer had changed shape. Comparing field by field also
  * keeps a re-read that allocates a new object with the same values quiet.
  */
 const samePalette = (
@@ -455,10 +500,10 @@ const snapshot = (palette: SystemPalette): SystemPalette =>
  *
  * Every watched field is compared as its own value, not through a joined key, so
  * a decoder that reports a colour as `""` where it previously omitted it is a
- * change the window sees — the two compose differently (`paletteToTokens` keeps
- * the base's role for the absent field and states the empty one). The values a
- * tick delivered are copied, so a reader that rewrites one palette object in
- * place is a change too.
+ * change the window is told about — the two are different reads, even though
+ * both name no colour and compose to the base's role. The values a tick
+ * delivered are copied, so a reader that rewrites one palette object in place is
+ * a change too.
  *
  * @example
  * ```tsx

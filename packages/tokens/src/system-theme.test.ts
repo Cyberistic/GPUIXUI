@@ -17,8 +17,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
-import { alpha, alphaOf, blend } from "./color.js";
-import { contrastRatio } from "./contrast.js";
+import { alpha, alphaOf, blend, invalidColorRoles } from "./color.js";
+import { contrastFloors, contrastRatio } from "./contrast.js";
 import {
   followDesktop,
   followPalette,
@@ -279,6 +279,98 @@ describe("the palette a desktop hands over", () => {
     expect(theme.typography).toBe(lightTheme.typography);
     expect(theme.density).toBe(lightTheme.density);
     expect(theme.mode).toBe(lightTheme.mode);
+  });
+
+  it("reads a colour a desktop left blank as one it does not name", () => {
+    // A palette is decoded at a boundary, so a cleared value arrives as `""` or
+    // whitespace rather than as a missing key — a TOML reader writes an empty
+    // value, a theme editor leaves the field empty. Read as a stated fill it
+    // erased the base's role **and** skipped the mapper's own measurement: a
+    // blank ink won `inkOn`'s comparison at 0:1, the merge then dropped it, and
+    // the fill kept the base's on-colour for the base's accent. Measured on the
+    // light base, a pale `#FFE08A` accent carried white at 1.29:1 while the
+    // base's own ink was there to measure.
+    const pale = paletteToTokens(
+      { background: "", foreground: "   ", accent: "#FFE08A" },
+      lightTheme,
+    );
+
+    expect(pale.colors.background).toBe(lightTheme.colors.background);
+    expect(pale.colors.foreground).toBe(lightTheme.colors.foreground);
+    expect(pale.colors.primary).toBe("#FFE08A");
+    // The ink is the base's own, chosen by measurement against the palette's
+    // accent — not the base's on-colour for the base's brand.
+    expect(pale.colors.primaryForeground).toBe(lightTheme.colors.foreground);
+    expect(
+      contrastRatio(pale.colors.primaryForeground, "#FFE08A"),
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+    // The answer the old read produced, kept as the negative control.
+    expect(
+      contrastRatio(lightTheme.colors.primaryForeground, "#FFE08A"),
+    ).toBeLessThan(contrastFloors.secondary);
+
+    // A blank quiet strip keeps the base's strip **and** its ink: the palette's
+    // body ink was not measured against the fill the base paints.
+    const quiet = paletteToTokens(
+      { muted: "", foreground: "#101010" },
+      lightTheme,
+    );
+    expect(quiet.colors.muted).toBe(lightTheme.colors.muted);
+    expect(quiet.colors.mutedForeground).toBe(
+      lightTheme.colors.mutedForeground,
+    );
+
+    // A blank error colour keeps the base's pair. With a black ink named, the
+    // old read handed the base's red that ink — 4.12:1, under the body floor.
+    const error = paletteToTokens(
+      { danger: " ", foreground: "#000000" },
+      lightTheme,
+    );
+    expect(error.colors.destructive).toBe(lightTheme.colors.destructive);
+    expect(error.colors.destructiveForeground).toBe(
+      lightTheme.colors.destructiveForeground,
+    );
+    expect(
+      contrastRatio("#000000", lightTheme.colors.destructive),
+    ).toBeLessThan(contrastFloors.secondary);
+
+    // A blank selection keeps the base's wash, and a border or page that names
+    // nothing keeps the base's role.
+    const wash = paletteToTokens({ selection: "" }, darkTheme);
+    expect(wash.colors.selection).toBe(darkTheme.colors.selection);
+    expect(wash.colors.border).toBe(darkTheme.colors.border);
+
+    // The split the rule must not cross: a value the desktop **named** but the
+    // renderer cannot parse is handed over as written, for the gate to report.
+    const typo = paletteToTokens(
+      { accent: "brand", background: "#FFFFFF", foreground: "#000000" },
+      lightTheme,
+    );
+    expect(typo.colors.primary).toBe("brand");
+    expect(invalidColorRoles(typo)).toEqual([
+      { role: "primary", value: "brand" },
+    ]);
+
+    // The rule is taught where a consumer plans a follow, and it is one read:
+    // the seam asks the boundary predicate rather than testing for blank itself.
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+    const seam = read("./system-theme.ts");
+    const colour = read("./color.ts");
+
+    [catalogue, readme, inventory].forEach((page) => {
+      expect(flat(page), "the blank field rule").toContain("names no colour");
+      expect(page).toContain("namesColour");
+    });
+    expect(flat(design)).toContain("left blank names no colour");
+    expect(seam).toContain("namesColour(value)");
+    expect(colour).toContain("export const namesColour");
+    // The retracted reading — a blank field is a fill the palette chose — is gone.
+    [seam, readme, inventory].forEach((page) => {
+      expect(page).not.toContain("states the empty one");
+    });
   });
 
   it("returns the base theme unchanged for an empty palette", () => {
@@ -947,8 +1039,8 @@ describe("following a palette", () => {
     // questions through the colour seam, and the mapper uses it.
     expect(seam).toContain("themeColors(base)");
     expect(seam).toContain("const roles = baseRoles(base)");
-    expect(seam).toContain("inkOn(palette.accent, palette, roles)");
-    expect(seam).toContain("selectionWash(palette.selection, roles)");
+    expect(seam).toContain("inkOn(accent, inks, roles)");
+    expect(seam).toContain("selectionWash(selection, roles)");
   });
 
   it("prints the case count its own suite runs", () => {
