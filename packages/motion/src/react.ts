@@ -89,7 +89,15 @@ const restingFrame = (value: number, complete: boolean): MotionState => ({
   complete,
 });
 
-/** Hook options. */
+/**
+ * Hook options.
+ *
+ * The object is a config as often as a literal: a consumer that keeps an
+ * animation's settings in a record reads back **no object at all** for a key it
+ * never wrote, because JSON has no `undefined`. An absent object is therefore
+ * the documented defaults, the same answer a field the value does not name
+ * gets — the hooks read it once before any field.
+ */
 export interface MotionOptions {
   /**
    * The reader's reduced-motion preference, as the **per-hook override**.
@@ -135,6 +143,21 @@ const initialFrame = (value: number): MotionFrame => ({
   active: false,
   complete: false,
 });
+
+/**
+ * The options a hook reads, from the object a caller may have stored.
+ *
+ * A hook re-renders for reasons that have nothing to do with motion, and its
+ * options are a config as often as a literal: a settings record that never
+ * carried the key reads back as `null`, so a consumer passing what its decoder
+ * answered handed the hook no object at all. The hooks read `.reducedMotion`
+ * and `.initial` off the object before anything else, which threw
+ * `TypeError: Cannot read properties of null (reading 'reducedMotion')` out of
+ * the render that mounted the surface. No options is the documented defaults,
+ * the answer every other optional object in this package gives.
+ */
+const optionsOf = (options: MotionOptions | null | undefined): MotionOptions =>
+  options ?? {};
 
 /**
  * The preference a hook runs with: its own override, else the provider's.
@@ -262,22 +285,23 @@ const coastRest = (declaration: CoastDeclaration, position: number): number =>
 export const useMotion = (
   target: number,
   transition: Transition,
-  options: MotionOptions = {},
+  options: MotionOptions | null = {},
 ): MotionState => {
-  const reducedMotion = useReducedMotion(options);
+  const settings = optionsOf(options);
+  const reducedMotion = useReducedMotion(settings);
   const [start] = useState(() =>
-    firstValue(target, options.initial, reducedMotion),
+    firstValue(target, settings.initial, reducedMotion),
   );
   const [motion] = useState(() => new MotionValue(start));
   const [origin] = useState(() => performance.now());
   const [frame, setFrame] = useState<MotionFrame>(() => {
     const first = initialFrame(start);
-    return skipsJourney(target, options.initial, reducedMotion)
+    return skipsJourney(target, settings.initial, reducedMotion)
       ? { ...first, complete: true }
       : first;
   });
   /** The mount already paints the resting frame, so there is no run to start. */
-  const skipped = useRef(skipsJourney(target, options.initial, reducedMotion));
+  const skipped = useRef(skipsJourney(target, settings.initial, reducedMotion));
   /**
    * The declaration the loop is running. A render builds a fresh object for the
    * documented `springPhysics({ … })` form, so identity would re-arm the effect —
@@ -346,7 +370,7 @@ export const useMotion = (
 export const useSpring = (
   target: number,
   physics: SpringPhysics = layoutSpring,
-  options: MotionOptions = {},
+  options: MotionOptions | null = {},
 ): MotionState => {
   const transition = useMemo(() => springTransition(physics), [physics]);
   return useMotion(target, transition, options);
@@ -363,7 +387,7 @@ export const useSpring = (
 export const useTransition = (
   target: number,
   spec: TweenSpec | null = {},
-  options: MotionOptions = {},
+  options: MotionOptions | null = {},
 ): MotionState => {
   const { durationMs, easing } = tweenSpecOf(spec);
   const transition = useMemo(
@@ -394,10 +418,11 @@ export const useTransition = (
 export const useInertia = (
   velocity: number,
   inertia: Inertia,
-  options: MotionOptions = {},
+  options: MotionOptions | null = {},
 ): MotionState => {
-  const reducedMotion = useReducedMotion(options);
-  const [offset] = useState(() => startValue(0, options.initial));
+  const settings = optionsOf(options);
+  const reducedMotion = useReducedMotion(settings);
+  const [offset] = useState(() => startValue(0, settings.initial));
   const [rest] = useState(() => coastRest({ inertia, velocity }, offset));
   const [motion] = useState(() => new MotionValue(offset));
   const [start] = useState(() => performance.now());

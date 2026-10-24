@@ -22,6 +22,10 @@
  * The third is where that preference comes from: the hooks publish the one
  * `MotionProvider` and read only their own option, so a tree wrapped for a
  * reduced reader still animated every hook below it.
+ *
+ * The fourth is the options **object**: a hook's settings are a config as often
+ * as a literal, and a record that never carried the key reads back as `null`,
+ * which the hooks read field-first before anything else.
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -34,6 +38,7 @@ import { MotionProvider } from "./provider.js";
 import {
   useInertia,
   useMotion,
+  useSpring,
   useSurfacePresence,
   useTransition,
 } from "./react.js";
@@ -179,6 +184,17 @@ const StoredSpecFrame = ({
   return <>{String(value)}</>;
 };
 
+/** Every hook's first frame from an options object a store did not keep. */
+const StoredOptionsFrame = () => {
+  const motion = useMotion(100, tween(300), null);
+  const spring = useSpring(100, undefined, null);
+  const tweened = useTransition(100, { durationMs: 300 }, null);
+  const coasted = useInertia(400, coast, null);
+  return (
+    <>{`${motion.value}:${spring.value}:${tweened.value}:${coasted.value}`}</>
+  );
+};
+
 describe("the preference the provider supplies", () => {
   it("is the frame a hook publishes when the caller states none", () => {
     // The defect: every physics hook read `options.reducedMotion` alone, while
@@ -318,6 +334,29 @@ describe("the first published frame", () => {
     expect(renderToStaticMarkup(<ReducedCompletion />)).toBe("false");
     // The animated control keeps the start: the preference is what changed.
     expect(renderToStaticMarkup(<Frame target={100} initial={0} />)).toBe("0");
+  });
+});
+
+describe("an options object a caller stored", () => {
+  it("mounts every hook from the documented defaults when the store kept none", () => {
+    // The bug this guards: a hook's options are a config as often as a literal,
+    // and JSON has no `undefined` — a settings record a caller never wrote reads
+    // back as `null`. The hooks read `.reducedMotion` and `.initial` off the
+    // object before anything else, so a consumer passing what its decoder
+    // answered threw `TypeError: Cannot read properties of null (reading
+    // 'reducedMotion')` out of the render that mounted the surface, and no hook
+    // on the page painted. An absent object is the documented defaults.
+    expect(renderToStaticMarkup(<StoredOptionsFrame />)).toBe("100:100:100:0");
+    // The preference is read from the object the hook was given, so a stored
+    // `null` still answers the provider rather than only the animated default:
+    // a reduced coast paints the rest its release projects, not the offset.
+    expect(
+      renderToStaticMarkup(
+        <MotionProvider preference="reduced">
+          <StoredOptionsFrame />
+        </MotionProvider>,
+      ),
+    ).toBe("100:100:100:140");
   });
 });
 

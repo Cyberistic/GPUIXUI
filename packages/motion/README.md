@@ -149,6 +149,14 @@ move keeps moving in a reduced one — and `reducedMotionOf(override, preference
 is the rule, so a package composing the table does not re-decide what "less
 motion" means.
 
+Each hook's **options object** is a stored value too: a settings record a caller
+never wrote reads back as `null`, because JSON has no `undefined`. The four hooks
+take it (`options: MotionOptions | null`) and read it once, so an absent object is
+the documented defaults — the target's own first frame with no entry run, and `0`
+for a coast's offset — instead of a `TypeError: Cannot read properties of null`
+out of the render that mounted the surface. `useSpring` and `useTransition`
+forward the same shape, so every hook in the entry answers it.
+
 ## The presence table
 
 A surface that enters and leaves reads one table, exported from
