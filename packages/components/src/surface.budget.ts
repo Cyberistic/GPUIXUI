@@ -24,9 +24,9 @@
  * family that imports only the seam measured **13 modules / 101 KiB** through
  * `./react` and **4 modules / 29 KiB** through `./react/presence`. The entry's
  * own graph still carries the physics — `CountingNumber` counts with
- * `./react`'s `useTransition`, and (until the primitives take the light entry,
- * `TODO.md` → Interlocks) their `Spinner` reads the preference from it — so
- * `familyMotion` below is the budget that holds the seam's route.
+ * `./react`'s `useTransition` — while the primitives read the light entry too
+ * (their `Spinner` prefers `./react/presence`), so `familyMotion` below is the
+ * budget that holds the seam's route.
  */
 export const surfaceBudget = {
   /** Modules in the entry's own package — `src/index.ts` and everything it reaches. */
@@ -148,7 +148,16 @@ export const surfaceBudget = {
    * per-phase timing, the mount window and the provider, and nothing else. The
    * `./react` route measured 13 modules / 101 KiB before the split.
    */
-  familyMotion: { modules: 4, bytes: 32 * 1024 },
+  /**
+   * The seam's own motion graph: the presence half's modules and bytes.
+   *
+   * 32 KiB → 34 KiB when the easing grammar moved into `@gpuixui/motion`'s
+   * `timing.ts` (`motionEasingNames`, `isMotionEasing`) — the module the
+   * presence half already loads — so a stored transition is read against the
+   * renderer's grammar before it is handed over. Measured 34 204 bytes with
+   * `nub scripts/surface.ts --entry src/motion-grid.tsx`.
+   */
+  familyMotion: { modules: 4, bytes: 34 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

@@ -38,21 +38,66 @@ export type MotionPhase = "enter" | "exit" | "standard";
 /** A cubic-bezier easing, in the runtime's order. */
 export type MotionCurve = [number, number, number, number];
 
+/**
+ * The easing names the runtime accepts, in its own order.
+ *
+ * The union below is derived from this list rather than restating it, so the
+ * grammar has one home: a name this release stops shipping is removed here and
+ * every table, guard and reader moves with it.
+ */
+export const motionEasingNames = [
+  "linear",
+  "ease",
+  "easeIn",
+  "easeOut",
+  "easeInOut",
+] as const;
+
+/** A named easing the runtime accepts. */
+export type MotionEasingName = (typeof motionEasingNames)[number];
+
 /** The easings the runtime accepts: five names, or a cubic-bezier tuple. */
-export type MotionEasing =
-  | "linear"
-  | "ease"
-  | "easeIn"
-  | "easeOut"
-  | "easeInOut"
-  | MotionCurve;
+export type MotionEasing = MotionEasingName | MotionCurve;
+
+/** A value a curve can read: a finite number. */
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+/** A cubic-bezier control in the range the renderer interpolates over. */
+const isUnitControl = (value: unknown): boolean =>
+  isFiniteNumber(value) && value >= 0 && value <= 1;
+
+/**
+ * Whether the runtime accepts an easing.
+ *
+ * The grammar is the renderer's, not this package's, and a motion description
+ * whose transition names an easing it cannot read is **rejected whole** — the
+ * surface paints no motion frame at all. A stored timing is therefore read
+ * through this before it is handed over: one of the five names, or a
+ * cubic-bezier whose four values are finite and whose two `x` controls lie in
+ * `[0, 1]` (the renderer solves the curve in time, so `y` may overshoot).
+ */
+export const isMotionEasing = (value: unknown): value is MotionEasing => {
+  if (typeof value === "string") {
+    return motionEasingNames.some((name) => name === value);
+  }
+  const curve: ReadonlyArray<unknown> = Array.isArray(value) ? value : [];
+  if (curve.length !== 4) return false;
+  const [x1, y1, x2, y2] = curve;
+  return (
+    isUnitControl(x1) &&
+    isFiniteNumber(y1) &&
+    isUnitControl(x2) &&
+    isFiniteNumber(y2)
+  );
+};
 
 /**
  * The easing each phase uses, by the physics it describes: a surface arrives
  * decelerating and leaves accelerating, and a movement between two resting
  * states eases at both ends.
  */
-export const motionEasings: Readonly<Record<MotionPhase, MotionEasing>> = {
+export const motionEasings: Readonly<Record<MotionPhase, MotionEasingName>> = {
   enter: "easeOut",
   exit: "easeIn",
   standard: "easeInOut",

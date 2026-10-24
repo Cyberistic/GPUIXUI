@@ -435,12 +435,14 @@ describe("the presence table the README teaches", () => {
     expect(called[0]).toMatch(/fadeFromAnchor\(|fadeFromSide\(|fadeFrom\(/);
 
     // The third argument is the journey: without a timing the composition hands
-    // the runtime no transition at all, which is the call the page used to teach.
+    // the runtime **no journey** explicitly. An empty transition is the
+    // renderer's own 300 ms default, a run the seam's window had already
+    // counted as zero, so "no transition" has to be said as a zero duration.
     const frames = fadeFromAnchor("bottom", 4);
     const timing = presenceTiming("normal");
     expect(
       presenceMotion(frames, true, presenceTimingOf(undefined)).transition,
-    ).toEqual({});
+    ).toEqual({ duration: 0 });
     expect(presenceMotion(frames, true, timing)).toEqual({
       initial: { opacity: 0, top: -4 },
       animate: { opacity: 1, top: 0 },

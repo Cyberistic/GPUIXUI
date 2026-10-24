@@ -19,7 +19,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `timeline.ts` | Keyframes with offsets, `stagger`, and a keyed `Sequence` driver |
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
-| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — and `preferenceOf`, the reader that decodes a stored motion preference |
+| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, and `motionEasingNames`/`isMotionEasing`, the renderer's easing grammar a stored transition is read against |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
 | `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers — the physics hooks; it re-exports `useMotionPreference`, `useSurfaceTiming` / `useSurfacePresence` and the provider from the presence half below |
 | `react/presence.ts` | The presence half of the React entry (entry `@gpuixui/motion/react/presence`): `useSurfaceTiming` / `useSurfacePresence` and `MotionProvider`, published without the physics a fade never samples |
@@ -149,10 +149,16 @@ A surface that enters and leaves reads one table, exported from
   keeps);
 - `presenceTimingOf(timing)` reads the table back from a value a caller may have
   stored: `PresenceTimingInput` is the shape a decoded config has — no object at
-  all, or one phase — and a phase the value does not name is **no transition**,
-  so the surface paints its resting frame at once instead of throwing out of the
-  render that projected its window. A caller passes what its decoder answered;
-  the type takes it, so no assertion stands between the two;
+  all, or one phase — and a phase the value does not name, or one whose duration
+  the renderer cannot run, is **no journey** (`{ duration: 0 }`, the instant
+  assignment the reduced policy and the window conversion both mean). That is
+  said explicitly rather than left as an empty transition, because the renderer
+  reads `{}` as **its own** 300 ms `easeOut` default: a surface handed one runs a
+  journey its window had already counted as zero. A wait or an easing the
+  renderer cannot read is dropped instead of rejecting the whole description —
+  the runtime paints no frame for a description it refuses — and a caller passes
+  what its decoder answered, because the type takes it, so no assertion stands
+  between the two;
 - `presenceMotion(frames, present, timing)` is the runtime's `motion` prop for a
   surface — the frames' first paint, the resting frame while it is open or the
   exit frame while it leaves, and that phase's transition — so a consumer that

@@ -22,6 +22,7 @@ import {
   presenceTimingOf,
   transitionWindowMs,
   type PresenceTransition,
+  type PresenceTransitionInput,
 } from "./presence.js";
 import { motionTiming } from "./timing.js";
 
@@ -247,19 +248,21 @@ describe("the motion prop", () => {
 });
 
 describe("a timing a caller stored", () => {
-  it("reads a phase the value does not name as no transition", () => {
-    // The bug this guards: `PresenceTiming` is exported and structural (a config
-    // decoded from storage can carry no object at all, or one phase), and
-    // `@gpuixui/motion/presence` is a published entry for a consumer painting
-    // its own surface. `useSurfacePresence` projected the hold window from
-    // `.exit` inside its render, so a stored value threw `TypeError` and the
-    // surface never mounted.
-    expect(presenceTimingOf(null)).toEqual({ enter: {}, exit: {} });
+  it("reads a phase the value does not name as no journey", () => {
+    // The bug this guards: a missing phase was handed over as `{}`, which the
+    // renderer reads as **its own** 300 ms `easeOut` default — so a surface
+    // whose config never decoded ran a journey the seam's window had already
+    // counted as zero. "No transition" is the instant assignment
+    // `transitionWindowMs` means by it, and it has to be said explicitly.
+    expect(presenceTimingOf(null)).toEqual({
+      enter: { duration: 0 },
+      exit: { duration: 0 },
+    });
     // A config that decoded with one phase is the shape the input type takes, so
     // the call needs no assertion to reach the reader.
     expect(presenceTimingOf({ enter: { duration: 0.32 } })).toEqual({
       enter: { duration: 0.32 },
-      exit: {},
+      exit: { duration: 0 },
     });
     // A complete pair keeps the transitions it was given.
     expect(presenceTimingOf(presenceTiming("fast"))).toEqual(
@@ -278,7 +281,69 @@ describe("a timing a caller stored", () => {
     expect(delayedTiming(null, 80)).toEqual({});
     expect(
       presenceMotion(fadeFrom("top", 8), false, stored).transition,
-    ).toEqual({});
+    ).toEqual({ duration: 0 });
+  });
+
+  it("reads a field the renderer rejects as no journey, not a rejected description", () => {
+    // The bug this guards: the renderer validates a whole motion description and
+    // paints **no frame** for one it rejects, while the seam's window counted the
+    // same field as zero — so a stored duration it cannot read (`NaN`, negative,
+    // past the clock, written as text) left a surface with no motion at all: an
+    // entering one appeared without its fade, and a leaving one kept its resting
+    // look for the exit window. A wait or an easing name a release dropped had
+    // the same effect, because the renderer rejects the description whole.
+    const unreadable: ReadonlyArray<PresenceTransitionInput> = [
+      { duration: Number.NaN },
+      { duration: -0.2 },
+      { duration: 1e308 },
+      { duration: 1e305 },
+      { duration: Number.POSITIVE_INFINITY },
+      // @ts-expect-error — a stored duration a config wrote as text.
+      { duration: "0.2" },
+    ];
+    unreadable.forEach((phase) => {
+      expect(presenceTimingOf({ enter: phase }).enter).toEqual({ duration: 0 });
+      // The window and the painted transition are the same run.
+      expect(exitWindowMs({ exit: phase })).toBe(
+        transitionWindowMs(presenceTimingOf({ exit: phase }).exit),
+      );
+    });
+    // A phase that is not an object at all is the same absence.
+    // @ts-expect-error — a stored phase the library did not type-check.
+    expect(presenceTimingOf({ enter: "fast" })).toEqual({
+      enter: { duration: 0 },
+      exit: { duration: 0 },
+    });
+
+    // A wait or an easing the renderer cannot read is dropped, the journey kept.
+    expect(
+      presenceTimingOf({ enter: { duration: 0.2, delay: Number.NaN } }).enter,
+    ).toEqual({ duration: 0.2 });
+    expect(
+      presenceTimingOf({ enter: { duration: 0.2, delay: -1 } }).enter,
+    ).toEqual({ duration: 0.2 });
+    expect(
+      presenceTimingOf({ enter: { duration: 0.2, delay: 1e308 } }).enter,
+    ).toEqual({ duration: 0.2 });
+    expect(
+      // @ts-expect-error — a stored easing name a release dropped.
+      presenceTimingOf({ enter: { duration: 0.2, ease: "easeOutBack" } }).enter,
+    ).toEqual({ duration: 0.2 });
+    // A control pair the renderer refuses (`x` outside [0, 1]) is no easing.
+    expect(
+      presenceTimingOf({ enter: { duration: 0.2, ease: [2, 0, 0, 1] } }).enter,
+    ).toEqual({ duration: 0.2 });
+
+    // A runnable phase keeps every field it was given, so the rule cannot pass by
+    // stripping every transition.
+    expect(
+      presenceTimingOf({
+        enter: { duration: 0.2, delay: 0.05, ease: [0.2, 0, 0.4, 1] },
+      }).enter,
+    ).toEqual({ duration: 0.2, delay: 0.05, ease: [0.2, 0, 0.4, 1] });
+    expect(presenceTimingOf(presenceTiming("slow"))).toEqual(
+      presenceTiming("slow"),
+    );
   });
 
   it("reads a frame set a caller stored as the fields it can paint", () => {

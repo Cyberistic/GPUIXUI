@@ -208,15 +208,17 @@ describe("the window a stored timing names", () => {
     // The defect: `PresenceTiming` is structural and this hook projects the hold
     // window from `.exit` in its render, so a config that decoded without one
     // threw out of the render and the surface never mounted at all. A phase the
-    // value does not name is no transition, which is also no window.
+    // value does not name is no journey — an explicit zero duration, because an
+    // empty transition is the renderer's own 300 ms default — which is also no
+    // window.
     const stored = { enter: { duration: 0.32 } };
     expect(renderToStaticMarkup(<StoredTimingFrame timing={stored} />)).toBe(
-      "true:undefined",
+      "true:0",
     );
     // A config that decoded with no object at all is no phase in either
     // direction, so the surface still mounts — the type says so, no cast.
     expect(renderToStaticMarkup(<StoredTimingFrame timing={null} />)).toBe(
-      "true:undefined",
+      "true:0",
     );
     // A complete timing still reports the exit it names.
     expect(

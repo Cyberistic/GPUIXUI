@@ -10,6 +10,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  isMotionEasing,
+  motionEasingNames,
   motionEasings,
   motionLevels,
   motionTiming,
@@ -73,10 +75,35 @@ describe("phases", () => {
   });
 
   it("names a curve the runtime accepts for every phase", () => {
-    const accepted = ["linear", "ease", "easeIn", "easeOut", "easeInOut"];
     Object.values(motionEasings).forEach((ease) => {
-      expect(accepted).toContain(ease);
+      expect(isMotionEasing(ease)).toBe(true);
     });
+  });
+
+  it("reads the renderer's easing grammar, not a list of its own", () => {
+    // The bug this guards: the grammar is the renderer's — five names, or a
+    // cubic-bezier with finite values whose two `x` controls lie in `[0, 1]` —
+    // and the renderer rejects the **whole** motion description for an easing it
+    // cannot read, which paints no frame at all. A stored timing therefore has
+    // to be read through this before it is handed over, and a name the package
+    // does not ship must not pass a lookup that reads inherited keys.
+    motionEasingNames.forEach((name) => {
+      expect(isMotionEasing(name)).toBe(true);
+    });
+    expect(isMotionEasing([0.2, 0, 0.4, 1])).toBe(true);
+    // `y` may overshoot; only the time controls are bounded.
+    expect(isMotionEasing([0.42, -0.5, 0.58, 1.5])).toBe(true);
+
+    ["easeOutBack", "linear ", "", "toString", "__proto__"].forEach((name) => {
+      expect(isMotionEasing(name)).toBe(false);
+    });
+    [2, -0.1].forEach((x) => {
+      expect(isMotionEasing([x, 0, 0.5, 1])).toBe(false);
+    });
+    expect(isMotionEasing([0, 0, 0.5, Number.NaN])).toBe(false);
+    expect(isMotionEasing([0, 0, 0.5])).toBe(false);
+    expect(isMotionEasing(null)).toBe(false);
+    expect(isMotionEasing({})).toBe(false);
   });
 });
 

@@ -14,6 +14,7 @@
  */
 
 import {
+  isMotionEasing,
   motionTiming,
   type MotionEasing,
   type MotionLevel,
@@ -73,6 +74,21 @@ export interface PresenceTransition {
   readonly ease?: MotionEasing;
 }
 
+/**
+ * A transition as a caller may have stored it.
+ *
+ * JSON has no `undefined`, so a field a config never carried reads back as
+ * `null`; a measurement that failed is a number the runtime cannot paint; and an
+ * easing name a release dropped is a string the runtime cannot read. Every
+ * {@link PresenceTransition} is one of these, so a consumer passes what its
+ * decoder answered without an assertion between the two.
+ */
+export interface PresenceTransitionInput {
+  readonly duration?: number | null;
+  readonly delay?: number | null;
+  readonly ease?: MotionEasing | null;
+}
+
 /** The enter and exit timing a surface at one level moves with. */
 export interface PresenceTiming {
   readonly enter: PresenceTransition;
@@ -86,8 +102,8 @@ export interface PresenceTiming {
  * config are both passed to {@link presenceTimingOf} without an assertion.
  */
 export interface PresenceTimingInput {
-  readonly enter?: PresenceTransition | null;
-  readonly exit?: PresenceTransition | null;
+  readonly enter?: PresenceTransitionInput | null;
+  readonly exit?: PresenceTransitionInput | null;
 }
 
 /** The pointer rule a surface paints: only a resting surface is a target. */
@@ -251,6 +267,52 @@ const framesOf = (
 });
 
 /**
+ * A duration or wait in the seconds the runtime reads, read from a stored field.
+ *
+ * The renderer converts a transition's seconds into a `Duration` and rejects a
+ * description whose value it cannot represent — `NaN`, an infinity, a negative
+ * number, or one past the range a clock can show — which paints no frame at all.
+ * A field that is not a positive time inside that range is therefore **no time**,
+ * the same reading {@link transitionWindowMs} takes of the field.
+ */
+const secondsOf = (value: number | null | undefined): number | undefined =>
+  value !== null &&
+  value !== undefined &&
+  Number.isFinite(value) &&
+  value > 0 &&
+  value <= Number.MAX_SAFE_INTEGER
+    ? value
+    : undefined;
+
+/**
+ * A phase read as the run the runtime accepts.
+ *
+ * A phase the value does not name used to be handed over as `{}`, which the
+ * renderer reads as **its own** 300 ms `easeOut` default: the surface ran a
+ * journey a window of zero had already ended, and a stored easing or duration
+ * the runtime cannot read made it reject the whole description, which paints no
+ * frame at all. A phase with no runnable duration is therefore **no journey** —
+ * `{ duration: 0 }`, the instant assignment the reduced preference and the window
+ * conversion already mean — and a wait or an easing the renderer cannot read is
+ * dropped, so the transition this module publishes is always one it accepts.
+ */
+const transitionOf = (
+  transition: PresenceTransitionInput | null | undefined,
+): PresenceTransition => {
+  const duration = secondsOf(transition?.duration);
+  if (duration === undefined) return { duration: 0 };
+  const delay = secondsOf(transition?.delay);
+  const ease = transition?.ease;
+  return {
+    duration,
+    ...(delay === undefined ? {} : { delay }),
+    ...(ease === null || ease === undefined || !isMotionEasing(ease)
+      ? {}
+      : { ease }),
+  };
+};
+
+/**
  * The timing a surface paints, read from a value a caller may have stored.
  *
  * `PresenceTimingInput` is the shape a decoded config actually has, and this
@@ -259,15 +321,16 @@ const framesOf = (
  * `undefined`, so a field the config never carried reads back as `null`) or with
  * a phase it never named. Reading `.enter`/`.exit` off it threw `TypeError` out of
  * the render that projected the window. A phase the value does not name is **no
- * transition** — the answer {@link transitionWindowMs} already gives a field it
- * cannot read — so the surface paints its resting frame at once rather than
- * throwing, and the window and the frame cannot disagree about what a run is.
+ * journey** ({@link transitionOf}), the answer {@link transitionWindowMs} already
+ * gives a field it cannot read — so the surface paints its resting frame at once
+ * rather than throwing, and the window and the frame cannot disagree about what a
+ * run is.
  */
 export const presenceTimingOf = (
   timing: PresenceTimingInput | null | undefined,
 ): PresenceTiming => ({
-  enter: timing?.enter ?? {},
-  exit: timing?.exit ?? {},
+  enter: transitionOf(timing?.enter),
+  exit: transitionOf(timing?.exit),
 });
 
 /**
