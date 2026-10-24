@@ -357,6 +357,11 @@ export const DialogContent = ({
                 label="Close"
                 size="sm"
                 testId="dialog-close"
+                // Only an open surface is a keyboard target: the ghost stays
+                // painted for its exit, but the runtime decides the Tab order
+                // per element, so its stop would land the reader on a control
+                // that unmounts under them (`presence.test.tsx`).
+                tabIndex={presence.present ? undefined : -1}
                 onClick={close}
                 motion={presenceMotion(fadeFrom("top", 8), presence)}
               >
@@ -529,6 +534,7 @@ export const dialogMeta = {
     "no aria-modal and no aria-labelledby in 0.11.0: the dialog is named with aria-label and its title is a heading",
     "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
     "a size restored from storage that names no variant paints the default `md` width: the guarded lookup never hands the renderer an undefined width",
+    "a dismissed surface stays painted for its exit and its own close control leaves the tab order for that window; a control composed inside the body keeps its stop, because 0.11.0 has no inherited `inert`",
   ],
   docs: "docs/dialog.mdx",
   example: "examples/dialog.example.tsx",

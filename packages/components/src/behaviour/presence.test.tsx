@@ -171,6 +171,50 @@ describe("a modal surface", () => {
     page.unmount();
   });
 
+  it("keeps a dismissed dialog's own close control out of the window's tab order", async () => {
+    // The bug this guards: the modal stays painted for its 320 ms exit, and its
+    // close control is the one control the **library** paints inside it — the
+    // seam's shield stops the pointer, but the runtime's Tab order is decided
+    // element by element, so the ghost was still a stop and a reader who pressed
+    // Escape and then Tabbed landed on it as it unmounted. Caller content is the
+    // documented gap (the runtime has no inherited `inert`); the library's own
+    // control stops the reader falling out of the window.
+    const page = renderComponent(
+      <Page>
+        <Button testId="before">Before</Button>
+        <Dialog>
+          <DialogTrigger testId="open">Rename</DialogTrigger>
+          <DialogContent label="Rename" testId="dialog" size="sm">
+            <DialogFooter>
+              <DialogClose testId="cancel">Cancel</DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Page>,
+    );
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
+      // While the surface is open its close control is a stop, or the ghost walk
+      // below would pass on a tree that never had it.
+      expect(tabWalk(page, "before", 5)).toContain("dialog-close");
+
+      // Escape has to be delivered inside the surface: the dismiss stack reads
+      // the key a surface's own handler is offered.
+      page.renderer.focusElement(
+        page.renderer.findByTestId("cancel")?.id ?? -1,
+      );
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "dialog")).toBe(true);
+      expect(Option.getOrElse(focusedTestId(page), () => "none")).toBe("open");
+
+      expect(tabWalk(page, "before", 5)).not.toContain("dialog-close");
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("travels back out while it leaves", async () => {
     const page = renderComponent(
       <Page>
@@ -448,6 +492,39 @@ describe("the preference", () => {
 });
 
 describe("an edge panel", () => {
+  it("keeps a dismissed drawer's own close control out of the window's tab order", async () => {
+    // The drawer's twin of the dialog case: the panel stays painted for its exit,
+    // and the close control the library paints inside it must not stay a stop
+    // while the ghost can only take a press the shield swallows.
+    const page = renderComponent(
+      <Page>
+        <Button testId="before">Before</Button>
+        <Drawer>
+          <DrawerTrigger testId="open">Filters</DrawerTrigger>
+          <DrawerContent label="Filters" testId="drawer" side="right">
+            <Button testId="done">Done</Button>
+          </DrawerContent>
+        </Drawer>
+      </Page>,
+    );
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "drawer")).toBe(true));
+      expect(tabWalk(page, "before", 5)).toContain("drawer-close");
+
+      // A key is read by the surface that owns the dismiss layer, so Escape is
+      // delivered from a control inside the drawer.
+      page.renderer.focusElement(page.renderer.findByTestId("done")?.id ?? -1);
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "drawer")).toBe(true);
+
+      expect(tabWalk(page, "before", 5)).not.toContain("drawer-close");
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("slides in from the edge it is anchored to", async () => {
     const page = renderComponent(
       <Page>

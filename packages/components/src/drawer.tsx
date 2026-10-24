@@ -386,6 +386,10 @@ export const DrawerContent = ({
                 label="Close drawer"
                 size="sm"
                 testId="drawer-close"
+                // A leaving panel is painted for its exit but is not a keyboard
+                // target: the runtime decides the Tab order per element, so the
+                // ghost's stop would unmount under the reader.
+                tabIndex={presence.present ? undefined : -1}
                 onClick={close}
                 motion={presenceMotion(fadeFromSide(side, 12), presence)}
               >
@@ -549,6 +553,7 @@ export const drawerMeta = {
     "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface",
     "sizes are layout constants: tokens carry no drawer-size role",
     "a size restored from storage that names no variant paints the default `md` box: the guarded lookup never hands the renderer an undefined width or height",
+    "a dismissed panel stays painted for its exit and its own close control leaves the tab order for that window; a control composed inside the body keeps its stop, because 0.11.0 has no inherited `inert`",
   ],
   docs: "docs/drawer.mdx",
   example: "examples/drawer.example.tsx",

@@ -89,6 +89,10 @@ scrolls a 30-row body and holds the control's box).
 - No `aria-modal` or `aria-labelledby`; the name is `label`.
 - The veil is an anchored layer at window coordinates, not a portal.
 - Not resizable, draggable or multi-window.
+- A dismissed dialog stays painted for its 320 ms exit and takes no presses; its
+  own close control leaves the Tab order for that window, while a control you
+  compose inside the body keeps its stop until the runtime publishes an
+  inherited `inert`.
 - A `size` restored from persisted state that the union does not name paints the
   house `md` width (480px); the lookup never hands `Math.min` an `undefined`, so
   a renamed or dropped size cannot shrink the surface to its content.
