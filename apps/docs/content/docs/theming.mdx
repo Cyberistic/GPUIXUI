@@ -119,6 +119,17 @@ A high-contrast base keeps its own colours and takes only geometry and families.
 
 A browser that refuses site storage keeps the URL's choice and the identity, and does not remember the choice.
 
+### Take a platform style
+
+<PlatformStyleSource />
+
+Each tab is the library's own `platformStyles` entry, not a second copy
+written for this page. Copy one into your repository, edit any value and apply
+it over a base theme; the `label` is yours too. A key you delete inherits the
+base theme's value, so a style can carry only the roles it means to repaint — the
+one under **Author a style** below is that shape. The audit you run before
+shipping is the same gate the library uses.
+
 ### The look picker
 
 <LookPicker />

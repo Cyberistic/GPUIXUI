@@ -275,6 +275,7 @@ src/components/docs/token-scales.tsx      The spacing/radius/density specimens o
 src/components/docs/style-reference.tsx   The class reference on /docs/styling, compiled from the theme
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
 src/components/docs/look-picker.tsx       The authored looks, as a control on /docs/theming
+src/components/docs/platform-style-source.tsx The copyable platform style, generated from the package's own table
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered
 src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
@@ -416,6 +417,7 @@ src/lib/patterns.ts                 The one source of the patterns and their par
 src/lib/licenses.ts                 The LICENSES/*.md parse
 src/lib/licenses-data.ts            The licence records, at build time
 src/lib/platform.ts                 The platform and look switch: parse, label, resolve, and the mode a preview paints
+src/lib/platform-style-source.ts    A shipped platform style as the file a reader copies, generated from the package
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/browser-storage.ts          The browser store, and the guard that reads a refusal as absence
 src/lib/clipboard.ts                One copy call that answers an absent or refused clipboard as a failed copy

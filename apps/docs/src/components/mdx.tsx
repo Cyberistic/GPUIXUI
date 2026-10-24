@@ -12,6 +12,7 @@ import { LaneTable } from "./docs/lane-table";
 import { LicenseInventory } from "./docs/license-table";
 import { LookPicker } from "./docs/look-picker";
 import { Pattern, PatternChoices } from "./docs/patterns";
+import { PlatformStyleSource } from "./docs/platform-style-source";
 import { SeriesSwatches } from "./docs/series-swatches";
 import { StyleReference } from "./docs/style-reference";
 import { ThemeEditor } from "./docs/theme-editor";
@@ -42,6 +43,7 @@ export const mdxComponents = {
   LookPicker,
   Pattern,
   PatternChoices,
+  PlatformStyleSource,
   SeriesSwatches,
   StyleReference,
   ThemeEditor,

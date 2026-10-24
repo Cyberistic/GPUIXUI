@@ -77,3 +77,75 @@
   min-height: 32px;
   padding: 4px 10px;
 }
+
+/*
+ * The copyable platform style on the Theming page. The frame is the docs
+ * chrome; the code inside it is a page rendered by the site's usual highlighter,
+ * so only the bar and the note are styled here.
+ */
+.gx-ps {
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.gx-ps-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-ps-group {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.gx-ps-tab {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-ps-tab:hover {
+  background: var(--accent);
+}
+
+.gx-ps-tab[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-ps-copy {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--primary);
+  border-radius: 7px;
+  background: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary-foreground);
+  cursor: pointer;
+}
+
+.gx-ps-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
