@@ -17,6 +17,7 @@ import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import type { ChatStatus } from "../chat/logic.js";
 import { ChatComposer, ChatMessages, ChatRoot } from "../chat.js";
+import { nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf, requireBounds } from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import {
@@ -383,5 +384,106 @@ describe("Chat", () => {
     );
 
     root.unmount();
+  });
+
+  it("reads a stored draft that is not text as an empty composer", () => {
+    // The bug this guards: the composer read `.trim()` off the draft before
+    // anything painted, so a draft restored from storage or read out of a saved
+    // record as `null` — the field a store writes where it carried no text —
+    // threw out of the render and took the transcript, the clock and the field
+    // with it, while every other stored value in the package reads failsafe.
+    const owned = renderComponent(
+      <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
+        <ChatRoot onSubmit={() => undefined}>
+          <ChatMessages />
+          <ChatComposer value={null as unknown as string} />
+        </ChatRoot>
+      </div>,
+    );
+    try {
+      expect(
+        owned.renderer.findByTestId("chat-field")?.customProps?.value,
+      ).toBe("");
+    } finally {
+      owned.unmount();
+    }
+
+    const fallback = renderComponent(
+      <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
+        <ChatRoot onSubmit={() => undefined}>
+          <ChatMessages />
+          <ChatComposer defaultValue={null as unknown as string} />
+        </ChatRoot>
+      </div>,
+    );
+    try {
+      expect(
+        fallback.renderer.findByTestId("chat-field")?.customProps?.value,
+      ).toBe("");
+    } finally {
+      fallback.unmount();
+    }
+  });
+
+  it("reads blank copy as the documented words, never a nameless control or a blank line", () => {
+    // The bug this guards: every name and sentence was a destructuring default,
+    // which covers only `undefined`. An i18n table's missing key — or a saved
+    // record — handed over `""`/`"   "`, so the conversation and its field were
+    // published with no name, the two actions painted no words, the failed reply
+    // painted a whitespace line and the hint laid out a full blank line (the
+    // runtime measures `""` at 0px and `"   "` at 16px).
+    const Surface = ({ status }: { readonly status?: ChatStatus }) => (
+      <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
+        <ChatRoot
+          label="  "
+          error="   "
+          status={status}
+          onSubmit={() => undefined}
+          onStop={() => undefined}
+        >
+          <ChatMessages emptyTitle="" emptyDescription="  " />
+          <ChatComposer label="" submitLabel="  " stopLabel="" hint="   " />
+        </ChatRoot>
+      </div>
+    );
+
+    const page = renderComponent(<Surface status="streaming" />);
+    try {
+      expect(
+        nodesWithRole(page.renderer, "region").map((node) => node.name),
+      ).toEqual(["Conversation"]);
+      expect(
+        nodesWithRole(page.renderer, "multilinetextinput").map(
+          (node) => node.name,
+        ),
+      ).toEqual(["Message"]);
+      expect(
+        nodesWithRole(page.renderer, "button").map((node) => node.name),
+      ).toEqual(["Stop"]);
+      expect(page.renderer.getAllText()).toEqual(
+        expect.arrayContaining([
+          "Start the conversation",
+          "Messages you send appear here.",
+        ]),
+      );
+      // Neither the description nor the hint copy lays out a blank line: the
+      // runtime measures `""` at 0px and `"   "` at 16px, so a whitespace-only
+      // run is the visible defect.
+      expect(
+        page.renderer.getAllText().filter((line) => line.trim() === ""),
+      ).toEqual([]);
+
+      page.rerender(<Surface />);
+      expect(
+        nodesWithRole(page.renderer, "button").map((node) => node.name),
+      ).toEqual(["Send"]);
+
+      page.rerender(<Surface status="error" />);
+      const painted = page.renderer.getAllText();
+      expect(painted).toContain("The reply failed.");
+      expect(painted.filter((line) => line.trim() === "")).toEqual([]);
+    } finally {
+      page.unmount();
+    }
   });
 });

@@ -47,12 +47,14 @@ ChatRoot
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `ChatRoot` | `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?`, `label?`, `className?`, `children` |
-| `ChatMessages` | the transcript viewport and empty panel | `empty?`, `emptyTitle?`, `emptyDescription?`, `className?`, `children` |
-| `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `submitLabel?` (default `"Send"`), `stopLabel?` (default `"Stop"`), `hint?`, `attachments?` (a row above the field), `disabled?`, `className?`, `style?` |
+| `ChatRoot` | `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?` (a blank value reads as `"The reply failed."`), `label?` (a blank value reads as `"Conversation"`), `className?`, `children` |
+| `ChatMessages` | the transcript viewport and empty panel | `empty?`, `emptyTitle?`, `emptyDescription?` (a blank value reads as the documented default), `className?`, `children` |
+| `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?` (a value that is not text reads as an empty draft), `onValueChange?`, `label?` (a blank value reads as `"Message"`), `placeholder?`, `submitLabel?` (default `"Send"`), `stopLabel?` (default `"Stop"`), `hint?` (a blank value paints no line), `attachments?` (a row above the field), `disabled?`, `className?`, `style?` |
 
 ## Limitations
 
 - The transport is yours; the component never calls a model.
 - No streaming API; drive the status with `chatMove`.
 - No `aria-live`; new rows are not announced.
+- **Every name and sentence is read failsafe**: a blank `label`, `error`, `emptyTitle`, `emptyDescription`, `submitLabel` or `stopLabel` — an i18n row with a missing key, or a saved record — reads as the documented default rather than publishing a nameless control, and a blank `hint` paints no line (the runtime measures `""` at 0px and `"   "` at 16px).
+- **A stored draft is read failsafe**: a `value` or `defaultValue` restored from storage as `null` reads once as an empty draft, so the composer paints instead of throwing out of `draft.trim()`; an absent controlled `value` still means uncontrolled.

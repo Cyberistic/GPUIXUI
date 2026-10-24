@@ -45,6 +45,11 @@ import {
   CHAT_ROOT,
   cn,
 } from "@gpuixui/tw";
+import {
+  accessibleName,
+  spokenSentence,
+  visibleCopy,
+} from "@gpuixui/primitives/core";
 import * as Option from "effect/Option";
 import {
   Children,
@@ -91,6 +96,16 @@ import {
   MessageScrollerJumpToLatest,
   MessageScrollerViewport,
 } from "./message-scroller.js";
+import { textOf } from "./internal/text.js";
+
+/** The words a part publishes when the caller's copy says nothing. */
+const DEFAULT_CONVERSATION_LABEL = "Conversation";
+const DEFAULT_ERROR = "The reply failed.";
+const DEFAULT_EMPTY_TITLE = "Start the conversation";
+const DEFAULT_EMPTY_DESCRIPTION = "Messages you send appear here.";
+const DEFAULT_COMPOSER_LABEL = "Message";
+const DEFAULT_SUBMIT_LABEL = "Send";
+const DEFAULT_STOP_LABEL = "Stop";
 
 /** The rules every part reads; throws outside a {@link ChatRoot}. */
 interface ChatContextValue {
@@ -135,9 +150,9 @@ export interface ChatRootProps extends Omit<Props, "children" | "onSubmit"> {
   readonly onStop?: () => void;
   /** Ask for another reply after a failure. */
   readonly onRetry?: () => void;
-  /** The failure copy shown above the composer. Default `"The reply failed."`. */
+  /** The failure copy shown above the composer. Default `"The reply failed."`; a blank one reads as the default. */
   readonly error?: string;
-  /** The conversation's accessible name. Default `"Conversation"`. */
+  /** The conversation's accessible name. Default `"Conversation"`; a blank name reads as the default. */
   readonly label?: string;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -155,14 +170,20 @@ export const ChatRoot = ({
   onSubmit,
   onStop,
   onRetry,
-  error = "The reply failed.",
-  label = "Conversation",
+  error,
+  label,
   className,
   children,
   style,
   ...rest
 }: ChatRootProps) => {
   const theme = useTheme();
+  // A name and a failure sentence are copy: an i18n table's missing row, or a
+  // record restored from storage, hands over `""` or `"   "`, which is an
+  // absence rather than a name. Read once here so the region, the transcript and
+  // the failed-reply row cannot disagree.
+  const name = accessibleName(label) ?? DEFAULT_CONVERSATION_LABEL;
+  const failure = spokenSentence(error ?? "", DEFAULT_ERROR);
   const [status, setStatus] = useControllableState({
     value: statusProp,
     defaultValue: defaultStatus,
@@ -197,22 +218,22 @@ export const ChatRoot = ({
   const context = useMemo<ChatContextValue>(
     () => ({
       status,
-      label,
-      error,
+      label: name,
+      error: failure,
       canStop: onStop !== undefined,
       canRetry: onRetry !== undefined,
       submit,
       stop,
       retry,
     }),
-    [status, label, error, onStop, onRetry, submit, stop, retry],
+    [status, name, failure, onStop, onRetry, submit, stop, retry],
   );
 
   return (
     <ChatContext.Provider value={context}>
       <div
         role="region"
-        aria-label={label}
+        aria-label={name}
         {...rest}
         style={mergeStyles(recipeStyle(cn(CHAT_ROOT, className), theme), style)}
       >
@@ -226,9 +247,9 @@ export const ChatRoot = ({
 export interface ChatMessagesProps extends Omit<Props, "children"> {
   /** Replaces the default empty-conversation panel. */
   readonly empty?: ReactNode;
-  /** The empty panel's title. Default `"Start the conversation"`. */
+  /** The empty panel's title. Default `"Start the conversation"`; a blank one reads as the default. */
   readonly emptyTitle?: string;
-  /** The empty panel's description. Default `"Messages you send appear here."`. */
+  /** The empty panel's description. Default `"Messages you send appear here."`; a blank one reads as the default. */
   readonly emptyDescription?: string;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -239,8 +260,8 @@ export interface ChatMessagesProps extends Omit<Props, "children"> {
  * empty and failed-reply panels. */
 export const ChatMessages = ({
   empty,
-  emptyTitle = "Start the conversation",
-  emptyDescription = "Messages you send appear here.",
+  emptyTitle,
+  emptyDescription,
   className,
   children,
   style,
@@ -249,6 +270,14 @@ export const ChatMessages = ({
   const theme = useTheme();
   const { status, label, error, canRetry, retry } = useChat();
   const emptyConversation = Children.toArray(children).length === 0;
+  // The empty panel's copy is interface copy like a name: a blank title or
+  // description lays out a line that says nothing, so it reads as the
+  // component's own sentence.
+  const title = spokenSentence(emptyTitle ?? "", DEFAULT_EMPTY_TITLE);
+  const description = spokenSentence(
+    emptyDescription ?? "",
+    DEFAULT_EMPTY_DESCRIPTION,
+  );
 
   return (
     <MessageScroller label={label}>
@@ -268,10 +297,10 @@ export const ChatMessages = ({
             {empty ?? (
               <>
                 <text style={recipeStyle(CHAT_EMPTY_TITLE, theme)}>
-                  {emptyTitle}
+                  {title}
                 </text>
                 <text style={recipeStyle(CHAT_EMPTY_DESCRIPTION, theme)}>
-                  {emptyDescription}
+                  {description}
                 </text>
               </>
             )}
@@ -319,20 +348,21 @@ export interface ChatComposerProps extends Omit<
   Props,
   "children" | "onSubmit" | "style"
 > {
-  /** The controlled draft. `undefined` means uncontrolled. */
+  /** The controlled draft. `undefined` means uncontrolled. A value that is not text reads as an empty draft. */
   readonly value?: string;
+  /** The uncontrolled starting draft. A value that is not text reads as an empty draft. */
   readonly defaultValue?: string;
   /** Every edit, including the clear after a send. */
   readonly onValueChange?: (value: string) => void;
-  /** The field's accessible name. Default `"Message"`. */
+  /** The field's accessible name. Default `"Message"`; a blank name reads as the default. */
   readonly label?: string;
   /** Default `"Send a message…"`. */
   readonly placeholder?: string;
-  /** Default `"Send"`. */
+  /** Default `"Send"`; a blank label reads as the default. */
   readonly submitLabel?: string;
-  /** Default `"Stop"`. */
+  /** Default `"Stop"`; a blank label reads as the default. */
   readonly stopLabel?: string;
-  /** One line of hint copy under the field, for example the key contract. */
+  /** One line of hint copy under the field, for example the key contract. A blank line paints nothing. */
   readonly hint?: string;
   /** A row above the field: file chips, model pickers, anything the caller owns. */
   readonly attachments?: ReactNode;
@@ -354,10 +384,10 @@ export const ChatComposer = ({
   value: valueProp,
   defaultValue = "",
   onValueChange,
-  label = "Message",
+  label,
   placeholder = "Send a message…",
-  submitLabel = "Send",
-  stopLabel = "Stop",
+  submitLabel,
+  stopLabel,
   hint,
   attachments,
   disabled = false,
@@ -368,11 +398,22 @@ export const ChatComposer = ({
 }: ChatComposerProps) => {
   const theme = useTheme();
   const { status, canStop, submit, stop } = useChat();
+  // A draft restored from storage, or read out of a saved record, writes `null`
+  // where it carried no text; the composer reads `.trim()` off it before
+  // anything paints, so anything that is not a string is the empty draft. An
+  // absent controlled value still means "uncontrolled".
   const [draft, setDraft] = useControllableState({
-    value: valueProp,
-    defaultValue,
+    value: valueProp === undefined ? undefined : textOf(valueProp),
+    defaultValue: textOf(defaultValue),
     onChange: onValueChange,
   });
+  // Names and copy are interface text too: a blank one is an absence, so the
+  // field and the two actions keep the words this module documents rather than
+  // publishing an unnamed control.
+  const name = accessibleName(label) ?? DEFAULT_COMPOSER_LABEL;
+  const submitWord = accessibleName(submitLabel) ?? DEFAULT_SUBMIT_LABEL;
+  const stopWord = accessibleName(stopLabel) ?? DEFAULT_STOP_LABEL;
+  const hintCopy = visibleCopy(hint);
   const busy = Machine.isChatBusy(status);
   const empty = draft.trim() === "";
   const state: ChatComposerState = { status, busy, empty, disabled };
@@ -418,7 +459,7 @@ export const ChatComposer = ({
         <div style={hintHost({ flexGrow: 1 })}>
           <textarea
             testId="chat-field"
-            aria-label={label}
+            aria-label={name}
             // The hint is painted, so the runtime's `aria_placeholder` left
             // with the prop; the empty composer announces the same words.
             aria-description={fieldHelp({ placeholder }, draft)}
@@ -454,7 +495,7 @@ export const ChatComposer = ({
             variant="secondary"
             onClick={stop}
           >
-            {stopLabel}
+            {stopWord}
           </Button>
         ) : (
           <Button
@@ -464,12 +505,12 @@ export const ChatComposer = ({
             disabled={!canSend}
             onClick={send}
           >
-            {submitLabel}
+            {submitWord}
           </Button>
         )}
       </div>
-      {hint === undefined ? null : (
-        <text style={recipeStyle(CHAT_COMPOSER_HINT, theme)}>{hint}</text>
+      {hintCopy === undefined ? null : (
+        <text style={recipeStyle(CHAT_COMPOSER_HINT, theme)}>{hintCopy}</text>
       )}
     </div>
   );

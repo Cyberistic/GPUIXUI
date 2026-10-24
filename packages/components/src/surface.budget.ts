@@ -94,7 +94,10 @@ export const surfaceBudget = {
   // 168 → 170 for MultiStepForm (`multi-step-form.tsx` and `wizard/logic.ts`):
   // the wizard's step arithmetic and gate live in a rule beside the shell, the
   // same split Stepper took.
-  modules: 170,
+  // 170 → 171 for `internal/text.ts`: the chat composer's stored draft is read
+  // once at the boundary (`textOf`), the rule the editor's `draftOf` already
+  // holds, so a record's `null` cannot throw out of the render.
+  modules: 171,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -119,7 +122,11 @@ export const surfaceBudget = {
   // `ScrollArea` (the reading, fade and pinned list now carry its prop surface
   // instead of a private viewport), so the ceiling moved 1090 → 1120 KiB for the
   // next family's headroom.
-  bytes: 1120 * 1024,
+  // 1 122 KiB measured at `HEAD` before the chat boundary read — the earlier
+  // seam growth had passed the 1120 KiB ceiling with nothing to record it — and
+  // 1 125 KiB with `internal/text.ts`, so the ceiling moved 1120 → 1140 KiB for
+  // the next family's headroom.
+  bytes: 1140 * 1024,
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.
