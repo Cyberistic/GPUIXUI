@@ -196,8 +196,9 @@ export interface ThemeColors {
  * the group may be absent or `null`, because a store can lose it and JSON has no
  * `undefined`, and a role may be **any** value, because a hand-edited literal or
  * a design-tool export can carry a number or an object where a colour belongs.
- * {@link themeColors} keeps only the strings, which is what {@link invalidColorRoles}
- * reports by — so the shape this seam documents is the shape its type accepts.
+ * {@link themeColors} keeps only the strings that name a colour, which is what
+ * {@link invalidColorRoles} reports by — so the shape this seam documents is the
+ * shape its type accepts.
  *
  * A role written as `null` is the same absence JSON writes for one a theme never
  * carried, and it is why the fields are `unknown` rather than `string | null`:
@@ -209,13 +210,24 @@ export interface ColourSource {
 }
 
 /**
+ * Whether a stored role names a colour: a string that carries one.
+ *
+ * A blank value is not a colour. It is what a brand editor writes when its field
+ * is cleared, and what an empty swatch in a theme file holds, and the renderer
+ * paints it as nothing — it parses no colour and the property keeps black. That
+ * is the same absence a `null` role is, so the paint seams read it that way
+ * rather than handing the runtime a value that vanishes.
+ */
+const namesColour = (value: unknown): value is string =>
+  typeof value === "string" && value.trim() !== "";
+
+/**
  * Whether every value the group carries is a colour string — the fast path, so a
  * complete theme's group is handed back as the object it already is.
  */
 const isRoleTable = (
   colors: Partial<Record<keyof ThemeColors, unknown>>,
-): colors is Partial<ThemeColors> =>
-  Object.values(colors).every((value) => typeof value === "string");
+): colors is Partial<ThemeColors> => Object.values(colors).every(namesColour);
 
 /**
  * The semantic roles a theme carries.
@@ -229,9 +241,18 @@ const isRoleTable = (
  * **A value a store wrote as `null` is the absence it is.** JSON has no
  * `undefined`, so a role a theme never carried comes back as `null`, and a
  * hand-edited literal can carry a number or an object where a colour belongs.
- * The seam keeps only the strings, which is the rule `invalidColorRoles` already
- * reports by — so a paint seam reading a role answers `undefined` rather than
- * handing the runtime a `null` it drops silently.
+ * The seam keeps only the strings that name a colour, which is the rule
+ * `invalidColorRoles` already reports by — so a paint seam reading a role
+ * answers `undefined` rather than handing the runtime a `null` it drops
+ * silently.
+ *
+ * **A blank value is the same absence.** `null` is what JSON writes for a role a
+ * theme never carried; `""` — or whitespace — is what a cleared brand-editor
+ * field and an empty swatch in a theme file write, and the renderer paints
+ * neither: it parses no colour and the property keeps black. The seam reads a
+ * blank role as the absence it names, so a control keeps its own resting fill
+ * instead of painting the runtime's black, while `invalidColorRoles` still names
+ * the role on the value the store wrote.
  *
  * @example
  * ```ts
@@ -240,6 +261,7 @@ const isRoleTable = (
  * themeColors(lightTheme).primary; // the brand role
  * themeColors({ colors: undefined }); // {} — no role to paint
  * themeColors({ colors: { primary: null } }); // {} — the null JSON writes
+ * themeColors({ colors: { primary: "" } }); // {} — a cleared field names no colour
  * ```
  */
 export function themeColors(theme: ColourSource): Partial<ThemeColors> {
@@ -251,7 +273,7 @@ export function themeColors(theme: ColourSource): Partial<ThemeColors> {
     ? colors
     : colorRoles.reduce<Partial<ThemeColors>>((roles, role) => {
         const value = colors[role];
-        return typeof value === "string" ? { ...roles, [role]: value } : roles;
+        return namesColour(value) ? { ...roles, [role]: value } : roles;
       }, {});
 }
 
@@ -887,8 +909,10 @@ export interface InvalidColorRole {
  * accepted, and the contracts that measure a pair treat the absence as an
  * unmeasurable pair rather than a crash. A value a store wrote as `null` — what
  * JSON writes for an absent one — is the same absence and is reported the same
- * way, so the report carries a colour or nothing rather than whatever the
- * decoder happened to hand over.
+ * way, and so is a **blank** one, the colour a store cleared: the role is
+ * named, so the theme is refused rather than passing with a fill nothing paints
+ * ({@link themeColors}). The report carries a colour or nothing rather than
+ * whatever the decoder happened to hand over.
  *
  * @example
  * ```ts

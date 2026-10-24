@@ -143,6 +143,14 @@ and the next `applyStyle` over that theme threw
 `TypeError: base.name.trim is not a function`; the port's `name` is `unknown`
 for that reason (`theme.test.ts`, `apply-style.test.ts`).
 
+A **colour a store cleared** is the absence a `null` role is: `""` — or
+whitespace, what a brand editor's empty field and an empty swatch in a theme file
+write — names no colour, so `extendTheme` keeps the base's role instead of
+erasing it, and the paint seams read a theme that carries one as the absence they
+answer for a lost role. The renderer parses no colour from a blank value and
+paints it black, which is the failure the absence rule exists to avoid
+(`color.test.ts`).
+
 A style is a look over a base, not a layer over a look: `platformTheme` and
 `retroTheme` overlay a *partial* palette that is designed against the base it
 lands on, and a theme does not record that it already wears one, so two shipped
@@ -1083,8 +1091,8 @@ a design tool's `"8"` or `"8px"` — is the number report's instead, reported un
 `measuredColour`/`opaqueRgb`/`alphaOf` takes `unknown` and resolves any non-string
 to unmeasurable, so a `null` role is a report line rather than
 `TypeError: Cannot read properties of null (reading 'trim')`. The seam every role
-is read through **keeps only the strings**, so a `null` never reaches a paint
-seam: `brandText`/`statusTone` answer `undefined`, `nativeTextTheme` leaves the
+is read through **keeps only the strings that name a colour**, so a `null` — or the
+blank a store cleared — never reaches a paint seam: `brandText`/`statusTone` answer `undefined`, `nativeTextTheme` leaves the
 field out, and a focus ring keeps its geometry with no colour so the runtime
 paints its own outline. The two **nested
 tables** follow the same rule. `seriesFailures` measures every one of the five
@@ -1122,7 +1130,12 @@ Each report is also a function of its own:
   reported with `value: undefined`, which is the shape a theme restored from
   storage has when it predates a role the library added: the source is
   `Partial<ThemeColors>` and `isPaintableColor` takes `unknown`, so absence is a
-  line in the report rather than a `TypeError`. The whole `colors` group may be
+  line in the report rather than a `TypeError`. **A colour a store cleared is the
+  absence it is** — `null` is what JSON writes for a role never carried, and the
+  empty string is what a cleared editor field writes — so `themeColors` drops a
+  blank role (a fill the renderer would paint black), `extendTheme` keeps the
+  base's role rather than erasing it, and the report still names the role on the
+  value the store wrote. The whole `colors` group may be
   gone too, and `themeColors(theme)` is the read every contract shares — it
   answers `{}` there, so all 47 roles are reported at once. The measurement
   dialect is the grammar the renderer paints minus the perceptual spaces: every

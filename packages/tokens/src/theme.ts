@@ -1,4 +1,5 @@
 import {
+  colorRoles,
   darkColors,
   highContrastDarkColors,
   highContrastLightColors,
@@ -375,6 +376,28 @@ const overlay = <T extends object>(
 };
 
 /**
+ * The colour roles an override actually names.
+ *
+ * A role written as `null` inherits, and so does one written **blank**: `""` is
+ * what a brand editor's cleared field writes, and it names no colour. Read as an
+ * override it would erase the base's role and hand every paint seam a value the
+ * renderer paints black; read as the absence it is, a cleared field returns the
+ * theme to the base's own role — the rule `nameOf` already follows for a family
+ * and a theme's name.
+ */
+const namedRoles = (
+  colors: Stored<Partial<ThemeColors>> | null | undefined,
+): Stored<Partial<ThemeColors>> | null | undefined =>
+  colors === null || colors === undefined
+    ? colors
+    : colorRoles.reduce<Partial<ThemeColors>>((named, role) => {
+        const value = colors[role];
+        return typeof value === "string" && value.trim() !== ""
+          ? { ...named, [role]: value }
+          : named;
+      }, {});
+
+/**
  * A name a theme can print or paint, or `undefined` when a store wrote none.
  *
  * Two fields are names: a font family and the theme's own name. Neither is a
@@ -585,6 +608,11 @@ export function getTheme(
  * handed back instead of erasing a role or throwing on a nulled group
  * ({@link ThemeOverridesSource}).
  *
+ * A **colour role written blank** is that same absence: `""` — or whitespace —
+ * is what a brand editor's cleared field and an empty swatch in a theme file
+ * write, and it names no colour, so the base's role is kept rather than replaced
+ * by a value the renderer paints black.
+ *
  * A **name** is read as a name. It is content — a picker's row, the header a
  * preview prints — and a decoder writes a number, a blank string or whitespace
  * as readily as a word, so a value that names nothing inherits the base's name,
@@ -622,7 +650,7 @@ export function extendTheme(
   // an override does not name stay absent for the gate, which is the `no colour
   // is invented` rule `paletteToTokens` relies on.
   const identity = getTheme(themeModeOf(base), themeContrastOf(base));
-  const colors = overlay(base.colors, overrides.colors);
+  const colors = overlay(base.colors, namedRoles(overrides.colors));
   // A level's strength is its share of the shadow role, so a brand that retints
   // the role retints every shadow it inherits. A level passed in `elevation`
   // replaces the whole array, colours and all. A shadow a store wrote as absent

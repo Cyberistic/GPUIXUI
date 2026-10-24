@@ -6,6 +6,7 @@
  * it is hovered or pressed — a hover that costs its label legibility fails the
  * same way a bad role pair does.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   alpha,
@@ -20,6 +21,7 @@ import {
   isPaintableColor,
   lightColors,
   palette,
+  themeColors,
   type ThemeColors,
 } from "./color.js";
 import {
@@ -29,12 +31,21 @@ import {
   highContrastFloors,
   type ContrastFloors,
 } from "./contrast.js";
-import { filledHover, filledPressed, type FilledAction } from "./styles.js";
+import { brandText } from "./brand-text.js";
+import { nativeTextTheme } from "./native-text.js";
+import {
+  filledHover,
+  filledPressed,
+  statusTone,
+  type FilledAction,
+} from "./styles.js";
 import {
   darkTheme,
+  extendTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
+  restoreTheme,
   type Theme,
 } from "./theme.js";
 
@@ -233,6 +244,115 @@ describe("invalidColorRoles", () => {
     };
 
     expect(invalidColorRoles(translucent)).toEqual([]);
+  });
+});
+
+/**
+ * A colour a store cleared is the absence a `null` role is.
+ *
+ * `null` is what JSON writes for a role a theme never carried; `""` — and
+ * whitespace — is what a brand editor's empty field and an empty swatch in a
+ * theme file write. The renderer parses neither, and a colour it cannot parse
+ * paints black: a button whose `primary` a decoder handed over as `""` drew a
+ * black fill while every paint seam believed the theme carried a colour.
+ * `themeColors` answered the group as it was because a blank *is* a string, so
+ * the role reached the runtime; the merge kept it too, erasing the base's role.
+ */
+describe("the roles a store cleared", () => {
+  const cleared = (role: keyof ThemeColors, value: string) => ({
+    colors: { ...lightColors, [role]: value },
+  });
+
+  it("reads a blank role as the absence a null role is", () => {
+    const blank = themeColors(cleared("primary", ""));
+    expect(blank.primary).toBeUndefined();
+    expect(blank.ring).toBe(lightColors.ring);
+    expect(themeColors(cleared("primary", "  ")).primary).toBeUndefined();
+    // The values either side are untouched, and a padded hex is still a colour
+    // the renderer trims and paints.
+    expect(
+      themeColors({ colors: { primary: "", secondary: "#FFFFFF" } }),
+    ).toEqual({ secondary: "#FFFFFF" });
+    expect(themeColors(cleared("ring", " #FFF ")).ring).toBe(" #FFF ");
+    // The absent group and the null role were already read this way.
+    expect(themeColors({ colors: { primary: null } })).toEqual({});
+  });
+
+  it("still names the role on the value the store wrote", () => {
+    // The report is the one place the store's value is visible: the paint seam
+    // answers the absence, and the gate still fails the theme rather than
+    // passing a role the renderer would paint black.
+    expect(invalidColorRoles(cleared("primary", ""))).toEqual([
+      { role: "primary", value: undefined },
+    ]);
+    expect(invalidColorRoles(cleared("primary", "  "))).toEqual([
+      { role: "primary", value: undefined },
+    ]);
+  });
+
+  it("paints the absence rather than the runtime's black", () => {
+    // A message's fill: `statusTone` answers no tone instead of a blank fill.
+    expect(
+      statusTone({ colors: { ...lightColors, infoSoft: "" } }, "info"),
+    ).toBeUndefined();
+    // A brand run: no brand to move, the same absence a lost `primary` gives.
+    expect(
+      brandText({ colors: { ...lightColors, primary: "" } }),
+    ).toBeUndefined();
+    // A native host: the value ink is dropped, so the host keeps its own.
+    expect(
+      nativeTextTheme({ colors: { ...lightColors, inputForeground: "" } }).text,
+    ).toBeUndefined();
+    // A complete role beside the cleared one still paints.
+    expect(
+      nativeTextTheme({ colors: { ...lightColors, primary: "" } }).text,
+    ).toBe(lightColors.inputForeground);
+  });
+
+  it("inherits the base's role when an override is cleared", () => {
+    // A cleared brand-editor field is no override: the theme returns to the
+    // base's role rather than carrying a value that paints nothing.
+    const restored = extendTheme(lightTheme, {
+      colors: { primary: "", secondary: "  " },
+    });
+    expect(restored.colors.primary).toBe(lightTheme.colors.primary);
+    expect(restored.colors.secondary).toBe(lightTheme.colors.secondary);
+    // A named role beside them still lands, and a saved theme's cleared role
+    // restores onto the shipped theme it was saved from.
+    const named = extendTheme(lightTheme, {
+      colors: { primary: "", ring: "#7C5CF" },
+    });
+    expect(named.colors.primary).toBe(lightTheme.colors.primary);
+    expect(named.colors.ring).toBe("#7C5CF");
+    expect(
+      restoreTheme({ mode: "dark", colors: { primary: "" } }).colors.primary,
+    ).toBe(darkTheme.colors.primary);
+  });
+
+  it("teaches the rule on the catalogue, the design system and the README", () => {
+    const pages: Readonly<Record<string, string>> = {
+      "docs/tokens.md": readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ),
+      "docs/design-system.md": readFileSync(
+        new URL("../../../docs/design-system.md", import.meta.url),
+        "utf8",
+      ),
+      "packages/tokens/README.md": readFileSync(
+        new URL("../README.md", import.meta.url),
+        "utf8",
+      ),
+      "COMPONENTS.md": readFileSync(
+        new URL("../../../COMPONENTS.md", import.meta.url),
+        "utf8",
+      ),
+    };
+    Object.entries(pages).forEach(([name, text]) => {
+      expect(text.replaceAll(/\s+/g, " "), name).toContain(
+        "colour a store cleared",
+      );
+    });
   });
 });
 

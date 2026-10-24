@@ -1642,7 +1642,16 @@ answers the library's own value (or no accent), so a decoded theme paints
 without the cast to `Theme` these seams used to require; `ColourSource.colors`
 admits the `null` JSON keeps for a group a theme never carried, and a role a
 store or a hand-edited literal wrote as anything but a colour — `themeColors`
-keeps only the strings. The collection
+keeps only the strings that name one. **A colour a store cleared is the absence
+it is**: `null` is what JSON writes for a role that was never carried, and the
+empty string (or whitespace) is what a brand editor's empty field and an empty
+swatch in a theme file write — a value the renderer parses no colour from and
+paints black. `themeColors` reads it as the absence, so `statusTone`,
+`brandText`, `nativeTextTheme` and every other paint seam answer what they answer
+for a role that is gone, and `extendTheme`/`restoreTheme` read it as no override,
+keeping the base theme's role instead of erasing it; `invalidColorRoles` still
+names the role on the value the store wrote, so the gate reports the theme rather
+than passing a fill nothing paints. The collection
 and highlight readers accept the storage shapes too: `SeriesSource`,
 `SyntaxSource`/`SyntaxAuditSource` and `FindHighlightSource` resolve a stated
 mode or variant this release does not ship through `themeModeOf`/
@@ -1689,9 +1698,9 @@ whose role is absent is reported **unmeasurable** (`ratio: undefined`) rather
 than skipped — a pair nobody can verify is not a pass — so `auditTheme` on a
 theme restored from storage returns a line naming the role and a failing gate,
 never a `TypeError`. The seam every one of those measurements resolves through
-**keeps only the strings**, so the `null` JSON writes for a role that was absent
-when the theme was saved — or a number where a colour belongs — is the absence it
-is: its pairs report `ratio: undefined`, `alphaOf` reads it as opaque so a
+**keeps only the strings that name a colour**, so the `null` JSON writes for a
+role that was absent when the theme was saved, the blank a store cleared it to,
+or a number where a colour belongs is the absence it is: its pairs report `ratio: undefined`, `alphaOf` reads it as opaque so a
 composite is reported rather than guessed, `blend` returns what it was given, and
 no paint seam hands the runtime a `null`. A stored role that is gone reaches a
 painter the way a dropped one does: `brandText`/`brandTextOn` and `statusTone`
@@ -4660,6 +4669,10 @@ Merge rules:
   JSON.parse(saved))` reads it without a cast. Kept as a value, a `null` role is
   a colour the `Theme` type promises and the renderer cannot paint, and a `null`
   group reached the merge as an object it could not open;
+- a **colour role written blank** is that same absence: a colour a store cleared
+  — `""`, or whitespace, which is what a brand editor's empty field writes —
+  names no colour, so the base's role is kept rather than replaced by a value the
+  renderer paints black (§Paint-ready values);
 - a **base** a store truncated past the type scale or the density box is read as
   the identity theme of the base's own mode and contrast for that group, because
   neither type has a partial form for an override to edit. Reading the lost group

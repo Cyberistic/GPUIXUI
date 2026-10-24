@@ -1192,7 +1192,12 @@ and an unpaintable shadow colour paints no shadow, so
 A theme restored from storage can be **incomplete**: it may predate a role, an
 elevation level or the whole elevation scale the library has added since, or have
 lost the whole `colors` group, and JSON has no `undefined`, so a
-value that was absent when the theme was saved comes back as `null`. The reports
+value that was absent when the theme was saved comes back as `null`. **A colour
+a store cleared — `null`, or the blank string a cleared editor field writes — is
+the absence it is**: `themeColors` keeps only the strings that name a colour, so
+a blank role paints the absence every seam answers rather than the black the
+renderer draws for a value it cannot parse, and `extendTheme` keeps the base's
+role instead of erasing it. The reports
 carry the absence rather than throwing — `invalidColorRoles` returns the role with
 `value: undefined` (`themeColors` reads a group the store lost as none),
 `invalidShadowColors` returns the level once at position `0`
@@ -1237,9 +1242,9 @@ stored scale level by level, so a level the theme lost stays absent and the repo
 still names it, and an entry whose colour the seam cannot measure is left as
 written — restated in the tint it would read as a full share, so a faint shadow a
 design tool exported would paint opaque and one outside the paint grammar would
-leave the report. The seam every role is read through **keeps only the strings**,
-so the `null` JSON writes for a role the theme never carried is the absence it
-is: no paint seam hands it to the runtime, and a focus ring keeps its geometry
+leave the report. The seam every role is read through **keeps only the strings
+that name a colour**, so the `null` JSON writes for a role the theme never
+carried — or the blank a store cleared it to — is the absence it is: no paint seam hands it to the runtime, and a focus ring keeps its geometry
 with no colour so the runtime paints its own outline. A shape a store wrote is that same absence: a level written as one
 object where the type declares a list, a list holding a `null`, or a shadow colour
 that is not a string is one report line at its position with no colour, and it
