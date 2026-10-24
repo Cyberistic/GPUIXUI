@@ -166,6 +166,18 @@ describe("the TreeView preview", () => {
     expect(treeName("", "docs/effect")).toBe("docs/effect");
   });
 
+  it("keeps the tree the one tab stop its page promises", () => {
+    const html = markup(<DependencyTreeDemo />);
+    const chevrons = html.match(/class="gx-tree-chevron"/g) ?? [];
+
+    // The tree itself is the tab stop. A chevron stays clickable but out of the
+    // tab order, so a keyboard reader does not traverse one button per row —
+    // the arrows and Enter own expansion, exactly as the page says.
+    expect(html.match(/tabindex="0"/g) ?? []).toHaveLength(1);
+    expect(chevrons.length).toBeGreaterThan(3);
+    expect(html.match(/tabindex="-1"/g) ?? []).toHaveLength(chevrons.length);
+  });
+
   it("reports the rows, the open branches and the row it stands on", () => {
     const cursor = openCursor();
     const rows = dependencyRows(DEPENDENCY_TREE, cursor);

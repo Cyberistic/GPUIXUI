@@ -12122,7 +12122,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 379/379
+`[x]` `[██████████]` 380/380
+
+`[x]` Make the **tree preview one tab stop, as its page promises** — the
+      `TreeView` page teaches "one tab stop and arrow keys", and the drawing
+      made every row's chevron a focusable `<button>`, so a keyboard reader
+      tabbed through one control per row before reaching the tree the page
+      describes (the shipped row paints a glyph, and the arrows and Enter own
+      expansion). The chevron keeps its press path and leaves the tab order
+      (`tabIndex={-1}`), and the hint says so. `tree-demo.test.tsx` gains
+      `keeps the tree the one tab stop its page promises`: the rendered tree
+      carries exactly one `tabindex="0"`, every chevron carries `-1`, and the
+      chevron count has a floor so an empty render cannot pass.
+      Directions measured: deleting `tabIndex={-1}` fails it by name
+      (`expected [] to have a length of 6`); restored, the file is 12/12 and the
+      docs suite **189 files / 1 938 tests** green. No native scenario applies —
+      a browser drawing and its rendered keyboard surface.
 
 `[x]` Keep the **virtual tree's tab stop on a row the window paints** — the
       drawing left `aria-activedescendant` naming the row a reader had revealed

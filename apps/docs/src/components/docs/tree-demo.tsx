@@ -196,6 +196,7 @@ function RowContent({
           event.stopPropagation();
           onFlip();
         }}
+        tabIndex={-1}
         type="button"
       >
         {row.expanded ? "▾" : "▸"}
@@ -372,7 +373,10 @@ export const revealOffsetFor = (count: number, index: number): number =>
 export const anchorIndexFor = (count: number, offset: number): number =>
   Math.min(
     Math.max(count - 1, 0),
-    Math.max(0, Math.floor(treeOffset(count, offset) / VIRTUAL_TREE_ROW_HEIGHT)),
+    Math.max(
+      0,
+      Math.floor(treeOffset(count, offset) / VIRTUAL_TREE_ROW_HEIGHT),
+    ),
   );
 
 /**
@@ -555,7 +559,9 @@ export function VirtualTreeDemo() {
         The rows are the package's window: the tree holds all{" "}
         {String(virtualTreeRows.length)} rows and mounts only those in view plus{" "}
         {VIRTUAL_TREE_OVERDRAW} either side. A cursor move mounts its row before
-        the focus moves, and a reveal moves the window first.
+        the focus moves, a reveal moves the window first, and a scroll keeps the
+        tab stop on the row at the window's top edge — a row outside the window
+        is not there to focus.
       </p>
     </div>
   );
