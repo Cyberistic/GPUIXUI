@@ -51,7 +51,11 @@ import {
   radius,
   spacing,
 } from "./scale.js";
-import { invalidScales, type InvalidScale, type ScaleSource } from "./scales.js";
+import {
+  invalidScales,
+  type InvalidScale,
+  type ScaleSource,
+} from "./scales.js";
 import { selectionFailures, type SelectionFailure } from "./selection.js";
 import {
   seriesFailures,
@@ -334,7 +338,7 @@ export interface ThemeAudit {
   readonly invalidNumbers: readonly InvalidNumber[];
   /** Steps that no longer describe two sizes — an inverted or repeated rung. */
   readonly scales: readonly InvalidScale[];
-  /** A declared switch paint the renderer cannot paint, or cannot find. */
+  /** A declared switch paint the renderer cannot paint or find, or a box it cannot draw. */
   readonly switch: SwitchReport;
   /** Text, icon and boundary pairs that miss their floor, or cannot be measured. */
   readonly contrast: readonly ContrastFailure[];
@@ -378,9 +382,10 @@ export interface ThemeAudit {
  * ones because they are the two ways a theme can be structurally wrong rather
  * than unreadable: `scales` names the rung that no longer exceeds the one
  * before it (a `size` prop that lies, a dialog as square as a card), and
- * `switch` names a declared switch value the renderer ignores or a track that
- * vanishes into the surface it stands on. Both were public functions *beside*
- * the gate, so a consumer running the gate alone shipped a theme they failed.
+ * `switch` names a declared switch value the renderer ignores, a track that
+ * vanishes into the surface it stands on, or a box whose knob no longer fits the
+ * track it slides in. Both were public functions *beside* the gate, so a
+ * consumer running the gate alone shipped a theme they failed.
  *
  * An incomplete theme does not crash the gate. A theme restored from storage can
  * predate a colour role, an elevation level or the whole elevation scale the
@@ -459,6 +464,7 @@ export function auditTheme(
       scales.length === 0 &&
       toggle.paint.length === 0 &&
       toggle.placements.length === 0 &&
+      toggle.metrics.length === 0 &&
       contrast.length === 0 &&
       decorative.length === 0 &&
       series.surfaces.length === 0 &&

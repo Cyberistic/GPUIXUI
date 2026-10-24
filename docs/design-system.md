@@ -788,8 +788,9 @@ accent recipe, with the knob's `elevation.sm` lift. Because those colours enter
 the theme through no role, they are measured by their own report:
 `switchFailures(theme)` holds the knob on each track and each track (or its
 edge) on the four strips a switch stands on (`switchSurfaces`) to the
-perceptibility floor, and `invalidSwitchColors(theme)` refuses a value the
-renderer cannot paint. Apple's `#E9E9EA` off track sits **1.003:1** from this
+perceptibility floor, `invalidSwitchColors(theme)` refuses a value the
+renderer cannot paint, and `switchMetricFailures(theme)` holds the box the
+control is drawn in (`audit.switch.metrics`). Apple's `#E9E9EA` off track sits **1.003:1** from this
 style's own `muted` sidebar, so the paint carries a `#C7C7CC` rim that the
 primitive draws as a ring rather than a border, keeping the box and the knob's
 inset whole. The floor is deliberately the perceptibility one: Apple's green is
@@ -800,7 +801,15 @@ of declaring one. The paint is a theme value like any other: a consumer that
 starts from a platform style and owns its toggle replaces all three slots
 through `extendTheme` (§11), and the report holds the brand's paint to the same
 floor — it is one of `auditTheme`'s reports (`audit.switch`), so a declared
-track a brand edits fails the gate rather than waiting for a separate check. A
+track a brand edits fails the gate rather than waiting for a separate check. The
+box is a decision of its own: `switchMetricSlots` names its five numbers, and
+the report measures the two relations the primitive relies on — the track's
+height holds the knob and both insets, and its width holds the same plus a pixel
+of travel, the distance the knob slides. That guard found the proportional
+scale's own arithmetic: `switchMetricsAt` rounded the knob and the inset apart
+and drew Adwaita's large switch as a 22px knob in a 29px track whose two insets
+took 8, one pixel through the pill's edge; the knob is fitted to the track's
+inner height now. A
 switch a store wrote as `null` is the "declares none" the accent
 switch answers: a saved theme carries `null` where it declared no paint, and the
 report measures the toggle the theme actually paints rather than reading a slot

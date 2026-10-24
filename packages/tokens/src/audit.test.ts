@@ -109,7 +109,7 @@ describe("the floors follow the theme's contrast variant", () => {
       invalidShadows: [],
       invalidNumbers: [],
       scales: [],
-      switch: { paint: [], placements: [] },
+      switch: { paint: [], placements: [], metrics: [] },
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
@@ -235,7 +235,7 @@ describe("every report is part of the gate", () => {
       invalidShadows: [],
       invalidNumbers: [],
       scales: [],
-      switch: { paint: [], placements: [] },
+      switch: { paint: [], placements: [], metrics: [] },
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
@@ -370,6 +370,7 @@ describe("every report is part of the gate", () => {
         audit.scales,
         audit.switch.paint,
         audit.switch.placements,
+        audit.switch.metrics,
         audit.contrast,
         audit.decorative,
         audit.series.surfaces,
@@ -536,10 +537,13 @@ describe("the gate holds the theme's own structure", () => {
   it("keeps a theme that declares no switch out of the report", () => {
     // A theme without a declared paint draws its toggle from the accent family,
     // and the roles that switch uses are measured by the mark, contrast and
-    // decorative tables — so the report is empty and the gate is unaffected.
+    // decorative tables — so the report is empty and the gate is unaffected. A
+    // box is measured whether or not a paint uses it, and the base theme has
+    // none: its accent switch derives one from the icon step.
     expect(auditTheme(lightTheme).switch).toEqual({
       paint: [],
       placements: [],
+      metrics: [],
     });
     expect(auditTheme(lightTheme).passed).toBe(true);
   });

@@ -16,17 +16,25 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  auditTheme,
   contrastRatio,
+  controlSizes,
+  extendTheme,
   invalidSwitchColors,
   lightTheme,
   platformNames,
+  platformStyles,
   platformTheme,
   switchFailures,
+  switchMetricFailures,
+  switchMetricSlots,
+  switchMetricsAt,
   switchPaintRoles,
   switchPlacements,
   switchSurfaces,
   themes,
   type SwitchAuditSource,
+  type SwitchMetrics,
   type Theme,
 } from "./index.js";
 import { resolveSwitchTheme } from "./platforms.example.js";
@@ -288,8 +296,150 @@ describe("the accent switch", () => {
       expect(switchFailures(theme), theme.name).toEqual({
         paint: [],
         placements: [],
+        metrics: [],
       });
     });
+  });
+});
+
+describe("the box a declared switch is drawn in", () => {
+  /** Apple's published box, the one a box is edited from in these cases. */
+  const apple = {
+    width: 38,
+    height: 22,
+    knob: 20,
+    inset: 1,
+    border: 0,
+  } satisfies SwitchMetrics;
+
+  it("names the five numbers in the order a box writes them", () => {
+    expect(switchMetricSlots).toEqual([
+      "width",
+      "height",
+      "knob",
+      "inset",
+      "border",
+    ]);
+  });
+
+  it("reports a number the renderer cannot draw, by slot", () => {
+    // The class of defect every other numeric token is held to: a batch crosses
+    // JSON on its way to native, so `NaN` and an infinity are dropped and the
+    // property paints as if it were never set, while a zero or a negative size
+    // is kept and lays the box out at nothing.
+    const broken: Partial<SwitchMetrics> = {
+      width: Number.NaN,
+      height: 0,
+      knob: -2,
+      inset: Number.NEGATIVE_INFINITY,
+      border: -1,
+    };
+
+    expect(switchMetricFailures({ switchMetrics: broken })).toEqual([
+      { slot: "width", value: Number.NaN, rule: "positive" },
+      { slot: "height", value: 0, rule: "positive" },
+      { slot: "knob", value: -2, rule: "positive" },
+      { slot: "inset", value: Number.NEGATIVE_INFINITY, rule: "nonNegative" },
+      { slot: "border", value: -1, rule: "nonNegative" },
+    ]);
+    // A value that is not a number at all is reported under `finite`: every
+    // other rule describes a number, and the finding here is that it is not one.
+    expect(
+      switchMetricFailures({ switchMetrics: { ...apple, width: "38" } }),
+    ).toEqual([{ slot: "width", value: "38", rule: "finite" }]);
+  });
+
+  it("fits the knob inside the track it slides in", () => {
+    // A knob through the pill's edge and a track with no room to travel are the
+    // two relations the primitive's `switchThumbTravel` relies on: the height
+    // holds the knob plus both insets, and the width holds the same plus a pixel.
+    expect(
+      switchMetricFailures({ switchMetrics: { ...apple, knob: 30 } }),
+    ).toEqual([{ slot: "height", value: 22, rule: "fits", needs: 32 }]);
+    expect(
+      switchMetricFailures({ switchMetrics: { ...apple, width: 22 } }),
+    ).toEqual([{ slot: "width", value: 22, rule: "fits", needs: 23 }]);
+    // A box the report already named is not compared twice: the slot it has to
+    // grow is the one already reported.
+    expect(
+      switchMetricFailures({
+        switchMetrics: { ...apple, height: Number.NaN, knob: 30 },
+      }),
+    ).toEqual([{ slot: "height", value: Number.NaN, rule: "positive" }]);
+  });
+
+  it("answers with nothing for a theme that carries no box", () => {
+    // The accent switch derives its box from the icon step, so there is no
+    // declaration to measure. A stored `null` is the same absence
+    // (`incomplete.test.ts` holds that shape across every shipped style).
+    expect(switchMetricFailures(lightTheme)).toEqual([]);
+    expect(switchMetricFailures({})).toEqual([]);
+  });
+
+  it("clears every shipped box at every size the scale draws", () => {
+    // `default` is the library's own identity and declares no box, so the sweep
+    // is the styles that own one — named, so an empty sweep cannot pass.
+    const boxes = platformNames.flatMap((platform) => {
+      const metrics = platformStyles[platform].switchMetrics;
+      return metrics === undefined ? [] : [{ platform, metrics }];
+    });
+
+    expect(boxes.map(({ platform }) => platform)).toEqual([
+      "darwin",
+      "linux",
+      "win32",
+    ]);
+    expect(
+      boxes.flatMap(({ platform, metrics }) =>
+        controlSizes.flatMap((size) =>
+          switchMetricFailures({
+            switchMetrics: switchMetricsAt(metrics, size),
+          }).map((failure) => `${platform} ${size}: ${failure.slot}`),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("fitted the large Adwaita knob to its inner track", () => {
+    // The defect this guard was written for: the scale rounded the knob and the
+    // inset apart, so 44×24 with an 18px knob at a 3px inset became 53×29 with a
+    // 22px knob whose two 4px insets needed 30 — one pixel through the edge.
+    const adwaita =
+      platformTheme(lightTheme, "linux").switchMetrics ??
+      expect.fail("linux declares no box");
+
+    expect(switchMetricsAt(adwaita, "lg")).toEqual({
+      width: 53,
+      height: 29,
+      knob: 21,
+      inset: 4,
+      border: 0,
+    });
+    // The pre-fix box, by value: the knob is the number that could not fit.
+    const preFix: SwitchMetrics = {
+      width: 53,
+      height: 29,
+      knob: 22,
+      inset: 4,
+      border: 0,
+    };
+    expect(switchMetricFailures({ switchMetrics: preFix })).toEqual([
+      { slot: "height", value: 29, rule: "fits", needs: 30 },
+    ]);
+    expect(
+      switchMetricFailures({ switchMetrics: switchMetricsAt(adwaita, "lg") }),
+    ).toEqual([]);
+  });
+
+  it("fails the gate for a brand whose box cannot draw", () => {
+    const brand = extendTheme(lightTheme, {
+      switchMetrics: { ...apple, knob: 30 },
+    });
+
+    expect(auditTheme(brand).switch.metrics).toEqual(
+      switchMetricFailures(brand),
+    );
+    expect(auditTheme(brand).passed).toBe(false);
   });
 });
 
@@ -319,6 +469,36 @@ describe("the pages that teach the declared paint", () => {
     expect(readme).toContain("switchFailures");
     // The inventory row records that the declared paint is measured.
     expect(inventoryRow("Platform styles")).toContain("switchFailures");
+  });
+
+  it("teaches the box the paint is drawn in", () => {
+    // A page that taught the paint and the scale but not the box would leave a
+    // style author with numbers no check runs. The numbers printed are the ones
+    // the fix measured, so a page that loses the history fails here.
+    [
+      [catalogue, "catalogue"],
+      [designSystem, "design system"],
+      [readme, "readme"],
+    ].forEach(([page, name]) => {
+      expect(page, name).toContain("switchMetricSlots");
+      expect(page, name).toContain("switchMetricFailures");
+      expect(page, name).toContain("inner height");
+      // The relations, in the words the primitive's travel relies on.
+      expect(page, name).toMatch(/height[\s\S]{0,120}insets/);
+      expect(page, name).toMatch(/width[\s\S]{0,120}travel/);
+    });
+    // The measured defect and its fix, by value, on both token pages.
+    [catalogue, designSystem].forEach((page) => {
+      expect(page).toContain("22px knob");
+    });
+    expect(catalogue).toContain("53×29");
+    expect(designSystem).toContain("29px track");
+    expect(catalogue).toContain("21px");
+    // The inventory row records the box beside the paint.
+    const row = inventoryRow("Platform styles");
+    expect(row).toContain("switchMetricFailures");
+    expect(row).toContain("switchMetricSlots");
+    expect(row).toContain("21px");
   });
 
   it("teaches the extension route a brand owns the paint through", () => {

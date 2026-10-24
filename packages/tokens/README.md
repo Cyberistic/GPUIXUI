@@ -578,12 +578,20 @@ which `Theme.switch` and `Theme.switchMetrics` carry once applied. The accent
 family cannot derive those fills, so the declaration is separate; the primitives
 draw the platform's box only for a theme that carries it, and an authored look
 that declares none keeps the library's accent toggle. `switchMetricsAt` keeps a
-proportional `sm`/`lg` scale of the published `md` box. Those three colours are
+proportional `sm`/`lg` scale of the published `md` box and fits the knob to the
+track's inner height. Those three colours are
 **measured**, because they enter a theme through no role: `switchFailures(theme)`
 holds the knob on each track and each track (or its edge) on the four strips a
 switch stands on (the page, a card, a popover and a muted toolbar) to the
 perceptibility floor, and `invalidSwitchColors(theme)` names a value the renderer
-cannot paint. The report is one of the gate's (`audit.switch`), so a declared
+cannot paint. The box is measured too, by `switchMetricFailures(theme)`: its five
+numbers (`switchMetricSlots`) and the two relations the primitive relies on — the
+track's height holds the knob and both insets, its width the same plus a pixel of
+travel — so a knob a step too large is reported instead of painted through the
+pill. That contract found the scale's own arithmetic: it rounded the knob and the
+inset apart and drew Adwaita's large switch one pixel through its track (a 22px
+knob whose two 4px insets needed 30 in a 29px track); the knob is clamped to the
+inner height now. The report is one of the gate's (`audit.switch`), so a declared
 track a brand edits fails `auditTheme` rather than waiting for a separate check.
 The report found Apple's `#E9E9EA` off track at **1.003:1** on its own `muted`
 sidebar, so the paint keeps the platform's off fill and adds a `#C7C7CC` rim —

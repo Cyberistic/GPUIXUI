@@ -819,7 +819,8 @@ off. `PlatformStyle.switch` is the paint, `PlatformStyle.switchMetrics` the box,
 `Theme.switch` and `Theme.switchMetrics` the halves for the resolved mode, and a
 primitive draws the platform's box only when the theme carries the paint.
 `switchMetricsAt(metrics, size)` keeps a proportional `sm` (0.8) and `lg` (1.2)
-scale of the published `md` box, so every size keeps the knob inside the track.
+scale of the published `md` box and fits the knob to the track's inner height,
+so every size keeps the knob inside the track.
 An authored look that declares none clears both, so Luna over macOS keeps Luna's
 chrome and the library's toggle.
 
@@ -827,12 +828,14 @@ chrome and the library's toggle.
 `switchPaintRoles` (`on`, `off`, `knob`) and `switchPlacements` are the table:
 the knob on each track it can sit in, and each track on the four strips a switch
 stands on (`switchSurfaces` — the page, a card, a popover and a `muted` toolbar,
-the canonical home of a settings switch). `switchFailures(theme)` returns both
-halves of the report — `paint`, every value the renderer cannot paint, and
-`placements`, every pair too faint to be found — and `invalidSwitchColors(theme)`
+the canonical home of a settings switch). `switchFailures(theme)` returns the
+report's three lists — `paint`, every value the renderer cannot paint,
+`placements`, every pair too faint to be found, and `metrics`, every box number
+it cannot draw (below) — and `invalidSwitchColors(theme)`
 is the grammar half on its own, beside `invalidColorRoles` and
 `invalidShadowColors` for the other two authored colour tables. A theme that
-declares no switch answers with an empty report: its toggle is painted from
+declares no switch answers with `paint` and `placements` empty: its toggle is
+painted from
 `primary`, `muted` and `foreground`, which the mark, contrast and decorative
 tables already hold where a switch stands. **A switch a store wrote as `null` is
 that same "declares none"**: JSON has no `undefined`, so a saved theme comes
@@ -867,6 +870,26 @@ on that sidebar. Every other platform placement clears the floor as painted.
 `switchFailures` and `invalidSwitchColors` are one of the gate's reports now
 (`audit.switch`), so a declared track a brand edits is held by `auditTheme`
 rather than by a contract the consumer has to remember to run.
+
+**The box is a decision too, and it enters a theme through no role either.**
+`PlatformStyle.switchMetrics` carries five numbers —
+`switchMetricSlots`: the track's width and height, the knob's side, the inset it
+keeps and the edge it may draw — and `switchMetricFailures(theme)` holds them as
+`audit.switch.metrics`. A drawn size (the track's two sides, the knob) must be
+positive, an inset and an edge may be zero, and a value a store wrote where a
+number belongs is reported under `finite` like every other number. Two relations
+sit on top, because the primitive slides the knob `width - knob - 2 × inset` to
+its on position: the track's **height** holds the knob plus both insets, and its
+**width** holds the same plus a pixel of travel, so a switch can show its two
+states. The inset is measured from the track's outer edge, which is why it
+includes the edge — Fluent's 12px knob at a 4px inset is exactly its 20px track,
+and Adwaita's 18 at a 3 exactly its 24. A box a theme does not carry answers
+with nothing: the accent switch derives its own from the icon step. The contract
+found the **proportional scale**: it rounded the knob and the inset apart, so
+Adwaita's large switch became 53×29 with a 22px knob whose two 4px insets needed
+30 — one pixel through the pill's edge — and `switchMetricsAt` clamps the knob to
+the track's inner height now (21px at `lg`, and all three sizes of all three
+platforms clear the contract).
 
 Each `darwin` set and all three dark sets carry their own `secondary`, because
 `platformTheme` inherits the base `#E1E5EC` and those windows and popovers sit

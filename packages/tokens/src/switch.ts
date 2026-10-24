@@ -100,12 +100,139 @@ const switchScale: Readonly<Record<ControlSize, number>> = {
   lg: 1.2,
 };
 
+/** The numbers a declared switch's box carries, in documentation order. */
+export const switchMetricSlots = [
+  "width",
+  "height",
+  "knob",
+  "inset",
+  "border",
+] as const;
+
+/** One number of a declared switch's box. */
+export type SwitchMetric = (typeof switchMetricSlots)[number];
+
+/**
+ * What a box number has to be. The track's width and height and the knob's side
+ * are drawn, so zero paints nothing; an inset and an edge may be zero, because a
+ * platform's track can sit flush.
+ */
+const switchMetricRules: Readonly<
+  Record<SwitchMetric, "positive" | "nonNegative">
+> = {
+  width: "positive",
+  height: "positive",
+  knob: "positive",
+  inset: "nonNegative",
+  border: "nonNegative",
+};
+
+/** A declared switch box the renderer cannot draw, or whose knob it cannot fit. */
+export interface SwitchMetricFailure {
+  /** Which number of the box. */
+  readonly slot: SwitchMetric;
+  /**
+   * The value the theme carries, or `undefined` when the slot is absent — a
+   * stored box older than the slot, which reads as the absence it is.
+   */
+  readonly value: unknown;
+  /** The rule it missed: a drawn size, a length, or the fit of the knob. */
+  readonly rule: "finite" | "positive" | "nonNegative" | "fits";
+  /**
+   * For `fits`, the smallest value the slot must reach: the knob plus both of
+   * its insets, so a reader is told what to grow rather than only which pair
+   * collides.
+   */
+  readonly needs?: number;
+}
+
+/** One number of a box, when it is a number the renderer can lay out. */
+const boxNumber = (
+  box: SwitchBoxSource,
+  slot: SwitchMetric,
+): number | undefined => {
+  const value: unknown = box[slot];
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
+};
+
+/** Every drawn number of a box, each held to its own rule. */
+const boxValues = (box: SwitchBoxSource): readonly SwitchMetricFailure[] =>
+  switchMetricSlots.flatMap((slot): ReadonlyArray<SwitchMetricFailure> => {
+    const value: unknown = box[slot];
+    const rule = switchMetricRules[slot];
+    const layable =
+      typeof value === "number" &&
+      Number.isFinite(value) &&
+      (rule === "positive" ? value > 0 : value >= 0);
+    return layable
+      ? []
+      : [{ slot, value, rule: typeof value === "number" ? rule : "finite" }];
+  });
+
+/**
+ * The knob's fit inside its track.
+ *
+ * The primitive centres a knob of `knob` pixels in a `height` track and travels
+ * it `width - knob - 2 × inset` to the on position (`switchThumbTravel`), so two
+ * relations have to hold or the control paints a knob through the pill's edge:
+ * the track's height holds the knob and both insets, and its width holds the
+ * same plus a pixel for the travel. `inset` is measured from the track's outer
+ * edge, so it includes the edge itself — Fluent's 12px knob at a 4px inset is
+ * exactly its 20px track.
+ */
+const boxFit = (box: SwitchBoxSource): readonly SwitchMetricFailure[] => {
+  const width = boxNumber(box, "width");
+  const height = boxNumber(box, "height");
+  const knob = boxNumber(box, "knob");
+  const inset = boxNumber(box, "inset");
+  // A number the report already named is not compared: the value that has to
+  // grow is the one it reported.
+  if (
+    width === undefined ||
+    height === undefined ||
+    knob === undefined ||
+    inset === undefined
+  ) {
+    return [];
+  }
+  const inner = knob + inset * 2;
+  return [
+    ...(height < inner
+      ? [
+          {
+            slot: "height" as const,
+            value: height,
+            rule: "fits" as const,
+            needs: inner,
+          },
+        ]
+      : []),
+    ...(width <= inner
+      ? [
+          {
+            slot: "width" as const,
+            value: width,
+            rule: "fits" as const,
+            needs: inner + 1,
+          },
+        ]
+      : []),
+  ];
+};
+
 /**
  * The box a platform switch paints at a control size.
  *
  * `md` is the platform's published control; `sm` and `lg` scale it
  * proportionally, because a platform specifies one switch and a preview that
- * draws a compact or large one must keep its knob inside its track.
+ * draws a compact or large one must keep its knob inside its track. The knob is
+ * fitted to the track's **inner** height — the height less both insets — rather
+ * than to the track itself: scaling the knob and the inset apart rounded
+ * Adwaita's 18px knob to 22 in a 29px track whose two insets took 8, so its
+ * large switch drew the knob one pixel through the pill's edge. The edge is
+ * drawn outside that gap, which is why `border` does not enter it.
  *
  * @example
  * ```ts
@@ -122,12 +249,16 @@ export const switchMetricsAt = (
   const scale = switchScale[size];
   if (scale === 1) return metrics;
   const height = Math.round(metrics.height * scale);
+  const inset = Math.round(metrics.inset * scale);
   return {
     width: Math.round(metrics.width * scale),
     height,
-    // A round knob, never taller than its track.
-    knob: Math.min(Math.round(metrics.knob * scale), height),
-    inset: Math.round(metrics.inset * scale),
+    // A round knob inside the track's inner height, never taller than it.
+    knob: Math.max(
+      0,
+      Math.min(Math.round(metrics.knob * scale), height - inset * 2),
+    ),
+    inset,
     border: metrics.border,
   };
 };
@@ -182,13 +313,27 @@ export type SwitchPlacementFailure = SwitchPlacement & {
   readonly floor: number;
 };
 
-/** What a declared switch's paint fails, in the two ways it can. */
+/** What a declared switch fails, in the three ways it can. */
 export interface SwitchReport {
   /** Values the renderer cannot paint, in `switchPaintRoles` order. */
   readonly paint: readonly InvalidSwitchColor[];
   /** Placements too faint to be found, in `switchPlacements` order. */
   readonly placements: readonly SwitchPlacementFailure[];
+  /** Box numbers the renderer cannot draw, and knobs its track cannot hold. */
+  readonly metrics: readonly SwitchMetricFailure[];
 }
+
+/**
+ * A switch box as a stored theme hands one back.
+ *
+ * Each slot is read as the value it is rather than trusted to be a number: JSON
+ * has no `undefined`, a store can carry `"38"` where a design tool exported a
+ * length, and `null` where a key was dropped. `Theme.switchMetrics` is the
+ * authored shape; this is the shape the report is handed.
+ */
+export type SwitchBoxSource = {
+  readonly [slot in SwitchMetric]?: unknown;
+};
 
 /**
  * The switch-shaped part of a theme the contract reads.
@@ -202,6 +347,11 @@ export interface SwitchAuditSource extends ColourSource {
   readonly colors?: Partial<ThemeColors>;
   /** The declared paint, or nothing for the accent switch. */
   readonly switch?: Partial<SwitchColors>;
+  /**
+   * The box the paint is drawn in. Measured on its own, because a consumer reads
+   * it directly through `switchMetricsAt` as well as through the primitive.
+   */
+  readonly switchMetrics?: SwitchBoxSource;
 }
 
 /**
@@ -254,21 +404,24 @@ const paintFailures = (
 ];
 
 /**
- * Measure a declared switch paint.
+ * Measure a declared switch paint and the box it is drawn in.
  *
- * A theme that declares none answers with an empty report: its switch is painted
- * from the accent family, and the roles that switch uses are measured by the
- * mark, contrast and decorative tables like every other role. A theme that
- * declares one is held to {@link invalidSwitchColors} and
- * {@link switchPlacements}, and a value or a strip the theme does not carry is
- * reported rather than skipped.
+ * A theme that declares no paint answers with `paint` and `placements` empty:
+ * its switch is painted from the accent family, and the roles that switch uses
+ * are measured by the mark, contrast and decorative tables like every other
+ * role. A box it carries is still measured (`metrics`), because the box is a
+ * geometry decision a consumer can read directly through
+ * {@link switchMetricsAt}, not a consequence of the paint. A theme that declares
+ * a paint is held to {@link invalidSwitchColors}, {@link switchPlacements} and
+ * {@link switchMetricFailures}, and a value or a strip the theme does not carry
+ * is reported rather than skipped.
  *
  * @example
  * ```ts
  * import { platformTheme, switchFailures, themes } from "@gpuixui/tokens";
  *
  * switchFailures(platformTheme(themes.light, "darwin"));
- * // { paint: [], placements: [] } — Apple's switch is measured where it paints
+ * // { paint: [], placements: [], metrics: [] } — Apple's switch is measured where it paints
  * ```
  */
 export function switchFailures(
@@ -276,8 +429,9 @@ export function switchFailures(
   floor: number = decorativeFloor,
 ): SwitchReport {
   const paint = declaredSwitch(theme);
+  const metrics = switchMetricFailures(theme);
   if (paint === undefined) {
-    return { paint: [], placements: [] };
+    return { paint: [], placements: [], metrics };
   }
   return {
     paint: paintFailures(paint),
@@ -303,7 +457,43 @@ export function switchFailures(
           : [{ ...placement, ratio, floor }];
       },
     ),
+    metrics,
   };
+}
+
+/**
+ * The declared switch box the renderer cannot draw, on its own.
+ *
+ * `switchFailures(theme).metrics` is the same list, for a caller that wants the
+ * whole report; this is the check a style author runs after editing a platform's
+ * box, beside `invalidSwitchColors`. Five numbers are drawn —
+ * `switchMetricSlots`: the track's width and height, the knob's side, the inset
+ * it keeps and the edge it may draw — and two relations are measured on top:
+ * the track's height holds the knob and both insets, and its width holds the
+ * same plus a pixel of travel, so a switch can show its two states. A number the
+ * renderer cannot lay out is reported under `finite`, the rule every report
+ * keeps for a value a store wrote.
+ *
+ * A box a theme does not carry answers with nothing: the library's accent switch
+ * derives its box from the icon step.
+ *
+ * @example
+ * ```ts
+ * import { platformTheme, switchMetricFailures, themes } from "@gpuixui/tokens";
+ *
+ * const edited = platformTheme(themes.light, "darwin");
+ * switchMetricFailures({
+ *   ...edited,
+ *   switchMetrics: { ...edited.switchMetrics, knob: 30 },
+ * });
+ * // [{ slot: "height", value: 22, rule: "fits", needs: 32 }]
+ * ```
+ */
+export function switchMetricFailures(
+  theme: Pick<SwitchAuditSource, "switchMetrics">,
+): readonly SwitchMetricFailure[] {
+  const box = theme.switchMetrics ?? undefined;
+  return box === undefined ? [] : [...boxValues(box), ...boxFit(box)];
 }
 
 /**

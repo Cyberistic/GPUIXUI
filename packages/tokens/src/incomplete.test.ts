@@ -1272,7 +1272,11 @@ describe("an optional table a store nulled", () => {
   it("reads a nulled switch as the accent toggle, instead of throwing", () => {
     const light = nulled(lightTheme);
 
-    expect(switchFailures(light)).toEqual({ paint: [], placements: [] });
+    expect(switchFailures(light)).toEqual({
+      paint: [],
+      placements: [],
+      metrics: [],
+    });
     expect(invalidSwitchColors(light)).toEqual([]);
     expect(() => auditTheme(light)).not.toThrow();
     expect(auditTheme(light).passed).toBe(true);
@@ -1299,7 +1303,11 @@ describe("an optional table a store nulled", () => {
 
     expect(seriesColors(stored({ series: short }))).toBe(short);
     expect(syntaxColors(stored({ syntax: partial }))).toBe(partial);
-    expect(switchFailures(declared)).toEqual({ paint: [], placements: [] });
+    expect(switchFailures(declared)).toEqual({
+      paint: [],
+      placements: [],
+      metrics: [],
+    });
   });
 
   it("reads every shipped style's nulled tables as the shipped ones", () => {
