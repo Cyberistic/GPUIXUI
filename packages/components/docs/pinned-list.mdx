@@ -45,6 +45,10 @@ import { PinnedList } from "@gpuixui/components/pinned-list";
 ## Limitations
 
 - No `position: sticky`; the header is a repositioned layer.
+- A held header is a painted surface over the rows, not a hit target: the layer,
+  the header and its title all take `pointerEvents: "none"`, so a press in the
+  first `headerHeight` points of the viewport reaches the row beneath. A control
+  placed there still works, but it is visually covered while the header holds.
 - Vertical only; the scrollbar's thumb takes no pointer input.
 - One line per header.
 - A section's height is measured once and kept with the section's **title**, so reordering `sections` places every header by the rows it actually holds. A section that changes height reports again; a section with no readable report yet counts as `0`, so its header sits at the start until the layout arrives.

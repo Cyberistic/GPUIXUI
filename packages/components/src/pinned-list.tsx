@@ -11,8 +11,9 @@
  *
  * A held header sits over moving rows, so it paints the caller's surface
  * opaquely and gains a bottom edge; while it travels it is just a title. The
- * layer takes `pointerEvents: "none"`, so a press on the first row under a held
- * header still reaches the row.
+ * layer, the painted header and its title all take `pointerEvents: "none"`,
+ * because the runtime's hit test stops at the element that paints, so a press
+ * on the first row under a held header still reaches the row.
  *
  * Like the scroll readings, the box is `@gpuixui/primitives`' `ScrollArea`
  * viewport: a pinned header must measure the very element that scrolls, and that
@@ -147,6 +148,11 @@ export const PinnedList = ({
               paddingLeft: theme.spacing.md,
               paddingRight: theme.spacing.md,
               backgroundColor: surface,
+              // The layer's opt-out does not reach the element that paints: a
+              // held header covers the row below it with its own surface, so
+              // both it and its text take the opt-out or the row loses the
+              // press (`behaviour/pinned-list.test.tsx`).
+              pointerEvents: "none",
               ...(frame.pinned
                 ? {
                     borderBottomWidth: theme.borderWidth.thin,
@@ -160,6 +166,7 @@ export const PinnedList = ({
               style={{
                 ...textStyle(theme, "bodyStrong"),
                 color: theme.colors.foreground,
+                pointerEvents: "none",
               }}
             >
               {sections[frame.index]?.title ?? ""}

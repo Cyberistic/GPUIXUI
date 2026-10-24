@@ -173,6 +173,58 @@ describe("PinnedList", () => {
     }
   });
 
+  it("lets a press through the held header reach the row under it", () => {
+    // The bug guarded: the header layer declares `pointerEvents: "none"` and
+    // the comment beside it promised a press on the row under a held header
+    // still reaches the row — but the layer is not the element that paints.
+    // Each header paints its own surface and its own `<text>`, so the runtime's
+    // hit test stopped there and the row under the held title lost the press.
+    // Measured in a window by `pinned-list-lifecycle` (`presses` stayed 1);
+    // this case reads the same hit test off the renderer.
+    let presses = 0;
+    const page = renderComponent(
+      <PinnedList
+        testId="list"
+        style={{ height: 160, width: 300 }}
+        sections={[
+          {
+            title: "Today",
+            children: (
+              <div
+                testId="row-today"
+                onClick={() => {
+                  presses += 1;
+                }}
+                style={{ height: 200 }}
+              />
+            ),
+          },
+          {
+            title: "Yesterday",
+            children: <div style={{ height: 200 }} />,
+          },
+        ]}
+      />,
+    );
+    try {
+      settle(page);
+      settle(page);
+      scrollTo(page, -100);
+
+      const list = requireBounds(page, "list");
+      // The row's visible band starts above the viewport, so 16 points below
+      // the list's top is inside the row and inside the held header.
+      page.renderer.nativeSimulateClick(list.x + 10, list.y + 16);
+      expect(presses).toBe(1);
+
+      // The negative control: the same row below the header still takes a press.
+      page.renderer.nativeSimulateClick(list.x + 10, list.y + 100);
+      expect(presses).toBe(2);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("passes the surface the caller names to the held header", () => {
     const page = mount("#101010");
     try {
