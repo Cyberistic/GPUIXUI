@@ -7,8 +7,10 @@
  * `bottom` / `left` / `opacity` / `borderRadius`). GPUix 0.11 has no
  * `transform`, so scale/rotate/translate have no style key yet — the hook still
  * exposes the computed `value`, which becomes usable once the runtime patch
- * (plan 525) lands. Pass `options.reducedMotion` from your platform's
- * reduced-motion preference; it completes immediately at the target.
+ * (plan 525) lands. The reader's preference is the nearest `MotionProvider`'s
+ * (the app supplies it, because the runtime publishes no query), so one
+ * provider answers every hook below it; `options.reducedMotion` is the per-hook
+ * override and a reduced hook completes at the target.
  *
  * The presence hooks are the React half of the table `presence.ts` publishes:
  * the frames, the per-phase timing and the pointer rule are numbers and
@@ -44,7 +46,9 @@ import {
   type MotionFrame,
   type Transition,
 } from "./motion.js";
+import { useMotionPreference } from "./provider.js";
 import { layoutSpring, type SpringPhysics } from "./spring.js";
+import { reducedMotionOf } from "./timing.js";
 
 /**
  * The React half of the presence table, published on its own light entry.
@@ -88,7 +92,15 @@ const restingFrame = (value: number, complete: boolean): MotionState => ({
 /** Hook options. */
 export interface MotionOptions {
   /**
-   * The reader's reduced-motion preference. Default `false`.
+   * The reader's reduced-motion preference, as the **per-hook override**.
+   *
+   * The application states the preference once — `MotionProvider` — and every
+   * hook below it reads that preference as its default, so a tree wrapped for a
+   * reader who asked for less motion does not animate a count-up or a drag
+   * release unless a caller says so. This option wins in both directions: a
+   * decorative run can be silenced in an animated tree and one that must move
+   * keeps moving in a reduced one. Default: the nearest provider's preference
+   * (`"animated"` with none).
    *
    * A reduced hook paints its resting frame in the render that names it — the
    * target, or a coast's projected rest — and ignores `initial`, because that
@@ -127,8 +139,15 @@ const initialFrame = (value: number): MotionFrame => ({
   complete: false,
 });
 
-const reduced = (options: MotionOptions): boolean =>
-  options.reducedMotion === true;
+/**
+ * The preference a hook runs with: its own override, else the provider's.
+ *
+ * One provider supplies the flag for the whole tree, so a reader who asked for
+ * less motion is answered by the hooks that publish it as well as by the
+ * presence half — the reader is not made to repeat the flag at every call.
+ */
+const useReducedMotion = (options: MotionOptions): boolean =>
+  reducedMotionOf(options.reducedMotion, useMotionPreference());
 
 /**
  * Publish a sample taken before a retarget, so the frame on screen moves with
@@ -248,7 +267,7 @@ export const useMotion = (
   transition: Transition,
   options: MotionOptions = {},
 ): MotionState => {
-  const reducedMotion = reduced(options);
+  const reducedMotion = useReducedMotion(options);
   const [start] = useState(() =>
     firstValue(target, options.initial, reducedMotion),
   );
@@ -279,7 +298,7 @@ export const useMotion = (
       skipped.current = false;
       return;
     }
-    if (reduced(options)) {
+    if (reducedMotion) {
       // The render already paints the resting frame; retargeting the retained
       // value to it now means a preference that turns back on starts where the
       // reader is, and the skipped journey reports its end with that frame.
@@ -293,11 +312,11 @@ export const useMotion = (
       });
       return;
     }
-    publish(setFrame, settleBefore(motion, origin, reduced(options)));
+    publish(setFrame, settleBefore(motion, origin, reducedMotion));
     motion.animate(target, running);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
-      const next = motion.sample(performance.now() - origin, reduced(options));
+      const next = motion.sample(performance.now() - origin, reducedMotion);
       publish(setFrame, next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
     };
@@ -305,7 +324,7 @@ export const useMotion = (
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, target, resting, running, origin, options.reducedMotion]);
+  }, [motion, target, resting, running, origin, reducedMotion]);
 
   return reducedMotion
     ? restingFrame(
@@ -377,7 +396,7 @@ export const useInertia = (
   inertia: Inertia,
   options: MotionOptions = {},
 ): MotionState => {
-  const reducedMotion = reduced(options);
+  const reducedMotion = useReducedMotion(options);
   const [offset] = useState(() => startValue(0, options.initial));
   const [rest] = useState(() => coastRest({ inertia, velocity }, offset));
   const [motion] = useState(() => new MotionValue(offset));
@@ -419,7 +438,7 @@ export const useInertia = (
     retired.current !== undefined && sameCoast(retired.current, running);
 
   useEffect(() => {
-    if (reduced(options)) {
+    if (reducedMotion) {
       // The declaration this commit ends is retired, whether or not the frame it
       // names differs from the one on screen: the animated branch must not
       // launch it again when the preference turns back off.
@@ -452,7 +471,7 @@ export const useInertia = (
       return;
     }
     retired.current = undefined;
-    const sampled = settleBefore(motion, start, reduced(options));
+    const sampled = settleBefore(motion, start, reducedMotion);
     if (skippingStart.current && sampled.value === offset) {
       // The mount painted the rest the preference names, so the release offset
       // is not a frame the reader should see for a commit.
@@ -463,7 +482,7 @@ export const useInertia = (
     motion.coast(running.inertia, running.velocity);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
-      const next = motion.sample(performance.now() - start, reduced(options));
+      const next = motion.sample(performance.now() - start, reducedMotion);
       publish(setFrame, next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
     };
@@ -471,7 +490,7 @@ export const useInertia = (
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, running, start, offset, options.reducedMotion]);
+  }, [motion, running, start, offset, reducedMotion]);
 
   /**
    * The frame a reduced render paints: the projection the release names from

@@ -19,7 +19,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `timeline.ts` | Keyframes with offsets, `stagger`, and a keyed `Sequence` driver |
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
-| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, and `motionEasingNames`/`isMotionEasing`/`isMotionEasingName`, the renderer's easing grammar a stored transition is read against |
+| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, `reducedMotionOf`, the rule that resolves a run's own override against the provider's preference, and `motionEasingNames`/`isMotionEasing`/`isMotionEasingName`, the renderer's easing grammar a stored transition is read against |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
 | `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers — the physics hooks; it re-exports `useMotionPreference`, `useSurfaceTiming` / `useSurfacePresence` and the provider from the presence half below |
 | `react/presence.ts` | The presence half of the React entry (entry `@gpuixui/motion/react/presence`): `useSurfaceTiming` / `useSurfacePresence` and `MotionProvider`, published without the physics a fade never samples |
@@ -112,9 +112,9 @@ the policy — rather than in a component package, so a primitive, a component a
 an application surface below one provider agree on the flag, and a package that
 moves does not have to depend on the components library. `@gpuixui/components`
 re-publishes this provider, so a tree written against it reads the same context.
-`preference` is a policy, not a per-control option: a reduced run is a
-zero-duration assignment, so the resting frame still paints and only the journey
-is removed.
+`preference` is a policy the tree states once rather than a flag each surface
+invents: a reduced run is a zero-duration assignment, so the resting frame still
+paints and only the journey is removed.
 
 The preference is a **stored** value as often as a literal — an application
 persists its motion setting and hands the row to the provider — so
@@ -131,6 +131,16 @@ The provider's `preference` prop takes that shape rather than the union — a
 stored row reaches it straight from the store, with no assertion between the
 two — so a renamed setting or a `"true"` column lands in the decoder instead of
 being refused by the type checker at the one call site an application writes.
+
+That provider is the **default for every hook below it**, the physics hooks in
+this entry included: `useMotion`, `useSpring`, `useTransition` and `useInertia`
+read it, so a tree wrapped for a reader who asked for less motion does not
+count up, tween a width or release a coast unless a caller overrides it.
+`options.reducedMotion` is that per-run override and wins in both directions —
+a decorative animation can be silenced in an animated tree, and one that must
+move keeps moving in a reduced one — and `reducedMotionOf(override, preference)`
+is the rule, so a package composing the table does not re-decide what "less
+motion" means.
 
 ## The presence table
 
@@ -270,9 +280,10 @@ as it was mounted: measured 2026-10-23 in the real GPUix renderer, a spring
 mounted at rest had painted 1 089 frames by 800 ms and 210 more in the following
 150 ms.
 
-Pass `options.reducedMotion` from your platform's reduced-motion preference; it
-completes at the target, and the **first render** already paints that frame.
-`options.initial` gives the first run a start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
+Pass `options.reducedMotion` for a run that states its own preference; without
+one the hook reads the nearest `MotionProvider`, and a reduced run completes at
+the target with the **first render** already painting that frame. `options.initial`
+gives the first run a start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
 up on mount, and `useInertia(400, inertia(), { initial: dragOffset })` coasts
 from the offset a gesture released at — and is read once, because the
 presentation on screen is the truth after it. A start or a target it cannot read

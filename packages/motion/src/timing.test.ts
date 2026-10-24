@@ -18,6 +18,7 @@ import {
   motionTiming,
   motionTimingOf,
   preferenceOf,
+  reducedMotionOf,
   type MotionLevel,
 } from "./timing.js";
 
@@ -192,6 +193,27 @@ describe("reduced motion", () => {
       duration: 0.2,
       ease: "easeInOut",
     });
+  });
+});
+
+describe("the preference a run resolves", () => {
+  it("is the provider's when the caller states no override", () => {
+    // One provider supplies the flag for the whole tree: a reader who asked for
+    // less motion is answered by every hook and surface below it, not only by
+    // the ones a caller remembered to pass the flag to. A tree that states
+    // nothing moves (`MotionProvider`'s own default).
+    expect(reducedMotionOf(undefined, "reduced")).toBe(true);
+    expect(reducedMotionOf(undefined, "animated")).toBe(false);
+  });
+
+  it("yields to the caller's override in both directions", () => {
+    // The option is a per-run override, not a second state of the policy: a
+    // decorative run can be silenced in an animated tree, and one that must move
+    // keeps moving under a reduced provider. `undefined` is the absence that
+    // means "no override", so `false` has to be honoured rather than read as one.
+    expect(reducedMotionOf(true, "animated")).toBe(true);
+    expect(reducedMotionOf(false, "reduced")).toBe(false);
+    expect(reducedMotionOf(false, "animated")).toBe(false);
   });
 });
 

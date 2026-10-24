@@ -18,13 +18,19 @@
  * The reduced preference is a second first-frame bug: `reducedMotion` removed
  * the tween's duration but not its start, so a hook mounted with `initial` under
  * reduced published the value the journey would have left from for one commit.
+ *
+ * The third is where that preference comes from: the hooks publish the one
+ * `MotionProvider` and read only their own option, so a tree wrapped for a
+ * reduced reader still animated every hook below it.
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import type { ReactNode } from "react";
 import { inertia } from "./inertia.js";
 import { tween } from "./motion.js";
 import { presenceTiming, type PresenceTimingInput } from "./presence.js";
+import { MotionProvider } from "./provider.js";
 import {
   useInertia,
   useMotion,
@@ -129,6 +135,89 @@ const StoredTimingFrame = ({
   const presence = useSurfacePresence(true, timing);
   return <>{`${presence.mounted}:${String(presence.timing.exit.duration)}`}</>;
 };
+
+/** The tween hook's frame without an override, so the provider decides. */
+const ProviderTWEENFrame = ({ initial }: { readonly initial?: number }) => {
+  const { value, complete } = useTransition(
+    100,
+    { durationMs: 300 },
+    { initial },
+  );
+  return <>{`${value}:${String(complete)}`}</>;
+};
+
+/** The coasting hook's frame without an override, so the provider decides. */
+const ProviderCOASTFrame = () => {
+  const { value } = useInertia(400, boundedCoast, { initial: 0 });
+  return <>{String(value)}</>;
+};
+
+/** A hook whose caller overrides a provider that states the other preference. */
+const OverriddenTWEENFrame = ({
+  reducedMotion,
+}: {
+  readonly reducedMotion: boolean;
+}) => {
+  const { value } = useTransition(
+    100,
+    { durationMs: 300 },
+    {
+      initial: 0,
+      reducedMotion,
+    },
+  );
+  return <>{String(value)}</>;
+};
+
+describe("the preference the provider supplies", () => {
+  it("is the frame a hook publishes when the caller states none", () => {
+    // The defect: every physics hook read `options.reducedMotion` alone, while
+    // the library publishes one `MotionProvider` for the whole tree and the
+    // presence hooks beside them already read it. An application that wrapped
+    // its tree for a reduced reader still got a count-up, a width tween and a
+    // drag release from `useMotion`/`useTransition`/`useSpring`/`useInertia`
+    // unless it repeated the flag at every call — the duplication the provider
+    // exists to remove — and a coast drifted off the projection the reader was
+    // promised.
+    const reduced = (children: ReactNode) =>
+      renderToStaticMarkup(
+        <MotionProvider preference="reduced">{children}</MotionProvider>,
+      );
+    const animated = (children: ReactNode) =>
+      renderToStaticMarkup(
+        <MotionProvider preference="animated">{children}</MotionProvider>,
+      );
+
+    expect(reduced(<ProviderTWEENFrame initial={0} />)).toBe("100:true");
+    expect(reduced(<Frame target={100} initial={0} />)).toBe("100");
+    expect(reduced(<ProviderCOASTFrame />)).toBe("50");
+    // The animated tree keeps the journey, and a tree with no provider moves.
+    expect(animated(<ProviderTWEENFrame initial={0} />)).toBe("0:false");
+    expect(renderToStaticMarkup(<ProviderTWEENFrame initial={0} />)).toBe(
+      "0:false",
+    );
+  });
+
+  it("yields to a hook's own override in both directions", () => {
+    // The option is the per-run override, not a second state of the policy: a
+    // decorative animation can be silenced in an animated tree, and one that
+    // must move keeps moving under a reduced provider.
+    expect(
+      renderToStaticMarkup(
+        <MotionProvider preference="reduced">
+          <OverriddenTWEENFrame reducedMotion={false} />
+        </MotionProvider>,
+      ),
+    ).toBe("0");
+    expect(
+      renderToStaticMarkup(
+        <MotionProvider preference="animated">
+          <OverriddenTWEENFrame reducedMotion />
+        </MotionProvider>,
+      ),
+    ).toBe("100");
+  });
+});
 
 describe("the first published frame", () => {
   it("is the value the caller asked for", () => {

@@ -134,6 +134,23 @@ export const preferenceOf = (value: unknown): MotionPreference =>
       ? "animated"
       : "reduced";
 
+/**
+ * Whether a run removes its motion, read from a caller's override and the
+ * reader's preference.
+ *
+ * The application states the preference **once**, through `MotionProvider`, so
+ * a surface below it moves as its reader asked without repeating the flag at
+ * every call. A caller's own `reducedMotion` is the per-run override — it wins
+ * in both directions, so a decorative animation can be silenced beside a
+ * functional one, and a caller that must move keeps moving in a reduced tree —
+ * and a tree that states neither keeps its motion, the provider's `"animated"`
+ * default.
+ */
+export const reducedMotionOf = (
+  override: boolean | undefined,
+  preference: MotionPreference,
+): boolean => override ?? preference === "reduced";
+
 /** A tween in the shape the runtime's `transition` prop reads. */
 export interface MotionTiming {
   /** Seconds, as the runtime reads it. */

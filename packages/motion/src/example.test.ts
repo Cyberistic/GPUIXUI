@@ -20,6 +20,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   compositionExample,
+  preferenceExample,
   presenceCompositionExample,
   presenceWindowExample,
   reducedMotionExample,
@@ -93,6 +94,14 @@ describe("the usage example", () => {
     // the projected rest.
     expect(coast).toBeGreaterThan(0);
     expect(coast).toBeLessThan(50);
+  });
+
+  it("resolves the preference a run moves with", () => {
+    // The bug this guards: the four physics hooks published the one
+    // `MotionProvider` and read only their own option, so a tree wrapped for a
+    // reduced reader still animated every hook below it. The provider is the
+    // default and the hook's option the per-run override, in both directions.
+    expect(preferenceExample()).toEqual([true, false, false, true]);
   });
 
   it("counts a leaving surface's window from the timing, never shorter", () => {

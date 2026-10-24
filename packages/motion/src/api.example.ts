@@ -14,6 +14,7 @@ import {
   continuitySpring,
   inertia,
   layoutSpring,
+  reducedMotionOf,
   retarget,
   sampleKeyframes,
   sampleSpring,
@@ -50,6 +51,22 @@ export const reducedMotionExample = (): number => {
   value.animate(1, springTransition(continuitySpring));
   return value.sample(16, true).value;
 };
+
+/**
+ * The preference a run resolves, from the provider and a caller's override.
+ *
+ * The application states the flag once, at the root of the tree, and every hook
+ * below it reads that preference: the first pair is a hook that names no option
+ * under a reduced and an animated provider. A caller's own option is the
+ * per-run override and wins both ways — the second pair is a decorative run
+ * silenced in an animated tree and one that must move under a reduced provider.
+ */
+export const preferenceExample = (): readonly boolean[] => [
+  reducedMotionOf(undefined, "reduced"),
+  reducedMotionOf(undefined, "animated"),
+  reducedMotionOf(false, "reduced"),
+  reducedMotionOf(true, "animated"),
+];
 
 /** A tween, staggered keyframe group, sequence, and an inertial coast. */
 export const compositionExample = (): readonly number[] => {
