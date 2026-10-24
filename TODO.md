@@ -3372,7 +3372,7 @@ a merge over a stored theme.
       Docs: `apps/playground/README.md` §`inline-edit-lifecycle` and the
       input row of §The critical interactions.
 
-`[ ]` Cite the **window measurement on the InlineEdit page and inventory row** —
+`[x]` Cite the **window measurement on the InlineEdit page and inventory row** —
       `packages/components/docs/inline-edit.mdx` §Limitations still says "Blur
       commits in an active app; a live window cannot prove it" without the
       measured reason (this window delivers no blur at all, see
@@ -13866,7 +13866,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     No native scenario applies — the names and the withheld controls are read
     off the real renderer the behaviour suite drives. Owner: data.
 
-`[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
+`[x]` Tier 4 desktop workspace (panels, docking, tabs, command palette) — landed as `@gpuixui/dock` (`SplitPane`, `PanelGroup`, `DockLayout`) over one divider and one persisted tree, with `workspace-restore` measuring the restore half, `split-pane-lifecycle`/`dock-reflow` the resize half, and the tabs and command palette shipping in `@gpuixui/components`.
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
       representative interactions now map to live probes in
       `apps/playground/README.md` §The critical interactions (**filtering/search**
@@ -16290,7 +16290,7 @@ MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{tabl
       packages are their owners' (open item below).
       No native scenario applies — a page and a source read.
 
-`[ ]` Hold the **remaining package pages** to the props their parts declare —
+`[x]` Hold the **remaining package pages** to the props their parts declare —
       `packages/data`'s last gap is closed: `docs/table-sorting.mdx` documented
       ten of `TableSortHeader`'s eleven props (`testId` was the missing one — the
       handle an app locates the header by), and `src/sort/docs.test.ts` holds the

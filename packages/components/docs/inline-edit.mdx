@@ -32,7 +32,22 @@ import { InlineEdit } from "@gpuixui/components";
 
 ### Blur commits, and the host that proves it
 
+Blur commits in an active app, and the pinned `@gpuix/native@0.11.0` is the
+reason the page cannot show it: `blur-delivery-lifecycle` measured that a window
+delivers **no blur event at all** — focus moved to another element, and the
+field that lost it heard nothing — so the commit a reader can exercise in a
+window is `Enter` (or a caller's own commit). `inline-edit-lifecycle` measures
+exactly that swap on the shipped component: the painted value becomes a real
+`<input>`, the window focuses the editor it mounted, `Enter` commits **once**
+and returns the focus to the painted value, and `Escape` discards the draft; a
+disabled twin refuses to open at all.
+
 ### An undo history is the field's
+
+The `<input>` keeps the runtime's own history: `cmd-z` restores its text through
+`onChange` (`text-undo-lifecycle`), and a value pushed in from outside clears
+that history. The component stores no draft history of its own, so an edit that
+must stay undoable after a commit belongs to the caller.
 
 ## Limitations
 
