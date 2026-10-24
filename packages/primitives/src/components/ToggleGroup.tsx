@@ -30,6 +30,7 @@ import {
   decideActivation,
   decideMove,
   isPlainKey,
+  orientationOf,
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { rovingIndex } from "../core/roving.js";
@@ -206,11 +207,11 @@ export const renderToggleGroup = (
   handlers: ToggleGroupHandlers,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  const {
-    orientation = "horizontal",
-    variant = "default",
-    square = false,
-  } = props;
+  const { variant = "default", square = false } = props;
+  // The axis a toolbar lays out and navigates on. `orientation` is a stored
+  // choice like a size, so a name this release does not carry reads as the
+  // documented horizontal (the layout and the keys must not disagree).
+  const orientation = orientationOf(props.orientation, "horizontal");
   const size = controlSize(props.size);
   const options = toggleGroupItems(props);
   const count = Arr.length(options);

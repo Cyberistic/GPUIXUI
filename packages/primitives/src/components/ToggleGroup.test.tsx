@@ -296,6 +296,29 @@ describe("ToggleGroup", () => {
     expect(onToggle).toHaveBeenCalledTimes(0);
   });
 
+  it("reads a stored orientation name as the documented horizontal axis", () => {
+    // The bug guarded: this group documents a horizontal toolbar, so a stored
+    // name it does not carry must not flip it to a column — and read raw the
+    // name reached `ARROW_KEYS[orientation]`, where destructuring threw
+    // `TypeError: Cannot destructure property 'forward'`, killing every plain
+    // key the group received.
+    const onToggle = vi.fn();
+    const groupHandlers = handlers(onToggle);
+    const element = render(
+      { options, orientation: "column" as "horizontal" },
+      ["bold"],
+      Option.some(0),
+      groupHandlers,
+    );
+
+    expect(hostStyleString(element, "flexDirection")).toStrictEqual(
+      Option.some("row"),
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("right"));
+    expect(groupHandlers.onFocusMove).toHaveBeenCalledWith(1);
+    expect(onToggle).toHaveBeenCalledTimes(0);
+  });
+
   it("toggles the focused option on Space-up and on Enter-down", () => {
     const onToggle = vi.fn();
     const element = render({ options }, [], Option.some(1), handlers(onToggle));

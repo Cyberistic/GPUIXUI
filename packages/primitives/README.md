@@ -63,7 +63,7 @@ control, a vanished mark, a `NaN` offset). They read through `controlSize` now,
 and `theme.test.ts`'s `reads the size through controlSize in …` cases hold each
 seam to the `md` paint; `fieldHint`'s frame follows the same rule.
 
-The other three names a control is given are stored choices for the same reason,
+The other paint names a control is given are stored choices for the same reason,
 and each is read through a membership test rather than indexed raw:
 
 - a **`variant`** is written into an action record, a saved toolbar or a
@@ -99,11 +99,22 @@ and each is read through a membership test rather than indexed raw:
   Raw, a height step resolved to `h-space-undefined` (a track with no height)
   and a tone to no colour class at all — a finished task whose fill was
   transparent.
+- a **group's `orientation`** is a saved layout choice, and it reaches the
+  keyboard contract as well as the paint: `isOrientation`/`orientationOf`
+  (`core/keyboard.ts`) read a name the arrow table does not carry as the group's
+  own documented axis — `vertical` for a radio or checkbox group, `horizontal`
+  for a toggle group. Read raw, the layout flipped to the other axis **and**
+  `decideMove` destructured `ARROW_KEYS[orientation]`, so the first plain key
+  press threw `TypeError: Cannot destructure property 'forward'` and the group's
+  whole keyboard contract was dead on a name. `decideMove` itself also answers
+  `None` for an axis the table does not carry, so a consumer calling it directly
+  cannot be emptied by a stored name.
 
 `Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`, `Switch.test.tsx`,
-`presentational.test.tsx`, `Progress.test.tsx` and `Meter.test.tsx` each hold one
-of these answers, and each case was measured failing on its raw read before the
-guard landed.
+`presentational.test.tsx`, `Progress.test.tsx`, `Meter.test.tsx`,
+`RadioGroup.test.tsx`, `CheckboxGroup.test.tsx` and `ToggleGroup.test.tsx` each
+hold one of these answers, and each case was measured failing on its raw read
+before the guard landed.
 
 The **words** a control announces are interface copy, so they ride the provider
 too: `messages={{ selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" } }}`

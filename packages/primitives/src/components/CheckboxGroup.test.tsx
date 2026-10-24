@@ -262,6 +262,29 @@ describe("CheckboxGroup", () => {
     expect(onToggle).toHaveBeenCalledTimes(0);
   });
 
+  it("reads a stored orientation name as the documented vertical axis", () => {
+    // The bug guarded: `orientation` is a stored layout choice as often as a
+    // literal, so a name this release does not carry arrives as a string the
+    // union no longer names. Read raw it reached `ARROW_KEYS[orientation]`, and
+    // destructuring threw `TypeError: Cannot destructure property 'forward'`
+    // on the first plain key press. It reads as the documented vertical.
+    const onToggle = vi.fn();
+    const groupHandlers = handlers(onToggle);
+    const element = render(
+      { options, orientation: "row" as "vertical" },
+      [],
+      Option.some(0),
+      groupHandlers,
+    );
+
+    expect(hostStyleString(element, "flexDirection")).toStrictEqual(
+      Option.some("column"),
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(groupHandlers.onFocusMove).toHaveBeenCalledWith(1);
+    expect(onToggle).toHaveBeenCalledTimes(0);
+  });
+
   it("toggles the focused option on the Space release, not on the press before it", () => {
     const onToggle = vi.fn();
     const element = render({ options }, [], Option.some(1), handlers(onToggle));

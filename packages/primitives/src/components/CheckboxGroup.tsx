@@ -29,6 +29,7 @@ import {
   decideActivation,
   decideMove,
   isPlainKey,
+  orientationOf,
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
@@ -161,7 +162,11 @@ export const renderCheckboxGroup = (
   handlers: CheckboxGroupHandlers,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  const { orientation = "vertical", accent = "primary" } = props;
+  // The axis a group lays out and navigates on. `orientation` is a stored
+  // choice like a size, so a name this release does not carry reads as the
+  // documented vertical (the layout and the keys must not disagree).
+  const orientation = orientationOf(props.orientation, "vertical");
+  const { accent = "primary" } = props;
   const size = controlSize(props.size);
   const options = checkboxGroupItems(props);
   const count = Arr.length(options);

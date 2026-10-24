@@ -7,8 +7,10 @@ import {
   decidePage,
   decideToggle,
   decideTypeAhead,
+  isOrientation,
   isPlainKey,
   isTypeAheadKey,
+  orientationOf,
   swallowKeyDefault,
   TYPE_AHEAD_RESET_MS,
 } from "./keyboard.js";
@@ -121,6 +123,39 @@ describe("decideMove", () => {
     expect(
       decideMove(0, 2, "down", "vertical", (index) => index !== 0),
     ).toEqual(Option.none());
+  });
+
+  it("answers nothing for an axis this release does not carry", () => {
+    // The bug guarded: `orientation` is a stored layout choice as often as a
+    // literal. Read raw, the name reached `ARROW_KEYS[orientation]` and
+    // destructuring threw `TypeError: Cannot destructure property 'forward'`
+    // on the first plain key press, so the group's whole keyboard contract
+    // died on a name; an axis with no arrow pair is `None`.
+    const stored = "row" as "vertical";
+    expect(decideMove(0, 3, "down", stored)).toEqual(Option.none());
+    expect(decideMove(0, 3, "right", stored)).toEqual(Option.none());
+  });
+});
+
+describe("a stored orientation", () => {
+  it("is the caller's documented axis when the table does not carry the name", () => {
+    // A radio and checkbox group document `vertical`, a toggle group and a
+    // button group `horizontal`; the default belongs to the component.
+    expect(orientationOf("row", "vertical")).toBe("vertical");
+    expect(orientationOf(undefined, "horizontal")).toBe("horizontal");
+  });
+
+  it("keeps a name the table does carry", () => {
+    expect(orientationOf("horizontal", "vertical")).toBe("horizontal");
+    expect(orientationOf("vertical", "horizontal")).toBe("vertical");
+  });
+
+  it("is the membership test the groups read their axis through", () => {
+    expect(isOrientation("vertical")).toBe(true);
+    expect(isOrientation("horizontal")).toBe(true);
+    expect(isOrientation("row")).toBe(false);
+    expect(isOrientation(undefined)).toBe(false);
+    expect(isOrientation(1)).toBe(false);
   });
 });
 

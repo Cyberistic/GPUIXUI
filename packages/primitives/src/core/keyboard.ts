@@ -20,6 +20,8 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 
 /** A key name as GPUix reports it in `EventPayload.key`, lower-cased. */
@@ -104,6 +106,34 @@ const ARROW_KEYS = {
 /** The axis a group of controls navigates with the arrow keys. */
 export type Orientation = keyof typeof ARROW_KEYS;
 
+/** The axes the table carries, so a stored name is checked against the paint. */
+const ORIENTATION_NAMES: ReadonlyArray<string> = R.keys(ARROW_KEYS);
+
+/**
+ * Whether a value names an axis.
+ *
+ * An orientation is a stored layout choice as often as a literal — a saved
+ * settings row, a toolbar record, a restored panel — so a name this release
+ * renamed or dropped arrives as a string the union no longer names.
+ */
+export const isOrientation = (value: unknown): value is Orientation =>
+  P.isString(value) && Arr.contains(ORIENTATION_NAMES, value);
+
+/**
+ * The axis a group navigates with: the name, or the caller's documented default.
+ *
+ * A group's default is its own (a radio group is vertical, a toggle group
+ * horizontal), so the caller states it here rather than the table guessing.
+ * Read raw, a stored name flipped the group's layout to the other axis **and**
+ * reached `ARROW_KEYS[orientation]`, where destructuring threw
+ * `TypeError: Cannot destructure property 'forward'` on the first plain key
+ * press — the group's whole keyboard contract died on a name.
+ */
+export const orientationOf = (
+  value: unknown,
+  fallback: Orientation,
+): Orientation => (isOrientation(value) ? value : fallback);
+
 /**
  * Move a selection with the arrow keys, wrapping at the ends.
  *
@@ -111,9 +141,9 @@ export type Orientation = keyof typeof ARROW_KEYS;
  * radio group must never land on a disabled option, because the tab stop would
  * move there with no way to select it.
  *
- * `None` means the key is not a navigation key, or there is nowhere enabled to
- * move to, so a caller can tell "stay put" from "unhandled" without comparing
- * against a sentinel index.
+ * `None` means the key is not a navigation key, the axis is one this release
+ * does not carry, or there is nowhere enabled to move to, so a caller can tell
+ * "stay put" from "unhandled" without comparing against a sentinel index.
  */
 export const decideMove = (
   index: number,
@@ -124,7 +154,9 @@ export const decideMove = (
 ): Option.Option<number> => {
   // A single option has nowhere to move: `Arr.range(1, 0)` answers `[1]`, which
   // would make the option its own neighbour and consume an arrow it cannot act on.
-  if (count <= 1) return Option.none();
+  // An axis the table does not carry has no arrow pair, which is `None` rather
+  // than a destructuring `TypeError` at a paint seam.
+  if (count <= 1 || !isOrientation(orientation)) return Option.none();
   const { forward, backward } = ARROW_KEYS[orientation];
   if (key !== forward && key !== backward) return Option.none();
   const step = key === forward ? 1 : -1;

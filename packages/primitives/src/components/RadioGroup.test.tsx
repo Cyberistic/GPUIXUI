@@ -135,6 +135,32 @@ describe("RadioGroup", () => {
     expect(handlers.onFocusMove).toHaveBeenCalledWith(1);
   });
 
+  it("reads a stored orientation name as the documented vertical axis", () => {
+    // The bug guarded: `orientation` is a stored layout choice as often as a
+    // literal, so a name this release does not carry arrives as a string the
+    // union no longer names. Read raw it reached `ARROW_KEYS[orientation]`, and
+    // destructuring threw `TypeError: Cannot destructure property 'forward'`
+    // on the first plain key press, so the group's whole keyboard contract was
+    // dead on a name. It reads as the documented vertical instead.
+    const onSelect = vi.fn();
+    const groupHandlers = radioHandlers(onSelect);
+    const element = renderRadioGroup(
+      { options, orientation: "row" as "vertical" },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      groupHandlers,
+    );
+
+    expect(hostStyleString(element, "flexDirection")).toStrictEqual(
+      Option.some("column"),
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(onSelect).toHaveBeenCalledWith("beta");
+    expect(groupHandlers.onFocusMove).toHaveBeenCalledWith(1);
+  });
+
   it("continues from the row that holds focus when the owner has not applied the choice", () => {
     // The bug guarded: the key contract started from the *selected* value, so a
     // controlled group whose owner declined a choice — a save still in flight, a
