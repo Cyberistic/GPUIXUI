@@ -441,6 +441,40 @@ describe("following a palette", () => {
     expect(applied).toHaveLength(1);
   });
 
+  it("re-applies a field a decoder now reports as empty, not absent", () => {
+    // A palette is a set of values, not a joined string. The key the watch used
+    // to compare wrote an absent field as `""` and joined the fields with a
+    // separator, so a decoder that stopped omitting a colour and started
+    // reporting it empty — what a TOML or JSON reader writes for a cleared
+    // value — produced the key of the palette before it, and the window kept the
+    // theme it had. The two compose differently: `paletteToTokens` keeps the
+    // base's role for an absent field and states the empty one, which the
+    // renderer then drops.
+    const cleared = clock({ ...nightPalette, accent: undefined });
+    cleared.change({ ...nightPalette, accent: "" });
+    cleared.tick();
+
+    expect(cleared.applied).toHaveLength(2);
+    expect(cleared.applied[1]?.colors.primary).toBe("");
+
+    // The reverse direction is the same change: a field omitted after it was
+    // reported empty falls back to the base's role.
+    const omitted = clock({ ...nightPalette, accent: "" });
+    omitted.change({ ...nightPalette, accent: undefined });
+    omitted.tick();
+
+    expect(omitted.applied).toHaveLength(2);
+    expect(omitted.applied[1]?.colors.primary).toBe(lightTheme.colors.primary);
+
+    // Comparing values rather than one string keeps a re-read that allocates a
+    // new object with the same fields quiet.
+    const reread = clock(nightPalette);
+    reread.change({ ...nightPalette });
+    reread.tick();
+
+    expect(reread.applied).toHaveLength(1);
+  });
+
   it("re-applies once per change", () => {
     const { applied, change, tick } = clock(nightPalette);
     change({ ...nightPalette, accent: "#7CC7B0" });

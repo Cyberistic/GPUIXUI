@@ -870,7 +870,10 @@ A palette names roles, and each maps to the role of the same name (`accent` is
 the `primary` fill, `danger` is `destructive`); an unnamed role keeps the base
 theme's value. The mapper chooses each filled role's on-colour by measuring the
 palette's own page and ink — it never blends a new colour — and the first read is
-applied at once while an unchanged palette calls nothing. A selection colour
+applied at once while an unchanged palette calls nothing. Every field is compared
+as its own value rather than through a joined key, so a decoder that reports a
+colour as `""` where it previously omitted it is delivered: the mapper keeps the
+base's role for the absent field and states the empty one. A selection colour
 arrives as a **fill** and is painted at the base theme's share, because the role
 is a wash behind text that keeps its own colour: handed over opaque, the example
 night palette's body ink reads **1.81:1** on the page and 8 selection placements

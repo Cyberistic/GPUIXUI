@@ -379,10 +379,10 @@ export interface WatchSystemThemeOptions {
 }
 
 /**
- * The palette fields the poll watches, in the fixed order its key reads them.
+ * The palette fields the poll watches, in the fixed order it reads them.
  *
  * A field this list omits is one a reader can change without the window
- * noticing — the watch compares this key, not the object — so the list is
+ * noticing — the watch compares these fields, not the object — so the list is
  * exhaustive by test: `system-theme.test.ts` builds a `Record<keyof
  * SystemPalette, string>` table (a new field fails the compile until it is
  * named there) and proves that changing any one field alone re-applies.
@@ -398,11 +398,24 @@ const paletteFields = [
   "selection",
 ] as const satisfies readonly (keyof SystemPalette)[];
 
-/** The palette's values in the watched order, so a tick that reads the same file is not a change. */
-const paletteKey = (palette: SystemPalette | undefined): string =>
-  palette === undefined
-    ? ""
-    : paletteFields.map((field) => palette[field] ?? "").join("\u0000");
+/**
+ * Whether two reads describe the same palette.
+ *
+ * The fields are compared as values, not through a string they are joined into:
+ * a decoder can report a colour as an empty string where the previous read
+ * omitted it — a TOML or JSON reader writes an empty value rather than no key —
+ * and the two compose differently, because `paletteToTokens` keeps the base's
+ * role for an absent field and states the empty one. A joined key wrote both as
+ * `""`, so the window kept the theme it had. Comparing field by field also
+ * keeps a re-read that allocates a new object with the same values quiet.
+ */
+const samePalette = (
+  left: SystemPalette | undefined,
+  right: SystemPalette | undefined,
+): boolean =>
+  left === undefined || right === undefined
+    ? left === right
+    : paletteFields.every((field) => left[field] === right[field]);
 
 /**
  * Follow a system palette, applying the first read immediately and re-applying
@@ -420,6 +433,11 @@ const paletteKey = (palette: SystemPalette | undefined): string =>
  * does not leave the window on the previous theme with the change marked as
  * delivered: the defect reaches the caller and the palette is offered again on
  * the next tick.
+ *
+ * Every watched field is compared as its own value, not through a joined key, so
+ * a decoder that reports a colour as `""` where it previously omitted it is a
+ * change the window sees — the two compose differently (`paletteToTokens` keeps
+ * the base's role for the absent field and states the empty one).
  *
  * @example
  * ```tsx
@@ -439,11 +457,11 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
   // range is the 1 ms floor it reads every other value as, so it is read as the
   // documented pace rather than handed on.
   const every = paceOf(options.every);
-  let applied: string | undefined;
+  let delivered = false;
+  let applied: SystemPalette | undefined;
   const tick = (): void => {
     const palette = read();
-    const key = paletteKey(palette);
-    if (key === applied) {
+    if (delivered && samePalette(applied, palette)) {
       return;
     }
     onChange(
@@ -453,7 +471,8 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
     );
     // Recorded after delivery: a callback that throws is retried next tick
     // rather than leaving the window on the theme it already had.
-    applied = key;
+    applied = palette;
+    delivered = true;
   };
   tick();
   return timer.poll(every, tick);

@@ -1334,7 +1334,11 @@ It applies the first read immediately, then re-applies only when the palette it
 read actually changed — a poll that keeps reading the same file calls nothing,
 and every field the shape offers is compared (the stated `mode` included), so a
 desktop that moves only its border, its selection colour or its mode still
-reaches the window — and an `undefined` read applies the base theme, which is how
+reaches the window — and each field is compared as its own value, not through a
+string the fields are joined into: a decoder that reports a colour as `""` where
+the previous read omitted it is a change, because the mapper keeps the base's
+role for the absent field and states the empty one, and a joined key wrote both
+as the same empty field — and an `undefined` read applies the base theme, which is how
 a deleted system theme returns the window to the application's own. The pace is
 configuration as often as a literal, so an `every` outside the 1 – 2 147 483 647 ms
 range `setInterval` honours reads as `systemThemePollMs` (2000): the timer treats
