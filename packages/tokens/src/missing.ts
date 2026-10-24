@@ -3,7 +3,7 @@
  * earns.
  *
  * This is the presence rule every contract that reads a numeric group shares.
- * The gate runs it before its reports ({@link auditTheme}), and each numeric
+ * The gate runs it before its reports (`auditTheme`), and each numeric report
  * report runs it too: `invalidNumbers` and `invalidScales` walk the groups a
  * theme carries, so a stored theme that lost a whole group used to fail inside
  * the walk with `TypeError: Cannot convert undefined or null to object` — a
