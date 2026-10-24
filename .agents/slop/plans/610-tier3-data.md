@@ -644,6 +644,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `docs/column-configuration.mdx`, the README's divider paragraph and the
   Resizable columns row. 232 unit / 157 behaviour green.
 
+- **Type-ahead reaches a row whose name never arrived**: the row paints and
+  announces its key when `labelOf` answers blank (`treeName`) and the pure
+  `typeAheadRow` matched on it, but `useTree` handed the typeahead seam the raw
+  label — measured, a two-row blank-label tree painted `alpha`/`beta` and typing
+  `b` left the cursor on `alpha`. The controller maps
+  `treeName(labelOf(node), key)` into the seam now, so the paint, the accessible
+  name and the match read one word in both `TreeView` and `VirtualTree`;
+  `behaviour/tree.test.tsx` gains the case (direction measured: the focus stayed
+  on `blank-tree-row-alpha`). Docs: `docs/tree-view.mdx`, the README's
+  type-ahead paragraph and the Tree views row. 232 unit / 158 behaviour green.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

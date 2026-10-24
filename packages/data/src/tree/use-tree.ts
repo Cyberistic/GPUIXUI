@@ -13,7 +13,9 @@
  * mounting a tree does not steal focus.
  *
  * The typed prefix is `@gpuixui/components/typeahead`'s rule; the tree supplies
- * the rows' labels and maps the position the seam answers back onto the row key.
+ * the rows' labels as the words they **paint** (`treeName`), so a blank label
+ * reads as the row's key for the paint, the name and the match alike, and maps
+ * the position the seam answers back onto the row key.
  *
  * A key is dispatched along the **focus path**, so a key typed in a field inside
  * a row reaches the row's handler too (`press-routing-lifecycle`'s `field-cell`
@@ -37,6 +39,7 @@ import {
   emptyCursor,
   isTreeKey,
   treeCursorMove,
+  treeName,
   type TreeCursor,
   type TreeRow,
 } from "./logic.js";
@@ -131,7 +134,9 @@ export const useTree = <T>({
   const typeahead = useTypeahead(
     Arr.map(rows, (row) => ({
       key: row.key,
-      label: labelOf(row.node),
+      // The words the row paints and is named by: a blank label reads as the
+      // key (`treeName`), so a typed prefix can reach the row the tree shows.
+      label: treeName(labelOf(row.node), row.key),
       disabled: false,
     })),
     Option.flatMap(resolved.active, (key) =>

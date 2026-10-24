@@ -419,7 +419,9 @@ holds the expansion set and the cursor; `TreeView` paints the rows and owns the
 keys and the native focus. A typed prefix is the **published** rule —
 `@gpuixui/components/typeahead` owns the window, the repeat rule and the
 character a keystroke types, so a tree, a list and a menu cannot disagree; the
-tree contributes each row's `labelOf` and keeps only the position-to-key step:
+tree contributes each row's words as it paints them —
+`treeName(labelOf(node), key)`, not the raw label — and keeps only the
+position-to-key step:
 
 ```tsx
 const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
@@ -442,7 +444,9 @@ character jumps to the first row after the cursor whose label starts with the
 prefix. A label is content: an accessor that answers blank — a listing that could
 not read a name, a record restored without its title — reads as the row's key
 (`treeName`, the one reading the paint, the accessible name and the type-ahead
-match share), so a tree never paints a nameless row no prefix can reach.
+match share), so a tree never paints a nameless row no prefix can reach — the
+seam is handed that same reading, not the raw label, so typing the key reaches a
+row whose name never arrived (`tree.test.tsx`).
 `reveal(key)` opens the path to a node and moves the cursor to it, and a
 caller-driven cursor **lands the focus** on its row: the row is re-taken on the
 next tick, after the runtime has handed the pressed control the focus. A key that

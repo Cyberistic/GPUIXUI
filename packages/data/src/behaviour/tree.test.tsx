@@ -368,4 +368,18 @@ describe("the file tree", () => {
     // The paint and the name are one reading.
     expect(paintedText(root)).toContain("alpha");
   });
+
+  it("reaches a blank-labelled row by typing the key it is named by", () => {
+    // Bug guarded: the row paints and announces its key when `labelOf` answers
+    // blank, but the type-ahead seam was handed the raw label, so the one word
+    // the row is named by could not reach it — a tree of rows whose names never
+    // arrived painted `alpha`/`beta` and no typed prefix could move to them.
+    root = renderData(<BlankNameTree />);
+    settle(root);
+
+    pressKey(root, "blank-tree-row-alpha", "b");
+    root.renderer.flush();
+
+    expect(focusedTestId(root)).toEqual(Option.some("blank-tree-row-beta"));
+  });
 });
