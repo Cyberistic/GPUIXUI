@@ -8738,6 +8738,28 @@ scenario applies — the floors, the gate and two tables read from one value.
       scenario applies — the resolvers paint what the components' own suites
       already read in a window.
 
+`[x]` `packages/primitives`: **a stored text tone lost its ink and a stored
+      spinner accent painted nothing** — the two remaining paint names indexed
+      their tables raw. `Text`'s `TONE_CLASS[options.tone]` resolved to no
+      colour class, so the run inherited whatever surface sat behind it — an
+      error line painted as ordinary copy — while `Spinner`'s
+      `SPINNER_ACCENT_CLASS[accent]` resolved to no background on any dot (a
+      busy state a reader cannot see, with no error anywhere) and the core
+      `accentColor` called `ACCENT_COLOR[name]` as a function (`TypeError`).
+      `core/style.ts` gains `isTextTone`/`textToneOf` (→ `default`) beside
+      `TEXT_TONES` and `core/loading.ts` gains
+      `isSpinnerAccent`/`spinnerAccentOf` (→ `primary`) beside
+      `SPINNER_ACCENTS`, each derived from the shipped list; `toneColor`,
+      `textClass` and `spinnerDotClass`/`accentColor` read through them.
+      Proof: `presentational.test.tsx` gains `paints a tone name the table does
+      not carry as the default tone` and `paints a spinner accent name the table
+      does not carry as the brand`; both were measured failing with the colour
+      absent from the element tree, and the package is 56 files / **1 125**
+      tests green with `check-types` clean. Docs: `docs/text.mdx`/`docs/
+      spinner.mdx` §API and the package README's stored-choice list. No native
+      scenario applies — the classes resolve to the ink and dots the suites
+      already read.
+
 `[x]` `packages/components`: **a hover delay the caller could not supply opened
       the surface at once** — `PreviewCard` and `NavigationMenu` each scheduled
       `openDelay`/`closeDelay` straight into `setTimeout`, which answers a delay

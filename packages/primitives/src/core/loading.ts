@@ -157,6 +157,23 @@ export const SPINNER_ACCENTS = [
 ] as const;
 export type SpinnerAccent = (typeof SPINNER_ACCENTS)[number];
 
+/** The accents as a list a stored value can be checked against. */
+const ACCENT_NAMES: ReadonlyArray<string> = SPINNER_ACCENTS;
+
+/** Whether a value names a spinner accent. */
+export const isSpinnerAccent = (value: unknown): value is SpinnerAccent =>
+  typeof value === "string" && Arr.contains(ACCENT_NAMES, value);
+
+/**
+ * The accent a spinner paints with: the name, or the documented `primary`.
+ *
+ * Indexed raw, an unknown name answered no colour class (a loader that painted
+ * nothing) and the core resolver called `ACCENT_COLOR[name]` as a function —
+ * a `TypeError` where an indicator should be.
+ */
+export const spinnerAccentOf = (value: unknown): SpinnerAccent =>
+  isSpinnerAccent(value) ? value : "primary";
+
 export interface SpinnerSpec {
   readonly size: number;
   readonly accent: SpinnerAccent;
@@ -213,7 +230,7 @@ const ACCENT_COLOR: Readonly<
 };
 
 const accentColor = (accent: SpinnerAccent, theme: PrimitiveTheme): string =>
-  ACCENT_COLOR[accent](theme);
+  ACCENT_COLOR[spinnerAccentOf(accent)](theme);
 
 /**
  * One dot of the indicator.

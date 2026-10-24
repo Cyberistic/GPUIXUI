@@ -21,6 +21,8 @@ import {
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import type { SpinnerAccent } from "../core/loading.js";
+import type { TextTone } from "../core/style.js";
 import type { TextRole } from "../core/theme.js";
 import * as primitives from "../index.js";
 import { renderBox } from "./Box.js";
@@ -549,6 +551,42 @@ describe("type", () => {
     );
     expect(numberIn(stored, "fontWeight")).toStrictEqual(
       numberIn(fallback, "fontWeight"),
+    );
+  });
+
+  it("paints a tone name the table does not carry as the default tone", () => {
+    // The bug guarded: `tone` is a stored choice as often as a literal — an
+    // audit row, a saved message, a settings record — so a name a release
+    // renamed resolved to no colour class at all. The run then inherited
+    // whatever the surface behind it painted, instead of the `default` ink the
+    // component documents.
+    const stored = renderText({ tone: "critical" as TextTone }, testTheme);
+    const fallback = renderText({ tone: "default" }, testTheme);
+    expect(expectSome(stringIn(stored, "color"))).toBe(
+      expectSome(stringIn(fallback, "color")),
+    );
+    expect(expectSome(stringIn(stored, "color"))).toBe(
+      testTheme.colors.foreground,
+    );
+  });
+
+  it("paints a spinner accent name the table does not carry as the brand", () => {
+    // The bug guarded: an unknown accent resolved to no colour class on every
+    // dot, so the indicator painted nothing at all — a busy state a reader
+    // cannot see, and no error anywhere.
+    const stored = renderSpinner(
+      { accent: "brand" as SpinnerAccent },
+      testTheme,
+      0,
+    );
+    const fallback = renderSpinner({ accent: "primary" }, testTheme, 0);
+    const dotOf = (element: ReactElement): ReactElement =>
+      elementChildren(element)[0] ?? expect.fail("the spinner drew no dot");
+    expect(expectSome(stringIn(dotOf(stored), "backgroundColor"))).toBe(
+      expectSome(stringIn(dotOf(fallback), "backgroundColor")),
+    );
+    expect(expectSome(stringIn(dotOf(stored), "backgroundColor"))).toBe(
+      testTheme.colors.primary,
     );
   });
 

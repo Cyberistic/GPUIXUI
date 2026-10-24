@@ -21,7 +21,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `size` | `IconSize \| number` | `"md"` | the dot side: a theme step, or raw pixels |
-| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-accent \| on-disabled` | `"primary"` | the role every dot paints |
+| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-accent \| on-disabled` | `"primary"` | the role every dot paints; a stored name the table does not carry reads as `primary` |
 | `label` | `string` | `loading.busy` (`"Loading"`) | accessible name announced as a status; a blank one paints the dots as decoration (no node to walk into) |
 | `reducedMotion` | `boolean` | the motion provider | holds the lit dot and schedules no interval; the prop overrides the provider |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |

@@ -233,6 +233,27 @@ export const TEXT_TONES = [
 
 export type TextTone = (typeof TEXT_TONES)[number];
 
+const TEXT_TONE_NAMES: ReadonlyArray<string> = TEXT_TONES;
+
+/**
+ * Whether a value names a text tone.
+ *
+ * A tone is a stored choice as often as a literal — an audit row, a saved
+ * message, a settings record carries the tone it was written with.
+ */
+export const isTextTone = (value: unknown): value is TextTone =>
+  typeof value === "string" && Arr.contains(TEXT_TONE_NAMES, value);
+
+/**
+ * The tone a run paints with: the name, or the documented `default`.
+ *
+ * Indexed raw, a name a release renamed resolved to no colour at all, so the
+ * run inherited the surface behind it instead of the ink the component
+ * documents — an error line reading as ordinary copy.
+ */
+export const textToneOf = (value: unknown): TextTone =>
+  isTextTone(value) ? value : "default";
+
 const tones: Record<TextTone, Paint> = {
   default: (theme) => theme.colors.foreground,
   muted: (theme) => theme.colors.mutedForeground,
@@ -253,7 +274,7 @@ const tones: Record<TextTone, Paint> = {
 export const toneColor = (
   theme: PrimitiveTheme,
   tone: TextTone,
-): string | undefined => paint(tones[tone], theme);
+): string | undefined => paint(tones[textToneOf(tone)], theme);
 
 export interface TextSpec {
   readonly role: TextRole;

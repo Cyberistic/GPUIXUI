@@ -11,6 +11,7 @@
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import { isTextRole } from "../core/theme.js";
+import { spinnerAccentOf } from "../core/loading.js";
 import type { SpinnerAccent } from "../core/loading.js";
 import { trackCount } from "../core/layout.js";
 import type {
@@ -28,6 +29,7 @@ import {
   paddingSides,
   progressSizeOf,
   progressToneOf,
+  textToneOf,
 } from "../core/style.js";
 import type {
   ProgressSize,
@@ -215,7 +217,7 @@ export const textClass = (options: TextRecipeOptions): string => {
   return cn(
     `type-${ROLE_CLASS[role]}`,
     familyOf(role),
-    TONE_CLASS[options.tone],
+    TONE_CLASS[textToneOf(options.tone)],
     options.align === undefined ? undefined : ALIGN_CLASS[options.align],
     options.selectable === true ? "select-text" : "select-none",
     options.truncate === true && "whitespace-nowrap text-ellipsis",
@@ -803,7 +805,7 @@ const SPINNER_ACCENT_CLASS: Readonly<Record<SpinnerAccent, string>> = {
  * indicator inside a filled control paints that fill's on-colour throughout.
  */
 export const spinnerDotClass = (accent: SpinnerAccent): string =>
-  cn("shrink-0 rounded-full", SPINNER_ACCENT_CLASS[accent]);
+  cn("shrink-0 rounded-full", SPINNER_ACCENT_CLASS[spinnerAccentOf(accent)]);
 
 /** The class string a skeleton's resting shape resolves from. */
 export const skeletonClass = (spec: {

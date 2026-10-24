@@ -82,6 +82,15 @@ and each is read through a membership test rather than indexed raw:
   The class name otherwise became `type-undefined`, which resolves to no size,
   leading or weight at all: the run painted the runtime's default face instead of
   body copy.
+- a **text `tone`** is written into an audit row, a saved message or a settings
+  record, so `isTextTone`/`textToneOf` (`core/style.ts`) read a name the table
+  does not carry as `default`; the class string otherwise lost its colour and
+  the run inherited whatever surface sat behind it — an error line painted as
+  ordinary copy.
+- a **spinner `accent`** is the same kind of paint name:
+  `isSpinnerAccent`/`spinnerAccentOf` (`core/loading.ts`) read an unknown one as
+  `primary`, because the recipe resolved no colour class (a loader that painted
+  nothing) and the core resolver called `ACCENT_COLOR[name]` as a function.
 - a **bar's `size` and `tone`** live in a dashboard widget's saved record, so
   `isProgressSize`/`progressSizeOf` and `isProgressTone`/`progressToneOf`
   (`core/style.ts`) read them as `md`/`primary` for both `Progress` and `Meter`.
