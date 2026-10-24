@@ -38,10 +38,31 @@ const props = (
 const surfaceOf = (): MediaPlayerSurface & {
   readonly toggle: ReturnType<typeof vi.fn>;
   readonly seek: ReturnType<typeof vi.fn>;
+  readonly down: ReturnType<typeof vi.fn>;
+  readonly move: ReturnType<typeof vi.fn>;
+  readonly up: ReturnType<typeof vi.fn>;
+  readonly register: ReturnType<typeof vi.fn>;
 } => {
   const toggle = vi.fn();
   const seek = vi.fn();
-  return { toggle, seek, onToggle: toggle, onSeek: seek };
+  const down = vi.fn();
+  const move = vi.fn();
+  const up = vi.fn();
+  const register = vi.fn();
+  return {
+    toggle,
+    seek,
+    down,
+    move,
+    up,
+    register,
+    onToggle: toggle,
+    onSeek: seek,
+    onTrackDown: down,
+    onTrackMove: move,
+    onTrackUp: up,
+    registerTrack: register,
+  };
 };
 
 const poster = createRef<ImgInstance>();
@@ -160,6 +181,44 @@ describe("renderMediaPlayer", () => {
     seek({ key: "end" });
     expect(surface.toggle).toHaveBeenCalledTimes(1);
     expect(surface.seek).toHaveBeenCalledWith({ key: "end" });
+  });
+
+  it("forwards the progress track's handlers and registers its box", () => {
+    // The bug guarded: the track painted the played share but took no press,
+    // so a reader could not seek to a point on the clip they could see.
+    const surface = surfaceOf();
+    const root = tree({}, { playing: false, playhead: 0 }, surface);
+    const hit = expectSome(findByTestId(root, "media-track-hit"));
+    const down = expectSome(elementHandler(hit, "onMouseDown"));
+    down({ x: 160, button: 0 });
+    const move = expectSome(elementHandler(hit, "onMouseMove"));
+    move({ x: 180, pressedButton: 0 });
+    const up = expectSome(elementHandler(hit, "onMouseUp"));
+    up(undefined);
+    expect(surface.down).toHaveBeenCalledWith({ x: 160, button: 0 });
+    expect(surface.move).toHaveBeenCalledWith({ x: 180, pressedButton: 0 });
+    expect(surface.up).toHaveBeenCalledTimes(1);
+    // The visual track keeps its own box and fill inside the taller target.
+    expect(
+      expectSome(
+        hostProp(expectSome(findByTestId(root, "media-track")), "style"),
+      ),
+    ).toMatchObject({ width: 200 });
+    expect(
+      expectSome(
+        hostProp(expectSome(findByTestId(root, "media-fill")), "style"),
+      ),
+    ).toMatchObject({ width: 0 });
+  });
+
+  it("takes no press on the progress track while disabled", () => {
+    const root = tree({ disabled: true });
+    const hit = expectSome(findByTestId(root, "media-track-hit"));
+    expect(elementHandler(hit, "onMouseDown")).toStrictEqual(Option.none());
+    expect(elementHandler(hit, "onMouseMove")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(hit, "style"))).toMatchObject({
+      cursor: "default",
+    });
   });
 
   it("paints no picture for a player with no frame source", () => {

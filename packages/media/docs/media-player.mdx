@@ -75,6 +75,20 @@ announces the clock through `aria-valuetext`:
 The play/pause action is the shipped `Button`, so it activates on click, Enter
 and Space and leaves the tab order while disabled.
 
+## Pointer
+
+The progress track is also a seek control: a press on it seeks to the share of
+the clip the pointer names, and a drag while the primary button is held scrubs.
+The painted rail is 6 points tall inside a **24-point** target
+(`targetSize.minimum`, the same floor a checkbox's target keeps), and the rail
+itself is pointer-transparent so a press anywhere in that band reaches the
+track. A press outside the band's ends clamps to 0:00 or the clip's end; a
+secondary press begins no scrub (it is a context-menu gesture); and a move that
+holds no button ends the gesture, so a release outside the track cannot leave it
+armed for the next hover. The player reads the track's box from the renderer at
+press time — the route the shipped `Slider` uses — so a resize is picked up
+without a second measurement.
+
 ## Limitations
 
 - **Measured in a window**: `media-player-lifecycle` (51 checks, 0.11.0) mounts
@@ -88,9 +102,11 @@ and Space and leaves the tab order while disabled.
   element and no playback verb, so the caller supplies each frame's bytes. This
   player is the picture and the transport; a clip's frames must arrive from the
   app.
-- **No pointer scrub.** The track paints the played share but is not a drag
-  control; a seek is the pad's keys. A caller that wants a click-to-seek track
-  composes one over the same playhead.
+- **A pointer scrub is a press and a drag, not a click on a rail.** The track
+  seeks to the share a press names and follows a drag while the primary button
+  is held; the rail itself is pointer-transparent inside its 24-point target. A
+  release delivered outside the target ends the scrub, so the next hover moves
+  nothing. A caller that wants a finer pointer target can set `trackWidth`.
 - **The pad announces through `aria-valuetext`**: `@gpuix/native@0.11.0` has no
   `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the clock is the value a
   reader hears (the same rule the shipped sliders follow).

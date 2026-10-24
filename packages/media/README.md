@@ -13,7 +13,7 @@ the runtime has no playback element.
 | `FileUpload` | the queue and `upload/queue.ts`'s state machine | the transfer is the caller's `upload(file, onProgress)`; the package owns no network |
 | `CropArea` | a controlled crop hole, its mask and its gestures | four veil bars are the only mask the runtime paints; each is pointer-transparent so the press reaches the frame |
 | `QrCode` | the symbol, its quiet zone and the refusal of a value that does not fit | the encoder is the package's; the paint is one tinted `<svg>` mask, the route `qr-matrix` measured |
-| `MediaPlayer` | the clip's frames, a progress track, a waveform and a transport with a seek pad | no `video`/`audio` host, so the caller supplies each frame's bytes and the player owns the clock; `setImagePixels` is the measured paint route |
+| `MediaPlayer` | the clip's frames, a progress track, a waveform and a transport with a seek pad and a pointer scrub | no `video`/`audio` host, so the caller supplies each frame's bytes and the player owns the clock; `setImagePixels` is the measured paint route |
 
 ## Why a package
 

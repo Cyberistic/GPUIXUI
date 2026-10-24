@@ -4,10 +4,12 @@
  * The bugs these guard: a play button that reports a state but paints no clock;
  * a pause that lets the app's interval run on; a seek pad whose keys are not
  * the transport's; a playhead taken to the clip's end while playing that does
- * not stop the transport; a play from a finished clip that stays finished; and
- * a player disabled while running that keeps its clock. The frame source is
- * recorded on every call, so the suite also holds that the paint follows the
- * playhead the transport reports.
+ * not stop the transport; a play from a finished clip that stays finished; a
+ * player disabled while running that keeps its clock; and a progress track that
+ * paints the played share but takes no press, so a reader cannot seek to a
+ * point on the clip they can see. The frame source is recorded on every call,
+ * so the suite also holds that the paint follows the playhead the transport
+ * reports.
  */
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
@@ -129,6 +131,25 @@ const fillOf = (root: TestRoot): number =>
     root.renderer.findByTestId("media-fill")?.id ?? -1,
   )?.width ?? -1;
 
+/** A point on the progress track at `share` of its width, in window points. */
+const trackPoint = (
+  root: TestRoot,
+  share: number,
+): { readonly x: number; readonly y: number } => {
+  const hit = root.renderer.findByTestId("media-track-hit");
+  if (hit === undefined) {
+    throw new Error("behaviour: the progress track is missing");
+  }
+  const box = root.renderer.getElementBounds(hit.id);
+  if (box === null) {
+    throw new Error("behaviour: the progress track painted no box");
+  }
+  return {
+    x: box.x + box.width * share,
+    y: box.y + box.height / 2,
+  };
+};
+
 const focusSeek = (root: TestRoot): void => {
   const seek = root.renderer.findByTestId("media-seek");
   if (seek === undefined) throw new Error("behaviour: the seek pad is missing");
@@ -239,6 +260,60 @@ describe("MediaPlayer transport", () => {
     expect(page.frames).toContain(4000);
     page.root.renderer.simulateKeystrokes("home");
     expect(page.frames).toContain(0);
+    page.root.unmount();
+  });
+
+  it("seeks to the share of the clip a press on the track names", () => {
+    // The bug guarded: the track painted the played share but took no press, so
+    // a reader could see a point on the clip and not seek to it.
+    const page = mount();
+    const threeQuarters = trackPoint(page.root, 0.75);
+    page.root.renderer.nativeSimulateMouseDown(
+      threeQuarters.x,
+      threeQuarters.y,
+    );
+    expect(textOf(page.root, "media-time")).toBe("0:03 / 0:04");
+    expect(fillOf(page.root)).toBe(150);
+    expect(page.playheads.at(-1)).toBe(3000);
+
+    const end = trackPoint(page.root, 1);
+    page.root.renderer.nativeSimulateMouseMove(end.x, end.y, 0);
+    expect(textOf(page.root, "media-time")).toBe("0:04 / 0:04");
+    expect(fillOf(page.root)).toBe(200);
+    expect(page.playheads.at(-1)).toBe(4000);
+
+    page.root.renderer.nativeSimulateMouseUp(end.x, end.y);
+    // A hover after the release holds no button, so it must not scrub: a
+    // gesture left armed would move the clip with no press at all.
+    const held = page.playheads.length;
+    const quarter = trackPoint(page.root, 0.25);
+    page.root.renderer.nativeSimulateMouseMove(quarter.x, quarter.y);
+    expect(page.playheads.length).toBe(held);
+    expect(textOf(page.root, "media-time")).toBe("0:04 / 0:04");
+    page.root.unmount();
+  });
+
+  it("begins no scrub on a secondary press", () => {
+    // A right press on the track is the reader asking for a context menu, not a
+    // seek; arming the scrub there would move the clip on a drag.
+    const page = mount();
+    const middle = trackPoint(page.root, 0.5);
+    page.root.renderer.nativeSimulateMouseDown(middle.x, middle.y, 2);
+    page.root.renderer.nativeSimulateMouseMove(middle.x, middle.y, 0);
+    expect(page.playheads).toStrictEqual([]);
+    expect(textOf(page.root, "media-time")).toBe("0:00 / 0:04");
+    page.root.unmount();
+  });
+
+  it("refuses the track while disabled", () => {
+    const page = mount();
+    page.show(true);
+    const middle = trackPoint(page.root, 0.5);
+    page.root.renderer.nativeSimulateMouseDown(middle.x, middle.y);
+    page.root.renderer.nativeSimulateMouseMove(middle.x, middle.y, 0);
+    page.root.renderer.nativeSimulateMouseUp(middle.x, middle.y);
+    expect(page.playheads).toStrictEqual([]);
+    expect(textOf(page.root, "media-time")).toBe("0:00 / 0:04");
     page.root.unmount();
   });
 

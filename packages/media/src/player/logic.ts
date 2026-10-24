@@ -134,6 +134,55 @@ export interface MediaKey {
   readonly preventDefault?: () => void;
 }
 
+/** A pointer payload, read structurally so a fixture can supply one. */
+export interface MediaPointer {
+  readonly x?: number | null;
+  /** Which button went down; `0` is the primary one. Absent reads as primary. */
+  readonly button?: number | null;
+  /** Which button a move is holding; a move holding none ends the scrub. */
+  readonly pressedButton?: number | null;
+}
+
+/** The box the progress track paints, in window points. */
+export interface MediaTrackBox {
+  readonly x: number;
+  readonly width: number;
+}
+
+/**
+ * Whether a press may begin a scrub.
+ *
+ * A secondary press on the track is the reader asking for a context menu, not a
+ * seek — the rule the crop frame follows. A payload that names no button is the
+ * primary one, the only press a gesture begins on.
+ */
+export const isScrubPress = (button: number | null | undefined): boolean =>
+  button === undefined || button === null || button === 0;
+
+/**
+ * The playhead a press at `x` on the progress track asks for.
+ *
+ * The track is the clip's whole length, so a press's share of its width is the
+ * share of the clip: a press outside the track clamps to its ends, and `None`
+ * answers when the track or the clip cannot be laid out (a stored `duration: 0`
+ * or a track the layout did not paint). A coordinate that is not a number reads
+ * as the track's start rather than moving the playhead by `NaN`.
+ */
+export const scrubPlayhead = (
+  x: number,
+  track: MediaTrackBox,
+  duration: number,
+): Option.Option<number> => {
+  const end = durationOf(duration);
+  const width =
+    Number.isFinite(track.width) && track.width > 0 ? track.width : 0;
+  if (end === 0 || width === 0) return Option.none();
+  const origin = Number.isFinite(track.x) ? track.x : 0;
+  const at = Number.isFinite(x) ? x : origin;
+  const share = Math.min(Math.max((at - origin) / width, 0), 1);
+  return Option.some(clampPlayhead(share * end, end));
+};
+
 /**
  * The playhead a transport key asks for; `None` for a key the pad does not own.
  *

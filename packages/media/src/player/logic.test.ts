@@ -16,9 +16,11 @@ import {
   formatClock,
   isFinished,
   isFrame,
+  isScrubPress,
   MEDIA_SEEK_STEP_MS,
   peaksOf,
   progressWidth,
+  scrubPlayhead,
   seekPlayhead,
   stepOf,
   timeLabel,
@@ -146,6 +148,48 @@ describe("the transport keys", () => {
     expect(seekPlayhead(0, "right", Number.NaN, 4000)).toStrictEqual(
       Option.some(MEDIA_SEEK_STEP_MS),
     );
+  });
+});
+
+describe("the progress track", () => {
+  it("seeks to the share of the clip a press names", () => {
+    // The track is the clip's whole length: its start is 0:00, its middle half
+    // the clip and its end the last frame a playhead can hold.
+    const track = { x: 100, width: 200 };
+    expect(scrubPlayhead(100, track, 4000)).toStrictEqual(Option.some(0));
+    expect(scrubPlayhead(200, track, 4000)).toStrictEqual(Option.some(2000));
+    expect(scrubPlayhead(300, track, 4000)).toStrictEqual(Option.some(4000));
+  });
+
+  it("clamps a press outside the track to its ends", () => {
+    const track = { x: 100, width: 200 };
+    expect(scrubPlayhead(0, track, 4000)).toStrictEqual(Option.some(0));
+    expect(scrubPlayhead(900, track, 4000)).toStrictEqual(Option.some(4000));
+  });
+
+  it("reads an unreadable coordinate as the track's start", () => {
+    expect(
+      scrubPlayhead(Number.NaN, { x: 100, width: 200 }, 4000),
+    ).toStrictEqual(Option.some(0));
+  });
+
+  it("answers nothing for a track or a clip that cannot be laid out", () => {
+    expect(scrubPlayhead(150, { x: 100, width: 0 }, 4000)).toStrictEqual(
+      Option.none(),
+    );
+    expect(
+      scrubPlayhead(150, { x: 100, width: Number.NaN }, 4000),
+    ).toStrictEqual(Option.none());
+    expect(scrubPlayhead(150, { x: 100, width: 200 }, 0)).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("begins a scrub only on the primary press", () => {
+    expect(isScrubPress(undefined)).toBe(true);
+    expect(isScrubPress(null)).toBe(true);
+    expect(isScrubPress(0)).toBe(true);
+    expect(isScrubPress(2)).toBe(false);
   });
 });
 

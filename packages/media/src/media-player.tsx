@@ -16,10 +16,16 @@
  * the runtime's one drawing route.
  */
 
-import type { ImgInstance, Props, StyleDesc } from "@gpuix/react";
+import {
+  useGpuix,
+  type ImgInstance,
+  type Props,
+  type PublicInstance,
+  type StyleDesc,
+} from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Button } from "@gpuixui/primitives/button";
-import { keyboardFocusRing, textStyle } from "@gpuixui/tokens";
+import { keyboardFocusRing, targetSize, textStyle } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import {
@@ -38,16 +44,19 @@ import {
   durationOf,
   isFinished,
   isFrame,
+  isScrubPress,
   MEDIA_SEEK_STEP_MS,
   MEDIA_TICK_MS,
   peaksOf,
   progressWidth,
+  scrubPlayhead,
   seekPlayhead,
   stepOf,
   timeLabel,
   waveformSvg,
   type MediaFrame,
   type MediaKey,
+  type MediaPointer,
   type MediaState,
 } from "./player/logic.js";
 
@@ -60,6 +69,12 @@ export type MediaFrameAt = (playhead: number) => Option.Option<MediaFrame>;
 export interface MediaPlayerSurface {
   readonly onToggle: () => void;
   readonly onSeek: (event: MediaKey) => void;
+  /** A press or drag on the progress track, which seeks to the share it names. */
+  readonly onTrackDown: (event: MediaPointer) => void;
+  readonly onTrackMove: (event: MediaPointer) => void;
+  readonly onTrackUp: () => void;
+  /** The track's painted instance, so a press can be read against its box. */
+  readonly registerTrack: (instance: PublicInstance | null) => void;
 }
 
 /** {@link MediaPlayer} props. */
@@ -141,6 +156,9 @@ const trackStyle = (theme: Theme, width: number): StyleDesc => ({
   height: TRACK_HEIGHT,
   borderRadius: TRACK_HEIGHT,
   backgroundColor: theme.colors.muted,
+  // The hit target is the padded row around the rail, so the rail itself is
+  // transparent to the pointer — the rule the crop mask's bars follow.
+  pointerEvents: "none",
 });
 
 /** The element `MediaPlayer` renders. Pure in its arguments. */
@@ -232,16 +250,35 @@ export const renderMediaPlayer = (
         >
           {state.playing ? pauseWord : playWord}
         </Button>
-        <div testId="media-track" style={trackStyle(theme, barWidth)}>
-          <div
-            testId="media-fill"
-            style={{
-              width: progressWidth(playhead, end, barWidth),
-              height: TRACK_HEIGHT,
-              borderRadius: TRACK_HEIGHT,
-              backgroundColor: theme.colors.primary,
-            }}
-          />
+        <div
+          testId="media-track-hit"
+          ref={surface.registerTrack}
+          onMouseDown={
+            disabled ? undefined : (event) => surface.onTrackDown(event)
+          }
+          onMouseMove={
+            disabled ? undefined : (event) => surface.onTrackMove(event)
+          }
+          onMouseUp={() => surface.onTrackUp()}
+          onMouseLeave={() => surface.onTrackUp()}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: targetSize.minimum,
+            cursor: disabled ? "default" : "pointer",
+          }}
+        >
+          <div testId="media-track" style={trackStyle(theme, barWidth)}>
+            <div
+              testId="media-fill"
+              style={{
+                width: progressWidth(playhead, end, barWidth),
+                height: TRACK_HEIGHT,
+                borderRadius: TRACK_HEIGHT,
+                backgroundColor: theme.colors.primary,
+              }}
+            />
+          </div>
         </div>
         <text
           testId="media-time"
@@ -283,6 +320,7 @@ export const renderMediaPlayer = (
 /** A clip's picture and transport, with an app-owned clock. */
 export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
   const theme = useTheme();
+  const { renderer } = useGpuix();
   const duration = durationOf(props.duration);
   const tick = stepOf(props.tickMs ?? MEDIA_TICK_MS, MEDIA_TICK_MS);
   const seekStep = stepOf(
@@ -290,6 +328,8 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
     MEDIA_SEEK_STEP_MS,
   );
   const poster = useRef<ImgInstance | null>(null);
+  const trackId = useRef<number | null>(null);
+  const scrubbing = useRef(false);
   const [state, setState] = useState<MediaState>(() => ({
     playing: props.defaultPlaying === true && duration > 0,
     playhead: clampPlayhead(props.defaultPlayhead ?? 0, duration),
@@ -365,6 +405,12 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
     }
   }, [props.disabled]);
 
+  // A scrub a disabled player interrupted cannot finish: the track refuses every
+  // move, so drop it rather than resume it on the first hover after re-enabling.
+  useEffect(() => {
+    if (props.disabled === true) scrubbing.current = false;
+  }, [props.disabled]);
+
   // A shorter clip than the stored playhead clamps it once and reports it, so
   // a restored position cannot leave the transport at a point the clip lacks.
   useEffect(() => {
@@ -389,6 +435,25 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
         instance.setImagePixels(frame.width, frame.height, frame.pixels),
     });
   }, [state.playhead, props.frameAt]);
+
+  /**
+   * The playhead a pointer at `x` on the track names, read against the box the
+   * layout reported. A track the layout did not paint, or a clip with no
+   * length, answers `None`, so a press cannot move the transport by a share of
+   * a box it does not have.
+   */
+  const scrub = (event: MediaPointer): void => {
+    if (trackId.current === null) return;
+    const box = renderer?.getElementBounds?.(trackId.current);
+    if (box === null || box === undefined) return;
+    Option.match(
+      scrubPlayhead(event.x ?? box.x, { x: box.x, width: box.width }, duration),
+      {
+        onNone: () => undefined,
+        onSome: (next) => commit({ ...stateRef.current, playhead: next }),
+      },
+    );
+  };
 
   const surface: MediaPlayerSurface = {
     onToggle: () => {
@@ -422,6 +487,31 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
           },
         },
       );
+    },
+    // A press begins the scrub on the primary button; a secondary press on the
+    // track is a context-menu gesture, not a seek.
+    onTrackDown: (event) => {
+      if (props.disabled === true || !isScrubPress(event.button)) return;
+      scrubbing.current = true;
+      scrub(event);
+    },
+    // A move reaches the track only while the press holds the primary button; a
+    // move holding none ends the gesture, so a release delivered outside the
+    // track cannot leave it armed for the next hover — the rule the dock's
+    // divider and the slider's track follow.
+    onTrackMove: (event) => {
+      if (props.disabled === true || !scrubbing.current) return;
+      if (event.pressedButton !== 0) {
+        scrubbing.current = false;
+        return;
+      }
+      scrub(event);
+    },
+    onTrackUp: () => {
+      scrubbing.current = false;
+    },
+    registerTrack: (instance) => {
+      trackId.current = instance?.id ?? null;
     },
   };
 

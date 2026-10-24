@@ -119,15 +119,19 @@ export {
   durationOf,
   formatClock,
   isFinished,
+  isScrubPress,
   MEDIA_SEEK_STEP_MS,
   MEDIA_TICK_MS,
   progressWidth,
+  scrubPlayhead,
   seekPlayhead,
   stepOf,
   timeLabel,
   waveformSvg,
   type MediaKey,
+  type MediaPointer,
   type MediaState,
+  type MediaTrackBox,
 } from "./player/logic.js";
 
 export {
