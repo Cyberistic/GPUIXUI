@@ -35,6 +35,7 @@ import { Button } from "@gpuixui/primitives";
 | `square` | `boolean` | `false` | icon-only geometry |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
+| `tabIndex` | `number` | `0`, or `-1` while `disabled` | the action's Tab stop; a caller's value wins both ways, so a surface leaving names `-1` and a control focused from code keeps `0` |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
 | `loadingLabel` | `string` | the provider's `loading.busy` (`Loading`) | the spinner's accessible name |
 | `reducedMotion` | `boolean` | the provider's preference (`false` when none) | lands the busy spinner at rest instead of animating it; the prop wins |
