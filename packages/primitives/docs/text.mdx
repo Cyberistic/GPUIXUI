@@ -31,6 +31,7 @@ import { Text, Stack } from "@gpuixui/primitives";
 | `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
+| `ref` / `aria-id` / `onLayout` | host props | none | the `<text>` element itself: the box a measurement reads (its own wrapped height, not a wrapper's), the instance a caller holds, and the author id an automation host addresses |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
 

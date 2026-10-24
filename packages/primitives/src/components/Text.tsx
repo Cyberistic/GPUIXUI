@@ -6,6 +6,13 @@
  * the same element with a different resolved `StyleDesc`. `Text` therefore adds
  * no behaviour: it names a role from the theme's type scale and a tone, and the
  * recipe (`recipe/textClass`) decides what that looks like.
+ *
+ * A run of type is also the leaf a caller measures and names: the width a
+ * caption can shrink to, the height a heading occupies before it wraps, the
+ * node an automation host addresses instead of scraping its text. So `Text`
+ * takes the runtime's host trio (`ElementHostProps`) exactly as the layout
+ * primitives do — a wrapper would be the flex item, and the box measured would
+ * no longer be the box the run paints.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -15,10 +22,10 @@ import type { TextAlign, TextTone } from "../core/style.js";
 import type { PrimitiveTheme, TextRole } from "../core/theme.js";
 import { textClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { childrenName, mergeStyle } from "./internal.js";
+import { childrenName, mergeStyle, type ElementHostProps } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface TextProps {
+export interface TextProps extends ElementHostProps {
   /** A role from the theme's type scale. Defaults to `body`. */
   readonly role?: TextRole;
   /** What the text means, which decides its colour. Defaults to `default`. */
@@ -70,6 +77,9 @@ export const renderText = (
     style,
     className,
     testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
     children,
   }: TextProps,
   theme: PrimitiveTheme,
@@ -84,12 +94,15 @@ export const renderText = (
   const semantics = semanticsOf(role);
   return (
     <text
+      ref={ref}
       testId={testId}
       role={semantics.role}
       aria-level={semantics.level}
+      aria-id={controlId}
       aria-label={
         semantics.role === undefined ? undefined : childrenName(children)
       }
+      onLayout={onLayout}
       style={mergeStyle(resolved.style, style)}
     >
       {children}

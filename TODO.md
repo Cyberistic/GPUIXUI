@@ -10191,6 +10191,28 @@ a merge over a stored theme.
       applies — element-tree arithmetic the runtime would drop; the picture's
       paint is `image-fit`'s and `surface-origin`'s.
 
+`[x]` `packages/primitives`: **a run of type could not be measured, held or
+      named** — `Text` paints the runtime's `<text>` and published only a
+      `testId`, while every other leaf takes the runtime's host trio: the height
+      a heading wraps to, the instance a caller holds and the author id an
+      automation host addresses were reachable only by wrapping the run in a
+      `div` — and in a flex parent the wrapper is the item that paints, so the
+      box measured was no longer the box composed. `TextProps` extends
+      `ElementHostProps` and `renderText` forwards `ref`, `aria-id` and
+      `onLayout` to the `<text>` itself. Proof: `presentational.test.tsx` gains
+      `hand a run of type its own element` (the trio on the run, and none when
+      given none), and `runtime/layout.runtime.test.tsx`'s `measures and names a
+      run of type where it is painted` reads the painted box back through the
+      run's own event, its ref as the runtime's instance, and the heading's
+      `author_id` from the accessibility tree. Directions measured: with the
+      forwarding removed the unit case fails (`expectSome` on an absent
+      `aria-id`) and the window case fails `expected undefined to strictly
+      equal { width: 1256, height: 26 }`. Restored: the package is 59 files /
+      1 213 unit tests and `layout.runtime.test.tsx` 37/37 with `check-types`
+      clean. Docs: `docs/text.mdx`'s API row, the README's layout-primitive
+      paragraph and the `COMPONENTS.md` Text row. No live scenario applies —
+      the trio lands on the same element the existing paint cases measure.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21

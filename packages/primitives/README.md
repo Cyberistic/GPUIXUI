@@ -398,9 +398,12 @@ differs from the role it starts from (`tone="primary"` paints `brandText`, as
 
 The **layout primitives are the caller's element**: `Box`, `Stack`, `Grid` and
 `Spacer` extend `ElementHostProps`, the runtime's `ref`/`aria-id`/`onLayout`, so
-a panel is measured, named for automation and held where it is painted. A text
-field hands the same trio to its native element under the name `FieldHostProps`
-— one vocabulary for "the element outside this library may need".
+a panel is measured, named for automation and held where it is painted. `Text`
+takes the same trio, because a run of type is the other leaf a caller measures —
+the height a heading wraps to and the node an automation host addresses belong
+to the `<text>`, not to a wrapper that would become the flex item. A text field
+hands the same trio to its native element under the name `FieldHostProps` — one
+vocabulary for "the element outside this library may need".
 
 ### What GPUix does not provide, and what this package does instead
 

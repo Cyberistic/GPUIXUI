@@ -393,6 +393,27 @@ describe("layout containers", () => {
     ]);
   });
 
+  it("hand a run of type its own element", () => {
+    // The bug guarded: `Text` painted one `<text>` and published only a
+    // `testId`, so a caller measuring the height a heading wraps to, holding
+    // the instance or naming the node for automation had to wrap the run — and
+    // the wrapper is the flex item that paints. The run itself is the element.
+    const onLayout = () => {};
+    const hold = () => {};
+    const text = renderText(
+      { "aria-id": "text", onLayout, ref: hold },
+      testTheme,
+    );
+    expect(expectSome(hostProp(text, "aria-id"))).toBe("text");
+    expect(hostProp(text, "onLayout")).toStrictEqual(Option.some(onLayout));
+    expect(hostProp(text, "ref")).toStrictEqual(Option.some(hold));
+    // A run given none of the trio invents none of it.
+    const plain = renderText({}, testTheme);
+    expect(hostProp(plain, "aria-id")).toStrictEqual(Option.none());
+    expect(hostProp(plain, "onLayout")).toStrictEqual(Option.none());
+    expect(hostProp(plain, "ref")).toStrictEqual(Option.none());
+  });
+
   it("scroll only the axes they were asked for", () => {
     const viewport = (axis: "vertical" | "horizontal" | "both") =>
       renderScrollAreaViewport({}, scrollPart({ axis }, testTheme));

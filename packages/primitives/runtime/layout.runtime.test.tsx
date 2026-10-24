@@ -200,6 +200,63 @@ it("measures and holds a layout primitive where it is painted", async () => {
   ).toStrictEqual(Option.some(held));
 });
 
+it("measures and names a run of type where it is painted", async () => {
+  // Bug guarded: `Text` painted one `<text>` and published no host trio, so the
+  // height a heading wraps to, the instance a caller holds and the node an
+  // automation host addresses were reachable only by wrapping the run — and in
+  // a flex parent the wrapper is the item that paints. The run is the element:
+  // its own box is reported, its own instance is held, and its own id reaches
+  // the accessibility tree's author id.
+  const runtime = await openWindow();
+  const boxes: Array<{ width: number; height: number }> = [];
+  const refs: Array<Option.Option<number>> = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Text
+          role="h3"
+          testId="section-title-element"
+          aria-id="section-title"
+          ref={(instance) => {
+            refs.push(
+              Option.map(Option.fromNullishOr(instance), (held) => held.id),
+            );
+          }}
+          onLayout={(event) =>
+            boxes.push({ width: event.width ?? 0, height: event.height ?? 0 })
+          }
+        >
+          Section title
+        </Text>
+      </Stack>
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const painted = boundsOf(runtime, "section-title-element");
+  expect(Option.getOrUndefined(Arr.last(boxes))).toStrictEqual({
+    width: painted.width,
+    height: painted.height,
+  });
+  // One run of type paints one line of its role's leading.
+  expect(painted.height).toBe(testTheme.typography.h3.lineHeight);
+  const held = Option.getOrElse(
+    Option.flatMap(Arr.last(refs), (instance) => instance),
+    () => expect.fail("the text's ref never ran"),
+  );
+  expect(
+    Option.map(
+      runtime.element("section-title-element"),
+      (element) => element.id,
+    ),
+  ).toStrictEqual(Option.some(held));
+  const heading = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Heading", label: "Section title" }),
+    () => expect.fail("the h3 was not announced as a heading"),
+  );
+  expect(heading.aria?.author_id).toBe("section-title");
+});
+
 it("separates a row Stack's children by the theme's gap", async () => {
   const runtime = await openWindow();
   runtime.render(
