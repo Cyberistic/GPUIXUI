@@ -389,7 +389,28 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 239/239
+`[x]` `[██████████]` 239/240
+
+`[ ]` State the **order a style and a brand compose in** — `applyStyle(base, style)`
+is the extension mechanism both `platformTheme` and `retroTheme` read, and it
+composes: a style names some roles, and the roles it does not name stay the
+base's. Two *shipped looks* therefore mix their partial palettes, and the gate
+rejects the result. Measured 2026-10-24:
+`applyStyle(retroTheme(lightTheme, "luna"), platformStyles.win32)` fails **5**
+placements — `ring` on the platform's `secondary` at **2.90:1** under the 3:1
+boundary floor, and four decorative ones under 1.05:1 (`disabled` on `accent`
+1.03:1, `infoSoft` on the page 1.01:1, `warningSoft` on the page 1.05:1);
+`applyStyle(retroTheme(darkTheme, "omarchy"), platformStyles.linux)` fails
+**25** (6 contrast, 5 decorative, 5 selection, 9 highlight), including selection
+washes that hide their text — the tightest printed **5.60:1** under the 7:1 body
+floor. The safe order the catalogue already uses is style first, brand second
+(`extendTheme(platformTheme(themes.dark, "win32"), { … })`), and every style over
+a built-in base passes. Decide and hold one: state the ordering rule on both
+token pages and the package README — a style is a look over a base, not a layer
+over a look — with a guard that derives the passing base × style matrix and the
+failing two-look pair from `auditTheme`, or add a named whole-look route and
+document when each is used. Evidence: `.agents/slop/scratch/probe-compose.ts`
+(`probe-style-over-style.ts` carries the whole matrix). Owner: tokens-theme.
 
 `[x]` Read a **theme a store truncated as the base the palette mapper asks** —
 `paletteToTokens` asked its base two questions (which ink reads on a filled role
