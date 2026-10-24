@@ -29,7 +29,10 @@
  * palette's own inks reads on a filled role, and it makes it by measurement
  * (`contrastRatio`), never by mixing a new colour. A palette whose ink cannot
  * read on its own accent is a palette the gate reports, not one this function
- * quietly repairs.
+ * quietly repairs. The base answers that question when the palette names no ink
+ * at all, and a base restored from storage that lost its whole colour group is
+ * read as the identity theme of its own mode and variant rather than throwing on
+ * the first tick (see {@link paletteToTokens}).
  *
  * It **restates a selection colour at the theme's share**, because `selection` is
  * the one role that is a wash rather than a fill: it is composited behind the run
@@ -53,13 +56,15 @@
  * the palette it reads actually changed.
  */
 
-import { alpha, alphaOf, type ThemeColors } from "./color.js";
+import { alpha, alphaOf, themeColors, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { pageMode } from "./luminance.js";
 import {
   extendTheme,
   getTheme,
   isThemeMode,
+  themeContrastOf,
+  themeModeOf,
   type Theme,
   type ThemeMode,
 } from "./theme.js";
@@ -111,22 +116,45 @@ export interface SystemPalette {
 }
 
 /**
+ * The base theme's roles, with the library's own value for one a store lost.
+ *
+ * A base is a theme a consumer holds — a brand, often one restored from
+ * storage — so it can arrive with no `colors` group at all: JSON keeps `null`
+ * where a theme carried nothing, and reading a role straight off the group threw
+ * `TypeError: Cannot read properties of null (reading 'foreground')` out of
+ * {@link paletteToTokens} and out of a {@link watchSystemTheme} tick. The two
+ * questions this module asks the base — which ink reads on a fill, and the share
+ * an opaque selection colour takes — are answered by the identity theme of the
+ * base's own mode and contrast variant when the base cannot answer, the rule
+ * `textStyle` and `nativeTextTheme` follow: a role a brand carries still wins,
+ * and no colour is invented. A base whose own group survived is returned as it
+ * is, so every caller's palette lands on exactly the roles it always did.
+ */
+const baseRoles = (base: Theme): ThemeColors => ({
+  ...getTheme(themeModeOf(base), themeContrastOf(base)).colors,
+  ...themeColors(base),
+});
+
+/**
  * The ink that reads on a fill: the palette's own page or body ink, whichever
  * measures further from the fill.
  *
- * The base theme's page and ink are used only when the palette names neither —
- * a palette that names a fill but no ink still gets a readable on-colour rather
- * than an invented one. A pair neither can serve is not repaired here;
- * `auditTheme` reports it.
+ * The base's page and ink are used only when the palette names neither — a
+ * palette that names a fill but no ink still gets a readable on-colour rather
+ * than an invented one, and a base a store truncated answers with the identity
+ * theme's pair for its mode rather than throwing (see {@link baseRoles}). A pair
+ * neither can serve is not repaired here; `auditTheme` reports it.
  */
-const inkOn = (fill: string, palette: SystemPalette, base: Theme): string => {
+const inkOn = (
+  fill: string,
+  palette: SystemPalette,
+  roles: ThemeColors,
+): string => {
   const measured = [palette.foreground, palette.background].filter(
     (candidate): candidate is string => candidate !== undefined,
   );
   const candidates =
-    measured.length > 0
-      ? measured
-      : [base.colors.foreground, base.colors.background];
+    measured.length > 0 ? measured : [roles.foreground, roles.background];
   return candidates.reduce((best, candidate) =>
     (contrastRatio(candidate, fill) ?? 0) > (contrastRatio(best, fill) ?? 0)
       ? candidate
@@ -180,16 +208,18 @@ export function paletteMode(palette: SystemPalette): ThemeMode | undefined {
  * base's own wash, the share the selection contract already measures for that
  * theme) and the hue is the platform's; a palette that states a share keeps it,
  * because a decoder that already knows the role is a wash has answered the
- * question. A value no colour grammar reads is returned unchanged, the rule
+ * question. A base a store truncated takes the identity theme's share for its
+ * mode and variant (see {@link baseRoles}), so a restored brand still follows
+ * the desktop. A value no colour grammar reads is returned unchanged, the rule
  * `alpha` follows, and the gate reports it.
  *
  * A desktop's `selection_foreground` cannot be honoured: the runtime paints the
  * wash behind a run that keeps the text role it already had.
  */
-const selectionWash = (selection: string, base: Theme): string =>
+const selectionWash = (selection: string, roles: ThemeColors): string =>
   alphaOf(selection) < 1
     ? selection
-    : alpha(selection, alphaOf(base.colors.selection));
+    : alpha(selection, alphaOf(roles.selection));
 
 /**
  * A theme wearing a system palette over a base theme.
@@ -207,6 +237,16 @@ const selectionWash = (selection: string, base: Theme): string =>
  * serve. None of its colours are new — each is either a palette value or a base
  * theme value.
  *
+ * **A base a store truncated is read through the library's own.** The base is
+ * asked two questions — which ink reads on a filled role the palette names no
+ * ink for, and the share an opaque selection colour takes — and a base restored
+ * from storage can arrive with no `colors` group at all (`null` in JSON). Both
+ * answers read through `themeColors` and fall back to the identity theme of the
+ * base's own mode and contrast variant, so a follow that starts over a restored
+ * brand applies its first palette instead of throwing on the tick. The roles the
+ * palette names still land, and the roles neither carries stay absent for
+ * `auditTheme` to report.
+ *
  * @example
  * ```tsx
  * import { darkTheme, paletteToTokens, type SystemPalette } from "@gpuixui/tokens";
@@ -221,6 +261,11 @@ export function paletteToTokens(
   palette: SystemPalette,
   base: Theme = getTheme(paletteMode(palette) ?? "light"),
 ): Theme {
+  // The two questions this seam asks the base — which ink reads on a fill and
+  // the share an opaque selection takes — read through the colour seam, so a
+  // base a store truncated answers with the identity theme's roles for its own
+  // mode and variant instead of throwing on `null` (see `baseRoles`).
+  const roles = baseRoles(base);
   const colors: Partial<ThemeColors> = {
     ...(palette.background === undefined
       ? {}
@@ -232,24 +277,24 @@ export function paletteToTokens(
       ? {}
       : {
           muted: palette.muted,
-          mutedForeground: inkOn(palette.muted, palette, base),
+          mutedForeground: inkOn(palette.muted, palette, roles),
         }),
     ...(palette.border === undefined ? {} : { border: palette.border }),
     ...(palette.accent === undefined
       ? {}
       : {
           primary: palette.accent,
-          primaryForeground: inkOn(palette.accent, palette, base),
+          primaryForeground: inkOn(palette.accent, palette, roles),
         }),
     ...(palette.danger === undefined
       ? {}
       : {
           destructive: palette.danger,
-          destructiveForeground: inkOn(palette.danger, palette, base),
+          destructiveForeground: inkOn(palette.danger, palette, roles),
         }),
     ...(palette.selection === undefined
       ? {}
-      : { selection: selectionWash(palette.selection, base) }),
+      : { selection: selectionWash(palette.selection, roles) }),
   };
   return extendTheme(base, { colors });
 }

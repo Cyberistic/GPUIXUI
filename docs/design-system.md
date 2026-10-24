@@ -1427,7 +1427,11 @@ The extension mechanism is deliberately small:
   measurement and names no colour of its own; a selection colour arrives as a
   **fill** and is painted at the base theme's share, because the role is a wash
   behind text that keeps its own colour; `watchSystemTheme` follows a
-  palette through a poll, because the runtime has no file watcher. A partial
+  palette through a poll, because the runtime has no file watcher. A base a store
+  truncated is read through `themeColors`, with the identity theme of the base's
+  own mode and contrast variant answering the two questions the mapper asks it —
+  which ink reads on a fill and the share a selection wash keeps — so a follow
+  over a restored brand starts instead of throwing on its first tick. A partial
   palette is a recolour — the roles it does not name stay the base's, and the
   audit reports the mix — so a look that owns its surfaces is a `PlatformStyle`,
   and the catalogue's [System palettes](./tokens.md#system-palettes) section

@@ -66,6 +66,15 @@ const isBaseValue = (
   Object.values(base.colors).includes(value) ||
   Object.values(palette).some((entry) => entry === value);
 
+/**
+ * A theme as a JSON store hands one back with its colour group truncated: JSON
+ * has no `undefined`, so a group a theme never carried arrives as `null`. The
+ * cast is the storage boundary, the rule `stored` above follows; this package
+ * ships no decoder by design, so the consumer's boundary owns the decode.
+ */
+const storedTheme = (theme: Theme): Theme =>
+  JSON.parse(JSON.stringify({ ...theme, colors: null })) as Theme;
+
 describe("the palette a desktop hands over", () => {
   it("maps the roles the palette names", () => {
     const theme = paletteToTokens(nightPalette, darkTheme);
@@ -726,6 +735,108 @@ describe("following a palette", () => {
       });
     });
     expect(paces.slice(-2)).toEqual([1, 2 ** 31 - 1]);
+  });
+
+  it("answers a base theme a store truncated, instead of reading nothing", () => {
+    // The bug this guards: both questions this seam asks its base — which ink
+    // reads on a filled role the palette names no ink for, and the share an
+    // opaque selection colour takes — read the base's colour group directly. A
+    // base restored from storage can have lost the whole group (JSON keeps
+    // `null` where a theme carried nothing), and `paletteToTokens` threw
+    // `TypeError: Cannot read properties of null (reading 'foreground')`; the
+    // follow below threw it on the tick that sets the window up.
+
+    // A white accent is the ink question's discriminator: the light identity
+    // answers its dark body ink, the dark identity its dark page.
+    const fill = "#FFFFFF";
+    const lightBased = paletteToTokens(
+      { accent: fill },
+      storedTheme(lightTheme),
+    );
+    const darkBased = paletteToTokens({ accent: fill }, storedTheme(darkTheme));
+
+    expect(lightBased.colors.primary).toBe(fill);
+    expect(lightBased.colors.primaryForeground).toBe(
+      lightTheme.colors.foreground,
+    );
+    expect(darkBased.colors.primaryForeground).toBe(
+      darkTheme.colors.background,
+    );
+    // The base's own mode decides the fallback, not the library's default.
+    expect(lightBased.colors.primaryForeground).not.toBe(
+      darkBased.colors.primaryForeground,
+    );
+
+    // The share is the identity's for the base's variant, too.
+    const truncatedHigh = paletteToTokens(
+      { selection: "#B49CFF" },
+      storedTheme(highContrastDarkTheme),
+    );
+    expect(alphaOf(truncatedHigh.colors.selection)).toBeCloseTo(
+      alphaOf(highContrastDarkTheme.colors.selection),
+      5,
+    );
+
+    // A base whose own group survived still answers with its own numbers: its
+    // share wins over the identity's, and its ink is the one measured.
+    const own = extendTheme(lightTheme, { colors: { selection: "#00000033" } });
+    expect(
+      paletteToTokens({ selection: "#B49CFF" }, own).colors.selection,
+    ).toBe(alpha("#B49CFF", alphaOf("#00000033")));
+    expect(
+      paletteToTokens({ muted: "#EEEEEE" }, own).colors.mutedForeground,
+    ).toBe(own.colors.foreground);
+
+    // Nothing is invented: a role neither the palette nor the two questions
+    // needed stays absent for the gate, rather than the mapper filling it in.
+    expect(lightBased.colors.card).toBeUndefined();
+    expect(auditTheme(lightBased).passed).toBe(false);
+  });
+
+  it("starts following a palette over a base a store truncated", () => {
+    // The reachable path: an application holds its brand theme, a store hands it
+    // back without the colour group, and the desktop's follow is the first thing
+    // that asks it a question. A throw here is the window setup, not a paint.
+    const manual = manualTimer();
+    const applied: Array<Theme> = [];
+
+    watchSystemTheme({
+      read: () => ({ accent: "#34C759" }),
+      base: storedTheme(darkTheme),
+      onChange: (theme) => applied.push(theme),
+      every: 2000,
+      timer: manual.timer,
+    });
+
+    expect(applied).toHaveLength(1);
+    expect(applied[0]?.colors.primary).toBe("#34C759");
+    expect(applied[0]?.colors.primaryForeground).toBe(
+      darkTheme.colors.background,
+    );
+  });
+
+  it("teaches the base it reads a truncated theme through, on every page", () => {
+    // A base a consumer holds is a theme like any other, and the seam's two
+    // questions about it threw on a stored theme that lost its colour group.
+    // The pages a reader learns the mapping from have to say what answers then.
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const seam = read("./system-theme.ts");
+    const rule =
+      "the identity theme of the base's own mode and contrast variant";
+
+    [catalogue, design, readme].forEach((page) => {
+      expect(flat(page), "the truncated base rule").toContain(rule);
+      expect(page).toContain("themeColors");
+    });
+
+    // The rule is the seam's, not only the page's: one helper answers both
+    // questions through the colour seam, and the mapper uses it.
+    expect(seam).toContain("themeColors(base)");
+    expect(seam).toContain("const roles = baseRoles(base)");
+    expect(seam).toContain("inkOn(palette.accent, palette, roles)");
+    expect(seam).toContain("selectionWash(palette.selection, roles)");
   });
 
   it("prints the case count its own suite runs", () => {

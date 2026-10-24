@@ -389,7 +389,36 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 238/238
+`[x]` `[██████████]` 239/239
+
+`[x]` Read a **theme a store truncated as the base the palette mapper asks** —
+`paletteToTokens` asked its base two questions (which ink reads on a filled role
+the palette names no ink for, and the share an opaque selection colour takes) by
+reading `base.colors.foreground`/`background`/`selection` straight off the group,
+and a base is a theme a consumer holds — often a brand restored from storage,
+where JSON keeps `null` for a group the theme never carried. Measured: a base
+with `colors: null` made `paletteToTokens({ accent: "#34C759" }, stored)` throw
+`TypeError: Cannot read properties of null (reading 'foreground')`, and
+`watchSystemTheme` with that base threw it on the **first tick** — the call that
+starts the follow, so a window following its desktop theme over a restored brand
+never got a palette at all. Both questions read through one `baseRoles` seam now
+(`themeColors(base)` over the identity theme of the base's own mode and contrast
+variant, the rule `textStyle`/`nativeTextTheme` follow): a brand role the base
+still carries still wins, a role it lost answers the library's own, and no colour
+is invented — the roles neither the palette nor the two questions needed stay
+absent for `auditTheme`. `system-theme.test.ts` gains three cases (33 in the
+file): the ink question with a white accent as the discriminator (light answers
+its dark body ink, dark its dark page, so the base's own mode decides), the
+selection share with a high-contrast base, a brand's own share and ink still
+winning, and the absent role a truncated base leaves for the gate; the follow
+over a stored base applying its first palette; and the rule on the catalogue,
+the design system, the README and the seam itself. Directions measured: with the
+raw group reads restored, the two behavioural cases fail with the exact
+`TypeError` and the page case names `const roles = baseRoles(base)` missing;
+restored, 49 files / **3 046** tests with `check-types` clean. Docs: `docs/tokens.md`
+§System palettes (the new fourth mapping rule), `docs/design-system.md` §11, the
+package README and the `System palettes` row. No native scenario applies — a pure
+mapping over a stored theme.
 
 `[x]` Count the **operating systems among the platform names**, not all four —
 `platformNames` is `darwin`, `linux`, `win32` **and `default`**, and `default`

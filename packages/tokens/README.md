@@ -821,6 +821,13 @@ the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark.
 the base with the palette; without it every palette keeps the one base the watch
 started with. A change is recorded once `onChange` has returned, so a callback
 that throws is retried next tick rather than leaving the window on its old theme.
+**A base a store truncated is read through the library's own**: the base answers
+two questions — which ink reads on a filled role the palette names no ink for,
+and the share an opaque selection colour takes — and a theme restored from
+storage can arrive with no `colors` group at all, so both read through
+`themeColors` and fall back to the identity theme of the base's own mode and
+contrast variant. A brand role the base still carries wins, and the roles neither
+carries stay absent for `auditTheme` to report.
 The pace is configuration as often as a literal, so an `every` outside the
 1 – 2 147 483 647 ms range `setInterval` honours reads as `systemThemePollMs`
 (2000): the timer reads `NaN`, `0`, a negative delay, a sub-millisecond one and

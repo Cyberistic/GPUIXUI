@@ -1170,7 +1170,7 @@ const palette: SystemPalette = readSystemPalette(); // your decoder
 const theme = paletteToTokens(palette, getTheme(paletteMode(palette) ?? "light"));
 ```
 
-The mapping has three rules, and all of them matter.
+The mapping has four rules, and all of them matter.
 
 - **A role maps to the role of the same name.** `background`, `foreground`,
   `muted`, `border`, `danger` and `selection` land on their roles; `accent` is
@@ -1196,6 +1196,19 @@ The mapping has three rules, and all of them matter.
   hue; a palette that states its own share keeps it. A desktop's
   `selection_foreground` cannot be honoured — the runtime paints the wash behind
   a run that keeps the colour it already had.
+- **The base answers two questions, and a base a store truncated is read through
+  the library's own.** The mapper asks the base which ink reads on a filled role
+  the palette names no ink for, and the share an opaque selection colour takes. A
+  base is a theme a consumer holds — often a brand restored from storage — so it
+  can arrive with no `colors` group at all: JSON keeps `null` where a theme
+  carried nothing, and reading those roles straight off the group threw
+  `TypeError: Cannot read properties of null (reading 'foreground')` from
+  `paletteToTokens`, and from `watchSystemTheme` on the tick that sets the window
+  up. Both questions read through `themeColors` now, and a role the base lost is
+  **the identity theme of the base's own mode and contrast variant** — the rule
+  `textStyle` and `nativeTextTheme` follow. A role the brand carries still wins;
+  a role neither the palette nor those two questions needed stays absent for
+  `auditTheme` to report, and no colour is invented.
 
 `paletteMode(palette)` returns the mode the palette **states**, or the one its
 page implies when it states none: a page that white contrasts with more than
