@@ -207,14 +207,19 @@ const namesPhase = (phase: string): phase is MotionPhase =>
 /**
  * The level a value names, or the house surface arrival.
  *
- * This is the read a component's caller makes at its own boundary: `level` is a
- * stored choice as often as a literal (a persisted animation speed, a saved
- * widget's row), and a name this release does not carry must not reach the
- * runtime as `undefined / 1000` — a `NaN` duration the renderer drops, which
- * leaves the surface on its own timing while the caller believes it asked for
- * the saved one. A name the table does not carry, a value that is not even a
- * string, and a name inherited from `Object.prototype` all answer `normal` (the
- * surface arrival), so the value decodes without an assertion at the call site.
+ * This is the read a caller makes for a motion level at its own boundary — a
+ * component's `level`, a saved dashboard's per-widget speed — and it answers the
+ * levels this table names. A prop that widens that vocabulary with a value of
+ * its own (`@gpuixui/components`' `level="none"`, which means "paint at rest")
+ * reads that value before this: `none` names no duration, so a stored one
+ * answers `normal` here.
+ *
+ * A name this release does not carry must not reach the runtime as
+ * `undefined / 1000` — a `NaN` duration the renderer drops, which leaves the
+ * surface on its own timing while the caller believes it asked for the saved
+ * one. A name the table does not carry, a value that is not even a string, and a
+ * name inherited from `Object.prototype` all answer `normal` (the surface
+ * arrival), so the value decodes without an assertion at the call site.
  */
 export const motionLevelOf = (value: unknown): MotionLevel =>
   isMotionLevel(value) ? value : "normal";
