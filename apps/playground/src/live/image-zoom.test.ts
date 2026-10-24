@@ -333,6 +333,29 @@ describe("the probe and the registry", () => {
     expect(sites).toBeGreaterThan(0);
     expect(ZOOM_CHECKS).toBeGreaterThanOrEqual(sites);
   });
+
+  it("counts a leave from the pointer's own arrival", () => {
+    // The bug this guards: the resting check read a **cumulative** leave count,
+    // and the probe's park can take a leave the measured pointer did not (a full
+    // run's previous probe may leave the pointer over the frame's box, so the
+    // frame is entered at mount and left when the pointer parks) — measured on
+    // this box as `point=60,120 moves=2 leaves=1` against a required `leaves=0`.
+    // The view now resets the count on the frame's own entry, so `leaves=0`
+    // means "no leave since the pointer reached the frame".
+    expect(probe).toContain("onMouseEnter={() => setLeaves(0)}");
+    expect(probe).toContain(
+      "onMouseLeave={() => setLeaves((count) => count + 1)}",
+    );
+    expect(probe).toContain(
+      "no leave arrived between the pointer reaching the frame and this read",
+    );
+    expect(probe.slice(probe.indexOf("export const imageZoomSteps"))).toContain(
+      '"leaves=0"',
+    );
+    expect(readme.replace(/\s+/g, " ")).toContain(
+      "resets when the pointer enters the frame",
+    );
+  });
 });
 
 describe("the README", () => {

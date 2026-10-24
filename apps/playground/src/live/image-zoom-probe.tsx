@@ -117,6 +117,11 @@ export const ImageZoomProbe = (): ReactNode => {
           });
           setMoves((count) => count + 1);
         }}
+        // Counted **per arrival**: a full run's previous probe can leave the
+        // pointer over the frame's box, so the park below takes a leave before
+        // the measured hover and a cumulative counter would report it as this
+        // pointer's. Zero means "no leave since the pointer reached the frame".
+        onMouseEnter={() => setLeaves(0)}
         onMouseLeave={() => setLeaves((count) => count + 1)}
       />
       <div
@@ -311,7 +316,7 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `point=${ZOOM_HOVERS.mark.x},${ZOOM_HOVERS.mark.y}`,
     );
     yield* ctx.expectContains(
-      "the component reported no leave while the pointer rested on it",
+      "no leave arrived between the pointer reaching the frame and this read",
       yield* ctx.host.text(ZOOM_IDS.readout),
       "leaves=0",
     );

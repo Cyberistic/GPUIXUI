@@ -6837,6 +6837,17 @@ Five rules the probe holds:
    The marks the magnified window leaves out are absent from the capture, and a
    later pan puts a different mark inside it, in the place the measured box
    names.
+**The leave counter is per arrival.** `leaves` resets when the pointer enters the
+frame, because a full run's previous probe can leave the pointer over the frame's
+box: the park below then takes a leave this pointer never made, and a cumulative
+counter reported it as `point=60,120 moves=2 leaves=1` against a required
+`leaves=0` (measured twice under a loaded box, and reproduced deliberately by
+entering the frame before the park — `leaves=1` with the cumulative counter,
+`leaves=0` with the reset). `leaves=0` therefore reads "no leave since the
+pointer reached the frame", which is the fact a magnifier has to keep; the paint
+checks above are what prove the pointer stayed applied, and a pointer the
+component really dropped fails them.
+
 5. **A measured limitation: the magnified picture's corners are square.** The
    resting picture carries the frame's radius on the image itself, so the
    capture's corner is the page; magnified, the runtime clips an overflowing
