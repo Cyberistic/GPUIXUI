@@ -198,6 +198,58 @@ describe("resolveMessages", () => {
       ),
     ).toBe("checked");
   });
+  it("reads a slot a store wrote as data as the table above it", () => {
+    // The bug guarded: a slot inherited only when it was `null`/`undefined`
+    // (`??`), and the table is data an application keeps in a settings record.
+    // An app that stores its copy as a template string wrote one where a
+    // function belongs, and the render then called it — `TypeError:
+    // messages.starName is not a function` out of Rating (and `codeDigit` from
+    // OTPField, `rangeEnd` from RangeSlider) — which a window paints as an empty
+    // area rather than an error. A row written as a number reached the words
+    // seam the same way and threw `self.trim is not a function`. Only a function
+    // is a sentence and only text is a row; anything else inherits.
+    const stored: MessagesSource = {
+      starName: "star {index} of {max}",
+      codeDigit: 42,
+      rangeEnd: true,
+      scrollRegion: 7,
+      selection: { checked: 1, unchecked: "décoché" },
+    };
+    const resolved = resolveMessages(stored, french);
+    expect(resolved.starName(1, 2)).toBe("étoile 1 sur 2");
+    expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
+    expect(resolved.rangeEnd("Prix", "start")).toBe("minimum de Prix");
+    expect(resolved.scrollRegion).toBe("Zone de défilement");
+    // The row the store wrote as text is still the caller's; only the shape a
+    // word cannot be is the table's above it.
+    expect(resolved.selection).toEqual({
+      checked: french.selection.checked,
+      unchecked: "décoché",
+      mixed: french.selection.mixed,
+    });
+    // The paint that used to throw: a rating handed the resolved table names
+    // every star.
+    expect(
+      Arr.map(
+        elementChildren(
+          renderRating(
+            { max: 2 },
+            testTheme,
+            initValueState(Option.none(), 0),
+            { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+            {
+              onSelect: vi.fn(),
+              onMove: vi.fn(),
+              registerItem: () => () => {},
+            },
+            undefined,
+            resolved,
+          ),
+        ),
+        (star) => expectSome(hostPropString(star, "aria-label")),
+      ),
+    ).toEqual(["étoile 1 sur 2", "étoile 2 sur 2"]);
+  });
 });
 
 describe("every control announces the table it is handed", () => {

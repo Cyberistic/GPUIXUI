@@ -54,7 +54,9 @@ The scale is `iconSize` from `@gpuixui/tokens`, not a second copy, so
 a theme change moves the icons with it. Named sizes are how an icon lines up
 with the text beside it. A count the runtime cannot paint and a **name the scale
 does not carry** — a stored preference from another release — both resolve to
-`md` through `iconPixels`, which takes the decoded value as `unknown`.
+`md` through `iconPixels`, which takes the decoded value as `unknown`. The
+membership test is that package's `isIconSize` too, so the five names and the
+index a consumer checks a saved choice against cannot drift apart.
 
 ## Names
 

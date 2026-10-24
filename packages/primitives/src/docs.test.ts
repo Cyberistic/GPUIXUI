@@ -780,6 +780,7 @@ describe("the primitives docs page contract", () => {
         "shipped word",
         "JSON cannot carry the three sentences",
         "absence whole",
+        "Only a function is a sentence",
       ],
       (phrase) => !words.includes(phrase),
     );

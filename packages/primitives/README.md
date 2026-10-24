@@ -309,7 +309,10 @@ the table above it rather than resetting it — and `useMessages` reads the
 resolved table. `MessagesSource` is the shape a stored table takes, so a decoded
 table (JSON writes `null` for the field a record never carried, and cannot carry
 a sentence) reaches the provider without a cast: the sentences it lacks inherit,
-and a table written as `null` is absence whole. A **formatter** a caller passes
+and a table written as `null` is absence whole. A slot the store wrote as
+something a word cannot be inherits too — only a function is a sentence and only
+text is a row, so a template string where `starName` belongs, or a number in a
+state row, keeps the table above instead of being called or trimmed mid-render. A **formatter** a caller passes
 for one bar is words too: `Progress`'s
 `formatValue`/`loadingText` and `Meter`'s `formatValue` go through
 `spokenText`, so an answer that says nothing (a locale table with no row for

@@ -1,6 +1,4 @@
-import * as Arr from "effect/Array";
-import * as R from "effect/Record";
-import { iconSize } from "@gpuixui/tokens";
+import { iconSize, isIconSize } from "@gpuixui/tokens";
 
 /**
  * Icon sizes.
@@ -13,13 +11,6 @@ import { iconSize } from "@gpuixui/tokens";
 export const ICON_SIZES = iconSize;
 
 export type IconSize = keyof typeof ICON_SIZES;
-
-/** The scale's names, as a list a decoded value can be checked against. */
-const ICON_STEPS: ReadonlyArray<string> = R.keys(ICON_SIZES);
-
-/** Whether a value names a step of the scale. */
-const isIconSize = (size: unknown): size is IconSize =>
-  typeof size === "string" && Arr.contains(ICON_STEPS, size);
 
 /**
  * Resolve a size name or a raw pixel count to the number of pixels to paint.
@@ -39,6 +30,10 @@ const isIconSize = (size: unknown): size is IconSize =>
  * around a vanished glyph stretched across the window. An unknown name reads as
  * the `md` step too, and the input is `unknown` because that is what a decoded
  * preference is.
+ *
+ * The membership check is the token package's `isIconSize` — the index every
+ * other persisted scale publishes — so this package cannot drift a second list
+ * of step names beside the one the release owns.
  */
 export const iconPixels = (size: unknown): number => {
   if (typeof size === "number") {

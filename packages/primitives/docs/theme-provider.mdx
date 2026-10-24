@@ -52,6 +52,13 @@ one needs no cast; JSON cannot carry the three sentences, so they are absent and
 inherit, and a table written as `null` (a settings record whose `messages` field
 was never set) is absence whole — the table above stands.
 
+A slot the store wrote as something a word cannot be also inherits, because a
+saved table is data: an app that keeps its copy as a template string wrote text
+where `starName`, `codeDigit` or `rangeEnd` belongs, and a row written as a
+number, a flag or an object is not a word. Only a function is a sentence and only
+text is a row; anything else keeps the table above, rather than being called or
+trimmed mid-render.
+
 ## Limitations
 
 - The density override is a whole group, not a partial patch. A theme restored

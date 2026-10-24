@@ -1,8 +1,9 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
-import { iconSize } from "@gpuixui/tokens";
+import * as Tokens from "@gpuixui/tokens";
 import { ICON_SIZES, iconPixels } from "./sizes.js";
 
 /**
@@ -12,6 +13,11 @@ import { ICON_SIZES, iconPixels } from "./sizes.js";
  * size that resolves to `0`, `NaN` or a negative number is a rendering bug, and
  * a scale that is not monotonically increasing means "larger" stopped meaning
  * larger.
+ *
+ * The last case reads the module's own source: `node:fs` is deliberate, the
+ * rule `docs.test.ts` states — the read happens once at suite load, this package
+ * has no `FileSystem` layer to provide, and a copied step list is a fact about
+ * the file. Nothing here is domain I/O.
  */
 describe("icon sizes", () => {
   it("resolves every named size to a positive pixel count", () => {
@@ -71,6 +77,30 @@ describe("icon sizes", () => {
 
 describe("the scale's source", () => {
   it("is the token scale, not a second copy", () => {
-    expect(ICON_SIZES).toBe(iconSize);
+    expect(ICON_SIZES).toBe(Tokens.iconSize);
+  });
+
+  it("narrows a stored step through the token index the release publishes", () => {
+    // The bug this guards: this module kept its own `ICON_STEPS` list and a
+    // private `isIconSize`, while `@gpuixui/tokens` owns both for every
+    // persisted axis (`iconSizes`, held to the scale by the `EveryIconStepListed`
+    // type guard). Two lists of the same names drift the moment a step is
+    // renamed, and the copy here is the one a consumer cannot import. Every step
+    // the index names must resolve, and one it does not must take the default.
+    Arr.forEach(Tokens.iconSizes, (step) => {
+      expect(iconPixels(step), step).toBe(Tokens.iconSize[step]);
+    });
+    expect(Tokens.isIconSize("md")).toBe(true);
+    expect(iconPixels("2xl")).toBe(ICON_SIZES.md);
+  });
+
+  it("carries no second step list or predicate of its own", () => {
+    // `node:fs` is deliberate, the rule `docs.test.ts` states: a document and a
+    // source read at suite load are not domain I/O, and this package has no
+    // platform dependency to provide a `FileSystem` layer from.
+    const source = readFileSync(new URL("./sizes.ts", import.meta.url), "utf8");
+    expect(source).toContain('import { iconSize, isIconSize } from "@gpuixui/tokens"');
+    expect(source).not.toContain("ICON_STEPS");
+    expect(source).not.toMatch(/const\s+isIconSize\s*=/);
   });
 });

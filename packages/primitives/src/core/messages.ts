@@ -30,6 +30,7 @@
  * localised tree from repeating the word on every action.
  */
 
+import * as P from "effect/Predicate";
 import { accessibleName, spokenSentence, spokenWord } from "./a11y.js";
 import type { StarState } from "./rating.js";
 import type { SelectionState } from "./selection.js";
@@ -144,18 +145,20 @@ export const rangeThumbNames = (
 };
 
 /**
- * A value as a store hands it back.
+ * A slot as a store hands it back.
  *
- * JSON has no `undefined`, so a group, a row or a function slot a record never
- * carried arrives as `null`. A function slot is not widened to a value: JSON
- * cannot carry a sentence, so a stored table leaves the three functions out
- * rather than writing something this release could call.
+ * The table is data once an application keeps its copy in a settings record, so
+ * a slot may hold anything the decoder produced: JSON has no `undefined`, a
+ * row can be written as a number, and a sentence an app stores as a template
+ * string arrives as text. The reads below decide what each slot can be
+ * (`row`, `sentence`), so the shape states the truth at the boundary and a
+ * decoded table reaches the provider without a cast.
  */
 type Stored<T> = T extends (...args: never[]) => unknown
-  ? T | null
+  ? unknown
   : T extends object
     ? { readonly [K in keyof T]?: Stored<T[K]> } | null
-    : T | null;
+    : unknown;
 
 /**
  * A words table as a store hands it back.
@@ -170,39 +173,69 @@ export type MessagesSource = {
   readonly [K in keyof PrimitiveMessages]?: Stored<PrimitiveMessages[K]>;
 };
 
+/**
+ * A row of a words table as a store hands it back: text, or the row above it.
+ *
+ * The table is interface copy, and an application that keeps its copy in a
+ * settings record reads it back as data: a row a decoder wrote as a number, a
+ * flag or an object is not a word, and `??` kept it — the paint then trimmed a
+ * number (`TypeError: self.trim is not a function`) while every control that
+ * announced that state went with the window. Only text is a word; a blank one
+ * is still kept, because `spokenWord` reads it as "no translation" and keeps the
+ * shipped word.
+ */
+const row = (stored: unknown, inherited: string): string =>
+  P.isString(stored) ? stored : inherited;
+
+/** A sentence slot a table calls, or `true` for a value that is not one. */
+const isSentence = <A>(value: unknown): value is A => P.isFunction(value);
+
+/**
+ * A sentence slot as a store hands it back: a function, or the one above it.
+ *
+ * `starName`, `codeDigit` and `rangeEnd` are called with the component's own
+ * data, and a stored table is data: an app that keeps its copy as a template
+ * string wrote text where a function belongs, and the render called it —
+ * `TypeError: messages.starName is not a function` out of Rating, OTPField and
+ * RangeSlider — which a window paints as an empty area, not an error. A slot
+ * that is not a function inherits the table above the provider.
+ */
+const sentence = <A>(stored: unknown, inherited: A): A =>
+  isSentence<A>(stored) ? stored : inherited;
+
 /** The rows of one words group, read row by row against the table above. */
 const selectionRows = (
   stored: Stored<SelectionWords> | undefined,
   inherited: SelectionWords,
 ): SelectionWords => ({
-  checked: stored?.checked ?? inherited.checked,
-  unchecked: stored?.unchecked ?? inherited.unchecked,
-  mixed: stored?.mixed ?? inherited.mixed,
+  checked: row(stored?.checked, inherited.checked),
+  unchecked: row(stored?.unchecked, inherited.unchecked),
+  mixed: row(stored?.mixed, inherited.mixed),
 });
 
 const pressRows = (
   stored: Stored<PressWords> | undefined,
   inherited: PressWords,
 ): PressWords => ({
-  pressed: stored?.pressed ?? inherited.pressed,
-  notPressed: stored?.notPressed ?? inherited.notPressed,
+  pressed: row(stored?.pressed, inherited.pressed),
+  notPressed: row(stored?.notPressed, inherited.notPressed),
 });
 
 const starRows = (
   stored: Stored<StarWords> | undefined,
   inherited: StarWords,
 ): StarWords => ({
-  checked: stored?.checked ?? inherited.checked,
-  half: stored?.half ?? inherited.half,
-  unchecked: stored?.unchecked ?? inherited.unchecked,
+  checked: row(stored?.checked, inherited.checked),
+  half: row(stored?.half, inherited.half),
+  unchecked: row(stored?.unchecked, inherited.unchecked),
 });
 
 const loadingRows = (
   stored: Stored<LoadingWords> | undefined,
   inherited: LoadingWords,
 ): LoadingWords => ({
-  busy: stored?.busy ?? inherited.busy,
-  indeterminate: stored?.indeterminate ?? inherited.indeterminate,
+  busy: row(stored?.busy, inherited.busy),
+  indeterminate: row(stored?.indeterminate, inherited.indeterminate),
 });
 
 /**
@@ -214,8 +247,11 @@ const loadingRows = (
  * caller forwards as `undefined` inherits, the rule `extendTheme` applies to a
  * theme's groups, and the whole table may be `null` — a record whose `messages`
  * field was never written — which is the same absence. Three of these keys are
- * sentences a component calls (`starName`, `codeDigit`, `rangeEnd`), so a hole
- * there is a render that throws and a table with no sentences inherits them.
+ * sentences a component calls (`starName`, `codeDigit`, `rangeEnd`), and a
+ * stored table is data: a value there that is not a function — the template
+ * string an app keeps its copy as, a number, a flag — inherits the sentence
+ * above it rather than being called, and a row that is not text inherits the
+ * word above it rather than being trimmed.
  *
  * The defaults are returned **as they are** when nothing is overridden, so the
  * shipped table has one identity rather than a copy per provider.
@@ -230,11 +266,11 @@ export const resolveMessages = (
         selection: selectionRows(messages.selection, inherited.selection),
         press: pressRows(messages.press, inherited.press),
         star: starRows(messages.star, inherited.star),
-        starName: messages.starName ?? inherited.starName,
-        scrollRegion: messages.scrollRegion ?? inherited.scrollRegion,
-        codeDigit: messages.codeDigit ?? inherited.codeDigit,
+        starName: sentence(messages.starName, inherited.starName),
+        scrollRegion: row(messages.scrollRegion, inherited.scrollRegion),
+        codeDigit: sentence(messages.codeDigit, inherited.codeDigit),
         loading: loadingRows(messages.loading, inherited.loading),
-        rangeEnd: messages.rangeEnd ?? inherited.rangeEnd,
+        rangeEnd: sentence(messages.rangeEnd, inherited.rangeEnd),
       };
 
 /**
