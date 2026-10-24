@@ -13165,6 +13165,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
       restored, the file is 3/3. No native scenario applies — a page and the
       guard it describes.
 
+`[x]` Put the **dialog's stored size in its own prop row** — the page taught
+      `dialogSize`'s house `md` only in the third Limitations bullet, below the
+      dismissal window, so a reader scanning the `DialogContent` table saw the
+      union and not the answer a restored `size` gets. The `size` row now
+      carries it, and `stored-value-page.test.ts` adds the pair (18 stored
+      values over eleven pages). Direction measured: at `HEAD` the row case
+      fails with `dialog.mdx: size — rule`; restored, 3/3. No native scenario
+      applies — a prop row and the guard it describes.
+
 `[x]` Teach **the value a store kept** on the served page's own prop row — a
       variant, size, tone, axis or activation is stored with the workspace as
       often as it is a literal, and each of these components reads the stored

@@ -39,6 +39,7 @@ interface StoredValue {
 const badge = "packages/components/src/badge.tsx";
 const card = "packages/components/src/card.tsx";
 const drawer = "packages/components/src/drawer.tsx";
+const dialog = "packages/components/src/dialog.tsx";
 const mentionMenu = "packages/components/src/menu/item.tsx";
 const placement = "packages/components/src/internal/placement.ts";
 const tabs = "packages/components/src/tabs/logic.ts";
@@ -51,6 +52,7 @@ const storedValues: ReadonlyArray<StoredValue> = [
   { page: "card.mdx", prop: "variant", source: card, reader: "variantOf" },
   { page: "drawer.mdx", prop: "side", source: drawer, reader: "drawerSide" },
   { page: "drawer.mdx", prop: "size", source: drawer, reader: "drawerSize" },
+  { page: "dialog.mdx", prop: "size", source: dialog, reader: "dialogSize" },
   { page: "popover.mdx", prop: "side", source: placement, reader: "sideOf" },
   { page: "popover.mdx", prop: "align", source: placement, reader: "alignOf" },
   {
