@@ -21937,7 +21937,34 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 12/12
+`[x]` `[██████████]` 13/13
+
+`[x]` `packages/components`: **the same stored string took the two phrase
+      painters down** — the pass above closed `SplittingText` and `TypingText`,
+      and the family's other two phrase components read the prop raw:
+      `GradientText` handed it to `gradientLines` (`Str.split`) and
+      `HighlightText` to `marksFor` (`String.matchAll`), so a phrase saved with a
+      layout or restored from a record that kept none (`null`) threw
+      `Cannot read properties of null (reading 'split')` /
+      `... (reading 'matchAll')` out of the first render and took the whole
+      surface with it — not only the ramp or the wash. Both read `text` through
+      the package's stored-text rule (`internal/text.ts`'s `textOf`) and paint
+      that phrase everywhere the raw prop was read: the ramp's lines and state,
+      and the matcher, the sweep length, the run key, the state and the painted
+      run. Proof: `behaviour/gradient-text.test.tsx` and
+      `behaviour/highlight-text.test.tsx` each gain a stored-`null` case that
+      requires the root painted, no glyphs / an empty run and no wash — a downed
+      tree cannot pass. Directions measured at `HEAD`, one component at a time:
+      the gradient case fails with that exact `TypeError` and
+      `expected undefined to be defined`, the highlight case with its own
+      `TypeError` and the same assertion; restored, the two files are **18/18**
+      and the inventory, docs, gradient and highlight logic suites **76/76** with
+      `check-types`, `oxlint` and `oxfmt` clean on the changed files. Docs:
+      both pages' §Limitations and the `Gradient text` (8 native cases) and
+      `Highlight text` (10) rows. No native scenario applies — the reads are the
+      render's own and the behaviour suites drive the real renderer; the
+      `highlight-text` shadow's window readings were unchanged by a boundary
+      read.
 
 `[x]` `packages/components`: **a stored string took the two text primitives down**
       — `SplittingText` handed its `text` to `splitUnits`, whose first read is
