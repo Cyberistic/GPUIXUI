@@ -45,6 +45,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { themeColors, useTheme } from "../theme.js";
+import { listOf } from "../internal/list.js";
 import { paintableSize } from "../internal/size.js";
 import { treeName, type TreeCursor, type TreeRow } from "./logic.js";
 import { TREE_INSET, TreeRowView } from "./row.js";
@@ -55,7 +56,16 @@ export { TREE_INSET };
 
 /** {@link TreeView} props. */
 export interface TreeViewProps<T> extends Omit<Props, "children"> {
-  /** The visible rows, in paint order — one flat list, already flattened. */
+  /**
+   * The visible rows, in paint order — one flat list, already flattened.
+   *
+   * The list is stored data as often as a literal: a workspace that keeps its
+   * flattened rows reaches this prop from a store, and an absent one is
+   * `undefined`. It is read through {@link listOf}, so a value that is not a
+   * list paints an empty tree instead of taking the frame down — before the
+   * read, the type-ahead's `Arr.map(rows, …)` threw
+   * `Cannot read properties of null (reading 'map')` in the first render.
+   */
   readonly rows: ReadonlyArray<TreeRow<T>>;
   /** The row's label: its accessible name and what a typed prefix matches. */
   readonly labelOf: (node: T) => string;
@@ -120,8 +130,11 @@ export const TreeView = <T,>({
   const theme = useTheme();
   const colors = themeColors(theme);
   const bound = Option.getOrUndefined(paintableSize(height));
+  // The caller's rows are stored data: a saved flattened list, or a snapshot
+  // that has not arrived, is not a list and paints no rows.
+  const visibleRows = listOf(rows);
   const tree = useTree({
-    rows,
+    rows: visibleRows,
     labelOf,
     cursor,
     onCursorChange,
@@ -150,7 +163,7 @@ export const TreeView = <T,>({
         style,
       )}
     >
-      {rows.map((row) => (
+      {visibleRows.map((row) => (
         <TreeRowView
           key={row.key}
           row={row}

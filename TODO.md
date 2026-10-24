@@ -3066,7 +3066,40 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 190/190
+`[x]` `[██████████]` 191/191
+
+`[x]` Measure the **shipped `TypingText`'s reveal in a window** — the
+      catalogue's *Typing text* row claimed the reveal is a timer over the
+      string's **code points**, that a zero pace and a reduced preference paint
+      the whole string on the first frame, and that the caret belongs to the
+      journey, while `src/behaviour/typing-text.test.tsx` read the component's
+      text nodes: a reveal that painted the whole string into a text host and
+      left the caret behind would have passed there. `typing-text-lifecycle`
+      (**23 checks**, 0.11.0) mounts a slow reveal with a caret, a `speed={0}`
+      twin, a three-emoji twin and one under `MotionProvider
+      preference="reduced"`, and reads the **shaped run**: the slow text reads
+      one character at the first read and two at the next, one painted line is a
+      proper prefix of the string (so the runtime lays out the partial run, not a
+      dimmed whole one), the caret paints **148** `primary` pixels inside the
+      text's box while the timer runs, the emoji frames are `🦊`, `🦊🦊`,
+      `🦊🦊🦊` (every one a whole code point), the completed run is **one**
+      painted line with no partial left, and the caret reads **0** once the last
+      character lands. An instant pace and the reduced provider each paint whole
+      on the first frame. `typing-text.test.ts` (13 cases) holds the prefix
+      algebra on the sampled frames and the lone fox, the partial-line read, the
+      sample rule, the polling discipline (no clock verb — the reveal is real
+      time), the count, the registry entry and the section, including the half it
+      does not claim (a window exposes no accessibility tree here, so the name
+      stays the renderer suite's). Directions measured, exit `1` each and
+      restored green: dropping the caret fails `the caret paints the theme's
+      primary role while the reveal runs` (`expected true, got false`), and
+      animating the reduced twin fails `a reduced preference paints its whole
+      string on the first frame` (`expected "Reduced paints at once", got
+      "R"`). Green: `--only typing-text-lifecycle` 1/1 on three runs (1.1 s,
+      4.0 s, 4.9 s), the playground suite 131 files / 1 318 tests,
+      `check-types`, `check:tests` and `lint` clean. Docs:
+      `apps/playground/README.md` §`typing-text-lifecycle`, the *Typing text* row
+      in `COMPONENTS.md` and `.artifacts/live/typing-{caret,done}.png`.
 
 `[x]` Measure the **shipped `RippleButton`'s paint in a window** — the
       catalogue's *Ripple button* row claimed four things about the glass (the
@@ -12410,6 +12443,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
     behaviour run failed once on `behaviour/table.test.tsx`'s Tab-order case
     under a loaded box and passed on re-run and alone (33/33) — the suite's
     known load flake, not this change. Owner: data.
+  - [x] **A frozen grid and a tree read their saved row list as a list** — the
+    rows a surface paints are data as often as a literal: a saved workspace
+    restores a panel's rows from JSON, and an app hands `snapshot?.rows` while
+    the snapshot is still absent, which is `undefined` at runtime. The prop
+    types promise a list, and `FrozenTable` (`rows.map`, `rows.length`) and
+    `TreeView` (its map, and `useTree`'s `Arr.map(rows, …)` for the type-ahead)
+    dereferenced it, so one stored absence threw out of the first render:
+    `Cannot read properties of null (reading 'map')` left the frozen grid with
+    neither pane nor empty message, and the tree with nothing painted at all —
+    the whole frame, siblings included, went blank. Both read through `listOf`
+    now, so an absent list is no rows: the frozen grid's data pane paints its
+    `TableEmpty` message and the tree paints its frame.
+    `src/behaviour/stored-rows.test.tsx` (5 cases) mounts `null` and
+    `undefined` for the grid and `null` for the tree, each beside a readable
+    list as its own control. Directions measured: at HEAD the three absence
+    cases fail with the `TypeError` from `frozen.tsx:246` and `use-tree.ts:135`
+    and paint nothing; with the read, 5/5 and the suite is 198/198 behaviour
+    (193 before) with `check-types` clean. Docs:
+    `docs/frozen-columns.mdx` §The rows a store kept, `docs/tree-view.mdx`,
+    the README's frozen and tree paragraphs, and the Tables and Tree views
+    rows. No native scenario applies — a boundary read and the paint branch;
+    the family's window probes already mount these two surfaces. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid

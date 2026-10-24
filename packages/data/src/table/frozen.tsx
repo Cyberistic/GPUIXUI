@@ -64,6 +64,7 @@ import {
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { Fragment, useRef, useState, type ReactNode } from "react";
+import { listOf } from "../internal/list.js";
 import { paneFill, usePaintedHeight } from "../internal/painted.js";
 import { paintableSize } from "../internal/size.js";
 import { DEFAULT_HEADER_HEIGHT } from "./frame.js";
@@ -99,7 +100,18 @@ export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
    * somewhere to scroll to.
    */
   readonly contentWidth: number;
-  /** The rows that fill both panes, in paint order. */
+  /**
+   * The rows that fill both panes, in paint order.
+   *
+   * The list is stored data as often as a literal — a saved workspace restores
+   * a panel's rows, and an app hands `snapshot?.rows`, which is `undefined`
+   * while the snapshot is absent — so it is read through {@link listOf}: a
+   * value that is not a list fills no pane, and the data pane paints its empty
+   * message. Before the read, one stored absence threw
+   * `Cannot read properties of null (reading 'map')` out of the first render
+   * and the grid painted neither pane nor its message
+   * (`behaviour/stored-rows.test.tsx`).
+   */
   readonly rows: ReadonlyArray<Row>;
   /** The stable React key of a record. */
   readonly rowKey: (row: Row) => string;
@@ -172,6 +184,9 @@ export const FrozenTable = <Row,>({
   const painted = usePaintedHeight(onLayout);
   const box = Option.orElse(bound, () => painted.measured);
   const boxHeight = Option.getOrUndefined(box);
+  // The caller's rows are stored data: a saved panel, or `snapshot?.rows`
+  // before the snapshot arrives, is not a list and fills no pane.
+  const records = listOf(rows);
   const [frozenHeaderHeight, setFrozenHeaderHeight] = useState(0);
   const [dataHeaderHeight, setDataHeaderHeight] = useState(0);
   // The panes' headers are the caller's rows, so their heights can differ by a
@@ -243,7 +258,7 @@ export const FrozenTable = <Row,>({
           ref={frozen}
           onScrollChange={mirror("frozen")}
         >
-          {rows.map((record) => (
+          {records.map((record) => (
             <Fragment key={rowKey(record)}>{frozenRow(record)}</Fragment>
           ))}
         </TableBody>
@@ -287,10 +302,10 @@ export const FrozenTable = <Row,>({
               ref={body}
               onScrollChange={mirror("body")}
             >
-              {rows.length === 0 ? (
+              {records.length === 0 ? (
                 <TableEmpty>{emptyMessage(empty)}</TableEmpty>
               ) : (
-                rows.map((record) => (
+                records.map((record) => (
                   <Fragment key={rowKey(record)}>{row(record)}</Fragment>
                 ))
               )}

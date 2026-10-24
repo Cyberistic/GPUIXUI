@@ -50,7 +50,7 @@ through `listOf`, so a stored hierarchy cannot take the render down
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `rows` | `TreeRow<T>[]` | — | the visible rows, in paint order |
+| `rows` | `TreeRow<T>[]` | — | the visible rows, in paint order; a value that is not a list paints an empty tree (see below) |
 | `labelOf` | `(node: T) => string` | — | the row's accessible name and type-ahead match; a blank label reads as the row's key |
 | `cursor` | `TreeCursor` | — | the caller's cursor; omit for an uncontrolled tree |
 | `onCursorChange` | `(cursor: TreeCursor) => void` | — | reports every cursor |
@@ -71,6 +71,14 @@ density seam (`rowHeightOf(theme)`): a theme a store restored without the
 density group paints the library's row instead of throwing from the first row
 (`tree/row.test.ts`), and `VirtualTree` resolves its own `rowHeight` through the
 same seam.
+
+The rows are stored data as often as a literal: a workspace that keeps its
+flattened list hands the tree whatever the store gave back, and `snapshot?.rows`
+is `undefined` until the snapshot arrives. `rows` is read through `listOf`, so a
+value that is not a list paints the tree's frame and no rows — before the read,
+the type-ahead's mapping threw `Cannot read properties of null (reading 'map')`
+in the first render and nothing painted at all
+(`behaviour/stored-rows.test.tsx`).
 
 ## Limitations
 

@@ -801,6 +801,18 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   that pins none or another. Direction measured: `src/table/table.tsx: pins no
   JSX runtime`. `apps/docs check-types` is clean.
 
+- **A frozen grid and a tree read their saved row list as a list**: the rows a
+  surface paints are stored data — a saved workspace restores them from JSON,
+  and `snapshot?.rows` is `undefined` until the snapshot arrives — while
+  `FrozenTable` (`rows.map`, `rows.length`) and `TreeView` (its map and
+  `useTree`'s `Arr.map(rows, …)` for the type-ahead) dereferenced the prop.
+  One absent list threw `Cannot read properties of null (reading 'map')` out of
+  the first render: the frozen grid painted neither pane nor its empty message,
+  and the tree painted nothing at all, siblings included. Both read through
+  `listOf` now, so an absent list is no rows. `src/behaviour/stored-rows.test.tsx`
+  (5 cases) mounts both absences with a readable list as the control; the three
+  absence cases fail at the old reads by name. 198 behaviour green (193 before).
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

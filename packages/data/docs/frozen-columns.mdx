@@ -47,7 +47,7 @@ import { FrozenTable, TableCell, TableHeaderCell, TableRow } from "@gpuixui/data
 | `height` | `number` | — | the grid's definite height; one the layout cannot paint reads as no height (see below) |
 | `frozenWidth` | `number` | — | the frozen pane's width |
 | `contentWidth` | `number` | — | the scrolling columns' total width |
-| `rows` | `ReadonlyArray<Row>` | — | the records, in paint order |
+| `rows` | `ReadonlyArray<Row>` | — | the records, in paint order; a value that is not a list paints the empty message (see below) |
 | `rowKey` | `(row: Row) => string` | — | the stable React key of a record |
 | `frozenHeader` | `ReactNode` | — | the frozen column's header cells |
 | `frozenRow` | `(row: Row) => ReactNode` | — | the frozen column's row |
@@ -74,6 +74,21 @@ both row scrollers at **0 points** against the **276** the same grid paints with
 a readable height, so the grid showed no row at all and neither pane could
 scroll. `src/behaviour/paintable-height.test.tsx` holds the case beside the four
 other bounded surfaces, and the rule itself lives in `internal/size.ts`.
+
+## The rows a store kept
+
+`rows` is stored data as often as a literal — a saved workspace restores a
+panel's rows, and `snapshot?.rows` is `undefined` while the snapshot is still
+absent. It is read through `listOf`, so a value that is not a list fills no pane
+and the data pane paints its `empty` message (a `TableEmpty` row, `No rows` by
+default): an empty grid, not a crashed one.
+
+Measured before the read: `rows={null}` threw
+`Cannot read properties of null (reading 'map')` out of the first render, the
+frozen pane, the data pane and the empty message all failed to paint, and
+`rows={undefined}` threw the same way. `src/behaviour/stored-rows.test.tsx`
+mounts both absences and reads the message out of the renderer, with a readable
+list as its own control.
 
 ## Limitations
 

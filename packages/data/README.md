@@ -319,7 +319,12 @@ child would paint the loading skeleton and a role-less message would sit outside
 the grid the tree describes. A **blank** `empty` reads as `No rows` too
 (`emptyMessage`): a default written `empty ?? "No rows"` only covers an absent
 prop, and a locale table with a missing row answers `""`, which painted a row
-and a cell with no words under them. `ColumnMenu`
+and a cell with no words under them. A **stored row list** is read as a list
+too: `rows` goes through `listOf`, so the `null` a store wrote — or the
+`undefined` an app's `snapshot?.rows` hands over before the snapshot arrives —
+fills no pane and the data pane paints that empty message instead of the first
+render throwing `Cannot read properties of null (reading 'map')`
+(`behaviour/stored-rows.test.tsx`). `ColumnMenu`
 therefore offers no pin row — a pin is a different layout, not something the
 column list can express. The page is `docs/frozen-columns.mdx`; the shipped
 screen is `examples/frozen-table.example.tsx`.
@@ -492,7 +497,11 @@ not read a name, a record restored without its title — reads as the row's key
 (`treeName`, the one reading the paint, the accessible name and the type-ahead
 match share), so a tree never paints a nameless row no prefix can reach — the
 seam is handed that same reading, not the raw label, so typing the key reaches a
-row whose name never arrived (`tree.test.tsx`).
+row whose name never arrived (`tree.test.tsx`). The **rows** are read as a list
+too (`listOf`): a workspace that keeps its flattened list hands the tree what the
+store gave back, and an absent list paints an empty tree rather than throwing out
+of the type-ahead's mapping and leaving the whole frame unpainted
+(`behaviour/stored-rows.test.tsx`).
 `reveal(key)` opens the path to a node and moves the cursor to it, and a
 caller-driven cursor **lands the focus** on its row: the row is re-taken on the
 next tick, after the runtime has handed the pressed control the focus. A key that
