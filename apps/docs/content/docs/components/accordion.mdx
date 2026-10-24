@@ -51,8 +51,8 @@ Accordion
 | ---- | ---- | ---- | ------- |
 | `Accordion` | `type` | `"single" \| "multiple"` | required |
 | `Accordion` | `collapsible` | `boolean` — single mode only | `false` |
-| `Accordion` | `value` | `string \| null` (single) · `ReadonlyArray<string>` (multiple) | — |
-| `Accordion` | `defaultValue` | the same union, for the uncontrolled form | `null` · `[]` |
+| `Accordion` | `value` | `string \| null` (single) · `ReadonlyArray<string>` (multiple) | — ; a stored open set that is not a list means uncontrolled |
+| `Accordion` | `defaultValue` | the same union, for the uncontrolled form | `null` · `[]` — a stored default that is not a list opens no sections |
 | `Accordion` | `onValueChange` | `(value: string \| null) => void` · `(values: ReadonlyArray<string>) => void` | — |
 | `AccordionItem` | `value` | `string` | required |
 | `AccordionItem` | `disabled` | `boolean` | `false` |

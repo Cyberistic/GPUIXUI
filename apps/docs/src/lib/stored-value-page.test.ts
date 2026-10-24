@@ -50,6 +50,7 @@ const colourHex = "packages/components/src/color/hex.ts";
 const tagLogic = "packages/components/src/tag-input/logic.ts";
 const comboboxLogic = "packages/components/src/combobox/logic.ts";
 const commandLogic = "packages/components/src/menu/fuzzy.ts";
+const accordionLogic = "packages/components/src/accordion/logic.ts";
 
 const storedValues: ReadonlyArray<StoredValue> = [
   { page: "badge.mdx", prop: "variant", source: badge, reader: "variantOf" },
@@ -217,6 +218,22 @@ const boundaries: ReadonlyArray<StoredBoundary> = [
     fallback: "[]",
     clause: "a stored value that is not a list carries no recents",
   },
+  {
+    page: "accordion.mdx",
+    prop: "value",
+    source: accordionLogic,
+    reader: "openSectionsOf",
+    fallback: "Option.none()",
+    clause: "a stored open set that is not a list means uncontrolled",
+  },
+  {
+    page: "accordion.mdx",
+    prop: "defaultValue",
+    source: accordionLogic,
+    reader: "openSectionsOf",
+    fallback: "Option.none()",
+    clause: "a stored default that is not a list opens no sections",
+  },
 ];
 
 /** The fallback a boundary reader answers with, read out of its own branch. */
@@ -339,8 +356,8 @@ describe("a list a store kept", () => {
       }),
     ).toEqual([]);
 
-    // Eight boundaries, eight clauses: a page cannot pass by printing one
-    // sentence eight times, and the list cannot shrink without the table
+    // Ten boundaries, ten clauses: a page cannot pass by printing one
+    // sentence ten times, and the list cannot shrink without the table
     // losing a row.
     expect(new Set(boundaries.map((boundary) => boundary.clause)).size).toBe(
       boundaries.length,

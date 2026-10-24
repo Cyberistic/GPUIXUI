@@ -13607,7 +13607,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[~]` `[██████████]` 400/401
+`[~]` `[██████████]` 401/402
+
+`[x]` Teach the **accordion's saved open set** on the served page — a workspace
+      saves which sections are open, so `Accordion`'s `value` and `defaultValue`
+      reach `MultipleAccordion` as a stored record's `null`; the components
+      workstream reads both through `openSectionsOf` (`accordion/logic.ts`) and
+      documented it on the package page the curated page shadows. The served
+      page's `value` and `defaultValue` rows now carry their two different
+      answers — an open set that is not a list is the uncontrolled accordion,
+      and a default that is not a list opens no sections — and
+      `stored-value-page.test.ts`'s boundary table is **ten entries over seven
+      pages**. Directions measured: with the two clauses removed the case names
+      `accordion.mdx: value — a stored open set that is not a list means
+      uncontrolled` and the `defaultValue` twin; restored, the file is 5/5 and
+      `component-page` joins it green (23/23). No native scenario applies — a
+      page and the reader it teaches.
 
 `[x]` Teach the **timing a saved duration and options object get** on
       `/docs/motion` — the package reads a resumable tween through
