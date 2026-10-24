@@ -323,6 +323,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "src/components/CheckboxGroup.test.tsx",
       "src/core/roving.test.ts",
       "runtime/controls.runtime.test.tsx",
+      "runtime/groups.runtime.test.tsx",
     ],
   },
   {
@@ -344,6 +345,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     tests: [
       "src/components/RadioGroup.test.tsx",
       "runtime/controls.runtime.test.tsx",
+      "runtime/groups.runtime.test.tsx",
     ],
   },
   {
@@ -608,6 +610,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "src/components/ToggleGroup.test.tsx",
       "src/core/roving.test.ts",
       "runtime/controls.runtime.test.tsx",
+      "runtime/groups.runtime.test.tsx",
     ],
   },
   {
