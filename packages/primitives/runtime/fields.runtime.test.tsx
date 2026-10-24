@@ -1459,6 +1459,45 @@ it("opens a Tooltip when its trigger takes keyboard focus", async () => {
   expect(runtime.allText()).toContain("A hint");
 });
 
+it("paints no tip for copy that says nothing", async () => {
+  // The bug guarded: `content` is copy a caller fills from an i18n table as
+  // often as a literal, and a tip is a padded, filled bubble — so a row the
+  // table never translated hovered a ghost box over the page while the trigger
+  // announced nothing. A blank string is no tip: the trigger paints alone.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Tooltip content="" testId="blank-tip">
+          <div testId="blank-target" tabIndex={0} style={{ display: "flex" }}>
+            <Text>Blank</Text>
+          </div>
+        </Tooltip>
+        <Tooltip content="   " testId="spaces-tip">
+          <div testId="spaces-target" tabIndex={0} style={{ display: "flex" }}>
+            <Text>Spaces</Text>
+          </div>
+        </Tooltip>
+        <Tooltip content="A hint" testId="tip">
+          <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+            <Text>Hover me</Text>
+          </div>
+        </Tooltip>
+      </Stack>
+    </Surface>,
+  );
+  runtime.hover("blank-target");
+  runtime.settleMotion();
+  runtime.hover("spaces-target");
+  runtime.settleMotion();
+  expect(runtime.bounds("blank-tip")).toStrictEqual(Option.none());
+  expect(runtime.bounds("spaces-tip")).toStrictEqual(Option.none());
+  // The same hover on a tip with copy is the control: it paints its box.
+  runtime.hover("target");
+  runtime.settleMotion();
+  expect(Option.isSome(runtime.bounds("tip"))).toBe(true);
+});
+
 it("publishes a Tooltip's text as the trigger's accessible description", async () => {
   const runtime = await openWindow();
   runtime.render(

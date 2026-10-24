@@ -421,6 +421,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "Open and close timing are the runtime's: a TooltipProvider sets a group's delay and skip window, a tip's own delay wins, and a caller can take the open state through open/onOpenChange",
       "In a window a Tab traversal focuses the trigger without running its onFocus, so the tip stays closed and hover is the only open path (three runs on 0.11.0); the TestRenderer does dispatch the event",
       "The tip moves on the house timing (motionLevels.fast, from the side it is anchored to) and is held for its exit; the reduced preference is the caller's, because the runtime exposes none",
+      "A string tip that says nothing paints no surface: a blank translation row hovered an empty bubble over the page, so the trigger paints alone and keeps its own name, tab stop and any description the caller states",
     ],
     source: ["src/components/Tooltip.tsx"],
     docs: "docs/tooltip.mdx",

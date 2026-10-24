@@ -335,6 +335,15 @@ out a whole line (measured on 0.11.0: 0px for `""`, 16px for `"   "`), so a labe
 grew by a blank line while the control announced nothing. Real copy is painted
 **as written** — only the decision is the name rule's, not the spacing.
 
+A **tip** is a surface as well as copy: `Tooltip`'s `content` is short copy an
+i18n table or a saved record fills, and a blank string painted the padded, filled
+bubble anyway — measured in a window at **14×10** over its trigger — while the
+trigger announced nothing. A string that says nothing is no tip: no surface is
+painted, and the trigger keeps the tab stop the runtime gives it and any
+`description` a caller states. A non-text tip is a tree the caller owns and is
+painted as given; `src/components/Tooltip.test.tsx` and
+`runtime/fields.runtime.test.tsx` hold both sides.
+
 The rule also holds for a **display formatter**, where a blank answer is worse
 than a blank line: `NumberField`'s `formatValue` is display copy, so a locale
 table with a missing row answers `""` and the field painted an **empty input

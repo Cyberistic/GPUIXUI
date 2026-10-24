@@ -31,7 +31,7 @@ const theme = useTheme();
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `content` | `ReactNode` | required | the tip; keep it short and unwrapped |
+| `content` | `ReactNode` | required | the tip; keep it short and unwrapped — a string that says nothing paints no tip at all |
 | `description` | `string` | `content` when it is a string | the trigger's accessible description |
 | `children` | `ReactNode` | required | the trigger: a focusable element that forwards the trigger pair |
 | `side` | `FloatingSide` | `"top"` | preferred placement |
@@ -59,4 +59,4 @@ const theme = useTheme();
 
 - The trigger must be a focusable element: `Button`, `IconButton`, `Toggle`, `Checkbox` and `Switch` forward `TooltipTriggerProps`.
 - In a window there is no keyboard open path: a `Tab` traversal leaves the tip closed, so hover is the only route.
-- No `aria-describedby`: a non-string tip has no description unless `description` is passed.
+- No `aria-describedby`: a non-string tip has no description unless `description` is passed. **A string tip that says nothing is no tip**: `content` is copy an i18n table or a saved record fills as often as a literal, and a tip is a padded, filled bubble, so `content=""` (or a run of spaces) would hover an empty box over the page. No surface is painted; the trigger keeps the tab stop and triggers the runtime gives it, and an explicit `description` is still the trigger's help. The rule reads a string, so a non-string tip is a tree the caller owns — `<Tooltip content={<text>{hint}</text>}>` with an empty `hint` still paints its surface.

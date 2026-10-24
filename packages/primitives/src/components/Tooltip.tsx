@@ -59,7 +59,7 @@ import {
   TooltipProvider as GpuixTooltipProvider,
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, visibleCopy } from "../core/a11y.js";
 import { reducedMotionOf } from "../core/motion.js";
 import {
   exitWindowMs,
@@ -127,7 +127,14 @@ export const TooltipProvider = (props: TooltipProviderProps): ReactElement =>
   renderTooltipProvider(props);
 
 export interface TooltipProps {
-  /** The label. Keep it short — the runtime does not wrap overlay content. */
+  /**
+   * The label. Keep it short — the runtime does not wrap overlay content.
+   *
+   * A string that says nothing — a missing translation row, a record whose
+   * hint was never written — is **no tip**: no surface is painted, because a
+   * tip is a padded, filled bubble and a blank one reads as a box over the
+   * page. A non-text tip is a tree the caller owns and is painted as given.
+   */
   readonly content: ReactNode;
   /**
    * The trigger's accessible description. Defaults to `content` when it is a
@@ -249,6 +256,23 @@ export interface TooltipView {
   readonly onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * The tip's copy, or `null` for a tip that says nothing.
+ *
+ * `content` is interface copy a caller fills from an i18n table as often as it
+ * is a literal, and a tip is a padded, filled surface: a blank string — a row
+ * the table never translated, a saved record's empty hint — painted a ghost
+ * bubble over the page while the trigger announced nothing. A string that says
+ * nothing is no tip, the rule a `Separator`'s caption and a `Progress` label
+ * follow; a non-text tip is a tree the caller owns and is painted as given.
+ */
+const tipCopy = (content: ReactNode): ReactNode =>
+  content === null || content === undefined
+    ? null
+    : typeof content === "string"
+      ? (visibleCopy(content) ?? null)
+      : content;
+
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (
   {
@@ -268,35 +292,40 @@ export const renderTooltip = (
   }: TooltipProps,
   theme: PrimitiveTheme,
   view?: TooltipView,
-): ReactElement => (
-  <GpuixTooltip
-    delayDuration={delay}
-    open={view === undefined ? open : view.mounted}
-    defaultOpen={defaultOpen}
-    onOpenChange={view === undefined ? onOpenChange : view.onOpenChange}
-    disableHoverableContent={disableHoverableContent}
-  >
-    <TooltipTrigger asChild>
-      {describedTrigger(
-        children,
-        description ?? (typeof content === "string" ? content : undefined),
-        description !== undefined,
-      )}
-    </TooltipTrigger>
-    <TooltipContent
-      side={view === undefined ? side : view.side}
-      align={align}
-      motion={view?.motion}
-      style={mergeStyle(
-        tooltipStyle(theme, className, style),
-        view === undefined ? undefined : presenceStyle(view.present),
-      )}
-      testId={testId}
+): ReactElement => {
+  const copy = tipCopy(content);
+  return (
+    <GpuixTooltip
+      delayDuration={delay}
+      open={view === undefined ? open : view.mounted}
+      defaultOpen={defaultOpen}
+      onOpenChange={view === undefined ? onOpenChange : view.onOpenChange}
+      disableHoverableContent={disableHoverableContent}
     >
-      {content}
-    </TooltipContent>
-  </GpuixTooltip>
-);
+      <TooltipTrigger asChild>
+        {describedTrigger(
+          children,
+          description ?? (typeof content === "string" ? content : undefined),
+          description !== undefined,
+        )}
+      </TooltipTrigger>
+      {copy === null ? null : (
+        <TooltipContent
+          side={view === undefined ? side : view.side}
+          align={align}
+          motion={view?.motion}
+          style={mergeStyle(
+            tooltipStyle(theme, className, style),
+            view === undefined ? undefined : presenceStyle(view.present),
+          )}
+          testId={testId}
+        >
+          {copy}
+        </TooltipContent>
+      )}
+    </GpuixTooltip>
+  );
+};
 
 /**
  * How far the tip travels while it arrives, in pixels.

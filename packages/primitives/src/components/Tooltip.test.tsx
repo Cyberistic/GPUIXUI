@@ -185,6 +185,40 @@ describe("Tooltip accessibility", () => {
       Option.none(),
     );
   });
+
+  it("paints no surface for copy that says nothing", () => {
+    // The bug guarded: `content` is copy a caller fills from an i18n table as
+    // often as a literal, and a tip is a padded, filled surface — so a row the
+    // table never translated hovered a ghost bubble over the page while the
+    // trigger announced nothing. A blank string is no tip: the trigger paints
+    // alone. The runtime still clones the trigger pair onto it, so the element
+    // keeps the tab stop a plain child is given.
+    expect(
+      elementChildren(render({ content: "", children: <div /> })),
+    ).toHaveLength(1);
+    expect(
+      elementChildren(render({ content: "   ", children: <div /> })),
+    ).toHaveLength(1);
+    // A tip with copy is the control: the same tree paints the surface.
+    expect(
+      elementChildren(render({ content: "A hint", children: <div /> })),
+    ).toHaveLength(2);
+  });
+
+  it("keeps the description a caller states for a tip that says nothing", () => {
+    // The two channels are decided separately: the surface says nothing to
+    // paint, while the help the caller wrote is still the trigger's help.
+    const trigger = triggerOf(
+      render({
+        content: "   ",
+        description: "Revenue definition",
+        children: <div tabIndex={0} />,
+      }),
+    );
+    expect(expectSome(hostProp(trigger, "aria-description"))).toBe(
+      "Revenue definition",
+    );
+  });
 });
 
 /** The tip's own element: the second child of the runtime's `Tooltip`. */
