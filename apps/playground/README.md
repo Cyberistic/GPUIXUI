@@ -41,7 +41,8 @@ proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open — `shell-selection`,
 which presses one of those rows and proves the app **opens** it (the header, the
 mounted view and its live field, the selection's paint and the palette switch),
-and
+`shell-stage-scroll`, which proves a scenario taller than the window can be
+read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
@@ -120,7 +121,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (47/47 green); -> 2 on a host with no binding
+# -> 0 here (48/48 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -754,12 +755,36 @@ the probe presses and reads, the pressed palette is one the shell offers and
 paints differently from the other, and the count above is the number of
 assertions in the probe's own source.
 
+## The stage scrolls a tall scenario to its bottom
+
+The shell's stage is the box a scenario is read in, and the registry's tallest
+view is taller than the window. `shell-stage-scroll` mounts the real `App`,
+presses `data-charts-core`'s row (measured as the tall entry — of the registry's
+views it is the one whose content exceeds the stage) and measured on 0.11.0:
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | the app opens on a scenario that fits and the stage reports `0, 0` |
+| the press | the charts view mounts, and its last chart (`chart-donut`, at the bottom of the column) starts **outside** the stage's box |
+| the wheel | the stage scrolls to its end, `-202` here, and the donut ends inside the stage's box while the content above it moved up |
+
+**12 checks**, `--only shell-stage-scroll`, green on 0.11.0. What makes the box
+scroll was measured by removing it: dropping the stage's `overflow: "scroll"`
+fails `the stage reports a scroll offset` (`expected a value, got none`) — the
+element is not a scroller at all — while dropping its `minHeight: 0` still
+scrolls, because a scroll container's automatic minimum size is already zero.
+`shell-stage.test.ts` (4 cases) holds the premises a host with no binding
+cannot: the pressed entry exists and is not the one the app opens on, the
+charts example declares the marker, the shell declares the stage with
+`overflow: "scroll"`, and the count above is the number of assertions in the
+probe's source.
+
 ## Evidence on this host
 
-The suite is **47/47 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **48/48 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-47/47 scenarios passed · capabilities: layout=verified text=verified
+48/48 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -795,7 +820,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | window size | `getWindowSize()` is the box the layout fills (not the retired 800×600 constant): `useWindowSize()` reads the same pair, and `zoomWindow()` takes a 900×520 window to 1680×923 while the flexible pane reflows and `onLayout` reports the new width (`window-resize-reflow`) |
-| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit: the header, the mounted view and the selection's paint follow, the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it |
+| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit: the header, the mounted view and the selection's paint follow, the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
 | content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence

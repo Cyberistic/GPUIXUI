@@ -2604,7 +2604,39 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 175/175
+`[x]` `[██████████]` 176/176
+
+`[x]` Prove **the stage scrolls a tall scenario to its bottom** — the shell's
+      sidebar scroller has a guard (`shell-navigation`) while the box every
+      scenario is *read* in had none, and the registry's tallest view is taller
+      than the window, so a stage that clipped instead of scrolling would hide
+      the bottom of a scenario with no way to reach it. The headless
+      `shell-stage-scroll` probe mounts the real `App`, presses the tall entry's
+      row and measured 12 checks on 0.11.0: the app opens on a scenario that
+      fits and the stage reports `0, 0`; pressing `data-charts-core` mounts its
+      charts and the column's last chart (`chart-donut`) starts **outside** the
+      stage's box; the wheel scrolls the stage to its end (`-202` in a 714px
+      stage) with the donut inside and the content above moved up. `data-charts-core`
+      is the tall entry because it was **measured**, not assumed: a throwaway
+      sweep pressed fourteen candidate entries and wheeled the stage, and it was
+      the only one that moved (`theme-color-roles`, whose 47-swatch grid looks
+      tall, fits). What makes the box scroll was measured by removing it:
+      dropping the stage's `overflow: "scroll"` fails `the stage reports a scroll
+      offset` (`expected a value, got none`), while dropping its `minHeight: 0`
+      still scrolls, because a scroll container's automatic minimum size is
+      already zero — so the declaration the probe depends on is named in the
+      README rather than assumed. The two shell probes now share their verbs
+      (`shell-nav.ts`: `navId`, `inside`, `fillOf`, `textOf`, `press`,
+      `revealRow`, `scrollToEnd`) instead of each carrying a copy, and the stage
+      gained the `app-stage` address. `shell-stage.test.ts` (4 cases) holds the
+      premises a host with no binding cannot (the pressed entry exists and is not
+      the one the app opens on, the charts example declares the marker, the shell
+      declares the stage with `overflow: "scroll"`, and the README's count is the
+      probe source's assertion count). Green: the full headless suite **48/48**
+      with every capability verified, `nub run --filter playground test` 120 files
+      / 1 197 tests, `check-types`, `oxlint`, `oxfmt` and `check:tests` clean.
+      Docs: `apps/playground/README.md` §The stage scrolls a tall scenario, the
+      intro's scenario list and the `shell` measurement row.
 
 `[x]` Prove **the playground shell opens the scenario a press reaches** — the app's
       sidebar was guarded only as a list that scrolls (`shell-navigation`), so

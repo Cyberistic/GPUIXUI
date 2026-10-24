@@ -25,9 +25,9 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { paletteIds, palettes } from "../palettes.js";
 import { registry } from "./registry.js";
+import { SHELL_LIST } from "./shell-nav.js";
 import {
   SELECTION_TARGET,
-  SHELL_LIST,
   TARGET_MARKER,
   TARGET_PALETTE,
   TARGET_READOUT,

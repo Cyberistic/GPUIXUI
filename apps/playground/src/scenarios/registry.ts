@@ -240,6 +240,11 @@ export const registry = [
     capability: "layout",
   },
   {
+    id: "shell-stage-scroll",
+    title: "Playground shell: a scenario taller than the window scrolls",
+    capability: "scroll",
+  },
+  {
     id: "virtual-list-windowed",
     title: "Windowed virtual list: itemCount mounts only the slice it paints",
     capability: "virtual-list",

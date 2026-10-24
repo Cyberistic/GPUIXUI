@@ -19,20 +19,30 @@
  *   - the palette switch repaints the shell — the root's fill and the selected
  *     row's accent both become the light palette's own roles — so the switch is
  *     a `ThemeProvider` re-render and not a repaint of the swatch alone.
+ *
+ * The row has to be **revealed** before the press: the renderer keeps a scroll
+ * offset per `testId`, so a list another scenario left scrolled can hold the row
+ * outside the viewport (see `shell-nav.ts`).
  */
-import { Effect, pipe } from "effect";
+import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { App } from "../app.js";
 import { palettes, type PaletteId } from "../palettes.js";
-import type { Smoke } from "@gpuixui/testing";
 import { scenarios } from "./index.js";
+import {
+  SHELL_LIST,
+  fillOf,
+  inside,
+  navId,
+  press,
+  revealRow,
+  textOf,
+} from "./shell-nav.js";
 import type { ScenarioBody } from "../types.js";
 
 /** The registry entry a press opens, and the view its own scenario paints. */
 export const SELECTION_TARGET = "input-edit";
-/** The sidebar's scroller, whose offset is per `testId` and survives a mount. */
-export const SHELL_LIST = "shell-nav-list";
 /** A `testId` only the target's own view declares. */
 export const TARGET_MARKER = "input-field";
 /** The readout the target's view writes what it was typed into. */
@@ -40,61 +50,7 @@ export const TARGET_READOUT = "input-readout";
 /** The palette the switch is pressed to, from the shell's own palette ids. */
 export const TARGET_PALETTE: PaletteId = "light";
 
-const navId = (id: string): string => `nav-${id}`;
 const paletteId = (palette: string): string => `theme-mode-${palette}`;
-
-/** One wheel's reach, and the most a reveal will take. */
-const STEP = 400;
-const MAX_STEPS = 40;
-
-/** The fill the runtime reports for `testId`, or none when it is not painted. */
-const fillOf = (
-  ctx: Smoke.SmokeContext,
-  testId: string,
-): Option.Option<string> =>
-  pipe(
-    Option.fromNullishOr(ctx.host.paintedStyle(testId)),
-    Option.flatMap((snapshot) => snapshot.backgroundColor),
-  );
-
-const textOf = (
-  ctx: Smoke.SmokeContext,
-  testId: string,
-): Option.Option<string> => Option.fromNullishOr(ctx.host.text(testId));
-
-/** Whether `row` sits wholly inside `list`'s box, so a press can hit it. */
-const inside = (list: Smoke.Bounds, row: Smoke.Bounds): boolean =>
-  row.y >= list.y && row.y + row.height <= list.y + list.height;
-
-/**
- * Wheels the list until `rowId` is inside it, and answers the row's box.
- *
- * The renderer keeps a scroll offset per `testId`, so a list another scenario
- * (or another entry) left scrolled can hold the row anywhere — a press aimed at
- * a box outside the viewport hits whatever is painted there instead. A wheel
- * *positive* `deltaY` scrolls up, the opposite of the DOM.
- */
-const revealRow = (
-  ctx: Smoke.SmokeContext,
-  listId: string,
-  rowId: string,
-  remaining: number,
-): Effect.Effect<Option.Option<Smoke.Bounds>> =>
-  Effect.gen(function* () {
-    const list = Option.fromNullishOr(ctx.host.bounds(listId));
-    const row = Option.fromNullishOr(ctx.host.bounds(rowId));
-    if (Option.isNone(list) || Option.isNone(row)) return row;
-    if (remaining <= 0 || inside(list.value, row.value)) return row;
-    ctx.host.wheel(listId, 0, row.value.y < list.value.y ? STEP : -STEP);
-    ctx.host.advance(50);
-    return yield* revealRow(ctx, listId, rowId, remaining - 1);
-  });
-
-/** Presses `testId` and lets the commit paint before the next read. */
-const press = (ctx: Smoke.SmokeContext, testId: string): void => {
-  ctx.host.click(testId);
-  ctx.host.advance(16);
-};
 
 export const shellSelectionScenario: ScenarioBody = {
   view: () => <App list={scenarios} />,
@@ -167,7 +123,7 @@ export const shellSelectionScenario: ScenarioBody = {
       );
       const revealed = yield* ctx.expectSome(
         "the entry a press opens is on screen",
-        yield* revealRow(ctx, SHELL_LIST, navId(target.id), MAX_STEPS),
+        yield* revealRow(ctx, SHELL_LIST, navId(target.id)),
       );
       yield* ctx.expectEqual(
         "the revealed row sits inside the list",

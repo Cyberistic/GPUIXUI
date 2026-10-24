@@ -201,6 +201,7 @@ const Shell = ({
           </Body>
         </div>
         <div
+          testId="app-stage"
           style={{
             flexGrow: 1,
             minHeight: 0,

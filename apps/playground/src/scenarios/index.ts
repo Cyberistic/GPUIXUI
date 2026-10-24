@@ -44,6 +44,7 @@ import { dockingScenario } from "./docking.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { shellNavigationScenario } from "./shell.js";
 import { shellSelectionScenario } from "./shell-selection.js";
+import { shellStageScenario } from "./shell-stage.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
 import { logViewerScenario } from "./log-viewer.js";
@@ -102,6 +103,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "theme-look": themeLookScenario,
   "shell-navigation": shellNavigationScenario,
   "shell-selection": shellSelectionScenario,
+  "shell-stage-scroll": shellStageScenario,
   "virtualized-table": virtualizedTableScenario,
   "tree-view": treeScenario,
   "log-viewer": logViewerScenario,
