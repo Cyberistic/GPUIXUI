@@ -139,6 +139,12 @@ export const liveRegistry = [
     capability: "modal",
   },
   {
+    id: "drawer-lifecycle",
+    title:
+      "Modal: the shipped Drawer sits flush against the edge it names, dims the page, traps and returns the focus, and refuses a dismissal it may not take",
+    capability: "modal",
+  },
+  {
     id: "surface-fade",
     title:
       "Motion: a surface fades into its resting frame over its level, and a reduced preference removes the journey",

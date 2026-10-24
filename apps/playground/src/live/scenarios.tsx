@@ -68,6 +68,14 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
   DatePicker,
   DatePickerCalendar,
   DatePickerContent,
@@ -390,6 +398,15 @@ import {
   decodeWindowBackground,
   surfaceAlpha,
 } from "./backdrop.js";
+import {
+  DRAWER_IDS,
+  boxText as drawerBoxText,
+  drawerBox,
+  drawerFlow,
+  drawerReadout,
+  initialDrawerFlow,
+  type DrawerEvent,
+} from "./drawer.js";
 import {
   captureScale,
   describeColour,
@@ -3080,6 +3097,132 @@ const ConfirmProbe = (): ReactNode => {
           onConfirm={() => dispatch("confirm")}
         />
         <Readout testId={CONFIRM_READOUT}>{confirmReadout(flow)}</Readout>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The shipped `Drawer` with the probe playing the caller.
+ *
+ * The fixture owns the edge, the size, `dismissible` and the open state, so the
+ * checks read the app's own record rather than the component's internals. The
+ * controls sit on the page's left, where a right-hand drawer leaves them under
+ * the veil — pressing one while a drawer is open would test the veil, not a
+ * choice, so the probe only changes them while the surface is closed.
+ */
+const DrawerProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [flow, dispatch] = useReducer(drawerFlow, initialDrawerFlow);
+  const control = (
+    id: string,
+    label: string,
+    event: DrawerEvent,
+  ): ReactNode => (
+    <Pressable testId={id} onClick={() => dispatch(event)}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {label}
+      </text>
+    </Pressable>
+  );
+  return (
+    <div
+      testId={DRAWER_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 640,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.sm,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Drawer: it sits against the edge it names, dims the page,
+          takes and returns the focus, and refuses a dismissal it may not take.
+        </text>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: theme.spacing.sm,
+          }}
+        >
+          {control(DRAWER_IDS.sideRight, "Right", "side-right")}
+          {control(DRAWER_IDS.sideLeft, "Left", "side-left")}
+          {control(DRAWER_IDS.sideBottom, "Bottom", "side-bottom")}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: theme.spacing.sm,
+          }}
+        >
+          {control(DRAWER_IDS.sizeSm, "Small", "size-sm")}
+          {control(DRAWER_IDS.sizeMd, "Medium", "size-md")}
+          {control(DRAWER_IDS.sizeLg, "Large", "size-lg")}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: theme.spacing.sm,
+          }}
+        >
+          {control(DRAWER_IDS.dismissibleOn, "Dismissible", "dismissible-on")}
+          {control(DRAWER_IDS.dismissibleOff, "Pinned", "dismissible-off")}
+        </div>
+        <Drawer
+          open={flow.open}
+          onOpenChange={(next) => dispatch(next ? "open" : "close")}
+          dismissible={flow.dismissible}
+        >
+          <DrawerTrigger testId={DRAWER_IDS.opener}>Open filters</DrawerTrigger>
+          <DrawerContent
+            label="Filters"
+            testId={DRAWER_IDS.surface}
+            side={flow.side}
+            size={flow.size}
+          >
+            <DrawerHeader>
+              <DrawerTitle testId={DRAWER_IDS.title}>Filters</DrawerTitle>
+              <DrawerDescription>Narrow the result set.</DrawerDescription>
+            </DrawerHeader>
+            <DrawerFooter>
+              <DrawerClose testId={DRAWER_IDS.cancel}>Cancel</DrawerClose>
+              <Pressable testId={DRAWER_IDS.apply} onClick={() => undefined}>
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  Apply
+                </text>
+              </Pressable>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+        <Readout testId={DRAWER_IDS.readout}>{drawerReadout(flow)}</Readout>
       </div>
     </div>
   );
@@ -7993,6 +8136,278 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       CONFIRM_OPENER,
     );
     yield* ctx.host.capture("confirm-escaped");
+  });
+
+/**
+ * Opens, edges, sizes and dismisses the shipped `Drawer` in a window.
+ *
+ * Four claims an offscreen suite cannot make. The **edge** is paint and layout
+ * together: the surface must sit flush against the window edge it names, and
+ * the veil must leave the rest of the page visible but dimmed. A **press on the
+ * veil** must reach the dismiss layer while a press inside the surface must not
+ * — that is the runtime's hit test, not the component's tree. **Tab** is the
+ * window's real traversal, so a trap is a sequence of focused ids rather than a
+ * simulated event. And a **pinned drawer** must refuse both Escape and a veil
+ * press, which is the one dismissal rule a caller can take away.
+ */
+const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(DRAWER_IDS.opener);
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.expectEqual(
+      "the probe's page fills the window it measures",
+      drawerBoxText(yield* paintedBox(ctx, DRAWER_IDS.probe)),
+      drawerBoxText({ x: 0, y: 0, width: window.width, height: window.height }),
+    );
+    const surface = yield* ctx.expectSome(
+      "the palette names the drawer's surface colour",
+      Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.popover)),
+    );
+
+    yield* ctx.expectEqual(
+      "the drawer starts closed with the caller's default edge and size",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "open=false opens=0 closes=0 side=right size=md dismissible=true",
+    );
+    yield* ctx.expectEqual(
+      "a closed drawer paints no surface",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds(DRAWER_IDS.surface)),
+      ),
+      true,
+    );
+    yield* ctx.host.capture("drawer-closed");
+
+    /** Focuses the app's opener and presses it, so the restore target is real. */
+    const open = Effect.gen(function* () {
+      yield* ctx.host.focusElement(DRAWER_IDS.opener);
+      yield* ctx.host.click(DRAWER_IDS.opener);
+      yield* settlePainted(ctx, DRAWER_IDS.surface);
+      // The surface travels a few points in from its edge, so a box read on the
+      // mount's frame names the entry rather than the resting box.
+      yield* Effect.sleep(Duration.millis(400));
+    });
+
+    // ── A right-hand column ────────────────────────────────────────────────
+    yield* open;
+    yield* ctx.expectEqual(
+      "a right drawer fills the window's height against its right edge",
+      drawerBoxText(yield* paintedBox(ctx, DRAWER_IDS.surface)),
+      drawerBoxText(drawerBox("right", "md", window)),
+    );
+    yield* ctx.expectEqual(
+      "the caller records the open",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "open=true opens=1 closes=0 side=right size=md dismissible=true",
+    );
+    yield* ctx.expectEqual(
+      "the drawer surface takes the focus",
+      yield* focusedAfterPaint(ctx),
+      DRAWER_IDS.surface,
+    );
+    yield* ctx.expectEqual(
+      "the veil covers the window",
+      drawerBoxText(yield* paintedBox(ctx, "drawer-backdrop")),
+      drawerBoxText({ x: 0, y: 0, width: window.width, height: window.height }),
+    );
+
+    // Real traversal: backwards from the surface wraps to its last stop, and
+    // forwards walks both footer actions before wrapping back to the first.
+    yield* ctx.host.key("shift-tab");
+    yield* ctx.expectEqual(
+      "Shift+Tab from the surface wraps to its last stop",
+      yield* focusedAfterPaint(ctx),
+      "drawer-close",
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab from the last stop wraps to the first action",
+      yield* focusedAfterPaint(ctx),
+      DRAWER_IDS.cancel,
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab walks to the next action",
+      yield* focusedAfterPaint(ctx),
+      DRAWER_IDS.apply,
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab reaches the surface's own close control",
+      yield* focusedAfterPaint(ctx),
+      "drawer-close",
+    );
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab wraps inside the surface rather than leaving it",
+      yield* focusedAfterPaint(ctx),
+      DRAWER_IDS.cancel,
+    );
+
+    // Capture-only wait: the surface enters on its `slow` level, and a
+    // half-faded screenshot is poor evidence rather than a wrong one.
+    yield* Effect.sleep(Duration.millis(400));
+    yield* ctx.host.capture("drawer-right");
+    const rightFrame = yield* ctx.host.pixels("drawer-right");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window's box at a whole scale",
+      captureScale(rightFrame, window),
+    );
+    const right = drawerBox("right", "md", window);
+    const centre = yield* colourAtPoint(
+      ctx,
+      rightFrame,
+      { x: right.x + right.width / 2, y: right.y + right.height / 2 },
+      scale,
+      "the drawer's centre paints inside the capture",
+    );
+    yield* ctx.expectEqual(
+      "the surface paints the popover role",
+      differs(centre, surface),
+      false,
+    );
+    const closedFrame = yield* ctx.host.pixels("drawer-closed");
+    const pagePoint = { x: 40, y: window.height - 40 };
+    const closedPage = yield* colourAtPoint(
+      ctx,
+      closedFrame,
+      pagePoint,
+      scale,
+      "the page paints before the drawer opens",
+    );
+    const openPage = yield* colourAtPoint(
+      ctx,
+      rightFrame,
+      pagePoint,
+      scale,
+      "the uncovered page paints under the veil",
+    );
+    yield* ctx.expectEqual(
+      "the veil dims the page the surface leaves uncovered",
+      distanceFrom(openPage, closedPage) > 20,
+      true,
+    );
+
+    yield* ctx.host.click(DRAWER_IDS.title);
+    yield* ctx.expectEqual(
+      "a press inside the surface does not dismiss it",
+      yield* settlePainted(ctx, DRAWER_IDS.surface),
+      true,
+    );
+    yield* ctx.host.click("drawer-backdrop");
+    yield* ctx.expectEqual(
+      "a press on the veil dismisses the drawer",
+      yield* settleGone(ctx, DRAWER_IDS.surface),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the veil press reports the close and returns the focus to the opener",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "open=false opens=1 closes=1 side=right size=md dismissible=true",
+    );
+    yield* ctx.expectEqual(
+      "the dismissed drawer gives the focus back",
+      yield* focusedAfterPaint(ctx),
+      DRAWER_IDS.opener,
+    );
+
+    // ── The size's own column width, on the same edge ──────────────────────
+    yield* ctx.host.click(DRAWER_IDS.sizeLg);
+    yield* open;
+    yield* ctx.expectEqual(
+      "a large right drawer takes the large column width",
+      drawerBoxText(yield* paintedBox(ctx, DRAWER_IDS.surface)),
+      drawerBoxText(drawerBox("right", "lg", window)),
+    );
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape dismisses the drawer",
+      yield* settleGone(ctx, DRAWER_IDS.surface),
+      true,
+    );
+
+    // ── The other edge ─────────────────────────────────────────────────────
+    yield* ctx.host.click(DRAWER_IDS.sizeMd);
+    yield* ctx.host.click(DRAWER_IDS.sideLeft);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the caller's controls move the edge and the size",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "side=left size=md",
+    );
+    yield* open;
+    yield* ctx.expectEqual(
+      "a left drawer sits against the window's left edge",
+      drawerBoxText(yield* paintedBox(ctx, DRAWER_IDS.surface)),
+      drawerBoxText(drawerBox("left", "md", window)),
+    );
+    yield* ctx.host.click(DRAWER_IDS.cancel);
+    yield* ctx.expectEqual(
+      "the drawer's own close control dismisses it",
+      yield* settleGone(ctx, DRAWER_IDS.surface),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the close control reports one close",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "open=false opens=3 closes=3 side=left size=md dismissible=true",
+    );
+
+    // ── A bottom sheet ─────────────────────────────────────────────────────
+    yield* ctx.host.click(DRAWER_IDS.sideBottom);
+    yield* ctx.host.click(DRAWER_IDS.sizeLg);
+    yield* open;
+    yield* ctx.expectEqual(
+      "a bottom sheet spans the window and sits against its bottom edge",
+      drawerBoxText(yield* paintedBox(ctx, DRAWER_IDS.surface)),
+      drawerBoxText(drawerBox("bottom", "lg", window)),
+    );
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape dismisses the sheet too",
+      yield* settleGone(ctx, DRAWER_IDS.surface),
+      true,
+    );
+
+    // ── A drawer that may not be dismissed ─────────────────────────────────
+    yield* ctx.host.click(DRAWER_IDS.sideRight);
+    yield* ctx.host.click(DRAWER_IDS.sizeMd);
+    yield* ctx.host.click(DRAWER_IDS.dismissibleOff);
+    yield* open;
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "a pinned drawer refuses Escape",
+      yield* settlePainted(ctx, DRAWER_IDS.surface),
+      true,
+    );
+    yield* ctx.host.click("drawer-backdrop");
+    yield* ctx.expectEqual(
+      "a pinned drawer refuses the veil's press too",
+      yield* settlePainted(ctx, DRAWER_IDS.surface),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "neither refusal reports a close",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "open=true opens=5 closes=4 side=right size=md dismissible=false",
+    );
+    yield* ctx.host.click(DRAWER_IDS.cancel);
+    yield* ctx.expectEqual(
+      "the pinned drawer still closes from its own control",
+      yield* settleGone(ctx, DRAWER_IDS.surface),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the caller records every open and close it saw",
+      yield* ctx.host.text(DRAWER_IDS.readout),
+      "open=false opens=5 closes=5 side=right size=md dismissible=false",
+    );
+    yield* ctx.expectEqual(
+      "the last close returns the focus to the opener",
+      yield* focusedAfterPaint(ctx),
+      DRAWER_IDS.opener,
+    );
+    yield* ctx.host.capture("drawer-pinned");
   });
 
 /**
@@ -29176,6 +29591,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "confirm-dialog-lifecycle",
     view: () => <ConfirmProbe />,
     steps: confirmSteps,
+  },
+  "drawer-lifecycle": {
+    id: "drawer-lifecycle",
+    view: () => <DrawerProbe />,
+    steps: drawerSteps,
   },
   "validation-lifecycle": {
     id: "validation-lifecycle",

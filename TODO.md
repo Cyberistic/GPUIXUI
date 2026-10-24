@@ -1932,7 +1932,38 @@ scenario applies — a box the primitives' own suite paints and a report over it
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 159/159
+`[x]` `[██████████]` 160/160
+
+`[x]` Measure the **shipped `Drawer`** in a window — the one modal whose edge,
+      veil and dismissal are all paint and hit-testing, and whose claims were
+      held only by the offscreen renderer. The `drawer-lifecycle` probe mounts
+      the shipped `Drawer`/`DrawerContent` in a real window on 0.11.0 and reads
+      the surface box against the component's own `WIDTH`/`HEIGHT` arithmetic:
+      a right `md` drawer is `500,0,400,520`, a right `lg` `340,0,560,520`, a
+      left `md` `0,0,400,520`, and a bottom `lg` `0,100,900,420` — so the edge,
+      the size and the sheet all land where the component says. The veil covers
+      `0,0,900,520`, a page point under it is measurably darker than the same
+      point before the open, and the surface's centre paints the palette's
+      `popover` role. Focus enters the surface (`tabIndex: -1`); `Shift+Tab`
+      wraps to `drawer-close` and Tab then walks `drawer-cancel` →
+      `drawer-apply` → `drawer-close` → `drawer-cancel` without naming the
+      opener. A press on the title leaves the drawer open, a press on the veil
+      dismisses it and returns the focus to the opener, and the drawer's own
+      close control reports one close. `dismissible={false}` refuses both
+      Escape and the veil press while the close control still closes it — the
+      app always owns one way out. **34 checks**, `--only drawer-lifecycle`,
+      green here (~19 s, three captures). Fixture `src/live/drawer.ts` (the size
+      arithmetic copied from the component, the ids, the caller's state and the
+      readout) + `DrawerProbe`/`drawerSteps` in `src/live/scenarios.tsx` +
+      `drawer.test.ts` (the size tables read out of `drawer.tsx`, the box
+      arithmetic and its clamps, the flow, the registry and wiring, the check
+      count and the README section). Two directions measured: the guard fails
+      three cases by name when `DRAWER_WIDTHS.md` is moved to 401, and the live
+      check fails with `expected "499,0,401,520", got "500,0,400,520"` (exit
+      `1`); restored, the probe is green. Evidence:
+      `apps/playground/README.md` §`drawer-lifecycle`,
+      `.artifacts/live/drawer-{closed,right,pinned}.png`. The `COMPONENTS.md`
+      citation is the Interlocks task below.
 
 `[x]` Measure the **shipped `MediaPlayer`** in a window — `@gpuixui/media`
       ships `MediaPlayer`, and every claim its package made about the transport
@@ -8502,6 +8533,8 @@ this time.
 
 | Cite the **shipped player's paint** in the media row — `COMPONENTS.md`'s *Video / audio player + waveform* row says the paint route "is the live `media-frame-lifecycle` probe's, which composes the same pieces in a window", and the `media-player-lifecycle` probe (51 checks, 0.11.0) now paints the **shipped** `MediaPlayer` itself: the frame the playhead names, a 200×32 waveform silhouette, the clock and fill, the four seek keys and the disabled refusal. The row's evidence sentence should cite this probe beside the composition one | media (`COMPONENTS.md`, docs `media-player.mdx`) | open — the probe, fixture, README section and guards are landed in the playground workstream; the row is this file's other owner |
 | Restore the **charts probe citation** the page prune removed — `packages/data/docs/charts.mdx` names `chart-surface-lifecycle` **0** times at `HEAD` (`e065c733` pruned the pages), while `apps/playground/src/live/chart-surface.test.ts`'s `cites the probe where the shipped charts are called window-verified` requires it on the page and both the `Charts` inventory row and the package README already carry it. `nub run --filter playground test` is therefore red at `HEAD` on that one case (1 failed / 4 passed in the file), not on a playground change | data (`packages/data/docs/charts.mdx`) | **resolved 2026-10-24** — the page's §Usage states the drawing route (one layer per series, tinted through `style.color`, because the runtime has no chart host and an `<svg>` is one tinted mask) and cites `chart-surface-lifecycle` as the probe that measures the shipped components in a real window. `src/live/chart-surface.test.ts` now passes 5/5; the direction was measured by restoring the pruned page, which fails `cites the probe where the shipped charts are called window-verified` |
+
+| Cite the **drawer's window measurement** in the components row — `COMPONENTS.md`'s Tier 2 *Drawer* row still reads `done | partial` with a limitations-only note, while the playground's `drawer-lifecycle` (34 checks, 0.11.0) has now measured the edge geometry, the veil's paint, the hit-tested dismissal, the window's Tab trap and the focus restore. The row's evidence sentence and `packages/components/docs/drawer.mdx` §Verification should cite the probe and keep the honest limits (`aria-modal`/`aria-labelledby` absent, no swipe, no slide travel) | components (`COMPONENTS.md`'s Drawer row, `packages/components/docs/drawer.mdx`) | open — the probe, fixture, README section and guards are landed in the playground workstream; the row and the page are the component owner's |
 
 | A **nested split reports its subtree as the whole layout** — `DockSplitView` hands every nested `DockNodeView` the **root's** `onLayoutChange`, so a divider inside a nested split calls it with `{ ...node, size }` for that subtree; a caller that stores the reported tree, which is the documented `onLayoutChange` usage (`setLayout`), replaces the whole workspace with the pane it resized. The root-level divider is correct, and `setActiveTab` always recurses from the root, so only a resize is affected. The fix is to compose the updater so every level rewrites its split by id in the tree it was handed (or to pass a path down). Found 2026-10-24 while drawing `/docs/dock/dock-layout` for the site; the preview draws the one-level tree the page's example uses, so it does not depend on the nested path | dock (`packages/dock/src/dock-layout.tsx`, `dock-layout.test.ts`) | open — direction to add: resize the inner split of the `root → right → …` tree in `dock-layout.test.ts`'s fixture and require `layout.first` to be the untouched editor group while `layout.second.size` moves |
 

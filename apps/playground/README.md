@@ -42,8 +42,8 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-118 probes a real window can prove, of which twenty-three mount shipped
-`@gpuixui/components` (the dialog and its fade, the confirmation flow, the
+119 probes a real window can prove, of which twenty-four mount shipped
+`@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the collapsible section, the popover,
@@ -1474,6 +1474,56 @@ The veil is an `anchored` element sized from the window, so the probe's root has
 to **fill** the window: mounted inside a 720px column the veil covered only that
 column, which is the documented "dim only its parent's box" behaviour rather than
 a defect.
+
+### `drawer-lifecycle` — measured on 0.11.0 here
+
+The shipped `Drawer` (`@gpuixui/components`) is the one modal that is **paint**
+rather than a centred box: its surface holds a window edge, its veil covers the
+rest of the page, and its dismissal is a hit test. The component's behaviour
+suite drives the offscreen renderer; this probe asks the window whether the edge
+lands flush, whether the veil dims what it leaves uncovered, whether a press on
+the veil reaches the dismiss layer while a press inside the surface does not,
+and whether the window's own Tab traversal stays inside it. The fixture is the
+caller: it owns the open state, the edge, the size and `dismissible`, and the
+readout it paints is what every assertion reads.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `open=false opens=0 closes=0 side=right size=md dismissible=true`, the surface paints no box, and the probe's page is the window's box |
+| open right, `md` | the surface is `500,0,400,520` — flush to the window's right edge, the window's full height |
+| the veil | it covers `0,0,900,520`; a page point under it is measurably darker than the same point before the drawer opened, so the veil paints rather than only existing |
+| the surface | its centre paints the palette's `popover` role |
+| focus | the surface (`drawer-surface`, `tabIndex: -1`) takes the focus on open; `Shift+Tab` wraps to `drawer-close`, then Tab walks `drawer-cancel` → `drawer-apply` → `drawer-close` → `drawer-cancel` without ever naming the opener |
+| a press inside | a press on the title leaves the drawer open |
+| the veil's press | it dismisses the drawer, reports the close, and returns the focus to the opener |
+| open right, `lg` | the surface is `340,0,560,520` — the large column keeps the right edge |
+| open left, `md` | the surface is `0,0,400,520`; its own close control dismisses it and reports one close |
+| open bottom, `lg` | the sheet is `0,100,900,420` — the window's width, the large height, against the bottom edge |
+| pinned | `dismissible=false`: Escape and a veil press both leave the surface painted and report no close, while the close control still dismisses it |
+
+Six rules the probe holds:
+
+1. **The edge and the size read one value.** The surface box is the component's
+   own arithmetic (`WIDTH`/`HEIGHT` in `drawer.tsx`, held by the
+   fixture's guard), so a size the component moves fails the probe's test rather
+   than a window's geometry.
+2. **The veil is a real paint clip.** It covers the window's box and dims the
+   page under it; the surface paints its own role above it.
+3. **A dismissal is hit-tested.** A press inside the surface reaches it and does
+   nothing; a press on the veil reaches the dismiss layer.
+4. **Tab is the window's traversal.** The trap is a sequence of focused ids, and
+   the opener is never one of them while the drawer is open.
+5. **Every close path returns the focus** — Escape, the veil and the close
+   control alike.
+6. **`dismissible={false}` removes both dismissal paths** and keeps the visible
+   close control working, because the app always owns one way out.
+
+34 checks, `--only drawer-lifecycle`, green on 0.11.0 here. Fixture
+`src/live/drawer.ts` (the size arithmetic, the ids, the caller's state and the
+readout) + `DrawerProbe`/`drawerSteps` in `src/live/scenarios.tsx` +
+`drawer.test.ts` (the component's size tables read out of its source, the box
+arithmetic, the flow, the registry, the check count and this section). Evidence:
+`.artifacts/live/drawer-{closed,right,pinned}.png`.
 
 ### `surface-fade` — measured on 0.11.0 here
 
@@ -6900,8 +6950,8 @@ narrower. Each deviation is deliberate and measured:
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
   `media-frame-lifecycle` and `media-player-lifecycle` and
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
-  and `second-window-lifecycle` and `qr-matrix` (sixty probes, each run
-  alone).
+  and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle`
+  (sixty-one probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`
