@@ -294,6 +294,33 @@ browser probes this is a run against a dev server, not part of `nub run test`;
 `src/lib/preview-press.test.ts` holds this policy to the probe (the ready-check,
 both directions and the commands) and the readout parser to its contract.
 
+### The data lane's four presses are measured
+
+The four data-lane drawings added for the key-value, toolbar, expandable-row and
+frozen-column pages are *interactions*, and each one's unit guard proves only the
+rule it runs. `apps/docs/scripts/data-previews-probe.ts` presses them in a
+hydrated page and reads the drawing's own readout: a second row opens **without
+closing the first** (`2 of 4 panels open`), a press on an open row closes only
+it, typing `staging` into the toolbar reports once after the pause (`3 of 6
+rows`, `wait 150 ms`), a wheel over the data pane moves the frozen column with it
+(`frozen:72,0 | data:72,0`), a vertical mirror carries the data pane's own `x`
+(`data:0,40`), and the key-value column reads `120` for a `NaN` width and `168`
+for a readable one. Run it with a server up:
+
+```sh
+nub run --filter @gpuixui/docs build && nub run --filter @gpuixui/docs preview
+nub apps/docs/scripts/data-previews-probe.ts
+```
+
+Measured 2026-10-24 on the served build: ten `PASS` lines and exit `0`. The run
+found the precondition the other probes only imply — a node's `__reactProps`
+exist **before** the commit that attaches its listeners, so a press at the first
+hydrated node is a no-op (the expandable press kept its panel and the toolbar
+reported nothing); the probe waits a quiet moment after the first hydrated node,
+and `src/lib/data-previews.test.ts` derives the probe's expected counts from the
+demo modules and holds its selectors to the drawings, so a renamed class or an
+added record asks the probe to move.
+
 ### The palette switch is a measured click
 
 The palette axis (`?mode=`, the sidebar's **Palette** group) is the one control

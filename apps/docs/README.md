@@ -434,6 +434,7 @@ scripts/preview-press-probe.ts      Presses a hydrated preview and reads the car
 scripts/palette-switch-probe.ts     Presses the Palette group once the surface it measures is hydrated, and reads every surface's palette back
 scripts/platform-switch-probe.ts    Presses Windows then macOS and reads every surface's platform, height and URL back
 scripts/docs-theme-probe.ts         Presses the docs theme toggle and holds every preview on the library's palette
+scripts/data-previews-probe.ts      Presses the data lane's four drawings and reads the panels, rows, offsets and widths back
 scripts/search-probe.ts             Presses the search dialog, types three queries and requires Enter to open the result
 scripts/theme-editor-probe.ts       Edits, audits and resets /docs/themes in a browser that refuses site data
 ```

@@ -101,6 +101,34 @@ export const FROZEN_RECORDS: ReadonlyArray<FrozenRecord> = [
     owner: "design",
     size: "36 KB",
   },
+  {
+    id: "r7",
+    name: "onboarding.pdf",
+    status: "archived",
+    owner: "people",
+    size: "2.2 MB",
+  },
+  {
+    id: "r8",
+    name: "release.json",
+    status: "approved",
+    owner: "platform",
+    size: "8 KB",
+  },
+  {
+    id: "r9",
+    name: "palette.json",
+    status: "draft",
+    owner: "design",
+    size: "4 KB",
+  },
+  {
+    id: "r10",
+    name: "archive.zip",
+    status: "archived",
+    owner: "platform",
+    size: "12 MB",
+  },
 ];
 
 /** The record the grid opens on: the first one, chosen for the whole grid. */
