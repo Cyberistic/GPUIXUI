@@ -23,6 +23,11 @@ const root = path.dirname(fileURLToPath(import.meta.url));
  */
 const nativeDir = path.resolve(root, "node_modules/@gpuix/native");
 
+/** One exact alias object, so the native subpaths read as a list. */
+const nativeEntry = (find: string, replacement: string) => [
+  { find: new RegExp(`^${find.replaceAll("/", "\\/")}$`), replacement },
+];
+
 const gpuixWeb = (): Plugin => ({
   name: "gpuix-web-wasm",
   enforce: "pre",
@@ -80,6 +85,16 @@ export default defineConfig({
         find: /^@gpuix\/native$/,
         replacement: path.resolve(root, "src/lib/gpuix-native.ts"),
       },
+      // The host and its siblings are plain JS, but the package's bare subpaths
+      // do not survive the Worker bundler's resolve (the deploy failed with
+      // `Module not found` on the first one), so each names the file its export
+      // map already points at.
+      ...nativeEntry("@gpuix/native/host", `${nativeDir}/dist/host.js`),
+      ...nativeEntry("@gpuix/native/cpu-throttle", `${nativeDir}/dist/cpu-throttle.js`),
+      ...nativeEntry("@gpuix/native/idle-gc", `${nativeDir}/dist/idle-gc.js`),
+      ...nativeEntry("@gpuix/native/testing", `${nativeDir}/dist/testing.js`),
+      ...nativeEntry("@gpuix/native/runtime", `${nativeDir}/dist/runtime.js`),
+      ...nativeEntry("@gpuix/native/automation", `${nativeDir}/dist/automation/index.js`),
       {
         find: /^@gpuix\/native\/wasm\/(.+)$/,
         replacement: `${nativeDir}/wasm/$1`,
