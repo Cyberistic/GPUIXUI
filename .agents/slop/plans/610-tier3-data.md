@@ -399,6 +399,18 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   failing at HEAD (`page 3/3` unchanged after Previous; `page 4/4 · 1 rows` for
   the size change). Docs `docs/virtualization.mdx` §Paging and the README's
   paging rule state it. 298 unit / 217 behaviour green.
+- **A predicate tree returns to the first page** — the page rule named the text
+  query and the three sort gestures, and a `filterTree` arrives as a controlled
+  prop, so nothing reset the index: a reader on page three of ten files who
+  narrowed to the five odd ones painted the narrowed **last** page instead of
+  its first. The pagination state is stamped with the tree it was measured
+  against, so a replacement paints page one in the same commit (no effect, the
+  rule a query already follows) and every later gesture stamps the tree it was
+  made against. `behaviour/table-pagination` gains `returns to the first page
+  when the predicate tree narrows the set` (green `page 1/2 · 3 rows`, red
+  `page 2/2 · 2 rows`) and steps once after the reset as the positive control.
+  Docs `docs/virtualization.mdx` §Paging, the README's paging rules and the
+  `filterTree` option's JSDoc state it. 298 unit / 218 behaviour green.
 - **A Tier 3 row's divider count is the contract's, not the style set it remembered**:
   the `Tables` row said the raw `border` misses "20 of the 80" (the painter's JSDoc
   said 17 of the 64) while `dividerFailures` measures **22 of 90** over eighteen

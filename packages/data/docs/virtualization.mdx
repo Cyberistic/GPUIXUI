@@ -127,6 +127,9 @@ Four rules are measured, not assumed:
 - **a filter, a search or a new sort returns to the first page** — the records
   the reader was reading are not where the index says they are once the set
   changes (`setQuery`, `pressSort`, `toggleSort` and `setSort` all reset it);
+  a new **predicate tree** does the same, and it arrives as a controlled prop
+  rather than a gesture, so the index is stamped with the tree it was measured
+  against and a replacement paints page one in the same commit;
 - **a page index past the set clamps to its last page** — a saved workspace
   reopens with the page it was on, and a set that has since narrowed paints its
   last page instead of a blank one past the end — **and the arrows and a page

@@ -15,6 +15,8 @@
  * - a saved index past the last page paints the last page (the regression);
  * - the arrows and a size change measure from the page the grid **paints**, so
  *   a saved index past the set does not strand them at its end;
+ * - a new predicate tree returns to the first page, the rule a query change
+ *   follows, even though the tree arrives as a controlled prop;
  * - the selection is the kept set's, not the page's: a record chosen on page
  *   one is still chosen while page two paints, and the page's own checkbox
  *   covers only what it paints.
@@ -23,6 +25,7 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
+import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { Button } from "@gpuixui/primitives/button";
 import {
@@ -45,6 +48,7 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import type { FilterTree } from "../surfaces/logic.js";
 import { useTable } from "../use-table.js";
 
 interface FileRow {
@@ -169,6 +173,64 @@ const PagedGrid = ({
   );
 };
 
+/** The tree the reader builds: the odd lane. */
+const keepOdd: FilterTree = {
+  kind: "all",
+  children: [
+    { kind: "predicate", field: "lane", comparison: "equals", value: "odd" },
+  ],
+};
+
+/** A paged grid whose predicate tree the reader can replace. */
+const TreePagedGrid = () => {
+  const [tree, setTree] = useState<FilterTree | undefined>(undefined);
+  const table = useTable({
+    rows: FILES,
+    keyOf,
+    columns: COLUMNS,
+    filterTree: tree,
+    pageSize: 3,
+  });
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "row", gap: 8 }}>
+        <Button testId="tree-narrow" onActivate={() => setTree(keepOdd)}>
+          Odd
+        </Button>
+        <Button testId="tree-next" onActivate={table.nextPage}>
+          Next
+        </Button>
+        <text testId="tree-page-readout">
+          {`page ${table.pageIndex + 1}/${table.pageCount} · ${table.rows.length} rows`}
+        </text>
+      </div>
+      <Table height={280}>
+        <TableViewport>
+          <TableHeader>
+            <TableRow>
+              <TableHeaderCell width={180}>Name</TableHeaderCell>
+              <TableHeaderCell width={80}>Lane</TableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.rows.map((row) => (
+              <TableRow
+                key={row.id}
+                testId={`page-row-${row.id}`}
+                selected={table.isSelected(row.id)}
+                onClick={() => table.press(row.id)}
+              >
+                <TableCell width={180}>{row.name}</TableCell>
+                <TableCell width={80}>{row.lane}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </TableViewport>
+      </Table>
+    </div>
+  );
+};
+
 describe("a paged grid", () => {
   it("paints one page of the kept set, and the arrows move it", () => {
     root = renderData(<PagedGrid pageSize={4} />);
@@ -264,6 +326,30 @@ describe("a paged grid", () => {
     expect(readout(root)).toContain("page 3/4 · 3 rows");
     expect(root.renderer.findByTestId("page-row-file-7")).toBeDefined();
     expect(root.renderer.findByTestId("page-row-file-10")).toBeUndefined();
+  });
+
+  it("returns to the first page when the predicate tree narrows the set", () => {
+    // Five of the ten files are in the odd lane. A reader on page three of the
+    // whole set has a saved index of two, which the narrowed set would clamp
+    // onto its **last** page — the records they were reading are not there.
+    root = renderData(<TreePagedGrid />);
+    settle(root);
+    expect(readout(root)).toContain("page 1/4 · 3 rows");
+
+    press(root, "tree-next");
+    press(root, "tree-next");
+    expect(readout(root)).toContain("page 3/4 · 3 rows");
+    expect(root.renderer.findByTestId("page-row-file-7")).toBeDefined();
+
+    press(root, "tree-narrow");
+    expect(readout(root)).toContain("page 1/2 · 3 rows");
+    expect(root.renderer.findByTestId("page-row-file-1")).toBeDefined();
+    expect(root.renderer.findByTestId("page-row-file-7")).toBeUndefined();
+
+    // The gesture after the tree arrived steps from the page it reset to.
+    press(root, "tree-next");
+    expect(readout(root)).toContain("page 2/2 · 2 rows");
+    expect(root.renderer.findByTestId("page-row-file-7")).toBeDefined();
   });
 
   it("keeps a chosen record while another page paints", () => {

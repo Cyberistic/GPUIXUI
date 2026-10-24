@@ -162,7 +162,10 @@ export interface UseTableOptions<Row extends RowData> {
    * A saved query is data: `null`/`undefined` means **no filter**, while a tree
    * this release cannot read (an unknown comparison or node, a missing child)
    * keeps no row rather than throwing or showing every record — see
-   * `readFilterTree`.
+   * `readFilterTree`. A **new tree returns to the first page**, the rule a
+   * query change follows: the tree is a controlled prop rather than a gesture,
+   * so the page index is stamped with the tree it was measured against and a
+   * replacement paints the first page in the same commit.
    */
   readonly filterTree?: FilterTree;
   /**
@@ -432,6 +435,18 @@ export const useTable = <Row extends RowData>({
       pageSize === undefined ? start.pagination.pageSize : pageSizeOf(pageSize),
   }));
   /**
+   * The predicate tree the page index was measured against.
+   *
+   * A tree is a controlled prop, not a gesture: the caller hands a new one and
+   * the controller sees it on the next render. The index is stamped with the
+   * tree it belongs to, so a new tree paints the **first page** in the same
+   * commit — the rule a query change follows — instead of clamping a stale
+   * index onto the narrowed set's last page; a later gesture stamps the tree it
+   * was made against.
+   */
+  const [pageTree, setPageTree] = useState<unknown>(filterTree);
+  const askedPageIndex = pageTree === filterTree ? pagination.pageIndex : 0;
+  /**
    * The record a Shift range extends from.
    *
    * The core keeps the chosen ids; the anchor is a gesture cursor, not
@@ -462,13 +477,28 @@ export const useTable = <Row extends RowData>({
   // reorder moves the reader to the first page, because the rows they were
   // reading are not where the page index says they are. The core's own
   // auto-reset is off (`constructGrid`), so this is the one place a filter or a
-  // sort changes the page — in the gesture, not inside a row model.
+  // sort changes the page — in the gesture, not inside a row model. A gesture
+  // also stamps the tree it was made against, so the stamp and the index agree.
+  const updatePage = useCallback(
+    (updater: (current: PaginationState) => PaginationState) => {
+      setPageTree(filterTree);
+      setPagination(updater);
+    },
+    [filterTree],
+  );
+  const writePage = useCallback(
+    (next: PaginationState) => {
+      setPageTree(filterTree);
+      setPagination(next);
+    },
+    [filterTree],
+  );
   const firstPage = useCallback(
     () =>
-      setPagination((current) =>
+      updatePage((current) =>
         current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
       ),
-    [],
+    [updatePage],
   );
   const writeQuery = useCallback(
     (next: string) => {
@@ -509,17 +539,17 @@ export const useTable = <Row extends RowData>({
         onSortingChange: writeSorting,
         onGlobalFilterChange: writeQuery,
         onRowSelectionChange: setRowSelection,
-        onPaginationChange: setPagination,
+        onPaginationChange: writePage,
       });
-    const first = build(pagination.pageIndex);
+    const first = build(askedPageIndex);
     const rowCount = first.getPrePaginatedRowModel().rows.length;
     const pageIndex = clampPageIndex(
-      pagination.pageIndex,
+      askedPageIndex,
       rowCount,
       pagination.pageSize,
     );
     return {
-      table: pageIndex === pagination.pageIndex ? first : build(pageIndex),
+      table: pageIndex === askedPageIndex ? first : build(pageIndex),
       pageIndex,
       pageCount: pageCountOf(rowCount, pagination.pageSize),
       rowCount,
@@ -532,10 +562,11 @@ export const useTable = <Row extends RowData>({
     sorting,
     query,
     rowSelection,
-    pagination.pageIndex,
+    askedPageIndex,
     pagination.pageSize,
     writeSorting,
     writeQuery,
+    writePage,
   ]);
   const table = built.table;
 
@@ -603,7 +634,7 @@ export const useTable = <Row extends RowData>({
   );
   const stepPage = useCallback(
     (delta: number) =>
-      setPagination((current) => ({
+      updatePage((current) => ({
         ...current,
         pageIndex: clampPageIndex(
           // The page the grid **paints**, not the saved index it clamped: a
@@ -615,7 +646,7 @@ export const useTable = <Row extends RowData>({
           current.pageSize,
         ),
       })),
-    [built.pageIndex, built.rowCount],
+    [built.pageIndex, built.rowCount, updatePage],
   );
   /**
    * The chosen record the painted page holds.
@@ -646,12 +677,12 @@ export const useTable = <Row extends RowData>({
     pageCount: built.pageCount,
     pageSize: pagination.pageSize,
     setPageIndex: (pageIndex) =>
-      setPagination((current) => ({
+      updatePage((current) => ({
         ...current,
         pageIndex: clampPageIndex(pageIndex, built.rowCount, current.pageSize),
       })),
     setPageSize: (next) =>
-      setPagination((current) =>
+      updatePage((current) =>
         // Measure the top row from the page the grid paints: a saved index the
         // set clamped would otherwise carry a top row past the end and land the
         // reader on the last page instead of keeping the row they were reading.
