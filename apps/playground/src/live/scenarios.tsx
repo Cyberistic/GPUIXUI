@@ -6529,13 +6529,18 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       MULTI_STEP_NAME_MESSAGE,
     );
 
-    // A usable name, then Enter: the field's own submit path advances too.
+    // A usable name, then Enter: the field's own submit path advances too. The
+    // cleared message is polled, not read once after a fixed sleep: a loaded
+    // box paints the field a frame or two after the keystrokes land, and a
+    // single read measured the message the previous frame carried.
     yield* typeInto(ctx, MULTI_STEP_IDS.nameInput, "desk");
+    const nameAfterTyping = yield* settleUntil(
+      ctx.host.text(MULTI_STEP_IDS.name),
+      (label) => !Str.includes(MULTI_STEP_NAME_MESSAGE)(label),
+    );
     yield* ctx.expectEqual(
       "the step's message clears once the value satisfies the rule",
-      Str.includes(MULTI_STEP_NAME_MESSAGE)(
-        yield* ctx.host.text(MULTI_STEP_IDS.name),
-      ),
+      Str.includes(MULTI_STEP_NAME_MESSAGE)(nameAfterTyping),
       false,
     );
     yield* ctx.host.key("enter");
@@ -6577,11 +6582,13 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text(MULTI_STEP_IDS.readout),
       multiStepReadout(2, { name: "desk", port: "3000" }, false, 0),
     );
+    const portAfterTyping = yield* settleUntil(
+      ctx.host.text(MULTI_STEP_IDS.port),
+      (label) => !Str.includes(MULTI_STEP_PORT_MESSAGE)(label),
+    );
     yield* ctx.expectEqual(
       "the port's message clears with the corrected value",
-      Str.includes(MULTI_STEP_PORT_MESSAGE)(
-        yield* ctx.host.text(MULTI_STEP_IDS.port),
-      ),
+      Str.includes(MULTI_STEP_PORT_MESSAGE)(portAfterTyping),
       false,
     );
     yield* ctx.host.click(MULTI_STEP_IDS.next);

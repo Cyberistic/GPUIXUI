@@ -169,6 +169,23 @@ describe("the view and the registry", () => {
     expect(view).toContain("schema={WorkspaceSetup}");
   });
 
+  it("polls a cleared message instead of reading one frame", () => {
+    // A loaded box paints a field a frame or two after the keystrokes land, so
+    // a single read after a fixed sleep measured the message the previous frame
+    // carried (measured under a five-agent build: `expected false, got true` at
+    // 823 ms, green alone). Both message checks wait on the state they assert.
+    const steps = view.slice(view.indexOf("const multiStepSteps"));
+    const body = steps.slice(0, steps.indexOf("const checkboxSteps"));
+    expect(body).toContain("const nameAfterTyping = yield* settleUntil(");
+    expect(body).toContain(
+      "Str.includes(MULTI_STEP_NAME_MESSAGE)(nameAfterTyping)",
+    );
+    expect(body).toContain("const portAfterTyping = yield* settleUntil(");
+    expect(body).toContain(
+      "Str.includes(MULTI_STEP_PORT_MESSAGE)(portAfterTyping)",
+    );
+  });
+
   it("registers the probe as an input measurement", () => {
     expect(liveRegistry).toContainEqual({
       id: "multi-step-form-lifecycle",

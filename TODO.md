@@ -2824,7 +2824,22 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 184/184
+`[x]` `[██████████]` 185/185
+
+`[x]` Poll a **cleared field message** instead of reading the frame a fixed
+      sleep lands on — `multi-step-form-lifecycle` typed a valid name (and
+      later a valid port) and read the field's text after `SETTLE` (40 ms), so a
+      loaded box painted the field a frame or two later and the check measured
+      the message the previous frame carried: measured once under a five-agent
+      build as `expected false, got true` at 823 ms, green alone. Both
+      "message clears" checks now `settleUntil` the field's text for the state
+      they assert (~2 s bound, so a message that never clears still fails on the
+      value the poll gave up with), and `multi-step.test.ts` gains `polls a
+      cleared message instead of reading one frame`. Direction measured:
+      restoring the name's direct read fails that case by name
+      (`expected … to contain 'const nameAfterTyping = yield* settleUntil('`).
+      Green: `--only multi-step-form-lifecycle` 1/1 on 0.11.0 (4.0 s, the same
+      check count), the two touched suites 25/25, `check-types` clean.
 
 `[x]` Flip the **pinned title's press** from the measured limitation to the
       fixed contract — the components workstream gave the painted header and its
@@ -13116,6 +13131,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` `[██████████]` 391/391
 
+`[x]` Answer a **stored drawer side with its edge**, not with the size's
+      absence — the served `drawer.mdx` documented a `size` restored from
+      storage as painting "the house `md` box instead of an `undefined` side",
+      while `drawerSide` reads a name the union does not carry as the house
+      `right` edge (the box, the layout and the entry travel read the one edge)
+      and `drawerSize` as the house `md` box; the `side` row taught the union
+      alone. Both rows now carry their own fallback and the limitation names
+      each guard. `src/lib/stored-value-page.test.ts` adds the Drawer pair (its
+      fallback reader now takes the reader's own comparison variable, `? side :
+      "right"`) and `answers a stored side with its edge, not with the size's
+      absence`, which refuses the merged sentence. Directions measured: at
+      `HEAD` the row case fails naming `drawer.mdx: side — rule` and `size —
+      rule`, and the sentence case fails on the retracted `` `undefined` side ``;
+      restored, the file is 3/3. No native scenario applies — a page and the
+      guards it describes.
+
 `[x]` Teach **the value a store kept** on the served page's own prop row — a
       variant, size, tone, axis or activation is stored with the workspace as
       often as it is a literal, and each of these components reads the stored
@@ -21203,7 +21234,7 @@ render's, read in the real renderer the behaviour suite drives. Owner: data.
 
 `[x]` `packages/primitives`: **a stored density override that was never carried replaced the theme's box with a hole** — `ThemeProvider`'s `density` is read from a settings record as often as from a literal, and JSON writes `null` for the field a record never carried, while `withDensity` tested only `undefined`: `density={null}` set the context theme's `density` to `null`, so a brand that ships a compact preset painted the **library's** metrics while its palette, type and radii stayed the brand's, and a consumer reading `theme.density` directly — the way every `@gpuixui/components` part reads the shared context — threw on the null. `withDensity` now reads `null` as the absence it is (the rule `ThemeOverridesSource` and `MessagesSource` keep), returning the theme itself, and `ThemeProviderProps.density` takes `Density | null` so a decoded settings row reaches the seam **without a cast**. Proof: `ThemeProvider.test.tsx` gains `reads a stored override that was never carried as no override` (the identity return and the context's own density) and `runtime/theme.runtime.test.tsx` `keeps the theme's density when a stored override is absent` (a compact brand under `density={null}` paints its own **28px** control, measured -1/absent with the hole). Directions measured: restoring the `undefined`-only check fails the unit case `expected { … density: null } to be testTheme` and the window case `expected -1 to be 28`; restoring `Density` on the prop fails `check-types` with two TS2322s on the stored value. Green: 58 files / **1 203** unit cases and the theme window suite 9/9, with `check-types`, `oxlint`, `oxfmt` and a scoped `check:tests` clean. Docs: `docs/theme-provider.mdx` §API/§Limitations and the package README's density paragraph. No live scenario applies — the override is the provider's own context, which the window suite reads; the playground's `theme-platform` passes its own resolved density.
 
-`[x]` Re-verify the **seven Tier 4/5 rows and the four Tier 5 component probes** on the tree that lands the stepper copy read (`65392c121`) — no row's status changes (six `done`/`done (composed)`, Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative). After `nub run --filter playground build`, live `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle --only multi-step-form-lifecycle --only crop-overlay --only qr-matrix --only markdown-fence` is **10/10 green** (2.4–14.3 s each; the capabilities report `unverified` because the selection samples each probe group), headless `--only editor-surface` is **1/1** (142 ms, `editor=verified`), and `dist/terminal/run.js` in a pty is **4/4** (`terminal-render`, `terminal-resize`, `terminal-pointer`, `terminal-input`, 8.0 s each). The stepper change only reads a name and a description the probes never pass blank, so no measured frame moves; `multi-step-form-lifecycle` mounts the wizard with literal titles. One observation: an earlier `--only multi-step-form-lifecycle` run, made while the package's behaviour suite was saturating the machine, failed `the step's message clears once the value satisfies the rule` (823 ms, `expected false, got true`) and passed alone on the next run (5.9 s); the probe types into the playground's own field and reads its message with no settle, so that check is timing-sensitive under load rather than broken — owner: playground, no code change made. The package suites behind the change are green: `@gpuixui/components` 104 files / **988** unit cases and **99** behaviour files / **1 067** cases.
+`[x]` Re-verify the **seven Tier 4/5 rows and the four Tier 5 component probes** on the tree that lands the stepper copy read (`65392c121`) — no row's status changes (six `done`/`done (composed)`, Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative). After `nub run --filter playground build`, live `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle --only multi-step-form-lifecycle --only crop-overlay --only qr-matrix --only markdown-fence` is **10/10 green** (2.4–14.3 s each; the capabilities report `unverified` because the selection samples each probe group), headless `--only editor-surface` is **1/1** (142 ms, `editor=verified`), and `dist/terminal/run.js` in a pty is **4/4** (`terminal-render`, `terminal-resize`, `terminal-pointer`, `terminal-input`, 8.0 s each). The stepper change only reads a name and a description the probes never pass blank, so no measured frame moves; `multi-step-form-lifecycle` mounts the wizard with literal titles. One observation: an earlier `--only multi-step-form-lifecycle` run, made while the package's behaviour suite was saturating the machine, failed `the step's message clears once the value satisfies the rule` (823 ms, `expected false, got true`) and passed alone on the next run (5.9 s); the probe types into the playground's own field and reads its message with no settle, so that check is timing-sensitive under load rather than broken — owner: playground, no code change made. **Resolved 2026-10-24** — the two "message clears with the value" checks (the name's and the port's) now poll the field with `settleUntil` for the state they assert instead of reading once after a fixed 40 ms sleep, so a loaded box's late frame is waited for while a message that never clears still fails on the value the poll gave up with; `src/live/multi-step.test.ts` gains `polls a cleared message instead of reading one frame`, measured failing when the direct read is restored (`expected … to contain 'const nameAfterTyping = yield* settleUntil('`). `--only multi-step-form-lifecycle` is 1/1 on 0.11.0 (4.0 s, the same check count), and the two touched suites are 25/25 with `check-types` clean. The package suites behind the change are green: `@gpuixui/components` 104 files / **988** unit cases and **99** behaviour files / **1 067** cases.
 
 `[x]` `packages/components`: **a stored tool-call status painted no state at all** — `Message`'s `ToolCall` read `TOOL_STATUS[call.status]` straight off the table, and a tool call's status is conversation data as often as a live transport value: a transcript restored from storage carries the name its writer used, so a value this release renamed or dropped (`"succeeded"`, an older vocabulary's word) answered `undefined` and the call painted its name, its result and **no state word** — a finished or failed call read like a blank slot, while the shipped `error` beside it still painted `Failed`. `message.tsx` now owns `MessageToolStatuses` (`Schema.Literals`, the exported `MessageToolStatus` derived from it) and `toolStatusWord`, which paints the table's word for a name it carries and `Unknown` for one it cannot name: an honest word for an unnameable state, where `Done` or `Running` would claim one, and only a shipped `error` keeps the failure glyph. Proof: `src/behaviour/message.test.tsx` gains `reads a stored tool status it does not name as Unknown, not a blank line` (a stored `"succeeded"` beside a shipped `error`: `Unknown` paints, `Failed` paints, one glyph). Direction measured: at `HEAD` the case fails `expected [ 'A', …(6) ] to deeply equal ArrayContaining{…}` with `"Unknown"` missing; restored, the file is 16/16 and `check-types` is clean. Docs: `packages/components/docs/message.mdx` §Limitations, the package README's stored-choices section and the `Message` row (15 → 16 native cases). No native scenario applies — the word is the renderer's own tree, and the probes mount no tool call.
 
