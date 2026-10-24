@@ -26,7 +26,7 @@ import { AvatarGroup } from "@gpuixui/components/avatar-group";
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `members` | `ReadonlyArray<AvatarGroupMember>` | — |
+| `members` | `ReadonlyArray<AvatarGroupMember>` (a value that is not a list reads as none; an entry without a text `name` is dropped) | — |
 | `max` | `number` | everyone |
 | `size` | `"xs" \| "sm" \| "md" \| "lg"` | `"md"` |
 | `overlap` | `number` | quarter of the diameter |
@@ -42,5 +42,6 @@ import { AvatarGroup } from "@gpuixui/components/avatar-group";
 
 - A face fades and rises; there is no scale.
 - Names are keys, so two members sharing one name collide.
+- **A stored member list is read**: a group restored from a saved record carries JSON's `null` for a list it never carried, so a value that is not a list paints no faces instead of throwing from the first one, and an entry without a text `name` is not a member — it is dropped while its neighbours paint (`membersOf`).
 - The chip is not interactive; compose a Popover to reach members.
 - A stored `size` the token scale does not carry paints the `md` row rather than discs stepped by `NaN`.

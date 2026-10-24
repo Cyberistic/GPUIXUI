@@ -7,7 +7,8 @@
  * page as it animates; a stagger counted per disc instead of through the row;
  * and a chip that paints a count no reader can resolve to names. The delay's
  * seconds and the reduced rule are `@gpuixui/motion`'s (`timing.test.ts`, "a
- * staggered timing").
+ * staggered timing"); and a member list a store handed back as `null`, which
+ * threw before a face painted.
  */
 
 import * as Option from "effect/Option";
@@ -22,6 +23,7 @@ import {
   avatarStep,
   groupDelayMs,
   groupName,
+  membersOf,
   overflowName,
   overflowText,
   splitMembers,
@@ -129,5 +131,36 @@ describe("what the group says", () => {
   it("does not accept a blank caller name", () => {
     expect(groupName(Option.some("   "), 2)).toBe("2 avatars");
     expect(groupName(Option.some("  Team  "), 2)).toBe("Team");
+  });
+
+  it("reads a stored member list as faces, and nothing for anything else", () => {
+    // The bug guarded: a group restored from a saved record carries JSON's
+    // `null` for a list it never carried, and `splitMembers` read `.length` off
+    // it — `Cannot read properties of null (reading 'length')` before a face
+    // painted.
+    const ada = { name: "Ada Lovelace" } as const;
+    const grace = { name: "Grace Hopper" } as const;
+    expect(membersOf([ada, grace])).toEqual([ada, grace]);
+    expect(membersOf(null)).toEqual([]);
+    expect(membersOf(undefined)).toEqual([]);
+    expect(membersOf([])).toEqual([]);
+  });
+
+  it("drops an entry that names nobody, keeping the faces beside it", () => {
+    // The name is the member's key and its picture's name, so an entry a store
+    // left as `null` or wrote a number into has no face to paint.
+    const ada = { name: "Ada Lovelace" } as const;
+    const grace = { name: "Grace Hopper" } as const;
+    expect(
+      membersOf([
+        // @ts-expect-error — a deleted record a store left in the list.
+        null,
+        ada,
+        // @ts-expect-error — a name a store wrote as something else.
+        { name: 42 },
+        { name: "   " },
+        grace,
+      ]),
+    ).toEqual([ada, grace]);
   });
 });

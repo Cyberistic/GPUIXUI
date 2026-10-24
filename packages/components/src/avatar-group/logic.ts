@@ -54,6 +54,47 @@ export const visibleCount = (
 };
 
 /**
+ * Whether a stored entry is a member: an object naming itself with a text name.
+ *
+ * The name is the member's identity — the key its arrival animates with, the
+ * picture's accessible name and the source of the initials fallback — so an
+ * entry without one is not a member. Nothing else is read here: a member's
+ * picture and presence are painted from values the avatar already reads
+ * failsafe.
+ */
+const isMember = <Member extends { readonly name: string }>(
+  entry: unknown,
+): entry is Member => {
+  if (typeof entry !== "object" || entry === null || !("name" in entry)) {
+    return false;
+  }
+  const name = entry.name;
+  return typeof name === "string" && name.trim().length > 0;
+};
+
+/**
+ * The members a caller's list carries, read at the boundary.
+ *
+ * A group is composed in code as often as it is restored from a saved record —
+ * a contact list, a project's people — and JSON writes `null` for a list a
+ * record never carried: `splitMembers` read `.length` off that value and threw
+ * `Cannot read properties of null (reading 'length')` before a face painted.
+ * Only a real list is a list, and an entry that does not name itself is dropped
+ * while its neighbours paint, so one malformed record cannot take the row down.
+ */
+export const membersOf = <Member extends { readonly name: string }>(
+  value: ReadonlyArray<Member> | null | undefined,
+): ReadonlyArray<Member> => {
+  const list = Option.getOrElse(
+    Option.filter(Option.fromNullishOr(value), (entries): boolean =>
+      Arr.isArray(entries),
+    ),
+    () => [],
+  );
+  return Arr.filter(list, isMember);
+};
+
+/**
  * The members shown and the members behind the overflow chip.
  *
  * The **tail** is hidden, not the head: a facepile reads in list order, so the

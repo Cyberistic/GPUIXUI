@@ -38,6 +38,7 @@ import {
   avatarStep,
   groupDelayMs,
   groupName,
+  membersOf,
   overflowName,
   overflowText,
   splitMembers,
@@ -68,7 +69,7 @@ export interface AvatarGroupState {
 
 /** {@link AvatarGroup} props. */
 export interface AvatarGroupProps extends Omit<Props, "children" | "style"> {
-  /** The faces, in reading order. A member's key is its `name`. */
+  /** The faces, in reading order. A member's key is its `name`: a value that is not a list — a saved record's `null` — paints no faces, and an entry without a text name is not a member. */
   readonly members: ReadonlyArray<AvatarGroupMember>;
   /**
    * The faces shown before the overflow chip. Omit to show everyone; `0` shows
@@ -109,7 +110,7 @@ export interface AvatarGroupProps extends Omit<Props, "children" | "style"> {
  * are pictures with their own names, and the chip is one labelled picture.
  */
 export const AvatarGroup = ({
-  members,
+  members: storedMembers,
   max,
   size = "md",
   overlap,
@@ -123,6 +124,7 @@ export const AvatarGroup = ({
   ...rest
 }: AvatarGroupProps) => {
   const theme = useTheme();
+  const members = membersOf(storedMembers);
   const timing = useSurfaceTiming(level).enter;
   const diameter = avatarPixels(size);
   const step = avatarStep(

@@ -145,8 +145,12 @@ export const surfaceBudget = {
   // combobox, accordion, tag input and command palette (`combobox/logic.ts`,
   // `accordion/logic.ts`, `tag-input/logic.ts`, `menu/fuzzy.ts`) beside the
   // motion seam's own rework in the same tree, so 1170 → 1180 KiB keeps the
-  // next family the headroom a prose edit needs.
-  bytes: 1180 * 1024,
+  // next family the headroom a prose edit needs. 1 182 KiB measured 2026-10-24
+  // with the pinned list's stored-section read and the avatar group's
+  // stored-member read (`pinned-list/logic.ts`'s `sectionsOf`,
+  // `avatar-group/logic.ts`'s `membersOf`), the two boundary readers the saved
+  // layouts this wave restored were missing: 1180 → 1190 KiB.
+  bytes: 1190 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
@@ -182,9 +186,11 @@ export const surfaceBudget = {
    * close commit rather than ghosting for a wait no timer can take. Measured
    * 40 243 bytes with `nub scripts/surface.ts --entry src/motion-grid.tsx`
    * (5 modules, 40 KiB) after the motion package's `d31ad7500`; the module count
-   * did not move, so only the ceiling follows.
+   * did not move, so only the ceiling follows. 41 984 → 42 179 bytes measured
+   * 2026-10-24 on the tree that lands the motion package's shared preference
+   * read, still 5 modules, so 42 KiB keeps a family's headroom.
    */
-  familyMotion: { modules: 5, bytes: 41 * 1024 },
+  familyMotion: { modules: 5, bytes: 42 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.
