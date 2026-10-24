@@ -86,6 +86,7 @@ import {
   type GridTable,
 } from "./grid-core.js";
 import { filterByTree, type FilterTree } from "./surfaces/logic.js";
+import { listOf } from "./internal/list.js";
 import {
   allSelected,
   clearSelection,
@@ -350,6 +351,11 @@ export const useTable = <Row extends RowData>({
    */
   const [anchor, setAnchor] = useState<Option.Option<string>>(Option.none());
 
+  // The caller's row list is stored data too: a saved workspace restores it
+  // from JSON, and `snapshot?.rows` is `undefined` before the snapshot arrives.
+  // Read once, so the tree's filter and the core's row models read one list.
+  const records = useMemo(() => listOf(rows), [rows]);
+
   // The tree narrows the records before the core builds its row models, so the
   // text query searches the set the tree kept and the sort orders that same set.
   // A nullish query is no filter; a query this release cannot read keeps no row
@@ -357,10 +363,10 @@ export const useTable = <Row extends RowData>({
   const source = useMemo(
     () =>
       Option.match(Option.fromNullishOr(filterTree), {
-        onNone: () => rows,
-        onSome: (tree) => filterByTree(rows, tree, fieldValueOf(columns)),
+        onNone: () => records,
+        onSome: (tree) => filterByTree(records, tree, fieldValueOf(columns)),
       }),
-    [rows, filterTree, columns],
+    [records, filterTree, columns],
   );
 
   const table = useMemo(

@@ -35,6 +35,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A hidden row's selection is released at render, not erased | `table-filter-lifecycle` | `useTable` computes `retainSelection(chosen, keys)` during render, so the first frame after a query change paints the released set. The retention is **not** a write: the core still holds the chosen ids, so a query that widens back to them paints them chosen again (measured: `1 rows · 0 selected` → a whole-set query → `60 rows · 2 selected`). A grid that needs a permanent clear calls `clear()` on the change. |
 | A sort is an order | `grid-core.test.ts`, `table.test.tsx` | A plain header press replaces the order; a Shift press appends the field as the next tie-break or flips it where it already sits. The core's sorted model walks every entry in turn, so records the primary sort ties are ordered by the second. |
 | A restored state is read, not dereferenced | `grid-core.test.ts`, `behaviour/table-restore.test.tsx` | `constructGrid` is the seam a store-driven grid builds with, so its state is stored data: JSON writes a slice that was never set as `null`. `readGridState` reads each slice — a sorting list that is not a list is **no sort** and an entry that names no column is dropped, a query that is not text is **no query**, a chosen set keeps only the ids set to `true`, and a `hiddenColumns` list that is not a list of text ids hides nothing. Measured before: `globalFilter: null` threw `Cannot read properties of null (reading 'trim')`, `sorting: null` threw `state.sorting is not iterable`, and a `[null]` entry threw `Cannot read properties of null (reading 'id')` — the grid could not reopen with the state it saved. **The shipped controller takes the same record**: `useTable({ stored })` reads it once at mount, so a workspace reopens its grid sorted, narrowed and chosen — `initialSort` is the sorting shorthand, used only when the record names no sorting (`behaviour/table-restore.test.tsx`). **The record is written too**: `gridConfig(state)` is the inverse of `readGridState` and `useTable().save()` composes it from the controller, so the round trip needs no caller-side copy of the wire shape. A saved sort naming a column this release dropped is not an order the grid counts (`retainSorting`), and the chosen ids are the core's — a record a filter hides is still saved, because retention is a view, not a write. |
+| A row list a store wrote is read as a list | `grid-core.test.ts`, `behaviour/stored-rows.test.tsx` | The rows are stored data as often as the state beside them: a saved workspace restores a grid's records from JSON, and an app hands `snapshot?.rows` while the snapshot is absent. `useTable` and `constructGrid` hand the core `listOf(rows)`, so one absence is **no rows** — the grid paints `0 rows` and its empty state, where the core's `data` access threw `Cannot read properties of null (reading 'length')` out of the first build — and a filter tree narrows that same list rather than the stored value. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds, and only a **primary** press arms it: the runtime delivers `mouseDown` for all three buttons, so a right press — the context-menu gesture — and a middle one would otherwise start a resize. **A move that holds no primary button ends the gesture** (`pressedButton`): a window the pointer left reports no release, and a hover must never resize the column by the pointer's travel — `table.test.tsx`'s lost-release case releases outside the window and hovers the strip. |
 | A bound, a step or a width the grid cannot read is legal | `columns/logic.test.ts` | A column's width is often computed (a stored size, a measurement, a fraction of the table), and a non-finite bound used to clamp every width to NaN, taking `contentWidth` and every later offset with it. `widthBounds` reads a non-finite minimum/maximum as 80/640 and `resizeWidthByKey` reads a non-finite step as 16. A width that is NaN is not clamped: it reads as the column's own minimum, so an arrow steps **from** it rather than snapping to it, and `resizeColumn` leaves the column alone instead of collapsing a 260px track to its floor because a drag computed no width. |
@@ -97,7 +98,9 @@ grid's windowing is the same one a browser grid uses, driven without a DOM.
 An application driving a grid from Effect or its own store builds the same table
 with `constructGrid`, whose `state` is read through `readGridState`: a restored
 record narrows and sorts the set instead of taking the build down, because a
-store hands back `null` for a slice JSON never wrote.
+store hands back `null` for a slice JSON never wrote. The rows are read the same
+way — `listOf(rows)` — so a grid whose records a store has not delivered yet
+paints `0 rows` and its own empty state.
 
 ## Usage
 
@@ -704,6 +707,13 @@ before a field is picked, so it can never match a column id and is dropped from
 the picker and from the list Add reads — a blank entry beside a real one used to
 be the field Add chose, painting a clause whose picker read the blank entry's
 label while the clause narrowed by no column.
+
+The copy a surface paints is data too: a locale table's missing row or a saved
+record hands over `""`, and a run of spaces lays out a full line where an empty
+string lays out none. The statistic card reads its `label`, `unit`, `hint` and
+`trend.text` through `visibleCopy`, so a blank line paints nothing at all while
+the reading — the caller's data — still paints
+(`src/behaviour/surface-a11y.test.tsx`).
 
 ```tsx
 import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "@gpuixui/data";

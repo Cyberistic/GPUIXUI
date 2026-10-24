@@ -14,10 +14,11 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { spaceValue } from "@gpuixui/primitives/core";
+import { spaceValue, visibleCopy } from "@gpuixui/primitives/core";
 import { statusTone } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import type { ReactNode } from "react";
 import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
@@ -27,8 +28,13 @@ import { STAT_CARD, STAT_HINT, STAT_LABEL, STAT_VALUE } from "./recipe.js";
 /** Which way a reading moved, and by how much. */
 export interface StatTrend {
   readonly direction: "up" | "down" | "flat";
-  /** The trend's own words, e.g. `+12%`. */
-  readonly text: string;
+  /**
+   * The trend's own words, e.g. `+12%`.
+   *
+   * A saved card is data: JSON writes `null` for a field it never set, so a
+   * nullish text reaches the paint as the absence it is.
+   */
+  readonly text: string | null;
 }
 
 /** {@link StatCard} props. */
@@ -80,13 +86,23 @@ export const StatCard = ({
   // A saved card writes `null` for the fields it never set, so the trend is
   // read as the absence the prop already means rather than dereferenced.
   const movement = Option.fromNullishOr(trend);
+  // Copy that arrived blank is the absence it is: a locale table's missing row
+  // or a saved record hands over `""`, and a run of spaces lays out a full line
+  // where an empty string lays out none. The reading is the caller's data and
+  // still paints; the label, unit, hint and trend are this card's lines, so a
+  // blank one paints no line at all (the rule `visibleCopy` states).
+  const title = visibleCopy(label);
+  const unitCopy = visibleCopy(unit);
+  const hintCopy = P.isString(hint) ? visibleCopy(hint) : hint;
   return (
     <div
       {...rest}
       role="group"
       style={mergeStyles(recipeStyle(cn(STAT_CARD, className), theme), style)}
     >
-      <text style={recipeStyle(STAT_LABEL, theme)}>{label}</text>
+      {title === undefined ? undefined : (
+        <text style={recipeStyle(STAT_LABEL, theme)}>{title}</text>
+      )}
       <div
         style={{
           display: "flex",
@@ -96,26 +112,29 @@ export const StatCard = ({
         }}
       >
         {readable(value, { style: recipeStyle(STAT_VALUE, theme) })}
-        {unit === undefined ? undefined : (
-          <text style={recipeStyle(STAT_HINT, theme)}>{unit}</text>
+        {unitCopy === undefined ? undefined : (
+          <text style={recipeStyle(STAT_HINT, theme)}>{unitCopy}</text>
         )}
         {Option.match(movement, {
           onNone: () => undefined,
-          onSome: (shown) => (
-            <text
-              style={{
-                ...recipeStyle(STAT_HINT, theme),
-                color: trendTone(shown.direction, theme),
-              }}
-            >
-              {shown.text}
-            </text>
-          ),
+          onSome: (shown) => {
+            const words = visibleCopy(shown.text ?? undefined);
+            return words === undefined ? undefined : (
+              <text
+                style={{
+                  ...recipeStyle(STAT_HINT, theme),
+                  color: trendTone(shown.direction, theme),
+                }}
+              >
+                {words}
+              </text>
+            );
+          },
         })}
       </div>
-      {hint === undefined
+      {hintCopy === undefined
         ? undefined
-        : readable(hint, { style: recipeStyle(STAT_HINT, theme) })}
+        : readable(hintCopy, { style: recipeStyle(STAT_HINT, theme) })}
     </div>
   );
 };

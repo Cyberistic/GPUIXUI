@@ -23,11 +23,21 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
-import { TableHeaderCell, TableRow, TableCell } from "../table/table.js";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  TableViewport,
+} from "../table/table.js";
 import { FrozenTable } from "../table/frozen.js";
 import { TreeView } from "../tree/tree-view.js";
 import { DEFAULT_EMPTY_MESSAGE } from "../table/table.js";
 import type { TreeRow } from "../tree/logic.js";
+import { useTable } from "../use-table.js";
+import { emptyTree, type FilterTree } from "../surfaces/logic.js";
 
 let root: DataTestRoot | undefined;
 
@@ -122,8 +132,84 @@ describe("a frozen grid whose stored row list is absent", () => {
   });
 });
 
-describe("a tree whose stored row list is absent", () => {
-  // @ts-expect-error — a row list a store wrote as absent.
+/** A grid over the row list a caller hands the controller. */
+const StoredGrid = ({
+  rows,
+  filterTree,
+}: {
+  readonly rows: ReadonlyArray<{ readonly id: string }>;
+  readonly filterTree?: FilterTree;
+}) => {
+  const table = useTable({
+    rows,
+    keyOf: (row) => row.id,
+    columns: [{ id: "name", valueOf: (row) => row.id }],
+    filterTree,
+  });
+  return (
+    <div>
+      <text testId="grid-readout">
+        {`${table.rows.length} rows · ${table.selectedCount} selected`}
+      </text>
+      <Table height={200}>
+        <TableViewport>
+          <TableHeader>
+            <TableRow>
+              <TableHeaderCell>Name</TableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.rows.map((row) => (
+              <TableRow key={row.id} testId={`grid-row-${row.id}`}>
+                <TableCell>{row.id}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </TableViewport>
+      </Table>
+    </div>
+  );
+};
+
+describe("a grid whose stored row list is absent", () => {
+  it("paints no rows instead of throwing", () => {
+    // The rows a grid is handed are stored data too: a saved workspace
+    // restores them from JSON, and `snapshot?.rows` is `undefined` before the
+    // snapshot arrives. `useTable` handed the value to the core's `data` and to
+    // the tree filter raw, so one absence threw out of the first render.
+    const mounted = mount(
+      <div>
+        {/* @ts-expect-error — a row list a store wrote as absent. */}
+        <StoredGrid rows={null} />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("after");
+    expect(paintedText(mounted)).toContain("0 rows · 0 selected");
+  });
+
+  it("narrows an absent list through a filter tree without throwing", () => {
+    const mounted = mount(
+      <div>
+        <StoredGrid
+          // @ts-expect-error — a row list a store wrote as absent.
+          rows={undefined}
+          filterTree={emptyTree}
+        />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("0 rows · 0 selected");
+  });
+
+  it("still paints the rows a readable list holds", () => {
+    const mounted = mount(<StoredGrid rows={[{ id: "alpha" }]} />);
+    expect(paintedText(mounted)).toContain("1 rows · 0 selected");
+    expect(mounted.renderer.findByTestId("grid-row-alpha")).not.toBe(undefined);
+  });
+});
+
+describe("a tree whose stored row list is absent", () => {  // @ts-expect-error — a row list a store wrote as absent.
   const absentRows: ReadonlyArray<TreeRow<string>> = null;
 
   it("paints its frame instead of throwing", () => {

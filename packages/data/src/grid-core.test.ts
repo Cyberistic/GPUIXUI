@@ -305,6 +305,42 @@ describe("a grid state a store restored", () => {
   });
 });
 
+describe("a grid handed a row list a store wrote as absent", () => {
+  /** A grid over whatever row list the caller hands it. */
+  const gridOver = (list: ReadonlyArray<Row>): GridTable<Row> =>
+    constructGrid({
+      rows: list,
+      keyOf: (row) => row.id,
+      columns,
+      state: { sorting: [], globalFilter: "", rowSelection: {} },
+      onSortingChange: () => {},
+      onGlobalFilterChange: () => {},
+      onRowSelectionChange: () => {},
+    });
+
+  it("builds an empty table instead of throwing", () => {
+    // The rows a grid is handed are stored data too: a saved workspace
+    // restores a panel's rows from JSON, and an app passes `snapshot?.rows`
+    // while the snapshot is absent, which is `undefined` at runtime. The core
+    // was handed the value raw (`data: rows`), so one absence threw
+    // `Cannot read properties of null (reading 'length')` out of the build and
+    // the grid could not paint its own empty state.
+    // @ts-expect-error — a row list a store wrote as absent.
+    const absent = gridOver(null);
+    expect(Arr.map(absent.getRowModel().rows, (row) => row.id)).toEqual([]);
+    // @ts-expect-error — the other absence a store writes.
+    expect(gridOver(undefined).getFilteredRowModel().rows).toEqual([]);
+  });
+
+  it("still builds the rows a readable list holds", () => {
+    expect(Arr.map(gridOver(rows).getRowModel().rows, (row) => row.id)).toEqual([
+      "r3",
+      "r1",
+      "r2",
+    ]);
+  });
+});
+
 describe("the record a grid writes to a store", () => {
   it("reads back through the seam that restores it", () => {
     const state = readGridState({

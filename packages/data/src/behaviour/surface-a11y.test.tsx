@@ -122,6 +122,29 @@ describe("the data surfaces announce what they paint", () => {
     expect(labelsUnder(tree, group)).toEqual(["Area", "9600", "px²", "+12%"]);
   });
 
+  it("paints no line for the copy a card was handed blank", () => {
+    // A label, unit, hint and trend are this card's copy, and a locale table's
+    // missing row or a saved record hands over `""` — or a run of spaces, which
+    // the runtime lays out as a full line where `""` lays out none. The reading
+    // is the caller's data and still paints; the four copy slots paint nothing
+    // at all, where a painted blank unit sat beside the reading and a blank
+    // label pushed the whole card down.
+    const tree = treeOf(
+      <StatCard
+        aria-label="Area"
+        label="   "
+        value={9600}
+        unit="  "
+        hint=" "
+        trend={{ direction: "up", text: "   " }}
+      />,
+    );
+
+    const group = onlyRole(tree, "Group");
+    // The control is the case above: every readable slot paints its own label.
+    expect(labelsUnder(tree, group)).toEqual(["9600"]);
+  });
+
   it("announces a property panel's title and its read-only rows", () => {
     const tree = treeOf(
       <PropertyPanel

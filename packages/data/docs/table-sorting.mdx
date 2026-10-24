@@ -125,6 +125,18 @@ can serialise the value without aliasing what the grid paints from.
 renderer: a grid sorted by name, a chosen record, and a query that hides it are
 saved and reopened as they were left.
 
+## The rows a store hands back
+
+`rows` is stored data like the record beside it: a workspace restores a grid's
+records from JSON, and an app passes `snapshot?.rows` while the snapshot is still
+absent — `undefined` at runtime, though the prop type says a list is present.
+`useTable` and `constructGrid` read the list through `listOf`, so a value that is
+not a list is **no rows**: the grid paints `0 rows` and its own empty state,
+where the core's `data` access used to throw
+`Cannot read properties of null (reading 'length')` out of the first build. A
+readable list is the caller's own, untouched
+(`behaviour/stored-rows.test.tsx`).
+
 ## Limitations
 
 - No `aria-sort`: direction and place are spoken, not attached to the header.

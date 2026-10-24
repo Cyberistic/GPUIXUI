@@ -45,6 +45,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
+import { listOf } from "./internal/list.js";
 
 /**
  * The features every grid registers.
@@ -227,6 +228,16 @@ export interface GridChange {
 
 /** What {@link constructGrid} needs. */
 export interface ConstructGridOptions<Row> extends GridChange {
+  /**
+   * The records the row models are built over.
+   *
+   * A row list is stored data as often as a literal — a saved workspace
+   * restores a panel's rows from JSON, and an app hands `snapshot?.rows` while
+   * the snapshot is absent — so it is read through `listOf`: a value that is
+   * not a list is **no rows**, and the grid paints its own empty state instead
+   * of the core's `data` access throwing `Cannot read properties of null
+   * (reading 'length')` out of the build.
+   */
   readonly rows: ReadonlyArray<Row>;
   readonly keyOf: (row: Row) => string;
   readonly columns: ReadonlyArray<GridColumn<Row>>;
@@ -300,7 +311,7 @@ export const constructGrid = <Row extends RowData>({
       columns,
       HashSet.fromIterable(storedIds(hiddenColumns)),
     ),
-    data: rows,
+    data: listOf(rows),
     getRowId: keyOf,
     /**
      * The field's text is trimmed before it narrows the set: a query of spaces
