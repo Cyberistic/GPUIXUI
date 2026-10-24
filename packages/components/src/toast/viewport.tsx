@@ -309,6 +309,10 @@ const ToastCard = ({
               size="sm"
               variant="secondary"
               testId="toast-action"
+              // Only a live card is a target: a leaving one is painted for its
+              // exit, but the keyboard must not land on a control that unmounts
+              // under it (the runtime decides the Tab order element by element).
+              tabIndex={present ? undefined : -1}
               onClick={() => {
                 onSelect();
                 dismiss(toast.id);
@@ -324,6 +328,7 @@ const ToastCard = ({
           label="Dismiss"
           size="sm"
           testId="toast-dismiss"
+          tabIndex={present ? undefined : -1}
           onClick={() => dismiss(toast.id)}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
@@ -449,6 +454,7 @@ export const toastMeta = {
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
     "no progress indicator for the remaining auto-dismiss time",
+    "a card's action and dismiss controls leave the tab order while it fades (the ghost takes no presses); a card dismissed from its own control still unmounts the focused element, because 0.11.0 moves focus nowhere when one goes",
   ],
   docs: "docs/toast.mdx",
   example: "examples/toast.example.tsx",

@@ -13,11 +13,13 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { Duration } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../internal/button.js";
 import {
   boundsOf,
   clickCentreOf,
+  focusedTestId,
   hoverCentreOf,
   waitFor,
 } from "../internal/interaction.js";
@@ -125,6 +127,25 @@ const settle = async (): Promise<void> => {
   await Promise.resolve();
 };
 
+/**
+ * Walk the window's Tab order: focus `from`, then take `steps` stops in turn.
+ *
+ * A card's ghost is decided element by element by the runtime, so this is the
+ * only route a suite can ask which painted controls the keyboard can reach.
+ */
+const tabWalk = (
+  root: ComponentTestRoot,
+  from: string,
+  steps: number,
+): ReadonlyArray<string> => {
+  const start = root.renderer.findByTestId(from);
+  if (start !== undefined) root.renderer.focusElement(start.id);
+  return Arr.makeBy(steps, () => {
+    root.renderer.focusNext();
+    return Option.getOrElse(focusedTestId(root), () => "none");
+  });
+};
+
 /** The measured y of a toast card, or a broken-fixture failure. */
 const toastY = (root: ComponentTestRoot, testId: string): number =>
   Option.getOrElse(boundsOf(root, testId), () => {
@@ -177,6 +198,46 @@ describe("Toast", () => {
     expect(page.renderer.getAllText()).toContain("Disk nearly full");
 
     page.unmount();
+  });
+
+  it("keeps a dismissed card's controls out of the window's tab order", async () => {
+    // The bug this guards: a dismissed card stays painted for its 180 ms exit
+    // and the shield takes the presses, but the runtime decides the Tab order
+    // element by element — neither `pointerEvents` nor the shield reaches a
+    // descendant's stop. A reader Tab-browsing while a card expired could land
+    // on its dismiss control and have it unmount under the keyboard, the class
+    // the menu family and the navigation panel each fixed for their own rows.
+    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
+    try {
+      clickCentreOf(page, "push-action");
+      await settle();
+
+      // While the card is live its controls are stops, or the ghost walk below
+      // would pass on a tree that never had them.
+      expect(tabWalk(page, "push", 8)).toContain("toast-dismiss");
+
+      // Dismissed from the keyboard's point of view: the pointer presses the
+      // card's own control with focus on the page, so no hold is in play.
+      page.renderer.focusElement(
+        page.renderer.findByTestId("elsewhere")?.id ?? -1,
+      );
+      clickCentreOf(page, "toast-dismiss");
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")?.style.pointerEvents).toBe(
+          "none",
+        ),
+      );
+
+      const ghost = tabWalk(page, "push", 8);
+      expect(ghost).not.toContain("toast-action");
+      expect(ghost).not.toContain("toast-dismiss");
+
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
   });
 
   it("clears the stack with dismissAll", async () => {

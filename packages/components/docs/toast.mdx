@@ -48,8 +48,18 @@ ToastProvider
 | `useToast()` | `dismiss` / `dismissAll` | `(id: string) => void` / `() => void` | — |
 | `useToast()` | `pause` / `resume` | `(id: string) => void` | — |
 
+## Motion
+
+A card rises 16 px into the stack and, when it is dismissed, fades while sliding
+16 px to the right. It stays painted for that exit (180 ms) and takes no presses,
+and **its action and dismiss controls drop out of the Tab order for the same
+window**, so a reader Tab-browsing while a card expires cannot land on a control
+that is about to unmount. `MotionProvider preference="reduced"` removes the
+journey and keeps the resting frame.
+
 ## Limitations
 
 - No `aria-live` or `aria-atomic`; a status region is the announcement.
 - No progress indicator for the remaining time.
 - A traversal does not hold the clock; use `duration: 0` for an actionable toast.
+- A dismissed card's controls leave the Tab order while it fades; a control you compose inside the card is the card's own content and follows the same rule only through the two controls the component paints.
