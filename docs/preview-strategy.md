@@ -1199,6 +1199,18 @@ release. `src/lib/aria-budget.test.ts` holds the record and every mounted page t
 the installed `@gpuix/native` typings. `src/lib/package-page-template.test.ts`
 holds every package page to its own `## API` and `## Limitations`.
 
+A page that documents a **dismissing surface** — a dialog, a drawer, a toast
+card, a menu or a navigation panel — teaches the window it leaves in: the
+surface stays painted for its exit, the seam's shield takes the presses, and
+every control the library paints inside it drops its own Tab stop, because the
+runtime decides that order element by element and neither `pointerEvents` nor a
+covered box reaches a descendant's stop. A control the consumer composes keeps
+its stop until the runtime publishes an inherited `inert`. The curated page is
+the served one for these surfaces, so `src/lib/dismissed-surface-page.test.ts`
+reads each painter's own flag and timing, derives the millisecond window it
+prints, and fails the served page that does not state the rule; it falls back to
+the package page when no curated page shadows it.
+
 The package's own pages are the component's doc file: a page that ships a demo
 mounts it as a labelled browser approximation (strategy 3), a lane with no demo
 shows none (strategy 4).

@@ -13005,7 +13005,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 388/388
+`[x]` `[██████████]` 389/389
+
+`[x]` Teach the **dismissal contract on the pages the site serves** — six
+      overlays (dialog, drawer, toast, navigation menu, dropdown and context
+      menu) drop their own controls out of the window's Tab order while the
+      surface is only painted for its exit, because the runtime decides that
+      order element by element; the components workstream measured it and wrote
+      it on the **package** pages, and the curated page owns the same URL for
+      every one of them, so the served page taught the paint and not the
+      keyboard window (`dialog.mdx` said nothing about its ghost, its close
+      control's box or a stored size). Each served page now states the exit
+      window it derives from its own painter — **320 ms** for the two modals,
+      **200 ms** for the panel and the menus, **180 ms** for a toast card — that
+      a control the reader composes keeps its stop until the runtime publishes
+      an inherited `inert`, and a modal's close control sits in the box around
+      its body's scroller rather than inside it (the scroll rule is taught in
+      **Composition**). The toast page also teaches the bound the store keeps:
+      **3** cards by default, so a notification centre owns its own history.
+      `src/lib/dismissed-surface-page.test.ts` (5 cases) reads the seam's two
+      halves out of `internal/presence.tsx`, every painter's own flag (the
+      modal's `presence.present ? undefined : -1`, the menu rows'
+      `disabled || leaving ? -1 : 0`, the panel's `leaving ? -1 : tabIndex`) and
+      its timing level out of `@gpuixui/motion`'s table, derives the printed
+      milliseconds, and holds each served page to the rule, the inert sentence
+      and the number; it also derives `DEFAULT_MAX` and holds the toast page's
+      bound to it, and requires both modal pages to cite the behaviour suite
+      that holds their scroll geometry. Directions measured: at `HEAD` three
+      cases fail naming 17 gaps across the six pages (`dialog.mdx: tab order`
+      first, both scroller pages, and `toast.mdx`'s missing `3 cards`), and with
+      the rule deleted from the dropdown page it fails again on
+      `inherited inert`. Green: the file is 5/5, the docs suite is 198 files /
+      **2 019** tests, `check-types` reports **0** errors in `apps/docs/src`
+      (its remaining errors are the in-flight `boxShadow`/`virtual-list` edits
+      in `packages/data`), and `fmt`, `lint` and `check:tests` are clean.
+      Docs: `docs/preview-strategy.md` §The component page template. No native
+      scenario applies — the renderer's Tab traversal is what the components'
+      behaviour suites drive, and this change teaches their measured result.
 
 `[x]` Name a **step the caller left blank** on the stepper page — the same
       components pass made `stepName` derive `Step` and the step's position for

@@ -56,6 +56,12 @@ Drawer
     └── (close control)
 ```
 
+The close control is painted in the box around the panel's own scroller, not
+inside it, so a long body scrolls under the control instead of carrying the one
+visible way out of the surface. The Tab trap, Escape and an outside press read
+that same box
+(`packages/components/src/behaviour/drawer.test.tsx` holds the scroll case).
+
 ## API reference
 
 ### `Drawer`
@@ -86,6 +92,17 @@ Drawer
 
 ## Limitations
 
-- The runtime role is **`dialog`**, named by the required `label`.
-- Focus enters the surface on open and returns to the opener on close, unless the opener has been destroyed in the meantime.
-- `dismissible={false}` consumes Escape and an outside press.
+- The runtime role is **`dialog`**, named by the required `label`; focus enters
+  the surface on open and returns to the opener on close (unless the opener has
+  been destroyed), and `dismissible={false}` consumes Escape and an outside
+  press.
+- **A dismissed drawer is a ghost, not a target.** It stays painted for its
+  **320 ms** exit and the seam's shield takes the presses, while its own close
+  control leaves the window's Tab order for that window: the runtime decides the
+  order element by element, so a control the library paints has to drop its own
+  stop. A control you compose inside the body keeps its stop until the runtime
+  publishes an inherited `inert`.
+- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0`, and no
+  swipe-to-dismiss: the runtime publishes no drag host. A `size` restored from
+  storage that the union does not name paints the house `md` box instead of an
+  `undefined` side.

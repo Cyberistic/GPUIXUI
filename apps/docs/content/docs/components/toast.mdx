@@ -85,6 +85,17 @@ ToastProvider
 
 ## Limitations
 
-- The viewport is `role="status"` with `aria-label="Notifications"`; each card's dismiss control is a labelled button.
-- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.11.0`: a status region is the supported announcement, not a live-region attribute.
-- **No progress indicator** for the remaining time.
+- The viewport is `role="status"` with `aria-label="Notifications"`; each card's
+  dismiss control is a labelled button, and **`@gpuix/native@0.11.0` publishes no
+  `aria-live` or `aria-atomic`**, so a status region is the supported
+  announcement.
+- **A dismissed card is a ghost, not a target.** It stays painted for its
+  **180 ms** exit with the content it was dismissed with, while its own action
+  and dismiss controls leave the window's Tab order for that window: the runtime
+  decides the order element by element, so a control the library paints has to
+  drop its own stop. A control you compose inside a card is your content and
+  keeps its stop until the runtime publishes an inherited `inert`.
+- **The stack keeps 3 cards by default** (`max`) and the next push expires the
+  oldest, so the store is a queue rather than a history: a notification centre
+  that must list what expired owns that history itself. **No progress indicator**
+  for the remaining time.

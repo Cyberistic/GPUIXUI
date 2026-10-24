@@ -138,9 +138,16 @@ ContextMenu
 
 ## Limitations
 
-- The runtime role is `menu`, with `menuitem` and `menuitemcheckbox` on rows.
-- No `aria-haspopup` on the trigger and no `aria-activedescendant`: the keyboard route is documented here rather than announced.
+- The runtime role is `menu`, with `menuitem` and `menuitemcheckbox` on rows; no
+  `aria-haspopup` on the trigger and no `aria-activedescendant`, so the keyboard
+  route is documented here rather than announced.
 - The surface is **not portalled**: it is an anchored layer at window coordinates, so it paints correctly but is not clipped by a scroll container.
+- **A dismissed menu is a ghost, not a target.** The surface stays painted for
+  its **200 ms** exit and the seam's shield takes the presses, while every row
+  inside it leaves the window's Tab order for that window: the runtime decides
+  the order element by element, so the row drops its own stop. A control you
+  compose inside the surface keeps its stop until the runtime publishes an
+  inherited `inert`.
 
 ## Theming
 

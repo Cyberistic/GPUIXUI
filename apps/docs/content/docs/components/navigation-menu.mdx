@@ -65,6 +65,13 @@ NavigationMenu
 
 ## Limitations
 
-- The nav is a `navigation` landmark named by `label`; each item is a `listitem` and each trigger a button carrying `aria-expanded`.
-- The panel is a `role="group"` whose accessible name is the item's **`value`**, not its visible label.
-- **No `aria-haspopup`** in `@gpuix/native@0.11.0`.
+- The nav is a `navigation` landmark named by `label`; each item is a `listitem`,
+  each trigger a button carrying `aria-expanded`, and the panel a `role="group"`
+  whose accessible name is the item's **`value`**, not its visible label.
+  **No `aria-haspopup`** in `@gpuix/native@0.11.0`.
+- **A dismissed panel is a ghost, not a target.** It stays painted for its
+  **200 ms** exit and the seam's shield takes the presses, while every link
+  inside it leaves the window's Tab order for that window: the runtime decides
+  the order element by element, so a link the library paints has to drop its own
+  stop. A link you compose elsewhere keeps its stop until the runtime publishes
+  an inherited `inert`.
