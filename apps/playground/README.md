@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-127 probes a real window can prove, of which twenty-nine mount shipped
+128 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -51,7 +51,7 @@ the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail, the image zoom, the accordion and
-the pinned list), ten mount
+the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer`, ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
 action), three mount `@gpuixui/data`'s examples (the table, the virtualized
@@ -7207,6 +7207,39 @@ close, moves delta's header by a different number and fails the check.
 29 checks, `--only accordion-lifecycle`, green on 0.11.0 (~1.9 s). Evidence:
 `.artifacts/live/accordion-single.png`.
 
+### `log-viewer-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/files` `LogViewer`: its own toolbar, its level filter
+and its controlled `followTail`/`enabledLevels` props, over 240 lines of
+`level message` rows in a 240-point viewport of **24**-point rows (ten rows on
+screen). The headless `log-viewer` scenario measured the runtime's
+`<virtual-list>` composition around a probe-local list; this probe mounts the
+component, and every row it names is a `line <index>` message read off the frame.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | rows **230–239** paint and `line 239` is the tail; `line 0` is outside the window; the toolbar paints `Follow tail` and all five levels (Error, Warn, Info, Debug, Trace); the list reports a **240**-point viewport and a logical anchor |
+| append 40 | the reader is at the new tail: rows **270–279** paint, the old tail `line 239` leaves the window, and the anchor moves with it |
+| wheel up one viewport (`deltaY = +240`) | the anchor moves towards the head and the painted window is rows **260–269**: the row the wheel pushed out leaves and the row it revealed paints |
+| append 40 while scrolled up | the viewer reaches **320** lines and the reader stays on rows **260–269** — `line 319` does not paint itself over them, and the anchor is exactly where the wheel left it |
+| follow off, append 40 | **360** lines; no arriving row paints, and the anchor still reads **260** |
+| follow on | the flag returns the reader to the tail in the same press: `line 359` paints and the anchor names **360** (the boundary the tail sits on). An append then follows it (**400** lines, `line 399`); the next append's tail is the row on screen |
+| errors only | the filter keeps one level: rows **350, 355, … 395** paint, `line 395` is the tail, and the trace row `line 399` does not |
+| all levels | the tail returns to `line 399` |
+| capture `log-viewer-tail` | the unfiltered 400-line tail the run leaves on screen |
+
+Two measured rules worth carrying out of it. **The follow flag is a jump as well
+as a hold**: flipping `followTail` from off to on scrolls the list to the tail in
+the same press, so a consumer needs no second scroll to restore the tail the
+headless reader inferred it would need; and **a wheel up does not fight the
+flag** — the reader stays at rows 260–269 while two appends land, which is the
+behaviour a log pane needs and the reason a separate follow state is useful.
+
+35 checks, `--only log-viewer-lifecycle`, green on 0.11.0 here (~1.5–5.6 s).
+Evidence: `.artifacts/live/log-viewer-tail.png`. Fixture
+`src/live/log-viewer.ts`, probe `src/live/log-viewer-probe.tsx`, guard
+`src/live/log-viewer.test.ts`.
+
 
 ## Terminal mode: the pty probe
 
@@ -7459,7 +7492,7 @@ narrower. Each deviation is deliberate and measured:
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
   `motion-interruption` and `panel-group-lifecycle` and
-  `accordion-lifecycle` (69
+  `accordion-lifecycle` and `log-viewer-lifecycle` (70
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples

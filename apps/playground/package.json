@@ -17,6 +17,7 @@
     "@gpuixui/components": "workspace:*",
     "@gpuixui/data": "workspace:*",
     "@gpuixui/dock": "workspace:*",
+    "@gpuixui/files": "workspace:*",
     "@gpuixui/media": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/shell": "workspace:*",

@@ -798,6 +798,12 @@ export const liveRegistry = [
       "Input: the shipped Accordion opens one section at a time, refuses a disabled header, moves real focus with the arrows, and reflows by the difference of its measured bodies",
     capability: "input",
   },
+  {
+    id: "log-viewer-lifecycle",
+    title:
+      "Log: the shipped LogViewer starts at the tail, follows an append, leaves a reader who wheels up where they stopped, and narrows the rows to the level its filter keeps",
+    capability: "log",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -11,7 +11,10 @@
  * `followTail` alone both anchor at the tail (measured, plan `154` §8). The
  * probe pins the composition a log viewer uses; it does not claim which prop
  * causes the anchoring. Scrolling up and then appending does **not** snap back,
- * so a real "follow" toggle is app state plus a scroll.
+ * so a reader is left where they stopped — and a window measures the other half
+ * the offscreen host cannot: flipping `followTail` on returns the list to the
+ * tail in the same press (`log-viewer-lifecycle`), so a toggle is the app's
+ * state plus the prop, not the prop plus a second scroll.
  *
  * Two-direction proof: dropping both props makes the tail assertions fail.
  */
