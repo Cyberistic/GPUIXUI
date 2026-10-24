@@ -25,7 +25,12 @@ import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { accessibleName, spokenText } from "../core/a11y.js";
-import type { ProgressTone } from "../core/style.js";
+import {
+  progressSizeOf,
+  progressToneOf,
+  type ProgressSize,
+  type ProgressTone,
+} from "../core/style.js";
 import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { progressFillClass, progressTrackClass } from "../recipe/index.js";
@@ -43,7 +48,7 @@ export interface MeterProps {
   /** Defaults to `primary`. */
   readonly tone?: ProgressTone;
   /** Defaults to `md`. */
-  readonly size?: "sm" | "md";
+  readonly size?: ProgressSize;
   /** Accessible name, e.g. "Disk usage". */
   readonly label?: string;
   /** How the value is announced. Defaults to `String(value)`. */
@@ -64,7 +69,7 @@ export interface MeterPart {
   /** The fraction of the track the fill paints. */
   readonly fraction: number;
   readonly tone: ProgressTone;
-  readonly size: "sm" | "md";
+  readonly size: ProgressSize;
   readonly label: string | undefined;
   /** The measurement as announced and displayed. */
   readonly valueText: string;
@@ -85,8 +90,8 @@ export const meterPart = (
     theme,
     value,
     fraction: valueFraction(value, range),
-    tone: props.tone ?? "primary",
-    size: props.size ?? "md",
+    tone: progressToneOf(props.tone),
+    size: progressSizeOf(props.size),
     label: props.label,
     // A formatter answers for this measurement; an answer that says nothing
     // falls back to the number rather than announcing an empty value.

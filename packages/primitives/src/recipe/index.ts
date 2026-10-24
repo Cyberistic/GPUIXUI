@@ -26,8 +26,11 @@ import {
   clampLines,
   paintableAspectRatio,
   paddingSides,
+  progressSizeOf,
+  progressToneOf,
 } from "../core/style.js";
 import type {
+  ProgressSize,
   ProgressTone,
   ScrollSpec,
   SliderOrientation,
@@ -728,7 +731,7 @@ export const sliderThumbClass = (
 // ── Meter / Progress ─────────────────────────────────────────────────
 
 /** The spacing step each progress size sits at. */
-const PROGRESS_HEIGHT_STEP: Readonly<Record<"sm" | "md", SpaceStep>> = {
+const PROGRESS_HEIGHT_STEP: Readonly<Record<ProgressSize, SpaceStep>> = {
   sm: "xs",
   md: "sm",
 };
@@ -741,8 +744,8 @@ const PROGRESS_HEIGHT_STEP: Readonly<Record<"sm" | "md", SpaceStep>> = {
  * the moving fill stayed at the start (measured in a window: its `x` never left
  * the track's) and every segment after the first was clipped below the bar.
  */
-export const progressTrackClass = (size: "sm" | "md"): string =>
-  `flex flex-row w-full h-space-${PROGRESS_HEIGHT_STEP[size]} rounded-full bg-muted overflow-hidden`;
+export const progressTrackClass = (size: ProgressSize): string =>
+  `flex flex-row w-full h-space-${PROGRESS_HEIGHT_STEP[progressSizeOf(size)]} rounded-full bg-muted overflow-hidden`;
 
 /** The colour role each progress tone paints. */
 const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
@@ -754,7 +757,7 @@ const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
 
 /** The class string a progress or meter fill resolves from. */
 export const progressFillClass = (tone: ProgressTone): string =>
-  cn("h-full rounded-full", PROGRESS_TONE_CLASS[tone]);
+  cn("h-full rounded-full", PROGRESS_TONE_CLASS[progressToneOf(tone)]);
 
 /**
  * The class string a progress's held-ahead segment resolves from.
@@ -771,7 +774,9 @@ export const progressFillClass = (tone: ProgressTone): string =>
 export const progressBufferClass = (tone: ProgressTone): string =>
   cn(
     "h-full shrink-0",
-    tone === "muted" ? "bg-border-strong" : "bg-muted-foreground",
+    progressToneOf(tone) === "muted"
+      ? "bg-border-strong"
+      : "bg-muted-foreground",
   );
 
 // ── Spinner / Skeleton ───────────────────────────────────────────────

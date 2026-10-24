@@ -10564,6 +10564,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
     behaviour 128/128, `check-types` clean. `docs/virtualization.mdx` §An
     overdraw is a count of rows and §API, the README's virtualization paragraph
     and the Virtualized tables row teach the rule. Owner: data.
+  - [x] End a **column drag whose release the window never heard** —
+    `TableColumnDivider` armed its gesture on a primary press and never asked
+    again whether a button was still held, so a release the strip did not hear
+    (the reader drags the pointer out of the window and lets go there, where the
+    platform reports nothing) left it armed and the **next hover** over its 6px
+    strip resized the column by however far the pointer travelled. The runtime
+    reports the button a move holds (`pressedButton`, `0` for the primary one —
+    measured in the renderer: an omitted button arrives absent, a held drag
+    arrives `0`), so a move that does not hold the primary button now ends the
+    gesture and resizes nothing; the rule is the dock package's divider
+    (`packages/dock/src/divider.tsx`). The behaviour suite's `drag` helper sends
+    the payload a captured drag really delivers (`0` per move), and the
+    non-primary-press case now moves with the primary held so its own direction
+    (only the press's own button decides) still measures. `table.test.tsx` gains
+    `ends a gesture whose release the window never heard`: a 2px drag widens to
+    262, the pointer leaves the window, a 2px hover stays at 262, and a fresh
+    press drags on from 262 to 268. Direction measured: without the guard the
+    hover reads `w=264`. `docs/column-configuration.mdx` gains §The drag, the
+    README's resize rule row and the Resizable columns row state the rule.
+    Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

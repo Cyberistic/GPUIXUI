@@ -22,8 +22,8 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | required | the measurement; clamped into the range |
 | `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of |
-| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
-| `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm` |
+| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role; a stored name the table does not carry reads as `primary` |
+| `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm`; a stored name the table does not carry reads as `md` |
 | `label` | `string` | none | accessible name, and `MeterLabel`'s default text |
 | `formatValue` | `(value: number) => string` | `String` | the announced and displayed measurement; a blank answer keeps the number |
 | `children` | `ReactNode` | the track | the parts to draw |

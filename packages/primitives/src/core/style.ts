@@ -505,6 +505,8 @@ export const PROGRESS_TONES = [
 
 export type ProgressTone = (typeof PROGRESS_TONES)[number];
 
+const PROGRESS_TONE_NAMES: ReadonlyArray<string> = PROGRESS_TONES;
+
 const progressTones: Record<ProgressTone, ColorRef> = {
   primary: brandText,
   success: (theme) => theme.colors.success,
@@ -512,13 +514,48 @@ const progressTones: Record<ProgressTone, ColorRef> = {
   muted: (theme) => theme.colors.mutedForeground,
 };
 
+/**
+ * The two heights a bar is built in — a progress and a meter share the table.
+ *
+ * A bar is a widget a dashboard stores, so its size is a name from another
+ * release as often as a literal: indexing the height table with one answered
+ * `undefined`, and the recipe asked the compiler for `h-space-undefined` — a
+ * track with no height at all.
+ */
+export const PROGRESS_SIZES = ["sm", "md"] as const;
+export type ProgressSize = (typeof PROGRESS_SIZES)[number];
+
+const PROGRESS_SIZE_NAMES: ReadonlyArray<string> = PROGRESS_SIZES;
+
+/** Whether a value names a bar height. */
+export const isProgressSize = (value: unknown): value is ProgressSize =>
+  typeof value === "string" && Arr.contains(PROGRESS_SIZE_NAMES, value);
+
+/** The bar's height step: the name, or the documented `md` default. */
+export const progressSizeOf = (value: unknown): ProgressSize =>
+  isProgressSize(value) ? value : "md";
+
+/** Whether a value names a bar tone. */
+export const isProgressTone = (value: unknown): value is ProgressTone =>
+  typeof value === "string" && Arr.contains(PROGRESS_TONE_NAMES, value);
+
+/**
+ * The tone a bar paints with: the name, or the documented `primary` default.
+ *
+ * Indexed raw, a stored tone resolved to no colour at all — the value's whole
+ * fill was transparent, so a finished task or a measured gauge read as an empty
+ * track while its label announced the number.
+ */
+export const progressToneOf = (value: unknown): ProgressTone =>
+  isProgressTone(value) ? value : "primary";
+
 export interface ProgressSpec {
   readonly value?: number;
   readonly tone: ProgressTone;
-  readonly size: "sm" | "md";
+  readonly size: ProgressSize;
 }
 
-const PROGRESS_HEIGHT: Record<ProgressSpec["size"], SpaceStep> = {
+const PROGRESS_HEIGHT: Record<ProgressSize, SpaceStep> = {
   sm: "xs",
   md: "sm",
 };
@@ -531,7 +568,7 @@ export const progressTrackStyle = (
   display: "flex",
   flexDirection: "row",
   width: "100%",
-  height: theme.spacing[PROGRESS_HEIGHT[spec.size]],
+  height: theme.spacing[PROGRESS_HEIGHT[progressSizeOf(spec.size)]],
   borderRadius: theme.radius.full,
   backgroundColor: theme.colors.muted,
   overflow: "hidden",
@@ -545,7 +582,7 @@ export const progressFillStyle = (
   height: "100%",
   width: `${progressPercent(spec.value ?? 0)}%`,
   borderRadius: theme.radius.full,
-  backgroundColor: paint(progressTones[spec.tone], theme),
+  backgroundColor: paint(progressTones[progressToneOf(spec.tone)], theme),
 });
 
 // ── Value controls: Slider, RangeSlider ──────────────────────────────

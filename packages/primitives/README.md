@@ -73,10 +73,17 @@ and each is read through a membership test rather than indexed raw:
   The class name otherwise became `type-undefined`, which resolves to no size,
   leading or weight at all: the run painted the runtime's default face instead of
   body copy.
+- a **bar's `size` and `tone`** live in a dashboard widget's saved record, so
+  `isProgressSize`/`progressSizeOf` and `isProgressTone`/`progressToneOf`
+  (`core/style.ts`) read them as `md`/`primary` for both `Progress` and `Meter`.
+  Raw, a height step resolved to `h-space-undefined` (a track with no height)
+  and a tone to no colour class at all — a finished task whose fill was
+  transparent.
 
-`Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`, `Switch.test.tsx` and
-`presentational.test.tsx` each hold one of these answers, and each case was
-measured failing on its raw read before the guard landed.
+`Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`, `Switch.test.tsx`,
+`presentational.test.tsx`, `Progress.test.tsx` and `Meter.test.tsx` each hold one
+of these answers, and each case was measured failing on its raw read before the
+guard landed.
 
 The **words** a control announces are interface copy, so they ride the provider
 too: `messages={{ selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" } }}`

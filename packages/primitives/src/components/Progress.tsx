@@ -43,6 +43,9 @@ import {
 import { reducedMotionOf, stillFrame } from "../core/motion.js";
 import {
   progressPercent,
+  progressSizeOf,
+  progressToneOf,
+  type ProgressSize,
   type ProgressSpec,
   type ProgressTone,
 } from "../core/style.js";
@@ -111,7 +114,7 @@ export interface ProgressPart {
   /** Where the held-ahead segment ends, or `undefined` when there is none. */
   readonly bufferPercent: number | undefined;
   readonly tone: ProgressTone;
-  readonly size: ProgressSpec["size"];
+  readonly size: ProgressSize;
   readonly step: number;
   readonly label: string | undefined;
   /** The share in the caller's words, or the default; announced and painted. */
@@ -145,8 +148,8 @@ export const progressPart = (
       determinate && buffer !== undefined
         ? Math.max(percent, progressPercent(buffer))
         : undefined,
-    tone,
-    size,
+    tone: progressToneOf(tone),
+    size: progressSizeOf(size),
     step,
     label,
     // The share is said in the caller's words: a locale, a unit, or a buffer the

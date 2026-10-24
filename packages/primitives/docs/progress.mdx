@@ -22,8 +22,8 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | 0–100 determinate fill; omit for indeterminate |
 | `buffer` | `number` | none | 0–100 held-ahead point; paints the segment between `value` and itself |
-| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
-| `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
+| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role; a stored name the table does not carry reads as `primary` |
+| `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm`; a stored name the table does not carry reads as `md` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
 | `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share; a blank answer keeps the default |
 | `loadingText` | `string` | `loading.indeterminate` (`"loading"`) | what an indeterminate bar says instead of a percentage; a blank one keeps the provider's |

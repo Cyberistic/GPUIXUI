@@ -13,6 +13,7 @@ import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import type { ProgressTone } from "../core/style.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   meterPart,
@@ -27,6 +28,7 @@ import {
   elementProp,
   expectSome,
   hostProp,
+  hostStyle,
   hostStyleString,
   hostTag,
 } from "./testing/element.js";
@@ -70,6 +72,38 @@ describe("Meter", () => {
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Disk usage");
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("62");
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
+  });
+
+  it("keeps the bar's height when its size name is one the scale does not carry", () => {
+    // The bug guarded: a meter is a widget a dashboard stores, so its size is a
+    // name from another release as often as a literal. The height table indexed
+    // raw answered `undefined`, so the track painted with no height at all — a
+    // measurement bar collapsed to its border.
+    const stored = renderMeter({ value: 62, size: "xl" as "md" }, testTheme);
+    const fallback = renderMeter({ value: 62, size: "md" }, testTheme);
+    expect(expectSome(hostStyle(trackOf(stored), "height"))).toStrictEqual(
+      expectSome(hostStyle(trackOf(fallback), "height")),
+    );
+    expect(expectSome(hostStyle(trackOf(stored), "height"))).toBe(
+      testTheme.spacing.sm,
+    );
+  });
+
+  it("paints the fill when its tone name is one the table does not carry", () => {
+    // The bug guarded: a stored tone resolved to no colour class at all, so the
+    // measured share of the track was transparent — a gauge whose needle was
+    // invisible while its label read the value.
+    const stored = renderMeter(
+      { value: 62, tone: "chart" as ProgressTone },
+      testTheme,
+    );
+    const fallback = renderMeter({ value: 62, tone: "primary" }, testTheme);
+    expect(stringIn(fillOf(stored), "backgroundColor")).toBe(
+      stringIn(fillOf(fallback), "backgroundColor"),
+    );
+    expect(stringIn(fillOf(stored), "backgroundColor")).toBe(
+      testTheme.colors.primary,
+    );
   });
 
   it("fills by the value's place in the range, not by the raw value", () => {

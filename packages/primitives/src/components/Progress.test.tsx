@@ -30,6 +30,7 @@ import {
   elementProp,
   expectSome,
   hostProp,
+  hostStyle,
   hostStyleString,
   hostTag,
 } from "./testing/element.js";
@@ -82,6 +83,48 @@ const announced = (element: ReactElement): string =>
   );
 
 describe("Progress", () => {
+  it("keeps the bar's height when its size name is one the scale does not carry", () => {
+    // The bug guarded: a progress is a widget a dashboard stores, so its size is
+    // a name from another release as often as a literal. `PROGRESS_HEIGHT_STEP`
+    // indexed raw answered `undefined`, `h-space-undefined` is a class the
+    // compiler refuses, and the track painted with no height at all — a bar
+    // collapsed to its border beside the default it documents.
+    const stored = renderProgress(
+      { value: 40, size: "xl" as "md" },
+      testTheme,
+      0,
+    );
+    const fallback = renderProgress({ value: 40, size: "md" }, testTheme, 0);
+    expect(expectSome(hostStyle(trackOf(stored), "height"))).toStrictEqual(
+      expectSome(hostStyle(trackOf(fallback), "height")),
+    );
+    expect(expectSome(hostStyle(trackOf(stored), "height"))).toBe(
+      testTheme.spacing.sm,
+    );
+  });
+
+  it("paints the fill when its tone name is one the table does not carry", () => {
+    // The bug guarded: a stored tone reached `PROGRESS_TONE_CLASS[name]` and
+    // resolved to no colour class at all, so the value's whole fill was
+    // transparent — a finished task that read as an empty track.
+    const stored = renderProgress(
+      { value: 40, tone: "chart" as ProgressTone },
+      testTheme,
+      0,
+    );
+    const fallback = renderProgress(
+      { value: 40, tone: "primary" },
+      testTheme,
+      0,
+    );
+    expect(expectSome(hostStyleString(fillOf(stored), "backgroundColor"))).toBe(
+      expectSome(hostStyleString(fillOf(fallback), "backgroundColor")),
+    );
+    expect(expectSome(hostStyleString(fillOf(stored), "backgroundColor"))).toBe(
+      testTheme.colors.primary,
+    );
+  });
+
   it("clamps a value past the end instead of painting outside the track", () => {
     const element = bar(Option.some(140));
     expect(expectSome(hostProp(element, "role"))).toBe("progressbar");
