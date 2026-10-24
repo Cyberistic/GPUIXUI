@@ -15,6 +15,13 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  presenceStyle,
+  presenceTiming,
+  presenceTimingOf,
+} from "./presence.js";
 import { motionLevels, motionTiming, motionTimingOf } from "./timing.js";
 
 const read = (path: string): string =>
@@ -317,6 +324,49 @@ describe("the reduced coast the README teaches", () => {
   });
 });
 
+/**
+ * The items between the parentheses of the first `(` at or after `from`.
+ *
+ * A bracket scan is the one place an index walk says more than a combinator: a
+ * call's arguments contain a call of their own — `fadeFromAnchor("bottom", 4)`
+ * is one argument — and a character class cannot track that depth. A signature's
+ * parameter list has the same shape, so both are read by this one scan.
+ */
+const itemsIn = (source: string, from: number): ReadonlyArray<string> => {
+  const open = source.indexOf("(", from);
+  if (open === -1) return [];
+  const items: string[] = [];
+  let depth = 0;
+  let start = open + 1;
+  for (let index = open; index < source.length; index += 1) {
+    const character = source[index] ?? "";
+    if (character === "(") depth += 1;
+    else if (character === ")") {
+      depth -= 1;
+      if (depth === 0) {
+        items.push(source.slice(start, index));
+        break;
+      }
+    } else if (character === "," && depth === 1) {
+      items.push(source.slice(start, index));
+      start = index + 1;
+    }
+  }
+  return items.map((item) => item.trim()).filter((item) => item.length > 0);
+};
+
+/** The parameters an `export const <name> =` declaration lists. */
+const listedAt = (source: string, name: string): ReadonlyArray<string> => {
+  const at = source.indexOf(`export const ${name} = `);
+  return at === -1 ? [] : itemsIn(source, at);
+};
+
+/** The arguments a document's first `<name>(` call passes. */
+const calledWith = (source: string, name: string): ReadonlyArray<string> => {
+  const at = source.indexOf(`${name}(`);
+  return at === -1 ? [] : itemsIn(source, at);
+};
+
 describe("the presence table the README teaches", () => {
   it("names every entry point the presence subpath exports", () => {
     // The bug this guards: `presenceMotion` — the one composition that turns
@@ -359,6 +409,52 @@ describe("the presence table the README teaches", () => {
     expect(readme).not.toMatch(
       /React half[^.]*stays with the package that owns a tree/,
     );
+  });
+
+  it("calls the composition entry point with the arguments it declares", () => {
+    // The bug this guards: the README's three-step composition — the only
+    // example a consumer of `@gpuixui/motion/presence` copies for a surface of
+    // its own — passed the whole presence object as `present` and named no
+    // timing, while `presenceMotion` declares `(frames, present, timing)`. A
+    // reader got a type error, and past it an object that is always truthy where
+    // the phase belongs and an empty transition, so the surface never ran its
+    // exit and never moved on its level.
+    const presence = sources.find(({ name }) => name === "presence.ts")?.text;
+    expect(presence, "presence.ts was not read").toBeDefined();
+    const declared = listedAt(presence ?? "", "presenceMotion").map(
+      (parameter) => parameter.split(":")[0]?.trim() ?? "",
+    );
+    expect(declared).toEqual(["frames", "present", "timing"]);
+
+    const snippet = readme.split("A surface composes the table")[1] ?? "";
+    expect(snippet.length).toBeGreaterThan(0);
+    const called = calledWith(snippet, "presenceMotion");
+    expect(called).toHaveLength(declared.length);
+    expect(called[1]).toBe("presence.present");
+    expect(called[2]).toBe("presence.timing");
+    expect(called[0]).toMatch(/fadeFromAnchor\(|fadeFromSide\(|fadeFrom\(/);
+
+    // The third argument is the journey: without a timing the composition hands
+    // the runtime no transition at all, which is the call the page used to teach.
+    const frames = fadeFromAnchor("bottom", 4);
+    const timing = presenceTiming("normal");
+    expect(
+      presenceMotion(frames, true, presenceTimingOf(undefined)).transition,
+    ).toEqual({});
+    expect(presenceMotion(frames, true, timing)).toEqual({
+      initial: { opacity: 0, top: -4 },
+      animate: { opacity: 1, top: 0 },
+      transition: { duration: 0.2, ease: "easeOut" },
+    });
+    expect(presenceMotion(frames, false, timing).transition).toEqual({
+      duration: 0.2,
+      ease: "easeIn",
+    });
+
+    // And the pointer rule is the seam's, not a literal the page restates.
+    expect(snippet).toContain("presenceStyle(presence.present)");
+    expect(presenceStyle(true)).toEqual({ pointerEvents: "auto" });
+    expect(presenceStyle(false)).toEqual({ pointerEvents: "none" });
   });
 });
 

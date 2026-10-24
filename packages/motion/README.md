@@ -183,7 +183,11 @@ mounted window:
 
 ```tsx
 import { motion } from "@gpuix/react";
-import { fadeFromAnchor, presenceMotion } from "@gpuixui/motion/presence";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  presenceStyle,
+} from "@gpuixui/motion/presence";
 import { useSurfacePresence, useSurfaceTiming } from "@gpuixui/motion/react";
 
 function Panel({ open }: { open: boolean }) {
@@ -194,12 +198,22 @@ function Panel({ open }: { open: boolean }) {
   if (!presence.mounted) return null;
   return (
     <motion.div
-      motion={presenceMotion(fadeFromAnchor("bottom", 4), presence)}
-      style={{ pointerEvents: presence.present ? "auto" : "none" }}
+      motion={presenceMotion(
+        fadeFromAnchor("bottom", 4),
+        presence.present,
+        presence.timing,
+      )}
+      style={presenceStyle(presence.present)}
     />
   );
 }
 ```
+
+The composition takes **three** arguments — the frames, the resting target and
+the timing the phase moves with — because the last one is the journey: `present`
+alone only chooses which frame is the target, so a call without `presence.timing`
+hands the runtime an empty transition and the surface snaps between its frames
+instead of entering and leaving on its level.
 
 `useSurfaceTiming(level)` reads the nearest provider, so the level a surface
 moves at is one line and the preference is one flag for the whole tree.
