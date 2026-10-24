@@ -137,8 +137,9 @@ describe("the switch's press path", () => {
   it("names the group the markup renders", () => {
     expect(platformGroup).toBe("Platform style");
     expect(toggle).toContain('label="Platform style"');
-    expect(probe).toContain("__reactProps");
-    expect(probe).toContain("typeof props.onClick");
+    // The gate is the shared read (`react-ready.ts`), over every copy of the
+    // group; `react-ready.test.ts` proves the read itself.
+    expect(probe).toContain("firstReady(");
   });
 
   it("names the look picker's group where the page and the probe read it", () => {

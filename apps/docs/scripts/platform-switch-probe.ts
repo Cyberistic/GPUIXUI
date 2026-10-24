@@ -38,6 +38,7 @@ import {
   resolvePlatformTheme,
 } from "../src/lib/platform.ts";
 import { findChrome, openChrome } from "./chrome-session.ts";
+import { firstReady } from "./react-ready.ts";
 
 /** The page a preview server serves, and the switch every docs page carries. */
 export const defaultUrl = "http://localhost:4175/docs/components/button";
@@ -80,12 +81,22 @@ export const expectedHeight = (
 ): string =>
   `${platformTheme(themes[mode], platform).density.controlHeight.md}px`;
 
-/** Every surface's state, as one line `parseSurface` reads. */
+/**
+ * Every surface's state, as one line `parseSurface` reads.
+ *
+ * A just-hydrated dev page can hold the server's markup beside the tree React
+ * committed for a moment, so a read of the first surface can name a platform
+ * the rest of the page has left. The line says `mixed` until every surface
+ * agrees, which is the contract the mission states ("every preview changes").
+ */
 const readSurfaces = `(() => {
   const surfaces = [...document.querySelectorAll(".gx-demo[data-platform]")];
+  const platforms = new Set(
+    surfaces.map((surface) => surface.getAttribute("data-platform") ?? "none"),
+  );
   const first = surfaces[0];
   return [
-    first?.getAttribute("data-platform") ?? "none",
+    platforms.size === 1 ? (first?.getAttribute("data-platform") ?? "none") : "mixed",
     first?.getAttribute("data-mode") ?? "none",
     (first?.style.getPropertyValue("--control-height-md") ?? "").trim(),
     location.search,
@@ -101,25 +112,27 @@ const countSurfaces = (platform: string): string => `(() => {
   return all.length + ":" + lit.length;
 })()`;
 
+/** The first copy of this label whose press answers, painted first. */
+const readyButton = (group: string, label: string): string =>
+  firstReady(
+    `[aria-label="${group}"] button`,
+    "onClick",
+    `node.textContent === ${JSON.stringify(label)}`,
+  );
+
 /** Whether the button with this label in `group` carries React's own handler. */
 const ready = (group: string, label: string): string => `(() => {
-  const button = [...document.querySelectorAll('[aria-label="${group}"] button')].find(
+  const button = ${readyButton(group, label)};
+  if (button !== undefined) return "ready";
+  const matches = [...document.querySelectorAll('[aria-label="${group}"] button')].filter(
     (node) => node.textContent === ${JSON.stringify(label)},
   );
-  if (button === undefined) return "no-button";
-  const props = Object.entries(button).find(([key]) =>
-    key.startsWith("__reactProps"),
-  )?.[1];
-  return props !== undefined && typeof props.onClick === "function"
-    ? "ready"
-    : "cold";
+  return matches.length === 0 ? "no-button" : "cold";
 })()`;
 
 /** Press the button a reader would press in `group`. */
 const press = (group: string, label: string): string => `(() => {
-  const button = [...document.querySelectorAll('[aria-label="${group}"] button')].find(
-    (node) => node.textContent === ${JSON.stringify(label)},
-  );
+  const button = ${readyButton(group, label)};
   if (button === undefined) return "no-button";
   button.click();
   return "pressed";
@@ -255,7 +268,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
         (await until(
           () => session.page.text(readSurfaces),
           (text) => parseSurface(text)?.platform === step.platform,
-          5000,
+          15000,
         )) ?? "",
       );
       if (surface === undefined) {

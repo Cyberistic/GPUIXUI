@@ -45,8 +45,9 @@ describe("the hydrated preview press", () => {
     const readyAt = probe.indexOf("controlReady");
     const nextAt = probe.indexOf('press("Next slide")');
     expect(readyAt).toBeGreaterThan(-1);
-    expect(probe).toContain("__reactProps");
-    expect(probe).toContain("typeof props.onClick");
+    // The gate is the shared read (`react-ready.ts`); `react-ready.test.ts`
+    // proves it finds React 19's non-enumerable props.
+    expect(probe).toContain("hasHandler(");
     expect(nextAt).toBeGreaterThan(readyAt);
     // Both directions, or the probe would pass on a control that only moves
     // forward — including one that ignores the press and starts on slide 2.

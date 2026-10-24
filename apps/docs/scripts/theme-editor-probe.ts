@@ -23,6 +23,7 @@
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";
 import { findChrome, openChrome } from "./chrome-session.ts";
+import { hasHandler } from "./react-ready.ts";
 
 /** The page a preview server serves. */
 export const defaultUrl = "http://localhost:4175/docs/themes";
@@ -98,12 +99,7 @@ const readEditor = `(() => {
 export const hydrated = `(() => {
   const reset = document.querySelector('${resetSelector}');
   if (reset === null) return "missing";
-  const props = Object.entries(reset).find(([key]) =>
-    key.startsWith("__reactProps"),
-  )?.[1];
-  return props !== undefined && typeof props.onClick === "function"
-    ? "ready"
-    : "cold";
+  return ${hasHandler("reset")} ? "ready" : "cold";
 })()`;
 
 /**

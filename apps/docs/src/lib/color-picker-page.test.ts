@@ -67,7 +67,7 @@ describe("the colour picker's testId row", () => {
     // is the defect the component fixed and the page did not teach.
     expect(fallback).not.toBe("");
     expect(source).toContain(
-      "accessibleName(label) ?? DEFAULT_COLOR_PICKER_LABEL",
+      "accessibleName(textOf(label)) ?? DEFAULT_COLOR_PICKER_LABEL",
     );
     expect(labelRow).toBeDefined();
     expect(labelRow ?? "").toContain(fallback);

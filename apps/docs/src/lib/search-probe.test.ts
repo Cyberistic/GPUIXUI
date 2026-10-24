@@ -218,9 +218,9 @@ describe("the search dialog", () => {
     // prototype's setter and an `input` event carries it.
     expect(probe).toContain("HTMLInputElement.prototype");
     expect(probe).toContain('new InputEvent("input"');
-    // The trigger's handler is the hydration precondition, not a fiber.
-    expect(probe).toContain("__reactProps");
-    expect(probe).toContain("typeof props.onClick");
+    // The trigger's handler is the hydration precondition, read through the
+    // shared helper over every copy of the trigger the chrome renders.
+    expect(probe).toContain("firstReady(");
     // Enter runs after the list is read, or the probe submits a suggestion.
     expect(probe.indexOf("const submit")).toBeGreaterThan(
       probe.indexOf("const readResults"),

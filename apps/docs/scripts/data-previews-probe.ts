@@ -16,6 +16,7 @@
  */
 
 import { findChrome, openChrome, type ChromePage } from "./chrome-session.ts";
+import { propsOfScript } from "./react-ready.ts";
 
 /** The pages this probe visits, and the drawing each one carries. */
 export const previewPages = {
@@ -52,7 +53,7 @@ export const expected = {
 /** True when a node carries React's props — i.e. its handlers are attached. */
 const hydrated = (selector: string): string => `(() => {
   const node = document.querySelector(${JSON.stringify(selector)});
-  return node !== null && Object.keys(node).some((key) => key.startsWith("__reactProps")) ? "yes" : "no";
+  return node !== null && ${propsOfScript}(node) !== undefined ? "yes" : "no";
 })()`;
 
 /** The React prop key a node carries, so a press is not a no-op on markup. */

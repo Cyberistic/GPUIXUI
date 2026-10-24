@@ -29,6 +29,7 @@ import {
 } from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { findChrome, openChrome } from "./chrome-session.ts";
+import { firstReady } from "./react-ready.ts";
 
 /** The page a preview server serves, and the toggle every docs page carries. */
 export const defaultUrl = "http://localhost:4175/docs/components/button";
@@ -184,20 +185,18 @@ const readPage = `(() => {
 
 /** Whether the toggle carries React's own handler, so a press does something. */
 const ready = `(() => {
-  const button = document.querySelector('[data-theme-toggle]');
-  if (button === null) return "no-toggle";
-  const props = Object.entries(button).find(([key]) =>
-    key.startsWith("__reactProps"),
-  )?.[1];
-  return props !== undefined && typeof props.onClick === "function"
-    ? "ready"
-    : "cold";
+  if (${firstReady("[data-theme-toggle]")} === undefined) {
+    return document.querySelector('[data-theme-toggle]') === null
+      ? "no-toggle"
+      : "cold";
+  }
+  return "ready";
 })()`;
 
 /** Press the toggle the way a reader does. */
 const press = `(() => {
-  const button = document.querySelector('[data-theme-toggle]');
-  if (button === null) return "no-toggle";
+  const button = ${firstReady("[data-theme-toggle]")};
+  if (button === undefined) return "no-toggle";
   button.click();
   return "pressed";
 })()`;

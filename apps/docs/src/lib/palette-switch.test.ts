@@ -79,16 +79,18 @@ describe("the switch's press path", () => {
     // React fiber at all; the handler is the precondition a press needs.
     const readyAt = probe.indexOf('ready("Light")');
     const pressAt = probe.indexOf('press("Light")');
-    expect(probe).toContain("__reactProps");
-    expect(probe).toContain("typeof props.onClick");
+    // The gate is the shared read (`react-ready.ts`), over every copy of the
+    // group; `react-ready.test.ts` proves the read itself.
+    expect(probe).toContain("firstReady(");
     const start = probe.indexOf("const ready = ");
     const end = probe.indexOf("const press = ");
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     // The handler is not enough any more: the switch is disabled until the
     // content mounts, so a read that ignored the gate would press a button
-    // that refuses the click and report that the press did nothing.
-    expect(probe.slice(start, end)).toContain("button.disabled");
+    // that refuses the click and report that the press did nothing. The gate
+    // is part of the shared selection, which skips a disabled copy.
+    expect(probe.slice(start, end)).toContain("node.disabled");
     expect(readyAt).toBeGreaterThan(-1);
     expect(pressAt).toBeGreaterThan(readyAt);
   });
@@ -108,7 +110,7 @@ describe("the switch's press path", () => {
     const body = probe.slice(start, end);
     expect(body).toContain(".gx-demo[data-mode]");
     const surfacePart = body.slice(body.indexOf("const surface"));
-    expect(surfacePart).toContain("__reactProps");
+    expect(surfacePart).toContain("propsOfScript");
   });
 
   it("presses both palettes and reads every surface", () => {

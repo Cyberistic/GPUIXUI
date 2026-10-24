@@ -27,6 +27,7 @@ import {
   type ThemeMode,
 } from "@gpuixui/tokens";
 import { findChrome, openChrome } from "./chrome-session.ts";
+import { firstReady, propsOfScript } from "./react-ready.ts";
 
 /** The page a preview server serves, and the switch every docs page carries. */
 export const defaultUrl = "http://localhost:4175/docs/components/button";
@@ -108,28 +109,31 @@ const countSurfaces = (mode: string): string => `(() => {
  * page a reader could not yet have clicked. The surface's props are the
  * precondition the measurement needs, not only the button's handler.
  */
+/** The first enabled copy of `label` whose press answers, painted first. */
+const readyButton = (label: string): string =>
+  firstReady(
+    `[aria-label="${paletteGroup}"] button`,
+    "onClick",
+    `node.textContent === ${JSON.stringify(label)} && !node.disabled`,
+  );
+
 const ready = (label: string): string => `(() => {
-  const button = [...document.querySelectorAll('[aria-label="${paletteGroup}"] button')].find(
+  const button = ${readyButton(label)};
+  if (button !== undefined) {
+    const surface = document.querySelector(".gx-demo[data-mode]");
+    if (surface === null) return "no-surface";
+    return ${propsOfScript}(surface) === undefined ? "cold" : "ready";
+  }
+  const matches = [...document.querySelectorAll('[aria-label="${paletteGroup}"] button')].filter(
     (node) => node.textContent === ${JSON.stringify(label)},
   );
-  if (button === undefined) return "no-button";
-  if (button.disabled) return "closed";
-  const props = Object.entries(button).find(([key]) =>
-    key.startsWith("__reactProps"),
-  )?.[1];
-  if (props === undefined || typeof props.onClick !== "function") return "cold";
-  const surface = document.querySelector(".gx-demo[data-mode]");
-  if (surface === null) return "no-surface";
-  return Object.keys(surface).some((key) => key.startsWith("__reactProps"))
-    ? "ready"
-    : "cold";
+  if (matches.length === 0) return "no-button";
+  return matches.every((node) => node.disabled) ? "closed" : "cold";
 })()`;
 
 /** Press the palette button a reader would press. */
 const press = (label: string): string => `(() => {
-  const button = [...document.querySelectorAll('[aria-label="${paletteGroup}"] button')].find(
-    (node) => node.textContent === ${JSON.stringify(label)},
-  );
+  const button = ${readyButton(label)};
   if (button === undefined) return "no-button";
   button.click();
   return "pressed";

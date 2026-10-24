@@ -23,6 +23,7 @@
  * readout `Slide 1 of 4` → `Slide 2 of 4` and back.
  */
 import { findChrome, openChrome } from "./chrome-session.ts";
+import { hasHandler } from "./react-ready.ts";
 
 /** The page a cold dev server serves, and the demo it carries. */
 export const defaultUrl = "http://localhost:4175/docs/components/carousel";
@@ -56,12 +57,7 @@ const controlReady = `(() => {
     (node) => node.getAttribute("aria-label") === "Next slide",
   );
   if (button === undefined) return "no-control";
-  const props = Object.entries(button).find(([key]) =>
-    key.startsWith("__reactProps"),
-  )?.[1];
-  return props !== undefined && typeof props.onClick === "function"
-    ? "ready"
-    : "cold";
+  return ${hasHandler("button")} ? "ready" : "cold";
 })()`;
 
 /** The workflow demo's frame, selected by the readout only it carries. */

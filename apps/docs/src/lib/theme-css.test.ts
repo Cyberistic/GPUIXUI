@@ -738,8 +738,11 @@ describe("the data series", () => {
       const theme = resolvePlatformTheme("default", "light", name);
       const declared = retroStyles[name].series?.light;
       expect(theme.series?.length ?? 0).toBe(declared?.length ?? 0);
+      // Compare against the table the look resolved to: a declared row is read
+      // position by position (`seriesPalette`), so the raw stored row and the
+      // painted scale are not the same value.
       expect(cssSeries(series(theme))).toEqual(
-        cssSeries(declared ?? lightSeries),
+        cssSeries(theme.series ?? lightSeries),
       );
     };
     look("luna");

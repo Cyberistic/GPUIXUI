@@ -152,8 +152,9 @@ describe("the press path", () => {
   it("waits for the toggle's handler before it presses", () => {
     const readyAt = probe.indexOf("session.page.text(ready)");
     const pressAt = probe.indexOf("session.page.text(press)");
-    expect(probe).toContain("__reactProps");
-    expect(probe).toContain("typeof props.onClick");
+    // The gate is the shared read (`react-ready.ts`), which finds React 19's
+    // fiber props; `react-ready.test.ts` proves the read itself.
+    expect(probe).toContain("firstReady(");
     expect(probe).toContain("[data-theme-toggle]");
     expect(readyAt).toBeGreaterThan(-1);
     expect(pressAt).toBeGreaterThan(readyAt);

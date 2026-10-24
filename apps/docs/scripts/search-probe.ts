@@ -19,6 +19,7 @@
  */
 
 import { findChrome, openChrome } from "./chrome-session.ts";
+import { firstReady } from "./react-ready.ts";
 
 /** The page a preview server serves; the dialog is mounted by the root layout. */
 export const defaultUrl = "http://localhost:4175/docs/components/button";
@@ -115,14 +116,9 @@ const readResults = `(() => {
 
 /** Whether the dialog's trigger carries React's own handler. */
 export const triggerReady = `(() => {
-  const trigger = document.querySelector('${searchTrigger}');
-  if (trigger === null) return "missing";
-  const props = Object.entries(trigger).find(([key]) =>
-    key.startsWith("__reactProps"),
-  )?.[1];
-  return props !== undefined && typeof props.onClick === "function"
-    ? "ready"
-    : "cold";
+  const trigger = ${firstReady(`button[data-search]`)};
+  if (trigger !== undefined) return "ready";
+  return document.querySelector('${searchTrigger}') === null ? "missing" : "cold";
 })()`;
 
 /** Whether the dialog is on screen: Radix keeps a closed one mounted for its exit. */
@@ -217,9 +213,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       return 1;
     }
 
-    await session.page.run(
-      `document.querySelector('${searchTrigger}').click()`,
-    );
+    await session.page.run(`${firstReady(searchTrigger)}.click()`);
     const opened = await until(
       () => session.page.text(dialogState),
       (state) => state === "open",

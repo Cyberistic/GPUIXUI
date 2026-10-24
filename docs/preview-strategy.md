@@ -286,6 +286,26 @@ banner `#1e222a` at `500,149`, and after one press through the automation locato
 the banner sampled `#0e5135` with the status reading "Pressed 1 time" — the same
 four claims, now painted by a React tree instead of a hand-fed batch.
 
+### Reading a hydrated node
+
+Every probe below gates its first press on a control's own `onClick`, because the
+route tree commits node by node and a press on markup that has not hydrated does
+nothing. The installed React (19.3) keeps a host node's committed props on its
+**fiber**, and only some nodes also carry the older `__reactProps$…` store; both
+keys are defined **non-enumerably**. Measured in headless Chrome on
+`/docs/components/button`: the sidebar's search trigger carried no enumerable
+property at all, `getOwnPropertyNames` carried `__reactFiber$…` whose
+`memoizedProps.onClick` ran, and a click on that trigger opened the dialog. Every
+probe read with `Object.entries`, so each one waited out its whole hydration
+budget against a live, interactive page and reported "never hydrated" — a probe
+that cannot run is a measurement the site no longer has.
+`apps/docs/scripts/react-ready.ts` is the one read: `propsOfScript` answers a
+node's committed props, and `hasHandler` answers whether a press runs a handler —
+on the node, or on a component above it, which is where React's synthetic events
+are handled for a styled trigger. `src/lib/react-ready.test.ts` executes both
+expressions against nodes built the way React builds one, so returning to an
+enumerable read, or to the node's store alone, fails by name.
+
 ### The press path is measured
 
 A strategy-3 preview is React in the browser, so a capture of the server-rendered
