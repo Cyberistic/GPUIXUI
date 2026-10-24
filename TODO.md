@@ -7685,6 +7685,41 @@ a merge over a stored theme.
       probe in the component's page and row, and the square corner, are the
       Interlocks rows below.
 
+`[x]` Measure the **shipped `Switch`** in a window — the control's visible state
+      is two paints and **where the knob is**, and the knob is a part the
+      component renders itself with no `testId`: the package's suites read the
+      resolved `StyleDesc` and pause the render tree's motion clock, so they can
+      say what the control asked for and never that the fill reached the glass
+      or that the knob crossed the track (the `Switches` row cited only
+      `core/selection.test.ts` and `runtime/switch.runtime.test.tsx`). The live
+      `switch-lifecycle` probe mounts the shipped switch over its own page and
+      reads the knob out of a captured frame by its ink: at rest the muted track
+      and the `foreground` knob at **x 18.5**, after a press the `primary` track
+      and the `primaryForeground` knob at **x 30.5** — a **12**-point travel that
+      lands on the same **2.5**-point inset at both ends; Space toggles it on the
+      release and a disabled twin reports nothing; a `darwin` style paints its
+      own off (`#39393D`) and on (`#30D158`) fills with its white knob,
+      travelling **16** points of its 38-point box from **x 17.5** to **x 33.5**;
+      and on a frozen motion clock the run's first frame paints **18.5**, half
+      the `fast` level **24.5** and past it **30.5**. One measured detail a plan
+      needs: a press leaves the pointer on the control, so the track paints its
+      derived **hover** fill rather than the role it rests on until the pointer
+      leaves — a probe that reads the fill at press time measures the wrong
+      state. 47 checks, `--only switch-lifecycle`, green on 0.11.0 here
+      (11.0–15.1 s, three runs). Fixture `src/live/switch.ts` (the ids, the
+      page's own backing, the frozen-clock offsets and the frame/inset
+      arithmetic) + `switch-probe.tsx` (the view and the steps) +
+      `switch.test.ts` (14 cases: the frame read on a synthetic capture in both
+      directions, the padded band at an edge, the gap arithmetic measured failing
+      for a short and an overshot knob, the halfway band, the timing level read
+      from the motion table and the component, the page's difference from every
+      ink it counts, the registry and wiring, the count and this section). One
+      negative control measured, exit `1`, restored green: capturing the halfway
+      frame without advancing the clock fails `halfway through the level the
+      thumb is between its two places` (`expected true, got false`). Docs:
+      `apps/playground/README.md` §`switch-lifecycle`; the `Switches` row cites
+      the measurement and the `COMPONENTS.md` gap it closes.
+
 `[x]` Report the **held button on a drag the offscreen host synthesises** — the
       headless suite's `data-table-core` failed on master with
       `the drag widened the name column: expected a string containing "w=320",

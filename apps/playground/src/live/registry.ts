@@ -864,6 +864,12 @@ export const liveRegistry = [
       "Content: the shipped DiffViewer tints a removed and an added line with their soft roles, pairs a split change on one row with a blank cell where a side ran out, and clips a long line to the caller's surface",
     capability: "content",
   },
+  {
+    id: "switch-lifecycle",
+    title:
+      "Input: the shipped Switch toggles by press and Space, moves its knob by the track's own travel on the motion clock, and paints a platform style's own toggle",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

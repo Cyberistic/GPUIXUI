@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-138 probes a real window can prove, of which thirty mount shipped
+139 probes a real window can prove, of which thirty mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -58,10 +58,10 @@ the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail, the image zoom, the accordion, the
 pinned list and the hotkey recorder), one mounts `@gpuixui/files`' shipped `LogViewer` and one its `FileTree`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
-shipped `DockLayout`, ten mount
-`@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
-Rating, the ScrollArea and the Button, and the media probe's play/pause
-action), three mount `@gpuixui/data`'s examples (the table, the virtualized
+shipped `DockLayout`, eleven mount
+`@gpuixui/primitives` (the Input, OTPField, Checkbox, Switch, Slider, Text,
+Tooltip, the Rating, the ScrollArea and the Button, and the media probe's
+play/pause action), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one mounts the package's shipped charts, one mounts the
 package's three chrome parts (the menu bar, the toolbar and the status bar), one
 more mounts the runtime's own `Select` parts, and the rest prove the runtime itself
@@ -902,7 +902,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle`, `modal-scroll-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in; an open modal's own body scrolls while the page it covers and the veil it paints move nothing |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
-| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle`, `hotkey-recorder-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats; the shipped `HotkeyRecorder` stores the chord the window delivers, paints it as keycaps, cancels on Escape, and the key it swallows is still measured on the app-level channel |
+| input update/validation | `text-input`, `checkbox-toggle`, `switch-lifecycle`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle`, `hotkey-recorder-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a press and the Space key toggle a checkbox; a switch moves its knob from one inset to the same inset on the far side, on the motion clock, and a disabled twin reports nothing; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats; the shipped `HotkeyRecorder` stores the chord the window delivers, paints it as keycaps, cancels on Escape, and the key it swallows is still measured on the app-level channel |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
@@ -7914,6 +7914,60 @@ surface fails
 side's content.
 Evidence: `.artifacts/live/diff-{unified,split,long,same}.png`.
 
+### `switch-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped `Switch` toggle from a press and from Space, and does its
+knob really travel?** The package's suites read the resolved `StyleDesc` and
+drive the render tree's motion clock: they can say what the control asked for,
+never that the fill reached the glass or where the knob landed. The knob is a
+part the component renders itself and carries no `testId`, so the probe reads it
+out of a captured frame by its colour inside the box the switch's own address
+covers.
+
+The probe paints its own page (`#0B0D12`) rather than a theme surface, and the
+reason is a measured one: a checked switch's knob is `primaryForeground`, which
+on the dark palette is **`#11141A` — the same bytes as `background`**. On a page
+painted as a role, a knob's bounds would be the whole band.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | the readout is `checked=false changes=0`; the track paints the `muted` fill (`#1E222A`, **25×14**) and the knob the `foreground` ink (`#EEF1F5`, **11×11**) at **x 18.5** |
+| a press | the readout is `checked=true changes=1`; the track turns to `primary` (`#A7A9FF`, **28×16**) and the knob to `primaryForeground`, still **11×11**, at **x 30.5** — a **12**-point travel |
+| the two rests | the knob keeps the same inset at both ends (the exact-colour bounds read **2.5** leading and **2.5** trailing), so the far position is a resting place, not "as far as it goes" |
+| Space | the focused switch toggles on the key's release and reports again (`checked=false changes=2`) |
+| a disabled twin | a press reports nothing (`refusals=0`) and leaves the open switch where it was |
+| a platform style | `darwin`'s own toggle paints its own off fill (`#39393D`, **37×22**), on fill (`#30D158`) and knob ink (`#FFFFFF`, **19×19**), and the knob travels **16** points of a 38-point box, from **x 17.5** to **x 33.5** — the accent recipe's `primary` paints none of it |
+| a frozen press | the run's first frame paints the knob at **18.5**, the frame halfway through the `fast` level at **24.5**, and the frame past the level at **30.5** |
+
+Three rules a switch plan can use:
+
+1. **The knob is two painted insets, not a transform.** The runtime has no
+   transform; the knob is absolutely positioned inside the track and the
+   component animates `left`, so a window reads its position as a rounded
+   rectangle of its own ink.
+2. **A press leaves its hover fill behind.** The runtime keeps the pointer on
+   the control after a press, so the track paints the derived hover fill rather
+   than the role it rests on; the resting colour is only visible once the
+   pointer leaves. A probe that reads the fill at press time measures the hover
+   state.
+3. **A platform style's toggle is the platform's paint.** Its on/off fills and
+   knob come from the platform table rather than the palette's accent family,
+   with the platform's own box — so its travel is that box's, not the accent
+   switch's.
+
+47 checks, `--only switch-lifecycle`, green on 0.11.0 here (11.0–15.1 s over
+three runs, seven captures: `switch-rest`, `switch-on`, `switch-platform-off`,
+`switch-platform-on`, `switch-frozen`, `switch-partial`, `switch-settled`).
+Fixture `src/live/switch.ts` + probe `src/live/switch-probe.tsx` +
+`switch.test.ts` (the frame read on a synthetic capture, the gap arithmetic in
+both directions, the timing level read from the motion table and the component,
+the page's difference from every ink it counts, the registry and wiring, the
+count and this section). Negative control measured, exit `1`, restored green:
+capturing the halfway frame without advancing the clock fails
+`halfway through the level the thumb is between its two places`
+(`expected true, got false`). Evidence:
+`.artifacts/live/switch-{rest,on,frozen,partial,settled,platform-off,platform-on}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -8169,8 +8223,8 @@ narrower. Each deviation is deliberate and measured:
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
   `color-picker-lifecycle` and `mention-input-lifecycle` and
   `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` and
-  `hotkey-recorder-lifecycle` and `diff-viewer-lifecycle` (80 probes, each run
-  alone).
+  `hotkey-recorder-lifecycle` and `diff-viewer-lifecycle` and
+  `switch-lifecycle` (81 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,

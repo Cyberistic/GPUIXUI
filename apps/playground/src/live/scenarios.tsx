@@ -1128,6 +1128,7 @@ import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import { RatingProbe, ratingSteps } from "./rating-probe.js";
 import { RadioGroupProbe, radioGroupSteps } from "./radio-group-probe.js";
+import { SwitchProbe, switchSteps } from "./switch-probe.js";
 import { RippleProbe, rippleSteps } from "./ripple-button-probe.js";
 import { TypingTextProbe, typingTextSteps } from "./typing-text-probe.js";
 import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
@@ -30745,5 +30746,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "diff-viewer-lifecycle",
     view: () => <DiffViewerProbe />,
     steps: diffViewerSteps,
+  },
+  "switch-lifecycle": {
+    id: "switch-lifecycle",
+    view: () => <SwitchProbe />,
+    steps: switchSteps,
   },
 };
