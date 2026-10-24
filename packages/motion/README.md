@@ -47,6 +47,13 @@ with `springPhysics({ stiffness, damping, mass, restDelta, restSpeed })`. A
 physics you write by hand is read the same way — a field that cannot be read
 takes the house default (see [Inputs the runtime can paint](#inputs-the-runtime-can-paint)).
 
+A **sample** is read the same way, because a workspace can save a panel's
+mid-flight state and hand the value a store gave back to `retarget`: an absent
+sample, or a value or velocity it cannot read, is a standstill (`0`), and a
+target it cannot read keeps the value the sample rests on. `retarget(null, 2)`
+is therefore a run from `0` toward `2` rather than a `TypeError` in the render
+that resumed it.
+
 ## The single entry point: `MotionValue.sample(elapsed, reducedMotion)`
 
 ```ts
@@ -489,7 +496,10 @@ value, so `@gpuixui/components`' toast arrives over 220 ms and leaves over 180 m
 without dragging another surface along (or the reverse). It is the one place a
 duration becomes a timing, so the reduced rule cannot be re-implemented beside
 it, and a duration that is not positive and finite reads as the house surface
-arrival (`normal`) rather than reaching the runtime as `NaN`:
+arrival (`normal`) rather than reaching the runtime as `NaN`. The options object
+is a config as often as a literal, so one a store never wrote (`null`) is the
+house timing a caller who states nothing gets, and a phase or preference it
+zeroed falls back the same way instead of throwing in the render:
 
 ```ts
 import { motionTimingOf } from "@gpuixui/motion/timing";
@@ -497,6 +507,7 @@ import { motionTimingOf } from "@gpuixui/motion/timing";
 motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }
 motionTimingOf(180, { phase: "exit", preference: "reduced" }); // { duration: 0 }
 motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
+motionTimingOf(200, null); // the same house timing: an absent config
 ```
 
 The tables are read by their **own** keys, so a level or phase an application

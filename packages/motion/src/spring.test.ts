@@ -46,6 +46,36 @@ describe("sampleSpring", () => {
     expect(reseeded.settled).toBe(false);
   });
 
+  it("reads a sample the caller does not have as a standstill it can retarget", () => {
+    // The bug this guards: a workspace can save a panel's mid-flight sample and
+    // hand the value a store gave back to `retarget`, and `null` is what JSON
+    // keeps for a field it never carried. Reading `.value`/`.velocity` off the
+    // absent object threw out of the render that resumed the run; a sample that
+    // is not there is a standstill, the same answer the physics already gives
+    // an unreadable field.
+    expect(retarget(null, 2)).toEqual({
+      value: 0,
+      velocity: 0,
+      target: 2,
+      settled: false,
+    });
+    expect(retarget(undefined, 2)).toEqual({
+      value: 0,
+      velocity: 0,
+      target: 2,
+      settled: false,
+    });
+    // An unreadable target keeps the value the sample rests on, and a sample
+    // whose fields a store wrote as `null` is that same standstill.
+    expect(
+      retarget(
+        // @ts-expect-error — a sample a decoded config can carry.
+        { value: 12, velocity: null, target: 12, settled: true },
+        Number.NaN,
+      ),
+    ).toEqual({ value: 12, velocity: 0, target: 12, settled: false });
+  });
+
   it("settles a tiny delta using rest thresholds without oscillating", () => {
     const sample = sampleSpring(layoutSpring, 10, 10.0001, 0, 600);
     expect(sample.settled).toBe(true);

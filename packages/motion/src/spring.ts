@@ -26,7 +26,12 @@ export interface SpringPhysics {
   readonly restSpeed: number;
 }
 
-/** A sampled point on the spring trajectory. */
+/**
+ * A sampled point on the spring trajectory.
+ *
+ * Structural, so a caller may persist a sample and hand the value a store gave
+ * back to {@link retarget} — which reads it the way the samplers read physics.
+ */
 export interface SpringSample {
   readonly value: number;
   readonly velocity: number;
@@ -149,16 +154,26 @@ export const atRest = (
  * Re-seeds a running spring at a new target, keeping the sampled value and
  * velocity. Pair with {@link sampleSpring} at `elapsedMs = 0` to continue
  * seamlessly toward the new target.
+ *
+ * A sample is caller data as often as a live one — a workspace that saved a
+ * panel's mid-flight state and reads it back, whose `null` JSON keeps for a
+ * field it never carried — so it is read like the physics: a missing sample or
+ * an unreadable field is a **standstill** (`0`), and an unreadable target keeps
+ * the sample's own value. Reading `.value` off the absent object threw out of the
+ * render that resumed the run.
  */
 export const retarget = (
-  sample: SpringSample,
+  sample: SpringSample | null | undefined,
   target: number,
-): SpringSample => ({
-  value: sample.value,
-  velocity: sample.velocity,
-  target: sanitizeNumber(target, sample.value),
-  settled: false,
-});
+): SpringSample => {
+  const value = sanitizeNumber(sample?.value, 0);
+  return {
+    value,
+    velocity: sanitizeNumber(sample?.velocity, 0),
+    target: sanitizeNumber(target, value),
+    settled: false,
+  };
+};
 
 /**
  * Samples a spring at an explicit elapsed time, returning value and velocity.

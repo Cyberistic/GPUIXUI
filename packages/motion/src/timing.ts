@@ -216,13 +216,19 @@ const phaseOf = (phase: MotionPhase): MotionPhase =>
  * a transition. A duration that is not positive and finite reads as the house
  * surface arrival ({@link motionLevels.normal}), the timing a surface that asked
  * for nothing moves with.
+ *
+ * The options are a caller's config as often as a literal, so an **absent
+ * object** — JSON has no `undefined`, so a settings row this never carried reads
+ * back as `null` — is the house timing a caller who states nothing gets, and an
+ * option it does not name falls back the same way. Reading `.phase` off the
+ * absent object threw out of the render that built the surface's timing.
  */
 export const motionTimingOf = (
   durationMs: number,
-  options: MotionTimingOptions = {},
+  options: MotionTimingOptions | null = {},
 ): MotionTiming => {
-  const phase = options.phase ?? "standard";
-  if (preferenceOf(options.preference) === "reduced") return { duration: 0 };
+  const phase = options?.phase ?? "standard";
+  if (preferenceOf(options?.preference) === "reduced") return { duration: 0 };
   const ms =
     Number.isFinite(durationMs) && durationMs > 0
       ? durationMs
@@ -243,5 +249,5 @@ export const motionTimingOf = (
  */
 export const motionTiming = (
   level: MotionLevel,
-  options: MotionTimingOptions = {},
+  options: MotionTimingOptions | null = {},
 ): MotionTiming => motionTimingOf(levelMs(level), options);

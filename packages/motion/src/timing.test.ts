@@ -293,4 +293,22 @@ describe("motionTimingOf", () => {
       ease: "easeInOut",
     });
   });
+
+  it("reads an options object the caller does not have as the house timing", () => {
+    // The bug this guards: `options` is a config as often as a literal, and a
+    // settings row the store never wrote reads back as `null` (JSON has no
+    // `undefined`), so `options.phase` threw out of the render that built a
+    // surface's timing. An absent object is the house timing a caller who says
+    // nothing gets, and an option it does not name falls back the same way.
+    const house = { duration: 0.2, ease: "easeInOut" } as const;
+    expect(motionTimingOf(200, null)).toEqual(house);
+    expect(motionTiming("normal", null)).toEqual(house);
+    expect(motionTimingOf(200, undefined)).toEqual(house);
+    // A stored field is the absence too: `??` is the rule the object's own
+    // defaults use, so a phase or preference a store nulled is not a crash.
+    // @ts-expect-error — a field a decoded config can null.
+    expect(motionTimingOf(200, { phase: null })).toEqual(house);
+    // @ts-expect-error — the same stored absence.
+    expect(motionTimingOf(200, { preference: null })).toEqual(house);
+  });
 });
