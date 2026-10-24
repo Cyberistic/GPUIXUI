@@ -112,6 +112,16 @@ and each is read through a membership test rather than indexed raw:
   Raw, a height step resolved to `h-space-undefined` (a track with no height)
   and a tone to no colour class at all — a finished task whose fill was
   transparent.
+- a **bar's `value`** is that record's measurement, and JSON keeps a field that
+  was never written as `null` rather than `undefined`: `progressPart` asked
+  `value !== undefined`, so a restored widget painted a **determinate bar at
+  0%** and announced `"0%"` — the position that reads as "nothing received" —
+  while `Progress`'s own step timer read the same field through
+  `Option.fromNullishOr` and drove the indeterminate segment, and every other
+  value control reads a stored value that way. The measurement and the timer
+  share one `Option` now, the `null` paints the loading word and the moving
+  segment, and `0` is still the empty share it says it is; `Progress.test.tsx`
+  holds both directions.
 - an **elevation level** is saved with the panel it raises (a workspace record,
   a settings row), so `elevationLevel` (`core/theme.ts`) reads a name the scale
   does not carry as `md`, the default lift `elevationShadow` already answers,

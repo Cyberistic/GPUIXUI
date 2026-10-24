@@ -20,7 +20,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `number` | — | 0–100 determinate fill; omit for indeterminate |
+| `value` | `number` | — | 0–100 determinate fill; omit for indeterminate, and a stored `null` reads as omitted |
 | `buffer` | `number` | none | 0–100 held-ahead point; paints the segment between `value` and itself |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role; a stored name the table does not carry reads as `primary` |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm`; a stored name the table does not carry reads as `md` |
@@ -32,6 +32,8 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
+
+A widget record kept in JSON stores a share it never learned as `null` rather than `undefined`. That reads as **absent**, like an omitted prop: the bar paints the moving segment and says the loading word, while `0` remains the empty share it names.
 
 ## Limitations
 

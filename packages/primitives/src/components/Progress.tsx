@@ -64,7 +64,13 @@ import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface ProgressProps {
-  /** 0–100. Omit for an indeterminate bar. */
+  /**
+   * 0–100. Omit for an indeterminate bar.
+   *
+   * A stored `null` — how JSON keeps a field that was never written — is
+   * absence too, so a restored widget paints the indeterminate segment instead
+   * of a bar pinned at 0%. `0` is still the empty share it says it is.
+   */
   readonly value?: number;
   /**
    * How much of the bar is already held — a download's received-then-buffered
@@ -138,18 +144,29 @@ export const progressPart = (
   step: number,
   messages: PrimitiveMessages = defaultMessages,
 ): ProgressPart => {
-  const determinate = value !== undefined;
-  const percent = determinate ? progressPercent(value) : 0;
+  // A stored `null` is absence, the rule `useControlState` already applies to
+  // every value control: JSON keeps an omitted field as `null`, so a restored
+  // widget that never learned its share would otherwise paint a bar at 0% —
+  // the one position that reads as "not started" — and announce "0%" instead of
+  // the loading word, while the step timer it feeds ran as indeterminate.
+  const measurement = Option.fromNullishOr(value);
+  const determinate = Option.isSome(measurement);
+  const percent = Option.match(measurement, {
+    onNone: () => 0,
+    onSome: progressPercent,
+  });
   return {
     theme,
     determinate,
     percent,
     // A buffer is a place on the bar, so it needs one: an indeterminate bar has
     // none, and a buffer behind the value has nothing left to say.
-    bufferPercent:
-      determinate && buffer !== undefined
-        ? Math.max(percent, progressPercent(buffer))
-        : undefined,
+    bufferPercent: determinate
+      ? Option.match(Option.fromNullishOr(buffer), {
+          onNone: () => undefined,
+          onSome: (held) => Math.max(percent, progressPercent(held)),
+        })
+      : undefined,
     tone: progressToneOf(tone),
     size: progressSizeOf(size),
     step,

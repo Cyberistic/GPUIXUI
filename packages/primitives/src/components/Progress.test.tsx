@@ -24,6 +24,7 @@ import {
   renderProgress,
   renderProgressLabel,
   renderProgressValue,
+  type ProgressProps,
 } from "./Progress.js";
 import {
   elementChildren,
@@ -140,6 +141,27 @@ describe("Progress", () => {
   it("announces an indeterminate bar as loading rather than as 0%", () => {
     const element = bar(Option.none());
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("loading");
+  });
+
+  it("reads a stored value of null as indeterminate, not as a bar at zero", () => {
+    // The bug guarded: a dashboard stores a widget as JSON, where a share it
+    // never learned is `null` rather than `undefined`. `progressPart` asked
+    // `value !== undefined`, so that record painted a determinate bar pinned at
+    // 0% and announced "0%" — the position that reads as "nothing received" —
+    // while `Progress`'s own step timer read the same field through
+    // `Option.fromNullishOr` and drove the indeterminate segment. The two seams
+    // now give one answer, the rule `useControlState` applies to every value
+    // control.
+    // The cast is the storage boundary: a saved record stores absence as null.
+    const stored = { value: null } as unknown as ProgressProps;
+    const element = renderProgress(stored, testTheme, 0);
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("loading");
+    // The indeterminate composition: a lead spacer and the moving segment.
+    expect(elementChildren(trackOf(element))).toHaveLength(2);
+    expect(progressPart(stored, testTheme, 0).determinate).toBe(false);
+    expect(progressPart(stored, testTheme, 0).bufferPercent).toBe(undefined);
+    // Zero is still the empty share it says it is.
+    expect(announced(renderProgress({ value: 0 }, testTheme, 0))).toBe("0%");
   });
 
   it("says the value in the caller's words, in the announcement and the part", () => {

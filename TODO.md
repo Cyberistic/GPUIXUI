@@ -7521,6 +7521,27 @@ handed to the timer.
       §Theming/§Limitations/§Verification (the workaround limit is retracted),
       the inventory record and the `COMPONENTS.md` row. `nub run --filter
       @gpuixui/primitives test` 799, `test:runtime` 19 files / 230 green
+`[x]` `packages/primitives`: a **stored `null` value painted a finished-looking
+      0% `Progress`** — a dashboard keeps a widget as JSON, where a share it
+      never learned is `null` and not `undefined`, and `progressPart` asked
+      `value !== undefined`, so a restored widget painted a **determinate bar
+      pinned at 0%** and announced `"0%"` — the one position that reads as
+      "nothing received" — while `Progress`'s own step timer read the same field
+      through `Option.fromNullishOr` and drove the indeterminate segment, and
+      every other value control (`useControlState`) reads a stored value that
+      way. The measurement and the timer share that one read now: `null` is
+      absence, so the bar paints the moving segment and the provider's loading
+      word, the buffer is read nullish too, and `0` stays the empty share it
+      names. `Progress.test.tsx` gains `reads a stored value of null as
+      indeterminate, not as a bar at zero` (the announcement, the two-segment
+      composition, `determinate`/`bufferPercent` and the `0` control). Directions
+      measured: with the raw `!== undefined` read restored the case fails
+      `expected '0%' to be 'loading'`; green, the package is 57 files / 1 169
+      tests and `runtime/loading.runtime.test.tsx` 20/20, with `check-types`,
+      `oxlint`, `oxfmt`, `check:tests` clean. Docs: `docs/progress.mdx` (the
+      `value` row and the paragraph after the API table), the primitives README's
+      stored-value list, and the `COMPONENTS.md` Progress row. No native scenario
+      applies — a pure reader over a stored record.
 `[x]` `packages/primitives`: the **switch-slide window test compared an
       animating pixel exactly** — after `click` + `flush` it asserted the thumb
       was still at the resting offset, but a frame delivered under load has
