@@ -1108,9 +1108,7 @@ describe("the avatar step", () => {
     );
     // The guard reads the index, not the record: `name in avatarSize` also
     // answers true for `toString`.
-    expect(scaleSource).toContain(
-      "avatarSizes.some((step) => step === value)",
-    );
+    expect(scaleSource).toContain("avatarSizes.some((step) => step === value)");
 
     const pages = [catalogue, readme, designSystem].map((page) =>
       page.replace(/\s+/g, " "),
