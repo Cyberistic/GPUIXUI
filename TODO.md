@@ -18551,6 +18551,20 @@ numbers).
       announcement is read from the runtime's own accessibility tree in the
       package suite.
 
+`[x]` `packages/primitives`: **`Select` could not be aligned against its trigger** —
+      the runtime's floating surface takes a `side` **and** an `align`, and
+      `Tooltip` has exposed both since it shipped, while `Select` forwarded only
+      the side, so a select in a narrow toolbar could open below its trigger but
+      not line up with its end and the prop the runtime supports had no route
+      through the public API. `SelectProps.align` is forwarded to the list's
+      content beside `side`; both stay absent when the caller gives neither, so
+      GPUix still picks. Proof: `Select.test.tsx`'s `hands the runtime the
+      placement a caller asks for, and nothing it did not` reads the content
+      part's own props in both directions (measured failing at HEAD on the
+      alignment with the forwarding removed). Docs: `select.mdx`'s API row and
+      the `COMPONENTS.md` Selects row. No playground scenario applies — the
+      runtime owns placement, and the package test holds the hand-off.
+
 ## Animated primitives (plan 600)
 
 `[x]` `[██████████]` 9/9

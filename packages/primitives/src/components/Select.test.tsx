@@ -39,6 +39,7 @@ import {
   type SelectEntry,
   type SelectItemState,
   type SelectOption,
+  type SelectProps,
   type SelectTriggerState,
 } from "./Select.js";
 import { tooltipStyle } from "./Tooltip.js";
@@ -492,6 +493,30 @@ describe("Select", () => {
         ),
       ),
     ).toBe(false);
+  });
+
+  it("hands the runtime the placement a caller asks for, and nothing it did not", () => {
+    // The bug guarded: the list is the runtime's floating surface, which offers
+    // a side **and** an alignment, and the wrapper forwarded only the side — so
+    // a select in a narrow toolbar could open below its trigger but not line up
+    // with its end, and the prop the runtime supports had no route through the
+    // public API. `Tooltip` has exposed both since it shipped.
+    const contentOf = (props: Partial<Pick<SelectProps, "side" | "align">>) =>
+      expectSome(
+        Arr.get(
+          elementChildren(
+            renderSelect({ options: grouped, ...props }, testTheme),
+          ),
+          1,
+        ),
+      );
+    const placed = contentOf({ side: "bottom", align: "end" });
+    expect(elementProp(placed, "side")).toStrictEqual(Option.some("bottom"));
+    expect(elementProp(placed, "align")).toStrictEqual(Option.some("end"));
+    // Absent, both stay GPUix's choice rather than an invented default.
+    const plain = contentOf({});
+    expect(elementProp(plain, "side")).toStrictEqual(Option.none());
+    expect(elementProp(plain, "align")).toStrictEqual(Option.none());
   });
 
   it("hands the trigger style callback its live state and lets its result win", () => {

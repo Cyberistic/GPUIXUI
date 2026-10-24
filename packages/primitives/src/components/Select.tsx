@@ -39,6 +39,7 @@ import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import {
   resolveStyle,
+  type FloatingAlign,
   type FloatingSide,
   type StateStyle,
 } from "@gpuix/react/floating";
@@ -184,6 +185,8 @@ export interface SelectProps
   readonly fullWidth?: boolean;
   /** Which side the list opens on. GPUix picks when this is absent. */
   readonly side?: FloatingSide;
+  /** How the list is aligned against the trigger. GPUix picks when this is absent. */
+  readonly align?: FloatingAlign;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
   /** Extra style on the wrapper, which paints nothing but its width. */
@@ -414,6 +417,7 @@ export const renderSelect = (
     size: requestedSize,
     fullWidth,
     side,
+    align,
     label,
     description,
     ref,
@@ -506,6 +510,7 @@ export const renderSelect = (
       <SelectContent
         ref={scroller}
         side={side}
+        align={align}
         // The rows are `option` nodes, so their container is what holds them:
         // without the role the options would sit under the role-less floating
         // layer. The list is unnamed — the trigger is the named control — and
