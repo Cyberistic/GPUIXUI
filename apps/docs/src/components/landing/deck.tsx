@@ -7,7 +7,7 @@
  * macOS and Windows show on the light palette, Linux and Omarchy on the dark
  * one. The shuffle pauses on hover; the stack is a clean fan with no rotation.
  */
-import { useEffect, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import {
   applyStyle,
   darkTheme,
@@ -53,6 +53,35 @@ const desktopTheme = (id: Platform["id"]): Theme =>
 export const nextDesktop = (top: number): number =>
   (top + 1) % platforms.length;
 
+/**
+ * The recipe line: the five things GPUIxUI is made of, read as one equation.
+ *
+ * The hero says what the library looks like; this says what it is built from,
+ * so a reader who knows shadcn or Base UI can place it before scrolling.
+ */
+export function LandingFormula() {
+  const parts = ["GPUI", "React", "shadcn", "Base UI", "Tailwind"] as const;
+
+  return (
+    <p className="landing-formula">
+      {parts.map((part, index) => (
+        <Fragment key={part}>
+          {index > 0 ? (
+            <span aria-hidden="true" className="landing-formula-op">
+              +
+            </span>
+          ) : null}
+          <span className="landing-formula-part">{part}</span>
+        </Fragment>
+      ))}
+      <span aria-hidden="true" className="landing-formula-op">
+        =
+      </span>
+      <span className="landing-formula-result">GPUIxUI</span>
+    </p>
+  );
+}
+
 export function Hero() {
   const [top, setTop] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -89,6 +118,8 @@ export function Hero() {
         Components that run on GPUix, styled to feel at home on macOS, Windows
         11, Linux and Omarchy — with the source in your hands.
       </p>
+
+      <LandingFormula />
 
       <p className="landing-omarchy-note">
         Omarchy reads your active theme and re-applies it live when{" "}

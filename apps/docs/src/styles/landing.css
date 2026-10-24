@@ -313,6 +313,39 @@
   margin: 14px auto 0;
 }
 
+/* The recipe line: the five things GPUIxUI is made of, read as one equation. */
+.landing-formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 18px auto 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.landing-formula-part {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-soft);
+  color: var(--fg);
+}
+
+.landing-formula-op {
+  color: var(--dim);
+}
+
+.landing-formula-result {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 650;
+}
+
 /* The one line that says Omarchy is a following theme, not a static dress. */
 .landing-omarchy-note {
   max-width: 52ch;
