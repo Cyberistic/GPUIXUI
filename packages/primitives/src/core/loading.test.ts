@@ -130,6 +130,32 @@ describe("skeletonStyle", () => {
       height: "2% ",
     });
   });
+
+  it("takes a blank side from the default, not from a dimension it cannot parse", () => {
+    // The bug guarded: a placeholder's side comes from a record as often as a
+    // literal, and a field a record carried blank — `""`, or a run of spaces —
+    // is not a length. It reached the style as a dimension the runtime cannot
+    // parse, and the runtime refuses the **whole** style batch for one, so a
+    // saved placeholder took the window down instead of painting the
+    // full-width, one-line box the prop documents as its default.
+    const line = testTheme.typography.body.lineHeight;
+    expect(skeletonSize({ width: "" }, testTheme)).toStrictEqual({
+      width: "100%",
+      height: line,
+    });
+    expect(skeletonSize({ width: "   ", height: "" }, testTheme)).toStrictEqual(
+      { width: "100%", height: line },
+    );
+    expect(skeletonSize({ circle: true, width: "" }, testTheme)).toStrictEqual({
+      width: line,
+      height: line,
+    });
+    // A real expression stays exactly as written, spacing included.
+    expect(skeletonSize({ width: "45%" }, testTheme)).toStrictEqual({
+      width: "45%",
+      height: line,
+    });
+  });
 });
 
 describe("spinnerDots", () => {

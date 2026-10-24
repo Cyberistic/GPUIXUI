@@ -21,8 +21,8 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number \| string` | `"100%"` | the block's width |
-| `height` | `number \| string` | body line height | the block's height |
+| `width` | `number \| string` | `"100%"` | the block's width; a side that is not a paintable length (a `NaN` measurement, or a stored `""`) takes the default, because the runtime refuses the whole style batch for a dimension it cannot parse |
+| `height` | `number \| string` | body line height | the block's height, with the same rule for a side it cannot paint |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius; a stored name this release does not carry keeps `sm` |
 | `circle` | `boolean` | `false` | full radius; the missing side mirrors the other |
 | `reducedMotion` | `boolean` | the motion provider | paints the full-opacity frame and schedules no pulse; the prop overrides the provider |

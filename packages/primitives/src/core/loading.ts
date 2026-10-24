@@ -14,6 +14,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import { motionLevels } from "@gpuixui/motion/timing";
+import { visibleCopy } from "./a11y.js";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 import { colorRole, radiusStep, radiusValue, typeOf } from "./theme.js";
 
@@ -63,20 +64,26 @@ export interface SkeletonSpec {
 }
 
 /**
- * A side the runtime can paint: any length string, or a positive finite number.
+ * A side the runtime can paint: a length string that says something, or a
+ * positive finite number.
  *
  * A placeholder's side is often a measurement — a collapsed panel's width, a
  * row's height — and a measurement that never arrived is `NaN`, which the
  * runtime paints as no box at all. A skeleton that paints nothing reads as
  * content that finished loading, so an unusable count takes the side's default.
- * A length string is the caller's own expression ("45%") and is left alone.
+ * A length string is the caller's own expression ("45%") and is left exactly as
+ * written, spacing included; a **blank** one is no expression at all — a record
+ * that carried `""` or a run of spaces for a width reached the style as a
+ * dimension the runtime cannot parse, which is the same invisible box.
  */
 const paintableSide = (
   side: number | string | undefined,
 ): number | string | undefined =>
-  typeof side === "number" && !(Number.isFinite(side) && side > 0)
-    ? undefined
-    : side;
+  typeof side === "number"
+    ? Number.isFinite(side) && side > 0
+      ? side
+      : undefined
+    : visibleCopy(side);
 
 /**
  * A skeleton's box.

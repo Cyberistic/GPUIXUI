@@ -217,6 +217,17 @@ and each is read through a membership test rather than indexed raw:
   through it; `layout.test.ts`, `recipe.test.ts`'s equivalence case and
   `runtime/layout.runtime.test.tsx` (a window, the exported resolver painted
   through a `Box`) hold a stored name to the column.
+- a **placeholder's side** is a measurement or an expression from a saved layout,
+  and a blank one is neither: `Skeleton`'s `width`/`height` took any string as a
+  length, so a record that carried `""` (or a run of spaces) reached the style as
+  a dimension `@gpuix/native@0.11.0` cannot parse — and it refuses the **whole**
+  style batch for one (`Batch op 10 setStyle parse error: invalid dimension: `),
+  so a saved placeholder took the window down instead of painting the
+  full-width, one-line box the prop documents as its default. `paintableSide`
+  keeps a length string exactly as written (spacing and all) and reads a blank
+  one as absence, through the same `visibleCopy` rule the copy sites use;
+  `core/loading.test.ts` and `runtime/loading.runtime.test.tsx` hold both
+  directions.
 - an **option list** and a **saved selection** are what a store hands back, so
   JSON's `null` (a field a record never set) and a deleted record (`null` inside
   an array) reach the data props. `Select`'s `options`, the three groups'

@@ -66,6 +66,13 @@ const idOf = (runtime: Runtime, testId: string): number =>
     () => expect.fail(`the runtime retained no ${testId}`),
   );
 
+/** The painted width of `testId`. */
+const widthOf = (runtime: Runtime, testId: string): number =>
+  Option.getOrElse(
+    Option.map(runtime.bounds(testId), (bounds) => bounds.width),
+    () => expect.fail(`the runtime painted no box for ${testId}`),
+  );
+
 const styleOf = (
   runtime: Runtime,
   id: number,
@@ -492,6 +499,29 @@ it("advances a step counter while it is running", async () => {
     6,
   );
   expect(new Set(steps).size).toBeGreaterThan(1);
+});
+
+it("paints a skeleton's blank side as the default box, not as nothing", async () => {
+  // The bug guarded: a placeholder's side comes from a record as often as a
+  // literal, and a field a record carried blank — `""` or a run of spaces — is
+  // not a length. It reached the style as a dimension the runtime cannot parse,
+  // and `@gpuix/native@0.11.0` refuses the **whole** style batch for one
+  // (`Batch op 10 setStyle parse error: invalid dimension: `), so a saved
+  // placeholder took the window down instead of painting the full-width,
+  // one-line box the prop documents as its default.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Skeleton testId="blank" width="" height={20} />
+        <Skeleton testId="plain" height={20} />
+      </Stack>
+    </Surface>,
+  );
+  const blank = widthOf(runtime, "blank");
+  const plain = widthOf(runtime, "plain");
+  expect(plain).toBeGreaterThan(0);
+  expect(blank).toBe(plain);
 });
 
 it("pulses a Skeleton's opacity between both of its states", async () => {
