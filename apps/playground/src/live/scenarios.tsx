@@ -7722,6 +7722,10 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const trigger = yield* paintedBox(ctx, "cb-trigger");
     yield* ctx.host.click("cb-trigger");
     yield* Effect.sleep(SETTLE);
+    // The box enters on a 200 ms fade-and-travel, so the placement is read once
+    // the entry has run: a box read on the first paint is mid-tween and its
+    // `top` is the frame it happens to be on, not where it was placed.
+    yield* Effect.sleep(Duration.millis(220));
     const surface = yield* paintedBox(ctx, "combobox-content");
     yield* ctx.expectEqual(
       "the search field takes the focus when the list opens",
@@ -7794,9 +7798,14 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "Grace Hopper",
     );
     yield* ctx.expectEqual(
-      "choosing closes the list",
+      "choosing keeps the list painted for its exit",
       yield* paintedAt(ctx, "combobox-content"),
-      false,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "choosing closes the list",
+      yield* settleGone(ctx, "combobox-content"),
+      true,
     );
     yield* ctx.expectEqual(
       "choosing returns the focus to the trigger",
@@ -7849,11 +7858,10 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     // 7. Escape closes and returns the focus; the value is untouched.
     yield* ctx.host.key("escape");
-    yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
       "Escape closes the list",
-      yield* paintedAt(ctx, "combobox-content"),
-      false,
+      yield* settleGone(ctx, "combobox-content"),
+      true,
     );
     yield* ctx.expectEqual(
       "Escape returns the focus to the trigger",
@@ -7894,8 +7902,8 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectEqual(
       "an outside press dismisses the list",
-      yield* paintedAt(ctx, "combobox-content"),
-      false,
+      yield* settleGone(ctx, "combobox-content"),
+      true,
     );
   });
 
