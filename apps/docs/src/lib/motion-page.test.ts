@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { preferenceOf } from "../../../../packages/motion/src/timing.js";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -149,6 +150,26 @@ describe("the motion page", () => {
     expect(page).not.toContain(
       "owns the three frames, the enter and exit timing and the mount window",
     );
+  });
+
+  it("teaches the fail-safe a stored preference takes", () => {
+    // Bug guarded: the page taught the two literal names and the provider's
+    // default, so a reader whose settings row decodes as NULL — or as a string
+    // a release renamed — could not learn what their tree would do, or why the
+    // fallback direction is the reduced one.
+    expect(preferenceOf("animated")).toBe("animated");
+    expect(preferenceOf("reduced")).toBe("reduced");
+    expect(preferenceOf(null)).toBe("animated");
+    expect(preferenceOf(undefined)).toBe("animated");
+    expect(preferenceOf("middle")).toBe("reduced");
+
+    expect(page).toContain("`preferenceOf`");
+    expect(page).toContain("@gpuixui/motion/timing");
+    expect(page).toContain("An absent value");
+    expect(page).toContain('the house `"animated"`');
+    expect(page).toContain("not one of those names");
+    expect(page).toContain('takes `"reduced"`');
+    expect(page).toContain("The two mistakes are not equal");
   });
 
   it("prints the five durations motionLevels declares", () => {
