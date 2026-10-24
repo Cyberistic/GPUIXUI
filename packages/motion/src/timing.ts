@@ -188,32 +188,36 @@ export interface MotionTimingOptions {
 }
 
 /**
- * Whether the table itself names a level.
+ * Whether the level table names this value.
  *
- * The tables are looked up by their **own** keys. `key in table` also answers
- * true for every name `Object.prototype` carries (`toString`, `constructor`,
- * `__proto__`), so a persisted name would pass the guard and the lookup would
- * hand the runtime a method where a number or a curve belongs.
+ * A level is a persisted choice as often as a literal — a saved dashboard's
+ * per-widget speed, a settings row a release renamed — so the test takes the
+ * value a decoder wrote. It reads the table's **own** keys: `key in table` also
+ * answers true for every name `Object.prototype` carries (`toString`,
+ * `constructor`, `__proto__`), so such a name would pass the guard and the
+ * lookup would hand the runtime a method where a number belongs.
  */
-const namesLevel = (level: string): level is MotionLevel =>
-  Object.hasOwn(motionLevels, level);
+export const isMotionLevel = (value: unknown): value is MotionLevel =>
+  typeof value === "string" && Object.hasOwn(motionLevels, value);
 
 /** Whether the easing table itself names a phase. */
 const namesPhase = (phase: string): phase is MotionPhase =>
   Object.hasOwn(motionEasings, phase);
 
 /**
- * The milliseconds a level names.
+ * The level a value names, or the house surface arrival.
  *
- * The level may be a persisted choice an application reads back — a string the
- * library did not type-check — so a key the table does not carry must not reach
- * the runtime as `undefined / 1000`. It takes the house **surface arrival**
- * (`normal`), the timing a component that asked for nothing would move with.
+ * This is the read a component's caller makes at its own boundary: `level` is a
+ * stored choice as often as a literal (a persisted animation speed, a saved
+ * widget's row), and a name this release does not carry must not reach the
+ * runtime as `undefined / 1000` — a `NaN` duration the renderer drops, which
+ * leaves the surface on its own timing while the caller believes it asked for
+ * the saved one. A name the table does not carry, a value that is not even a
+ * string, and a name inherited from `Object.prototype` all answer `normal` (the
+ * surface arrival), so the value decodes without an assertion at the call site.
  */
-const levelMs = (level: MotionLevel): number =>
-  namesLevel(level) && Number.isFinite(motionLevels[level])
-    ? motionLevels[level]
-    : motionLevels.normal;
+export const motionLevelOf = (value: unknown): MotionLevel =>
+  isMotionLevel(value) ? value : "normal";
 
 /**
  * The phase a timing eases with. A phase the table does not carry takes
@@ -271,12 +275,15 @@ export const motionTimingOf = (
 /**
  * A level and phase as the runtime's timing, in seconds.
  *
- * Under the reduced preference the duration is zero and no easing is named:
- * the target is painted without a transition, which is the runtime's instant
- * assignment. The caller keeps the frames (an opacity or an offset) either way,
- * so the resting appearance never depends on the preference.
+ * The level is read through {@link motionLevelOf}, so a value a consumer
+ * restored from storage and this type does not carry still moves on the house
+ * surface arrival instead of a `NaN` duration. Under the reduced preference the
+ * duration is zero and no easing is named: the target is painted without a
+ * transition, which is the runtime's instant assignment. The caller keeps the
+ * frames (an opacity or an offset) either way, so the resting appearance never
+ * depends on the preference.
  */
 export const motionTiming = (
   level: MotionLevel,
   options: MotionTimingOptions | null = {},
-): MotionTiming => motionTimingOf(levelMs(level), options);
+): MotionTiming => motionTimingOf(motionLevels[motionLevelOf(level)], options);

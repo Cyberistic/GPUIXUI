@@ -23,7 +23,9 @@ import {
   presenceTimingOf,
 } from "./presence.js";
 import {
+  isMotionLevel,
   motionLevels,
+  motionLevelOf,
   motionTiming,
   motionTimingOf,
   preferenceOf,
@@ -186,6 +188,30 @@ describe("the level table the timing seam describes", () => {
       "motionTimingOf(1e300); // the same house timing: no clock can schedule it",
     );
     expect(motionTimingOf(1e300)).toEqual(motionTiming("normal"));
+  });
+
+  it("teaches the level a store wrote with the answer it gets", () => {
+    // The bug this guards: the README told a consumer that a level read back
+    // from storage takes the house arrival, while the timing builders take the
+    // union — so the documented repair had no read to come through and a
+    // decoded row could reach the timing only by an assertion. The printed
+    // calls are evaluated, so a reader that answered a dropped name as itself,
+    // or a membership test that accepted an inherited key, fails here by name.
+    expect(readme).toContain(
+      'motionLevelOf("elapsed"); // "normal" — a name this release dropped',
+    );
+    expect(motionLevelOf("elapsed")).toBe("normal");
+    expect(readme).toContain(
+      'motionTiming(motionLevelOf(saved)); // { duration: 0.32, ease: "easeInOut" }',
+    );
+    expect(motionTiming(motionLevelOf("slow"))).toEqual({
+      duration: 0.32,
+      ease: "easeInOut",
+    });
+    expect(readme).toContain(
+      'isMotionLevel("toString"); // false — the table\'s own keys only',
+    );
+    expect(isMotionLevel("toString")).toBe(false);
   });
 });
 

@@ -14,6 +14,8 @@ import {
   continuitySpring,
   inertia,
   layoutSpring,
+  motionLevelOf,
+  motionTiming,
   motionTimingOf,
   reducedMotionOf,
   retarget,
@@ -144,6 +146,41 @@ export const presenceCompositionExample = (): {
       { enter: { duration: 0.2 } },
     ),
     pointsAtRest: presenceStyle(true).pointerEvents === "auto",
+  };
+};
+
+/**
+ * A stored animation speed read where a component's caller owns it.
+ *
+ * A level is a persisted choice as often as a literal — a saved dashboard's
+ * per-widget speed, a settings row a release renamed — and the timing builders
+ * take the level this package carries, so the value a decoder wrote needs one
+ * read: {@link motionLevelOf} answers a name the table holds as itself and
+ * every other shape (a name this release dropped, an empty field, a record, a
+ * number, `null`) as the house surface arrival. The timing then moves on that
+ * level's own duration, and a reduced reader still gets no journey at all.
+ */
+export const storedLevelExample = (): {
+  readonly saved: ReturnType<typeof motionTiming>;
+  readonly dropped: ReturnType<typeof motionTiming>;
+  readonly empty: ReturnType<typeof motionTiming>;
+  readonly nested: ReturnType<typeof motionTiming>;
+  readonly reduced: ReturnType<typeof motionTiming>;
+  readonly timed: ReturnType<typeof presenceTiming>;
+} => {
+  // One row as a settings decoder hands it over: a value this release does not
+  // type, reaching the reader without an assertion at the call site.
+  const saved: unknown = "slow";
+  const dropped: unknown = "elapsed";
+  const empty: unknown = "";
+  const nested: unknown = { speed: "fast" };
+  return {
+    saved: motionTiming(motionLevelOf(saved)),
+    dropped: motionTiming(motionLevelOf(dropped)),
+    empty: motionTiming(motionLevelOf(empty)),
+    nested: motionTiming(motionLevelOf(nested)),
+    reduced: motionTiming(motionLevelOf(dropped), { preference: "reduced" }),
+    timed: presenceTiming(motionLevelOf(null)),
   };
 };
 

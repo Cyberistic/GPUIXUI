@@ -26,6 +26,7 @@ import {
   reducedMotionExample,
   springExample,
   storedConfigExample,
+  storedLevelExample,
 } from "./api.example.js";
 
 const read = (path: string): string =>
@@ -134,6 +135,26 @@ describe("the usage example", () => {
       animate: { opacity: 1, top: 0 },
       transition: { duration: 0.2 },
     });
+  });
+
+  it("reads a stored animation speed where the caller owns it", () => {
+    // The bug this guards: a component's `level` is a persisted choice as often
+    // as a literal, and the timing builders take the union — so a decoded row
+    // reached them only through an assertion, and the repair the tables promise
+    // (a name they do not carry is the house arrival) was unreachable.
+    const stored = storedLevelExample();
+    expect(stored.saved).toEqual({ duration: 0.32, ease: "easeInOut" });
+    // Every unreadable shape lands on the surface arrival, not a NaN duration.
+    const house = { duration: 0.2, ease: "easeInOut" };
+    expect(stored.dropped).toEqual(house);
+    expect(stored.empty).toEqual(house);
+    expect(stored.nested).toEqual(house);
+    expect(stored.timed).toEqual({
+      enter: { duration: 0.2, ease: "easeOut" },
+      exit: { duration: 0.2, ease: "easeIn" },
+    });
+    // The reduced policy still removes the journey the level would run.
+    expect(stored.reduced).toEqual({ duration: 0 });
   });
 
   it("counts a leaving surface's window from the timing, never shorter", () => {

@@ -12,19 +12,17 @@ import { describe, expect, it } from "vitest";
 import {
   isMotionEasing,
   isMotionEasingName,
+  isMotionLevel,
   motionEasingNames,
   motionEasings,
   motionLevels,
+  motionLevelOf,
   motionTiming,
   motionTimingOf,
   preferenceOf,
   reducedMotionOf,
-  type MotionLevel,
 } from "./timing.js";
-
-/** A key of the level table, without asserting a `string` into one. */
-const isMotionLevel = (value: string): value is MotionLevel =>
-  value in motionLevels;
+import { presenceTiming } from "./presence.js";
 
 describe("motion levels", () => {
   it("names the durations the surfaces share, in milliseconds", () => {
@@ -174,6 +172,81 @@ describe("a level or phase the table does not carry", () => {
         ease: motionEasings.standard,
       });
     });
+  });
+});
+
+describe("a level a store wrote", () => {
+  /**
+   * The shapes a persisted animation speed decodes to: a name a release
+   * dropped, a name with the case and whitespace a setting keeps, an empty
+   * field, a number, a nested record, the list a multi-select wrote, `null`,
+   * and the names `Object.prototype` answers to.
+   */
+  const stored: ReadonlyArray<unknown> = [
+    "elapsed",
+    "Faster",
+    " normal",
+    "",
+    42,
+    null,
+    undefined,
+    { speed: "fast" },
+    ["fast"],
+    "toString",
+    "__proto__",
+    "constructor",
+  ];
+
+  it("names the levels the table carries, and no inherited key", () => {
+    // The bug this guards: the level table's membership was tested with `in`,
+    // which answers true for every name `Object.prototype` carries — so
+    // `"toString"` was a level, and the lookup beside the guard handed the
+    // runtime a method where a duration belongs.
+    expect(Object.keys(motionLevels).filter(isMotionLevel)).toEqual([
+      "step",
+      "fast",
+      "normal",
+      "slow",
+      "notice",
+    ]);
+    // A readable pair beside the refusals, so a guard that answered `false`
+    // everywhere cannot pass.
+    expect(isMotionLevel("slow")).toBe(true);
+    stored.forEach((value) => expect(isMotionLevel(value)).toBe(false));
+  });
+
+  it("reads it as the house surface arrival instead of a NaN duration", () => {
+    // The bug this guards: a component's `level` is a persisted choice as often
+    // as a literal — a saved dashboard's per-widget speed, a settings row a
+    // release renamed — while the timing builders take the union this package
+    // carries. A decoded row could therefore reach the timing only through an
+    // assertion, and the read the tables' own documentation promised (a name
+    // they do not carry is the house arrival) had no port to come through.
+    stored.forEach((value) => {
+      expect(motionLevelOf(value)).toBe("normal");
+      // The reader and the timing cannot disagree: the level the reader answers
+      // is the one both timing builders move on.
+      expect(motionTiming(motionLevelOf(value))).toEqual(
+        motionTiming("normal"),
+      );
+      expect(presenceTiming(motionLevelOf(value))).toEqual(
+        presenceTiming("normal"),
+      );
+    });
+    // A name the table carries keeps its own duration, so the reader is not a
+    // constant.
+    expect(motionLevelOf("slow")).toBe("slow");
+    expect(motionTiming(motionLevelOf("slow"))).toEqual({
+      duration: 0.32,
+      ease: "easeInOut",
+    });
+  });
+
+  it("keeps the reduced preference's read of it", () => {
+    // The repair must not resurrect the journey the preference removes.
+    expect(
+      motionTiming(motionLevelOf("elapsed"), { preference: "reduced" }),
+    ).toEqual({ duration: 0 });
   });
 });
 

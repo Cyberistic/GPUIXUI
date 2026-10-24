@@ -19,7 +19,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `timeline.ts` | Keyframes with offsets, `stagger`, and a keyed `Sequence` driver |
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
-| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, `reducedMotionOf`, the rule that resolves a run's own override against the provider's preference, and `motionEasingNames`/`isMotionEasing`/`isMotionEasingName`, the renderer's easing grammar a stored transition is read against |
+| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — `preferenceOf`, the reader that decodes a stored motion preference, `reducedMotionOf`, the rule that resolves a run's own override against the provider's preference, `isMotionLevel`/`motionLevelOf`, the membership test and the reader a stored animation level comes through, and `motionEasingNames`/`isMotionEasing`/`isMotionEasingName`, the renderer's easing grammar a stored transition is read against |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
 | `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers — the physics hooks; it re-exports `useMotionPreference`, `useSurfaceTiming` / `useSurfacePresence` and the provider from the presence half below |
 | `react/presence.ts` | The presence half of the React entry (entry `@gpuixui/motion/react/presence`): `useSurfaceTiming` / `useSurfacePresence` and `MotionProvider`, published without the physics a fade never samples |
@@ -562,6 +562,26 @@ fallback: the surface arrival `normal` (200 ms) and the between-states curve,
 instead of handing the runtime a `NaN` duration, an absent easing, or a method
 where a curve belongs. A reduced run is still an instant assignment whatever the
 tables hold.
+
+A component's `level` is such a value — a saved dashboard's per-widget speed is
+as ordinary as a literal — and the timing builders take the level this package
+carries, so the row is read **once**, where the application owns it:
+`motionLevelOf` answers a name the table holds as itself and every other shape
+as the surface arrival, and `isMotionLevel` is the membership test beside it.
+
+```ts
+import {
+  isMotionLevel,
+  motionLevelOf,
+  motionTiming,
+} from "@gpuixui/motion/timing";
+
+const saved: unknown = "slow"; // the value a settings decoder wrote
+motionTiming(motionLevelOf(saved)); // { duration: 0.32, ease: "easeInOut" }
+motionLevelOf("elapsed"); // "normal" — a name this release dropped
+motionLevelOf({ speed: "fast" }); // "normal" — not a name at all
+isMotionLevel("toString"); // false — the table's own keys only
+```
 
 ### The names are the runtime's curves, in both halves
 
