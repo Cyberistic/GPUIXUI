@@ -38,6 +38,7 @@
  */
 
 import { useGpuix, type Props, type PublicInstance } from "@gpuix/react";
+import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -59,6 +60,7 @@ import {
 } from "../table/table.js";
 import { useMeasuredBodyHeight } from "../table/frame.js";
 import { paintableSize } from "../internal/size.js";
+import { paneFill } from "./measured.js";
 import { VirtualList, type VisibleRange } from "./list.js";
 import {
   useVirtualRows,
@@ -283,7 +285,7 @@ export const VirtualTable = ({
     {...rest}
     height={Option.getOrUndefined(paintableSize(height))}
     className={className}
-    style={style}
+    style={mergeStyles(paneFill(paintableSize(height)), style)}
   >
     <TableViewport>
       <TableHeader>{header}</TableHeader>

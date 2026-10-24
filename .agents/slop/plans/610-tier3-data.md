@@ -545,6 +545,21 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   the empty-state case fails `expected 'Name' to contain 'No rows'`; with the
   normaliser it is 9/9 in the file. The virtualization page, the README
   paragraph and the Virtualized tables row teach the rule.
+- **An unbound window takes its pane and reads the height back**: a windowed
+  surface has no natural height, so a height the layout cannot paint (omitted,
+  or a computed `NaN`) left `useVirtualRows` at `0` and mounted only the
+  overdraw — in a 320px pane `VirtualTable` collapsed to its header (0 rows
+  against 8) and `VirtualTree` painted 5 rows against 10. `<virtual-list>` paints
+  no surface, so it reports no `onLayout` of its own (measured on 0.11.0); the
+  table fills its container and keeps reading the viewport frame it already
+  measures, and the tree measures the column it fills (`virtual/measured.ts`'s
+  `paneFill` + `usePaintedHeight`) and draws the list at that height.
+  `behaviour/paintable-height.test.tsx` turns the two `it.todo`s into cases
+  holding each surface to the rows it paints at `height={320}`; directions
+  measured: restoring the bound-only list height fails the tree case (0 rows),
+  and dropping the table's fill fails the table case (0 against 8). The
+  virtualization page, the tree page, the README and the two Tier 3/Tier 5 rows
+  carry the rule.
 
 
 ## 5. Acceptance

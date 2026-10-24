@@ -327,6 +327,16 @@ The row must paint exactly `rowHeight`: the window's positions come from the
 runtime's estimate, so a taller row would push the rows below it out of place.
 A row of a different height uses `VirtualList` in children mode instead.
 
+**A window with no height takes its pane's.** A windowed surface computes its
+range from a viewport and has no natural height, so a height the layout cannot
+paint (omitted, or a computed `NaN`) reads as no height: `VirtualTable` fills
+its container and windows against the measured viewport frame, and `VirtualTree`
+measures the column it fills and draws the list at that height — the runtime's
+`<virtual-list>` paints no surface of its own and reports no `onLayout`
+(measured on 0.11.0), so the list cannot measure itself. In a 320px pane both
+paint the window they paint at `height={320}` (8 table rows, 10 tree rows);
+`behaviour/paintable-height.test.tsx` holds both.
+
 **A row height the window cannot divide is the row this package paints.**
 `rowHeight` (and the list's `estimatedItemHeight`) is often computed, and a
 value that is not a finite height above zero used to reach the estimate, the

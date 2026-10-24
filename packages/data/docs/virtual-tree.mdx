@@ -32,7 +32,7 @@ const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
 | `defaultCursor` | `TreeCursor` | nothing open | the uncontrolled tree's start |
 | `onActivate` | `(row: TreeRow<T>) => void` | — | a press or Enter on a row |
 | `renderRow` | `(row: TreeRow<T>) => ReactNode` | `labelOf` as text | paints a row's content after its inset and chevron |
-| `height` | `number` | — | the viewport height; the window is computed from it |
+| `height` | `number` | the pane's height | the viewport height; a height the layout cannot paint is **no height**, so the tree fills the pane and windows against the height it measured |
 | `rowHeight` | `number` | the density's `rowHeight` | every row paints exactly this height |
 | `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report, for a readout or pagination |
@@ -41,5 +41,6 @@ const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
 ## Limitations
 
 - **One row height**: `rowHeight` positions rows; use `VirtualList` for variable heights.
+- **A window needs a height**: given a paintable `height` the window is computed from it; a height the layout cannot paint is no height, so the tree fills its pane and windows against the height it measured. The runtime's `<virtual-list>` paints no surface and reports no `onLayout`, so an unbound tree measures the column it fills instead (measured on 0.11.0; `behaviour/paintable-height.test.tsx` holds a 320px pane to the 10 rows a `height={320}` tree paints).
 - **A scrolling window moves the cursor**: the focused row can unmount.
 - **One active row**; no multi-select tree.

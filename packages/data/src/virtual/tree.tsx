@@ -58,6 +58,7 @@ import {
 } from "react";
 import { useTheme } from "../theme.js";
 import { paintableSize } from "../internal/size.js";
+import { paneFill, usePaintedHeight } from "./measured.js";
 import type { TreeCursor, TreeRow } from "../tree/logic.js";
 import { TreeRowView } from "../tree/row.js";
 import { useTree } from "../tree/use-tree.js";
@@ -124,6 +125,7 @@ export const VirtualTree = <T,>({
   rowHeight: namedRowHeight,
   overdraw,
   onVisibleRange,
+  onLayout,
   instanceRef,
   className,
   testId,
@@ -135,14 +137,21 @@ export const VirtualTree = <T,>({
   // The viewport's height, when it paints. A height nothing could be read from
   // is no height, so the caller's layout owns the viewport (`paintableSize`).
   const bound = paintableSize(height);
+  const painted = usePaintedHeight(onLayout);
   // The tree's rows are built at the density's step, so a declaration the
   // window cannot divide falls back to it rather than to `NaN`: the two cursor
   // walks below divide by this number, and a `NaN` index reaches no row at all.
   const rowHeight = rowHeightOf(namedRowHeight, theme.density.rowHeight);
+  // The height the list is drawn at: the caller's, or the box this component
+  // measured for it. An unbound tree takes its layout's share and windows
+  // against the height that box painted; without that measurement the window
+  // sees `0` and mounts only the overdraw in a pane that holds far more
+  // (`paintable-height`).
+  const listHeight = Option.orElse(bound, () => painted.measured);
   const window = useVirtualRows({
     count: dataRows.length,
     rowHeight,
-    viewportHeight: Option.getOrElse(bound, () => 0),
+    viewportHeight: Option.getOrElse(listHeight, () => 0),
     overdraw,
   });
   const tree = useTree({
@@ -246,13 +255,13 @@ export const VirtualTree = <T,>({
     });
   }, [window.scrollTarget, window.consumeScrollTarget, renderer]);
 
-  return (
+  const list = (
     <VirtualList
       {...rest}
       ref={attach}
       role="tree"
       testId={testId}
-      height={Option.getOrUndefined(bound)}
+      height={Option.getOrUndefined(listHeight)}
       itemCount={dataRows.length}
       estimatedItemHeight={rowHeight}
       windowStart={window.windowStart}
@@ -284,4 +293,15 @@ export const VirtualTree = <T,>({
       })}
     </VirtualList>
   );
+  // `<virtual-list>` paints no surface of its own, so it reports no layout
+  // event (measured on 0.11.0). An unbound tree measures the column it fills
+  // instead; the list is then drawn at that height.
+  return Option.match(bound, {
+    onSome: () => list,
+    onNone: () => (
+      <div onLayout={painted.onLayout} style={paneFill(bound)}>
+        {list}
+      </div>
+    ),
+  });
 };

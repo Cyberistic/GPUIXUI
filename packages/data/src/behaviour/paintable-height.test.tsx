@@ -22,6 +22,16 @@
  *
  * The fix is one rule: a size the layout cannot paint reads as **no size**,
  * the reading the prop already has when it is omitted (`internal/size.ts`).
+ *
+ * A window given no size at all is the second half of the rule: a windowed
+ * surface has no natural height, so it takes the share of the pane its layout
+ * hands out and windows against the height that box painted. Measured before
+ * that seam existed, in a 320-point pane: `VirtualTable height={NaN}` painted
+ * **no row** against the **8** it paints at 320, and `VirtualTree height={NaN}`
+ * painted **5** — its overdraw — against the **10** it paints at 320. The
+ * runtime's `<virtual-list>` paints no surface, so it reports no `onLayout`
+ * (measured on 0.11.0); the table's body reads the viewport frame it already
+ * measures, and the tree measures the column it fills (`virtual/measured.ts`).
  */
 
 import * as Arr from "effect/Array";
@@ -43,7 +53,8 @@ import {
   TableViewport,
 } from "../table/table.js";
 import { TreeView } from "../tree/tree-view.js";
-import { VirtualTableBody } from "../virtual/table.js";
+import { VirtualTable, VirtualTableBody } from "../virtual/table.js";
+import { VirtualTree } from "../virtual/tree.js";
 import type { TreeRow } from "../tree/logic.js";
 
 /** The table's own height: the frame the body is measured against. */
@@ -174,6 +185,64 @@ const treeHeightFor = (height: number | undefined): number =>
     (mounted) => requireBounds(mounted, "paintable-tree").height,
   );
 
+/** The pane an unbound window has to fill. */
+const WINDOW_PANE = 320;
+
+/** A windowed table in a pane, given no readable height. */
+const WindowedTable = ({ height }: { readonly height: number | undefined }) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", height: WINDOW_PANE }}
+  >
+    <VirtualTable
+      height={height ?? Number.NaN}
+      aria-label="Rows"
+      count={200}
+      rowHeight={37}
+      header={
+        <TableRow>
+          <TableHeaderCell width={180}>Name</TableHeaderCell>
+        </TableRow>
+      }
+      row={(index) => (
+        <TableRow>
+          <TableCell width={180}>
+            <text>{`row-${index}`}</text>
+          </TableCell>
+        </TableRow>
+      )}
+    />
+  </div>
+);
+
+/** The rows the windowed table painted, by their cells' text. */
+const windowedTableRowsFor = (height: number | undefined): number =>
+  withRoot(
+    () => renderData(<WindowedTable height={height} />),
+    (mounted) => paintedRows(mounted, "row-"),
+  );
+
+/** A windowed tree in the same pane, given no readable height. */
+const WindowedTree = ({ height }: { readonly height: number | undefined }) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", height: WINDOW_PANE }}
+  >
+    <VirtualTree
+      height={height ?? Number.NaN}
+      aria-label="Nodes"
+      rows={TREE_ROWS}
+      rowHeight={37}
+      labelOf={(node) => node.label}
+    />
+  </div>
+);
+
+/** The rows the windowed tree painted, by their labels. */
+const windowedTreeRowsFor = (height: number | undefined): number =>
+  withRoot(
+    () => renderData(<WindowedTree height={height} />),
+    (mounted) => paintedRows(mounted, "node "),
+  );
+
 describe("a height the layout cannot paint", () => {
   it("keeps the row scroller's measured frame", () => {
     // The frame: the table's own height less its header.
@@ -202,8 +271,6 @@ describe("a height the layout cannot paint", () => {
     expect(windowedBodyRowsFor(Number.NaN)).toBe(measured);
   });
 
-  // TODO: a window given no paintable height still paints no rows — it needs
-  // the height it painted reported back into its window (TODO.md, `packages/data`).
   it("keeps a tree inside the pane it sits in", () => {
     const measured = treeHeightFor(undefined);
     expect(measured).toBe(PANE_HEIGHT);
@@ -211,5 +278,27 @@ describe("a height the layout cannot paint", () => {
     // Measured before the fix: 640 points inside a 200-point pane — the tree
     // overflowed it instead of scrolling inside it.
     expect(treeHeightFor(Number.NaN)).toBe(measured);
+  });
+
+  it("paints the rows of a windowed table in the pane it fills", () => {
+    const bounded = windowedTableRowsFor(WINDOW_PANE);
+    expect(bounded).toBeGreaterThan(5);
+
+    // Measured before the fix: no row at all — the table collapsed to its
+    // header, so the window had no viewport to compute against.
+    expect(windowedTableRowsFor(undefined)).toBe(bounded);
+  });
+
+  it("paints the rows of a windowed tree in the pane it fills", () => {
+    const bounded = windowedTreeRowsFor(WINDOW_PANE);
+    // More than the four-row overdraw above and below the window.
+    expect(bounded).toBeGreaterThan(5);
+
+    // Measured before the fix: 5 — the overdraw alone — in a pane that holds
+    // nine rows: the window was handed `0` and never read the height back.
+    expect(windowedTreeRowsFor(undefined)).toBe(bounded);
+    expect(windowedTreeRowsFor(undefined)).toBeGreaterThanOrEqual(
+      Math.ceil(WINDOW_PANE / 37),
+    );
   });
 });
