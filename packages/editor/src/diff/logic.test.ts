@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import {
   diffLines,
   diffStrings,
+  modeOf,
   numberDiff,
   reconstructAfter,
   reconstructBefore,
@@ -34,6 +35,22 @@ const side = (
   which: "left" | "right",
 ): Option.Option<DiffRow> =>
   Option.flatMap(Arr.get(pairs, index), (pair) => pair[which]);
+
+describe("modeOf", () => {
+  it("reads a stored layout name, and a name it does not declare as the default", () => {
+    // The bug guarded: `mode` was compared with `=== "unified"` and every
+    // other value fell through to the split layout, so a saved preference from
+    // an older release (`"inline"`) painted two columns on a reader who asked
+    // for one. A view name the union no longer carries is the default.
+    expect(modeOf("unified")).toBe("unified");
+    expect(modeOf("split")).toBe("split");
+    expect(modeOf("inline")).toBe("unified");
+    expect(modeOf(undefined)).toBe("unified");
+    expect(modeOf(7)).toBe("unified");
+    expect(modeOf(null, "split")).toBe("split");
+    expect(modeOf("split", "unified")).toBe("split");
+  });
+});
 
 describe("splitLines", () => {
   it("treats a trailing newline as the end of the last line, not a line", () => {

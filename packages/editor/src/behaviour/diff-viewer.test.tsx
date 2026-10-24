@@ -14,6 +14,7 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { DiffViewer } from "../diff/diff-viewer.js";
+import type { DiffMode } from "../diff/logic.js";
 
 interface Root {
   readonly renderer: ReturnType<typeof createTestRoot>["renderer"];
@@ -119,5 +120,28 @@ describe("DiffViewer in split mode", () => {
     );
     expect(rowText(root, "diff-viewer-row-1")).toEqual(["beta"]);
     expect(root.renderer.findByTestId("diff-viewer-row-2")).toBeUndefined();
+  });
+
+  it("paints the default layout for a stored mode name it does not declare", () => {
+    // The bug guarded: `mode` was compared with `=== "unified"`, so every other
+    // value — a preference saved by an older release, a typo, a record
+    // restored with `"inline"` — fell through to the split layout and painted
+    // two columns on a reader who asked for one. The name is read at the
+    // boundary now, so the unified script keeps its four rows.
+    const root = render(
+      <DiffViewer
+        before={"alpha\nbeta\ngamma"}
+        after={"alpha\nBETA\ngamma"}
+        mode={"inline" as unknown as DiffMode}
+      />,
+    );
+    expect(rowText(root, "diff-viewer-row-1")).toEqual(["-", "2", "beta"]);
+    expect(rowText(root, "diff-viewer-row-3")).toEqual([
+      " ",
+      "3",
+      "3",
+      "gamma",
+    ]);
+    root.unmount();
   });
 });

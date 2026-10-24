@@ -12,7 +12,29 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
+
+/** How the two sides are laid out. */
+export const DiffMode = Schema.Literals(["unified", "split"]);
+/** How the two sides are laid out. */
+export type DiffMode = typeof DiffMode.Type;
+
+/** Whether a value names one of the two layouts. */
+export const isDiffMode = Schema.is(DiffMode);
+
+/**
+ * A layout read at the boundary.
+ *
+ * A view mode is a stored preference as often as a literal, so a name a saved
+ * record carries that this release no longer declares — or one it never
+ * declared — is the default rather than a silent fall through to the other
+ * layout, which paints a view the caller did not ask for.
+ */
+export const modeOf = (
+  value: unknown,
+  fallback: DiffMode = "unified",
+): DiffMode => (isDiffMode(value) ? value : fallback);
 
 /** What a line is in the edit script: shared, added on the after side, or removed from the before side. */
 export type LineKind = "context" | "added" | "removed";

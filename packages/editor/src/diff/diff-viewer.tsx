@@ -28,9 +28,18 @@ import {
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { diffStrings, numberDiff, splitPairs, type DiffRow } from "./logic.js";
+import {
+  diffStrings,
+  modeOf,
+  numberDiff,
+  splitPairs,
+  type DiffMode,
+  type DiffRow,
+} from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { draftOf } from "../internal/text.js";
+
+export type { DiffMode } from "./logic.js";
 
 /** The name a blank `label` falls back to. */
 const DIFF_NAME = "Diff";
@@ -38,9 +47,6 @@ const DIFF_NAME = "Diff";
 /** The viewer's resting surface. */
 const DIFF_ROOT =
   "flex flex-col overflow-hidden rounded-lg border border-input bg-background";
-
-/** How the two sides are laid out. */
-export type DiffMode = "unified" | "split";
 
 /** What the viewer tells a `style` callback. */
 export interface DiffViewerState {
@@ -53,7 +59,7 @@ export interface DiffViewerProps {
   readonly before: string;
   /** The after source. */
   readonly after: string;
-  /** One merged column, or two side-by-side. Default `"unified"`. */
+  /** One merged column, or two side-by-side. Default `"unified"`; a stored name that is neither reads as the default. */
   readonly mode?: DiffMode;
   /** Number the rows on both sides. Default `true`. */
   readonly lineNumbers?: boolean;
@@ -125,6 +131,10 @@ export const DiffViewer = ({
   // `undefined`, and a saved or i18n label arrives empty).
   const name = accessibleName(label) ?? DIFF_NAME;
   const metrics = textStyle(theme, "codeBlock");
+  // A view mode is a stored preference as often as a literal; a name this
+  // release does not declare reads as the default rather than falling through
+  // to the other layout.
+  const view = modeOf(mode);
   // A side restored from a saved record may not be text at all; it reads as an
   // empty source, the rule the other editor surfaces follow through `draftOf`,
   // rather than throwing out of the line split before a row paints.
@@ -144,7 +154,7 @@ export const DiffViewer = ({
         resolveStyle(style, state),
       )}
     >
-      {mode === "unified" ? (
+      {view === "unified" ? (
         <div style={{ display: "flex", flexDirection: "column" }}>
           {rows.map((row, index) => (
             <div
