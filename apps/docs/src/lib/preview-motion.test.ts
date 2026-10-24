@@ -88,8 +88,7 @@ const subjectOf = (selector: string): string =>
  *
  * The property matters: a block that stops an animation does not stop a
  * movement transition. The selector matters too: `.gx-imagezoom` stopping its
- * own transition does not stop the `img` inside it, so a rule is covered only
- * by a guard for itself or for its subject compound.
+ * own transition does not stop the `img` inside it.
  */
 const surrendered = (
   css: string,
@@ -100,7 +99,7 @@ const surrendered = (
     reduceBlocks(css).flatMap((block) =>
       [...block.matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap((match) =>
         stopped.test(match[2] ?? "")
-          ? (match[1] ?? "").split(",").map(subjectOf)
+          ? (match[1] ?? "").split(",").map((part) => part.trim())
           : [],
       ),
     ),
@@ -142,18 +141,27 @@ const travelling = (css: string): ReadonlyArray<MotionRule> =>
     return transition !== undefined && MOVEMENT.test(transition);
   });
 
-/** A rule's class, guarded for the property that rule turns on. */
+/**
+ * A rule is guarded when a block stops the same property for its own selector.
+ *
+ * A descendant selector whose subject carries a class also accepts a guard for
+ * that subject (`.gx-shine-btn:hover .gx-shine-sheen` is stopped by
+ * `.gx-shine-sheen`); a subject with no class of its own (`… img`) needs the
+ * whole selector, because a guard for a different parent does not apply to it.
+ */
 const unguarded = (
   sheet: StyleSheet,
   rules: ReadonlyArray<MotionRule>,
   property: "animation" | "transition",
 ): ReadonlyArray<string> => {
   const guarded = surrendered(sheet.css, property);
-  return rules.flatMap((rule) =>
-    guarded.has(rule.selector) || guarded.has(subjectOf(rule.selector))
-      ? []
-      : [`${sheet.name}: ${rule.selector}`],
-  );
+  return rules.flatMap((rule) => {
+    const subject = subjectOf(rule.selector);
+    const stopped =
+      guarded.has(rule.selector) ||
+      (subject.includes(".") && guarded.has(subject));
+    return stopped ? [] : [`${sheet.name}: ${rule.selector}`];
+  });
 };
 
 describe("the previews' motion", () => {
