@@ -53,6 +53,22 @@ export const leadingIndent = (line: string): string =>
   );
 
 /**
+ * The rows the highlight layer paints: every line the field shows, and at least
+ * the caller's `minRows` floor.
+ *
+ * The layer is the only thing that sizes the editor — the field is positioned
+ * absolutely over it — so a floor is painted as empty rows; a floor that cannot
+ * be read adds none rather than collapsing the box.
+ */
+export const visibleRows = (documentRows: number, minRows?: number): number =>
+  Math.max(
+    Number.isFinite(documentRows) ? Math.max(1, Math.floor(documentRows)) : 1,
+    minRows !== undefined && Number.isFinite(minRows)
+      ? Math.max(0, Math.floor(minRows))
+      : 0,
+  );
+
+/**
  * The indentation a new line keeps after Enter at the end of the value: the
  * leading whitespace of the value's last line, or nothing for an empty value.
  */

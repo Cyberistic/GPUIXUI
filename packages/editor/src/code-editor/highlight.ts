@@ -22,7 +22,6 @@
 import { tokenize } from "@tanstack/highlight";
 import type { HighlightTokenClass } from "@tanstack/highlight";
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
 import type { SyntaxRole } from "@gpuixui/tokens";
 
 /** One run of source: its exact text and, when it is a token, its syntax role. */
@@ -99,34 +98,46 @@ const LINE_ENDINGS = /\r\n?|\n/;
  * The source as one row per line, each row the runs that paint it.
  *
  * A run whose text crosses a line ending is split at the ending and its pieces
- * land in successive rows, each keeping the run's role. A trailing line ending
- * leaves no empty final row: `"a\n"` is one row.
+ * land in successive rows, each keeping the run's role. The rows are **the
+ * field's** lines, not a reader's idea of a document: a textarea shows one
+ * (empty) line for an empty value and starts a new, empty line after a trailing
+ * newline, and this layer is the only thing that sizes the editor — the field is
+ * positioned absolutely over it. Reading the final row away painted an empty
+ * editor as its two borders and put the caret's line, after Enter, outside a box
+ * that ended on the newline.
  */
 export const codeLines = (
   source: string,
   language: unknown,
 ): ReadonlyArray<ReadonlyArray<HighlightRun>> => {
-  const rows: Array<Array<HighlightRun>> = [];
-  let current: Array<HighlightRun> = [];
-
-  const place = (text: string, role: SyntaxRole | undefined): void => {
-    if (text.length > 0) current.push({ text, role });
-  };
-
-  for (const run of codeRuns(source, language)) {
-    const pieces = run.text.split(LINE_ENDINGS);
-    pieces.forEach((piece, index) => {
-      if (index > 0) {
-        rows.push(current);
-        current = [];
-      }
-      place(piece, run.role);
-    });
-  }
-  rows.push(current);
-
-  return Option.match(Arr.last(rows), {
-    onNone: () => [],
-    onSome: (last) => (last.length === 0 ? Arr.dropRight(rows, 1) : rows),
+  // A run's pieces carry one row boundary each: the first piece continues the
+  // row the previous run ended on, and every later piece opens a new one. The
+  // pieces are numbered by row first, because a group is the run of pieces that
+  // share one.
+  const [, pieces] = Arr.mapAccum(
+    Arr.flatMap(codeRuns(source, language), (run) =>
+      Arr.map(run.text.split(LINE_ENDINGS), (text, index) => ({
+        text,
+        role: run.role,
+        opensRow: index > 0,
+      })),
+    ),
+    0,
+    (row, piece) => {
+      const at = piece.opensRow ? row + 1 : row;
+      return [at, { text: piece.text, role: piece.role, row: at }];
+    },
+  );
+  return Arr.match(pieces, {
+    onEmpty: () => [[]],
+    onNonEmpty: (nonEmpty) =>
+      Arr.map(
+        Arr.groupWith(nonEmpty, (head, piece) => head.row === piece.row),
+        (row) =>
+          Arr.map(
+            Arr.filter(row, (piece) => piece.text.length > 0),
+            (piece) => ({ text: piece.text, role: piece.role }),
+          ),
+      ),
   });
 };

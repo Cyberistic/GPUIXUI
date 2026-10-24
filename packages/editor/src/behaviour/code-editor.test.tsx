@@ -273,6 +273,84 @@ describe("CodeEditor", () => {
     editor.unmount();
   });
 
+  it("paints the line an empty document shows", () => {
+    // The bug guarded: the highlight layer is the editor's box (the field is
+    // absolutely positioned over it), and it painted one row per line *ending*,
+    // so an empty document was its two borders — 2 points tall, with no line
+    // number, no room for its hint and no caret line to type on.
+    const heightOf = (node: ReactNode): number | undefined => {
+      const editor = render(node);
+      const surface = editor.renderer.findByTestId("code-editor-surface");
+      const height = editor.renderer.getElementBounds(
+        surface?.id ?? -1,
+      )?.height;
+      editor.unmount();
+      return height;
+    };
+    const empty = heightOf(
+      <CodeEditor value="" onValueChange={() => undefined} />,
+    );
+    const oneLine = heightOf(
+      <CodeEditor value="a" onValueChange={() => undefined} />,
+    );
+    expect(empty).toBe(oneLine);
+    expect(empty).toBeGreaterThan(2);
+
+    const editor = render(
+      <CodeEditor value="" onValueChange={() => undefined} />,
+    );
+    expect(editor.renderer.getAllText()).toContain("1");
+    editor.unmount();
+  });
+
+  it("keeps the caret's line inside the box a trailing newline leaves", () => {
+    // The bug guarded: after Enter the field holds an empty final line, and the
+    // layer stopped at the last line *with text*, so the caret's line painted
+    // outside a box that ended on the newline (`"a\n"` measured one row tall).
+    const heightOf = (value: string): number | undefined => {
+      const editor = render(
+        <CodeEditor value={value} onValueChange={() => undefined} />,
+      );
+      const surface = editor.renderer.findByTestId("code-editor-surface");
+      const height = editor.renderer.getElementBounds(
+        surface?.id ?? -1,
+      )?.height;
+      editor.unmount();
+      return height;
+    };
+    expect(heightOf("a\n")).toBe(heightOf("a\nb"));
+
+    const editor = render(
+      <CodeEditor value={"a\n"} onValueChange={() => undefined} />,
+    );
+    expect(editor.renderer.getAllText()).toContain("2");
+    editor.unmount();
+  });
+
+  it("paints the rows the caller asks for with minRows", () => {
+    // The bug guarded: `minRows` documented "minimum visible rows" and reached
+    // the absolutely positioned field, so it could not size anything — three
+    // asked-for rows measured the empty editor's two borders.
+    const heightOf = (node: ReactNode): number | undefined => {
+      const editor = render(node);
+      const surface = editor.renderer.findByTestId("code-editor-surface");
+      const height = editor.renderer.getElementBounds(
+        surface?.id ?? -1,
+      )?.height;
+      editor.unmount();
+      return height;
+    };
+    expect(
+      heightOf(
+        <CodeEditor value="" minRows={3} onValueChange={() => undefined} />,
+      ),
+    ).toBe(
+      heightOf(
+        <CodeEditor value={"a\nb\nc"} onValueChange={() => undefined} />,
+      ),
+    );
+  });
+
   it("hands the source field the page fill the editor paints", () => {
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       const editor = render(<CodeEditor defaultValue="const a = 1" />, theme);

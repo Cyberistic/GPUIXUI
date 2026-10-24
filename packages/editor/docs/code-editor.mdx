@@ -32,7 +32,8 @@ import { CodeEditor } from "@gpuixui/editor";
 | `placeholder` | `string` | — | The editor's hint, painted in the theme's `placeholder` role and announced as the field's description; the host is handed none. |
 | `readOnly` | `boolean` | `false` | View-only. |
 | `disabled` | `boolean` | `false` | Not editable, out of the tab order, painted with the disabled chrome. |
-| `minRows` / `maxRows` | `number` | — | The runtime's row controls. |
+| `minRows` | `number` | — | The least number of rows the editor paints. The highlight layer is what sizes the editor, so the floor is painted as empty rows. |
+| `maxRows` | `number` | — | Passed to the field. The layer cannot follow a scroll (the runtime reports no offset), so it paints every line and the surface grows with the document. |
 | `fullWidth` | `boolean` | `false` | Fill the available width. |
 | `label` | `string` | `"Code editor"` | The accessible name. A blank name reads as the default. |
 | `className` | `string` | — | A Tailwind class string, merged last. |
@@ -49,3 +50,4 @@ import { CodeEditor } from "@gpuixui/editor";
 - **A stored `language` that is not text paints plain text**: the id is read through `languageOf` before the tokenizer sees it, so a preference saved as a number or an object is the same plain fallback an unknown id gets instead of a `.trim()` throw.
 - **A blank `label` reads as `"Code editor"`**: the name is read through the same absence rule as every other name, so a stored empty string cannot publish an unnamed field.
 - **The gutter is flush with the code column**: a line number shares its row's top edge — held by `src/behaviour/code-editor.test.tsx` in the renderer, so a number cannot drift a spacing step below the line it numbers. The transparent field's own text inset stays unverified: it paints no caret to compare against the highlight layer.
+- **The highlight layer is the editor's box, so it paints the field's own lines**: an empty document is one (empty) line and a trailing newline opens another, and `minRows` is painted as empty rows at the bottom. Anything narrower left the editor a two-point strip when empty and put the caret's line, after Enter, outside a box that ended on the newline. `maxRows` cannot cap that height — the layer cannot follow the field's scroll, because the runtime reports no scroll offset — so a long document grows the surface instead of scrolling inside it.

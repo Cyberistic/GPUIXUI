@@ -11,8 +11,9 @@
  * `docs/code-editor.mdx`): a `<textarea>` with transparent ink paints no caret,
  * and it reports no scroll offset. The editor therefore states the caret colour
  * through `nativeTextTheme` on the page fill it paints (`"background"`, not a
- * plain control's `"input"`), and keeps the two layers on one scroll surface,
- * and documents what that still cannot reach.
+ * plain control's `"input"`), sizes the box from the highlight layer — the
+ * field's own lines, empty ones included — and documents what that cannot reach:
+ * the field scrolls inside a box it does not size, so `maxRows` cannot cap it.
  *
  * Tab and Enter are editing decisions, not input re-implementation. In
  * `"insert"` mode Tab swallows the focus traversal and inserts the indent
@@ -42,13 +43,20 @@ import {
   textStyle,
 } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { draftOf } from "../internal/text.js";
-import { codeLines } from "./highlight.js";
-import { enterIndent, tabIndent, tabInserts, type TabMode } from "./logic.js";
+import { codeLines, type HighlightRun } from "./highlight.js";
+import {
+  enterIndent,
+  tabIndent,
+  tabInserts,
+  visibleRows,
+  type TabMode,
+} from "./logic.js";
 
 /** The editor's resting appearance: a field-edged surface with a gutter. */
 const EDITOR_ROOT =
@@ -93,9 +101,9 @@ export interface CodeEditorProps {
   readonly readOnly?: boolean;
   /** Not editable, out of the tab order, painted with the disabled chrome. */
   readonly disabled?: boolean;
-  /** Minimum visible rows. */
+  /** Minimum visible rows. The highlight layer is what sizes the editor, so it paints the floor as empty rows. */
   readonly minRows?: number;
-  /** Rows after which the editor scrolls. */
+  /** Rows after which the field scrolls. The highlight layer cannot follow a scroll (the runtime reports no offset), so it paints every line and the surface grows with the document. */
   readonly maxRows?: number;
   readonly fullWidth?: boolean;
   /** Accessible name. Default `"Code editor"`; a blank name reads as the default. */
@@ -150,9 +158,19 @@ export const CodeEditor = ({
   const syntax = syntaxColors(theme);
   const metrics = textStyle(theme, "codeBlock");
   const lines = codeLines(value, language);
+  // The layer is the editor's box (the field is absolutely positioned over it),
+  // so it paints the field's own lines — the empty line of an empty document,
+  // the caret's line after Enter — and the caller's `minRows` floor as blanks.
+  const body = visibleRows(Arr.length(lines), minRows) - Arr.length(lines);
+  const rows = Arr.appendAll(
+    lines,
+    Arr.take(Arr.replicate(Arr.empty<HighlightRun>(), body), body),
+  );
   const gutterWidth =
     Math.ceil(
-      String(Math.max(1, lines.length)).length * metrics.fontSize * MONO_DIGIT,
+      String(Math.max(1, Arr.length(rows))).length *
+        metrics.fontSize *
+        MONO_DIGIT,
     ) + theme.spacing.sm;
   const state: CodeEditorState = { disabled, focused };
 
@@ -219,7 +237,7 @@ export const CodeEditor = ({
             flexShrink: 0,
           })}
         >
-          {lines.map((_, index) => (
+          {rows.map((_, index) => (
             <text
               key={index}
               role="presentation"
@@ -237,7 +255,7 @@ export const CodeEditor = ({
       ) : null}
       <div style={recipeStyle(EDITOR_CODE, theme)}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {lines.map((line, index) => (
+          {rows.map((line, index) => (
             <div
               key={index}
               style={{
@@ -299,7 +317,8 @@ export const codeEditorMeta = {
   limitations: [
     "a textarea with transparent ink paints no caret, and it reports no scroll offset (measured; gpuix-capabilities.md §Editable highlighted overlay), so the overlay is a highlight layer over a native field, not a positional editor",
     "Tab insert and Enter auto-indent append at the end of the document — the runtime exposes no caret position to insert at",
-    "the two layers align by the codeBlock type scale and one scroll surface; pixel-exact alignment is not verified without a native host",
+    "the two layers align by the codeBlock type scale in one box sized by the highlight layer; pixel-exact alignment is not verified without a native host",
+    "maxRows cannot cap the editor's height: the layer cannot follow the field's internal scroll, because the runtime reports no scroll offset",
   ],
   docs: "docs/code-editor.mdx",
   example: "examples/code-editor.example.tsx",

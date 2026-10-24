@@ -14,6 +14,7 @@ import {
   TAB_INDENT,
   tabIndent,
   tabInserts,
+  visibleRows,
 } from "./logic.js";
 
 describe("leadingIndent", () => {
@@ -57,6 +58,25 @@ describe("tabIndent", () => {
     expect(tabIndent(null)).toBe(TAB_INDENT);
     expect(tabIndent(undefined)).toBe(TAB_INDENT);
     expect(tabIndent(4)).toBe(TAB_INDENT);
+  });
+});
+
+describe("visibleRows", () => {
+  it("keeps the document's rows and paints the floor above them", () => {
+    // The bug guarded: `minRows` was passed to a field that is absolutely
+    // positioned over this layer, so it could not size anything — an editor
+    // asked for three rows painted its two borders.
+    expect(visibleRows(1, undefined)).toBe(1);
+    expect(visibleRows(5, undefined)).toBe(5);
+    expect(visibleRows(1, 3)).toBe(3);
+    expect(visibleRows(5, 3)).toBe(5);
+  });
+
+  it("reads a floor it cannot lay out as no floor", () => {
+    expect(visibleRows(2, 0)).toBe(2);
+    expect(visibleRows(2, -4)).toBe(2);
+    expect(visibleRows(2, Number.NaN)).toBe(2);
+    expect(visibleRows(Number.NaN, undefined)).toBe(1);
   });
 });
 

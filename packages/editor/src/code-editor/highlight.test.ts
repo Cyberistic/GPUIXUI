@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a run that loses a character of the source (the flat
  * runs must concatenate back to the input, newlines included); an unknown
- * language painting through the wrong grammar instead of plain text; and a
- * trailing newline producing an empty row the row count does not claim.
+ * language painting through the wrong grammar instead of plain text; and a row
+ * list that disagrees with the field it sits behind — an empty document is one
+ * empty line, and a trailing newline opens another.
  *
  * The suite runs under `environment: "node"` (no jsdom), which is itself the
  * proof `@tanstack/highlight` needs no DOM.
@@ -57,9 +58,22 @@ describe("codeRuns", () => {
 });
 
 describe("codeLines", () => {
-  it("drops the single empty row a trailing newline would make", () => {
-    expect(codeLines("a\n", "plaintext")).toEqual([[{ text: "a" }]]);
-    expect(codeLines("a\n\n", "plaintext")).toEqual([[{ text: "a" }], []]);
+  it("paints the field's own lines, empty ones included", () => {
+    // The bug guarded: the final row was read away, so an empty editor painted
+    // its two borders and nothing else, and the line the caret sits on after
+    // Enter fell outside the box the field fills (`CodeEditor` has no other
+    // thing to size it — the field is absolutely positioned over this layer).
+    expect(codeLines("", "plaintext")).toEqual([[]]);
+    expect(codeLines("a\n", "plaintext")).toEqual([[{ text: "a" }], []]);
+    expect(codeLines("\n", "plaintext")).toEqual([[], []]);
+    expect(codeLines("a\n\n", "plaintext")).toEqual([[{ text: "a" }], [], []]);
+  });
+
+  it("a trailing newline is a line, not a stray row (negative control)", () => {
+    // The row list is the field's line box: reading the final row away is the
+    // defect `paints the field's own lines` guards, so this holds the exact
+    // difference rather than only the shape.
+    expect(codeLines("a\n", "plaintext")).not.toEqual([[{ text: "a" }]]);
   });
 
   it("paints one plain row per line for a language that is not text", () => {
