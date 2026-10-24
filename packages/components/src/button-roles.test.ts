@@ -59,11 +59,25 @@ describe("the action's label role", () => {
     expect(mismatches()).toEqual([]);
   });
 
+  it("paints a stored look name the table does not carry as the documented default", () => {
+    // A variant is a stored choice as often as a literal, so a name this release
+    // does not ship reaches the adapter at runtime. The table read threw a
+    // `TypeError` before; the documented default is `secondary`.
+    Arr.forEach(THEMES, ([themeName, theme]) => {
+      // @ts-expect-error — a variant a store wrote, not the union the props declare.
+      const painted = actionOnColor(theme, "tertiary");
+      expect(
+        `${themeName}: ${painted}`,
+        `${themeName}: a stored look name paints the default`,
+      ).toBe(`${themeName}: ${primitiveActionOnColor(theme, "secondary")}`);
+    });
+  });
+
   it("keeps no second role table of its own", () => {
     const source = adapter();
     expect(source).toContain("actionOnColor as primitiveActionOnColor");
     expect(source).toContain(
-      "primitiveActionOnColor(theme, LOOKS[variant].variant)",
+      "primitiveActionOnColor(theme, lookOf(variant).variant)",
     );
     expect(source).not.toContain("Match.value(variant)");
     Arr.forEach(

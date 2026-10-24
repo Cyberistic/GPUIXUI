@@ -153,6 +153,15 @@ keep their label while a `ghost` action keeps the where-can-Tab-go cue.
 the collapse with `keyboardDimFailures`; `docs/component-api.md` §3 states the
 rule.
 
+A variant name is a stored choice as often as a literal — an action record, a
+saved toolbar, a dialog setting a store wrote — so `internal/button.tsx` reads it
+through `lookOf` before the table: a name this release does not ship paints the
+documented `secondary` default (`Schema.is` over the four names) instead of
+answering `undefined` and throwing `LOOKS[variant].variant` out of the render.
+`actionOnColor` reads the same seam, so a busy mark or an effect wash over such
+an action keeps the role of the default it paints. `src/button-roles.test.ts`
+holds the role and `src/behaviour/button.test.tsx` the painted control.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

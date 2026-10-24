@@ -37,17 +37,29 @@ import {
   type ButtonVariant as PrimitiveVariant,
 } from "@gpuixui/primitives/button";
 import { cn } from "@gpuixui/tw";
+import * as Schema from "effect/Schema";
 import type { Theme } from "./theme.js";
 
+/** The four looks a control can take, as the guard reads them. */
+const ButtonVariants = Schema.Literals([
+  "primary",
+  "secondary",
+  "ghost",
+  "danger",
+]);
+
 /** The four looks a control can take. */
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = typeof ButtonVariants.Type;
 
 /** The control heights the theme's density defines. */
 export type ButtonSize = "sm" | "md" | "lg";
 
 /** {@link Button} props. */
 export interface ButtonProps extends Props {
-  /** Default `"secondary"`. */
+  /**
+   * Default `"secondary"`. A name this release does not ship — a variant a store
+   * wrote, or one a release renamed — reads as that default.
+   */
   readonly variant?: ButtonVariant;
   /** Default `"md"`. */
   readonly size?: ButtonSize;
@@ -88,6 +100,21 @@ const LOOKS: Readonly<Record<ButtonVariant, Look>> = {
 };
 
 /**
+ * The look a stored variant name paints.
+ *
+ * A variant is a stored choice as often as a literal — an action record, a
+ * saved toolbar, a restored dialog setting — so a name a release renamed or
+ * dropped arrives as a string the union no longer names. The table read is the
+ * first thing every action does, and `LOOKS[name]` answered `undefined`, so
+ * `LOOKS[variant].variant` threw a `TypeError` mid-render and the window painted
+ * nothing, the action included. A name the table does not carry paints the
+ * documented default, `secondary`, the rule `buttonVariantOf` follows in the
+ * primitives.
+ */
+const lookOf = (variant: unknown): Look =>
+  LOOKS[Schema.is(ButtonVariants)(variant) ? variant : "secondary"];
+
+/**
  * The role a variant paints its label in: the on-colour of the fill it owns.
  *
  * A glyph inside an action is the control's label drawn in vectors, not a mark
@@ -97,7 +124,7 @@ const LOOKS: Readonly<Record<ButtonVariant, Look>> = {
  * `secondaryForeground` after the primitive moved its `secondary` label.
  */
 export const actionOnColor = (theme: Theme, variant: ButtonVariant): string =>
-  primitiveActionOnColor(theme, LOOKS[variant].variant);
+  primitiveActionOnColor(theme, lookOf(variant).variant);
 
 /**
  * A labelled action. `variant` picks the look, `size` the density-defined
@@ -112,18 +139,21 @@ export const Button = ({
   style,
   "aria-label": ariaLabel,
   ...rest
-}: ButtonProps) => (
-  <PrimitiveButton
-    {...rest}
-    variant={LOOKS[variant].variant}
-    size={size}
-    disabled={disabled}
-    label={ariaLabel}
-    className={cn(LOOKS[variant].className)}
-    onActivate={onClick}
-    style={style}
-  />
-);
+}: ButtonProps) => {
+  const look = lookOf(variant);
+  return (
+    <PrimitiveButton
+      {...rest}
+      variant={look.variant}
+      size={size}
+      disabled={disabled}
+      label={ariaLabel}
+      className={cn(look.className)}
+      onActivate={onClick}
+      style={style}
+    />
+  );
+};
 
 /**
  * A square, icon-only action. The glyph is the caller's `children`; the

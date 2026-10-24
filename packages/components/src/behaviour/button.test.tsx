@@ -28,7 +28,7 @@ import {
 } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
-import { Button, IconButton } from "../internal/button.js";
+import { Button, IconButton, type ButtonVariant } from "../internal/button.js";
 import {
   clickCentreOf,
   hoverCentreOf,
@@ -553,6 +553,33 @@ describe("Button", () => {
         );
       },
     );
+  });
+
+  it("paints the documented default for a stored variant name it does not ship", () => {
+    // The bug this guards: the variant table was read before anything asked
+    // whether the name was in it, so a variant that arrived from storage — an
+    // action record, a saved toolbar, a name a release renamed — answered
+    // `undefined` and `LOOKS[variant].variant` threw a `TypeError` mid-render.
+    // The window painted nothing, the action included, instead of the secondary
+    // control the default documents.
+    // @ts-expect-error — a variant a store wrote, not the union the props declare.
+    const stored: ButtonVariant = "tertiary";
+    const onClick = vi.fn();
+
+    const button = renderComponent(
+      <Button testId="button" variant={stored} onClick={onClick}>
+        Save
+      </Button>,
+    );
+
+    const element = button.renderer.findByTestId("button");
+    expect(element?.style.color).toBe(darkTheme.colors.secondaryForeground);
+    expect(element?.style.borderColor).toBe(darkTheme.colors.borderStrong);
+
+    clickCentreOf(button, "button");
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    button.unmount();
   });
 });
 
