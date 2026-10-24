@@ -18,9 +18,10 @@
 export const clamp01 = (value: number): number =>
   Number.isNaN(value) ? 0 : value < 0 ? 0 : value > 1 ? 1 : value;
 
-/** A value the samplers can call as a curve. */
-const isCurve = (value: unknown): value is (progress: number) => number =>
-  typeof value === "function";
+/** A value the samplers can call as a curve, and the reader a stored easing takes. */
+export const isCurve = (
+  value: unknown,
+): value is (progress: number) => number => typeof value === "function";
 
 /**
  * A curve applied at `progress`, falling back to the progress itself.

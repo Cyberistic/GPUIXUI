@@ -14,6 +14,7 @@ import {
   continuitySpring,
   inertia,
   layoutSpring,
+  motionTimingOf,
   reducedMotionOf,
   retarget,
   sampleKeyframes,
@@ -60,12 +61,17 @@ export const reducedMotionExample = (): number => {
  * under a reduced and an animated provider. A caller's own option is the
  * per-run override and wins both ways — the second pair is a decorative run
  * silenced in an animated tree and one that must move under a reduced provider.
+ * The last pair is the rule a composing package reuses with its own stored
+ * setting: a value this release does not name is the reduced policy, and an
+ * absent one is the house `"animated"`.
  */
 export const preferenceExample = (): readonly boolean[] => [
   reducedMotionOf(undefined, "reduced"),
   reducedMotionOf(undefined, "animated"),
   reducedMotionOf(false, "reduced"),
   reducedMotionOf(true, "animated"),
+  reducedMotionOf(undefined, "Reduced"),
+  reducedMotionOf(undefined, null),
 ];
 
 /** A tween, staggered keyframe group, sequence, and an inertial coast. */
@@ -138,5 +144,35 @@ export const presenceCompositionExample = (): {
       { enter: { duration: 0.2 } },
     ),
     pointsAtRest: presenceStyle(true).pointerEvents === "auto",
+  };
+};
+
+/**
+ * A decoded config reaching the ports that read it.
+ *
+ * A settings row and a saved layout come back as the values a decoder wrote — a
+ * preference string, a phase name, an easing this release may have renamed — so
+ * these entries take what the store wrote and the readers decide: a preference
+ * this release does not name is the reduced policy, a phase it does not name
+ * eases between two resting states, and an easing it cannot read is dropped
+ * instead of refusing the whole description. No assertion stands between a
+ * decoder and any call below.
+ */
+export const storedConfigExample = (): {
+  readonly stockPreference: ReturnType<typeof presenceTiming>;
+  readonly stockPhase: ReturnType<typeof motionTimingOf>;
+  readonly droppedEasing: ReturnType<typeof presenceTimingOf>["enter"];
+  readonly composition: ReturnType<typeof presenceMotion>;
+} => {
+  const frames = fadeFromAnchor("bottom", 4);
+  return {
+    stockPreference: presenceTiming("normal", "Reduced"),
+    stockPhase: motionTimingOf(220, { phase: "settle" }),
+    droppedEasing: presenceTimingOf({
+      enter: { duration: 0.2, ease: "easeOutBack" },
+    }).enter,
+    composition: presenceMotion(frames, true, {
+      enter: { duration: 0.2, delay: null, ease: "easeOutBack" },
+    }),
   };
 };

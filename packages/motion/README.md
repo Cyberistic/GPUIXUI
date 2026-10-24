@@ -147,7 +147,10 @@ count up, tween a width or release a coast unless a caller overrides it.
 a decorative animation can be silenced in an animated tree, and one that must
 move keeps moving in a reduced one — and `reducedMotionOf(override, preference)`
 is the rule, so a package composing the table does not re-decide what "less
-motion" means.
+motion" means. Its preference is read through `preferenceOf` for the same
+reason the timings are: a package that composes the rule with **its own**
+decoded settings row gets the reduced policy for a value this release does not
+name, rather than the animated run a direct `=== "reduced"` comparison answered.
 
 Each hook's **options object** is a stored value too: a settings record a caller
 never wrote reads back as `null`, because JSON has no `undefined`. The four hooks

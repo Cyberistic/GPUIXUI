@@ -25,6 +25,7 @@ import {
   presenceWindowExample,
   reducedMotionExample,
   springExample,
+  storedConfigExample,
 } from "./api.example.js";
 
 const read = (path: string): string =>
@@ -100,8 +101,39 @@ describe("the usage example", () => {
     // The bug this guards: the four physics hooks published the one
     // `MotionProvider` and read only their own option, so a tree wrapped for a
     // reduced reader still animated every hook below it. The provider is the
-    // default and the hook's option the per-run override, in both directions.
-    expect(preferenceExample()).toEqual([true, false, false, true]);
+    // default and the hook's option the per-run override, in both directions —
+    // and a stored value this release does not name is the reduced policy, the
+    // reading the rule shares with `preferenceOf`.
+    expect(preferenceExample()).toEqual([
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+    ]);
+  });
+
+  it("takes the values a decoded config wrote, on the ports that read them", () => {
+    // The bug this guards: the presence and timing entries documented a stored
+    // config as the shape they read — "a consumer passes what its decoder
+    // answered without an assertion" — while their fields were typed as the
+    // authored unions, so a renamed preference, a phase a release dropped or a
+    // stored easing name could reach the reader only through a cast. The readers
+    // answer the same values they always have; the ports now accept the store's
+    // own shape, and this example is the call site an application writes.
+    const stored = storedConfigExample();
+    expect(stored.stockPreference).toEqual({
+      enter: { duration: 0 },
+      exit: { duration: 0 },
+    });
+    expect(stored.stockPhase).toEqual({ duration: 0.22, ease: "easeInOut" });
+    expect(stored.droppedEasing).toEqual({ duration: 0.2 });
+    expect(stored.composition).toEqual({
+      initial: { opacity: 0, top: -4 },
+      animate: { opacity: 1, top: 0 },
+      transition: { duration: 0.2 },
+    });
   });
 
   it("counts a leaving surface's window from the timing, never shorter", () => {

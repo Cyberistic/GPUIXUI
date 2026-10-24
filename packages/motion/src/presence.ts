@@ -19,7 +19,6 @@ import {
   motionTiming,
   type MotionEasing,
   type MotionLevel,
-  type MotionPreference,
 } from "./timing.js";
 
 /** The side of a trigger or window edge a surface arrives from. */
@@ -87,7 +86,12 @@ export interface PresenceTransition {
 export interface PresenceTransitionInput {
   readonly duration?: number | null;
   readonly delay?: number | null;
-  readonly ease?: MotionEasing | null;
+  /**
+   * The easing a decoder answered. Read through `isMotionEasing`, so a curve
+   * this release does not name is dropped instead of refused by the type at the
+   * one call site that reads a store.
+   */
+  readonly ease?: unknown;
 }
 
 /** The enter and exit timing a surface at one level moves with. */
@@ -357,11 +361,12 @@ export const presenceTimingOf = (
  * transitions rather than one shared curve: a surface that speeds up as it
  * leaves reads as being pulled away. A preference a caller restored from storage
  * is read by `motionTiming`'s own rule, so a name the union does not carry takes
- * the reduced policy rather than the journey.
+ * the reduced policy rather than the journey — and the parameter takes the value
+ * the store wrote, so no assertion stands between the two.
  */
 export const presenceTiming = (
   level: MotionLevel,
-  preference: MotionPreference = "animated",
+  preference: unknown = "animated",
 ): PresenceTiming => ({
   enter: motionTiming(level, { phase: "enter", preference }),
   exit: motionTiming(level, { phase: "exit", preference }),

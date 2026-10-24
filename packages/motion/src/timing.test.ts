@@ -148,7 +148,6 @@ describe("a level or phase the table does not carry", () => {
   it("eases between two resting states for a phase it does not name", () => {
     // A phase read from the same persisted setting: an absent curve reaches
     // the runtime as `ease: undefined`.
-    // @ts-expect-error — a persisted phase the library did not type-check.
     expect(motionTiming("fast", { phase: "settle" })).toEqual({
       duration: 0.16,
       ease: motionEasings.standard,
@@ -170,7 +169,6 @@ describe("a level or phase the table does not carry", () => {
       "hasOwnProperty",
     ];
     inherited.forEach((phase) => {
-      // @ts-expect-error — a persisted phase the library did not type-check.
       expect(motionTiming("fast", { phase })).toEqual({
         duration: 0.16,
         ease: motionEasings.standard,
@@ -233,14 +231,43 @@ describe("a preference the table does not carry", () => {
       expect(preferenceOf(preference)).toBe("reduced");
     });
     // The same rule for the entry points a surface builds its timing with.
-    // @ts-expect-error — a stored value the library did not type-check.
     expect(motionTiming("normal", { preference: "Reduced" })).toEqual({
       duration: 0,
     });
-    // @ts-expect-error — the same untrusted value.
     expect(motionTimingOf(220, { preference: "System" })).toEqual({
       duration: 0,
     });
+  });
+
+  it("is the same policy in reducedMotionOf, the rule a package composes", () => {
+    // The bug this guards: `reducedMotionOf` is published as *the* rule a
+    // package composing the timing table reuses ("so a package composing the
+    // table does not re-decide what less motion means"), and it compared the
+    // preference with `=== "reduced"` while `preferenceOf` — the reader every
+    // timing entry point sits on — reads a value that is present and not a name
+    // as the reduced policy. A package that handed it its own decoded settings
+    // row therefore animated a reader whose stored preference this release no
+    // longer names: the two readers disagreed about the same value, on the one
+    // direction the policy cannot leave to intent.
+    const stored: ReadonlyArray<unknown> = [
+      "Reduced",
+      "REDUCED",
+      "true",
+      1,
+      {},
+      "reduced",
+      "animated",
+      null,
+      undefined,
+    ];
+    stored.forEach((preference) => {
+      expect(reducedMotionOf(undefined, preference)).toBe(
+        preferenceOf(preference) === "reduced",
+      );
+    });
+    // The two names above are also the only ones a caller's override yields to.
+    expect(reducedMotionOf(false, "REDUCED")).toBe(false);
+    expect(reducedMotionOf(true, "animated")).toBe(true);
   });
 
   it("is the house animated one when the application stored nothing", () => {
@@ -323,9 +350,7 @@ describe("motionTimingOf", () => {
     expect(motionTimingOf(200, undefined)).toEqual(house);
     // A stored field is the absence too: `??` is the rule the object's own
     // defaults use, so a phase or preference a store nulled is not a crash.
-    // @ts-expect-error — a field a decoded config can null.
     expect(motionTimingOf(200, { phase: null })).toEqual(house);
-    // @ts-expect-error — the same stored absence.
     expect(motionTimingOf(200, { preference: null })).toEqual(house);
   });
 });

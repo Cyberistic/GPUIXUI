@@ -11086,6 +11086,8 @@ this time.
 
 ## Interlocks (cross-workstream dependencies)
 
+| Teach the **fail-safe the rule `reducedMotionOf` now shares** on `/docs/motion` — the page's §Reduced motion names `reducedMotionOf` as "the rule a composing package reuses" and §Preference teaches `preferenceOf`'s stored-value fail-safe, but it does not say the two are now the same read: `reducedMotionOf(undefined, "Reduced")` was **false** (animated) while `preferenceOf("Reduced")` is `"reduced"`, so a package composing the rule with its own decoded settings row moved a reader who asked for less motion. The package now resolves through `preferenceOf` (`packages/motion/src/timing.ts`), and its ports take a decoded preference/phase/easing without an assertion (`MotionTimingOptions`, `presenceTiming`, `PresenceTransitionInput.ease`, `TweenSpec.easing`). `motion-page.test.ts` should hold the page's sentence to the composed read the way it holds the other repairs, and the module table's `timing` row to the port shape | docs-site (`apps/docs/content/docs/motion.mdx`, `apps/docs/src/lib/motion-page.test.ts`) | open — measured 2026-10-24: `timing.test.ts`'s new case fails at HEAD with `expected false to be true`, and restoring the five port types fails `check-types` with 18 errors across the package's tests and its compile-checked example |
+
 | Correct the **HotkeyRecorder's swallowing claim** — `packages/components/docs/hotkey-recorder.mdx` §Limitations and `hotkeyRecorderMeta.limitations` both say a recorded key is swallowed so "the app's own binding does not fire", and the playground's `hotkey-recorder-lifecycle` (25 checks, 0.11.0) measured the opposite on the only seam GPUix publishes for an app-level key: `preventDefault` removes the element's default action, and the root `onKeyDown` handler still receives the key (`window=shift,k` on the press that stored `Mod+Shift+K`). The page and the meta should teach that an app-level binding must be gated while a recorder is armed, and the component could publish the armed state (an `onRecordingChange` callback) so an app can suspend its shortcuts without owning the state. The probe asserts the measured answer, so a component that later shields the root handler updates that check | components (`packages/components/docs/hotkey-recorder.mdx`, `src/hotkey-recorder.tsx`'s `hotkeyRecorderMeta`, the `COMPONENTS.md` row) | **resolved 2026-10-24** — the page's §Limitations and `hotkeyRecorderMeta` teach the measured rule, `HotkeyRecorder` publishes the armed state through `onRecordingChange` (reported on a transition only, through a ref), the page gains §Gating your own bindings with the gate snippet, and `src/behaviour/hotkey-recorder.test.tsx` gains `reports the armed state as it changes`, `reports the armed state when a recording is cancelled` and `lets an application-level handler hear a recorded chord` — measured failing at the pre-change component on the two reporting cases (the prop did not exist), 13/13 green after. The probe and its README section record the measurement |
 
 | Verify **the files package's `FileTree` and `PropertyPanel` as the surfaces the inventory names** — `packages/files` ships `FileTree`, `PropertyPanel` and `LogViewer` with only three pure-logic tests and no `.test.tsx` anywhere in the package, and two inventory rows cite live evidence that does not mount the surface they name: Tier 4 *Inspector panels* / *Property editors* (`@gpuixui/files`' `PropertyPanel`) cite `inspector-lifecycle`, whose `InspectorPanel` is composed in the probe from primitives (`apps/playground/src/live/scenarios.tsx`), and *File trees* cites `virtual-tree-lifecycle`, which mounts `@gpuixui/data`'s `TreeView`. The playground now measures two of the package family's surfaces in a window — `log-viewer-lifecycle` (35 checks) for `@gpuixui/files`' `LogViewer` and `property-panel-lifecycle` (18 checks) for `@gpuixui/data`'s `PropertyPanel` — so the files package's own `PropertyPanel` and `FileTree` and the package's behaviour suites are what is left | files/components (`packages/files/src/{tree,property}/`) + playground (`file-tree-lifecycle`, the files `PropertyPanel`'s window half) | **playground half resolved 2026-10-24** — `file-tree-lifecycle` (30 checks, 0.11.0) mounts the files package's own `FileTree`, so the *File trees* row now cites it beside `virtual-tree-lifecycle`; it found a real defect (the checkbox's press also reaches its row — the Interlocks row below carries it) that the probe pins. **Open:** the files package's own `PropertyPanel` has no window probe (the measured `property-panel-lifecycle` mounts `@gpuixui/data`'s), and `packages/files` still has no `.test.tsx` behaviour suite — both are the files owner's |
@@ -21748,6 +21750,47 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+
+`[x]` `@gpuixui/motion`: **the rule a composing package reuses animated a reader
+      whose stored preference this release does not name** — `reducedMotionOf` is
+      published as *the* rule "so a package composing the table does not re-decide
+      what less motion means", and it compared the preference with
+      `=== "reduced"` while `preferenceOf` — the reader every timing entry point
+      sits on (`motionTiming`, `motionTimingOf`, `presenceTiming`) — reads a value
+      that is present and not a name as the reduced policy. Measured over the
+      stored shapes a settings row decodes to: `reducedMotionOf(undefined,
+      "Reduced")` answered **false** (animated) where `preferenceOf("Reduced")` is
+      `"reduced"`, so a package that composed the rule with its own decoded row
+      moved a reader who had asked for less motion — the one direction the policy
+      cannot leave to intent. It now resolves through `preferenceOf` (and takes
+      the value a decoder wrote, so no assertion stands between the store and the
+      rule). The same pass let the ports whose JSDoc already promised a decoded
+      config take its shape: `MotionTimingOptions.preference`/`.phase`,
+      `presenceTiming`'s preference, `PresenceTransitionInput.ease` and
+      `TweenSpec.easing`, each read by the guard it already had, so a renamed
+      preference, a phase a release dropped or a stored easing name reaches the
+      reader instead of being refused at the call site. Proof:
+      `src/timing.test.ts`'s `is the same policy in reducedMotionOf, the rule a
+      package composes` (nine stored shapes against `preferenceOf`, plus both
+      override directions), `src/api.example.ts`'s `storedConfigExample` executed
+      by `example.test.ts` (a stored preference, a phase the table does not name,
+      an easing the renderer cannot read, through `presenceMotion`), and
+      `src/docs.test.ts`'s `reads the preference through the timing's own policy`
+      holding the README sentence to the source. Directions measured: with HEAD's
+      `reducedMotionOf` restored the case fails `expected false to be true`;
+      restoring all five port types fails `check-types` with **18** errors naming
+      each port and the example (`Argument of type '"Reduced"' is not assignable
+      to parameter of type 'MotionPreference'`, `Type '"settle"' is not assignable
+      to type 'MotionPhase | undefined'`, `Type '"easeOutBack"' is not assignable
+      to type 'MotionEasing | null | undefined'`), and the six `@ts-expect-error`
+      directives the old types needed are gone. Green: 15 files / **223** tests,
+      `check-types` clean; `@gpuixui/primitives`' `core/motion.test.ts` 4/4 and
+      `@gpuixui/components`' `motion-provider`/`presence-contract` 27/27 beside it.
+      Docs: `packages/motion/README.md` §React hooks states the rule reads the
+      preference through `preferenceOf`; the `/docs/motion` sentence is filed as
+      the interlock row below. No native scenario applies — a pure policy read and
+      the ports that accept a decoded config; no shipped surface passes an
+      unrecognised preference (the provider decodes it), so no paint moves.
 
 `[x]` `@gpuixui/motion`: **a hold window past the delay a timer keeps ended the
       exit in its first frame** — `transitionWindowMs` is the value both the

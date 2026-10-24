@@ -22,7 +22,13 @@ import {
   presenceTiming,
   presenceTimingOf,
 } from "./presence.js";
-import { motionLevels, motionTiming, motionTimingOf } from "./timing.js";
+import {
+  motionLevels,
+  motionTiming,
+  motionTimingOf,
+  preferenceOf,
+  reducedMotionOf,
+} from "./timing.js";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -183,7 +189,37 @@ describe("the level table the timing seam describes", () => {
   });
 });
 
-/** The package's own manifest: the subpaths a consumer may import. */
+/**
+ * The preference port the README teaches.
+ *
+ * The rule `reducedMotionOf` publishes is the one a composing package reuses
+ * with its own settings row, so the page and the source must agree about what a
+ * stored value gets. The behaviour is held by `timing.test.ts`; this holds the
+ * two teaching surfaces to it.
+ */
+describe("the preference port the README teaches", () => {
+  it("reads the preference through the timing's own policy", () => {
+    // The bug this guards: `reducedMotionOf` compared the preference with
+    // `=== "reduced"` while `preferenceOf` — the reader every timing entry point
+    // sits on — reads a value that is present and not a name as the reduced
+    // policy. A package composing the rule with its own decoded row therefore
+    // animated a reader whose stored setting this release does not name.
+    const timing = sources.find(({ name }) => name === "timing.ts")?.text ?? "";
+    expect(timing).toContain("override ?? preferenceOf(preference)");
+    expect(readme).toContain(
+      "Its preference is read through `preferenceOf` for the same\nreason the timings are",
+    );
+    // The page's four documented pairs are the rule's own answers.
+    const stored = ["Reduced", "true", "reduced", "animated", null];
+    expect(stored.map((value) => reducedMotionOf(undefined, value))).toEqual(
+      stored.map((value) => preferenceOf(value) === "reduced"),
+    );
+  });
+});
+
+/**
+ * The package's own manifest: the subpaths a consumer may import.
+ */
 const packageManifest: unknown = JSON.parse(read("../package.json"));
 const packageName = isRecord(packageManifest)
   ? packageManifest["name"]

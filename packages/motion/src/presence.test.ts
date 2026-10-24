@@ -148,7 +148,6 @@ describe("the presence timing", () => {
     // through the provider, and the preference it hands over can be the stored
     // one. The reduced policy is the fail-safe answer: the journey is the part
     // that can hurt the reader who asked for less.
-    // @ts-expect-error — a stored preference the library did not type-check.
     const timing = presenceTiming("slow", "Reduced");
     expect(timing.enter).toEqual({ duration: 0 });
     expect(exitWindowMs(timing)).toBe(0);
@@ -393,7 +392,6 @@ describe("a timing a caller stored", () => {
       presenceTimingOf({ enter: { duration: 0.2, delay: 1e308 } }).enter,
     ).toEqual({ duration: 0.2 });
     expect(
-      // @ts-expect-error — a stored easing name a release dropped.
       presenceTimingOf({ enter: { duration: 0.2, ease: "easeOutBack" } }).enter,
     ).toEqual({ duration: 0.2 });
     // A control pair the renderer refuses (`x` outside [0, 1]) is no easing.

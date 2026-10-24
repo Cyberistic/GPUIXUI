@@ -147,11 +147,17 @@ export const preferenceOf = (value: unknown): MotionPreference =>
  * functional one, and a caller that must move keeps moving in a reduced tree —
  * and a tree that states neither keeps its motion, the provider's `"animated"`
  * default.
+ *
+ * The preference is read through {@link preferenceOf}, the same rule every
+ * timing entry point sits on, because this is the function a composing package
+ * reuses with **its** settings row: a stored value that is present and not a
+ * name is the reduced policy here too, rather than the animated answer a direct
+ * `=== "reduced"` comparison gave it.
  */
 export const reducedMotionOf = (
   override: boolean | undefined,
-  preference: MotionPreference,
-): boolean => override ?? preference === "reduced";
+  preference: unknown,
+): boolean => override ?? preferenceOf(preference) === "reduced";
 
 /** A tween in the shape the runtime's `transition` prop reads. */
 export interface MotionTiming {
@@ -163,13 +169,22 @@ export interface MotionTiming {
 
 /** What a caller may choose when building a timing. */
 export interface MotionTimingOptions {
-  /** Default `"standard"`. */
-  readonly phase?: MotionPhase;
+  /**
+   * Default `"standard"`. A phase the table does not name is `"standard"`, the
+   * curve between two resting states ({@link phaseOf}), so the field takes the
+   * value a decoded config has rather than the union this package carries.
+   */
+  readonly phase?: unknown;
   /**
    * Default `"animated"`. A stored value the union does not name is read as
    * `"reduced"` ({@link preferenceOf}).
+   *
+   * The field takes what the application has rather than the union this package
+   * carries — a settings row read back from a store is a `string` the type does
+   * not name — so a decoded value reaches the reader here instead of being
+   * refused at the call site and asserted into a `MotionPreference`.
    */
-  readonly preference?: MotionPreference;
+  readonly preference?: unknown;
 }
 
 /**
@@ -203,10 +218,11 @@ const levelMs = (level: MotionLevel): number =>
 /**
  * The phase a timing eases with. A phase the table does not carry takes
  * `standard`, the curve between two resting states, rather than handing the
- * runtime an absent `ease`.
+ * runtime an absent `ease` — including a value a store wrote that is not even a
+ * string, which the table cannot name either.
  */
-const phaseOf = (phase: MotionPhase): MotionPhase =>
-  namesPhase(phase) ? phase : "standard";
+const phaseOf = (phase: unknown): MotionPhase =>
+  typeof phase === "string" && namesPhase(phase) ? phase : "standard";
 
 /**
  * The milliseconds a timing can run.

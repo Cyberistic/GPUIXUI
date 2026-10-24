@@ -16,6 +16,7 @@
 import type { Inertia } from "./inertia.js";
 import { sameInertia } from "./inertia-read.js";
 import { easeOut, type Easing } from "./easing.js";
+import { isCurve } from "./progress.js";
 import {
   DEFAULT_TWEEN_MS,
   transitionEquals,
@@ -50,7 +51,13 @@ export interface CoastDeclaration {
  */
 export interface TweenSpec {
   readonly durationMs?: number | null;
-  readonly easing?: Easing | null;
+  /**
+   * The easing a decoder answered — a curve, or the name a stored spec carries.
+   * A value that is not a function is no curve and takes the documented
+   * `easeOut`, so the field takes what the store wrote rather than the function
+   * type only a literal could satisfy.
+   */
+  readonly easing?: unknown;
 }
 
 /**
@@ -73,7 +80,7 @@ export const tweenSpecOf = (
   const easing = spec?.easing;
   return {
     durationMs: spec?.durationMs ?? DEFAULT_TWEEN_MS,
-    easing: typeof easing === "function" ? easing : easeOut,
+    easing: isCurve(easing) ? easing : easeOut,
   };
 };
 

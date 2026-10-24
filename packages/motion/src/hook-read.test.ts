@@ -139,8 +139,9 @@ describe("the spec a tween hook reads", () => {
   it("takes a value that is not a curve as the default curve", () => {
     // A stored easing a release renamed is a string, and passing it through
     // reaches the sampler's linear fallback — the default names `easeOut`, so a
-    // stored spec must not quietly change the curve it did not name.
-    // @ts-expect-error — a stored easing the library did not type-check.
+    // stored spec must not quietly change the curve it did not name. The spec
+    // takes the value the store wrote, so this is the call site an application
+    // actually writes.
     expect(tweenSpecOf({ durationMs: 120, easing: "easeInOut" }).easing).toBe(
       easeOut,
     );
