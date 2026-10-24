@@ -210,6 +210,7 @@ src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
 src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint
 src/components/docs/data-toolbar-demo.tsx The toolbar's debounced wait, its blank-name default and the rows it reports
+src/components/docs/table-filter-demo.tsx The filter field's blank name and hint, and the literal match the table owns
 src/components/docs/expandable-rows-demo.tsx The disclosure row: the press, the sibling panel and two open at once
 src/components/docs/frozen-columns-demo.tsx The two mirrored scrollers and the height rule the composition reads
 src/components/docs/stat-card-demo.tsx    The metric card's derived reading, its trend roles and the box a reader measures

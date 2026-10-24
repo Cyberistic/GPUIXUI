@@ -38,6 +38,7 @@ export const packagePreviews: ReadonlyArray<PackagePreview> = [
   },
   { origin: "data", path: "table-sorting.mdx", demo: "table-sorting-demo" },
   { origin: "data", path: "table-selection.mdx", demo: "table-selection-demo" },
+  { origin: "data", path: "table-filtering.mdx", demo: "table-filter-demo" },
   { origin: "data", path: "tree-view.mdx", demo: "tree-view-demo" },
   { origin: "data", path: "virtual-tree.mdx", demo: "virtual-tree-demo" },
   { origin: "data", path: "stat-card.mdx", demo: "stat-card-demo" },

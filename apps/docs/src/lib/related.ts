@@ -263,6 +263,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
     pages: [
       data("table-sorting", "Table sorting"),
       data("table-selection", "Table selection"),
+      data("table-filtering", "Filtering controls"),
       data("frozen-columns", "Frozen columns"),
       data("column-configuration", "Column configuration"),
       data("expandable-rows", "Expandable rows"),

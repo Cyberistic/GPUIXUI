@@ -1,0 +1,42 @@
+---
+title: Filtering controls
+description: The field a data surface narrows its rows from
+---
+
+## Usage
+
+```tsx
+import { TableFilterField } from "@gpuixui/data";
+
+<TableFilterField
+  value={query}
+  label="Filter services"
+  onValueChange={setQuery}
+/>;
+```
+
+The field owns no query state: the table holds `value` and narrows on each
+`onValueChange`. The field reports every edit at once — a debounce is the
+caller's, as `DataToolbar`'s search is — so a table that wants one wraps it.
+
+## API
+
+### `TableFilterField`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string` | — | the query the field shows; the table owns it |
+| `onValueChange` | `(next: string) => void` | — | receives every edit, not a debounced one |
+| `label` | `string` | `Filter rows` | the field's accessible name; a blank name reads as the default |
+| `placeholder` | `string` | `Filter…` | the hint a reader sees in the empty field; a blank hint reads as the default |
+| `width` | `number` | — | the wrapper's width in pixels; unset, the field fills its row |
+| `testId` | `string` | — | the input's handle, for an automation host |
+
+## Limitations
+
+- The field narrows nothing: the table owns the query and the match, and the
+  field never rewrites what a reader typed.
+- The query is matched literally — no pattern syntax, and case is ignored
+  (the grid's global filter).
+- It is the primitives' `Input`, so the platform text session survives the
+  narrowed set; the field keeps no session of its own.

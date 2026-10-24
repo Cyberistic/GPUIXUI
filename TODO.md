@@ -12506,17 +12506,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
     Direction measured: at HEAD the blank case fails `expected '' to contain
     'Filter…'`; with the read, 2/2. Docs: the README's search paragraph, the
     field's JSDoc and the Filtering controls row. Owner: data.
-  - [ ] **The filter field has no docs page of its own** — `TableFilterField`
-    is the only data part a reader can reach only through the README and the
-    combined table demo: `docs/table-*.mdx` cover sorting, selection, columns
-    and the frozen composition, and the Filtering controls row is `done` with
-    no page to cite. The page belongs in `packages/data/docs/table-filtering.mdx`
-    (an API table held to `TableFilterFieldProps` by a `docs.test.ts`, the
-    narrowing/release rules and the hint default), but the site's related-line
-    guard (`apps/docs/src/lib/related.test.ts`) needs a family entry in
-    `apps/docs/src/lib/related.ts`, and a native preview needs a demo in
-    `package-preview.ts` + `demos.tsx` — both outside this workstream's paths.
-    Owner: docs (with this lane's page content).
+  - [x] **The filter field has a docs page now** — `packages/data/docs/table-filtering.mdx`
+    documents `TableFilterField` in the lane's own voice: Usage (the field owns
+    no query and reports every edit), `## API` (all six declared props), and
+    `## Limitations` (it narrows nothing, the match is the grid's literal
+    case-insensitive one, and it keeps the platform text session). The site half
+    landed with it: `related.ts` puts the page in **Table surfaces**,
+    `package-preview.ts` mounts `table-filter-demo` above the Markdown,
+    `demos.tsx` registers the drawing, and `preview-strategy.md`'s lane list
+    prints **fifteen** data surfaces. The guard is
+    `apps/docs/src/components/docs/table-filter-demo.test.tsx` (7 cases): it
+    reads `TableFilterFieldProps` and holds every declared prop to a page row in
+    **both** directions, derives the two printed defaults from the constants
+    `field.tsx` declares (and the blank-name/blank-hint readers those constants
+    feed), holds the literal-match sentence to the field's own words, and runs
+    the drawing (`filterLabel`, `filterHint`, `matchingRows`, the rendered
+    `aria-label`/hint). Directions measured: deleting the `testId` row fails
+    `expected [ 'testId' ] to deeply equal []`; printing `Search…` as the hint
+    default fails on the table row; a `Filter` fallback in the drawing fails
+    both the executed and the rendered case. `@gpuixui/docs` 201 files / 2 059
+    tests and `@gpuixui/data` 33 files / 268 tests green, both `check-types`
+    clean. No native scenario applies — a page, the type it documents and a
+    browser drawing of the field's rules.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -13966,7 +13977,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 408/408
+`[x]` `[██████████]` 409/409
+
+`[x]` Give the **filter field its own page** — `TableFilterField` was the one
+      data part a reader could reach only through the README and the combined
+      table demo, so `packages/data/docs/table-filtering.mdx` now documents it
+      (Usage, the six-prop `## API`, the literal-match and blank-default rules)
+      and the site mounts `table-filter-demo` above it: the drawing reads the
+      field's own `DEFAULT_FILTER_LABEL`/`DEFAULT_FILTER_PLACEHOLDER` and
+      `spokenText`/`visibleCopy` readers, so a default or a blank rule cannot
+      drift from the component. `related.ts` files the page under **Table
+      surfaces**, `preview-strategy.md`'s data lane prints **fifteen** surfaces,
+      and `table-filter-demo.test.tsx` (7 cases) holds the page's props table to
+      `TableFilterFieldProps` in both directions, the printed defaults to the
+      declared constants, the literal-match sentence to the field's own words,
+      and the drawing's narrowing and rendered name/hint. Directions measured:
+      deleting the `testId` row, printing `Search…`, and a `Filter` fallback in
+      the drawing each fail by name. `@gpuixui/docs` 201 files / 2 059 tests and
+      `@gpuixui/data` 268 tests green. No native scenario applies — a page, the
+      type it documents and a browser drawing of the field's rules.
 
 `[x]` Teach the **clock a stored presence phase has to fit** on `/docs/motion` —
       `presenceTimingOf` reads a phase's duration through `duration.ts`'s
