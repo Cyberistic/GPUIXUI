@@ -1081,6 +1081,36 @@ each track and each track on the four strips a switch stands on (the contract
 above). A brand that declares none paints the accent switch, which the mark and
 contrast tables already measure.
 
+#### A style a store hands back
+
+The table is a file as often as it is a source module, so the value a consumer
+applies is often the copy a boundary decoded. `applyStyle` takes
+`PlatformStyleSource` — the authored `PlatformStyle` is a member — and reads it
+the way every other seam reads a stored value: a group the copy lost keeps the
+base theme's, a family is read as a **name** (a number or a blank string names no
+face), and the label a preview prints falls back to the base's name instead of
+painting `Dark · null`.
+
+Three failures made that route impossible to write without a cast, and all three
+are closed: a lost `colors` group threw
+`TypeError: Cannot read properties of null (reading 'dark')` out of the first
+style a window applied; a lost `label` printed `Dark · null`; and a lost
+`contrast` label **silently dropped the palette the style still carried** — a
+stored red `primary` resolved to the base dark theme's, because an absent variant
+was compared with the base's instead of read. A style that **states no variant**
+is read as `default`, the variant every shipped style declares: a look is not an
+accessibility claim, and reading an unknown label as the strict one denied its
+palette to every ordinary base. A high-contrast base still keeps its own palette,
+as rule one below says.
+
+```ts
+import { applyStyle, themes, type PlatformStyleSource } from "@gpuixui/tokens";
+
+// The shape a saved file comes back as: the authored table, some groups null.
+const saved: PlatformStyleSource = decodeStyle(JSON.parse(fromStorage));
+applyStyle(themes.dark, saved); // groups it lost are the base's
+```
+
 ### Authored looks
 
 A look does not have to be a platform. `platformNames` is the persisted key a

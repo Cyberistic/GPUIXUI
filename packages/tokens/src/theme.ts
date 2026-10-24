@@ -3,8 +3,6 @@ import {
   highContrastDarkColors,
   highContrastLightColors,
   lightColors,
-  themeColors,
-  type ColourSource,
   type ThemeColors,
 } from "./color.js";
 import {
@@ -20,9 +18,8 @@ import {
   platformNames,
   platformStyles,
   type PlatformName,
-  type PlatformStyle,
+  type PlatformStyleSource,
 } from "./platforms.js";
-import { pageMode } from "./luminance.js";
 import {
   borderWidth,
   controlSizes,
@@ -45,119 +42,27 @@ import type { SeriesColors } from "./series.js";
 import type { SyntaxColors } from "./syntax.js";
 import { typography, type TextStyle, type Typography } from "./typography.js";
 
-/**
- * Theme modes the library ships, in documentation order. `ThemeMode` derives
- * from this list, so a new mode must also gain a value in `themes` and
- * `highContrastThemes`.
- */
-export const themeModes = ["light", "dark"] as const;
+import {
+  isThemeContrast,
+  isThemeMode,
+  themeContrastOf,
+  themeContrasts,
+  themeModeOf,
+  themeModes,
+  type ThemeContrast,
+  type ThemeMode,
+} from "./mode.js";
 
-/** Theme modes the library ships. */
-export type ThemeMode = (typeof themeModes)[number];
-
-/**
- * Contrast variants the library ships, in documentation order. `ThemeContrast`
- * derives from this list, so a new variant must also gain a set of floors and a
- * theme per mode.
- */
-export const themeContrasts = ["default", "high"] as const;
-
-/** Contrast variants the library ships, independent of light/dark mode. */
-export type ThemeContrast = (typeof themeContrasts)[number];
-
-/**
- * Narrow unknown input — a stored preference — to a theme mode. This is not a
- * theme decoder: it checks the axis only, and a consumer iterates
- * {@link themeModes} instead of retyping the modes.
- */
-export const isThemeMode = (value: unknown): value is ThemeMode =>
-  themeModes.some((mode) => mode === value);
-
-/**
- * Narrow unknown input to a contrast variant. Not a theme decoder, and a
- * consumer iterates {@link themeContrasts} rather than retyping them.
- */
-export const isThemeContrast = (value: unknown): value is ThemeContrast =>
-  themeContrasts.some((contrast) => contrast === value);
-
-/**
- * The contrast variant a theme's **values** are read as.
- *
- * The variant decides which floors every pair is measured against
- * (`contrastFloorsFor`) and which palette a native host is handed
- * (`syntaxColors`, `seriesColors`), so an unrecognised one is not a cosmetic
- * detail: read as the default it **downgrades an accessibility claim**, because
- * a high-contrast theme stored with an upper-cased `HIGH` was measured against
- * the AA floors, highlighted with the default palette, and `auditTheme(...)
- * .passed` said yes. A value this release does not ship is therefore read as the
- * **strict** variant — a theme that cannot say which floors it was designed for
- * is held to the stronger ones, and its report names the pair that misses — while
- * an absent or `null` variant is the "declares nothing" a hand-built theme is
- * and reads as `default`.
- *
- * Narrow a stored preference with {@link isThemeContrast} where the caller can
- * tell the reader which variant it substituted; this is the read a paint or
- * report seam makes, where there is no one to tell.
- *
- * @example
- * ```ts
- * import { highContrastDarkTheme, lightTheme, themeContrastOf } from "@gpuixui/tokens";
- *
- * themeContrastOf(highContrastDarkTheme); // "high"
- * themeContrastOf({ ...lightTheme, contrast: "HIGH" }); // "high" — the strict variant
- * ```
- */
-export const themeContrastOf = (theme: {
-  readonly contrast?: unknown;
-}): ThemeContrast => {
-  const stated = theme.contrast;
-  if (stated === undefined || stated === null) {
-    return "default";
-  }
-  return isThemeContrast(stated) ? stated : "high";
-};
-
-/**
- * The mode a theme's **values** are read as.
- *
- * The mode decides which categorical and syntax tables a painter is handed
- * (`seriesColors`, `syntaxColors`), the appearance a native text host is given
- * (`nativeTextTheme`), and which of a platform style's two palettes `applyStyle`
- * wears. A theme is documented as storable, so a value this release does not
- * ship reaches those seams — an upper-cased `Dark`, a release's old name, a
- * theme another app wrote. Read as light it handed a dark palette the **light**
- * tables: a code block highlighted for a light canvas, a chart drawn in the
- * light categorical scale, and a platform style that applied its radii and
- * families but not its colours.
- *
- * A value this release does not ship — or none at all — is therefore read from
- * the page the theme carries: a fill closer to white is a light theme's page,
- * because that theme's ink is designed to read on it. That is the one question
- * the palette can answer without trusting the label, and it is the rule
- * {@link paletteMode} already follows for a system palette. A page no colour
- * grammar reads keeps `light`, the mode `getTheme` starts from.
- *
- * Narrow a stored preference with {@link isThemeMode} where the caller can tell
- * the reader which mode it substituted; this is the read a paint or report seam
- * makes, where there is no one to tell.
- *
- * @example
- * ```ts
- * import { darkTheme, lightTheme, themeModeOf } from "@gpuixui/tokens";
- *
- * themeModeOf(darkTheme); // "dark"
- * themeModeOf({ ...darkTheme, mode: "Dark" }); // "dark" — read from its page
- * ```
- */
-export const themeModeOf = (
-  theme: ColourSource & { readonly mode?: unknown },
-): ThemeMode => {
-  const stated = theme.mode;
-  if (isThemeMode(stated)) {
-    return stated;
-  }
-  return pageMode(themeColors(theme).background) ?? "light";
-};
+export {
+  isThemeContrast,
+  isThemeMode,
+  themeContrastOf,
+  themeContrasts,
+  themeModeOf,
+  themeModes,
+  type ThemeContrast,
+  type ThemeMode,
+} from "./mode.js";
 
 /**
  * A complete, resolved design theme. Every field is plain data, so a theme can
@@ -454,6 +359,16 @@ const overlay = <T extends object>(
   );
   return { ...base, ...Object.fromEntries(defined) };
 };
+
+/**
+ * A font family a theme names, or `undefined` when the value cannot name a face.
+ *
+ * A family is a **name**: a decoder that writes a number, a boolean or a blank
+ * string has not named one, and the runtime would paint its fallback while the
+ * theme's data claimed a face — so the base's family is the family.
+ */
+const fontFamilyOf = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim() !== "" ? value : undefined;
 
 const mergeTypography = (
   base: Typography,
@@ -814,14 +729,67 @@ export function createTheme(config: ThemeConfig): Theme {
 }
 
 /**
+ * The contrast variant a style is designed for.
+ *
+ * A style's palette is authored against the floors of one variant and every
+ * shipped style declares `default`; a base that needs more keeps its own. A
+ * label a store lost, or one this release does not ship, is therefore the
+ * default variant rather than the strict one: a look is not an accessibility
+ * claim, and reading an unknown label as `"high"` made it match no ordinary base
+ * — so the palette the style still carried was dropped without a report.
+ */
+const styleContrastOf = (style: {
+  readonly contrast?: unknown;
+}): ThemeContrast =>
+  isThemeContrast(style.contrast) ? style.contrast : "default";
+
+/**
+ * The name a themed style prints: the base's name and the style's label.
+ *
+ * A label is a name a store wrote, so an absent, blank or non-string one leaves
+ * the base's name whole rather than printing `Dark · null`.
+ */
+const styleName = (
+  base: Theme,
+  style: { readonly label?: unknown },
+): string => {
+  const own = base.name.trim() === "" ? "Theme" : base.name;
+  const label = fontFamilyOf(style.label) ?? "";
+  return label === "" ? own : `${own} · ${label}`;
+};
+
+/**
+ * One mode's slice of a style group, read as the value a store hands back: a
+ * group the store lost, or a mode it never carried, is `undefined` rather than
+ * the `TypeError` a direct index threw on `null`.
+ */
+const modeOf = <T>(
+  group: Partial<Record<ThemeMode, T>> | null | undefined,
+  mode: ThemeMode,
+): T | undefined => group?.[mode] ?? undefined;
+
+/**
  * A theme wearing one style: the base theme's mode and elevation, with the
  * style's families, radii, density and chrome colours. A high-contrast base
  * keeps its own colours — accessibility outranks the look — and takes only the
  * families, radii and density.
  *
  * This is the whole mechanism behind {@link platformTheme}. A consumer who
- * authored a style of their own in the {@link PlatformStyle} shape applies it
- * the same way; no registry is involved.
+ * authored a style of their own in the `PlatformStyle` shape applies it the same
+ * way; no registry is involved.
+ *
+ * **The style is read as a store hands it back.** A style is documented as
+ * copyable and editable, so the value a consumer applies is often a file its
+ * boundary decoded: a group may be `null` where it carried none and the label it
+ * was saved with may be absent. Reading only the authored shape made that route
+ * impossible without a cast (`AGENTS.md` §2) and failed three ways once it got
+ * there — a lost `colors` group threw `TypeError: Cannot read properties of null
+ * (reading 'dark')`, a lost `label` named the theme `Dark · null`, and a lost
+ * `contrast` label **silently dropped the palette the style still carried**,
+ * because an unstated variant was compared with the base's instead of read. Every
+ * group now keeps the base's where the style lost it, a family is read as a name,
+ * and a style that states no variant is read as `default` — the variant every
+ * shipped style declares — while a high-contrast base still keeps its own palette.
  *
  * `extendTheme` does the merge, so the base is never mutated. The result is an
  * ordinary theme: layer `extendTheme` on top to keep the look but change a
@@ -839,28 +807,37 @@ export function createTheme(config: ThemeConfig): Theme {
  * <ThemeProvider theme={applyStyle(themes.dark, platformStyles.darwin)} />
  * ```
  */
-export function applyStyle(base: Theme, style: PlatformStyle): Theme {
+export function applyStyle(base: Theme, style: PlatformStyleSource): Theme {
   const contrast = themeContrastOf(base);
   // A palette — and the scale its plots are drawn in — is designed against the
-  // floors of one contrast variant; a base that needs more keeps its own.
-  const applies = contrast === style.contrast;
+  // floors of one contrast variant; a base that needs more keeps its own. A style
+  // that states no variant states nothing to compare, and the variant a look is
+  // authored against is the default one — reading it as the strict variant
+  // dropped a saved style's palette on every ordinary base.
+  const applies = contrast === styleContrastOf(style);
   const mode = themeModeOf(base);
   const themed = extendTheme(base, {
-    name: `${base.name ?? "Theme"} · ${style.label}`,
-    typography: { sans: style.sans, mono: style.mono },
-    radius: style.radius,
-    density: style.density,
-    colors: applies ? style.colors[mode] : undefined,
-    series: applies ? style.series?.[mode] : undefined,
-    syntax: applies ? style.syntax?.[mode] : undefined,
+    name: styleName(base, style),
+    typography: {
+      sans: fontFamilyOf(style.sans),
+      mono: fontFamilyOf(style.mono),
+    },
+    radius: style.radius ?? undefined,
+    density: style.density ?? undefined,
+    colors: applies ? modeOf(style.colors, mode) : undefined,
+    series: applies ? modeOf(style.series, mode) : undefined,
+    syntax: applies ? modeOf(style.syntax, mode) : undefined,
   });
   // A switch paint belongs to the look, not to the base: an authored look
   // declares none, so applying it over a platform's theme clears the platform's
-  // toggle instead of leaving a green Apple switch in Luna's chrome.
+  // toggle instead of leaving a green Apple switch in Luna's chrome. A style that
+  // lost the group in storage is that same "declares none".
   return {
     ...themed,
-    switch: applies ? style.switch?.[mode] : base.switch,
-    switchMetrics: applies ? style.switchMetrics : base.switchMetrics,
+    switch: applies ? (modeOf(style.switch, mode) ?? undefined) : base.switch,
+    switchMetrics: applies
+      ? (style.switchMetrics ?? undefined)
+      : base.switchMetrics,
   };
 }
 

@@ -142,6 +142,19 @@ looks stacked mix their colours and `auditTheme` rejects the result
 `extendTheme(platformTheme(themes.dark, "win32"), { … })` — never base, style,
 style.
 
+**A style a store hands back** is read as the value it is: a platform style is
+copyable and editable, so the copy a boundary decoded reaches `applyStyle` as
+`PlatformStyleSource` — the authored `PlatformStyle` is a member — without a
+cast. A group the copy lost keeps the base's, a family is read as a name (a
+number or a blank string names no face), and the label a preview prints falls
+back to the base's name. A copy that lost its `colors` group threw
+`Cannot read properties of null (reading 'dark')`, one that lost its `label`
+printed `Dark · null`, and one that lost its `contrast` label **silently dropped
+the palette it still carried** because an absent variant was compared instead of
+read; a style that states no variant is read as `default`, the variant every
+shipped style declares, while a high-contrast base keeps its own palette
+(`apply-style.test.ts`).
+
 A **whole theme a store handed back** is restored from its own labels.
 `extendTheme` keeps its base's `mode` and `contrast` by design, so a saved theme
 passed to it under a fixed base lands on the wrong theme: the dark roles paint on

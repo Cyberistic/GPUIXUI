@@ -8,7 +8,7 @@
 
 import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { relativeLuminance } from "./luminance.js";
-import { themeContrastOf } from "./theme.js";
+import { themeContrastOf } from "./mode.js";
 
 /**
  * The WCAG 2.1 contrast ratio between two opaque colours: 1 for identical

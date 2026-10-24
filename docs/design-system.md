@@ -1456,11 +1456,15 @@ The extension mechanism is deliberately small:
 - `createTheme({ mode, ...overrides })` — start from a built-in theme.
 - `extendTheme(base, overrides)` — derive from any theme, including another
   brand theme or a high-contrast theme.
-- `applyStyle(base, style)` — apply a whole look (`PlatformStyle`) at once;
-  `platformTheme` and `retroTheme` are the two tables it reads. It applies to a
-  **base theme**, never to another resolved style: a style is a look over a
-  base, not a layer over a look (§5), and a brand is `extendTheme` over the
-  result.
+- `applyStyle(base, style)` — apply a whole look at once; `platformTheme` and
+  `retroTheme` are the two tables it reads. The style is read as
+  `PlatformStyleSource`, the shape a store hands back (the authored
+  `PlatformStyle` is a member): a group a copied and saved style lost keeps the
+  base's, a family is read as a name, and a style that states no `contrast`
+  variant is read as `default` — the variant every shipped style declares — while
+  a high-contrast base keeps its own palette. It applies to a **base theme**,
+  never to another resolved style: a style is a look over a base, not a layer
+  over a look (§5), and a brand is `extendTheme` over the result.
 - `restoreTheme(stored)` — rebuild the theme a store handed back: the shipped
   theme its saved `mode` and `contrast` name, with the saved groups applied over
   it. It is the one seam that reads those two labels, because `extendTheme` keeps

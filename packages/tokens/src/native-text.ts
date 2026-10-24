@@ -81,7 +81,7 @@ import { decorativeFloor } from "./decorative.js";
 import { radius, spacing, type Radius, type Spacing } from "./scale.js";
 import { statusTone, textStyle, type TypeSource } from "./styles.js";
 import { syntaxColors, type SyntaxColors } from "./syntax.js";
-import { themeModeOf, type ThemeMode } from "./theme.js";
+import { themeModeOf, type ThemeMode } from "./mode.js";
 import { typography } from "./typography.js";
 
 /**

@@ -60,14 +60,12 @@ import { alpha, alphaOf, themeColors, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { pageMode } from "./luminance.js";
 import {
-  extendTheme,
-  getTheme,
   isThemeMode,
   themeContrastOf,
   themeModeOf,
-  type Theme,
   type ThemeMode,
-} from "./theme.js";
+} from "./mode.js";
+import { extendTheme, getTheme, type Theme } from "./theme.js";
 
 /**
  * The colours a system theme offers, in the terms a theme uses.

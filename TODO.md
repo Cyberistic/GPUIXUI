@@ -389,7 +389,64 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 262/262
+`[x]` `[██████████]` 264/264
+
+`[x]` Read a **platform style a store hands back** as the style it is — the
+mission's platform styles are "real, editable token themes … a consumer can take
+one platform theme file, edit it, and ship their own look", and the docs generate
+a copyable `PlatformStyle` for a reader, but `applyStyle(base, style)` declared
+the authored table only: `colors` was indexed straight off the style, the label
+was interpolated as it arrived, and the style's `contrast` label was compared word
+for word with the base's. A decoded file therefore reached the seam only through a
+cast (`AGENTS.md` §2) and failed three ways once it did — measured 2026-10-24 on a
+JSON round-trip of `platformStyles.darwin`: a lost `contrast` label kept the radii,
+families and density and **silently dropped the palette the style still carried**
+(a stored `#FF0000` `primary` resolved to the base dark theme's `#A7A9FF`, because
+an absent variant was compared instead of read), a lost `colors` group threw
+`TypeError: Cannot read properties of null (reading 'dark')`, and a lost `label`
+named the theme `Dark · null`. `PlatformStyleSource` (`platforms.ts`) is the
+storage shape — the authored `PlatformStyle` is a member, every per-mode group may
+be absent or `null` — and `applyStyle` reads it through `styleContrastOf`,
+`styleName`, `modeOf` and `fontFamilyOf`: a group the copy lost keeps the base's, a
+family must be a non-blank name, the name falls back to the base's, and a style
+that states no variant is read as `default` — a look is not an accessibility
+claim, and reading an unknown label as the strict variant denied its palette to
+every ordinary base — while a high-contrast base keeps its own. An unshipped
+density preset is still refused by name. `apply-style.test.ts` (8 cases) holds the
+authored table as the positive control, the lost-variant palette on a default base
+and the high-contrast base's own, the three lost groups, a partial corner scale,
+the unnamed label and family, the density refusal and the pages. Directions
+measured: against `HEAD`'s `theme.ts`/`platforms.ts`, 5 of the 8 cases fail by
+name (the `#FF0000`/`#A7A9FF` palette, the exact `TypeError`, the `Dark · null`
+names, the `42` family, the seam's signature). Green: 53 files / **3 127** tests,
+`check-types` clean. Docs: `docs/tokens.md` §A style a store hands back (new
+subsection under §Editing a platform style), `docs/design-system.md` §11, the
+package README §Extending a theme and the `Platform styles` row. No native
+scenario applies — a pure merge over a stored style.
+
+`[x]` Break the **runtime cycle that left the shipped themes typeless** — the type
+scale needed the platform table's two families (`typography` → `platforms`), the
+platform table needed the syntax palette (`platforms` → `syntax`), and the syntax
+palette read its labels from the theme module (`syntax` → `theme`), which imports
+the type scale: `typography → platforms → syntax → theme → typography`. A program
+that imported `typography` (or the platform table) **before** `theme` built the
+shipped themes from an uninitialised binding — measured 2026-10-24,
+`lightTheme.typography` was `undefined` and `missingTokens(lightTheme)` answered
+`[{ group: "typography", path: "", kind: "group" }]`, so the library's own theme
+was refused by its own gate. The two label readers (`themeModes`,
+`themeContrasts`, `isThemeMode`, `isThemeContrast`, `themeContrastOf`,
+`themeModeOf`) now live in `mode.ts`, which depends on the colour and luminance
+seams only; `theme.ts` imports and re-exports them, so the package surface and
+every `from "./theme.js"` consumer is unchanged, and `syntax.ts`, `series.ts`,
+`contrast.ts`, `native-text.ts` and `system-theme.ts` read them from the owner.
+`module-order.test.ts` (2 cases) imports the scale first — the order that broke
+it — and requires every shipped theme to carry the scale and `missingTokens` to
+answer `[]`, plus the public surface's identity with `mode.ts`. Directions
+measured: restoring `syntax.ts`'s `from "./theme.js"` fails it with `expected
+undefined to be { sans: '.SystemUIFont', …(11) }`; green, 53 files / 3 127 tests
+and `check-types` clean. `theme.test.ts`'s page-direction guard now reads the
+sentence off `mode.ts`, the file that owns it. Docs: `mode.ts`'s module note; no
+page changed (the readers' prose moved with them, unchanged).
 
 `[x]` Take the **system palette's mode as the value a decoder wrote**, not as a
 union the boundary has to assert — `paletteMode` already read a stated mode this
@@ -7174,7 +7231,30 @@ a merge over a stored theme.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 25/25
+`[x]` `[██████████]` 26/26
+
+`[x]` `packages/primitives`: **a stored `null` painted one line and one star** —
+      `Text`'s `clamp` and `Rating`'s `max` are optional counts a saved node or
+      widget carries, and JSON keeps the field a record never wrote as `null`,
+      not `undefined`: both paint paths compared it with `undefined`
+      (`textStyle`/`textClass` and `ratingMax`), so a restored run was cut to a
+      **one-line** box (measured at **18px** against an unclamped **72px** in a
+      window) and a restored rating painted **one** star, clamping every score
+      onto it, while each prop documents no clamp / five as its default.
+      `lineClampOf` (`core/style.ts`) reads the absence as no clamp and
+      `ratingMax` (`Rating.tsx`) reads it as five; a count that *is* there and
+      cannot be laid out keeps its floor (one line through `clampLines`, one
+      star through `starCount`). `style.test.ts`, `presentational.test.tsx`,
+      `Rating.test.tsx`, `layout.runtime.test.tsx` and
+      `rating.runtime.test.tsx` hold both directions (with the fix removed:
+      `expected 18 to be undefined`, and the window cases read
+      `expected 18 to be 72` and no `1 of 5` node). Green: the package is
+      59 files / **1 222** tests, the two runtime files **57/57**, and
+      `check-types`, `oxlint`, `oxfmt` and `check:tests` are clean. Docs:
+      `docs/text.mdx`, `docs/rating.mdx`, the README's stored-choice list, both
+      sources' JSDoc and the two Tier 1 rows. No playground scenario applies —
+      the clamp's box and the star count are the renderer's own tree, read by
+      the package's runtime suite.
 
 `[x]` `packages/primitives`: **a saved bar's share read as `NaN%`, and a timer
       that disagreed with the paint** — `progressPart` read `value` and `buffer`
@@ -11157,7 +11237,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Re-anchor the **theming page's contrast guard** to the seam the merge now reads — `apps/docs/src/lib/theming-page.test.ts`'s `states the contrast rule the merge implements` requires the literal `contrast === style.contrast` in `packages/tokens/src/theme.ts`, while the stored-style pass reads the style's variant through `styleContrastOf(style)` (a lost or unknown label is the default variant rather than a mismatch), so the docs suite is red while the page's sentence stays true. The guard should hold the comparison's **meaning** — the base's variant against the style's declared variant, with the documented default — rather than one expression | docs-site (`apps/docs/src/lib/theming-page.test.ts`) | **resolved 2026-10-24** — the case holds the comparison's meaning instead of one expression: it accepts `style.contrast` (the committed literal) and `styleContrastOf(style)` (the reader the stored-style pass introduced), and refuses a fallback (`contrast === "default"`), a renamed `style.contrastOf(style)` and a reader over another value (`styleContrastOf(other)`) — the five spellings measured. `nub run --filter @gpuixui/docs test src/lib/theming-page.test.ts` is 8/8 with the tokens refactor in the working tree, where the old literal was red; the page's two sentences are unchanged, because they were true throughout |
 
 | Pin the **JSX runtime of every published `.tsx`** the docs program compiles — `nub run --filter @gpuixui/docs check-types` is red on `master`: **85** `TS2322`/`TS2339`/`TS2739` errors at `8729f09ed`, **17** in `packages/components` and **68** in `packages/data`, reproduced in a detached worktree of that commit so it is not a working-tree artifact. The cause is the defect the primitives/icons pass already closed for its own packages: `apps/docs/tsconfig.json` sets `"jsx": "react-jsx"` and no import source, each package's `exports` points at `./src/index.ts`, and the site mounts their demos, so TypeScript compiles those sources against `@types/react`'s DOM JSX unless the file pins its own runtime. The errors are exactly that surface — `Type 'StyleDesc' is not assignable to type 'CSSProperties'`, `Type 'KeyboardEvent<HTMLDivElement>' is missing … 'elementId'`, `Property 'anchored' does not exist on type 'JSX.IntrinsicElements'` — not type errors in the components. Measured across the tree: primitives **31/31** and icons **1/1** published `.tsx` files carry `/** @jsxImportSource @gpuix/react */`, components **0/89**, data **0/22**, dock **0/4**, files **0/3**, shell **0/3**, editor **0/4**, media **0/6** | components + data + dock/files/shell/editor/media (their `.tsx` files; the docs app cannot fix it from its tsconfig, because its own JSX is the browser's) | open — add the pragma to every published `.tsx` in the six unpinned packages and widen `packages/primitives/src/jsx-runtime.test.ts` (which derives each package's `jsxImportSource` from its tsconfig and walks the published files) to cover them, so a new file cannot drift back; then `apps/docs check-types` should print **0**. The docs workstream holds no file in this fix and records it rather than editing another owner's sources |
-
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3

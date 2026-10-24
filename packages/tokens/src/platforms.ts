@@ -22,6 +22,7 @@ import type {
   SwitchMetrics,
   ThemeContrast,
   ThemeMode,
+  ThemeOverrides,
 } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
@@ -118,6 +119,57 @@ export interface PlatformStyle extends PlatformType {
    * `platformTheme` applies a palette only where this matches the base.
    */
   readonly contrast: ThemeContrast;
+}
+
+/**
+ * A style as a store hands it back: the table a consumer copied, edited and
+ * saved, or a file its boundary decoded.
+ *
+ * A platform style is documented as copyable and editable, and a copy that was
+ * written to a file is read back through a decoder — so every group may be
+ * absent or `null` (JSON has no `undefined`) and the two names and the contrast
+ * label arrive as whatever the file said. {@link applyStyle} takes this shape
+ * rather than the authored one, so a saved style reaches it without the
+ * assertion `AGENTS.md` §2 forbids and a group it lost keeps the base's value
+ * instead of throwing or silently dropping the palette it still carries.
+ *
+ * The authored {@link PlatformStyle} is a member of this shape: a style written
+ * as a TypeScript literal is read exactly as it always was.
+ */
+export interface PlatformStyleSource {
+  /**
+   * The name a preview prints. A name this release cannot read — absent, blank,
+   * a number a decoder wrote — leaves the base theme's name alone.
+   */
+  readonly label?: unknown;
+  /** The UI family. A value that is not a non-blank name keeps the base's face. */
+  readonly sans?: unknown;
+  /** The monospace family, read by the same rule as {@link sans}. */
+  readonly mono?: unknown;
+  /** The corner scale, or the steps a store kept. */
+  readonly radius?: Partial<Radius> | null;
+  /** A preset name, a whole box, or the metrics a store kept. */
+  readonly density?: ThemeOverrides["density"] | null;
+  /**
+   * The variant the palette is designed for. A style that states none — or a
+   * name this release does not ship — is read as `default`, the variant every
+   * shipped style declares: a look is not an accessibility claim, and reading an
+   * unknown label as the strict variant denied its palette to every ordinary
+   * base.
+   */
+  readonly contrast?: unknown;
+  /** The chrome roles the style repaints, per mode. A mode it lost is the base's. */
+  readonly colors?: Partial<
+    Record<ThemeMode, Partial<ThemeColors> | null>
+  > | null;
+  /** The categorical scale the look paints, per mode, or `null` for none. */
+  readonly series?: Partial<Record<ThemeMode, SeriesColors>> | null;
+  /** The syntax palette the look highlights with, per mode, or `null` for none. */
+  readonly syntax?: Partial<Record<ThemeMode, SyntaxColors>> | null;
+  /** The platform's own switch paint, per mode, or `null` for the accent switch. */
+  readonly switch?: Partial<Record<ThemeMode, SwitchColors>> | null;
+  /** The box the platform's own switch is drawn in. */
+  readonly switchMetrics?: SwitchMetrics | null;
 }
 
 /**

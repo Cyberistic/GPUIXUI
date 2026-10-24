@@ -24,7 +24,8 @@
 import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
-import { themeContrastOf, themeModeOf, type Stored } from "./theme.js";
+import { themeContrastOf, themeModeOf } from "./mode.js";
+import type { Stored } from "./theme.js";
 
 /**
  * One categorical scale: five colours, in the order a chart assigns them. A

@@ -39,7 +39,7 @@ import {
   contrastRatio,
   type ContrastFloors,
 } from "./contrast.js";
-import { themeContrastOf, themeModeOf } from "./theme.js";
+import { themeContrastOf, themeModeOf } from "./mode.js";
 
 /**
  * The token types a syntax theme paints, in the runtime's own order, so

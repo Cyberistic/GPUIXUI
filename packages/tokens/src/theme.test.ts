@@ -194,7 +194,7 @@ describe("a theme mode this release does not ship", () => {
       "docs/tokens.md": read("../../../docs/tokens.md"),
       "docs/design-system.md": read("../../../docs/design-system.md"),
       "packages/tokens/README.md": read("../README.md"),
-      "packages/tokens/src/theme.ts": read("./theme.ts"),
+      "packages/tokens/src/mode.ts": read("./mode.ts"),
       "packages/tokens/src/luminance.ts": read("./luminance.ts"),
       "COMPONENTS.md": read("../../../COMPONENTS.md"),
     };
