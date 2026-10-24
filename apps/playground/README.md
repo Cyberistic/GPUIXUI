@@ -8011,8 +8011,8 @@ Four rules a rename flow can plan on:
    (`blur-delivery-lifecycle`), so the component's blur commit stays the
    renderer suite's measurement.
 
-22 checks, `--only inline-edit-lifecycle`, green on 0.11.0 here (two runs,
-9.5–9.6 s, four captures: `inline-edit-rest`, `inline-edit-editing`,
+22 checks, `--only inline-edit-lifecycle`, green on 0.11.0 here (three runs,
+9.5–9.9 s, four captures: `inline-edit-rest`, `inline-edit-editing`,
 `inline-edit-committed`, `inline-edit-empty-committed`). Fixture
 `src/live/inline-edit.ts` + probe `src/live/inline-edit-probe.tsx` +
 `inline-edit.test.ts` (the readout codec, the ids, the three mounts, the draft
