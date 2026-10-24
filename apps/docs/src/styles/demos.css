@@ -13059,3 +13059,18 @@
 .gx-fc-size {
   width: 140px;
 }
+
+/* A movement transition is a journey, so the reduced-motion preference
+   collapses it to the state change it stands for, the rule the native
+   components follow. `preview-motion.test.ts` holds every one to a guard. */
+@media (prefers-reduced-motion: reduce) {
+  .gx-switch-thumb,
+  .gx-carousel-dot-mark,
+  .gx-liquid-fill,
+  .gx-magnetic-card,
+  .gx-imagezoom img,
+  .gx-motiongrid-cell,
+  .gx-preview-picture {
+    transition: none;
+  }
+}

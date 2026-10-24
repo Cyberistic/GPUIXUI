@@ -207,13 +207,20 @@ carries its own `@media (prefers-reduced-motion: reduce)` rule. The rule is
 `animation: none`, never a shorter duration: the drawing keeps the state it
 arrives at and loses the journey, which is what the preference asks for.
 
-The guard (`src/lib/preview-motion.test.ts`) reads every animation in
-`src/styles/*.css`, takes the class each selector animates and requires it in a
-reduced-motion block of the same sheet, so a new animated part cannot ship
-without one. Read before the guard, four
-animated parts kept moving under the preference: a chart column growing, a
-leaving toast sliding out, a collapsing body fading in and a copy button's glyph
-rolling. Four rules stop them now.
+A movement transition is the same journey — a switch thumb sliding, a chart
+growing, a picture zooming — so it is collapsed the same way with
+`transition: none`. A transition that only changes colour is not movement and
+keeps its transition.
+
+The guard (`src/lib/preview-motion.test.ts`) reads `src/styles/*.css`, takes the
+selector each animation or geometric transition applies to and requires a
+reduced-motion block that stops the same property for that selector or its
+subject compound, so a new moving part cannot ship without one. Read before the
+guard, four animated parts kept moving and eight movement transitions kept
+travelling under the preference: a chart column, a leaving toast, a collapsing
+body, a copy button's glyph, a settings knob, a switch thumb, a carousel dot, a
+liquid fill, a magnetic card, an image zoom, a motion-grid cell and a preview
+picture. Twelve rules stop them now.
 
 ### The live surface
 

@@ -9,15 +9,21 @@ import { describe, expect, it } from "vitest";
  * components animate their own keyframes — a chart growing in, a toast leaving,
  * a spinner turning, a skeleton pulsing. Those drawings are browser code, so
  * none of them reach the runtime's policy: each needs its own
- * `@media (prefers-reduced-motion: reduce)` rule. Measured before this guard,
- * four animated parts kept moving under the preference: a chart column, a
- * leaving toast, a collapsing body and a copy button's glyph.
+ * `@media (prefers-reduced-motion: reduce)` rule. A movement transition is the
+ * same kind of journey — a thumb sliding, a chart growing, a picture zooming —
+ * and is collapsed the same way.
  *
- * The scan is structural rather than a list: every rule that declares an
- * `animation` names the class it animates (the selector's last compound), and
- * that class has to appear in a reduced-motion block in the same style sheet.
- * A new animated part without a guard fails by name, and a guard whose class no
- * rule animates is not counted, so the two sides cannot drift.
+ * A source scan before this guard found four animated parts still moving (a
+ * chart column, a leaving toast, a collapsing body, a copy button's glyph) and
+ * eight movement transitions still travelling (a settings knob, a switch thumb,
+ * a carousel dot, a liquid fill, a magnetic card, an image zoom, a motion-grid
+ * cell and a preview picture).
+ *
+ * The scan is structural rather than a list: every rule that turns on
+ * `animation` or a geometric transition names the selector it applies to, and
+ * that selector (or its subject compound) has to appear in a reduced-motion
+ * block that stops the same property in the same style sheet. A new moving part
+ * without a guard fails by name.
  */
 
 const styles = new URL("../styles/", import.meta.url);
@@ -66,56 +72,119 @@ const blocksAt = (css: string, needle: string): ReadonlyArray<string> => {
 const reduceBlocks = (css: string): ReadonlyArray<string> =>
   blocksAt(css, "@media (prefers-reduced-motion: reduce)");
 
-const classesIn = (text: string): ReadonlyArray<string> =>
-  [...text.matchAll(/\.([a-zA-Z][\w-]*)/g)].flatMap((match) =>
-    match[1] === undefined ? [] : [match[1]],
+/** A selector's subject compound, without the state that narrows it. */
+const subjectOf = (selector: string): string =>
+  (
+    selector
+      .trim()
+      .split(/[\s>+~]+/)
+      .at(-1) ?? selector.trim()
+  )
+    .replace(/\[[^\]]*\]/g, "")
+    .replace(/::?[a-zA-Z-]+(?:\([^)]*\))?/g, "");
+
+/**
+ * The selectors a reduced-motion block collapses for one property.
+ *
+ * The property matters: a block that stops an animation does not stop a
+ * movement transition. The selector matters too: `.gx-imagezoom` stopping its
+ * own transition does not stop the `img` inside it, so a rule is covered only
+ * by a guard for itself or for its subject compound.
+ */
+const surrendered = (
+  css: string,
+  property: "animation" | "transition",
+): ReadonlySet<string> => {
+  const stopped = new RegExp(`${property}\\s*:\\s*none`);
+  return new Set(
+    reduceBlocks(css).flatMap((block) =>
+      [...block.matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap((match) =>
+        stopped.test(match[2] ?? "")
+          ? (match[1] ?? "").split(",").map(subjectOf)
+          : [],
+      ),
+    ),
   );
+};
 
-/** A reduced-motion block's classes: the parts that stop under the preference. */
-const guardedClasses = (css: string): ReadonlySet<string> =>
-  new Set(reduceBlocks(css).flatMap(classesIn));
-
-interface AnimatedRule {
+interface MotionRule {
   readonly selector: string;
-  /** The class the rule animates; a selector with no class cannot be guarded. */
-  readonly subject: string | undefined;
 }
 
-/** Every rule that turns an animation on, with the class it applies to. */
-const animatedRules = (css: string): ReadonlyArray<AnimatedRule> =>
+/** The selectors that turn on a property. */
+const motionRules = (
+  css: string,
+  picks: (body: string) => boolean,
+): ReadonlyArray<MotionRule> =>
   [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap((match) => {
     const selector = (match[1] ?? "").trim();
     const body = match[2] ?? "";
-    if (selector.startsWith("@")) return [];
-    if (!/animation(?:-name)?\s*:/.test(body)) return [];
-    if (/animation\s*:\s*none/.test(body)) return [];
-    return selector.split(",").flatMap((part) => {
-      const classes = classesIn(part);
-      return [{ selector, subject: classes.at(-1) }];
-    });
+    if (selector.startsWith("@") || !picks(body)) return [];
+    return selector.split(",").map((part) => ({
+      selector: part.trim(),
+    }));
   });
+
+const animated = (css: string): ReadonlyArray<MotionRule> =>
+  motionRules(
+    css,
+    (body) =>
+      /animation(?:-name)?\s*:/.test(body) &&
+      !/animation\s*:\s*none/.test(body),
+  );
+
+/** A transition that moves a part: the properties a reader would see travel. */
+const MOVEMENT = /\b(?:left|right|top|bottom|width|height|transform)\b/;
+
+const travelling = (css: string): ReadonlyArray<MotionRule> =>
+  motionRules(css, (body) => {
+    const transition = /transition\s*:\s*([^;]+)/.exec(body)?.[1];
+    return transition !== undefined && MOVEMENT.test(transition);
+  });
+
+/** A rule's class, guarded for the property that rule turns on. */
+const unguarded = (
+  sheet: StyleSheet,
+  rules: ReadonlyArray<MotionRule>,
+  property: "animation" | "transition",
+): ReadonlyArray<string> => {
+  const guarded = surrendered(sheet.css, property);
+  return rules.flatMap((rule) =>
+    guarded.has(rule.selector) || guarded.has(subjectOf(rule.selector))
+      ? []
+      : [`${sheet.name}: ${rule.selector}`],
+  );
+};
 
 describe("the previews' motion", () => {
   it("collapses every drawn animation when the reader asks for less motion", () => {
-    const unguarded = sheets.flatMap((sheet) => {
-      const guarded = guardedClasses(sheet.css);
-      return animatedRules(sheet.css).flatMap((rule) =>
-        rule.subject !== undefined && guarded.has(rule.subject)
-          ? []
-          : [`${sheet.name}: ${rule.selector}`],
-      );
-    });
+    expect(
+      sheets.flatMap((sheet) =>
+        unguarded(sheet, animated(sheet.css), "animation"),
+      ),
+    ).toEqual([]);
+  });
 
-    expect(unguarded).toEqual([]);
+  it("collapses every movement transition too", () => {
+    expect(
+      sheets.flatMap((sheet) =>
+        unguarded(sheet, travelling(sheet.css), "transition"),
+      ),
+    ).toEqual([]);
   });
 
   it("scans the style sheets rather than passing on an empty walk", () => {
     // Floors: a parser that stopped matching would otherwise report no gap.
-    const animated = sheets.flatMap((sheet) => animatedRules(sheet.css));
-    const guarded = sheets.flatMap((sheet) => [...guardedClasses(sheet.css)]);
+    const animations = sheets.flatMap((sheet) => animated(sheet.css));
+    const transitions = sheets.flatMap((sheet) => travelling(sheet.css));
+    const guards = sheets.flatMap((sheet) => [
+      ...surrendered(sheet.css, "animation"),
+      ...surrendered(sheet.css, "transition"),
+    ]);
 
-    expect(animated.length).toBeGreaterThanOrEqual(20);
-    expect(guarded.length).toBeGreaterThanOrEqual(10);
+    expect(animations.length).toBeGreaterThanOrEqual(20);
+    expect(transitions.length).toBeGreaterThanOrEqual(10);
+    expect(guards.length).toBeGreaterThanOrEqual(20);
   });
 
   it("states the policy and the guard that holds it", () => {

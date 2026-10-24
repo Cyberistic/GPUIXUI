@@ -2856,6 +2856,12 @@
   transform: translateX(16px);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .gx-set-knob {
+    transition: none;
+  }
+}
+
 .gx-set-switch:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
