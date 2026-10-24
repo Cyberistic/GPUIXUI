@@ -51,5 +51,5 @@ const [copies, setCopies] = useState(1);
 ## Limitations
 
 - Decimal text by default; grouped or locale display goes through `formatValue`/`parseValue`.
-- `min` above `max` is swapped; `Home`/`End` read the swapped range.
+- `min` above `max` is the range it means: the clamp and the arrow/Page steps read the pair the right way round. `Home`/`End` would read it too, but a window's native `<input>` consumes both for its caret before the field hears them, so in a window they stay the caret's.
 - No `type="number"`, `inputMode` or `maxLength`: the runtime applies a value only when it changes, so a refused character stays in the box.

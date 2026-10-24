@@ -1468,6 +1468,26 @@ describe("the primitives docs page contract", () => {
     );
   });
 
+  it("teaches the keys the shipped number field actually answers", () => {
+    // Bug guarded: §Limitations said "`Home`/`End` read the swapped range",
+    // which is true of the resolver and false of the field a window ships — a
+    // native `<input>` consumes both for its caret before React hears them
+    // (`runtime/number-field.runtime.test.tsx`), and the inventory row records
+    // that the pair stays the caret's. A page cannot teach a bounds jump the
+    // shipped window cannot deliver.
+    const page = read("number-field.mdx");
+    expect(page).toContain("stay the caret's");
+    expect(page).not.toContain("`Home`/`End` read the swapped range");
+
+    const suite = readFileSync(
+      fileURLToPath(
+        new URL("../runtime/number-field.runtime.test.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    expect(suite).toContain("hears no Home or End in a window");
+  });
+
   it("keeps the window that painted the vertical slider registered and recorded", () => {
     // Bug guarded: the vertical axis is proved in a real window by
     // `slider-vertical-lifecycle`, and a plan that deleted or renamed the probe
