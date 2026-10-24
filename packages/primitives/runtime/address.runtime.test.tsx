@@ -321,3 +321,64 @@ it("hands the caller's ref the element the form has to focus", async () => {
   // A select's address belongs to its trigger, the one focusable element.
   expect(fruitRef.current?.id).toBe(addressed(runtime, "Fruit").id);
 });
+
+it("moves a range slider's address to the end the reader last used", async () => {
+  // The bug guarded: the page told a caller the address trio landed on the
+  // **track** — the non-focusable `role="group"` — so a form focused an element
+  // that cannot take focus, an automation host looked for the id on the wrong
+  // node, and a measurement was read as the control's. The page's own rule
+  // (`docs/README.md`) makes the address name the element a form focuses and a
+  // layout measures, and only the thumbs can be focused: the start while
+  // neither holds focus, the end once the reader has tabbed there. The pure
+  // suite reads the two branches; only a window can say the native focus move
+  // lands on the end, the address follows it, and the box the caller receives is
+  // a thumb's rather than the track's.
+  const runtime = await openWindow();
+  const ref = createRef<PublicInstance>();
+  const boxes: Array<{ readonly x: number; readonly width: number }> = [];
+  runtime.render(
+    <Surface>
+      <RangeSlider
+        testId="price"
+        label="Price"
+        aria-id="price-end"
+        defaultValue={[20, 60] as const}
+        ref={ref}
+        onLayout={(event) =>
+          boxes.push({ x: event.x ?? 0, width: event.width ?? 0 })
+        }
+      />
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const track = Option.getOrElse(runtime.bounds("price"), () =>
+    expect.fail("the runtime painted no range slider"),
+  );
+  expect(ref.current?.id).toBe(addressed(runtime, "Price minimum").id);
+  // The first box is the addressed thumb, not the track a caller measures.
+  expect(boxes).toHaveLength(1);
+  expect((boxes[0]?.width ?? 0) < track.width).toBe(true);
+
+  // Two stops: the start thumb, then the end thumb.
+  runtime.focusNext();
+  runtime.focusNext();
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(ref.current?.id).toBe(addressed(runtime, "Price maximum").id);
+  expect(node(runtime, "Slider", "Price maximum").aria?.author_id).toBe(
+    "price-end",
+  );
+  expect(
+    node(runtime, "Slider", "Price minimum").aria?.author_id,
+  ).toBeUndefined();
+  // The address moving re-reports its box, and it is still a thumb's: the second
+  // report sits where the end thumb is painted.
+  const end = Option.getOrElse(
+    runtime.boundsOfId(addressed(runtime, "Price maximum").id),
+    () => expect.fail("the end thumb painted no box"),
+  );
+  expect(boxes).toHaveLength(2);
+  expect(boxes[1]).toStrictEqual({ x: end.x, width: end.width });
+  expect(end.width < track.width).toBe(true);
+});

@@ -484,6 +484,14 @@ the one a caller holds, and the author id reaches the `progressbar`, `meter` and
 native element under the name `FieldHostProps` — one vocabulary for "the element
 outside this library may need".
 
+A **composite** control has no single element, so the same trio names the part
+that holds its tab stop: a radio group's option row, a rating's focused star, an
+OTP field's first cell, and a range slider's focused thumb. The group node
+around them cannot take focus, so a form that focused it would focus nothing.
+Each page's API table says which part that is, and the window suite reads the
+id, the instance and the announced help back off the element the runtime
+retained (`runtime/address.runtime.test.tsx`).
+
 ### What GPUix does not provide, and what this package does instead
 
 | Capability | GPUix 0.11.0 | Here |

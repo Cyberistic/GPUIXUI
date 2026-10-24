@@ -47,7 +47,8 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for the default composition |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the range's own; keys land on a thumb |
-| `ref` / `aria-id` / `onLayout` | host props | none | land on the track (`role="group"`); each thumb is a `slider` of its own |
+| `ref` / `aria-id` | host props | none | land on the thumb that holds the tab stop — the end the reader last used, the start while neither holds focus — because the group node cannot take focus; the address moves with the reader |
+| `onLayout` | `(event: EventPayload) => void` | none | the painted box of the thumb holding the tab stop — a thumb's, never the track's — reported on mount and again when the address moves; wrap the slider to measure the whole control |
 | `testId` | `string` | — | stable locator for the track |
 
 ## Limitations

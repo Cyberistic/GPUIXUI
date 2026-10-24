@@ -1350,6 +1350,60 @@ describe("the primitives docs page contract", () => {
     );
   });
 
+  it("addresses the thumb a range slider's reader last used, and says so", () => {
+    // The bug guarded: the page said the address trio landed on the **track** —
+    // the non-focusable `role="group"` — while the component writes it onto the
+    // addressed thumb, the contract every other group page states. A caller
+    // wiring `onLayout` to measure the slider was promised the control's box and
+    // got a thumb's, and a form focusing the address was told it landed on
+    // something that cannot take focus. The page names the thumb, the catalogue
+    // states the rule for every composite, and the window suite measures that
+    // the address follows the reader from the start end to the end they used.
+    const page = read("range-slider.mdx");
+    expect(page).toContain("| `ref` / `aria-id` |");
+    expect(page).toContain("thumb that holds the tab stop");
+    expect(page).toContain("the start while neither holds focus");
+    expect(page).toContain("never the track's");
+    expect(page).toContain("wrap the slider");
+    expect(page).not.toContain("land on the track");
+
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("../README.md", import.meta.url)),
+      "utf8",
+    );
+    // Prose wraps, so the claim is read as one run of words.
+    expect(Str.replace(/\s+/g, " ")(catalogue)).toContain(
+      "part that holds its tab stop",
+    );
+
+    const painter = readFileSync(
+      fileURLToPath(new URL("../src/components/Slider.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(painter).toContain(
+      "const addressedIndex = Option.getOrElse(focus.focusedIndex, () => 0);",
+    );
+    expect(painter).toContain(
+      "addressed ? mergeRefs(register, props.ref) : register",
+    );
+    expect(painter).toContain(
+      '"aria-id": addressed ? props["aria-id"] : undefined',
+    );
+    expect(painter).toContain(
+      "onLayout: addressed ? props.onLayout : undefined",
+    );
+
+    const runtime = readFileSync(
+      fileURLToPath(
+        new URL("../runtime/address.runtime.test.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    expect(runtime).toContain(
+      "moves a range slider's address to the end the reader last used",
+    );
+  });
+
   it("gives both value controls their second axis", () => {
     // The bug guarded: `orientation` reached the root but not the parts, so a
     // vertical slider laid a horizontal rail, grew its fill sideways and pulled
