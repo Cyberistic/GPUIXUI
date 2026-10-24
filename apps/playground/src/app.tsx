@@ -97,6 +97,7 @@ const Shell = ({
 
   return (
     <div
+      testId="app-shell"
       style={{
         display: "flex",
         width: "100%",
@@ -192,7 +193,7 @@ const Shell = ({
             borderColor: theme.colors.border,
           }}
         >
-          <Body>
+          <Body testId="app-title">
             {Option.match(current, {
               onNone: () => "no scenarios",
               onSome: (scenario) => scenario.title,

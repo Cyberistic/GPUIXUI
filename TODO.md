@@ -2604,7 +2604,42 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 174/174
+`[x]` `[██████████]` 175/175
+
+`[x]` Prove **the playground shell opens the scenario a press reaches** — the app's
+      sidebar was guarded only as a list that scrolls (`shell-navigation`), so
+      nothing pressed a row: the `selected` state, the header that reads it and
+      the stage that mounts `scenario.view()` had no check between them, and a
+      press could paint its highlight over a stage that never changed while the
+      whole 46-scenario suite stayed green — the playground broken for a human
+      and every piece of evidence intact. The headless `shell-selection` probe
+      mounts the real `App` and measured 30 checks on 0.11.0: the header names
+      the registry's first entry, that row paints the dark palette's `accent`
+      while an unpressed row paints its `background`, and the pressed entry's own
+      view is not mounted (`input-field` has no box); the pressed row is
+      **revealed** first, because the renderer keeps a scroll offset **per
+      `testId`** (after `shell-navigation`, the list is at the bottom and a press
+      aimed at an off-screen box hits whatever is painted there); the press moves
+      the header, mounts the view with a box, paints the pressed row's accent and
+      returns the retired row to the page; the mounted view is **live** (a press
+      into its own field plus one key reaches its own readout, `value=g`); and
+      pressing `theme-mode-light` repaints the root's fill and the selected row's
+      accent to the light palette's roles. The shell gained the three addresses
+      this needs (`app-shell`, `app-title`, and `Body`'s optional `testId`).
+      Directions measured, `exit 1` each and restored green: dropping the nav
+      row's `onClick` fails `the header names the pressed scenario` (`got "Flex
+      layout, gaps and absolute positioning"`), and dropping the palette switch's
+      `onSelect` fails `the palette switch repaints the shell's root` (`expected
+      "#F6F8FA", got "#11141A"`). `shell-selection.test.ts` (5 cases) holds the
+      premises a host with no binding cannot — the pressed entry exists and is
+      not the one the app opens on, that entry's view declares both `testId`s,
+      the shell declares every address the probe presses, the pressed palette is
+      offered and paints differently, and the README's printed count is the
+      number of assertions in the probe's source (measured: restoring `31 checks`
+      fails the count case). Green: the full headless suite **47/47** with every
+      capability verified, `nub run --filter playground test` 119 files / 1 193
+      tests. Docs: `apps/playground/README.md` §The shell's selection, the intro's
+      scenario list and the `shell` measurement row.
 
 `[x]` Stop the **theme gallery's inventory row** printing a registry size — the
       `Native theme gallery` row said "**40/40** headless scenarios green" and

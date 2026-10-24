@@ -36,10 +36,17 @@ export const Readout = ({
 };
 
 /** Body text in the theme's foreground colour. */
-export const Body = ({ children }: { readonly children: ReactNode }) => {
+export const Body = ({
+  testId,
+  children,
+}: {
+  readonly testId?: string;
+  readonly children: ReactNode;
+}) => {
   const theme = useTheme();
   return (
     <text
+      testId={testId}
       style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
     >
       {children}

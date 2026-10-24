@@ -235,6 +235,11 @@ export const registry = [
     capability: "layout",
   },
   {
+    id: "shell-selection",
+    title: "Playground shell: a press opens the scenario it reaches",
+    capability: "layout",
+  },
+  {
     id: "virtual-list-windowed",
     title: "Windowed virtual list: itemCount mounts only the slice it paints",
     capability: "virtual-list",
