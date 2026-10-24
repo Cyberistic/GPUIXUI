@@ -130,6 +130,11 @@ export interface UseTableOptions<Row extends RowData> {
    * again paints it chosen (the core keeps the id). Pass a tree whose identity
    * changes only when the query does: a fresh object on every render rebuilds
    * the row models.
+   *
+   * A saved query is data: `null`/`undefined` means **no filter**, while a tree
+   * this release cannot read (an unknown comparison or node, a missing child)
+   * keeps no row rather than throwing or showing every record — see
+   * `readFilterTree`.
    */
   readonly filterTree?: FilterTree;
   /** Start sorted, for a table whose natural order is not the source order. */
@@ -295,11 +300,14 @@ export const useTable = <Row extends RowData>({
 
   // The tree narrows the records before the core builds its row models, so the
   // text query searches the set the tree kept and the sort orders that same set.
+  // A nullish query is no filter; a query this release cannot read keeps no row
+  // (the schema refusal in `filterByTree`), never every row.
   const source = useMemo(
     () =>
-      filterTree === undefined
-        ? rows
-        : filterByTree(rows, filterTree, fieldValueOf(columns)),
+      Option.match(Option.fromNullishOr(filterTree), {
+        onNone: () => rows,
+        onSome: (tree) => filterByTree(rows, tree, fieldValueOf(columns)),
+      }),
     [rows, filterTree, columns],
   );
 

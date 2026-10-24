@@ -34,10 +34,28 @@ import {
 } from "../internal/test-root.js";
 import { AdvancedFilter } from "../surfaces/advanced-filter.js";
 import { DEFAULT_LABEL_WIDTH, KeyValue } from "../surfaces/key-value.js";
-import type { FilterTree } from "../surfaces/logic.js";
+import { UNREADABLE_TREE, type FilterTree } from "../surfaces/logic.js";
 import { DataToolbar } from "../surfaces/toolbar.js";
 
 let root: DataTestRoot | undefined;
+
+/**
+ * A saved query whose comparison a later release does not carry.
+ *
+ * This is the shape a store hands back: `unknown` cast by the release that
+ * wrote it, read by a release whose schema refuses it.
+ */
+const SAVED_QUERY = {
+  kind: "all",
+  children: [
+    {
+      kind: "predicate",
+      field: "name",
+      comparison: "startsWith",
+      value: "re",
+    },
+  ],
+} as unknown as FilterTree;
 
 /** A builder over a tree its caller holds, so an Add control repaints it. */
 const NestedBuilder = ({ tree: initial }: { readonly tree: FilterTree }) => {
@@ -211,6 +229,31 @@ describe("the data surfaces", () => {
     expect(requireBounds(root, "nested-0-value").y).toBeLessThan(
       requireBounds(root, "nested-1-0-value").y,
     );
+  });
+
+  it("refuses a saved tree it cannot read, and Clear starts a new one", () => {
+    // A saved query is data, and a release can meet one it cannot read: the
+    // comparison below is not in this build's schema. The grid used to throw
+    // `Match/exhaustive: absurd` on such a tree, and reading it as the empty
+    // tree would paint every record the query meant to hide. The builder shows
+    // the refusal with Clear, so the reader can recover from a query they
+    // cannot edit.
+    root = renderData(<NestedBuilder tree={SAVED_QUERY} />);
+    settle(root);
+
+    expect(paintedText(root)).toContain(UNREADABLE_TREE);
+    expect(root.renderer.findByTestId("nested-0-value")).toBeUndefined();
+    expect(root.renderer.findByTestId("nested-add")).toBeUndefined();
+    expect(root.renderer.findByTestId("nested-add-group")).toBeUndefined();
+
+    clickCentreOf(root, "nested-clear");
+    root.renderer.flush();
+
+    // Clear lands the empty tree a fresh builder starts from, and the editor
+    // controls come back with it.
+    expect(paintedText(root)).toContain("everything");
+    expect(paintedText(root)).not.toContain(UNREADABLE_TREE);
+    expect(root.renderer.findByTestId("nested-add")).toBeDefined();
   });
 
   it("adds a clause to the nested group the reader asked", () => {

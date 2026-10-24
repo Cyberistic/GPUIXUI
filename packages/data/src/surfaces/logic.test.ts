@@ -19,13 +19,17 @@
  * - a builder that could read an `any` or a `not` but never compose one, so
  *   every saved query it wrote was a flat `all`;
  * - a combinator or a negation that rebuilt the group around its clauses, so
- *   switching "all" to "any" dropped the clauses the reader had typed.
+ *   switching "all" to "any" dropped the clauses the reader had typed;
+ * - a saved query this release cannot read (an unknown comparison or node)
+ *   throwing out of the grid, or passing every record through the filter it
+ *   was meant to apply.
  */
 
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
   appendAt,
   appendClause,
@@ -37,13 +41,16 @@ import {
   filterByTree,
   isAll,
   isAny,
+  isFilterTree,
   isNot,
   isPredicate,
   matchesComparison,
   matchesTree,
   negateAt,
+  readFilterTree,
   removeAt,
   setGroupKind,
+  UNREADABLE_TREE,
   updateAt,
   updatePredicate,
   type FieldPredicate,
@@ -700,5 +707,105 @@ describe("editing a tree", () => {
       child: clause("status", "equals", "tracked"),
     };
     expect(negateAt(negated, [1])).toEqual(negated);
+  });
+});
+
+/**
+ * A saved query, read back out of a store.
+ *
+ * A store hands back `unknown`; the cast is its claim about what it wrote, and
+ * the release that reads it is what has to be sure. The JSON goes through
+ * `Schema` (`Schema.Unknown`) so the fixture is parsed the way an app parses a
+ * saved record. A tree this build cannot read used to throw
+ * `Match/exhaustive: absurd` out of the grid on the first record — and the fix
+ * must not swing to "match everything", which would paint the records the query
+ * meant to hide.
+ */
+const saved = (json: string): FilterTree =>
+  Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(
+    json,
+  ) as FilterTree;
+
+describe("a saved query", () => {
+  it("keeps no row for a comparison this release does not name", () => {
+    const tree = saved(
+      '{"kind":"all","children":[{"kind":"predicate","field":"size","comparison":"startsWith","value":"1"}]}',
+    );
+    const row = rows[0] ?? { name: "", size: 0, status: "" };
+
+    expect(filterByTree(rows, tree, valueOf)).toEqual([]);
+    expect(matchesTree(tree, row, valueOf)).toBe(false);
+    expect(describeTree(tree)).toBe(UNREADABLE_TREE);
+    expect(clauseCount(tree)).toBe(0);
+  });
+
+  it("keeps no row for a node this release does not name", () => {
+    const trees = [
+      saved('{"kind":"xor","children":[]}'),
+      saved('{"kind":"not"}'),
+      saved("null"),
+    ];
+    const row = rows[0] ?? { name: "", size: 0, status: "" };
+
+    expect(Arr.map(trees, (tree) => filterByTree(rows, tree, valueOf))).toEqual(
+      [[], [], []],
+    );
+    expect(Arr.map(trees, (tree) => matchesTree(tree, row, valueOf))).toEqual([
+      false,
+      false,
+      false,
+    ]);
+    expect(Arr.map(trees, describeTree)).toEqual([
+      UNREADABLE_TREE,
+      UNREADABLE_TREE,
+      UNREADABLE_TREE,
+    ]);
+    // The refusal is not the empty tree: an `all` with no clause keeps every
+    // row, and a stored query must never be read as one.
+    expect(filterByTree(rows, emptyTree, valueOf)).toHaveLength(3);
+  });
+
+  it("leaves a tree it cannot read alone when the builder edits it", () => {
+    const tree = saved(
+      '{"kind":"all","children":[{"kind":"predicate","field":"size","comparison":"startsWith","value":"1"}]}',
+    );
+
+    expect(updatePredicate(tree, { value: "2" })).toEqual(tree);
+    expect(updateAt(tree, [0], clause("size", "equals", "2"))).toEqual(tree);
+    expect(removeAt(tree, [0])).toEqual(tree);
+    expect(appendAt(tree, [], clause("name", "equals", "main.ts"))).toEqual(
+      tree,
+    );
+    expect(appendClause(tree, clause("name", "equals", "main.ts"))).toEqual(
+      tree,
+    );
+    expect(setGroupKind(tree, [], "any")).toEqual(tree);
+    expect(negateAt(tree, [])).toEqual(tree);
+    expect(Option.isNone(clauseAt(tree, [0]))).toBe(true);
+  });
+
+  it("decodes every tree a builder composes, and refuses the rest", () => {
+    const composed: ReadonlyArray<FilterTree> = [
+      emptyTree,
+      clause("status", "equals", "tracked"),
+      { kind: "all", children: [clause("status", "equals", "tracked")] },
+      {
+        kind: "any",
+        children: [
+          clause("size", "greaterThan", "1024"),
+          { kind: "not", child: clause("name", "contains", "main") },
+        ],
+      },
+    ];
+
+    expect(Arr.every(composed, isFilterTree)).toBe(true);
+    expect(
+      Arr.every(composed, (tree) => Option.isSome(readFilterTree(tree))),
+    ).toBe(true);
+    expect(Option.isNone(readFilterTree(saved('{"kind":"all"}')))).toBe(true);
+    expect(Option.isNone(readFilterTree(saved('"everything"')))).toBe(true);
+    // Absence is the caller's to read: `useTable` and the builder treat a
+    // nullish query as no filter, while a direct read refuses it.
+    expect(Option.isNone(readFilterTree(null))).toBe(true);
   });
 });

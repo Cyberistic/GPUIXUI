@@ -54,9 +54,11 @@ import {
   comparisons,
   describeTree,
   emptyTree,
+  isFilterTree,
   negateAt,
   removeAt,
   setGroupKind,
+  UNREADABLE_TREE,
   updateAt,
   type Comparison,
   type FieldPredicate,
@@ -506,8 +508,22 @@ export const AdvancedFilter = ({
   ...rest
 }: AdvancedFilterProps) => {
   const theme = useTheme();
+  /**
+   * The tree this build can paint.
+   *
+   * A saved query is data: `null`/`undefined` is the empty tree a fresh builder
+   * starts from, and anything else the schema refuses paints the refusal with
+   * Clear rather than throwing out of the render. `None` is the unreadable
+   * case; the editor controls are hidden until it is cleared.
+   */
+  const shown = Option.match(Option.fromNullishOr(tree), {
+    onNone: () => Option.some(emptyTree),
+    onSome: (value) =>
+      isFilterTree(value) ? Option.some(value) : Option.none(),
+  });
+  const base = Option.getOrElse(shown, () => emptyTree);
   const addClause = (path: FilterPath): void => {
-    onChange(appendAt(tree, path, clauseFor(fields)));
+    onChange(appendAt(base, path, clauseFor(fields)));
   };
   const addGroup = (path: FilterPath): void => {
     // A new group starts as an `all` holding one blank clause: the reader
@@ -516,7 +532,7 @@ export const AdvancedFilter = ({
     // keeps nothing, which is not a state an Add control should land a reader
     // in.
     onChange(
-      appendAt(tree, path, { kind: "all", children: [clauseFor(fields)] }),
+      appendAt(base, path, { kind: "all", children: [clauseFor(fields)] }),
     );
   };
   return (
@@ -535,36 +551,48 @@ export const AdvancedFilter = ({
         {title}
       </text>
       <text style={recipeStyle(FILTER_SENTENCE, theme)}>
-        {describeTree(tree)}
+        {Option.match(shown, {
+          onNone: () => UNREADABLE_TREE,
+          onSome: describeTree,
+        })}
       </text>
-      <Tree
-        root={tree}
-        node={tree}
-        path={[]}
-        fields={fields}
-        onChange={onChange}
-        onAddClause={addClause}
-        onAddGroup={addGroup}
-        testId={testId}
-        removable={false}
-      />
+      {Option.match(shown, {
+        onNone: () => null,
+        onSome: (readable) => (
+          <Tree
+            root={readable}
+            node={readable}
+            path={[]}
+            fields={fields}
+            onChange={onChange}
+            onAddClause={addClause}
+            onAddGroup={addGroup}
+            testId={testId}
+            removable={false}
+          />
+        ),
+      })}
       <div style={recipeStyle("flex flex-row items-center gap-2", theme)}>
-        <Button
-          variant="secondary"
-          size="sm"
-          onActivate={() => addClause([])}
-          testId={testId === undefined ? undefined : `${testId}-add`}
-        >
-          Add clause
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onActivate={() => addGroup([])}
-          testId={testId === undefined ? undefined : `${testId}-add-group`}
-        >
-          Add group
-        </Button>
+        {Option.isSome(shown) ? (
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              onActivate={() => addClause([])}
+              testId={testId === undefined ? undefined : `${testId}-add`}
+            >
+              Add clause
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onActivate={() => addGroup([])}
+              testId={testId === undefined ? undefined : `${testId}-add-group`}
+            >
+              Add group
+            </Button>
+          </>
+        ) : undefined}
         <Button
           variant="ghost"
           size="sm"

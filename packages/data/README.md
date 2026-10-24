@@ -575,8 +575,14 @@ text query does, so the field above the rows searches the set the tree kept and
 the sort orders that same set. A chosen record the tree hides is released in
 the same commit a query releases it, and a tree that keeps it again paints it
 chosen; a field no column names reads blank, so a saved tree that mentions a
-removed column narrows instead of failing. A controlled consumer building the
-table with `constructGrid` reads the same seam:
+removed column narrows instead of failing. A **saved query** is data read by a
+later release: the tree is a `FilterTree` schema, `readFilterTree(value)` is the
+boundary that decodes one, and a comparison or node this build does not name is
+**refused rather than approximated** — `filterByTree` keeps no row (never every
+row, which would paint the records the query meant to hide) and `describeTree`
+answers `a filter this release cannot read`, which the builder paints with
+Clear. A `null`/`undefined` query is no filter. A controlled consumer building
+the table with `constructGrid` reads the same seam:
 
 ```ts
 import { fieldValueOf, filterByTree } from "@gpuixui/data";

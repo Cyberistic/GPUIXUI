@@ -34,12 +34,39 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 | Export | What it does |
 | ------ | ------------ |
 | `emptyTree` | the empty `all` group, which matches everything |
+| `FilterTree` | the schema a stored query is decoded and validated through |
+| `isFilterTree(value)` | whether a value is a tree this release can read |
+| `readFilterTree(value)` | `Option<FilterTree>`: a stored query, or the refusal |
 | `filterByTree(rows, tree, valueOf)` | the rows a tree keeps |
 | `matchesTree(tree, row, valueOf)` | whether one row matches |
 | `describeTree(tree)` | the sentence a tree reads as |
+
+## A saved query
+
+A tree is stored data: a saved query outlives the release that wrote it, and a
+store or a hand-edited record can hand back a node or a comparison this build
+does not carry. Decode it before it reaches a builder or a table:
+
+```ts
+const saved = readFilterTree(storedQuery);
+
+Option.match(saved, {
+  onNone: () => promptToRebuildTheQuery(),
+  onSome: (tree) => setTree(tree),
+});
+```
+
+A tree this release cannot read is **refused, never approximated**: the table
+keeps **no** rows rather than showing every record the query meant to hide, and
+`describeTree` answers `a filter this release cannot read`. The builder paints
+that sentence with Clear, so a reader can recover from a query whose clauses it
+cannot edit. A `null`/`undefined` query is no filter at all — `useTable` and the
+builder read it as the empty tree.
 
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.
 - A `not` holds exactly one child and paints no Add of its own.
 - A clause carries Remove only where removing it changes the tree.
+- A tree the release cannot read is refused with Clear; it is not migrated into
+  the current comparison set.

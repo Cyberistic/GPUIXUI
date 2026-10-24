@@ -11,6 +11,17 @@
  * value is read through the caller's `valueOf`, so the tree never learns what
  * a row is.
  *
+ * A tree is also **stored data**: a saved query outlives the release that wrote
+ * it, and a store or a hand-edited record can hand back a node or a comparison
+ * this build does not name. Every exported reader therefore reads its input
+ * through {@link FilterTree}'s schema first: an unreadable tree keeps **no**
+ * rows rather than throwing, or keeps every row as if the filter were absent —
+ * the records a broken query was meant to hide must not paint. `null` and
+ * `undefined` are the one absence the *components* read as the empty tree; a
+ * direct `filterByTree` call treats them like any other unreadable input.
+ * `describeTree` says {@link UNREADABLE_TREE} and a builder paints that
+ * sentence with Clear, so a reader can recover from a query they cannot edit.
+ *
  * ```ts
  * const tree: FilterTree = {
  *   kind: "all",
@@ -28,27 +39,26 @@ import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Number from "effect/Number";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
 /** How a field's value is compared with a clause's value. */
-export type Comparison =
-  | "equals"
-  | "notEquals"
-  | "contains"
-  | "greaterThan"
-  | "lessThan";
-
-/** The combinators a group can wear. */
-export type GroupKind = "all" | "any" | "not";
-
-/** The comparisons a builder offers, in the order it lists them. */
-export const comparisons: ReadonlyArray<Comparison> = [
+export const comparisons = [
   "equals",
   "notEquals",
   "contains",
   "greaterThan",
   "lessThan",
-];
+] as const;
+
+/** One comparison, as the builder offers it and a saved tree decodes it. */
+export const Comparison = Schema.Literals(comparisons);
+
+/** How a field's value is compared with a clause's value. */
+export type Comparison = typeof Comparison.Type;
+
+/** The combinators a group can wear. */
+export type GroupKind = "all" | "any" | "not";
 
 /** One comparison over one field. */
 export interface FieldPredicate {
@@ -80,6 +90,61 @@ export interface NotClause {
 
 /** A predicate, or a boolean combination of predicates. */
 export type FilterTree = FieldPredicate | AllClause | AnyClause | NotClause;
+
+/**
+ * The tree as a schema: the shape every reader validates stored input against.
+ *
+ * Recursive, because a group holds trees. It is the same union the types
+ * describe, so `Schema.is` is a membership test rather than a second model —
+ * and it is what makes a saved query decodable before a grid runs it.
+ */
+export const FilterTree: Schema.Schema<FilterTree> = Schema.Union([
+  Schema.Struct({
+    kind: Schema.tag("predicate"),
+    field: Schema.String,
+    comparison: Comparison,
+    value: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.tag("all"),
+    children: Schema.Array(Schema.suspend(() => FilterTree)),
+  }),
+  Schema.Struct({
+    kind: Schema.tag("any"),
+    children: Schema.Array(Schema.suspend(() => FilterTree)),
+  }),
+  Schema.Struct({
+    kind: Schema.tag("not"),
+    child: Schema.suspend(() => FilterTree),
+  }),
+]);
+
+/**
+ * The sentence a tree this release cannot read is shown by.
+ *
+ * A builder paints it beside Clear, and `describeTree` answers it for any
+ * stored query the schema refuses, so the words a reader meets match the rows
+ * they see (none).
+ */
+export const UNREADABLE_TREE = "a filter this release cannot read";
+
+/** Whether a value is a tree this release can read. */
+export const isFilterTree = (value: unknown): value is FilterTree =>
+  Schema.is(FilterTree)(value);
+
+/** Whether a value is a comparison this release can evaluate. */
+export const isComparison = (value: unknown): value is Comparison =>
+  Schema.is(Comparison)(value);
+
+/**
+ * Read a stored query, or refuse it.
+ *
+ * This is the boundary a saved query crosses: a store hands back `unknown`, and
+ * a builder or a grid is handed only the trees this build can read. `None`
+ * means the query cannot be read — not that it keeps everything.
+ */
+export const readFilterTree = (value: unknown): Option.Option<FilterTree> =>
+  isFilterTree(value) ? Option.some(value) : Option.none();
 
 /** Whether a tree is a single comparison. */
 export const isPredicate = (tree: FilterTree): tree is FieldPredicate =>
@@ -127,6 +192,7 @@ export const matchesComparison = (
   left: string | number,
   right: string,
 ): boolean =>
+  Arr.contains(comparisons, comparison) &&
   Match.value(comparison).pipe(
     Match.when("equals", () => `${left}` === right),
     Match.when("notEquals", () => `${left}` !== right),
@@ -142,13 +208,8 @@ export const matchesComparison = (
     Match.exhaustive,
   );
 
-/**
- * Whether a row matches a tree.
- *
- * The row's value is read through `valueOf`, so the tree is independent of
- * what a row is.
- */
-export const matchesTree = <Row>(
+/** A row and a tree the schema has already accepted. */
+const matchesReadable = <Row>(
   tree: FilterTree,
   row: Row,
   valueOf: (row: Row, field: string) => string | number,
@@ -162,52 +223,74 @@ export const matchesTree = <Row>(
       ),
     ),
     Match.when(isAll, (group) =>
-      Arr.every(group.children, (child) => matchesTree(child, row, valueOf)),
+      Arr.every(group.children, (child) =>
+        matchesReadable(child, row, valueOf),
+      ),
     ),
     Match.when(isAny, (group) =>
-      Arr.some(group.children, (child) => matchesTree(child, row, valueOf)),
+      Arr.some(group.children, (child) => matchesReadable(child, row, valueOf)),
     ),
-    Match.when(isNot, (group) => !matchesTree(group.child, row, valueOf)),
+    Match.when(isNot, (group) => !matchesReadable(group.child, row, valueOf)),
     Match.exhaustive,
   );
 
-/** The rows a tree keeps, in the caller's order. */
+/**
+ * Whether a row matches a tree.
+ *
+ * The row's value is read through `valueOf`, so the tree is independent of
+ * what a row is. A tree the schema refuses matches nothing: a saved query this
+ * release cannot read must not pass every record through the filter it was
+ * meant to apply.
+ */
+export const matchesTree = <Row>(
+  tree: FilterTree,
+  row: Row,
+  valueOf: (row: Row, field: string) => string | number,
+): boolean => isFilterTree(tree) && matchesReadable(tree, row, valueOf);
+
+/**
+ * The rows a tree keeps, in the caller's order.
+ *
+ * A tree the schema refuses keeps no row (see {@link matchesTree}); validating
+ * once here means a stored query costs one check rather than one per record.
+ */
 export const filterByTree = <Row>(
   rows: ReadonlyArray<Row>,
   tree: FilterTree,
   valueOf: (row: Row, field: string) => string | number,
 ): ReadonlyArray<Row> =>
-  Arr.filter(rows, (row) => matchesTree(tree, row, valueOf));
+  isFilterTree(tree)
+    ? Arr.filter(rows, (row) => matchesReadable(tree, row, valueOf))
+    : [];
 
-/** How many comparisons a tree holds. */
-export const clauseCount = (tree: FilterTree): number =>
+/** How many comparisons a tree the schema accepted holds. */
+const clauseCountReadable = (tree: FilterTree): number =>
   Match.value(tree).pipe(
     Match.when(isPredicate, () => 1),
     Match.when(isAll, (group) =>
       Arr.reduce(
         group.children,
         0,
-        (total, child) => total + clauseCount(child),
+        (total, child) => total + clauseCountReadable(child),
       ),
     ),
     Match.when(isAny, (group) =>
       Arr.reduce(
         group.children,
         0,
-        (total, child) => total + clauseCount(child),
+        (total, child) => total + clauseCountReadable(child),
       ),
     ),
-    Match.when(isNot, (group) => clauseCount(group.child)),
+    Match.when(isNot, (group) => clauseCountReadable(group.child)),
     Match.exhaustive,
   );
 
-/**
- * The sentence a tree reads as.
- *
- * A builder shows the sentence beside the clauses, so a reader can see what
- * the tree means without reading every row.
- */
-export const describeTree = (tree: FilterTree): string =>
+/** How many comparisons a tree holds; a tree it cannot read holds none. */
+export const clauseCount = (tree: FilterTree): number =>
+  isFilterTree(tree) ? clauseCountReadable(tree) : 0;
+
+/** The sentence a tree the schema accepted reads as. */
+const describeReadable = (tree: FilterTree): string =>
   Match.value(tree).pipe(
     Match.when(
       isPredicate,
@@ -216,26 +299,31 @@ export const describeTree = (tree: FilterTree): string =>
     Match.when(isAll, (group) =>
       group.children.length === 0
         ? "everything"
-        : `all of (${Arr.map(group.children, describeTree).join(", ")})`,
+        : `all of (${Arr.map(group.children, describeReadable).join(", ")})`,
     ),
     Match.when(isAny, (group) =>
       group.children.length === 0
         ? // No alternative to satisfy, so no row matches — the sentence a
           // builder shows has to agree with the rows the tree keeps.
           "nothing"
-        : `any of (${Arr.map(group.children, describeTree).join(", ")})`,
+        : `any of (${Arr.map(group.children, describeReadable).join(", ")})`,
     ),
-    Match.when(isNot, (group) => `not (${describeTree(group.child)})`),
+    Match.when(isNot, (group) => `not (${describeReadable(group.child)})`),
     Match.exhaustive,
   );
 
 /**
- * Replace one clause's field, comparison or value.
+ * The sentence a tree reads as.
  *
- * The builder edits the tree in place rather than rebuilding it, so a change
- * keeps the clauses the reader did not touch.
+ * A builder shows the sentence beside the clauses, so a reader can see what
+ * the tree means without reading every row. A tree the schema refuses reads as
+ * {@link UNREADABLE_TREE} instead of throwing.
  */
-export const updatePredicate = (
+export const describeTree = (tree: FilterTree): string =>
+  isFilterTree(tree) ? describeReadable(tree) : UNREADABLE_TREE;
+
+/** A tree the schema accepted, edited in place. */
+const updatePredicateReadable = (
   tree: FilterTree,
   change: {
     readonly field?: string;
@@ -255,21 +343,38 @@ export const updatePredicate = (
     Match.when(isAll, (group) => ({
       ...group,
       children: Arr.map(group.children, (child) =>
-        updatePredicate(child, change),
+        updatePredicateReadable(child, change),
       ),
     })),
     Match.when(isAny, (group) => ({
       ...group,
       children: Arr.map(group.children, (child) =>
-        updatePredicate(child, change),
+        updatePredicateReadable(child, change),
       ),
     })),
     Match.when(isNot, (group) => ({
       ...group,
-      child: updatePredicate(group.child, change),
+      child: updatePredicateReadable(group.child, change),
     })),
     Match.exhaustive,
   );
+
+/**
+ * Replace one clause's field, comparison or value.
+ *
+ * The builder edits the tree in place rather than rebuilding it, so a change
+ * keeps the clauses the reader did not touch. A tree the schema refuses is
+ * returned unchanged.
+ */
+export const updatePredicate = (
+  tree: FilterTree,
+  change: {
+    readonly field?: string;
+    readonly comparison?: Comparison;
+    readonly value?: string;
+  },
+): FilterTree =>
+  isFilterTree(tree) ? updatePredicateReadable(tree, change) : tree;
 
 /**
  * A clause's path from the root: the child index at each level.
@@ -328,9 +433,11 @@ export const clauseAt = (
   tree: FilterTree,
   path: FilterPath,
 ): Option.Option<FieldPredicate> =>
-  Option.flatMap(nodeAt(tree, path), (node) =>
-    isPredicate(node) ? Option.some(node) : Option.none(),
-  );
+  isFilterTree(tree)
+    ? Option.flatMap(nodeAt(tree, path), (node) =>
+        isPredicate(node) ? Option.some(node) : Option.none(),
+      )
+    : Option.none();
 
 /**
  * The group a node reads as when its children keep their positions.
@@ -355,6 +462,7 @@ export const updateAt = (
   path: FilterPath,
   next: FilterTree,
 ): FilterTree => {
+  if (!isFilterTree(tree) || !isFilterTree(next)) return tree;
   if (path.length === 0) return next;
   const [head, ...rest] = path;
   const replaceChild = (children: ReadonlyArray<FilterTree>) =>
@@ -393,11 +501,13 @@ export const setGroupKind = (
   tree: FilterTree,
   path: FilterPath,
   kind: "all" | "any",
-): FilterTree =>
-  Option.match(nodeAt(tree, path), {
+): FilterTree => {
+  if (!isFilterTree(tree)) return tree;
+  return Option.match(nodeAt(tree, path), {
     onNone: () => tree,
     onSome: (node) => updateAt(tree, path, asGroup(node, kind)),
   });
+};
 
 /**
  * Negate the group at `path`, or give it back when it is already negated.
@@ -407,8 +517,9 @@ export const setGroupKind = (
  * wrapper and changes nothing else, so the control is its own inverse. A path
  * that names nothing leaves the tree alone.
  */
-export const negateAt = (tree: FilterTree, path: FilterPath): FilterTree =>
-  Option.match(nodeAt(tree, path), {
+export const negateAt = (tree: FilterTree, path: FilterPath): FilterTree => {
+  if (!isFilterTree(tree)) return tree;
+  return Option.match(nodeAt(tree, path), {
     onNone: () => tree,
     onSome: (node) =>
       updateAt(
@@ -417,6 +528,7 @@ export const negateAt = (tree: FilterTree, path: FilterPath): FilterTree =>
         isNot(node) ? node.child : { kind: "not", child: node },
       ),
   });
+};
 
 /**
  * Remove the clause at a path.
@@ -431,6 +543,7 @@ export const negateAt = (tree: FilterTree, path: FilterPath): FilterTree =>
  * other, and its clauses remove like any other.
  */
 export const removeAt = (tree: FilterTree, path: FilterPath): FilterTree => {
+  if (!isFilterTree(tree)) return tree;
   if (path.length === 0) return tree;
   const [head, ...rest] = path;
   const dropChild = (children: ReadonlyArray<FilterTree>) =>
@@ -497,7 +610,8 @@ const appendNode = (tree: FilterTree, node: FilterTree): FilterTree =>
 export const appendClause = (
   tree: FilterTree,
   clause: FieldPredicate,
-): FilterTree => appendNode(tree, clause);
+): FilterTree =>
+  isFilterTree(tree) && isFilterTree(clause) ? appendNode(tree, clause) : tree;
 
 /**
  * Add a clause or a group to the group at `path` — the root at `[]`.
@@ -521,6 +635,7 @@ export const appendAt = (
   path: FilterPath,
   added: FilterTree,
 ): FilterTree => {
+  if (!isFilterTree(tree) || !isFilterTree(added)) return tree;
   // The root keeps `appendClause`'s rule: a lone node becomes an `all` holding
   // both, which is what the builder's own Add means.
   if (path.length === 0) return appendNode(tree, added);
