@@ -335,7 +335,10 @@ export interface TextSpec {
   readonly tone: TextTone;
   readonly align?: TextAlign;
   readonly truncate?: boolean;
-  /** Maximum visible lines: a box at the role's leading, clipped below it. */
+  /**
+   * Maximum visible lines: a box at the role's leading, clipped below it. A
+   * store writes `null` for a clamp it never carried, which is no clamp.
+   */
   readonly clamp?: number;
   /** Selectable text: off by default for chrome, on for content. */
   readonly selectable?: boolean;
@@ -351,8 +354,25 @@ const MONO_ROLES: ReadonlyArray<TextRole> = ["code", "codeBlock"];
  * zero-height box that paints nothing; one line is the minimum a clamp can
  * mean, the same floor the grid's track count takes.
  */
-export const clampLines = (clamp: number): number =>
-  Number.isFinite(clamp) ? Math.max(1, Math.floor(clamp)) : 1;
+export const clampLines = (clamp: unknown): number =>
+  typeof clamp === "number" && Number.isFinite(clamp)
+    ? Math.max(1, Math.floor(clamp))
+    : 1;
+
+/**
+ * The lines a run is clamped to, or absence when it is not clamped.
+ *
+ * A clamp is a stored preference — a markdown node's line budget, a restored
+ * inspector row's preview — and JSON keeps a field the record never carried as
+ * `null`, not `undefined`. Read as a count, that absence painted **one line**;
+ * the prop's documented default is no clamp at all. A count that is there and
+ * cannot be laid out is still the one-line floor `clampLines` names.
+ */
+export const lineClampOf = (clamp: unknown): number | undefined =>
+  Option.match(Option.fromNullishOr(clamp), {
+    onNone: () => undefined,
+    onSome: (count) => clampLines(count),
+  });
 
 export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
   const role = typeOf(theme, spec.role);
@@ -376,12 +396,13 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     style.whiteSpace = "nowrap";
     style.textOverflow = "ellipsis";
   }
-  if (spec.clamp !== undefined) {
+  const clamp = lineClampOf(spec.clamp);
+  if (clamp !== undefined) {
     // `lineClamp` is declared by 0.11.0 and paints every line (measured by the
     // playground's `text-truncation` probe), so the cut is a definite box: the
     // line count times the role's own leading, with a hidden overflow.
     style.whiteSpace = "normal";
-    style.height = role.lineHeight * clampLines(spec.clamp);
+    style.height = role.lineHeight * clamp;
     style.overflow = "hidden";
   }
   return style;

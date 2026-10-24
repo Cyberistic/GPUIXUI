@@ -52,7 +52,7 @@ import { renderSeparator, renderSpacer } from "./Separator.js";
 import { renderSkeleton } from "./Skeleton.js";
 import { renderSpinner } from "./Spinner.js";
 import { renderGrid, renderStack } from "./Stack.js";
-import { renderText } from "./Text.js";
+import { renderText, type TextProps } from "./Text.js";
 import {
   elementChildren,
   elementProp,
@@ -816,6 +816,24 @@ describe("type", () => {
     expect(expectSome(stringIn(truncated, "whiteSpace"))).toBe("nowrap");
     expect(stringIn(truncated, "lineClamp")).toStrictEqual(Option.none());
     expect(numberIn(truncated, "height")).toStrictEqual(Option.none());
+  });
+
+  it("paints a stored clamp of null as no clamp, not as one line", () => {
+    // The bug guarded: a clamp is a stored preference — a markdown node's line
+    // budget, a restored inspector row's preview — and JSON keeps a field the
+    // record never carried as `null`, not `undefined`. `textClass` asked
+    // `clamp !== undefined`, so a restored run compiled a one-line box while
+    // the prop's documented default is no clamp at all.
+    // The cast is the storage boundary: a saved record stores absence as null.
+    const stored = { clamp: null } as unknown as TextProps;
+    const element = renderText(stored, testTheme);
+    expect(numberIn(element, "height")).toStrictEqual(Option.none());
+    expect(stringIn(element, "overflow")).toStrictEqual(Option.none());
+    expect(stringIn(element, "whiteSpace")).toStrictEqual(Option.none());
+    // A count that is there and cannot be laid out is still one line.
+    expect(
+      numberIn(renderText({ clamp: Number.NaN }, testTheme), "height"),
+    ).toStrictEqual(Option.some(testTheme.typography.body.lineHeight));
   });
 
   it("paints an error in the measured status text role, not the solid fill", () => {

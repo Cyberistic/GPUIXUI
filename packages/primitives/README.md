@@ -132,6 +132,17 @@ and each is read through a membership test rather than indexed raw:
   `storedNumber` (`core/stored.ts`) is that read now, used by the paint and the
   timer alike, and `progressPercent` clamps an unreadable share to empty; a
   `NaN` is still a number whose share the clamp reads as `0%`.
+- an **optional count** is the same kind of saved field, and JSON's absence for
+  one is `null`: a markdown node's `clamp` and a saved rating's `max` were both
+  compared with `undefined`, so a restored run was cut to **one line** (measured
+  at **18px** against an unclamped **72px** in a window) and a restored rating
+  painted **one star**, clamping every score onto it. `lineClampOf`
+  (`core/style.ts`) reads `null` as **no clamp** — the prop's documented
+  default — and `ratingMax` (`components/Rating.tsx`) reads it as the default
+  **five**, while a count that is there and cannot be laid out keeps its floor
+  (one line, one star). `style.test.ts`, `presentational.test.tsx`,
+  `Rating.test.tsx`, `layout.runtime.test.tsx` and `rating.runtime.test.tsx`
+  hold both directions.
 - an **elevation level** is saved with the panel it raises (a workspace record,
   a settings row), so `elevationLevel` (`core/theme.ts`) reads a name the scale
   does not carry as `md`, the default lift `elevationShadow` already answers,

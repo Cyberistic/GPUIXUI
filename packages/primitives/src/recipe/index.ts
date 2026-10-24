@@ -24,7 +24,7 @@ import type {
 } from "../core/layout.js";
 import type { SelectionAccent, SelectionState } from "../core/selection.js";
 import {
-  clampLines,
+  lineClampOf,
   paintableAspectRatio,
   paddingSides,
   progressSizeOf,
@@ -218,6 +218,7 @@ export interface TextRecipeOptions {
 export const textClass = (options: TextRecipeOptions): string => {
   const role = isTextRole(options.role) ? options.role : "body";
   const align = textAlignOf(options.align);
+  const clamp = lineClampOf(options.clamp);
   return cn(
     `type-${ROLE_CLASS[role]}`,
     familyOf(role),
@@ -227,9 +228,7 @@ export const textClass = (options: TextRecipeOptions): string => {
     options.truncate === true && "whitespace-nowrap text-ellipsis",
     // The role travels in the class name because a clamp's height is that
     // role's own leading: `clamp-body-2` and `clamp-h1-2` are different boxes.
-    options.clamp === undefined
-      ? undefined
-      : `clamp-${ROLE_CLASS[role]}-${clampLines(options.clamp)}`,
+    clamp === undefined ? undefined : `clamp-${ROLE_CLASS[role]}-${clamp}`,
   );
 };
 

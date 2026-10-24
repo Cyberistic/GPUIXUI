@@ -27,7 +27,7 @@ import { Text, Stack } from "@gpuixui/primitives";
 | `tone` | `TextTone` | `"default"` | colour role; a stored name the table does not carry reads as `default` |
 | `align` | `"start" \| "center" \| "end"` | runtime default (left) | horizontal alignment; the runtime has no writing direction, so `start` paints left and `end` paints right, and a stored name this release does not carry paints the default |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
-| `clamp` | `number` | none | cut to a box N lines tall |
+| `clamp` | `number` | none | cut to a box N lines tall; a stored `null` is no clamp (the default), while a count that is there and cannot be laid out is one line |
 | `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |

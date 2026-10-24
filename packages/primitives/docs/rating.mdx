@@ -29,7 +29,7 @@ const [score, setScore] = useState(0);
 | `defaultValue` | `number` | `0` | uncontrolled start |
 | `onValueChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
-| `max` | `number` | `5` | how many stars to paint |
+| `max` | `number` | `5` | how many stars to paint; a stored `null` is the default five, while a count that is there and cannot be laid out is one star |
 | `allowHalf` | `boolean` | `false` | score in halves |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |

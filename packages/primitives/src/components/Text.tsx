@@ -33,7 +33,7 @@ export interface TextProps extends ElementHostProps {
   readonly align?: TextAlign;
   /** One line, clipped with an ellipsis. */
   readonly truncate?: boolean;
-  /** Clip after this many lines. */
+  /** Clip after this many lines. A stored `null` is no clamp. */
   readonly clamp?: number;
   /** Let the user select this text. Off for chrome, on for content. */
   readonly selectable?: boolean;

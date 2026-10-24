@@ -18,6 +18,7 @@ import {
   controlFocusStyle,
   controlStyle,
   fieldTextStyle,
+  lineClampOf,
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
@@ -395,6 +396,29 @@ describe("textStyle", () => {
       testTheme.typography.body.lineHeight,
     );
     expect(clampLines(2.9)).toBe(2);
+  });
+
+  it("reads a clamp a store never wrote as no clamp, not as one line", () => {
+    // The bug guarded: a clamp is a stored preference — a markdown node's line
+    // budget, a restored inspector row's preview — and JSON keeps a field the
+    // record never carried as `null`, not `undefined`. The paint asked
+    // `clamp !== undefined`, so a restored run was cut to a **one-line** box
+    // (content the reader could never reveal) although the prop's documented
+    // default is no clamp at all. Absence is the default; a count that is there
+    // and cannot be laid out is still the one-line floor.
+    const stored = text({
+      role: "body",
+      tone: "default",
+      clamp: null as unknown as number,
+    });
+    expect(stored.height).toBeUndefined();
+    expect(stored.overflow).toBeUndefined();
+    expect(stored.whiteSpace).toBeUndefined();
+    expect(clampLines(null)).toBe(1);
+    expect(lineClampOf(null)).toBeUndefined();
+    expect(lineClampOf(undefined)).toBeUndefined();
+    expect(lineClampOf(Number.NaN)).toBe(1);
+    expect(lineClampOf(2.9)).toBe(2);
   });
 
   it("switches font family for code roles", () => {

@@ -30,9 +30,12 @@ export interface StarBox {
  * be laid out reads as one star, the same answer the value clamp, the key
  * contract and the tab stop already give it; an infinite count would otherwise
  * reach `new Array(Infinity)` and throw `RangeError: Invalid array length`.
+ * Absence is a different question, and {@link ratingMax} answers it.
  */
-export const starCount = (max: number): number =>
-  Math.max(1, Math.trunc(Number.isFinite(max) ? max : 1));
+export const starCount = (max: unknown): number =>
+  typeof max === "number" && Number.isFinite(max)
+    ? Math.max(1, Math.trunc(max))
+    : 1;
 
 /**
  * Where a score lands: on a whole star, or on a half when halves are allowed.

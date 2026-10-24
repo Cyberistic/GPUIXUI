@@ -15,6 +15,7 @@ import { targetSize } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
+  ratingMax,
   renderRating,
   type RatingHandlers,
   type RatingProps,
@@ -93,6 +94,23 @@ describe("Rating", () => {
     const unreadable = render({ label: "Quality", max: Number.NaN }, 0);
     expect(starsOf(unreadable).map(labelOf)).toStrictEqual(["1 of 1"]);
     expect(starsOf(render({ label: "Quality" }, 0))).toHaveLength(5);
+  });
+
+  it("paints the documented five for a count a store never wrote", () => {
+    // The bug guarded: a widget is saved with its star count, and JSON keeps a
+    // field the record never carried as `null` rather than `undefined`. `max`
+    // was read with `=== undefined`, so a restored rating painted **one** star
+    // and clamped every score onto it, although the prop's documented default
+    // is five. A count that *is* there and cannot be laid out is still one star.
+    // The cast is the storage boundary: a saved record stores absence as null.
+    const stored = { max: null } as unknown as RatingProps;
+    expect(
+      starsOf(render({ ...stored, label: "Quality" }, 0)).map(labelOf),
+    ).toStrictEqual(["1 of 5", "2 of 5", "3 of 5", "4 of 5", "5 of 5"]);
+    expect(ratingMax(null)).toBe(5);
+    expect(ratingMax(undefined)).toBe(5);
+    expect(ratingMax(Number.NaN)).toBe(1);
+    expect(ratingMax(8)).toBe(8);
   });
 
   it("marks the stars up to the value as checked", () => {

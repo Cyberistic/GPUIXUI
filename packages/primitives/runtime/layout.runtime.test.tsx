@@ -28,7 +28,7 @@ import {
 } from "../src/components/ScrollArea.js";
 import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
-import { Text } from "../src/components/Text.js";
+import { Text, type TextProps } from "../src/components/Text.js";
 import type { RuleSpec, ScrollAxis } from "../src/core/style.js";
 import type {
   Density,
@@ -1013,6 +1013,38 @@ it("clamps a Text after its own line count", async () => {
   );
   expect(boundsOf(runtime, "one").height).toBe(line);
   expect(boundsOf(runtime, "two").height).toBe(2 * line);
+});
+
+it("paints every line of a run whose stored clamp is absence", async () => {
+  // The bug guarded: a clamp is a stored preference — a markdown node's line
+  // budget, a restored inspector row's preview — and JSON keeps a field the
+  // record never carried as `null`, not `undefined`. The paint asked
+  // `clamp !== undefined`, so a restored run was cut to a **one-line** box that
+  // hid everything below it, while the documented default is no clamp at all.
+  const runtime = await openWindow();
+  const line = testTheme.typography.body.lineHeight;
+  const copy =
+    "A sentence long enough that a hundred and sixty pixels wrap it over several lines.";
+  // The cast is the storage boundary: a saved record stores absence as null.
+  const stored = { clamp: null } as unknown as TextProps;
+  runtime.render(
+    <Surface>
+      <Box tone="none" style={{ width: 160 }} testId="free">
+        <Text>{copy}</Text>
+      </Box>
+      <Box tone="none" style={{ width: 160 }} testId="stored">
+        <Text {...stored}>{copy}</Text>
+      </Box>
+      <Box tone="none" style={{ width: 160 }} testId="clamped">
+        <Text clamp={1}>{copy}</Text>
+      </Box>
+    </Surface>,
+  );
+  // The negative control proves the copy wraps at all.
+  expect(boundsOf(runtime, "clamped").height).toBe(line);
+  const free = boundsOf(runtime, "free").height;
+  expect(free).toBeGreaterThan(line);
+  expect(boundsOf(runtime, "stored").height).toBe(free);
 });
 
 it("clamps each node to its own line count, even sharing one string layout", async () => {

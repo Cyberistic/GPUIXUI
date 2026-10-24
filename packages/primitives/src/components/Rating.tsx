@@ -87,7 +87,9 @@ export interface RatingProps
   /**
    * How many stars to paint; defaults to five. A count that cannot be laid out
    * — `NaN`, an infinity, zero or a negative number — paints one star, the same
-   * answer the value clamp, the keys and the tab stop read (`starCount`).
+   * answer the value clamp, the keys and the tab stop read (`starCount`). A
+   * stored `null` (JSON's absence for a count a record never carried) is the
+   * default five, not the one-star floor.
    */
   readonly max?: number;
   /**
@@ -167,11 +169,15 @@ export interface RatingHandlers {
  * `max` is caller arithmetic (a measured total, a stored preference), so it
  * goes through the same rule the value, the keys and the tab stop read
  * (`starCount`): a count that cannot be laid out is one star rather than an
- * `Arr.range` bound — `new Array(Infinity)` throws. No `max` is the documented
- * five.
+ * `Arr.range` bound — `new Array(Infinity)` throws. **No `max` is the
+ * documented five**, and a store writes the field it never carried as `null`,
+ * so both absences take the default rather than the one-star floor.
  */
-export const ratingMax = (max: number | undefined): number =>
-  max === undefined ? 5 : starCount(max);
+export const ratingMax = (max: unknown): number =>
+  Option.match(Option.fromNullishOr(max), {
+    onNone: () => 5,
+    onSome: (count) => starCount(count),
+  });
 
 /** A pointer that is nowhere: the idle state a render helper starts from. */
 const NO_POINTER: RatingHover = {

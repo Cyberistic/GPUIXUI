@@ -13,7 +13,7 @@ import * as Option from "effect/Option";
 import { icons } from "@gpuixui/icons";
 import { targetSize } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
-import { Rating } from "../src/components/Rating.js";
+import { Rating, type RatingProps } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, a11yValueOf, type Bounds, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
@@ -532,6 +532,28 @@ it("steps a half score by half and lands Home on the half star", async () => {
   runtime.keyDown("ra", "home");
   expect(checkedStars(runtime)[0]).toBe("half");
   expect(checkedStars(runtime)[1]).toBe("unchecked");
+});
+
+it("paints the default stars for a count a store never wrote", async () => {
+  // The bug guarded: a rating widget is saved with its star count, and JSON
+  // keeps a field the record never carried as `null`, not `undefined`. `max`
+  // was read with `=== undefined`, so a restored rating painted **one** star
+  // and clamped every score onto it, although the documented default is five.
+  const runtime = await openWindow();
+  // The cast is the storage boundary: a saved record stores absence as null.
+  const stored = { max: null } as unknown as RatingProps;
+  runtime.render(
+    <Surface>
+      <Rating label="Quality" value={4} {...stored} />
+    </Surface>,
+  );
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "checked",
+    "checked",
+    "unchecked",
+  ]);
 });
 
 it("paints one star for a count a window cannot lay out", async () => {
