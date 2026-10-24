@@ -1,5 +1,6 @@
 import type * as PageTree from "fumadocs-core/page-tree";
 import type { ReactNode } from "react";
+import { isEffect } from "./effects.js";
 
 /**
  * The sidebar sections, completed.
@@ -64,12 +65,31 @@ export const completeSection = (
   const fill = (nodes: ReadonlyArray<PageTree.Node>): PageTree.Node[] =>
     nodes.map((node): PageTree.Node => {
       if (node.type !== "folder") return node;
-      return node.name === folderName
-        ? {
-            ...node,
-            children: merged(pagesIn(node.children), pages).map(pageNode),
-          }
-        : { ...node, children: fill(node.children) };
+      if (node.name !== folderName)
+        return { ...node, children: fill(node.children) };
+      const all = merged(pagesIn(node.children), pages);
+      // The Components lane keeps its effects under one category: they are
+      // found by what they draw, not by the alphabetical name of the control
+      // they replace.
+      if (node.name !== "Components")
+        return { ...node, children: all.map(pageNode) };
+      const plain = all.filter((page) => !isEffect(page.url));
+      const effects = all.filter((page) => isEffect(page.url));
+      return {
+        ...node,
+        children: [
+          ...plain.map(pageNode),
+          ...(effects.length === 0
+            ? []
+            : [
+                {
+                  type: "folder" as const,
+                  name: "Effects",
+                  children: effects.map(pageNode),
+                },
+              ]),
+        ],
+      };
     });
 
   return { ...tree, children: fill(tree.children) };

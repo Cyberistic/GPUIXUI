@@ -379,6 +379,7 @@ src/lib/package-preview.ts          The package pages the site previews, and the
 src/lib/collection-pages.ts         The pages a mounted collection serves, including one that ships none yet
 src/lib/collection-index.ts         The index a collection route generates when the package writes no landing page
 src/lib/page-tree.ts                Fills and alphabetically sorts each sidebar section
+src/lib/effects.ts                  The decorative slugs the Components lane groups as Effects
 src/lib/page-meta.ts                Title, description, canonical and social metadata
 src/lib/page-markdown.ts            Server function behind "Copy page"
 src/lib/page-edit.ts                The Markdown file behind a page, for its GitHub link

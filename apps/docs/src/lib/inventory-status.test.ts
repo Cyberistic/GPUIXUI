@@ -266,26 +266,6 @@ describe("the status a package page reports", () => {
     expect(curatedPages.length).toBe(39);
   });
 
-  it("mounts the status strip on both component page frames", () => {
-    const view = readFileSync(
-      new URL("apps/docs/src/lib/docs-view.tsx", root),
-      "utf8",
-    );
-    const curated = view.slice(
-      view.indexOf("function SiteContent"),
-      view.indexOf("function PackageContent"),
-    );
-    const packaged = view.slice(
-      view.indexOf("function PackageContent"),
-      view.indexOf("function DocsView"),
-    );
-
-    // Each frame hands the strip the page's address, because two pages can
-    // share a title and only the address tells their rows apart.
-    expect(curated).toContain("<StatusStrip title={page.title} url={url} />");
-    expect(packaged).toContain("<StatusStrip title={page.title} url={url} />");
-  });
-
   it("throws on a title two rows could answer, instead of guessing", () => {
     const ambiguous = {
       rows: [

@@ -804,15 +804,7 @@ Markdown. The demo is the same registry entry either way, so the label, the
 Preview/Code tabs and the platform switch are identical. One page never draws
 twice — `src/lib/package-preview.test.ts` refuses a row whose page mounts a
 preview of its own, and refuses a row whose page, demo or collection the site
-does not carry. Either way
-the page opens with a note saying the drawing is not the shipped frame and
-naming the command that opens the companion playground — `nub run
-dev:playground`, read from the root manifest rather than typed twice — with a
-link to [the native playground page](/docs/playground), which catalogues every
-probe and gives the scoped run commands.
-`src/components/docs/native-run-note.test.tsx` holds the command to the manifest's
-script, the link to a heading the installation page has, and the page frame to
-mounting the note. The primitive layer is one sidebar section even though two
+does not carry. The primitive layer is one sidebar section even though two
 packages write its pages, because a reader looks for a lane of the library, not
 for a package boundary. `src/lib/collection-routes.ts` is the single registry;
 `src/lib/package-docs.test.ts` holds it to every `packages/*/docs` directory and
@@ -876,49 +868,6 @@ the props it declares; the site simply does not render a second page for the
 component. `src/lib/curated-twins.test.ts` derives the duplicate set from the two
 trees by title, so curating a sixth primitive without retiring its package page
 fails by name rather than shipping two pages again.
-
-### The dependency line is generated, not written
-
-`MISSION.md` asks every component page for the packages it needs, and the
-package pages are Markdown the site mounts while the curated pages are MDX the
-site writes. Asking every page author to keep a list beside their imports would
-drift the first time an import moved, so the site reads the component's own
-module instead:
-
-- `src/lib/page-dependencies.ts` is the model: a page's component imports,
-  grouped by workspace package (`@gpuixui/*`, `@gpuix/*`), with the page that
-  documents each one. A mounted collection documents its package at the
-  collection's own route, so that link is derived from `packageCollections`
-  rather than listed a second time; a package the site writes a page for, or a
-  collection whose documentation sits below its route, adds one entry. A package
-  the site has no page for stays plain text.
-- `src/lib/page-dependencies-source.ts` resolves the page's component. The
-  published symbol wins, because a page stem is not always a file name: `grid`
-  finds the `Grid` declared in `Stack.tsx`, `spacer` finds `Separator.tsx`. A
-  family that publishes no symbol under its own name falls back to the file of
-  the same name (`chat` → `chat.tsx`). A page that resolves to no module is
-  reported, not guessed, and the guard fails until it has a source to read. A
-  **curated** page names its module in the `<ComponentSource file>` it shows, and
-  that is the module the strip reads — `/docs/components/button` lists the
-  primitives' imports even though the components package documents its own
-  wrapper at another URL.
-- `plugins/page-dependencies-plugin.ts` serves that index as a build-time
-  module, so neither the browser bundle nor the Worker opens the workspace.
-- `<DependencyStrip>` prints it under the status strip, names the module the
-  imports were read from, and links each package to its page. It renders nothing
-  on a page whose author wrote `## Dependencies` itself (today,
-  `packages/primitives/docs/tooltip.mdx`) or whose component imports no
-  workspace package. Both frames mount it, so the curated page a reader lands on
-  lists its packages beside the source block it shows.
-
-`src/lib/page-dependencies.test.ts` holds both directions of the reading — every
-workspace import the module makes is listed and nothing invented — and keeps
-every printed link on a mounted page, including a collection's generated index.
-It also holds a curated page's entry to its own `ComponentSource` file, and every
-mounted collection to a package page, so a lane added to `packageCollections`
-cannot render its package name as plain text. Deleting either frame's mount fails
-the frame case; emptying the index or dropping the curated half fails the curated
-case and both strip cases.
 
 ### The keyboard contract is generated, not written
 
@@ -1000,7 +949,7 @@ page could read behaviour, theming and API and still not see the file they would
 own if they copied the component.
 
 The site resolves the module a page documents at build time, reusing the
-decision the dependency line already makes (`page-dependencies-source.ts`'s
+decision the dependency index already makes (`page-dependencies-source.ts`'s
 `readPackagePages`; the published symbol wins, a page-stem file is the fallback)
 and prints that file's own text:
 
@@ -1031,52 +980,13 @@ file's own path. The file is printed whole, so a character count here would be a
 second measurement of someone else's file; the policy names the file, not its
 length.
 
-### The status strip is generated, not written
-
-A component page — curated or package — describes its component but does not
-decide whether that component is shipped. `src/components/docs/status-strip.tsx`
-prints the `COMPONENTS.md` row — its status and its GPUix support verdict — above
-the page, joined by the page title: `src/lib/inventory-status.ts` normalises
-punctuation and a trailing plural, and names the few titles whose row reads
-differently (`Text` → `Text / typography`, `Toast` → `Toasts / notifications`).
-A title is not an identity, though: `@gpuixui/data` and `@gpuixui/files` each
-ship a `PropertyPanel`, so both pages are titled `Property panels` and only the
-address says which component a page is about. The strip therefore hands the join
-its page's URL, and `pageRowsByUrl` pins the one page whose row its title cannot
-name — the files panel's `Inspector panels` and `Property editors` rows, while
-the data page keeps the `Property panels` row. The address also travels to the
-index, so a tile cannot wear its neighbour's verdict.
-The strip reads the inventory, so a row that moves to `done` moves on the page in
-the same commit with no docs change. Both frames mount it, so the curated page a
-reader lands on reports the same verdict as the package page the URL shadows —
-the verdict is not left to the index tile alone.
-
-A page the inventory has no row for renders no strip rather than a guess. The
-argued exemption is `ThemeProvider`, a provider rather than a component, and
-`inventory-status.test.ts` fails when a new page needs an entry, when an alias
-names a row that is gone, when an alias reports the row its title already names,
-when an exemption outlives its page, or when a title two rows could answer would
-report the wrong verdict. `Grid` was the second exemption until its Tier 1 row
-landed; the strip now reports it.
-
-The same row marks the index row, because the strip is on a page the reader has
-not opened yet. `src/lib/component-index-data.ts` resolves every page title
-through that one alias table and `buildIndex` copies the two cells onto the
-entry; `verdictMark` stays silent for `done` on `yes` and names each axis that
-is not whole (`partial`, `todo · unknown`), so the list cannot wear a mark the
-inventory does not support. The query indexes those words too, which is what
-makes `partial` a way to find the components the runtime covers only in part.
-`component-index.test.ts` holds the resolution, both axes and the silent case,
-`component-index.test.tsx` holds the badge on the rendered rows, and
-`component-page.test.ts` requires the index page to say what the mark means. The
-query is not a dead end: a filter the composed lane cannot answer names the lower
-lane that does hold it, with the matching pages linked, so typing a primitive's
-name here finds the primitive.
-
-Because the package writes Markdown and the site compiles MDX, the packages'
-files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.
-`src/lib/package-docs.test.ts` holds that line, and a collection fails whole
-when it is crossed.
+The inventory verdict makes `partial` a way to find the components the runtime
+covers only in part. `component-index.test.ts` holds the resolution, both axes
+and the silent case, `component-index.test.tsx` holds the badge on the rendered
+rows, and `component-page.test.ts` requires the index page to say what the mark
+means. The query is not a dead end: a filter the composed lane cannot answer
+names the lower lane that does hold it, with the matching pages linked, so typing
+a primitive's name here finds the primitive.
 
 ## Theming: a preview paints the library's theme, not the site's
 
@@ -1281,7 +1191,7 @@ prop inside a shared table — to the clause that says what it paints.
 
 The footer of every page — curated or package — names the Markdown that renders
 it and links that file's GitHub edit view. It is not a template row an author
-writes, for the same reason the related line and the status strip are not: the
+writes, for the same reason the related line is not: the
 site knows which collection served the page, so `src/lib/page-edit.ts` derives
 the path from the page's `origin` and `path` and `src/components/docs/edit-page.tsx`
 renders it. A curated page keeps its URL over the package page it shadows, so
@@ -1396,16 +1306,6 @@ approximation this strategy warns about, with no component page to anchor it, an
 the file a reader copies is the stronger artefact. `examples.test.ts` holds the
 registry to the files on disk in both directions, so a new example appears
 without a docs change and a deleted one leaves no dead row.
-
-The link runs the other way too. A page that an example owns carries a
-**Worked example** strip under its title (`page-example.tsx`), generated from the
-same registry, pointing at the row's own fragment — `<package>-<id>`, so
-`/docs/examples#components-card`. The fragment is the file's package and id
-rather than the page title, because two packages ship a `form` and a retitled
-page would otherwise move the anchor. A grouped example owns no single page, so
-no component page claims it, and a page with no example renders no strip rather
-than borrowing one. `page-example.test.tsx` proves the href is the rendered row's
-anchor, that every owned page resolves, and that a page with no row stays empty.
 
 ## Generated specimens
 

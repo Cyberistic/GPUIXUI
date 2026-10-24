@@ -182,24 +182,6 @@ describe("the dependency index", () => {
     expect(dependencyPackage("react")).toBeUndefined();
   });
 
-  it("is mounted on both component page frames, so a curated page lists its packages too", () => {
-    const view = readFileSync(
-      join(root, "apps/docs/src/lib/docs-view.tsx"),
-      "utf8",
-    );
-    const curated = view.slice(
-      view.indexOf("function SiteContent"),
-      view.indexOf("function PackageContent"),
-    );
-    const packaged = view.slice(
-      view.indexOf("function PackageContent"),
-      view.indexOf("function DocsView"),
-    );
-
-    expect(curated).toContain("<DependencyStrip url={url} />");
-    expect(packaged).toContain("<DependencyStrip url={url} />");
-  });
-
   it("reads a curated page's module from the source block it shows", () => {
     // The page's own `<ComponentSource file>` is what a reader can see, and it
     // can differ from the package page the URL shadows: `button` shows the

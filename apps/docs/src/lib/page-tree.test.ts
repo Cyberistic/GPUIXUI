@@ -60,6 +60,42 @@ const shipped: ReadonlyArray<SectionPage> = [
   { name: "Badge", url: "/docs/components/badge" },
 ];
 
+describe("the effects category", () => {
+  it("keeps the decorative surfaces under one folder, and no page elsewhere", () => {
+    const completed = completeSection(
+      tree([folder("Components", [page("Button", "/docs/components/button")])]),
+      "Components",
+      [
+        { name: "Button", url: "/docs/components/button" },
+        { name: "Fireworks", url: "/docs/components/fireworks" },
+        { name: "Particles", url: "/docs/components/particles" },
+        { name: "Tabs", url: "/docs/components/tabs" },
+      ],
+    );
+    const components = completed.children.find(
+      (node) => node.type === "folder" && node.name === "Components",
+    );
+    const children = components?.type === "folder" ? components.children : [];
+    const effects = children.find(
+      (node) => node.type === "folder" && node.name === "Effects",
+    );
+    const effectUrls =
+      effects?.type === "folder"
+        ? effects.children.flatMap((node) =>
+            node.type === "page" ? [node.url] : [],
+          )
+        : [];
+
+    expect(effectUrls).toEqual([
+      "/docs/components/fireworks",
+      "/docs/components/particles",
+    ]);
+    expect(
+      children.flatMap((node) => (node.type === "page" ? [node.url] : [])),
+    ).toEqual(["/docs/components/button", "/docs/components/tabs"]);
+  });
+});
+
 describe("the component section", () => {
   it("folds curated and package pages into one alphabetical list", () => {
     const completed = completeSection(

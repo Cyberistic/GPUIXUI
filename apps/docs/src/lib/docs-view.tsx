@@ -13,13 +13,10 @@ import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
 import { CollectionIndexPage } from "@/components/docs/collection-index";
 import { CopyPage } from "@/components/docs/copy-page";
-import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { EditPage } from "@/components/docs/edit-page";
 import { KeyboardStrip } from "@/components/docs/keyboard-strip";
 import { MountedPreview } from "@/components/docs/mounted-preview";
-import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PackageSource } from "@/components/docs/package-source";
-import { PageExample } from "@/components/docs/page-example";
 import { mainContentId } from "@/components/skip-link";
 import { RelatedStrip } from "@/components/docs/related-strip";
 import {
@@ -27,10 +24,8 @@ import {
   PlatformProvider,
   PlatformToggle,
 } from "@/components/docs/platform-toggle";
-import { StatusStrip } from "@/components/docs/status-strip";
 import { collectionIndexOf } from "./collection-index";
 import {
-  collectionByOrigin,
   packageCollections,
   packageSections,
   type PackageOrigin,
@@ -135,7 +130,6 @@ function PageFrame({
   description,
   toc,
   path,
-  url,
   origin,
   children,
 }: {
@@ -143,7 +137,6 @@ function PageFrame({
   readonly description: ReactNode;
   readonly toc: ComponentProps<typeof DocsPage>["toc"];
   readonly path: string;
-  readonly url: string;
   readonly origin: PageOrigin;
   readonly children: ReactNode;
 }) {
@@ -155,7 +148,6 @@ function PageFrame({
       </div>
       <DocsDescription>{description}</DocsDescription>
       <DocsBody>
-        <PageExample url={url} />
         {children}
         <EditPage origin={origin} path={path} />
       </DocsBody>
@@ -178,10 +170,7 @@ function SiteContent({ path, url }: { path: string; url: string }) {
       path={path}
       title={page.title}
       toc={toc}
-      url={url}
     >
-      <StatusStrip title={page.title} url={url} />
-      <DependencyStrip url={url} />
       <MDX components={mdxComponents} />
       <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />
       <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
@@ -209,7 +198,6 @@ function PackageContent({
 
   const { toc } = use(page.load());
   const MDX = page.body;
-  const collection = collectionByOrigin[origin];
 
   return (
     <PageFrame
@@ -218,14 +206,7 @@ function PackageContent({
       path={path}
       title={page.title}
       toc={toc}
-      url={url}
     >
-      <StatusStrip title={page.title} url={url} />
-      <DependencyStrip url={url} />
-      <NativeRunNote
-        kind={collection.kind}
-        path={`${collection.dir}/${path.replace(/\.mdx$/, "")}.mdx`}
-      />
       <MountedPreview origin={origin} path={path} />
       <MDX components={mdxComponents} />
       <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />

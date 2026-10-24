@@ -156,8 +156,6 @@ describe("the contributing page", () => {
     // lists them; the files behind them have to exist, and the mount has to be
     // on the frame rather than on the author.
     const strips = [
-      ["status", "src/components/docs/status-strip.tsx"],
-      ["built on", "src/components/docs/dependency-strip.tsx"],
       ["keyboard", "src/components/docs/keyboard-strip.tsx"],
       ["related", "src/components/docs/related-strip.tsx"],
       ["source accordion", "src/components/docs/package-source.tsx"],
@@ -171,7 +169,6 @@ describe("the contributing page", () => {
       ),
     ).toEqual([]);
 
-    expect(appFile("src/lib/docs-view.tsx")).toContain("<StatusStrip");
     expect(appFile("src/lib/docs-view.tsx")).toContain("<KeyboardStrip");
     expect(appFile("src/lib/docs-view.tsx")).toContain("<RelatedStrip");
   });
