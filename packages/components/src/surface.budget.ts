@@ -176,10 +176,15 @@ export const surfaceBudget = {
    * clock's bound moved to `duration.ts` (`schedulableSeconds`), which the
    * timing entry point reads as well as the presence table: a duration past the
    * renderer's range is no journey at either door, not a description refused
-   * whole. Measured 39 512 bytes with
-   * `nub scripts/surface.ts --entry src/motion-grid.tsx` (5 modules, 39 KiB).
+   * whole. 39 512 → 40 243 bytes when a **hold window** past the scheduler's
+   * range reads as no window (`SCHEDULABLE_WINDOW_MS`): the number the seam
+   * publishes is the delay the timer actually holds, so a box unmounts in the
+   * close commit rather than ghosting for a wait no timer can take. Measured
+   * 40 243 bytes with `nub scripts/surface.ts --entry src/motion-grid.tsx`
+   * (5 modules, 40 KiB) after the motion package's `d31ad7500`; the module count
+   * did not move, so only the ceiling follows.
    */
-  familyMotion: { modules: 5, bytes: 39 * 1024 },
+  familyMotion: { modules: 5, bytes: 41 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.
