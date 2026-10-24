@@ -1327,6 +1327,41 @@ describe("the primitives docs page contract", () => {
     expect(painter).not.toContain("ELEVATION_SHADOW[spec.elevation]");
   });
 
+  it("paints the value a number field holds when its formatter says nothing", () => {
+    // Bug guarded: `formatValue?.(value) ?? displayNumber(...)` read a blank
+    // answer as a value, so a locale table's missing row (or a masked format of
+    // spaces) blanked an input that still held a number. The page, the README,
+    // the painter and the copy seam must agree, and a page cannot promise a
+    // field that shows its value while the painter drops the answer.
+    expect(read("number-field.mdx")).toContain("is no answer");
+
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("../README.md", import.meta.url)),
+      "utf8",
+    );
+    expect(catalogue).toContain("`numberDisplay`");
+    expect(catalogue).toContain("empty input");
+
+    const painter = readFileSync(
+      fileURLToPath(
+        new URL("../src/components/NumberField.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    expect(painter).toContain(
+      "numberDisplay(value, props.precision, props.formatValue)",
+    );
+    expect(painter).not.toContain("props.formatValue?.(value) ??");
+
+    const seam = readFileSync(
+      fileURLToPath(new URL("../src/core/number.ts", import.meta.url)),
+      "utf8",
+    );
+    expect(seam).toContain(
+      "visibleCopy(formatValue?.(value)) ?? displayNumber(value, precision)",
+    );
+  });
+
   it("keeps the window that painted the vertical slider registered and recorded", () => {
     // Bug guarded: the vertical axis is proved in a real window by
     // `slider-vertical-lifecycle`, and a plan that deleted or renamed the probe

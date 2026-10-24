@@ -39,7 +39,7 @@ const [copies, setCopies] = useState(1);
 | `description` | `string` | none | announced help on the input (`aria-description`); a caller's permanent help wins over the hint |
 | `placeholder` | `string` | none | empty-field hint, painted in the `placeholder` role and announced as the field's description while the box is empty (the host's own hint is a fixed grey no theme reaches) |
 | `autoFocus` | `boolean` | `false` | focus on mount |
-| `formatValue` | `(value: number) => string` | fixed decimals | the display text, display-only; pair it with `parseValue` |
+| `formatValue` | `(value: number) => string` | fixed decimals | the display text, display-only; pair it with `parseValue`. An answer that says nothing (`""` or only spaces — a locale table's missing row) is no answer, so the field paints the value it holds instead of an empty box |
 | `parseValue` | `(text: string) => Option<number>` | none | reads the text `formatValue` painted; tried first, then decimal |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | resolved against the live state, merged last |

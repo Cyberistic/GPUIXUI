@@ -43,9 +43,9 @@ import {
   clampNumeric,
   commitNumberDraft,
   decideNumberKey,
-  displayNumber,
   initNumberDraft,
   normalizeNumberRange,
+  numberDisplay,
   numberDraftText,
   parseNumberText,
   scrubNumber,
@@ -634,7 +634,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     valueChange(props),
   );
   const display = (value: number): string =>
-    props.formatValue?.(value) ?? displayNumber(value, props.precision);
+    numberDisplay(value, props.precision, props.formatValue);
   // One reading for typing and for committing: a caller's format is theirs to
   // read back, and text it declines still reads as decimal.
   const read = (text: string): Option.Option<number> =>

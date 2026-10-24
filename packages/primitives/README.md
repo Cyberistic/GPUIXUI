@@ -173,6 +173,16 @@ and a run of spaces lays out a whole line (measured on 0.11.0: 0px for `""`,
 nothing. Real copy is painted **as written** — only the decision is the name
 rule's, not the spacing.
 
+The rule also holds for a **display formatter**, where a blank answer is worse
+than a blank line: `NumberField`'s `formatValue` is display copy, so a locale
+table with a missing row answers `""` and the field painted an **empty input
+while it still held the number** — the reader saw nothing, the steppers moved
+the hidden value, and every frame repainted nothing. `numberDisplay`
+(`core/number.ts`) reads a blank or whitespace-only answer as absence and paints
+the field's own decimal text, while a real answer is painted as written;
+`core/number.test.ts` and `runtime/number-field.runtime.test.tsx` hold both
+sides.
+
 **A group row is a control too**, so the caption beside an option's name is that
 row's help: every option row in `RadioGroup`, `CheckboxGroup` and
 `ToggleGroup` announces its `description` through `aria-description`

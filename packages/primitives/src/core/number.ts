@@ -9,6 +9,7 @@
 
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
+import { visibleCopy } from "./a11y.js";
 
 /** Optional bounds with a mandatory step. */
 export interface NumberRange {
@@ -213,6 +214,25 @@ export const displayNumber = (value: number, precision?: number): string =>
   precision === undefined
     ? expandedNumber(value)
     : formatNumber(value, precision);
+
+/**
+ * The text a number field paints: the caller's format, or its own decimal text.
+ *
+ * `formatValue` is display copy like a formatter's announcement — a locale table
+ * with a missing row answers `""`, and a masked format can answer only spaces —
+ * so an answer that says nothing is **absence**, not a value to paint. Read
+ * with `??`, such an answer painted an empty box while the field still held a
+ * number: the reader saw nothing, the steppers moved the hidden value and every
+ * frame after it repainted nothing, and an edit starting from that blank box had
+ * no number to start from. A real answer is painted as written; only the
+ * decision is the copy rule's (`visibleCopy`).
+ */
+export const numberDisplay = (
+  value: number,
+  precision: number | undefined,
+  formatValue?: (value: number) => string,
+): string =>
+  visibleCopy(formatValue?.(value)) ?? displayNumber(value, precision);
 
 /**
  * Move by `steps` steps and clamp. A step of 0 is treated as 1.

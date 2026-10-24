@@ -69,6 +69,7 @@ export {
   expandedNumber,
   formatNumber,
   normalizeNumberRange,
+  numberDisplay,
   parseNumberText,
   parseNumericText,
   SCRUB_PIXELS_PER_STEP,

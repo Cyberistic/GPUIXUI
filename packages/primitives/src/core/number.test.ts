@@ -18,6 +18,7 @@ import {
   formatNumber,
   initNumberDraft,
   normalizeNumberRange,
+  numberDisplay,
   numberDraftText,
   parseNumberText,
   parseNumericText,
@@ -205,6 +206,30 @@ describe("formatNumber", () => {
     expect(formatNumber(1.5e21, 2)).toBe("1500000000000000000000.00");
     expect(formatNumber(-1e21)).toBe("-1000000000000000000000");
     expect(formatNumber(1e-7, 8)).toBe("0.00000010");
+  });
+});
+
+describe("numberDisplay", () => {
+  it("paints the caller's format when it says something", () => {
+    const grouped = (value: number): string => value.toLocaleString("en-US");
+    expect(numberDisplay(1234, 2, grouped)).toBe("1,234");
+    // A format's own spacing is the caller's: only the *decision* is the copy
+    // rule's, so " 42 " is painted as written rather than trimmed.
+    expect(numberDisplay(42, undefined, () => " 42 ")).toBe(" 42 ");
+  });
+
+  it("paints the value it holds when the caller's format says nothing", () => {
+    // The defect guarded: `formatValue?.(value) ?? displayNumber(...)` read a
+    // blank answer as a value. A locale table with a missing row answers `""`
+    // (and a masked format answers spaces), so the field painted an **empty**
+    // box while it held a number — the steppers moved the hidden value and every
+    // frame repainted nothing.
+    expect(numberDisplay(5, undefined, () => "")).toBe("5");
+    expect(numberDisplay(5, undefined, () => "   ")).toBe("5");
+    expect(numberDisplay(1.5, 2, () => "")).toBe("1.50");
+    expect(numberDisplay(-0.25, undefined, () => "\t")).toBe("-0.25");
+    // No formatter at all is the same absence, which is the `displayNumber` path.
+    expect(numberDisplay(7, 1)).toBe("7.0");
   });
 });
 

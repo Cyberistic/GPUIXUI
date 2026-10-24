@@ -506,6 +506,32 @@ it("keeps a grouped draft the controlled owner echoes", async () => {
   expect(textOf(runtime, "Amount")).toBe("12,345");
 });
 
+it("paints the value it holds when its caller's format says nothing", async () => {
+  // The bug guarded: `formatValue?.(value) ?? displayNumber(...)` read a blank
+  // answer as a value, and a locale table with a missing row answers `""` (a
+  // masked format answers spaces). The field then painted an **empty** input
+  // while it still held the number: the reader saw a blank field, the steppers
+  // moved the hidden value, and every frame after it repainted nothing.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Amount"
+      autoFocus
+      defaultValue={5}
+      formatValue={() => ""}
+      onChange={field.onChange}
+    />,
+  );
+  expect(textOf(runtime, "Amount")).toBe("5");
+  // The field formats blank, it does not hold blank: a step still moves the
+  // value and the paint follows it.
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(6);
+  expect(textOf(runtime, "Amount")).toBe("6");
+});
+
 it("shows the value its owner pushes", async () => {
   // The bug guarded: a controlled field kept the text it was given, so a value
   // the owner pushed was never seen by the user.
