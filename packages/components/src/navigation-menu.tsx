@@ -129,6 +129,24 @@ const ItemContext = createContext<
   { readonly value: string; readonly open: boolean } | undefined
 >(undefined);
 
+/**
+ * Whether the panel a link sits in is painted only for its exit.
+ *
+ * A dismissed panel stops taking presses — the seam's `presenceStyle` removes its
+ * own hitbox and `PresenceShield` covers the content — but the runtime decides
+ * its Tab order element by element, and neither a `pointerEvents` rule nor the
+ * shield removes a descendant's tab stop. Measured on 0.11.0 with this page:
+ * open a panel with ArrowDown, press Escape (the panel ghosts for its 200 ms
+ * exit) and Tab, and the focus lands on a link that unmounts under the keyboard.
+ * A link therefore reads this flag and drops its own stop while its panel
+ * leaves — the rule the menu family's `MenuLeaving` follows, because the flag
+ * cannot reach content the caller composes elsewhere.
+ */
+const PanelLeaving = createContext(false);
+
+/** Whether the panel a link sits in is painted only for its exit. */
+const usePanelLeaving = (): boolean => useContext(PanelLeaving);
+
 /** The nav a part belongs to. Throws when there is none. */
 const useNavigationMenu = (): NavigationMenuContextValue => {
   const value = useContext(NavigationMenuContext);
@@ -602,7 +620,14 @@ export interface NavigationMenuContentProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
-/** The anchored panel for its item, mounted while open and through its exit. */
+/**
+ * The anchored panel for its item, mounted while open and through its exit.
+ *
+ * The panel itself takes no presses while it leaves (`presenceStyle`) and the
+ * shield covers the content, and every link inside it drops its own tab stop for
+ * the same window ({@link PanelLeaving}): the runtime's Tab order is decided per
+ * element, so a painted ghost would otherwise be reachable from the keyboard.
+ */
 export const NavigationMenuContent = ({
   children,
   className,
@@ -665,7 +690,11 @@ export const NavigationMenuContent = ({
         style,
       )}
     >
-      <DismissScope>{children}</DismissScope>
+      <DismissScope>
+        <PanelLeaving.Provider value={!presence.present}>
+          {children}
+        </PanelLeaving.Provider>
+      </DismissScope>
       <PresenceShield present={presence.present} />
     </FloatingLayer>
   );
@@ -694,10 +723,15 @@ export const NavigationMenuLink = ({
   onClick,
   className,
   style,
+  tabIndex,
   ...rest
 }: NavigationMenuLinkProps) => {
   const theme = useTheme();
   const { setOpen, stopHover } = useNavigationMenu();
+  // A panel that is only painted for its exit is not a target: the shield takes
+  // the presses, and the row drops its own Tab stop so the keyboard cannot land
+  // on a link that unmounts under it.
+  const leaving = usePanelLeaving();
   const linkStyle = mergeStyles(
     recipeStyle(cn(NAVIGATION_MENU_LINK, className), theme),
     {
@@ -710,6 +744,7 @@ export const NavigationMenuLink = ({
   return (
     <PrimitiveButton
       {...rest}
+      tabIndex={leaving ? -1 : tabIndex}
       variant="ghost"
       onActivate={(event) => {
         (onActivate ?? onClick)?.(event);

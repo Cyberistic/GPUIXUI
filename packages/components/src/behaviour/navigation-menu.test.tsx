@@ -13,6 +13,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   NavigationMenu,
@@ -43,6 +44,25 @@ const hoverPanel = (
 ): void => {
   const bounds = requireBounds(root, testId);
   root.renderer.nativeSimulateMouseMove(bounds.x + 10, bounds.y + 10);
+};
+
+/**
+ * Walk the window's Tab order: focus `from`, then take `steps` stops in turn.
+ *
+ * The runtime decides the order element by element, so this is the only route a
+ * suite can ask which painted controls a reader can Tab to.
+ */
+const tabWalk = (
+  root: ReturnType<typeof renderComponent>,
+  from: string,
+  steps: number,
+): ReadonlyArray<string> => {
+  const start = root.renderer.findByTestId(from);
+  if (start !== undefined) root.renderer.focusElement(start.id);
+  return Arr.makeBy(steps, () => {
+    root.renderer.focusNext();
+    return Option.getOrElse(focusedTestId(root), () => "none");
+  });
 };
 
 /** A two-item product nav, with an inert target far to the right. */
@@ -586,6 +606,44 @@ describe("NavigationMenu motion", () => {
     expect(onBehind).toHaveBeenCalledTimes(1);
 
     nav.unmount();
+  });
+
+  it("keeps a dismissed panel's links out of the window's tab order", async () => {
+    // The bug this guards: a dismissed panel stays painted for its 200 ms exit
+    // (`PresenceShield` takes the presses), but the runtime decides its Tab order
+    // element by element, and neither the surface's `pointerEvents` nor the shield
+    // reaches a descendant's `tabIndex`. So a reader who pressed Escape and then
+    // Tabbed landed on a link of the panel that unmounted under the keyboard —
+    // the same defect the menu family fixed for its rows (`MenuLeaving`). Every
+    // link of a panel that is only painted for its exit drops its own stop.
+    const nav = renderComponent(<Workspace />);
+    try {
+      nav.renderer.focusElement(
+        nav.renderer.findByTestId("trigger-platform")?.id ?? -1,
+      );
+      nav.renderer.simulateKeystrokes("down");
+      await waitFor(() =>
+        expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+      );
+      // While the panel is open its links are stops, or the ghost walk below
+      // would pass by reading a tree that never had them.
+      expect(tabWalk(nav, "trigger-platform", 6)).toContain("link-overview");
+
+      nav.renderer.focusElement(
+        nav.renderer.findByTestId("trigger-platform")?.id ?? -1,
+      );
+      nav.renderer.simulateKeystrokes("escape");
+      await after(30);
+
+      expect(focusedTestId(nav)).toEqual(Option.some("trigger-platform"));
+      expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+      const ghost = tabWalk(nav, "trigger-platform", 6);
+      expect(ghost).not.toContain("link-overview");
+      expect(ghost).not.toContain("link-runtime");
+    } finally {
+      nav.unmount();
+    }
   });
 
   it("paints its resting frame with no travel under reduced motion", async () => {

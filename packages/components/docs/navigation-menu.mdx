@@ -57,8 +57,17 @@ NavigationMenu
 | `NavigationMenuContent` | anchored `role="group"` panel | `className?`, `children` |
 | `NavigationMenuLink` | a full-width button row | `onSelect?`, `onActivate` (and the deprecated alias `onClick`), `className?`, the shared `Button` props |
 
+## Motion
+
+The panel enters with the house appearance — a fade plus 4 px of travel out from
+its trigger — and stays painted for its exit after it is dismissed. While it
+leaves it takes no presses and every link inside it drops its own Tab stop, so
+the keyboard cannot land on a link that is about to unmount. `MotionProvider
+preference="reduced"` removes the journey and keeps the resting frame.
+
 ## Limitations
 
 - No `href`; `NavigationMenuLink` is a button.
 - Hover is a timer policy; touch opens by press.
 - Disabling a trigger while its hover open is still waiting cancels the open; the trigger has to be entered again after it is re-enabled.
+- A panel's own links drop out of the Tab order while it leaves; a control you compose elsewhere keeps its stop until the runtime publishes an inherited `inert`.
