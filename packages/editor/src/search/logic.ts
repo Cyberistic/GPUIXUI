@@ -130,6 +130,25 @@ const nonOverlapping = (
 };
 
 /**
+ * The bar's readout: the active match of the total, `No matches` for a query
+ * that fits nothing, and nothing at all before a query.
+ *
+ * The bar paints this sentence as a named `status` node, so it is also what a
+ * screen reader hears: `No matches` before the reader has typed anything
+ * announces a search that was never made, on a field whose query is empty.
+ */
+export const matchReadout = (
+  query: string,
+  active: number,
+  count: number,
+): string =>
+  query.length === 0
+    ? ""
+    : count === 0
+      ? "No matches"
+      : `${active + 1} / ${count}`;
+
+/**
  * The text with every non-overlapping occurrence of `query` replaced.
  *
  * Built from {@link findRanges} so a replace-all and a match count agree; an

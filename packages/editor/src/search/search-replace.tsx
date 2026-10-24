@@ -21,7 +21,7 @@ import { cn } from "@gpuixui/tw";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { useState } from "react";
-import { findRanges, replaceAll } from "./logic.js";
+import { findRanges, matchReadout, replaceAll } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { draftOf } from "../internal/text.js";
 
@@ -115,12 +115,10 @@ export const SearchReplace = ({
   const active = count === 0 ? 0 : Math.min(activeIndex, count - 1);
   /**
    * The bar's one piece of state: how many matches there are and which one is
-   * active. A `role="status"` node is the only way a reader hears it — the
-   * runtime drops an element from the accessibility tree unless it has a role,
-   * and a status without a name announces nothing — so the words are the
-   * node's name as well as its paint.
+   * active, and nothing before a query — the node is a named `status`, so a
+   * count at rest would announce a search the reader never made.
    */
-  const readout = count === 0 ? "No matches" : `${active + 1} / ${count}`;
+  const readout = matchReadout(query, active, count);
 
   const go = (step: 1 | -1): void => {
     if (disabled || count === 0) return;
@@ -210,9 +208,11 @@ export const SearchReplace = ({
       >
         W
       </Toggle>
-      <text role="status" aria-label={readout} testId={`${testId}-count`}>
-        {readout}
-      </text>
+      {readout.length === 0 ? null : (
+        <text role="status" aria-label={readout} testId={`${testId}-count`}>
+          {readout}
+        </text>
+      )}
       <Button
         variant="outline"
         size="sm"

@@ -12,7 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { findRanges, replaceAll } from "./logic.js";
+import { findRanges, matchReadout, replaceAll } from "./logic.js";
 
 describe("findRanges", () => {
   it("skips overlapping matches", () => {
@@ -133,5 +133,23 @@ describe("replaceAll", () => {
     // replacement instead of returning the replaced text.
     const replaced = replaceAll("a".repeat(20_000), "a", "b");
     expect(replaced).toBe("b".repeat(20_000));
+  });
+});
+
+describe("matchReadout", () => {
+  it("reports the active match of the total, and nothing before a query", () => {
+    // The bug guarded: an empty query has no matches by definition, so the bar
+    // painted and announced `No matches` before the reader typed anything — a
+    // failed search that was never made, in the one sentence a screen reader
+    // hears from this bar.
+    expect(matchReadout("", 0, 0)).toBe("");
+    expect(matchReadout("cat", 0, 3)).toBe("1 / 3");
+    expect(matchReadout("cat", 2, 3)).toBe("3 / 3");
+    expect(matchReadout("z", 0, 0)).toBe("No matches");
+  });
+
+  it("does not report a count at rest (negative control)", () => {
+    expect(matchReadout("", 0, 0)).not.toBe("No matches");
+    expect(matchReadout("", 0, 0)).not.toBe("1 / 0");
   });
 });

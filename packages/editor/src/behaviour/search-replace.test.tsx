@@ -160,6 +160,26 @@ describe("SearchReplace", () => {
     search.unmount();
   });
 
+  it("says nothing about a count before a query", () => {
+    // The bug guarded: the readout is the bar's one `status` node, and an empty
+    // query has no matches by definition — so at rest the bar painted and
+    // announced `No matches`, a failed search the reader never made.
+    const search = render(
+      <Harness initial="cat cat" onChange={() => undefined} />,
+    );
+    expect(text(search)).not.toContain("No matches");
+    expect(
+      search.renderer.findByTestId("search-replace-count"),
+    ).toBeUndefined();
+
+    typeInto(search, "search-replace-find", "z");
+    expect(text(search)).toContain("No matches");
+    expect(
+      search.renderer.findByTestId("search-replace-count")?.customProps,
+    ).toMatchObject({ "aria-label": "No matches" });
+    search.unmount();
+  });
+
   it("refuses to step the match once the bar is disabled", () => {
     const search = render(
       <SearchReplace value="cat cat" onValueChange={() => undefined} />,
