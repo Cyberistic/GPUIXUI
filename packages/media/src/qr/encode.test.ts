@@ -362,16 +362,18 @@ describe("encodeQr", () => {
       ),
       ({ mode, level }) => {
         const atOne = qrModeCapacity(mode, 1, level);
-        expect(symbolOf(encodeQr(valueOf(mode, atOne), { level })).version).toBe(
-          1,
-        );
+        expect(
+          symbolOf(encodeQr(valueOf(mode, atOne), { level })).version,
+        ).toBe(1);
 
         const atMax = qrModeCapacity(mode, QR_MAX_VERSION, level);
         expect(
           symbolOf(encodeQr(valueOf(mode, atMax), { level })).version,
         ).toBe(QR_MAX_VERSION);
 
-        const refused = overflowOf(encodeQr(valueOf(mode, atMax + 1), { level }));
+        const refused = overflowOf(
+          encodeQr(valueOf(mode, atMax + 1), { level }),
+        );
         expect(refused.mode).toBe(mode);
         expect(refused.length).toBe(atMax + 1);
         expect(refused.capacity).toBe(atMax);
@@ -379,7 +381,8 @@ describe("encodeQr", () => {
     );
   });
 
-  it("spends more symbol for a stronger level", () => {    const value = "z".repeat(40);
+  it("spends more symbol for a stronger level", () => {
+    const value = "z".repeat(40);
     const low = encodeQr(value, { level: "L" });
     const high = encodeQr(value, { level: "H" });
     expect(low).toBeInstanceOf(QrSymbol);

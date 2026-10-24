@@ -17,7 +17,12 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
-import { QR_MAX_VERSION, qrByteCapacity, qrModeCapacity, type QrMode } from "./qr/encode.js";
+import {
+  QR_MAX_VERSION,
+  qrByteCapacity,
+  qrModeCapacity,
+  type QrMode,
+} from "./qr/encode.js";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");

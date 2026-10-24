@@ -337,9 +337,7 @@ const payloadLength = (text: string, mode: QrMode): number =>
 /** A numeric payload's data bits: three digits to ten, then seven or four. */
 const numericBits = (length: number): number => {
   const rest = length % 3;
-  return (
-    Math.floor(length / 3) * 10 + (rest === 2 ? 7 : rest === 1 ? 4 : 0)
-  );
+  return Math.floor(length / 3) * 10 + (rest === 2 ? 7 : rest === 1 ? 4 : 0);
 };
 
 /** An alphanumeric payload's data bits: two characters to eleven, then six. */
@@ -380,8 +378,9 @@ export const qrModeCapacity = (
         Math.floor(available / 10) * 3 + (rest >= 7 ? 2 : rest >= 4 ? 1 : 0)
       );
     }),
-    Match.when("alphanumeric", () =>
-      Math.floor(available / 11) * 2 + (available % 11 >= 6 ? 1 : 0),
+    Match.when(
+      "alphanumeric",
+      () => Math.floor(available / 11) * 2 + (available % 11 >= 6 ? 1 : 0),
     ),
     Match.when("byte", () => Math.floor(available / 8)),
     Match.exhaustive,
@@ -555,8 +554,7 @@ const alphanumericPayload = (bits: number[], text: string): void => {
       group,
       0,
       (total, character) =>
-        total * 45 +
-        Option.getOrElse(alphanumericValue(character), () => 0),
+        total * 45 + Option.getOrElse(alphanumericValue(character), () => 0),
     );
     appendBits(bits, value, group.length === 2 ? 11 : 6);
   });
