@@ -3,7 +3,10 @@ import {
   delayedTiming,
   presenceTiming,
 } from "../../../../packages/motion/src/presence.js";
-import { preferenceOf } from "../../../../packages/motion/src/timing.js";
+import {
+  preferenceOf,
+  reducedMotionOf,
+} from "../../../../packages/motion/src/timing.js";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -84,6 +87,18 @@ const presenceRow = (): string => {
   const end = page.indexOf("|", start + 12);
   return page.slice(start, end);
 };
+
+/** The page's own timing row, between its bars. */
+const timingRow = (): string => {
+  const start = page.indexOf("| timing |");
+  const end = page.indexOf("|", start + 10);
+  return page.slice(start, end);
+};
+
+/** The values `timing.ts` exports. */
+const timingExports = [
+  ...read("packages/motion/src/timing.ts").matchAll(/^export const (\w+)/gm),
+].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
 interface Level {
   readonly name: string;
@@ -186,6 +201,34 @@ describe("the motion page", () => {
     expect(page).toContain("not one of those names");
     expect(page).toContain('takes `"reduced"`');
     expect(page).toContain("The two mistakes are not equal");
+  });
+
+  it("teaches the provider's preference to the physics hooks", () => {
+    // Bug guarded: the provider is the default for every hook below it, the
+    // four physics hooks included, and `options.reducedMotion` is the per-run
+    // override. The page stopped at "a reduced run is a zero-duration
+    // assignment", so a reader could not learn that one provider silences a
+    // count-up, a width tween or a coast, or that a hook's own option wins.
+    expect(reducedMotionOf(undefined, "reduced")).toBe(true);
+    expect(reducedMotionOf(undefined, "animated")).toBe(false);
+    expect(reducedMotionOf(false, "reduced")).toBe(false);
+    expect(reducedMotionOf(true, "animated")).toBe(true);
+
+    const row = timingRow();
+    const listed = [...row.matchAll(/`(\w+)`/g)].flatMap((match) =>
+      match[1] === undefined ? [] : [match[1]],
+    );
+
+    expect(timingExports).toContain("reducedMotionOf");
+    expect(listed).toContain("preferenceOf");
+    expect(listed).toContain("reducedMotionOf");
+    expect(listed.filter((name) => !timingExports.includes(name))).toEqual([]);
+    expect(page).toContain(
+      "`useMotion`, `useSpring`, `useTransition` and `useInertia` read it",
+    );
+    expect(page).toContain("`options.reducedMotion` is the per-run override");
+    expect(page).toContain("in both directions");
+    expect(page).toContain("`reducedMotionOf(override, preference)`");
   });
 
   it("teaches the wait a no-journey timing drops", () => {
