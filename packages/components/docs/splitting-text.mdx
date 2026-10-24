@@ -34,6 +34,7 @@ import { SplittingText } from "@gpuixui/components/splitting-text";
 
 ## Limitations
 
+- **A stored phrase that is not text paints no units**: `textOf` reads `text` at the boundary, so a `null` a saved layout kept no longer reaches the splitter and throws out of the render.
 - Every unit is a host; split words for long text.
 - No slide, scale or mask — no `transform`.
 - A unit that changes replays its own run.

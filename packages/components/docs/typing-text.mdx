@@ -35,6 +35,7 @@ import { TypingText } from "@gpuixui/components";
 
 ## Limitations
 
+- **A stored string that is not text reveals nothing**: `textOf` reads `text` at the boundary, so a `null` a saved record kept no longer throws out of the render.
 - Real-time reveal, not synced to the renderer clock.
 - The caret cannot follow a wrapped line.
 - No per-glyph paint or stagger.

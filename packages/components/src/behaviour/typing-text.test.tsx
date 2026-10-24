@@ -144,6 +144,22 @@ describe("TypingText", () => {
     }
   });
 
+  it("paints nothing, and throws nothing, for a stored string that was not text", () => {
+    // The bug guarded: a string saved with a layout writes `null` for a value
+    // it never carried, and `characters` handed that to `Arr.fromIterable`,
+    // which threw `self is not iterable` out of the render.
+    const page = renderComponent(
+      <TypingText testId="typing" text={null as unknown as string} speed={0} />,
+    );
+    try {
+      expect(page.renderer.findByTestId("typing")).toBeDefined();
+      expect(painted(page)).toBe("");
+      expect(parts(page)).toBe(1);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints a caret while it types and drops it once the text is complete", async () => {
     const page = renderComponent(
       <TypingText testId="typing" text="Hi" speed={30} caret />,

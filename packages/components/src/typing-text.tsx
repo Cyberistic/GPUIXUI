@@ -24,6 +24,7 @@ import { cn } from "@gpuixui/tw";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import {
   textStyle,
   useTheme,
@@ -49,7 +50,11 @@ export interface TypingTextState {
 
 /** {@link TypingText} props. */
 export interface TypingTextProps extends Omit<Props, "children" | "style"> {
-  /** The string to reveal. A new value retypes from the first character. */
+  /**
+   * The string to reveal. A new value retypes from the first character, and a
+   * value a saved record left absent reveals nothing rather than taking the
+   * render down.
+   */
   readonly text: string;
   /** Milliseconds between two characters. Default `45`; `0` paints instantly. */
   readonly speed?: number;
@@ -114,15 +119,17 @@ export const TypingText = ({
 }: TypingTextProps) => {
   const theme = useTheme();
   const reducedMotion = useMotionPreference() === "reduced";
+  /** The string a saved record may have lost; JSON writes `null` for it. */
+  const phrase = textOf(text);
   const timing: TypingTiming = useMemo(
     () => typingTiming({ speedMs: speed, delayMs: delay }),
     [delay, speed],
   );
-  const charactersOf = useMemo(() => characters(text), [text]);
+  const charactersOf = useMemo(() => characters(phrase), [phrase]);
   const total = charactersOf.length;
   const instant = reducedMotion || timing.speedMs === 0;
   /** The reveal a measured progress belongs to: a new string or pace restarts. */
-  const run = `${timing.speedMs}:${timing.delayMs}:${text}`;
+  const run = `${timing.speedMs}:${timing.delayMs}:${phrase}`;
 
   // Progress belongs to the run it was measured for, so a changed string reads
   // as zero immediately instead of flashing the previous count.
@@ -155,10 +162,10 @@ export const TypingText = ({
   // callback must not re-announce a finish that already happened.
   const announced = useRef<{ readonly text: string } | undefined>(undefined);
   useEffect(() => {
-    if (!complete || announced.current?.text === text) return;
-    announced.current = { text };
+    if (!complete || announced.current?.text === phrase) return;
+    announced.current = { text: phrase };
     onComplete?.();
-  }, [complete, onComplete, text]);
+  }, [complete, onComplete, phrase]);
 
   const state: TypingTextState = { revealed, complete, reducedMotion };
 
@@ -175,13 +182,13 @@ export const TypingText = ({
       )}
     >
       <text
-        aria-label={label ?? text}
+        aria-label={label ?? phrase}
         style={{
           ...textStyle(theme, role),
           color: theme.colors.foreground,
         }}
       >
-        {visibleText(text, revealed)}
+        {visibleText(phrase, revealed)}
       </text>
       {caret && !complete ? <div style={caretStyle(theme, role)} /> : null}
     </div>

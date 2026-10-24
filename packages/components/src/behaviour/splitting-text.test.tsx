@@ -200,4 +200,20 @@ describe("SplittingText", () => {
       page.unmount();
     }
   });
+
+  it("paints no units for a stored phrase that was not text", () => {
+    // The bug guarded: a headline saved with a layout writes `null` for a string
+    // it never carried, and `splitUnits` handed that to `Str.split`, which threw
+    // `Cannot read properties of null (reading 'split')` out of the render.
+    const { page } = mountFrozen(
+      <SplittingText testId="split" text={null as unknown as string} />,
+    );
+    try {
+      expect(page.renderer.findByTestId("split")).toBeDefined();
+      expect(painted(page.renderer)).toBe("");
+      expect(units(page.renderer)).toEqual([]);
+    } finally {
+      page.unmount();
+    }
+  });
 });

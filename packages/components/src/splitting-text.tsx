@@ -27,6 +27,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 import {
   offsetOf,
@@ -44,7 +45,11 @@ export interface SplittingTextState {
 
 /** {@link SplittingText} props. */
 export interface SplittingTextProps extends Omit<Props, "children" | "style"> {
-  /** The phrase to reveal. A changed phrase replays the units it changed. */
+  /**
+   * The phrase to reveal. A changed phrase replays the units it changed, and a
+   * value a saved record left absent paints no units rather than taking the
+   * render down.
+   */
   readonly text: string;
   /** Split into words or code points. Default `"words"`. */
   readonly split?: SplitMode;
@@ -82,11 +87,13 @@ export const SplittingText = ({
 }: SplittingTextProps) => {
   const theme = useTheme();
   const timing = useSurfaceTiming("normal");
-  const lines = splitUnits(text, { mode: split, stepMs, from });
+  /** The phrase a saved layout may have lost; JSON writes `null` for it. */
+  const phrase = textOf(text);
+  const lines = splitUnits(phrase, { mode: split, stepMs, from });
   const rise = offsetOf(Option.fromNullishOr(offset));
   const metrics = textStyle(theme, role);
   const state: SplittingTextState = {
-    text,
+    text: phrase,
     units: Arr.reduce(lines, 0, (count, line) => count + line.units.length),
     reducedMotion: timing.enter.duration === 0,
   };
