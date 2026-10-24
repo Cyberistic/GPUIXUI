@@ -108,7 +108,7 @@ const toCamel = (name: string): string =>
 
 const darkColours = Object.fromEntries(Object.entries(themes.dark.colors));
 
-/** The density metrics `.gx-demo` declares, keyed by their CSS variable. */
+/** The density metrics `.gx-base` declares, keyed by their CSS variable. */
 const darkDensity: Readonly<Record<string, number>> = {
   "control-height-sm": themes.dark.density.controlHeight.sm,
   "control-height-md": themes.dark.density.controlHeight.md,
@@ -326,9 +326,12 @@ describe("preview style sheets", () => {
 
     const mismatched = declared.filter(({ name, value }) => {
       const role = toCamel(name.slice(2));
-      const metric = darkDensity[name];
+      // The map is keyed by the property without its `--`: indexing it with the
+      // whole name read every metric as absent, so a density default could be
+      // any number at all and the landing painted it.
+      const metric = darkDensity[name.slice(2)];
       if (metric !== undefined) return value !== `${metric}px`;
-      const fill = darkFills[name];
+      const fill = darkFills[name.slice(2)];
       if (fill !== undefined) return value !== fill.toLowerCase();
       if (role === "radius") return value !== `${themes.dark.radius.md}px`;
       const expected = darkColours[role];
@@ -339,6 +342,30 @@ describe("preview style sheets", () => {
     // The landing's product window renders outside a PreviewSurface, so these
     // defaults are the only paint it gets: they must be the library's.
     expect(mismatched.map(({ name }) => name)).toEqual([]);
+  });
+
+  it("keeps every density default it paints, not only the colours", () => {
+    // The landing's scene reads the row a list paints and every control's box
+    // from these defaults. A metric the map does not name was held to nothing,
+    // which is how the row height sat on the `sm` box while the library used
+    // the `md` one. The regexes name the metric families so a new one cannot
+    // join the sheet unheld.
+    const declared = declarations(
+      block(read("../styles/demos.css"), ".gx-base"),
+    );
+    const metrics = declared
+      .map(({ name }) => name.slice(2))
+      .filter((name) =>
+        /^(?:control-|row-|spacing-|icon-size-|target-size$)/.test(name),
+      );
+
+    expect(metrics.length).toBeGreaterThan(5);
+    expect(metrics.filter((name) => darkDensity[name] === undefined)).toEqual(
+      [],
+    );
+    expect(block(read("../styles/demos.css"), ".gx-base")).toContain(
+      `--row-height: ${themes.dark.density.rowHeight}px`,
+    );
   });
 
   it("keep the scene free of variables, so a preview inherits its surface", () => {

@@ -58,7 +58,9 @@
   --control-padding-x-sm: 8px;
   --control-padding-x-md: 10px;
   --control-padding-x-lg: 12px;
-  --row-height: var(--control-height-sm);
+  /* `themes.dark.density.rowHeight` is `controlHeight.md` in every preset; a
+     scene that used the `sm` box drew a list row shorter than the library's. */
+  --row-height: 32px;
   --spacing-md: 8px;
   --spacing-lg: 12px;
   --icon-size-sm: 14px;

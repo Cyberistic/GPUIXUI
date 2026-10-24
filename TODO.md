@@ -14103,7 +14103,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 410/410
+`[x]` `[██████████]` 411/411
+
+`[x]` Hold the **landing scene's density defaults** to the theme, and paint the
+      row the library paints — `.gx-base` is the default palette for the one
+      preview mounted outside a `PreviewSurface` (the landing's product window),
+      and its `--row-height` was `var(--control-height-sm)`: **28px** where
+      `themes.dark.density.rowHeight` is **32** (`controlHeight.md` in every
+      preset), so the dashboard's list and log rows drew shorter than the
+      library's. The guard that should have caught it indexed its metric map with
+      the whole property name (`darkDensity["--row-height"]`) while the map is
+      keyed without the `--`, so **every** density default was read as absent and
+      held to nothing — a colour default was checked, a box was not. The value is
+      `32px` now, the lookup reads `name.slice(2)`, and the new case
+      `keeps every density default it paints, not only the colours` derives the
+      families (`control-`, `row-`, `spacing-`, `icon-size-`, `target-size`) from
+      the sheet and fails a metric the map does not name, so a new box cannot join
+      the scene unheld. Directions measured: restoring
+      `var(--control-height-sm)` fails `keep the .gx-base defaults equal to the
+      dark theme` with `expected [ '--row-height' ] to deeply equal []` and the
+      new case by name; and with the old whole-name lookup restored the defaults
+      case passes on the same broken sheet (only the new case fails), which is the
+      gap measured rather than argued. Green: `theme-css.test.ts` is 28/28.
+      No native scenario applies — a checked-in style sheet and the guard over it.
 
 `[x]` Serve the **whole documentation as one Markdown document** — `/llms.txt`
       was the map (a line per page) and `/sitemap.xml` the crawler's list, so a
