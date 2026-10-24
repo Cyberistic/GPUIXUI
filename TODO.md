@@ -421,8 +421,14 @@ name (the `#FF0000`/`#A7A9FF` palette, the exact `TypeError`, the `Dark · null`
 names, the `42` family, the seam's signature). Green: 53 files / **3 127** tests,
 `check-types` clean. Docs: `docs/tokens.md` §A style a store hands back (new
 subsection under §Editing a platform style), `docs/design-system.md` §11, the
-package README §Extending a theme and the `Platform styles` row. No native
-scenario applies — a pure merge over a stored style.
+package README §Extending a theme and the `Platform styles` row. Verified in a
+runtime: headless `theme-color-roles`, `theme-platform`, `theme-look`,
+`theme-type-and-shadow` **4/4**, the platform and look scenarios painting through
+`platformTheme`/`retroTheme` → `applyStyle`; live `system-theme-follow` **1/1**
+and `field-ink` **1/1**. `theme-switch-lifecycle` could not mount on this tree —
+the playground workstream's in-flight mount-marker change in
+`apps/playground/src/live/run.ts` waits for a marker the bundled view does not
+paint, and no theme assertion ran — so it is not evidence either way.
 
 `[x]` Break the **runtime cycle that left the shipped themes typeless** — the type
 scale needed the platform table's two families (`typography` → `platforms`), the
