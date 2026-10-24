@@ -2243,7 +2243,7 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 161/161
+`[x]` `[██████████]` 162/162
 
 `[x]` Measure the **shipped `Drawer`** in a window — the one modal whose edge,
       veil and dismissal are all paint and hit-testing, and whose claims were
@@ -5848,6 +5848,48 @@ handed to the timer.
       8 files / 81 tests green; `nub apps/playground/dist/smoke/run.js --only
       data-table-core` is green again (`w=320`). Docs: `packages/testing/README.md`
       §Adapting a host states the rule.
+
+`[x]` Measure **the shipped `Carousel`** in a window — its offscreen suite proves
+      the tree and three of its claims are paint claims: that only the slide on
+      screen paints (a spare slide mounted with `display: none` would paint and
+      keep its tab stops on this runtime), that the frame takes its height from
+      that slide (which is why the track does not travel), and that the
+      indicator's two inks change before its widths. The `carousel-lifecycle`
+      live probe mounts three slides that each carry a fill and a label ink no
+      other slide shares — blue `#2A6BF2`/yellow `#FFF200` at 120, green
+      `#1F9D55`/magenta `#FF8AF5` at 160, orange `#B45309`/cyan `#00FFC8` at 100
+      — and reads the frame on 0.11.0: at rest the frame is **360×122**, the
+      blue fill and its ink paint and the other two slides contribute **0** fill
+      and **0** ink; the next control steps to `active=1` and the frame keeps its
+      origin and width while it grows to **162** (the green slide's 160), the
+      third step reads **102**; arrows step and clamp, Home/End jump, the edge
+      controls report nothing until the caller's loop turns on, and then both
+      wrap in both directions; a dot chooses its slide and pressing the chosen
+      dot reports nothing. The indicator is read inside each 24px press target:
+      the chosen dot's exact ink is an **18×6** pill of the theme's `primary`
+      and the others **6×6** dots of `mutedForeground` (the rounded ends cost a
+      point, so a dot reads 5 and the pill 17 and the band is ±1.5). On a frozen
+      motion clock the press's own frame already paints the new roles while the
+      widths are still the old drawings, 40 of the 160ms level paints both dots
+      strictly between the widths, and past the level they land — so the ink is
+      the state and the width is the journey. **97 checks**,
+      `--only carousel-lifecycle`, green here (~15–22 s, six captures). Fixture
+      `src/live/carousel.ts` (the slides, the frame arithmetic, the dot geometry
+      and the two bands) + `CarouselProbe`/`carouselSteps` in
+      `src/live/carousel-probe.tsx` + `carousel.test.ts` (the slides' distinct
+      colours and heights, the per-slide frame height, both bands measured in
+      both directions, the component's declared geometry, unmount rule, `fast`
+      level and clamp/wrap grammar read out of its source, the registry and
+      wiring, the count and the README section). Three negative controls
+      measured, exit `1`, restored green: expecting the second slide's height as
+      the first's fails `the frame takes its height from the second slide on
+      screen` (`expected 122 ± 3, got 162`); requiring every dot to be the rest
+      width fails `dot 0 paints the width of a dot` (`expected 6, got 5`); and
+      freezing the partial read at the level's start fails `partway through the
+      level both dots paint a width between a dot and the pill`. Evidence:
+      `apps/playground/README.md` §`carousel-lifecycle`,
+      `.artifacts/live/carousel-{first,second,dots,motion-frozen,motion-partial,motion-settled}.png`.
+      The `COMPONENTS.md` citation is the Interlocks task below.
 
 ## Phase C — Tier 1–2 components
 
@@ -9596,6 +9638,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Say that **a system palette's stated mode is read from the page** on `/docs/dark-mode` — the site's page says `paletteMode(palette)` "returns the mode the palette states and falls back to the page's lightness only when it states none", and the seam now also reads a stated mode **this release does not ship** (an upper-cased `Dark` a consumer's decoder writes) from the page, because the documented call site hands the answer to `getTheme`, which refuses a name it does not know; the sentence should say so and name the reason | docs-site (`apps/docs/content/docs/dark-mode.mdx`) | open — the seam, its tests and the token pages landed 2026-10-24 (`paletteMode`, `system-theme.test.ts`'s four new cases); the sentence is this page's |
 
 | Teach the **stagger's other door** on `/docs/motion` — the page lists `delayedTiming` in the presence row of its module table and never states the rule, while the package now drops a wait for *any* journey the timing cannot run (a reduced zero, an absent/unreadable/not-positive duration), since the runtime waits a delay out before an instant assignment. `packages/motion/README.md` §The presence table and `docs/component-api.md` §11 carry it; a reader of the site can only learn the rule from the package. One paragraph under §Presence beside the frames table, with the four no-journey shapes and the reason the delay rides with them, and a `motion-page.test.ts` case holding it to `presence.ts`'s `milliseconds(timing.duration) === 0` the way the file's other cases hold their sentences to the seam | docs-site (`apps/docs/content/docs/motion.mdx`) | **open** |
+| Cite the **carousel's window measurement** in its row and page — `COMPONENTS.md`'s Tier 2 *Carousel* row says only "blocked by `transform` and scroll snap (#102) — discrete stepping; only the slide on screen mounts", and `packages/components/docs/carousel.mdx` has no §Verification. The playground's `carousel-lifecycle` (97 checks, 0.11.0) measured the three paint claims: only the mounted slide contributes fill and label ink to a capture (the other two rows paint **0** at every index); the frame is **360×122 / 162 / 102** as the slide on screen changes (its origin and width hold), so a travelling track would paint the tallest slide's 162 on every step; and the indicator's two inks swap in the press's own frame while its widths travel — the chosen dot is an **18×6** `primary` pill and the others **6×6** `mutedForeground` dots, read inside each 24px target (the antialiased ends cost a point: 5 and 17). The row should cite the probe and keep the honest limits (no swipe, no scroll snap, no auto-advance, a slide's local state does not survive a visit), and the page should gain §Verification with the measured heights and the inks-before-widths rule | components (`COMPONENTS.md`'s Carousel row, `packages/components/docs/carousel.mdx`) | open — the probe, fixture, README section and guards are landed in the playground workstream; the row and the page are the component owner's |
 
 ## Phase D — data and workspace components
 

@@ -762,6 +762,12 @@ export const liveRegistry = [
       "Content: the shipped image zoom paints the marked spot under the pointer where the pointer is, magnifies the picture into a box larger than its frame, and returns to rest when the pointer leaves",
     capability: "content",
   },
+  {
+    id: "carousel-lifecycle",
+    title:
+      "Input: the shipped carousel paints only the slide on screen, sizes its frame to that slide, swaps the indicator's inks in the press's frame and travels its widths to land, and steps, clamps and wraps through its controls",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

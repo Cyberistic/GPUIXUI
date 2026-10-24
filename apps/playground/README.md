@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-121 probes a real window can prove, of which twenty-six mount shipped
+122 probes a real window can prove, of which twenty-seven mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6840,6 +6840,85 @@ still requires 1.6 fails
 `expected true, got false`. Evidence:
 `.artifacts/live/image-zoom-{rest,mark,other,returned}.png`.
 
+### `carousel-lifecycle` — measured on 0.11.0 here
+
+**Which slide paints, how tall is the frame, and what does the indicator do
+between two slides?** `Carousel`'s offscreen suite proves the tree: which slide
+is mounted, the index it reports, the dots' roles and `aria-selected`. Three of
+its claims are claims about paint, and a renderer that reports no style cannot
+answer them: that **only the slide on screen paints** (a spare slide mounted
+with `display: none` would paint beside the active one on this runtime, which is
+why the component unmounts instead), that **the frame takes its height from
+that slide** (the reason the track does not travel), and that the **indicator's
+inks change before its widths** (motion interpolates numbers and has no colour).
+The probe mounts the shipped component on three slides that each carry a fill, a
+label ink and a height no other slide shares — blue `#2A6BF2` with yellow
+`#FFF200` at 120, green `#1F9D55` with magenta `#FF8AF5` at 160, orange
+`#B45309` with cyan `#00FFC8` at 100 — so a capture says which slide's subtree
+painted by the colours only it can produce, and the frame's height names the
+slide it is sized by.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `active=0 reports=0 loop=off`; the frame is **360** wide and **122** tall (120 + the track's two 1px borders); the blue fill and its yellow label paint, and the green and orange rows paint **0** fill and **0** ink |
+| a press on the next control | `active=1 reports=1`; the frame **keeps its origin and width** and grows to **162** (the green slide's 160); the green fill and ink paint, the blue row is gone |
+| the right arrow | `active=2 reports=2`; a second right at the last slide stays there (the readout is unchanged) |
+| Home, then End | `active=0 reports=3`, then `active=2 reports=4` |
+| the controls at an edge | with loop off, previous on the first slide and next on the last report nothing (`active=0 reports=5` / `active=2 reports=6`) |
+| loop on | next on the last slide wraps to the first (`active=0 reports=7`), previous on the first wraps to the last (`active=2 reports=8`) |
+| a press on the second dot | `active=1 reports=9`; pressing the chosen dot reports nothing (`reports=9`) |
+| the indicator at rest | the chosen dot paints the theme's **`primary`** ink in an **18×6** pill and none of the resting ink; the other two paint **`mutedForeground`** in **6×6** dots and no primary ink |
+| the press's own frame (clock frozen) | the chosen slide's fill paints and the one it left paints nothing; the dot the selection reached already paints **`primary`** while it is still a **6**-wide dot, and the dot it left already paints `mutedForeground` while it is still the **18**-wide pill |
+| 40 of the 160ms level | both dots paint a width strictly between the dot and the pill |
+| past the level | the reached dot is the **18** pill, the one it left is the **6** dot |
+
+Four rules the window settles:
+
+1. **Only the mounted slide paints.** The two slides that are not on screen
+   contribute no fill and no label ink to any capture, at every index. The
+   renderer ignores `display: none` for layout and paint, so this is a property
+   of unmounting rather than of hiding — the reason a slide's local state does
+   not survive a visit.
+2. **The frame is the slide, so the track cannot travel.** The frame's height
+   moves 122 → 162 → 102 with the slide on screen while its origin and width
+   stay put; a travelling track would lay all three out in one box and take its
+   height from the tallest (162 on every step).
+3. **The ink is the state, the width is the journey.** In the press's own frame
+   the two dots have already swapped their roles while still carrying the
+   previous drawing widths, and the widths land once the level is past. A
+   component that changed the width and the colour together would fail the
+   frozen read, and one that never travelled would fail the mid-level read.
+4. **The step clamps, then wraps — and the controls agree with the keys.** With
+   loop off the two edge controls refuse a press rather than reporting a step
+   that the arithmetic clipped; with loop on both wrap in both directions. The
+   readout's `reports` count is the caller's `onValueChange`, so a clamped step
+   and a press on the chosen dot are both measurably silent.
+
+**What is measured as a *drawing*, not a box.** The dots' press targets are the
+24px floor, so their boxes are all 24 wide and a layout read cannot tell the
+pill from a dot. The probe reads each drawing's **exact ink** inside its own
+target: the rounded ends are antialiased, so a 6px dot's exact paint is **5**
+points wide and an 18px pill's is **17**, and the band the fixture accepts is
+±1.5 points — far narrower than the 12-point gap between the two states.
+
+97 checks, `--only carousel-lifecycle`, green on 0.11.0 here (~15–22 s, six
+captures). Fixture `src/live/carousel.ts` (the three slides' fills, inks and
+heights, the frame arithmetic, the dot geometry and the two invariants) +
+`CarouselProbe`/`carouselSteps` in `src/live/carousel-probe.tsx` +
+`carousel.test.ts` (the slides' distinct colours and heights, the frame's
+per-slide height, the width band and the travelling band measured both ways,
+the component's declared dot geometry, its unmount rule, its `fast` level and
+the clamp/wrap grammar read out of the shipped source, the registry and wiring,
+the check count and this section). Three negative controls measured, exit `1`
+each, restored green: expecting the second slide's frame height as the first
+slide's fails `the frame takes its height from the second slide on screen` with
+`expected 122 ± 3, got 162`; requiring every dot to be the resting width fails
+`dot 0 paints the width of a dot` with `expected 6, got 5` (the antialiased
+end); and freezing the partial read at the level's start (0ms instead of 40)
+fails `partway through the level both dots paint a width between a dot and the
+pill` with `expected true, got false`. Evidence:
+`.artifacts/live/carousel-{first,second,dots,motion-frozen,motion-partial,motion-settled}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7085,8 +7164,8 @@ narrower. Each deviation is deliberate and measured:
   `media-frame-lifecycle` and `media-player-lifecycle` and
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
-  `modal-scroll-lifecycle` and `image-zoom-lifecycle` (63 probes, each run
-  alone).
+  `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
+  `carousel-lifecycle` (64 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`

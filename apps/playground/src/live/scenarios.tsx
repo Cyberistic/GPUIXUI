@@ -1111,6 +1111,7 @@ import { AppChromeProbe, appChromeSteps } from "./app-chrome-probe.js";
 import { SecondWindowProbe, secondWindowSteps } from "./second-window-probe.js";
 import { QrMatrixProbe, qrMatrixSteps } from "./qr-matrix-probe.js";
 import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
+import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -30285,5 +30286,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "image-zoom-lifecycle",
     view: () => <ImageZoomProbe />,
     steps: imageZoomSteps,
+  },
+  "carousel-lifecycle": {
+    id: "carousel-lifecycle",
+    view: () => <CarouselProbe />,
+    steps: carouselSteps,
   },
 };
