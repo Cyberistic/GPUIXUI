@@ -26,7 +26,7 @@
  * `undefined` too, and the report is the one place the absence is named.
  */
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
@@ -94,6 +94,34 @@ import {
   syntaxFailures,
   syntaxRoles,
 } from "./syntax.js";
+
+/** Every non-test source under a package, keyed by its path below that root. */
+const sourcesUnder = (
+  root: string,
+): ReadonlyArray<readonly [string, string]> => {
+  const walk = (
+    url: URL,
+    prefix = "",
+  ): ReadonlyArray<readonly [string, string]> =>
+    readdirSync(url, { withFileTypes: true }).flatMap((entry) => {
+      if (entry.isDirectory()) {
+        return walk(new URL(`${entry.name}/`, url), `${prefix}${entry.name}/`);
+      }
+      if (!entry.name.endsWith(".ts") && !entry.name.endsWith(".tsx")) {
+        return [];
+      }
+      if (entry.name.includes(".test.")) {
+        return [];
+      }
+      return [
+        [
+          `${prefix}${entry.name}`,
+          readFileSync(new URL(entry.name, url), "utf8"),
+        ],
+      ];
+    });
+  return walk(new URL(root, import.meta.url));
+};
 
 /** Every style the library ships, as the gate would be run over them. */
 const shipped: readonly Theme[] = [
@@ -486,6 +514,31 @@ describe("an absent colour group", () => {
     expect(inventory).toContain(
       "`focusRing` answers `undefined` when the theme lost `ring`",
     );
+  });
+
+  it("reads every role the primitives paint through their one seam", () => {
+    // `core/theme.ts` is the primitives' single paint point: `colorRole` answers
+    // a role the theme still carries and `undefined` for one a stored theme
+    // lost. A direct `theme.colors.x` read is the shape that threw a `TypeError`
+    // out of the first control a truncated theme painted — the absence this
+    // suite exists for — so no paint source may carry one, and the walk has to
+    // find the painters rather than pass on an empty scan.
+    const painted = sourcesUnder("../../primitives/src/");
+    expect(
+      painted.length,
+      "the primitives walk found no paint sources",
+    ).toBeGreaterThan(6);
+
+    expect(
+      painted
+        .filter(([, source]) => source.includes("theme.colors"))
+        .map(([path]) => path),
+      "a paint source reads the colour group directly",
+    ).toEqual([]);
+    expect(
+      painted.filter(([, source]) => source.includes("colorRole(")).length,
+      "the seam is not the route the painters take",
+    ).toBeGreaterThan(6);
   });
 
   it("reads every shipped style as whole", () => {

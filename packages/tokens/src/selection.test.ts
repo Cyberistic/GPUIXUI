@@ -225,8 +225,10 @@ describe("selectionFailures", () => {
     const style = read("../../primitives/src/core/style.ts");
 
     expect(recipes).toContain('user: "bg-muted"');
-    expect(style).toContain("muted: (theme) => theme.colors.muted");
-    expect(style).toContain("style.selectionColor = theme.colors.selection;");
+    expect(style).toContain('muted: (theme) => colorRole(theme, "muted")');
+    expect(style).toContain(
+      'style.selectionColor = colorRole(theme, "selection");',
+    );
   });
 
   it("reports a wash that hides the text it selects", () => {
@@ -998,10 +1000,12 @@ describe("the adoption both packages paint", () => {
     // The primitives: one declaration for a selectable host's style, and the
     // `select-text` utility the field recipes carry.
     expect(primitiveStyle).toContain(
-      "style.selectionColor = theme.colors.selection;",
+      'style.selectionColor = colorRole(theme, "selection");',
     );
     expect(primitiveRecipe).toContain('"select-text"');
-    expect(primitiveRecipe).toContain("selectionColor: theme.colors.selection");
+    expect(primitiveRecipe).toContain(
+      'selectionColor: colorRole(theme, "selection")',
+    );
     // The components: one seam, a host that spreads it, and the alert's
     // per-surface derivation.
     expect(componentsSeam).toContain("export const selectionWash");

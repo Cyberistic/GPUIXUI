@@ -783,7 +783,7 @@ describe("the secondary action's label on the fill it paints", () => {
     // from that fill — a role wash is the fill it replaces in several styles.
     // The components package resolves it through the primitive's table now
     // (`actionOnColor`), so either form counts; the role is the claim.
-    expect(secondary).toContain("theme.colors.secondaryForeground");
+    expect(secondary).toContain('colorRole(theme, "secondaryForeground")');
     expect(
       [
         "primitiveActionOnColor",
@@ -864,7 +864,7 @@ describe("a control's label on its group strip", () => {
       ).exec(primitives)?.[0];
       expect(declaration, variant).toContain("background: undefined");
       expect(declaration, variant).toContain(
-        "foreground: (theme) => theme.colors.foreground",
+        'foreground: (theme) => colorRole(theme, "foreground")',
       );
     }
   });
@@ -1124,7 +1124,9 @@ describe("the body role on a box's own surface", () => {
     // The bubble sets no colour of its own, and `Text`'s default tone is the
     // body role — so the pair above is the one a user message paints.
     expect(bubbles).toContain('user: "bg-muted"');
-    expect(style).toContain("default: (theme) => theme.colors.foreground");
+    expect(style).toContain(
+      'default: (theme) => colorRole(theme, "foreground")',
+    );
   });
 
   it("reports copy a surface swallows", () => {
@@ -1386,7 +1388,7 @@ describe("the status label on the wash a list row wears", () => {
     );
     expect(list).toContain("backgroundColor: theme.colors.selected");
     expect(style).toContain(
-      "destructive: (theme) => theme.colors.destructiveSoftForeground",
+      'destructive: (theme) => colorRole(theme, "destructiveSoftForeground")',
     );
   });
 
@@ -3071,7 +3073,7 @@ describe("the muted text inside a field's own fill", () => {
         ),
         "utf8",
       ),
-    ).toContain("part.theme.colors.mutedForeground");
+    ).toContain('colorRole(part.theme, "mutedForeground")');
 
     // The native host's muted slot is the same role over the same fill, in the
     // package's own seam: `nativeTextTheme(theme)` defaults to a plain field's

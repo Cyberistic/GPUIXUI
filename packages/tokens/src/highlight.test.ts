@@ -586,8 +586,10 @@ describe("what the pages teach", () => {
     );
 
     // The painters: the component defaults to the derived pair and only a
-    // caller's own colour replaces it.
-    expect(wash).toContain("findHighlight(theme)");
+    // caller's own colour replaces it. The seam takes the source it derives
+    // from — a theme or the colour group a store handed back — so the guard
+    // holds the call rather than the parameter's name.
+    expect(wash).toMatch(/findHighlight\(\s*\w+\s*\)/);
     expect(wash).toContain("input.color ?? derived.color");
     expect(wash).toContain("input.activeColor ?? derived.activeColor");
     expect(

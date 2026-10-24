@@ -786,7 +786,9 @@ describe("decorative surfaces", () => {
     expect(recipe).toContain(
       "bg-secondary text-secondary-foreground border border-strong",
     );
-    expect(variants).toContain("border: (theme) => theme.colors.borderStrong");
+    expect(variants).toContain(
+      'border: (theme) => colorRole(theme, "borderStrong")',
+    );
     // The components' arm is a class string today and was a recipe object a
     // release ago; the claim is the `secondary` action carrying the edge.
     expect(components).toMatch(
@@ -983,7 +985,7 @@ describe("decorative surfaces", () => {
         'active: { backgroundColor: pressWash(theme, "accent") }',
       ),
       hover:
-        variants.includes("backgroundColor: theme.colors.hover") &&
+        variants.includes('backgroundColor: colorRole(theme, "hover")') &&
         row.includes(
           "hover: disabled ? undefined : { backgroundColor: theme.colors.hover }",
         ),

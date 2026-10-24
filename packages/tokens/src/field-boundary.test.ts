@@ -60,7 +60,9 @@ const fieldVariant = (): string => {
 
 /** The role `fieldVariant` paints at rest. */
 const variantEdge = (): string => {
-  const match = /border:\s*\(theme\)\s*=>\s*theme\.colors\.(\w+)/.exec(
+  // The primitives paint every role through one seam (`colorRole`), so the
+  // resting edge is the role that seam names rather than a property read.
+  const match = /border:\s*\(theme\)\s*=>\s*colorRole\(theme,\s*"(\w+)"\)/.exec(
     fieldVariant(),
   );
   expect(match, "fieldVariant no longer resolves a border role").not.toBeNull();
