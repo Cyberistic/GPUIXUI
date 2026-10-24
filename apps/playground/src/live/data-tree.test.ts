@@ -198,6 +198,20 @@ describe("the data-tree fixture", () => {
     expect(probe).toContain('dataExamples["tree"]');
   });
 
+  it("keeps its readout id apart from the windowed tree's", () => {
+    // The live runner mounts selected probes in **one** window, so two probes
+    // that print the same test id can answer each other: a batched run of
+    // `--only virtual-tree-lifecycle --only data-tree-lifecycle` read
+    // `visible=4000 expanded=40 …` as this tree's readout and failed on its
+    // first check (measured twice on 2026-10-24). Both ids are read from their
+    // own sources, so a rename on either side cannot reintroduce the collision.
+    const virtual = probe.slice(probe.indexOf("const VirtualTreeProbe"));
+    const id = /<Readout testId="([^"]+)"/.exec(virtual)?.[1];
+    expect(id).toBeDefined();
+    expect(DATA_TREE_READOUT).not.toBe(id);
+    expect(example).toContain(`"${DATA_TREE_READOUT}"`);
+  });
+
   it("prints every measured readout in its section", () => {
     const start = readme.indexOf("### `data-tree-lifecycle`");
     const end = readme.indexOf("\n### ", start + 1);

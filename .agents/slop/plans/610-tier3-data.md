@@ -746,6 +746,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `iconSize` beside the other four groups. Docs: the README's Styling section
   and rules table.
 
+- **A readout id is a probe's own**: the live runner mounts selected probes
+  into **one** window, so the data tree's example and the windowed tree's probe
+  both printing `tree-readout` let a batched run read
+  `visible=4000 expanded=40 …` as the plain tree's readout — measured twice in
+  `--only virtual-tree-lifecycle --only data-tree-lifecycle`, where the probe
+  alone paints in 814 ms and the batched one read after 327 ms. The example now
+  prints `data-tree-readout`, and `apps/playground/src/live/data-tree.test.ts`
+  gains `keeps its readout id apart from the windowed tree's`, which reads both
+  ids from their own sources (measured failing with the old id:
+  `expected 'tree-readout' not to be 'tree-readout'`). The pair is green (2/2,
+  3.6 s + 10.0 s); the runner-level mount marker for any two probes that share
+  an id is `TODO.md` → Interlocks.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

@@ -18,7 +18,7 @@
 import * as Option from "effect/Option";
 
 /** The example's readout: the visible row count and the active row. */
-export const DATA_TREE_READOUT = "tree-readout";
+export const DATA_TREE_READOUT = "data-tree-readout";
 /** The three actions above the tree. */
 export const DATA_TREE_EXPAND = "tree-expand";
 export const DATA_TREE_COLLAPSE = "tree-collapse";

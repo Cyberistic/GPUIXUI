@@ -107,7 +107,7 @@ export const TreeExample = () => {
         </Button>
       </div>
       <text
-        testId="tree-readout"
+        testId="data-tree-readout"
         style={{
           ...textStyle(theme, "caption"),
           color: theme.colors.mutedForeground,
