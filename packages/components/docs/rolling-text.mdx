@@ -38,6 +38,7 @@ Under `MotionProvider preference="reduced"` the swap is immediate, so there is n
 
 ## Limitations
 
+- **A stored value that is not text reports `""`**: `textOf` reads `text` at the boundary, so a `null` a saved record kept no longer reaches `state.text`, which a `style` callback may measure.
 - Width follows the value; the clip is the value on screen.
 - No horizontal direction.
 - One line only; a wide value is clipped.

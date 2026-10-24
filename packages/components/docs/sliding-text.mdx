@@ -40,6 +40,7 @@ Under `MotionProvider preference="reduced"` the swap is immediate, so there is n
 
 ## Limitations
 
+- **A stored value that is not text reports `""`**: `textOf` reads `text` at the boundary, so a `null` a saved record kept no longer reaches `state.text`, which a `style` callback may measure.
 - The box decides the travel; width is measured after paint.
 - One line only; a wide value is clipped.
 - The outgoing value fades out of the clip.

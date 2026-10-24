@@ -301,4 +301,27 @@ describe("SlidingText", () => {
       page.unmount();
     }
   });
+
+  it("reports an empty value for a stored value that was not text", () => {
+    // The bug guarded: a value saved with a layout writes `null` for a string it
+    // never carried, and the swap state carried it into `state.text` — declared
+    // a `string`, so a caller's `style` callback that measures it throws.
+    const reported: Array<string> = [];
+    const page = renderComponent(
+      <SlidingText
+        testId="slide"
+        text={null as unknown as string}
+        style={(state) => {
+          reported.push(state.text);
+          return { width };
+        }}
+      />,
+    );
+    try {
+      expect(painted(page)).toBe("");
+      expect(reported).toEqual([""]);
+    } finally {
+      page.unmount();
+    }
+  });
 });

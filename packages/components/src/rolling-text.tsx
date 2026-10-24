@@ -35,6 +35,7 @@ import {
   type SwapPhase,
 } from "./internal/text-swap.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 
 /** What a rolling value draws at one frame. */
@@ -86,11 +87,13 @@ export const RollingText = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = swapHalves(level, preference);
-  const [roll, setRoll] = useState(() => initialSwap(text));
+  /** The value a saved record may have lost; JSON writes `null` for it. */
+  const value = textOf(text);
+  const [roll, setRoll] = useState(() => initialSwap(value));
 
   useEffect(() => {
-    setRoll((current) => requestSwap(current, text, preference === "reduced"));
-  }, [text, preference]);
+    setRoll((current) => requestSwap(current, value, preference === "reduced"));
+  }, [value, preference]);
 
   useEffect(() => {
     if (roll.phase !== "leaving") return;

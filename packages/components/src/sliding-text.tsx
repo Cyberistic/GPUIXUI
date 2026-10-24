@@ -31,6 +31,7 @@ import { useEffect, useState } from "react";
 import { measuredBox } from "./internal/measure.js";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import {
   initialSwap,
   requestSwap,
@@ -96,12 +97,14 @@ export const SlidingText = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = swapHalves(level, preference);
-  const [swap, setSwap] = useState(() => initialSwap(text));
+  /** The value a saved record may have lost; JSON writes `null` for it. */
+  const value = textOf(text);
+  const [swap, setSwap] = useState(() => initialSwap(value));
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
-    setSwap((current) => requestSwap(current, text, preference === "reduced"));
-  }, [text, preference]);
+    setSwap((current) => requestSwap(current, value, preference === "reduced"));
+  }, [value, preference]);
 
   useEffect(() => {
     if (swap.phase !== "leaving") return;
