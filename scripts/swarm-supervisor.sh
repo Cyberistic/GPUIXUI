@@ -27,7 +27,7 @@ set -uo pipefail
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODELS="$REPO/scripts/swarm-model.sh"
-MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-2}"
+MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-7}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -39,7 +39,7 @@ LOCK="$STATE/supervisor.lock"
 
 # One workstream per agent, each with its own tree so two writers never share a
 # checkout. The descriptions keep the five from colliding.
-WORKSTREAMS="components docs-site"
+WORKSTREAMS="${GPUIXUI_WORKSTREAMS:-tokens-theme primitives components docs-site playground motion data}"
 
 workstream_scope() {
   case "$1" in
@@ -178,7 +178,7 @@ this turn. Do not create plan-per-task files.
 Done means: the code, a test that can fail, an example, a docs page, and a
 COMPONENTS.md row for a component; code, a test, and the TODO.md tick otherwise.
 
-**Shared checkout.** Five other agents write in this same directory on master.
+**Shared checkout.** The other agents write in this same directory on master.
 Own only your paths and never edit another workstream's files. Stage only your
 paths (\`git add <paths>\`, never \`git add -A\`) and commit with
 \`scripts/swarm-commit.sh "<message>" <paths...>\`, which serialises the index
@@ -237,7 +237,7 @@ Never write a new plan. Never claim a test passed unless it ran. When the queue
 is empty, record the final counts in the log and stop; a new file appearing is
 the only thing that restarts you.
 
-Shared checkout: five other agents write in this same directory on master.
+Shared checkout: the other agents write in this same directory on master.
 Stage only your paths (\`git add <paths>\`, never \`git add -A\`) and commit with
 \`scripts/swarm-commit.sh "<message>" <paths...>\`; retry once on a lock timeout.
 Push master after each coherent unit.
