@@ -21,6 +21,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { spaceValue } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
@@ -111,7 +112,7 @@ export const KeyValue = ({
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            gap: theme.spacing.sm,
+            gap: spaceValue(theme, "sm"),
             ...recipeStyle(KEY_VALUE_ROW, theme),
           }}
         >

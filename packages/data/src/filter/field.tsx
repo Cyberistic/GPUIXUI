@@ -10,7 +10,7 @@
  */
 
 import { Input } from "@gpuixui/primitives";
-import { spokenText } from "@gpuixui/primitives/core";
+import { spaceValue, spokenText } from "@gpuixui/primitives/core";
 import * as Option from "effect/Option";
 import { useTheme } from "../theme.js";
 
@@ -59,7 +59,7 @@ export const TableFilterField = ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: theme.spacing.sm,
+        gap: spaceValue(theme, "sm"),
         ...(width === undefined ? {} : { width }),
       }}
     >

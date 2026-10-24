@@ -24,7 +24,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Input } from "@gpuixui/primitives";
-import { accessibleName } from "@gpuixui/primitives/core";
+import { accessibleName, spaceValue } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import { recordsOf } from "../internal/list.js";
@@ -150,8 +150,8 @@ export const PropertyPanel = ({
       )}
       <div
         style={{
-          paddingLeft: theme.spacing.sm,
-          paddingRight: theme.spacing.sm,
+          paddingLeft: spaceValue(theme, "sm"),
+          paddingRight: spaceValue(theme, "sm"),
         }}
       >
         <KeyValue entries={entries} labelWidth={labelWidth} />

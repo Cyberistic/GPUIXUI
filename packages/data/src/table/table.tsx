@@ -37,7 +37,11 @@
 
 import type { Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { spokenText } from "@gpuixui/primitives/core";
+import {
+  borderWidthOf,
+  spaceValue,
+  spokenText,
+} from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
@@ -237,7 +241,7 @@ export const TableHeader = ({
       role="rowgroup"
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TABLE_HEADER, className), theme), {
-          borderBottomWidth: theme.borderWidth.thin,
+          borderBottomWidth: borderWidthOf(theme, "thin"),
           // The header sits on the table's own `card` fill; the rule is the
           // same derivation a row uses, so a brand whose `border` is too close
           // to its card gets a visible line here too.
@@ -415,7 +419,7 @@ export const TableRow = ({
       onClick={disabled === true ? undefined : onClick}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(recipe, className), theme), {
-          borderBottomWidth: theme.borderWidth.thin,
+          borderBottomWidth: borderWidthOf(theme, "thin"),
           borderColor: rule(
             selected === true ? theme.colors.selected : theme.colors.card,
           ),
@@ -636,7 +640,7 @@ export const TableEmpty = ({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: theme.spacing.xs,
+          gap: spaceValue(theme, "xs"),
         }}
       >
         {typeof children === "string" || typeof children === "number" ? (

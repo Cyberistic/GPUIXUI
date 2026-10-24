@@ -54,6 +54,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A reveal moves the window first | `virtual-list-windowed` | `useVirtualRows` moves the window to the row's own position in the same render, and the body scrolls to it in the layout effect after that commit. |
 | A row height the window can divide | `rowheight.test.tsx`, `window.test.ts` | `rowHeightOf` reads a computed row height once — a finite height above zero, else `DEFAULT_ROW_HEIGHT` (37, what the shipped row paints) — and the runtime's estimate, the anchor, a reveal and the tree's cursor walks all read it. A height nothing could be read from used to mount a row per pixel and to clamp the anchor's offset to `0`, so a thousand-row table painted nothing past its first window. |
 | A theme without the density group still builds a row | `tree/row.test.ts` | The step a tree row defaults to is the primitives' density reader (`rowHeightOf(theme)`), which answers the library's row for a theme a store gave back without the group. Indexing the group directly threw `TypeError: Cannot read properties of undefined (reading 'rowHeight')` from the first row, in the plain tree and the windowed one alike. |
+| A numeric group is read through the seam that answers its absence | `paint-readers.test.ts` | `spaceValue`, `borderWidthOf`, `radiusValue` and `rowHeightOf` answer the library's number for a theme a store gave back without the group; indexing `theme.spacing`, `theme.borderWidth`, `theme.radius` or `theme.density` threw from the first layout that asked for a gap, an edge or a row height. |
 
 ## Shape
 
@@ -774,6 +775,18 @@ Resting appearance is a Tailwind class recipe compiled through
 recipe per theme. Geometry the runtime exposes as behaviour — scroller axes,
 column widths — is set in `style`, because `overflow-x`/`overflow-y` live only
 in the primitives' registry and a column width is data.
+
+**A numeric group is read through the seam that answers its absence.** A theme
+a store hands back can lose `spacing`, `radius`, `borderWidth` or `density`, and
+every part used to index the group: the first layout that asked for a gap, an
+edge or a row height threw `TypeError: Cannot read properties of undefined
+(reading 'xs')` and took the surface down, because a paint seam runs mid-render
+and cannot throw. The parts read the primitives' published readers
+(`spaceValue`, `borderWidthOf`, `radiusValue`, `iconSideOf`, `rowHeightOf`),
+which answer the library's number for the group the theme lost; `paint-readers`
+holds every source under `src/` to them. The chart legend's dot is the one
+remaining raw icon-step read, because the primitives publish a side per
+**control** size rather than per icon step (`TODO.md` → Interlocks).
 
 ## Status
 

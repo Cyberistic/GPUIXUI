@@ -13,6 +13,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { spaceValue } from "@gpuixui/primitives/core";
 import { statusTone } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
@@ -90,7 +91,7 @@ export const StatCard = ({
           display: "flex",
           flexDirection: "row",
           alignItems: "baseline",
-          gap: theme.spacing.xs,
+          gap: spaceValue(theme, "xs"),
         }}
       >
         {readable(value, { style: recipeStyle(STAT_VALUE, theme) })}

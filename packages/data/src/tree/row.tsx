@@ -24,7 +24,11 @@
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
-import { rowHeightOf, type DensitySource } from "@gpuixui/primitives/core";
+import {
+  iconSideOf,
+  rowHeightOf,
+  type DensitySource,
+} from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
@@ -130,8 +134,8 @@ export const TreeRowView = <T,>({
         testId={testId === undefined ? undefined : `${testId}-slot`}
         style={{
           ...recipeStyle(TREE_CHEVRON, theme),
-          width: theme.iconSize.md,
-          height: theme.iconSize.md,
+          width: iconSideOf(theme, "md"),
+          height: iconSideOf(theme, "md"),
           // The slot is the chevron's box: a leaf keeps it blank so its label
           // lines up with a branch's.
         }}

@@ -728,6 +728,23 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   source case by name. Docs: `docs/tree-view.mdx`, `docs/virtual-tree.mdx`, the
   README and the two inventory rows.
 
+- **A numeric group the theme lost paints the library's number**: the parts read
+  `theme.spacing`, `theme.borderWidth`, `theme.radius` and `theme.density` raw,
+  so a theme a store handed back without a group threw
+  `TypeError: Cannot read properties of undefined (reading 'xs')` from the first
+  layout that asked for a gap, an edge or a row height. Every library source now
+  paints through the primitives' published readers (`spaceValue`,
+  `borderWidthOf`, `radiusValue`, `iconSideOf`, `rowHeightOf`), which answer the
+  library's number for the absence; `src/paint-readers.test.ts` (3 cases) scans
+  every non-test source under `src/` and fails naming the file and the group,
+  with a premise case that drives the scan's own shapes so "no raw reads" cannot
+  pass by reading nothing. Directions measured: restoring `theme.spacing.xs` in
+  `surfaces/stat-card.tsx` fails `surfaces/stat-card.tsx: theme.spacing`.
+  Examples are excluded — a demo composes like an app and owns its theme. The
+  chart legend dot's `theme.iconSize.xs` is the recorded exception (no
+  icon-step reader exists; `TODO.md` → Interlocks). Docs: the README's Styling
+  section and rules table.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`
