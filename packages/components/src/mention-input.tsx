@@ -24,6 +24,7 @@ import {
   MENTION_INPUT_ITEM_TEXT,
   MENTION_INPUT_LIST,
 } from "@gpuixui/tw";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   Children,
@@ -32,6 +33,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
 } from "react";
@@ -49,7 +51,14 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { fadeFromAnchor, useSurfaceTiming } from "./internal/presence.js";
+import {
+  fadeFromAnchor,
+  PresenceShield,
+  presenceMotion,
+  presenceStyle,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import {
   applyMention,
   mentionMaxVisible,
@@ -74,6 +83,8 @@ interface MentionContextValue {
   readonly query: Option.Option<MentionQuery>;
   readonly highlighted: number;
   readonly maxVisible: number;
+  /** The field refuses every edit, so its list is gone rather than leaving. */
+  readonly disabled: boolean;
   readonly select: (value: string) => void;
   readonly close: () => void;
   readonly reportVisible: (values: ReadonlyArray<string>) => void;
@@ -83,10 +94,17 @@ const MentionContext = createContext<MentionContextValue | undefined>(
   undefined,
 );
 
-/** Whether the item is the highlighted row, set by the list. */
-const MentionItemContext = createContext<{ readonly highlighted: boolean }>({
-  highlighted: false,
-});
+/**
+ * Whether the row is the highlighted one, set by the list.
+ *
+ * `leaving` marks a row painted only for the list's exit: the runtime decides the
+ * Tab order element by element, so a row that cannot be pressed must not be a
+ * stop either.
+ */
+const MentionItemContext = createContext<{
+  readonly highlighted: boolean;
+  readonly leaving: boolean;
+}>({ highlighted: false, leaving: false });
 
 /** The mention field a part belongs to. Throws when there is none. */
 const useMention = (): MentionContextValue => {
@@ -183,6 +201,7 @@ export const MentionInput = ({
       query: open,
       highlighted: active,
       maxVisible,
+      disabled,
       select,
       close: () => setDismissed(true),
       reportVisible: (values) =>
@@ -191,7 +210,7 @@ export const MentionInput = ({
         ),
     }),
     // `select` closes over the current text and query.
-    [active, maxVisible, open, text],
+    [active, disabled, maxVisible, open, text],
   );
 
   const controlStyle = mergeStyles(recipeStyle(MENTION_INPUT_CONTROL, theme), {
@@ -292,13 +311,25 @@ const isItemElement = (child: unknown): child is ItemElement =>
   child.type === MentionInputItem &&
   typeof (child.props as { readonly value?: unknown }).value === "string";
 
+/** One row the list paints: the value it inserts and the item it was declared as. */
+interface PaintedRow {
+  readonly value: string;
+  readonly item: ItemElement;
+}
+
+/** What a list last painted: its rows, and the one it had highlighted. */
+interface PaintedList {
+  readonly rows: ReadonlyArray<PaintedRow>;
+  readonly highlighted: number;
+}
+
 /**
  * The list's entry: the house fade plus 4px of travel out from the field's
  * bottom edge, the offset every anchored panel uses.
  */
 const listFrames = fadeFromAnchor("bottom", 4);
 
-/** The ranked suggestion surface, rendered only while a query is open. */
+/** The list: a suggestion surface that leaves the way it arrived. */
 export const MentionInputList = ({
   className,
   children,
@@ -306,7 +337,8 @@ export const MentionInputList = ({
   ...rest
 }: MentionInputListProps) => {
   const theme = useTheme();
-  const { query, highlighted, maxVisible, reportVisible } = useMention();
+  const { disabled, query, highlighted, maxVisible, reportVisible } =
+    useMention();
   const timing = useSurfaceTiming("normal");
   assertParts(mentionList, children);
 
@@ -320,6 +352,15 @@ export const MentionInputList = ({
         maxVisible,
       ),
   });
+  const rows = Arr.flatMap(ranked, (value) =>
+    Option.match(
+      Arr.findFirst(items, (item) => item.props.value === value),
+      {
+        onNone: () => [],
+        onSome: (item): ReadonlyArray<PaintedRow> => [{ value, item }],
+      },
+    ),
+  );
 
   const key = ranked.join("\u0000");
   useLayoutEffect(() => {
@@ -327,7 +368,37 @@ export const MentionInputList = ({
     // `key` is the value identity of the list; `ranked` is rebuilt each render.
   }, [key, reportVisible]);
 
-  if (ranked.length === 0) return null;
+  // The box leaves when the query does, not when the filter empties: a list that
+  // merely narrowed to nothing is cut, because the field is still open and a
+  // ghost of rows the query no longer matches would be a lie about the search.
+  const open = Option.isSome(query);
+  const presence = useSurfacePresence(open, timing);
+
+  // The rows the box paints while it leaves are the ones it was dismissed with,
+  // so the reader sees the list they closed rather than an empty surface.
+  const shown = useRef<Option.Option<PaintedList>>(Option.none());
+  useLayoutEffect(() => {
+    if (rows.length > 0) shown.current = Option.some({ rows, highlighted });
+  });
+  const leaving = !disabled && !presence.present && presence.mounted;
+  const painted =
+    rows.length > 0
+      ? rows
+      : leaving
+        ? Option.getOrElse(
+            Option.map(shown.current, (last) => last.rows),
+            () => [],
+          )
+        : [];
+  const active =
+    rows.length > 0
+      ? highlighted
+      : Option.getOrElse(
+          Option.map(shown.current, (last) => last.highlighted),
+          () => 0,
+        );
+
+  if (!presence.mounted || painted.length === 0) return null;
 
   return (
     <FloatingLayer
@@ -335,35 +406,28 @@ export const MentionInputList = ({
       align="start"
       sideOffset={4}
       collisionPadding={8}
-      // The surfaces' entrance, entry only: the list is rendered from the query
-      // in the text, so closing it removes it with the query rather than leaving
-      // a box behind to fade. `MotionProvider preference="reduced"` paints it at
-      // rest in the frame it appears.
-      motion={{
-        initial: listFrames.initial,
-        animate: listFrames.animate,
-        transition: timing.enter,
-      }}
+      motion={presenceMotion(listFrames, presence)}
       role="group"
       aria-label="Mentions"
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(MENTION_INPUT_LIST, className), theme),
+        mergeStyles(recipeStyle(cn(MENTION_INPUT_LIST, className), theme), {
+          // A positioned box is what the leaving guard is inset against.
+          position: "relative",
+          ...presenceStyle(presence.present),
+        }),
         style,
       )}
     >
-      {ranked.map((value, index) => {
-        const item = items.find((candidate) => candidate.props.value === value);
-        if (item === undefined) return null;
-        return (
-          <MentionItemContext.Provider
-            key={value}
-            value={{ highlighted: index === highlighted }}
-          >
-            {item}
-          </MentionItemContext.Provider>
-        );
-      })}
+      {painted.map((row, index) => (
+        <MentionItemContext.Provider
+          key={row.value}
+          value={{ highlighted: index === active, leaving: !presence.present }}
+        >
+          {row.item}
+        </MentionItemContext.Provider>
+      ))}
+      <PresenceShield present={presence.present} />
     </FloatingLayer>
   );
 };
@@ -387,14 +451,16 @@ export const MentionInputItem = ({
   ...rest
 }: MentionInputItemProps) => {
   const theme = useTheme();
-  const { highlighted } = useContext(MentionItemContext);
+  const { highlighted, leaving } = useContext(MentionItemContext);
   const { select } = useMention();
 
   return (
     <div
       role="button"
       aria-selected={highlighted}
-      tabIndex={0}
+      // A row of a surface painted only for its exit leaves the window's Tab
+      // order with it: it cannot take a press, so it must not be a stop either.
+      tabIndex={leaving ? -1 : 0}
       {...rest}
       onMouseDown={() => select(value)}
       {...activationHandlers(() => select(value))}

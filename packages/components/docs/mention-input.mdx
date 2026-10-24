@@ -50,6 +50,18 @@ MentionInput
 | `MentionInputList` | anchored suggestion surface, labelled "Mentions" | `className?`, `children` |
 | `MentionInputItem` | a selected button row | `value` (required), `label?`, `style?`, `className?` |
 
+## Motion
+
+The suggestion list enters and leaves on the house `normal` level: a fade plus 4px
+of travel out from the field's bottom edge. Closing the query — `Escape`, a
+selection, or a field that becomes disabled — keeps the box painted for its exit
+window, carrying the rows the reader dismissed rather than re-ranking an empty
+query mid-fade, and the seam's leaving guard stops a ghost row taking the press.
+A list that only narrows to nothing is cut instead: the field is still open and a
+ghost of rows the query no longer matches would misreport the search.
+`MotionProvider preference="reduced"` removes the journey: the box is gone in the
+frame it closes.
+
 ## Limitations
 
 - The query comes from the text, not the caret.

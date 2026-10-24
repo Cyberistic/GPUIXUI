@@ -806,9 +806,10 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
   },
   {
     surface: "Mention suggestions",
-    prints: ["4px", "normal"],
+    prints: ["4px", "normal", "kept for the exit"],
     paints: [
       { file: "src/mention-input.tsx", marker: 'fadeFromAnchor("bottom", 4)' },
+      { file: "src/mention-input.tsx", marker: "presenceMotion(listFrames" },
     ],
   },
   {
