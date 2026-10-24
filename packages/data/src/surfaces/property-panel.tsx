@@ -27,8 +27,7 @@ import { Input } from "@gpuixui/primitives";
 import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
-import * as P from "effect/Predicate";
-import { listOf } from "../internal/list.js";
+import { recordsOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { KeyValue, type KeyValueEntry } from "./key-value.js";
@@ -65,7 +64,15 @@ export interface PropertyPanelProps extends Omit<Props, "children"> {
    * heading, rather than an unnamed one.
    */
   readonly title?: string;
-  /** The rows, in the order they paint. */
+  /**
+   * The rows, in the order they paint.
+   *
+   * A saved list is stored twice: a value that is not a list paints no rows,
+   * and a row that does not name itself with a `key` is not a row
+   * (`recordsOf`) — the panel addresses a row by its key, so a record a
+   * migration lost the key from would otherwise paint a nameless field at
+   * `property-undefined` instead of no row at all.
+   */
   readonly rows: ReadonlyArray<PropertyRow>;
   /** The label column's width, in pixels. Defaults to `120`. */
   readonly labelWidth?: number;
@@ -93,7 +100,7 @@ export const PropertyPanel = ({
   const theme = useTheme();
   const heading = accessibleName(title);
   const entries: ReadonlyArray<KeyValueEntry> = Arr.map(
-    Arr.filter(listOf(rows), (row): boolean => P.isObject(row)),
+    recordsOf(rows),
     (row) => {
       // The label column and an editable row's field name are one reading: a
       // blank label is content that says nothing, and the row's key is the

@@ -22,7 +22,7 @@ import { KeyValue } from "@gpuixui/data";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `entries` | `KeyValueEntry[]` | — | the rows, in the order they paint; a value that is not a list paints no rows |
+| `entries` | `KeyValueEntry[]` | — | the rows, in the order they paint; a value that is not a list paints no rows, and an entry without a text `key` is not a row |
 | `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` |
 | `valueWidth` | `number` | — | the value column's width; omitted — or one that cannot paint — and the value fills the row |
 | `className` | `string` | — | joined after the recipe |
@@ -32,7 +32,7 @@ import { KeyValue } from "@gpuixui/data";
 
 | Field | Type | Consequence |
 | ----- | ---- | ----------- |
-| `key` | `string` | the stable identity a row is addressed by; the cells derive their ids from it |
+| `key` | `string` | the stable identity a row is addressed by; the cells derive their ids from it, and an entry whose `key` is not text is not a row |
 | `label` | `string` | the words in the fixed label column |
 | `value` | `ReactNode` | the value, already rendered by the caller; a string or a number is painted as its own `Label` |
 
@@ -42,4 +42,7 @@ import { KeyValue } from "@gpuixui/data";
 - An unusable `width` reads as the default rather than a malformed track.
 - The list does not scroll; the owning panel scrolls it.
 - `entries` is read as data: a saved record that carried `null` for the
-  list paints the list with no rows rather than throwing out of the render.
+  list paints the list with no rows rather than throwing out of the render, and
+  an entry that does not name itself with a `key` is not a row — it has no
+  identity to address or key by, so it paints nothing while its neighbours
+  paint.

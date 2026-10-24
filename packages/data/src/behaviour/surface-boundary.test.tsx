@@ -106,4 +106,36 @@ describe("a data surface whose stored slot is null", () => {
     );
     expect(paintedText(mounted)).toContain("contains");
   });
+
+  it("paints no key-value row for a stored entry that names nothing", () => {
+    const mounted = mount(
+      <KeyValue
+        testId="kv"
+        entries={[
+          { key: "width", label: "Width", value: "120" },
+          // @ts-expect-error — a saved entry an older shape wrote with no key.
+          { label: "Orphan", value: "ghost" },
+        ]}
+      />,
+    );
+    expect(paintedText(mounted)).not.toContain("Orphan");
+    expect(mounted.renderer.findByTestId("kv-label-width")).toBeDefined();
+    expect(mounted.renderer.findByTestId("kv-label-undefined")).toBeUndefined();
+  });
+
+  it("paints no property row for a stored row that names nothing", () => {
+    const mounted = mount(
+      <PropertyPanel
+        title="Properties"
+        rows={[
+          { kind: "readonly", key: "tag", label: "Tag", value: "v1" },
+          // @ts-expect-error — a saved row an older shape wrote with no key.
+          { kind: "editable", value: "ghost", onChange: () => {} },
+        ]}
+      />,
+    );
+    expect(paintedText(mounted)).not.toContain("ghost");
+    expect(mounted.renderer.findByTestId("property-tag")).toBeUndefined();
+    expect(mounted.renderer.findByTestId("property-undefined")).toBeUndefined();
+  });
 });

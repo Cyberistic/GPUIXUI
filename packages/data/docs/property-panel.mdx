@@ -26,7 +26,7 @@ import { PropertyPanel } from "@gpuixui/data";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `title` | `string` | — | the panel's header; a blank title paints no header, never an unnamed one |
-| `rows` | `PropertyRow[]` | — | the rows, in the order they paint; a blank label reads as the row's key, and a value that is not a list paints no rows |
+| `rows` | `PropertyRow[]` | — | the rows, in the order they paint; a blank label reads as the row's key, a value that is not a list paints no rows, and a row without a text `key` is not a row |
 | `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` (the key-value list's rule) |
 | `className` | `string` | — | joined after the recipe |
 
@@ -35,7 +35,7 @@ import { PropertyPanel } from "@gpuixui/data";
 | Field | Type | Which rows | Consequence |
 | ----- | ---- | ---------- | ----------- |
 | `kind` | `"readonly" \| "editable"` | both | the discriminator; only an editable row carries a change |
-| `key` | `string` | both | the stable identity a row is addressed by; an editable row's field is `property-${key}` |
+| `key` | `string` | both | the stable identity a row is addressed by; an editable row's field is `property-${key}`, and a row whose `key` is not text is not a row |
 | `label` | `string` | both | the words in the label column, and an editable field's accessible name |
 | `value` | `string` | both | the value the row shows, or the text the field edits |
 | `onChange` | `(next: string) => void` | editable | receives every edit of the row's value |
@@ -46,4 +46,7 @@ import { PropertyPanel } from "@gpuixui/data";
 - The panel does not scroll.
 - One editable row is one text session.
 - `rows` is read as data: a saved panel that carried `null` for its rows
-  paints the title and no rows rather than throwing out of the render.
+  paints the title and no rows rather than throwing out of the render, and a row
+  that does not name itself with a `key` is not a row — the panel addresses a
+  row by its key, so a keyless editable row would otherwise paint a nameless
+  field at `property-undefined`.

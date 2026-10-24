@@ -23,9 +23,8 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
-import * as P from "effect/Predicate";
 import type { ReactNode } from "react";
-import { listOf } from "../internal/list.js";
+import { recordsOf } from "../internal/list.js";
 import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
@@ -43,7 +42,14 @@ export interface KeyValueEntry {
 
 /** {@link KeyValue} props. */
 export interface KeyValueProps extends Omit<Props, "children"> {
-  /** The rows, in the order they paint. */
+  /**
+   * The rows, in the order they paint.
+   *
+   * A saved list is stored twice: a value that is not a list paints no rows,
+   * and an entry that does not name itself with a `key` is not a row
+   * (`recordsOf`) — it has no identity to address or key by, so a migrated
+   * or hand-built record cannot paint a nameless row.
+   */
   readonly entries: ReadonlyArray<KeyValueEntry>;
   /** The label column's width, in pixels. Defaults to `120`. */
   readonly labelWidth?: number;
@@ -97,56 +103,49 @@ export const KeyValue = ({
       role="list"
       style={mergeStyles(recipeStyle(cn("", className), theme), style)}
     >
-      {Arr.map(
-        Arr.filter(listOf(entries), (entry): boolean => P.isObject(entry)),
-        (entry) => (
-          <div
-            key={entry.key}
-            role="listitem"
+      {Arr.map(recordsOf(entries), (entry) => (
+        <div
+          key={entry.key}
+          role="listitem"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: theme.spacing.sm,
+            ...recipeStyle(KEY_VALUE_ROW, theme),
+          }}
+        >
+          <text
+            testId={
+              testId === undefined ? undefined : `${testId}-label-${entry.key}`
+            }
             style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: theme.spacing.sm,
-              ...recipeStyle(KEY_VALUE_ROW, theme),
+              ...recipeStyle(KEY_VALUE_LABEL, theme),
+              width: labelTrack,
+              flexGrow: 0,
+              flexShrink: 0,
+              flexBasis: labelTrack,
             }}
           >
-            <text
-              testId={
-                testId === undefined
-                  ? undefined
-                  : `${testId}-label-${entry.key}`
-              }
-              style={{
-                ...recipeStyle(KEY_VALUE_LABEL, theme),
-                width: labelTrack,
-                flexGrow: 0,
-                flexShrink: 0,
-                flexBasis: labelTrack,
-              }}
-            >
-              {entry.label}
-            </text>
-            {readable(entry.value, {
-              testId:
-                testId === undefined
-                  ? undefined
-                  : `${testId}-value-${entry.key}`,
-              style: {
-                ...recipeStyle(KEY_VALUE_VALUE, theme),
-                ...(valueTrack === undefined
-                  ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
-                  : {
-                      width: valueTrack,
-                      flexGrow: 0,
-                      flexShrink: 0,
-                      flexBasis: valueTrack,
-                    }),
-              },
-            })}
-          </div>
-        ),
-      )}
+            {entry.label}
+          </text>
+          {readable(entry.value, {
+            testId:
+              testId === undefined ? undefined : `${testId}-value-${entry.key}`,
+            style: {
+              ...recipeStyle(KEY_VALUE_VALUE, theme),
+              ...(valueTrack === undefined
+                ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
+                : {
+                    width: valueTrack,
+                    flexGrow: 0,
+                    flexShrink: 0,
+                    flexBasis: valueTrack,
+                  }),
+            },
+          })}
+        </div>
+      ))}
     </div>
   );
 };

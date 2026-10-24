@@ -636,7 +636,12 @@ panel's or list's `rows`/`entries` can arrive nullish. Each is read as the
 absence the prop already means — no trend, no field, no rows — so the rest of
 the surface (the title, the toolbar's own controls, the card's reading) still
 paints instead of being taken down by one dereference
-(`src/behaviour/surface-boundary.test.tsx`). A builder's `fields` is read the
+(`src/behaviour/surface-boundary.test.tsx`). A list is stored **twice**, so an
+entry is read too: `recordsOf` keeps the records that name themselves with a
+`key`, so a property row or a key-value entry a migration lost the key from
+paints **no row** while its neighbours paint. A keyless editable row used to
+paint a nameless field addressed `property-undefined`, and a keyless key-value
+entry painted a row with no identity to address. A builder's `fields` is read the
 same way: a list, or no field list at all. **Add is offered only while there is
 a field to name** — a new clause takes the first offered field, so a saved list
 that arrived empty (or whose one entry this release cannot read) would append a
