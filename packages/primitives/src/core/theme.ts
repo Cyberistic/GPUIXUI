@@ -125,8 +125,10 @@ const isTextStyle = (value: unknown): value is TextStyle =>
  * them, so a role a theme does not carry is the one it would have painted
  * anyway, and a brand that overrode it and lost it still paints readable type.
  *
- * A role name the scale does not carry is the `body` default, the same rule
- * {@link controlSize} follows for a size name the scale dropped.
+ * A role name the scale does not carry is the theme's `body` default, the same
+ * rule {@link controlSize} follows for a size name the scale dropped: a brand
+ * that resized its scale keeps its own type, and only a theme that lost the
+ * `body` role itself falls back to the library's.
  */
 export const typeOf = (theme: TypeSource, role: unknown): TextStyle => {
   const name = isTextRole(role) ? role : "body";

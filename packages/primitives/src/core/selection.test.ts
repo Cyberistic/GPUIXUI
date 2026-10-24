@@ -291,6 +291,29 @@ describe("switch", () => {
     expect(on.top).toBe(off.top);
   });
 
+  it("keeps the knob's gap to each edge equal in both states", () => {
+    // The bug guarded: the travel counted the track's two borders as part of
+    // the knob's journey, while a child's `left` is measured from the padding
+    // box — so a bordered theme (every switch that is not a platform's own)
+    // painted the checked knob one border-width nearer its edge than the
+    // resting one. Read off the painted style: the padding box less the knob
+    // and the inset is the same inset on both sides.
+    const themes = [testTheme, platformTheme(lightTheme, "darwin")];
+    Arr.forEach(["sm", "md", "lg"] as const, (size) => {
+      Arr.forEach(themes, (theme) => {
+        const rest = spec({ size });
+        const checked = spec({ size, state: "checked" });
+        const box = switchBox(size, theme);
+        const padding =
+          Number(switchTrackStyle(rest, theme).width) - box.border * 2;
+        expect(Number(switchThumbStyle(rest, theme).left)).toBe(box.inset);
+        expect(Number(switchThumbStyle(checked, theme).left) + box.knob).toBe(
+          padding - box.inset,
+        );
+      });
+    });
+  });
+
   it("keeps the thumb a whole pixel inside the track", () => {
     const track = switchTrackStyle(spec({ size: "lg" }), testTheme);
     const thumb = switchThumbStyle(spec({ size: "lg" }), testTheme);
@@ -405,20 +428,14 @@ describe("a stored switch paint", () => {
       );
     });
   });
-  it("teaches the fallback a stored theme gets", () => {
+  it("records the fallback a stored theme gets", () => {
     // The rule a reader needs when a restored theme paints the accent toggle:
-    // the page and the inventory record name it, so neither can keep silence
-    // about the table while the seam decodes it.
-    const page = readFileSync(
-      new URL("../../docs/switch.mdx", import.meta.url),
-      "utf8",
-    );
+    // the inventory record names it, so the seam's fallback cannot be silent
+    // even though the page's prose sections were pruned.
     const record = Option.getOrUndefined(
       Arr.findFirst(inventory, (meta) => meta.name === "Switches"),
     );
 
-    expect(page).toContain("switchFailures");
-    expect(page).toMatch(/accent family/);
     expect(record?.limitations.join(" ")).toContain("switchFailures");
   });
 });

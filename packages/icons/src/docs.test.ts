@@ -3,8 +3,10 @@
  *
  * The bug this guards: the description said "Forty-seven monochrome icons"
  * while the registry shipped 48, because the count is prose and the set is data.
- * The size table is the second stale value of the same kind — it prints a pixel
- * number per step, and the scale lives in `@gpuixui/tokens`.
+ * The size scale is the second stale value of the same kind: the page and the
+ * README print it, and the scale lives in `@gpuixui/tokens`. The page's prose
+ * sections were pruned to usage, API and limitations, so the table that survives
+ * is the README's §Sizes and the guards read it there.
  *
  * The page is read from disk, as `packages/primitives/src/docs.test.ts` and the
  * tokens catalogue guards do: this checks a document, not a runtime.
@@ -18,7 +20,6 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
-import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Tokens from "@gpuixui/tokens";
 import { ICON_NAMES } from "./names.js";
@@ -48,10 +49,6 @@ const section = (heading: string): string =>
     () => expect.fail(`the page has no "${heading}" section`),
   );
 
-/** Every backticked name in a section, in order. */
-const namesIn = (body: string): ReadonlyArray<string> =>
-  Arr.map([...body.matchAll(/`([a-z][a-z-]*)`/g)], (match) => match[1] ?? "");
-
 describe("the icon page", () => {
   it("prints the size of the set it documents", () => {
     const description = Option.getOrElse(frontmatter("description"), () =>
@@ -61,51 +58,35 @@ describe("the icon page", () => {
   });
 
   it("prints each size step at the scale's pixel value", () => {
+    // The page's size table was pruned with the prose sections; the package
+    // README's §Sizes is the table a consumer copies, and it still has to print
+    // the scale `@gpuixui/tokens` owns.
+    const sizes = readme.slice(readme.indexOf("## Sizes"));
     Arr.forEach(R.toEntries(ICON_SIZES), ([step, pixels]) => {
-      // The default step's row names its default after the name: `md` (default).
-      const row = new RegExp(
-        `\\|\\s*\`${step}\`[^|]*\\|\\s*(\\d+)\\s*\\|`,
-      ).exec(page);
-      expect(row?.[1]).toBe(String(pixels));
+      expect(sizes, step).toContain(`\`${step}\` ${pixels}`);
     });
   });
 
   it("teaches the answer a stored size name gets", () => {
-    // This test guards a page claim, not a behaviour: `iconPixels` is proven by
-    // `sizes.test.ts` and the painted box by `runtime/icons.runtime.test.tsx`.
-    // But a reader who stores a size (a density preference, a saved layout) is
-    // the one caller the type does not protect, and the page said nothing about
-    // what such a name resolves to while the resolver answered `undefined`. The
-    // words are held to the behaviour so they cannot drift apart.
-    const sizes = section("Sizes");
+    // This test guards a document claim, not a behaviour: `iconPixels` is proven
+    // by `sizes.test.ts` and the painted box by
+    // `runtime/icons.runtime.test.tsx`. But a reader who stores a size (a
+    // density preference, a saved layout) is the one caller the type does not
+    // protect, and the page said nothing about what such a name resolves to
+    // while the resolver answered `undefined`. The words are held to the
+    // behaviour so they cannot drift apart.
+    const api = section("API");
     expect({
-      resolvesToDefault: sizes.includes("resolve to `md`"),
-      namesStoredPreference: sizes.includes("stored preference"),
-      namesTheBrokenCount: sizes.includes(
-        "`NaN`, an infinity, zero or a negative",
-      ),
+      resolvesToDefault: api.includes("resolves to `md`"),
       readmeTeaches: /name the scale\s+does not carry/.test(readme),
       unknownName: iconPixels("huge"),
       defaultStep: ICON_SIZES.md,
     }).toEqual({
       resolvesToDefault: true,
-      namesStoredPreference: true,
-      namesTheBrokenCount: true,
       readmeTeaches: true,
       unknownName: ICON_SIZES.md,
       defaultStep: ICON_SIZES.md,
     });
-  });
-
-  it("lists every icon the package ships, and only those", () => {
-    // A set that grows while its page keeps the old names leaves a reader
-    // typing a name that does not exist — and a name typed into the page that
-    // does not exist is the same bug in the other direction.
-    const listed = Arr.sort(
-      Arr.dedupe(namesIn(section("Names"))),
-      Order.String,
-    );
-    expect(listed).toEqual([...ICON_NAMES]);
   });
 
   it("documents every prop IconProps declares", () => {
@@ -148,8 +129,9 @@ describe("the icon page", () => {
     // The claim that used to be false: the page said no third-party icon file
     // was copied while most of the geometry is Lucide's, and pointed at a
     // `LICENSES/` directory with no Lucide record — an ISC/MIT notice the
-    // release owed and did not carry.
-    expect(section("Provenance")).toContain("`LICENSES/lucide.md`");
+    // release owed and did not carry. The record is cited from the README now
+    // that the page's provenance section is pruned, and the notices stay whole.
+    expect(readme).toContain("LICENSES/lucide.md");
     expect(lucideRecord).toContain("lucide-static` `1.61.0`");
     expect(lucideRecord).toContain("## ISC License");
     expect(lucideRecord).toContain("Lucide Icons and Contributors");

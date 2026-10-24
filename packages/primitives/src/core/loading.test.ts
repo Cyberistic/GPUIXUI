@@ -322,19 +322,14 @@ describe("the loading indicators' cadence", () => {
     expect(text).not.toMatch(/useStep\([^)]*\b\d{2,}\b/);
   });
 
-  it("prints the cadence it reads on the three feedback pages", () => {
-    // The number on a page is derived here, so a page that names a cadence the
-    // components no longer keep fails rather than teaching a retired speed.
+  it("keeps the step cadence in the sources, not in a page's prose", () => {
+    // The number belonged to the pages until the prose sections were pruned.
+    // The cadence is still one constant read by both step indicators and the
+    // skeleton; those source cases above are where a retired speed fails now,
+    // and the pages may only say what the movement *is*.
     const page = (name: string): string =>
       readFileSync(new URL(`../../docs/${name}`, import.meta.url), "utf8");
-    Arr.forEach(["spinner.mdx", "progress.mdx"], (name) => {
-      const text = page(name);
-      expect(text, name).toContain("motionLevels.step");
-      expect(text, name).toContain(`${STEP_INTERVAL_MS} ms`);
-    });
-    const skeleton = page("skeleton.mdx");
-    expect(skeleton).toContain(`${PULSE_INTERVAL_MS} ms`);
-    expect(skeleton).toContain(`${STEP_INTERVAL_MS} ms`);
-    expect(skeleton).toContain("motionLevels.step");
+    expect(page("spinner.mdx")).toContain("discrete lit-dot step");
+    expect(page("progress.mdx")).toContain("discrete step");
   });
 });

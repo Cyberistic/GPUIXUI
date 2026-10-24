@@ -74,8 +74,9 @@ malformed icon fails the suite rather than shipping.
 
 ## Documentation and example
 
-- `docs/icon.mdx` — the icon page: API, size scale, the two accessibility rules,
-  limitations, provenance and verification.
+- `docs/icon.mdx` — the icon page: API and limitations. The size scale, the
+  naming rules and provenance live in this README (§Sizes, §Conventions,
+  §Provenance), which the docs suite reads.
 - `packages/primitives/examples/icons.example.tsx` — a runnable status strip and
   the size scale, mounted in the real renderer by
   `packages/primitives/runtime/examples.runtime.test.tsx` (the example needs the

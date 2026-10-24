@@ -26,7 +26,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<RadioOption>` | — | the choices as data; omit when the items are children |
+| `options` | `ReadonlyArray<RadioOption>` | — | the choices as data (`{ value, label, description? }`); a description paints a caption beside the name and is announced as the row's help |
 | `children` | `ReactNode` | — | `<RadioGroupItem>` elements, for rich content |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | `""` | initial selection when uncontrolled |

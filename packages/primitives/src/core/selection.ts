@@ -325,7 +325,10 @@ export const switchThumbTravel = (
   theme: SwitchPaintTheme,
 ): number => {
   const box = switchBox(spec.size, theme);
-  return box.width - box.knob - box.inset * 2;
+  // The knob's `left` is measured from the padding box, so the track's two
+  // borders are outside the distance the knob can travel: a bordered theme
+  // that dropped them left the checked knob one border too close to its edge.
+  return box.width - box.knob - box.inset * 2 - box.border * 2;
 };
 
 /**

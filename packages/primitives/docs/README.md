@@ -51,10 +51,12 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 
 ## Page contract
 
-Each page opens with frontmatter (`title`, `description`) and a paragraph saying
-what the component is — and what it is *not*. The sections below are the shape
-the pages carry now; a required one is on every page, an optional one is on the
-pages whose component needs it. A page cannot invent a section the table does
+Each page opens with frontmatter (`title`, `description`) and carries exactly
+the three sections below: the preview above them, one usage example, the API
+tables and at most three runtime limits. Measurement stories, verification
+citations, keyboard tables, theming prose and related links are not page
+content — they live in `COMPONENTS.md`, the inventory record's `tests` list and
+the playground's probe records. A page cannot invent a section the table does
 not name, and a row cannot promise a section no page carries — `src/docs.test.ts`
 reads this table and every page together.
 
@@ -62,16 +64,7 @@ reads this table and every page together.
 | ------- | -------- | --------------- |
 | `## Usage` | yes | a TSX snippet importing from the public package root |
 | `## API` | yes | prop, type, default, consequence; the variants, sizes and states are the `Type` column |
-| `## Limitations` | yes | measured gaps and the honest alternative |
-| `## Composition` | no | the parts and what each one is responsible for |
-| `## Keyboard` | no | the keys a component answers, and the ones a window cannot deliver |
-| `## Motion` | no | how a surface enters and leaves, or how a step indicator advances, and what the reduced preference removes |
-| `## Variants` | no | a variant set whose paint needs a sentence of its own |
-| `## Roles` | no | the semantic roles a page enumerates from the theme |
-| `## Tones` | no | the semantic tone set a page enumerates from the theme |
-| `## Words` | no | the provider's vocabulary |
-| `## Dependencies` | no | the runtime parts or packages the page composes |
-| `## Absence` | no | what a component does when it has no value |
+| `## Limitations` | yes | at most three measured gaps and the honest alternative |
 
 Every component takes the caller's `className` (compiled through the recipe
 registry, after the component's own rules) and `style` (merged last); its `## API`
@@ -90,12 +83,12 @@ measures — the input, the track, the first code cell, or the row holding a
 group's tab stop.
 
 A keyboard rule, a supported `aria-*` and the roles a component paints belong in
-the section they inform — the API table's consequence, a limitation, or a role
-row — rather than a heading of their own, so no page promises a section its
-component does not have. Every claim is traceable to the source and to the suite
-each Tier 1 record in `src/inventory.ts` names; `COMPONENTS.md` carries the same
-verdicts. A capability the pinned runtime does not have is written as a
-limitation with the alternative in use — never as a promise.
+the section they inform — the API table's consequence or a limitation — rather
+than a heading of their own, so no page promises a section its component does
+not have. Every claim is traceable to the source and to the suite each Tier 1
+record in `src/inventory.ts` names; `COMPONENTS.md` carries the same verdicts. A
+capability the pinned runtime does not have is written as a limitation with the
+alternative in use — never as a promise.
 
 ## Cross-component guards
 

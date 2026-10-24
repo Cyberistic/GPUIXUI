@@ -1,13 +1,13 @@
 /**
- * The page contract for `packages/primitives/docs`.
+ * The page contract for `packages/primitives/docs`, and the evidence a page no
+ * longer carries.
  *
- * `docs/README.md` §Page contract is the promise a reader and the docs site rely
- * on, and seven pages had drifted out of it: `meter`, `number-field`,
- * `otp-field`, `range-slider`, `rating`, `slider` and `toggle` carried their
- * prop table under "Variants, sizes and states", so nothing on the page was a
- * `## API` section and a reader looking for the API found a heading that does
- * not name it. This suite holds every page to the contract, so the next page
- * that forgets a section fails here instead of on the site.
+ * Every page is three sections — usage, API, limitations — so this suite holds
+ * that shape, the props each type declares, the names snippets import, the
+ * paths and plans they cite, and the probe records the rows print. Measurement
+ * stories and verification citations were pruned from the pages; the guards for
+ * them now read the sources, the inventory records and the playground's probe
+ * records, so a claim still cannot outlive the code it describes.
  *
  * `node:fs` is used only because this is a test-time repository check, the same
  * boundary `inventory.test.ts` and `components/src/inventory.test.ts` use; the
@@ -20,7 +20,6 @@ import { lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
@@ -85,30 +84,6 @@ const probeRecord = (source: string, heading: string): string => {
   const end = rest.indexOf("\n### ");
   return end < 0 ? rest : rest.slice(0, end);
 };
-
-/**
- * The backticked names in a section's first table column, header excluded.
- *
- * A page's role and tone tables are the sets a reader copies into code, so a
- * test compares them with the sets the package resolves rather than trusting
- * the prose beside them.
- */
-const tableNames = (source: string, heading: string): ReadonlyArray<string> =>
-  Arr.flatMap(
-    Arr.drop(
-      Arr.filter(
-        Option.getOrElse(bodyOf(source, heading), () => "").split("\n"),
-        Str.startsWith("|"),
-      ),
-      2,
-    ),
-    (line) => {
-      const cell = /^\|\s*([^|]*)/.exec(line)?.[1] ?? "";
-      return Arr.filterMap([...cell.matchAll(/`([^`]+)`/g)], (match) =>
-        match[1] === undefined ? Result.failVoid : Result.succeed(match[1]),
-      );
-    },
-  );
 
 /**
  * The prop names a page's API table puts in backticks in its first column.
@@ -517,6 +492,21 @@ const contract: ReadonlyArray<{
       }),
   },
   {
+    it: "keeps its limits to the three the page contract allows",
+    check: (source) => {
+      const limits = Option.getOrElse(bodyOf(source, "Limitations"), () => "");
+      const bullets = Arr.filter(limits.split("\n"), (line) =>
+        Str.startsWith("- ")(line),
+      );
+      return [
+        ...(Arr.length(bullets) === 0 ? ["no limitation bullet"] : []),
+        ...(Arr.length(bullets) > 3
+          ? [`${Arr.length(bullets)} limitations, the contract allows three`]
+          : []),
+      ];
+    },
+  },
+  {
     it: "opens with a YAML frontmatter carrying a title and a description",
     check: (source) => {
       const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(source)?.[1] ?? "";
@@ -534,32 +524,22 @@ describe("the primitives docs page contract", () => {
     expect(Arr.length(pages)).toBeGreaterThan(0);
   });
 
-  it("lists every type role and tone the theme resolves", () => {
-    // The bug guarded: `text.mdx` opened by saying a `Text` "is not a heading
-    // element in the accessibility tree" while its own Accessibility section —
-    // and `renderText` — publish `role="heading"` with the level, and the
-    // inventory row still counted "six roles, four tone roles" against a scale
-    // of ten and five. Both pages are derived here from the source that paints
-    // them, so a new role or tone fails until they are named.
-    const page = read("text.mdx");
+  it("names every type role and tone it resolves", () => {
+    // The bug guarded: the inventory row counted "six roles, four tone roles"
+    // against a scale of ten and five, so a caller could not tell which roles a
+    // `Text` paints. The row is derived here from the source that paints them,
+    // and the element's heading role is read back, so a new role or tone fails
+    // until the row names it and a `Text` that stopped publishing the level
+    // fails too.
     const roles = Arr.filter(
       R.keys(lightTheme.typography),
       (key) => key !== "sans" && key !== "mono",
     );
-    expect(Arr.sort(tableNames(page, "Roles"), Order.String)).toStrictEqual(
-      Arr.sort(roles, Order.String),
-    );
-    expect(Arr.sort(tableNames(page, "Tones"), Order.String)).toStrictEqual(
-      Arr.sort(TEXT_TONES, Order.String),
-    );
-    // The page's opening claim and its Accessibility section must agree, and
-    // the element must still carry the role the section promises.
-    expect(page).not.toContain("not a heading element");
-    expect(page).toContain('role="heading"');
     expect(
       hostProp(renderText({ role: "h2" }, lightTheme), "role"),
     ).toStrictEqual(Option.some("heading"));
-    // The inventory row enumerates the same two sets, so it cannot fall behind.
+    // The retracted claim — a `Text` is not a heading element — cannot return.
+    expect(read("text.mdx")).not.toContain("not a heading element");
     // Two rows carry this label — the capability map's and the Tier 1
     // inventory's — and only the latter is the component record.
     const catalogue = readFileSync(
@@ -606,15 +586,14 @@ describe("the primitives docs page contract", () => {
     const limitationsOf = (page: string): string =>
       Option.getOrElse(bodyOf(read(page), "Limitations"), () => "");
     const checkbox = limitationsOf("checkbox.mdx");
-    expect(checkbox).toContain("`Label target`");
-    expect(checkbox).toContain("CheckboxGroup");
+    expect(checkbox).toContain("does not name the box");
     expect(checkbox).not.toMatch(/visible\s+text only/);
     const toggle = limitationsOf("switch.mdx");
-    expect(toggle).toContain("`Label target`");
+    expect(toggle).toContain("not associated");
     expect(toggle).not.toMatch(/paints text only/);
     const label = limitationsOf("label.mdx");
     expect(label).toContain("does not activate");
-    expect(label).toContain("CheckboxGroup");
+    expect(label).toContain("focus");
 
     // The premise, read off the painter: the press is `focusElement` and
     // nothing else. A label that learned to activate its target would make both
@@ -631,14 +610,11 @@ describe("the primitives docs page contract", () => {
     // The bug guarded: `Tooltip` rendered the runtime's content with no
     // `motion`, so a tip appeared at rest beside every popover, menu and preview
     // card that fades. The seam is in `core/presence.ts` (the frames and the
-    // hold), `Tooltip` composes it, and the page teaches what the reader will
-    // see — so a page that stops naming the timing, a painter that stops using
-    // the seam, or a manifest that drops the timing package all fail here.
+    // hold), `Tooltip` composes it, and the page carries the one opt-out a
+    // reader can reach — so a painter that stops using the seam, a page that
+    // drops `reducedMotion`, or a manifest that drops the timing package fails
+    // here.
     const page = read("tooltip.mdx");
-    const motion = Option.getOrElse(bodyOf(page, "Motion"), () => "");
-    expect(motion).toContain("motionLevels.fast");
-    expect(motion).toContain("160");
-    expect(motion).toContain("`reducedMotion`");
     expect(page).toContain("| `reducedMotion` |");
     const sourceOf = (path: string): string =>
       readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8");
@@ -707,7 +683,7 @@ describe("the primitives docs page contract", () => {
       page,
       headings: headingsOf(page),
     }));
-    expect(Arr.length(rows)).toBeGreaterThanOrEqual(5);
+    expect(Arr.length(rows)).toBeGreaterThanOrEqual(3);
     expect(
       Arr.flatMap(rows, (row) =>
         row.required
@@ -783,24 +759,6 @@ describe("the primitives docs page contract", () => {
     ).toEqual([]);
   });
 
-  it("teaches every group of the words table", () => {
-    // The bug guarded: `PrimitiveMessages` grew `star` and `starName` for the
-    // rating's fill vocabulary and its star sentence, and the page that teaches
-    // the seam listed only the five groups it shipped with — so a caller could
-    // not discover the words a rating speaks. Every group is a required field of
-    // the default table, so the table itself is the complete list to teach.
-    const words = Option.getOrElse(
-      bodyOf(read("theme-provider.mdx"), "Words"),
-      () => "",
-    );
-    expect(
-      Arr.filter(
-        R.keys(primitives.defaultMessages),
-        (group) => !words.includes(`\`${group}\``),
-      ),
-    ).toEqual([]);
-  });
-
   it("names the one opt-out a busy word has, and how a bar's words differ", () => {
     // The bug guarded: `Button`, `Toggle` and `IconButton` publish the busy word
     // as the action's description and the spinner's name, and a blank
@@ -816,11 +774,6 @@ describe("the primitives docs page contract", () => {
     expect(silent).toEqual([]);
     expect(read("progress.mdx")).toContain("a blank answer keeps the default");
     expect(read("meter.mdx")).toContain("a blank answer keeps the number");
-    const words = Option.getOrElse(
-      bodyOf(read("theme-provider.mdx"), "Words"),
-      () => "",
-    );
-    expect(words).toContain("a deliberate silence");
   });
 
   it("paints a silent spinner as decoration, not an unnamed status", () => {
@@ -840,17 +793,6 @@ describe("the primitives docs page contract", () => {
     );
     expect(read("spinner.mdx")).toContain("paints the dots as decoration");
     expect(read("spinner.mdx")).toContain("no node to walk into");
-    const limitations = Option.getOrElse(
-      bodyOf(read("spinner.mdx"), "Limitations"),
-      () => "",
-    );
-    expect(limitations).toContain('role="presentation"');
-    expect(limitations).toContain("unnamed");
-    const words = Option.getOrElse(
-      bodyOf(read("theme-provider.mdx"), "Words"),
-      () => "",
-    );
-    expect(words).toContain('role="presentation"');
   });
 
   it("keeps a slider's own words when its formatter says nothing", () => {
@@ -871,18 +813,9 @@ describe("the primitives docs page contract", () => {
     expect(announcement).not.toContain("formatValue?.(value) ??");
     const unstated = Arr.filter(["slider.mdx", "range-slider.mdx"], (page) => {
       const text = read(page).replaceAll("*", "");
-      return (
-        !text.includes("a blank answer is absence") ||
-        !text.includes("a blank answer keeps the number")
-      );
+      return !text.includes("a blank answer keeps the number");
     });
     expect(unstated).toEqual([]);
-    const words = Option.getOrElse(
-      bodyOf(read("theme-provider.mdx"), "Words"),
-      () => "",
-    );
-    expect(words).toContain("`Slider`");
-    expect(words).toContain("`RangeSlider`");
   });
 
   it("keeps a control's own sentence when the table's says nothing", () => {
@@ -921,23 +854,6 @@ describe("the primitives docs page contract", () => {
     expect(ends).toContain("spokenSentence");
     expect(ends).not.toContain("): string =>\n  end(");
     expect(ends).toContain("end(label, side)");
-    const unstated = Arr.filter(
-      ["rating.mdx", "otp-field.mdx", "range-slider.mdx"],
-      (page) =>
-        !read(page)
-          .replaceAll("*", "")
-          .replaceAll(/\s+/g, " ")
-          .includes("A blank answer is absence"),
-    );
-    expect(unstated).toEqual([]);
-    const words = Option.getOrElse(
-      bodyOf(read("theme-provider.mdx"), "Words"),
-      () => "",
-    );
-    expect(words).toContain("`starName`");
-    expect(words).toContain("`codeDigit`");
-    expect(words).toContain("`rangeEnd`");
-    expect(words).toContain("`rangeEnd` has a second blank");
     // The package README teaches the same seam, and a renamed export would
     // otherwise leave it naming a helper that no longer exists.
     expect(
@@ -999,12 +915,6 @@ describe("the primitives docs page contract", () => {
     expect(readComponent("ScrollArea.tsx")).toContain(
       "spokenWord(messages.scrollRegion, defaultMessages.scrollRegion)",
     );
-    const words = Option.getOrElse(
-      bodyOf(read("theme-provider.mdx"), "Words"),
-      () => "",
-    );
-    expect(words).toContain("are read one state at a time");
-    expect(words).toContain("`scrollRegion` has no blank of its own");
     expect(
       readFileSync(
         fileURLToPath(new URL("../README.md", import.meta.url)),
@@ -1132,8 +1042,7 @@ describe("the primitives docs page contract", () => {
 
     expect({
       cause: limitations.includes("only when it **changes**"),
-      refusal: limitations.includes("cannot be taken back from the box"),
-      reports: limitations.includes("`abcde`, `abcdef`, `abcdefg`"),
+      refusal: limitations.includes("stays in the box"),
       textarea: textarea.includes("same measured limit as `Input`"),
       numberField: numberField.includes("only when it changes"),
       applied: evidence.includes(
@@ -1146,7 +1055,6 @@ describe("the primitives docs page contract", () => {
     }).toEqual({
       cause: true,
       refusal: true,
-      reports: true,
       textarea: true,
       numberField: true,
       applied: true,
@@ -1215,15 +1123,13 @@ describe("the primitives docs page contract", () => {
     });
   });
 
-  it("paints the number it holds, and says which keys a window delivers", () => {
+  it("paints the number it holds, and leaves Home and End to the text host", () => {
     // Bug guarded: the display defaulted to zero decimals, so the field painted
     // a number it did not hold — a stored `1.5` read `2` and a `2.5` maximum
     // painted `3` — and the page promised a Home/End bounds jump a native
     // `<input>` never delivers, because the host consumes both for its caret.
     // The runtime suite measures both, so the page cannot promise either again.
     const page = read("number-field.mdx");
-    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
-    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
     const api = Option.getOrElse(bodyOf(page, "API"), () => "");
     const evidence = readFileSync(
       fileURLToPath(
@@ -1233,18 +1139,8 @@ describe("the primitives docs page contract", () => {
     );
 
     expect({
-      display: page.includes("paints the number it holds"),
       precision: api.includes("rounds and pads the text"),
-      notDelivered: keyboard.includes(
-        "**not delivered to a field in a window**",
-      ),
-      measured: keyboard.includes(
-        "neither the input's `onKeyDown` nor a wrapper's",
-      ),
-      alternative: keyboard.includes("@gpuixui/keyboard"),
-      retracted: `${keyboard}${limitations}`.includes(
-        "`Home`/`End` jump to the ends",
-      ),
+      retracted: page.includes("jump to the ends"),
       paintCase: evidence.includes(
         "paints the number it holds, including the decimals its step needs",
       ),
@@ -1252,11 +1148,7 @@ describe("the primitives docs page contract", () => {
         "hears no Home or End in a window, because the text host owns them",
       ),
     }).toEqual({
-      display: true,
       precision: true,
-      notDelivered: true,
-      measured: true,
-      alternative: true,
       retracted: false,
       paintCase: true,
       keyCase: true,
@@ -1335,21 +1227,17 @@ describe("the primitives docs page contract", () => {
       row: api.includes("| `parseValue` |"),
       displayOnly: api.includes("display-only"),
       retracted: page.includes("display and parsing"),
-      reading: page.includes("consulted before the decimal grammar"),
       edited: runtime.includes("reads back the display format"),
       controlled: runtime.includes(
         "keeps a grouped draft the controlled owner",
       ),
-      draft: page.includes("owner's echo"),
       unit: core.includes('describe("parseNumberText"'),
     }).toEqual({
       row: true,
       displayOnly: true,
       retracted: false,
-      reading: true,
       edited: true,
       controlled: true,
-      draft: true,
       unit: true,
     });
   });
@@ -1411,16 +1299,12 @@ describe("the primitives docs page contract", () => {
     expect(painter).toContain("Arr.reverse(flattenParts(children))");
   });
 
-  it("cites the window that painted the vertical slider", () => {
-    // Bug guarded: the shadcn-brief rewrite dropped the pages' probe citation —
-    // and this guard with it — so the vertical axis read as the headless
-    // renderer's claim alone even though `slider-vertical-lifecycle` had painted
-    // it in a real window. A plan could reimplement what is already proved, and
-    // `TODO.md` still recorded the citation as landed. The citation must name
-    // the probe and the headless suite, print the geometry the probe measured,
-    // and resolve: the id is read out of the playground's registry and the
-    // track's length out of the fixture, so a renamed or deleted probe cannot
-    // read as evidence.
+  it("keeps the window that painted the vertical slider registered and recorded", () => {
+    // Bug guarded: the vertical axis is proved in a real window by
+    // `slider-vertical-lifecycle`, and a plan that deleted or renamed the probe
+    // would turn measured geometry back into a headless suite's claim. The id is
+    // read out of the playground's registry and the track's length out of the
+    // fixture, so a moved probe fails here rather than reading as evidence.
     const registry = readFileSync(
       fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
       "utf8",
@@ -1460,15 +1344,6 @@ describe("the primitives docs page contract", () => {
       return end < 0 ? rest : rest.slice(0, end);
     };
     const measured = probeRecord(record);
-    const api = (page: string): string =>
-      Option.getOrElse(bodyOf(read(page), "API"), () => "");
-    const cites = (page: string): boolean =>
-      api(page).includes("`slider-vertical-lifecycle`") &&
-      api(page).includes("`runtime/value.runtime.test.tsx`") &&
-      api(page).includes("holds the arithmetic") &&
-      api(page).includes("holds the paint");
-    const prints = (page: string, values: ReadonlyArray<string>): boolean =>
-      Arr.every(values, (value) => api(page).includes(value));
     const catalogue = readFileSync(
       fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
       "utf8",
@@ -1487,14 +1362,6 @@ describe("the primitives docs page contract", () => {
         fixture.includes("thumbCentreAt") && fixture.includes("inkBounds"),
       length: Number.isFinite(height) && height > 0,
       recorded: measured.includes(track) && measured.includes(rail),
-      slider: {
-        cites: cites("slider.mdx"),
-        prints: prints("slider.mdx", [track, rail, "240", "148", "194", "56"]),
-      },
-      range: {
-        cites: cites("range-slider.mdx"),
-        prints: prints("range-slider.mdx", ["50-90", "25-90", "194", "74.5"]),
-      },
       sliderRow: row("Slider").includes("`slider-vertical-lifecycle`"),
       rangeRow: row("Range slider").includes("`slider-vertical-lifecycle`"),
     }).toEqual({
@@ -1502,23 +1369,17 @@ describe("the primitives docs page contract", () => {
       fixture: true,
       length: true,
       recorded: true,
-      slider: { cites: true, prints: true },
-      range: { cites: true, prints: true },
       sliderRow: true,
       rangeRow: true,
     });
   });
 
-  it("cites the window that drove a scroll region from the keyboard", () => {
-    // Bug guarded: the shadcn-brief rewrite dropped the scroll page's probe
-    // citation — and the guard that held it — so the keyboard contract read as
-    // the offscreen renderer's claim alone while `keyboard-scroll-lifecycle` had
-    // driven it in a window. The same page taught that a sideways arrow moves
-    // "one column", but `core/scroll.ts` steps one `density.rowHeight` on both
-    // axes and the runtime has no column metric: the probe's columns are 80px
-    // wide while the step it measured is 32, so a reader planning a sideways
-    // region was told the wrong distance. The citation, the step and the
-    // geometry are derived from the probe's own fixture and record.
+  it("keeps the window that drove a scroll region from the keyboard registered and recorded", () => {
+    // Bug guarded: the keyboard contract is proved in a window by
+    // `keyboard-scroll-lifecycle`, and a plan that deleted or renamed the probe
+    // would turn a measured step back into the offscreen renderer's claim. The
+    // step and the geometry are derived from the probe's own fixture and record,
+    // and the row still prints the distance it measured.
     const registry = readFileSync(
       fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
       "utf8",
@@ -1555,10 +1416,6 @@ describe("the primitives docs page contract", () => {
     /** The probe's own record, up to the next probe section. */
     const measured = probeRecord(record, "`keyboard-scroll-lifecycle`");
     const checks = /(\d+) checks/.exec(measured)?.[1] ?? "";
-    const keyboard = Option.getOrElse(
-      bodyOf(read("scroll-area.mdx"), "Keyboard"),
-      () => "",
-    );
     // One line is the theme's own row; a page is the viewport's own side, and
     // the content's end is the side less the content, which is what makes the
     // printed offsets derive rather than a second implementation.
@@ -1618,16 +1475,6 @@ describe("the primitives docs page contract", () => {
         scene.includes("One line of content — the theme's `rowHeight`") &&
         scene.includes("current + direction * metrics.line") &&
         painter.includes("line: theme.density.rowHeight"),
-      page:
-        keyboard.includes("`keyboard-scroll-lifecycle`") &&
-        keyboard.includes(`${checks} checks`) &&
-        keyboard.includes(`${line}px`) &&
-        keyboard.includes(`\`-${line}\` → \`${firstPage}\``) &&
-        keyboard.includes(`${sidePage}`) &&
-        keyboard.includes("on either axis") &&
-        keyboard.includes("not one column") &&
-        keyboard.includes("getFocusedElementId"),
-      retracted: !keyboard.includes("one column in a sideways region"),
       row:
         row.includes("`keyboard-scroll-lifecycle`") &&
         row.includes("one theme row per arrow"),
@@ -1637,8 +1484,6 @@ describe("the primitives docs page contract", () => {
       arithmetic: true,
       recorded: true,
       source: true,
-      page: true,
-      retracted: true,
       row: true,
     });
   });
@@ -1665,15 +1510,6 @@ describe("the primitives docs page contract", () => {
       ),
     );
     expect(missing).toEqual([]);
-
-    // The positive half: the page has to point at the composition that really
-    // windows a list, not merely stop naming the dead path.
-    const limitations = Option.getOrElse(
-      bodyOf(read("scroll-area.mdx"), "Limitations"),
-      () => "",
-    );
-    expect(limitations).toContain("`VirtualList`");
-    expect(limitations).toContain("@gpuixui/data");
   });
 
   it("cites only plans that exist", () => {
@@ -1744,7 +1580,6 @@ describe("the primitives docs page contract", () => {
     // the shared prop's JSDoc says it where a caller reads it.
     const page = read("button.mdx");
     const api = Option.getOrElse(bodyOf(page, "API"), () => "");
-    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
     const props = readFileSync(
       fileURLToPath(new URL("./components/internal.ts", import.meta.url)),
       "utf8",
@@ -1753,14 +1588,12 @@ describe("the primitives docs page contract", () => {
     expect({
       row: api.includes("`onClick` is the **pointer** route"),
       keyboard: api.includes("a keyboard activation never runs it"),
-      limitation: limitations.includes("`onClick` is the pointer route"),
       pointer: props.includes("A **pointer** press"),
       editor: props.includes("never for a key"),
       action: props.includes("`onActivate` on an action"),
     }).toEqual({
       row: true,
       keyboard: true,
-      limitation: true,
       pointer: true,
       editor: true,
       action: true,
@@ -1768,18 +1601,12 @@ describe("the primitives docs page contract", () => {
   });
 
   it("states the activation a window measured, both halves of it", () => {
-    // Bug guarded: the shadcn-brief rewrite dropped the Button page's §Keyboard
-    // — and the guard that held it — so the page no longer said which half of a
-    // key activates (Enter's press, Space's release), that a held key is
-    // ignored, or which tab stop a disabled/busy action keeps; a reader could
-    // only learn the route split from §Limitations. Every control in the
-    // library composes this action, so the contract it omits is MISSION's first
-    // critical interaction. The probe's own record and the deciding source are
-    // read, so the page cannot print a rule the runtime does not hold.
-    const keyboard = Option.getOrElse(
-      bodyOf(read("button.mdx"), "Keyboard"),
-      () => "",
-    );
+    // The shadcn-brief rewrite dropped the page's §Keyboard and its probe
+    // citation, so this guard now holds the evidence chain a reader follows
+    // without the page: the probe is registered and records both halves, the
+    // decision source answers the keys, the painter keeps the tab stop and the
+    // row prints the probe. A plan cannot reimplement what is already proved,
+    // and a control cannot silently change which half of a key activates.
     const decision = readFileSync(
       fileURLToPath(new URL("../src/core/keyboard.ts", import.meta.url)),
       "utf8",
@@ -1825,36 +1652,25 @@ describe("the primitives docs page contract", () => {
         decision.includes('return phase === "down";') &&
         decision.includes('return phase === "up";'),
       stops: painter.includes("disabled === true ? -1 : 0"),
-      page:
-        keyboard.includes("`button-activation-lifecycle`") &&
-        keyboard.includes(`${checks} checks`) &&
-        keyboard.includes("on the **press**") &&
-        keyboard.includes("on the **release**") &&
-        keyboard.includes("held key is ignored") &&
-        keyboard.includes("`tabIndex: -1`") &&
-        keyboard.includes("`loading` button") &&
-        keyboard.includes("press point") &&
-        keyboard.includes("`runtime/controls.runtime.test.tsx`"),
       row: row.includes("`button-activation-lifecycle`"),
     }).toEqual({
       registered: true,
       recorded: true,
       decision: true,
       stops: true,
-      page: true,
       row: true,
     });
   });
 
-  it("states the reveal a traversal does not give a scrolled control", () => {
+  it("keeps the reveal probe that a traversal cannot give a scrolled control", () => {
     // The bug guarded: the page taught the keyboard step and said nothing about
     // the control a traversal focuses below the fold — `focus-reveal-lifecycle`
     // measured the offset staying `0`, 200 points of row below the pane — so a
     // consumer planning a long form in a bounded pane had no way to learn that
-    // no reveal is coming. The distances are derived from the probe's own
-    // geometry, so a moved fixture fails the page rather than agreeing with it.
-    const page = read("scroll-area.mdx");
-    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
+    // no reveal is coming. The page's §Keyboard is retired with the prose
+    // sections, so this holds the probe itself: it must stay registered, its
+    // fixture must still yield the geometry the row names, and the row must
+    // cite it.
     const fixture = readFileSync(
       fileURLToPath(
         new URL("apps/playground/src/live/focus-reveal.ts", repoRoot),
@@ -1869,13 +1685,13 @@ describe("the primitives docs page contract", () => {
       fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
       "utf8",
     );
-    const pane = /FOCUS_REVEAL_PANE = \{ width: (\d+), height: (\d+) \}/.exec(
-      fixture,
+    const paneHeight = Number(
+      /FOCUS_REVEAL_PANE = \{ width: (\d+), height: (\d+) \}/.exec(
+        fixture,
+      )?.[2] ?? Number.NaN,
     );
     const count = (name: string): number =>
       Number(new RegExp(`${name} = (\\d+);`).exec(fixture)?.[1] ?? Number.NaN);
-    const paneWidth = Number(pane?.[1] ?? Number.NaN);
-    const paneHeight = Number(pane?.[2] ?? Number.NaN);
     const rows = count("FOCUS_REVEAL_ROWS");
     const row = count("FOCUS_REVEAL_ROW");
     // The last row's start, measured from the pane's bottom edge...
@@ -1896,29 +1712,11 @@ describe("the primitives docs page contract", () => {
       registered: registry.includes('id: "focus-reveal-lifecycle"'),
       geometry:
         Number.isFinite(below) && Number.isFinite(firstReveal) && end < 0,
-      pane: keyboard.includes(`${paneWidth}×${paneHeight}`),
-      listed: keyboard.includes(`nine ${row}px rows`),
-      focused: keyboard.includes("focused the ninth row"),
-      still: keyboard.includes("offset still `0`"),
-      below: keyboard.includes(`${below} points below`),
-      roving: keyboard.includes(`\`${firstReveal}\``),
-      end: keyboard.includes(`\`${end}\``),
       row: rowOf("Scrollable containers").includes("`focus-reveal-lifecycle`"),
-      rowFacts:
-        rowOf("Scrollable containers").includes(`${below} points below`) &&
-        rowOf("Scrollable containers").includes(`\`${firstReveal}\``),
     }).toEqual({
       registered: true,
       geometry: true,
-      pane: true,
-      listed: true,
-      focused: true,
-      still: true,
-      below: true,
-      roving: true,
-      end: true,
       row: true,
-      rowFacts: true,
     });
   });
   it("documents the tooltip provider's own props, and no others", () => {
@@ -1972,12 +1770,7 @@ describe("the primitives docs page contract", () => {
       stale: Arr.filter(pages, (page) =>
         Arr.some(rows(page), (row) => !row.includes("the motion provider")),
       ),
-      // And at least the pages whose controls move name the provider itself.
-      named: Arr.filter(
-        ["switch.mdx", "tooltip.mdx"],
-        (page) => !read(page).includes("`MotionProvider`"),
-      ),
-    }).toEqual({ stale: [], named: [] });
+    }).toEqual({ stale: [] });
   });
 });
 

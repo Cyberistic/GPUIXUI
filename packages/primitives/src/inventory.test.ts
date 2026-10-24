@@ -325,7 +325,7 @@ const switchPendingProblems = (): ReadonlyArray<string> =>
             ...(row.notes.includes("busy toggle")
               ? ["Switches: the row promises the Toggle's busy state"]
               : []),
-            ...(row.notes.includes("No pending state") &&
+            ...(/no pending state/i.test(row.notes) &&
             row.notes.includes("in flight")
               ? []
               : [
@@ -453,7 +453,8 @@ describe("Tier 1 inventory", () => {
     expect(notes).toContain("evaluated and declined");
     const page = sourceOf("docs/button.mdx");
     expect(page).toContain("@gpuix/react/button");
-    expect(page).toContain("not adopted");
+    expect(page).toContain("Not adopting");
+    expect(page).toContain("buttonProps");
     // The premise: the runtime really publishes it, and the source records the
     // decision the documents must not forget.
     const readme = sourceOf("README.md");

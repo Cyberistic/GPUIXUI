@@ -243,13 +243,16 @@ describe("a type role is read through one seam", () => {
   it("reads a role name the scale does not carry as the body default", () => {
     // The same rule `controlSize` follows for a size name a release dropped: a
     // name the scale does not carry is the documented default, not a lookup
-    // that answers `undefined`.
+    // that answers `undefined`. The default is the **theme's** body — a brand
+    // that resized its scale keeps its own type, and only a theme that lost the
+    // role falls back to the library's.
     expect(isTextRole("body")).toBe(true);
     expect(isTextRole("bodyStrong")).toBe(true);
     expect(isTextRole("bodyy")).toBe(false);
     expect(isTextRole("sans")).toBe(false);
-    expect(typeOf(testTheme, "bodyy")).toEqual(libraryScale.body);
-    expect(typeOf(testTheme, undefined)).toEqual(libraryScale.body);
+    expect(typeOf(testTheme, "bodyy")).toEqual(testTheme.typography.body);
+    expect(typeOf(testTheme, undefined)).toEqual(testTheme.typography.body);
+    expect(typeOf({}, "bodyy")).toEqual(libraryScale.body);
   });
 
   it("reads the font family the same way", () => {

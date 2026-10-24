@@ -52,4 +52,4 @@ const [copies, setCopies] = useState(1);
 
 - Decimal text by default; grouped or locale display goes through `formatValue`/`parseValue`.
 - `min` above `max` is swapped; `Home`/`End` read the swapped range.
-- No `type="number"`, `inputMode` or `maxLength`; a refused character stays in the box.
+- No `type="number"`, `inputMode` or `maxLength`: the runtime applies a value only when it changes, so a refused character stays in the box.

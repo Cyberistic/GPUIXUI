@@ -64,7 +64,9 @@ describe("a Label beside a control", () => {
         ...(/not associated|does not name/.test(page)
           ? []
           : [`${file}: never says the label is unassociated`]),
-        ...(/labelledBy|`label` prop/.test(page)
+        // The control's own name prop is the channel; a page that dropped its
+        // API row would leave a reader no way to discover it.
+        ...(/(^|\n)\| `label` \|/.test(page) || page.includes("labelledBy")
           ? []
           : [`${file}: never names the control's own label prop`]),
       ];
