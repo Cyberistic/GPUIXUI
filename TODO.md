@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 269/269
+`[x]` `[██████████]` 270/270
 
 `[x]` Read the **value a store wrote apart from the role an older release never
       carried** — the previous fix read a blank colour as the absence it is and
@@ -419,6 +419,35 @@ Verification.
       `docs/tokens.md` §Paint-ready values, `docs/design-system.md` §9, the
       package README and the `Colour grammar` row. No native scenario applies — a
       report over the value a store handed back.
+
+`[x]` Read a **desktop palette's cleared field as one it did not name** —
+      `paletteToTokens` spread every string it was handed, so a field a decoder
+      cleared (`""`, whitespace: an empty entry in a theme file, a template's
+      unset variable) was stated as a fill. `extendTheme` then dropped it, which
+      kept the base's role, but the mapper's own ink measurement had already run
+      on it: the blank won `inkOn`'s comparison at 0:1, the merge dropped it,
+      and the fill kept the base's on-colour for **its** accent — measured on the
+      light base as white on a pale `#FFE08A` accent at **1.29:1** where the
+      base's own ink reads **13.09:1**; a blank `muted` beside a named ink
+      repainted the base's strip in that ink, and a blank `danger` beside a black
+      ink handed the base's red **4.12:1**. `namesColour` — the one read
+      `themeColors`/`extendTheme` already follow — is exported as the boundary
+      predicate (JSDoc and an `@example`), `colour` applies it to every palette
+      field and `inkOn` measures only the inks actually named, while a value the
+      desktop **named** and the renderer cannot parse is still handed over as
+      written for `auditTheme`. `system-theme.test.ts` gains `reads a colour a
+      desktop left blank as one it did not name` (a pale accent with blank page
+      and ink, a blank strip, a blank error colour, a blank selection, the
+      named-but-unparseable control and the pages; **36 cases** in the file).
+      Directions measured: with the old palette read restored the case fails
+      `expected '#FFFFFF' to be '#191D25'`; with only the ink filter restored it
+      fails `expected '#101010' to be '#4B5362'`; restored, the case is green.
+      Green: 53 files / **3 144** tests, `check-types`, `check:tests` and
+      `oxfmt` clean. Docs: `docs/tokens.md` §Paint-ready values and §System
+      palettes (now five rules), `docs/design-system.md` §11, the package README
+      §System palettes, the seam's own JSDoc and the `System palettes` row. No
+      native scenario applies — a boundary read, a merge and the prose that
+      teaches them.
 
 `[x]` Read a **colour a store cleared as the absence it is** — `themeColors`
       kept every string, so a role a decoder wrote as `""` — a cleared
@@ -11014,7 +11043,7 @@ this time.
 
 ## Interlocks (cross-workstream dependencies)
 
-| Correct the **HotkeyRecorder's swallowing claim** — `packages/components/docs/hotkey-recorder.mdx` §Limitations and `hotkeyRecorderMeta.limitations` both say a recorded key is swallowed so "the app's own binding does not fire", and the playground's `hotkey-recorder-lifecycle` (25 checks, 0.11.0) measured the opposite on the only seam GPUix publishes for an app-level key: `preventDefault` removes the element's default action, and the root `onKeyDown` handler still receives the key (`window=shift,k` on the press that stored `Mod+Shift+K`). The page and the meta should teach that an app-level binding must be gated while a recorder is armed, and the component could publish the armed state (an `onRecordingChange` callback) so an app can suspend its shortcuts without owning the state. The probe asserts the measured answer, so a component that later shields the root handler updates that check | components (`packages/components/docs/hotkey-recorder.mdx`, `src/hotkey-recorder.tsx`'s `hotkeyRecorderMeta`, the `COMPONENTS.md` row) | open — measured 2026-10-24 by the playground workstream; `apps/playground/README.md` §`hotkey-recorder-lifecycle` records the measurement and the workaround |
+| Correct the **HotkeyRecorder's swallowing claim** — `packages/components/docs/hotkey-recorder.mdx` §Limitations and `hotkeyRecorderMeta.limitations` both say a recorded key is swallowed so "the app's own binding does not fire", and the playground's `hotkey-recorder-lifecycle` (25 checks, 0.11.0) measured the opposite on the only seam GPUix publishes for an app-level key: `preventDefault` removes the element's default action, and the root `onKeyDown` handler still receives the key (`window=shift,k` on the press that stored `Mod+Shift+K`). The page and the meta should teach that an app-level binding must be gated while a recorder is armed, and the component could publish the armed state (an `onRecordingChange` callback) so an app can suspend its shortcuts without owning the state. The probe asserts the measured answer, so a component that later shields the root handler updates that check | components (`packages/components/docs/hotkey-recorder.mdx`, `src/hotkey-recorder.tsx`'s `hotkeyRecorderMeta`, the `COMPONENTS.md` row) | **resolved 2026-10-24** — the page's §Limitations and `hotkeyRecorderMeta` teach the measured rule, `HotkeyRecorder` publishes the armed state through `onRecordingChange` (reported on a transition only, through a ref), the page gains §Gating your own bindings with the gate snippet, and `src/behaviour/hotkey-recorder.test.tsx` gains `reports the armed state as it changes`, `reports the armed state when a recording is cancelled` and `lets an application-level handler hear a recorded chord` — measured failing at the pre-change component on the two reporting cases (the prop did not exist), 13/13 green after. The probe and its README section record the measurement |
 
 | Verify **the files package's `FileTree` and `PropertyPanel` as the surfaces the inventory names** — `packages/files` ships `FileTree`, `PropertyPanel` and `LogViewer` with only three pure-logic tests and no `.test.tsx` anywhere in the package, and two inventory rows cite live evidence that does not mount the surface they name: Tier 4 *Inspector panels* / *Property editors* (`@gpuixui/files`' `PropertyPanel`) cite `inspector-lifecycle`, whose `InspectorPanel` is composed in the probe from primitives (`apps/playground/src/live/scenarios.tsx`), and *File trees* cites `virtual-tree-lifecycle`, which mounts `@gpuixui/data`'s `TreeView`. The playground now measures two of the package family's surfaces in a window — `log-viewer-lifecycle` (35 checks) for `@gpuixui/files`' `LogViewer` and `property-panel-lifecycle` (18 checks) for `@gpuixui/data`'s `PropertyPanel` — so the files package's own `PropertyPanel` and `FileTree` and the package's behaviour suites are what is left | files/components (`packages/files/src/{tree,property}/`) + playground (`file-tree-lifecycle`, the files `PropertyPanel`'s window half) | **playground half resolved 2026-10-24** — `file-tree-lifecycle` (30 checks, 0.11.0) mounts the files package's own `FileTree`, so the *File trees* row now cites it beside `virtual-tree-lifecycle`; it found a real defect (the checkbox's press also reaches its row — the Interlocks row below carries it) that the probe pins. **Open:** the files package's own `PropertyPanel` has no window probe (the measured `property-panel-lifecycle` mounts `@gpuixui/data`'s), and `packages/files` still has no `.test.tsx` behaviour suite — both are the files owner's |
 | Cite the **shipped player's paint** in the media row — `COMPONENTS.md`'s *Video / audio player + waveform* row says the paint route "is the live `media-frame-lifecycle` probe's, which composes the same pieces in a window", and the `media-player-lifecycle` probe (51 checks, 0.11.0) now paints the **shipped** `MediaPlayer` itself: the frame the playhead names, a 200×32 waveform silhouette, the clock and fill, the four seek keys and the disabled refusal. The row's evidence sentence should cite this probe beside the composition one | media (`COMPONENTS.md`, docs `media-player.mdx`) | **resolved 2026-10-24 (components)** — the player row now cites `media-player-lifecycle` (51 checks, 0.11.0) with the facts it measured — the 240×135 frame the playhead names, the 200×32 `mutedForeground` silhouette, the `0:00 / 0:04` clock, the four seek keys and the disabled refusal — and `packages/media/docs/media-player.mdx` §Limitations opens with the same sentence; `packages/components/src/inventory.test.ts`'s `cites the shipped player's own paint in its row and its page` derives the 51 from the README's own close-out line and fails when either surface prints another number, drops the probe id, or loses one of the three measured facts |
