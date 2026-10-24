@@ -134,8 +134,8 @@ describe("a data surface whose stored slot is null", () => {
         ]}
       />,
     );
+    expect(paintedText(mounted)).toContain("Tag");
     expect(paintedText(mounted)).not.toContain("ghost");
-    expect(mounted.renderer.findByTestId("property-tag")).toBeUndefined();
     expect(mounted.renderer.findByTestId("property-undefined")).toBeUndefined();
   });
 });
