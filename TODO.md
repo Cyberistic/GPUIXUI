@@ -2361,7 +2361,38 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 167/167
+`[x]` `[██████████]` 168/168
+
+`[x]` Measure the **held section title of a pinned list in a window** — Tier 3's
+      *sticky header* row is answered by `PinnedList`, whose header is a layer
+      repositioned from the measured offset (the runtime paints no `position:
+      sticky`), and every claim behind it was an offscreen read: the element tree
+      carries the layer's `pointerEvents: "none"`, the header's box, and the
+      spacer. A tree read cannot tell an opaque title from a transparent one, nor
+      an inert layer from a covering one, so the two questions a reader of the
+      component actually asks had no answer. The `pinned-list-lifecycle` probe
+      mounts the shipped `PinnedList` in a 900×520 window: two 200-point rows
+      under a 32-point title in a 160-point viewport, with a control pair beside
+      it (a filled cover over a row) that proves the host's `click` is
+      hit-tested at a point. Measured: the first title holds at the viewport's
+      top through a `-120` wheel while the second travels to 112, the held title
+      paints the caller's `card` surface over the row's own fill, a wheel past
+      the first section's end clamps at `-304`, retires that title and hands the
+      top to the second, and a wheel back paints both at their rest places. **It
+      also found a defect**: the held title takes the press the row beneath it
+      would have taken (`presses` stays 1 while the same row at rest reports 1
+      and the covered control reports `control=0,1`), because the layer's
+      `pointerEvents: "none"` does not reach the child that paints — recorded
+      for the component's owner in `TODO.md` → Interlocks. **39 checks**,
+      `--only pinned-list-lifecycle`, green on 0.11.0 here (~8.1 s, three
+      captures). Fixture `src/live/pinned-list.ts` + probe
+      `src/live/pinned-list-probe.tsx` + `pinned-list.test.ts` (7 cases: the
+      geometry, the pressed centre under the title, the end-of-section
+      arithmetic, the readout, the id set, and the README recording the
+      measured limitation). Scenarios run: `--only pinned-list-lifecycle`
+      (live, 1/1, `scroll=unverified` because the capability has other probes);
+      playground suite 114 files / 1145 tests green. Docs: `apps/playground/README.md`
+      §`pinned-list-lifecycle`, `.artifacts/live/pinned-list-{rest,scrolled,end}.png`.
 
 `[x]` Verify and mark the **two Tier 4 workspace rows that still read `todo`** —
        *Detachable / movable tabs* and *Workspace layouts* both had measured
@@ -11307,6 +11338,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
     No native scenario applies — the names are read off the renderer's tree,
     and the shipped `column-resize-lifecycle` paint is unchanged.
     Owner: data.
+  - [x] Let **type-ahead reach a row whose name never arrived** — the row paints
+    and announces its key when `labelOf` answers blank (`treeName`), and the
+    pure `typeAheadRow` matched on that key, but `useTree` handed the
+    **typeahead seam** the raw `labelOf(node)`: a two-row tree whose names were
+    blank painted `alpha`/`beta` and typing `b` left the cursor on `alpha`, so
+    the one word the row was named by could not reach the match the package
+    documents as shared with the paint and the accessible name. The controller
+    maps `treeName(labelOf(node), key)` into the seam now, and both `TreeView`
+    and `VirtualTree` inherit it. `src/behaviour/tree.test.tsx` gains `reaches
+    a blank-labelled row by typing the key it is named by`; direction measured:
+    before the reading the focus stays on `blank-tree-row-alpha` (expected
+    `blank-tree-row-beta`), after it the file is 12/12 and the package is
+    232 unit / 158 behaviour cases. Docs: `docs/tree-view.mdx`'s `labelOf` row
+    and blank-label paragraph, the README's type-ahead paragraph and the Tier 3
+    Tree views row (whose claim was previously true of the pure model only).
+    No native scenario applies — the renderer's own key delivery is the
+    measured contract (`tree.test.tsx`), and the `data-tree-lifecycle` paint is
+    unchanged.
+    Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
@@ -19152,3 +19202,5 @@ scenario applies — the timings are pure values.
 `[x]` Re-verify the **seven Tier 4/5 rows and the four Tier 5 component probes** on `c6c8bd2f3`, the tree that lands the truncated-theme wash fix — no row's status changes: six are `done`/`done (composed)` and Terminal surfaces stays `unsupported (no host element)` with the measured terminal-runtime alternative. After `nub run --filter playground build`, live `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` is **6/6 green** (3.6–18.6 s each; the capabilities report `unverified` because the selection samples each probe group), headless `--only editor-surface` is **1/1** (1117 ms, `editor=verified`), `dist/terminal/run.js` in a pty is **4/4** (`terminal-render`, `terminal-resize`, `terminal-pointer`, `terminal-input`), and the workstream's four Tier 5 probes `--only multi-step-form-lifecycle --only crop-overlay --only qr-matrix --only markdown-fence` are **4/4 green** (3.2–14.9 s each). The wash fix is a host-prop branch on `HighlightText` — a complete theme still derives the pair every probe paints — so no measured frame moves.
 
 `[x]` `packages/components`: **seven prop rows were missing from the pages nothing held** — the props half of `api.test.ts` read only Tier 2 records, and `multiStepFormMeta` was never collected into `inventory.ts` at all, so `MultiStepForm`'s Tier 5 page and the animated primitives' pages were the places a prop could ship undocumented. Extending the guard to every recorded page (Tier 2 and Tier 5) reported **26** missing rows, and **19** of them were internal part props — `Bubbles`' `Bubble`, `Stars`' `Star`, `Gradient`'s `Breath` — which no consumer can import. `pageTypes` now holds a page to the props its **exported** parts declare (`isExportedPart`), the seven real gaps are filled (`children` in auto-height, hexagon, reveal, scroll-fade, scroll-progress and topography; `className` in glyph), `multiStepFormMeta` is collected, and the inventory's row lookup reads the Tier 2, animated and Tier 5 target tables (a Tier 5 verdict's `(measured)` qualifier states its evidence, not a second answer). Directions measured: with the guard extended and the page filter absent the case fails with all 26 rows by name; deleting `pending` from `multi-step-form.mdx` fails `docs/multi-step-form.mdx: MultiStepFormProps.pending has no API row`; flipping the record's `gpuixSupport` to `partial` fails `row says support yes (measured), record says partial`; restored, the package is **104 files / 977 tests** green with `check-types`, `oxlint` and `oxfmt` clean. No native scenario applies — pages and a repository check.
+
+`[x]` `apps/docs`: **three data pages taught their rules with nothing to run** — the Advanced filtering, Virtualization and Column configuration pages each describe an interaction a reader plans a grid around, and each mounted no drawing: `package-preview.ts` named four data surfaces, so a reader of the query builder, the window or the column menu got source and limitations only, while the component and primitive lanes draw every page. Each now mounts a labelled strategy-3 preview from the site's own table — no package page edited — and every drawing runs the package's logic rather than a copy: `advanced-filter-demo` evaluates the tree with `filterByTree`, prints `describeTree`'s sentence and decodes a stored query through `readFilterTree` (a query this release cannot read keeps no rows, and its Clear control restores a readable one); `virtualization-demo` mounts the rows `createWindowCalculator` computes over `DEFAULT_ROW_HEIGHT`/`DEFAULT_OVERDRAW` in a 320px viewport, clamps through `maxScrollOffset`/`clampScrollOffset` and reveals row 500 by moving the window first, with the header as a sibling above the scroller (the runtime's only fixed header); `column-configuration-demo` shows, hides, moves and keyboard-resizes through `toggleColumn`, `moveColumn`, `resizeWidthByKey` and `resizeColumn`, with the header and every row reading one `visibleColumns` list and `contentWidth`/`hiddenColumns` feeding the readout. Proof: `src/components/docs/data-demo.test.tsx` (15 cases) holds each drawing to the package's own answers — the kept file ids, the disjunction's larger set, the refusal's empty set and sentence, the calculator's indices and clamp at 0/400/12 000/end, the overdraw start row and reveal, the header/cell counts from the visible list and Home/End bounds. Directions measured: keeping every file in `filterFiles` fails 3 cases by name (`expected [ 'brand', 'hero', …(3) ] to deeply equal [ 'brand' ]` and the mount case), a zero overdraw fails the window case (`expected 104 to be 108`), and a no-op `toggledColumn` fails `hides a column…` and `refuses to hide the last visible column`; restored, the file is 15/15. Green: `@gpuixui/docs` is **188 files / 1 916 tests**, `check-types`, `build`, `check:tests`, `oxlint` and `oxfmt` clean on these files; the three demos also mount in both palettes through `preview-demo-render.test.tsx`. Docs: `docs/preview-strategy.md` §A page that ships a demo now says the data lane draws **seven** surfaces and names the three readers; `preview-strategy.test.ts` holds the page list and the sentence; `apps/docs/README.md`'s ledger names the three modules. No native scenario applies — the drawings are browser previews of GPUix surfaces, guarded against the package's pure logic; the components' own behaviour and live probes are the data workstream's.

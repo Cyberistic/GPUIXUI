@@ -619,15 +619,24 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws four surfaces — Property panels on its own page, the
-sorting and selection pages through the site's table, and the statistic card
-through it too: the header cycle is `@gpuixui/data`'s `pressSortOrder`, the
+The data lane draws seven surfaces — Property panels on its own page, the
+sorting, selection, advanced-filter, virtualization and column-configuration
+pages through the site's table, and the statistic card through it too: the
+header cycle is `@gpuixui/data`'s `pressSortOrder`, the
 painted order is its own row model (`constructGrid`, the core `useTable` runs
 on), a row press is its `pressSelection` over the visible keys, so the deploy
 queue a reader sorts and selects is the records the package would paint, and
 the metric card's reading is the area of the box a reader picks, with its trend
 painted in the status tone's readable role — the three roles the card's own
-`trendTone` reads. Property panels was the first drawer outside the component
+`trendTone` reads. The query builder's tree is evaluated by the package's
+`filterByTree`, its words are `describeTree`'s sentence, and a stored query is
+decoded through `readFilterTree`, so a query this release cannot read keeps no
+rows; the windowed table's mounted rows are the package's window calculator
+(`createWindowCalculator`, `maxScrollOffset`, `clampScrollOffset`), so its
+readout and the rows it paints cannot disagree; and the column page shows,
+hides, moves and keyboard-resizes through `toggleColumn`, `moveColumn`,
+`resizeWidthByKey` and `resizeColumn`, so the header and every row read the
+same visible list. Property panels was the first drawer outside the component
 and primitive lanes — one object read by a preview, a field, a table and a
 metric card, every one of which the browser can draw honestly.
 

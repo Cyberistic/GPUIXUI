@@ -201,6 +201,9 @@ src/components/docs/switch-preview.ts      The switch preview's dependent-settin
 src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
 src/components/docs/table-preview.ts      The table preview's copy of the package's sort, selection and filter rules
 src/components/docs/table-rule-demos.tsx  The sorting and selection pages' drawings over the package's row model
+src/components/docs/advanced-filter-demo.tsx The query builder's tree, its sentence and a refused stored query
+src/components/docs/virtualization-demo.tsx The window calculator's mounted rows and their offsets
+src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/stat-card-demo.tsx    The metric card's derived reading, its trend roles and the box a reader measures
 src/components/docs/table-demo.tsx        The table's browser renderings and their source strings
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate

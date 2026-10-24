@@ -29,6 +29,18 @@ import { ToolbarDemo, toolbarDemoSource } from "./toolbar-demo";
 import { AppMenuDemo, appMenuDemoSource } from "./app-menu-demo";
 import { StatusBarDemo, statusBarDemoSource } from "./status-bar-demo";
 import { StatCardDemo, statCardDemoSource } from "./stat-card-demo";
+import {
+  AdvancedFilterDemo,
+  advancedFilterDemoSource,
+} from "./advanced-filter-demo";
+import {
+  VirtualizationDemo,
+  virtualizationDemoSource,
+} from "./virtualization-demo";
+import {
+  ColumnConfigurationDemo,
+  columnConfigurationDemoSource,
+} from "./column-configuration-demo";
 import { DockLayoutDemo, dockLayoutDemoSource } from "./dock-layout-demo";
 import { PanelGroupDemo, panelGroupDemoSource } from "./panel-group-demo";
 import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
@@ -2944,6 +2956,18 @@ export const demos: Readonly<Record<string, Demo>> = {
   "table-selection-demo": {
     render: TableSelectionDemo,
     source: tableSelectionDemoSource,
+  },
+  "advanced-filter-demo": {
+    render: AdvancedFilterDemo,
+    source: advancedFilterDemoSource,
+  },
+  "virtualization-demo": {
+    render: VirtualizationDemo,
+    source: virtualizationDemoSource,
+  },
+  "column-configuration-demo": {
+    render: ColumnConfigurationDemo,
+    source: columnConfigurationDemoSource,
   },
   "timeline-states": { render: TimelineStates, source: timelineStatesSource },
   "timeline-workflow": {
