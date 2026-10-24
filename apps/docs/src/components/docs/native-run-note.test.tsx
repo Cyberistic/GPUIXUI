@@ -75,14 +75,16 @@ describe("the native playground note", () => {
 
     expect(previewPages("packages/components/docs")).toBeGreaterThanOrEqual(70);
     expect(previewPages("packages/primitives/docs")).toBeGreaterThanOrEqual(25);
-    // The dock lane draws all three of its surfaces; the files lane draws its
-    // three through the site's table; the shell lane has no honest browser
-    // reproduction yet, so the note's wording has to stay true for it.
+    // The dock lane draws all three of its surfaces in its own Markdown; the
+    // files and shell lanes draw theirs through the site's table, so their
+    // pages carry no `<ComponentPreview>` of their own.
     expect(previewPages("packages/dock/docs")).toBe(3);
     expect(previewPages("packages/files/docs")).toBe(0);
     expect(previewPages("packages/shell/docs")).toBe(0);
-    // The data lane draws one composition, so the policy names that page
-    // instead of calling every lane but Components and Primitives strategy 4.
+    // The data lane draws one composition in its own Markdown (Property
+    // panels); its sorting, selection and statistic pages are mounted from the
+    // site's table, which is why the policy names those pages rather than
+    // calling every lane but Components and Primitives strategy 4.
     expect(previewPages("packages/data/docs")).toBe(1);
 
     // ...and the frame draws the note and the page body that mounts it.

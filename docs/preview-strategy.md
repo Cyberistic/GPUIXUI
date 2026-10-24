@@ -619,15 +619,17 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws its three surfaces too — Property panels on its own page,
-and the sorting and selection pages through the site's table: the header cycle
-is `@gpuixui/data`'s `pressSortOrder`, the painted order is its own row model
-(`constructGrid`, the core `useTable` runs on), and a row press is its
-`pressSelection` over the visible keys, so the deploy queue a reader sorts and
-selects is the records the package would paint. Property panels was the first
-drawer outside the component and primitive lanes — one object read by a preview,
-a field, a table and a metric card, every one of which the browser can draw
-honestly.
+The data lane draws four surfaces — Property panels on its own page, the
+sorting and selection pages through the site's table, and the statistic card
+through it too: the header cycle is `@gpuixui/data`'s `pressSortOrder`, the
+painted order is its own row model (`constructGrid`, the core `useTable` runs
+on), a row press is its `pressSelection` over the visible keys, so the deploy
+queue a reader sorts and selects is the records the package would paint, and
+the metric card's reading is the area of the box a reader picks, with its trend
+painted in the status tone's readable role — the three roles the card's own
+`trendTone` reads. Property panels was the first drawer outside the component
+and primitive lanes — one object read by a preview, a field, a table and a
+metric card, every one of which the browser can draw honestly.
 
 **The shell lane's drawings are the shell's rules.** `@gpuixui/shell` publishes
 its components and their types, and its root re-exports the components: GPUix

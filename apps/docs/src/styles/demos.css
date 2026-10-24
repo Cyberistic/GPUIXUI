@@ -12300,3 +12300,117 @@
   font-size: 11px;
   color: var(--muted-foreground);
 }
+
+/* ---- data: the statistic card. The card's own recipe is
+   `flex flex-col gap-1 rounded-lg border border-input bg-card px-3 py-2`, so
+   the drawing takes the `border` role (the compiler's shadcn remap), the `lg`
+   radius, the card fill, 4px between parts and 8/12 padding. A trend paints the
+   status tone's readable role, which is the role `trendTone` returns. ---- */
+.gx-stat-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+}
+
+.gx-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gx-stat-card {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.gx-stat-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}
+
+.gx-stat-reading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.gx-stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  color: var(--foreground);
+}
+
+.gx-stat-hint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}
+
+.gx-stat-trend {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-stat-trend[data-direction="up"] {
+  color: var(--success-soft-foreground);
+}
+
+.gx-stat-trend[data-direction="down"] {
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-stat-trend[data-direction="flat"] {
+  color: var(--muted-foreground);
+}
+
+.gx-stat-actions {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  align-self: flex-start;
+}
+
+.gx-stat-choice {
+  height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.gx-stat-choice[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-stat-choice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-stat-readout {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}

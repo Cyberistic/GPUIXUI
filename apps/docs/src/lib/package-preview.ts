@@ -38,6 +38,7 @@ export const packagePreviews: ReadonlyArray<PackagePreview> = [
   },
   { origin: "data", path: "table-sorting.mdx", demo: "table-sorting-demo" },
   { origin: "data", path: "table-selection.mdx", demo: "table-selection-demo" },
+  { origin: "data", path: "stat-card.mdx", demo: "stat-card-demo" },
   { origin: "shell", path: "toolbar.mdx", demo: "toolbar-demo" },
   { origin: "shell", path: "app-menu.mdx", demo: "app-menu-demo" },
   { origin: "shell", path: "status-bar.mdx", demo: "status-bar-demo" },
