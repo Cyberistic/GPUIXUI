@@ -9,10 +9,31 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
-/** What Tab does while the editor holds focus. */
-export type TabMode = "insert" | "focus";
+/** The two things Tab can do while the editor holds focus. */
+export const TAB_MODES = ["insert", "focus"] as const;
+
+/** The two things Tab can do while the editor holds focus. */
+export const TabModes = Schema.Literals(TAB_MODES);
+/** The two things Tab can do while the editor holds focus. */
+export type TabMode = typeof TabModes.Type;
+
+/** Whether a stored value names a Tab mode this editor paints. */
+export const isTabMode = Schema.is(TabModes);
+
+/**
+ * The Tab mode a stored value names, or the documented default.
+ *
+ * A tab mode is a saved preference as often as a literal, so the value reaching
+ * the component may be a name this release no longer declares. Comparing it raw
+ * read such a name as not-insert and sent Tab out of the field, while the prop
+ * documents `"insert"` — so the mode is read once here and the keyboard
+ * decision, its JSDoc and its page all answer the same name.
+ */
+export const tabModeOf = (value: unknown): TabMode =>
+  isTabMode(value) ? value : "insert";
 
 /** The indentation a Tab inserts when the caller names none. */
 export const TAB_INDENT = "  ";

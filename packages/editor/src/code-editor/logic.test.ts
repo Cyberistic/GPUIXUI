@@ -14,6 +14,7 @@ import {
   TAB_INDENT,
   tabIndent,
   tabInserts,
+  tabModeOf,
   visibleRows,
 } from "./logic.js";
 
@@ -45,6 +46,25 @@ describe("tabInserts", () => {
     expect(tabInserts("insert", "")).toBe(false);
     expect(tabInserts("insert", TAB_INDENT)).toBe(true);
     expect(tabInserts("focus", "\t")).toBe(false);
+  });
+});
+
+describe("tabModeOf", () => {
+  it("keeps the two modes this release ships", () => {
+    expect(tabModeOf("insert")).toBe("insert");
+    expect(tabModeOf("focus")).toBe("focus");
+  });
+
+  it("reads a stored mode name it does not ship as the documented default", () => {
+    // The bug guarded: the mode was compared raw, so a preference a release
+    // renamed (`"indent"`, an older spelling) read as not-insert and Tab moved
+    // the focus out of the field although the prop documents `"insert"`.
+    expect(tabModeOf("indent")).toBe("insert");
+    expect(tabModeOf("INSERT")).toBe("insert");
+    expect(tabModeOf(" insert")).toBe("insert");
+    expect(tabModeOf(undefined)).toBe("insert");
+    expect(tabModeOf(null)).toBe("insert");
+    expect(tabModeOf(4)).toBe("insert");
   });
 });
 

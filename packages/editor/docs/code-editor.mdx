@@ -27,7 +27,7 @@ import { CodeEditor } from "@gpuixui/editor";
 | `onValueChange` | `(value: string) => void` | — | Every edit, including Tab and Enter. |
 | `language` | `string` | — | The tokenizer's language id. An unknown id, or one that is not text, paints plain text. |
 | `lineNumbers` | `boolean` | `true` | Number the rows in a gutter. |
-| `tabMode` | `"insert" \| "focus"` | `"insert"` | What Tab does. |
+| `tabMode` | `"insert" \| "focus"` | `"insert"` | What Tab does. A stored name that is neither reads as the default `"insert"`. |
 | `indent` | `string` | `"  "` | The string Tab inserts. An empty string leaves Tab as the platform traversal, and a value that is not a string reads as the default. |
 | `placeholder` | `string` | — | The editor's hint, painted in the theme's `placeholder` role and announced as the field's description; the host is handed none. |
 | `readOnly` | `boolean` | `false` | View-only. |
@@ -46,6 +46,7 @@ import { CodeEditor } from "@gpuixui/editor";
 - **A transparent textarea paints no caret** and reports no scroll offset.
 - **Tab and Enter insert at the end**, because the runtime exposes no caret position.
 - **Tab only swallows the traversal when it inserts something**: an empty `indent` leaves the platform's Tab, so a field is never a keyboard trap, and an indent restored from storage that is not a string reads as the default `"  "`.
+- **A stored `tabMode` that is not a mode reads as `"insert"`**: a preference a release renamed (`"indent"`) is read through `tabModeOf` before the key decision, so it keeps inserting rather than silently sending Tab out of the field.
 - **A stored draft that is not text paints an empty document**: a `value` or `defaultValue` restored from storage as `null` reads through `draftOf`, so the tokenizer and the gutter paint the empty state instead of throwing out of the render.
 - **A stored `language` that is not text paints plain text**: the id is read through `languageOf` before the tokenizer sees it, so a preference saved as a number or an object is the same plain fallback an unknown id gets instead of a `.trim()` throw.
 - **A blank `label` reads as `"Code editor"`**: the name is read through the same absence rule as every other name, so a stored empty string cannot publish an unnamed field.

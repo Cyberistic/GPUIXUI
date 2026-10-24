@@ -233,6 +233,37 @@ describe("CodeEditor", () => {
     editor.unmount();
   });
 
+  it("keeps Tab inserting for a stored tab mode name it does not ship", () => {
+    // The bug guarded: `tabMode` was compared raw, so a preference restored as
+    // an older or renamed spelling (`"indent"`) read as not-insert: Tab moved
+    // the focus out of the field although the prop documents `"insert"`, and
+    // no indentation was ever typed.
+    const onChange = vi.fn();
+    const editor = render(
+      <div>
+        <Button testId="before">Before</Button>
+        <CodeEditor
+          value="const a = 1"
+          onValueChange={onChange}
+          // A store hands back the name it wrote; this release does not declare it.
+          // @ts-expect-error — the value a saved preference actually carries
+          tabMode="indent"
+          testId="code-editor"
+        />
+        <Button testId="after">After</Button>
+      </div>,
+    );
+    editor.renderer.focusElement(
+      editor.renderer.findByTestId("before")?.id ?? -1,
+    );
+    editor.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(editor)).toEqual(Option.some("code-editor"));
+    editor.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(editor)).toEqual(Option.some("code-editor"));
+    expect(onChange).toHaveBeenCalledWith("const a = 1  ");
+    editor.unmount();
+  });
+
   it("reads an indent it cannot store as the default", () => {
     // The bug guarded: a preference restored as `null` reached
     // `value + indent`, so Tab typed the word "null" into the document.

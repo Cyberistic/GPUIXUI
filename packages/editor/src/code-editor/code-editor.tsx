@@ -54,6 +54,7 @@ import {
   enterIndent,
   tabIndent,
   tabInserts,
+  tabModeOf,
   visibleRows,
   type TabMode,
 } from "./logic.js";
@@ -89,7 +90,7 @@ export interface CodeEditorProps {
   readonly language?: string;
   /** Number every row in a gutter. Default `true`. */
   readonly lineNumbers?: boolean;
-  /** What Tab does: insert indentation, or move focus. Default `"insert"`. */
+  /** What Tab does: insert indentation, or move focus. Default `"insert"`; a stored name that is neither reads as the default. */
   readonly tabMode?: TabMode;
   /**
    * The string Tab inserts in `"insert"` mode. Default two spaces. An empty
@@ -154,6 +155,11 @@ export const CodeEditor = ({
     onChange: onValueChange,
   });
   const [focused, setFocused] = useState(false);
+  // A tab mode is a saved preference as often as a literal: a name this release
+  // does not carry reads as the documented `"insert"`, so a stored mode cannot
+  // quietly turn the editor into a Tab trap's opposite (focus moving out of the
+  // field while the prop says Tab inserts).
+  const mode = tabModeOf(tabMode);
 
   const syntax = syntaxColors(theme);
   const metrics = textStyle(theme, "codeBlock");
@@ -188,10 +194,10 @@ export const CodeEditor = ({
 
   const onKeyDown = (event: KeyEvent): void => {
     if (readOnly || disabled) return;
-    const tab = tabIndent(indent);
-    if (event.key === "tab" && tabInserts(tabMode, tab)) {
+    const indentText = tabIndent(indent);
+    if (event.key === "tab" && tabInserts(mode, indentText)) {
       event.preventDefault();
-      setValue(value + tab);
+      setValue(value + indentText);
     }
   };
 
