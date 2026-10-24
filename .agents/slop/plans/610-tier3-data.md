@@ -571,6 +571,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   to its type in both directions plus the header-only prop. Directions measured:
   dropping the `indeterminate` row fails the type case and the header-only case,
   and adding it to the row's table fails the invented-prop case.
+- **Two virtualization tables back to back named no part, and the list's tail-follow props were absent**: `docs/virtualization.mdx` printed a `VirtualList` table and a `VirtualTable` table under one unlabelled heading, merged `row`/`renderRow` into one row, and never named `VirtualTableBody` — the export a consumer composes inside its own frame — at all. The list's table also omitted `followTail` and `alignment`, the two props the shipped log viewer reads, so the only docs route to "keep the list at its tail" was a component's source. The page now carries one section per part (`VirtualList`, `VirtualTable`, `VirtualTableBody`) with every shared and mode prop, and `src/virtual/docs.test.ts` (3 cases) holds each table to its type in both directions, resolving the shared props plus both union branches. Directions measured: dropping the `followTail` row fails `` `VirtualList`: followTail ``, and a `probe` field on `VirtualTableProps` fails `` `VirtualTable`: probe ``.
 - **A page lists the props its type declares**: `docs/table-sorting.mdx` was the
   only page a consumer reads for `TableSortHeader`, and nothing held its API
   table to the type — it documented ten of eleven props, missing `testId` (the

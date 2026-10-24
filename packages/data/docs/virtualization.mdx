@@ -19,29 +19,51 @@ import { VirtualList } from "@gpuixui/data";
 
 ## API
 
+### `VirtualList`
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `height` | `number` | caller's layout | a definite viewport height |
 | `children` | `ReactNode` | — | the rows |
+| `followTail` | `boolean` | `false` | keeps the list at its trailing edge as rows arrive |
+| `alignment` | `"top" \| "bottom"` | `top` | where the content sits when it does not fill the viewport |
 | `itemCount` | `number` | children mode | switches to the windowed mode |
 | `estimatedItemHeight` | `number` | — | required with `itemCount`; a height the runtime cannot lay out is read as the shipped row's own (`37`) |
 | `windowStart` | `number` | `0` | the first rendered slice's index |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the built window |
 | `overdraw` | `number` | — | rows built beyond the viewport; a count the runtime cannot read is the default (`4`), a negative is `0` |
+| `className` | `string` | — | joined after the list's own (empty) recipe |
 | `ref` | `Ref<PublicInstance>` | — | the list's instance, for `scrollToItem` |
+
+### `VirtualTable`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `count` | `number` | — | the logical row count; a fraction, a negative or an unreadable count is the whole, non-negative rows the table holds (`0` paints `empty`) |
+| `height` | `number` | measured viewport | a definite table height; one the layout cannot paint is no height, so the table fills its column |
 | `rowHeight` | `number` | — | every row must paint exactly this height; a height the window cannot divide is read as the shipped row's own (`37`) |
-| `row` / `renderRow` | `(index: number) => ReactNode` | — | paints one absolute row index |
-| `height` | `number` | measured body | a definite table (or body) height |
 | `header` | `ReactNode` | — | the header row's cells |
+| `row` | `(index: number) => ReactNode` | — | paints one absolute row index |
 | `empty` | `ReactNode` | `No rows` | painted inside a `TableEmpty` row when `count` is `0`; a string paints as its own text element |
 | `caption` | `ReactNode` | — | the line below the frame; a string paints as its own text element |
 | `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side; a count the window cannot read is `4`, a negative is `0` |
 | `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report |
+| `className` | `string` | — | joined after the recipe |
+
+### `VirtualTableBody`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `count` | `number` | — | the logical row count; read the same way `VirtualTable` reads it |
+| `rowHeight` | `number` | — | the painted height of one row; a height the window cannot divide is `37` |
+| `renderRow` | `(index: number) => ReactNode` | — | paints one absolute row index |
+| `height` | `number` | the measured body | a definite body height; omit it inside a bounded `Table` |
+| `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
+| `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
+| `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report |
+| `instanceRef` | `Ref<PublicInstance>` | — | the list's instance, for a consumer that scrolls it itself |
+| `testId` | `string` | — | the body's locator |
 
 ## The height a window needs
 
