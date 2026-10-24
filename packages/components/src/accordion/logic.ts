@@ -46,7 +46,9 @@ const singleDefault = (
 export const openSectionsOf = (
   value: unknown,
 ): Option.Option<ReadonlyArray<string>> =>
-  Arr.isArray(value) ? Option.some(Arr.filter(value, P.isString)) : Option.none();
+  Arr.isArray(value)
+    ? Option.some(Arr.filter(value, P.isString))
+    : Option.none();
 
 const multipleDefault = (
   value: AccordionConfig["defaultValue"],

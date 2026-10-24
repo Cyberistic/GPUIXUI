@@ -43,7 +43,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { addTokens, removeToken, splitDraft, tokensOf } from "./tag-input/logic.js";
+import {
+  addTokens,
+  removeToken,
+  splitDraft,
+  tokensOf,
+} from "./tag-input/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,

@@ -125,7 +125,7 @@ export const rankByGroup = <A>(
  * the absence threw out of the render. An absent list is no rows, which is the
  * empty state the palette already has.
  */
-export const commandListOf = <A,>(
+export const commandListOf = <A>(
   value: ReadonlyArray<A> | null | undefined,
 ): ReadonlyArray<A> => (Arr.isArray(value) ? value : []);
 
