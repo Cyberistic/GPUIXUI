@@ -382,14 +382,11 @@ const paletteKey = (palette: SystemPalette | undefined): string =>
  * ```
  */
 export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
-  const {
-    read,
-    base,
-    baseFor,
-    onChange,
-    every,
-    timer = intervalTimer,
-  } = options;
+  const { read, base, baseFor, onChange, timer = intervalTimer } = options;
+  // The pace a watch runs at. A value that is not a finite positive number is
+  // the 1 ms floor `setInterval` reads an unusable delay as, so it is read as
+  // the documented pace rather than handed on.
+  const every = paceOf(options.every);
   let applied: string | undefined;
   const tick = (): void => {
     const palette = read();
@@ -407,5 +404,5 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
     applied = key;
   };
   tick();
-  return timer.poll(paceOf(every), tick);
+  return timer.poll(every, tick);
 }
