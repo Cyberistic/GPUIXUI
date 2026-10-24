@@ -56,7 +56,7 @@ TagInput
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `ReadonlyArray<string>` | — | the tokens; the caller owns and renders them |
+| `value` | `ReadonlyArray<string>` | — | the tokens; the caller owns and renders them, and a stored value that is not a list carries no tokens |
 | `onValueChange` | `(value: ReadonlyArray<string>) => void` | — | the list after every accepted edit, including a removal |
 | `label` | `string` | — | the group's accessible name |
 | `max` | `number` | none | additions past it are refused; the chips stay |

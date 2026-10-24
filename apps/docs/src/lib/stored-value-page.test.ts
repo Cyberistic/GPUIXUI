@@ -45,6 +45,10 @@ const placement = "packages/components/src/internal/placement.ts";
 const tabs = "packages/components/src/tabs/logic.ts";
 const stepper = "packages/components/src/stepper/logic.ts";
 const alertTone = "packages/components/src/internal/theme.ts";
+const colourPicker = "packages/components/src/color-picker.tsx";
+const colourHex = "packages/components/src/color/hex.ts";
+const tagLogic = "packages/components/src/tag-input/logic.ts";
+const comboboxLogic = "packages/components/src/combobox/logic.ts";
 
 const storedValues: ReadonlyArray<StoredValue> = [
   { page: "badge.mdx", prop: "variant", source: badge, reader: "variantOf" },
@@ -123,6 +127,92 @@ const fallbackOf = (source: string, reader: string): string | undefined => {
   return /\? \w+ : "([a-z]+)"/.exec(body)?.[1];
 };
 
+/** One prop whose stored value a reader answers with a whole list or absence. */
+interface StoredBoundary {
+  /** The curated page the site serves. */
+  readonly page: string;
+  /** The prop as the page's table names it. */
+  readonly prop: string;
+  /** The module that owns the reader. */
+  readonly source: string;
+  /** The reader function's name. */
+  readonly reader: string;
+  /** The branch the reader answers when the stored value is not the shape. */
+  readonly fallback: string;
+  /** The clause the served page's row must carry beside the prop. */
+  readonly clause: string;
+}
+
+/**
+ * The pickers read a stored palette, token list or selection through a reader
+ * that answers a list or an absence, so the page's row has to say what that
+ * absence paints. `optionsOf` and `tokensOf` drop every entry that is not the
+ * right shape and answer `[]`; `storedSwatches`, `storedDraft` and
+ * `selectionOf` answer `Option.none()`, which the caller turns into the theme's
+ * defaults, the documented colour or an uncontrolled control.
+ */
+const boundaries: ReadonlyArray<StoredBoundary> = [
+  {
+    page: "color-picker.mdx",
+    prop: "value",
+    source: colourHex,
+    reader: "storedDraft",
+    fallback: "Option.none()",
+    clause: "a stored value that is not text means uncontrolled",
+  },
+  {
+    page: "color-picker.mdx",
+    prop: "defaultValue",
+    source: colourHex,
+    reader: "storedDraft",
+    fallback: "Option.none()",
+    clause: "a stored default that is not text",
+  },
+  {
+    page: "color-picker.mdx",
+    prop: "swatches",
+    source: colourHex,
+    reader: "storedSwatches",
+    fallback: "Option.none()",
+    clause: "a stored value that is not a list paints the theme's defaults",
+  },
+  {
+    page: "tag-input.mdx",
+    prop: "value",
+    source: tagLogic,
+    reader: "tokensOf",
+    fallback: "[]",
+    clause: "a stored value that is not a list carries no tokens",
+  },
+  {
+    page: "combobox.mdx",
+    prop: "options",
+    source: comboboxLogic,
+    reader: "optionsOf",
+    fallback: "[]",
+    clause: "a stored value that is not a list paints no rows",
+  },
+  {
+    page: "combobox.mdx",
+    prop: "value",
+    source: comboboxLogic,
+    reader: "selectionOf",
+    fallback: "Option.none()",
+    clause: "a stored value that is neither text nor a list means uncontrolled",
+  },
+];
+
+/** The fallback a boundary reader answers with, read out of its own branch. */
+const branchOf = (source: string, reader: string): string | undefined => {
+  const start = new RegExp(`export const ${reader} =`).exec(source);
+  if (start === null) return undefined;
+  // The reader's own declaration only: a sibling's absence is not its answer.
+  const rest = source.slice(start.index + 1);
+  const end = rest.search(/\nexport const /);
+  const body = end === -1 ? rest : rest.slice(0, end);
+  return [...body.matchAll(/:\s*(\[\]|Option\.none\(\))/g)].at(-1)?.[1];
+};
+
 /** The table row that documents a prop, from its name cell. */
 const rowOf = (text: string, prop: string): string | undefined =>
   text
@@ -182,5 +272,63 @@ describe("a value a store kept", () => {
     expect(page).toContain("A `side` restored from storage");
     expect(page).toContain("house `right` edge");
     expect(page).toContain("house `md` box");
+  });
+});
+
+/**
+ * The list a store kept.
+ *
+ * A palette, a token list, a picker's rows and its selection are saved with the
+ * workspace as often as they are literals, so a record's `null` reaches the
+ * component. Each picker reads the saved value at its boundary and answers a
+ * list or an absence; the curated page owns the URL, so the package page that
+ * documents the answer is never served. This case derives each reader's own
+ * fallback branch and holds the served page's row to the clause that says what
+ * it paints.
+ */
+describe("a list a store kept", () => {
+  it("teaches the boundary each picker reads a saved value at", () => {
+    const policy = read("docs/preview-strategy.md");
+    const page = (name: string): string =>
+      read(`apps/docs/content/docs/components/${name}`);
+
+    expect(
+      boundaries.flatMap((boundary) => {
+        const branch = branchOf(read(boundary.source), boundary.reader);
+        const row = rowOf(page(boundary.page), boundary.prop);
+        const gaps: Array<string> = [];
+        if (branch !== boundary.fallback)
+          gaps.push(`the reader answers ${String(branch)}`);
+        if (row === undefined) gaps.push("no row");
+        else if (!row.includes(boundary.clause)) gaps.push(boundary.clause);
+        return gaps.map((gap) => `${boundary.page}: ${boundary.prop} — ${gap}`);
+      }),
+    ).toEqual([]);
+
+    // Six boundaries, six clauses: a page cannot pass by printing one sentence
+    // six times, and the list cannot shrink without the table losing a row.
+    expect(new Set(boundaries.map((boundary) => boundary.clause)).size).toBe(
+      boundaries.length,
+    );
+    expect(policy.replace(/\s+/g, " ")).toContain(
+      "prints the answer a restored value gets",
+    );
+  });
+
+  it("prints the colour a stored default falls back to", () => {
+    // The default a stored `defaultValue` cannot answer with is not prose: the
+    // picker's own constant is the colour, so the page's cell must print it.
+    const colour = /const DEFAULT_COLOUR = "([^"]+)"/.exec(
+      read(colourPicker),
+    )?.[1];
+    expect(colour).not.toBeUndefined();
+    expect(typeof colour).toBe("string");
+
+    const row = rowOf(pageText("color-picker.mdx"), "defaultValue") ?? "";
+    expect(
+      colour === undefined || row.includes(`\`"${colour}"\``)
+        ? []
+        : [`defaultValue — ${colour}`],
+    ).toEqual([]);
   });
 });

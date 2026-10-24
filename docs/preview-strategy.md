@@ -1247,6 +1247,14 @@ The package's own pages are the component's doc file: a page that ships a demo
 mounts it as a labelled browser approximation (strategy 3), a lane with no demo
 shows none (strategy 4).
 
+A prop whose value is saved with a workspace **prints the answer a restored value
+gets** in its own row. A colour, a palette, a token list or a picker's rows and
+selection arrive from storage as often as they are literals, and each component
+reads the saved value at its boundary rather than painting a record's `null`; the
+package page that documents the answer is shadowed by the curated page for these
+components, so `src/lib/stored-value-page.test.ts` derives each reader's own
+fallback branch and holds the served row to the clause that says what it paints.
+
 ### The page's own file
 
 The footer of every page — curated or package — names the Markdown that renders

@@ -45,10 +45,10 @@ ColorPicker
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` | — | the group's accessible name; the field is named `<label> hex value` |
-| `value` | `string` | `undefined` | the controlled value; `undefined` means uncontrolled |
-| `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour |
+| `value` | `string` | — | the controlled value; `undefined` is uncontrolled, and a stored value that is not text means uncontrolled |
+| `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour; a stored default that is not text paints it |
 | `onValueChange` | `(value: string) => void` | — | a swatch press, or a typed value that normalises |
-| `swatches` | `ReadonlyArray<string>` | six theme roles | the grid, in order; replaces the defaults whole |
+| `swatches` | `ReadonlyArray<string>` | six theme roles | the grid, in order; replaces the defaults whole, and a stored value that is not a list paints the theme's defaults |
 | `disabled` | `boolean` | `false` | swatches leave the tab order, the field is read-only, the root fades |
 | `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
 | `style` | `StateStyle<ColorPickerState>` | — | resolved against `{ disabled, valid }`, merged last |

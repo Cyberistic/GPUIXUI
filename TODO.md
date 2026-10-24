@@ -13476,7 +13476,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 396/396
+`[x]` `[██████████]` 397/397
+
+`[x]` Teach the **three picker boundaries a save can hand back** — the
+      components workstream read a saved colour and palette, a saved token list
+      and a saved picker's rows and selection at the boundary and wrote each on
+      the **package** page, and the curated page owns the same URL for all three,
+      so the served page printed the union and never the answer a record's `null`
+      gets. The `value`/`defaultValue`/`swatches` rows on
+      `/docs/components/color-picker`, `value` on `tag-input` and
+      `options`/`value` on `combobox` now carry the clause each reader answers
+      with (`color/hex.ts`'s `storedDraft` and `storedSwatches`,
+      `tag-input/logic.ts`'s `tokensOf`, `combobox/logic.ts`'s `optionsOf` and
+      `selectionOf`). `stored-value-page.test.ts` gains **a list a store kept**
+      (2 cases): the first derives each reader's own fallback branch from its
+      declaration, holds the served page's row to the clause that says what it
+      paints, refuses two boundaries printing one sentence, and requires the
+      policy's new rule; the second derives `DEFAULT_COLOUR` from
+      `color-picker.tsx` and requires the page's `defaultValue` row to print it.
+      Directions measured: before the pages the case named all six rows (and
+      `combobox.mdx: options — the reader answers Option.none()` while the
+      derivation window still read a sibling's branch, which is the source-side
+      direction), deleting `tag-input.mdx`'s clause fails
+      `tag-input.mdx: value — a stored value that is not a list carries no
+      tokens`, and printing `"#111111"` as the stored default fails
+      `defaultValue — #000000`. Green: the file is 5/5 and
+      `component-page`/`link-integrity`/`curated-twins` pass with it (34/34).
+      `docs/preview-strategy.md` §The component page template states the rule.
+      No native scenario applies — three pages and the readers they teach.
 
 `[x]` Collapse **every drawn journey** for a reader who asks for less motion —
       the library collapses its motion under `prefers-reduced-motion`, and the

@@ -78,8 +78,8 @@ Combobox
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
-| `options` | `ReadonlyArray<ComboboxOption>` — `{ value, label, description?, disabled? }` | required |
-| `value` | `string \| ReadonlyArray<string>` — controlled | — |
+| `options` | `ReadonlyArray<ComboboxOption>` — `{ value, label, description?, disabled? }` | required; a stored value that is not a list paints no rows |
+| `value` | `string \| ReadonlyArray<string>` — controlled | uncontrolled; a stored value that is neither text nor a list means uncontrolled |
 | `defaultValue` | `string \| ReadonlyArray<string>` — initial selection when uncontrolled | — |
 | `onValueChange` | `(value: string \| null \| ReadonlyArray<string>) => void` | — |
 | `multiple` | `boolean` | `false` |
