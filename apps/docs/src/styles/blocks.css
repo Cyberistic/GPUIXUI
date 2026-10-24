@@ -2367,6 +2367,28 @@
   gap: 10px;
 }
 
+/* The drag surface: the card lifts, the column it would land in tints, and the
+   line is the exact slot the drop names. */
+.gx-kan-drag {
+  cursor: grab;
+}
+
+.gx-kan-drag[data-dragging="true"] {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+.gx-kan-stack[data-drop="true"] {
+  background: var(--accent);
+  border-radius: calc(var(--radius) + 2px);
+}
+
+.gx-kan-drop-line {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
 .gx-kan-card {
   display: flex;
   flex-direction: column;

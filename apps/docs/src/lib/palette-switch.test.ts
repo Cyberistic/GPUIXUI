@@ -6,9 +6,7 @@ import { describe, expect, it } from "vitest";
 import { PlatformSwitch } from "../components/docs/platform-toggle";
 import { resolvePlatformTheme } from "./platform";
 import {
-  earlyPress,
   expectedBackground,
-  parseEarlyPress,
   parseSurface,
   platformOf,
 } from "../../scripts/palette-switch-probe";
@@ -86,11 +84,6 @@ describe("the switch's press path", () => {
     const end = probe.indexOf("const press = ");
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    // The handler is not enough any more: the switch is disabled until the
-    // content mounts, so a read that ignored the gate would press a button
-    // that refuses the click and report that the press did nothing. The gate
-    // is part of the shared selection, which skips a disabled copy.
-    expect(probe.slice(start, end)).toContain("node.disabled");
     expect(readyAt).toBeGreaterThan(-1);
     expect(pressAt).toBeGreaterThan(readyAt);
   });
@@ -132,39 +125,11 @@ describe("the switch's press path", () => {
   });
 });
 
-describe("the switch's gate", () => {
-  const switchMarkup = (contentReady: boolean): string =>
-    renderToStaticMarkup(
-      createElement(PlatformSwitch, {
-        contentReady,
-        mode: "dark",
-        platform: "darwin",
-        theme: resolvePlatformTheme("darwin", "dark"),
-        setMode: () => undefined,
-        setPlatform: () => undefined,
-      }),
-    );
-
-  it("refuses every choice until the content it repaints has mounted", () => {
-    // Bug guarded: the sidebar hydrates before the page's previews, so a press
-    // in that window moved the group and the URL while every surface kept the
-    // server's palette and no later render recovered it. The buttons are the
-    // only thing a reader can click, so they carry the gate.
-    const closed = switchMarkup(false);
-    const ready = switchMarkup(true);
-
-    expect(closed.match(/disabled=""/g) ?? []).toHaveLength(6);
-    expect(ready.match(/disabled=""/g) ?? []).toEqual([]);
-    // The switch is still readable while it waits — a hidden control would be
-    // a different answer.
-    expect(closed).toContain("Platform style");
-    expect(closed).toContain("Preview palette");
-  });
-
+describe("the switch's mount marker", () => {
   it("reports from inside the content boundary, after the page", () => {
-    // The marker is what turns the gate off: it has to sit in the same
-    // `Suspense` boundary as the page and after it, so its effect cannot run
-    // while the previews are still suspended.
+    // The marker still sits in the same `Suspense` boundary as the page and
+    // after it, so its effect runs once there is a preview to repaint — the
+    // state bump is what re-resolves every surface, not a disabled button.
     const view = read("apps/docs/src/lib/docs-view.tsx");
     const start = view.indexOf("<Suspense>");
     const end = view.indexOf("</Suspense>");
@@ -175,46 +140,21 @@ describe("the switch's gate", () => {
     expect(marker).toBeGreaterThan(boundary.indexOf("<SiteContent"));
     expect(marker).toBeGreaterThan(boundary.indexOf("<PackageContent"));
   });
-});
 
-describe("the early press", () => {
-  it("reads the gate, both choices and the address bar", () => {
-    expect(
-      parseEarlyPress("closed|Dark|Dark|?platform=darwin&mode=dark"),
-    ).toEqual({
-      gate: "closed",
-      before: "Dark",
-      after: "Dark",
-      search: "?platform=darwin&mode=dark",
-    });
-    expect(parseEarlyPress("open|Dark|Light|?mode=light")?.after).toBe("Light");
-  });
-
-  it("refuses an unreadable gate instead of guessing one", () => {
-    // A readout that dropped the gate would let a press that moved the group
-    // pass as a refusal, which is the failure the probe exists to catch.
-    expect(parseEarlyPress("Dark|Dark|")).toBeUndefined();
-    expect(parseEarlyPress("shut|Dark|Dark|")).toBeUndefined();
-  });
-
-  it("presses before it waits for React's handler", () => {
-    // The press being measured is the one a reader makes on the styled switch
-    // before hydration, so it must not be gated behind the handler the probe
-    // later waits for.
-    expect(earlyPress()).toContain("button.disabled");
-    expect(probe.indexOf("earlyPress()")).toBeGreaterThan(-1);
-    expect(probe.indexOf("earlyPress()")).toBeLessThan(
-      probe.indexOf('ready("Light")'),
+  it("answers every press, at any point after the switch paints", () => {
+    const markup = renderToStaticMarkup(
+      createElement(PlatformSwitch, {
+        mode: "dark",
+        platform: "darwin",
+        theme: resolvePlatformTheme("darwin", "dark"),
+        setMode: () => undefined,
+        setPlatform: () => undefined,
+      }),
     );
-    expect(probe).toContain('early.gate === "closed"');
-  });
 
-  it("judges the press on the choice and the URL it left", () => {
-    // A disabled press that still wrote `mode=light` would be lost, not
-    // refused; the probe holds both consequences.
-    expect(probe).toContain("refused.before");
-    expect(probe).toContain("refused.after");
-    expect(probe).toContain('refused.search.includes("mode=light")');
+    expect(markup.match(/disabled=""/g) ?? []).toEqual([]);
+    expect(markup).toContain("Platform style");
+    expect(markup).toContain("Preview palette");
   });
 });
 
@@ -227,14 +167,6 @@ describe("the policy", () => {
     // the probe is not vacuous.
     expect(policy).toContain("3 of 3 surfaces painted");
     expect(policy).toContain("a preview opened in light, not dark");
-  });
-
-  it("records the closed switch and the early press that proves it", () => {
-    // A policy that only says the probe waits for the surface would leave the
-    // gate a reader experiences unrecorded.
-    expect(policy).toContain("closed until");
-    expect(policy).toContain("early: the disabled switch refused the press");
-    expect(policy).toContain("ContentMounted");
   });
 
   it("names the probe in the site's ledger", () => {

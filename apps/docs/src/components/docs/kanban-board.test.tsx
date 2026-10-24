@@ -7,6 +7,7 @@ import {
   initialKanbanCards,
   kanbanColumns,
   moveCard,
+  moveCardTo,
 } from "./kanban-board";
 
 /**
@@ -20,6 +21,51 @@ import {
  */
 
 const markup = renderToStaticMarkup(<KanbanRender />);
+
+describe("dragging a card", () => {
+  it("paints each card as a drag source and each column as a drop target", () => {
+    expect(markup).toContain('draggable="true"');
+    expect(markup).toContain('data-card-id="design-system"');
+  });
+
+  it("lands the card at the index the drop names", () => {
+    const moved = moveCardTo(initialKanbanCards, "design-system", "done", 0);
+    const done = moved.filter((card) => card.column === "done");
+
+    expect(done[0]?.id).toBe("design-system");
+    // Every other card keeps its column and its fields.
+    expect(moved.filter((card) => card.column === "todo").length).toBe(
+      initialKanbanCards.filter((card) => card.column === "todo").length - 1,
+    );
+  });
+
+  it("reorders inside one column", () => {
+    const progress = initialKanbanCards.filter(
+      (card) => card.column === "progress",
+    );
+    const last = progress[progress.length - 1];
+    // A last card moved to the front is the first thing the column paints.
+    const moved = moveCardTo(initialKanbanCards, last?.id ?? "", "progress", 0);
+
+    expect(moved.filter((card) => card.column === "progress")[0]?.id).toBe(
+      last?.id,
+    );
+  });
+
+  it("appends past the end of the column", () => {
+    const moved = moveCardTo(initialKanbanCards, "design-system", "review", 99);
+
+    expect(moved.filter((card) => card.column === "review").at(-1)?.id).toBe(
+      "design-system",
+    );
+  });
+
+  it("ignores an id the list no longer holds", () => {
+    expect(moveCardTo(initialKanbanCards, "removed", "done", 0)).toBe(
+      initialKanbanCards,
+    );
+  });
+});
 
 describe("kanban board block markup", () => {
   it("prints the app sidebar, its groups and the user row", () => {

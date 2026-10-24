@@ -197,7 +197,6 @@ function ChoiceGroup<T extends string>({
   label,
   choices,
   selected,
-  disabled,
   onSelect,
 }: {
   readonly label: string;
@@ -206,8 +205,6 @@ function ChoiceGroup<T extends string>({
     readonly label: string;
   }>;
   readonly selected: T;
-  /** Refuse a choice while the content it repaints has not mounted. */
-  readonly disabled: boolean;
   readonly onSelect: (value: T) => void;
 }) {
   return (
@@ -216,7 +213,6 @@ function ChoiceGroup<T extends string>({
         <button
           aria-pressed={selected === choice.value}
           className="gx-platform-option"
-          disabled={disabled}
           key={choice.value}
           onClick={() => onSelect(choice.value)}
           type="button"
@@ -230,7 +226,6 @@ function ChoiceGroup<T extends string>({
 
 /** The switch's markup, given the state it reads — so the gate is testable. */
 export function PlatformSwitch({
-  contentReady,
   mode,
   platform,
   theme,
@@ -238,7 +233,7 @@ export function PlatformSwitch({
   setPlatform,
 }: Pick<
   PlatformState,
-  "contentReady" | "mode" | "platform" | "theme" | "setMode" | "setPlatform"
+  "mode" | "platform" | "theme" | "setMode" | "setPlatform"
 >) {
   return (
     <div className="gx-platform not-prose">
@@ -248,7 +243,6 @@ export function PlatformSwitch({
           value: option,
           label: platformLabel(option),
         }))}
-        disabled={!contentReady}
         label="Platform style"
         onSelect={setPlatform}
         selected={platform}
@@ -259,7 +253,6 @@ export function PlatformSwitch({
           value: option,
           label: modeLabel(option),
         }))}
-        disabled={!contentReady}
         label="Preview palette"
         onSelect={setMode}
         selected={mode}

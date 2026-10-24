@@ -1,14 +1,14 @@
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { RailToggle, useRailCollapse } from "./sidebar-rail";
 
 /**
  * Kanban board block — a project task board with an app sidebar and four
  * columns.
  *
- * The reproduction owns the state a reader can watch: the `…` menu moves a card
- * to another column and the column counts follow, while `+` appends a
- * placeholder card. Dragging is out of scope — the browser shim has no pointer
- * capture — so the menu is the move affordance.
+ * The reproduction owns the state a reader can watch: a card drags between
+ * columns at the position the pointer names, the `…` menu moves it without a
+ * pointer, and `+` appends a placeholder card. The counts follow the same
+ * array, so a move cannot leave one stale.
  *
  * There is no kanban component in the library; this is a recipe built from
  * `Card`, `Badge`, `Avatar`, `SearchInput`, `Tabs`, `Button`, `Stack`, `Text`
@@ -157,6 +157,46 @@ export const moveCard = (
   column: KanbanColumnId,
 ): ReadonlyArray<KanbanCard> =>
   cards.map((card) => (card.id === id ? { ...card, column } : card));
+
+/**
+ * The same cards with one card placed at `index` in `column`.
+ *
+ * A drag names a position, not only a column, so the board's order is the
+ * array's: the card lands before the card currently at that index, or after the
+ * column's last card when the index is past the end. A card the list does not
+ * hold is a no-op, so a stale drag payload cannot drop a card that was removed
+ * mid-gesture.
+ */
+export const moveCardTo = (
+  cards: ReadonlyArray<KanbanCard>,
+  id: string,
+  column: KanbanColumnId,
+  index: number,
+): ReadonlyArray<KanbanCard> => {
+  const moving = cards.find((card) => card.id === id);
+  if (moving === undefined) return cards;
+  const others = cards.filter((card) => card.id !== id);
+  const inColumn = others.filter((card) => card.column === column);
+  const next = { ...moving, column };
+  const anchor = inColumn[Math.max(0, Math.min(index, inColumn.length))];
+  if (anchor === undefined) {
+    const last = inColumn[inColumn.length - 1];
+    if (last === undefined) return [...others, next];
+    const at = others.indexOf(last);
+    return [...others.slice(0, at + 1), next, ...others.slice(at + 1)];
+  }
+  const at = others.indexOf(anchor);
+  return [...others.slice(0, at), next, ...others.slice(at)];
+};
+
+/** Where a drop at `clientY` lands among the cards a stack paints. */
+const dropIndex = (stack: HTMLElement, clientY: number): number => {
+  const cards = [...stack.querySelectorAll<HTMLElement>("[data-card-id]")];
+  return cards.filter((card) => {
+    const box = card.getBoundingClientRect();
+    return clientY > box.top + box.height / 2;
+  }).length;
+};
 
 /** A card's next unused placeholder number, so `+` never repeats an id. */
 const nextCardNumber = (cards: ReadonlyArray<KanbanCard>): number =>
@@ -407,6 +447,11 @@ export const KanbanRender = () => {
   const [cards, setCards] =
     useState<ReadonlyArray<KanbanCard>>(initialKanbanCards);
   const [menu, setMenu] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [hover, setHover] = useState<{
+    readonly column: KanbanColumnId;
+    readonly index: number;
+  } | null>(null);
   const rail = useRailCollapse();
   const counts = countCards(cards);
 
@@ -543,22 +588,83 @@ export const KanbanRender = () => {
                   <Glyph size={13}>{ICON.plus}</Glyph>
                 </button>
               </header>
-              <div className="gx-kan-stack">
+              <div
+                className="gx-kan-stack"
+                data-drop={hover?.column === column.id}
+                onDragLeave={(event) => {
+                  if (
+                    !event.currentTarget.contains(
+                      event.relatedTarget as Node | null,
+                    )
+                  ) {
+                    setHover(null);
+                  }
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  setHover({
+                    column: column.id,
+                    index: dropIndex(event.currentTarget, event.clientY),
+                  });
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const id =
+                    event.dataTransfer.getData("text/plain") || dragging;
+                  if (id !== null) {
+                    const index =
+                      hover?.column === column.id
+                        ? hover.index
+                        : Number.MAX_SAFE_INTEGER;
+                    setCards((current) =>
+                      moveCardTo(current, id, column.id, index),
+                    );
+                  }
+                  setDragging(null);
+                  setHover(null);
+                }}
+              >
                 {cards
                   .filter((card) => card.column === column.id)
-                  .map((card) => (
-                    <KanbanCardView
-                      card={card}
-                      key={card.id}
-                      menuOpen={menu === card.id}
-                      onMenu={() =>
-                        setMenu((current) =>
-                          current === card.id ? null : card.id,
-                        )
-                      }
-                      onMove={(target) => move(card.id, target)}
-                    />
+                  .map((card, index) => (
+                    <Fragment key={card.id}>
+                      {hover?.column === column.id && hover.index === index ? (
+                        <div aria-hidden="true" className="gx-kan-drop-line" />
+                      ) : null}
+                      <div
+                        className="gx-kan-drag"
+                        data-card-id={card.id}
+                        data-dragging={dragging === card.id}
+                        draggable
+                        onDragEnd={() => {
+                          setDragging(null);
+                          setHover(null);
+                        }}
+                        onDragStart={(event) => {
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData("text/plain", card.id);
+                          setDragging(card.id);
+                        }}
+                      >
+                        <KanbanCardView
+                          card={card}
+                          menuOpen={menu === card.id}
+                          onMenu={() =>
+                            setMenu((current) =>
+                              current === card.id ? null : card.id,
+                            )
+                          }
+                          onMove={(target) => move(card.id, target)}
+                        />
+                      </div>
+                    </Fragment>
                   ))}
+                {hover?.column === column.id &&
+                hover.index >=
+                  cards.filter((card) => card.column === column.id).length ? (
+                  <div aria-hidden="true" className="gx-kan-drop-line" />
+                ) : null}
               </div>
             </section>
           ))}

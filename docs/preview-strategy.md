@@ -403,23 +403,15 @@ waited for. Measured 2026-10-24 against `vite preview` on this box:
 `light: 3 of 3 surfaces painted #F2F2F7` (the macOS page), exit `0`.
 
 Waiting is not a fix a reader benefits from, though: the switch is painted and
-styled long before the previews hydrate. So the switch itself is **closed until
-the content it repaints reports itself** — `PlatformSwitch` disables both
-groups while `PlatformProvider`'s `contentReady` is false, and the
-`ContentMounted` marker inside `DocsView`'s `<Suspense>`, after the page
-content, is what opens them. The probe presses **Light** at the first instant
-the button exists and requires the press to be refused: the group still reads
-`Dark`, the address bar carries no `mode=light`, and the surfaces stay on the
-dark page. It prints `early: the disabled switch refused the press`; a press
-that moved the group while the previews kept the server's palette is the bug,
-and the same session then proves the enabled press works. A preview build can
-hydrate before the probe's first read, so the probe reopens the document (eight
-attempts, address reset each time) until it observes the closed gate; a run
-that never observes it fails rather than passing on the wrong page. The
-measured press also waits for the gate to **open**: the content can carry React's
-props a beat before the marker's effect runs, and a probe that pressed then
-clicked a still-disabled button and read `pressing Light left no surface in
-light mode` against a working switch — measured against `vite preview`.
+styled long before the previews hydrate, so it answers **every** press. The
+`ContentMounted` marker inside `DocsView`'s `<Suspense>`, after the page content,
+reports the mount and bumps the provider's state once the previews exist, which
+re-resolves every surface against the choice the reader already made — so an
+early press lands as soon as there is something to repaint instead of being
+swallowed by a disabled button. A press that moved the group while the previews
+kept the server's palette is the bug the bump fixes, and
+`src/lib/palette-switch.test.ts` holds the marker's position and that no choice
+is disabled.
 
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the
