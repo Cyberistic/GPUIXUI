@@ -252,6 +252,24 @@ describe("the tree", () => {
     ).toBe("not (name contains main)");
   });
 
+  it("names a clause that names no field, instead of opening on its comparison", () => {
+    // A clause's field is stored data: a saved query can carry a blank one (a
+    // builder saved before a field was picked), and a builder with no field to
+    // offer appends exactly that. The sentence opened on the comparison
+    // (`" equals "`), so a reader could not tell which part was missing.
+    expect(describeTree(clause("", "equals", "tracked"))).toBe(
+      "Field equals tracked",
+    );
+    expect(describeTree(clause("   ", "equals", ""))).toBe("Field equals");
+    expect(
+      describeTree({ kind: "all", children: [clause("", "equals", "")] }),
+    ).toBe("all of (Field equals)");
+    // A clause that does name its field is unchanged.
+    expect(describeTree(clause("status", "equals", "tracked"))).toBe(
+      "status equals tracked",
+    );
+  });
+
   it("reads an empty any group as nothing, because that is what it keeps", () => {
     const emptyAny: FilterTree = { kind: "any", children: [] };
 

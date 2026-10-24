@@ -33,8 +33,13 @@ import {
   type DataTestRoot,
 } from "../internal/test-root.js";
 import { AdvancedFilter } from "../surfaces/advanced-filter.js";
+import type { AdvancedFilterField } from "../surfaces/advanced-filter.js";
 import { DEFAULT_LABEL_WIDTH, KeyValue } from "../surfaces/key-value.js";
-import { UNREADABLE_TREE, type FilterTree } from "../surfaces/logic.js";
+import {
+  emptyTree,
+  UNREADABLE_TREE,
+  type FilterTree,
+} from "../surfaces/logic.js";
 import { DataToolbar } from "../surfaces/toolbar.js";
 
 let root: DataTestRoot | undefined;
@@ -70,6 +75,30 @@ const NestedBuilder = ({ tree: initial }: { readonly tree: FilterTree }) => {
       tree={tree}
       onChange={setTree}
       testId="nested"
+    />
+  );
+};
+
+/**
+ * A builder over the field list the caller hands it.
+ *
+ * `fields` is stored data — a saved record can carry `null`, or a hole where a
+ * field belongs — so the Add controls a builder offers depend on it.
+ */
+const GatedBuilder = ({
+  fields,
+  tree: initial = emptyTree,
+}: {
+  readonly fields: ReadonlyArray<AdvancedFilterField>;
+  readonly tree?: FilterTree;
+}) => {
+  const [tree, setTree] = useState<FilterTree>(initial);
+  return (
+    <AdvancedFilter
+      fields={fields}
+      tree={tree}
+      onChange={setTree}
+      testId="gated"
     />
   );
 };
@@ -296,6 +325,66 @@ describe("the data surfaces", () => {
     expect(paintedText(root)).toContain(
       "any of (name contains alpha, status equals",
     );
+  });
+
+  it("offers no Add while the builder has no field to name", () => {
+    // `fields` is stored data: a saved record can carry `null` for the list, and
+    // a store can write a hole where a field belongs. A new clause takes the
+    // **first** offered field, so with none to offer Add appended a clause over
+    // no field — a press that composed a query narrowing nothing, painted as a
+    // clause whose picker had no name.
+    root = renderData(<GatedBuilder fields={[]} />);
+    settle(root);
+    expect(root.renderer.findByTestId("gated-add")).toBeUndefined();
+    expect(root.renderer.findByTestId("gated-add-group")).toBeUndefined();
+    // Clear stays: an empty builder is still a query a reader can reset.
+    expect(root.renderer.findByTestId("gated-clear")).toBeDefined();
+
+    // A saved list whose one entry this release cannot read offers no field.
+    root.rerender(
+      // @ts-expect-error — a hole a store wrote in a saved field list.
+      <GatedBuilder fields={[{ field: null, label: "Name" }]} />,
+    );
+    settle(root);
+    expect(root.renderer.findByTestId("gated-add")).toBeUndefined();
+    expect(root.renderer.findByTestId("gated-add-group")).toBeUndefined();
+
+    // A saved clause inside a group keeps its row — the reader can edit or
+    // remove it — but the group offers no second clause to name.
+    root.rerender(
+      <GatedBuilder
+        key="nested"
+        fields={[]}
+        tree={{
+          kind: "all",
+          children: [
+            {
+              kind: "any",
+              children: [
+                {
+                  kind: "predicate",
+                  field: "",
+                  comparison: "equals",
+                  value: "",
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    );
+    settle(root);
+    expect(root.renderer.findByTestId("gated-0-0-value")).toBeDefined();
+    expect(root.renderer.findByTestId("gated-0-add")).toBeUndefined();
+    expect(root.renderer.findByTestId("gated-0-add-group")).toBeUndefined();
+
+    // A field to name brings both controls back, the negative control.
+    root.rerender(
+      <GatedBuilder fields={[{ field: "status", label: "Status" }]} />,
+    );
+    settle(root);
+    expect(root.renderer.findByTestId("gated-add")).toBeDefined();
+    expect(root.renderer.findByTestId("gated-add-group")).toBeDefined();
   });
 
   it("composes a group's combinator and its negation from the builder", () => {

@@ -342,6 +342,45 @@ describe("the data surfaces announce what they paint", () => {
     ).toContain("status");
   });
 
+  it("names a clause that names no field, instead of opening on its comparison", () => {
+    // A clause's field is stored data: a saved query can carry a blank one (a
+    // builder saved before a field was picked), and a builder with no field to
+    // offer appends exactly that. The picker used to be a **nameless** button,
+    // the value field read `" value"`, and the sentence opened on the
+    // comparison (`" equals "`), so nothing said which part was missing.
+    const tree = treeOf(
+      <AdvancedFilter
+        fields={[]}
+        tree={{
+          kind: "all",
+          children: [
+            {
+              kind: "predicate",
+              field: "   ",
+              comparison: "equals",
+              value: "",
+            },
+          ],
+        }}
+        onChange={() => {}}
+        testId="blank-field"
+      />,
+    );
+
+    expect(
+      Arr.map(withRole(tree, tree.root, "Button"), (id) => nameOf(tree, id)),
+    ).toEqual(["all of", "Field", "equals", "Remove clause", "Clear"]);
+    expect(
+      Arr.map(withRole(tree, tree.root, "TextInput"), (id) => nameOf(tree, id)),
+    ).toEqual(["Field value"]);
+    expect(
+      Arr.map(
+        withRole(tree, tree.root, "Label"),
+        (id) => tree.nodes[id]?.aria.value,
+      ),
+    ).toEqual(["all of (Field equals)"]);
+  });
+
   it("reads a blank property row's label as the key it is stored by", () => {
     // Bug guarded: a property row's label is content — a saved object answers
     // `""` for a row whose name key is missing — and the panel paints it in the

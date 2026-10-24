@@ -54,6 +54,7 @@ import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import {
   appendAt,
+  clauseFieldName,
   comparisons,
   describeTree,
   emptyTree,
@@ -146,7 +147,8 @@ export const groupLabels: Readonly<Record<"all" | "any" | "not", string>> = {
  *
  * A blank label is absence: a locale table with a missing row answers `""`,
  * which would leave the picker's trigger unnamed and the value field named
- * `" value"` — so the field's own name is the words.
+ * `" value"` — so the field's own name is the words, and a clause that names no
+ * field at all reads {@link clauseFieldName}'s word instead of nothing.
  */
 const labelOf = (
   fields: ReadonlyArray<AdvancedFilterField>,
@@ -154,9 +156,12 @@ const labelOf = (
 ): string =>
   Arr.findFirst(fields, (candidate) => candidate.field === field).pipe(
     Option.map((candidate) =>
-      spokenText(Option.fromNullishOr(candidate.label), candidate.field),
+      spokenText(
+        Option.fromNullishOr(candidate.label),
+        clauseFieldName(candidate.field),
+      ),
     ),
-    Option.getOrElse(() => field),
+    Option.getOrElse(() => clauseFieldName(field)),
   );
 
 /** A clause's or group's path as a locator segment: a root node is `0`. */
@@ -415,6 +420,7 @@ const Tree = ({
   onAddGroup,
   testId,
   removable,
+  canAdd,
 }: {
   /** The whole tree: an edit is written back into it by path. */
   readonly root: FilterTree;
@@ -430,6 +436,14 @@ const Tree = ({
   readonly testId: string | undefined;
   /** Whether the node sits in a group that can drop it. */
   readonly removable: boolean;
+  /**
+   * Whether the builder has a field a new clause could name.
+   *
+   * Add appends a clause over the first offered field, so with none to offer
+   * the clause would name no field and narrow nothing. The control is withheld
+   * rather than painting a press that cannot compose a query.
+   */
+  readonly canAdd: boolean;
 }) => {
   if (node.kind === "predicate") {
     return (
@@ -466,6 +480,7 @@ const Tree = ({
           onAddGroup={onAddGroup}
           testId={testId}
           removable={false}
+          canAdd={canAdd}
         />
       </Group>
     );
@@ -479,7 +494,7 @@ const Tree = ({
       testId={testId}
       onChange={onChange}
       onRemove={removable ? () => onChange(removeAt(root, path)) : undefined}
-      onAdd={path.length === 0 ? undefined : () => onAddGroup(path)}
+      onAdd={path.length === 0 || !canAdd ? undefined : () => onAddGroup(path)}
     >
       {Arr.map(node.children, (child, at) => (
         <Tree
@@ -493,9 +508,10 @@ const Tree = ({
           onAddGroup={onAddGroup}
           testId={testId}
           removable
+          canAdd={canAdd}
         />
       ))}
-      {path.length === 0 ? undefined : (
+      {path.length === 0 || !canAdd ? undefined : (
         <Button
           variant="ghost"
           size="sm"
@@ -534,6 +550,14 @@ const Tree = ({
  * rule: every `all`/`any` group that sits in a group paints its own Add
  * controls, so a nested `any` can be extended or given a group in place —
  * including one a `not` negates — while the root's Add sits below the tree.
+ *
+ * **Add is offered only while there is a field to name.** A new clause takes
+ * the first offered field, so a builder whose `fields` list arrived empty (a
+ * saved record that carried `null`, a list whose entries this release cannot
+ * read) would append a clause over no field — a press that composes a query
+ * narrowing nothing. The Add controls are withheld until a field is offered;
+ * Clear stays, and a saved clause that names no field still paints its row
+ * (under `clauseFieldName`'s word) so the reader can edit it.
  */
 export const AdvancedFilter = ({
   fields,
@@ -610,11 +634,12 @@ export const AdvancedFilter = ({
             onAddGroup={addGroup}
             testId={testId}
             removable={false}
+            canAdd={offered.length > 0}
           />
         ),
       })}
       <div style={recipeStyle("flex flex-row items-center gap-2", theme)}>
-        {Option.isSome(shown) ? (
+        {Option.isSome(shown) && offered.length > 0 ? (
           <>
             <Button
               variant="secondary"

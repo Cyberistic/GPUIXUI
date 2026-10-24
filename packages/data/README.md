@@ -637,7 +637,12 @@ absence the prop already means — no trend, no field, no rows — so the rest o
 the surface (the title, the toolbar's own controls, the card's reading) still
 paints instead of being taken down by one dereference
 (`src/behaviour/surface-boundary.test.tsx`). A builder's `fields` is read the
-same way: a list, or no field list at all.
+same way: a list, or no field list at all. **Add is offered only while there is
+a field to name** — a new clause takes the first offered field, so a saved list
+that arrived empty (or whose one entry this release cannot read) would append a
+clause over no field: a press that composes a query narrowing nothing. Clear
+stays, and a saved clause that names no field still paints its row so the reader
+can edit or remove it (`src/behaviour/surfaces.test.tsx`).
 
 ```tsx
 import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "@gpuixui/data";
@@ -667,7 +672,11 @@ read `Filter rows` and `Search`, the builder's title reads `Filters` and its
 field picker reads the field's own name, the column menu and its surface read
 `Columns`, the select-all box reads `Select every row` and a row's box reads
 `Select this row`, and a property
-panel's blank title paints no heading rather than an unnamed one. A property
+panel's blank title paints no heading rather than an unnamed one. A clause's
+field is content too: a clause that names no field — the shape a saved query can
+carry — reads `Field` (`clauseFieldName`) in the picker's trigger, the value
+field's name and the sentence, so it never publishes a nameless picker, a value
+field named `" value"` or a sentence that opens on its comparison. A property
 row's label is content too: a blank one reads as the row's key (`propertyName`,
 the one reading the label column and an editable row's field name share), so a
 saved object cannot leave its editor unnamed. A column's label is the same kind

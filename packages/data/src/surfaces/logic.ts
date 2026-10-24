@@ -56,6 +56,28 @@ import * as Str from "effect/String";
 export const propertyName = (label: string, key: string): string =>
   spokenText(Option.fromNullishOr(label), key);
 
+/**
+ * The words a clause's field is read by when it names none.
+ *
+ * A clause's field is stored data: a saved query can carry a blank one (a
+ * builder saved before a field was picked, a migration that lost the name), and
+ * a builder whose `fields` list offers nothing appends a clause with no field
+ * at all. Such a clause painted a **nameless** field picker, a value field
+ * named `" value"`, and a sentence that opened on its comparison
+ * (`" equals "`), so neither the paint nor the words said which part was
+ * missing. A blank field reads as this word instead.
+ */
+export const UNNAMED_CLAUSE_FIELD = "Field";
+
+/**
+ * The name a clause's field paints and announces: a blank field names none.
+ *
+ * A field's own name is the words a reader is shown when its label arrived
+ * blank; a blank field is the one case with no name to show.
+ */
+export const clauseFieldName = (field: string): string =>
+  spokenText(Option.fromNullishOr(field), UNNAMED_CLAUSE_FIELD);
+
 /** How a field's value is compared with a clause's value. */
 export const comparisons = [
   "equals",
@@ -306,9 +328,13 @@ export const clauseCount = (tree: FilterTree): number =>
 /** The sentence a tree the schema accepted reads as. */
 const describeReadable = (tree: FilterTree): string =>
   Match.value(tree).pipe(
-    Match.when(
-      isPredicate,
-      (clause) => `${clause.field} ${clause.comparison} ${clause.value}`,
+    Match.when(isPredicate, (clause) =>
+      // A clause that names no field still says which part is missing, and a
+      // value the reader has not typed yet leaves no trailing space in the
+      // sentence (`clauseFieldName`).
+      Str.trim(
+        `${clauseFieldName(clause.field)} ${clause.comparison} ${clause.value}`,
+      ),
     ),
     Match.when(isAll, (group) =>
       group.children.length === 0

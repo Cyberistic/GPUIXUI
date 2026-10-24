@@ -39,7 +39,7 @@ The tree's own readers are exported beside the builder:
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name, and a value that is not a list offers no field |
+| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name, a value that is not a list offers no field, and a list that offers none paints no Add control |
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
 | `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
@@ -75,11 +75,23 @@ that sentence with Clear, so a reader can recover from a query whose clauses it
 cannot edit. A `null`/`undefined` query is no filter at all — `useTable` and the
 builder read it as the empty tree.
 
+A tree the schema **can** read may still name no field: a query saved before its
+field was picked carries a blank `field`, which the tree's schema accepts. The
+builder does not refuse it — there is a clause to edit — it reads the missing
+name as `Field`, so the row is named and its sentence says which part is absent.
+
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.
 - `fields` is read as data: a saved record that carried `null` for the
   list offers no field, so a clause falls back to the field's own name.
+- **Add is offered only while there is a field to name.** A new clause takes the
+  first offered field, so a builder with none to offer paints no Add clause and
+  no Add group — the press would append a clause over no field, a query that
+  narrows nothing. Clear stays.
+- A clause that names no field — the shape a saved query can carry — reads
+  `Field` in its clause row and its sentence, so it is never a nameless picker
+  and its sentence never opens on its comparison.
 - A `not` holds exactly one child and paints no Add of its own.
 - A clause carries Remove only where removing it changes the tree.
 - A tree the release cannot read is refused with Clear; it is not migrated into
