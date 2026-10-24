@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-133 probes a real window can prove, of which twenty-nine mount shipped
+134 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7592,6 +7592,79 @@ the people a query selects, the id set, the row crop, the check count, the
 registry and this section). Evidence:
 `.artifacts/live/mention-{open,second,filtered,dismiss}.png`.
 
+### `radio-group-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/primitives` `RadioGroup` in five configurations: one
+driven by presses, one only by the window's traversal and keys, one with a
+disabled option, one disabled whole, and one controlled by an owner that
+**declines** every choice. The package's suites read `aria-valuetext` and the
+resolved `StyleDesc`; the disc's ink, the ring's width and the roving base are a
+window's to measure.
+
+**A row has no address of its own.** `RadioGroup` forwards its `testId` to the
+group wrapper and gives the rows none, so a probe cannot name an option; and the
+automation protocol's text locator is a contains match, which finds both a row
+and the text it paints. The probe therefore lists four of the five groups as
+`RadioGroupItem` children and names the text each row paints
+(`radio-row-<group>-<value>`), while the keys group stays data-driven so both
+option paths are mounted. The missing per-row address is recorded in `TODO.md`
+for the primitives workstream.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | both the pointer and the keys group read `value= reports=0` and paint **0** `primary` pixels |
+| a press on `Aardvark` | `value=a1 reports=1`; the chosen row paints **540** `primary` pixels in a **32x32** device box — the 16-point disc — and the keys group paints **0** |
+| `Tab` from the button above | the keys group's one stop takes the window's focus and paints the ring: **4576** `primary` pixels in a **516x64** box, wider than the selection disc |
+| `Down` | `value=b2 reports=1` — the traversal reached the group and the arrow chose the next row |
+| `g` | `value=g3 reports=2` — the typed prefix chooses the row it names |
+| `Home`, `End` | `value=a1 reports=3`, then `value=d4 reports=4` |
+| `Down` at the last row | **wraps**: `value=a1 reports=5` |
+| `Space` | the chosen row is chosen again and reports nothing: `reports=5` |
+| `Tab` | the window's focus is `radio-after`, so the whole group is **one** stop |
+| a press on `Heron` (disabled) | `reports=0` — the row refuses the press |
+| a press on `Kestrel` (already chosen) | `reports=0` |
+| `Down` | `value=s3 reports=1` — the arrow steps over the disabled option |
+| a press on `Quartz` in the disabled group | `reports=0` |
+| a press on `Pine` (the kept value) | `reports=0`, `value=p1` |
+| `Down`, `Down` | `last=p2 reports=1`, then `last=p3 reports=2` |
+| `Space` | `last=p3 reports=3` — Space chooses the row that holds focus |
+
+Four rules the window settles:
+
+1. **The choice is a disc, the ring is the row.** Both paint the same role (the
+   dark theme's `ring` **is** its `primary`), so a pixel count cannot tell a
+   chosen group from a focused one; the ink's own bounding box can — 32x32 for
+   the disc, 516 wide for the row ring. The ring is an outline drawn outside the
+   row, so a read confined to the group's box sees only its bottom edge; the
+   crop reaches six points out.
+2. **The arrows wrap, and Space acts on the row.** A move is modulo the option
+   count, so `Down` at the last row lands on the first — the probe's first run
+   expected a clamp and failed `expected "value=d4 reports=4", got
+   "value=a1 reports=5"`. Space chooses the row that holds focus on its release
+   and reports nothing when that is already the value.
+3. **The roving base is the focused row.** A controlled group whose owner keeps
+   the value it was given reports `p2` and then `p3`; a base taken from the kept
+   value would report `p2` forever, stalling the reader on the option they left.
+4. **A press paints the group it presses.** The pointer group's disc leaves the
+   keys group at 0, and a pointer press paints no keyboard ring — the ring is a
+   keyboard-only cue.
+
+```sh
+nub apps/playground/dist/live/run.js --only radio-group-lifecycle
+```
+
+39 checks, `--only radio-group-lifecycle`, one window and three captures
+(`radio-rest`, `radio-choice`, `radio-ring`), green on 0.11.0 here (three runs,
+13.2–16.8 s). Fixture `src/live/radio-group.ts` + probe
+`src/live/radio-group-probe.tsx` + `radio-group.test.ts` (the readout parsing,
+the unique labels and row addresses, the disc-versus-ring width rule, both
+option paths, the steps' claims, the count, the registry entry and this
+section). One negative control measured, exit `1`, restored green: declaring the
+keys group `orientation="horizontal"` fails `the keyboard ring is wider than a
+selection disc` (`expected true, got false`) — the sampled row is then a quarter
+of the group's width, so the ring read follows the axis the group declares.
+Evidence: `.artifacts/live/radio-{rest,choice,ring}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7845,8 +7918,8 @@ narrower. Each deviation is deliberate and measured:
   `motion-interruption` and `panel-group-lifecycle` and
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
-  `color-picker-lifecycle` and `mention-input-lifecycle` (75 probes, each run
-  alone).
+  `color-picker-lifecycle` and `mention-input-lifecycle` and
+  `radio-group-lifecycle` (76 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,

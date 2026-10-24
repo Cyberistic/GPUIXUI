@@ -1126,6 +1126,7 @@ import { QrMatrixProbe, qrMatrixSteps } from "./qr-matrix-probe.js";
 import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import { RatingProbe, ratingSteps } from "./rating-probe.js";
+import { RadioGroupProbe, radioGroupSteps } from "./radio-group-probe.js";
 import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
 import { DockLayoutProbe, dockLayoutSteps } from "./dock-layout-probe.js";
 import { PanelGroupProbe, panelGroupSteps } from "./panel-group-probe.js";
@@ -30712,5 +30713,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "mention-input-lifecycle",
     view: () => <MentionInputProbe />,
     steps: mentionInputSteps,
+  },
+  "radio-group-lifecycle": {
+    id: "radio-group-lifecycle",
+    view: () => <RadioGroupProbe />,
+    steps: radioGroupSteps,
   },
 };

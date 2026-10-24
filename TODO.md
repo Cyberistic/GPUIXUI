@@ -3004,7 +3004,49 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 188/188
+`[x]` `[██████████]` 189/189
+
+`[x]` Measure the **radio group's choice and keyboard contract in a window** —
+      `COMPONENTS.md`'s *Radio groups* row claimed "a window measures the second
+      downward step and the `Tab` that leaves the group" while the row's own
+      sentence above it said the opposite ("the radio row's own interaction is
+      the renderer suite, because no live probe mounts a radio group yet"), and
+      the package's suites read `aria-valuetext` and the resolved `StyleDesc`
+      only. The `radio-group-lifecycle` probe (39 checks, 0.11.0) mounts the
+      shipped `RadioGroup` in five groups and measures the paint and the keys:
+      an unchosen group paints **0** `primary` pixels in both crops; a press
+      chooses a row and paints **540** `primary` pixels in a **32x32** device box
+      (the 16-point disc) while the group beside it stays at 0; `Tab` into the
+      keys group paints the row ring as **4576** `primary` pixels in a
+      **516x64** box, so the ring is the row and the disc is the choice (they
+      are the same role — `ring` **is** `primary` — so only width tells them
+      apart); the arrows select and move real focus, type-ahead chooses, `Home`/
+      `End` land on the ends, the arrows **wrap** at the ends (the first run
+      expected a clamp and failed `expected "value=d4 reports=4", got
+      "value=a1 reports=5"`), `Space` on the chosen row reports nothing, one
+      `Tab` leaves the group (`focused()` is `radio-after`), a disabled row
+      refuses the press and the arrow steps over it, a group disabled whole
+      reports nothing, and a controlled group whose owner declines every choice
+      reports `p2` then `p3` — the roving base is the focused row, not the value
+      the owner kept — with `Space` choosing the focused row again. **A shipped
+      row has no address**: the group forwards its `testId` to the wrapper and
+      the protocol's text locator finds both the row and the text it paints, so
+      four groups are listed as `RadioGroupItem` children naming the text each
+      row paints while the keys group stays data-driven; the missing
+      `itemTestId` is recorded in Interlocks. `radio-group.test.ts` (16 cases)
+      holds the readout parsing, the unique labels and row addresses, the
+      disc-versus-ring width rule against the measured 32 and 516, both option
+      paths, the steps' claims, the count and the README section. Directions
+      measured: with `RADIO_CHECKS = 40` the count case and the README count case
+      fail by name, and declaring the keys group `orientation="horizontal"`
+      fails the live `the keyboard ring is wider than a selection disc`
+      (`expected true, got false`, exit `1`), restored green (three runs,
+      13.2–16.8 s). Docs: `apps/playground/README.md`
+      §`radio-group-lifecycle`, `.artifacts/live/radio-{rest,choice,ring}.png`.
+      Note: the tree's `playground build` is red only on other workstreams'
+      in-flight `packages/data`/`packages/tokens` type errors while this probe's
+      emitted build ran; the suite and `check-types` for these files are
+      otherwise clean.
 
 `[x]` Wait for the **probe it is about to measure** in a batched live run — the
       live runner mounted each selected probe into one keyed window and then slept
@@ -8051,7 +8093,11 @@ a merge over a stored theme.
       group's controlled value and the missing `aria-checked`. Measured native
       window: `menu-lifecycle` and `context-menu-lifecycle` re-ran green
       (2/2, 0.11.0) with the widget in place; the radio row's own interaction is
-      the renderer suite, because no live probe mounts a radio group yet.
+      the renderer suite, because no live probe mounts a radio group yet —
+      **now measured in a window**: `radio-group-lifecycle` (39 checks, 0.11.0)
+      drives the shipped `RadioGroup` and its exclusive-choice rows, and the
+      `radio-group-lifecycle` entry in this section records the paint, the roving
+      base and the missing per-row address.
 
 `[x]` `packages/components`: the **exclusive choice was an unnamed group** —
       `MenuRadioGroup` rendered `role="group"` with nothing to call it by, and
@@ -10779,6 +10825,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Need | Owner | Status |
 | Paint the **carousel control's chevron** in the fill it sits on — `CarouselControl` (`packages/components/src/carousel.tsx`) renders the default `Button` (the `primary` fill, whose on-colour is `primaryForeground`) and passes the icon `color={theme.colors.secondaryForeground}`, so the arrow is painted in a role belonging to a different fill. Measured across the 16 shipped, high-contrast, platform and authored styles: **1.42:1** on Windows dark, 1.57:1 high-contrast dark, 1.70:1 base dark, 2.22:1 base light, at best 2.89:1 on macOS dark — every one under the 3:1 a non-text mark needs, so the control's arrow is effectively invisible. The tokens contract does not measure the pair because no role pair should: the icon should inherit the button's own on-colour (drop the explicit `color`) or the control should take `variant="secondary"` and keep `secondaryForeground` — the second is already measured (`secondaryForeground` on `secondary`). Found while widening `FilledRole` (the same class of defect: a colour painted on a fill it was not chosen for) | components (owns `carousel.tsx`) | **resolved — the premise was wrong, and the painter is now pinned so it cannot become true.** `CarouselControl` renders `Button` with no `variant`, whose default is **`secondary`**, not `primary`; the recorded ratios are exactly `secondaryForeground` **on `primary`** (base dark 1.7025, light 2.2191, Windows dark 1.4237, high-contrast dark 1.5654, macOS dark 2.8868), so they measure a pair the component never paints. Read off the renderer, the control fills `#333A46` and paints the chevron `#E1E5EC` — **10.49:1** at rest, and the pair the control does paint is **7.16–17.14:1** in all 16 shipped, high-contrast, platform and authored styles across `secondary`, `hover` and `active`, held by `contrastPairs` at the 4.5:1 secondary floor. The class of defect was real though: the glyph's role was written down separately from the fill, so a default change or a caller's variant would split them. `internal/button.tsx` now owns `actionOnColor(theme, variant)` (the on-colour each variant's fill carries), `variantStyle` paints its label from it, `CarouselControl` pins `CONTROL_VARIANT = "secondary"` and paints the chevron through the same helper, and `ConfirmDialog`'s busy loader (which had the same hand-rolled variant→role ternary) reads it too. Proof: `carousel.test.tsx`'s `paints the chevron in the control's own label role` reads the painted label, fill and glyph off the renderer in both themes, requires the glyph to be the label role and the painted pair to clear the mark floor, and `button.test.tsx`'s `paints every variant's label in the role its own fill carries` holds all four variants in both themes. Both directions measured: painting the reported bug (primary fill, `secondaryForeground` glyph) fails `expected '#E1E5EC' to be '#11141A'`, and the fix passes. Docs in `packages/components/docs/carousel.mdx` §Theming; no `contrastPairs` entry was needed |
 | ---- | ----- | ------ |
+| Give a radio group's **option rows their own address** — `RadioGroup` forwards its `testId` to the group wrapper (`renderRadioGroup`'s `div role="radiogroup"`) and passes none to the rows it builds, so a native probe cannot name an option: `getByTestId` finds only the wrapper, and the automation protocol's text locator is a contains match that finds both a row (`aria-label`) and the text it paints. The playground's `radio-group-lifecycle` (39 checks, 0.11.0) proves the interaction by listing the rows as `RadioGroupItem` children and naming the text each paints (`radio-row-<group>-<value>`), but a caller's own smoke test, and a probe of the data-`options` path's focus, still cannot address a row. Add `itemTestId?: (value: string) => string` (the shape `Select`'s `itemTestId` took) to `RadioGroup` and its siblings, forwarded to each row's `testId` | primitives (`packages/primitives/src/components/{RadioGroup,CheckboxGroup,ToggleGroup}.tsx`) | open — the probe's workaround and its README paragraph record the gap; the direction to add is a probe that presses a data-option row through `itemTestId` and reads the window's focused id off it |
 | Publish the **paint-side density readers** `@gpuixui/data` needs — the open row *Adopt a total density read in the row painters* says the data painters "can take the primitives' `rowHeightOf(theme)`", but that function is declared in `packages/primitives/src/core/theme.ts` and is **not** exported from `packages/primitives/src/core/index.ts` (nor the package root, which re-exports `./core/index.js`), so a consumer cannot call it: `ScrollArea.tsx` imports it by relative path. `@gpuixui/data`'s `tree/row.tsx` and `virtual/tree.tsx` therefore still index `theme.density.rowHeight` raw, and a theme a store gave back without the group throws `Cannot read properties of undefined (reading 'rowHeight')` from the first tree row — the class the primitives closed for their own painters. Exporting `rowHeightOf` (with `controlHeightOf`/`controlPaddingOf` and the `DensitySource` port) from `core/index.ts` lets data adopt the one seam instead of a second copy of its fallback | primitives (`packages/primitives/src/core/index.ts`) | **primitives half resolved 2026-10-24** — the whole paint-side reader set is on the package entry, not only the density trio: `spaceValue`, `radiusValue`, `iconSideOf`, `controlHeightOf`, `controlPaddingOf`, `rowHeightOf` and the already-public `borderWidthOf`, with their source ports `SpaceSource`/`RadiusSource`/`IconSizeSource`/`DensitySource`/`BorderWidthSource` re-exported from `core/index.ts` (so the root barrel carries them). They are the painters' own functions — `core/theme.test.ts` gains three cases: every reader is the entry's binding by identity (re-measured with `rowHeightOf` dropped from the export list: `"rowHeightOf": false` and `TypeError: rowHeightOf is not a function`), a theme that lost `spacing`/`radius`/`iconSize`/`density`/`borderWidth` answers the library's number through the entry while a brand's own `rowHeight` still wins, and the README must say they are published. `packages/primitives` 59 files / **1 212** tests green, `check-types` clean. README §The theme itself and the `Theme extension`-adjacent readers paragraph name the published set. **Data half open:** `packages/data/src/{tree/row,virtual/tree,chart/chart,table/table,surfaces/*,filter/field}.tsx` still index `theme.density`/`theme.spacing`/`theme.iconSize`/`theme.borderWidth` raw (8 sites measured 2026-10-24) — that is the data owner's adoption, and the seam it needs is now public |
 | Lead the **type-role guard from `@gpuixui/tokens`** — `packages/primitives/src/core/theme.ts` keeps a local `isTextRole` over `SCALE_NAMES` (`R.keys(libraryTypography)`) because the token package had no guard when the seam landed; the tokens package now exports `textRoles`/`isTextRole` (2026-10-24), so the local copy is a second list of the same ten names. Import the token guard and delete `SCALE_NAMES`, keeping `typeOf`'s `body` fallback and the seam's `libraryTypography` fallback untouched | primitives | **resolved** — `core/theme.ts` imports and re-exports the token `isTextRole` and `SCALE_NAMES` is gone; `theme.test.ts`'s new `reads stored roles through the token guard, not a second list` requires the seam's export to be the token function (measured failing with the local guard restored) and accepts every role in `textRoles`. Package green at 56 files / 1 126 tests, `check-types` and `lint` clean |
 | Stop the **two module comments teaching `h-9` = 36** — `packages/tw/src/utilities.ts`'s header and `packages/components/src/internal/recipe.ts`'s say the default registry is "fixed metrics (`h-9` = 36, `text-sm` = 14/20)", while `classesToStyle` maps `h-8`/`h-9`/`h-10` onto the theme's density scale and the default theme paints **32**. Found while correcting `/docs/styling` (this workstream): the page now prints the density's own `md` height and `styling-page.test.ts` reads `CONTROL_HEIGHT` + `densityPresets`, so the page cannot drift back; the two comments still teach the retired number | tw (`src/utilities.ts`) + components (`src/internal/recipe.ts`) | **components half resolved 2026-10-23** — `packages/components/src/internal/recipe.ts`'s header now names the split the compiler actually keeps (`rounded-lg` = 8 and `text-sm` = 14/20 fixed; `h-8`/`h-9`/`h-10` and `size-*` read the theme's density, `h-9` = `md` = 32), and `src/recipe/recipe.test.ts` gains `teaches the height h-9 compiles to, not Tailwind's 36`, which reads the header and holds it to `classesToStyle("h-9", darkTheme)` and `density.controlHeight.md`. Direction measured: restoring the retired `h-9` = 36 phrase fails the case by name; restored, the file is 51/51. **The tw half remains open** — `packages/tw/src/utilities.ts`'s header still names the retired Tailwind number as the registry's rule |

@@ -834,6 +834,12 @@ export const liveRegistry = [
       "Input: the shipped MentionInput places its suggestion list below the field, paints the arrow's row in the theme's accent, inserts by Enter and by a press through the floating layer, and keeps its dismissed rows while they leave",
     capability: "input",
   },
+  {
+    id: "radio-group-lifecycle",
+    title:
+      "Input: the shipped RadioGroup paints its choice as a primary disc and its keyboard ring around the focused row, is one Tab stop, steps with the arrows and type-ahead over a disabled row, and continues from the focused row when its owner declines a choice",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
