@@ -16,7 +16,7 @@
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { iconPixels } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import {

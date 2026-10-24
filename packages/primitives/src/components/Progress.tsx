@@ -27,7 +27,7 @@ import {
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { cn } from "@gpuixui/tw";
 import { accessibleName, spokenText, visibleCopy } from "../core/a11y.js";
 import {

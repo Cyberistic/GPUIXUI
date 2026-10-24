@@ -23,7 +23,7 @@
  */
 
 import { useContext, type ReactElement, type ReactNode } from "react";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import { controlSize } from "../core/theme.js";

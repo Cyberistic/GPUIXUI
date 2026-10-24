@@ -45,7 +45,7 @@ import { useContext, useState, type ReactElement, type ReactNode } from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { reducedMotionOf } from "../core/motion.js";
 import { accessibleName } from "../core/a11y.js";
 import {

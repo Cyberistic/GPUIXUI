@@ -33,7 +33,7 @@ import type {
 } from "@gpuix/react";
 import * as P from "effect/Predicate";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import {

@@ -342,6 +342,21 @@ namespace and the import closure, and
 `runtime/layout.runtime.test.tsx` mounts the routed export in a window and
 reads its layout and offset back.
 
+### The reduced-motion preference loads from the light entry
+
+The animated primitives read `useMotionPreference` from
+`@gpuixui/motion/react/presence`, not from `@gpuixui/motion/react`. Both entries
+publish the same `MotionProvider` and hook, so an application wraps its tree
+once and every control hears it; the difference is the cost. The full entry's
+physics hooks reach the spring, inertia and timeline samplers a fade never
+samples, and `@gpuixui/motion` divides them: its presence entry is 4 modules /
+29 KiB against the full entry's 13 / 101, and a control's graph pays 4 / 29
+where it paid 12 / 88. Measured on 2026-10-24, a `Button` entry dropped from
+**78 modules / 949 KiB to 70 / 891** and `@gpuixui/components`' `popover.tsx`
+from **94 / 1 023 to 86 / 965**. `core/motion-entry.test.ts` fails when any
+package source imports the full entry, names the file that did, and proves both
+entries export the same bindings.
+
 ## The JSX runtime is pinned per file
 
 Every published `.tsx` file opens with `/** @jsxImportSource @gpuix/react */`, the

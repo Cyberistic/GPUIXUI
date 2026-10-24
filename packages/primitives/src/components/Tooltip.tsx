@@ -51,7 +51,7 @@ import {
 } from "react";
 import type { MotionProps, StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { cn } from "@gpuixui/tw";
 import {
   Tooltip as GpuixTooltip,

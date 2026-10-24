@@ -14,7 +14,7 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { useMotionPreference } from "@gpuixui/motion/react";
+import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { cn } from "@gpuixui/tw";
 import {
   PULSE_INTERVAL_MS,

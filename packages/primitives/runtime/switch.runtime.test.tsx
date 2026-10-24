@@ -16,7 +16,7 @@
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
-import { MotionProvider } from "@gpuixui/motion/react";
+import { MotionProvider } from "@gpuixui/motion/react/presence";
 import { Switch } from "../src/components/Switch.js";
 import { Stack } from "../src/components/Stack.js";
 import {
