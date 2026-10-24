@@ -71,6 +71,33 @@ const table = useTable({
 </Table>;
 ```
 
+## The drag
+
+The divider is a `separator` tab stop inside the header cell it ends, not a
+spacer column: its 6px strip paints, which is what lets GPUI's hit test stop on
+it. Four rules are the ones a window measured (`pointer-capture`,
+`column-resize-lifecycle`):
+
+- **The press arms pointer capture.** The strip subscribes to both `onMouseDown`
+  and `onMouseMove`; a move-only strip hears one move of eight and never
+  resizes.
+- **The press and its moves land before React commits**, so the width a gesture
+  started from lives in a ref and is read again at the next press — a second
+  drag measures from the width the first one ended at.
+- **Only the primary button arms it.** The runtime delivers `mouseDown` for all
+  three buttons, so a right press (the context-menu gesture) or a middle one
+  would otherwise start a resize nobody asked for.
+- **A move that holds no primary button ends the gesture.** The runtime reports
+  the button a move holds, and a window the pointer left never hears the
+  release. Without that rule the strip stays armed and the reader's next
+  **hover** over it resizes the column by however far the pointer travelled; a
+  press after it starts a fresh gesture from the width on screen. The dock
+  package's divider follows the same rule.
+
+The arrows step the focused divider by `step` (16px), and Home/End name the
+column's own bounds; every route clamps, because a reader can hold an arrow
+against a bound exactly as a pointer can drag past it.
+
 ## API
 
 ### `ColumnMenu`

@@ -12,6 +12,12 @@
  *   with the move half alone hears one move of eight and never resizes.
  * - **The width is read at each press.** A second gesture starts from the width
  *   the first one ended at, not from the width at mount.
+ * - **A move that holds no primary button ends the gesture.** The runtime
+ *   reports the button a move holds (`pressedButton`, `0` for the primary one),
+ *   and a window the pointer left never hears the release: the strip would stay
+ *   armed and the reader's **next hover** over it would resize the column by
+ *   however far the pointer travelled. The rule is the dock divider's
+ *   (`packages/dock/src/divider.tsx`).
  *
  * It is positioned inside its header cell at the cell's right edge, so the
  * body's tracks do not need a spacer column to stay aligned. A control that
@@ -120,11 +126,19 @@ export const TableColumnDivider = ({
       }}
       onMouseMove={(event: EventPayload) =>
         Option.match(press.current, {
+          // A move that reports no held primary button is not part of the
+          // gesture: the window lost the release (the pointer left it), and a
+          // hover must never resize the column.
           onNone: () => {},
-          onSome: (start) =>
+          onSome: (start) => {
+            if (event.pressedButton !== 0) {
+              press.current = Option.none();
+              return;
+            }
             onResize(
               clampWidth(start.width + (event.x ?? 0) - start.x, bounds),
-            ),
+            );
+          },
         })
       }
       onMouseUp={() => {

@@ -546,7 +546,9 @@ const checkboxWord = (root: DataTestRoot, testId: string): string =>
  * Drag `testId` by `deltaX`, delivered as eight moves.
  *
  * One jump would prove nothing about the press-arms-the-capture rule; eight
- * moves is the number every pointer probe in this repository uses.
+ * moves is the number every pointer probe in this repository uses. Each move
+ * reports the primary button held (`0`), which is what the runtime delivers for
+ * a captured drag — a move with none ends the gesture (`pressedButton`).
  */
 const drag = (root: DataTestRoot, testId: string, deltaX: number): void => {
   const { x, y, width, height } = boundsOf(root, testId);
@@ -555,7 +557,11 @@ const drag = (root: DataTestRoot, testId: string, deltaX: number): void => {
   root.renderer.nativeSimulateMouseDown(startX, startY);
   root.renderer.flush();
   Arr.forEach(Arr.range(1, 8), (step) => {
-    root.renderer.nativeSimulateMouseMove(startX + (deltaX * step) / 8, startY);
+    root.renderer.nativeSimulateMouseMove(
+      startX + (deltaX * step) / 8,
+      startY,
+      0,
+    );
     root.renderer.flush();
   });
   root.renderer.nativeSimulateMouseUp(startX + deltaX, startY);
@@ -610,19 +616,52 @@ describe("resizable columns", () => {
 
     // The runtime delivers mouseDown for all three buttons: a right press is
     // the context-menu gesture and a middle one is nothing, so neither may arm
-    // a resize the caller never saw.
+    // a resize the caller never saw. The move holds the primary button, so only
+    // the press's own button decides this — a move with no held button ends a
+    // gesture, which the next case measures.
     Arr.forEach([1, 2], (button) => {
       root.renderer.nativeSimulateMouseDown(startX, startY, button);
       root.renderer.flush();
       // Stay inside the 6px strip: without capture, a move past its box is not
       // the divider's event, so a bug that armed the gesture would show on the
       // move that is still over it.
-      root.renderer.nativeSimulateMouseMove(startX + 2, startY);
+      root.renderer.nativeSimulateMouseMove(startX + 2, startY, 0);
       root.renderer.flush();
       root.renderer.nativeSimulateMouseUp(startX + 2, startY, button);
       root.renderer.flush();
       expect(readout(root)).toContain("w=260");
     });
+  });
+
+  it("ends a gesture whose release the window never heard", () => {
+    const root = mount();
+    const { x, y, width, height } = boundsOf(root, "files-divider-name");
+    const startX = x + width / 2;
+    const startY = y + height / 2;
+    expect(readout(root)).toContain("w=260");
+
+    root.renderer.nativeSimulateMouseDown(startX, startY);
+    root.renderer.flush();
+    root.renderer.nativeSimulateMouseMove(startX + 2, startY, 0);
+    root.renderer.flush();
+    expect(readout(root)).toContain("w=262");
+
+    // The reader drags out of the window and releases there: the platform
+    // reports no release to a window the pointer left, so the press stays armed
+    // unless the strip reads the button a move holds.
+    root.renderer.nativeSimulateMouseExit(startX + 2, startY);
+    root.renderer.flush();
+    root.renderer.nativeSimulateMouseMove(startX + 4, startY);
+    root.renderer.flush();
+    expect(readout(root)).toContain("w=262");
+
+    // A press after the lost release starts a fresh gesture from the width the
+    // reader can see, so the guard does not cost them the drag.
+    root.renderer.nativeSimulateMouseDown(startX + 4, startY);
+    root.renderer.flush();
+    root.renderer.nativeSimulateMouseMove(startX + 10, startY, 0);
+    root.renderer.flush();
+    expect(readout(root)).toContain("w=268");
   });
 
   it("widens the column a drag ends, and keeps the cells on the new track", () => {
