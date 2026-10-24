@@ -841,6 +841,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "typing-text-lifecycle",
+    title:
+      "Text: the shipped TypingText paints a code-point prefix at a time, never half a glyph, whole on the first frame for a zero pace or a reduced preference, and drops its caret with the last character",
+    capability: "text",
+  },
+  {
     id: "ripple-lifecycle",
     title:
       "Layout: the shipped RippleButton's disc is the label's own ink at a faint share, a circle born on the press point, clipped by the control and faded as it arrives, and it never takes the press it marks",

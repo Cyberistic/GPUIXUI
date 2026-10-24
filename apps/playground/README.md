@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-135 probes a real window can prove, of which twenty-nine mount shipped
+136 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7665,6 +7665,59 @@ selection disc` (`expected true, got false`) — the sampled row is then a quart
 of the group's width, so the ring read follows the axis the group declares.
 Evidence: `.artifacts/live/radio-{rest,choice,ring}.png`.
 
+### `typing-text-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/components` `TypingText` in a window: a slow reveal
+with a caret, a `speed={0}` twin, a three-emoji twin and one under
+`MotionProvider preference="reduced"`. The package's renderer suite reads the
+text nodes and their children; what the **runtime shapes** — and the caret's own
+pixels — is a window's to measure.
+
+The reveal is a real-time timer, not the renderer's motion clock (the row says
+so), so nothing here is frozen: the frames are found by polling, and the check
+after each poll asserts the value it settled on.
+
+| Step | Measured |
+| ---- | -------- |
+| the first frame | the `speed={0}` twin paints `Instant` whole, and the reduced twin paints `Reduced paints at once` whole |
+| the slow reveal | one character at the first read, two at the next — a code-point prefix, never the whole string |
+| what the renderer shaped | one painted line is a proper prefix of the slow string: the runtime lays out the partial run, not a dimmed whole one |
+| the caret | **148** pixels of the theme's `primary` role inside the text's box while the reveal runs |
+| the emoji reveal | the sampled frames are `🦊`, `🦊🦊`, `🦊🦊🦊`, `🦊🦊🦊` — every one a whole code point, so no frame splits a surrogate pair |
+| the last character | the run reads the whole string, and it is **one** painted line |
+| after it | no partial run is left painted, and the caret's `primary` count is **0** |
+
+Three rules the window settles:
+
+1. **The reveal is the shaped run.** The renderer paints a partial line while the
+   timer runs, so a component that painted the whole string and hid it would be
+   visible in the painted text.
+2. **A character is a code point.** Every sampled emoji frame is a prefix of the
+   string at code-point boundaries; the lone-fox frame is the measurement.
+3. **The first frame is whole** for a zero pace and for a reduced preference,
+   and the caret belongs to the journey, not the resting frame.
+
+The accessible name is the whole string from the first frame, which the
+component's renderer suite reads from the automation tree
+(`typing-text.test.tsx`); a live window exposes no such tree on this host, so
+that half is not claimed here.
+
+```sh
+nub apps/playground/dist/live/run.js --only typing-text-lifecycle
+```
+
+23 checks, `--only typing-text-lifecycle`, one window and two captures
+(`typing-caret`, `typing-done`), green on 0.11.0 here (three runs, 1.1–4.3 s).
+Fixture `src/live/typing-text.ts` + probe `src/live/typing-text-probe.tsx` +
+`typing-text.test.ts` (the prefix algebra, the sample rule, the caret's crop,
+the registry entry and this section). Two negative controls measured, exit `1`
+each and restored green: dropping the caret fails
+`the caret paints the theme's primary role while the reveal runs` (`expected
+true, got false`), and animating the reduced twin fails
+`a reduced preference paints its whole string on the first frame` (`expected
+"Reduced paints at once", got "R"`). Evidence:
+`.artifacts/live/typing-{caret,done}.png`.
+
 ### `ripple-lifecycle` — measured on 0.11.0 here
 
 The **shipped** `@gpuixui/components` `RippleButton` in a window, pressed by a
@@ -7989,7 +8042,7 @@ narrower. Each deviation is deliberate and measured:
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
   `color-picker-lifecycle` and `mention-input-lifecycle` and
-  `radio-group-lifecycle` and `ripple-lifecycle` (77 probes, each run alone).
+  `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` (78 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,
