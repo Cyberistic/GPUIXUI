@@ -641,6 +641,19 @@ describe("type", () => {
     );
   });
 
+  it("aligns a run in the runtime's grammar, not the API's name", () => {
+    // The bug guarded: `align="end"` compiled to a declaration of `end`, a word
+    // the pinned renderer does not parse (its text host reads `left`, `center`
+    // and `right`, plus `start` as left) — handed `end` it paints the default,
+    // so a right-aligned caption looked exactly like a left-aligned one.
+    expect(
+      stringIn(renderText({ align: "end" }, testTheme), "textAlign"),
+    ).toStrictEqual(Option.some("right"));
+    expect(
+      stringIn(renderText({ align: "start" }, testTheme), "textAlign"),
+    ).toStrictEqual(Option.some("left"));
+  });
+
   it("paints a spinner accent name the table does not carry as the brand", () => {
     // The bug guarded: an unknown accent resolved to no colour class on every
     // dot, so the indicator painted nothing at all — a busy state a reader

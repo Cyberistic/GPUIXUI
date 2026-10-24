@@ -151,6 +151,13 @@ and each is read through a membership test rather than indexed raw:
   class** nobody reads and the resolver answered no number, so the box went
   square with every report empty (`recipe.test.ts`,
   `presentational.test.tsx`).
+- an **alignment** is a stored caption's or column's setting, and the two paint
+  paths resolve it through one table: `textAlignValue` (`core/style.ts`) maps
+  the API's `start`/`center`/`end` onto the runtime's `left`/`center`/`right`,
+  and `isTextAlign`/`textAlignOf` read a stored name the release does not carry
+  as the runtime's default. Handed `end` verbatim the host — which parses
+  `left`/`center`/`right` and no `end` — painted a right-aligned run at the
+  start, **byte-identical** to a left-aligned one (`runtime/text-align.runtime.test.tsx`).
 - a **group's `orientation`** is a saved layout choice, and it reaches the
   keyboard contract as well as the paint: `isOrientation`/`orientationOf`
   (`core/keyboard.ts`) read a name the arrow table does not carry as the group's

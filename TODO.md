@@ -2509,7 +2509,7 @@ handed to the timer.
       inference that a toggle is "app state plus a scroll" (its header now cites
       the window half) — and a wheel up **does not fight the flag**, so a log
       pane keeps its own follow state. **35 checks**, `--only
-      log-viewer-lifecycle`, green on 0.11.0 here (~4.4–5.6 s, one capture).
+      log-viewer-lifecycle`, green on 0.11.0 here (~1.5–5.6 s, one capture).
       Fixture `src/live/log-viewer.ts`, probe `src/live/log-viewer-probe.tsx`,
       guard `src/live/log-viewer.test.ts` (10 cases: the level cycle read from
       the package's own `LOG_LEVELS`, the derived filter tails, the readout
@@ -18901,6 +18901,32 @@ numbers).
       alignment with the forwarding removed). Docs: `select.mdx`'s API row and
       the `COMPONENTS.md` Selects row. No playground scenario applies — the
       runtime owns placement, and the package test holds the hand-off.
+
+`[x]` `packages/primitives`: **`Text align="end"` painted at the start** — the
+      alignment API is direction-neutral (`start`/`center`/`end`), while the
+      pinned `@gpuix/native@0.11.0` text host parses `left`, `center` and
+      `right` (and reads `start` as left) but **not** `end`: handed `end` it
+      paints the default, so a right-aligned caption looked exactly like a
+      left-aligned one with nothing reported. `textAlignValue` (`core/style.ts`)
+      is the one mapping every painter reads — the resolver (`textStyle`) and
+      the registry's `text-start`/`text-end` utilities — and `align` is read
+      through `isTextAlign`/`textAlignOf`, so a stored name this release does
+      not carry paints the runtime's default rather than an unknown word. Proof:
+      `core/style.test.ts` holds the three values (start → left, end → right, a
+      stored name → no declaration), `recipe.test.ts` compiles the recipe for
+      each and requires `unsupported` empty, `presentational.test.tsx` reads the
+      painted style off the rendered `Text`, and
+      `runtime/text-align.runtime.test.tsx` captures two frames in a window —
+      start and end are **byte-identical** when the host ignores the value and
+      differ once `end` reaches it as `right`, with a same-alignment capture as
+      the control. Directions measured: with the registry's raw values restored,
+      the window case fails `expected true to be false` and the three unit cases
+      fail by name (`expected 'end' to be 'right'`); restored, the package is 57
+      files / **1 184** unit tests with the runtime file 1/1 and `check-types`,
+      `oxlint` and `oxfmt` clean. Docs: `text.mdx`'s API row (held by
+      `docs.test.ts`), the package README's stored choices, the `COMPONENTS.md`
+      Text row, and `examples/typography.example.tsx` gains the end-aligned
+      footer the runtime suite mounts.
 
 ## Animated primitives (plan 600)
 

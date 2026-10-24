@@ -30,6 +30,7 @@ import {
   progressSizeOf,
   progressToneOf,
   scrollAxis,
+  textAlignOf,
   textToneOf,
 } from "../core/style.js";
 import type {
@@ -37,6 +38,7 @@ import type {
   ProgressTone,
   SliderOrientation,
   SurfaceTone,
+  TextAlign,
   TextTone,
 } from "../core/style.js";
 import type { ElevationLevel, RadiusStep, SpaceStep } from "../core/theme.js";
@@ -183,7 +185,7 @@ const TONE_CLASS: Readonly<Record<TextTone, string | undefined>> = {
   inherit: undefined,
 };
 
-const ALIGN_CLASS: Readonly<Record<"start" | "center" | "end", string>> = {
+const ALIGN_CLASS: Readonly<Record<TextAlign, string>> = {
   start: "text-start",
   center: "text-center",
   end: "text-end",
@@ -197,7 +199,7 @@ const familyOf = (role: TextRole): string =>
 export interface TextRecipeOptions {
   readonly role: TextRole;
   readonly tone: TextTone;
-  readonly align?: "start" | "center" | "end";
+  readonly align?: TextAlign;
   readonly truncate?: boolean;
   readonly clamp?: number;
   readonly selectable?: boolean;
@@ -214,11 +216,12 @@ export interface TextRecipeOptions {
  */
 export const textClass = (options: TextRecipeOptions): string => {
   const role = isTextRole(options.role) ? options.role : "body";
+  const align = textAlignOf(options.align);
   return cn(
     `type-${ROLE_CLASS[role]}`,
     familyOf(role),
     TONE_CLASS[textToneOf(options.tone)],
-    options.align === undefined ? undefined : ALIGN_CLASS[options.align],
+    align === undefined ? undefined : ALIGN_CLASS[align],
     options.selectable === true ? "select-text" : "select-none",
     options.truncate === true && "whitespace-nowrap text-ellipsis",
     // The role travels in the class name because a clamp's height is that

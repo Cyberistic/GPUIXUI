@@ -25,7 +25,7 @@ import { Text, Stack } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `role` | `TextRole` | `"body"` | size, leading, weight and family; a stored name the scale does not carry reads as `body` |
 | `tone` | `TextTone` | `"default"` | colour role; a stored name the table does not carry reads as `default` |
-| `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
+| `align` | `"start" \| "center" \| "end"` | runtime default (left) | horizontal alignment; the runtime has no writing direction, so `start` paints left and `end` paints right, and a stored name this release does not carry paints the default |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | cut to a box N lines tall |
 | `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash |

@@ -289,10 +289,50 @@ export const toneColor = (
   tone: TextTone,
 ): string | undefined => paint(tones[textToneOf(tone)], theme);
 
+export const TEXT_ALIGNMENTS = ["start", "center", "end"] as const;
+export type TextAlign = (typeof TEXT_ALIGNMENTS)[number];
+
+/**
+ * The alignment values the runtime parses.
+ *
+ * GPUix has no writing direction, so its text host understands `left`, `center`
+ * and `right` (and reads `start` as left) but **not** `end`: handed `end` it
+ * paints the default, so a right-aligned run stayed left. The API keeps the
+ * direction-neutral names and every painter resolves through this one table.
+ */
+const ALIGN_VALUES: Readonly<Record<TextAlign, "left" | "center" | "right">> = {
+  start: "left",
+  center: "center",
+  end: "right",
+};
+
+/**
+ * A value of the runtime's text-alignment grammar.
+ *
+ * The mapping lives here so the resolver and the recipe cannot disagree: a
+ * caller's `end` reaches the runtime as `right`, which it paints.
+ */
+export const textAlignValue = (align: TextAlign): "left" | "center" | "right" =>
+  ALIGN_VALUES[align];
+
+/**
+ * Whether a value names an alignment.
+ *
+ * An alignment is a stored choice as often as a literal — a saved caption, a
+ * restored column — so a name a release does not carry is the runtime's own
+ * default (no declaration) rather than an unknown string handed to the host.
+ */
+export const isTextAlign = (align: unknown): align is TextAlign =>
+  P.isString(align) && Arr.contains(TEXT_ALIGNMENTS, align);
+
+/** The alignment a stored name stands for, or absence where it carries none. */
+export const textAlignOf = (align: unknown): TextAlign | undefined =>
+  isTextAlign(align) ? align : undefined;
+
 export interface TextSpec {
   readonly role: TextRole;
   readonly tone: TextTone;
-  readonly align?: "start" | "center" | "end";
+  readonly align?: TextAlign;
   readonly truncate?: boolean;
   /** Maximum visible lines: a box at the role's leading, clipped below it. */
   readonly clamp?: number;
@@ -325,7 +365,8 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     color: toneColor(theme, spec.tone),
     userSelect: spec.selectable === true ? "text" : "none",
   };
-  if (spec.align !== undefined) style.textAlign = spec.align;
+  const align = textAlignOf(spec.align);
+  if (align !== undefined) style.textAlign = textAlignValue(align);
   // A selectable run paints the design system's wash, not the runtime's
   // accent-at-35% default: `selection` is the role the token contract measures.
   if (spec.selectable === true)

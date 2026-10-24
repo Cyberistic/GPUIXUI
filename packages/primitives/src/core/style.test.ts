@@ -33,6 +33,7 @@ import {
   sliderThumbStyle,
   sliderTrackStyle,
   surfaceStyle,
+  textAlignOf,
   textStyle,
   TEXT_TONES,
   type ControlSpec,
@@ -337,6 +338,38 @@ describe("textStyle", () => {
     expect(
       textStyle({ role: "body", tone: "primary" }, lightTheme).color,
     ).not.toBe(lightTheme.colors.primary);
+  });
+
+  it("paints an alignment in the grammar the runtime parses", () => {
+    // The bug guarded: `end` was handed to the runtime verbatim, and its text
+    // host parses `left`, `center` and `right` (plus `start` as left) but not
+    // `end` — handed `end` it painted the default, so a right-aligned run
+    // stayed left. The API keeps the direction-neutral names; this is the seam
+    // that states what each means to a runtime with no writing direction.
+    expect(
+      text({ role: "body", tone: "default", align: "start" }).textAlign,
+    ).toBe("left");
+    expect(
+      text({ role: "body", tone: "default", align: "center" }).textAlign,
+    ).toBe("center");
+    expect(
+      text({ role: "body", tone: "default", align: "end" }).textAlign,
+    ).toBe("right");
+  });
+
+  it("paints no alignment for a stored name the release does not carry", () => {
+    // An alignment is a stored choice as often as a literal, so a renamed or
+    // dropped one is the runtime's own default (no declaration), not an unknown
+    // string handed to the host.
+    // The cast is the storage boundary: a saved alignment a later release
+    // renamed arrives as a string the union no longer names.
+    const stored = "END" as Parameters<typeof textStyle>[0]["align"];
+    expect(
+      text({ role: "body", tone: "default", align: stored }).textAlign,
+    ).toBeUndefined();
+    expect(textAlignOf("end")).toBe("end");
+    expect(textAlignOf("end ")).toBeUndefined();
+    expect(textAlignOf(undefined)).toBeUndefined();
   });
 
   it("truncates on one line, and clamps on several", () => {

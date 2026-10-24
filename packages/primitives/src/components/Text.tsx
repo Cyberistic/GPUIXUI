@@ -11,7 +11,7 @@
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
-import type { TextTone } from "../core/style.js";
+import type { TextAlign, TextTone } from "../core/style.js";
 import type { PrimitiveTheme, TextRole } from "../core/theme.js";
 import { textClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -23,7 +23,7 @@ export interface TextProps {
   readonly role?: TextRole;
   /** What the text means, which decides its colour. Defaults to `default`. */
   readonly tone?: TextTone;
-  readonly align?: "start" | "center" | "end";
+  readonly align?: TextAlign;
   /** One line, clipped with an ellipsis. */
   readonly truncate?: boolean;
   /** Clip after this many lines. */

@@ -25,7 +25,7 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { switchBox, switchThumbOffset } from "../core/selection.js";
 import { pressWash } from "../core/pointer.js";
-import { paintableAspectRatio } from "../core/style.js";
+import { paintableAspectRatio, textAlignValue } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 import {
   borderWidthOf,
@@ -207,8 +207,12 @@ export const recipeTw = createTw({
       userSelect: "text",
       selectionColor: colorRole(theme, "selection"),
     }),
-    "text-start": () => ({ textAlign: "start" }),
-    "text-end": () => ({ textAlign: "end" }),
+    // The runtime parses `left`/`center`/`right` and reads `start` as left, but
+    // not `end` — handed `end` it paints the default, so a right-aligned run
+    // stayed left. The class names keep the direction-neutral API and the one
+    // table in `core/style.ts` states what each means to the host.
+    "text-start": () => ({ textAlign: textAlignValue("start") }),
+    "text-end": () => ({ textAlign: textAlignValue("end") }),
     "text-ellipsis": () => ({ textOverflow: "ellipsis" }),
     "font-sans": (theme) => ({ fontFamily: familyOf(theme, "sans") }),
     "font-mono": (theme) => ({ fontFamily: familyOf(theme, "mono") }),

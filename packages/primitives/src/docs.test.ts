@@ -26,7 +26,7 @@ import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import * as primitives from "./index.js";
 import { inventory } from "./inventory.js";
-import { TEXT_TONES } from "./core/style.js";
+import { textAlignValue, TEXT_TONES } from "./core/style.js";
 import { renderText } from "./components/Text.js";
 import { hostProp } from "./components/testing/element.js";
 
@@ -676,6 +676,24 @@ describe("the primitives docs page contract", () => {
         [],
       );
     });
+  });
+
+  it("teaches the alignment the runtime parses, not the API's name", () => {
+    // The bug guarded: the API's neutral names were handed to the host as-is,
+    // and its text grammar reads `left`/`center`/`right` (and `start` as left)
+    // but not `end` — so a right-aligned run painted left and the page promised
+    // an alignment nothing did. The page states the mapping the seam derives.
+    const row = Option.getOrElse(
+      Arr.findFirst(
+        read("text.mdx").split("\n"),
+        (line) => firstCell(line) === "`align`",
+      ),
+      () => expect.fail("text.mdx has no align row"),
+    );
+    expect(row).toContain("`start` paints left");
+    expect(row).toContain("`end` paints right");
+    expect(textAlignValue("start")).toBe("left");
+    expect(textAlignValue("end")).toBe("right");
   });
 
   it("holds the page contract to the sections the pages carry", () => {

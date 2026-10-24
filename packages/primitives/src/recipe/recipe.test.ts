@@ -41,6 +41,7 @@ import {
   scrollStyle,
   surfaceStyle,
   textStyle,
+  type TextAlign,
   type TextSpec,
 } from "../core/style.js";
 import {
@@ -339,6 +340,43 @@ describe("Text recipe", () => {
         ).style,
       ).toEqual(textStyle(spec, testTheme));
     });
+  });
+
+  it("paints the alignment in the runtime's own grammar", () => {
+    // The bug guarded: the API's `end` reached the host as `end`, and the
+    // pinned renderer parses `left`, `center` and `right` (reading `start` as
+    // left) but not `end` — handed `end` it paints the default, so a
+    // right-aligned run stayed left. The equivalence case above could not see
+    // it, because both painters said the same wrong word.
+    const painted = (align: TextAlign) =>
+      recipeTw.classesToStyle(
+        textClass({ role: "body", tone: "default", align }),
+        testTheme,
+      );
+    Arr.forEach(
+      [
+        ["start", "left"],
+        ["center", "center"],
+        ["end", "right"],
+      ] as const,
+      ([align, value]) => {
+        const compiled = painted(align);
+        expect(compiled.unsupported).toStrictEqual([]);
+        expect(compiled.style.textAlign).toBe(value);
+      },
+    );
+  });
+
+  it("paints no alignment for a stored name the release does not carry", () => {
+    // An alignment is a stored choice as often as a literal, so a renamed or
+    // dropped name is the runtime's default rather than a class nothing reads.
+    const stored = "END" as TextAlign; // the storage boundary
+    const compiled = recipeTw.classesToStyle(
+      textClass({ role: "body", tone: "default", align: stored }),
+      testTheme,
+    );
+    expect(compiled.unsupported).toStrictEqual([]);
+    expect(compiled.style.textAlign).toBeUndefined();
   });
 
   it("resolves a clamp's box from the role its class names", () => {
