@@ -5,6 +5,11 @@ description: Bar, stacked, line, donut and sparkline charts drawn as stacked SVG
 
 ## Usage
 
+The runtime has no chart host and an `<svg>` paints as one tinted mask, so a
+chart is one layer per series, each tinted through `style.color`. The
+`chart-surface-lifecycle` probe measures the shipped components' paint in a real
+window.
+
 ```tsx
 import { BarChart, DonutChart, LineChart, Sparkline, StackedBar } from "@gpuixui/data";
 
