@@ -121,6 +121,7 @@ const rowTokens = (): ReadonlyArray<string> =>
     .map((match) => match[1] ?? "");
 
 const modalFixture = read("apps/playground/src/live/modal-scroll.ts");
+const motionFixture = read("apps/playground/src/live/motion-interruption.ts");
 const runtimePage = read("apps/docs/content/docs/runtime.mdx");
 
 /** One numeric constant the fixture exports. */
@@ -129,6 +130,30 @@ const fixtureNumber = (name: string): number => {
     modalFixture,
   );
   return Number(found?.[1] ?? Number.NaN);
+};
+
+/** One numeric constant of any fixture, by name. */
+const numberIn = (source: string, name: string): number => {
+  const found = new RegExp(`export const ${name} = (-?\\d+)`).exec(source);
+  return Number(found?.[1] ?? Number.NaN);
+};
+
+/**
+ * The checks the `motion-interruption` probe asserts.
+ *
+ * `paintedBox` asserts the paint it reads (`ctx.expectSome`), so each call is a
+ * check as well as the `ctx.expect*` calls in the steps. The steps are the run;
+ * a check added to the probe without the record moving fails here.
+ */
+const motionInterruptChecks = (): number => {
+  const scenarios = read("apps/playground/src/live/scenarios.tsx");
+  const start = scenarios.indexOf("const motionInterruptSteps");
+  const end = scenarios.indexOf("const toastSteps", start);
+  const steps = scenarios.slice(start, end);
+  return (
+    [...steps.matchAll(/ctx\.expect/g)].length +
+    [...steps.matchAll(/paintedBox\(/g)].length
+  );
 };
 
 /** A number as the record prints it: thousands separated by a space. */
@@ -244,6 +269,59 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("`modal-scroll-lifecycle`");
     expect(runtimePage).toContain("no scroll lock");
     expect(runtimePage).toContain("occlude");
+  });
+
+  it("records an interrupted animation continuing, from its fixture", () => {
+    // The runtime's most load-bearing motion sentence — a retarget starts from
+    // the visible value — was the one supported row with no probe. The fixture
+    // carries the three widths and the tolerance; the probe asserts the cuts;
+    // the record and the page print what it painted.
+    const rest = numberIn(motionFixture, "MOTION_REST_WIDTH");
+    const mid = numberIn(motionFixture, "MOTION_MID_WIDTH");
+    const far = numberIn(motionFixture, "MOTION_FAR_WIDTH");
+    const tolerance = numberIn(motionFixture, "CONTINUATION_TOLERANCE");
+    expect([rest, mid, far, tolerance]).toEqual([120, 240, 400, 60]);
+
+    const checks = motionInterruptChecks();
+    expect(checks).toBe(20);
+    const probe = read("apps/playground/README.md");
+    const section = probe.slice(probe.indexOf("### `motion-interruption`"));
+    expect(section).toContain(`${checks} checks`);
+
+    const row = rowFor("Animation interruption");
+    expect(row?.verdict).toBe("supported");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("`motion-interruption`");
+    expect(evidence).toContain(`${checks} checks`);
+    expect(evidence).toContain("src/live/motion-interruption.ts");
+    // The three targets are the fixture's: a restart paints the rest width and
+    // a run that finished the abandoned target paints the far one, so the two
+    // failure shapes are widths the row prints.
+    expect(evidence).toContain(`**${rest}**`);
+    expect(evidence).toContain(`**${far}**`);
+    expect(tolerance).toBeLessThan(far - mid);
+    // The two cut readings are the probe's own; a changed sample fails here.
+    expect(section).toContain("**212.5**");
+    expect(section).toContain("**306.5**");
+    expect(evidence).toContain("**212.5**");
+    expect(evidence).toContain("**306.5**");
+    // The new run is re-timed from the cut, and completion reporting is
+    // `motion-geometry`'s measurement, not this probe's.
+    expect(evidence).toContain("own full declared duration");
+    expect(evidence).toContain("`motion-geometry`");
+    expect(row?.workaround).toContain("generation filter");
+
+    // The page is a summary of the record, not a second copy.
+    const pageRow = runtimePage
+      .split("\n")
+      .find((line) => line.startsWith("| An interrupted animation continues"));
+    expect(pageRow).toContain("`motion-interruption`");
+    expect(pageRow).toContain(`${checks} checks`);
+    expect(pageRow).toContain("**212.5**");
+    expect(pageRow).toContain("**306.5**");
+
+    // §5 owes every cited probe a line.
+    expect(doc.slice(doc.indexOf("## 5."))).toContain("`motion-interruption`");
   });
 
   it("records the chrome the shipped shell parts paint, from the probe", () => {
