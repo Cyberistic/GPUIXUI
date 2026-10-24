@@ -845,17 +845,17 @@ describe("the component section index", () => {
       "finds every component the runtime supports only in part",
     );
     expect(index).toContain(
-      "`COMPONENTS.md` row the status strip already joins",
+      "`COMPONENTS.md` row",
     );
   });
 
-  it("says how to run the native component, in the note's own words", () => {
-    // The command is imported rather than retyped, and printed as an
-    // expression instead of a code sample.
+  it("says how to run the native component, from one command", () => {
+    // The command is a constant the page prints as an expression, so the
+    // prose and the command cannot drift.
     const index = source("index.mdx");
 
     expect(index).toContain(
-      'import { playgroundCommand } from "@/components/docs/native-run-note";',
+      'export const playgroundCommand = "nub run dev:playground";',
     );
     expect(index).toContain("<code>{playgroundCommand}</code>");
   });
