@@ -43,6 +43,8 @@ export const PLAYER_IDS = {
   poster: "media-poster",
   waveform: "media-waveform",
   play: "media-play",
+  /** The 24-point band around the rail; the rail itself is pointer-transparent. */
+  trackHit: "media-track-hit",
   track: "media-track",
   fill: "media-fill",
   time: "media-time",
@@ -56,6 +58,7 @@ export const PLAYER_COMPONENT_IDS = [
   PLAYER_IDS.poster,
   PLAYER_IDS.waveform,
   PLAYER_IDS.play,
+  PLAYER_IDS.trackHit,
   PLAYER_IDS.track,
   PLAYER_IDS.fill,
   PLAYER_IDS.time,
@@ -73,6 +76,17 @@ export const PLAYER_POSTER = MEDIA_POSTER;
 
 /** The progress track the shipped player draws. */
 export const PLAYER_TRACK = MEDIA_TRACK;
+
+/**
+ * Where the scrub's press lands, in points from the band's centre.
+ *
+ * The band is the clip's whole length, so its centre is half the clip and a
+ * quarter more is three quarters — the same playhead the transport's three
+ * `Right` presses reach, so the scrub is read against a share the same window
+ * already painted. The drag reuses the offset as its travel, ending on the
+ * band's trailing edge, which is the clip's end.
+ */
+export const PLAYER_SCRUB_OFFSET = PLAYER_TRACK.width / 4;
 
 /**
  * The player's own tick: the component advances the playhead by this much on
@@ -168,4 +182,4 @@ export const playerReportOf = (
  * the checks a run reports; this is the number the run printed and the README
  * teaches.
  */
-export const PLAYER_CHECKS = 51;
+export const PLAYER_CHECKS = 63;

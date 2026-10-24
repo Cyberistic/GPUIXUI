@@ -23,7 +23,8 @@
  * 3. **The transport.** The clock, the fill's share and the seek's keys, each
  *    read against the **package's own** arithmetic
  *    (`@gpuixui/media/player/logic`), so the window is measured against the
- *    rule the component ships rather than a copy of it.
+ *    rule the component ships rather than a copy of it. The pointer scrub is
+ *    the same share read from the band a reader presses.
  * 4. **The refusal.** A disabled player keeps its picture and refuses every
  *    press and every key.
  */
@@ -50,6 +51,7 @@ import {
   PLAYER_PEAKS,
   PLAYER_POSTER,
   PLAYER_REST,
+  PLAYER_SCRUB_OFFSET,
   PLAYER_SEEK_STEP_MS,
   PLAYER_TICK_MS,
   PLAYER_TRACK,
@@ -470,6 +472,95 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
+    // ---- the pointer scrub ----
+    // The band is the clip's whole length, so a press's share of its width is
+    // its share of the clip. The rail inside the band is pointer-transparent,
+    // so the registered band is the element that hears the press.
+    yield* ctx.host.key("home");
+    yield* settleUntil(
+      ctx.host.text(PLAYER_IDS.time),
+      (text) => text === timeLabel(0, PLAYER_CLIP_MS),
+      ATTEMPTS,
+    );
+    // A press with no travel is the down/up pair a click makes, aimed a
+    // quarter of the band right of its centre — three quarters along the clip.
+    yield* ctx.host.drag(PLAYER_IDS.trackHit, 0, 0, {
+      offset: { x: PLAYER_SCRUB_OFFSET, y: 0 },
+      steps: 1,
+    });
+    const pressed = yield* settleUntil(
+      ctx.host.text(PLAYER_IDS.time),
+      (text) => text === timeLabel(3 * PLAYER_SEEK_STEP_MS, PLAYER_CLIP_MS),
+      ATTEMPTS,
+    );
+    yield* ctx.expectEqual(
+      "a press three quarters along the track seeks to that share",
+      pressed,
+      timeLabel(3 * PLAYER_SEEK_STEP_MS, PLAYER_CLIP_MS),
+    );
+    yield* ctx.expectNear(
+      "the fill paints the share a press on the track names",
+      (yield* boxOf(ctx, PLAYER_IDS.fill)).width,
+      progressWidth(
+        3 * PLAYER_SEEK_STEP_MS,
+        PLAYER_CLIP_MS,
+        PLAYER_TRACK.width,
+      ),
+      1,
+    );
+    const pressedReport = yield* reportIn(
+      ctx,
+      yield* ctx.host.text(PLAYER_IDS.readout),
+    );
+    yield* ctx.expectEqual(
+      "a press on the track reports the playhead it named",
+      pressedReport.playhead,
+      3 * PLAYER_SEEK_STEP_MS,
+    );
+
+    // The pointer travels to the band's trailing edge, held down, and the
+    // release is outside the rail the press began on.
+    yield* ctx.host.drag(PLAYER_IDS.trackHit, PLAYER_SCRUB_OFFSET, 0, {
+      offset: { x: PLAYER_SCRUB_OFFSET, y: 0 },
+      steps: 8,
+    });
+    const dragged = yield* settleUntil(
+      ctx.host.text(PLAYER_IDS.time),
+      (text) => text === timeLabel(PLAYER_CLIP_MS, PLAYER_CLIP_MS),
+      ATTEMPTS,
+    );
+    yield* ctx.expectEqual(
+      "a drag along the track follows the pointer to the clip's end",
+      dragged,
+      timeLabel(PLAYER_CLIP_MS, PLAYER_CLIP_MS),
+    );
+    yield* ctx.expectNear(
+      "the fill reaches the track's end with the drag",
+      (yield* boxOf(ctx, PLAYER_IDS.fill)).width,
+      progressWidth(PLAYER_CLIP_MS, PLAYER_CLIP_MS, PLAYER_TRACK.width),
+      1,
+    );
+    const draggedReport = yield* reportIn(
+      ctx,
+      yield* ctx.host.text(PLAYER_IDS.readout),
+    );
+    yield* ctx.expectEqual(
+      "a drag on the track reports the playhead it reached",
+      draggedReport.playhead,
+      PLAYER_CLIP_MS,
+    );
+
+    // The release ended the gesture: a pointer that rests on the band reports
+    // nothing, so a scrub cannot stay armed on the first hover.
+    const released = yield* ctx.host.text(PLAYER_IDS.readout);
+    yield* ctx.host.hover(PLAYER_IDS.trackHit);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a hover after the release reports nothing",
+      yield* ctx.host.text(PLAYER_IDS.readout),
+      released,
+    );
+
     // ---- a disabled player refuses the transport, and keeps its picture ----
     yield* ctx.host.click(PLAYER_IDS.disable);
     yield* settleUntil(
@@ -495,6 +586,16 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text(PLAYER_IDS.time),
       before,
     );
+    yield* ctx.host.drag(PLAYER_IDS.trackHit, 0, 0, {
+      offset: { x: PLAYER_SCRUB_OFFSET, y: 0 },
+      steps: 1,
+    });
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled track refuses a press",
+      yield* ctx.host.text(PLAYER_IDS.time),
+      before,
+    );
     const disabledFrame = yield* frameOf(ctx, DISABLED);
     yield* ctx.expectEqual(
       "a disabled player still paints its frame",
@@ -503,7 +604,7 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         disabledFrame,
         poster,
         scale,
-        frameHex(3 * PLAYER_SEEK_STEP_MS),
+        frameHex(PLAYER_CLIP_MS),
       )) > 0,
       true,
     );

@@ -6537,9 +6537,12 @@ window is measured against the rule the component ships rather than a copy.
 | End, then Home | `0:04 / 0:04` with the fill full, then `0:00 / 0:04` |
 | three Rights | `0:03 / 0:04`, with the fill at 150 of the track's 200 |
 | the seek's paint | the picture repaints to the third second's `#047857`, and none of the first frame survives |
-| disabled | the picture keeps painting the frame it was on while the action refuses a press and the playhead does not move |
+| a press three quarters along the track | the press lands 50 points right of the band's centre, and the clock reads `0:03 / 0:04` with the fill at 150 — the share the three Rights reached, now named by the pointer; the report prints `playhead=3000` |
+| a drag to the band's trailing edge, released | `0:04 / 0:04` with the fill full (200) and the report at `playhead=4000`; the release lands outside the 6-point rail the press began on |
+| a hover after the release | the readout is exactly the one the drag left — a released band reports nothing, so a scrub cannot stay armed |
+| disabled | the picture keeps painting the frame it was on while the action refuses a press, the track refuses a press, and the playhead does not move |
 
-Three rules the shipped player owes:
+Four rules the shipped player owes:
 
 1. **The component owns the clock.** The interval, the clamp and the stop at the
    clip's end live in `MediaPlayer`, so a caller supplies frames and hears
@@ -6552,13 +6555,19 @@ Three rules the shipped player owes:
 3. **`disabled` refuses the transport and keeps the picture.** Disabling stops a
    running clock, refuses the keys and drops the seek pad's tab stop; the frame
    and the waveform keep painting, because a disabled player is still a poster.
+4. **The band is the clip.** A press's share of the 24-point band is its share
+   of the clip, and the registered band — not the 6-point rail, which is
+   pointer-transparent — is the element that hears the gesture: a press three
+   quarters along seeks to `0:03`, a drag to the trailing edge reaches the end,
+   and the release ends the scrub, so a hover afterwards moves nothing. A
+   disabled band refuses the press for the same reason it refuses the action.
 
-51 checks, `--only media-player-lifecycle`, green on 0.11.0 here (~5.8 s, three
+63 checks, `--only media-player-lifecycle`, green on 0.11.0 here (~8 s, three
 captures). Fixture `src/live/media-player.ts` (the ids, the clip, the peaks and
 the readout) + `media-player-probe.tsx` (the view and steps) +
 `media-player.test.ts` (the component's ids and defaults, the frame schedule,
 the report grammar, the registry and wiring, the probe's clock-free route, the
-count and this section). Evidence:
+pointer scrub's band, the count and this section). Evidence:
 `.artifacts/live/media-player-{rest,sought,disabled}.png`.
 
 ### `menu-radio-lifecycle` — measured on 0.11.0 here

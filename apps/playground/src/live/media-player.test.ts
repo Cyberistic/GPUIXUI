@@ -20,6 +20,7 @@ import * as Option from "effect/Option";
 import {
   MEDIA_SEEK_STEP_MS,
   MEDIA_TICK_MS,
+  progressWidth,
   timeLabel,
 } from "@gpuixui/media/player/logic";
 import { darkTheme } from "@gpuixui/tokens";
@@ -36,6 +37,7 @@ import {
   PLAYER_PEAKS,
   PLAYER_POSTER,
   PLAYER_REST,
+  PLAYER_SCRUB_OFFSET,
   PLAYER_SEEK_STEP_MS,
   PLAYER_TICK_MS,
   PLAYER_TRACK,
@@ -221,6 +223,30 @@ describe("the probe", () => {
     expect(probe).toContain("timeLabel(PLAYER_CLIP_MS, PLAYER_CLIP_MS)");
   });
 
+  it("drives the track's pointer scrub on the band a press reaches", () => {
+    // The rail is pointer-transparent, so the registered band is the element
+    // that hears the gesture — and it is the shipped `media-track-hit`.
+    expect(PLAYER_IDS.trackHit).toBe("media-track-hit");
+    expect(PLAYER_COMPONENT_IDS).toContain(PLAYER_IDS.trackHit);
+    expect(probe).toContain("ctx.host.drag(PLAYER_IDS.trackHit, 0, 0, {");
+    expect(probe).toContain(
+      "ctx.host.drag(PLAYER_IDS.trackHit, PLAYER_SCRUB_OFFSET, 0, {",
+    );
+    expect(probe).not.toContain("ctx.host.drag(PLAYER_IDS.track,");
+    // The press lands three quarters along the band, which is the playhead
+    // the transport's own three steps reach: the two readings share a point.
+    const pressAt = PLAYER_TRACK.width / 2 + PLAYER_SCRUB_OFFSET;
+    expect(pressAt).toBe((PLAYER_TRACK.width * 3) / 4);
+    expect((pressAt / PLAYER_TRACK.width) * PLAYER_CLIP_MS).toBe(
+      3 * PLAYER_SEEK_STEP_MS,
+    );
+    // The gesture ends on the band's trailing edge, and the release ends it.
+    expect(pressAt + PLAYER_SCRUB_OFFSET).toBe(PLAYER_TRACK.width);
+    expect(probe).toContain("ctx.host.hover(PLAYER_IDS.trackHit)");
+    expect(probe).toContain('"a hover after the release reports nothing"');
+    expect(probe).toContain('"a disabled track refuses a press"');
+  });
+
   it("counts the checks the probe can assert", () => {
     const sites = Arr.length(
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
@@ -257,6 +283,21 @@ describe("the record", () => {
     );
     expect(section).toContain(PLAYER_WAVEFORM_INK);
     expect(section).toContain(PLAYER_PAGE);
+  });
+
+  it("prints the pointer scrub the same window measured", () => {
+    const section = sectionOf();
+    // The three-quarter press, its report and the fill's share.
+    expect(section).toContain("three quarters along the track");
+    expect(section).toContain(
+      `${progressWidth(3 * PLAYER_SEEK_STEP_MS, PLAYER_CLIP_MS, PLAYER_TRACK.width)}`,
+    );
+    expect(section).toContain("playhead=3000");
+    // The drag's end and the release that ended it.
+    expect(section).toContain("trailing edge");
+    expect(section).toContain("playhead=4000");
+    expect(section).toContain("a hover after the release");
+    expect(section).toContain("the track refuses a press");
   });
 
   it("names the poster the shipped player paints", () => {
