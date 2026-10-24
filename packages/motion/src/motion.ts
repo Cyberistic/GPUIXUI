@@ -48,15 +48,20 @@ export const instant: Transition = { kind: "instant" };
  *
  * A duration the sampler cannot read (`NaN`, an infinity) divides the elapsed
  * time into `NaN`, so the sample is `NaN` and the run never reports completion —
- * a surface that hands the runtime a `NaN` inset. It falls back to
- * {@link DEFAULT_TWEEN_MS} the way every other unusable timing in the package
- * does, and a zero or negative one is no duration at all (an instant
- * assignment). The declared transition, the sampler and the equality check all
- * read this one value, so a hand-built tween cannot sample differently from the
- * duration it compares by.
+ * a surface that hands the runtime a `NaN` inset. A value **past the integer
+ * milliseconds a clock can name** (`Number.MAX_SAFE_INTEGER`, roughly 285 000
+ * years) is the same failure one step further along: every sample is a finite
+ * frame that never reaches its target, so the hook churns a frame every 16 ms for
+ * the life of the tree. Both take {@link DEFAULT_TWEEN_MS}, the way every other
+ * unusable timing in the package does, and a zero or negative one is no duration
+ * at all (an instant assignment). The declared transition, the sampler and the
+ * equality check all read this one value, so a hand-built tween cannot sample
+ * differently from the duration it compares by.
  */
 const runDurationMs = (durationMs: number): number =>
-  Number.isFinite(durationMs) ? Math.max(durationMs, 0) : DEFAULT_TWEEN_MS;
+  Number.isFinite(durationMs) && durationMs <= Number.MAX_SAFE_INTEGER
+    ? Math.max(durationMs, 0)
+    : DEFAULT_TWEEN_MS;
 
 /** A duration/easing tween. A duration that cannot run uses the house default. */
 export const tween = (

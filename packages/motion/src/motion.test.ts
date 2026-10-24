@@ -183,14 +183,25 @@ describe("MotionValue", () => {
   it("falls back from a tween duration that cannot run", () => {
     // A `NaN` duration divides the clock into `NaN`: every sample is `NaN` (the
     // runtime paints a null inset) and the run never reports completion, so the
-    // hook would churn frames forever. Infinity never completes either. Both
-    // take the house duration, which the declared transition carries.
+    // hook would churn frames forever. Infinity never completes either, and a
+    // finite duration past the integer milliseconds a clock can name (`1e300`
+    // ms) is the same leak one step along: a frame every 16 ms for the life of
+    // the tree, on a run no clock reaches. All take the house duration, which
+    // the declared transition carries.
     const declared = tween(Number.NaN, linear);
     expect(declared.kind === "tween" && declared.durationMs).toBe(
       DEFAULT_TWEEN_MS,
     );
+    const unreachable = tween(1e300, linear);
+    expect(unreachable.kind === "tween" && unreachable.durationMs).toBe(
+      DEFAULT_TWEEN_MS,
+    );
+    // A large duration the clock can still name is kept: the rule is the
+    // clock's, not a house ceiling.
+    const reachable = tween(1e12, linear);
+    expect(reachable.kind === "tween" && reachable.durationMs).toBe(1e12);
 
-    [Number.NaN, Number.POSITIVE_INFINITY].forEach((durationMs) => {
+    [Number.NaN, Number.POSITIVE_INFINITY, 1e300].forEach((durationMs) => {
       const value = new MotionValue(0);
       value.animate(1, tween(durationMs, linear));
       expect(value.sample(DEFAULT_TWEEN_MS / 2).value).toBeCloseTo(0.5, 5);

@@ -364,7 +364,8 @@ the run, and still clamp an infinity to the end — a presenter whose clock read
 failed paints the first frame rather than `NaN`. A clock **before** the sequence
 (a negative one) is its start too, and both entry points read it that way, so
 `complete` and `sample` cannot disagree about a sequence with nothing left to
-run. A tween duration that cannot run (`NaN` or an infinity) falls back to
+run. A tween duration that cannot run (`NaN`, an infinity, or a finite value past
+the integer milliseconds a clock can name — `1e300` ms) falls back to
 `DEFAULT_TWEEN_MS` (300 ms), and a zero or negative one is an instant
 assignment; the equality check above reads the same duration, so a hand-built
 `Transition` whose duration cannot run is not treated as a new run on every
