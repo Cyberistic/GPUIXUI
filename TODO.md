@@ -13577,7 +13577,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 399/399
+`[x]` `[██████████]` 400/400
+
+`[x]` Teach the **timing a saved duration and options object get** on
+      `/docs/motion` — the package reads a resumable tween through
+      `motionTimingOf`, whose `options` may be the `null` a store writes and
+      whose duration may be a `NaN`, and the page listed the seam in its module
+      table and never said what either gets, so a reader could not tell whether a
+      stored config throws, paints nothing, or moves with the house timing.
+      §House timing now carries the seam and its three answers, and
+      `motion-page.test.ts` gains `teaches the timing a stored duration and
+      options object get`: it executes `motionTimingOf` for a `NaN`, a negative
+      duration, a `null` config and a named phase, then holds the page's snippet
+      comments to those executed values and the house level to
+      `motionLevels.normal`. The README's page row now describes the page the
+      site serves (it promised springs, keyframes and inertia, which the page
+      names and does not teach). Directions measured: `easeOut` in the second
+      snippet comment fails `to contain '// { duration: 0.22, ease:
+      "easeInOut" }'`, and replacing the sentence fails `to contain 'config as
+      often as a literal'`; restored, the file is 12/12. No native scenario
+      applies — a page, the seam it teaches and the ledger row that describes it.
+
+`[ ]` Teach the **three modules `/docs/motion` names and does not explain** —
+      springs (`springPhysics`, `sampleSpring`, `atRest`, `retarget`, including
+      the sampler's repair of a physics field a store cannot read), keyframes
+      (`keyframe`, `sampleKeyframes`, `stagger`, `Sequence`) and inertia
+      (`inertia`, `project`, `sampleInertia`) each appear only in the page's
+      module table, while `packages/motion/README.md` documents every rule; a
+      reader who arrives from the page's own description expects them. Owner:
+      docs-site, with `motion-page.test.ts` growing a case per rule the way its
+      curve and stored-duration cases do.
 
 `[x]` Teach the **command palette's saved lists** on the page the site serves —
       `CommandMenu` reads an `actions` list a registry is still loading (or a

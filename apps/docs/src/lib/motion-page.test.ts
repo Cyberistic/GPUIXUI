@@ -5,6 +5,8 @@ import {
   presenceTiming,
 } from "../../../../packages/motion/src/presence.js";
 import {
+  motionLevels,
+  motionTimingOf,
   preferenceOf,
   reducedMotionOf,
 } from "../../../../packages/motion/src/timing.js";
@@ -317,6 +319,44 @@ describe("the motion page", () => {
   it("prints the five durations motionLevels declares", () => {
     expect(declaredLevels.length).toBeGreaterThanOrEqual(5);
     expect(printedLevels).toEqual(declaredLevels);
+  });
+
+  it("teaches the timing a stored duration and options object get", () => {
+    // Bug guarded: the page listed `motionTimingOf` in its module table and
+    // never said what a store's duration or options object gets, so a reader
+    // resuming a saved tween could not tell whether a `null` config or a `NaN`
+    // duration throws, paints nothing, or moves with the house timing.
+    expect(motionTimingOf(Number.NaN)).toEqual({
+      duration: motionLevels.normal / 1000,
+      ease: "easeInOut",
+    });
+    expect(motionTimingOf(-5)).toEqual(motionTimingOf(motionLevels.normal));
+    // A config a store never wrote is the timing a caller who states nothing
+    // gets, not a throw.
+    expect(motionTimingOf(220, null)).toEqual(motionTimingOf(220));
+    // A phase it does not name is the house one, and a named phase still wins.
+    expect(motionTimingOf(220, { phase: "enter" })).toEqual({
+      duration: 0.22,
+      ease: "easeOut",
+    });
+
+    expect(page).toContain("`motionTimingOf`");
+    expect(page).toContain("not positive and finite");
+    expect(page).toContain("config as often as a literal");
+    expect(page).toContain("`motionLevels.normal`");
+    expect(page).toContain("`standard`");
+
+    // The snippet's comments are the executed values, so a printed easing or
+    // duration cannot drift from the timing a run takes.
+    const enter = motionTimingOf(220, { phase: "enter" });
+    const plain = motionTimingOf(220);
+    expect(page).toContain(
+      `// { duration: ${String(enter.duration)}, ease: "${String(enter.ease)}" }`,
+    );
+    expect(page).toContain(
+      `// { duration: ${String(plain.duration)}, ease: "${String(plain.ease)}" }`,
+    );
+    expect(page).toContain(`the house ${String(motionLevels.normal)} ms`);
   });
 
   it("calls the frame builder with the arguments it declares", () => {

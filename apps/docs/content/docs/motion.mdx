@@ -35,6 +35,18 @@ const enter = motionTiming("normal", { phase: "enter" });
 | `slow` | 320 | a dialog or drawer |
 | `notice` | 500 | a toast |
 
+`motionTiming` names a level; `motionTimingOf` is the seam for a timing read back from a store — a resumed tween, a saved panel's phase:
+
+```ts
+import { motionTimingOf } from "@gpuixui/motion/timing";
+
+motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }
+motionTimingOf(220); // { duration: 0.22, ease: "easeInOut" }
+motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
+```
+
+A duration that is not positive and finite is the house surface arrival (`motionLevels.normal`) rather than a `NaN` on the runtime, and the options object is a config as often as a literal: `null` is the house timing, a phase it does not name is `standard`, and a preference is read by the policy in **Reduced motion**.
+
 ## Curves
 
 The timing table hands the runtime a **name**; a movement this package samples needs a function. `motionCurve(name)` resolves the same name to the same curve, so the two halves of one transition trace one path:
