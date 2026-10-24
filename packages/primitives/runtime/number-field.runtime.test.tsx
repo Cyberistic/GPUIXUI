@@ -173,6 +173,37 @@ it("paints the number it holds, including the decimals its step needs", async ()
   expect(textOf(runtime, "Score")).toBe("2.5");
 });
 
+it("paints the number it holds when a stored precision is absent", async () => {
+  // The bug guarded: a precision is a display setting saved beside the form, and
+  // a record that never carried one hands over `null` — JSON's absence.
+  // Compared with `undefined`, that absence reached `toFixed` as **zero**
+  // decimals, so a restored field holding 1.5 painted "2" (the number it does
+  // not hold) and its 2.5 maximum painted "3", past the bound it declares.
+  const field = recorder();
+  // The cast is the storage boundary: a saved record stores absence as null.
+  const stored = { precision: null } as unknown as { precision?: number };
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Score"
+      autoFocus
+      defaultValue={1.5}
+      step={0.5}
+      max={2.5}
+      onChange={field.onChange}
+      {...stored}
+    />,
+  );
+  expect(textOf(runtime, "Score")).toBe("1.5");
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(2);
+  expect(textOf(runtime, "Score")).toBe("2");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(2.5);
+  expect(textOf(runtime, "Score")).toBe("2.5");
+});
+
 it("hears no Home or End in a window, because the text host owns them", async () => {
   // The defect guarded: the page promised the bounds jump on Home/End, but a
   // native `<input>` consumes both as caret keys before React — measured on

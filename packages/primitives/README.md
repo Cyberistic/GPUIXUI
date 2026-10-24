@@ -334,6 +334,16 @@ the field's own decimal text, while a real answer is painted as written;
 `core/number.test.ts` and `runtime/number-field.runtime.test.tsx` hold both
 sides.
 
+A **field's display precision** is a setting saved beside the form, so JSON keeps
+one a record never carried as `null`. `displayNumber` compared it with
+`undefined`, and `toFixed` reads a non-number as **zero** decimals: a restored
+field holding `1.5` painted `2` — the number it does not hold — and its `2.5`
+maximum painted `3`, past the bound the field declares. `precisionOf` reads only
+a real number as a precision (`storedNumber`'s rule), so an unreadable one is the
+same absence an omitted prop is and the field paints the value's own decimals;
+`core/number.test.ts` and `runtime/number-field.runtime.test.tsx` hold the paint
+in both directions.
+
 **A group row is a control too**, so the caption beside an option's name is that
 row's help: every option row in `RadioGroup`, `CheckboxGroup` and
 `ToggleGroup` announces its `description` through `aria-description`

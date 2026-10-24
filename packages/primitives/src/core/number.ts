@@ -10,6 +10,7 @@
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { visibleCopy } from "./a11y.js";
+import { storedNumber } from "./stored.js";
 
 /** Optional bounds with a mandatory step. */
 export interface NumberRange {
@@ -199,6 +200,21 @@ export const expandedNumber = (value: number): string => {
 };
 
 /**
+ * The decimals a field paints with, or absence for a precision it cannot read.
+ *
+ * A precision is a display setting saved beside the form that draws it, and JSON
+ * keeps a field a record never carried as `null`. Every other optional count in
+ * this package reads that absence as its default (`lineClampOf`, `rowCount`),
+ * and the default here is the value's own shortest decimal. Compared with
+ * `undefined`, a restored `precision: null` reached `toFixed` as **zero**
+ * decimals, so a field holding `1.5` painted `2` — the number it does not hold —
+ * and the first press on a `0.5` step looked like it did nothing. Only a real
+ * number is a precision; text is not coerced (the rule `storedNumber` follows).
+ */
+const precisionOf = (precision: unknown): Option.Option<number> =>
+  Option.filter(storedNumber(precision), Number.isFinite);
+
+/**
  * The text a number field paints for the value it holds.
  *
  * A field must paint the number it holds: with no `precision` that is the
@@ -208,12 +224,14 @@ export const expandedNumber = (value: number): string => {
  * `2`, and a field bounded at `2.5` painted `3`, past its own maximum, on End.
  *
  * `precision` is the caller's fixed display width: it rounds and pads the
- * painted text, and the value channel keeps the number it was given.
+ * painted text, and the value channel keeps the number it was given. A
+ * precision a store did not carry is the same absence an omitted one is.
  */
-export const displayNumber = (value: number, precision?: number): string =>
-  precision === undefined
-    ? expandedNumber(value)
-    : formatNumber(value, precision);
+export const displayNumber = (value: number, precision?: unknown): string =>
+  Option.match(precisionOf(precision), {
+    onNone: () => expandedNumber(value),
+    onSome: (decimals) => formatNumber(value, decimals),
+  });
 
 /**
  * The text a number field paints: the caller's format, or its own decimal text.
@@ -229,7 +247,7 @@ export const displayNumber = (value: number, precision?: number): string =>
  */
 export const numberDisplay = (
   value: number,
-  precision: number | undefined,
+  precision: unknown,
   formatValue?: (value: number) => string,
 ): string =>
   visibleCopy(formatValue?.(value)) ?? displayNumber(value, precision);

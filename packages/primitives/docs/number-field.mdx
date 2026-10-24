@@ -30,7 +30,7 @@ const [copies, setCopies] = useState(1);
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
 | `min` / `max` | `number` | none | bound the value; absent means unbounded, and an inverted pair is the range it means |
 | `step` | `number` | `1` | arrow step |
-| `precision` | `number` | the value's own decimals | decimals painted on commit; it rounds and pads the text, and the value keeps its own |
+| `precision` | `number` | the value's own decimals | decimals painted on commit; it rounds and pads the text, and the value keeps its own. A stored value that is not a number (a record's `null`, text) is no precision at all, so the field paints the value's own decimals rather than rounding it to a whole number |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border |

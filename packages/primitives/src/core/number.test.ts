@@ -261,6 +261,21 @@ describe("displayNumber", () => {
     expect(displayNumber(-1.5, 2)).toBe("-1.50");
   });
 
+  it("paints the value's own decimals for a precision a store did not carry", () => {
+    // The bug guarded: a precision is a display setting saved beside the form,
+    // and JSON keeps a field a record never carried as `null`. Compared with
+    // `undefined`, that absence reached `toFixed` as **zero** decimals — so a
+    // restored field holding `1.5` painted `2`, the number it does not hold,
+    // and its `2.5` maximum painted `3`, past the bound it declares. Only a
+    // real number is a precision; text is not coerced (`storedNumber`'s rule).
+    expect(displayNumber(1.5, null)).toBe("1.5");
+    expect(displayNumber(2.5, null)).toBe("2.5");
+    expect(displayNumber(1.5, "2")).toBe("1.5");
+    expect(displayNumber(1.5, Number.NaN)).toBe("1.5");
+    // An omitted precision is the same absence, which is the control.
+    expect(displayNumber(1.5)).toBe("1.5");
+  });
+
   it("expands the exponent a shortest text uses", () => {
     // A field paints digits: the parser accepts `1e21`, so the number it means
     // must be legible in the box, and a small number must not read as `5e-324`.
