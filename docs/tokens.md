@@ -675,23 +675,38 @@ seriesColors(brand); // the house scale, not the shipped one
 auditTheme(brand).passed; // measured on the plot, against itself and for every deficiency
 ```
 
-The array replaces the shipped table whole, like an elevation level: the five
-positions are an order the chart and its legend both read, so a partial array is
-not a merge. A theme decoded from storage can still carry one — JSON has no
-`undefined`, so a position that was absent when the theme was saved comes back as
-`null` — and the contract measures **every position the scale names**, not the
-entries the table happens to hold: a position it cannot read is reported on every
-plot surface and in every pair, so a short table fails the gate instead of
-painting series 2 to 5 with no colour and no report. A **look** owns one the same way, in the `PlatformStyle` shape: a
-style may declare `series` per mode, `applyStyle` hands it to the base theme
-under the rule its palette follows (a high-contrast base keeps its own scale),
-and a mode a look does not name — and every style that declares none —
-resolves the base theme's table. Windows XP's Luna is the measured case: its
-beige toolbar swallows the shared light amber at 2.75:1, so `retroStyles.luna`
-declares `lunaSeries` for the light edition — the amber one step deeper,
-`#9A6300` — and leaves its dark edition on the shared dark table, which separates
-on that navy page already. A house that wants other hues copies the style and
-replaces the five positions; `series.example.ts`'s `houseLook` is that copy. See
+An **authored** scale is all five positions: the order is what the chart and its
+legend both read, so a brand writes the tuple rather than a fragment, and the
+table replaces the shipped one. A **stored** row is read position by position,
+because a theme saved by a release that shipped fewer categories, or one a
+hand-edited file cleared, is not a fragment the reader chose. `seriesPalette`
+keeps every position that names a colour and answers the table the theme
+inherits at every position it does not, so the fifth category of a chart still
+paints a mark instead of nothing:
+
+```ts
+import { lightSeries, seriesPalette } from "@gpuixui/tokens";
+
+// A row saved by a release with two categories, read over the light table:
+seriesPalette(["#5F4BDB", "#1B45AC"], lightSeries);
+// → ["#5F4BDB", "#1B45AC", "#158754", "#B57600", "#A5262B"]
+```
+
+The gate still names what the row lost: `seriesFailures` reads the scale **as
+the store wrote it**, so a position it cannot read is reported on every plot
+surface and in every pair, and the theme it belongs to fails `auditTheme` until
+the row is repaired. A **look** owns one the same way, in the `PlatformStyle`
+shape: a style may declare `series` per mode, `applyStyle` merges it into the
+base theme under the rule its palette follows (a high-contrast base keeps its own
+scale), and a mode a look does not name — and every style that declares none —
+resolves the base theme's table. A look names the positions it repaints and
+inherits the rest, so a look can correct the one hue that vanishes on its own
+strip without restating four. Windows XP's Luna is the measured case: its beige
+toolbar swallows the shared light amber at 2.75:1, so `retroStyles.luna` declares
+`lunaSeries` for the light edition — the amber one step deeper, `#9A6300` — and
+leaves its dark edition on the shared dark table, which separates on that navy
+page already. A house that wants other hues copies the style and replaces the
+five positions; `series.example.ts`'s `houseLook` is that copy. See
 [Authored looks](#authored-looks). A runnable example builds a legend, an
 audit and a look that owns its table; see
 [`src/series.example.ts`](../packages/tokens/src/series.example.ts).
@@ -1730,8 +1745,9 @@ and the focus ring keeps its geometry with no colour — **the runtime paints it
 own outline** rather than reading a `null`. The two
 **nested tables** a theme may carry follow the same rule — a `series` short of
 its five positions and a `syntax` palette that names only some of its tokens are
-reported, not skipped and not thrown on (§Data series, §Syntax palette). A
-numeric group is the exception, and so is a **step**
+reported, not skipped and not thrown on, while the paint answers the base's value
+at each position or token the store did not name (§Data series, §Syntax
+palette). A numeric group is the exception, and so is a **step**
 inside one: adding either is a breaking change rather than an additive one, so
 the gate **refuses** the theme and names it —
 
@@ -4659,7 +4675,7 @@ interface Theme {
   elevation: Elevation;
   borderWidth: BorderWidth;
   iconSize: IconSize;
-  series?: SeriesColors; // a brand's categorical scale, replaced whole
+  series?: SeriesColors; // a brand's categorical scale; a stored row completes position by position
   syntax?: SyntaxColors; // the palette a native <code> host highlights with
   switch?: SwitchColors; // a platform's own toggle; absent paints the accent one
   switchMetrics?: SwitchMetrics; // the box that toggle paints, in pixels

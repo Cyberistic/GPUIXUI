@@ -15,7 +15,7 @@ import {
   type DensityName,
   type Radius,
 } from "./scale.js";
-import type { SeriesColors } from "./series.js";
+import type { StoredSeries } from "./series.js";
 import { darkSyntax, type StoredSyntax, type SyntaxColors } from "./syntax.js";
 import type {
   SwitchColors,
@@ -97,11 +97,15 @@ export interface PlatformStyle extends PlatformType {
    * light amber, which measures 2.75:1 on that toolbar — one series a reader
    * cannot find — so the look carries a scale designed for its own strips.
    *
+   * It is named **position by position**, like the code palette: the positions a
+   * look repaints are its own and every position it does not name answers the
+   * base's scale, so a look can retint its amber without restating four hues.
+   *
    * It follows the same rule as {@link colors}: a base theme of another contrast
    * variant keeps its own scale, because a scale designed for a look's surfaces
    * is not a high-contrast scale.
    */
-  readonly series?: Readonly<Partial<Record<ThemeMode, SeriesColors>>>;
+  readonly series?: Readonly<Partial<Record<ThemeMode, StoredSeries>>>;
   /**
    * The syntax palette a look highlights code with, per mode. A mode it omits —
    * and every style that declares none — resolves the base theme's table for
@@ -167,7 +171,7 @@ export interface PlatformStyleSource {
     Record<ThemeMode, Partial<ThemeColors> | null>
   > | null;
   /** The categorical scale the look paints, per mode, or `null` for none. */
-  readonly series?: Partial<Record<ThemeMode, SeriesColors>> | null;
+  readonly series?: Partial<Record<ThemeMode, StoredSeries>> | null;
   /** The syntax palette the look highlights with, per mode, or `null` for none. */
   readonly syntax?: Partial<Record<ThemeMode, StoredSyntax | null>> | null;
   /** The platform's own switch paint, per mode, or `null` for the accent switch. */

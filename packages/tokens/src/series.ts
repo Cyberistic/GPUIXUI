@@ -21,11 +21,10 @@
  * page.
  */
 
-import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
+import { namesColour, themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
 import { themeContrastOf, themeModeOf } from "./mode.js";
-import type { Stored } from "./theme.js";
 
 /**
  * One categorical scale: five colours, in the order a chart assigns them. A
@@ -33,6 +32,26 @@ import type { Stored } from "./theme.js";
  * legend short; a chart with more categories folds the tail into "Other".
  */
 export type SeriesColors = readonly [string, string, string, string, string];
+
+/**
+ * A scale as a store hands it back.
+ *
+ * A saved scale is not the five-position tuple the paint path promises: a row
+ * written by a release that shipped fewer categories holds a prefix of it, JSON
+ * writes `null` for a swatch that was empty when the theme was saved, and a
+ * hand-edited theme can name one hue and leave the rest. This is the storage
+ * port for every seam that reads a scale a consumer's decoder produced — the
+ * merge ({@link ThemeOverridesSource.series}), the paint
+ * ({@link seriesColors}) and the look a style declares — so the value reaches
+ * them without the cast `AGENTS.md` §2 forbids, the rule `StoredSyntax` follows
+ * for the code palette.
+ *
+ * A theme still carries a complete table: a position the store named as a colour
+ * is its own, every position it did not name answers the table the theme
+ * inherits, and {@link seriesFailures} reads the table as the store wrote it so
+ * the gate names the position that was lost.
+ */
+export type StoredSeries = ReadonlyArray<unknown>;
 
 /** The series scale for the default light theme. */
 export const lightSeries: SeriesColors = [
@@ -178,18 +197,69 @@ export interface SeriesSource extends ColourSource {
   readonly contrast?: unknown;
   /**
    * The scale the theme authors, when it carries one. Read from the storage
-   * shape — a store writes `null` for a table it never carried — so a saved
+   * shape — a store writes `null` for a table it never carried and a short row
+   * for a theme saved by a release that shipped fewer categories — so a decoded
    * theme reaches this seam without a cast.
    */
-  readonly series?: Stored<SeriesColors>;
+  readonly series?: StoredSeries | null;
+}
+
+/** The table a theme with no scale of its own resolves, by mode and variant. */
+const shippedSeries = (theme: SeriesSource): SeriesColors => {
+  const mode = themeModeOf(theme);
+  if (themeContrastOf(theme) === "high") {
+    return mode === "dark" ? highContrastDarkSeries : highContrastLightSeries;
+  }
+  return mode === "dark" ? darkSeries : lightSeries;
+};
+
+/** Whether a stored table names a colour for every position a chart indexes. */
+const isCompleteSeries = (scale: StoredSeries): scale is SeriesColors =>
+  scale.length === seriesPositions.length && scale.every(namesColour);
+
+/**
+ * A stored scale read over the table it inherits from.
+ *
+ * A position the store named as a colour is its own; a position it did not name
+ * — one a release that shipped fewer categories never had, one JSON wrote as
+ * `null`, one a field cleared to `""` — answers the fallback's colour at that
+ * position rather than being handed to a chart, whose `colors[3]` would then be
+ * `undefined` and paint no mark at all. That is the rule `syntaxPalette` follows
+ * for a code palette and every colour role follows for a cleared field: the paint
+ * answers a value the theme can show, while {@link seriesFailures} names the
+ * position the store lost so the gate still refuses the theme.
+ *
+ * @example
+ * ```ts
+ * import { lightSeries, seriesPalette } from "@gpuixui/tokens";
+ *
+ * // A scale that names its first hue and inherits the rest:
+ * seriesPalette(["#6A45F0"], lightSeries); // [#6A45F0, lightSeries[1], …]
+ * ```
+ */
+export function seriesPalette(
+  stored: StoredSeries,
+  fallback: SeriesColors,
+): SeriesColors {
+  if (isCompleteSeries(stored)) {
+    return stored;
+  }
+  const at = (position: 0 | 1 | 2 | 3 | 4): string => {
+    const value = stored[position];
+    return namesColour(value) ? value : fallback[position];
+  };
+  return [at(0), at(1), at(2), at(3), at(4)];
 }
 
 /**
  * The categorical scale a theme paints its data marks in.
  *
- * A theme that carries `series` owns it — the array replaces the shipped one
- * whole, like an elevation level — and every other theme resolves the table for
- * its mode and contrast variant.
+ * A theme that carries `series` owns the positions it names — the array replaces
+ * the shipped one, like an elevation level — and a position it does not name
+ * answers the table for its mode and contrast variant, so a scale saved by a
+ * release that shipped fewer categories still paints a mark in every position
+ * instead of leaving the tail blank. Every other theme resolves the table for its
+ * mode and contrast variant.
  *
  * **A table a store wrote as `null` is the absence it is**: JSON has no
  * `undefined`, so a saved theme comes back with `null` where it carried no
@@ -205,14 +275,8 @@ export interface SeriesSource extends ColourSource {
  * ```
  */
 export function seriesColors(theme: SeriesSource): SeriesColors {
-  if (theme.series != null) {
-    return theme.series;
-  }
-  const mode = themeModeOf(theme);
-  if (themeContrastOf(theme) === "high") {
-    return mode === "dark" ? highContrastDarkSeries : highContrastLightSeries;
-  }
-  return mode === "dark" ? darkSeries : lightSeries;
+  const table = shippedSeries(theme);
+  return theme.series == null ? table : seriesPalette(theme.series, table);
 }
 
 /** One series colour that is not perceivable on a surface it can be drawn on. */
@@ -396,16 +460,18 @@ export function simulateColorVision(
   ]);
 }
 
-/** A theme with the fields a series audit reads. */
+/**
+ * A theme with the fields a series audit reads.
+ *
+ * The scale is the storage shape: a stored theme can hold a table shorter than
+ * the five positions a chart indexes, or one with a `null` where a colour was
+ * absent when it was saved, so the audit reads it positionally and measures what
+ * each position carries rather than what the type promised.
+ */
 export type SeriesAuditSource = Omit<SeriesSource, "series"> &
   ColourSource & {
-    /**
-     * The scale the theme carries. A stored theme can hold a table shorter than
-     * the five positions a chart indexes, or one with a `null` where a colour was
-     * absent when it was saved, so the audit reads it positionally and measures
-     * what each position paints rather than what the type promised.
-     */
-    readonly series?: readonly (string | undefined)[] | null;
+    /** The scale as the theme carries it, or as a store handed it back. */
+    readonly series?: StoredSeries | null;
   };
 
 /**
@@ -451,7 +517,7 @@ export function seriesFailures(
   const surfaceFloor = contract.surface ?? variant.boundary;
   const distinctnessFloor = contract.distinctness ?? seriesDistinctnessFloor;
   const deficiencyFloor = contract.deficiency ?? seriesDeficiencyFloor;
-  const series: ReadonlyArray<string | undefined> =
+  const series: StoredSeries =
     theme.series ??
     seriesColors({
       mode: theme.mode,
@@ -459,13 +525,14 @@ export function seriesFailures(
       colors: theme.colors,
     });
   /**
-   * The colour a position paints, read as the value a store hands back: a short
-   * table has no entry there and a holed one has `null`, and neither is a colour
-   * the report can carry, so both are the same absence.
+   * The colour a position names, read as the value a store hands back: a short
+   * table has no entry there, a holed one has `null` and a cleared one is blank,
+   * and none of them is a colour the report can carry, so all are the absence the
+   * gate names.
    */
   const at = (position: number): string | undefined => {
     const color = series[position];
-    return typeof color === "string" ? color : undefined;
+    return namesColour(color) ? color : undefined;
   };
   const surfaceFailures = surfaces.flatMap((surface) =>
     seriesPositions.flatMap((index) => {

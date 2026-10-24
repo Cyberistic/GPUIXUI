@@ -1262,7 +1262,9 @@ describe("a scale a store wrote", () => {
     const readme = read("../README.md");
 
     // The series contract measures positions, and the syntax one tokens.
-    expect(catalogue).toContain("every position the scale names");
+    expect(catalogue).toContain(
+      "answers the table the theme inherits at every position it does not",
+    );
     expect(catalogue).toContain("A **token the palette does not name**");
     expect(catalogue).toContain("the `null` JSON writes");
     expect(catalogue).toContain("**completes** the palette it paints");
@@ -1460,13 +1462,22 @@ describe("an optional table a store nulled", () => {
     expect(switchFailures(typo).paint).toHaveLength(1);
   });
 
-  it("keeps a table the theme does carry, whole", () => {
+  it("keeps the positions a scale names and completes the ones it does not", () => {
     const short = lightSeries.slice(0, 2);
     const declared = stored({
       switch: { on: "#30D158", off: "#DCDCE1", knob: "#FFFFFF" },
     });
 
-    expect(seriesColors(stored({ series: short }))).toBe(short);
+    // The two positions it names are its own; the three it lost answer the
+    // light table, so a chart's third category still paints a mark.
+    expect(seriesColors(stored({ series: short }))).toEqual([
+      ...short,
+      lightSeries[2],
+      lightSeries[3],
+      lightSeries[4],
+    ]);
+    // The report still reads the row as the store wrote it.
+    expect(seriesFailures(stored({ series: short })).surfaces).not.toEqual([]);
     expect(switchFailures(declared)).toEqual({
       paint: [],
       placements: [],

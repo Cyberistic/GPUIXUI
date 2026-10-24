@@ -4,6 +4,8 @@ import {
   highContrastDarkColors,
   highContrastLightColors,
   lightColors,
+  namesColour,
+  themeColors,
   type ThemeColors,
 } from "./color.js";
 import {
@@ -15,7 +17,9 @@ import {
   lightElevation,
   type BoxShadow,
   type Elevation,
+  type ElevationLevel,
 } from "./elevation.js";
+import { isStepRecord } from "./missing.js";
 import {
   isPlatformName,
   platformNames,
@@ -44,7 +48,12 @@ import {
   type Radius,
   type Spacing,
 } from "./scale.js";
-import type { SeriesColors } from "./series.js";
+import {
+  seriesColors,
+  seriesPalette,
+  type SeriesColors,
+  type StoredSeries,
+} from "./series.js";
 import {
   syntaxColors,
   syntaxPalette,
@@ -305,7 +314,7 @@ export type Stored<T> =
       : T | null;
 
 /** The groups an override replaces whole, so a stored one is not merged. */
-type WholeGroup = "series" | "switch" | "switchMetrics";
+type WholeGroup = "switch" | "switchMetrics";
 
 /**
  * A partial theme as a store hands it back.
@@ -339,7 +348,15 @@ export type ThemeOverridesSource = {
         // open record is the shape a decoder hands over without a cast; the
         // missing tokens are completed from the base's table when merged.
         StoredSyntax | null
-      : Stored<ThemeOverrides[K]>;
+      : K extends "series"
+        ? // A scale is a stored row as often as a literal, and a store writes
+          // the positions it carries — a release that shipped fewer categories,
+          // a swatch cleared to `null`. The array replaces the shipped table
+          // whole when merged (the five positions are an order a chart and its
+          // legend both read), so this is the shape a decoder hands over without
+          // a cast rather than a port that completes it.
+          StoredSeries | null
+        : Stored<ThemeOverrides[K]>;
 };
 
 /**
@@ -723,7 +740,17 @@ export function extendTheme(
     elevation: overlay(elevation, overrides.elevation),
     borderWidth: overlay(base.borderWidth, overrides.borderWidth),
     iconSize: overlay(base.iconSize, overrides.iconSize),
-    series: overrides.series ?? base.series,
+    series:
+      overrides.series == null
+        ? base.series
+        : // A scale is named position by position, like the code palette: the
+          // positions an override names are its own, and every position it does
+          // not name answers the table the base resolves. A short row saved by a
+          // release that shipped fewer categories therefore paints a mark in
+          // every position a chart indexes instead of leaving the tail blank,
+          // while `seriesFailures` reads the row as the store wrote it and names
+          // the position that was lost.
+          seriesPalette(overrides.series, seriesColors(base)),
     // A palette is named token by token: the tokens an override names are its
     // own, and every one it does not name answers the table the base resolves
     // for its mode and variant. That is the rule every colour role follows —
@@ -769,55 +796,102 @@ void borderWidthIndex;
 const isEmptyGroup = (group: object): boolean =>
   Object.keys(group).length === 0;
 
+/**
+ * A number a stored group holds under a key, or `undefined` when it holds none.
+ *
+ * The diff reads a theme a store handed back, so a group may be absent or `null`
+ * and a step may be the `null` JSON writes for a key that was never carried. A
+ * value that is not a number is the same absence: the type cannot vouch for a
+ * decoder's value, and the gate (`invalidNumbers`) is what reports it.
+ */
+const storedNumber = (group: unknown, key: string): number | undefined => {
+  if (!isStepRecord(group)) return undefined;
+  const value = group[key];
+  return typeof value === "number" ? value : undefined;
+};
+
 /** The steps of one numeric scale a theme moved, or nothing when it moved none. */
 const stepOverrides = <Step extends string>(
   steps: readonly Step[],
-  theme: Readonly<Record<Step, number>>,
+  theme: unknown,
   base: Readonly<Record<Step, number>>,
 ): Partial<Record<Step, number>> | undefined => {
   const moved = steps.reduce<Partial<Record<Step, number>>>(
-    (overrides, step) =>
-      theme[step] === base[step]
+    (overrides, step) => {
+      const value = storedNumber(theme, step);
+      return value === undefined || value === base[step]
         ? overrides
-        : { ...overrides, [step]: theme[step] },
+        : { ...overrides, [step]: value };
+    },
     {},
   );
   return isEmptyGroup(moved) ? undefined : moved;
 };
 
 /** The fields of one text role a theme moved, or nothing when it moved none. */
-const textFields = (
-  role: TextStyle,
-  base: TextStyle,
-): Partial<TextStyle> | undefined => {
+const textFields = (role: unknown, base: TextStyle): Partial<TextStyle> | undefined => {
+  const size = storedNumber(role, "fontSize");
+  const leading = storedNumber(role, "lineHeight");
+  const weight = storedNumber(role, "fontWeight");
   const moved: Partial<TextStyle> = {
-    ...(role.fontSize === base.fontSize ? {} : { fontSize: role.fontSize }),
-    ...(role.lineHeight === base.lineHeight
+    ...(size === undefined || size === base.fontSize ? {} : { fontSize: size }),
+    ...(leading === undefined || leading === base.lineHeight
       ? {}
-      : { lineHeight: role.lineHeight }),
-    ...(role.fontWeight === base.fontWeight
+      : { lineHeight: leading }),
+    ...(weight === undefined || weight === base.fontWeight
       ? {}
-      : { fontWeight: role.fontWeight }),
+      : { fontWeight: weight }),
   };
   return isEmptyGroup(moved) ? undefined : moved;
 };
 
 /** The type scale a theme moved, field by field, or nothing when it moved none. */
 const typographyOverrides = (
-  theme: Typography,
+  theme: unknown,
   base: Typography,
 ): TypographyOverrides | undefined => {
+  const source = isStepRecord(theme) ? theme : {};
+  const sans = nameOf(source.sans);
+  const mono = nameOf(source.mono);
   const roles = textRoles.reduce<TypographyOverrides>(
     (overrides, role) => {
-      const moved = textFields(theme[role], base[role]);
+      const moved = textFields(source[role], base[role]);
       return moved === undefined ? overrides : { ...overrides, [role]: moved };
     },
     {
-      ...(theme.sans === base.sans ? {} : { sans: theme.sans }),
-      ...(theme.mono === base.mono ? {} : { mono: theme.mono }),
+      ...(sans === undefined || sans === base.sans ? {} : { sans }),
+      ...(mono === undefined || mono === base.mono ? {} : { mono }),
     },
   );
   return isEmptyGroup(roles) ? undefined : roles;
+};
+
+/** Whether a value is a shadow the runtime can paint, as a stored level holds it. */
+const isBoxShadow = (value: unknown): value is BoxShadow =>
+  isStepRecord(value) &&
+  typeof value.offsetX === "number" &&
+  typeof value.offsetY === "number" &&
+  typeof value.blurRadius === "number" &&
+  typeof value.spreadRadius === "number" &&
+  typeof value.color === "string";
+
+/**
+ * The shadows a stored elevation level holds, or `undefined` when it holds none.
+ *
+ * A level is an array a store wrote whole, but a saved theme can carry a level
+ * with an entry it cleared, a `null` level or a group it lost — the shape a
+ * decoder hands over. A level that is not a complete shadow set is no level: the
+ * diff then inherits the base's, and the gate (`invalidShadows`) names it.
+ */
+const shadowsAt = (
+  elevation: unknown,
+  level: ElevationLevel,
+): readonly BoxShadow[] | undefined => {
+  if (!isStepRecord(elevation)) return undefined;
+  const value = elevation[level];
+  if (!Array.isArray(value)) return undefined;
+  const shadows = value.filter(isBoxShadow);
+  return shadows.length === value.length ? shadows : undefined;
 };
 
 /** Whether two shadow arrays carry the same rungs. */
@@ -840,63 +914,77 @@ const sameShadows = (
 
 /** The density box a theme moved, or nothing when it moved none. */
 const densityOverrides = (
-  theme: Density,
+  density: unknown,
   base: Density,
 ): ThemeOverrides["density"] | undefined => {
+  // A preset name is the whole box, and a preset this release does not ship still
+  // names the box the theme asked for; the merge refuses that name by name.
+  if (typeof density === "string") {
+    return isDensityName(density) && density !== base.name ? density : undefined;
+  }
+  if (!isStepRecord(density)) {
+    return undefined;
+  }
   // A different preset name is a different box: a partial override keeps the
   // base's name (that is the merge rule), so the whole box — the shape a stored
   // theme writes — is what reproduces the preset a theme reports.
-  if (theme.name !== base.name) {
-    return theme;
+  if (isDensityBox(density) && density.name !== base.name) {
+    return density;
   }
   const controlHeight = stepOverrides(
     controlSizes,
-    theme.controlHeight,
+    density.controlHeight,
     base.controlHeight,
   );
   const controlPaddingX = stepOverrides(
     controlSizes,
-    theme.controlPaddingX,
+    density.controlPaddingX,
     base.controlPaddingX,
   );
+  const rowHeight = storedNumber(density, "rowHeight");
   const moved: DensityOverrides = {
     ...(controlHeight === undefined ? {} : { controlHeight }),
     ...(controlPaddingX === undefined ? {} : { controlPaddingX }),
-    ...(theme.rowHeight === base.rowHeight
+    ...(rowHeight === undefined || rowHeight === base.rowHeight
       ? {}
-      : { rowHeight: theme.rowHeight }),
+      : { rowHeight }),
   };
   return isEmptyGroup(moved) ? undefined : moved;
 };
 
 /** The syntax palette a theme moved, token by token, or nothing. */
 const syntaxOverrides = (
-  theme: Theme,
+  theme: StoredTheme,
   base: Theme,
 ): Partial<SyntaxColors> | undefined => {
   const carried = theme.syntax;
-  if (carried === undefined) {
+  if (!isStepRecord(carried)) {
     return undefined;
   }
   // The tokens a theme does not name are the base's resolved table when merged,
   // so the table a diff compares against is the one `extendTheme` reads.
   const table = syntaxColors(base);
   const moved = syntaxRoles.reduce<Partial<SyntaxColors>>(
-    (tokens, role) =>
-      carried[role] === table[role]
-        ? tokens
-        : { ...tokens, [role]: carried[role] },
+    (tokens, role) => {
+      const value = carried[role];
+      return namesColour(value) && value !== table[role]
+        ? { ...tokens, [role]: value }
+        : tokens;
+    },
     {},
   );
   return isEmptyGroup(moved) ? undefined : moved;
 };
 
-/** Whether two categorical scales name the same five colours. */
-const sameSeries = (
-  left: SeriesColors,
-  right: SeriesColors | undefined,
-): boolean =>
-  right !== undefined && left.every((colour, index) => colour === right[index]);
+/**
+ * Whether two categorical scales name the same five colours.
+ *
+ * The base's five positions are walked, not the table the theme happens to hold:
+ * a scale a store wrote short has no colour at the positions it lost, and those
+ * positions are the base's, so a short table is not the same scale.
+ */
+const sameSeries = (left: StoredSeries, right: SeriesColors | undefined): boolean =>
+  right !== undefined && right.every((colour, index) => left[index] === colour);
 
 /** Whether two switch paints name the same slots, the optional edge included. */
 const sameSwitch = (
@@ -968,7 +1056,7 @@ const sameMetrics = (
  * themeOverrides(edited, themes.light); // { radius: { md: 4 } }
  * ```
  */
-export function themeOverrides(theme: Theme, base: Theme): ThemeOverrides {
+export function themeOverrides(theme: StoredTheme, base: Theme): ThemeOverrides {
   const mode = themeModeOf(theme);
   const contrast = themeContrastOf(theme);
   if (mode !== themeModeOf(base) || contrast !== themeContrastOf(base)) {
@@ -976,20 +1064,29 @@ export function themeOverrides(theme: Theme, base: Theme): ThemeOverrides {
       `\`${mode} · ${contrast}\` is not an edit of \`${themeModeOf(base)} · ${themeContrastOf(base)}\`: a mode and a contrast variant are what a theme's numbers mean, so no override can move them. Start from the theme of the same mode with \`getTheme\`, or rebuild a stored theme from its own labels with \`restoreTheme\`.`,
     );
   }
-  const colors = colorRoles.reduce<Partial<ThemeColors>>(
-    (overrides, role) =>
-      theme.colors[role] === base.colors[role]
-        ? overrides
-        : { ...overrides, [role]: theme.colors[role] },
-    {},
-  );
+  // Every group is read as a store hands it back — the same reads the paint
+  // seams and `extendTheme` make — so a group or a role the theme does not carry
+  // is not an edit rather than a `TypeError` or a `null` in the result. No
+  // override can express an absence (a `null` inherits), so omitting is the only
+  // truthful answer; the gate (`missingTokens`) is what refuses the theme.
+  const colours = themeColors(theme);
+  const colors = colorRoles.reduce<Partial<ThemeColors>>((overrides, role) => {
+    const value = colours[role];
+    return value === undefined || value === base.colors[role]
+      ? overrides
+      : { ...overrides, [role]: value };
+  }, {});
   // The shadow role owns every level's tint, so a moved role names them all.
-  const shadowMoved = theme.colors.shadow !== base.colors.shadow;
+  const shadowMoved =
+    colours.shadow !== undefined && colours.shadow !== base.colors.shadow;
   const elevation = elevationLevels.reduce<Partial<Elevation>>(
-    (overrides, level) =>
-      shadowMoved || !sameShadows(theme.elevation[level], base.elevation[level])
-        ? { ...overrides, [level]: theme.elevation[level] }
-        : overrides,
+    (overrides, level) => {
+      const shadows = shadowsAt(theme.elevation, level);
+      return shadows === undefined ||
+        (!shadowMoved && sameShadows(shadows, base.elevation[level]))
+        ? overrides
+        : { ...overrides, [level]: shadows };
+    },
     {},
   );
   const spacing = stepOverrides(spacingSteps, theme.spacing, base.spacing);
@@ -1000,20 +1097,27 @@ export function themeOverrides(theme: Theme, base: Theme): ThemeOverrides {
     base.borderWidth,
   );
   const iconSize = stepOverrides(iconSizes, theme.iconSize, base.iconSize);
-  const name = theme.name === base.name ? undefined : theme.name;
+  const authoredName = nameOf(theme.name);
+  const name =
+    authoredName === undefined || authoredName === base.name
+      ? undefined
+      : authoredName;
   const typography = typographyOverrides(theme.typography, base.typography);
   const density = densityOverrides(theme.density, base.density);
   const syntax = syntaxOverrides(theme, base);
+  const baseSeries = seriesColors(base);
+  const carried =
+    theme.series == null ? undefined : seriesPalette(theme.series, baseSeries);
   const series =
-    theme.series === undefined || sameSeries(theme.series, base.series)
+    carried === undefined || sameSeries(carried, baseSeries)
       ? undefined
-      : theme.series;
+      : carried;
   const toggle =
-    theme.switch === undefined || sameSwitch(theme.switch, base.switch)
+    theme.switch == null || sameSwitch(theme.switch, base.switch)
       ? undefined
       : theme.switch;
   const metrics =
-    theme.switchMetrics === undefined ||
+    theme.switchMetrics == null ||
     sameMetrics(theme.switchMetrics, base.switchMetrics)
       ? undefined
       : theme.switchMetrics;
