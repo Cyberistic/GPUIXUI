@@ -32,6 +32,7 @@ import {
 } from "@gpuixui/tokens/react";
 import {
   ThemeProvider,
+  avatarPixels,
   messageLink,
   pressWash,
   tone,
@@ -256,6 +257,10 @@ describe("the seam re-exports the token helpers", () => {
     expect(elevationShadow).toBe(Tokens.elevationShadow);
     expect(alpha).toBe(Tokens.alpha);
     expect(statusTone).toBe(Tokens.statusTone);
+    // The bug: a second guard and resolver for the fixed avatar scale lived
+    // here, so a step the token package added or renamed reached one package
+    // and not the component that paints it.
+    expect(avatarPixels).toBe(Tokens.avatarPixels);
     expect(ThemeProvider).toBe(TokenThemeProvider);
     expect(useTheme).toBe(tokenUseTheme);
   });

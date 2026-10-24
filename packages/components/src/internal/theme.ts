@@ -18,6 +18,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Schema from "effect/Schema";
 import {
   alpha,
+  avatarPixels,
   avatarSize,
   brandTextOn,
   controlFocusRing,
@@ -57,6 +58,7 @@ import {
 
 export {
   alpha,
+  avatarPixels,
   avatarSize,
   controlFocusRing,
   controlHeight,
@@ -91,28 +93,6 @@ export type {
   Theme,
 };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
-
-/**
- * Whether a stored value is a step the avatar scale carries.
- *
- * The scale is looked up by its **own** keys: `key in avatarSize` also answers
- * true for every name `Object.prototype` carries (`toString`, `constructor`),
- * so a persisted name would pass the guard and the lookup would hand the
- * runtime a method where a diameter belongs.
- */
-const isAvatarSize = (value: unknown): value is keyof typeof avatarSize =>
-  typeof value === "string" && Object.hasOwn(avatarSize, value);
-
-/**
- * The diameter a stored avatar size names.
- *
- * `size` is as often a saved preference as a literal, so a name from a release
- * that renamed or dropped a step reads as the default `md` — the rule `Icon`'s
- * `iconPixels` follows. A bare lookup answered `undefined`, which painted a box
- * with no side and a `NaN` fallback font.
- */
-export const avatarPixels = (size: unknown): number =>
-  isAvatarSize(size) ? avatarSize[size] : avatarSize.md;
 
 /**
  * The focus ring every interactive part declares **at rest**.
