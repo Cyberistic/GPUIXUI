@@ -1,4 +1,8 @@
 import { readFileSync } from "node:fs";
+import {
+  delayedTiming,
+  presenceTiming,
+} from "../../../../packages/motion/src/presence.js";
 import { preferenceOf } from "../../../../packages/motion/src/timing.js";
 import { describe, expect, it } from "vitest";
 
@@ -170,6 +174,36 @@ describe("the motion page", () => {
     expect(page).toContain("not one of those names");
     expect(page).toContain('takes `"reduced"`');
     expect(page).toContain("The two mistakes are not equal");
+  });
+
+  it("teaches the wait a no-journey timing drops", () => {
+    // Bug guarded: the page listed `delayedTiming` in its module table and never
+    // stated its rule, so a reader could only learn from the package that a
+    // stagger's wait disappears — and it disappears for every journey the timing
+    // cannot run, not only the zero a reduced run takes.
+    const enter = presenceTiming("normal").enter;
+    const noJourney = [
+      { duration: 0 },
+      {},
+      { duration: Number.NaN },
+      { duration: -0.2 },
+      { duration: 1e308 },
+    ];
+
+    expect(noJourney.map((timing) => delayedTiming(timing, 80))).toEqual(
+      noJourney,
+    );
+    // A readable run keeps its wait, so the rule cannot pass by dropping every
+    // stagger.
+    expect(delayedTiming(enter, 80).delay).toBe(0.08);
+    expect(page).toContain(
+      "**A wait rides with a journey that actually runs.**",
+    );
+    expect(page).toContain("the runtime sits the wait out");
+    expect(page).toContain("absent");
+    expect(page).toContain("`NaN`");
+    expect(page).toContain("not positive");
+    expect(page).toContain("overflow");
   });
 
   it("prints the five durations motionLevels declares", () => {

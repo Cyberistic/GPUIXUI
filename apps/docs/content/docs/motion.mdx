@@ -88,6 +88,8 @@ if (!presence.mounted) return null; // render until the exit has run
 | `fadeFromSide(side, offset)` | arrives from a window edge |
 | `fadeFromAnchor(side, offset)` | travels out from the trigger's own edge |
 
+**A wait rides with a journey that actually runs.** `delayedTiming(timing, delayMs)` adds a stagger's wait to a transition, but the runtime sits the wait out *before* it starts the tween — so a wait kept beside a journey that cannot travel holds the box at its first frame for exactly the wait the reader removed. The wait is therefore dropped for every no-journey shape: a duration that is absent, one the arithmetic cannot read (`NaN`), one that is not positive — the zero a reduced run takes — and one whose seconds overflow the millisecond conversion. A wait that cannot be scheduled itself (negative, zero, `NaN`, infinite) adds nothing, and a run with no wait keeps the object it was handed.
+
 ## Limitations
 
 - **No `transform`**: scale, rotate and translate have no style key.
