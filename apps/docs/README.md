@@ -198,7 +198,7 @@ src/components/docs/badge-preview.ts       The badge preview's statuses, filter 
 src/components/docs/badge-demo.tsx        The badge's deployments panel and state gallery
 src/components/docs/timeline-preview.ts   The timeline preview's app-marked statuses and its cursor
 src/components/docs/timeline-demo.tsx     The timeline's two browser renderings and their source strings
-src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
+src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule, and the slide's duration and curve derived from the component's timing
 src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
 src/components/docs/table-preview.ts      The table preview's copy of the package's sort, selection and filter rules
 src/components/docs/table-rule-demos.tsx  The sorting and selection pages' drawings over the package's row model
