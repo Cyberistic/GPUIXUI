@@ -540,6 +540,25 @@ export interface AsyncSmokeHost {
     offset: Offset,
   ) => Effect.Effect<void, SmokeHostError>;
   /**
+   * Presses a point **inside** `testId`'s painted box.
+   *
+   * `offset` is in the element's own coordinates, from its painted top-left
+   * corner — the convention {@link hoverAt} takes. A shipped component does not
+   * give every part it renders an address: `FileTree`'s row holds a
+   * `@gpuixui/primitives` checkbox that forwards no `testId`, so the only way to
+   * press it is the point a reader clicks.
+   *
+   * The protocol's `drag` cannot stand in: its `offset` is applied to the press
+   * **and again** to the release (`dragBy` adds it to the computed destination,
+   * which `mouse.drag` offsets a second time), so a zero-length drag presses and
+   * releases two different points. This verb sends the protocol's own click at
+   * the point, which is the one hit-tested path a press takes.
+   */
+  readonly clickAt: (
+    testId: string,
+    offset: Offset,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
    * Presses on `testId` and drags the pointer by the given offset, releasing
    * there.
    *

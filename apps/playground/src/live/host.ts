@@ -295,6 +295,17 @@ export const createLiveHost = ({
           app.mouse.move({ x: box.x + offset.x, y: box.y + offset.y }),
         );
       }),
+    clickAt: (testId, offset) =>
+      Effect.gen(function* () {
+        const box = yield* call(`clickAt ${testId}`, () => at(testId).bounds());
+        const point = { x: box.x + offset.x, y: box.y + offset.y };
+        // A reader moves the pointer onto a part and then presses it, and the
+        // move is what gives the renderer a hit test at that point: a click
+        // delivered without one lands on whatever the last move hovered
+        // (`file-tree-lifecycle` measured a row miss after a scroll).
+        yield* call(`clickAt ${testId}`, () => app.mouse.move(point));
+        yield* call(`clickAt ${testId}`, () => app.mouse.click(point));
+      }),
     drag: (testId, deltaX, deltaY, options) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY, options)),
     /**

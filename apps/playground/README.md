@@ -47,7 +47,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-130 probes a real window can prove, of which twenty-nine mount shipped
+131 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -56,7 +56,7 @@ the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail, the image zoom, the accordion and
-the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
+the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer` and one its `FileTree`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
 shipped `DockLayout`, ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
@@ -7383,6 +7383,51 @@ working here.
 `src/live/dock-layout.ts`, probe `src/live/dock-layout-probe.tsx`, guard
 `src/live/dock-layout.test.ts`.
 
+### `file-tree-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/files` `FileTree` over a five-path workspace — two
+folders, a config file and a readme — built by the package's own
+`buildFileTree`. Tier 4's *File trees* row cited `virtual-tree-lifecycle`, which
+measures the runtime's `<virtual-list>` around a probe-local flattening; no
+window had mounted the component, pressed one of its rows or read the leading
+checkbox it adds over `@gpuixui/data`'s tree.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the readout is `sel=0 keys=none picked=-`; the four roots each paint a row (`assets`, `src`, `config.json`, `readme.md`, folders first); `assets/logo.png` has no row; the tree's box is **128** tall — four **32**-point rows, the height it was handed — so the `height` prop is the tree's own bound |
+| press `src` | the folder opens and both children paint; the readout is `sel=1 keys=src picked=src`, so a press both opens a branch and replaces the selection |
+| wheel down over the tree | the sixth row starts below the box (the height clips rather than grows), the wheel scrolls the tree's own scroller to the end of its content (**−64** = two rows), and the row it revealed sits inside the box while the first row is pushed above it |
+| press `readme.md` | the readout is `sel=1 keys=readme.md picked=readme.md` — the selection a folder held is replaced — and `src` stays open |
+| wheel back up | the offset returns to `0` |
+| press `assets`' checkbox | **a measured gap**: the readout is `sel=1 keys=assets picked=assets` and the closed folder opens, because the row press the checkbox also runs replaces the selection. The component documents the checkbox as toggling a row *in* the selection, so a consumer cannot multi-select by it. A second press closes the folder again and leaves the same row chosen |
+| press `src/button.tsx`, `down`, `enter`, `r`+`e` | the press lands native focus on that row, the arrow moves the cursor **and** native focus to `src/index.ts` (one tab stop), Enter activates it (`sel=1 keys=src/index.ts picked=src/index.ts`), and the typed prefix `re` takes focus to `readme.md` |
+
+**The checkbox gap is the files package's, and is recorded for its owner.**
+`FileTree`'s row is the press target and the checkbox is its first child; GPUix
+delivers a handled click to both, so `onCheckedChange`'s toggle is followed by
+the row's own replace (and a branch's open/close). The fix is the mechanism
+`@gpuixui/media`'s crop handles already use — `event.stopPropagation()` on the
+checkbox's press — and `TODO.md` → Interlocks carries it with this evidence. The
+probe pins the measured reading so the fix flips those checks, the `File trees`
+row and this table together.
+
+**Two address limits, read from the source.** The component forwards no `testId`
+to the checkbox it renders, so a probe reaches it only by a point inside the row:
+`fileTreeCheckboxOffset` derives that point from the row's depth inset, the
+chevron slot's own box (`${row}-slot`) and the library's minimum target size —
+no hard-coded geometry. That needed a new host verb, `AsyncSmokeHost.clickAt`,
+because the protocol's `drag` applies its `offset` to the press **and again** to
+the release, so a zero-length drag does not press and release one point. And a
+press needs a **pointer move first**: a click sent without one lands on whatever
+the last move hovered — measured here, a row press after a wheel reached nothing
+until the probe moved onto it — which is why the probe's row presses are
+`hover` then `click`.
+
+30 checks, `--only file-tree-lifecycle`, green on 0.11.0 here (three runs,
+1.6–3.4 s). Evidence: `.artifacts/live/file-tree-open.png`. Fixture
+`src/live/file-tree.ts`, probe `src/live/file-tree-probe.tsx`, guard
+`src/live/file-tree.test.ts`.
+
 
 ## Terminal mode: the pty probe
 
@@ -7636,7 +7681,7 @@ narrower. Each deviation is deliberate and measured:
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
   `motion-interruption` and `panel-group-lifecycle` and
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
-  `dock-layout-lifecycle` (72
+  `dock-layout-lifecycle` and `file-tree-lifecycle` (73
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples

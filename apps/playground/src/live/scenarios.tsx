@@ -1131,6 +1131,7 @@ import { DockLayoutProbe, dockLayoutSteps } from "./dock-layout-probe.js";
 import { PanelGroupProbe, panelGroupSteps } from "./panel-group-probe.js";
 import { AccordionProbe, accordionSteps } from "./accordion-probe.js";
 import { LogViewerProbe, logViewerSteps } from "./log-viewer-probe.js";
+import { FileTreeProbe, fileTreeSteps } from "./file-tree-probe.js";
 import {
   PropertyPanelProbe,
   propertyPanelSteps,
@@ -30687,5 +30688,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "dock-layout-lifecycle",
     view: () => <DockLayoutProbe />,
     steps: dockLayoutSteps,
+  },
+  "file-tree-lifecycle": {
+    id: "file-tree-lifecycle",
+    view: () => <FileTreeProbe />,
+    steps: fileTreeSteps,
   },
 };

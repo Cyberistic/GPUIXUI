@@ -816,6 +816,12 @@ export const liveRegistry = [
       "Panel: the shipped DockLayout paints a split's tab groups in their shares, and a tab press repaints its group but reports only that group as the tree",
     capability: "panel",
   },
+  {
+    id: "file-tree-lifecycle",
+    title:
+      "Tree: the shipped FileTree opens a folder on a press, replaces the selection on a file, adds a row from its checkbox without opening the folder, walks native focus by key and scrolls inside the height it was handed",
+    capability: "tree",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
