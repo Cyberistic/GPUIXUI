@@ -54,7 +54,10 @@ const section = (() => {
 
 describe("the accordion scene's arithmetic", () => {
   it("gives every section a distinct body, so a shift names its pair", () => {
-    const heights = Arr.map(ACCORDION_ORDER, (section) => ACCORDION_BODIES[section]);
+    const heights = Arr.map(
+      ACCORDION_ORDER,
+      (section) => ACCORDION_BODIES[section],
+    );
     expect(heights).toEqual([120, 200, 80, 60]);
     expect(Arr.dedupe(heights)).toHaveLength(heights.length);
     // The switch the probe reads, derived from the two bodies it switches
@@ -108,8 +111,9 @@ describe("the accordion scene's arithmetic", () => {
         accordionBody(section),
       ]),
     );
-    expect(Arr.dedupe([...ids, ACCORDION_IDS.probe, ACCORDION_IDS.readout]))
-      .toHaveLength(ACCORDION_ORDER.length * 3 + 2);
+    expect(
+      Arr.dedupe([...ids, ACCORDION_IDS.probe, ACCORDION_IDS.readout]),
+    ).toHaveLength(ACCORDION_ORDER.length * 3 + 2);
     expect(accordionTrigger("gamma")).toBe("accordion-gamma-trigger");
   });
 });
@@ -148,7 +152,12 @@ describe("the probe mounts the shipped accordion", () => {
   it("composes the package's parts instead of a local disclosure", () => {
     expect(probe).toContain('} from "@gpuixui/components"');
     Arr.forEach(
-      ["<Accordion", "<AccordionItem", "<AccordionTrigger", "<AccordionContent"],
+      [
+        "<Accordion",
+        "<AccordionItem",
+        "<AccordionTrigger",
+        "<AccordionContent",
+      ],
       (part) => {
         expect(probe).toContain(part);
       },

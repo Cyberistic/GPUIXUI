@@ -84,8 +84,11 @@ export const PINNED_ROW_FILL = "#FF3B30";
 export const ROW_TODAY_TOP = PINNED_HEADER;
 
 /** The centre of a row that starts at `top` in content space, at `offset`. */
-export const rowCentre = (top: number, height: number, offset: number): number =>
-  top + height / 2 + offset;
+export const rowCentre = (
+  top: number,
+  height: number,
+  offset: number,
+): number => top + height / 2 + offset;
 
 /** The readout the probe paints after every wheel and press. */
 export const pinnedReadout = (state: {

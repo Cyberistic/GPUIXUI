@@ -49,9 +49,7 @@ export const ACCORDION_ENABLED: ReadonlyArray<AccordionSection> = Arr.filter(
 export const ACCORDION_START: AccordionSection = "alpha";
 
 /** Whether a value is one of this scene's sections. */
-export const isAccordionSection = (
-  value: unknown,
-): value is AccordionSection =>
+export const isAccordionSection = (value: unknown): value is AccordionSection =>
   P.isString(value) && Arr.contains(ACCORDION_ORDER, value);
 
 /**

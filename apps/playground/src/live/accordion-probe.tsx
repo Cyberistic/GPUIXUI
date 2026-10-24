@@ -91,10 +91,7 @@ export const AccordionProbe = (): ReactNode => {
         </text>
       </AccordionTrigger>
       {/* The padding is dropped so the settled clip is the body's own height. */}
-      <AccordionContent
-        testId={accordionClip(section)}
-        className="p-0 gap-0"
-      >
+      <AccordionContent testId={accordionClip(section)} className="p-0 gap-0">
         {body(section)}
       </AccordionContent>
     </AccordionItem>
@@ -173,7 +170,9 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       settleNumber(heightOf(testId));
 
     /** Whether `testId` stops painting, which a close waits for. */
-    const gone = (testId: string): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+    const gone = (
+      testId: string,
+    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
       settleUntil(
         Effect.map(ctx.host.bounds(testId), (painted) => painted === null),
         (absent) => absent,
