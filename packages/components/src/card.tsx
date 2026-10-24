@@ -21,6 +21,7 @@ import {
   CARD_VARIANTS,
   cn,
 } from "@gpuixui/tw";
+import * as Schema from "effect/Schema";
 import {
   assertParts,
   type PartChildren,
@@ -30,12 +31,29 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 
+/** The surface treatments, as the guard reads them. */
+const CardVariants = Schema.Literals(["outline", "elevated", "plain"]);
+
 /** The surface treatment. `outline` borders, `elevated` floats, `plain` does neither. */
-export type CardVariant = "outline" | "elevated" | "plain";
+export type CardVariant = typeof CardVariants.Type;
+
+/**
+ * The treatment a stored variant paints.
+ *
+ * A variant is a stored choice as often as a literal — a saved dashboard, a
+ * settings section, a layout record — so a name a release renamed arrives as a
+ * string the union no longer carries. The raw table read answered `undefined`
+ * and the recipe dropped the entry, so the surface painted neither the
+ * documented `outline` edge nor a lift: a card with no boundary on the page. A
+ * name the table does not carry paints the documented default, the rule the
+ * `Badge` guard and `internal/button.tsx`'s `lookOf` follow.
+ */
+const variantOf = (value: unknown): CardVariant =>
+  Schema.is(CardVariants)(value) ? value : "outline";
 
 /** {@link Card} props. */
 export interface CardProps extends Omit<Props, "children"> {
-  /** Default `"outline"`. */
+  /** Default `"outline"`; a stored name the table does not carry reads as the default. */
   readonly variant?: CardVariant;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -52,11 +70,12 @@ export const Card = ({
 }: CardProps) => {
   const theme = useTheme();
   assertParts(cardRoot, children);
+  const treatment = variantOf(variant);
   return (
     <div
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(CARD_BASE, CARD_VARIANTS[variant], className), theme),
+        recipeStyle(cn(CARD_BASE, CARD_VARIANTS[treatment], className), theme),
         style,
       )}
     >

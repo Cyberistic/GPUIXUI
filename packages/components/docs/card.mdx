@@ -42,7 +42,7 @@ Card
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Card` | `div` | `variant?: "outline" \| "elevated" \| "plain"` (default `"outline"`), `className?`, `children` |
+| `Card` | `div` | `variant?: "outline" \| "elevated" \| "plain"` (default `"outline"`; a stored name that is neither reads as the default), `className?`, `children` |
 | `CardHeader` | `div` | `className?`, `children` |
 | `CardTitle` | `text` | `role="heading"`, `aria-level={3}`, `className?` |
 | `CardDescription` | `text` | `className?` |
@@ -54,3 +54,4 @@ Card
 - The footer recipe has no bottom padding; add `className="pb-3"`.
 - `overflow` is hidden on the surface; put the scroller in `CardContent`.
 - Not focusable and not a landmark.
+- **A stored `variant` the table does not carry paints `"outline"`**: a saved card whose treatment a release renamed keeps its edge instead of painting with no boundary at all.

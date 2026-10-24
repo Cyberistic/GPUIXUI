@@ -80,6 +80,31 @@ describe("Card", () => {
     plain.unmount();
   });
 
+  it("paints the outlined default for a stored variant name it does not ship", () => {
+    // The bug guarded: the variant indexed `CARD_VARIANTS` raw, so a name a
+    // release renamed (a card saved as `"bordered"`) answered `undefined`, the
+    // recipe dropped the entry, and the surface painted neither the documented
+    // `outline` edge nor a lift — a card with no boundary at all on a page.
+    const card = renderComponent(
+      <Card
+        testId="card"
+        // A store keeps the name it wrote; this release does not declare it.
+        // @ts-expect-error — the value a saved variant actually carries
+        variant="bordered"
+      />,
+    );
+    try {
+      expect(card.renderer.findByTestId("card")?.style.borderWidth).toBe(
+        darkTheme.borderWidth.thin,
+      );
+      expect(
+        card.renderer.findByTestId("card")?.style.boxShadow,
+      ).toBeUndefined();
+    } finally {
+      card.unmount();
+    }
+  });
+
   it("announces the title as a level-3 heading", () => {
     const card = renderComponent(settingsCard);
     const headings = nodesWithRole(card.renderer, "heading");
