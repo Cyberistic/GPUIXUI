@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-122 probes a real window can prove, of which twenty-seven mount shipped
+123 probes a real window can prove, of which twenty-seven mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -50,9 +50,10 @@ the command palette, the tabs, the list, the collapsible section, the popover,
 the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
-the modal focus rule and the breadcrumb trail, and the image zoom), nine mount
+the modal focus rule and the breadcrumb trail, and the image zoom), ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
-ScrollArea and the Button, and the media probe's play/pause action), three mount `@gpuixui/data`'s examples (the table, the virtualized
+Rating, the ScrollArea and the Button, and the media probe's play/pause
+action), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one mounts the package's shipped charts, one mounts the
 package's three chrome parts (the menu bar, the toolbar and the status bar), one
 more mounts the runtime's own `Select` parts, and the rest prove the runtime itself
@@ -6926,6 +6927,69 @@ fails `partway through the level both dots paint a width between a dot and the
 pill` with `expected true, got false`. Evidence:
 `.artifacts/live/carousel-{first,second,dots,motion-frozen,motion-partial,motion-settled}.png`.
 
+### `rating-lifecycle` — measured on 0.11.0 here
+
+**Does a rating's state reach the glass, and does the half star really clip the
+glyph?** `Rating`'s offscreen suites read the element tree and the icons'
+`style.color`: a filled star is the theme's `primary`, an empty one
+`mutedForeground`, a failed validation's filled star `destructive`, and a half
+star is the filled glyph painted whole inside a box clipped at the star's
+midpoint. What no renderer read answers is whether those inks paint, whether the
+clip cuts the glyph where the component says, and whether the keyboard contract
+survives a real window's focus path. The probe gives each static reading a
+`max={1}` rating — the group's box is then exactly one **24×24** star, so a count
+confined to it cannot borrow another row's ink — and drives a five-star group
+with `allowHalf`.
+
+| Step | Measured |
+| ---- | -------- |
+| an unrated `max={1}` star | **0** primary pixels, **196** muted ones: the outline is the muted role and nothing of the brand paints |
+| a star at `1` | **270** primary pixels, **0** muted: the filled glyph replaces the outline rather than sitting over it |
+| a star at `0.5` | the left half paints **168** primary pixels, the right half **0** primary and **98** muted — the clip cuts at the box's midpoint and the outline shows beyond it |
+| a star at `1` with `invalid` | **274** destructive pixels and **0** primary |
+| a disabled star at `1` | **282** pixels of the half-opacity composite and **0** of the undimmed primary |
+| the driven group at rest | `value=0 reports=0 disabled=0` |
+| a press at the group's centre | `value=3 reports=1` — the middle star, hit-tested through its own glyph |
+| Right / Left | `value=3.5 reports=2`, then `value=3 reports=3` — halves step by half |
+| Home / End | `value=0.5 reports=4`, then `value=5 reports=5` |
+| Right at five | the readout is unchanged: the arrows clamp, they do not wrap |
+| Delete | `value=0 reports=6` — the clear key reports the change it made |
+| a press on the disabled group | `disabled=0`: the press is refused and reports nothing |
+
+The numbers are one run's counts; the assertions are the zero claims and the
+presence of each role, because an antialiased edge can move by a few pixels
+between captures.
+
+Three rules a plan can build on:
+
+1. **The role is in the glass.** A filled star's fill is the brand role as a
+   count, not only as a style value, and the empty and invalid states swap the
+   role rather than tinting it.
+2. **A half star is a clip, not a tint.** The filled glyph is painted whole and
+   cut by the cell's left half; the outline stays visible in the right half.
+   That is the runtime's only shape for half a star, since it has no transform.
+3. **A press owns the keyboard path.** The probe's first pass pressed the
+   disabled group before the clear key and `Delete` left the value at **5** —
+   the press had moved native focus to a group that refuses input, so the key
+   never reached the interactive rating. The steps now clear the rating while
+   its own star holds the focus, which is the rule a composition must plan:
+   after a press on another control, the keyboard path goes with it.
+
+```sh
+nub apps/playground/dist/live/run.js --only rating-lifecycle
+```
+
+47 checks, `--only rating-lifecycle`, one window and two captures
+(`rating-rest`, `rating-chosen`), green on 0.11.0 here (~4.6 s). Fixture `src/live/rating.ts` + probe
+`src/live/rating-probe.tsx` + `rating.test.ts` (the inks' separation, the
+readout, the half split, the probe's wiring, the registry and this section).
+The negative control is measured: dropping `allowHalf` from the half star's row
+fails `a half star paints the primary ink in its left half`
+(`expected true, got false`, exit `1`), because the value snaps to a whole star
+and the fill moves to the other half. Evidence:
+`apps/playground/README.md` §`rating-lifecycle`,
+`.artifacts/live/rating-{rest,chosen}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7172,7 +7236,7 @@ narrower. Each deviation is deliberate and measured:
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
-  `carousel-lifecycle` (64 probes, each run alone).
+  `carousel-lifecycle` and `rating-lifecycle` (65 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`

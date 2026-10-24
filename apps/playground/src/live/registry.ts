@@ -768,6 +768,12 @@ export const liveRegistry = [
       "Input: the shipped carousel paints only the slide on screen, sizes its frame to that slide, swaps the indicator's inks in the press's frame and travels its widths to land, and steps, clamps and wraps through its controls",
     capability: "input",
   },
+  {
+    id: "rating-lifecycle",
+    title:
+      "Input: the shipped rating paints a filled star in the primary role, an empty one muted, a half star as a clipped fill, steps with the arrows and clears with Delete",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
