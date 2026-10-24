@@ -38,6 +38,39 @@ process.stdout.write(`${Report.formatReport(report)}\n`);
 process.exitCode = Report.exitCode(report);
 ```
 
+## The window host's verbs
+
+`Smoke.AsyncSmokeHost` is the window half of the suite. A probe reads, presses,
+types and captures through these verbs; each one names an element rather than a
+screen coordinate, so a check measures the reader's path instead of a point.
+
+| Group | Verbs |
+| ----- | ----- |
+| Reads | `text`, `paintedText`, `bounds`, `focused`, `windowSize`, `scrollOffset`, `listAnchor`, `selectedText`, `clearSelection`, `pixels` |
+| Presses and moves | `click`, `clickText`, `rightClick`, `clickWith`, `hover`, `hoverAt`, `clickAt`, `drag`, `wheel` |
+| Keys and focus | `key`, `keyDown`, `keyUp`, `focusNext`, `focusElement`, `blur` |
+| Scrolls | `scrollToItem` |
+| Time | `clockPause`, `clockFastForward`, `clockResume`, `waitFor` |
+| Evidence | `capture` |
+| Window | `zoomWindow`, `activateWindow`, `registerFont` |
+
+`a11yTree` and `paintedStyle` are absent here on purpose: a window's automation
+protocol exposes no accessibility dump, so both are offscreen facts.
+
+### A press at a point inside an element
+
+`clickAt(testId, offset)` presses a point measured from the element's painted
+top-left corner, the convention `hoverAt` takes. It exists for a part a shipped
+component renders without an address: `FileTree` forwards no `testId` to the
+checkbox in each row, so the probe presses that box where the library's own
+target geometry puts it.
+
+Two measured facts make it a verb rather than an option on another one. `drag`
+applies its `offset` to the press **and again** to the release, so a zero-length
+drag presses and releases two different points. And a press with no preceding
+move lands on whatever the last move hovered — a row press after a wheel reached
+nothing — so `clickAt` moves the pointer onto the point and then presses it.
+
 ## Running a suite
 
 `--only` is repeatable and scoped; `--list` prints the ids and runs nothing.
