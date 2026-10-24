@@ -26,7 +26,13 @@ import {
   targetSize,
 } from "@gpuixui/tokens";
 import type { SwitchColors } from "@gpuixui/tokens";
-import { iconSideOf, colorRole, radiusValue, spaceValue } from "./theme.js";
+import {
+  iconSideOf,
+  borderWidthOf,
+  colorRole,
+  radiusValue,
+  spaceValue,
+} from "./theme.js";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
@@ -225,7 +231,7 @@ export const selectionBoxStyle = (
       spec.shape === "circle"
         ? radiusValue(theme, "full")
         : radiusValue(theme, "sm"),
-    borderWidth: theme.borderWidth.thin,
+    borderWidth: borderWidthOf(theme, "thin"),
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : undefined,
     color: selectionMarkColor(spec, theme),
@@ -285,7 +291,11 @@ export const switchBox = (
   source: SwitchPaintTheme,
 ): SwitchBox => {
   const theme = switchTheme(source);
-  const metrics = theme.switchMetrics;
+  // A platform's metrics are an optional group: JSON writes `null` for one a
+  // store did not carry, and `null` is absence, not a table to measure.
+  const metrics = Option.getOrUndefined(
+    Option.fromNullishOr(theme.switchMetrics),
+  );
   if (theme.switch !== undefined && metrics !== undefined) {
     return switchMetricsAt(metrics, size);
   }
@@ -296,7 +306,7 @@ export const switchBox = (
     height: iconSide,
     knob: iconSide - inset * 2,
     inset,
-    border: theme.borderWidth.thin,
+    border: borderWidthOf(theme, "thin"),
   };
 };
 

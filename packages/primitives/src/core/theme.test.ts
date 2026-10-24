@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  borderWidth as libraryBorderWidth,
   defaultDensity as libraryDensity,
   iconSize as libraryIconSize,
   isTextRole as tokenTextRole,
@@ -42,9 +43,10 @@ import {
   switchTrackStyle,
 } from "./selection.js";
 import { pressWash } from "./pointer.js";
-import { actionOnColor, buttonVariants } from "./variants.js";
+import { actionOnColor, buttonVariants, fieldVariant } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import {
+  borderWidthOf,
   colorRole,
   colorsOf,
   controlHeightOf,
@@ -444,6 +446,47 @@ describe("a numeric group a store gave back", () => {
     );
   });
 
+  it("paints the library's border width for a group the theme lost", () => {
+    expect(borderWidthOf({}, "thin")).toBe(libraryBorderWidth.thin);
+    expect(borderWidthOf({}, "strong")).toBe(libraryBorderWidth.strong);
+    expect(borderWidthOf(stored({ borderWidth: null }), "thin")).toBe(
+      libraryBorderWidth.thin,
+    );
+    // A brand's own widths are the ones that paint.
+    const brand = stored({ borderWidth: { thin: 3, strong: 5 } });
+    expect(borderWidthOf(brand, "thin")).toBe(3);
+    expect(borderWidthOf(brand, "strong")).toBe(5);
+    // And every painter that asks for one takes the seam.
+    const lost = stored({ borderWidth: null });
+    expect(ruleStyle({ orientation: "vertical" }, lost).width).toBe(
+      libraryBorderWidth.thin,
+    );
+    expect(
+      selectionBoxStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        lost,
+      ).borderWidth,
+    ).toBe(libraryBorderWidth.thin);
+    expect(
+      controlStyle({ variant: fieldVariant, size: "md" }, lost).borderWidth,
+    ).toBe(libraryBorderWidth.thin);
+    expect(sliderThumbStyle({ size: "md" }, lost).borderWidth).toBe(
+      libraryBorderWidth.strong,
+    );
+  });
+
+  it("keeps a switch box on the accent metrics when a store nulled its table", () => {
+    // A platform's metrics are an optional group, so the gate does not require
+    // them; JSON writes `null` for one a store did not carry. The declared
+    // paint still reads, and the box falls back to the derived accent switch
+    // instead of handing `switchMetricsAt` a `null` to measure.
+    const declared = stored({
+      switch: { on: "#008800", off: "#888888", knob: "#ffffff" },
+      switchMetrics: null,
+    });
+    expect(switchBox("md", declared)).toEqual(switchBox("md", testTheme));
+  });
+
   it("keeps every painter on its feet with the groups a store lost", () => {
     const lost: PrimitiveTheme = stored({
       spacing: null,
@@ -507,7 +550,7 @@ describe("a numeric group a store gave back", () => {
     // A second direct read would be a second rule, and the painter would throw
     // on the theme the seam survives.
     const read =
-      /\.(spacing|radius|iconSize)\s*\[|\.(spacing|radius|iconSize)\.[A-Za-z]|\.density\.(controlHeight|controlPaddingX|rowHeight)/;
+      /\.(spacing|radius|iconSize)\s*\[|\.(spacing|radius|iconSize)\.[A-Za-z]|\.density\.(controlHeight|controlPaddingX|rowHeight)|\.borderWidth\.[A-Za-z]/;
     const offenders = Arr.filter(walk(sourceDir), (path) => {
       if (path.endsWith(join("core", "theme.ts"))) return false;
       return read.test(readFileSync(path, "utf8"));
@@ -529,6 +572,7 @@ describe("a numeric group a store gave back", () => {
           "iconSideOf",
           "controlHeightOf",
           "rowHeightOf",
+          "borderWidthOf",
         ],
         (name) => readme.includes(name),
       ),

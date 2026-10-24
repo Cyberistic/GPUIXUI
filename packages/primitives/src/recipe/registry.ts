@@ -28,6 +28,7 @@ import { pressWash } from "../core/pointer.js";
 import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 import {
+  borderWidthOf,
   colorRole,
   controlHeightOf,
   controlPaddingOf,
@@ -211,8 +212,8 @@ export const recipeTw = createTw({
     "text-ellipsis": () => ({ textOverflow: "ellipsis" }),
     "font-sans": (theme) => ({ fontFamily: familyOf(theme, "sans") }),
     "font-mono": (theme) => ({ fontFamily: familyOf(theme, "mono") }),
-    "h-px": (theme) => ({ height: theme.borderWidth.thin }),
-    "w-px": (theme) => ({ width: theme.borderWidth.thin }),
+    "h-px": (theme) => ({ height: borderWidthOf(theme, "thin") }),
+    "w-px": (theme) => ({ width: borderWidthOf(theme, "thin") }),
     // The runtime paints one border style for every side. `solid` is the
     // default, so only the dashed class carries a declaration.
     "border-dashed": () => ({ borderStyle: "dashed" }),
@@ -424,7 +425,7 @@ export const recipeTw = createTw({
         height: side,
         marginLeft: -half,
         marginRight: -half,
-        borderWidth: theme.borderWidth.strong,
+        borderWidth: borderWidthOf(theme, "strong"),
       };
     },
     // The same thumb on a track that runs up: the half-side pull is vertical.
@@ -437,7 +438,7 @@ export const recipeTw = createTw({
         height: side,
         marginTop: -half,
         marginBottom: -half,
-        borderWidth: theme.borderWidth.strong,
+        borderWidth: borderWidthOf(theme, "strong"),
       };
     },
     "px-inset": (theme, value) => {

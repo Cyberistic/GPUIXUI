@@ -35,6 +35,7 @@ import type {
 import { controlRing } from "./focus.js";
 import { pressWash } from "./pointer.js";
 import {
+  borderWidthOf,
   colorRole,
   controlHeightOf,
   controlPaddingOf,
@@ -140,7 +141,8 @@ export const controlStyle = (
     fontWeight: label.fontWeight,
     backgroundColor: rest,
     color: paint(variant.foreground, theme),
-    borderWidth: variant.border === undefined ? 0 : theme.borderWidth.thin,
+    borderWidth:
+      variant.border === undefined ? 0 : borderWidthOf(theme, "thin"),
     borderColor: border,
     paddingLeft: padding,
     paddingRight: padding,
@@ -454,7 +456,7 @@ export const surfaceStyle = (
   if (spec.radius !== undefined)
     style.borderRadius = radiusValue(theme, spec.radius);
   if (spec.border === true) {
-    style.borderWidth = theme.borderWidth.thin;
+    style.borderWidth = borderWidthOf(theme, "thin");
     style.borderColor = colorRole(theme, "border");
     if (spec.borderStyle === "dashed") style.borderStyle = "dashed";
   }
@@ -488,14 +490,14 @@ export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
   const inset = spec.inset === undefined ? 0 : spaceValue(theme, spec.inset);
   return spec.orientation === "horizontal"
     ? {
-        height: theme.borderWidth.thin,
+        height: borderWidthOf(theme, "thin"),
         flexShrink: 0,
         backgroundColor: colorRole(theme, "border"),
         marginLeft: inset,
         marginRight: inset,
       }
     : {
-        width: theme.borderWidth.thin,
+        width: borderWidthOf(theme, "thin"),
         flexShrink: 0,
         backgroundColor: colorRole(theme, "border"),
         marginTop: inset,
@@ -795,7 +797,7 @@ export const sliderThumbStyle = (
     flexShrink: 0,
     borderRadius: radiusValue(theme, "full"),
     backgroundColor: colorRole(theme, "input"),
-    borderWidth: theme.borderWidth.strong,
+    borderWidth: borderWidthOf(theme, "strong"),
     borderColor:
       spec.invalid === true
         ? colorRole(theme, "destructive")

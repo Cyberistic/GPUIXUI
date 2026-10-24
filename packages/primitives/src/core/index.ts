@@ -272,6 +272,7 @@ export {
 export type { ButtonVariant, ToggleVariant } from "./variants.js";
 
 export {
+  borderWidthOf,
   colorRole,
   colorsOf,
   controlSize,
@@ -285,6 +286,7 @@ export {
 
 export type {
   BorderWidth,
+  BorderWidthSource,
   ColorRef,
   ColorSource,
   ControlSize,

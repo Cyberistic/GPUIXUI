@@ -148,10 +148,11 @@ and each is read through a membership test rather than indexed raw:
   painter read `theme.spacing[...]`, `theme.radius[...]`, `theme.iconSize[...]`
   and `theme.density.controlHeight[...]` directly, so one truncated theme threw
   `TypeError: Cannot read properties of null (reading 'md')` from the first
-  layout that asked for a gap and emptied the window. `scaleValue` and the five
+  layout that asked for a gap and emptied the window. `scaleValue` and the
   readers over it (`spaceValue`, `radiusValue`, `iconSideOf`,
-  `controlHeightOf`/`controlPaddingOf`, `rowHeightOf`) paint the theme's own
-  number and otherwise the **library's** — the rule `typeOf`/`familyOf` already
+  `controlHeightOf`/`controlPaddingOf`, `rowHeightOf`, `borderWidthOf`) paint
+  the theme's own number and otherwise the **library's** — the rule
+  `typeOf`/`familyOf` already
   follow for the type group — so a paint seam never throws mid-render. The gate
   still refuses the theme: `missingTokens` names the group or the step and the
   release to rebuild it from. `theme.test.ts` holds the readers, every painter

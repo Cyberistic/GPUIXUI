@@ -25,7 +25,7 @@ import { disabledOpacity } from "@gpuixui/tokens";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 import { visibleCopy } from "../core/a11y.js";
-import { colorRole, controlPaddingOf } from "../core/theme.js";
+import { borderWidthOf, colorRole, controlPaddingOf } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
@@ -89,7 +89,7 @@ const hintInsets = (theme: PrimitiveTheme, spec: HintSpec): HintInsets => {
   const field = spec.origin === "field";
   const padding = field ? controlPaddingOf(theme, spec.size) : 0;
   return {
-    border: field ? theme.borderWidth.thin : 0,
+    border: field ? borderWidthOf(theme, "thin") : 0,
     paddingLeft: padding,
     paddingRight: padding,
     paddingTop: padding,

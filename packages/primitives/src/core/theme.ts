@@ -8,6 +8,7 @@
  */
 
 import {
+  borderWidth as libraryBorderWidth,
   defaultDensity as libraryDensity,
   iconSize as libraryIconSize,
   isControlSize,
@@ -23,6 +24,7 @@ import {
   type ThemeContrast,
 } from "@gpuixui/tokens";
 import type {
+  BorderWidth,
   Density,
   IconSize,
   Radius,
@@ -190,6 +192,31 @@ export interface RadiusSource {
 /** The corner a radius step paints: the theme's, or the library's. */
 export const radiusValue = (theme: RadiusSource, step: RadiusStep): number =>
   scaleValue(theme.radius, libraryRadius, step);
+
+/**
+ * A theme's border-width group, or the shape a stored edge is measured against.
+ *
+ * An edge is a numeric group a store can lose like any other; JSON writes `null`
+ * where it carried none.
+ */
+export interface BorderWidthSource {
+  readonly borderWidth?: Partial<BorderWidth> | null;
+}
+
+/**
+ * The edge a control paints: the theme's, or the library's.
+ *
+ * A border width was the one numeric group the seam did not cover: every rule,
+ * box, field and selection control read `theme.borderWidth.thin` directly, so
+ * the same truncated theme that lost a scale threw `TypeError: Cannot read
+ * properties of null (reading 'thin')` from the first edge it drew. The theme's
+ * own number wins, and a lost or nulled step answers the library's — the rule
+ * {@link scaleValue} states.
+ */
+export const borderWidthOf = (
+  theme: BorderWidthSource,
+  step: keyof BorderWidth,
+): number => scaleValue(theme.borderWidth, libraryBorderWidth, step);
 
 /**
  * A theme's density group, or the shape a stored metric is measured against.
