@@ -44,7 +44,7 @@ ColorPicker
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `label` | `string` | — | the group's accessible name; the field is named `<label> hex value` |
+| `label` | `string` | — | the group's accessible name; the field is named `<label> hex value`, and a blank value reads as `Color picker` so both are always named |
 | `value` | `string` | — | the controlled value; `undefined` is uncontrolled, and a stored value that is not text means uncontrolled |
 | `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour; a stored default that is not text paints it |
 | `onValueChange` | `(value: string) => void` | — | a swatch press, or a typed value that normalises |
