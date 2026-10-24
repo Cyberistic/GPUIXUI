@@ -75,6 +75,27 @@ export const tallTypeTheme = extendTheme(lightTheme, {
 export const tallTypeAudit = auditTheme(tallTypeTheme);
 
 /**
+ * A brand that shaved its rows to the pressable floor while its reading leading
+ * grew past them. A tree row paints its label at `body`'s leading inside a box of
+ * exactly `density.rowHeight` (`packages/data/src/tree/row.tsx`) and a log
+ * viewer's line is `code` in the same box, so the row clips the line it was built
+ * for — while the row is still 24px, every control height contains the leading
+ * (28/32/36), the type scale is in order and the colours are untouched. The
+ * pressable rule alone said nothing: the row is a box of text as well as a press.
+ */
+export const shavedRowTheme = extendTheme(lightTheme, {
+  name: "Shaved row",
+  density: { rowHeight: 24 },
+  typography: {
+    body: { lineHeight: 26 },
+    bodyStrong: { lineHeight: 26 },
+  },
+});
+
+/** What the gate reports for it: the row that has to grow, by name. */
+export const shavedRowAudit = auditTheme(shavedRowTheme);
+
+/**
  * A brand that enlarged its icon scale for a 24px grid and kept the library's
  * density: every step is finite, positive and in order, and the icon is exactly
  * the box a square action is — except `compact`'s smallest control is 24px and

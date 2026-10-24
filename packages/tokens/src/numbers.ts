@@ -21,7 +21,9 @@
  * every row answers a press, and a selectable one also takes a `tabIndex` and a
  * hover wash — while a `dense` row is built at exactly `density.rowHeight`
  * (`packages/components/src/list.tsx`), so a theme that shaves the row ships a
- * target under the floor even when every control height is right.
+ * target under the floor even when every control height is right. It is a box of
+ * text too: a tree row paints its label at `body`'s leading inside it and a log
+ * viewer's line is `code`, so the row is held to the fit a control's box is.
  *
  * A type role carries two numbers that only mean something together: a leading
  * shorter than the role's own size puts the next baseline inside this line's
@@ -112,9 +114,10 @@ export type NumberGroup =
  *   size. Below that the next baseline sits inside this line's glyph box, so the
  *   two lines collide. It is a rule about two tokens, so it is applied
  *   where the pair sits together ({@link inspectType}) rather than to one value;
- * - `fits` — a control height, which contains the leading of the tallest type
- *   role a control paints (`label` or `body`) and the icon it draws
- *   (`iconSize.md`). The box is exactly `density.controlHeight[size]` and both
+ * - `fits` — a control height or a row height, which contains the leading of the
+ *   tallest type role that box paints (`label`/`body` for a control,
+ *   `body`/`code` for a row) and the icon it draws (`iconSize.md`). The box is
+ *   exactly `density.controlHeight[size]` or `density.rowHeight`, and both
  *   painters lay their text at that leading, so a box below it clips or spills
  *   the label while every number is finite, positive and pressable; the same box
  *   is a square action's icon, so a glyph taller than it overflows the control.
@@ -398,64 +401,101 @@ const inspectEmphasis = (
 };
 
 /**
- * The ceiling a control's box has to contain: the taller of the two type roles a
- * control paints and the icon a control draws. A button, a toggle and a select
- * trigger lay their text at `typography.label`'s leading; a field lays its value
- * at `typography.body`'s (`packages/primitives/src/core/style.ts`'s
- * `controlStyle` and `fieldTextStyle`); an `Icon` defaults to `iconSize.md`
- * (`packages/icons/src/icon.tsx`), which is also the step a selection box, a
- * spinner's dot and a menu row's leading slot are drawn at, so the box is a
- * square action's glyph as well as a line of text. An unusable leading is the
- * type report's, and an unusable icon the icon report's, not this one's.
+ * The type roles a **control**'s box carries: the label a button, a toggle and a
+ * select trigger lay their text at, and the value a field lays at `body`'s
+ * (`packages/primitives/src/core/style.ts`'s `controlStyle` and
+ * `fieldTextStyle`).
  */
-const controlContent = (
+const controlRoles = ["label", "body"] as const satisfies readonly TextRole[];
+
+/**
+ * The type roles a **row**'s box carries: the label a tree row paints
+ * (`packages/data/src/tree/row.tsx`) and the line a log viewer paints
+ * (`packages/files/src/log/log-viewer.tsx`), both inside a box of exactly
+ * `density.rowHeight`.
+ */
+const rowRoles = ["body", "code"] as const satisfies readonly TextRole[];
+
+/**
+ * The ceiling a box has to contain: the tallest leading among `roles` and the
+ * glyph it leads with. An `Icon` defaults to `iconSize.md`
+ * (`packages/icons/src/icon.tsx`), which is also the step a selection box, a
+ * spinner's dot and a tree row's chevron slot are drawn at, so a box is a square
+ * action's glyph as well as a line of text. An unusable leading is the type
+ * report's, and an unusable icon the icon report's, not this one's, so a role a
+ * theme lost makes the ceiling unknown rather than smaller.
+ */
+const contentCeiling = (
   typography: NumberSource["typography"],
   iconSize: NumberSource["iconSize"],
+  roles: readonly TextRole[],
 ): number | undefined => {
-  const { label, body } = typography;
-  // Both carriers are steps of the scale, so a theme that lost one is the gate's
-  // refusal rather than this report's; the ceiling is unknown, not smaller.
-  if (!isTextStyle(label) || !isTextStyle(body)) {
+  const styles = roles.map((role) => typography[role]);
+  if (!styles.every(isTextStyle)) {
     return undefined;
   }
-  const parts = [label.lineHeight, body.lineHeight, iconSize.md];
+  const parts = [...styles.map(({ lineHeight }) => lineHeight), iconSize.md];
   return parts.every(Number.isFinite) ? Math.max(...parts) : undefined;
 };
 
 /**
- * Every control height, held to the pressable floor and to what it carries. A
- * height that is not pressable is reported once, by that rule; the fit is
- * measured only on a height a pointer can already press, so one shrunken box is
- * not two defects.
+ * A box's own fit: its height reaches the ceiling of what it carries. A box that
+ * already missed the pressable floor is reported once, by that rule, because the
+ * number that has to change is the same one; an unknown ceiling is not a pass or
+ * a failure, so it reports nothing.
+ */
+const missingFit = (
+  path: string,
+  value: number,
+  ceiling: number | undefined,
+): readonly InvalidNumber[] =>
+  ceiling === undefined || value >= ceiling
+    ? []
+    : [{ group: "density", path, value, rule: "fits" }];
+
+/**
+ * Every control height, held to the pressable floor and to what it carries.
  */
 const inspectControlHeights = (
   density: NumberSource["density"],
   typography: NumberSource["typography"],
   iconSize: NumberSource["iconSize"],
-): readonly InvalidNumber[] =>
-  controlSizes.flatMap((size: ControlSize) => {
+): readonly InvalidNumber[] => {
+  const ceiling = contentCeiling(typography, iconSize, controlRoles);
+  return controlSizes.flatMap((size: ControlSize) => {
+    const path = `controlHeight.${size}`;
     const value = density.controlHeight[size];
-    const pressable = inspect(
-      "density",
-      `controlHeight.${size}`,
-      value,
-      "pressable",
-    );
-    if (pressable.length > 0) {
-      return pressable;
-    }
-    const content = controlContent(typography, iconSize);
-    return content === undefined || value >= content
-      ? []
-      : [
-          {
-            group: "density",
-            path: `controlHeight.${size}`,
-            value,
-            rule: "fits",
-          },
-        ];
+    const pressable = inspect("density", path, value, "pressable");
+    return pressable.length > 0 ? pressable : missingFit(path, value, ceiling);
   });
+};
+
+/**
+ * The row box, held to both rules a row answers.
+ *
+ * A `dense` list row, a tree row and a log viewer's line are built at exactly
+ * `density.rowHeight` and take a press, so the row is a target the library does
+ * not pad. It is also a box of text: the tree paints its label at `body` and a
+ * log viewer its line at `code`, and the tree's chevron sits in an `iconSize.md`
+ * slot. `pressable` alone was the half of the contract that let a brand shave a
+ * row to 24 while its body leading was 26 — a clipped row with every control
+ * height still fitting, so no other report saw it.
+ */
+const inspectRowHeight = (
+  density: NumberSource["density"],
+  typography: NumberSource["typography"],
+  iconSize: NumberSource["iconSize"],
+): readonly InvalidNumber[] => {
+  const value = density.rowHeight;
+  const pressable = inspect("density", "rowHeight", value, "pressable");
+  return pressable.length > 0
+    ? pressable
+    : missingFit(
+        "rowHeight",
+        value,
+        contentCeiling(typography, iconSize, rowRoles),
+      );
+};
 
 /** The four numbers a shadow carries. Offsets and spread may be negative. */
 const inspectShadow = (
@@ -483,7 +523,8 @@ const inspectShadow = (
  *
  * An empty array means every size, length and shadow a theme carries is one the
  * runtime can paint, every control height and row height is one a reader can hit,
- * every control height contains the text and the icon it carries, every type
+ * every control height contains the text and the icon it carries, every row
+ * height the line and the glyph slot it carries, every type
  * role's leading reaches its own size, and the strong body role outweighs the
  * body it emphasises. A number
  * that is not finite is dropped rather than clamped, a size at or below zero
@@ -492,7 +533,8 @@ const inspectShadow = (
  * not pad up, the same floor holds a dense list row to `rowHeight`, a leading
  * shorter than its type stacks the next line into the current one, a control
  * height below the leading of the label or value it paints — or below the
- * `iconSize.md` glyph it draws — clips the text or the icon, a
+ * `iconSize.md` glyph it draws — clips the text or the icon, a row height below
+ * the line a tree row or a log viewer paints in it clips that line, a
  * zero `borderWidth.strong` leaves the focus ring nothing to paint, a
  * `bodyStrong` that does not share `body`'s size and leading or does not weigh
  * more than it paints an emphasis as plain reading or as a smaller title, and a
@@ -577,7 +619,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
       "nonNegative",
       "controlPaddingX.",
     ),
-    ...inspect("density", "rowHeight", theme.density.rowHeight, "pressable"),
+    ...inspectRowHeight(theme.density, theme.typography, theme.iconSize),
     ...Object.entries(theme.elevation ?? {}).flatMap(([level, shadows]) =>
       isShadowList(shadows)
         ? shadows.flatMap((shadow: unknown, index) =>

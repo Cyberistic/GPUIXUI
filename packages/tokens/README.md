@@ -862,7 +862,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
-audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable, and the strong body role shares the body's size and leading and outweighs it
+audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable and holds the line it paints, and the strong body role shares the body's size and leading and outweighs it
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible, every row keeps its rule on the wash it wears and on the press it derives, and every pointer state answers the wash it replaces
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -998,7 +998,11 @@ Each report is also a function of its own:
   contain the leading of the `label` or `body` text a control paints **and the
   `iconSize.md` glyph it draws** — the box is exactly that height, so a brand
   that grows its type or its icon scale past it is reported as `fits` while
-  every number is still layable. The strong body role must be the body's
+  every number is still layable. The row height takes the same `fits` rule
+  against its own painters: a tree row paints `body`'s leading inside it and a
+  log viewer's line is `code`, so a row a brand shaves under its reading leading
+  is reported on the row rather than leaving a clipped line with every control
+  height still fitting. The strong body role must be the body's
   emphasis: the two share a size and a leading — one emphasis at one size — and
   the strong role weighs more. A brand that forwards one stored weight to every
   role paints a card title as plain text, and a brand that raises only the body's

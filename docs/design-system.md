@@ -286,6 +286,15 @@ The two halves still have to fit together:
   its cells, so neither reads the row step; `density-adoption.test.ts` holds this
   list to the sources that read it.
 
+- **A row's box contains the line it paints, too.** The tree row paints its label
+  at `body`'s leading and leads it with a chevron in an `iconSize.md` slot inside
+  that box, and a log viewer's line is `code`, so a row is held to the same
+  `fits` ceiling a control's box is —
+  `max(body.lineHeight, code.lineHeight, iconSize.md)`. A brand that shaves its
+  rows to the 24px floor while its reading leading is 26 clips a tree or log
+  row's line with every control height still fitting, so `invalidNumbers` reports
+  `rowHeight` as `fits` on the row that has to grow.
+
 The shortest of those controls — `compact` `sm` at 24px — is also the
 pressable-target floor, so a control built at a control height never needs
 extra hit-area padding. That is a claim about a theme, not only about the built-in
@@ -293,7 +302,8 @@ presets: `invalidNumbers` reports a `controlHeight` under `targetSize.minimum`
 (24px) as `pressable`, so a brand that shrinks one fails the audit instead of
 shipping a target a pointer cannot reliably hit. A row is the same box one level
 down — a `dense` list row is built at exactly `rowHeight` and takes a press — so
-`rowHeight` is reported as `pressable` under the same floor. An icon-sized part
+`rowHeight` is reported as `pressable` under the same floor, and as `fits` when
+the line a tree or log row paints is taller than it. An icon-sized part
 needs an inset; §9 has the rule.
 
 Every one of these scales is a **ladder**, and its order is part of the
@@ -1219,7 +1229,9 @@ also the one report that compares two groups: a control height that cannot
 contain the `label` or `body` leading a control paints, or the `iconSize.md`
 glyph it draws, is reported as `fits`, because the box is exactly that height
 and the text or the icon would spill or clip while every number is still layable
-(§6).
+(§6). A row height is the same box with its own painters: a tree row's `body`
+leading or a log viewer's `code` line taller than `rowHeight` — or a chevron slot
+of `iconSize.md` taller than it — is reported as `fits` on the row (§6).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
 reports all fourteen in one call — `invalidRoles`, `invalidShadows`,

@@ -1690,7 +1690,7 @@ by group, path, value and the rule it missed:
 | `typography` | every role's weight | finite — the runtime clamps a real number into its 1–1000 range (`fontWeight`) |
 | `typography` | `bodyStrong`'s size, leading and weight | the size and the leading equal `body`'s, and the weight is greater — `emphasis` |
 | `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the text and the icon it carries (`fits`) |
-| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
+| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`), and at least the line a row paints (`fits`) |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
 | `elevation` | every shadow's `offsetX`, `offsetY`, `spreadRadius` | finite |
 | `elevation` | every shadow's `blurRadius` | finite, `>= 0` |
@@ -1722,6 +1722,20 @@ library reserving no hit-area padding on top of the row either. So the same
 reader cannot reliably hit while every control height is right, and
 `invalidNumbers` reports `rowHeight` by name. Every shipped preset clears it —
 the density table below prints each one.
+
+The row is also a **box of text**, so it takes the fit rule as well. A tree row
+paints its label at `textStyle(theme, "body")` and leads it with a chevron in a
+slot of `theme.iconSize.md`, all inside `height: theme.density.rowHeight`
+(`packages/data/src/tree/row.tsx`), and a log viewer lays each line at
+`textStyle(theme, "code")` in the same box (`packages/files/src/log/log-viewer.tsx`).
+`invalidNumbers` therefore holds `rowHeight` to the same ceiling a control's box
+is held to — `max(body.lineHeight, code.lineHeight, iconSize.md)` — and reports
+`fits` on the row that has to grow. The pressable rule alone missed it: a brand
+that shaves the rows to the 24px floor while its reading leading is 26 paints a
+tree or log row that clips its own line, with every control height (28/32/36)
+still containing that leading, the scale still in order and every colour clean.
+A row exactly as tall as the ceiling passes, and a row that already misses the
+pressable floor is reported once, by `pressable`.
 
 A control's box also has to contain the text it carries. The box is exactly
 `density.controlHeight[size]`, and the two painters lay their text at a type
@@ -1818,6 +1832,16 @@ invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
 invalidNumbers(extendTheme(lightTheme, { density: { rowHeight: 20 } }));
 // [{ group: "density", path: "rowHeight", value: 20, rule: "pressable" }]
 invalidNumbers(
+  extendTheme(lightTheme, {
+    density: { rowHeight: 24 },
+    typography: {
+      body: { lineHeight: 26 },
+      bodyStrong: { lineHeight: 26 },
+    },
+  }),
+);
+// [{ group: "density", path: "rowHeight", value: 24, rule: "fits" }]
+invalidNumbers(
   extendTheme(lightTheme, { typography: { body: { lineHeight: 10 } } }),
 );
 // [{ group: "typography", path: "body.lineHeight", value: 10, rule: "leading" }]
@@ -1861,14 +1885,15 @@ invalidNumbers(stored);
 // [{ group: "typography", path: "h1.fontWeight", value: NaN, rule: "finite" }]
 ```
 
-`src/numbers.example.ts` holds eight brands: one whose corner radius came from a
+`src/numbers.example.ts` holds nine brands: one whose corner radius came from a
 scale factor nobody set, one whose "dense" preset shaves two control heights and
 a row under the pressable floor, one whose type scale multiplied the leadings
 under the sizes, one that grew its body leading past the smallest control it
 still ships, one that enlarged its `md` icon past the same box, one whose weight
-scale flattened `bodyStrong` into `body`, one that zeroed the strong border
-and so left the focus ring nothing to paint, and one restored from storage with
-a heading weight the batch drops. `numbers.test.ts` runs all eight
+scale flattened `bodyStrong` into `body`, one that shaved its rows to the
+pressable floor while its reading leading grew past them, one that zeroed the
+strong border and so left the focus ring nothing to paint, and one restored from
+storage with a heading weight the batch drops. `numbers.test.ts` runs all nine
 audits, proves none of the
 colour reports can see their defects, and holds all 18 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the

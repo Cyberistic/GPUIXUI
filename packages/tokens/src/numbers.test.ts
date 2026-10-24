@@ -20,7 +20,9 @@
  * A row height is the third: a list row is a press target, and a `dense` row is
  * built at exactly `density.rowHeight`, so a theme whose rows were shaved ships
  * a target under the floor even when every control height is right. It is the
- * same `pressable` rule one level down, held here by name.
+ * same `pressable` rule one level down, and the row is a box of text as well as a
+ * press — a tree row paints `body`'s leading inside it and a log viewer's line is
+ * `code` — so the fit rule that holds a control's box holds the row's too.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -58,6 +60,8 @@ import {
   invisibleRingAudit,
   lopsidedEmphasisAudit,
   lopsidedEmphasisTheme,
+  shavedRowAudit,
+  shavedRowTheme,
   squatDensityAudit,
   tallTypeAudit,
   tallTypeTheme,
@@ -449,12 +453,26 @@ describe("the documents name the number rules", () => {
 
     expect(failure).toBeDefined();
     expect(catalogue).toContain(
-      "| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |",
+      "| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`), and at least the line a row paints (`fits`) |",
     );
     // The snippet is the real report, not an illustration of one.
     expect(catalogue).toContain(
       `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
+  });
+
+  it("prints the row's fit, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(shavedRowTheme);
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+    // The page names the two painters whose type the row carries, so a reader
+    // who shaves a row knows which leading it has to hold.
+    expect(catalogue).toContain("`packages/data/src/tree/row.tsx`");
+    expect(catalogue).toContain("`packages/files/src/log/log-viewer.tsx`");
   });
 
   it("prints the leading rule in the catalogue, with a report the code actually returns", () => {
@@ -798,6 +816,120 @@ describe("a row height a pointer cannot reach", () => {
 
     expect(audit.invalidNumbers.map(({ path, rule }) => [path, rule])).toEqual([
       ["rowHeight", "pressable"],
+    ]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+});
+
+describe("a row's box fits the line it paints", () => {
+  // The row is a box of text as well as a press target: a tree row paints its
+  // label at `body`'s leading inside `height: theme.density.rowHeight`, a log
+  // viewer's line is `code`, and the tree's chevron sits in an `iconSize.md` slot.
+  // The pressable rule alone let a brand shave the row to the 24px floor while its
+  // line was taller, so the row clipped its own label with every control height
+  // still fitting and no report saying anything.
+  const row = (
+    overrides: ThemeOverrides,
+  ): ReadonlyArray<readonly [string, string]> =>
+    invalidNumbers(brand(overrides)).map(({ path, rule }) => [path, rule]);
+
+  it("reports a row shorter than the body leading a tree row carries", () => {
+    expect(
+      row({
+        density: { rowHeight: 24 },
+        typography: {
+          body: { lineHeight: 26 },
+          bodyStrong: { lineHeight: 26 },
+        },
+      }),
+    ).toEqual([["rowHeight", "fits"]]);
+  });
+
+  it("reports a row shorter than the glyph slot it leads with", () => {
+    // The tree's chevron slot is `width`/`height: theme.iconSize.md` inside the
+    // row, so a 26px glyph in a 24px row overflows it while every control box
+    // (28/32/36) still contains the glyph.
+    expect(
+      row({ density: { rowHeight: 24 }, iconSize: { md: 26, lg: 28, xl: 30 } }),
+    ).toEqual([["rowHeight", "fits"]]);
+  });
+
+  it("measures the code role a log viewer paints, not only the tree's body", () => {
+    expect(
+      row({
+        density: { rowHeight: 24 },
+        typography: { code: { lineHeight: 26 } },
+      }),
+    ).toEqual([["rowHeight", "fits"]]);
+  });
+
+  it("accepts a row exactly as tall as the line, where it fills the box", () => {
+    expect(
+      invalidNumbers(
+        brand({
+          density: { rowHeight: targetSize.minimum },
+          typography: {
+            body: { lineHeight: targetSize.minimum },
+            bodyStrong: { lineHeight: targetSize.minimum },
+          },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports a row under the floor once, as the pressable one", () => {
+    // A row that cannot be pressed at all is the height rule's finding: the
+    // number that has to change is the same one the fit would name.
+    expect(
+      row({
+        density: { rowHeight: 20 },
+        typography: {
+          body: { lineHeight: 26 },
+          bodyStrong: { lineHeight: 26 },
+        },
+      }),
+    ).toEqual([["rowHeight", "pressable"]]);
+  });
+
+  it("holds every shipped preset above the lines its rows paint", () => {
+    expect(
+      densityNames.filter(
+        (name) =>
+          densityPresets[name].rowHeight <
+          Math.max(
+            typography.body.lineHeight,
+            typography.code.lineHeight,
+            iconSize.md,
+          ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reads the two painters that put the type scale in a row", () => {
+    const tree = readFileSync(
+      new URL("../../data/src/tree/row.tsx", import.meta.url),
+      "utf8",
+    );
+    const log = readFileSync(
+      new URL("../../files/src/log/log-viewer.tsx", import.meta.url),
+      "utf8",
+    );
+
+    // A carrier the painters stop painting is a ceiling the report would invent.
+    expect(tree).toContain('textStyle(theme, "body")');
+    expect(tree).toContain("height: height ?? theme.density.rowHeight");
+    expect(tree).toContain("width: theme.iconSize.md");
+    expect(log).toContain('textStyle(theme, "code")');
+    expect(log).toContain("theme.density.rowHeight");
+  });
+
+  it("fails the gate on a shaved row, with no colour report involved", () => {
+    const audit = shavedRowAudit;
+
+    expect(audit.invalidNumbers.map(({ path, rule }) => [path, rule])).toEqual([
+      ["rowHeight", "fits"],
     ]);
     expect(audit.contrast).toEqual([]);
     expect(audit.decorative).toEqual([]);
