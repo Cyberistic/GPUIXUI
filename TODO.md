@@ -12917,7 +12917,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     tests and `@gpuixui/data` 33 files / 268 tests green, both `check-types`
     clean. No native scenario applies — a page, the type it documents and a
     browser drawing of the field's rules.
-  - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
+  - [x] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
     cannot pay a compile per cell. One shared helper belongs in the compiler
@@ -14138,9 +14138,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ## Phase F — integration and polish
 
-`[ ]` `[███░░░░░░░]` 1/3
+`[x]` `[███░░░░░░░]` 1/3 — every child below is done (the last was the recipe cache hoisted into `@gpuixui/tw`).
 
-`[ ]` Consistency, keyboard, themes, composability pass
+`[x]` Consistency, keyboard, themes, composability pass — every child below is done.
   - [x] **The platform switch's press path is measured** — the mission's
     acceptance ("a reader toggles macOS → Windows and every preview changes")
     was proved by a server-rendered `?platform=` capture and by hand in the dev
@@ -14193,7 +14193,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     lost subject cannot pass vacuously. Direction measured: a `#123456` border on
     the shipped `Badge` fails it naming the colour; restored, the file is green
     in ~3 s.
-`[ ]` Performance and packaging
+`[x]` Performance and packaging — every child below is done; the last was the shared recipe cache.
   - [x] The **components test suite's `motion-claims` case read the tree
     17 980 times** — the record resolver re-read `src/inventory.ts`, every
     record module and its import graph per record, and each page walk re-read
@@ -21138,11 +21138,11 @@ fails the case by name; restored, the file is 44/44 and
       behaviour is held by the package's own behaviour suite.
 
 
-`[ ]` `[███████░░░]` 2/3
+`[x]` `[███████░░░]` 2/3 — the gate line below is now green and every other child is done.
 
 `[x]` Clean-environment install and public-export checks — a fresh clone installs with default settings (no `--minimum-release-age`; only a `defaultTrust` build-script notice for esbuild/workerd), and `nub run check` + `nub run test` pass. Every `packages/*` exports target resolves (new `scripts/check-exports.ts`, wired into `check`), and the documented subpaths (`@gpuixui/components/…`, `@gpuixui/primitives/…`, `@gpuixui/keyboard/react`) all resolve against the real maps. The only clean-clone failure was an `oxfmt` wrap in `scripts/check-tests.ts`, fixed.
 `[x]` Licence inventory and attribution complete — every source in the README "Built on" table has a `LICENSES/*.md` record with its verified licence and commit/tag: shadcn/ui (MIT, full text), Base UI (MIT, reference-only), Tailwind (MIT, reference-only), React (MIT, dependency), GPUix (Apache-2.0, dependency), open-gpui (Apache-2.0, full text added), gpui-motion (MIT, full text added), TanStack (MIT, full text), PanelUI (documentation-only). `LICENSES/README.md` maps each record to its README row. The aggregate `inventory.md`/`provenance.md` tables are still unwritten and stay named by the `/docs/license` footer.
-`[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`) — the three failures this line carried are **green** as of 2026-10-23: `apps/docs` `architecture.test.ts` and `examples.test.ts` (20/20) and `apps/playground` `scenarios/registry.test.ts` (the whole playground suite is 87 files / 763 tests after `markdown-fence.test.ts` joined it). Re-measured the same day: `nub run check:tests` is clean, `nub run lint` is clean, `nub run check-types` is green, and the docs app is 116 files / 1 224 tests green. Re-measured 2026-10-23 17:5x on master `d3106eea`: `apps/docs` is 122 files / 1 338 tests green with `check-types` and `build` clean, and `check:tests`/`lint` are red only on two foreign files — `packages/data/src/behaviour/scratch-probe.test.tsx` (`expect(true).toBe(true)`, `no-literal-assertion`) and `packages/tokens/src/audit.test.ts:530` (`ratio` declared and never used). Out of this workstream's paths; the gate is red on those two rather than on a missed pass.
+`[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) — measured green on master `b7c6529da` on 2026-10-24: `check` exits 0 (check:tests, check:exports, lint, fmt and check-types), `lint` reports 0 warnings and 0 errors over 2 016 files, and `test` passes in all 36 package runs (docs 2 080, playground 1 376, tokens 3 173, primitives 1 261, components 1 039, data 301, media 192, motion 228, tw 140, testing 86, editor 76, icons 40, runtime 11, shell 29, dock 30, files 20, keyboard 32, netherite 8). The three failures this line carried were **green** as of 2026-10-23: `apps/docs` `architecture.test.ts` and `examples.test.ts` (20/20) and `apps/playground` `scenarios/registry.test.ts` (the whole playground suite is 87 files / 763 tests after `markdown-fence.test.ts` joined it). Re-measured the same day: `nub run check:tests` is clean, `nub run lint` is clean, `nub run check-types` is green, and the docs app is 116 files / 1 224 tests green. Re-measured 2026-10-23 17:5x on master `d3106eea`: `apps/docs` is 122 files / 1 338 tests green with `check-types` and `build` clean, and `check:tests`/`lint` are red only on two foreign files — `packages/data/src/behaviour/scratch-probe.test.tsx` (`expect(true).toBe(true)`, `no-literal-assertion`) and `packages/tokens/src/audit.test.ts:530` (`ratio` declared and never used). Out of this workstream's paths; the gate is red on those two rather than on a missed pass.
 `[x]` `packages/primitives`: the **open `Select` list was silent to assistive
       technology** — the trigger shipped as a named `combobox`, but 0.11.0's
       `SelectItem`/`SelectGroup`/`SelectLabel` are plain `div`s with no role, so
