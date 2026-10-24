@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-123 probes a real window can prove, of which twenty-seven mount shipped
+124 probes a real window can prove, of which twenty-seven mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -1702,6 +1702,56 @@ What it settles:
   (`expected true, got false`); with an 800ms settle after `waitFor` the same
   three-probe selection passed three times in a row. The probe settles first for
   that reason, and samples eight times so one unlucky frame cannot decide it.
+
+### `motion-interruption` — measured on 0.11.0 here
+
+What the runtime's `motion` does when the **target changes mid-flight**. The
+capability record's *Animation interruption* row says "a target change starts
+the next transition from the current visible value", and no probe had changed a
+target while a box was moving — while a collapsible sidebar a reader reopens
+before it closed, and a split pane dragged while its width is still travelling,
+both depend on it. A 120-wide box is driven to 400 and cut to 240 1.2s in; then,
+after it settles, driven to 120 and cut back to 400 1.2s in. The cuts point in
+opposite directions, so both failure shapes are one width apart from the truth:
+a restart paints the interrupted run's start (120) and a finish-first paints its
+old target (400, or 120 on the way back).
+
+| Step | Width the window painted |
+| ---- | ------------------------ |
+| mount | **120** |
+| press `far`, 1.2s | **212** — travelling, not yet at 400 |
+| press `mid` | **212.5** — continues from the width on screen: not 120, not 400 |
+| settled | **240**, the target it was cut to |
+| press `far`, settled | **400** |
+| press `rest`, 1.2s | **307** — travelling back down |
+| press `far` | **306.5** — continues from the width on screen again |
+| settled | **400** |
+
+20 checks, `--only motion-interruption`, green twice consecutively here (~14.9s
+each). Captures: `.artifacts/live/motion-interrupt-far.png`,
+`motion-interrupt-rest.png`.
+
+What it settles:
+
+1. **A retarget starts from the painted value, in both directions.** The cut
+   runs read 212.5 and 306.5 against the 212 and 307 the box was painting the
+   frame before — one frame of travel, not the 120-point jump a restart would
+   paint nor the 120–140-point jump a finish-first would.
+2. **The new run is re-timed from the cut, against the declared duration.** The
+   212 → 240 cut took as long to land as a full run (the probe polls up to 8s);
+   a consumer must not budget the remaining distance as time, and an animation
+   that reverses under the reader's pointer keeps the run's whole easing. This
+   is why `settleWidth` polls instead of sleeping the declared duration: the
+   same declaration painted a ~3s run here and, per `motion-geometry`, a few
+   hundred milliseconds on an idle box under the same window's clock.
+3. **What it does not measure:** completion reporting. `motion-geometry` owns
+   `onMotionComplete`; this probe reads paint only. One observation while
+   building it is worth knowing when chaining steps: a completion that arrives
+   *after* the next target has committed is dropped by the React wrapper's
+   generation filter (`@gpuix/react`'s `MotionDiv` compares
+   `event.motionGeneration` with the render's own), so pressing on the exact
+   frame a run lands can lose that run's report. Chain on the state the
+   completion sets, not on both a retarget and its report.
 
 ### `toast-lifecycle` — measured on 0.11.0 here
 
@@ -7189,6 +7239,7 @@ src/live/media-frame.ts the clip's frames, buffer bytes and transport arithmetic
 src/live/media-frame-probe.tsx  the player's view and steps (one module)
 src/live/media-player.ts the shipped player's ids, clip, peaks and readout
 src/live/media-player-probe.tsx the shipped player's view and steps (one module)
+src/live/motion-interruption.ts the cut widths, the continuation rule and the readout
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -7260,7 +7311,8 @@ narrower. Each deviation is deliberate and measured:
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
-  `carousel-lifecycle` and `rating-lifecycle` (65 probes, each run alone).
+  `carousel-lifecycle` and `rating-lifecycle` and `motion-interruption` (66
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`

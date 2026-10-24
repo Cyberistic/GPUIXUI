@@ -172,6 +172,18 @@ import {
   SPLIT_KEYBOARD_STEP,
 } from "../panels/split-pane.js";
 import { isResizeKey, keySize } from "../panels/resize.js";
+import {
+  MOTION_FAR_WIDTH,
+  MOTION_INTERRUPT_IDS,
+  MOTION_INTERRUPT_REST,
+  MOTION_MID_WIDTH,
+  MOTION_REST_WIDTH,
+  continuesFrom,
+  isTravellingBetween,
+  motionInterruptReadout,
+  motionTargetWidth,
+  type MotionTarget,
+} from "./motion-interruption.js";
 import { Body, Pressable, Readout, Toolbar } from "../ui.js";
 import { useWindowKey, useWindowSelection } from "../window-handlers.js";
 import { useWindowFacts } from "./window-facts.js";
@@ -3943,6 +3955,112 @@ const MotionProbe = (): ReactNode => {
   );
 };
 
+/**
+ * The runtime's `motion` measured across a **retarget**: the capability record's
+ * Animation interruption row claims a target change starts the next transition
+ * from the current visible value, and no probe had changed a target mid-flight.
+ *
+ * The box rests at 120 and is driven to 400, then cut to 240 while it is still
+ * rising; later it is driven to 120 and cut back to 400 while it is still
+ * falling. The two cuts point in opposite directions, so a restart (paints the
+ * interrupted run's start) and a finish-first (paints the run's old target)
+ * are both readable from one width: the sampled value is within a frame's
+ * travel of the value painted before the press.
+ *
+ * `duration: 3` is the transition `motion-geometry` also drives, so the two
+ * probes measure the same declaration. The cut is timed at 1.2s, where the
+ * window painted **212** of the 120 → 400 travel; the reverse cut, 1.2s into a
+ * 400 → 120 run, painted **307**.
+ */
+const MotionInterruptProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [target, setTarget] = useState<MotionTarget>("rest");
+  const width = motionTargetWidth(target);
+  return (
+    <div
+      testId={MOTION_INTERRUPT_IDS.probe}
+      style={{
+        width: 720,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: theme.spacing.lg,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        motion interruption: a new target mid-flight continues from the width on
+        screen.
+      </text>
+      <div
+        style={{ display: "flex", flexDirection: "row", gap: theme.spacing.sm }}
+      >
+        {(
+          [
+            ["rest", MOTION_INTERRUPT_IDS.rest],
+            ["mid", MOTION_INTERRUPT_IDS.mid],
+            ["far", MOTION_INTERRUPT_IDS.far],
+          ] as const
+        ).map(([next, id]) => (
+          <div
+            key={id}
+            testId={id}
+            role="button"
+            tabIndex={0}
+            onClick={() => setTarget(next)}
+            style={{
+              padding: theme.spacing.sm,
+              borderRadius: theme.radius.md,
+              backgroundColor: theme.colors.muted,
+              ...keyboardFocusRing(theme),
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.foreground,
+              }}
+            >
+              {`${next} ${motionTargetWidth(next)}`}
+            </text>
+          </div>
+        ))}
+      </div>
+      <div
+        testId={MOTION_INTERRUPT_IDS.box}
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <motion.div
+          initial={{ width: MOTION_REST_WIDTH }}
+          animate={{ width }}
+          transition={{ duration: 3, ease: "easeInOut" }}
+          style={{
+            overflow: "hidden",
+            backgroundColor: theme.colors.primary,
+          }}
+        >
+          <div style={{ width: MOTION_FAR_WIDTH, height: 40, flexShrink: 0 }} />
+        </motion.div>
+      </div>
+      <text
+        testId={MOTION_INTERRUPT_IDS.readout}
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {motionInterruptReadout({ target })}
+      </text>
+    </div>
+  );
+};
+
 /** The panel a `useToast` caller lives in: one push control and a queue count. */
 const ToastPanel = (): ReactNode => {
   const theme = useTheme();
@@ -5262,6 +5380,35 @@ const boxAxis =
         onSome: (box) => box[field],
       }),
     );
+
+/**
+ * The painted width of `testId`; `NaN` while it paints nothing.
+ *
+ * No assertion of its own: a poll reads this many times, so only the check
+ * that follows the poll is counted.
+ */
+const boxWidth = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<number, Smoke.SmokeHostError> =>
+  Effect.map(ctx.host.bounds(testId), (bounds) =>
+    Option.match(Option.fromNullishOr(bounds), {
+      onNone: () => Number.NaN,
+      onSome: (box) => box.width,
+    }),
+  );
+
+/** Waits for a travelling box to paint `target`, then reports what it read. */
+const settledWidth = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+  target: number,
+): Effect.Effect<number, Smoke.SmokeHostError> =>
+  settleUntil(
+    boxWidth(ctx, testId),
+    (width) => Math.abs(width - target) <= 1,
+    200,
+  );
 
 /**
  * The painted box of `testId` once it paints, failing by name if it never does.
@@ -9461,6 +9608,133 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.click("motion-toggle");
     yield* Effect.sleep(Duration.millis(900));
     yield* ctx.host.capture("motion-shrunk");
+  });
+
+/**
+ * Measures what `motion` does when the target changes mid-flight.
+ *
+ * The claim is the capability record's **Animation interruption** row: a target
+ * change starts the next transition from the current visible value. The box is
+ * first driven from 120 to 400, and 1.2s in the target is cut to 240; a restart
+ * paints 120 and a finish-first paints 400, each ~120 points from the value cut
+ * at. The second cut runs the other way: from 400 down toward 120, then back to
+ * 400, so a restart is the interrupted run's own start and a finish-first its
+ * own target — both ~140 points from the cut.
+ *
+ * The run length is not a promise (`motion-geometry` measured the same declared
+ * duration completing in a few hundred milliseconds on an idle box), so the
+ * probe polls for the target rather than sleeping a fixed time, and the cut is
+ * timed from the measured travel rather than assumed.
+ *
+ * A screenshot stalls the animation clock (`motion-geometry` records the
+ * measured snap), so every capture sits after the timed runs and a settle.
+ */
+const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MOTION_INTERRUPT_IDS.probe);
+    // A previous probe's capture stalls this one's clock; settle first so the
+    // first press starts a run from a known frame.
+    yield* Effect.sleep(Duration.millis(800));
+
+    const rest = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectNear(
+      "the box rests at its initial width",
+      rest.width,
+      MOTION_REST_WIDTH,
+      1,
+    );
+    yield* ctx.expectContains(
+      "the readout starts at rest with no completed run",
+      yield* ctx.host.text(MOTION_INTERRUPT_IDS.readout),
+      motionInterruptReadout(MOTION_INTERRUPT_REST),
+    );
+
+    // ── A rising run cut downward ──────────────────────────────────────────
+    // The runtime runs the declared 3s, so 1.2s is a third of the way.
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
+    yield* Effect.sleep(Duration.millis(1200));
+    const rising = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectEqual(
+      "the run to the far target is still travelling when it is cut",
+      isTravellingBetween(rising.width, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
+      true,
+    );
+
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.mid);
+    const cutDown = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectEqual(
+      "a cut target continues from the width on screen",
+      continuesFrom(rising.width, cutDown.width),
+      true,
+    );
+    // A poll, not a fixed wait: `motion-geometry` measured the same declared
+    // duration completing anywhere from ~250ms to seconds, so waiting for the
+    // target is the only honest settle.
+    yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_MID_WIDTH);
+    const settledMid = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectNear(
+      "the interrupted run lands on the target it was cut to",
+      settledMid.width,
+      MOTION_MID_WIDTH,
+      1,
+    );
+    yield* ctx.expectContains(
+      "the mid control retargets the box",
+      yield* ctx.host.text(MOTION_INTERRUPT_IDS.readout),
+      motionInterruptReadout({ target: "mid" }),
+    );
+
+    // ── A falling run cut back upward ──────────────────────────────────────
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
+    yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_FAR_WIDTH);
+    const atFar = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectNear(
+      "the box reaches the far target before the second cut",
+      atFar.width,
+      MOTION_FAR_WIDTH,
+      1,
+    );
+    yield* ctx.expectContains(
+      "the far control retargets the box",
+      yield* ctx.host.text(MOTION_INTERRUPT_IDS.readout),
+      motionInterruptReadout({ target: "far" }),
+    );
+
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.rest);
+    yield* Effect.sleep(Duration.millis(1200));
+    const falling = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectEqual(
+      "the run back to rest is still travelling when it is cut",
+      isTravellingBetween(falling.width, MOTION_REST_WIDTH, MOTION_FAR_WIDTH),
+      true,
+    );
+
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
+    const cutUp = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectEqual(
+      "a cut in the other direction continues from the width on screen too",
+      continuesFrom(falling.width, cutUp.width),
+      true,
+    );
+    yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_FAR_WIDTH);
+    const settledFar = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
+    yield* ctx.expectNear(
+      "the second interrupted run lands on the far target",
+      settledFar.width,
+      MOTION_FAR_WIDTH,
+      1,
+    );
+    yield* ctx.expectContains(
+      "the far control is the one the second cut pressed",
+      yield* ctx.host.text(MOTION_INTERRUPT_IDS.readout),
+      motionInterruptReadout({ target: "far" }),
+    );
+
+    // Captures last: a screenshot stalls the animation clock.
+    yield* ctx.host.capture("motion-interrupt-far");
+    yield* ctx.host.click(MOTION_INTERRUPT_IDS.rest);
+    yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_REST_WIDTH);
+    yield* ctx.host.capture("motion-interrupt-rest");
   });
 
 /**
@@ -29797,6 +30071,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "motion-geometry",
     view: () => <MotionProbe />,
     steps: motionSteps,
+  },
+  "motion-interruption": {
+    id: "motion-interruption",
+    view: () => <MotionInterruptProbe />,
+    steps: motionInterruptSteps,
   },
   "toast-lifecycle": {
     id: "toast-lifecycle",

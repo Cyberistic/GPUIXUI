@@ -169,6 +169,12 @@ export const liveRegistry = [
     capability: "layout",
   },
   {
+    id: "motion-interruption",
+    title:
+      "Layout: a motion target changed mid-flight continues from the width on screen, in both directions",
+    capability: "layout",
+  },
+  {
     id: "toast-lifecycle",
     title:
       "Overlay: the shipped toast system queues a toast and dismisses it from its own control",
