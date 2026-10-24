@@ -54,7 +54,7 @@ DropdownMenu
 | `DropdownMenu` | root context | `open?`, `defaultOpen?` (default `false`), `onOpenChange?`, `children` |
 | `DropdownMenuTrigger` | button with `aria-expanded` | `disabled?`, button `variant`/`size`/`label` |
 | `DropdownMenuContent` | floating `role="menu"` surface | `label?`, `side?` (default `"bottom"`), `align?` (default `"start"`), `sideOffset?` (default `4`), `alignOffset?` (default `0`), `collisionPadding?` (default `8`), `className?`, `children` |
-| `DropdownMenuItem` | one action row | `onSelect?`, `disabled?`, `tone?`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` (default `true`) |
+| `DropdownMenuItem` | one action row | `onSelect?`, `disabled?`, `tone?` (default `"default"`; a stored name that is neither tone reads as `"default"`), `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` (default `true`) |
 | `DropdownMenuCheckboxItem` | an on/off row that stays open | `checked` (required), `onCheckedChange` (required) |
 | `DropdownMenuRadioGroup` | the exclusive choice its rows belong to, named by `label` | `value` (required), `onValueChange` (required), `label?`, `className?` |
 | `DropdownMenuRadioItem` | one choice; choosing it closes the menu | `value` (required), `disabled?`, `leading?`, `trailing?`, `textValue?` |
@@ -66,3 +66,8 @@ DropdownMenu
 - No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`.
 - One level of submenus is tested.
 - A hover does not preview a highlight; the pointer activates on click.
+- **A stored `tone` the union does not carry paints `"default"`**: a menu built
+  from a saved action list may hold another vocabulary's word for the same idea
+  (`"danger"`) or the `null` a store writes for a field it never set, and the
+  row's emphasis is decoration — the action still runs — where a name outside
+  the two would otherwise take the whole menu down.

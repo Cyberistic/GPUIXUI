@@ -720,6 +720,68 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
+  it("keeps a stored tone name it does not carry paintable", () => {
+    // The bug guarded: `menuRowStyle` matched the tone exhaustively over the two
+    // names this release declares, and a row is built from a record as often as
+    // from JSX (a command palette's action list, a saved toolbar's menu), so a
+    // tone saved under another vocabulary's word for the same idea (`"danger"`,
+    // the alert's name) — or the `null` a store writes for a field it never set
+    // — fell through `Match.exhaustive`, which throws out of the render and
+    // takes the whole menu with it. A name the union does not carry paints the
+    // documented `default` row and still runs its action.
+    const onSelect = vi.fn();
+    const menu = renderComponent(
+      <DropdownMenu>
+        <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu" label="File actions">
+          <DropdownMenuItem
+            testId="delete"
+            // @ts-expect-error a stored name is not the union's literal
+            tone="danger"
+            onSelect={onSelect}
+          >
+            Delete
+          </DropdownMenuItem>
+          <DropdownMenuItem testId="delete-strong" tone="destructive">
+            Move to trash
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            testId="delete-null"
+            // @ts-expect-error a store writes `null` for a field it never set
+            tone={null}
+            onSelect={onSelect}
+          >
+            Remove
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+
+    try {
+      clickCentreOf(menu, "trigger");
+
+      // Both stored shapes paint the documented neutral row: the popover's
+      // foreground, where the destructive role would have painted them red.
+      Arr.forEach(["delete", "delete-null"], (id) => {
+        const row = menu.renderer.findByTestId(id);
+        expect(row, id).toBeDefined();
+        expect(row?.style.color, id).toBe(darkTheme.colors.popoverForeground);
+        expect(row?.style.color, id).not.toBe(
+          darkTheme.colors.destructiveSoftForeground,
+        );
+      });
+      // The negative control beside it keeps the emphasis it was given.
+      expect(menu.renderer.findByTestId("delete-strong")?.style.color).toBe(
+        darkTheme.colors.destructiveSoftForeground,
+      );
+      // The action still runs: a crash is not the safe answer for a name.
+      clickCentreOf(menu, "delete");
+      expect(onSelect).toHaveBeenCalledTimes(1);
+    } finally {
+      menu.unmount();
+    }
+  });
+
   it("paints a destructive row in the status tone's measured page role", () => {
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");

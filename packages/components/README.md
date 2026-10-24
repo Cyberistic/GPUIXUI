@@ -193,6 +193,15 @@ of falling back to the runtime's own row with no alignment.
 `src/behaviour/stepper.test.tsx` holds the fallback and a shipped `vertical`
 list as the negative control.
 
+A menu row's `tone` is saved with the action list it belongs to, so
+`menu/item.tsx`'s `menuToneOf` reads it once before the row's paint: a name this
+release does not ship — another vocabulary's word for the same idea (`"danger"`)
+or a store's `null` — paints the documented `default` row instead of reaching an
+exhaustive matcher that threw `effect/match/Match/exhaustive: absurd` and took
+every action in the menu down with it.
+`src/behaviour/dropdown-menu.test.tsx` holds both stored shapes beside a shipped
+`destructive` row.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

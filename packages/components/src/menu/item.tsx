@@ -20,6 +20,7 @@ import { MENU_GROUP, MENU_ITEM, MENU_LABEL, MENU_SEPARATOR } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import {
   createContext,
@@ -46,8 +47,26 @@ import {
 import { useMergedRef } from "../internal/ref.js";
 import { useMenuContext, useMenuLeaving } from "./state.js";
 
+/** The two emphases a row can carry, as the guard reads them. */
+const MenuTones = Schema.Literals(["default", "destructive"]);
+
 /** How much emphasis a row carries. `destructive` asks before it is used. */
-export type MenuItemTone = "default" | "destructive";
+export type MenuItemTone = typeof MenuTones.Type;
+
+/**
+ * The emphasis a stored name names.
+ *
+ * A row is built from a record as often as from JSX — a command palette's action
+ * list, a saved toolbar's menu — so a tone can arrive under another vocabulary's
+ * word for the same idea (`"danger"`, the alert's name) or as the `null` a store
+ * writes for a field it never set. The matcher below is exhaustive over the two
+ * names, so a third threw `effect/match/Match/exhaustive: absurd` out of the
+ * render and took the whole menu down. A name this release does not carry paints
+ * the documented `default` row: the emphasis is decoration and the action still
+ * runs, where a crash removes every action in the menu.
+ */
+export const menuToneOf = (value: unknown): MenuItemTone =>
+  Schema.is(MenuTones)(value) ? value : "default";
 
 /** {@link MenuItem} props. */
 export interface MenuItemProps extends Omit<Props, "style"> {
@@ -162,7 +181,7 @@ const Row = ({
 export const MenuItem = ({
   onSelect,
   disabled = false,
-  tone = "default",
+  tone: requestedTone = "default",
   leading,
   trailing,
   textValue,
@@ -177,6 +196,9 @@ export const MenuItem = ({
   ...rest
 }: MenuItemProps) => {
   const theme = useTheme();
+  // A tone saved with the row may name a word this release does not declare;
+  // the emphasis is read once here so the matcher cannot see a third name.
+  const emphasis = menuToneOf(requestedTone);
   // Only stable members here: the context object changes whenever a row
   // registers, and depending on it would re-register in a loop.
   const { activeId, register, noteFocus, close, closeSubmenu } =
@@ -247,7 +269,7 @@ export const MenuItem = ({
         onMouseEnter?.(event);
       }}
       style={mergeStyles(
-        menuRowStyle(theme, tone, active, disabled, className),
+        menuRowStyle(theme, emphasis, active, disabled, className),
         resolveStyle(style, state),
       )}
     >
