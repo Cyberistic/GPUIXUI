@@ -153,6 +153,31 @@ describe("Message", () => {
     expect(names).toEqual(["You", "Assistant", "System"]);
   });
 
+  it("reads a stored variant name it does not ship as the documented default", () => {
+    // A row's variant arrives with a saved transcript as often as a literal, so
+    // a name this release renamed or dropped reaches the component as a string
+    // the union no longer names: `AUTHOR[variant]` answered `undefined`, so the
+    // row published no accessible name and painted neither the mirror nor the
+    // bubble the reader's role documents — the row silently became an unnamed
+    // assistant line.
+    // @ts-expect-error — a variant a store wrote, not the union the props declare.
+    const stored: MessageVariant = "customer";
+
+    const root = renderComponent(<Row variant={stored} />);
+    const groups = nodesWithRole(root.renderer, "group").map(
+      (node) => node.name,
+    );
+    const images = nodesWithRole(root.renderer, "image").map(
+      (node) => node.name,
+    );
+
+    expect(groups).toContain("Assistant");
+    expect(images).toContain("Assistant");
+    expect(root.renderer.findByTestId("row")?.style.flexDirection).toBe("row");
+
+    root.unmount();
+  });
+
   it("mirrors a user row and leaves an assistant row leading", () => {
     const user = renderComponent(<Row variant="user" />);
     expect(user.renderer.findByTestId("row")?.style.flexDirection).toBe(

@@ -47,6 +47,7 @@ import {
   MESSAGE_TOOL_CALL_STATUS,
 } from "@gpuixui/tw";
 import { createContext, useContext, type ReactNode } from "react";
+import * as Schema from "effect/Schema";
 import { Avatar } from "./avatar.js";
 import {
   Collapsible,
@@ -63,15 +64,34 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 
-/** Who a row is from. The default is `assistant`. */
-export type MessageVariant = "user" | "assistant" | "system";
+/** Who a row is from, as the guard reads it. The default is `assistant`. */
+const MessageVariants = Schema.Literals(["user", "assistant", "system"]);
 
-/** The author line each variant derives, and the avatar's name. */
+/** Who a row is from. The default is `assistant`. */
+export type MessageVariant = typeof MessageVariants.Type;
+
+/**
+ * The author line each variant derives, and the avatar's name.
+ */
 const AUTHOR: Readonly<Record<MessageVariant, string>> = {
   user: "You",
   assistant: "Assistant",
   system: "System",
 };
+
+/**
+ * The row a stored variant name paints.
+ *
+ * A row's variant is conversation data as often as a literal: a transcript
+ * restored from storage carries the role it was written with, so a name this
+ * release renamed or dropped arrives as a string the union no longer names.
+ * `AUTHOR[variant]` and `MESSAGE_BUBBLES[variant]` answered `undefined`, so the
+ * row published no accessible name — `aria-label` was the absent author — and
+ * painted neither the mirror nor the bubble its reader was written as. A name
+ * the table does not carry is the component's documented default, `assistant`.
+ */
+const rowVariant = (variant: unknown): MessageVariant =>
+  Schema.is(MessageVariants)(variant) ? variant : "assistant";
 
 /** How a tool call ended. */
 export type MessageToolStatus = "running" | "complete" | "error";
@@ -120,7 +140,11 @@ const TOOL_STATUS: Readonly<Record<MessageToolStatus, string>> = {
 
 /** {@link MessageRoot} props. */
 export interface MessageRootProps extends Omit<Props, "children"> {
-  /** Who the row is from. Default `"assistant"`. */
+  /**
+   * Who the row is from. Default `"assistant"`; a name this release does not
+   * ship — a role a saved transcript carries, or one a release renamed — reads
+   * as that default.
+   */
   readonly variant?: MessageVariant;
   /** The row's accessible name. Default is the variant's author. */
   readonly label?: string;
@@ -131,7 +155,7 @@ export interface MessageRootProps extends Omit<Props, "children"> {
 
 /** One conversation row: its variant, its avatar and its content. */
 export const MessageRoot = ({
-  variant = "assistant",
+  variant: variantProp = "assistant",
   label,
   className,
   children,
@@ -140,6 +164,7 @@ export const MessageRoot = ({
 }: MessageRootProps) => {
   const theme = useTheme();
   assertParts(messageRoot, children);
+  const variant = rowVariant(variantProp);
   const author = AUTHOR[variant];
 
   return (
