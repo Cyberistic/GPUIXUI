@@ -434,8 +434,14 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
 export const platformTypes: Readonly<Record<PlatformName, PlatformType>> =
   platformStyles;
 
+/**
+ * The host's platform name, or the identity when the runtime names an operating
+ * system the library does not style. The index decides membership, so a platform
+ * added to {@link platformNames} — and given a style in {@link platformStyles} —
+ * is recognised on its own host without a second list of names to edit.
+ */
 const knownPlatform = (name: string): PlatformName =>
-  name === "darwin" || name === "linux" || name === "win32" ? name : "default";
+  isPlatformName(name) ? name : "default";
 
 /**
  * The platform the code runs on, or `default` when it is not one the library

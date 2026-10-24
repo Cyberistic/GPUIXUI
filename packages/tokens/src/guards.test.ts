@@ -31,6 +31,7 @@
  * to cast a restored step. `spacingSteps`/`isSpacingStep` and
  * `radiusSteps`/`isRadiusStep` close each axis, held to their scales here.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { elevationLevels, isElevationLevel } from "./elevation.js";
 import { isPlatformName, platformNames, platformStyles } from "./platforms.js";
@@ -60,6 +61,8 @@ import {
   themeContrasts,
   themeModes,
   themes,
+  type ThemeContrast,
+  type ThemeMode,
 } from "./theme.js";
 import { isTextRole, textRoles, typography } from "./typography.js";
 import {
@@ -266,6 +269,64 @@ describe("a stored choice resolves without a cast", () => {
     expect(radiusStepFromStoredChoice(6)).toBeUndefined();
     expect(toneFromStoredChoice(getTheme("dark"), "purple").background).toBe(
       statusTone(getTheme("dark"), "info").background,
+    );
+  });
+});
+
+/**
+ * Guards that an index is the only list of the names it carries.
+ *
+ * The bug this holds: two of the four resolvers re-listed their index in the
+ * message they refuse with — `getTheme` said "light, dark are the modes" and
+ * "default, high are the variants", while `extendTheme`, `platformTheme` and
+ * `retroTheme` built theirs from `densityNames`/`platformNames`/`retroNames` —
+ * and `currentPlatform` re-listed the three operating systems instead of asking
+ * `isPlatformName`. A mode, variant or platform added to its index would then be
+ * accepted by the guard and refused by the message, or read as the identity
+ * platform on a host the table styles.
+ */
+describe("an index is the only list of its names", () => {
+  const read = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+
+  it("refuses against the modes and variants the index carries", () => {
+    // The cast is the storage boundary: a settings row is unknown input.
+    const mode = JSON.parse('"sepia"') as ThemeMode;
+    const contrast = JSON.parse('"soft"') as ThemeContrast;
+
+    expect(() => getTheme(mode)).toThrow(
+      `\`sepia\` is not a theme mode: ${themeModes.join(", ")} are the modes`,
+    );
+    expect(() => getTheme("light", contrast)).toThrow(
+      `\`soft\` is not a contrast variant: ${themeContrasts.join(", ")} are the variants`,
+    );
+  });
+
+  it("reads both refusals and the host platform from the index", () => {
+    const theme = read("./theme.ts");
+    expect(theme).toContain('${themeModes.join(", ")} are the modes');
+    expect(theme).toContain('${themeContrasts.join(", ")} are the variants');
+    expect(theme).not.toContain("is not a theme mode: light, dark");
+    expect(theme).not.toContain("is not a contrast variant: default, high");
+
+    const platforms = read("./platforms.ts");
+    expect(platforms).toContain('isPlatformName(name) ? name : "default"');
+    expect(platforms).not.toContain('name === "darwin"');
+  });
+
+  it("teaches the rule where the persisted choices are taught", () => {
+    const page = read("../../../docs/tokens.md").replace(/\s+/g, " ");
+    const readme = read("../README.md").replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      "A refusal prints the same index it refuses against",
+    );
+    expect(page).toContain(
+      "`currentPlatform` reads the host runtime through `isPlatformName`",
+    );
+    expect(readme).toContain("read from the index that owns them");
+    expect(readme).toContain(
+      "reaches the guard, the refusal and `currentPlatform` together",
     );
   });
 });

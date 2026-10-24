@@ -389,7 +389,27 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 243/243
+`[x]` `[██████████]` 244/244
+
+`[x]` Refuse a stored mode, variant or host **against the index that owns the
+names** — `getTheme`'s two refusals spelled their lists out ("light, dark are the
+modes", "default, high are the variants") while `extendTheme`, `platformTheme`
+and `retroTheme` built theirs from `densityNames`/`platformNames`/`retroNames`,
+and `currentPlatform` re-listed the three operating systems
+(`name === "darwin" || …`) instead of asking `isPlatformName`. A mode, variant
+or platform added to its index would then be accepted by the guard and refused by
+the message, or read as the identity platform on a host the table styles — the
+"one edit at the owner" the catalogue promises. Both refusals now interpolate
+`themeModes.join(", ")`/`themeContrasts.join(", ")` and the host resolver is
+`isPlatformName(name) ? name : "default"`. `guards.test.ts` gains `an index is
+the only list of its names` (3 cases): the two refusals are held to the joined
+indexes, both sources must carry the derived expression and no literal list, and
+both teaching surfaces must state the rule. Directions measured: restoring either
+retracted form fails `reads both refusals and the host platform from the index`
+(naming `${themeModes.join(", ")} are the modes`, then
+`isPlatformName(name) ? name : "default"`); green, 50 files / **3 070** tests with
+`check-types` and `oxfmt` clean. Docs: `docs/tokens.md` §Persisted choices. No
+native scenario applies — two message builders and a host lookup.
 
 `[x]` Measure a **decoded theme with the collection and highlight readers, not
 only paint it** — `seriesColors`/`syntaxColors` already resolved a stated mode

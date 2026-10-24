@@ -206,8 +206,10 @@ contrast variant (it painted the default palette, so a restored `HIGH` lost its
 contrast), `platformTheme` and `retroTheme` name an unshipped style (the lookup
 threw `Cannot read properties of undefined (reading 'contrast')`), and
 `extendTheme`/`createTheme` name an unshipped density preset. Each message names
-the value, the values this release ships and the guard — narrowing first is the
-route that never throws.
+the value, the values this release ships — **read from the index that owns
+them**, so a name added to an index reaches the guard, the refusal and
+`currentPlatform` together — and the guard; narrowing first is the route that
+never throws.
 
 `textStyle` is a **paint** seam, so it is total on the name: a role the scale does
 not carry reads as `body` rather than throwing `Cannot read properties of

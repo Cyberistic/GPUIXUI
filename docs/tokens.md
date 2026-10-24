@@ -4603,7 +4603,14 @@ so a restored value neither needs the union retyped nor a cast:
 
 The unions derive from the indexes, so adding a mode, platform or tone is one
 edit at the owner and every consumer loop — including this package's own tests —
-covers it. The indexes are held to the data they select: every mode has both
+covers it. **A refusal prints the same index it refuses against**:
+`getTheme` names the modes and variants it ships from `themeModes` and
+`themeContrasts`, `extendTheme` names the presets from `densityNames`, and
+`platformTheme` and `retroTheme` from `platformNames` and `retroNames`, while
+`currentPlatform` reads the host runtime through `isPlatformName` rather than a
+second list of operating systems — so a name added to an index reaches the guard,
+the error message and the host resolver together. The indexes are held to the
+data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
 density preset has a metric for every control size, every tone has its own soft
 roles, every type role is a key of the type scale, every elevation level a key

@@ -550,12 +550,12 @@ export function getTheme(
 ): Theme {
   if (!isThemeMode(mode)) {
     throw new Error(
-      `\`${mode}\` is not a theme mode: light, dark are the modes this release ships. A restored or configured choice is narrowed with \`isThemeMode\` before it reaches a theme.`,
+      `\`${mode}\` is not a theme mode: ${themeModes.join(", ")} are the modes this release ships. A restored or configured choice is narrowed with \`isThemeMode\` before it reaches a theme.`,
     );
   }
   if (!isThemeContrast(contrast)) {
     throw new Error(
-      `\`${contrast}\` is not a contrast variant: default, high are the variants this release ships. A restored or configured choice is narrowed with \`isThemeContrast\` before it reaches a theme.`,
+      `\`${contrast}\` is not a contrast variant: ${themeContrasts.join(", ")} are the variants this release ships. A restored or configured choice is narrowed with \`isThemeContrast\` before it reaches a theme.`,
     );
   }
   return contrast === "high" ? highContrastThemes[mode] : themes[mode];
