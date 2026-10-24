@@ -7,8 +7,15 @@
  * scenario rather than be coerced. Those are this adapter's decisions, so they
  * are tested on a renderer a test can inspect — the real renderer is exercised by
  * the playground's smoke suite.
+ *
+ * The bug the drag cases guard: the host sent moves with **no** held button
+ * while a window's own drag reports the primary one, so a component that ends a
+ * gesture on an unheld move (a divider, because a window the pointer left never
+ * delivers the release) cancelled the whole drag and the suite measured a
+ * column that never resized.
  */
 import { describe, expect, it } from "@effect/vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { Bounds } from "./smoke.js";
 import {
@@ -56,7 +63,8 @@ const fakeRenderer = (focusedId: number | null = 6) => {
     getFocusedElementId: () => focusedId,
     nativeSimulateClick: (x, y) => calls.push(`click ${x},${y}`),
     nativeSimulateMouseDown: (x, y) => calls.push(`down ${x},${y}`),
-    nativeSimulateMouseMove: (x, y) => calls.push(`move ${x},${y}`),
+    nativeSimulateMouseMove: (x, y, pressedButton) =>
+      calls.push(`move ${x},${y} held=${pressedButton ?? "none"}`),
     nativeSimulateMouseUp: (x, y) => calls.push(`up ${x},${y}`),
     nativeSimulateScrollWheel: (x, y, deltaX, deltaY) =>
       calls.push(`wheel ${x},${y} ${deltaX},${deltaY}`),
@@ -226,17 +234,33 @@ describe("createTestHost", () => {
     host.drag("row", 40, 0);
     expect(calls[0]).toBe("down 100,50");
     expect(calls).toHaveLength(10);
-    expect(calls[1]).toBe("move 105,50");
+    expect(calls[1]).toBe("move 105,50 held=0");
     expect(calls[9]).toBe("up 140,50");
 
     const stepped = fake();
     stepped.host.drag("row", 40, 0, 2);
     expect(stepped.calls).toEqual([
       "down 100,50",
-      "move 120,50",
-      "move 140,50",
+      "move 120,50 held=0",
+      "move 140,50 held=0",
       "up 140,50",
     ]);
+  });
+
+  it("reports the held button on every move a drag synthesises", () => {
+    // The bug this guards: the host sent moves with **no** held button, while a
+    // window's own drag reports the primary one (`pressedButton: 0`). A component
+    // that ends its gesture on a move holding none — the rule the dock's and the
+    // data table's dividers follow, because a window the pointer left never
+    // delivers the release — then cancelled every move the offscreen host
+    // produced, so a drag that works in a window resized nothing in the suite.
+    const { host, calls } = fake();
+    host.drag("row", 40, 0, 2);
+    expect(Arr.filter(calls, (call) => call.startsWith("move "))).toEqual([
+      "move 120,50 held=0",
+      "move 140,50 held=0",
+    ]);
+    expect(calls.every((call) => !call.endsWith("held=none"))).toBe(true);
   });
 
   it("maps the renderer's scroll tuple to an offset", () => {

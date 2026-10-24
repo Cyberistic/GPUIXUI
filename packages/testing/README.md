@@ -54,7 +54,11 @@ selected text, the runtime's own painted style, screenshot).
 a fake renderer: a `<virtual-list>` or `<anchored>` layer paints no bounds of its
 own, so input aimed at it walks up to the nearest painted ancestor; a subtree's
 text is a join; a style the runtime reports with the wrong type fails the decode;
-a drag is a down, N moves and an up.
+a drag is a down, N moves and an up — and **every move reports the held primary
+button**, because a window's own drag does: a component that ends its gesture on
+a move holding none (the rule a divider follows, since a window the pointer left
+never delivers the release) would otherwise cancel every move this host
+synthesises and measure nothing.
 
 `dragSelect(from, to)` is separate from `drag` on purpose: the runtime registers
 its selection listeners during **paint**, so a hand-rolled down/move/up with no

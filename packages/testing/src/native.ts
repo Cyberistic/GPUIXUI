@@ -60,7 +60,21 @@ export interface NativeRenderer {
   readonly getFocusedElementId: () => number | null;
   readonly nativeSimulateClick: (x: number, y: number) => void;
   readonly nativeSimulateMouseDown: (x: number, y: number) => void;
-  readonly nativeSimulateMouseMove: (x: number, y: number) => void;
+  /**
+   * A pointer move, with the button a press is holding.
+   *
+   * A window's own drag reports the primary button on every move
+   * (`pressedButton: 0`), and a component that ends a gesture on a move holding
+   * none — the rule a divider follows, because a window the pointer left never
+   * delivers the release — reads that flag. The offscreen renderer takes the
+   * button as its third argument, so the host passes it rather than sending a
+   * hover-like move in the middle of a drag.
+   */
+  readonly nativeSimulateMouseMove: (
+    x: number,
+    y: number,
+    pressedButton?: number,
+  ) => void;
   readonly nativeSimulateMouseUp: (x: number, y: number) => void;
   readonly nativeSimulateScrollWheel: (
     x: number,
@@ -281,6 +295,10 @@ export const createTestHost = (renderer: NativeRenderer): SmokeHost => ({
         renderer.nativeSimulateMouseMove(
           point.x + (deltaX * step) / total,
           point.y + (deltaY * step) / total,
+          // The press is held: a window's drag reports the primary button on
+          // every move, and a divider that ends its gesture on an unheld move
+          // would cancel the whole drag under this host.
+          0,
         ),
       );
       renderer.nativeSimulateMouseUp(point.x + deltaX, point.y + deltaY);
