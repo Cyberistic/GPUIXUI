@@ -17915,6 +17915,26 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `packages/components`: **a reordered list placed every header by the section that used to be there** —
+`PinnedList` renders its sections keyed by `title` (the doc says "It is also the section's key"), and it kept the
+measured heights in a **positional** array, so a caller that reorders `sections` — a saved order, a sorted group,
+a filter that moves a section up — handed every header the height that used to sit in its slot. Measured in the
+renderer with two bodies (200 and 400) scrolled 300 past the start: with the order reversed the leading
+section's header was **not painted at all** (it was pushed out by its neighbour's shorter height) and the
+second header pinned at `0` while its section began at `132`. Heights are kept in a `HashMap` keyed by the
+section's title now and folded into declaration order at render, so a moved section travels with the rows it
+actually holds. The report is also decoded by `internal/measure.ts`'s new `measuredHeight` — a payload height
+the runtime cannot paint is no height, not a `NaN` the style batch drops — and `AutoHeight` composes the same
+reader instead of `Option.fromNullishOr(event.height)`, so the seam is the one place a measured box is read.
+Proof: `src/behaviour/pinned-list.test.tsx`'s `keeps each section's measured height when the caller reorders
+them` (the two headers' painted tops after the reorder) and `src/internal/measure.test.ts`'s `measuredHeight`
+(2 cases: the readable side, and the absent/`NaN`/infinite one refused). Directions measured at `HEAD`:
+the reorder case fails `expected false to be true` on `pinned-header-0`, and `measuredHeight` is not exported.
+Green with the fix: pinned-list behaviour 9/9, measure 10/10, auto-height/accordion/collapsible 28/28,
+`check-types`, `oxfmt`, `oxlint` and `check:tests` clean. Docs: the record's limitation (which used to call the
+stale slot heights the design), the page's §Limitations and the `COMPONENTS.md` row, which was a one-line stub.
+No live scenario applies — the reorder is a React-state change no probe performs, and the suite reads the real
+renderer.
 `[x]` `packages/components`: **a sheen survived the control that could no longer answer its hover** —
 `ShineButton`'s band is hover feedback and its own suite states the rule ("paints no sheen on a
 disabled action"), but the only cleanup effect read the reduced-motion preference: the `enter`

@@ -252,6 +252,60 @@ describe("the data surfaces announce what they paint", () => {
     );
   });
 
+  it("reads a blank field name as the field it reads", () => {
+    root = renderData(
+      <AdvancedFilter
+        fields={[{ field: "status", label: "" }]}
+        tree={{
+          kind: "predicate",
+          field: "status",
+          comparison: "equals",
+          value: "tracked",
+        }}
+        onChange={() => {}}
+        testId="blank-fields"
+      />,
+    );
+    settle(root);
+    const before = decodeA11yTree(root.renderer.getA11yTree());
+    // The picker's trigger and the value field are controls, so each needs the
+    // field's words; a blank label used to leave the trigger unnamed and the
+    // value field named `" value"`.
+    expect(
+      Arr.map(withRole(before, before.root, "Button"), (id) =>
+        nameOf(before, id),
+      ),
+    ).toContain("status");
+    expect(
+      Arr.map(withRole(before, before.root, "TextInput"), (id) =>
+        nameOf(before, id),
+      ),
+    ).toEqual(["status value"]);
+
+    const trigger = root.renderer.findByTestId("blank-fields-0-field");
+    if (trigger === undefined) {
+      throw new Error("the field picker painted no trigger");
+    }
+    const bounds = root.renderer.getElementBounds(trigger.id);
+    if (bounds === null) {
+      throw new Error("the field picker's trigger painted no box");
+    }
+    root.renderer.nativeSimulateClick(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+      0,
+    );
+    root.renderer.flush();
+
+    const open = decodeA11yTree(root.renderer.getA11yTree());
+    // The choice inside the menu is named by the same words, not left blank.
+    expect(
+      Arr.map(withRole(open, open.root, "MenuItem"), (id) =>
+        nameOf(open, id),
+      ),
+    ).toContain("status");
+  });
+
   it("reads blank column-menu names as the documented default", () => {
     root = renderData(
       <ColumnMenu

@@ -78,7 +78,12 @@ import {
 export interface AdvancedFilterField {
   /** The field the clause reads. */
   readonly field: string;
-  /** The words the builder shows for it. */
+  /**
+   * The words the builder shows for it.
+   *
+   * A blank label reads as {@link field}'s own name: a locale table with a
+   * missing row answers `""`, which would leave the picker unnamed.
+   */
   readonly label: string;
 }
 
@@ -134,13 +139,21 @@ export const groupLabels: Readonly<Record<"all" | "any" | "not", string>> = {
   not: "not",
 };
 
-/** The label a field is shown by, falling back to its own name. */
+/**
+ * The label a field is shown by, falling back to its own name.
+ *
+ * A blank label is absence: a locale table with a missing row answers `""`,
+ * which would leave the picker's trigger unnamed and the value field named
+ * `" value"` — so the field's own name is the words.
+ */
 const labelOf = (
   fields: ReadonlyArray<AdvancedFilterField>,
   field: string,
 ): string =>
   Arr.findFirst(fields, (candidate) => candidate.field === field).pipe(
-    Option.map((candidate) => candidate.label),
+    Option.map((candidate) =>
+      spokenText(Option.fromNullishOr(candidate.label), candidate.field),
+    ),
     Option.getOrElse(() => field),
   );
 
@@ -216,7 +229,7 @@ const ClauseRow = ({
                 id === undefined ? undefined : `${id}-field-${field.field}`
               }
             >
-              {field.label}
+              {labelOf(fields, field.field)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

@@ -25,7 +25,7 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name |
+| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name; a blank label reads as the field's own name |
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
 | `title` | `string` | `Filters` | the title above the builder; a blank title reads as `Filters` |
