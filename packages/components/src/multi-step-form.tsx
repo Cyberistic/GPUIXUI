@@ -15,7 +15,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { accessibleName, visibleCopy } from "@gpuixui/primitives/core";
+import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useState, type ReactNode } from "react";
@@ -24,6 +24,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { statusTone, useTheme } from "./internal/theme.js";
 import { Stepper, StepperStep } from "./stepper.js";
+import { stepName } from "./stepper/logic.js";
 import {
   gateMessage,
   isLastStep,
@@ -31,7 +32,6 @@ import {
   previousStep,
   refusalText,
   stepAnnouncement,
-  stepName,
   stepOf,
   type StepGate,
 } from "./wizard/logic.js";
@@ -211,8 +211,8 @@ export const MultiStepForm = ({
           <StepperStep
             key={entry.id}
             value={at + 1}
-            label={stepName(entry.title, at + 1)}
-            description={visibleCopy(entry.description)}
+            label={entry.title}
+            description={entry.description}
           />
         ))}
       </Stepper>

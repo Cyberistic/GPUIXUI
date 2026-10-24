@@ -217,6 +217,28 @@ describe("Stepper", () => {
     stepper.unmount();
   });
 
+  it("names a titleless step by its position and paints no blank line", () => {
+    // The bug guarded: a step's title and description are copy from an i18n
+    // table or a data record as often as literals, and this part published both
+    // raw — a title a table never filled left the list item unnamed (the wizard
+    // derived `Step 2` at its call site instead), and a run of spaces laid out a
+    // full blank line under the name.
+    const stepper = renderComponent(
+      <Stepper value={1} label="Checkout">
+        <StepperStep value={1} label="Account" />
+        <StepperStep value={2} label="   " description="   " />
+      </Stepper>,
+    );
+
+    const items = nodesWithRole(stepper.renderer, "listitem");
+    const names = items.map((item) => item.name);
+    const painted = stepper.renderer.getAllText();
+    stepper.unmount();
+
+    expect(names).toEqual(["Account", "Step 2"]);
+    expect(painted).toEqual(["1", "Account", "2", "Step 2"]);
+  });
+
   it("lets a consumer's style win over the status rule", () => {
     const stepper = renderComponent(
       <Stepper value={1} label="Checkout">

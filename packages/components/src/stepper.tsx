@@ -19,6 +19,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { visibleCopy } from "@gpuixui/primitives/core";
 import {
   cn,
   STEPPER_DESCRIPTION,
@@ -44,6 +45,7 @@ import {
   currentStep,
   orientationOf,
   statusOf,
+  stepName,
   type StepperOrientation,
   type StepperStatus,
 } from "./stepper/logic.js";
@@ -183,11 +185,17 @@ export const StepperStep = ({
   const status = statusOf(current, value);
   const marker = markerPalette(theme, status);
   const side = controlHeight(theme, "md");
+  // A title and a description are copy as often as they are literals (an i18n
+  // table's missing row, a workflow record's blank field): a blank title names
+  // the step by its position, and a blank or whitespace description paints no
+  // line rather than a zero-height run over a typed blank one.
+  const name = stepName(label, value);
+  const detail = visibleCopy(description);
 
   return (
     <div
       role="listitem"
-      aria-label={label}
+      aria-label={name}
       aria-selected={status === "current"}
       {...rest}
       style={mergeStyles(
@@ -219,12 +227,10 @@ export const StepperStep = ({
                 : theme.colors.foreground,
           })}
         >
-          {label}
+          {name}
         </text>
-        {description === undefined ? null : (
-          <text style={recipeStyle(STEPPER_DESCRIPTION, theme)}>
-            {description}
-          </text>
+        {detail === undefined ? null : (
+          <text style={recipeStyle(STEPPER_DESCRIPTION, theme)}>{detail}</text>
         )}
       </div>
     </div>

@@ -16,6 +16,7 @@
  * an observation, and the component still has to paint somewhere.
  */
 
+import { accessibleName } from "@gpuixui/primitives/core";
 import * as Schema from "effect/Schema";
 
 /** Where a step sits relative to the current one. */
@@ -39,6 +40,19 @@ export type StepperOrientation = typeof StepperOrientations.Type;
  */
 export const orientationOf = (value: unknown): StepperOrientation =>
   Schema.is(StepperOrientations)(value) ? value : "horizontal";
+
+/**
+ * A step's name, for the indicator and for the content that announces it.
+ *
+ * A title is copy from a data table or an i18n file as often as it is a literal,
+ * so a blank one is an absence: an unnamed list item and an announcement opening
+ * with a comma are both worse than the step's own position. The root that owns
+ * the position derives the name, so the wizard and a direct `StepperStep` cannot
+ * disagree about the rule.
+ */
+export const stepName = (title: string, position: number): string =>
+  accessibleName(title) ??
+  `Step ${Number.isFinite(position) ? Math.max(1, Math.floor(position)) : 1}`;
 
 /**
  * The current step a caller named, or the first step when it cannot be read.

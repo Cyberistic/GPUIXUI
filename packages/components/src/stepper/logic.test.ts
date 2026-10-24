@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
-import { currentStep, orientationOf, statusOf } from "./logic.js";
+import { currentStep, orientationOf, statusOf, stepName } from "./logic.js";
 
 describe("orientationOf", () => {
   it("keeps the two axes this release ships", () => {
@@ -74,5 +74,21 @@ describe("statusOf", () => {
     // state they asked for — distinct from one they could not read.
     expect(statusOf(0, 1)).toBe("upcoming");
     expect(statusOf(-1, 1)).toBe("upcoming");
+  });
+});
+
+describe("stepName", () => {
+  it("names a titleless step by its position", () => {
+    // The bug guarded: a title that arrived blank published an unnamed list
+    // item and a marker with no word beside it (`StepperStep` read `label`
+    // raw, while the wizard derived this name at its own call site).
+    expect(stepName("", 2)).toBe("Step 2");
+    expect(stepName("   ", 3)).toBe("Step 3");
+    expect(stepName("", Number.NaN)).toBe("Step 1");
+  });
+
+  it("keeps a readable title without its padding", () => {
+    expect(stepName(" Review ", 2)).toBe("Review");
+    expect(stepName("Step 2", 2)).toBe("Step 2");
   });
 });
