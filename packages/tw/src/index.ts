@@ -24,6 +24,7 @@ export {
   type TwUtilityResolver,
   type TwVariantResolver,
 } from "./registry.js";
+export { createRecipeCache } from "./recipe-cache.js";
 export { BASE_ALIASES } from "./aliases.js";
 export {
   dialogMotion,
