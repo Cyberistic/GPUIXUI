@@ -45,7 +45,7 @@ export const COLUMN_KEY_STEP = 16;
 export interface ColumnDef {
   /** The stable identity a resize, a move and a visibility change address. */
   readonly id: string;
-  /** The visible label, also the base of the column's accessible names. */
+  /** The visible label, also the base of the column's accessible names. A blank label reads as `id`. */
   readonly label: string;
   /** The track width, in pixels. */
   readonly width: number;

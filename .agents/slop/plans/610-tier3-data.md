@@ -600,6 +600,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   carry the rule.
 
 
+- **A column's blank label reads as the id it is stored by**: `ColumnMenu`'s
+  visibility row is named by its children and its move row interpolated the
+  label bare, so a column restored from a saved configuration without a title —
+  or an i18n table missing its row — left the one control that decides
+  visibility **unnamed** in the tree while the submenu read `Move ` and
+  stopped. Both rows read `columnName` (the header's own reading), so a blank
+  (or whitespace) label is the column's `id`. `surface-a11y.test.tsx` gains the
+  window case (a blank and a whitespace label, the checkbox and move rows read
+  off the tree); direction measured: before the fix the two move rows read
+  `Move ` / `Move   ` and no checkbox row carried a name. Docs:
+  `docs/column-configuration.mdx`, the README's column-label paragraph and the
+  Tier 3 Column configuration row.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

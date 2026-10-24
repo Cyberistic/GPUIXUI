@@ -120,6 +120,13 @@ publishing an unnamed trigger or surface: a default only covers an *absent*
 prop, and a locale table with a missing row answers `""`. The trigger and the
 menu both announce `Columns` then (`src/behaviour/surface-a11y.test.tsx`).
 
+A **column's** label is content the same way: a saved configuration can restore
+a column with no title and a locale table can answer `""`. Every row the menu
+paints for that column reads it through `columnName`, so a blank label reads as
+the column's `id` — the visibility row is named `name`, not left unnamed, and
+the submenu says `Move name` rather than `Move ` and stops.
+(`src/behaviour/surface-a11y.test.tsx` mounts a blank and a whitespace label.)
+
 ### `TableColumnDivider`
 
 | Prop | Type | Default | Consequence |

@@ -18,6 +18,11 @@
  * sticky position, so a frozen column is the measured two-pane composition,
  * not a flag in this menu.
  *
+ * A column's words are {@link columnName}'s: a label this release cannot read —
+ * a locale table missing its row, a saved configuration restored without its
+ * title — reads as the column's `id`, so the visibility row is never unnamed
+ * and a Move row never says `Move ` and stops.
+ *
  * ```tsx
  * const columns = useColumns({ columns: FILE_COLUMNS });
  * <ColumnMenu
@@ -42,6 +47,7 @@ import {
 import { spokenText } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { columnName } from "../sort/logic.js";
 import {
   moveColumn,
   setColumnVisible,
@@ -99,7 +105,7 @@ const VisibilityRow = ({
     }
     testId={testId === undefined ? undefined : `${testId}-toggle-${column.id}`}
   >
-    {column.label}
+    {columnName(column.label, column.id)}
   </DropdownMenuCheckboxItem>
 );
 
@@ -123,9 +129,11 @@ const MoveRow = ({
     <DropdownMenuSubTrigger
       testId={testId === undefined ? undefined : `${testId}-move-${column.id}`}
     >
-      {`Move ${column.label}`}
+      {`Move ${columnName(column.label, column.id)}`}
     </DropdownMenuSubTrigger>
-    <DropdownMenuSubContent label={`Move ${column.label}`}>
+    <DropdownMenuSubContent
+      label={`Move ${columnName(column.label, column.id)}`}
+    >
       <DropdownMenuItem
         disabled={at === 0}
         onSelect={() => onChange(moveColumn(state, column.id, -1))}

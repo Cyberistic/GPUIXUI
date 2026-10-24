@@ -154,9 +154,12 @@ export const sortLabel = (
  * A label is content before it is a literal: an i18n table missing its row
  * answers `""`, and a saved column configuration can restore a header with no
  * words. A blank label therefore reads as the column's **field** — the stable
- * identity the header sorts by, and the word the advanced filter's field picker
- * already falls back to. Without it the control was named `", sortable"`: the
- * state without the column it belongs to.
+ * identity the header sorts by, the `id` a configuration menu addresses it by,
+ * and the word the advanced filter's field picker already falls back to.
+ * Without it the control was named `", sortable"`: the state without the column
+ * it belongs to, and the menu's visibility row was unnamed.
+ *
+ * It is the one reading a sortable header and `ColumnMenu`'s rows share.
  */
 export const columnName = (label: string, field: string): string =>
   spokenText(Option.fromNullishOr(label), field);

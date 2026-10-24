@@ -370,4 +370,49 @@ describe("the data surfaces announce what they paint", () => {
       DEFAULT_COLUMN_MENU_LABEL,
     );
   });
+
+  it("reads a blank column label as the id the column is stored by", () => {
+    // Bug guarded: a column label is content — a locale table missing its row
+    // and a saved column configuration both hand over `""` — and the menu's
+    // visibility row is named by its children, so a blank label left the one
+    // control that decides visibility unnamed while its Move row read `Move `.
+    root = renderData(
+      <ColumnMenu
+        state={{
+          columns: [
+            { id: "name", label: "", visible: true, width: 160 },
+            { id: "size", label: "  ", visible: true, width: 90 },
+          ],
+        }}
+        onChange={() => {}}
+        testId="blank-labels"
+      />,
+    );
+    settle(root);
+    const trigger = root.renderer.findByTestId("blank-labels");
+    if (trigger === undefined) {
+      throw new Error("the column menu painted no trigger");
+    }
+    const bounds = root.renderer.getElementBounds(trigger.id);
+    if (bounds === null) {
+      throw new Error("the column menu's trigger painted no box");
+    }
+    root.renderer.nativeSimulateClick(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+      0,
+    );
+    root.renderer.flush();
+
+    const tree = decodeA11yTree(root.renderer.getA11yTree());
+    const checkboxes = Arr.map(
+      withRole(tree, tree.root, "MenuItemCheckBox"),
+      (id) => nameOf(tree, id),
+    );
+    const moves = Arr.map(withRole(tree, tree.root, "MenuItem"), (id) =>
+      nameOf(tree, id),
+    );
+    expect(checkboxes).toEqual(["name", "size"]);
+    expect(moves).toEqual(["Move name", "Move size"]);
+  });
 });
