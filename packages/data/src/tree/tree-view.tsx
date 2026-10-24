@@ -45,7 +45,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { themeColors, useTheme } from "../theme.js";
-import { listOf } from "../internal/list.js";
+import { rowsOf } from "../internal/list.js";
 import { paintableSize } from "../internal/size.js";
 import { treeName, type TreeCursor, type TreeRow } from "./logic.js";
 import { TREE_INSET, TreeRowView } from "./row.js";
@@ -135,7 +135,7 @@ export const TreeView = <T,>({
   // The caller's rows are stored data: a saved flattened list, or a snapshot
   // that has not arrived, is not a list and paints no rows, and a hole the
   // store wrote inside one names no row.
-  const visibleRows = listOf(rows);
+  const visibleRows = rowsOf(rows, (row) => row.key);
   const tree = useTree({
     rows: visibleRows,
     labelOf,

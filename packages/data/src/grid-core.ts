@@ -48,7 +48,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
-import { listOf } from "./internal/list.js";
+import { rowsOf } from "./internal/list.js";
 import { readPagination } from "./pagination/logic.js";
 
 /**
@@ -359,7 +359,7 @@ export const constructGrid = <Row extends RowData>({
       columns,
       HashSet.fromIterable(storedIds(hiddenColumns)),
     ),
-    data: listOf(rows),
+    data: rowsOf(rows, keyOf),
     getRowId: keyOf,
     /**
      * The field's text is trimmed before it narrows the set: a query of spaces

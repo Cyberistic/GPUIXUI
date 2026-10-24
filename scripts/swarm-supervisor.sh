@@ -27,7 +27,7 @@ set -uo pipefail
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODELS="$REPO/scripts/swarm-model.sh"
-MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-7}"
+MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-3}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 

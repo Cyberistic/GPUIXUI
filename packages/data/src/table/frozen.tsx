@@ -64,7 +64,7 @@ import {
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { Fragment, useRef, useState, type ReactNode } from "react";
-import { listOf } from "../internal/list.js";
+import { rowsOf } from "../internal/list.js";
 import { paneFill, usePaintedHeight } from "../internal/painted.js";
 import { paintableSize } from "../internal/size.js";
 import { DEFAULT_HEADER_HEIGHT } from "./frame.js";
@@ -206,7 +206,7 @@ export const FrozenTable = <Row,>({
   // The caller's rows are stored data: a saved panel, or `snapshot?.rows`
   // before the snapshot arrives, is not a list and fills no pane, and a hole
   // the store wrote inside one is a record with no identity to key a row by.
-  const records = listOf(rows);
+  const records = rowsOf(rows, rowKey);
   const [frozenHeaderHeight, setFrozenHeaderHeight] = useState(0);
   const [dataHeaderHeight, setDataHeaderHeight] = useState(0);
   // The panes' headers are the caller's rows, so their heights can differ by a
