@@ -170,6 +170,14 @@ fill together — a restored status pill painted as an unreadable label.
 `src/behaviour/badge.test.tsx` holds the fallback and a shipped `primary`/`sm`
 pill as the negative control.
 
+A tab set's `orientation` and `activation` are stored with the workspace, so
+`tabs/logic.ts` reads both (`orientationOf`, `activationOf`) and `Tabs` resolves
+each once: the root's layout, the rail's arrow direction, the activation policy
+and the context paint the same answer. A name this release does not ship reads
+as `horizontal`/`automatic`, the documented defaults.
+`src/behaviour/tabs.test.tsx` drives the painted axis, the `Right` move and the
+automatic selection for a stored `"diagonal"`/`"eager"` set.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

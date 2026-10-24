@@ -42,6 +42,8 @@ import {
   type TestTheme,
 } from "../internal/test-root.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
+import type { TabsOrientation } from "../tabs.js";
+import type { TabsActivation } from "../tabs/logic.js";
 
 /** Three settings panels with the middle tab disabled. */
 const Settings = ({
@@ -327,6 +329,90 @@ describe("Tabs", () => {
     );
 
     tabs.unmount();
+  });
+
+  it("paints and moves a stored orientation name as the documented horizontal set", () => {
+    // The bugs these guard: a tab set is stored in a workspace layout, so
+    // `orientation` arrives as a string as often as a literal. The raws treated
+    // an unknown name as "not horizontal": the root painted the vertical axis
+    // (`flex-row`, rail beside panel) and the rail answered Down/Up while
+    // Right/Left did nothing — the opposite of the documented horizontal set
+    // the props promise.
+    // @ts-expect-error — an axis a store wrote, not the union the props declare.
+    const stored: TabsOrientation = "diagonal";
+
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile" orientation={stored} testId="tabs-root">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+          <TabsTrigger testId="tab-danger" value="danger">
+            Danger
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="panel-profile" value="profile">
+          <text>Profile panel</text>
+        </TabsContent>
+        <TabsContent testId="panel-danger" value="danger">
+          <text>Danger panel</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    try {
+      focusTab(tabs, "tab-profile");
+      tabs.renderer.simulateKeystrokes("right");
+
+      expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+      expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
+      expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();
+
+      expect(tabs.renderer.findByTestId("tabs-root")?.style.flexDirection).toBe(
+        "column",
+      );
+    } finally {
+      tabs.unmount();
+    }
+  });
+
+  it("reads a stored activation name as automatic", () => {
+    // The bug this guards: a stored policy name the union no longer carries
+    // (`"eager"`) fell through to manual, so an arrow moved real focus and left
+    // the old panel painted — Enter was required although the component
+    // documents `automatic` as its default.
+    // @ts-expect-error — a policy a store wrote, not the union the props declare.
+    const stored: TabsActivation = "eager";
+
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile" activation={stored}>
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+          <TabsTrigger testId="tab-danger" value="danger">
+            Danger
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="panel-profile" value="profile">
+          <text>Profile panel</text>
+        </TabsContent>
+        <TabsContent testId="panel-danger" value="danger">
+          <text>Danger panel</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    try {
+      focusTab(tabs, "tab-profile");
+      tabs.renderer.simulateKeystrokes("right");
+
+      expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+      expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
+      expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();
+    } finally {
+      tabs.unmount();
+    }
   });
 
   it("moves focus and the selection with the arrow keys, wrapping", () => {

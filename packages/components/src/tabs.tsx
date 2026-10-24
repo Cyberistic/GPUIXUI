@@ -106,13 +106,15 @@ import {
 } from "./internal/theme.js";
 import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
 import {
+  activationOf,
   moveOrigin,
+  orientationOf,
   selectsOnFocus,
   type TabsActivation,
+  type TabsOrientation,
 } from "./tabs/logic.js";
 
-/** The two axes a tab list can run along. */
-export type TabsOrientation = "horizontal" | "vertical";
+export type { TabsActivation, TabsOrientation } from "./tabs/logic.js";
 
 /** One registered trigger: its value, native id and whether it accepts input. */
 interface TabRow {
@@ -237,8 +239,8 @@ export const Tabs = ({
   value: valueProp,
   defaultValue = "",
   onValueChange,
-  orientation = "horizontal",
-  activation = "automatic",
+  orientation,
+  activation,
   className,
   children,
   style,
@@ -246,6 +248,11 @@ export const Tabs = ({
 }: TabsProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
+  // Both names are stored with the workspace as often as they are literals, so
+  // each is read once here and the layout, the keys, the activation policy and
+  // the context all paint the same answer.
+  const axis = orientationOf(orientation);
+  const policy = activationOf(activation);
   const [selected, setSelected] = useControllableState({
     value: valueProp,
     defaultValue,
@@ -302,11 +309,11 @@ export const Tabs = ({
         ),
         Option.match({
           onNone: () => undefined,
-          onSome: (row) => focusRow(row, selectsOnFocus(activation)),
+          onSome: (row) => focusRow(row, selectsOnFocus(policy)),
         }),
       );
     },
-    [activation, active, focusRow, indexOf, rows, selected],
+    [active, focusRow, indexOf, policy, rows, selected],
   );
 
   const jumpTo = useCallback(
@@ -319,11 +326,11 @@ export const Tabs = ({
         rowAt(rows, enabled),
         Option.match({
           onNone: () => undefined,
-          onSome: (row) => focusRow(row, selectsOnFocus(activation)),
+          onSome: (row) => focusRow(row, selectsOnFocus(policy)),
         }),
       );
     },
-    [activation, focusRow, rows],
+    [focusRow, policy, rows],
   );
 
   const select = useCallback(
@@ -369,8 +376,8 @@ export const Tabs = ({
       selected,
       active,
       tabbable,
-      orientation,
-      activation,
+      orientation: axis,
+      activation: policy,
       rows,
       boxes,
       register,
@@ -383,14 +390,14 @@ export const Tabs = ({
       selectActive,
     }),
     [
-      activation,
+      axis,
       active,
       boxes,
       focusRow,
       jumpTo,
       moveBy,
       noteFocus,
-      orientation,
+      policy,
       register,
       reportBox,
       rows,
@@ -408,10 +415,7 @@ export const Tabs = ({
       <div
         {...rest}
         style={mergeStyles(
-          recipeStyle(
-            cn(TABS_ROOT, TABS_ORIENTATION[orientation], className),
-            theme,
-          ),
+          recipeStyle(cn(TABS_ROOT, TABS_ORIENTATION[axis], className), theme),
           style,
         )}
       >

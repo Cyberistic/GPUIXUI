@@ -7,13 +7,52 @@
  * element is the precise origin — a `Tab` traversal focuses a trigger without
  * running its `onFocus` on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), and the
  * recorded row can be stale or absent — so the anchor cannot be state alone.
+ *
+ * The two stored names are read here as well (`orientationOf`, `activationOf`):
+ * a set restored from a workspace carries strings as often as literals, and one
+ * answer feeds the layout, the arrow direction, the activation policy and the
+ * context, so a name a release dropped cannot paint one axis and answer another.
  */
 
 import { pipe } from "effect";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+
+/** The two axes a tab list can run along, as the guard reads them. */
+export const TabsOrientations = Schema.Literals(["horizontal", "vertical"]);
+
+/** The two axes a tab list can run along. */
+export type TabsOrientation = typeof TabsOrientations.Type;
+
+/**
+ * The axis a stored name paints.
+ *
+ * A tab set is stored with the workspace it belongs to as often as it is a
+ * literal, so `orientation` arrives as a string a release may have renamed or
+ * dropped. The raw reads treated such a name as "not horizontal": the root
+ * painted the vertical axis and the rail answered Down/Up, while the component
+ * documents a horizontal default. A name this release does not carry reads as
+ * `horizontal`, the rule the primitives' `orientationOf` follows for their
+ * groups.
+ */
+export const orientationOf = (value: unknown): TabsOrientation =>
+  Schema.is(TabsOrientations)(value) ? value : "horizontal";
+
+/** The two policies for when a tab becomes selected, as the guard reads them. */
+export const TabsActivations = Schema.Literals(["automatic", "manual"]);
 
 /** When a tab becomes selected relative to the keyboard focus. */
-export type TabsActivation = "automatic" | "manual";
+export type TabsActivation = typeof TabsActivations.Type;
+
+/**
+ * The policy a stored name runs.
+ *
+ * A stored policy name this release does not carry (`"eager"`, an older
+ * release's spelling) fell through to manual, so an arrow moved real focus and
+ * left the old panel painted although the component documents `automatic`.
+ */
+export const activationOf = (value: unknown): TabsActivation =>
+  Schema.is(TabsActivations)(value) ? value : "automatic";
 
 /**
  * Whether moving focus onto a tab also selects it.

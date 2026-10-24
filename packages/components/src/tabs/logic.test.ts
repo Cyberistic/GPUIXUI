@@ -12,7 +12,12 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { moveOrigin, selectsOnFocus } from "./logic.js";
+import {
+  activationOf,
+  moveOrigin,
+  orientationOf,
+  selectsOnFocus,
+} from "./logic.js";
 
 describe("selectsOnFocus", () => {
   it("selects on focus in automatic mode", () => {
@@ -21,6 +26,36 @@ describe("selectsOnFocus", () => {
 
   it("waits for Enter or Space in manual mode", () => {
     expect(selectsOnFocus("manual")).toBe(false);
+  });
+});
+
+describe("orientationOf", () => {
+  it("keeps an axis this release names", () => {
+    expect(orientationOf("horizontal")).toBe("horizontal");
+    expect(orientationOf("vertical")).toBe("vertical");
+  });
+
+  it("reads a stored axis this release does not name as the documented horizontal set", () => {
+    // A tab set is stored in a workspace layout, so `orientation` arrives as a
+    // string as often as a literal. The raws read treated an unknown name as
+    // "not horizontal": the root painted the vertical axis and the arrows
+    // stepped Down/Up, while the component documents a horizontal default.
+    expect(orientationOf("diagonal")).toBe("horizontal");
+    expect(orientationOf(undefined)).toBe("horizontal");
+    expect(orientationOf(2)).toBe("horizontal");
+  });
+});
+
+describe("activationOf", () => {
+  it("keeps a policy this release names", () => {
+    expect(activationOf("automatic")).toBe("automatic");
+    expect(activationOf("manual")).toBe("manual");
+  });
+
+  it("reads a stored policy this release does not name as automatic", () => {
+    expect(activationOf("eager")).toBe("automatic");
+    expect(activationOf(undefined)).toBe("automatic");
+    expect(activationOf({ policy: "manual" })).toBe("automatic");
   });
 });
 

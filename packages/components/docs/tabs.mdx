@@ -65,3 +65,7 @@ Tabs
 - No `aria-orientation`, `aria-controls` or `aria-labelledby`.
 - `focused` misses a `Tab` traversal: the trigger gains focus **without running its `onFocus`**.
 - The selected surface is measured, not styled per trigger.
+- `orientation` and `activation` are stored with the workspace as often as they
+  are literals, so a name this release does not ship reads as the documented
+  default (`horizontal` / `automatic`) rather than flipping the component to the
+  other axis or silently waiting for Enter.
