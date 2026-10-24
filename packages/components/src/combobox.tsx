@@ -295,9 +295,10 @@ export const Combobox = ({
   });
 
   // Report each search the popup runs, including the empty one it opens with.
-  // A closed popup is not a search: the close path clears the query in the same
-  // commit, and reporting that would ask a caller to fetch nothing. A control
-  // the caller disables is closing for the same reason.
+  // A closed popup is not a search: `open` is false from the dismissal, so the
+  // query its ghost keeps painted is never reported, and a caller is not asked
+  // to fetch nothing. A control the caller disables is closing for the same
+  // reason.
   useLayoutEffect(() => {
     if (!open || disabled) return;
     onQueryChangeRef.current?.(query);
