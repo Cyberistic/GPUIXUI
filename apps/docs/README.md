@@ -27,7 +27,7 @@ dark-mode.mdx                App-owned mode switching, following the desktop's p
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
 accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree, the pressable-target floors and the keyboard dim
-motion.mdx                   House timing and the seam a stored one is read at, retained values and the tween a clock can name, the curves a timing name stands for, the reduced-motion policy, the presence seam and the React hooks
+motion.mdx                   House timing and the seam a stored one is read at, retained values and the tween a clock can name, the curves a timing name stands for, the reduced-motion policy, the presence seam (and the clock a stored phase must fit) and the React hooks
 layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps

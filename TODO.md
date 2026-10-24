@@ -389,7 +389,35 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 267/267
+`[x]` `[██████████]` 268/268
+
+`[x]` Read a **colour a store cleared as the absence it is** — `themeColors`
+      kept every string, so a role a decoder wrote as `""` — a cleared
+      brand-editor field, an empty swatch in a theme file, the value a colour
+      picker's hex input holds when the reader selects and deletes — reached the
+      renderer, which parses no colour from it and paints black, while every
+      paint seam believed the theme carried a colour; and `extendTheme` kept the
+      blank as an override, erasing the base's role under it. Measured on the
+      merged key path: `statusTone({ colors: { ...lightColors, infoSoft: "" } })`
+      answered `{ background: '', … }` (a message with no fill) and
+      `extendTheme(lightTheme, { colors: { primary: "" } }).colors.primary`
+      answered `''` (a button with no fill) instead of `#5F4BDB`. `namesColour`
+      is the one read — a string that names a colour — so `themeColors` answers
+      the absence a `null` role already is, `namedRoles` keeps `extendTheme`'s
+      merge on the base's role for a blank override, and `invalidColorRoles`
+      still names the role on the value the store wrote, so the gate refuses the
+      theme. `color.test.ts` gains `the roles a store cleared` (5 cases: the read,
+      the report, three paint seams, the merge and the pages) and
+      `system-theme.test.ts`'s two follow cases now hold the delivered theme to
+      the base's role (the palette change is still delivered) while
+      `restoreTheme` returns the shipped role. Directions measured: with the old
+      reads restored, six cases fail by name (`expected '' to be undefined`,
+      `[ { role: 'primary', value: '' } ]`, `expected { background: '', … }`,
+      and three `expected '' to be '#5F4BDB'`); restoring the fix is 53 files /
+      **3 142** tests with `check-types` clean. Docs: `docs/tokens.md`
+      §Paint-ready values/§Theme API, `docs/design-system.md` §9, the package
+      README §Extending a theme and the `Colour grammar` inventory row. No native
+      scenario applies — a pure read, a merge and the prose that teaches them.
 
 `[x]` Read a **theme name a store wrote** as a name, not as a value to trim —
       `extendTheme` interpolated `overrides.name` and `styleName` trimmed the
@@ -10950,7 +10978,7 @@ this time.
 | Re-anchor the **data-display controller rules** to the table-core migration — the data workstream moved `useTable` onto `@tanstack/table-core` (`src/grid-core.ts`), and the docs still read the pre-migration shape in four places: `lane-page.test.ts` required `clearSelection(selection)` (the controller writes `clearSelection(chosen)`), `table-preview.test.ts` read the deleted `packages/data/src/filter/logic.ts` at module scope (so the whole file died at import with `ENOENT` instead of guarding anything), and both copyable snippets — `table-demo.tsx`'s `tableWorkflowSource` and the curated Table page's usage block — still called `useTable({ rows, keyOf, textOf, valueOf })`, options the shipped hook no longer takes; the lane page's Sort bullet also described `sortRows(rows, key, direction)`, a helper the package does not export | data (the migration) + docs-site (`lane-page.test.ts`, `table-preview.test.ts`, `/docs/data-display`, `/docs/components/table`) | **resolved 2026-10-23 — all four suites green and the pages describe the row model.** The public contract did not move (`selection`, `selectedCount`, `activeKey`, `clear()`, `isSelected`), so the page's four bullets stand; what changed is **where the ids live**. `/docs/data-display`'s *A release is a view, not a write* now names the grid's **row model** (`rowSelection`, read back through `getSelectedRowIds()`) instead of "the controller keeps the chosen records", and its **Sort** rule is the core's sorted row model (`sortFn: "basic"`, the column's `valueOf` owning the comparison) instead of a `sortRows` helper. The clamp sentence is untouched (`useVirtualRows` did not move). `lane-page.test.ts` derives `chosen` from the core's ids (`HashSet.fromIterable(table.getSelectedRowIds())`), requires `retainSelection(chosen, keys)` and `clearSelection(chosen)`, and **refuses** `clearSelection(selection)` plus a page that stops naming the row model. `table-preview.test.ts` reads `grid-core.ts` for the rule the core owns (`globalFilterFn: "includesString"`, the trim in `constructGrid`, `accessorFn: column.valueOf`), and its `read` helper fails **naming the path** that vanished instead of throwing `ENOENT` from the import. **The migration exposed a real preview bug**: the browser preview joined a row's four cells into one string, so `api production` matched `billing-api` + `production` — a query that spans two cells, which the core's per-column filter never matches; `cellsOf` searches each cell on its own and a case holds it. Both copyable snippets now pass the one `columns` list, and the demo's renders `TableFilterField` against `table.query`/`table.setQuery` and imports `Option` for `table.setSort`. Directions measured: joining the cells again fails `expected [ { id: 'billing' … } ] to deeply equal []`; restoring the old demo snippet fails `expected 'import * as Option …' to contain 'columns: ['`; restoring the `textOf` usage block fails `expected '---\ntitle: Table …' to contain 'columns: ['`; restoring `sortRows` fails `expected '---\ntitle: Data display …' to contain 'sortFn: "basic"'`; and the stale `clearSelection(selection)` is the failure the suite reported on `master` before the fix. `nub run --filter @gpuixui/docs test`: 99 files / 987 tests green (was 2 failed / 978 passed); `check-types` and `check:tests` clean. No native scenario applies — a docs page and its guards have no runtime path |
 | Publish the **reflow an open panel survives** — `docs/gpuix-capabilities.md`'s **Menu anchored in a scroller** row and `/docs/runtime` carry only the paint-level half (`header-menu-lifecycle`: a wheel moves a trigger and its panel together in one read), so a reader cannot tell whether a menu left open during a divider drag is re-placed or left on the pixels it entered at. The playground's `floating-reflow-lifecycle` (27 checks, 0.11.0) measured a window zoom from **900×520** to **1680×923**: a raw `FloatingLayer` panel keeps its **6**-point gap and top alignment through a **780**-point horizontal move and a **403**-point vertical one, and the shipped `Popover` keeps both offsets against a trigger that moved both ways, while its **side** is decided once per open (`internal/use-placement.ts`, a source read) | docs-site (the record's row + `/docs/runtime`; `capability-doc.test.ts` should hold the printed readouts to the probe) | **resolved 2026-10-23** — §3 gains **Floating panel reflow** (`supported, with limits`): an open surface is laid out again with its anchor rather than left on the pixels it entered at, with all three anchors' geometry (`700,120 → 1480,120` and panel `554,120 → 1334,120` for the raw layer, `y 440 → 843` for the bottom pair, `460,440 → 1240,843` for the shipped `Popover`), the two window sizes, the absolute-pixel negative control (**554** read as **1334**), and both limits (the probe drives a zoom, not a divider drag or a column hide — those reflows are `dock-reflow` and `table-columns-lifecycle`; the side is decided once per open). §5 owes `floating-reflow-lifecycle` and `/docs/runtime#measured-in-a-window` publishes the same row. `capability-doc.test.ts` gains `records the placement an open panel keeps through a reflow, from its fixture`, which derives every printed box from the probe's own constants, the runner's `WINDOW`, the probe's README section and its assertion sites (`apps/docs/src/lib/floating-reflow.test-util.ts`, ledgered), then holds the record, the page, the probe's section and §5. Directions measured: with the row absent the case fails on the verdict, and restoring one printed box (`1334,120` → `1339,120`) fails `expected … to contain '1334,120'`; restored, the docs suite is 120 files / 1291 tests with `check-types`, `lint` and `check:tests` clean. No native scenario applies — the probe's 0.11.0 run stands; this pass publishes it |
 
-| Teach the **clock a duration has to fit** on `/docs/motion` — the page's §Timing says "A duration that is not positive and finite is the house surface arrival (`motionLevels.normal`)", and `motionTimingOf` now also reads one **past the clock the renderer schedules** (`duration.ts`'s `schedulableSeconds`, `Number.MAX_SAFE_INTEGER` seconds) as the house arrival: the binding converts a description's seconds into a `Duration` and refuses the whole description for one it cannot represent, which paints no frame at all, so the page's sentence stops one case short of the rule its own entry point follows | docs-site (`apps/docs/content/docs/motion.mdx` §Timing; `motion-page.test.ts` should hold the sentence to `duration.ts`'s bound) | open — `packages/motion`'s README, the `motionTimingOf` JSDoc and the bound teach it; measured in the real renderer by `packages/components/src/behaviour/presence.test.tsx`'s `travels on a stored duration past the clock, read as the house arrival` (8px asked, 0 moved at HEAD) |
+| Teach the **clock a duration has to fit** on `/docs/motion` — the page's §Timing says "A duration that is not positive and finite is the house surface arrival (`motionLevels.normal`)", and `motionTimingOf` now also reads one **past the clock the renderer schedules** (`duration.ts`'s `schedulableSeconds`, `Number.MAX_SAFE_INTEGER` seconds) as the house arrival: the binding converts a description's seconds into a `Duration` and refuses the whole description for one it cannot represent, which paints no frame at all, so the page's sentence stops one case short of the rule its own entry point follows | docs-site (`apps/docs/content/docs/motion.mdx` §Timing; `motion-page.test.ts` should hold the sentence to `duration.ts`'s bound) | **resolved 2026-10-24** — §House timing prints the bound (`Number.MAX_SAFE_INTEGER` seconds, "the `1e300` ms a store may hold"), and §Presence carries the same rule for the other seam that reads a stored phase: `presenceTimingOf` answers a duration the clock cannot schedule as the no-journey `{ duration: 0 }` and `exitWindowMs` as **0**, so a resumed surface does not stay mounted for a run the runtime refuses whole. `motion-page.test.ts` gains `teaches the clock a stored presence timing has to fit`, which executes `schedulableSeconds` (the bound itself schedulable, `1e300` not), `presenceTimingOf`/`exitWindowMs` for both a refused and a readable phase (`0`/`320`), and holds the page's printed bound to `duration.ts`'s own `SCHEDULABLE_SECONDS` line plus both snippet comments. Directions measured: removing the §Presence sentence fails the case by name (`expected … to contain '`Number.MAX_SAFE_INTEGER`'`), and printing `// 200` for the refused window fails it on the snippet (`expected … to contain 'exitWindowMs({ exit: { duration: 1e30…'`); restored, the file is 21/21. No native scenario applies — a page, two pure seams and the bound they share |
 
 Work that this workstream needs but does not own. Another agent owns each row.
 
@@ -12465,6 +12493,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the README's frozen and tree paragraphs, and the Tables and Tree views
     rows. No native scenario applies — a boundary read and the paint branch;
     the family's window probes already mount these two surfaces. Owner: data.
+  - [x] **A filter field's blank hint reads as `Filter…`** — a placeholder is
+    copy as often as a literal: a locale table with a missing row answers `""`,
+    a saved preference can arrive as spaces, and `placeholder = "Filter…"` as a
+    destructuring default only covers an **absent** prop. The field reached
+    `<input>` with an empty hint (and a run of spaces laid out a full empty
+    line), while the package's own default sat unused — the sibling the
+    toolbar's search field had already closed (`visibleCopy`). The field reads
+    `visibleCopy(placeholder) ?? DEFAULT_FILTER_PLACEHOLDER`, the default is
+    exported from the root, and `src/behaviour/filter-field.test.tsx` (2 cases)
+    mounts a blank and a caller's hint and reads them out of the renderer.
+    Direction measured: at HEAD the blank case fails `expected '' to contain
+    'Filter…'`; with the read, 2/2. Docs: the README's search paragraph, the
+    field's JSDoc and the Filtering controls row. Owner: data.
+  - [ ] **The filter field has no docs page of its own** — `TableFilterField`
+    is the only data part a reader can reach only through the README and the
+    combined table demo: `docs/table-*.mdx` cover sorting, selection, columns
+    and the frozen composition, and the Filtering controls row is `done` with
+    no page to cite. The page belongs in `packages/data/docs/table-filtering.mdx`
+    (an API table held to `TableFilterFieldProps` by a `docs.test.ts`, the
+    narrowing/release rules and the hint default), but the site's related-line
+    guard (`apps/docs/src/lib/related.test.ts`) needs a family entry in
+    `apps/docs/src/lib/related.ts`, and a native preview needs a demo in
+    `package-preview.ts` + `demos.tsx` — both outside this workstream's paths.
+    Owner: docs (with this lane's page content).
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -13914,7 +13966,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 407/407
+`[x]` `[██████████]` 408/408
+
+`[x]` Teach the **clock a stored presence phase has to fit** on `/docs/motion` —
+      `presenceTimingOf` reads a phase's duration through `duration.ts`'s
+      `schedulableSeconds`, so a value the renderer's clock cannot schedule is no
+      journey (`{ duration: 0 }`) and `exitWindowMs` answers **0** — while the
+      page taught only the record that lost a phase, so a reader resuming a tween
+      with a stored `1e300` believed their surface kept a run (and a hold window)
+      it cannot paint. §Presence carries the rule and its two values beside the
+      lost-phase sentence, §House timing names the shared bound
+      (`Number.MAX_SAFE_INTEGER` seconds), and `motion-page.test.ts` gains
+      `teaches the clock a stored presence timing has to fit`: it executes
+      `schedulableSeconds`, `presenceTimingOf` and `exitWindowMs` for a refused
+      and a readable phase (`0` / `320`), and holds the page's printed bound to
+      `duration.ts`'s own `SCHEDULABLE_SECONDS` line and both snippet comments.
+      Directions measured: removing the sentence fails the case by name
+      (`expected … to contain '`Number.MAX_SAFE_INTEGER`'`), and printing `// 200`
+      for the refused window fails it on the snippet; restored, the file is
+      21/21. The Interlocks row is resolved with the same evidence. No native
+      scenario applies — a page, two pure seams and the bound they share.
 
 `[x]` Publish the **root render rule a window measured** — `render` takes one
       element, and a top-level fragment paints only its **last** child with no

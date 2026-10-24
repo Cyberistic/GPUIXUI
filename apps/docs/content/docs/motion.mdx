@@ -45,7 +45,7 @@ motionTimingOf(220); // { duration: 0.22, ease: "easeInOut" }
 motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
 ```
 
-A duration that is not positive and finite — or one past the clock the renderer schedules (`1e300` ms) — is the house surface arrival (`motionLevels.normal`) rather than a `NaN` on the runtime, and the options object is a config as often as a literal: `null` is the house timing, a phase it does not name is `standard`, and a preference is read by the policy in **Reduced motion**.
+A duration that is not positive and finite — or one past the clock the renderer schedules (`Number.MAX_SAFE_INTEGER` seconds, so the `1e300` ms a store may hold) — is the house surface arrival (`motionLevels.normal`) rather than a `NaN` on the runtime, and the options object is a config as often as a literal: `null` is the house timing, a phase it does not name is `standard`, and a preference is read by the policy in **Reduced motion**.
 
 ## Springs
 
@@ -161,6 +161,7 @@ import {
   fadeFromSide,
   presenceStyle,
   presenceTiming,
+  presenceTimingOf,
 } from "@gpuixui/motion/presence";
 import {
   useSurfacePresence,
@@ -170,6 +171,8 @@ import {
 const frames = fadeFromSide("top", 8); // initial, animate and exit
 const timing = presenceTiming("normal"); // enter and exit transitions
 const held = exitWindowMs(timing); // 200 — the exit window, in ms
+presenceTimingOf({ exit: { duration: 1e300 } }).exit; // { duration: 0 }
+exitWindowMs({ exit: { duration: 1e300 } }); // 0 — no window for a run that cannot start
 const rule = presenceStyle(false, "target"); // { pointerEvents: "none" }
 
 const surfaceTiming = useSurfaceTiming("normal"); // the provider's preference
@@ -179,7 +182,7 @@ if (!presence.mounted) return null; // render until the exit has run
 
 `presenceMotion(frames, present, timing)` returns the `motion` prop the surface paints. `presenceStyle(present, rest)` takes the pointer rule: `"target"` for an overlay, which blocks the pointer behind it, and `"wrapper"` for a reveal, which paints no surface of its own and so paints nothing at rest.
 
-A timing read back from storage goes through `presenceTimingOf`: a record that lost a phase reads as no transition for that phase, so a surface closes at once instead of throwing on a run that is not there.
+A timing read back from storage goes through `presenceTimingOf`: a record that lost a phase reads as no transition for that phase, so a surface closes at once instead of throwing on a run that is not there. A phase whose duration is not positive, not finite, or past the clock's `Number.MAX_SAFE_INTEGER` seconds is the same no-journey shape (`duration: 0`), and `exitWindowMs` reads those fields too — so such a surface unmounts at once instead of staying for a run that never starts.
 
 | Frames | Shape |
 | ------ | ----- |

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { schedulableSeconds } from "../../../../packages/motion/src/duration.js";
 import { linear, motionCurve } from "../../../../packages/motion/src/easing.js";
 import {
   inertia,
@@ -14,7 +15,9 @@ import {
 } from "../../../../packages/motion/src/motion.js";
 import {
   delayedTiming,
+  exitWindowMs,
   presenceTiming,
+  presenceTimingOf,
 } from "../../../../packages/motion/src/presence.js";
 import {
   atRest,
@@ -405,6 +408,53 @@ describe("the motion page", () => {
       `// { duration: ${String(plain.duration)}, ease: "${String(plain.ease)}" }`,
     );
     expect(page).toContain(`the house ${String(motionLevels.normal)} ms`);
+  });
+
+  it("teaches the clock a stored presence timing has to fit", () => {
+    // Bug guarded: `presenceTimingOf` reads a stored phase through the
+    // renderer's clock, so a duration past it is no journey (`duration: 0`) and
+    // `exitWindowMs` answers no window — the box unmounts at once rather than
+    // staying for a run the runtime refuses whole. The page taught only the
+    // record that lost a phase, so a reader resuming a tween with a stored
+    // `1e300` believed their surface kept a journey (and a hold window) it
+    // cannot paint.
+    const bound = Number.MAX_SAFE_INTEGER;
+
+    // The bound itself is schedulable; the value past it is not.
+    expect(schedulableSeconds(bound)).toBe(bound);
+    expect(schedulableSeconds(1e300)).toBeUndefined();
+    expect(presenceTimingOf({ exit: { duration: 1e300 } })).toEqual({
+      enter: { duration: 0 },
+      exit: { duration: 0 },
+    });
+    expect(exitWindowMs({ exit: { duration: 1e300 } })).toBe(0);
+
+    // A readable phase keeps its own seconds and its own window.
+    expect(presenceTimingOf({ exit: { duration: 0.32 } }).exit).toEqual({
+      duration: 0.32,
+    });
+    expect(exitWindowMs({ exit: { duration: 0.32 } })).toBe(320);
+
+    // The page's printed bound is the module's: a changed expression asks the
+    // page to move with it.
+    expect(read("packages/motion/src/duration.ts")).toContain(
+      "const SCHEDULABLE_SECONDS = Number.MAX_SAFE_INTEGER;",
+    );
+
+    const presence = page.slice(
+      page.indexOf("A timing read back from storage"),
+      page.indexOf("| Frames |"),
+    );
+    expect(presence).toContain("`Number.MAX_SAFE_INTEGER`");
+    expect(presence).toContain("`duration: 0`");
+    expect(presence).toContain("`exitWindowMs`");
+    expect(presence).toContain("unmounts at once");
+    expect(page).toContain(
+      "presenceTimingOf({ exit: { duration: 1e300 } }).exit; // { duration: 0 }",
+    );
+    expect(page).toContain(
+      "exitWindowMs({ exit: { duration: 1e300 } }); // 0 — no window for a run that cannot start",
+    );
   });
 
   it("calls the frame builder with the arguments it declares", () => {
