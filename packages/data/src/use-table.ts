@@ -606,12 +606,16 @@ export const useTable = <Row extends RowData>({
       setPagination((current) => ({
         ...current,
         pageIndex: clampPageIndex(
-          current.pageIndex + delta,
+          // The page the grid **paints**, not the saved index it clamped: a
+          // record naming page six of a three-page set would otherwise compute
+          // `5 − 1` and clamp straight back to page three, leaving Previous
+          // painting the page it was already on.
+          built.pageIndex + delta,
           built.rowCount,
           current.pageSize,
         ),
       })),
-    [built.rowCount],
+    [built.pageIndex, built.rowCount],
   );
   /**
    * The chosen record the painted page holds.
@@ -647,7 +651,15 @@ export const useTable = <Row extends RowData>({
         pageIndex: clampPageIndex(pageIndex, built.rowCount, current.pageSize),
       })),
     setPageSize: (next) =>
-      setPagination((current) => withPageSize(current, next)),
+      setPagination((current) =>
+        // Measure the top row from the page the grid paints: a saved index the
+        // set clamped would otherwise carry a top row past the end and land the
+        // reader on the last page instead of keeping the row they were reading.
+        withPageSize(
+          { pageIndex: built.pageIndex, pageSize: current.pageSize },
+          next,
+        ),
+      ),
     nextPage: () => stepPage(1),
     previousPage: () => stepPage(-1),
     activeKey,

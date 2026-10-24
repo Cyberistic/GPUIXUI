@@ -13,6 +13,8 @@
  * - a filter or a search returns to the first page, because the records the
  *   reader was on are not where the index says they are;
  * - a saved index past the last page paints the last page (the regression);
+ * - the arrows and a size change measure from the page the grid **paints**, so
+ *   a saved index past the set does not strand them at its end;
  * - the selection is the kept set's, not the page's: a record chosen on page
  *   one is still chosen while page two paints, and the page's own checkbox
  *   covers only what it paints.
@@ -128,6 +130,9 @@ const PagedGrid = ({
         <Button testId="page-two" onActivate={() => table.setPageSize(2)}>
           Two a page
         </Button>
+        <Button testId="page-three" onActivate={() => table.setPageSize(3)}>
+          Three a page
+        </Button>
         <text testId="page-readout">
           {`page ${table.pageIndex + 1}/${table.pageCount} · ${table.rows.length} rows · ${table.selectedCount} selected · all=${table.allSelected} some=${table.someSelected} · active=${Option.getOrElse(table.activeKey, () => "none")} · stop=${Option.getOrElse(table.tabStop, () => "none")}`}
         </text>
@@ -216,6 +221,49 @@ describe("a paged grid", () => {
     expect(readout(root)).toContain("2 rows");
     expect(root.renderer.findByTestId("page-row-file-9")).toBeDefined();
     expect(root.renderer.findByTestId("page-row-file-10")).toBeDefined();
+  });
+
+  it("steps from the page it paints, not the saved index it clamped", () => {
+    // The regression: the record names page six, the grid paints page three of
+    // three, and `previousPage` computed `5 - 1` from the record — clamped back
+    // to two — so the arrow that says Previous painted the same page again.
+    root = renderData(
+      <PagedGrid
+        pageSize={4}
+        stored={{ pagination: { pageIndex: 5, pageSize: 4 } }}
+      />,
+    );
+    settle(root);
+    expect(readout(root)).toContain("page 3/3");
+
+    press(root, "page-previous");
+    expect(readout(root)).toContain("page 2/3 · 4 rows");
+    expect(root.renderer.findByTestId("page-row-file-5")).toBeDefined();
+    expect(root.renderer.findByTestId("page-row-file-9")).toBeUndefined();
+
+    press(root, "page-previous");
+    expect(readout(root)).toContain("page 1/3 · 4 rows");
+    expect(root.renderer.findByTestId("page-row-file-1")).toBeDefined();
+  });
+
+  it("keeps the painted page's top row when the saved index was clamped", () => {
+    // Ten rows at four a page hold three pages, and the record names page six,
+    // so the grid paints page three, whose top row is the ninth. At three a
+    // page that row opens page three; measuring from the record's 5 × 4 = 20
+    // put the reader on the last page, showing one row instead.
+    root = renderData(
+      <PagedGrid
+        pageSize={4}
+        stored={{ pagination: { pageIndex: 5, pageSize: 4 } }}
+      />,
+    );
+    settle(root);
+    expect(readout(root)).toContain("page 3/3");
+
+    press(root, "page-three");
+    expect(readout(root)).toContain("page 3/4 · 3 rows");
+    expect(root.renderer.findByTestId("page-row-file-7")).toBeDefined();
+    expect(root.renderer.findByTestId("page-row-file-10")).toBeUndefined();
   });
 
   it("keeps a chosen record while another page paints", () => {

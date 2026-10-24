@@ -129,7 +129,10 @@ Four rules are measured, not assumed:
   changes (`setQuery`, `pressSort`, `toggleSort` and `setSort` all reset it);
 - **a page index past the set clamps to its last page** — a saved workspace
   reopens with the page it was on, and a set that has since narrowed paints its
-  last page instead of a blank one past the end;
+  last page instead of a blank one past the end — **and the arrows and a page
+  size change measure from the page it paints**, so a saved index past the set
+  cannot strand Previous on the page already shown or carry a new size past the
+  reader's top row;
 - **a page size change keeps the reader's top row in view**, so doubling the
   size shows the same records from the same first row;
 - **the selection is the kept set's, not the page's** — a record chosen on page

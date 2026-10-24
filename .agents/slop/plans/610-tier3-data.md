@@ -386,6 +386,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   child. Directions measured: at `HEAD` the new unit case fails `expected 2 to
   be 1` and the window case fails on the clause the Remove should have taken;
   with the descent, 29 unit and 9 behaviour cases green.
+- **The arrows step from the page the grid paints** — a saved record names page
+  six of a set that clamps to three, and the controller kept the written index:
+  `previousPage` computed `5 − 1` and clamped straight back to page three, so the
+  arrow that says Previous painted the page already shown, and `setPageSize`
+  measured a top row of `5 × 4 = 20` and landed the reader on the last page
+  instead of keeping the row they were reading. `stepPage` and `setPageSize`
+  read `built.pageIndex` (the clamped page) now, so both stay on the page the
+  grid **paints** — the rule the clamp exists for. `behaviour/table-pagination`
+  gains `steps from the page it paints, not the saved index it clamped` and
+  `keeps the painted page's top row when the saved index was clamped`, both
+  failing at HEAD (`page 3/3` unchanged after Previous; `page 4/4 · 1 rows` for
+  the size change). Docs `docs/virtualization.mdx` §Paging and the README's
+  paging rule state it. 298 unit / 217 behaviour green.
 - **A Tier 3 row's divider count is the contract's, not the style set it remembered**:
   the `Tables` row said the raw `border` misses "20 of the 80" (the painter's JSDoc
   said 17 of the 64) while `dividerFailures` measures **22 of 90** over eighteen
