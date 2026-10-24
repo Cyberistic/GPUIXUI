@@ -4526,6 +4526,12 @@ Merge rules:
 - groups are partial: omitted values inherit from the base;
 - a group key written as `undefined` — an optional value a caller passed through
   unchanged — inherits too, so it cannot erase a role the group must carry;
+- a group **or a role** written as `null` inherits as well. JSON has no
+  `undefined`, so a theme restored from a store carries `null` where it carried
+  nothing, and `ThemeOverridesSource` is that shape: `extendTheme(base,
+  JSON.parse(saved))` reads it without a cast. Kept as a value, a `null` role is
+  a colour the `Theme` type promises and the renderer cannot paint, and a `null`
+  group reached the merge as an object it could not open;
 - colour, spacing, radius, border width and icon overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight; `bodyStrong` is its own role, so a brand that changes the
@@ -4558,7 +4564,9 @@ Merge rules:
 
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
-application that owns that boundary.
+application that owns that boundary. Once decoded, the partial it yields is a
+`ThemeOverridesSource`: every group and role may be `null`, and extending a
+shipped theme with it restores the values the store kept.
 
 #### What an override reaches
 

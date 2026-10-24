@@ -554,6 +554,112 @@ describe("an override that names a value as absent", () => {
   });
 });
 
+/**
+ * JSON has no `undefined`: a theme restored from a store carries `null` for a
+ * group it never carried and for a role it never filled, and the same is true of
+ * the partial a consumer assembles to rebuild one. `undefined` already inherits,
+ * so `null` — the shape the store actually hands back — must inherit too rather
+ * than reaching a merge as a value: `extendTheme(lightTheme, { colors: null })`
+ * threw `TypeError: Cannot convert undefined or null to object` out of `overlay`.
+ */
+describe("a partial a store handed back", () => {
+  it("keeps every group a store wrote as null", () => {
+    const base = extendTheme(darkTheme, {});
+    const groups = [
+      "name",
+      "colors",
+      "typography",
+      "spacing",
+      "radius",
+      "density",
+      "elevation",
+      "borderWidth",
+      "iconSize",
+      "series",
+      "syntax",
+      "switch",
+      "switchMetrics",
+    ] as const satisfies readonly (keyof Theme)[];
+
+    const extended = groups.map((group) => ({
+      group,
+      theme: extendTheme(base, { [group]: null }),
+    }));
+
+    expect(
+      extended
+        .filter(({ group, theme }) => theme[group] !== base[group])
+        .map(({ group }) => group),
+    ).toEqual([]);
+  });
+
+  it("keeps the base role when a store wrote the role as null", () => {
+    const custom = extendTheme(darkTheme, {
+      colors: { primary: null, background: null },
+      spacing: { md: null },
+      radius: { md: null },
+      borderWidth: { thin: null },
+      iconSize: { md: null },
+      typography: { sans: null, body: { fontSize: null } },
+      density: { rowHeight: null },
+      elevation: { sm: null },
+    });
+
+    expect(custom.colors.primary).toBe(darkTheme.colors.primary);
+    expect(custom.colors.background).toBe(darkTheme.colors.background);
+    expect(custom.spacing.md).toBe(darkTheme.spacing.md);
+    expect(custom.radius.md).toBe(darkTheme.radius.md);
+    expect(custom.borderWidth.thin).toBe(darkTheme.borderWidth.thin);
+    expect(custom.iconSize.md).toBe(darkTheme.iconSize.md);
+    expect(custom.typography.sans).toBe(darkTheme.typography.sans);
+    expect(custom.typography.body.fontSize).toBe(
+      darkTheme.typography.body.fontSize,
+    );
+    expect(custom.density.rowHeight).toBe(darkTheme.density.rowHeight);
+    expect(custom.elevation.sm).toBe(darkTheme.elevation.sm);
+  });
+
+  it("keeps a defined value beside a nulled one, and retints only a real shadow", () => {
+    const custom = extendTheme(darkTheme, {
+      colors: { primary: "#123456", shadow: null, background: null },
+      radius: { md: 2, lg: null },
+    });
+    const retinted = extendTheme(darkTheme, { colors: { shadow: "#0B1220" } });
+
+    expect(custom.colors.primary).toBe("#123456");
+    expect(custom.colors.background).toBe(darkTheme.colors.background);
+    expect(custom.radius.md).toBe(2);
+    expect(custom.radius.lg).toBe(darkTheme.radius.lg);
+    // A nulled shadow is absent, so no level is restated in a tint nobody named.
+    expect(custom.elevation).toBe(darkTheme.elevation);
+    expect(retinted.elevation).not.toBe(darkTheme.elevation);
+  });
+
+  it("teaches the shape a store hands back on every surface", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const surfaces: Readonly<Record<string, string>> = {
+      "docs/tokens.md": read("../../../docs/tokens.md"),
+      "docs/design-system.md": read("../../../docs/design-system.md"),
+      "packages/tokens/README.md": read("../README.md"),
+      "packages/tokens/src/theme.ts": read("./theme.ts"),
+      "COMPONENTS.md": read("../../../COMPONENTS.md"),
+    };
+
+    Object.entries(surfaces).forEach(([name, text]) => {
+      expect(text, name).toContain("ThemeOverridesSource");
+      expect(text, name).toContain("JSON has no `undefined`");
+    });
+    // The catalogue names the two failures the rule retires, so a reader can
+    // tell an absence they fixed from a cast they worked around.
+    expect(surfaces["COMPONENTS.md"]).toContain(
+      "Cannot convert undefined or null to object",
+    );
+  });
+});
+
 describe("the extension mechanism", () => {
   /**
    * Every group a theme carries except its mode and contrast variant, in the

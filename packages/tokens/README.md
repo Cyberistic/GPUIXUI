@@ -114,7 +114,11 @@ scrim; `elevation.overlay` is a reserved, empty level that lifts nothing.
 `createTheme` starts from the built-in theme of the requested `mode` and
 `contrast` (default contrast when it is not named); `extendTheme` derives from
 any theme. Neither mutates its base. Groups merge key by key — a key written as
-`undefined` inherits instead of erasing a role the group must carry. Typography
+`undefined` inherits instead of erasing a role the group must carry, and `null`
+is the same absence: JSON has no `undefined`, so the partial a store hands back
+carries `null` for a group or a role it never kept. `ThemeOverridesSource` is
+that shape, so `extendTheme(base, JSON.parse(saved))` needs no cast and hands the
+renderer no `null` colour. Typography
 merges field by field, elevation levels replace whole arrays, a `density`
 override merges each control size so raising `md` keeps `sm` and `lg`, a
 platform's `switch` paint replaces whole (the three slots are one control's

@@ -1472,6 +1472,11 @@ Overrides merge by group; typography merges field by field; a density preset's
 one size keeps the others; elevation levels are replaced as whole arrays; a
 platform's `switch` paint is replaced whole, because the three slots are one
 control's paint and a half-declared switch draws the slots it lost with nothing.
+A key written as `undefined` inherits, and `null` is the same absence — JSON has
+no `undefined`, so the partial a store hands back carries `null` for a group or a
+role it never kept. `ThemeOverridesSource` is that shape, which is what lets
+`extendTheme(base, JSON.parse(saved))` restore a stored brand without a cast and
+without handing the renderer a `null` role.
 Every group a theme carries is an override except `mode` and `contrast`: those
 two are what its numbers mean, so a caller that wants another asks `getTheme`
 for it. Nothing mutates the base, so a theme can be created once at

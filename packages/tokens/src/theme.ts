@@ -345,6 +345,38 @@ export interface ThemeOverrides {
 }
 
 /**
+ * A partial shape as a store hands it back: every value may also be `null`.
+ *
+ * JSON has no `undefined`, so a store writes `null` for a group, a role or a
+ * table it never carried. An array is a value here rather than a shape to widen
+ * (an elevation level, a series), so it keeps its own type beside `null`.
+ */
+type Stored<T> =
+  T extends ReadonlyArray<unknown>
+    ? T | null
+    : T extends object
+      ? { readonly [K in keyof T]?: Stored<T[K]> } | null
+      : T | null;
+
+/** The groups an override replaces whole, so a stored one is not merged. */
+type WholeGroup = "series" | "syntax" | "switch" | "switchMetrics";
+
+/**
+ * A partial theme as a store hands it back.
+ *
+ * A theme is documented as storable, so the value a consumer rebuilds one from
+ * is often `JSON.parse` of what it saved — and a shape typed as
+ * {@link ThemeOverrides} cannot name the `null` JSON keeps. `null` is read as
+ * "inherit the base's value", the rule {@link themeColors} and every report
+ * already follow for the absence JSON writes.
+ */
+export type ThemeOverridesSource = {
+  readonly [K in keyof ThemeOverrides]?: K extends WholeGroup
+    ? ThemeOverrides[K] | null
+    : Stored<ThemeOverrides[K]>;
+};
+
+/**
  * The theme keys an override cannot change.
  *
  * A mode and a contrast variant are what its numbers mean: every floor and
@@ -390,26 +422,28 @@ export interface ThemeConfig extends ThemeOverrides {
  * Overlay a group's defined overrides on a base group. A key present with
  * `undefined` — an optional value a caller forwarded unchanged — inherits
  * instead of erasing, because a theme's groups are complete and an erased role
- * paints nothing.
+ * paints nothing. `null` is the same absence: it is what a store writes for a
+ * role it never carried, and a merge that kept it handed the renderer a role
+ * the `Theme` type promises is a colour.
  */
 const overlay = <T extends object>(
   base: T,
-  overrides: Partial<T> | undefined,
+  overrides: Stored<Partial<T>> | null | undefined,
 ): T => {
-  if (overrides === undefined) {
+  if (overrides === undefined || overrides === null) {
     return base;
   }
   const defined = Object.entries(overrides).filter(
-    ([, value]) => value !== undefined,
+    ([, value]) => value !== undefined && value !== null,
   );
   return { ...base, ...Object.fromEntries(defined) };
 };
 
 const mergeTypography = (
   base: Typography,
-  override: TypographyOverrides | undefined,
+  override: Stored<TypographyOverrides> | null | undefined,
 ): Typography => {
-  if (override === undefined) {
+  if (override === undefined || override === null) {
     return base;
   }
   return {
@@ -430,9 +464,9 @@ const mergeTypography = (
 
 const mergeDensity = (
   base: Density,
-  override: DensityName | DensityOverrides | undefined,
+  override: DensityName | Stored<DensityOverrides> | null | undefined,
 ): Density => {
-  if (override === undefined) {
+  if (override === undefined || override === null) {
     return base;
   }
   if (typeof override === "string") {
@@ -564,6 +598,12 @@ export function getTheme(
 /**
  * Derive a theme from a base theme without mutating it.
  *
+ * A group or a role written as `undefined` **or `null`** inherits the base's
+ * value: `null` is what a store writes for the absence JSON has no `undefined`
+ * for, so `extendTheme(lightTheme, JSON.parse(saved))` reads the shape the store
+ * handed back instead of erasing a role or throwing on a nulled group
+ * ({@link ThemeOverridesSource}).
+ *
  * @example
  * ```ts
  * const brand = extendTheme(darkTheme, {
@@ -572,13 +612,17 @@ export function getTheme(
  * });
  * ```
  */
-export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
+export function extendTheme(
+  base: Theme,
+  overrides: ThemeOverridesSource,
+): Theme {
   const colors = overlay(base.colors, overrides.colors);
   // A level's strength is its share of the shadow role, so a brand that retints
   // the role retints every shadow it inherits. A level passed in `elevation`
-  // replaces the whole array, colours and all.
+  // replaces the whole array, colours and all. A shadow a store wrote as absent
+  // is no retint at all, rather than a restatement of the base's own tint.
   const elevation =
-    overrides.colors?.shadow === undefined
+    overrides.colors?.shadow === undefined || overrides.colors.shadow === null
       ? base.elevation
       : elevationWithTint(base.elevation, colors.shadow);
   return {
