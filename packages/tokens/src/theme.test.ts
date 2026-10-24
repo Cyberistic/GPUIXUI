@@ -390,6 +390,112 @@ describe("extendTheme", () => {
   });
 
   /**
+   * A theme's name is content — the row a picker prints, the header a preview
+   * shows — so it is a value a store writes as readily as a word: JSON keeps the
+   * `null` of a name never carried, a cleared brand-editor field writes `""`, a
+   * decoder can write a number, and `JSON.parse` answers `any` so none of them
+   * needs a cast to arrive. The merge interpolated whatever came, so
+   * `{"name": 42}` landed in a field the `Theme` type promises is a string, and
+   * the next `applyStyle` over that theme threw
+   * `TypeError: base.name.trim is not a function` — measured on the restored
+   * theme, from the seat that applies a platform style to it. A name is read as
+   * a name now: a value that names nothing inherits the base's, and a base that
+   * carries none is the library's.
+   */
+  describe("a theme name a store wrote", () => {
+    it("inherits the base's name for a value that names nothing", () => {
+      const unreadable: ReadonlyArray<unknown> = [
+        JSON.parse("42"),
+        null,
+        undefined,
+        "",
+        "   ",
+        true,
+        {},
+      ];
+      const names = unreadable.map(
+        (name) => extendTheme(darkTheme, { name }).name,
+      );
+
+      expect(names).toEqual(unreadable.map(() => darkTheme.name));
+      // A word is a name, and a base that names nothing gets the library's.
+      expect(extendTheme(darkTheme, { name: "Acme" }).name).toBe("Acme");
+      expect(
+        extendTheme({ ...darkTheme, name: JSON.parse("42") }, {}).name,
+      ).toBe("Theme");
+    });
+
+    it("inherits the base's face for a family that names none", () => {
+      // The two families are names under the same rule — `applyStyle` already
+      // reads them that way — so a stored `"sans": 42` or a blank one is the
+      // base's face rather than a value the theme claims and no face can paint.
+      const stored = (family: unknown): Theme =>
+        extendTheme(
+          darkTheme,
+          JSON.parse(
+            `{"typography":{"sans":${JSON.stringify(family)},"mono":${JSON.stringify(family)}}}`,
+          ),
+        );
+
+      const faces = [42, "", "   ", true].map((family) => {
+        const theme = stored(family);
+        return [theme.typography.sans, theme.typography.mono];
+      });
+
+      expect(faces).toEqual(
+        [42, "", "   ", true].map(() => [
+          darkTheme.typography.sans,
+          darkTheme.typography.mono,
+        ]),
+      );
+      const house = extendTheme(darkTheme, {
+        typography: { sans: "Inter", mono: "JetBrains Mono" },
+      });
+      expect([house.typography.sans, house.typography.mono]).toEqual([
+        "Inter",
+        "JetBrains Mono",
+      ]);
+    });
+
+    it("restores a stored theme with a name a store wrote, and applies a style", () => {
+      // The stored route is the same merge: the value reaches `restoreTheme`
+      // through `JSON.parse`, exactly as a decoded settings row would.
+      const restored = restoreTheme(JSON.parse('{"mode":"dark","name":42}'));
+
+      expect(restored.name).toBe(darkTheme.name);
+      expect(platformTheme(restored, "darwin").name).toMatch(
+        new RegExp(`^${darkTheme.name} · `),
+      );
+    });
+
+    it("teaches the name rule where the extension mechanism is documented", () => {
+      const read = (path: string): string =>
+        readFileSync(new URL(path, import.meta.url), "utf8")
+          .replace(/\s+/g, " ")
+          .replace(/\*\*/g, "");
+      const surfaces: Readonly<Record<string, string>> = {
+        "docs/tokens.md": read("../../../docs/tokens.md"),
+        "docs/design-system.md": read("../../../docs/design-system.md"),
+        "packages/tokens/README.md": read("../README.md"),
+        "COMPONENTS.md": read("../../../COMPONENTS.md"),
+        "packages/tokens/src/theme.ts": read("./theme.ts"),
+      };
+
+      Object.entries(surfaces).forEach(([name, text]) => {
+        expect(text, name).toContain("base.name.trim is not a function");
+        expect(text, name).toContain("names nothing");
+      });
+      // The rule is one reader, used by the merge and by the style's name.
+      expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
+        "nameOf(overrides.name)",
+      );
+      expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
+        "nameOf(base.name)",
+      );
+    });
+  });
+
+  /**
    * A size is a step in a record, and the documented override names one size
    * (`invalidNumbers`' own example raises `controlHeight.sm`). The merge used
    * to overlay the record whole, so a brand that changed one size erased the

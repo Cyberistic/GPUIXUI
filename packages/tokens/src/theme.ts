@@ -292,7 +292,21 @@ type WholeGroup = "series" | "syntax" | "switch" | "switchMetrics";
  * already follow for the absence JSON writes.
  */
 export type ThemeOverridesSource = {
-  readonly [K in keyof ThemeOverrides]?: K extends WholeGroup
+  /**
+   * The name a store wrote, as it wrote it.
+   *
+   * A theme's name is content — a picker's row, the header a preview prints —
+   * and it arrives from a decoder as readily as from a literal: JSON keeps the
+   * `null` of a name never carried, a cleared brand-editor field writes `""`,
+   * and an export can write a number. The merge reads it as a name, so the port
+   * takes the value the store wrote rather than one the boundary must assert.
+   * It is not `Stored<string>` for that reason: `Stored` describes the value a
+   * typed theme carries, and the name is the one field whose type a decoder can
+   * falsify without changing what the theme means.
+   */
+  readonly name?: unknown;
+} & {
+  readonly [K in Exclude<keyof ThemeOverrides, "name">]?: K extends WholeGroup
     ? ThemeOverrides[K] | null
     : Stored<ThemeOverrides[K]>;
 };
@@ -361,13 +375,17 @@ const overlay = <T extends object>(
 };
 
 /**
- * A font family a theme names, or `undefined` when the value cannot name a face.
+ * A name a theme can print or paint, or `undefined` when a store wrote none.
  *
- * A family is a **name**: a decoder that writes a number, a boolean or a blank
- * string has not named one, and the runtime would paint its fallback while the
- * theme's data claimed a face — so the base's family is the family.
+ * Two fields are names: a font family and the theme's own name. Neither is a
+ * label to interpolate — a decoder that writes a number, a boolean, a blank
+ * string or whitespace has named nothing. A family read that way painted the
+ * library's face while the theme's data claimed one; a **theme** name read that
+ * way reached `styleName`'s `base.name.trim()`, which threw
+ * `TypeError: base.name.trim is not a function` from the first style a window
+ * applied. A value that names nothing leaves the base's own.
  */
-const fontFamilyOf = (value: unknown): string | undefined =>
+const nameOf = (value: unknown): string | undefined =>
   typeof value === "string" && value.trim() !== "" ? value : undefined;
 
 const mergeTypography = (
@@ -378,8 +396,8 @@ const mergeTypography = (
     return base;
   }
   return {
-    sans: override.sans ?? base.sans,
-    mono: override.mono ?? base.mono,
+    sans: nameOf(override.sans) ?? base.sans,
+    mono: nameOf(override.mono) ?? base.mono,
     display: overlay(base.display, override.display),
     h1: overlay(base.h1, override.h1),
     h2: overlay(base.h2, override.h2),
@@ -567,6 +585,13 @@ export function getTheme(
  * handed back instead of erasing a role or throwing on a nulled group
  * ({@link ThemeOverridesSource}).
  *
+ * A **name** is read as a name. It is content — a picker's row, the header a
+ * preview prints — and a decoder writes a number, a blank string or whitespace
+ * as readily as a word, so a value that names nothing inherits the base's name,
+ * and a base that carries none is `Theme`. Kept as written, a numeric name made
+ * the theme report a number where its type promises a string, and the next
+ * `applyStyle` over it threw `TypeError: base.name.trim is not a function`.
+ *
  * A **base** a store truncated past the type scale or the density box is read
  * as the identity theme of the base's own mode and contrast for that group — the
  * values a painter answers anyway — because neither type has a partial form for
@@ -607,7 +632,7 @@ export function extendTheme(
       ? base.elevation
       : elevationWithTint(base.elevation, colors.shadow);
   return {
-    name: overrides.name ?? base.name ?? "Theme",
+    name: nameOf(overrides.name) ?? nameOf(base.name) ?? "Theme",
     mode: base.mode,
     contrast: base.contrast,
     colors,
@@ -746,15 +771,19 @@ const styleContrastOf = (style: {
 /**
  * The name a themed style prints: the base's name and the style's label.
  *
- * A label is a name a store wrote, so an absent, blank or non-string one leaves
- * the base's name whole rather than printing `Dark · null`.
+ * Both halves are names a store wrote, so each is read by `nameOf`: an absent,
+ * blank or non-string label leaves the base's name whole rather than printing
+ * `Dark · null`, and a **base** whose name is not a name — a theme restored from
+ * a store that wrote a number there — is `Theme` rather than the
+ * `TypeError: base.name.trim is not a function` a direct read threw on the first
+ * style a window applied.
  */
 const styleName = (
   base: Theme,
   style: { readonly label?: unknown },
 ): string => {
-  const own = base.name.trim() === "" ? "Theme" : base.name;
-  const label = fontFamilyOf(style.label) ?? "";
+  const own = nameOf(base.name) ?? "Theme";
+  const label = nameOf(style.label) ?? "";
   return label === "" ? own : `${own} · ${label}`;
 };
 
@@ -819,8 +848,8 @@ export function applyStyle(base: Theme, style: PlatformStyleSource): Theme {
   const themed = extendTheme(base, {
     name: styleName(base, style),
     typography: {
-      sans: fontFamilyOf(style.sans),
-      mono: fontFamilyOf(style.mono),
+      sans: nameOf(style.sans),
+      mono: nameOf(style.mono),
     },
     radius: style.radius ?? undefined,
     density: style.density ?? undefined,

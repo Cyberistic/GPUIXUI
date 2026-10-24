@@ -175,6 +175,28 @@ describe("a platform style a store hands back", () => {
     );
   });
 
+  it("reads a base whose name is not a name, instead of throwing", () => {
+    // A style is applied to a theme a store restored, so the base's own name is
+    // a value a decoder wrote. `styleName` trimmed it unguarded, so a numeric
+    // name — a design-tool export, an old release's file — threw
+    // `TypeError: base.name.trim is not a function` on the first style a window
+    // applied, and the window never painted. A value that names nothing is the
+    // library's own name.
+    //
+    // The assertion is the storage boundary, as in the density case below: a
+    // theme assembled from a decoded file is unknown input no Theme type can
+    // describe, and `applyStyle` is the seat a window hands it to.
+    const built = (name: unknown): Theme => ({ ...themes.dark, name }) as Theme;
+    const unnamed: ReadonlyArray<unknown> = [JSON.parse("42"), "", "   ", true];
+    const names = unnamed.map((name) => applyStyle(built(name), darwin).name);
+
+    expect(names).toEqual(unnamed.map(() => `Theme · ${darwin.label}`));
+    // The authored case is unchanged: a theme that names itself keeps its name.
+    expect(applyStyle(themes.dark, darwin).name).toBe(
+      `${themes.dark.name} · ${darwin.label}`,
+    );
+  });
+
   it("keeps the base's face when the style's family is not a name", () => {
     // A family is a name: a decoder that wrote a number or a blank string has
     // named no face. The resolved theme claimed the value — `missingTokens`

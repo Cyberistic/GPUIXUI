@@ -1516,6 +1516,14 @@ no `undefined`, so the partial a store hands back carries `null` for a group or 
 role it never kept. `ThemeOverridesSource` is that shape, which is what lets
 `extendTheme(base, JSON.parse(saved))` restore a stored brand without a cast and
 without handing the renderer a `null` role.
+A **name** — the theme's own and its two font families — is a value of the same
+kind and is read as a name: a decoder can write a number, a blank string or
+whitespace where a name belongs, so a value that names nothing inherits the
+base's name (or face), and a theme that carries none is `Theme`. Kept as
+written, a stored `{"name": 42}` put a number in a field the `Theme` type
+promises is a string, and the next `applyStyle` over it threw
+`TypeError: base.name.trim is not a function` — so the port's `name` is
+`unknown`, the value the store wrote.
 A **base** a store truncated past the type scale or the density box is read as
 the identity theme of its own mode and contrast for that group: neither type has
 a partial form for an override to edit, and reading the lost group directly threw

@@ -134,6 +134,15 @@ coverage is held by a type-level guard in `theme.ts` — a group added to `Theme
 without an override fails the type check — and `theme.test.ts` proves each one
 reaches its group and no other.
 
+A **name** — the theme's own and its two font families — is read as a name,
+because it is content a decoder writes as readily as a literal: a number, a
+blank string or whitespace names nothing, so it inherits the base's, and a
+theme that carries no name at all is `Theme`. Kept as written, a stored
+`{"name": 42}` put a number in a field the `Theme` type promises is a string,
+and the next `applyStyle` over that theme threw
+`TypeError: base.name.trim is not a function`; the port's `name` is `unknown`
+for that reason (`theme.test.ts`, `apply-style.test.ts`).
+
 A style is a look over a base, not a layer over a look: `platformTheme` and
 `retroTheme` overlay a *partial* palette that is designed against the base it
 lands on, and a theme does not record that it already wears one, so two shipped

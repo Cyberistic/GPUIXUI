@@ -4668,6 +4668,16 @@ Merge rules:
   value (`textStyle`, `nativeTextTheme`). A flat group stays as the base wrote
   it, so a role an override does not name is still absent for the gate — the
   `paletteToTokens` rule that no colour is invented;
+- a **name** is read as a name: the theme's own `name` and its two font
+  families. A name is content — the row a picker prints, the header a preview
+  shows, the face text is painted in — and a decoder writes a number, a blank
+  string or whitespace as readily as a word, so a value that names nothing
+  inherits the base's; a theme that carries no name at all is `Theme`. Kept as
+  written, a stored `{"name": 42}` put a number in a field the `Theme` type
+  promises is a string, and the next `applyStyle` over that theme threw
+  `TypeError: base.name.trim is not a function`. `ThemeOverridesSource["name"]`
+  is `unknown` for the same reason: the value a decoder wrote reaches the merge
+  as it is;
 - colour, spacing, radius, border width and icon overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight; `bodyStrong` is its own role, so a brand that changes the
