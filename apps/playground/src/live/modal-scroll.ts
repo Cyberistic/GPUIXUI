@@ -12,9 +12,9 @@
  *
  * The page is the reader's scroller and the dialog body is the shipped
  * `DialogContent`'s own `overflow: "scroll"`; the readouts live on the page
- * header (a tree read, so the veil does not hide them). The same scroller
- * carries the surface's close control, which is why this fixture also owns the
- * point that control paints at rest.
+ * header (a tree read, so the veil does not hide them). The surface's close
+ * control lives in the wrapper the scroller sits in, so the body's travel
+ * leaves it where it rests — the point this fixture also owns.
  */
 
 /** The page's rows: 40 × 40px against a ~480px viewport, so it has travel. */
@@ -35,18 +35,22 @@ export const DIALOG_VIEWPORT = 456;
 /**
  * The dialog's own header and padding, above and below the rows it scrolls.
  *
- * Measured: the body clamps at `456 - 1432`, so the surface's content is the 30
- * rows plus these 232 points. The probe compares the clamp exactly, which is
- * what makes the recorded `-976` a derived number rather than a transcript.
+ * Measured: the body clamps at `456 - 1420`, so the surface's content is the 30
+ * rows plus these 220 points. It is 12 fewer than the `232` this fixture first
+ * carried: that reading included the close control's absolute box, which sat
+ * inside the scroller and left a phantom band below the rows. The control now
+ * lives in the wrapper around the scroller, so it contributes no content and the
+ * probe compares the clamp exactly rather than accepting the old transcript.
  */
-export const DIALOG_CHROME_HEIGHT = 232;
+export const DIALOG_CHROME_HEIGHT = 220;
 
 /**
  * The dialog's close control, measured where it paints at rest.
  *
- * The control is `position: "absolute"` inside the surface, and the surface is
- * the scroller, so this is also the point a scrolled body carries away: `44 +
- * the body's clamp` is where it paints at the end.
+ * The control is `position: "absolute"` in the wrapper the scroller sits in, so
+ * this is the one box it paints in: a scrolled body leaves it here rather than
+ * carrying it away (`44 + the body's clamp` was the measured carry this fixture
+ * used to own).
  */
 export const DIALOG_CLOSE_TOP = 44;
 

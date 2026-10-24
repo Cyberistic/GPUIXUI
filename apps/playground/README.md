@@ -6803,7 +6803,7 @@ no wheel handler and no `preventDefault`, so a scroll lock consumed by the modal
 is impossible; the only honest options are a wall or app-side compensation.
 The probe mounts a real page scroller (40 rows of 40 points in a **472**-point
 viewport) and the shipped `DialogContent`, which is itself `overflow: "scroll"`
-(30 rows of 40 points inside a **456**-point surface — 1 432 points of content
+(30 rows of 40 points inside a **456**-point surface — 1 420 points of content
 counted with its header and padding). Every wheel below is aimed at an element,
 so its coordinates are the runtime's own: the page's rows are narrow, so their
 centre lands left of the centred surface and measures the veil rather than the
@@ -6817,8 +6817,8 @@ modal.
 | the modal opens | the surface takes the focus, its body is a scroller (`456` tall) and starts at `y=0` |
 | a wheel on the veil, left of the surface | the page stays `0`, the modal's body stays `0`, and the page's `onScroll` count stays `2` |
 | a wheel inside the modal's body | the body reaches `-100`, its readout `dialog=x0 y-100 events=1`, and the page stays `0` with `events=2` |
-| a `-10000` wheel inside the body | the body clamps at `-976` (`1 432 - 456`), the page still `0`, and a second `-10000` wheel leaves the body at `-976` |
-| the dialog's own close control | paints at `44` inside the surface at rest and at `-932` after the body clamps — it travels with the content (`44 - 976`), so a scrolled dialog loses its visible close, leaving `Escape` and a press on the veil |
+| a `-10000` wheel inside the body | the body clamps at `-964` (`1 420 - 456`), the page still `0`, and a second `-10000` wheel leaves the body at `-964` |
+| the dialog's own close control | paints at `44` inside the surface at rest and **stays at `44`** after the body clamps: it lives in the wrapper the scroller sits in, so a long body never carries the one visible way out |
 | `Escape` | the modal unpaints, the page is still at `0`, and one more `-10000` wheel clamps it at `-1 128` (`1 600 - 472`) with `events=3` |
 
 Five rules the probe holds:
@@ -6838,18 +6838,19 @@ Five rules the probe holds:
    where the reader left it after `Escape`, and its next wheel clamps at its own
    content's end — so the scroller was alive throughout rather than dead under
    the modal.
-5. **A scrolled body takes the close control with it.** The surface is the
-   scroller and the close is `position: "absolute"` inside it, so the control
-   paints 976 points above the surface once the body reaches its end —
-   **measured gap**, not a deliberate layout. The fix is the shield's route: pin
-   the close in the positioned box **outside** the scroller (where the leaving
-   guard already lives), and then this probe's two close checks move with it.
-   The component owner's Interlocks row carries it; the check is asserted as
-   measured, so the fix fails here rather than passing silently.
+5. **A scrolled body leaves the close control where it rests.** The surface is
+   the scroller and the close sits in the wrapper around it — the box that
+   already holds the leaving guard — so the control keeps its `44`-point box at
+   the body's end and stays inside the surface. That is the fix the earlier
+   measurement called for: the control used to be `position: "absolute"` inside
+   the scroller and the body carried it off the surface's top once the body
+   reached its end, taking the one visible way out with the content. The probe
+   asserts both halves — the resting box and the box at the clamp — so a
+   regression fails here rather than passing silently.
 
 35 checks, `--only modal-scroll-lifecycle`, green on 0.11.0 here (~1.5–1.9 s).
 Fixture `src/live/modal-scroll.ts` (the row counts, the two viewports, the
-surface's 232-point chrome, the close control's measured `44`, the wheel delta,
+surface's 220-point chrome, the close control's measured `44`, the wheel delta,
 the row width that keeps a page wheel outside the surface, the ids and the two
 readouts) + `ModalScrollProbe`/`modalScrollSteps` in `src/live/scenarios.tsx` +
 `modal-scroll.test.ts` (the derived clamps, the veil geometry, the registry and

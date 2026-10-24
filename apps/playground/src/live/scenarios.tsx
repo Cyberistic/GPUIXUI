@@ -11625,13 +11625,15 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const closeScrolled = yield* paintedBox(ctx, "dialog-close");
     yield* ctx.expectEqual(
-      "a scrolled body carries the dialog's close control with it (measured gap)",
+      "a scrolled body leaves the dialog's close control where it rests",
       closeScrolled.y,
-      closeAtRest.y + clamped,
+      closeAtRest.y,
     );
     yield* ctx.expectEqual(
-      "the close control is above the surface once its body has scrolled",
-      closeScrolled.y < dialogBox.y,
+      "the close control stays inside the surface once its body has scrolled",
+      closeScrolled.y >= dialogBox.y &&
+        closeScrolled.y + closeScrolled.height <=
+          dialogBox.y + dialogBox.height,
       true,
     );
     yield* ctx.expectEqual(

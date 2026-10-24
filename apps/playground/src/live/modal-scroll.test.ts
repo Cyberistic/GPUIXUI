@@ -105,11 +105,11 @@ describe("the fixture's geometry", () => {
       BODY_ROWS * MODAL_ROW_HEIGHT + DIALOG_CHROME_HEIGHT,
     );
     expect(maxOffset(pageContentHeight, PAGE_VIEWPORT)).toBe(-1128);
-    expect(maxOffset(dialogContentHeight, DIALOG_VIEWPORT)).toBe(-976);
-    // The close control rides the body's scroll: where it lands at the end.
-    expect(
-      DIALOG_CLOSE_TOP + maxOffset(dialogContentHeight, DIALOG_VIEWPORT),
-    ).toBe(-932);
+    expect(maxOffset(dialogContentHeight, DIALOG_VIEWPORT)).toBe(-964);
+    // The close control lives outside the scroller, so the body's travel does
+    // not move it: its one box is the resting `44`.
+    expect(DIALOG_CLOSE_TOP).toBe(44);
+    expect(DIALOG_CHROME_HEIGHT).toBe(220);
   });
 
   it("keeps a page wheel short of both ends", () => {
@@ -155,12 +155,17 @@ describe("the reason the probe exists", () => {
     expect(component).toContain('overflow: "scroll"');
   });
 
-  it("holds the close control inside the scroller, which is why it scrolls", () => {
-    // The measured gap: the surface scrolls and its own close control is an
-    // absolutely positioned child of it, so a scrolled body carries the control
-    // out of view. Pinned outside the scroller, this case fails first.
-    expect(component.indexOf('overflow: "scroll"')).toBeLessThan(
+  it("holds the close control outside the scroller the body scrolls", () => {
+    // The defect this guards: the close control used to be an absolutely
+    // positioned child of the scroller, so a long body carried the one visible
+    // way out off screen. It now sits in the wrapper around the scroller — the
+    // content element closes before it — and the two checks in `modalScrollSteps`
+    // read that box at rest and at the body's end.
+    expect(component.indexOf("</DismissScope>")).toBeLessThan(
       component.indexOf('testId="dialog-close"'),
+    );
+    expect(component).toContain(
+      "close control lives here for the same reason.",
     );
     expect(component).not.toContain('position: "sticky"');
   });
@@ -222,11 +227,17 @@ describe("the record", () => {
     expect(section).toContain(`${PAGE_VIEWPORT}`);
     expect(section).toContain(`${DIALOG_VIEWPORT}`);
     expect(section).toContain(`${DIALOG_CLOSE_TOP}`);
-    expect(section).toContain(
-      grouped(
-        DIALOG_CLOSE_TOP + maxOffset(dialogContentHeight, DIALOG_VIEWPORT),
-      ),
-    );
+  });
+
+  it("prints the close control staying put, not the carry the fix removed", () => {
+    const section = sectionOf();
+    // The retracted measurement: the control rode the body and landed 976 above
+    // the surface. The page may keep the story of the defect, but not as the
+    // current behaviour — and it must state the box the control keeps.
+    expect(section).toContain("stays at `44`");
+    expect(section).not.toContain("at `-932`");
+    expect(section).not.toContain("takes the close control with it");
+    expect(section).not.toContain("976 points above the surface");
   });
 
   it("names the component, the fixture and the wheel-stopping rule", () => {

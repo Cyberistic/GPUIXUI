@@ -241,14 +241,14 @@ describe("docs/gpuix-capabilities.md", () => {
       pageViewport,
       dialogViewport,
       chrome,
-    ]).toEqual([40, 40, 30, 472, 456, 232]);
+    ]).toEqual([40, 40, 30, 472, 456, 220]);
 
     const pageContent = pageRows * rowHeight;
     const dialogContent = bodyRows * rowHeight + chrome;
     const pageClamp = Math.min(0, pageViewport - pageContent);
     const dialogClamp = Math.min(0, dialogViewport - dialogContent);
     expect([pageContent, dialogContent, pageClamp, dialogClamp]).toEqual([
-      1600, 1432, -1128, -976,
+      1600, 1420, -1128, -964,
     ]);
 
     const row = rowFor("Modal scroll containment");
