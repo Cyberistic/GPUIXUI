@@ -179,7 +179,13 @@ describe("the component", () => {
   });
 
   it("travels the indicator on the fast level, from the width on screen", () => {
-    expect(component).toContain('useSurfaceTiming("fast")');
+    // The timing is the components' shared motion table, and the hook's name is
+    // the component's to choose: the presence module ships `useSurfaceTiming`
+    // for a surface that enters or leaves and `useMoveTiming` for a box that
+    // travels between two resting states. This holds the seam and the level, not
+    // the name, so either reading satisfies it and a removed timing fails.
+    expect(component).toContain('from "./internal/presence.js"');
+    expect(component).toMatch(/use(?:Move|Surface)Timing\("fast"\)/);
     expect(component).toContain("initial: false");
     expect(timing).toContain("fast: 160");
     expect(CAROUSEL_LEVEL_MS).toBe(160);
