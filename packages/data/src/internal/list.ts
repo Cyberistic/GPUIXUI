@@ -11,11 +11,13 @@
  * A caller that composes the list by hand still gets it unchanged; only a
  * value that is not a list reads as an empty one.
  *
- * A list is stored data **twice**: the slot can be absent, and an entry inside
- * it can be the hole a store wrote (`[null, { … }]` — a series a release
- * dropped, a record an older shape saved). A part that reads its entries as
- * objects dereferenced one of those and took the surface down with the slot
- * already guarded, so a list of keyed records reads through {@link recordsOf}.
+ * A list is stored data **twice**: the slot can be absent — JSON writes `null`
+ * for a field a record never set, and a hand-built literal may omit it — and an
+ * entry inside it can be the hole a store wrote (`[null, { … }]` — a series a
+ * release dropped, a record an older shape saved). A part that reads its
+ * entries as objects dereferenced one of those and took the surface down with
+ * the slot already guarded, so a list of keyed records reads through
+ * {@link recordsOf}.
  */
 
 import * as Arr from "effect/Array";
@@ -23,7 +25,7 @@ import * as P from "effect/Predicate";
 
 /** The rows a saved surface carries: only a list is a list. */
 export const listOf = <A>(
-  value: ReadonlyArray<A> | undefined,
+  value: ReadonlyArray<A> | null | undefined,
 ): ReadonlyArray<A> => (Arr.isArray(value) ? value : []);
 
 /**

@@ -32,8 +32,14 @@ import {
 
 /** {@link useExpandedRows} options. */
 export interface UseExpandedRowsOptions<T> extends TreeSpec<T> {
-  /** The tree's roots, in paint order. */
-  readonly roots: ReadonlyArray<T>;
+  /**
+   * The tree's roots, in paint order.
+   *
+   * A saved tree's roots are **data**: JSON writes `null` for a list a record
+   * never carried, so an absent list paints no rows rather than throwing on the
+   * first render (`listOf`).
+   */
+  readonly roots: ReadonlyArray<T> | null | undefined;
   /** The row's label: its accessible name and what type-ahead matches. */
   readonly labelOf: (node: T) => string;
   /**

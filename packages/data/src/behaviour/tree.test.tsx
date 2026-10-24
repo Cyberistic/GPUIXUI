@@ -171,6 +171,42 @@ const StoredExpansionTree = () => {
   );
 };
 
+/**
+ * A saved tree whose leaves carry no children list.
+ *
+ * JSON writes `null` (or drops the key) for a field a record never set, so a
+ * stored hierarchy is a branch with a list of children and a leaf with `null`
+ * where its list belongs — the ordinary shape a file tree arrives in.
+ */
+interface StoredNode {
+  readonly name: string;
+  readonly children?: ReadonlyArray<StoredNode> | null;
+}
+
+const StoredChildrenTree = () => {
+  const roots: ReadonlyArray<StoredNode> = [
+    { name: "src", children: [{ name: "index.ts", children: null }] },
+    { name: "readme.md", children: null },
+  ];
+  const tree = useExpandedRows({
+    roots,
+    keyOf: (node) => node.name,
+    childrenOf: (node) => node.children,
+    labelOf: (node) => node.name,
+  });
+  return (
+    <TreeView
+      testId="stored-children"
+      aria-label="Saved files"
+      height={120}
+      rows={tree.rows}
+      cursor={tree.cursor}
+      onCursorChange={tree.setCursor}
+      labelOf={(node) => node.name}
+    />
+  );
+};
+
 describe("the file tree", () => {
   it("opens the folder a press lands on, and reports the row", () => {
     const root = mount();
@@ -428,5 +464,28 @@ describe("the file tree", () => {
     expect(root.renderer.findByTestId("stored-tree-row-child.ts")).toBe(
       undefined,
     );
+  });
+
+  it("paints a tree whose stored leaves carry no children list", () => {
+    // Bug guarded: a leaf's children list is stored data, and a store writes
+    // `null` (or omits the key) for one a record never carried. The flatten
+    // handed that value to `Arr.isReadonlyArrayNonEmpty`, whose `null.length`
+    // read threw `TypeError: Cannot read properties of null (reading 'length')`
+    // out of the first render — a saved tree painted nothing at all, not even
+    // the branch above the leaf.
+    root = renderData(<StoredChildrenTree />);
+    settle(root);
+
+    expect(paintedText(root)).toContain("src");
+    expect(paintedText(root)).toContain("readme.md");
+    // The leaf is a leaf: it paints no chevron and opens no branch.
+    expect(
+      root.renderer.findByTestId("stored-children-row-index.ts"),
+    ).toBeUndefined();
+
+    clickCentreOf(root, "stored-children-row-src");
+    root.renderer.flush();
+
+    expect(paintedText(root)).toContain("index.ts");
   });
 });

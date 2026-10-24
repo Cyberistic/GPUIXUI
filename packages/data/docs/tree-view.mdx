@@ -38,6 +38,14 @@ something else — an object where JSON has no `Set`, a number, `null` — is **
 expansion**, the state a fresh tree starts in, rather than a `TypeError` on the
 first render. An entry that is not text is not a key.
 
+The hierarchy is data as well, so `roots` and every node's `childrenOf` are read
+as **lists**: JSON writes `null` for a list a record never carried, and a
+hand-built node often omits it, so a leaf with `children: null` is the ordinary
+shape of a saved tree. An absent `roots` paints no rows and an absent children
+list is a leaf — `flattenTree`, `branchKeys` and `expandedPath` all read the slot
+through `listOf`, so a stored hierarchy cannot take the render down
+(`behaviour/tree.test.tsx`'s stored-children case).
+
 ### `TreeView`
 
 | Prop | Type | Default | Consequence |

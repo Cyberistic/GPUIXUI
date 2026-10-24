@@ -12665,6 +12665,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the clip is the runtime rule the sidebar and half-star probes measured, and
     the chart paint's own `chart-surface-lifecycle` is unchanged.
     Owner: data.
+  - [x] Read a **tree's hierarchy lists as lists, not as the value a store wrote**
+    — a saved hierarchy is ordinary data: JSON writes `null` for a field a record
+    never carried, and a hand-built node often omits it, so a leaf with no
+    children list is the shape a stored file tree arrives in. `flattenTree` handed
+    `childrenOf`'s answer to `Arr.isReadonlyArrayNonEmpty`, whose `null.length`
+    read threw `TypeError: Cannot read properties of null (reading 'length')` on
+    the first leaf, so a tree painted **nothing at all** — not even the branch
+    above it; `roots` and `expandedPath`'s descent read the same slot.
+    `internal/list.ts`'s `listOf` now names `null` in its port (JSON's absence,
+    the shape its own docs already claimed), `TreeSpec.childrenOf` returns
+    `ReadonlyArray<T> | null | undefined` and `flattenTree`/`branchKeys`/
+    `expandedPath`/`expandAll`/`expandTo` and `useExpandedRows`' `roots` read
+    through it, so an absent slot is no children (a leaf) or no rows rather than a
+    crash. `src/tree/logic.test.ts` gains `reads a node's children list as a list,
+    not as the value it was stored with` (a stored leaf beside a real branch, the
+    branch list, the reveal path, and absent roots) and
+    `src/behaviour/tree.test.tsx` `paints a tree whose stored leaves carry no
+    children list`. Directions measured: at `HEAD` the unit case throws the exact
+    `TypeError` at `logic.ts:95` and the window case paints nothing (`- src`);
+    with the read the package is 30 files / **255** unit cases and 21 files /
+    **187** behaviour cases green, `check-types` clean. Docs:
+    `docs/tree-view.mdx` §API, `docs/virtual-tree.mdx` §Limitations, the README's
+    stored-tree paragraph and the Tree views row. Owner: data.
   - [x] Step a **column divider from the width it announces** — `TableColumnDivider`
     reads the caller's `width` through `readableWidth` and clamps it to the
     column's bounds for the `aria-valuetext` announcement and for the width a drag

@@ -30,6 +30,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import { listOf } from "../internal/list.js";
 import { neighbourKey } from "../selection/logic.js";
 
 /**
@@ -44,8 +45,17 @@ export const TREE_INDENT = 16;
 export interface TreeSpec<T> {
   /** The stable identity a row is expanded, activated and focused by. */
   readonly keyOf: (node: T) => string;
-  /** The children a node has, in paint order. A leaf answers `[]`. */
-  readonly childrenOf: (node: T) => ReadonlyArray<T>;
+  /**
+   * The children a node has, in paint order.
+   *
+   * A leaf answers `[]` — or the list a store carries for "no children", which
+   * is **`null`** (JSON writes it for a field the record never set) or an
+   * omitted field. Both read as no children: a saved tree's leaves are the
+   * ordinary shape of the data, not a caller mistake, so every reader that
+   * walks the hierarchy reads the slot through {@link listOf} rather than
+   * iterating it.
+   */
+  readonly childrenOf: (node: T) => ReadonlyArray<T> | null | undefined;
 }
 
 /** One visible row: the node, where it sits and whether its children paint. */
@@ -70,9 +80,13 @@ export interface TreeRow<T> {
  * make the flatten loop or paint two rows that answer to one key. That is a
  * caller mistake the tree swallows rather than throws: a data surface that
  * refuses to paint is worse than one that paints the node its caller gave it.
+ *
+ * The roots and every node's children are read as lists ({@link listOf}): a
+ * saved tree writes `null` for the children a leaf never carried, so a leaf is
+ * a leaf rather than a `TypeError` out of the first render.
  */
 export const flattenTree = <T>(
-  roots: ReadonlyArray<T>,
+  roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
   expanded: HashSet.HashSet<string>,
 ): ReadonlyArray<TreeRow<T>> => {
@@ -91,7 +105,7 @@ export const flattenTree = <T>(
     const key = spec.keyOf(node);
     if (HashSet.has(ancestors, key) || MutableHashSet.has(painted, key)) return;
     MutableHashSet.add(painted, key);
-    const children = spec.childrenOf(node);
+    const children = listOf(spec.childrenOf(node));
     const hasChildren = Arr.isReadonlyArrayNonEmpty(children);
     const open = hasChildren && HashSet.has(expanded, key);
     rows.push({ node, key, depth, parent, hasChildren, expanded: open });
@@ -102,13 +116,15 @@ export const flattenTree = <T>(
     );
   };
 
-  Arr.forEach(roots, (root) => visit(root, 0, Option.none(), HashSet.empty()));
+  Arr.forEach(listOf(roots), (root) =>
+    visit(root, 0, Option.none(), HashSet.empty()),
+  );
   return rows;
 };
 
 /** Every key in the tree that has children, in paint order. */
 export const branchKeys = <T>(
-  roots: ReadonlyArray<T>,
+  roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
 ): ReadonlyArray<string> => {
   const keys: Array<string> = [];
@@ -118,13 +134,13 @@ export const branchKeys = <T>(
     const key = spec.keyOf(node);
     if (HashSet.has(ancestors, key) || MutableHashSet.has(seen, key)) return;
     MutableHashSet.add(seen, key);
-    const children = spec.childrenOf(node);
+    const children = listOf(spec.childrenOf(node));
     if (Arr.isReadonlyArrayNonEmpty(children)) keys.push(key);
     const path = HashSet.add(ancestors, key);
     Arr.forEach(children, (child) => visit(child, path));
   };
 
-  Arr.forEach(roots, (root) => visit(root, HashSet.empty()));
+  Arr.forEach(listOf(roots), (root) => visit(root, HashSet.empty()));
   return keys;
 };
 
@@ -171,7 +187,7 @@ export const expandedSet = (value: unknown): HashSet.HashSet<string> =>
 
 /** Every branch open, which is what "expand all" means. */
 export const expandAll = <T>(
-  roots: ReadonlyArray<T>,
+  roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
 ): HashSet.HashSet<string> => HashSet.fromIterable(branchKeys(roots, spec));
 
@@ -183,7 +199,7 @@ export const expandAll = <T>(
  * tree does not hold answers nothing, and the caller's set is unchanged.
  */
 export const expandedPath = <T>(
-  roots: ReadonlyArray<T>,
+  roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
   key: string,
 ): Option.Option<ReadonlyArray<string>> => {
@@ -200,18 +216,18 @@ export const expandedPath = <T>(
         }
         const next = [...path, nodeKey];
         if (nodeKey === key) return Option.some(next);
-        const inside = walk(spec.childrenOf(node), next);
+        const inside = walk(listOf(spec.childrenOf(node)), next);
         return Option.isSome(inside) ? inside : walk(Arr.drop(nodes, 1), path);
       },
     });
 
-  return walk(roots, []);
+  return walk(listOf(roots), []);
 };
 
 /** Expand every ancestor of `key` in one step, for a reveal or a search hit. */
 export const expandTo = <T>(
   expanded: HashSet.HashSet<string>,
-  roots: ReadonlyArray<T>,
+  roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
   key: string,
 ): HashSet.HashSet<string> =>

@@ -17,7 +17,7 @@ describe("a stored list", () => {
   it("is a list only when it is one", () => {
     expect(listOf([3])).toEqual([3]);
     expect(listOf<number>(undefined)).toEqual([]);
-    // @ts-expect-error — a slot a store wrote as absent.
+    // A slot JSON wrote as `null` is the absence the port names, not a cast.
     expect(listOf<number>(null)).toEqual([]);
     // @ts-expect-error — a slot a store wrote as something else.
     expect(listOf<number>(42)).toEqual([]);

@@ -483,6 +483,14 @@ and a value a store wrote as something else — an object (JSON has no `Set`), a
 number, `null` — is no expansion, the state a fresh tree starts in, rather than
 a `TypeError` on the first render. An entry that is not text is not a key.
 
+The hierarchy itself is data too, so `roots` and every node's `childrenOf` are
+read as **lists**: JSON writes `null` for a list a record never carried, and a
+hand-built node often omits it, so a leaf with `children: null` is the ordinary
+shape of a saved tree. An absent slot is no row (no roots) or no children (a
+leaf), never a `TypeError` out of the first render — `flattenTree`, `branchKeys`
+and `expandedPath` all read through `listOf`, and `childrenOf`'s type names the
+absence (`behaviour/tree.test.tsx`'s stored-children case).
+
 A tree of thousands uses **`VirtualTree`**: the same rows and keyboard over the
 runtime's `itemCount` window, so only the rows around the viewport are retained.
 A cursor move to a row outside the window moves the window first, then focuses

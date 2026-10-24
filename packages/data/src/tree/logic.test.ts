@@ -99,6 +99,51 @@ describe("the flattened tree", () => {
     expect(Arr.filter(rows, (row) => row.key === "a")).toHaveLength(1);
   });
 
+  it("reads a node's children list as a list, not as the value it was stored with", () => {
+    // Bug guarded: `childrenOf` is a caller's accessor over its own nodes, and
+    // a saved tree is ordinary data — JSON writes `null` for a field a record
+    // never carried, and a hand-built node often omits it, so a leaf with no
+    // children list is the shape a stored hierarchy arrives in. The flatten
+    // handed that value to `Arr.isReadonlyArrayNonEmpty`, which threw
+    // `TypeError: Cannot read properties of null (reading 'length')` on the
+    // first leaf, so a tree of files painted nothing at all.
+    interface Stored {
+      readonly name: string;
+      readonly children?: ReadonlyArray<Stored> | null;
+    }
+    const stored: TreeSpec<Stored> = {
+      keyOf: (value) => value.name,
+      childrenOf: (value) => value.children,
+    };
+    const roots: ReadonlyArray<Stored> = [
+      {
+        name: "src",
+        children: [{ name: "index.ts", children: null }, { name: "readme.md" }],
+      },
+      { name: "empty", children: null },
+    ];
+    const rows = flattenTree(roots, stored, open("src"));
+    expect(Arr.map(rows, (row) => row.key)).toEqual([
+      "src",
+      "index.ts",
+      "readme.md",
+      "empty",
+    ]);
+    expect(Arr.map(rows, (row) => row.hasChildren)).toEqual([
+      true,
+      false,
+      false,
+      false,
+    ]);
+    // Every reader that walks the hierarchy reads the same list the same way.
+    expect(branchKeys(roots, stored)).toEqual(["src"]);
+    expect(expandedPath(roots, stored, "index.ts")).toEqual(
+      Option.some(["src", "index.ts"]),
+    );
+    // A tree whose roots slot is absent paints no rows rather than throwing.
+    expect(flattenTree(null, stored, open("src"))).toEqual([]);
+  });
+
   it("lists every branch, opens all of them, and closes them again", () => {
     expect(branchKeys(tree, spec)).toEqual(["src", "components", "table"]);
     const all = expandAll(tree, spec);
