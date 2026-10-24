@@ -20155,6 +20155,42 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion`: **a stored transition was handed to the renderer as a
+description it either refuses or reads as its own default** — `presenceTimingOf`
+mapped a phase the value did not name to `{}`, and the renderer's `MotionTransition`
+has serde defaults (`duration` 0.3 s, `easeOut`), so a surface whose config never
+decoded ran a 300 ms journey the seam's hold window had already counted as **zero** —
+the module's own sentence ("no transition, so the surface paints its resting frame at
+once, and the window and the frame cannot disagree") was false. The other direction
+was worse: the renderer validates the **whole** description and paints no frame for
+one it rejects, so a stored `duration: NaN`, a negative, an overflow past its clock
+or a dropped easing name left a surface with no motion at all — an entering one
+appeared without its fade and a leaving one kept its resting look for the exit.
+`presenceTimingOf` now reads each phase as the run the renderer accepts: a phase
+with no runnable duration is **no journey** (`{ duration: 0 }`, what the reduced
+policy and `transitionWindowMs` mean by it), a wait or an easing it cannot read is
+dropped, and a readable one is kept. `PresenceTransitionInput` is the decoded
+shape (`null` fields), and `timing.ts` owns the renderer's easing grammar as
+`motionEasingNames`/`isMotionEasing` (five names, or a cubic-bezier with finite
+values and `x` in `[0, 1]`) — the union is derived from the list, so the test's
+second copy is gone. Proof: `src/presence.test.ts`'s `reads a field the renderer
+rejects as no journey, not a rejected description` (six unreadable durations, a
+phase that is not an object, four waits/easings, the readable control, and the
+window agreeing with the painted transition), the two updated stored-timing cases,
+`react.test.tsx`'s mount case and `timing.test.ts`'s grammar case (2).
+Directions measured: with `presenceTimingOf` restored to `timing?.enter ?? {}`,
+**4** cases fail (`expected {} to deeply equal { duration: +0 }`, and
+`expected { duration: NaN } to deeply equal { duration: +0 }`); restored, the
+package is 15 files / **193** tests with `check-types` clean and the components'
+`presence` behaviour (39) and `surface` budget (30) green. The seam's motion graph
+grew 32 KiB → 34 KiB because `timing.ts` (which the light entry already loads)
+carries the grammar now; `surface.budget.ts` records it and its stale "until the
+primitives take the light entry" note is retracted (the primitives' `Spinner`
+reads `./react/presence`). Docs: the package README §The presence table and the
+`timing.ts` layout row, the `presenceTimingOf` JSDoc and `isMotionEasing`'s. No
+native scenario applies — the renderer's validation is in the installed binding
+(`packages/native/src/motion.rs`), and the transition is sampled by the pure
+package.
 `[x]` `packages/components`: **the remote-combobox suite still expected a disabled popup to cut** — the
 combobox's exit landed after that suite was written, so a dismissed popup is kept painted for its
 exit window and takes no presses; the interaction suite states the rule in so many words ("the claim
