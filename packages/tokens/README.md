@@ -212,12 +212,15 @@ caller's content — rather than `TypeError: Cannot read properties of undefined
 radius and spacing groups for the same reason: a surface can paint a theme nobody
 has audited yet, so a lost role or group paints the library's own role, family
 and step, and `missingTokens` stays the refusal. `elevationShadow` reads a level this release does not ship as
-`md` too, rather than a raised panel that silently paints flat, and `statusTone`
+`md` too, rather than a raised panel that silently paints flat, `avatarPixels`
+reads a diameter step this release does not ship as `md` rather than handing the
+renderer `undefined` (which it drops, so the mark painted with no side), and
+`statusTone`
 reads a tone this release does not ship as `info` — the family the boundary
 narrowing substitutes — rather than answering `undefined` to a caller that
-destructures it. Narrow a stored role, size, tone or level with `isTextRole`,
-`isControlSize`, `isStatusTone` or `isElevationLevel` where the caller can tell
-the reader what it substituted.
+destructures it. Narrow a stored role, size, tone, level or avatar step with
+`isTextRole`, `isControlSize`, `isStatusTone`, `isElevationLevel` or
+`isAvatarSize` where the caller can tell the reader what it substituted.
 
 A whole theme is storable, so its **mode** is a stated value before it is a union.
 There is no strict reading of light and dark, so `themeModeOf(theme)` reads a mode

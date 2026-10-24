@@ -1092,6 +1092,48 @@ describe("the resolvers refuse an axis they do not ship", () => {
 });
 
 /**
+ * The avatar scale is the tenth persisted axis, and the last one without an
+ * index and a guard: a saved contact list, settings row or inspector panel
+ * stores the step its mark was drawn at, so a name this release dropped could
+ * only reach `avatarSize` through a cast — and a bare lookup answered
+ * `undefined`, which the renderer drops, so the mark painted with no side. The
+ * resolver reads the dropped step as `md` and every page says so.
+ */
+describe("the avatar step", () => {
+  const scaleSource = read("./scale.ts");
+
+  it("reads a stored step as the default diameter, and says so", () => {
+    expect(scaleSource).toContain(
+      "isAvatarSize(size) ? avatarSize[size] : avatarSize.md",
+    );
+    // The guard reads the index, not the record: `name in avatarSize` also
+    // answers true for `toString`.
+    expect(scaleSource).toContain(
+      "avatarSizes.some((step) => step === value)",
+    );
+
+    const pages = [catalogue, readme, designSystem].map((page) =>
+      page.replace(/\s+/g, " "),
+    );
+
+    pages.forEach((page, index) => {
+      expect(page, `page ${index}`).toContain("`avatarSizes`");
+      expect(page, `page ${index}`).toContain("`isAvatarSize`");
+      expect(page, `page ${index}`).toContain("`avatarPixels`");
+    });
+    expect(pages[0]).toContain(
+      "reads a name this release does not ship as `md`",
+    );
+    expect(pages[1]).toContain(
+      "reads a diameter step this release does not ship as `md`",
+    );
+    expect(pages[2]).toContain(
+      "reads a step this release dropped as the default `md`",
+    );
+  });
+});
+
+/**
  * `bodyStrong` is `body`'s emphasis at the same size and leading, and the
  * typography merge is per role, so an example that raises the body size has to
  * raise the pair — and the gate now says so: `invalidNumbers` reports a strong
