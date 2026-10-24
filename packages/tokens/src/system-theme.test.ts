@@ -441,6 +441,56 @@ describe("following a palette", () => {
     expect(applied).toHaveLength(1);
   });
 
+  it("re-applies a palette a reader rewrites in place, not only one it replaces", () => {
+    // A decoder can fill one palette it reuses: a parser with a module-level
+    // result, a watcher that clears and rewrites its record, a record a settings
+    // panel keeps. The poll compared the palette values it had delivered with
+    // the object the reader handed back, so the same reference was compared with
+    // itself — the field the reader had just rewritten matched and the window
+    // kept the theme it had, however many times the desktop moved.
+    const manual = manualTimer();
+    const applied: Array<Theme> = [];
+    const palette = { ...nightPalette };
+    watchSystemTheme({
+      read: () => palette,
+      base: lightTheme,
+      onChange: (theme) => applied.push(theme),
+      every: 2000,
+      timer: manual.timer,
+    });
+
+    palette.accent = "#7CC7B0";
+    manual.tick();
+
+    expect(applied).toHaveLength(2);
+    expect(applied[1]?.colors.primary).toBe("#7CC7B0");
+
+    // The field the first fix closed stays closed: an empty value differs from
+    // an absent one even when the object is the same one.
+    palette.accent = "";
+    manual.tick();
+
+    expect(applied).toHaveLength(3);
+    expect(applied[2]?.colors.primary).toBe("");
+
+    // And a tick that rewrites nothing delivers nothing.
+    manual.tick();
+
+    expect(applied).toHaveLength(3);
+
+    // The pages a consumer plans a follow from state the same rule.
+    const pages = [
+      read("../../../docs/tokens.md"),
+      read("../README.md"),
+      read("../../../COMPONENTS.md"),
+    ];
+    pages.forEach((page) => {
+      expect(flat(page), "the in-place rewrite rule").toContain(
+        "rewrites one palette object in place",
+      );
+    });
+  });
+
   it("re-applies a field a decoder now reports as empty, not absent", () => {
     // A palette is a set of values, not a joined string. The key the watch used
     // to compare wrote an absent field as `""` and joined the fields with a
@@ -638,12 +688,12 @@ describe("following a palette", () => {
   });
 
   it("watches every field the palette offers", () => {
-    // The poll compares a key built from the palette's fields, so a field the
-    // key forgot is one a reader can change without the window noticing: the
-    // watch read the same key, decided nothing had moved and kept the old
-    // theme. The table is a `Record<keyof SystemPalette, …>`, so a field added
-    // to the palette fails the compile until it is named here, and each one is
-    // then driven through the watch. `selection` is the field this caught.
+    // The poll compares the palette's fields, so a field the list forgot is one
+    // a reader can change without the window noticing: the watch compared the
+    // values it had, decided nothing had moved and kept the old theme. The table
+    // is a `Record<keyof SystemPalette, …>`, so a field added to the palette
+    // fails the compile until it is named here, and each one is then driven
+    // through the watch. `selection` is the field this caught.
     const pair: Record<keyof SystemPalette, readonly [string, string]> = {
       mode: ["dark", "light"],
       background: ["#101418", "#101419"],

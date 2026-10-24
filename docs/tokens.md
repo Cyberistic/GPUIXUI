@@ -1347,8 +1347,10 @@ reaches the window — and each field is compared as its own value, not through 
 string the fields are joined into: a decoder that reports a colour as `""` where
 the previous read omitted it is a change, because the mapper keeps the base's
 role for the absent field and states the empty one, and a joined key wrote both
-as the same empty field — and an `undefined` read applies the base theme, which is how
-a deleted system theme returns the window to the application's own. The pace is
+as the same empty field. The values a tick delivered are copied rather than
+remembered by reference, so a reader that rewrites one palette object in place is
+a change too. An `undefined` read applies the base theme, which is how a deleted
+system theme returns the window to the application's own. The pace is
 configuration as often as a literal, so an `every` outside the 1 – 2 147 483 647 ms
 range `setInterval` honours reads as `systemThemePollMs` (2000): the timer treats
 `NaN`, `0`, a negative delay, a sub-millisecond one and one past its 32-bit limit

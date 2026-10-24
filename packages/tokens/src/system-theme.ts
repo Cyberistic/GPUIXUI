@@ -418,6 +418,20 @@ const samePalette = (
     : paletteFields.every((field) => left[field] === right[field]);
 
 /**
+ * The values a delivered palette is compared against.
+ *
+ * A copy, not the object the reader returned: a decoder can fill one palette it
+ * reuses — a parser with a module-level result, a watcher that clears and
+ * rewrites its record — and hands the poll the same reference every tick.
+ * Remembering that reference made the field it had just rewritten compare equal
+ * to itself, so the window kept the theme it had. `Object.assign` copies the
+ * own fields the comparison reads, so a field added to `SystemPalette` is
+ * watched without a second list.
+ */
+const snapshot = (palette: SystemPalette): SystemPalette =>
+  Object.assign({}, palette);
+
+/**
  * Follow a system palette, applying the first read immediately and re-applying
  * only when the palette changes.
  *
@@ -437,7 +451,9 @@ const samePalette = (
  * Every watched field is compared as its own value, not through a joined key, so
  * a decoder that reports a colour as `""` where it previously omitted it is a
  * change the window sees — the two compose differently (`paletteToTokens` keeps
- * the base's role for the absent field and states the empty one).
+ * the base's role for the absent field and states the empty one). The values a
+ * tick delivered are copied, so a reader that rewrites one palette object in
+ * place is a change too.
  *
  * @example
  * ```tsx
@@ -470,8 +486,10 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
         : paletteToTokens(palette, baseFor?.(palette) ?? base),
     );
     // Recorded after delivery: a callback that throws is retried next tick
-    // rather than leaving the window on the theme it already had.
-    applied = palette;
+    // rather than leaving the window on the theme it already had. The values
+    // are copied, not remembered by reference, so a reader that rewrites one
+    // palette in place is the next change rather than no change at all.
+    applied = palette === undefined ? undefined : snapshot(palette);
     delivered = true;
   };
   tick();
