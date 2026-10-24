@@ -52,7 +52,7 @@ ColorPicker
 | `disabled` | `boolean` | `false` | swatches leave the tab order, the field is read-only, the root fades |
 | `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
 | `style` | `StateStyle<ColorPickerState>` | — | resolved against `{ disabled, valid }`, merged last |
-| `testId` | `string` | — | the stable locators above |
+| `testId` | `string` | — | the root's locator; each swatch derives `-swatch-<index>` (and `-swatch-<index>-marker` for the chosen cell), the preview `-preview` and the field `-hex` |
 
 ## Limitations
 

@@ -389,7 +389,9 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 233/233
+`[x]` `[██████████]` 234/234
+
+`[x]` Paint a **stored theme's type instead of throwing** — `textStyle` read `theme.typography[name]` and `nativeTextTheme` read `typography.sans`, `radius.lg` and `spacing.xl` straight off the groups, so a theme a store truncated past the type, radius or spacing group took the window down mid-render: `textStyle(stored, "body")` threw `TypeError: Cannot read properties of undefined (reading 'body')` from every components painter that spreads it (`AvatarGroup`, `CodeBlock`, `PinnedList` and the five motion text components), and `nativeTextTheme(stored)` threw `… (reading 'sans')` from the first field, code block or document a window mounted. The gate refuses such a theme (`missingTokens`), but a surface can paint one nobody has audited yet, so both seams answer the library's own scale — the rule the primitives' `typeOf`/`familyOf` and the density seam already follow: `textStyle` reads a lost role, group or blank family as `shippedTypography`'s role and face, and `nativeTextTheme` reads every document role through it plus a finite-step reader for `radius`/`spacing`. A complete brand still paints its own numbers. `styles.test.ts` gains `answers the library's type for a theme that lost it` (lost and nulled group, blank family, nulled role, a `NaN` size, and a brand's own type still winning) and `native-text.test.ts` the same for the host (families, every metric, nulled radius/spacing, a dropped leading, a brand's 20/24 code role and 12/24 geometry); `incomplete.test.ts`'s absent-step and blank-family cases now hold the fallback beside the refusal. Directions measured: with the direct reads restored, both new cases fail by name on the exact `TypeError`s and 2 `incomplete.test.ts` cases fail their assertions; with the seams the package is 49 files / **3 034** tests with `check-types` clean. Docs: `docs/tokens.md` §Paint-ready values/§Native text hosts, `docs/design-system.md` §9, the package README and the `Native text hosts` inventory row state the split (the gate refuses, the paint answers), held by `styles.test.ts`'s `the type group's paint rule` (2 cases). No native scenario applies — a pure fallback with the same values a complete theme handed over.
 
 `[x]` Read the primitives' roles through the **single paint point** they now use — the primitives' "single semantic paint point" rewrite replaced every `theme.colors.x` read in a painter with `colorRole(theme, "x")` (`core/theme.ts`, the seam that answers a role a stored theme lost as `undefined`), and eleven guards in this package pinned the retired expression, so `nub run --filter @gpuixui/tokens test` was 5 files / 11 cases red on the rewrite (`expected … to contain 'theme.colors.secondaryForeground'`, `fieldVariant no longer resolves a border role`, `[ 'hover has no painter' ]`). The guards now read the seam: `contrast.test.ts`'s secondary label, group-strip ink, bubble surface, list-row status role and field muted ink; `decorative.test.ts`'s tonal edge and the hover painter `surfaceOrigin` reads; `field-boundary.test.ts`'s `variantEdge`, a regex on `colorRole`; `selection.test.ts`'s bubble/stroke pair and its seam case; and `highlight.test.ts`'s adoption case, which held the parameter's name (`findHighlight(theme)`) rather than the call — the component takes a `FindHighlightSource` now, so the guard matches the call and keeps the two `input.x ?? derived.x` defaults. `incomplete.test.ts` gains `reads every role the primitives paint through their one seam`: a walk of `packages/primitives/src` (tests excluded) must find more than six paint sources, none may contain `theme.colors` — the direct read that threw from the first control a truncated theme painted — and more than six must call `colorRole(`. Directions measured: at HEAD the four paint sources carry **71** direct reads and no `colorRole` call, every moved guard's expected expression is absent from the HEAD blob it reads (`grep -cF` 0 for all ten), the live tree has **0** direct reads and **10** sources through the seam; green: 49 files / **3 030** tests with `check-types`, `oxlint`, `oxfmt` (touched files) and `check:tests` clean. No native scenario applies — the guards read source and the new case walks it.
 
@@ -11734,7 +11736,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 375/375
+`[x]` `[██████████]` 376/376
+
+`[x]` Print the **locators the colour picker derives** — the page's `testId`
+      row answered "the stable locators above" while the page printed no list,
+      the same dangling reference the variant tables carried, so an automation
+      host reading the prop could not learn one locator to target. The row now
+      names the root's own locator and the four suffixes `color-picker.tsx`
+      derives (`-swatch-<index>`, `-swatch-<index>-marker`, `-preview`,
+      `-hex`); `src/lib/color-picker-page.test.ts` (2 cases) reads the
+      `` `${testId}…` `` templates out of the component and requires the row to
+      print each, and refuses the retracted phrase. Directions measured: with
+      the old row restored both cases fail (`[ '-swatch-${index}-marker',
+      …(3) ]` missing, and `not to contain 'above'`). No native scenario
+      applies — a page row and a source read.
 
 `[x]` Print the **variant tables two pages pointed at** — `badge.mdx` and
       `card.mdx` answered their `variant` prop with "the table above" while the
