@@ -227,6 +227,13 @@ primitive below the same provider reads the one flag instead of taking its own:
 </MotionProvider>
 ```
 
+The preference is a **stored** value as often as a literal, so the provider
+decodes it (`preferenceOf`): the two names are read as themselves, an absent
+value keeps the `"animated"` default, and a value the union does not name — a
+renamed setting, a checkbox column written as `"true"` — is read as `"reduced"`.
+The fail-safe direction is deliberate: animating a reader who asked for less
+motion is the failure the policy exists to prevent.
+
 A reduced run is a zero-duration assignment — the resting frame still paints.
 `src/behaviour/presence.test.tsx` measures the movement, the exit window, the
 reduced negative control, the accordion's measured height and the pill in the

@@ -19,7 +19,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `timeline.ts` | Keyframes with offsets, `stagger`, and a keyed `Sequence` driver |
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
-| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds |
+| `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds — and `preferenceOf`, the reader that decodes a stored motion preference |
 | `presence.ts` | The frames, per-phase timing, hold window and leaving pointer rule both a component and a primitive package compose (entry `@gpuixui/motion/presence`) |
 | `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers, `useMotionPreference`, and the presence hooks `useSurfaceTiming` / `useSurfacePresence` |
 | `provider.ts` | `MotionProvider` — the one reduced-motion preference every package reads |
@@ -115,6 +115,17 @@ re-publishes this provider, so a tree written against it reads the same context.
 zero-duration assignment, so the resting frame still paints and only the journey
 is removed.
 
+The preference is a **stored** value as often as a literal — an application
+persists its motion setting and hands the row to the provider — so
+`preferenceOf` decodes what it is given: the two names the table carries are read
+as themselves, an absent (nullish) value is the house `"animated"` that a tree
+stating nothing has always moved with, and a value that is **present and not a
+name** — a renamed setting, a `"true"` from a checkbox column — is read as
+`"reduced"`. The fail-safe direction is deliberate: animating a reader who asked
+for less motion is the failure this policy exists to prevent, while a journey
+the application can see it lost is one a developer fixes. `motionTiming` reads
+the same rule, so a surface that builds its own timing gets it too.
+
 ## The presence table
 
 A surface that enters and leaves reads one table, exported from
@@ -132,7 +143,9 @@ A surface that enters and leaves reads one table, exported from
   carries `0` on its axis instead of a number the runtime paints as nothing, so
   the surface fades in place rather than losing the movement it asked for;
 - `presenceTiming(level, preference)` gives the enter and exit tween at one
-  level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"`;
+  level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"` (and
+  under a stored preference the union does not name, the rule `preferenceOf`
+  keeps);
 - `presenceMotion(frames, present, timing)` is the runtime's `motion` prop for a
   surface — the frames' first paint, the resting frame while it is open or the
   exit frame while it leaves, and that phase's transition — so a consumer that

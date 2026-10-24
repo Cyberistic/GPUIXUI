@@ -139,6 +139,17 @@ describe("the presence timing", () => {
     expect(timing.enter).toEqual({ duration: 0 });
     expect(timing.exit).toEqual({ duration: 0 });
   });
+
+  it("takes the reduced policy for a preference the table does not carry", () => {
+    // A consumer painting its own surface builds its timing here rather than
+    // through the provider, and the preference it hands over can be the stored
+    // one. The reduced policy is the fail-safe answer: the journey is the part
+    // that can hurt the reader who asked for less.
+    // @ts-expect-error — a stored preference the library did not type-check.
+    const timing = presenceTiming("slow", "Reduced");
+    expect(timing.enter).toEqual({ duration: 0 });
+    expect(exitWindowMs(timing)).toBe(0);
+  });
 });
 
 describe("the hold window", () => {

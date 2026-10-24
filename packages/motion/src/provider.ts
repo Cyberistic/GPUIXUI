@@ -19,13 +19,18 @@ import {
   useContext,
   type ReactNode,
 } from "react";
-import type { MotionPreference } from "./timing.js";
+import { preferenceOf, type MotionPreference } from "./timing.js";
 
 const MotionPreferenceContext = createContext<MotionPreference>("animated");
 
 /** Props for {@link MotionProvider}. */
 export interface MotionProviderProps {
-  /** The reader's preference. Default `"animated"`. */
+  /**
+   * The reader's preference. Default `"animated"`.
+   *
+   * A value read back from storage is decoded by `preferenceOf`: an absent one
+   * keeps the default and one the union does not name is the reduced policy.
+   */
   readonly preference?: MotionPreference;
   readonly children?: ReactNode;
 }
@@ -38,18 +43,21 @@ export interface MotionProviderProps {
  * With no provider the library reads `"animated"`, so a tree that never states a
  * preference keeps its motion.
  *
+ * The published value is the name the library carries, never the caller's raw
+ * one, because a surface compares it (`"reduced"`) rather than reading it: an
+ * application that persisted its setting and read back `NULL` or a name a
+ * release renamed would otherwise hand every consumer a value outside the union
+ * and animate a reader who asked for less motion.
+ *
  * The element is built with `createElement` rather than JSX: this package is
  * renderer-neutral and declares no JSX factory, so the same provider renders
  * under whichever React reconciler the consumer uses — a GPUix tree names
  * `@gpuix/react` as its factory and a plain React test names `react`.
  */
-export const MotionProvider = ({
-  preference = "animated",
-  children,
-}: MotionProviderProps) =>
+export const MotionProvider = ({ preference, children }: MotionProviderProps) =>
   createElement(
     MotionPreferenceContext.Provider,
-    { value: preference },
+    { value: preferenceOf(preference) },
     children,
   );
 

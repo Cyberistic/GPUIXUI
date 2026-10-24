@@ -310,6 +310,65 @@ describe("the preference", () => {
       page.unmount();
     }
   });
+
+  /**
+   * The bug this guards: the preference is a **stored** value — an application
+   * persists its motion setting and hands the row to the provider — and every
+   * surface reads it as `preference === "reduced"`. A setting that came back as
+   * a name the union never described (a renamed value, a `"true"` from a
+   * checkbox column) therefore animated a reader who had asked for less motion,
+   * with nothing on screen to show the request was lost. The provider publishes
+   * the name the library carries, so the surface never sees the stored one.
+   */
+  it("fails safe when the stored preference is not a name the library carries", () => {
+    const tree = (preference: string | null) => (
+      <PackageMotionProvider
+        // @ts-expect-error — a settings row the library did not type-check.
+        preference={preference}
+      >
+        <div
+          testId="frame"
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          <Reveal testId="reveal" distance={12} />
+        </div>
+      </PackageMotionProvider>
+    );
+    const page = renderComponent(tree("Reduced"));
+    try {
+      page.renderer.clockPause();
+      settle(page);
+      // The resting frame, not the entry offset, and no journey behind it.
+      expect(
+        where(page.renderer, "reveal", "y") -
+          where(page.renderer, "frame", "y"),
+      ).toBeCloseTo(0, 1);
+      expect(
+        page.renderer.findByTestId("reveal")?.customProps?.motion,
+      ).toMatchObject({ transition: { duration: 0 } });
+    } finally {
+      page.unmount();
+    }
+
+    // Absence is the house default, not the fail-safe: a `NULL` column is a
+    // setting the application never stored, and a tree that states no
+    // preference keeps its motion. A fresh mount, because the entry frame is
+    // the mount's.
+    const absent = renderComponent(tree(null));
+    try {
+      absent.renderer.clockPause();
+      settle(absent);
+      expect(
+        where(absent.renderer, "reveal", "y") -
+          where(absent.renderer, "frame", "y"),
+      ).toBeCloseTo(12, 1);
+      expect(
+        absent.renderer.findByTestId("reveal")?.customProps?.motion,
+      ).toMatchObject({ transition: { duration: 0.2 } });
+    } finally {
+      absent.unmount();
+    }
+  });
 });
 
 describe("an edge panel", () => {

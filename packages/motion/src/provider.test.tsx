@@ -56,4 +56,37 @@ describe("the motion preference", () => {
     expect(ReactEntry.MotionProvider).toBe(Provider.MotionProvider);
     expect(ReactEntry.useMotionPreference).toBe(Provider.useMotionPreference);
   });
+
+  /**
+   * The bug this guards: the preference is a `MotionPreference` to TypeScript
+   * and a value from storage to the application — a settings row that is `NULL`,
+   * a renamed setting, a checkbox column written as `"true"`. The provider
+   * published whatever it was handed, so `useMotionPreference()` could answer a
+   * value outside its own union and every surface's `=== "reduced"` read false:
+   * a reader who asked for less motion got the journey, with nothing to see.
+   */
+  it("publishes only a name the library carries", () => {
+    expect(
+      markup(
+        <Provider.MotionProvider
+          // @ts-expect-error — a settings row the library did not type-check.
+          preference={"Reduced"}
+        >
+          <Preference />
+        </Provider.MotionProvider>,
+      ),
+    ).toBe("reduced");
+    // Absence is the house default, not the fail-safe: a config that never
+    // carried the setting decodes to a nullish value.
+    expect(
+      markup(
+        <Provider.MotionProvider
+          // @ts-expect-error — a `NULL` column.
+          preference={null}
+        >
+          <Preference />
+        </Provider.MotionProvider>,
+      ),
+    ).toBe("animated");
+  });
 });

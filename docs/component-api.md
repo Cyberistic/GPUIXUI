@@ -537,7 +537,13 @@ so `MotionProvider` takes it:
 
 Under `"reduced"` a tween's duration is zero and no easing is named: the resting
 frame still paints, only the journey is removed. The same rule holds for a
-component that has no provider (the default is `"animated"`).
+component that has no provider (the default is `"animated"`). The setting is a
+**stored** value as often as a literal, so the provider decodes what it is handed
+(`@gpuixui/motion/timing`'s `preferenceOf`): the two names are read as
+themselves, an absent value keeps the `"animated"` default, and a value the
+union does not name — a renamed setting, a checkbox column written as `"true"` —
+is read as `"reduced"`, because animating a reader who asked for less motion is
+the failure the policy exists to prevent.
 
 **A stagger is a delay on the same timing, and it goes with the journey.**
 `delayedTiming` (in the seam) adds one in the seconds the runtime reads, and it

@@ -7,7 +7,9 @@
  * record marks the detection `not supported`). This module is the one place the
  * library's timing is named: five levels shared by every surface, one easing per
  * phase, and the preference policy that collapses a timing to an instant
- * assignment instead of a transition.
+ * assignment instead of a transition — including the rule that reads a
+ * preference an application stored, which is the policy's only input it does not
+ * type.
  *
  * A reduced run still paints its final frame: the semantic state is unchanged,
  * only the journey is removed (openGpui's `MotionPreference::Reduced`).
@@ -59,6 +61,28 @@ export const motionEasings: Readonly<Record<MotionPhase, MotionEasing>> = {
 /** Who owns the preference: the application, because the runtime exposes none. */
 export type MotionPreference = "animated" | "reduced";
 
+/**
+ * The preference the library moves with, read from a value an application stored.
+ *
+ * The preference is a persisted choice — an application reads its motion setting
+ * back from storage and hands it to `MotionProvider` — so the library is handed
+ * values the union never described: a database column that is `NULL`, or a
+ * release that renamed the setting and left the old string behind. Only the two
+ * names the table carries are read as themselves. An **absent** value (nullish,
+ * the rule `Option.fromNullishOr` keeps at every boundary) is the house
+ * `"animated"`, which is what a tree that states no preference has always moved
+ * with. A value that is **present and not a name** takes `"reduced"`, because
+ * the two mistakes are not equal: animating a reader who asked for less motion
+ * is the failure this policy exists to prevent, while removing a journey the
+ * application can see it lost is one a developer fixes.
+ */
+export const preferenceOf = (value: unknown): MotionPreference =>
+  value === "reduced" || value === "animated"
+    ? value
+    : value === null || value === undefined
+      ? "animated"
+      : "reduced";
+
 /** A tween in the shape the runtime's `transition` prop reads. */
 export interface MotionTiming {
   /** Seconds, as the runtime reads it. */
@@ -71,7 +95,10 @@ export interface MotionTiming {
 export interface MotionTimingOptions {
   /** Default `"standard"`. */
   readonly phase?: MotionPhase;
-  /** Default `"animated"`. */
+  /**
+   * Default `"animated"`. A stored value the union does not name is read as
+   * `"reduced"` ({@link preferenceOf}).
+   */
   readonly preference?: MotionPreference;
 }
 
@@ -127,7 +154,7 @@ export const motionTimingOf = (
   options: MotionTimingOptions = {},
 ): MotionTiming => {
   const phase = options.phase ?? "standard";
-  if (options.preference === "reduced") return { duration: 0 };
+  if (preferenceOf(options.preference) === "reduced") return { duration: 0 };
   const ms =
     Number.isFinite(durationMs) && durationMs > 0
       ? durationMs

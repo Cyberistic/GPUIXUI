@@ -178,7 +178,9 @@ export const fadeFromAnchor = (
  *
  * The enter decelerates and the exit accelerates, so the two are separate
  * transitions rather than one shared curve: a surface that speeds up as it
- * leaves reads as being pulled away.
+ * leaves reads as being pulled away. A preference a caller restored from storage
+ * is read by `motionTiming`'s own rule, so a name the union does not carry takes
+ * the reduced policy rather than the journey.
  */
 export const presenceTiming = (
   level: MotionLevel,

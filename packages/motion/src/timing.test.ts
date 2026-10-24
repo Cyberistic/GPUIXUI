@@ -14,6 +14,7 @@ import {
   motionLevels,
   motionTiming,
   motionTimingOf,
+  preferenceOf,
   type MotionLevel,
 } from "./timing.js";
 
@@ -146,6 +147,48 @@ describe("reduced motion", () => {
 
   it("keeps an animated run on its level's own duration and easing", () => {
     expect(motionTiming("normal", { preference: "animated" })).toEqual({
+      duration: 0.2,
+      ease: "easeInOut",
+    });
+  });
+});
+
+describe("a preference the table does not carry", () => {
+  /**
+   * The bug these guard: the preference is a **stored** choice — an application
+   * reads its motion setting back from storage and hands it to `MotionProvider`
+   * — and every timing read `preference === "reduced"` directly. A setting that
+   * came back as a name the union never described (a renamed value, a `"true"`
+   * from a checkbox column) therefore animated a reader who had asked for less
+   * motion, silently, because a reduced run is the one policy this package
+   * cannot leave to the caller's intent.
+   */
+  it("is the reduced policy when it is present and not a name", () => {
+    const stored = ["Reduced", "true", 1, {}];
+    stored.forEach((preference) => {
+      expect(preferenceOf(preference)).toBe("reduced");
+    });
+    // The same rule for the entry points a surface builds its timing with.
+    // @ts-expect-error — a stored value the library did not type-check.
+    expect(motionTiming("normal", { preference: "Reduced" })).toEqual({
+      duration: 0,
+    });
+    // @ts-expect-error — the same untrusted value.
+    expect(motionTimingOf(220, { preference: "System" })).toEqual({
+      duration: 0,
+    });
+  });
+
+  it("is the house animated one when the application stored nothing", () => {
+    // Absence is not the failure above: a nullish value is what a config that
+    // never carried the setting decodes to, and a tree that states no
+    // preference has always moved. The two names are their own answers.
+    [null, undefined].forEach((preference) => {
+      expect(preferenceOf(preference)).toBe("animated");
+    });
+    expect(preferenceOf("reduced")).toBe("reduced");
+    expect(preferenceOf("animated")).toBe("animated");
+    expect(motionTiming("normal")).toEqual({
       duration: 0.2,
       ease: "easeInOut",
     });
