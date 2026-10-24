@@ -31,16 +31,17 @@ import { CodeEditor } from "@gpuixui/editor";
 | `indent` | `string` | `"  "` | The string Tab inserts. An empty string leaves Tab as the platform traversal, and a value that is not a string reads as the default. |
 | `placeholder` | `string` | — | The editor's hint, painted in the theme's `placeholder` role and announced as the field's description; the host is handed none. |
 | `readOnly` | `boolean` | `false` | View-only. |
-| `disabled` | `boolean` | `false` | Not editable, out of the tab order. |
+| `disabled` | `boolean` | `false` | Not editable, out of the tab order, painted with the disabled chrome. |
 | `minRows` / `maxRows` | `number` | — | The runtime's row controls. |
 | `fullWidth` | `boolean` | `false` | Fill the available width. |
 | `label` | `string` | `"Code editor"` | The accessible name. A blank name reads as the default. |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `style` | `StateStyle<CodeEditorState>` | — | The surface, or a function of `{ disabled, focused }`. |
-| `testId` | `string` | `"code-editor"` | The address an automation host locates the editor by. |
+| `testId` | `string` | `"code-editor"` | The address an automation host locates the field by; the surface around it is `${testId}-surface`. |
 
 ## Limitations
 
+- **A disabled editor paints the disabled chrome**: the surface fades by `disabledOpacity` and the field leaves the tab order, so a reader sees the refusal rather than typing into a field that answers nothing — held by `src/behaviour/code-editor.test.tsx`.
 - **A transparent textarea paints no caret** and reports no scroll offset.
 - **Tab and Enter insert at the end**, because the runtime exposes no caret position.
 - **Tab only swallows the traversal when it inserts something**: an empty `indent` leaves the platform's Tab, so a field is never a keyboard trap, and an indent restored from storage that is not a string reads as the default `"  "`.

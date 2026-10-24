@@ -35,7 +35,12 @@ import {
 } from "@gpuixui/primitives/hint";
 import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
-import { nativeTextTheme, syntaxColors, textStyle } from "@gpuixui/tokens";
+import {
+  disabledOpacity,
+  nativeTextTheme,
+  syntaxColors,
+  textStyle,
+} from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -196,10 +201,14 @@ export const CodeEditor = ({
 
   return (
     <div
+      testId={`${testId}-surface`}
       style={mergeStyles(
-        mergeStyles(recipeStyle(cn(EDITOR_ROOT, className), theme), {
-          width: fullWidth ? "100%" : undefined,
-        }),
+        mergeStyles(
+          mergeStyles(recipeStyle(cn(EDITOR_ROOT, className), theme), {
+            width: fullWidth ? "100%" : undefined,
+          }),
+          disabled ? { opacity: disabledOpacity } : {},
+        ),
         resolveStyle(style, state),
       )}
     >

@@ -12,7 +12,7 @@
 import { useState, type ReactNode } from "react";
 import { createTestRoot } from "@gpuix/react/testing";
 import { Button } from "@gpuixui/primitives";
-import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { darkTheme, disabledOpacity, lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -172,6 +172,43 @@ describe("CodeEditor", () => {
     type(editor, "enter");
     expect(onChange).not.toHaveBeenCalled();
     expect(valueOf(editor)).toBe("const a = 1");
+    editor.unmount();
+  });
+
+  it("leaves the tab order and paints the disabled chrome", () => {
+    // The bug this guards: `disabled` documented "painted with the disabled
+    // chrome" and dropped the tab stop, but the surface painted the same as a
+    // live editor — a reader typed into a field that refused every key with
+    // nothing saying why. The `opacity` is the share the library's other
+    // disabled surfaces paint (`@gpuixui/tokens`' `disabledOpacity`).
+    const editor = render(
+      <div>
+        <Button testId="before">Before</Button>
+        <CodeEditor defaultValue="const a = 1" disabled />
+        <Button testId="after">After</Button>
+      </div>,
+    );
+    expect(
+      editor.renderer.findByTestId("code-editor")?.customProps,
+    ).toMatchObject({ tabIndex: -1 });
+    expect(
+      editor.renderer.findByTestId("code-editor-surface")?.style.opacity,
+    ).toBe(disabledOpacity);
+
+    editor.renderer.focusElement(
+      editor.renderer.findByTestId("before")?.id ?? -1,
+    );
+    editor.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(editor)).toEqual(Option.some("after"));
+
+    editor.unmount();
+  });
+
+  it("paints no disabled chrome while it can edit", () => {
+    const editor = render(<CodeEditor defaultValue="const a = 1" />);
+    expect(
+      editor.renderer.findByTestId("code-editor-surface")?.style.opacity,
+    ).toBeUndefined();
     editor.unmount();
   });
 
