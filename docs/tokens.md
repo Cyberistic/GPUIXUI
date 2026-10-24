@@ -1518,6 +1518,14 @@ paint helpers that derive a colour from roles read the same seam: `brandText`,
 gone — the absence rule `elevationShadow` follows for a level — while a `Theme`
 still answers a colour outright, because its type carries the group.
 
+**The primitives reach every role through one seam.** `@gpuixui/primitives` does
+not read `theme.colors` in a painter: `colorRole(theme, role)` in
+`packages/primitives/src/core/theme.ts` is the one read, and it answers
+`undefined` for a role a stored theme lost, so a control keeps the resting fill
+its recipe paints instead of taking the window down. `incomplete.test.ts` walks
+the package's sources — no painter may carry a direct `theme.colors` read, and
+the walk has to find the painters — so a second, direct read fails the suite.
+
 The **numeric paint seams** answer the same way. A control's box and its
 horizontal padding are read through `controlHeight` and `controlPaddingX`, and
 both take a `DensitySource` — a theme, or the shape a store handed back — so a

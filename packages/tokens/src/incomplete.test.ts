@@ -539,6 +539,16 @@ describe("an absent colour group", () => {
       painted.filter(([, source]) => source.includes("colorRole(")).length,
       "the seam is not the route the painters take",
     ).toBeGreaterThan(6);
+
+    // The catalogue teaches the seam beside the tokens' own absence rule, so a
+    // consumer reading §Paint-ready values finds the path the painters take.
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(catalogue).toContain("packages/primitives/src/core/theme.ts");
+    expect(catalogue).toContain("`colorRole(theme, role)`");
   });
 
   it("reads every shipped style as whole", () => {
