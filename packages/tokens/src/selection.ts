@@ -91,6 +91,7 @@
 import {
   alphaOf,
   blend,
+  isColorRole,
   themeColors,
   type ColourSource,
   type ThemeColors,
@@ -304,6 +305,13 @@ export function selectionFailures(
  * The `Theme` overload still answers a colour outright, because its type
  * carries the roles.
  *
+ * A surface **name** this release does not ship is that same absence: a saved
+ * preview or a notification record's surface can carry a role a release
+ * renamed, and there is no fill to composite a wash over. Narrow it with
+ * {@link isColorRole} where the caller can tell the reader what it substituted.
+ * `brandTextOn` answers its anywhere-safe colour for the same input, because a
+ * link that reads everywhere is what an unknown surface can still promise.
+ *
  * The text floor follows the theme's own contrast variant (7:1 in both, through
  * `contrastFloorsFor`), the same rule the gate uses.
  *
@@ -340,13 +348,14 @@ export function selectionOn(
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): string | undefined {
   const colors = themeColors(theme);
-  const fill = colors[surface];
+  const role = isColorRole(surface) ? surface : undefined;
+  const fill = role === undefined ? undefined : colors[role];
   const wash = colors.selection;
   const page = colors.background;
   if (fill === undefined || wash === undefined || page === undefined) {
     return undefined;
   }
-  const inks = inksOn(surface).map((role) => colors[role]);
+  const inks = inksOn(surface).map((ink) => colors[ink]);
   const carries = (candidate: string): boolean => {
     const composed = blend(fill, candidate, alphaOf(candidate));
     const visible = contrastRatio(composed, fill);

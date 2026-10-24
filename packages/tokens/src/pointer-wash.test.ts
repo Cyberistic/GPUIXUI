@@ -397,13 +397,16 @@ describe("the wash a pointer state paints", () => {
     expect(recipe).toContain("hover:bg-hover active:bg-active");
     // The data package's two workspace rows read the helper directly: a chosen
     // row repaints over the `accent` it hovers with and a pointed one over
-    // `hover`, and neither falls back to the raw role while it can derive.
+    // `hover`, and neither falls back to the raw role while it can derive. The
+    // fallback is the role, not a binding name: a row that reads its roles
+    // through `themeColors` may destructure `colors`, and the contract is the
+    // role the press lands on.
     [table, tree].forEach((source, index) => {
       const name = index === 0 ? "table/table.tsx" : "tree/row.tsx";
 
       expect(source, name).toContain('pointerWash(theme, "active", "accent")');
       expect(source, name).toContain('pointerWash(theme, "active", "hover")');
-      expect(source, name).toContain("?? theme.colors.active");
+      expect(source, name).toMatch(/\?\?\s*(\w+\.)*active\b/);
     });
   });
 

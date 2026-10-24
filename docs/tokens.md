@@ -548,6 +548,28 @@ The message's **own copy** keeps the tone's readable role, not the brand:
 by the contrast table, so a warning's body text stays readable while its action
 link keeps as much of the brand as the tint allows.
 
+### A surface name this release does not ship
+
+A surface is content as often as a literal: a saved preview, a notification
+record or a theme-editor row carries the role a run sat on, and a release that
+renames or drops one hands `brandTextOn` a name the palette no longer carries.
+The seam read that name straight out of the group, so the surface was
+`undefined`, no pair could be measured, and the derivation accepted its first
+candidate — the **raw fill role** came back as if it had been checked. That is
+the exact colour this page opens with (4.30:1 on the `active` wash in the base
+light theme), so the answer for an unknown surface was the one colour the
+function exists to replace.
+
+`isColorRole` is the membership test the role index ships: every role of every
+shipped palette is accepted, and a name from another release — or a prototype
+key such as `toString`, which `name in lightColors` also answers — is not. An
+unknown surface answers the **anywhere-safe brand**, `brandText(theme)`, the one
+claim that can still be made about a surface nobody can measure: it reads on
+every surface a link can sit on, at the theme's own floor. `selectionOn` answers
+absence for the same input instead, because a wash is only meaningful over a
+surface it can composite. Narrow a stored name with `isColorRole` where the
+caller can tell the reader what it substituted.
+
 The other text a component writes in a status colour — a required marker, a
 field error, an inline warning — is not `brandText`'s job: a status tone has its
 own readable role, `statusTone(theme, tone).foreground`, measured as page text

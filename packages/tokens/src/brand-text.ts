@@ -42,6 +42,7 @@
 
 import {
   blend,
+  isColorRole,
   themeColors,
   type ColourSource,
   type ThemeColors,
@@ -122,6 +123,19 @@ const derivedBrandText = (
 };
 
 /**
+ * The test {@link brandText} holds a colour to: it reads on every surface a
+ * link can sit on. The same test answers a run whose surface name this release
+ * does not ship — the anywhere-safe colour is the one thing that can be said
+ * about a surface nobody can measure.
+ */
+const anywhereLegible =
+  (theme: BrandSource, floors: ContrastFloors) =>
+  (colour: string): boolean => {
+    const ratio = worstRatio(theme, colour);
+    return ratio === undefined || ratio >= floors.secondary;
+  };
+
+/**
  * The colour a link, a text action or any brand-coloured run paints.
  *
  * The theme's `primary` when it already clears the floor on every surface a
@@ -153,11 +167,7 @@ export function brandText(
   theme: BrandSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): string | undefined {
-  const legible = (colour: string): boolean => {
-    const ratio = worstRatio(theme, colour);
-    return ratio === undefined || ratio >= floors.secondary;
-  };
-  return derivedBrandText(theme, legible);
+  return derivedBrandText(theme, anywhereLegible(theme, floors));
 }
 
 /**
@@ -176,6 +186,16 @@ export function brandText(
  * own contrast variant (4.5:1 default, 7:1 high contrast), a 2% step toward
  * `foreground`, no step past it, and a brand or surface it cannot measure is
  * returned unchanged rather than replaced by a guess.
+ *
+ * A **surface name this release does not ship** is content as often as a
+ * literal — a saved theme preview, a notification record's surface, a
+ * theme-editor row — and the one claim that can be made about it is the one
+ * {@link brandText} makes: the colour that reads on every surface a link can sit
+ * on. It is not the raw fill role, which is under the floor on some of them
+ * (the base light brand is 4.30:1 on `active` and the role itself is 4.5:1 on its
+ * own on-colour), so an unknown surface answers the anywhere-safe brand rather
+ * than a colour nobody measured. Narrow a stored name with {@link isColorRole}
+ * where the caller can tell the reader what it substituted.
  *
  * A source that has lost the group answers `undefined`, the same absence rule
  * {@link brandText} follows.
@@ -202,8 +222,12 @@ export function brandTextOn(
   surface: keyof ThemeColors,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): string | undefined {
+  const role = isColorRole(surface) ? surface : undefined;
+  if (role === undefined) {
+    return derivedBrandText(theme, anywhereLegible(theme, floors));
+  }
   const legible = (colour: string): boolean => {
-    const ratio = contrastRatio(colour, themeColors(theme)[surface]);
+    const ratio = contrastRatio(colour, themeColors(theme)[role]);
     return ratio === undefined || ratio >= floors.secondary;
   };
   return derivedBrandText(theme, legible);

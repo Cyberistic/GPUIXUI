@@ -20,7 +20,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { alphaOf, blend, lightColors, palette } from "./color.js";
+import { alphaOf, blend, isColorRole, lightColors, palette } from "./color.js";
 import {
   contrastFloors,
   contrastRatio,
@@ -975,6 +975,19 @@ describe("the wash a theme cannot derive", () => {
     expect(selectionOn(without("selection"), "background")).toBeUndefined();
     expect(selectionOn(without("background"), "background")).toBeUndefined();
     expect(selectionOn(without("infoSoft"), "infoSoft")).toBeUndefined();
+  });
+
+  it("answers undefined for a surface name this release does not ship", () => {
+    // A surface is content: a saved preview or a record can name a role another
+    // release carried. There is no fill to composite, so the seam answers the
+    // absence — where `brandTextOn` answers its anywhere-safe colour for the
+    // same input, because a link that reads everywhere is still a promise.
+    const unknown = "cardHover" as keyof typeof lightColors;
+    expect(isColorRole(unknown)).toBe(false);
+    expect(selectionOn(lightTheme, unknown)).toBeUndefined();
+    expect(page("../../../docs/tokens.md")).toContain(
+      "A surface name this release does not ship",
+    );
   });
 
   it("still reads a complete theme's own wash", () => {

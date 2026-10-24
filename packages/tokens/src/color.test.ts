@@ -16,6 +16,7 @@ import {
   highContrastDarkColors,
   highContrastLightColors,
   invalidColorRoles,
+  isColorRole,
   isPaintableColor,
   lightColors,
   palette,
@@ -157,6 +158,35 @@ describe("colour roles", () => {
         expect(colors[role], `${label}.${role}`).toBeDefined();
       });
     });
+  });
+
+  it("narrows a stored role with the index, not the palette", () => {
+    // Every role of every shipped palette is in the release's vocabulary.
+    colourSets.forEach(({ label, colors }) => {
+      Object.keys(colors).forEach((role) => {
+        expect(isColorRole(role), `${label}.${role}`).toBe(true);
+      });
+    });
+    // `name in colors` would accept the prototype's own names, which is why the
+    // membership test is the index's; a name another release carried is the
+    // same refusal.
+    [
+      "toString",
+      "constructor",
+      "__proto__",
+      "",
+      "cardHover",
+      "Primary",
+    ].forEach((stored) => {
+      expect(isColorRole(stored), stored).toBe(false);
+    });
+    [null, undefined, 1, {}, []].forEach((stored) => {
+      expect(isColorRole(stored), String(stored)).toBe(false);
+    });
+    // The narrowing a boundary consumer gets: a stored string becomes a role
+    // only where the index carries it.
+    const stored: unknown = "selected";
+    expect(isColorRole(stored) ? stored : "background").toBe("selected");
   });
 });
 

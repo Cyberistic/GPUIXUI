@@ -98,7 +98,11 @@ floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. A run
 that knows its surface asks for it: a link inside an `Alert`'s description sits
 on that message's `xSoft` tint, where the shared colour is under the floor in 28
 of the 72 tint placements (macOS dark on `warningSoft` measures 3.43:1), so it
-paints `brandTextOn(theme, surface)`. The message's own copy keeps the tone's
+paints `brandTextOn(theme, surface)`. A **surface name this release does not
+ship** — a saved preview, a record's surface, a theme-editor row — answers the
+anywhere-safe brand, `brandText(theme)`, rather than the unmeasured fill role;
+`isColorRole` narrows a stored name at the boundary, and `selectionOn` answers
+absence for the same input. The message's own copy keeps the tone's
 readable role. The same rule covers status text: a required marker or a field
 error paints `statusTone(theme, tone).foreground`, the tone's readable role,
 never the solid fill. See `docs/tokens.md` §Brand text.

@@ -471,6 +471,13 @@ the floor there in 28 of the 72 tint placements (macOS dark on `warningSoft`
 measures 3.43:1), so it paints `brandTextOn(theme, "infoSoft")` — the same
 derivation held to one role.
 
+A **surface name this release does not ship** is content too — a saved preview,
+a record's surface, a theme-editor row — and it answers the anywhere-safe brand
+(`brandText`), not the raw fill role the seam returned when it could not measure
+the surface (the 4.30:1 colour above). `isColorRole` is the index's membership
+test, so a boundary narrows a stored name before a seam sees it; `selectionOn`
+answers absence for the same input.
+
 Status text — a required marker, a field error — is
 `statusTone(theme, tone).foreground`, the tone's readable role.
 

@@ -21,7 +21,7 @@ import {
   messageLinkStyles,
   paleBrand,
 } from "./brand-text.example.js";
-import { alpha } from "./color.js";
+import { alpha, isColorRole } from "./color.js";
 import { contrastFloorsFor } from "./contrast.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
 import { platformNames } from "./platforms.js";
@@ -551,5 +551,66 @@ describe("brand text on a message's own tint", () => {
       `under the text floor on ${under.length} of the ${placements.length} tint`,
     );
     expect(seam).toContain(`the ${everyTheme.length} shipped styles`);
+  });
+});
+
+/**
+ * Guards the surface-name boundary of {@link brandTextOn}.
+ *
+ * The bug this holds: the surface was read straight out of the colour group, so
+ * a stored name this release does not ship answered `undefined` for the pair and
+ * `contrastRatio` could not measure it — the derivation's test accepted its first
+ * candidate and the seam returned the **raw fill role**, the exact colour this
+ * file opens with (4.30:1 on the `active` wash in the base light theme).
+ * `selectionOn` answered absence for the same input, so the two seams disagreed
+ * about what an unshipped role name is. An unknown surface answers the
+ * anywhere-safe brand now, which is the one claim that can still be made.
+ */
+describe("a surface name this release does not ship", () => {
+  /** A stored surface name, the way a saved preview or a record carries one. */
+  const stored = (value: string): keyof typeof lightTheme.colors =>
+    value as keyof typeof lightTheme.colors;
+
+  /** The four surfaces a consumer learns the rule from. */
+  const documents = (): Readonly<Record<string, string>> => ({
+    "docs/tokens.md": source("../../../docs/tokens.md").replace(/\s+/g, " "),
+    "docs/design-system.md": source("../../../docs/design-system.md").replace(
+      /\s+/g,
+      " ",
+    ),
+    "packages/tokens/README.md": source("../README.md").replace(/\s+/g, " "),
+    "COMPONENTS.md": source("../../../COMPONENTS.md").replace(/\s+/g, " "),
+  });
+
+  it("answers the anywhere-safe brand, not the unmeasured fill", () => {
+    const unknown = stored("cardHover");
+
+    // The premise: the raw role is under the floor on a surface a link sits on.
+    expect(
+      contrastRatio(lightTheme.colors.primary, lightTheme.colors.active),
+    ).toBeCloseTo(4.3, 1);
+    expect(brandTextOn(lightTheme, unknown)).toBe(brandText(lightTheme));
+    expect(brandTextOn(darkTheme, unknown)).toBe(brandText(darkTheme));
+    expect(brandTextOn(lightTheme, unknown)).not.toBe(
+      lightTheme.colors.primary,
+    );
+    expect(isColorRole(unknown)).toBe(false);
+  });
+
+  it("reads on every surface a link can sit on, in every shipped style", () => {
+    everyTheme.forEach(([label, theme]) => {
+      const colour = brandTextOn(theme, stored("cardHover"));
+      expect(worstRatio(theme, colour) ?? 0, label).toBeGreaterThanOrEqual(
+        contrastFloorsFor(theme).secondary,
+      );
+    });
+  });
+
+  it("names the rule and the guard where a consumer reads it", () => {
+    Object.entries(documents()).forEach(([name, text]) => {
+      expect(text, name).toContain("isColorRole");
+      expect(text, name).toContain("surface name this release does not ship");
+      expect(text, name).toContain("anywhere-safe brand");
+    });
   });
 });

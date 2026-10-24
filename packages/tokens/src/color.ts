@@ -811,6 +811,49 @@ export const colorRoles = [
   "shadow",
 ] as const satisfies readonly (keyof ThemeColors)[];
 
+/**
+ * A role the index forgets, as a build error.
+ *
+ * `colorRoles` is the one place the set is written down: the documentation
+ * tables and {@link invalidColorRoles} iterate it, and {@link isColorRole}
+ * narrows a stored role with it. A role added to `ThemeColors` without a line
+ * here would be a role no report checks and no consumer can narrow, so the
+ * assignment below fails the package's type check with the missing role named.
+ */
+type EveryColorRoleListed<Listed extends keyof ThemeColors> =
+  Exclude<keyof ThemeColors, Listed> extends never
+    ? true
+    : [
+        "a colour role is missing from the index",
+        Exclude<keyof ThemeColors, Listed>,
+      ];
+
+const colorRoleIndex: EveryColorRoleListed<(typeof colorRoles)[number]> = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void colorRoleIndex;
+
+/**
+ * Narrow unknown input — a saved surface name, a theme-editor row, a
+ * notification record's surface — to a role of this release's palette.
+ *
+ * Membership is the index's, not a palette's: `name in lightColors` also answers
+ * true for the names `Object.prototype` carries (`toString`, `constructor`), so
+ * a stored name would pass and the seam would read a method where a colour
+ * belongs. A name this release does not ship is refused, which is what lets a
+ * paint seam answer its own safe fallback instead of measuring a surface that
+ * does not exist.
+ *
+ * @example
+ * ```ts
+ * import { isColorRole } from "@gpuixui/tokens";
+ *
+ * isColorRole("selected"); // true — a surface a row paints
+ * isColorRole("cardHover"); // false — no such role in this release
+ * ```
+ */
+export const isColorRole = (value: unknown): value is keyof ThemeColors =>
+  colorRoles.some((role) => role === value);
+
 /** A semantic role whose value is not a colour GPUix can paint. */
 export interface InvalidColorRole {
   /** The role, in documentation order. */
