@@ -10859,7 +10859,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
     (`'fallback' is declared but its value is never read`), not on these paths.
     Docs: `docs/table-sorting.mdx` §A saved order is read, the README's restored-
     state row and §Usage, and the Tier 3 Sortable tables row. No native scenario
-    applies — a boundary read with no paint path of its own. Owner: data.
+    applies — a boundary read with no paint path of its own. Owner: data. The
+    ledger hunks were carried into other agents' commits by the shared index:
+    the code, the test and the page in `c622541a3`, the README row, the
+    inventory row and the root export in `bc609a954`/`658dc5ea5` (which name the
+    reader), and this entry in `eb2852ebd`.
+    Verified: unit 246/246, `test:behaviour` 159/159 in the real renderer, and
+    live `--only data-table-lifecycle` (1/1, 27 s) — the controller's own path
+    in a window.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
