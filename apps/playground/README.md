@@ -7955,7 +7955,7 @@ Three rules a switch plan can use:
    with the platform's own box — so its travel is that box's, not the accent
    switch's.
 
-47 checks, `--only switch-lifecycle`, green on 0.11.0 here (11.0–15.1 s over
+47 checks, `--only switch-lifecycle`, green on 0.11.0 here (11.0–13.9 s over
 three runs, seven captures: `switch-rest`, `switch-on`, `switch-platform-off`,
 `switch-platform-on`, `switch-frozen`, `switch-partial`, `switch-settled`).
 Fixture `src/live/switch.ts` + probe `src/live/switch-probe.tsx` +

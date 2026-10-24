@@ -7706,7 +7706,7 @@ a merge over a stored theme.
       derived **hover** fill rather than the role it rests on until the pointer
       leaves — a probe that reads the fill at press time measures the wrong
       state. 47 checks, `--only switch-lifecycle`, green on 0.11.0 here
-      (11.0–15.1 s, three runs). Fixture `src/live/switch.ts` (the ids, the
+      (11.0–13.9 s, three runs). Fixture `src/live/switch.ts` (the ids, the
       page's own backing, the frozen-clock offsets and the frame/inset
       arithmetic) + `switch-probe.tsx` (the view and the steps) +
       `switch.test.ts` (14 cases: the frame read on a synthetic capture in both
