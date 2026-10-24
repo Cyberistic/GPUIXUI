@@ -1253,7 +1253,8 @@ selection arrive from storage as often as they are literals, and each component
 reads the saved value at its boundary rather than painting a record's `null`; the
 package page that documents the answer is shadowed by the curated page for these
 components, so `src/lib/stored-value-page.test.ts` derives each reader's own
-fallback branch and holds the served row to the clause that says what it paints.
+fallback branch and holds the served page's row — or the cell that names the
+prop inside a shared table — to the clause that says what it paints.
 
 ### The page's own file
 
