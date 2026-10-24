@@ -786,6 +786,12 @@ export const liveRegistry = [
       "Scroll: a pinned title is a repositioned layer that holds at the viewport's top, paints opaquely over the rows under it and takes no press from the row beneath",
     capability: "scroll",
   },
+  {
+    id: "panel-group-lifecycle",
+    title:
+      "Panel: the shipped panel group paints its fractions in a window, collapses from the traversal and frees a share the page shows through, and a focused divider resizes it from the keyboard",
+    capability: "panel",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

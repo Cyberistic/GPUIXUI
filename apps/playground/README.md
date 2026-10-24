@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-125 probes a real window can prove, of which twenty-eight mount shipped
+126 probes a real window can prove, of which twenty-eight mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7132,6 +7132,42 @@ id set and the limitation recorded below). Evidence:
 `apps/playground/README.md` §`pinned-list-lifecycle`,
 `.artifacts/live/pinned-list-{rest,scrolled,end}.png`.
 
+### `panel-group-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/dock` `PanelGroup`, three panes at 640×320 in a
+900×520 window: `sidebar` 20% (collapsible), `editor` 55%, `inspector` 25%
+(collapsible), each pane painting its own caller fill. `panel-group-core` holds
+the group's arithmetic in the offscreen renderer; this probe paints the same
+group in a window and presses it through the native traversal.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the group is 640×320; the initial readout is `panes=sidebar:20,editor:55,inspector:25 collapsed=none`; the panes paint 125.6 / 345.4 / 157 of the 628-point pane space, and the three panes plus both 6-point dividers are the group's whole width |
+| at rest | each divider starts on the edge its pane ends at (125.6 and 477 from the group's left edge) |
+| capture `panel-group-rest` | each pane's own fill covers the share it was given, sampled clear of its header and its line of copy |
+| `Tab` then `Enter` from a parked stop | the first stop inside the group is the sidebar's header toggle: the readout reports `collapsed=sidebar`, the pane shrinks to its header, and its body is gone from the painted text |
+| capture `panel-group-collapsed` | the panes that stay open keep 0.8 of the freed share and the remaining 0.2 paints the **page** at the group's right edge, not a pane — the measured gap |
+| `Enter` again | the pane expands and paints its fraction again |
+| `Tab` | the traversal lands on `panel-group-divider-0` |
+| `right` / `left` | one 16-point step moves the split (`sidebar:23,editor:52`), the painted panes follow by exactly 16, and the left arrow returns them |
+
+**The pointer half is not measured here.** The group's dividers are the same
+`Divider` the previous probe records as blocked: its `highlight` layer takes the
+press the control would have taken, so a drag starts nothing. This probe does
+not repeat that defect as a passing row — it measures the layout, the paint, the
+traversal and the keyboard, and `dock-split-lifecycle` carries the blocker.
+
+**Measured gap**: a collapsed pane leaves its freed share blank because the
+runtime treats `flexGrow` as a share of the free space rather than a weight over
+the panes present. The probe derives the strip from the collapsed box it
+measured, so a component that normalises the remaining shares moves both the
+geometry and the captured page-coloured band together, and the check fails until
+the sentence and the capture move with it.
+
+48 checks, `--only panel-group-lifecycle`, green on 0.11.0 (~3.7–7.7 s). Evidence:
+`.artifacts/live/panel-group-{rest,collapsed}.png`.
+
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7380,7 +7416,7 @@ narrower. Each deviation is deliberate and measured:
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
   `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
-  `motion-interruption` (67
+  `motion-interruption` and `panel-group-lifecycle` (68
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples

@@ -1127,6 +1127,7 @@ import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import { RatingProbe, ratingSteps } from "./rating-probe.js";
 import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
+import { PanelGroupProbe, panelGroupSteps } from "./panel-group-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -30646,5 +30647,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "pinned-list-lifecycle",
     view: () => <PinnedListProbe />,
     steps: pinnedSteps,
+  },
+  "panel-group-lifecycle": {
+    id: "panel-group-lifecycle",
+    view: () => <PanelGroupProbe />,
+    steps: panelGroupSteps,
   },
 };
