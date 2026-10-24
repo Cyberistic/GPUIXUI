@@ -1429,7 +1429,10 @@ The extension mechanism is deliberately small:
 - `extendTheme(base, overrides)` — derive from any theme, including another
   brand theme or a high-contrast theme.
 - `applyStyle(base, style)` — apply a whole look (`PlatformStyle`) at once;
-  `platformTheme` and `retroTheme` are the two tables it reads.
+  `platformTheme` and `retroTheme` are the two tables it reads. It applies to a
+  **base theme**, never to another resolved style: a style is a look over a
+  base, not a layer over a look (§5), and a brand is `extendTheme` over the
+  result.
 - `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
   (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
   colour, a selection wash). It chooses each filled role's on-colour by

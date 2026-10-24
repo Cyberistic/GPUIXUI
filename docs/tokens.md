@@ -950,10 +950,10 @@ Five rules the mechanism keeps:
 - **Every platform palette is measured on the same role pairs as the built-in
   themes.** `platforms.test.ts` holds all six platform themes to the contrast
   floors, so a platform cannot ship unreadable text.
-- **A style goes over a base, not over a look.** A style is a look over a base,
-  not a layer over a look: every palette here is partial and designed against
-  the base it lands on, and a theme does not record that it already wears one —
-  so stacking two shipped looks mixes their colours. `applyStyle(retroTheme(themes.light, "luna"), platformStyles.win32)`
+- **A style is a look over a base, not a layer over a look.** Every palette here
+  is partial and designed against the base it lands on, and a theme does not
+  record that it already wears one — so stacking two shipped looks mixes their
+  colours. `applyStyle(retroTheme(themes.light, "luna"), platformStyles.win32)`
   fails the gate on a `ring` the platform paints over Luna's `secondary` at
   **2.90:1** (under the 3:1 boundary floor) and four decorative placements under
   1.05:1, and `applyStyle(retroTheme(themes.dark, "omarchy"), platformStyles.linux)`
