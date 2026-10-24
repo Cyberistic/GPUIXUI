@@ -58,7 +58,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
     page: "dialog.mdx",
     packagePage: "packages/components/docs/dialog.mdx",
     painters: ["packages/components/src/dialog.tsx"],
-    flags: ["tabIndex={presence.present ? undefined : -1}"],
+    flags: ["presenceTabStop(presence.present)"],
     window: {
       kind: "level",
       level: "slow",
@@ -70,7 +70,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
     page: "drawer.mdx",
     packagePage: "packages/components/docs/drawer.mdx",
     painters: ["packages/components/src/drawer.tsx"],
-    flags: ["tabIndex={presence.present ? undefined : -1}"],
+    flags: ["presenceTabStop(presence.present)"],
     window: {
       kind: "level",
       level: "slow",
@@ -82,7 +82,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
     page: "toast.mdx",
     packagePage: "packages/components/docs/toast.mdx",
     painters: ["packages/components/src/toast/viewport.tsx"],
-    flags: ["tabIndex={present ? undefined : -1}"],
+    flags: ["presenceTabStop(present)"],
     window: {
       kind: "explicit",
       milliseconds: 180,
@@ -184,6 +184,17 @@ describe("the pages that document a dismissed surface", () => {
     expect(presence).toContain("PresenceShield");
     expect(presence).toContain("Tab order");
     expect(presence).toContain("inherited `inert`");
+  });
+
+  it("derives the own-control stop from the seam's one rule", () => {
+    // A surface's own control reads `presenceTabStop`, so the `-1` is defined
+    // once instead of copied per painter — the guard follows the seam rather
+    // than one spelling of its result.
+    const start = presence.indexOf("export const presenceTabStop");
+    const rule = presence.slice(start, start + 400);
+
+    expect(rule).toContain("tabIndex: -1");
+    expect(rule).not.toContain("tabIndex: 0");
   });
 
   it("finds every painter's own flag and exit window", () => {
