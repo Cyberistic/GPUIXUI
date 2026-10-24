@@ -81,7 +81,9 @@ and each is read through a membership test rather than indexed raw:
   reads a name the scale does not carry as `body`, the answer `typeOf` gives.
   The class name otherwise became `type-undefined`, which resolves to no size,
   leading or weight at all: the run painted the runtime's default face instead of
-  body copy.
+  body copy. The membership test is `@gpuixui/tokens`' own `textRoles`/`isTextRole`
+  (this package re-exports it), so a role the scale grows is read here without a
+  second list to edit.
 - a **text `tone`** is written into an audit row, a saved message or a settings
   record, so `isTextTone`/`textToneOf` (`core/style.ts`) read a name the table
   does not carry as `default`; the class string otherwise lost its colour and

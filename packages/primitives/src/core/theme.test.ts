@@ -4,7 +4,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { keyboardFocusRing, typography as libraryScale } from "@gpuixui/tokens";
+import {
+  isTextRole as tokenTextRole,
+  keyboardFocusRing,
+  textRoles,
+  typography as libraryScale,
+} from "@gpuixui/tokens";
 import { sliderInset, sliderTrackStyle } from "./style.js";
 import { controlStyle } from "./style.js";
 import { keyboardRing } from "./focus.js";
@@ -331,6 +336,18 @@ describe("a type role is read through one seam", () => {
     expect(typeOf(testTheme, "bodyy")).toEqual(testTheme.typography.body);
     expect(typeOf(testTheme, undefined)).toEqual(testTheme.typography.body);
     expect(typeOf({}, "bodyy")).toEqual(libraryScale.body);
+  });
+
+  it("reads stored roles through the token guard, not a second list", () => {
+    // The bug this holds: the seam kept its own `R.keys(typography)` list beside
+    // the token package's published index, so a role the tokens package grew
+    // would be accepted by the guard a consumer iterates and refused here — the
+    // primitive would paint `body` for a role the library documents.
+    expect(
+      isTextRole,
+      "the primitives must read the token package's role index, not a second list",
+    ).toBe(tokenTextRole);
+    expect(Arr.every(textRoles, isTextRole)).toBe(true);
   });
 
   it("reads the font family the same way", () => {

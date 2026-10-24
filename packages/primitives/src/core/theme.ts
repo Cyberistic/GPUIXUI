@@ -9,6 +9,7 @@
 
 import {
   isControlSize,
+  isTextRole,
   typography as libraryTypography,
   type ControlSize,
 } from "@gpuixui/tokens";
@@ -19,9 +20,9 @@ import type {
   TextStyle,
   Theme,
 } from "@gpuixui/tokens";
-import * as Arr from "effect/Array";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
+
+export { isTextRole };
 
 export type {
   BoxShadow as ThemeShadow,
@@ -74,23 +75,6 @@ export interface TypeSource {
     readonly mono?: string | null;
   } & Partial<Record<TextRole, TextStyle | null>>;
 }
-
-/** The scale's names, as a list a stored value can be checked against. */
-const SCALE_NAMES: ReadonlyArray<string> = R.keys(libraryTypography);
-
-/**
- * Whether a value names a role of the type scale.
- *
- * A role is a stored choice — a heading level, a caption's role — so a name a
- * release renamed arrives as a string the union no longer names. The scale's own
- * list is the membership test, exactly as `isControlSize` is beside
- * `controlSizes`: a second list of the names could drift from the scale.
- */
-export const isTextRole = (value: unknown): value is TextRole =>
-  typeof value === "string" &&
-  Arr.contains(SCALE_NAMES, value) &&
-  value !== "sans" &&
-  value !== "mono";
 
 /**
  * Whether a value is a type role: the size, the leading and the weight.
