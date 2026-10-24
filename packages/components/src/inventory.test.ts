@@ -4,14 +4,16 @@
  * This suite fails when a component is marked `done` without a native behaviour
  * test, when a docs page or example named by a record does not exist, when a
  * `COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
- * finished Tier 2 row has no record, when two records claim the same name or
- * docs page, when one Tier 2 component has two rows (a stray `todo` copy beneath
- * the real one used to hide there), when a row's stated native test count
+ * finished Tier 2 row has no record (a `done (composed)` row excepted: it ships
+ * a documented composition, not a component), when two records claim the same
+ * name or docs page, when one Tier 2 component has two rows (a stray `todo` copy
+ * beneath the real one used to hide there), when a row's stated native test count
  * disagrees with the behaviour suite (plan 139), and when a record or a row
  * justifies a control with a package that shipped long ago. It is the automated
  * form of plan 117 §1.
  *
- * The date picker landed in plan 119, so every Tier 2 row now has a record.
+ * The date picker landed in plan 119, so every Tier 2 row now has a record or
+ * is composed.
  * `node:fs` is used here only because this is a test-time repository check —
  * plan 117 §3 authorises it, and nothing in the component runtime imports it.
  */
@@ -129,6 +131,18 @@ const packageRows = (): ReadonlyArray<Row> => [
   ...animatedRows(),
 ];
 
+/**
+ * Whether a row owes this package an inventory record.
+ *
+ * A **composed** row ships no component of its own — it is a documented
+ * composition of parts from this package and the primitives, with no docs page,
+ * example or behaviour suite a record could name — so it owes none. The marker
+ * is the status, not a component's name, so a component row cannot claim the
+ * exemption.
+ */
+const owesRecord = (row: Row): boolean =>
+  row.status !== "todo" && row.status !== "done (composed)";
+
 const duplicates = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.filter(values, (value, index) => values.indexOf(value) !== index);
 
@@ -185,13 +199,31 @@ describe("inventory", () => {
 
   it("has a record for every package row that is no longer todo", () => {
     const problems = Arr.filter(
-      Arr.filter(packageRows(), (row) => row.status !== "todo"),
+      Arr.filter(packageRows(), owesRecord),
       (row) => !Arr.some(inventory, (meta) => meta.name === row.name),
     ).map(
       (row) => `${row.name}: row is ${row.status} with no inventory record`,
     );
 
     expect(problems).toEqual([]);
+  });
+
+  it("asks a composed row for no record it cannot have", () => {
+    // `Auth` is four cards composed over `Card` and the primitives and
+    // documented as examples, so it has no page, example or suite a record
+    // could name. The exemption is the row's own status, so a component that
+    // shipped one cannot hide behind it.
+    const row = (name: string, status: string): Row => ({
+      name,
+      status,
+      support: "yes",
+      notes: "",
+    });
+
+    expect(owesRecord(row("Auth", "done (composed)"))).toBe(false);
+    expect(owesRecord(row("Button", "done"))).toBe(true);
+    expect(owesRecord(row("Toggle", "wip"))).toBe(true);
+    expect(owesRecord(row("Calendar", "todo"))).toBe(false);
   });
 
   it("has no duplicate names, docs pages or examples", () => {
