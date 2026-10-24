@@ -4134,7 +4134,9 @@ scale's own keys with a type-level guard failing a step it forgets.
 `iconSizeFromStoredChoice` in the catalogue's [Persisted
 choices](#persisted-choices) example is the narrowing written out.
 `avatarSizes` is the four avatar steps and `isAvatarSize` narrows a restored
-one. `avatarPixels(size)` resolves the diameter and reads a name this release
+one, and the index is the diameter record's own keys in documentation order,
+with the same type-level guard failing a step it forgets. `avatarPixels(size)`
+resolves the diameter and reads a name this release
 does not ship as `md`, the rule `iconPixels` follows: a bare lookup answered
 `undefined`, which the renderer drops, so the mark painted with no side. Both
 guards read the index, not the record — `name in avatarSize` (or in `iconSize`)

@@ -389,7 +389,33 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 264/264
+`[x]` `[██████████]` 265/265
+
+`[x]` Hold the **avatar index to its diameter record at the type level**, the
+one persisted axis the guard series left behind — `spacingSteps`, `radiusSteps`
+and `iconSizes` each carry an `Every…StepListed` guard that fails `check-types`
+with the forgotten step named, and `avatarSizes` was the only index written as a
+bare `as const`: a step added to `AvatarSize` without a line was silently absent
+from the vocabulary a contact list, a settings row or an inspector panel stores,
+and the `Design tokens` inventory row meanwhile told a reader the icon **and
+avatar** scales were "held to their records by a type-level guard, so a step
+added to `IconSize` or `AvatarSize` without a line fails `check-types` naming
+it" — a claim the avatar half falsified. `avatarSizes` now carries
+`satisfies readonly (keyof AvatarSize)[]` and `EveryAvatarStepListed`, so the
+scale and its index cannot drift in either direction, and its docs state that it
+is the fixed record's own keys in documentation order. `guards.test.ts`'s avatar
+case holds the order a size picker iterates (`Object.keys(avatarSize)` against
+the index) instead of only set equality, which is the rule the spacing, radius
+and icon cases already hold. Directions measured: with `xl: 48` added to both
+`AvatarSize` and `avatarSize`, `tsc -p packages/tokens/tsconfig.json --noEmit`
+fails `src/scale.ts(307,7): error TS2322: Type 'boolean' is not assignable to
+type '["an avatar step is missing from the index", "xl"]'`, while the same tree
+with HEAD's bare index compiles clean; reordering the record to `xs, sm, lg, md`
+fails the avatar case `expected [ 'xs', 'sm', 'lg', 'md' ] to deeply equal [
+'xs', 'sm', 'md', 'lg' ]`. Green: 53 files / **3 127** tests, `check-types`,
+`check:tests` and `oxfmt` clean. Docs: `docs/tokens.md` §Borders, icons and
+identity marks and the index's own JSDoc; the `Design tokens` row's claim is now
+the code's. No native scenario applies — an index and the compile guard over it.
 
 `[x]` Read a **platform style a store hands back** as the style it is — the
 mission's platform styles are "real, editable token themes … a consumer can take

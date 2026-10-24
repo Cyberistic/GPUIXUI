@@ -198,12 +198,14 @@ describe("indexes match the data they select", () => {
 
   /**
    * The avatar scale is fixed rather than a theme group, so its index is held to
-   * the record's own keys: a step the scale grows must be listed, and a listed
-   * name the record does not carry has nothing to resolve.
+   * the record's own keys in documentation order: a step the scale grows must be
+   * listed (the package's type check refuses it otherwise, `EveryAvatarStepListed`
+   * in `scale.ts`), a step it drops must leave the index, and the order a size
+   * picker iterates is the order the catalogue prints.
    */
-  it("names every step of the avatar scale", () => {
+  it("names every step of the avatar scale, in order", () => {
+    expect(Object.keys(avatarSize)).toEqual([...avatarSizes]);
     expect(new Set(avatarSizes)).toEqual(new Set(Object.keys(avatarSize)));
-    expect(avatarSizes).toHaveLength(Object.keys(avatarSize).length);
   });
 
   /**

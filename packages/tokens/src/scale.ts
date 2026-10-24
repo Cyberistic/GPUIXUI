@@ -273,12 +273,38 @@ export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
  *
  * The index a size picker iterates and the guard reads, so a stored diameter —
  * a saved contact list's density, a settings row's preview — is narrowed
- * without retyping the four names or casting the value.
+ * without retyping the four names or casting the value. It is the fixed
+ * scale's own keys in the order the catalogue prints them.
  */
-export const avatarSizes = ["xs", "sm", "md", "lg"] as const;
+export const avatarSizes = [
+  "xs",
+  "sm",
+  "md",
+  "lg",
+] as const satisfies readonly (keyof AvatarSize)[];
 
 /** A step of the avatar scale, by name. */
 export type AvatarSizeName = (typeof avatarSizes)[number];
+
+/**
+ * An avatar step the index forgets, as a build error — the spacing index's rule.
+ *
+ * The scale is fixed rather than a theme group, so its steps are the whole
+ * persisted vocabulary a contact list or a settings row can name: a step added
+ * to `AvatarSize` without a line here would be a stored name no guard can
+ * narrow and no resolver answers.
+ */
+type EveryAvatarStepListed<Listed extends AvatarSizeName> =
+  Exclude<keyof AvatarSize, Listed> extends never
+    ? true
+    : [
+        "an avatar step is missing from the index",
+        Exclude<keyof AvatarSize, Listed>,
+      ];
+
+const avatarIndex: EveryAvatarStepListed<(typeof avatarSizes)[number]> = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void avatarIndex;
 
 /**
  * Narrow unknown input — a stored avatar size — to a step of the scale.
