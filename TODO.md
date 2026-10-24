@@ -21832,6 +21832,22 @@ numbers).
 
 `[x]` `[██████████]` 10/10
 
+`[ ]` `packages/components`: **a stored "no entrance" reads as an entrance** —
+      four surfaces widen their `level` prop past the motion table —
+      `PageTransition`, `CodeBlock`, `CopyButton` and `ThemeToggler` accept
+      `MotionLevel | "none"`, where `"none"` means "paint the resting frame in
+      this one". The table's reader is `motionLevelOf` (`@gpuixui/motion`), and a
+      level is a persisted choice as often as a literal (a saved block, a
+      dashboard row), so the read a consumer makes returns `normal` for the one
+      value those four props use to mean **no journey** — decoding a stored
+      `"none"` through it animates exactly where the caller asked for still.
+      Owner: motion. Do: a components-side reader beside the prop vocabulary
+      (`"none"` kept as itself, every other value through `motionLevelOf`), the
+      four call sites reading through it instead of comparing the raw prop, and
+      one case per surface that a stored `"none"` paints the resting frame in the
+      first paint. Measure the direction on `PageTransition` first: its swap is
+      already `instant` on a literal `"none"`.
+
 > Every phase is landed. The text catalogue closes with `gradient-text` sampled
 > per glyph — the honest form of a text ramp while the host paints no text fill
 > — and the effects that need `transform` or a filter are declined with
