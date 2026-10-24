@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 275/275
+`[x]` `[██████████]` 276/276
 
 `[x]` Teach the **switch a brand half-declares** the fallback its painter takes —
       four teaching surfaces said a half-declared `switch` "paints the slots it
@@ -3308,6 +3308,30 @@ a merge over a stored theme.
       the `ThemeOverrides.density` JSDoc, `docs/tokens.md` §Density and §Theme
       API, `docs/design-system.md` §11 and the `Theme extension` row. No native
       scenario applies — a stored value read at a merge seam.
+
+`[x]` Teach the **platform style's switch the fallback its painter takes**, and
+      read a page as prose so a retraction cannot hide behind a line break —
+      `docs/tokens.md` §Platform styles' copyable `extendTheme` example still said
+      "a half-declared switch draws the slots it lost with nothing", the exact
+      sentence the seam and both pages had retracted: a reader editing the toggle
+      — the one example that exists to show a brand owning the paint — was told a
+      lost slot paints nothing, while the primitive painter is whole or none
+      (`declaredPaint` answers `None` for a table that lost a slot, so the control
+      keeps the accent toggle) and `switchFailures` names the slot. The guard
+      could not see it: `switch.test.ts` read `not.toContain("slots it lost")`
+      against the file, and the sentence wrapped between "it" and "// lost", so
+      the contiguous phrase never occurred. `prose(text)` reads a page as
+      sentences — a line-leading `//` and the wrapping removed — and both the
+      existing loop and a new `teaches the platform style's switch fallback where
+      it edits one` read the platform section on its own, requiring
+      "half-declared switch is not a declaration", "keeps its accent toggle" and
+      no "slots it lost". Directions measured: with the page's old comment
+      restored, two cases fail by name (`expected '…' not to contain 'slots it
+      lost'` and the missing rule in the section); corrected, the package is 54
+      files / **3 173** tests with `check-types` clean (`check:tests` is red only
+      on `packages/primitives/src/components/scratch-otp.test.tsx`, another
+      workstream's in-flight file). Docs: `docs/tokens.md` §Platform styles. No
+      native scenario applies — a page sentence and the painter it describes.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

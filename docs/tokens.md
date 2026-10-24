@@ -1090,9 +1090,10 @@ that carries one replaces it whole:
 import { extendTheme, platformTheme, themes } from "@gpuixui/tokens";
 
 const house = extendTheme(platformTheme(themes.dark, "darwin"), {
-  // The three slots are one paint: a half-declared switch draws the slots it
-  // lost with nothing, so a brand owns all three. A theme that carries none
-  // keeps the library's accent switch.
+  // The three slots are one paint: a half-declared switch is not a declaration
+  // — the control keeps its accent toggle and `switchFailures` names the slot —
+  // so a brand owns all three. A theme that carries none keeps the accent
+  // switch too.
   switch: { on: "#4ADE80", off: "#3B3B40", knob: "#FFFFFF" },
 });
 ```

@@ -12,6 +12,11 @@
  *
  * `node:fs` is deliberate, as in `docs.test.ts`: this checks the repository's
  * own Markdown, and the package keeps zero runtime dependencies by design.
+ *
+ * The pages are read as **prose**, not lines: the platform-style example kept
+ * "a half-declared switch draws the slots it lost with nothing" — the claim the
+ * painter had already replaced — wrapped between "it" and "// lost", where a
+ * line-wise `toContain` could not see it.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -56,6 +61,22 @@ const primitiveSuite = read(
 );
 /** The seam's own JSDoc, with line wrapping and comment stars removed. */
 const seam = read("./theme.ts").replace(/\s+/g, " ").replace(/ \* /g, " ");
+
+/**
+ * A page read as prose: wrapping and a code fence's `//` removed.
+ *
+ * A retracted sentence is the same sentence whether or not a line break lands
+ * in the middle of it, and `toContain` on the file reads lines rather than
+ * sentences. This page's platform-style example said "draws the slots it /
+ * // lost with nothing" — the exact claim §Theme API had already retracted —
+ * and every line-wise assertion passed while a reader was taught a half switch
+ * paints nothing.
+ */
+const prose = (text: string): string =>
+  text
+    .replace(/(^|\n)\s*\/\/\s*/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
 
 /** One exported seam of the primitive painter, from its name to its closing brace. */
 const painter = (name: string): string => {
@@ -639,7 +660,27 @@ describe("the pages that teach the declared paint", () => {
     expect(designSystem).toContain("half-declared switch is no declaration");
     [catalogue, designSystem, seam].forEach((page) => {
       expect(page).not.toContain("slots it lost");
+      // Read as prose too: the platform-style example carried the retraction
+      // across two comment lines, where a line-wise read cannot see it.
+      expect(prose(page)).not.toContain("slots it lost");
     });
+  });
+
+  it("teaches the platform style's switch fallback where it edits one", () => {
+    // The §Platform styles example is the one a consumer copies to edit the
+    // toggle, and it said "a half-declared switch draws the slots it lost with
+    // nothing" — the opposite of the painter, which keeps the accent toggle
+    // (`selection.ts`'s `declaredPaint` answers `None` for a table that lost a
+    // slot). The section is read on its own, so the rule cannot live in
+    // §Theme API alone.
+    const from = catalogue.indexOf("#### Editing a platform style");
+    const to = catalogue.indexOf("#### A style a store hands back");
+    expect(from).toBeGreaterThan(-1);
+    expect(to).toBeGreaterThan(from);
+    const section = prose(catalogue.slice(from, to));
+    expect(section).toContain("half-declared switch is not a declaration");
+    expect(section).toContain("keeps its accent toggle");
+    expect(section).not.toContain("slots it lost");
   });
 
   it("holds the paint half to the seam the primitives read", () => {
