@@ -147,6 +147,59 @@ it("lifts a box whose stored elevation this release does not carry", async () =>
   ).toStrictEqual(Option.none());
 });
 
+// Bug guarded: the layout primitives painted one element each and published no
+// way to reach it, so measuring a region, holding its instance or naming it for
+// automation meant wrapping it in a `div` — and in a flex parent the wrapper
+// becomes the item, so a `grow`ing box inside it has to repeat its own flex
+// facts on the wrapper. The element a caller measures here is the element the
+// primitive paints, and the ref is the runtime's own instance.
+it("measures and holds a layout primitive where it is painted", async () => {
+  const runtime = await openWindow();
+  const boxes: Array<{ width: number; height: number }> = [];
+  const refs: Array<Option.Option<number>> = [];
+  runtime.render(
+    <Surface>
+      <Stack
+        direction="column"
+        gap="sm"
+        testId="stack"
+        aria-id="stack"
+        ref={(instance) => {
+          refs.push(
+            Option.map(Option.fromNullishOr(instance), (held) => held.id),
+          );
+        }}
+        onLayout={(event) =>
+          boxes.push({ width: event.width ?? 0, height: event.height ?? 0 })
+        }
+      >
+        <Box tone="card" style={{ height: 20 }} testId="first" />
+        <Grid columns={2} gap="sm" testId="grid">
+          <Box tone="card" style={{ height: 30 }} />
+          <Box tone="card" style={{ height: 30 }} />
+        </Grid>
+      </Stack>
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const painted = boundsOf(runtime, "stack");
+  const reported = Arr.last(boxes);
+  expect(Option.getOrUndefined(reported)).toStrictEqual({
+    width: painted.width,
+    height: painted.height,
+  });
+  // The stack is two rows: a 20px card, the gap, then the grid's 30px row.
+  expect(painted.height).toBe(20 + testTheme.spacing.sm + 30);
+  const held = Option.getOrElse(
+    Option.flatMap(Arr.last(refs), (instance) => instance),
+    () => expect.fail("the stack's ref never ran"),
+  );
+  expect(
+    Option.map(runtime.element("stack"), (element) => element.id),
+  ).toStrictEqual(Option.some(held));
+});
+
 it("separates a row Stack's children by the theme's gap", async () => {
   const runtime = await openWindow();
   runtime.render(

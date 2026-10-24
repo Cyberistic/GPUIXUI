@@ -6,6 +6,12 @@
  * Both are pure resolvers, so their spacing always comes from the theme instead
  * of a call-site pixel value. Their recipes (`recipe/stackClass`,
  * `recipe/gridClass`) are Tailwind class strings compiled through `@gpuixui/tw`.
+ *
+ * Both, and `Spacer`, take the runtime's host trio (`ref`, `aria-id`,
+ * `onLayout`): a layout is often the thing a caller measures — a panel's box,
+ * a row's height, the content a scroll reading divides by — and wrapping it in
+ * a `div` to reach that measurement changes the layout, because the wrapper is
+ * the flex item.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -15,10 +21,10 @@ import type { GridSpec, StackSpec } from "../core/layout.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { gridClass, stackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, type ElementHostProps } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface StackProps extends StackSpec {
+export interface StackProps extends StackSpec, ElementHostProps {
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -27,7 +33,16 @@ export interface StackProps extends StackSpec {
 }
 
 export const renderStack = (
-  { style, className, children, testId, ...spec }: StackProps,
+  {
+    style,
+    className,
+    children,
+    testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
+    ...spec
+  }: StackProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const resolved = recipeTw.classesToStyle(
@@ -35,7 +50,13 @@ export const renderStack = (
     theme,
   );
   return (
-    <div testId={testId} style={mergeStyle(resolved.style, style)}>
+    <div
+      ref={ref}
+      aria-id={controlId}
+      onLayout={onLayout}
+      testId={testId}
+      style={mergeStyle(resolved.style, style)}
+    >
       {children}
     </div>
   );
@@ -45,7 +66,7 @@ export const renderStack = (
 export const Stack = (props: StackProps): ReactElement =>
   renderStack(props, useTheme());
 
-export interface GridProps extends GridSpec {
+export interface GridProps extends GridSpec, ElementHostProps {
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -54,7 +75,16 @@ export interface GridProps extends GridSpec {
 }
 
 export const renderGrid = (
-  { style, className, children, testId, ...spec }: GridProps,
+  {
+    style,
+    className,
+    children,
+    testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
+    ...spec
+  }: GridProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const resolved = recipeTw.classesToStyle(
@@ -62,7 +92,13 @@ export const renderGrid = (
     theme,
   );
   return (
-    <div testId={testId} style={mergeStyle(resolved.style, style)}>
+    <div
+      ref={ref}
+      aria-id={controlId}
+      onLayout={onLayout}
+      testId={testId}
+      style={mergeStyle(resolved.style, style)}
+    >
       {children}
     </div>
   );

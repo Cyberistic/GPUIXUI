@@ -108,6 +108,31 @@ it("composes the layout example around a scrolling property list", async () => {
   );
 });
 
+it("measures the layout example's drop target where the primitive paints it", async () => {
+  // Bug guarded: the layout primitives published no `onLayout`, so a measured
+  // region had to be wrapped in a `div` — and in a flex parent the wrapper is
+  // the item, so the box measured is not the box composed. The number this
+  // caption paints is read from the primitive's own layout event, and it agrees
+  // with the box the frame painted.
+  const runtime = await openWindow();
+  renderExample(runtime, "layout");
+  // The layout event crosses to the handler on a dispatch, and the caption
+  // repaints in the frame after the state it set.
+  Arr.forEach(Arr.range(0, 1), () => {
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+  });
+  const painted = Option.getOrElse(runtime.bounds("layout-example-drop"), () =>
+    expect.fail("the layout example painted no drop target"),
+  );
+  const caption = Option.getOrElse(runtime.text("layout-example-drop"), () =>
+    expect.fail("the drop target painted no text"),
+  );
+  expect(caption).toContain(
+    `${Math.round(painted.width)} × ${Math.round(painted.height)}`,
+  );
+});
+
 it("creates through the form example's busy action", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "form");

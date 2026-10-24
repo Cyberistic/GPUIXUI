@@ -21,7 +21,7 @@ import { spaceStep, spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { separatorClass, separatorGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, type ElementHostProps } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
@@ -70,7 +70,7 @@ export const renderSeparator = (
 export const Separator = (props: SeparatorProps): ReactElement =>
   renderSeparator(props, useTheme());
 
-export interface SpacerProps {
+export interface SpacerProps extends ElementHostProps {
   /**
    * A fixed gap on the spacing scale. Omit for a flexible filler.
    *
@@ -87,7 +87,15 @@ export interface SpacerProps {
 }
 
 export const renderSpacer = (
-  { size, style, className, testId }: SpacerProps,
+  {
+    size,
+    style,
+    className,
+    testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
+  }: SpacerProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const step = spaceStep(theme, size);
@@ -102,6 +110,9 @@ export const renderSpacer = (
         };
   return (
     <div
+      ref={ref}
+      aria-id={controlId}
+      onLayout={onLayout}
       testId={testId}
       style={mergeStyle(
         mergeStyle(fixed, recipeTw.classesToStyle(cn(className), theme).style),

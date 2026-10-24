@@ -12,6 +12,11 @@
  * conflicts exactly as `cn` resolves them. Padding takes one step for all four
  * sides, or `paddingX`/`paddingY` for the two axes; a border can be dashed and
  * a box can hold an aspect ratio, both of which the runtime paints.
+ *
+ * The element is the caller's: `ref`, `aria-id` and `onLayout` reach the painted
+ * `div` (`ElementHostProps`), so a region is measured, named for automation or
+ * held where it is painted. A wrapper would be the flex item, so a `grow`ing box
+ * inside one would have to repeat its own flex facts on the wrapper.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -21,10 +26,10 @@ import type { BoxSpec } from "../core/layout.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { boxClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, type ElementHostProps } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface BoxProps extends BoxSpec {
+export interface BoxProps extends BoxSpec, ElementHostProps {
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -33,7 +38,16 @@ export interface BoxProps extends BoxSpec {
 }
 
 export const renderBox = (
-  { style, className, children, testId, ...spec }: BoxProps,
+  {
+    style,
+    className,
+    children,
+    testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
+    ...spec
+  }: BoxProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const resolved = recipeTw.classesToStyle(
@@ -41,7 +55,13 @@ export const renderBox = (
     theme,
   );
   return (
-    <div testId={testId} style={mergeStyle(resolved.style, style)}>
+    <div
+      ref={ref}
+      aria-id={controlId}
+      onLayout={onLayout}
+      testId={testId}
+      style={mergeStyle(resolved.style, style)}
+    >
       {children}
     </div>
   );

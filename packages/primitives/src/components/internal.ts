@@ -93,27 +93,39 @@ export interface InteractionProps {
 }
 
 /**
- * The host props a text field hands to its native element.
+ * The host props a painted element accepts.
  *
- * A field's value, name, editing state and chrome are the field's, but its
- * element still has to be addressable from outside: a form focuses the field
- * that failed, an automation host addresses it by `aria-id`, and a layout
- * measures its box. Those are the runtime's own host props, so they pass
- * through instead of becoming a second vocabulary.
+ * A primitive paints one element and owns no disclosure state, but its element
+ * still has to be reachable from outside: an automation host addresses it by
+ * `aria-id`, a layout measures its painted box, and a restored scroll offset,
+ * a reveal or a focus call needs the instance itself. Those are the runtime's
+ * own host props, so they pass through instead of becoming a second
+ * vocabulary.
  *
- * This is deliberately narrower than {@link ActionHostProps}: a text host owns
- * no disclosure state, so there is no `aria-expanded`/`aria-selected` to
- * forward, and its tab stop belongs to the field because a disabled field
- * leaves the order whatever the caller asks for.
+ * The alternative was a wrapper `div`, and it is not equivalent: in a flex
+ * parent the wrapper becomes the item, so a `Box` that grows or stretches
+ * inside it has to repeat its own flex facts on the wrapper — the layout the
+ * caller composed is no longer the layout that was measured.
+ *
+ * This is deliberately narrower than {@link ActionHostProps}: no `role`, tab
+ * stop, name or handler, because a region's semantics are the consumer's and
+ * its interaction is a control's.
  */
-export interface FieldHostProps {
-  /** The element a form focuses, measures or anchors to. */
+export interface ElementHostProps {
+  /** The instance a caller holds: the element a measurement or scroll names. */
   readonly ref?: Ref<PublicInstance>;
   /** Author id exposed as `AXIdentifier` / UIA AutomationId. */
   readonly "aria-id"?: string;
-  /** The addressed element's painted box after the first paint and each resize. */
+  /** The element's painted box after the first paint and each resize. */
   readonly onLayout?: (event: EventPayload) => void;
 }
+
+/**
+ * The host props a text field hands to its native element — the same trio, for
+ * the same reasons: a form focuses the field that failed, an automation host
+ * addresses it, and a layout measures it.
+ */
+export type FieldHostProps = ElementHostProps;
 
 /**
  * The announced help a control carries.

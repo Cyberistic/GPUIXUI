@@ -26,6 +26,9 @@ import { Grid, Text } from "@gpuixui/primitives";
 | `rows` | `number` | auto | equal fixed rows; floored, minimum 1 |
 | `gap` | spacing step | none | both axes, from `spacing` |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
+| `ref` | `Ref<PublicInstance>` | — | the painted element, for a measurement, a scroll or a focus call |
+| `aria-id` | `string` | — | the element's author id, exposed as the platform's automation id |
+| `onLayout` | `(event: EventPayload) => void` | — | the painted box after the first paint and each resize |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `children` | `ReactNode` | — | cells, in source order |

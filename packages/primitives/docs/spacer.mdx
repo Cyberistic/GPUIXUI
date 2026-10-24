@@ -22,6 +22,9 @@ import { Spacer, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `size` | spacing step | none (flexible) | a fixed square gap on both axes; `spaceStep` reads a stored step this theme does not carry as the default — a flexible filler — rather than a fixed item with no side |
+| `ref` | `Ref<PublicInstance>` | — | the painted element |
+| `aria-id` | `string` | — | the element's author id, exposed as the platform's automation id |
+| `onLayout` | `(event: EventPayload) => void` | — | the painted box after the first paint and each resize |
 | `className` | `string` | — | a Tailwind class string, joined after the fixed gap so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |

@@ -342,6 +342,12 @@ expressions equal — including on the shipped themes, where a derived value
 differs from the role it starts from (`tone="primary"` paints `brandText`, as
 `text-brand` does).
 
+The **layout primitives are the caller's element**: `Box`, `Stack`, `Grid` and
+`Spacer` extend `ElementHostProps`, the runtime's `ref`/`aria-id`/`onLayout`, so
+a panel is measured, named for automation and held where it is painted. A text
+field hands the same trio to its native element (`FieldHostProps` is that
+type) — one vocabulary for "the element outside this library may need".
+
 ### What GPUix does not provide, and what this package does instead
 
 | Capability | GPUix 0.11.0 | Here |
@@ -355,6 +361,7 @@ differs from the role it starts from (`tone="primary"` paints `brandText`, as
 | scrollbar tint | present | `ScrollArea` tints the platform thumb through `scrollbarColor`/`scrollbarWidth` (measured in `runtime/layout.runtime.test.tsx`) and sets the overflow axes |
 | absolute scroll offset | present (`onScrollChange`, `scrollTo`) | `ScrollArea` forwards `onScrollChange`, is a keyboard scroll region (arrows, PageUp/PageDown, Home/End) through the renderer, and hands the scroller out as `viewportRef` (or a composed viewport's `ref`) so a caller can restore a saved offset or return to the top — measured in `runtime/layout.runtime.test.tsx` |
 | the scroll box's measured extent | present (`onLayout`, `getElementBounds`) | `ScrollArea`/`ScrollAreaViewport` forward `onLayout` from the element that scrolls — the frame's padding excluded — so a scroll reading measures the same box it reads the offset from; measured in `runtime/layout.runtime.test.tsx` |
+| a layout's own measured extent | present (`onLayout`, `getElementBounds`, a ref) | `Box`, `Stack`, `Grid` and `Spacer` take `ElementHostProps` — `ref`, `aria-id`, `onLayout` — so the element a caller measures is the element the primitive paints, and a region needs no wrapper. A wrapper would be the flex item: a `grow`ing box inside one has to repeat its own flex facts there and the box measured is not the box composed. `presentational.test.tsx` holds the props on all four and `runtime/layout.runtime.test.tsx` measures a `Stack` through its own event and reads its `ref` back as the runtime's instance |
 | a list revealing its own highlight | absent (`scrollIntoView` scrolls to a scroller's **direct child**, and `Select` never scrolls for its highlight) | a `Select` row brings itself into view after commit from the row's and the list's painted boxes (`core/scroll.ts`'s `revealScroll`), so a row past the 320px cap and a row inside a group are both revealed |
 | fade mask | absent | no edge fade: the scroller paints a hard edge |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning; the step indicators tick at `@gpuixui/motion`'s `motionLevels.step` (120 ms), read rather than copied. A blank `label` is decoration (`role="presentation"`) rather than an unnamed status node |

@@ -312,6 +312,52 @@ describe("layout containers", () => {
     ).toStrictEqual(["text", "rule", "gap", "labelled"]);
   });
 
+  it("hand the runtime's host props to the element they paint", () => {
+    // The bug guarded: a layout primitive painted one element and could not be
+    // reached from outside. Measuring a region, holding its instance or naming
+    // it for automation meant wrapping it in a `div` — and in a flex parent the
+    // wrapper becomes the item, so a box that grows or stretches inside it has
+    // to repeat its own flex facts on the wrapper and the layout measured is no
+    // longer the layout the caller composed. The four layout primitives take
+    // the runtime's own trio instead.
+    const onLayout = () => {};
+    const painted = [
+      renderBox({ tone: "card", "aria-id": "box", onLayout }, testTheme),
+      renderStack(
+        { direction: "column", "aria-id": "stack", onLayout },
+        testTheme,
+      ),
+      renderGrid({ columns: 2, "aria-id": "grid", onLayout }, testTheme),
+      renderSpacer({ "aria-id": "spacer", onLayout }, testTheme),
+    ];
+    expect(
+      Arr.map(painted, (element) => expectSome(hostProp(element, "aria-id"))),
+    ).toStrictEqual(["box", "stack", "grid", "spacer"]);
+    Arr.forEach(painted, (element) => {
+      expect(hostProp(element, "onLayout")).toStrictEqual(
+        Option.some(onLayout),
+      );
+    });
+    // A primitive given neither still carries neither: the trio is the
+    // caller's, not something the element invents.
+    expect(
+      Arr.map(
+        [
+          renderBox({ tone: "card" }, testTheme),
+          renderStack({ direction: "column" }, testTheme),
+          renderGrid({ columns: 2 }, testTheme),
+          renderSpacer({}, testTheme),
+        ],
+        (element) => hostProp(element, "onLayout"),
+      ),
+    ).toStrictEqual([
+      Option.none(),
+      Option.none(),
+      Option.none(),
+      Option.none(),
+    ]);
+  });
+
   it("scroll only the axes they were asked for", () => {
     const viewport = (axis: "vertical" | "horizontal" | "both") =>
       renderScrollAreaViewport({}, scrollPart({ axis }, testTheme));

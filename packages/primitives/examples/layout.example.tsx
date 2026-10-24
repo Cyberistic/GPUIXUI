@@ -9,7 +9,9 @@
  */
 
 import * as Arr from "effect/Array";
-import type { ReactElement } from "react";
+import * as Option from "effect/Option";
+import type { EventPayload } from "@gpuix/react";
+import { useState, type ReactElement } from "react";
 import {
   Box,
   Grid,
@@ -38,6 +40,22 @@ const properties: ReadonlyArray<{
 
 /** A property inspector: a fixed header, a scrolling body and a footer. */
 export const LayoutExample = (): ReactElement => {
+  // The drop target measures itself: `onLayout` reports the box the runtime
+  // painted, so the caption states the size the primitive actually got instead
+  // of a number the example guessed. The state is this example's own — a
+  // measurement nobody else reads.
+  const [drop, setDrop] = useState<
+    Option.Option<{ readonly width: number; readonly height: number }>
+  >(Option.none());
+  const measure = (event: EventPayload) => {
+    const width = Math.round(event.width ?? 0);
+    const height = Math.round(event.height ?? 0);
+    setDrop((held) =>
+      Option.exists(held, (box) => box.width === width && box.height === height)
+        ? held
+        : Option.some({ width, height }),
+    );
+  };
   return (
     <Box
       tone="card"
@@ -86,10 +104,20 @@ export const LayoutExample = (): ReactElement => {
             paddingX="sm"
             paddingY="sm"
             testId="layout-example-drop"
+            onLayout={measure}
           >
-            <Text role="caption" tone="muted">
-              Drop a layer here
-            </Text>
+            <Stack direction="row" align="center" gap="sm" fullWidth>
+              <Text role="caption" tone="muted">
+                Drop a layer here
+              </Text>
+              <Spacer />
+              <Text role="caption" tone="muted">
+                {Option.match(drop, {
+                  onNone: () => "—",
+                  onSome: ({ width, height }) => `${width} × ${height}`,
+                })}
+              </Text>
+            </Stack>
           </Box>
         </Stack>
       </ScrollArea>
