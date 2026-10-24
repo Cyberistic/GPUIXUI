@@ -93,9 +93,14 @@ export const RollingText = ({
 
   useEffect(() => {
     if (roll.phase !== "leaving") return;
+    // The window belongs to the exit that started, not to the value replaced
+    // while it runs: a timer re-armed on `pending` let a value changing faster
+    // than one swap push the swap back forever, and the clip stayed empty after
+    // the outgoing value had left it. `settleSwap` reads the newest pending
+    // value when it fires.
     const handle = setTimeout(() => setRoll(settleSwap), timing.swapMs);
     return () => clearTimeout(handle);
-  }, [roll.phase, roll.pending, timing.swapMs]);
+  }, [roll.phase, timing.swapMs]);
 
   const metrics = textStyle(theme, role);
   const frames = rollFrames(direction, metrics.lineHeight);

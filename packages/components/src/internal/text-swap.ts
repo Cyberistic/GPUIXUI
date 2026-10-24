@@ -62,10 +62,12 @@ const jump = (state: SwapState, text: string): SwapState =>
  *
  * A value that arrives during the exit **replaces** the pending one instead of
  * queueing, so a clock that ticks faster than a swap lands on the newest value
- * rather than replaying every step. A value that arrives during the entry starts
- * a new exit from where the incoming host has got to. Asking for the value
- * already on screen changes nothing, and asking for it again mid-exit travels it
- * back instead of finishing the swap.
+ * rather than replaying every step. The swap itself is timed from the exit the
+ * change started, not from the newest arrival, so a value that keeps changing
+ * cannot push it back and leave the clip empty. A value that arrives during the
+ * entry starts a new exit from where the incoming host has got to. Asking for
+ * the value already on screen changes nothing, and asking for it again mid-exit
+ * travels it back instead of finishing the swap.
  */
 export const requestSwap = (
   state: SwapState,

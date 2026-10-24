@@ -104,9 +104,14 @@ export const SlidingText = ({
 
   useEffect(() => {
     if (swap.phase !== "leaving") return;
+    // The window belongs to the exit that started, not to the value replaced
+    // while it runs: a timer re-armed on `pending` let a value changing faster
+    // than one swap push the swap back forever, and the clip stayed empty after
+    // the outgoing value had left it. `settleSwap` reads the newest pending
+    // value when it fires.
     const handle = setTimeout(() => setSwap(settleSwap), timing.swapMs);
     return () => clearTimeout(handle);
-  }, [swap.phase, swap.pending, timing.swapMs]);
+  }, [swap.phase, timing.swapMs]);
 
   const measure = (event: EventPayload) => {
     onLayout?.(event);

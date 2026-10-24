@@ -6,8 +6,9 @@
  * so the slide has nothing to travel; an entry that starts at rest, or travels
  * the wrong way; a travel measured from anything but the box's own width (the
  * runtime keeps insets as numbers, so a guessed distance is the wrong one); a
- * swap before the width is known reaching the runtime as `NaN`; and a reduced
- * run that still waits for the clock.
+ * swap before the width is known reaching the runtime as `NaN`; a value that
+ * keeps changing faster than one swap, which re-armed the swap timer and left
+ * the clip empty; and a reduced run that still waits for the clock.
  *
  * The motion clock is paused for the frame readings, so the entering value's
  * offset is the declared edge rather than wherever real time had got. The swap
@@ -41,6 +42,11 @@ const slide = (text: string, extra: { readonly back?: boolean } = {}) => (
 /** Every painted string: the value on screen. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
+
+/** The values the accessibility tree carries: what a reader is told. */
+const shown = (
+  page: ReturnType<typeof renderComponent>,
+): ReadonlyArray<string> => a11yNodes(page.renderer).map((node) => node.name);
 
 /** The value's host — the runtime paints a styled host and its run. */
 const host = (page: ReturnType<typeof renderComponent>): TestElement => {
@@ -255,6 +261,43 @@ describe("SlidingText", () => {
       expect(names).not.toContain("second");
       expect(names).not.toContain("first");
     } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps swapping while the value keeps changing", async () => {
+    // The bug this guards: the swap timer was re-armed by every value that
+    // arrived mid-exit, so a value changing faster than one swap (a live
+    // counter) pushed the swap back indefinitely and the clip stayed empty —
+    // the outgoing value had left it and the pending one never replaced it.
+    // The window belongs to the exit the swap waits for, not to the newest
+    // value that replaces its pending one.
+    const page = renderComponent(
+      <SlidingText testId="slide" text="v1" level="notice" style={{ width }} />,
+    );
+    try {
+      page.renderer.clockPause();
+      await settle(page);
+      for (const next of ["v2", "v3", "v4", "v5", "v6"]) {
+        await change(
+          page,
+          <SlidingText
+            testId="slide"
+            text={next}
+            level="notice"
+            style={{ width }}
+          />,
+        );
+        // Well inside the 250 ms exit half of the `notice` level.
+        await after(60);
+      }
+      // The exit the first change started has run by now, so a newer value is
+      // the one on screen even though the stream never stopped.
+      await after(60);
+      expect(shown(page)).not.toContain("v1");
+      await waitFor(() => expect(shown(page)).toContain("v6"), 1_000);
+    } finally {
+      page.renderer.clockResume();
       page.unmount();
     }
   });

@@ -30,6 +30,12 @@ import { RollingText } from "@gpuixui/components/rolling-text";
 | `className` | `string` | — |
 | `style` | `StateStyle<RollingTextState>` | — |
 
+## A value that keeps changing
+
+The swap is timed from the exit the **change** started, not from the newest value: a value arriving mid-exit replaces the pending one, and the window is the exit half of `level`, so a live counter — a value updated faster than one swap — still commits a swap every window and shows a newer value instead of emptying the clip. Once the changes stop, the last value is the one that paints.
+
+Under `MotionProvider preference="reduced"` the swap is immediate, so there is no window to wait.
+
 ## Limitations
 
 - Width follows the value; the clip is the value on screen.
