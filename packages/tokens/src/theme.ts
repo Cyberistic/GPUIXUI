@@ -251,6 +251,41 @@ export interface ThemeOverrides {
   readonly switchMetrics?: SwitchMetrics;
 }
 
+/**
+ * The theme keys an override cannot change.
+ *
+ * A mode and a contrast variant are what its numbers mean: every floor and
+ * every contract is read through them, so a caller that wants another variant
+ * asks `getTheme` for it rather than repainting a dark theme's roles and
+ * calling it light.
+ */
+type FixedThemeKey = "mode" | "contrast";
+
+/**
+ * A theme group the extension mechanism does not reach, as a build error.
+ *
+ * The library's promise is that a consumer starts from a shipped style and
+ * edits any of its values, so every group a `Theme` carries is a
+ * {@link ThemeOverrides} key. A group added without one would be a group a
+ * brand receives and can never change — and, because the optional groups are
+ * copied one by one in {@link extendTheme}, one it could silently lose. The
+ * assignment below fails the package's type check with the missing group named.
+ */
+type EveryGroupOverridable =
+  Exclude<
+    Exclude<keyof Theme, FixedThemeKey>,
+    keyof ThemeOverrides
+  > extends never
+    ? true
+    : [
+        "a theme group has no override",
+        Exclude<Exclude<keyof Theme, FixedThemeKey>, keyof ThemeOverrides>,
+      ];
+
+const groupsOverridable: EveryGroupOverridable = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void groupsOverridable;
+
 /** Input to {@link createTheme}: a mode, a contrast variant and overrides. */
 export interface ThemeConfig extends ThemeOverrides {
   readonly mode: ThemeMode;

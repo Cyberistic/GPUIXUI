@@ -4264,6 +4264,15 @@ Merge rules:
   size, so raising one size inherits the rest rather than dropping the steps the
   audit gate requires;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
+- `contrast` is not overridable either, and for the same reason: a mode and a
+  variant are what a theme's numbers mean, so a caller that wants the other one
+  asks `getTheme` for it. Every other group — `name`, `colors`, `typography`,
+  `spacing`, `radius`, `density`, `elevation`, `borderWidth`, `iconSize`,
+  `series`, `syntax`, `switch` and `switchMetrics` — is an override. That
+  coverage is the extension promise ("start from a style, edit any value") and it
+  is held in both directions: a group added to `Theme` without an override fails
+  the package's type check, and `theme.test.ts` proves each group reaches its own
+  key and leaves the others untouched;
 - nothing is mutated. The returned theme may share untouched token objects. The
   contract is no mutation, not deep cloning.
 

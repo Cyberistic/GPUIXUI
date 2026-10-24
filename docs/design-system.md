@@ -1333,8 +1333,10 @@ Overrides merge by group; typography merges field by field; a density preset's
 `controlHeight` and `controlPaddingX` merge size by size, so a brand that raises
 one size keeps the others; elevation levels are replaced as whole arrays; a
 platform's `switch` paint is replaced whole, because the three slots are one
-control's paint and a half-declared switch draws the slots it lost with nothing;
-the mode is immutable. Nothing mutates the base, so a theme can be created once at
+control's paint and a half-declared switch draws the slots it lost with nothing.
+Every group a theme carries is an override except `mode` and `contrast`: those
+two are what its numbers mean, so a caller that wants another asks `getTheme`
+for it. Nothing mutates the base, so a theme can be created once at
 startup and shared. `bodyStrong` is its own role, so a brand that changes the
 body size names it too — the pair is one emphasis at one size, and
 `invalidNumbers` reports a strong role that does not follow as `emphasis`.

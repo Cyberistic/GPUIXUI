@@ -23,9 +23,13 @@ import {
   invalidNumbers,
   lightTheme,
   platformTheme,
+  seriesColors,
   switchFailures,
+  syntaxColors,
   themes,
   type SwitchColors,
+  type Theme,
+  type ThemeOverrides,
 } from "./index.js";
 
 describe("built-in themes", () => {
@@ -367,6 +371,138 @@ describe("an override that names a value as absent", () => {
     const apple = platformTheme(darkTheme, "darwin");
     const custom = extendTheme(apple, { switch: undefined });
     expect(custom.switch).toBe(apple.switch);
+  });
+});
+
+describe("the extension mechanism", () => {
+  /**
+   * Every group a theme carries except its mode and contrast variant, in the
+   * order the catalogue lists them.
+   *
+   * The list is the test's own inventory: a group added to `Theme` fails
+   * `EveryGroupProbed` below until it is named here and given a probe, so the
+   * extension promise ("start from a style, edit any value") cannot lose a
+   * group to a new optional field.
+   */
+  const overridableGroups = [
+    "name",
+    "colors",
+    "typography",
+    "spacing",
+    "radius",
+    "density",
+    "elevation",
+    "borderWidth",
+    "iconSize",
+    "series",
+    "syntax",
+    "switch",
+    "switchMetrics",
+  ] as const satisfies readonly Exclude<keyof Theme, "mode" | "contrast">[];
+
+  type ListedGroup = (typeof overridableGroups)[number];
+
+  /** A group the list does not name, as a build error naming it. */
+  type EveryGroupProbed =
+    Exclude<
+      Exclude<keyof Theme, "mode" | "contrast">,
+      ListedGroup
+    > extends never
+      ? true
+      : [
+          "a theme group has no probe",
+          Exclude<Exclude<keyof Theme, "mode" | "contrast">, ListedGroup>,
+        ];
+
+  const everyGroupProbed: EveryGroupProbed = true;
+  void everyGroupProbed;
+
+  /** The override each group is reached through, read off the base theme. */
+  const overrideProbes = {
+    name: () => ({ name: "Probe" }),
+    colors: () => ({ colors: { primary: "#123456" } }),
+    typography: (base: Theme) => ({
+      typography: { body: { fontSize: base.typography.body.fontSize + 1 } },
+    }),
+    spacing: (base: Theme) => ({ spacing: { md: base.spacing.md + 1 } }),
+    radius: (base: Theme) => ({ radius: { md: base.radius.md + 1 } }),
+    density: () => ({ density: "spacious" }),
+    elevation: (base: Theme) => ({
+      elevation: {
+        sm: [
+          {
+            offsetX: 0,
+            offsetY: 3,
+            blurRadius: 6,
+            spreadRadius: 0,
+            color: base.colors.shadow,
+          },
+        ],
+      },
+    }),
+    borderWidth: (base: Theme) => ({
+      borderWidth: { thin: base.borderWidth.thin + 1 },
+    }),
+    iconSize: (base: Theme) => ({ iconSize: { md: base.iconSize.md + 1 } }),
+    series: (base: Theme) => {
+      const current = seriesColors(base);
+      return {
+        series: ["#101010", current[1], current[2], current[3], current[4]],
+      };
+    },
+    syntax: (base: Theme) => ({
+      syntax: { ...syntaxColors(base), keyword: "#123456" },
+    }),
+    switch: () => ({
+      switch: { on: "#00FF00", off: "#111111", knob: "#FFFFFF" },
+    }),
+    switchMetrics: () => ({
+      switchMetrics: { width: 44, height: 24, knob: 20, inset: 2, border: 1 },
+    }),
+  } satisfies Record<ListedGroup, (base: Theme) => ThemeOverrides>;
+
+  it("carries every group when nothing is overridden", () => {
+    // A group copied by hand in `extendTheme` is one a later group can be
+    // forgotten beside: the returned theme names every key, so a group missing
+    // from the copy is absent here rather than silently `undefined`.
+    const custom = extendTheme(darkTheme, {});
+
+    expect(Object.keys(custom)).toEqual(
+      expect.arrayContaining([...overridableGroups, "mode", "contrast"]),
+    );
+  });
+
+  it("reaches every group, and only the group it names", () => {
+    const base = extendTheme(darkTheme, {});
+    const extended = overridableGroups.map((group) => ({
+      group,
+      theme: extendTheme(base, overrideProbes[group](base)),
+    }));
+
+    expect(
+      extended
+        .filter(({ group, theme }) => theme[group] === base[group])
+        .map(({ group }) => group),
+    ).toEqual([]);
+
+    // A group the override did not name must be the base's, untouched.
+    expect(
+      extended.flatMap(({ group, theme }) =>
+        overridableGroups
+          .filter((other) => other !== group && theme[other] !== base[other])
+          .map((other) => `${group} reached ${other}`),
+      ),
+    ).toEqual([]);
+
+    // A mode or a contrast variant is what the numbers mean, so no override
+    // may move either; `getTheme` is how a caller asks for the other one.
+    expect(
+      extended.flatMap(({ group, theme }) =>
+        (["mode", "contrast"] as const)
+          .filter((fixed) => theme[fixed] !== base[fixed])
+          .map((fixed) => `${group} moved ${fixed}`),
+      ),
+    ).toEqual([]);
   });
 });
 

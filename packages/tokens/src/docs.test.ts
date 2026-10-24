@@ -414,10 +414,14 @@ describe("the motion claim", () => {
     const seam = read("../../../packages/components/src/internal/presence.tsx");
 
     // The seam's timing moved to the motion package's `presence` entry when the
-    // provider landed; the preference is the React entry's hook.
+    // provider landed; the preference and the mounted window are the React
+    // entry's. The seam composes them rather than restating a frame, so the
+    // guard names the symbols it actually uses — a rename upstream fails here
+    // instead of leaving a page that describes a seam nobody can find.
     expect(seam).toContain('from "@gpuixui/motion/presence"');
-    expect(seam).toContain("presenceTiming");
+    expect(seam).toContain("transitionWindowMs");
     expect(seam).toContain('from "@gpuixui/motion/react"');
+    expect(seam).toContain("useSurfaceTiming");
     expect(seam).toContain("useMotionPreference");
 
     // The retracted claim was "none"; a floor is enough to keep the page honest

@@ -115,8 +115,12 @@ any theme. Neither mutates its base. Groups merge key by key — a key written a
 merges field by field, elevation levels replace whole arrays, a `density`
 override merges each control size so raising `md` keeps `sm` and `lg`, a
 platform's `switch` paint replaces whole (the three slots are one control's
-paint, and `switchFailures` names a slot that was lost), and the mode is not
-overridable.
+paint, and `switchFailures` names a slot that was lost). Every group a `Theme`
+carries is an override except `mode` and `contrast`: a mode or a variant is what
+the numbers mean, so a caller that wants another asks `getTheme` for it. The
+coverage is held by a type-level guard in `theme.ts` — a group added to `Theme`
+without an override fails the type check — and `theme.test.ts` proves each one
+reaches its group and no other.
 
 A brand that changes a fill owns its **on-colour** too, per mode. Dark themes
 pair a light fill with dark text, so the brand's dark fill is a light violet with

@@ -350,7 +350,45 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 212/212
+`[x]` `[██████████]` 213/213
+
+`[x]` Hold the **extension mechanism to every group a theme carries** — the
+mission's promise is that a consumer takes a shipped style and edits *any* of
+its values, and the mechanism had no guard on the other end: `ThemeOverrides`
+is a hand-written interface, and three groups (`series`, `syntax`, `switch` plus
+`switchMetrics`) are optional, so a group added to `Theme` without an override
+would be one a brand receives and can never change — and, because
+`extendTheme` copies those groups one by one, one it could silently lose on the
+way through. `theme.ts` now carries `EveryGroupOverridable`, the same
+`EveryStepListed` shape `scales.ts` uses: a group on `Theme` that is not a
+`ThemeOverrides` key and is not `mode`/`contrast` fails the package's type check
+naming the group. `theme.test.ts` gains `the extension mechanism` (2 cases,
++13 probes): its own `overridableGroups` list is held to `Theme` by a second
+type-level guard, one probe per group drives `extendTheme` and requires the
+named key to change while every other key stays the base's reference and both
+`mode` and `contrast` stay put, and a key-set case requires the returned theme
+to name every group. Directions measured: deleting `switchMetrics` from
+`extendTheme` fails both cases by name (`expected [ 'switchMetrics' ] to deeply
+equal []` and the key-set case), and adding `probe?: number` to `Theme` fails
+`check-types` twice with `Type 'boolean' is not assignable to type '["a theme
+group has no override", "probe"]'`. Green: the package is 49 files / **2 952**
+tests with `check-types`, `oxlint` and `oxfmt` clean. Docs: `docs/tokens.md`
+§Theme API's merge rules, `docs/design-system.md` §11, the package README
+§Extending a theme and the `Theme extension` inventory row state the two fixed
+keys, the guard and the every-group probe. No native scenario applies — a pure
+merge and its type contract.
+
+`[x]` Read the **presence seam the motion package moved, again** — `docs.test.ts`'s
+motion claim asserted the seam `internal/presence.tsx` contains `presenceTiming`,
+and the motion package's provider rewrite replaced that helper with
+`useSurfaceTiming` (React entry) plus `transitionWindowMs` (presence entry), so
+the tokens gate was red on a file another workstream owns (`1 failed | 50
+passed`). The case now holds the symbols the seam actually composes — the
+presence import with `transitionWindowMs` and the React import with
+`useSurfaceTiming`/`useMotionPreference` — so a rename upstream fails here again
+instead of leaving the page describing a seam nobody can find. The page case
+already named all three entries and passes unchanged. Green: `docs.test.ts`
+51/51 and the package 2 952 tests. No native scenario applies — a source read.
 
 `[x]` Search the **accent's ladder lazily**, and hold it to the smallest step —
 `nativeAccent` walked the whole 2% ladder before choosing a rung
