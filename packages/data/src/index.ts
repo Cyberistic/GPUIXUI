@@ -155,6 +155,7 @@ export type {
   SelectionState,
 } from "./selection/logic.js";
 export {
+  DEFAULT_SELECTION_LABEL,
   SELECTION_COLUMN_WIDTH,
   TableSelectionCell,
   TableSelectionHeader,
@@ -179,7 +180,7 @@ export type {
 export { fieldValueOf, useTable } from "./use-table.js";
 export type { TableController, UseTableOptions } from "./use-table.js";
 
-export { ColumnMenu } from "./columns/menu.js";
+export { ColumnMenu, DEFAULT_COLUMN_MENU_LABEL } from "./columns/menu.js";
 export type { ColumnMenuProps } from "./columns/menu.js";
 export { TableColumnDivider } from "./columns/divider.js";
 export type {

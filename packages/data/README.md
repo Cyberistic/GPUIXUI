@@ -566,8 +566,10 @@ They announce what they paint: the key-value list is a named `List` of
 titles are headings, and every primitive label or value is a `Label` node
 (`src/behaviour/surface-a11y.test.tsx`). A documented default covers a **blank**
 name as well as an absent one: the filter field and the toolbar's search field
-read `Filter rows` and `Search`, the builder's title reads `Filters`, and a
-property panel's blank title paints no heading rather than an unnamed one.
+read `Filter rows` and `Search`, the builder's title reads `Filters`, the column
+menu and its surface read `Columns` and the select-all box reads
+`Select every row`, and a property panel's blank title paints no heading rather
+than an unnamed one.
 
 The advanced filter's state is a **predicate tree**, not a string: a predicate
 (field, comparison, value), an `all`, an `any` and a `not`. The tree is the

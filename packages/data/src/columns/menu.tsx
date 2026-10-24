@@ -39,6 +39,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@gpuixui/components/dropdown-menu";
+import { spokenText } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -49,6 +50,9 @@ import {
   type ColumnState,
 } from "./logic.js";
 
+/** The trigger's name when the caller says nothing. */
+export const DEFAULT_COLUMN_MENU_LABEL = "Columns";
+
 /** {@link ColumnMenu} props. */
 export interface ColumnMenuProps {
   /** The configured columns, in paint order. */
@@ -57,7 +61,10 @@ export interface ColumnMenuProps {
   readonly onChange: (next: ColumnState) => void;
   /** Restores the definitions, order included. Omit to hide the row. */
   readonly onReset?: () => void;
-  /** The trigger's label. Defaults to `Columns`. */
+  /**
+   * The trigger's label. Defaults to `Columns`; a blank name is the default
+   * too, because a default only covers an absent prop.
+   */
   readonly label?: string;
   /** The menu surface's accessible name. Defaults to the trigger's label. */
   readonly contentLabel?: string;
@@ -146,13 +153,21 @@ export const ColumnMenu = ({
   state,
   onChange,
   onReset,
-  label = "Columns",
+  label,
   contentLabel,
   disabled,
   testId,
 }: ColumnMenuProps) => {
   const visible = visibleColumns(state);
   const canHide = visible.length > 1;
+  // A locale table with a missing row answers `""`, which reaches the trigger
+  // as an empty child and the surface as an empty `aria-label`: both read as
+  // unnamed while the documented default sat unused.
+  const menuLabel = spokenText(
+    Option.fromNullishOr(label),
+    DEFAULT_COLUMN_MENU_LABEL,
+  );
+  const surfaceLabel = spokenText(Option.fromNullishOr(contentLabel), menuLabel);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -161,9 +176,9 @@ export const ColumnMenu = ({
         disabled={disabled}
         testId={testId}
       >
-        {label}
+        {menuLabel}
       </DropdownMenuTrigger>
-      <DropdownMenuContent label={contentLabel ?? label}>
+      <DropdownMenuContent label={surfaceLabel}>
         {Arr.map(state.columns, (column) => (
           <VisibilityRow
             key={`visible-${column.id}`}

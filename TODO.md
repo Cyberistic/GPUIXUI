@@ -10366,6 +10366,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the README's surface paragraph and the Key-value/Property panels/Data
     toolbars/Advanced filtering rows. Verified: unit 221/221, behaviour 138/138,
     `check-types` clean. Owner: data.
+  - [x] Read a **blank grid-control name as the words it documents** — the column
+    menu's `label`/`contentLabel` and the select-all box's `label` defaulted in
+    their destructuring, which only covers an *absent* prop: a locale table with
+    a missing row, or a saved preference, hands over `""`, so the trigger
+    painted an empty child, the menu surface got `aria-label=""`, and the
+    `Checkbox` announced nothing — measured in the renderer, the trigger, the
+    `Menu` and the `CheckBox` nodes all read `''` while `Columns` and
+    `Select every row` sat in the defaults. Both now read the blank through
+    `spokenText` (`@gpuixui/primitives/core`), the rule the filter field, the
+    toolbar, the builder and the property panel already follow, and
+    `DEFAULT_COLUMN_MENU_LABEL`/`DEFAULT_SELECTION_LABEL` publish the words the
+    docs print. `behaviour/surface-a11y.test.tsx` gains two cases (9 in the
+    file): a blank header reads `Select every row`, and a menu opened from a
+    blank trigger with a whitespace `contentLabel` names both the `Button` and
+    the `Menu` `Columns`. Directions measured: before the fix the cases fail
+    `expected '' to be 'Select every row'` and `expected '' to be 'Columns'`;
+    after it behaviour is 142/142, unit 221/221 and `check-types` clean.
+    `docs/{table-selection,column-configuration}.mdx` and the README state the
+    rule. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid

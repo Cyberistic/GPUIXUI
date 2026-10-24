@@ -17,11 +17,18 @@
  * A documented default is not a name until it covers the blank string a locale
  * table or a saved record hands over: a default only applies to an *absent*
  * prop, so these surfaces also read an empty label as the words they document —
- * and a panel's blank title as no heading, not an unnamed one.
+ * and a panel's blank title as no heading, not an unnamed one. The grid's own
+ * controls follow the same rule: a column menu's trigger and surface and the
+ * select-all box were left unnamed by a blank default, because their fallback
+ * was written in the destructuring where only `undefined` reaches it.
  */
 
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
+import {
+  ColumnMenu,
+  DEFAULT_COLUMN_MENU_LABEL,
+} from "../columns/menu.js";
 import { DEFAULT_FILTER_LABEL, TableFilterField } from "../filter/field.js";
 import { decodeA11yTree, onlyRole, withRole } from "../internal/a11y.js";
 import {
@@ -29,6 +36,10 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import {
+  DEFAULT_SELECTION_LABEL,
+  TableSelectionHeader,
+} from "../selection/column.js";
 import {
   AdvancedFilter,
   DEFAULT_FILTER_TITLE,
@@ -222,5 +233,63 @@ describe("the data surfaces announce what they paint", () => {
       ),
     ).toEqual([DEFAULT_FILTER_TITLE]);
     // …while the panel's blank title is absence: no second, unnamed heading.
+  });
+
+  it("reads a blank select-all name as the documented default", () => {
+    const tree = treeOf(
+      <TableSelectionHeader
+        checked={false}
+        onCheckedChange={() => {}}
+        label=""
+        testId="blank-select"
+      />,
+    );
+
+    // A blank i18n row used to leave the header box with no name at all, while
+    // the prop's documented default sat unused.
+    expect(nameOf(tree, onlyRole(tree, "CheckBox"))).toBe(
+      DEFAULT_SELECTION_LABEL,
+    );
+  });
+
+  it("reads blank column-menu names as the documented default", () => {
+    root = renderData(
+      <ColumnMenu
+        state={{
+          columns: [
+            { id: "name", label: "Name", visible: true, width: 160 },
+          ],
+        }}
+        onChange={() => {}}
+        label=""
+        contentLabel="  "
+        testId="blank-columns"
+      />,
+    );
+    settle(root);
+    const trigger = root.renderer.findByTestId("blank-columns");
+    if (trigger === undefined) {
+      throw new Error("the column menu painted no trigger");
+    }
+    const bounds = root.renderer.getElementBounds(trigger.id);
+    if (bounds === null) {
+      throw new Error("the column menu's trigger painted no box");
+    }
+    root.renderer.nativeSimulateClick(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+      0,
+    );
+    root.renderer.flush();
+
+    const tree = decodeA11yTree(root.renderer.getA11yTree());
+    // Both the trigger and the surface it opens are names a reader hears; a
+    // blank label used to leave them empty while `Columns` sat in the default.
+    expect(nameOf(tree, onlyRole(tree, "Button"))).toBe(
+      DEFAULT_COLUMN_MENU_LABEL,
+    );
+    expect(nameOf(tree, onlyRole(tree, "Menu"))).toBe(
+      DEFAULT_COLUMN_MENU_LABEL,
+    );
   });
 });

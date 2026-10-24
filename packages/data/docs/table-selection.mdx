@@ -62,6 +62,10 @@ const table = useTable({ rows: files, keyOf: (row) => row.id, columns });
 | `disabled` | `boolean` | `false` | refuses the press |
 | `testId` | `string` | — | the box's id; the header cell is `${testId}-cell` and its target `${testId}-target` |
 
+A blank `label` is the documented default `Select every row`, not an unnamed
+box: a default only covers an absent prop, and an i18n row with a missing
+translation answers `""` (`src/behaviour/surface-a11y.test.tsx`).
+
 ### `TableSelectionCell`
 
 | Prop | Type | Default | Consequence |

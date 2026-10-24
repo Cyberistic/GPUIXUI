@@ -112,6 +112,11 @@ against a bound exactly as a pointer can drag past it.
 | `disabled` | `boolean` | — | refuses the trigger |
 | `testId` | `string` | — | derives `-toggle-<id>`, `-move-<id>`, `-move-<id>-left`/`-right` and `-reset` |
 
+A blank `label` or `contentLabel` reads as the documented default rather than
+publishing an unnamed trigger or surface: a default only covers an *absent*
+prop, and a locale table with a missing row answers `""`. The trigger and the
+menu both announce `Columns` then (`src/behaviour/surface-a11y.test.tsx`).
+
 ### `TableColumnDivider`
 
 | Prop | Type | Default | Consequence |

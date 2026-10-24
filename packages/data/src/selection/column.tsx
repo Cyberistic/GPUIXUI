@@ -20,11 +20,16 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import { Checkbox } from "@gpuixui/primitives";
+import { spokenText } from "@gpuixui/primitives/core";
+import * as Option from "effect/Option";
 import { TableCell, TableHeaderCell } from "../table/table.js";
 import { useTheme, type Theme } from "../theme.js";
 
 /** The fixed track a selection column takes in the header and every row. */
 export const SELECTION_COLUMN_WIDTH = 40;
+
+/** The select-all box's name when the caller says nothing. */
+export const DEFAULT_SELECTION_LABEL = "Select every row";
 
 /**
  * The box's own painted target.
@@ -59,7 +64,10 @@ export interface TableSelectionHeaderProps {
   readonly indeterminate?: boolean;
   /** The box's next state: choose every visible record, or clear the set. */
   readonly onCheckedChange: (selected: boolean) => void;
-  /** Defaults to `Select every row`. */
+  /**
+   * The box's accessible name. Defaults to `Select every row`; a blank name is
+   * the default too, because a default only covers an absent prop.
+   */
   readonly label?: string;
   /** Defaults to {@link SELECTION_COLUMN_WIDTH}, which the body box must match. */
   readonly width?: number;
@@ -78,12 +86,17 @@ export const TableSelectionHeader = ({
   checked,
   indeterminate = false,
   onCheckedChange,
-  label = "Select every row",
+  label,
   width = SELECTION_COLUMN_WIDTH,
   disabled = false,
   testId,
 }: TableSelectionHeaderProps) => {
   const theme = useTheme();
+  // A blank i18n row must not leave the select-all box unnamed.
+  const boxLabel = spokenText(
+    Option.fromNullishOr(label),
+    DEFAULT_SELECTION_LABEL,
+  );
   return (
     <TableHeaderCell
       width={width}
@@ -98,7 +111,7 @@ export const TableSelectionHeader = ({
           checked={checked}
           indeterminate={indeterminate}
           onCheckedChange={onCheckedChange}
-          label={label}
+          label={boxLabel}
           disabled={disabled}
           size="sm"
           testId={testId}
