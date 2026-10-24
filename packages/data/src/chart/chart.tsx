@@ -29,6 +29,7 @@ import { seriesColors } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { listOf } from "../internal/list.js";
 import { recipeStyle } from "../recipe.js";
 import { textStyle, useTheme } from "../theme.js";
 import {
@@ -101,6 +102,13 @@ export interface ChartLegendItem {
 
 /** {@link ChartLegend} props. */
 export interface ChartLegendProps extends Omit<Props, "children"> {
+  /**
+   * The rows, in paint order.
+   *
+   * A saved legend writes `null` where it carried no rows, so only a list is a
+   * list: a slot with no list paints no rows rather than throwing out of the
+   * render.
+   */
   readonly items: ReadonlyArray<ChartLegendItem>;
   readonly testId?: string;
 }
@@ -118,13 +126,14 @@ export const ChartLegend = ({
   ...rest
 }: ChartLegendProps) => {
   const theme = useTheme();
+  const rows = listOf(items);
   return (
     <div
       {...rest}
       testId={testId}
       style={mergeStyles(recipeStyle(CHART_LEGEND, theme), style)}
     >
-      {items.map((item) => (
+      {rows.map((item) => (
         <div key={item.key} style={recipeStyle(CHART_LEGEND_ITEM, theme)}>
           <div
             testId={
@@ -153,9 +162,19 @@ export const ChartLegend = ({
 
 /** The rules every series chart shares. */
 export interface ChartProps extends Omit<Props, "children"> {
-  /** The series, painted in the theme's categorical order. */
+  /**
+   * The series, painted in the theme's categorical order.
+   *
+   * A saved chart writes `null` where it carried no series, so only a list is a
+   * list: a chart with no series paints its frame and no layer.
+   */
   readonly series: ReadonlyArray<ChartSeries>;
-  /** One label per category, under the plot. */
+  /**
+   * One label per category, under the plot.
+   *
+   * A stored absence is no label list — the rule {@link ChartProps.series}
+   * follows — so the categories paint nothing rather than throwing.
+   */
   readonly labels: ReadonlyArray<string>;
   /** The plot's width, in pixels. Defaults to `320`. */
   readonly width?: number;
@@ -253,7 +272,15 @@ const ChartFrame = ({
     series: ReadonlyArray<ChartSeries>,
     categories: number,
   ) => number;
+  /**
+   * The geometry, per series.
+   *
+   * The series and labels are the lists this frame read (see `listOf`), so a
+   * geometry function never receives the stored absence the props may carry.
+   */
   readonly marks: (
+    series: ReadonlyArray<ChartSeries>,
+    labels: ReadonlyArray<string>,
     box: ChartBox,
     scale: number,
   ) => ReadonlyArray<ReadonlyArray<ChartMark>>;
@@ -263,17 +290,19 @@ const ChartFrame = ({
     width: DEFAULT_CHART_WIDTH,
     height: DEFAULT_CHART_HEIGHT,
   });
-  const scale = scaleOf(series, labels.length);
+  const rows = listOf(series);
+  const categories = listOf(labels);
+  const scale = scaleOf(rows, categories.length);
   const palette = seriesColors(theme);
-  const layers = marks(box, scale);
-  const slot = barSlot(labels.length, box.width).slot;
+  const layers = marks(rows, categories, box, scale);
+  const slot = barSlot(categories.length, box.width).slot;
   const tickValues = axisTicks(scale, ticks);
   // The labels take their precision from the distance between neighbours, not
   // from the plot's scale: a four-step axis over `0.005` has a `0.00125` step
   // and prints `0.0013`, while `100` still prints `25`.
   const tickStep =
     tickValues.length > 1 ? scale / (tickValues.length - 1) : scale;
-  const showLegend = legend ?? series.length > 1;
+  const showLegend = legend ?? rows.length > 1;
   return (
     <div
       {...rest}
@@ -319,12 +348,12 @@ const ChartFrame = ({
             height: box.height,
           }}
         >
-          {Arr.map(series, (one, index) =>
+          {Arr.map(rows, (one, index) =>
             // A series paints a layer while it has a labelled slot, even if no
             // value in it draws: a bar chart of zeros shows no bar, but the
             // series exists and its numbers still reach the tree. Only a series
             // with no labelled category at all is not part of the picture.
-            Arr.match(Arr.take(one.values, labels.length), {
+            Arr.match(Arr.take(one.values, categories.length), {
               onEmpty: () => null,
               onNonEmpty: () => (
                 <ChartLayer
@@ -332,7 +361,7 @@ const ChartFrame = ({
                   chartTestId={testId}
                   seriesKey={one.key}
                   label={seriesName(one.label, one.key)}
-                  description={seriesDescription(one.values, labels)}
+                  description={seriesDescription(one.values, categories)}
                   colour={seriesColour(palette, index)}
                   marks={layers[index] ?? []}
                   box={box}
@@ -349,7 +378,7 @@ const ChartFrame = ({
           paddingLeft: axis ? CHART_AXIS_WIDTH : 0,
         }}
       >
-        {labels.map((label, index) => (
+        {Arr.map(categories, (label, index) => (
           <div
             key={`category-${index}`}
             testId={
@@ -376,7 +405,7 @@ const ChartFrame = ({
       {showLegend ? (
         <ChartLegend
           testId={testId === undefined ? undefined : `${testId}-legend`}
-          items={Arr.map(series, (one, index) => ({
+          items={Arr.map(rows, (one, index) => ({
             key: one.key,
             label: one.label,
             color: seriesColour(palette, index),
@@ -394,8 +423,8 @@ export type BarChartProps = ChartProps;
 export const BarChart = (props: BarChartProps) => (
   <ChartFrame
     {...props}
-    marks={(box, scale) =>
-      groupedBarMarks(props.series, box, scale, props.labels.length)
+    marks={(series, labels, box, scale) =>
+      groupedBarMarks(series, box, scale, labels.length)
     }
   />
 );
@@ -414,8 +443,8 @@ export const StackedBar = (props: StackedBarProps) => (
   <ChartFrame
     {...props}
     scaleOf={stackedScale}
-    marks={(box, scale) =>
-      stackedBarMarks(props.series, box, scale, props.labels.length)
+    marks={(series, labels, box, scale) =>
+      stackedBarMarks(series, box, scale, labels.length)
     }
   />
 );
@@ -433,9 +462,9 @@ export type LineChartProps = ChartProps;
 export const LineChart = (props: LineChartProps) => (
   <ChartFrame
     {...props}
-    marks={(box, scale) =>
-      Arr.map(props.series, (one) =>
-        Option.match(linePath(one.values, box, scale, props.labels.length), {
+    marks={(series, labels, box, scale) =>
+      Arr.map(series, (one) =>
+        Option.match(linePath(one.values, box, scale, labels.length), {
           onNone: () => [],
           onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
         }),
@@ -454,7 +483,12 @@ export interface ChartDatum {
 
 /** {@link DonutChart} props. */
 export interface DonutChartProps extends Omit<Props, "children"> {
-  /** One slice per datum, in the theme's categorical order. */
+  /**
+   * One slice per datum, in the theme's categorical order.
+   *
+   * A saved ring writes `null` where it carried no data, so only a list is a
+   * list: a ring with no data paints its empty frame.
+   */
   readonly data: ReadonlyArray<ChartDatum>;
   /** The plot's size, in pixels. Defaults to `160` square. */
   readonly size?: number;
@@ -492,8 +526,9 @@ export const DonutChart = ({
     height: DEFAULT_DONUT_SIZE,
   });
   const palette = seriesColors(theme);
+  const slices = listOf(data);
   const segments = donutSegments(
-    Arr.map(data, (one) => one.value),
+    Arr.map(slices, (one) => one.value),
     box,
   );
   return (
@@ -511,7 +546,7 @@ export const DonutChart = ({
           height: box.height,
         }}
       >
-        {data.map((one, index) => (
+        {slices.map((one, index) => (
           <ChartLayer
             key={one.key}
             chartTestId={testId}
@@ -527,7 +562,7 @@ export const DonutChart = ({
       {legend ? (
         <ChartLegend
           testId={testId === undefined ? undefined : `${testId}-legend`}
-          items={Arr.map(data, (one, index) => ({
+          items={Arr.map(slices, (one, index) => ({
             key: one.key,
             label: one.label,
             color: seriesColour(palette, index),
@@ -540,7 +575,12 @@ export const DonutChart = ({
 
 /** {@link Sparkline} props. */
 export interface SparklineProps extends Omit<Props, "children"> {
-  /** The values, one point each, in paint order. */
+  /**
+   * The values, one point each, in paint order.
+   *
+   * A saved trend writes `null` where it carried no samples, so only a list is
+   * a list: a sparkline with no values paints its frame and no line.
+   */
   readonly values: ReadonlyArray<number>;
   /** The plot's width, in pixels. Defaults to `120`. */
   readonly width?: number;
@@ -581,8 +621,11 @@ export const Sparkline = ({
     width: DEFAULT_SPARKLINE_WIDTH,
     height: DEFAULT_SPARKLINE_HEIGHT,
   });
-  const scale = chartScale([{ key: "sparkline", label: "sparkline", values }]);
-  const d = linePath(values, box, scale);
+  const points = listOf(values);
+  const scale = chartScale([
+    { key: "sparkline", label: "sparkline", values: points },
+  ]);
+  const d = linePath(points, box, scale);
   return (
     <div
       {...rest}
@@ -603,7 +646,7 @@ export const Sparkline = ({
             Option.fromNullishOr(ariaLabel),
             DEFAULT_SPARKLINE_LABEL,
           )}
-          description={seriesDescription(values)}
+          description={seriesDescription(points)}
           colour={color ?? seriesColour(seriesColors(theme), 0)}
           marks={Option.match(d, {
             onNone: () => [],

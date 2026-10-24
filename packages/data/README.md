@@ -581,6 +581,11 @@ its **key** — `seriesName`, the one reading the image's name and the legend ro
 share — so a saved chart configuration cannot paint a nameless row beside an
 unnamed image.
 
+A chart's list is **stored data** too, so every part reads it through `listOf`:
+only a list is a list, and a saved configuration whose `series`, `labels`,
+`data`, `values` or legend `items` is `null` paints its empty frame instead of
+throwing out of the render and taking the surface down.
+
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the
 workspace **tree**, the 4 000-row **windowed tree**, the **expandable-rows**

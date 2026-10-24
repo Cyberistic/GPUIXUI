@@ -11126,6 +11126,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
     Verified: unit 246/246, `test:behaviour` 159/159 in the real renderer, and
     live `--only data-table-lifecycle` (1/1, 27 s) — the controller's own path
     in a window.
+  - [x] Read a **chart's stored list** as a list instead of dereferencing it
+    — the data surfaces already read a slot a store wrote `null` for as the
+    absence it means (`listOf`), but the charts did not: `BarChart`/
+    `StackedBar`/`LineChart` handed `series`/`labels` straight to
+    `Arr.map`/`.length`, `DonutChart` called `data.map`, `ChartLegend`
+    `items.map` and `Sparkline` read `values.length` in the geometry, so a saved
+    dashboard configuration — or a query result a store kept before it loaded —
+    threw `TypeError: object null is not iterable` / `Cannot read properties of
+    null (reading 'map')` out of the render and took the whole surface down
+    instead of painting an empty frame. Every chart part now reads its list
+    through `listOf`, and `ChartFrame` hands its normalized series and labels to
+    the geometry callback so a mark painter cannot receive the stored absence
+    either. `src/behaviour/chart-boundary.test.tsx` (6 cases) mounts each part
+    with the stored absence and an `after` control beside it. Directions
+    measured: each case fails at `HEAD` with the empty render (all six) and the
+    named TypeErrors, and passes with the read. Green: 246 unit / 171 behaviour
+    with `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the README's
+    stored-list paragraph and the Charts inventory row. No native scenario
+    applies — the boundary read is the render the behaviour suite drives.
+    Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
