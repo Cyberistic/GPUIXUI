@@ -190,6 +190,31 @@ describe("layout containers", () => {
     ).toStrictEqual(Option.some(testTheme.borderWidth.thin));
   });
 
+  it("paint no caption for a caption that says nothing", () => {
+    // The bug guarded: `label` is copy a caller fills from an i18n table as
+    // often as a literal, and a missing row hands over `""` / `"   "`. A
+    // labelled rule is a row of two rules around a `Text`, so a blank caption
+    // drew the row's caption element — and the runtime lays a run of spaces out
+    // as a full line (measured in `runtime/layout.runtime.test.tsx`), which
+    // breaks a separator that reads as one hairline. A blank caption is no
+    // caption, the rule `visibleCopy` already applies to a label's help and a
+    // list row's description.
+    const blank = renderSeparator(
+      { orientation: "horizontal", label: "   " },
+      testTheme,
+    );
+    expect(elementChildren(blank)).toEqual([]);
+    expect(numberIn(blank, "height")).toStrictEqual(
+      Option.some(testTheme.borderWidth.thin),
+    );
+
+    const captioned = renderSeparator(
+      { orientation: "horizontal", label: "or" },
+      testTheme,
+    );
+    expect(elementChildren(captioned)).toHaveLength(3);
+  });
+
   it("spacer either takes a fixed step or fills what is left", () => {
     expect(
       numberIn(renderSpacer({ size: "lg" }, testTheme), "width"),

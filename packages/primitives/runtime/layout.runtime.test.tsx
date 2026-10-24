@@ -169,6 +169,26 @@ it("draws a horizontal Separator as one border step across the surface", async (
   expect(rule.width).toBe(next.width);
 });
 
+it("keeps a rule a blank caption says nothing about one hairline tall", async () => {
+  // The bug this guards: `label` is copy a caller fills from an i18n table as
+  // often as a literal, and a missing row hands over `"   "`. A labelled rule is
+  // a row around a caption `Text`, and the runtime lays a run of spaces out as a
+  // full line — so a rule whose caption said nothing painted a blank line
+  // between two hairlines instead of reading as one rule. The caption is a rule
+  // only where it says something (`visibleCopy`).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Separator orientation="horizontal" label="   " testId="blank-rule" />
+      <Separator orientation="horizontal" label="or" testId="captioned-rule" />
+    </Surface>,
+  );
+  const blank = boundsOf(runtime, "blank-rule");
+  const captioned = boundsOf(runtime, "captioned-rule");
+  expect(blank.height).toBe(testTheme.borderWidth.thin);
+  expect(captioned.height).toBeGreaterThan(blank.height);
+});
+
 it("keeps a static rule out of the tree, because a separator maps to a splitter", async () => {
   // The measured reason this component publishes no role. The one ARIA token a
   // rule could carry, `separator`, maps to the platform's **Splitter** — the

@@ -14,6 +14,7 @@
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import { visibleCopy } from "../core/a11y.js";
 import type { RuleSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { separatorClass, separatorGroupClass } from "../recipe/index.js";
@@ -23,7 +24,12 @@ import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
 export interface SeparatorProps extends RuleSpec {
-  /** A caption centred on the rule. */
+  /**
+   * A caption centred on the rule. A blank or whitespace-only caption is **no**
+   * caption — it is copy that arrived from data (an i18n table's missing row),
+   * and the runtime lays a run of spaces out as a full line, which would break a
+   * rule that reads as one hairline (`visibleCopy`).
+   */
   readonly label?: string;
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -38,7 +44,8 @@ export const renderSeparator = (
 ): ReactElement => {
   const classes = cn(separatorClass(orientation, inset), className);
   const rule = mergeStyle(recipeTw.classesToStyle(classes, theme).style, style);
-  if (label === undefined || orientation === "vertical") {
+  const caption = visibleCopy(label);
+  if (caption === undefined || orientation === "vertical") {
     return <div testId={testId} style={rule} />;
   }
   const grown = mergeStyle(
@@ -50,7 +57,7 @@ export const renderSeparator = (
     <div testId={testId} style={row}>
       <div style={grown} />
       <Text role="caption" tone="muted">
-        {label}
+        {caption}
       </Text>
       <div style={grown} />
     </div>

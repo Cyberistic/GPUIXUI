@@ -23,7 +23,7 @@ import { Separator, Stack, Text } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `orientation` | `"horizontal" \| "vertical"` | required | which way the rule runs |
 | `inset` | spacing step | none | margin at both ends, from `spacing` |
-| `label` | `string` | none | a centred caption; ignored for vertical rules |
+| `label` | `string` | none | a centred caption; ignored for vertical rules, and a blank or whitespace-only caption is no caption (it would paint a full blank line) |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
