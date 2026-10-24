@@ -130,6 +130,9 @@ export interface PropertyPanelFrameProps {
   readonly onChange: (record: PropertyRecord) => void;
 }
 
+/** The id a row's field carries, so its label can point at it. */
+export const fieldId = (key: string): string => `gx-prop-${key}`;
+
 /** One field, chosen by the row's own `type` — the panel's `Match`, in DOM. */
 function Field({
   row,
@@ -140,14 +143,15 @@ function Field({
   readonly record: PropertyRecord;
   readonly onChange: (record: PropertyRecord) => void;
 }) {
+  const id = fieldId(row.key);
   const edit = (value: PropertyValue): void =>
     onChange(setProperty(record, row.key, value));
 
   return Match.value(row).pipe(
     Match.when(isTextRow, (text) => (
       <input
-        aria-label={text.label}
         className="gx-props-field"
+        id={id}
         onChange={(event) => edit(event.target.value)}
         type="text"
         value={textValueOf(record, text)}
@@ -155,8 +159,8 @@ function Field({
     )),
     Match.when(isNumberRow, () => (
       <input
-        aria-label={row.label}
         className="gx-props-field"
+        id={id}
         min={80}
         onChange={(event) => edit(Number(event.target.value))}
         type="number"
@@ -165,17 +169,17 @@ function Field({
     )),
     Match.when(isBooleanRow, () => (
       <input
-        aria-label={row.label}
         checked={valueOf(record, row) === true}
         className="gx-props-switch"
+        id={id}
         onChange={(event) => edit(event.target.checked)}
         type="checkbox"
       />
     )),
     Match.when(isSelectRow, (select) => (
       <select
-        aria-label={select.label}
         className="gx-props-field"
+        id={id}
         onChange={(event) => edit(event.target.value)}
         value={textValueOf(record, select)}
       >
@@ -203,9 +207,13 @@ export function PropertyPanelFrame({
         <div className="gx-props-rows">
           {rows.map((row) => (
             <div className="gx-props-row" key={row.key}>
-              <span className="gx-props-label" style={{ width: LABEL_WIDTH }}>
+              <label
+                className="gx-props-label"
+                htmlFor={fieldId(row.key)}
+                style={{ width: LABEL_WIDTH }}
+              >
                 {row.label}
-              </span>
+              </label>
               <Field onChange={onChange} record={record} row={row} />
             </div>
           ))}

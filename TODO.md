@@ -10559,8 +10559,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `buildFileTree`/`fileIcon`, `parseLogLine`/`filterByLevel`/`levelTone`,
       `propertyRecord`/`setProperty`, over `@gpuixui/data`'s `flattenTree`,
       `treeCursorMove` and `pressSelection` — so only the paint is the browser's;
-      the tree's rows, glyphs, folder keys and selection, the log's filter, tint
-      and tail, and the panel's four row kinds and the object they repaint are
+      the tree's rows, glyphs, folder keys, active-row announcement and
+      selection, the log's filter, tint, tail and `role="log"` name, and the
+      panel's four row kinds, label/field pair and the object they repaint are
       each held to those functions. `browser-icon.tsx` paints an icon from the
       set's own markup (the gallery now shares it). Guards: `package-preview.test.ts`
       (4 cases) holds every row to a page the collection mounts, to a registered

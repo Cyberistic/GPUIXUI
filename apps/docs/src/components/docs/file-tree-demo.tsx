@@ -119,6 +119,16 @@ export const selectionReadout = (state: SelectionState): string => {
     : `${keys.length} chosen: ${keys.join(", ")}`;
 };
 
+/** The id a row's element carries, so the tree can name its active row. */
+export const rowId = (key: string): string =>
+  `gx-filetree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
+
+/** The cursor with `key` as the row the keyboard stands on. */
+export const withActive = (cursor: TreeCursor, key: string): TreeCursor => ({
+  ...cursor,
+  active: Option.some(key),
+});
+
 export interface FileTreeFrameProps {
   /** The roots to draw, so a test can hand in its own workspace. */
   readonly roots: ReadonlyArray<FileNode>;
@@ -141,13 +151,22 @@ export function FileTreeFrame({
   onSelectionChange,
 }: FileTreeFrameProps) {
   const rows = fileRows(roots, cursor);
-  const active = Option.getOrElse(cursor.active, () => "");
+  const active = Option.getOrUndefined(cursor.active);
   const order = Arr.map(rows, (row) => row.key);
 
-  const press = (row: TreeRow<FileNode>, toggle: boolean): void =>
+  // A press chooses the row and stands on it, the way the shipped tree's roving
+  // tab stop follows the row a reader pressed.
+  const press = (row: TreeRow<FileNode>, toggle: boolean): void => {
+    onCursorChange(withActive(cursor, row.key));
     onSelectionChange(
       pressSelection(selection, row.key, toggle ? "toggle" : "replace", order),
     );
+  };
+
+  // The chevron flips *its* row, not whichever row the cursor happens to stand
+  // on, so the cursor moves there first.
+  const flip = (row: TreeRow<FileNode>): void =>
+    onCursorChange(treeCursorMove(rows, withActive(cursor, row.key), "enter"));
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const key = treeKeyOf(event.key);
@@ -158,6 +177,7 @@ export function FileTreeFrame({
 
   return (
     <div
+      aria-activedescendant={active === undefined ? undefined : rowId(active)}
       aria-label="Workspace files"
       className="gx-filetree"
       onKeyDown={onKeyDown}
@@ -177,6 +197,7 @@ export function FileTreeFrame({
             data-chosen={chosen ? "true" : "false"}
             data-current={current ? "true" : "false"}
             data-icon={glyphOf(node, row.expanded)}
+            id={rowId(row.key)}
             key={row.key}
             onClick={() => press(row, false)}
             role="treeitem"
@@ -191,7 +212,7 @@ export function FileTreeFrame({
               disabled={!row.hasChildren}
               onClick={(event) => {
                 event.stopPropagation();
-                onCursorChange(treeCursorMove(rows, cursor, "enter"));
+                flip(row);
               }}
               type="button"
             >

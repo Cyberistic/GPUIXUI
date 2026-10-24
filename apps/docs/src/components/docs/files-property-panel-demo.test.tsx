@@ -71,6 +71,18 @@ describe("the files PropertyPanel preview", () => {
     expect(html).toContain(`style="width:${LABEL_WIDTH}px"`);
   });
 
+  it("points every label at the field it names", () => {
+    const html = markup();
+    const fields = ["name", "width", "visible", "align"];
+
+    expect(
+      fields.filter((key) => !html.includes(`for="gx-prop-${key}"`)),
+    ).toEqual([]);
+    expect(
+      fields.filter((key) => !html.includes(`id="gx-prop-${key}"`)),
+    ).toEqual([]);
+  });
+
   it("repaints the object from the same record an edit returns", () => {
     const widened = setProperty(panelRecord(), "width", 320);
     const html = markup(widened);

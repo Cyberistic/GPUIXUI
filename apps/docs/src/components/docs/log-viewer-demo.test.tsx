@@ -112,6 +112,11 @@ describe("the LogViewer preview", () => {
     expect(rows(markup(false, ["error"]))).toBe(2);
   });
 
+  it("announces the list as a log, named by what it holds", () => {
+    expect(markup(true)).toContain('role="log"');
+    expect(markup(true)).toContain('aria-label="Build log"');
+  });
+
   it("appends one line, because the caller owns the lines", () => {
     const one = appendLine(LOG_LINES);
     const two = appendLine(one);

@@ -146,6 +146,7 @@ export function LogViewerFrame({
         </button>
       </div>
       <div
+        aria-label="Build log"
         className="gx-logviewer-list"
         data-follow={follow ? "true" : "false"}
         ref={list}

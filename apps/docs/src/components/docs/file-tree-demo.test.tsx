@@ -14,8 +14,10 @@ import {
   fileRows,
   glyphOf,
   openCursor,
+  rowId,
   selectionReadout,
   treeKeyOf,
+  withActive,
   workspaceTree,
 } from "./file-tree-demo";
 
@@ -94,6 +96,28 @@ describe("the FileTree preview", () => {
     expect(missing).toEqual([]);
   });
 
+  it("names the row it stands on, so a reader hears the cursor move", () => {
+    const cursor = {
+      expanded: HashSet.make("src"),
+      active: Option.some("src/index.ts"),
+    };
+
+    expect(rowId("src/index.ts")).toBe("gx-filetree-src-index-ts");
+    expect(markup(cursor)).toContain(
+      'aria-activedescendant="gx-filetree-src-index-ts"',
+    );
+    expect(markup(cursor)).toContain('id="gx-filetree-src-index-ts"');
+
+    // A press moves the roving tab stop onto the row it chose.
+    expect(Option.getOrNull(withActive(cursor, "readme.md").active)).toBe(
+      "readme.md",
+    );
+    // A cursor with no row names none, rather than naming an id no row has.
+    expect(markup({ ...cursor, active: Option.none() })).not.toContain(
+      "aria-activedescendant",
+    );
+  });
+
   it("opens a folder with the package's key move, not a local toggle", () => {
     const roots = workspaceTree();
     const closed: TreeCursor = {
@@ -101,7 +125,7 @@ describe("the FileTree preview", () => {
       active: Option.some("src"),
     };
     const rows = fileRows(roots, closed);
-    const opened = treeCursorMove(rows, closed, "enter");
+    const opened = treeCursorMove(rows, withActive(closed, "src"), "enter");
 
     expect(HashSet.has(opened.expanded, "src")).toBe(true);
     // Right on a closed branch opens it; Left closes it again.
