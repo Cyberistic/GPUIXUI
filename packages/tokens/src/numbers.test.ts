@@ -919,7 +919,13 @@ describe("a row's box fits the line it paints", () => {
 
     // A carrier the painters stop painting is a ceiling the report would invent.
     expect(tree).toContain('textStyle(theme, "body")');
-    expect(tree).toContain("height: height ?? theme.density.rowHeight");
+    // The row's box is the density scale's, read directly or through the
+    // primitives' paint-side `rowHeightOf` seam, which answers the same number
+    // and the library's preset for a theme a store gave back without the group.
+    expect(
+      tree.includes("height: height ?? theme.density.rowHeight") ||
+        tree.includes("height ?? rowHeightOf(theme)"),
+    ).toBe(true);
     expect(tree).toContain("width: theme.iconSize.md");
     expect(log).toContain('textStyle(theme, "code")');
     expect(log).toContain("theme.density.rowHeight");

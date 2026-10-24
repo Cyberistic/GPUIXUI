@@ -1375,7 +1375,10 @@ drives a tick by hand instead of waiting.
 The runnable call sites are in
 [`src/system-theme.example.ts`](../packages/tokens/src/system-theme.example.ts):
 `followPalette` maps a palette onto the mode it states or its page implies, and
-`followDesktop` is the poll. `system-theme.test.ts` holds the mapper to the
+`followDesktop` is the poll, and the base it applies follows the mode the palette
+states — so a night desktop does not land on the light base's cards — with the
+interval timer unless the application passes its own.
+`system-theme.test.ts` holds the mapper to the
 palette's own values, the ink choice to measurement, the watcher to one apply per
 change, and the deleted file to the base theme.
 

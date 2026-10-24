@@ -162,7 +162,13 @@ describe("the target sizes' adoption", () => {
 
   it("reads the tree's rule: the chevron is a drawing and the row is the target", () => {
     const row = read("packages/data/src/tree/row.tsx");
-    expect(row).toContain("height: height ?? theme.density.rowHeight");
+    // The row's height is the density scale's, read directly or through the
+    // primitives' paint-side `rowHeightOf` seam, which answers the same number
+    // and the library's preset for a theme a store gave back without the group.
+    expect(
+      row.includes("height: height ?? theme.density.rowHeight") ||
+        row.includes("height ?? rowHeightOf(theme)"),
+    ).toBe(true);
     expect(row).toContain("width: theme.iconSize.md");
     // The glyph passes the press through, so the row it sits in receives it.
     expect(read("packages/icons/src/icon.tsx")).toContain(

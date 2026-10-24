@@ -6,8 +6,10 @@
 
 import {
   getTheme,
+  intervalTimer,
   paletteMode,
   paletteToTokens,
+  systemThemePollMs,
   watchSystemTheme,
   type SystemPalette,
   type SystemThemeTimer,
@@ -68,15 +70,32 @@ export const manualTimer = (): {
   };
 };
 
-/** An application following the desktop: one call, one applied theme. */
+/**
+ * An application following the desktop: one call, and the window wears the
+ * palette the desktop states.
+ *
+ * The base a palette lands on is the one its own mode names, not the mode the
+ * call started on: a night palette mapped onto the light base leaves the page
+ * dark and every card white, the mix `auditTheme` reports. `base` is the theme
+ * a deleted palette returns to, and `timer` is the interval unless the
+ * application schedules its own work.
+ */
 export const followDesktop = (
   read: () => SystemPalette | undefined,
   onChange: (theme: Theme) => void,
+  {
+    base = getTheme("light"),
+    timer = intervalTimer,
+  }: {
+    readonly base?: Theme;
+    readonly timer?: SystemThemeTimer;
+  } = {},
 ): (() => void) =>
   watchSystemTheme({
     read,
-    base: getTheme("light"),
+    base,
+    baseFor: (palette) => getTheme(paletteMode(palette) ?? base.mode),
     onChange,
-    every: 2000,
-    timer: manualTimer().timer,
+    every: systemThemePollMs,
+    timer,
   });

@@ -922,7 +922,10 @@ probe on the pinned runtime (12 checks): both palettes and their accents are
 asserted on the frame, the follow re-renders the tree without remounting it
 (`mounts=1`), and a deleted theme returns to the application's own — while this
 host is macOS, so `omarchy-theme-set` itself is not run. Runnable call sites are
-in [`src/system-theme.example.ts`](./src/system-theme.example.ts).
+in [`src/system-theme.example.ts`](./src/system-theme.example.ts):
+`followDesktop` is that poll, with the palette's own mode choosing the base
+instead of the mode the call started on, and the interval timer unless the
+application passes its own.
 
 ## Checking a theme
 

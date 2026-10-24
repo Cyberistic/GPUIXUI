@@ -630,17 +630,49 @@ describe("following a palette", () => {
     expect(stopped()).toBe(true);
   });
 
-  it("executes the documented call site", () => {
-    let applied: Theme | undefined;
-    followDesktop(
-      () => paperPalette,
-      (theme) => {
-        applied = theme;
-      },
+  it("executes the documented call site, onto the base the palette's mode names", () => {
+    // A night palette on the light base is a dark page with white cards — the
+    // mix the seam's own note warns about — so the example hands the palette's
+    // mode to the base instead of keeping the one the call started on.
+    const manual = manualTimer();
+    const applied: Array<Theme> = [];
+    let palette: SystemPalette | undefined = paperPalette;
+    const stop = followDesktop(
+      () => palette,
+      (theme) => applied.push(theme),
+      { base: lightTheme, timer: manual.timer },
     );
 
-    expect(applied?.colors.background).toBe(paperPalette.background);
-    expect(applied?.colors.primary).toBe(paperPalette.accent);
+    palette = nightPalette;
+    manual.tick();
+    palette = undefined;
+    manual.tick();
+    stop();
+
+    expect(applied.map((theme) => theme.mode)).toEqual([
+      "light",
+      "dark",
+      "light",
+    ]);
+    expect(applied[0]?.colors.background).toBe(paperPalette.background);
+    expect(applied[1]?.colors.card).toBe(darkTheme.colors.card);
+    expect(applied[1]?.colors.primary).toBe(nightPalette.accent);
+    // The deleted theme returns the caller's base, not the last palette's.
+    expect(applied[2]).toBe(lightTheme);
+
+    // The example's own prose and both pages name the rule, so a reader copying
+    // the call site is not taught the fixed base the seam warns against.
+    const example = read("./system-theme.example.ts");
+    expect(example).toContain("baseFor: (palette)");
+    expect(example).toContain("paletteMode(palette) ?? base.mode");
+    const catalogue = flat(read("../../../docs/tokens.md"));
+    const readme = flat(read("../README.md"));
+    expect(catalogue).toContain(
+      "`followDesktop` is the poll, and the base it applies follows the mode the palette states",
+    );
+    expect(readme).toContain(
+      "`followDesktop` is that poll, with the palette's own mode choosing the base",
+    );
   });
 
   it("reports the mix a partial palette cannot serve", () => {
