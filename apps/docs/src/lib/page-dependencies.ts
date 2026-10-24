@@ -12,6 +12,8 @@
  * over; the strip and its tests only see this shape.
  */
 
+import { packageCollections } from "./collection-routes";
+
 /** One workspace package a component's module imports. */
 export interface ComponentDependency {
   /** The package as the import names it: `@gpuixui/tokens`, `@gpuix/react`. */
@@ -39,12 +41,14 @@ export interface PageDependencyIndex {
 /**
  * The page that documents a workspace package.
  *
- * A package the site has no page for is still listed — it is a dependency the
- * reader may need — but its name stays plain text rather than link nowhere.
+ * A mounted collection documents its package at the collection's own route, so
+ * that route is derived rather than listed twice. Only a package the site
+ * writes a page for, or a collection whose documentation lives below its route,
+ * needs an entry here. A package the site has no page for is still listed — it
+ * is a dependency the reader may need — but its name stays plain text rather
+ * than link nowhere.
  */
-const documentedAt: Readonly<Record<string, string>> = {
-  "@gpuixui/primitives": "/docs/primitives",
-  "@gpuixui/components": "/docs/components",
+const sitePages: Readonly<Record<string, string>> = {
   "@gpuixui/icons": "/docs/icons/icon",
   "@gpuixui/tokens": "/docs/theming",
   "@gpuixui/tw": "/docs/styling",
@@ -71,7 +75,10 @@ export const dependencyPackage = (specifier: string): string | undefined =>
 
 /** The page that documents a package, when the site mounts one. */
 export const packagePage = (packageName: string): string | undefined =>
-  documentedAt[packageName];
+  sitePages[packageName] ??
+  packageCollections.find(
+    (collection) => collection.packageName === packageName,
+  )?.route;
 
 /** Group a module's import specifiers into the workspace packages it needs. */
 export const collectDependencies = (

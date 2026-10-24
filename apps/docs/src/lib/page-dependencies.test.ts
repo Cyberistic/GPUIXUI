@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { collectionIndexUrls } from "./collection-index";
 import { packageCollections } from "./collection-routes";
 import {
   collectDependencies,
@@ -55,6 +56,9 @@ const mountedPages = (): ReadonlySet<string> => {
         .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
         .map((name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`),
     ),
+    // A collection with no `index.mdx` answers at its route with a generated
+    // index, so a dependency link may point there.
+    ...collectionIndexUrls(),
     "/docs/components",
   ]);
 };
@@ -144,6 +148,30 @@ describe("the dependency index", () => {
         (dependency) => dependency.packageName === "@gpuixui/icons",
       )?.url,
     ).toBe("/docs/icons/icon");
+  });
+
+  it("links every package the site mounts a collection for to that collection", () => {
+    // Bug guarded: the map named the four packages whose pages the site writes
+    // itself and forgot the six collections mounted since, so a files page
+    // printed `@gpuixui/data` as plain text with `/docs/data-display` a click
+    // away. The mapping is derived from the collection list, so a new lane is
+    // linked without a second edit.
+    const unlinked = packageCollections
+      .filter((collection) => packagePage(collection.packageName) === undefined)
+      .map((collection) => collection.packageName);
+
+    expect(unlinked).toEqual([]);
+    expect(packageCollections.length).toBeGreaterThanOrEqual(9);
+    // A collection's route documents its package; only the icon set documents
+    // itself on a page below the route.
+    expect(packagePage("@gpuixui/icons")).toBe("/docs/icons/icon");
+    expect(packagePage("@gpuixui/data")).toBe("/docs/data-display");
+    expect(packagePage("@gpuixui/media")).toBe("/docs/media");
+    expect(
+      index.pages["/docs/files/file-tree"]?.dependencies.find(
+        (dependency) => dependency.packageName === "@gpuixui/data",
+      )?.url,
+    ).toBe("/docs/data-display");
   });
 
   it("leaves a package the site does not document unlinked rather than guessing", () => {

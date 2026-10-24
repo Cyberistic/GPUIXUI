@@ -398,7 +398,7 @@ src/lib/public-symbols-data.ts      The index, read from the plugin's build-time
 src/lib/package-graph.ts            The package table's order, responsibilities, direction chains and model
 src/lib/package-graph-source.ts     Reads packages/*/package.json for the table
 src/lib/package-graph-data.ts       The graph, read from the plugin's build-time module
-src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package
+src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package; a mounted collection's route is its package's page
 src/lib/page-dependencies-source.ts Reads each package page's component module and each curated page's source block, at build time
 src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
 src/lib/keyboard-contracts.ts      The keyboard model: each page's keys, the modules (workspace or installed runtime) they are read from, and the sentence each key earns

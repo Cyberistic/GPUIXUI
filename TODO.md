@@ -13235,7 +13235,39 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 391/391
+`[x]` `[██████████]` 393/393
+
+`[x]` Link **every mounted collection's package** from the dependency line —
+      `page-dependencies.ts` named the four packages whose pages the site writes
+      itself and forgot the six collections mounted since, so the **Built on**
+      line under a files, data, shell, dock, editor or media page printed
+      `@gpuixui/data` (or a sibling) as plain text while `/docs/data-display`
+      was one click away. The collection's own route is derived from
+      `packageCollections`, so a new lane is linked without a second edit; the
+      icon set keeps its one explicit entry (`/docs/icons/icon`, the component
+      page rather than the section index). `page-dependencies.test.ts` gains
+      `links every package the site mounts a collection for to that collection`
+      and its mounted-page set now includes each collection's generated index,
+      so a link to `/docs/dock` is not reported dead. Directions measured: at
+      `HEAD` the new case fails naming all six (`[ '@gpuixui/data', …, 
+      '@gpuixui/media' ]`), and with the derivation restored the file is 8/8.
+      Docs: `docs/preview-strategy.md` §The dependency line is generated and the
+      `apps/docs/README.md` ledger row.
+
+`[x]` Re-anchor the **dismissed-surface guard to the tab-stop seam** — the
+      components workstream moved the modal and toast close controls from the
+      hand-written `tabIndex={present ? undefined : -1}` to
+      `presenceTabStop(present)` in `internal/presence.tsx`, and
+      `dismissed-surface-page.test.ts` still pinned the literal, so the docs
+      suite went red on `Dialog` and `Drawer` while the pages it guards were
+      still correct. The guard now requires the three painters to compose the
+      seam, and a new case holds the seam's own answer (`tabIndex: -1` for a
+      surface that is only painted for its exit). Directions measured: the old
+      case failed by name on both modals (`tabIndex={presence.present ?
+      undefined : -1} (320)`), the new case fails when the seam's rule is not
+      found (`expected '' to contain 'tabIndex: -1'`), and the file is 6/6
+      green. No native scenario applies — a source read and the pages that
+      teach its result.
 
 `[x]` Answer a **stored drawer side with its edge**, not with the size's
       absence — the served `drawer.mdx` documented a `size` restored from

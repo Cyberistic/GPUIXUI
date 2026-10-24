@@ -842,7 +842,11 @@ module instead:
 
 - `src/lib/page-dependencies.ts` is the model: a page's component imports,
   grouped by workspace package (`@gpuixui/*`, `@gpuix/*`), with the page that
-  documents each one. A package the site has no page for stays plain text.
+  documents each one. A mounted collection documents its package at the
+  collection's own route, so that link is derived from `packageCollections`
+  rather than listed a second time; a package the site writes a page for, or a
+  collection whose documentation sits below its route, adds one entry. A package
+  the site has no page for stays plain text.
 - `src/lib/page-dependencies-source.ts` resolves the page's component. The
   published symbol wins, because a page stem is not always a file name: `grid`
   finds the `Grid` declared in `Stack.tsx`, `spacer` finds `Separator.tsx`. A
@@ -864,10 +868,12 @@ module instead:
 
 `src/lib/page-dependencies.test.ts` holds both directions of the reading — every
 workspace import the module makes is listed and nothing invented — and keeps
-every printed link on a mounted page. It also holds a curated page's entry to its
-own `ComponentSource` file. Deleting either frame's mount fails the frame case;
-emptying the index or dropping the curated half fails the curated case and both
-strip cases.
+every printed link on a mounted page, including a collection's generated index.
+It also holds a curated page's entry to its own `ComponentSource` file, and every
+mounted collection to a package page, so a lane added to `packageCollections`
+cannot render its package name as plain text. Deleting either frame's mount fails
+the frame case; emptying the index or dropping the curated half fails the curated
+case and both strip cases.
 
 ### The keyboard contract is generated, not written
 
