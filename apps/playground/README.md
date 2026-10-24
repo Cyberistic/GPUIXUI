@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-124 probes a real window can prove, of which twenty-seven mount shipped
+125 probes a real window can prove, of which twenty-eight mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -50,7 +50,8 @@ the command palette, the tabs, the list, the collapsible section, the popover,
 the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
-the modal focus rule and the breadcrumb trail, and the image zoom), ten mount
+the modal focus rule and the breadcrumb trail, the image zoom and the pinned
+list), ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
 action), three mount `@gpuixui/data`'s examples (the table, the virtualized
@@ -7078,6 +7079,59 @@ and the fill moves to the other half. Evidence:
 `apps/playground/README.md` §`rating-lifecycle`,
 `.artifacts/live/rating-{rest,chosen}.png`.
 
+### `pinned-list-lifecycle` — measured on 0.11.0 here
+
+**Does a pinned section title paint over the rows it holds above — and does a
+press on the row beneath it still reach the row?** The runtime paints no
+`position: sticky`, so `PinnedList` is a header layer repositioned from the
+measured offset, and the offscreen suite reads those frames back off the element
+tree. A tree read cannot answer either question: a transparent header and an
+opaque one have the same box, and an inert layer and a covering one have the same
+tree. Both are facts about the glass.
+
+The probe mounts the shipped `PinnedList` with two 200-point rows under a
+32-point title each, in a 160-point viewport, and drives it in a window. The
+first row is tall on purpose: at the probe's wheel its own **centre** lies under
+the held title, so a layer that took the press would swallow it. A second pair is
+the control: a filled cover over a row, which takes the press aimed at the row
+beneath it — so the held-title result below is a hit-test result, not a host that
+delivers every press to the element it names.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | the viewport is **160** tall, the title's reserved row **32**, the first title at the viewport's top, the second one section (**232**) below |
+| a travelling title | paints the caller's `surfaceColor` role (the palette's `card`) at its centre, and the row paints its own fill **60** points below the viewport's top |
+| a wheel `-120` | the offset is `-120`; the first title stays at the viewport's top while the second moves to **112** (232 − 120) |
+| the held title | paints the `card` role at the row's own centre, and the row's fill is still there below it — the title is opaque, not a wash |
+| a press on the row at rest | `presses=1,0` |
+| a press on a row under the filled cover | `control=0,1` — the cover takes the press |
+| a press on the row **under the held title** | `presses` stays `1`: the title takes it |
+| a wheel past the first section's end | the offset clamps at **−304** (two 232-point sections in a 160-point viewport); the first title paints nothing and the second takes the viewport's top |
+| a wheel back | the offset returns to `0` and the first title paints at its rest place again |
+
+**The measured limitation.** The component declares `pointerEvents: "none"` on
+the header layer, and the offscreen suite reads that declaration back; in a
+window the held title still takes the press the row beneath it would have taken.
+GPUI's opt-out belongs to the element that paints, and the title is a child with
+its own fill, so the declaration on the layer does not reach it. A row under a
+held title must therefore keep its own actionable content below the header's
+band (or the title's element needs the opt-out itself — recorded for the
+component's owner in `TODO.md` → Interlocks). This probe pins the measured
+behaviour; when the component changes, the check flips and the section follows.
+
+```sh
+nub apps/playground/dist/live/run.js --only pinned-list-lifecycle
+```
+
+39 checks, `--only pinned-list-lifecycle`, one window and three captures
+(`pinned-list-rest`, `pinned-list-scrolled`, `pinned-list-end`), green on
+0.11.0 here (~8.1 s). Fixture `src/live/pinned-list.ts` + probe
+`src/live/pinned-list-probe.tsx` + `pinned-list.test.ts` (the geometry, the
+pressed centre under the title, the end-of-section arithmetic, the readout, the
+id set and the limitation recorded below). Evidence:
+`apps/playground/README.md` §`pinned-list-lifecycle`,
+`.artifacts/live/pinned-list-{rest,scrolled,end}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7325,7 +7379,8 @@ narrower. Each deviation is deliberate and measured:
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
   `modal-scroll-lifecycle` and `image-zoom-lifecycle` and
-  `carousel-lifecycle` and `rating-lifecycle` and `motion-interruption` (66
+  `carousel-lifecycle` and `rating-lifecycle` and `pinned-list-lifecycle` and
+  `motion-interruption` (67
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples

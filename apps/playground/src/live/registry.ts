@@ -780,6 +780,12 @@ export const liveRegistry = [
       "Input: the shipped rating paints a filled star in the primary role, an empty one muted, a half star as a clipped fill, steps with the arrows and clears with Delete",
     capability: "input",
   },
+  {
+    id: "pinned-list-lifecycle",
+    title:
+      "Scroll: a pinned title is a repositioned layer that holds at the viewport's top, paints opaquely over the rows under it and takes no press from the row beneath",
+    capability: "scroll",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

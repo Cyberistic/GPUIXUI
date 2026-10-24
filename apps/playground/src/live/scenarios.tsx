@@ -1126,6 +1126,7 @@ import { QrMatrixProbe, qrMatrixSteps } from "./qr-matrix-probe.js";
 import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import { RatingProbe, ratingSteps } from "./rating-probe.js";
+import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -30640,5 +30641,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "rating-lifecycle",
     view: () => <RatingProbe />,
     steps: ratingSteps,
+  },
+  "pinned-list-lifecycle": {
+    id: "pinned-list-lifecycle",
+    view: () => <PinnedListProbe />,
+    steps: pinnedSteps,
   },
 };
