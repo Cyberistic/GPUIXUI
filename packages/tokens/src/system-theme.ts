@@ -18,8 +18,12 @@
  *
  * It **carries the mode the desktop states**. A platform that says `dark` has
  * answered the question a page's lightness only approximates, so a stated mode
- * wins over the page; a palette that states none is read by lightness, which is
- * the one question a page can answer without naming a mode.
+ * wins over the page; a palette that states none — or states a name this release
+ * does not ship, which a consumer's own decoder can write — is read by
+ * lightness, the one question a page can answer without naming a mode.
+ * {@link paletteMode} is total on the name for the reason every paint seam is:
+ * the documented call site hands its answer straight to `getTheme`, which
+ * refuses a mode it does not know.
  *
  * It **never invents a fill**. The one choice the mapper makes is which of the
  * palette's own inks reads on a filled role, and it makes it by measurement
@@ -52,7 +56,13 @@
 import { alpha, alphaOf, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { pageMode } from "./luminance.js";
-import { extendTheme, getTheme, type Theme, type ThemeMode } from "./theme.js";
+import {
+  extendTheme,
+  getTheme,
+  isThemeMode,
+  type Theme,
+  type ThemeMode,
+} from "./theme.js";
 
 /**
  * The colours a system theme offers, in the terms a theme uses.
@@ -73,7 +83,9 @@ export interface SystemPalette {
    *
    * A theme file that says `light` or `dark` has answered a question its page's
    * lightness only approximates — a mid-grey page is neither — so a stated mode
-   * is what {@link paletteMode} returns. Omit it and the page decides.
+   * is what {@link paletteMode} returns. Omit it and the page decides; state a
+   * name this release does not ship and the page decides too, because a decoder
+   * that writes the palette is a boundary where the value is still unknown.
    */
   readonly mode?: ThemeMode;
   /** The window's own page fill. */
@@ -125,13 +137,20 @@ const inkOn = (fill: string, palette: SystemPalette, base: Theme): string => {
 /**
  * The mode a palette states, or the one its own page implies.
  *
- * A palette that carries `mode` has answered the question — the desktop said
- * so — and that answer is returned unchanged, even when the page's lightness
- * would classify it the other way (a mid-grey page is neither light nor dark).
- * Otherwise a page reads as dark when white is the better contrast against it,
- * which is the one lightness question a page can answer by itself. A palette
- * that names no page, or a page in a colour form the measurement dialect cannot
- * resolve, has no mode at all.
+ * A palette that carries a mode this release ships has answered the question —
+ * the desktop said so — and that answer is returned unchanged, even when the
+ * page's lightness would classify it the other way (a mid-grey page is neither
+ * light nor dark). A mode this release does **not** ship is the same input as a
+ * stored role or size: a consumer's own decoder writes the `SystemPalette`, and
+ * a desktop file that says `Dark`, a release's old name or a `null` a JSON store
+ * kept is a name before it is a union. It is read from the page, the rule
+ * {@link themeModeOf} follows for a theme, because the documented call site hands
+ * this answer straight to `getTheme`, which refuses a mode it does not know — the
+ * example palette threw `\`Dark\` is not a theme mode` instead of following the
+ * desktop.
+ *
+ * A palette that names no page, or a page in a colour form the measurement
+ * dialect cannot resolve, has no mode at all.
  *
  * @example
  * ```ts
@@ -146,10 +165,7 @@ const inkOn = (fill: string, palette: SystemPalette, base: Theme): string => {
  */
 export function paletteMode(palette: SystemPalette): ThemeMode | undefined {
   const { background, mode } = palette;
-  if (mode !== undefined) {
-    return mode;
-  }
-  return pageMode(background);
+  return isThemeMode(mode) ? mode : pageMode(background);
 }
 
 /**

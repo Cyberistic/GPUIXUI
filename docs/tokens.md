@@ -1184,11 +1184,17 @@ The mapping has three rules, and all of them matter.
 page implies when it states none: a page that white contrasts with more than
 black is dark. A stated mode wins because a desktop that says so has answered a
 question a page's lightness only approximates — a mid-grey page is neither, and
-an inverted theme is a choice. Use it to hand the matching built-in theme to
-`paletteToTokens` (and to keep the app's mode switch honest), or omit `base` and
-the mapper does it for you. The base still owns everything the palette does not
-name — a card, a modal, a state wash — so a palette of only a page and an ink is
-a recolour, not a new design system.
+an inverted theme is a choice. `paletteMode` reads a stated mode this release
+does not ship from the page, the rule `themeModeOf` follows for a theme: a
+consumer's own decoder writes the `SystemPalette`, so the upper-cased `Dark` a
+file or a store carries is a name before it is a mode, and the call below hands
+the answer straight to `getTheme`, which refuses a mode it does not know. A
+palette with no page to measure answers no mode, so the caller's own default
+stands rather than a mode invented from the label. Use it to hand the matching
+built-in theme to `paletteToTokens` (and to keep the app's mode switch honest),
+or omit `base` and the mapper does it for you. The base still owns everything
+the palette does not name — a card, a modal, a state wash — so a palette of only
+a page and an ink is a recolour, not a new design system.
 
 ### Omarchy's `colors.toml`
 

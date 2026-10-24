@@ -371,7 +371,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 219/219
+`[x]` `[██████████]` 220/220
 
 `[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
 (`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
@@ -2185,6 +2185,38 @@ with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs in
 `docs/tokens.md` §Persisted choices, `docs/design-system.md` §11, the package
 README §Persisted choices and the `Design tokens` row. No native scenario applies
 — a pure name read and the tables it selects.
+
+`[x]` Read a **stated system-palette mode this release does not ship as the page
+it carries** — `paletteMode` returned a palette's stated `mode` unchanged, and
+`SystemPalette` is written by a **consumer's own decoder** (the package reads
+only Omarchy's file), so the value is unknown input at that boundary before it is
+a `ThemeMode`: an upper-cased `Dark`, a release's old name, a `null` a JSON store
+kept. Every documented call site hands that answer straight to `getTheme`, which
+refuses a name it does not know — so `followPalette({ ...nightPalette, mode:
+"Dark" })` (the executed example, and the page's snippet with `getTheme(
+paletteMode(palette) ?? "light")`) threw `Error: \`Dark\` is not a theme mode`
+instead of following the desktop, and `watchSystemTheme`'s documented `baseFor`
+did the same on every tick. The seam now reads every case through `isThemeMode`
+and falls back to the page, the rule `themeModeOf` already follows for a theme —
+whose JSDoc already claimed this seam followed it. A palette with no page to
+measure answers no mode, so the caller's own `?? base.mode` default stands rather
+than a mode invented from the label. Proof: `system-theme.test.ts` gains `reads a
+stated mode this release does not ship from the page` (`Dark`/`LIGHT` by page,
+`null` and a number by page, no page → no answer), `follows the page for a
+palette whose mode names a name it does not ship` (the executed example resolves
+the dark base and `paletteToTokens`' own default the light one) and `teaches the
+fallback a stated mode name gets, on every page` (the catalogue, the design
+system, the README and the `System palettes` row state the read), plus `prints
+the case count its own suite runs` — the row printed **22** while the file had
+grown to 26, so the count is read from the file and a case added here moves the
+row or fails the case. Directions measured: with the stated-mode branch restored,
+three cases fail by name (`expected 'Dark' to be 'dark'` twice and the page case)
+and the second throws the exact `Error: \`Dark\` is not a theme mode …` out of
+`followPalette`; restored, the package is 49 files / **2 999** tests with
+`check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs in
+`docs/tokens.md` §System palettes, `docs/design-system.md` §11, the package
+README §System palettes and the `System palettes` row. No native scenario applies
+— a pure name read and the theme it selects.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -9538,6 +9570,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Carry the **stored preference's fail-safe** to `/docs/motion` — the package now decodes the preference an application persisted (`preferenceOf`: the two names themselves, a nullish value the house `"animated"`, and a value that is present and not a name `"reduced"`), while the page's §Reduced motion taught only `preference={reduceMotion ? "reduced" : "animated"}` and the provider's default, so a reader whose settings row decodes as `NULL` or a renamed string could not learn what their tree would do or why the fail-safe direction is the reduced one | docs-site (`apps/docs/content/docs/motion.mdx`) | **resolved 2026-10-24** — the page's §Reduced motion now carries the three cases under the provider snippet and the reason the unequal mistakes justify the reduced direction, and its module table names `preferenceOf` in the `timing` row. `motion-page.test.ts` gains `teaches the fail-safe a stored preference takes`, which executes `preferenceOf` itself (both names, `null`, `undefined`, a renamed `"middle"`) and requires the page to name the function, the `timing` entry, the absent-value default, the renamed-string answer and the unequal mistakes; the package half is held by `packages/motion/src/timing.test.ts`, `presence.test.ts`, `provider.test.tsx` and the components' `presence.test.tsx`. Directions measured: with the page at `HEAD` the case fails (`expected … to contain '\`preferenceOf\`'`), and with the section restored `motion-page.test.ts` is 7/7. `nub run --filter @gpuixui/docs check-types` reports the recorded 164 pre-existing `packages/primitives` errors and none in `apps/docs`. No native scenario applies — a page and pure package values |
 
 | Cite the **`ImageZoom` probe**, and square its magnified corner — the `image-zoom-lifecycle` live probe (54 checks, 0.11.0) measured that the shipped component magnifies and pans as documented: a 240×160 frame at the default 1.6× paints a **384×256** picture at **−36,−72** for a pointer at `60,120` and at **−120,−72** for `200,120`, the pointed mark stays under the pointer, the marks outside the window vanish, and the mark's exact paint grows **30×30 → 48×48** device pixels, so the `<img>` host really scales its buffer. It also measured a fidelity gap: the resting picture carries the frame's radius on the image itself, so the frame's corner is the page, while magnified the runtime **clips an overflowing child square** and the corner paints the picture's own `#2B3240`. The package page (`packages/components/docs/image-zoom.mdx` §Limitations) and the `Image zoom` row in `COMPONENTS.md` should cite the probe for the magnification and pan, and state the corner rule; rounding the magnified corner needs a runtime change (a rounded clip on an overflowing child) or a component-side mask — no mask exists in 0.11.0, so the honest fix is documentation | components (`packages/components/docs/image-zoom.mdx`, `COMPONENTS.md`'s Image zoom row) | open — measured 2026-10-24 by the playground's `image-zoom-lifecycle`; fixture, probe, README section and guards are landed in the playground workstream (`apps/playground/README.md` §`image-zoom-lifecycle`, `.artifacts/live/image-zoom-{rest,mark,other,returned}.png`) |
+| Say that **a system palette's stated mode is read from the page** on `/docs/dark-mode` — the site's page says `paletteMode(palette)` "returns the mode the palette states and falls back to the page's lightness only when it states none", and the seam now also reads a stated mode **this release does not ship** (an upper-cased `Dark` a consumer's decoder writes) from the page, because the documented call site hands the answer to `getTheme`, which refuses a name it does not know; the sentence should say so and name the reason | docs-site (`apps/docs/content/docs/dark-mode.mdx`) | open — the seam, its tests and the token pages landed 2026-10-24 (`paletteMode`, `system-theme.test.ts`'s four new cases); the sentence is this page's |
 
 ## Phase D — data and workspace components
 

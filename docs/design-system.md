@@ -1238,7 +1238,9 @@ and a page no colour grammar reads keeps `light`. The chart scale, the code
 palette, a native host's `appearance` and the palette `applyStyle` wears all read
 it there. Read as light, an upper-cased `Dark` was handed the light tables on a
 dark fill and lost a platform style's palette while keeping its radii and
-families.
+families. `paletteMode` reads a system palette's stated mode the same way,
+because a consumer's decoder writes that palette at a boundary, and the
+documented call site hands its answer straight to `getTheme`.
 
 The parts are
 public too: `contrastRatio(foreground, background)`

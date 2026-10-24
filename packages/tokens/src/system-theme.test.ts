@@ -45,6 +45,17 @@ import {
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
+/** A document's prose with its line breaks folded away. */
+const flat = (text: string): string => text.replace(/\s+/g, " ");
+
+/**
+ * A palette as a JSON store hands one back, where a field is unknown before it
+ * is a union and a key can hold `null`. The cast is the storage boundary, the
+ * rule `styles.test.ts`'s stored role and size cases follow.
+ */
+const stored = (palette: Record<string, unknown>): SystemPalette =>
+  JSON.parse(JSON.stringify(palette)) as SystemPalette;
+
 const isBaseValue = (
   base: Theme,
   palette: SystemPalette,
@@ -289,6 +300,63 @@ describe("the palette a desktop hands over", () => {
     expect(paletteMode({ background: "#FFFFFF", mode: "dark" })).toBe("dark");
     // A mode with no page is still an answer; nothing has to be measured.
     expect(paletteMode({ mode: "dark" })).toBe("dark");
+  });
+
+  it("reads a stated mode this release does not ship from the page", () => {
+    // The bug this guards: a `SystemPalette` is written by a consumer's decoder,
+    // so its `mode` is unknown input at that boundary even though the type names
+    // two modes. `paletteMode` returned the stated string unchanged and the
+    // documented call site hands it straight to `getTheme`, which refuses a mode
+    // it does not know — an upper-cased `Dark` threw out of `followPalette`
+    // instead of following the desktop's page.
+    expect(paletteMode(stored({ ...nightPalette, mode: "Dark" }))).toBe("dark");
+    expect(paletteMode(stored({ ...paperPalette, mode: "LIGHT" }))).toBe(
+      "light",
+    );
+    // A key a store kept without a value is the absence it is, and the page still
+    // answers; a number is not a mode either.
+    expect(paletteMode(stored({ ...nightPalette, mode: null }))).toBe("dark");
+    expect(paletteMode(stored({ ...paperPalette, mode: 7 }))).toBe("light");
+    // No page to measure is no answer, so the caller's own default stands rather
+    // than a mode invented from a label nobody ships.
+    expect(
+      paletteMode(stored({ accent: "#B49CFF", mode: "solar" })),
+    ).toBeUndefined();
+  });
+
+  it("follows the page for a palette whose mode names a name it does not ship", () => {
+    const followed = followPalette(stored({ ...nightPalette, mode: "Dark" }));
+
+    expect(followed.mode).toBe("dark");
+    expect(followed.colors.background).toBe(nightPalette.background);
+    expect(followed.name).toBe(darkTheme.name);
+    // A palette that only names the paper page and a stale label still gets the
+    // light base, which is what `paletteToTokens`' own default reads.
+    expect(
+      paletteToTokens(stored({ ...paperPalette, mode: "DARK" })).mode,
+    ).toBe("light");
+  });
+
+  it("teaches the fallback a stated mode name gets, on every page", () => {
+    // The substitution is a paint seam's, so a page that promises only "the mode
+    // the palette states" leaves a reader staring at `getTheme`'s refusal with no
+    // explanation. Every surface a consumer reads states the read.
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+
+    expect(paletteMode(stored({ ...nightPalette, mode: "Dark" }))).toBe("dark");
+
+    [catalogue, readme, inventory].forEach((page) => {
+      expect(flat(page)).toContain("stated mode this release does not ship");
+    });
+    expect(flat(catalogue)).toContain(
+      "A palette with no page to measure answers no mode",
+    );
+    expect(flat(design)).toContain(
+      "`paletteMode` reads a system palette's stated mode",
+    );
   });
 
   it("follows the palette's page without a base to hand", () => {
@@ -562,5 +630,19 @@ describe("following a palette", () => {
     });
     manual.tick();
     expect(applied).toHaveLength(1);
+  });
+
+  it("prints the case count its own suite runs", () => {
+    // The inventory row is the one place a reader sees how much this file holds,
+    // and it printed 22 while the suite had grown to 26. The count is read from
+    // the file itself, so a case added here moves the row or fails this one.
+    const source = read("./system-theme.test.ts");
+    const inventory = read("../../../COMPONENTS.md");
+    const cases = source
+      .split("\n")
+      .filter((line) => /^ {2}it\b/.test(line)).length;
+
+    expect(cases).toBeGreaterThan(20);
+    expect(inventory).toContain(`\`system-theme.test.ts\` (${cases} cases)`);
   });
 });

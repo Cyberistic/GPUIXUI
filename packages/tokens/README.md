@@ -760,6 +760,13 @@ const stop = watchSystemTheme({
 });
 ```
 
+`paletteMode` is total on the mode a decoder writes: a stated mode this release
+does not ship — the upper-cased `Dark` a file or a store carries — is read from
+the page, the rule `themeModeOf` follows, because `baseFor` above hands the
+answer straight to `getTheme`, which refuses a name it does not know. A palette
+with no page to measure answers no mode, so `?? appTheme.mode` is the caller's
+default rather than an invented one.
+
 A palette names roles, and each maps to the role of the same name (`accent` is
 the `primary` fill, `danger` is `destructive`); an unnamed role keeps the base
 theme's value. The mapper chooses each filled role's on-colour by measuring the
