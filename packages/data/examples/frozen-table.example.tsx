@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A frozen-column grid: a pinned name column beside columns that pan.
  *

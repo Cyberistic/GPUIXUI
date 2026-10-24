@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The checkbox column: a select-all box in the header, one box per row.
  *

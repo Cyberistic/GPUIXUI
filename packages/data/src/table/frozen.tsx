@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The frozen-column composition: two panes that scroll as one.
  *

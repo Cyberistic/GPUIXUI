@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The advanced filter: a builder over a typed predicate tree.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A large file tree: four thousand rows, of which only a window is retained.
  *

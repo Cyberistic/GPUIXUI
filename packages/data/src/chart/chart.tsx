@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Charts, drawn as stacked `<svg>` masks.
  *

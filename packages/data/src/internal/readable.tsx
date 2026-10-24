@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Paint a value so the words reach the accessibility tree.
  *

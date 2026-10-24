@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The data surfaces, composed over one object: a toolbar, a statistic card, a
  * key-value list, a property panel and an advanced filter.

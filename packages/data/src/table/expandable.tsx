@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The row that opens a panel under itself.
  *

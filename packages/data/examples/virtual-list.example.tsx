@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A virtualized list of 2 000 rows: a window paints, the range is reported, and
  * a far row is revealed without mounting the rows above it.

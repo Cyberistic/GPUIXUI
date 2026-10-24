@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A toolbar: the row of controls a data surface acts from.
  *

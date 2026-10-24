@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The divider that resizes the column it ends.
  *

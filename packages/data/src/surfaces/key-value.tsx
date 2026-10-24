@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A key-value list: the property rows an inspector reads.
  *

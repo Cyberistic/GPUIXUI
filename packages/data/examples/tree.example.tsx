@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A workspace file tree: open a folder, walk the rows from the keyboard and
  * jump to a row by typing its name.

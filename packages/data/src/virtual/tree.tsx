@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The windowed tree: a hierarchy flattened to rows, of which only a window is
  * retained and painted.

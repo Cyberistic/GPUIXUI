@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A metrics screen: every chart the package ships, on one card surface.
  *

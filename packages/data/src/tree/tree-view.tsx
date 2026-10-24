@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The tree of rows a reader opens, closes and walks.
  *

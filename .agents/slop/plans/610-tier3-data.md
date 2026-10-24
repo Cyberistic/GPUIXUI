@@ -792,6 +792,15 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   restoring the raw read in `sort/header.tsx` fails with
   `sort/header.tsx: theme.colors`.
 
+- **Every published file pins its JSX runtime**: a consumer compiling this
+  package from source (the docs app does) resolved its files against that
+  program's runtime, so `@gpuixui/docs` `check-types` reported 68 errors here in
+  files no docs change touched. All 31 published `.tsx` (22 `src`, 9 `examples`)
+  now open with `/** @jsxImportSource @gpuix/react */`; `src/jsx-runtime.test.ts`
+  derives the runtime from the `tsconfig`, walks both trees and names a file
+  that pins none or another. Direction measured: `src/table/table.tsx: pins no
+  JSX runtime`. `apps/docs check-types` is clean.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

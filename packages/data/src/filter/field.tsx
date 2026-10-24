@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The filter field above a table's rows.
  *

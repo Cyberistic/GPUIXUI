@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The measured frame a table's parts share.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The column configuration menu above a table.
  *

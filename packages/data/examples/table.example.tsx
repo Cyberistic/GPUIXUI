@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A files table: sort, filter, choose a row, configure columns, resize a track
  * and walk the rows from the keyboard.

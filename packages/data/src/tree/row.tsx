@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * One painted tree row, shared by the plain and the windowed tree.
  *

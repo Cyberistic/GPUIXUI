@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A sortable header cell.
  *

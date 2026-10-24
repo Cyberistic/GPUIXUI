@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A files table whose rows open a detail panel under themselves.
  *

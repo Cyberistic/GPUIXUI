@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The table core: a bounded surface whose header stays painted while its rows
  * scroll.

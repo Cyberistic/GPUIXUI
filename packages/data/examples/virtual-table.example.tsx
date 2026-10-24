@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A virtualized table over 1 000 rows: one measured window of rows is
  * retained, a header stays painted above them, a far row is revealed, and a

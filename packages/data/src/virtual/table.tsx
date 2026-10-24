@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The virtualized table body, and the table that composes it with a fixed
  * header.

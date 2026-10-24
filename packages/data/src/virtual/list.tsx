@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The virtualized list, over the runtime's own `<virtual-list>`.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A property panel: the rows that describe one object.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A statistic card: a label, a reading and a hint.
  *
