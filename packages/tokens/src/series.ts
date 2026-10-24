@@ -24,7 +24,11 @@
 import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
-import type { ThemeContrast, ThemeMode } from "./theme.js";
+import {
+  themeContrastOf,
+  type ThemeContrast,
+  type ThemeMode,
+} from "./theme.js";
 
 /**
  * One categorical scale: five colours, in the order a chart assigns them. A
@@ -200,7 +204,7 @@ export function seriesColors(theme: SeriesSource): SeriesColors {
   if (theme.series != null) {
     return theme.series;
   }
-  if (theme.contrast === "high") {
+  if (themeContrastOf(theme) === "high") {
     return theme.mode === "dark"
       ? highContrastDarkSeries
       : highContrastLightSeries;

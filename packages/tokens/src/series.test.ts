@@ -62,6 +62,7 @@ import {
   lightTheme,
   platformTheme,
   themes,
+  type Theme,
 } from "./theme.js";
 
 const shipped = [
@@ -525,5 +526,26 @@ describe("the example is executable and its calls are the documented ones", () =
     expect(seriesReport(redGreen)).toContain(
       "deuteranopia: series 1 and 2 are 0.024 apart",
     );
+  });
+});
+
+/**
+ * Guards the table a stated-but-unshipped variant resolves.
+ *
+ * `seriesColors` compared `theme.contrast === "high"`, so a chart in a theme
+ * restored with the upper-cased `HIGH` was drawn in the **default** scale — five
+ * hues designed against the 3:1 boundary floor, in a window that promises 4.5 —
+ * while `seriesFailures` measured that same table. The variant is read through
+ * the floors' own rule now, so a stated variant this release does not ship takes
+ * the scale designed for the strict floors.
+ */
+describe("a stored contrast variant", () => {
+  const stored = (contrast: unknown): Theme =>
+    ({ ...lightTheme, contrast }) as Theme;
+
+  it("resolves the scale designed for the strict floors", () => {
+    expect(seriesColors(stored("HIGH"))).toBe(highContrastLightSeries);
+    expect(seriesColors(stored("default"))).toBe(lightSeries);
+    expect(seriesColors(stored(undefined))).toBe(lightSeries);
   });
 });

@@ -40,6 +40,7 @@ import {
   lightTheme,
   platformTheme,
   themes,
+  type Theme,
 } from "./theme.js";
 
 /** The ratio as the catalogue prints it, or a word when it cannot be measured. */
@@ -215,6 +216,87 @@ describe("the floors a contrast report uses", () => {
  * only `background` and `card`, so a menu row could ship below the body floor
  * with nothing to notice.
  */
+/**
+ * Guards the variant a theme does not ship.
+ *
+ * `contrastFloorsFor` read `theme.contrast === "high"`, so a theme restored from
+ * storage whose variant this release does not carry — the upper-cased `HIGH` the
+ * resolver story already names, a release's old name, a store's `""` — fell to
+ * the **default** floors, and `syntaxColors`/`seriesColors` handed the host the
+ * default palettes with it. A high-contrast palette was then measured against
+ * the AA floors and `auditTheme(...).passed` said yes, while the one axis whose
+ * whole job is an accessibility promise was silently downgraded. A variant that
+ * is stated but not one this release ships is read as the **strict** one; an
+ * absent or `null` variant is the "declares nothing" a hand-built theme is.
+ */
+describe("a contrast variant this release does not ship", () => {
+  /** The same palette under a variant the type cannot vouch for. */
+  const stated = (contrast: unknown): Theme =>
+    ({
+      ...extendTheme(lightTheme, { colors: { mutedForeground: "#5A5A5A" } }),
+      contrast,
+    }) as Theme;
+
+  it("is held to the strict floors rather than the default ones", () => {
+    const ratio =
+      contrastRatio("#5A5A5A", lightTheme.colors.background) ?? undefined;
+    // The premise: the pair clears the default secondary floor and misses AAA.
+    expect(ratio).toBeGreaterThanOrEqual(contrastFloors.secondary);
+    expect(ratio).toBeLessThan(highContrastFloors.secondary);
+
+    const reported = contrastFailures(stated("HIGH"));
+
+    expect(reported).toContainEqual({
+      foreground: "mutedForeground",
+      background: "background",
+      ratio,
+      floor: highContrastFloors.secondary,
+    });
+    // The palette under the variant it actually is keeps passing the default
+    // floors, so the case measures the variant and not the grey.
+    expect(
+      contrastFailures(
+        extendTheme(lightTheme, { colors: { mutedForeground: "#5A5A5A" } }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reads every stated variant it does not ship as the strict one", () => {
+    ["HIGH", "maximum", "", "Default", 1, {}].forEach((value) =>
+      expect(contrastFloorsFor(stated(value)), String(value)).toEqual(
+        highContrastFloors,
+      ),
+    );
+  });
+
+  it("keeps the default floors for an absent or nulled variant", () => {
+    [undefined, null].forEach((value) =>
+      expect(contrastFloorsFor(stated(value)), String(value)).toEqual(
+        contrastFloors,
+      ),
+    );
+    expect(contrastFloorsFor(lightTheme)).toEqual(contrastFloors);
+    expect(contrastFloorsFor(highContrastLightTheme)).toEqual(
+      highContrastFloors,
+    );
+  });
+
+  it("is taught where the floors and the absence rule are", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+
+    [catalogue, design, readme].forEach((page) => {
+      expect(page).toContain("does not ship");
+      expect(page).toContain("strict");
+    });
+  });
+});
+
 describe("status text on a surface", () => {
   /** The strips a status message's text can be painted straight onto. */
   const statusTextStrips = ["background", "card", "popover", "muted"] as const;

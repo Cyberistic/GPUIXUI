@@ -216,6 +216,13 @@ const theme = getTheme("dark", "high");
 `getTheme(mode)` is unchanged and returns the default theme. A selection example
 lives in [`src/high-contrast.example.ts`](./src/high-contrast.example.ts).
 
+The variant is also a **stored axis**, so a theme restored from storage can carry
+a value this release does not ship (an upper-cased `HIGH`, a release's old name).
+`themeContrastOf(theme)` reads that as the **strict** variant rather than the
+default: an accessibility claim measured against weaker floors, or highlighted
+with the default palette, would be downgraded quietly while the gate said yes. An
+absent or `null` variant is "declares nothing" and keeps the default floors.
+
 ## Status tones
 
 The four status families — `info`, `success`, `warning` and `destructive` — each

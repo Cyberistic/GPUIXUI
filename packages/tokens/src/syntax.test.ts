@@ -403,3 +403,27 @@ describe("the syntax palette", () => {
     );
   });
 });
+
+/**
+ * Guards the table a stated-but-unshipped variant resolves.
+ *
+ * `syntaxColors` compared `theme.contrast === "high"`, so a theme restored from
+ * storage with the variant this release does not carry (the upper-cased `HIGH`)
+ * fell to the **default** palette: a code block in a high-contrast window was
+ * highlighted with tokens designed for the default floors, and the report that
+ * would have measured it was handed the same table. The variant is read through
+ * the floors' own rule now, so a stated variant this release does not ship takes
+ * the table designed for the strict floors.
+ */
+describe("a stored contrast variant", () => {
+  const stored = (contrast: unknown): Theme =>
+    ({ ...lightTheme, contrast }) as Theme;
+
+  it("resolves the table designed for the strict floors", () => {
+    expect(syntaxColors(stored("HIGH"))).toBe(highContrastLightSyntax);
+    // The variant it actually is keeps the default table, so the case measures
+    // the variant rather than the mode.
+    expect(syntaxColors(stored("default"))).toBe(lightSyntax);
+    expect(syntaxColors(stored(undefined))).toBe(lightSyntax);
+  });
+});

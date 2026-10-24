@@ -39,6 +39,7 @@ import {
   contrastRatio,
   type ContrastFloors,
 } from "./contrast.js";
+import { themeContrastOf } from "./theme.js";
 
 /**
  * The token types a syntax theme paints, in the runtime's own order, so
@@ -229,7 +230,7 @@ export function syntaxColors(theme: SyntaxSource): SyntaxColors {
   if (theme.syntax != null) {
     return theme.syntax;
   }
-  if (theme.contrast === "high") {
+  if (themeContrastOf(theme) === "high") {
     return theme.mode === "dark"
       ? highContrastDarkSyntax
       : highContrastLightSyntax;

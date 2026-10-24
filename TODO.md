@@ -371,7 +371,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 217/217
+`[x]` `[██████████]` 218/218
 
 `[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
 (`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
@@ -2118,6 +2118,37 @@ package 49 files / **2 980** tests with `check-types` clean. Docs: `docs/tokens.
 §Elevation, `docs/design-system.md` §7/§9, the package README §Shadows and the
 `Elevation` inventory row. No native scenario applies — a merge and the values it
 answers.
+
+`[x]` Read a **stated contrast variant this release does not ship as the strict
+one** — `contrastFloorsFor`, `syntaxColors` and `seriesColors` each compared
+`theme.contrast === "high"`, so a theme restored from storage carrying a variant
+this release does not ship — the upper-cased `HIGH` the resolver story already
+names, an old release's name, a store's `""` — fell to the **default** floors,
+the default syntax table and the default series scale, and
+`auditTheme(...).passed` said yes: a high-contrast palette was measured against
+the AA floors while its own promise was AAA, and its code block was highlighted
+with hues designed for the 3:1 boundary. The axis was already refused at every
+resolver (`getTheme`/`platformTheme`/`retroTheme`), so this was the read half of
+the same axis on a theme that never went through one. `themeContrastOf(theme)`
+is that read: a stated value the release does not ship resolves to `high` — the
+fail-safe answer, because a theme that cannot say which floors it was designed
+for is held to the stronger ones and its report names the pair that misses —
+while an absent or `null` variant is the "declares nothing" a hand-built theme
+is and keeps `default`; `applyStyle` reads the same seam instead of
+`base.contrast ?? "default"`. Proof: `contrast.test.ts` gains `a contrast variant
+this release does not ship` (4 cases: the floors, the gate reporting a 6.48:1
+grey at the 7:1 floor while the same palette under `default` is clean, every
+stated junk value, the absent/`null` pair, and the three pages), `syntax.test.ts`
+and `series.test.ts` one each (the strict table and scale, with the shipped
+variant as the control). Directions measured: on the old comparison the five
+cases fail by name (`HIGH: expected { body: 7, secondary: 4.5, …(2) } to deeply
+equal { body: 7, secondary: 7, …(2) }`, the gate case `expected 0 to be greater
+than 0`, and both palette cases naming the default table); restored, the three
+files are 173/173 and the package 49 files / **2 986** tests with `check-types`
+clean (`@gpuixui/primitives` and `@gpuixui/components` type-check against the
+widened parameter). Docs in `docs/tokens.md` §Contrast, `docs/design-system.md`
+§9, the package README §High contrast and the `Contrast contract` row. No native
+scenario applies — the floors, the gate and two tables read from one value.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -5705,6 +5736,28 @@ answers.
       probe in the component's page and row, and the square corner, are the
       Interlocks rows below.
 
+`[x]` Report the **held button on a drag the offscreen host synthesises** — the
+      headless suite's `data-table-core` failed on master with
+      `the drag widened the name column: expected a string containing "w=320",
+      got "… w=260 …"`, and the cause was this package, not the table: a window's
+      own drag reports the button it holds on **every move**
+      (`pressedButton: 0` — the automation client's `drag` passes it), while
+      `createTestHost`'s `drag` called `nativeSimulateMouseMove(x, y)` with no
+      button at all. A component that ends its gesture on a move holding none —
+      the rule `packages/data/src/columns/divider.tsx` and the dock's divider
+      follow, because a window the pointer left never delivers the release —
+      therefore cancelled every move the offscreen host produced, so a drag that
+      resizes in a window resized nothing in the suite. `NativeRenderer`'s
+      `nativeSimulateMouseMove` takes the held button (the renderer's own third
+      argument), `drag` passes `0`, and `native.test.ts` gains
+      `reports the held button on every move a drag synthesises`; the file header
+      states the bug. Directions measured: with the argument removed the two drag
+      cases fail (`expected 'move 105,50 held=none' to be 'move 105,50 held=0'`
+      and the stepped case's array), and with it the file is 15/15 and the package
+      8 files / 81 tests green; `nub apps/playground/dist/smoke/run.js --only
+      data-table-core` is green again (`w=320`). Docs: `packages/testing/README.md`
+      §Adapting a host states the rule.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 23/23
@@ -8637,6 +8690,29 @@ answers.
       `variant`/`accent`/`role` API rows on the seven pages and the package
       README's stored-choice paragraph. No native scenario applies — the names
       paint the boxes the other suites already read in a window.
+
+`[x]` `packages/primitives`: **a stored bar size collapsed the track and a stored
+      tone made the fill transparent** — `Progress` and `Meter` are the two
+      widgets a dashboard saves into a record, and both took `size`/`tone`
+      straight into their paint: `PROGRESS_HEIGHT_STEP[name]` answered
+      `undefined`, so the recipe asked for `h-space-undefined`, a class the
+      compiler refuses — a track with no height at all — while
+      `PROGRESS_TONE_CLASS[name]` resolved to no colour class, so the value's
+      whole fill was invisible and a finished task read as an empty track.
+      `core/style.ts` now carries `PROGRESS_SIZES`/`ProgressSize` with
+      `isProgressSize`/`progressSizeOf` (→ `md`) and
+      `isProgressTone`/`progressToneOf` (→ `primary`) beside `PROGRESS_TONES`,
+      each derived from the shipped list; `progressPart`, `meterPart`,
+      `progressTrackClass`, `progressFillClass`, `progressBufferClass`,
+      `progressTrackStyle` and `progressFillStyle` all read through them, so
+      the root, the parts and the core resolvers agree. Proof:
+      `Progress.test.tsx` and `Meter.test.tsx` each gain the two cases; all four
+      were measured failing (the height missing from the tree, the fill's
+      `backgroundColor` `None` against `Some`), and the package is 56 files /
+      **1 114** tests green with `check-types` clean. Docs:
+      `docs/progress.mdx`/`docs/meter.mdx` §API and the package README's
+      stored-choice list. No native scenario applies — the classes resolve to
+      the same box and fill the bar suite already paints.
 
 `[x]` `packages/components`: **a hover delay the caller could not supply opened
       the surface at once** — `PreviewCard` and `NavigationMenu` each scheduled

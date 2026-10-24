@@ -1963,7 +1963,13 @@ values).
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 105 pairs cover the text role
+the caller remembering to say so. A variant a theme **states** but this release
+does not ship — the upper-cased `HIGH` a settings store writes, an older
+release's name, an empty string — is read as the **strict** one rather than as
+the default, because the quiet alternative is an accessibility claim measured
+against weaker floors; `themeContrastOf(theme)` is that read, and it answers
+`default` only for an absent or `null` variant (the "declares nothing" a
+hand-built theme is). The 105 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own

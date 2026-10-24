@@ -8,7 +8,7 @@
 
 import { themeColors, type ThemeColors } from "./color.js";
 import { opaqueRgb } from "./measure.js";
-import type { ThemeContrast } from "./theme.js";
+import { themeContrastOf, type ThemeContrast } from "./theme.js";
 
 const channel = (rgb: string, at: number): number => {
   const srgb = Number.parseInt(rgb.slice(at, at + 2), 16) / 255;
@@ -110,7 +110,11 @@ export const highContrastFloors: ContrastFloors = {
  *
  * A theme that declares `contrast: "high"` is held to the AAA floors, not to the
  * default ones — the floors follow the declaration rather than the caller's
- * memory. A hand-built theme declares nothing and gets the default floors.
+ * memory. A hand-built theme declares nothing and gets the default floors. A
+ * variant the theme **states** but this release does not ship is read as the
+ * **strict** one ({@link themeContrastOf}), because the alternative is a silent
+ * downgrade: the upper-cased `HIGH` a store wrote was measured against the AA
+ * floors while its own palette promised AAA.
  *
  * @example
  * ```ts
@@ -118,9 +122,11 @@ export const highContrastFloors: ContrastFloors = {
  * ```
  */
 export function contrastFloorsFor(theme: {
-  readonly contrast?: ThemeContrast;
+  readonly contrast?: unknown;
 }): ContrastFloors {
-  return theme.contrast === "high" ? highContrastFloors : contrastFloors;
+  return themeContrastOf(theme) === "high"
+    ? highContrastFloors
+    : contrastFloors;
 }
 
 /** One role pair a theme is measured on, and the floor it must reach. */

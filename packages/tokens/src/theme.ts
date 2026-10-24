@@ -77,6 +77,43 @@ export const isThemeContrast = (value: unknown): value is ThemeContrast =>
   themeContrasts.some((contrast) => contrast === value);
 
 /**
+ * The contrast variant a theme's **values** are read as.
+ *
+ * The variant decides which floors every pair is measured against
+ * (`contrastFloorsFor`) and which palette a native host is handed
+ * (`syntaxColors`, `seriesColors`), so an unrecognised one is not a cosmetic
+ * detail: read as the default it **downgrades an accessibility claim**, because
+ * a high-contrast theme stored with an upper-cased `HIGH` was measured against
+ * the AA floors, highlighted with the default palette, and `auditTheme(...)
+ * .passed` said yes. A value this release does not ship is therefore read as the
+ * **strict** variant — a theme that cannot say which floors it was designed for
+ * is held to the stronger ones, and its report names the pair that misses — while
+ * an absent or `null` variant is the "declares nothing" a hand-built theme is
+ * and reads as `default`.
+ *
+ * Narrow a stored preference with {@link isThemeContrast} where the caller can
+ * tell the reader which variant it substituted; this is the read a paint or
+ * report seam makes, where there is no one to tell.
+ *
+ * @example
+ * ```ts
+ * import { highContrastDarkTheme, lightTheme, themeContrastOf } from "@gpuixui/tokens";
+ *
+ * themeContrastOf(highContrastDarkTheme); // "high"
+ * themeContrastOf({ ...lightTheme, contrast: "HIGH" }); // "high" — the strict variant
+ * ```
+ */
+export const themeContrastOf = (theme: {
+  readonly contrast?: unknown;
+}): ThemeContrast => {
+  const stated = theme.contrast;
+  if (stated === undefined || stated === null) {
+    return "default";
+  }
+  return isThemeContrast(stated) ? stated : "high";
+};
+
+/**
  * A complete, resolved design theme. Every field is plain data, so a theme can
  * be passed through React context, stored, or built at startup.
  */
@@ -563,7 +600,7 @@ export function createTheme(config: ThemeConfig): Theme {
  * ```
  */
 export function applyStyle(base: Theme, style: PlatformStyle): Theme {
-  const contrast = base.contrast ?? "default";
+  const contrast = themeContrastOf(base);
   // A palette — and the scale its plots are drawn in — is designed against the
   // floors of one contrast variant; a base that needs more keeps its own.
   const applies = contrast === style.contrast;

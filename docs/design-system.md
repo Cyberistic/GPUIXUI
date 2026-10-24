@@ -1215,7 +1215,13 @@ true only when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
 to AAA without the caller naming a floor set; an explicit `ContrastFloors`
-overrides it. Every report that takes floors reads them that way — the contrast,
+overrides it. A variant a theme **states** but this release does not ship is read
+as the **strict** one (`themeContrastOf`), because reading it as the default
+downgrades an accessibility promise quietly — the upper-cased `HIGH` a store
+wrote was measured against the AA floors while its palette, its syntax table and
+its data series all promised AAA; an absent or `null` variant is the "declares
+nothing" that keeps the default floors. Every report that takes floors reads them
+that way — the contrast,
 selection and indicator reports select the theme's variant themselves, and the
 series surface floor comes from the same rule — so calling one of them on its own
 cannot answer with different floors than the gate (§9). Two reports ignore those
