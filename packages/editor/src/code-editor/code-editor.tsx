@@ -35,7 +35,6 @@ import {
   fieldHint,
   renderFieldHint,
 } from "@gpuixui/primitives/hint";
-import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import {
   disabledOpacity,
@@ -49,7 +48,7 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
-import { draftOf } from "../internal/text.js";
+import { draftOf, labelOf } from "../internal/text.js";
 import { codeLines, type HighlightRun } from "./highlight.js";
 import {
   enterIndent,
@@ -146,7 +145,7 @@ export const CodeEditor = ({
   const theme = useTheme();
   // A blank name is an absence: an unnamed field is worse than the default, and
   // a label restored from an i18n table with a missing row arrives blank.
-  const name = accessibleName(label) ?? "Code editor";
+  const name = labelOf(label, "Code editor");
   const [value, setValue] = useControllableState({
     // A draft restored from storage may not be text at all; it reads as an
     // empty document rather than throwing out of the tokenizer and the gutter.

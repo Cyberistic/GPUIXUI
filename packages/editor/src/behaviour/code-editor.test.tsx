@@ -149,6 +149,15 @@ describe("CodeEditor", () => {
       editor.renderer.findByTestId("code-editor")?.customProps?.["aria-label"],
     ).toBe("Code editor");
     editor.unmount();
+
+    // A saved record writes the field it kept, and a label that is not text is
+    // no name at all: it reads as the same default instead of throwing
+    // `self.trim is not a function` out of `accessibleName`.
+    const stored = render(<CodeEditor label={42 as unknown as string} />);
+    expect(
+      stored.renderer.findByTestId("code-editor")?.customProps?.["aria-label"],
+    ).toBe("Code editor");
+    stored.unmount();
   });
 
   it("does not edit when read-only, even for Tab and Enter", () => {

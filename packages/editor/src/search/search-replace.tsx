@@ -17,14 +17,14 @@
  */
 
 import type { KeyEvent } from "@gpuix/react";
-import { accessibleName, Button, Input, Toggle } from "@gpuixui/primitives";
+import { Button, Input, Toggle } from "@gpuixui/primitives";
 import { cn } from "@gpuixui/tw";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { useState } from "react";
 import { findRanges, matchReadout, replaceAll } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
-import { draftOf } from "../internal/text.js";
+import { draftOf, labelOf } from "../internal/text.js";
 
 /** The bar's resting surface. */
 const SEARCH_ROOT = "flex flex-row items-center gap-2 flex-wrap";
@@ -92,13 +92,12 @@ export const SearchReplace = ({
   // A name is copy from an i18n table or a saved record as often as a literal,
   // and a destructuring default covers only `undefined`: a blank one published
   // an unnamed field or an action named by its arrow glyph.
-  const findName = accessibleName(findLabel) ?? FIND_NAME;
-  const replaceFieldName =
-    accessibleName(replaceFieldLabel) ?? REPLACE_FIELD_NAME;
-  const replaceName = accessibleName(replaceLabel) ?? REPLACE_NAME;
-  const replaceAllName = accessibleName(replaceAllLabel) ?? REPLACE_ALL_NAME;
-  const nextName = accessibleName(nextLabel) ?? NEXT_NAME;
-  const previousName = accessibleName(previousLabel) ?? PREVIOUS_NAME;
+  const findName = labelOf(findLabel, FIND_NAME);
+  const replaceFieldName = labelOf(replaceFieldLabel, REPLACE_FIELD_NAME);
+  const replaceName = labelOf(replaceLabel, REPLACE_NAME);
+  const replaceAllName = labelOf(replaceAllLabel, REPLACE_ALL_NAME);
+  const nextName = labelOf(nextLabel, NEXT_NAME);
+  const previousName = labelOf(previousLabel, PREVIOUS_NAME);
   const [query, setQuery] = useState("");
   const [replacement, setReplacement] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);

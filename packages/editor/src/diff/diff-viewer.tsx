@@ -18,7 +18,6 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import {
   statusTone,
@@ -38,7 +37,7 @@ import {
   type DiffRow,
 } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
-import { draftOf } from "../internal/text.js";
+import { draftOf, labelOf } from "../internal/text.js";
 
 export type { DiffMode } from "./logic.js";
 
@@ -130,7 +129,7 @@ export const DiffViewer = ({
   // The rows are presentational, so the group's name is the whole surface's
   // name: a blank one would publish a silent diff (a default covers only
   // `undefined`, and a saved or i18n label arrives empty).
-  const name = accessibleName(label) ?? DIFF_NAME;
+  const name = labelOf(label, DIFF_NAME);
   const metrics = textStyle(theme, "codeBlock");
   // A view mode is a stored preference as often as a literal; a name this
   // release does not declare reads as the default rather than falling through

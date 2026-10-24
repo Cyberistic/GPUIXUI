@@ -21,7 +21,7 @@ import { DiffViewer } from "@gpuixui/editor";
 | `after` | `string` | — | The after source. |
 | `mode` | `"unified" \| "split"` | `"unified"` | One merged column, or two. A stored name that is neither reads as the default. |
 | `lineNumbers` | `boolean` | `true` | Number the rows on both sides. |
-| `label` | `string` | `"Diff"` | The accessible name; a blank name reads as the default (the rows are presentational, so this is the whole surface's name). |
+| `label` | `string` | `"Diff"` | The accessible name; a blank or non-text name reads as the default (the rows are presentational, so this is the whole surface's name). |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `style` | `StateStyle<DiffViewerState>` | — | The surface, or a function of `{ changed }`. |
 | `testId` | `string` | `"diff-viewer"` | The address an automation host locates the diff by; each pair appends `-row-<index>`. |
@@ -56,6 +56,6 @@ read the change in `unified` mode where the line has the whole row.
 - **`O(n·m)` time and space.** The LCS table is the size of the two files, so very large files are slow.
 - **No word-level diff.** A changed line is a whole line, not the words inside it.
 - **The diff text is presentational.** The rows are `role="presentation"` runs, so a reader hears whether anything changed, not the diffed text itself.
-- **A blank `label` reads as `"Diff"`.** The rows carry no words of their own, so the group's name is the whole surface's name: an empty or whitespace-only one from a table or a saved record is an absence, not a silent diff.
+- **A blank `label` reads as `"Diff"`.** The rows carry no words of their own, so the group's name is the whole surface's name: an empty or whitespace-only one from a table or a saved record is an absence, not a silent diff, and a value that is not text at all reads the same way.
 - **A side that carried no document reads as an empty source.** `before` and `after` are read as text at the boundary, so a diff restored from a saved record whose side is not a string paints the other side against nothing instead of throwing out of the line split — the rule `CodeEditor` and `MarkdownEditor` follow for a stored draft.
 - **A stored `mode` that is neither name reads as `"unified"`.** A view mode is a saved preference as often as a literal, so a name this release does not declare — an older release's `"inline"`, or a record restored with a typo — is the documented default rather than a silent fall through to the split layout.

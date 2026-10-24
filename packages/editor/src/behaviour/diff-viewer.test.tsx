@@ -91,6 +91,21 @@ describe("DiffViewer in split mode", () => {
       root.renderer.findByTestId("diff-viewer")?.customProps?.["aria-label"],
     ).toBe("Diff");
     root.unmount();
+
+    // A saved record writes the field it kept, and a label that is not text is
+    // no name at all: it reads as the same default instead of throwing
+    // `self.trim is not a function` out of `accessibleName`.
+    const stored = render(
+      <DiffViewer
+        before={"alpha"}
+        after={"beta"}
+        label={42 as unknown as string}
+      />,
+    );
+    expect(
+      stored.renderer.findByTestId("diff-viewer")?.customProps?.["aria-label"],
+    ).toBe("Diff");
+    stored.unmount();
   });
 
   it("reads a side that carried no document as an empty source", () => {

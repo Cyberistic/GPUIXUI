@@ -431,5 +431,24 @@ describe("MarkdownEditor", () => {
     expect(nameOf(padded, "markdown-source")).toBe("Notes source");
     expect(nameOf(padded, "markdown-preview-viewport")).toBe("Notes preview");
     padded.unmount();
+
+    // A saved record writes the field it kept, and a label that is not text is
+    // no name at all: every part keeps the default prefix instead of the render
+    // throwing `self.trim is not a function` out of `accessibleName`.
+    const stored = render(
+      <MarkdownEditor
+        defaultValue="# Title"
+        label={42 as unknown as string}
+        testId="editor"
+      />,
+    );
+    expect(nameOf(stored, "markdown-source")).toBe("Markdown editor source");
+    expect(nameOf(stored, "markdown-preview-viewport")).toBe(
+      "Markdown editor preview",
+    );
+    expect(nameOf(stored, "editor-split-divider")).toBe(
+      "Markdown editor split",
+    );
+    stored.unmount();
   });
 });

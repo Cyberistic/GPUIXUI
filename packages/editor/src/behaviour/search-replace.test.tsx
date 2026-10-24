@@ -252,6 +252,32 @@ describe("SearchReplace", () => {
       expect(actions).toContain(name),
     );
     search.unmount();
+
+    // A saved record writes the field it kept, and a name that is not text is
+    // no name at all: the fields and actions keep their defaults instead of the
+    // render throwing `self.trim is not a function` out of `accessibleName`.
+    const stored = render(
+      <SearchReplace
+        value="cat cat"
+        onValueChange={() => undefined}
+        findLabel={42 as unknown as string}
+        nextLabel={42 as unknown as string}
+      />,
+    );
+    expect(
+      stored.renderer.findByTestId("search-replace-find")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("Find");
+    const storedActions = Object.values(
+      stored.renderer.getA11yTree().nodes ?? {},
+    ).flatMap((node) =>
+      node.aria?.role === "Button" && node.aria.label !== undefined
+        ? [node.aria.label]
+        : [],
+    );
+    expect(storedActions).toContain("Next match");
+    stored.unmount();
   });
 
   it("replaces the active match with the replacement field's text", () => {

@@ -19,7 +19,7 @@ import type { StyleDesc } from "@gpuix/react";
 import type { ReactElement } from "react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { DIVIDER_WIDTH, SplitPane } from "@gpuixui/dock";
-import { accessibleName, Button, ScrollArea } from "@gpuixui/primitives";
+import { Button, ScrollArea } from "@gpuixui/primitives";
 import {
   fieldHelp,
   fieldHint,
@@ -32,6 +32,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
+import { labelOf } from "../internal/text.js";
 import {
   closeFences,
   draftOf,
@@ -142,7 +143,7 @@ export const MarkdownEditor = ({
   // A label arrives from an i18n table or a saved record as often as it is a
   // literal, so a blank one is an absence: every part derives its name from it,
   // and a blank prefix would publish " source", " preview" and " split".
-  const name = accessibleName(label) ?? DEFAULT_LABEL;
+  const name = labelOf(label, DEFAULT_LABEL);
   const [source, setSource] = useControllableState({
     // A draft restored from storage may not be text at all; it reads as an empty
     // document rather than throwing out of the status line and the preview. An

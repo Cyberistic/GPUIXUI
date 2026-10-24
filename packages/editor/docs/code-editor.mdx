@@ -35,7 +35,7 @@ import { CodeEditor } from "@gpuixui/editor";
 | `minRows` | `number` | — | The least number of rows the editor paints. The highlight layer is what sizes the editor, so the floor is painted as empty rows. |
 | `maxRows` | `number` | — | Passed to the field. The layer cannot follow a scroll (the runtime reports no offset), so it paints every line and the surface grows with the document. |
 | `fullWidth` | `boolean` | `false` | Fill the available width. |
-| `label` | `string` | `"Code editor"` | The accessible name. A blank name reads as the default. |
+| `label` | `string` | `"Code editor"` | The accessible name. A blank or non-text name reads as the default. |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `style` | `StateStyle<CodeEditorState>` | — | The surface, or a function of `{ disabled, focused }`. |
 | `testId` | `string` | `"code-editor"` | The address an automation host locates the field by; the surface around it is `${testId}-surface`. |
@@ -49,6 +49,6 @@ import { CodeEditor } from "@gpuixui/editor";
 - **A stored `tabMode` that is not a mode reads as `"insert"`**: a preference a release renamed (`"indent"`) is read through `tabModeOf` before the key decision, so it keeps inserting rather than silently sending Tab out of the field.
 - **A stored draft that is not text paints an empty document**: a `value` or `defaultValue` restored from storage as `null` reads through `draftOf`, so the tokenizer and the gutter paint the empty state instead of throwing out of the render.
 - **A stored `language` that is not text paints plain text**: the id is read through `languageOf` before the tokenizer sees it, so a preference saved as a number or an object is the same plain fallback an unknown id gets instead of a `.trim()` throw.
-- **A blank `label` reads as `"Code editor"`**: the name is read through the same absence rule as every other name, so a stored empty string cannot publish an unnamed field.
+- **A blank `label` reads as `"Code editor"`**: the name is read through the same absence rule as every other name, so a stored empty string cannot publish an unnamed field; a record that kept a number or an object there is not text, so it reads as the same default instead of throwing out of the name seam.
 - **The gutter is flush with the code column**: a line number shares its row's top edge — held by `src/behaviour/code-editor.test.tsx` in the renderer, so a number cannot drift a spacing step below the line it numbers. The transparent field's own text inset stays unverified: it paints no caret to compare against the highlight layer.
 - **The highlight layer is the editor's box, so it paints the field's own lines**: an empty document is one (empty) line and a trailing newline opens another, and `minRows` is painted as empty rows at the bottom. Anything narrower left the editor a two-point strip when empty and put the caret's line, after Enter, outside a box that ended on the newline. `maxRows` cannot cap that height — the layer cannot follow the field's scroll, because the runtime reports no scroll offset — so a long document grows the surface instead of scrolling inside it.

@@ -44,7 +44,7 @@ import { MarkdownEditor } from "@gpuixui/editor";
 
 ## Names
 
-`label` names the editor and every part of it: the source field is `"<label> source"`, the preview `"<label> preview"` and the split's divider `"<label> split"`. A label that arrives blank — from an i18n table or a saved record — is an absence, so each part falls back to `Markdown editor` rather than publishing `" source"`.
+`label` names the editor and every part of it: the source field is `"<label> source"`, the preview `"<label> preview"` and the split's divider `"<label> split"`. A label that arrives blank — from an i18n table or a saved record — is an absence, so each part falls back to `Markdown editor` rather than publishing `" source"`; a label that is not text at all (a number a record kept) is no name either, so the parts keep the same default instead of the render throwing out of the name seam.
 
 ## Views
 

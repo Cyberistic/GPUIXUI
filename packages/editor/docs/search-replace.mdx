@@ -21,8 +21,8 @@ import { SearchReplace } from "@gpuixui/editor";
 | `onValueChange` | `(value: string) => void` | — | Reports a single replace and a replace-all. |
 | `placeholder` | `string` | `"Find"` | The find field's hint. |
 | `replacePlaceholder` | `string` | `"Replace with"` | The replacement field's hint. |
-| `findLabel` | `string` | `"Find"` | The find field's accessible name; a blank name reads as the default. |
-| `replaceFieldLabel` | `string` | `"Replace with"` | The replacement field's accessible name; a blank name reads as the default. |
+| `findLabel` | `string` | `"Find"` | The find field's accessible name; a blank or non-text name reads as the default. |
+| `replaceFieldLabel` | `string` | `"Replace with"` | The replacement field's accessible name; a blank or non-text name reads as the default. |
 | `replaceLabel` / `replaceAllLabel` | `string` | `"Replace"` / `"Replace all"` | The actions' names; a blank one reads as its default. |
 | `nextLabel` / `previousLabel` | `string` | `"Next match"` / `"Previous match"` | The navigation names; a blank one reads as its default. |
 | `disabled` | `boolean` | `false` | Refuse every route, `F3` included: a read-only host still receives keys. |
@@ -67,8 +67,9 @@ that moved into the active slot, which is the one the reader is working through.
   refuses it. `src/behaviour/search-replace.test.tsx` holds the reading.
 - **A blank name reads as its default**: the two fields and the four actions are
   copy from an i18n table or a saved record as often as literals, so an empty or
-  whitespace-only name is an absence — never an unnamed control — and a name
-  given is trimmed.
+  whitespace-only name is an absence — never an unnamed control — a name given
+  is trimmed, and a name that is not text at all reads as the default instead of
+  throwing out of the name seam.
 - **A document that is not text reads as an empty one**: `value` is a document
   restored from storage as often as a literal, and a saved record writes `null`
   where it carried no text; it is read once through `draftOf`, so typing a query
