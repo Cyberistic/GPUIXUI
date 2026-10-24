@@ -54,6 +54,7 @@ import {
 import type {
   ElevationLevel,
   PrimitiveTheme,
+  RadiusStep,
   TextRole,
 } from "../core/theme.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -79,10 +80,12 @@ import {
   ratingGroupClass,
   ratingStarClass,
   scrollClass,
+  scrollFrameClass,
   selectContentClass,
   selectItemClass,
   selectTriggerClass,
   separatorClass,
+  skeletonClass,
   stackClass,
   textClass,
   toggleClass,
@@ -848,5 +851,61 @@ describe("the recipe stays one expression, not a stub", () => {
       (className) => recipeTw.classesToStyle(className, testTheme).unsupported,
     );
     expect(unsupported).toStrictEqual([]);
+  });
+});
+
+describe("a stored corner name", () => {
+  /*
+   * Bug guarded: a corner is a stored choice as often as a literal — a saved
+   * panel's radius, a restored placeholder's shape — so a name this release
+   * renamed or dropped reached `rounded-<name>`, which the compiler records as
+   * an **unsupported class** nobody reads and paints no corner for. A `Box` or
+   * a scroll frame then went square (its documented default, at least), while
+   * a `Skeleton` lost the `sm` corner its page documents. The name is resolved
+   * through `radiusStep` at the recipe, so each painter answers what it
+   * documents and the compiler has nothing to report.
+   */
+  // The cast is the storage boundary: a saved corner name a later release
+  // dropped arrives as a string the union no longer names.
+  const shipped = "xl2" as RadiusStep;
+
+  it("paints the corner each painter documents, and no unsupported class", () => {
+    const box = recipeTw.classesToStyle(
+      boxClass({ tone: "card", radius: shipped }),
+      testTheme,
+    );
+    expect(box.unsupported).toStrictEqual([]);
+    expect(box.style.borderRadius).toBeUndefined();
+
+    const frame = recipeTw.classesToStyle(
+      scrollFrameClass({ radius: shipped }),
+      testTheme,
+    );
+    expect(frame.unsupported).toStrictEqual([]);
+    expect(frame.style.borderRadius).toBeUndefined();
+
+    const skeleton = recipeTw.classesToStyle(
+      skeletonClass({ radius: shipped }),
+      testTheme,
+    );
+    expect(skeleton.unsupported).toStrictEqual([]);
+    expect(skeleton.style.borderRadius).toBe(testTheme.radius.sm);
+  });
+
+  it("still paints a step the release carries, and its own theme's number", () => {
+    const rounded = recipeTw.classesToStyle(
+      boxClass({ tone: "card", radius: "lg" }),
+      testTheme,
+    );
+    expect(rounded.unsupported).toStrictEqual([]);
+    expect(rounded.style.borderRadius).toBe(testTheme.radius.lg);
+    const brand: PrimitiveTheme = {
+      ...testTheme,
+      radius: { ...testTheme.radius, lg: 11 },
+    };
+    expect(
+      recipeTw.classesToStyle(boxClass({ tone: "card", radius: "lg" }), brand)
+        .style.borderRadius,
+    ).toBe(11);
   });
 });

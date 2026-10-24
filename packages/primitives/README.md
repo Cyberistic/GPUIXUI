@@ -143,6 +143,14 @@ and each is read through a membership test rather than indexed raw:
   spacer, with the sibling it exists to push sitting against its neighbour.
   `theme.test.ts`, `presentational.test.tsx` and `runtime/layout.runtime.test.tsx`
   hold both paths to the one answer.
+- a **corner step** is stored the same way — a saved panel's radius, a restored
+  placeholder's shape — so `isRadiusStep`/`radiusStep` (`core/theme.ts`) read a
+  name this release does not carry as **absence**: a Box and a scroll frame
+  paint no corner (their documented default) and a Skeleton keeps its
+  documented `sm`. Read raw, `rounded-<name>` compiled to an **unsupported
+  class** nobody reads and the resolver answered no number, so the box went
+  square with every report empty (`recipe.test.ts`,
+  `presentational.test.tsx`).
 - a **group's `orientation`** is a saved layout choice, and it reaches the
   keyboard contract as well as the paint: `isOrientation`/`orientationOf`
   (`core/keyboard.ts`) read a name the arrow table does not carry as the group's

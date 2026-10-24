@@ -278,8 +278,10 @@ export {
   controlSize,
   elevationLevel,
   familyOf,
+  isRadiusStep,
   isSpaceStep,
   isTextRole,
+  radiusStep,
   spaceStep,
   typeOf,
 } from "./theme.js";

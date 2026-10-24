@@ -10,7 +10,7 @@
 
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
-import { elevationLevel, isTextRole } from "../core/theme.js";
+import { elevationLevel, isTextRole, radiusStep } from "../core/theme.js";
 import { spinnerAccentOf } from "../core/loading.js";
 import type { SpinnerAccent } from "../core/loading.js";
 import { trackCount } from "../core/layout.js";
@@ -320,13 +320,20 @@ const boxPaddingClass = (spec: BoxSpec): string | undefined => {
   );
 };
 
-/** The class string a `Box` resolves from its surface and layout spec. */
-export const boxClass = (spec: BoxSpec): string =>
-  cn(
+/**
+ * The class string a `Box` resolves from its surface and layout spec.
+ *
+ * A stored corner name the release does not carry paints no corner — the
+ * `Box`'s documented default — instead of a `rounded-<name>` the compiler
+ * records as unsupported and nobody reads (`radiusStep`).
+ */
+export const boxClass = (spec: BoxSpec): string => {
+  const corner = radiusStep(spec.radius);
+  return cn(
     "flex flex-col",
     SURFACE_BG[spec.tone],
     boxPaddingClass(spec),
-    spec.radius === undefined ? undefined : `rounded-${spec.radius}`,
+    corner === undefined ? undefined : `rounded-${corner}`,
     spec.border === true && "border border-border",
     spec.border === true && spec.borderStyle === "dashed" && "border-dashed",
     paintableAspectRatio(spec.aspectRatio) === undefined
@@ -338,6 +345,7 @@ export const boxClass = (spec: BoxSpec): string =>
     spec.fullWidth === true && "w-full",
     spec.fullHeight === true && "h-full",
   );
+};
 
 // ── Toggle ───────────────────────────────────────────────────────────
 
@@ -410,13 +418,15 @@ export const scrollFrameClass = (spec: {
   readonly padding?: SpaceStep;
   readonly radius?: RadiusStep;
   readonly border?: boolean;
-}): string =>
-  cn(
+}): string => {
+  const corner = radiusStep(spec.radius);
+  return cn(
     "flex flex-col overflow-hidden",
     spec.padding === undefined ? undefined : `p-${spec.padding}`,
-    spec.radius === undefined ? undefined : `rounded-${spec.radius}`,
+    corner === undefined ? undefined : `rounded-${corner}`,
     spec.border === true && "border border-border",
   );
+};
 
 // ── ButtonGroup ──────────────────────────────────────────────────────
 
@@ -830,5 +840,9 @@ export const skeletonClass = (spec: {
 }): string =>
   cn(
     "shrink-0 bg-skeleton",
-    spec.circle === true ? "rounded-full" : `rounded-${spec.radius ?? "sm"}`,
+    // A stored corner the release does not carry keeps the documented `sm`
+    // rather than a `rounded-<name>` the compiler reports and drops.
+    spec.circle === true
+      ? "rounded-full"
+      : `rounded-${radiusStep(spec.radius) ?? "sm"}`,
   );

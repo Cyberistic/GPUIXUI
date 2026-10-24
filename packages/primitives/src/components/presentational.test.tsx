@@ -27,6 +27,7 @@ import type { TextTone } from "../core/style.js";
 import type {
   ElevationLevel,
   PrimitiveTheme,
+  RadiusStep,
   TextRole,
 } from "../core/theme.js";
 import * as primitives from "../index.js";
@@ -887,6 +888,24 @@ describe("loading", () => {
     expect(expectSome(numberIn(circle, "height"))).toBe(
       testTheme.typography.body.lineHeight,
     );
+  });
+
+  it("keeps the corner its page documents for a stored radius name", () => {
+    // The bug guarded: a saved placeholder's radius arrived as a name a later
+    // release dropped, so the recipe shipped an unsupported `rounded-<name>`
+    // class and the block painted square while its page promised `sm`.
+    const stored = "xl2" as RadiusStep; // the storage boundary
+    expect(
+      expectSome(
+        numberIn(
+          renderSkeleton({ radius: stored }, testTheme, 0),
+          "borderRadius",
+        ),
+      ),
+    ).toBe(testTheme.radius.sm);
+    expect(
+      numberIn(renderSkeleton({ radius: "lg" }, testTheme, 0), "borderRadius"),
+    ).toStrictEqual(Option.some(testTheme.radius.lg));
   });
 
   it("announces a spinner by role and name", () => {

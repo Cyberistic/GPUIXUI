@@ -645,6 +645,31 @@ describe("the primitives docs page contract", () => {
     expect(record.tests).toContain("src/core/presence.test.ts");
   });
 
+  it("teaches the corner a stored radius name paints", () => {
+    // The bug guarded: a stored corner name this release dropped compiled to an
+    // unsupported `rounded-<name>` class nobody reads, so a Box or a scroll
+    // frame went square (its documented default) and a Skeleton lost the `sm`
+    // corner its page promises. The guard is `radiusStep`'s, and each painter
+    // documents what it answers.
+    const sourceOf = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8");
+    const theme = sourceOf("src/core/theme.ts");
+    expect(theme).toContain("export const isRadiusStep");
+    expect(theme).toContain("export const radiusStep");
+    expect(sourceOf("src/recipe/index.ts")).toContain(
+      "radiusStep(spec.radius)",
+    );
+    expect(read("box.mdx")).toContain(
+      "a stored name this release does not carry paints no corner",
+    );
+    expect(read("skeleton.mdx")).toContain(
+      "a stored name this release does not carry keeps `sm`",
+    );
+    expect(read("scroll-area.mdx")).toContain(
+      "a stored name this release does not carry paints no corner",
+    );
+  });
+
   Arr.forEach(contract, ({ it: title, check }) => {
     it(title, () => {
       expect(Arr.flatMap(pages, (page) => problemsFor(page, check))).toEqual(

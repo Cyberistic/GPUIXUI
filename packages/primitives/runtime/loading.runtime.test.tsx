@@ -18,6 +18,7 @@ import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
+import { Box } from "../src/components/Box.js";
 import {
   Progress,
   ProgressIndicator,
@@ -29,6 +30,7 @@ import { Spinner } from "../src/components/Spinner.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { useStep } from "../src/components/internal.js";
+import type { RadiusStep } from "../src/core/theme.js";
 import {
   a11yDescriptionOf,
   a11yNode,
@@ -499,6 +501,28 @@ it("paints a Skeleton box when a measured side cannot be laid out", async () => 
   );
   expect(drawn.width).toBeGreaterThan(0);
   expect(drawn.height).toBe(20);
+});
+
+it("paints the corner a stored radius name documents in a window", async () => {
+  // The bug guarded: a saved corner name a later release dropped reached the
+  // recipe as `rounded-<name>`, which compiles to an unsupported class, and the
+  // resolver answered no number — a Skeleton painted square in a window while
+  // its page promised `sm`. The name is resolved at the seam, so the block
+  // keeps its documented corner and a Box keeps its documented none.
+  const stored = "xl2" as RadiusStep; // the storage boundary
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Skeleton testId="sk" radius={stored} reducedMotion />
+        <Box testId="bx" tone="card" radius={stored} />
+      </Stack>
+    </Surface>,
+  );
+  expect(styleOf(runtime, idOf(runtime, "sk"))["borderRadius"]).toBe(
+    testTheme.radius.sm,
+  );
+  expect(styleOf(runtime, idOf(runtime, "bx"))["borderRadius"]).toBeUndefined();
 });
 
 it("moves a Spinner's lit dot instead of rotating it", async () => {

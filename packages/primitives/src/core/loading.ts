@@ -15,7 +15,7 @@ import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import { motionLevels } from "@gpuixui/motion/timing";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
-import { colorRole, radiusValue, typeOf } from "./theme.js";
+import { colorRole, radiusStep, radiusValue, typeOf } from "./theme.js";
 
 /** How many steps a pulse visits before repeating. */
 export const PULSE_STEPS = 2;
@@ -56,6 +56,7 @@ export const SPINNER_FADE_FLOOR = 0.2;
 export interface SkeletonSpec {
   readonly width?: number | string;
   readonly height?: number | string;
+  /** A corner step. A stored name this release does not carry keeps `sm`. */
   readonly radius?: RadiusStep;
   /** A circle: an avatar placeholder. */
   readonly circle?: boolean;
@@ -121,7 +122,7 @@ export const skeletonStyle = (
   borderRadius:
     spec.circle === true
       ? radiusValue(theme, "full")
-      : radiusValue(theme, spec.radius ?? "sm"),
+      : radiusValue(theme, radiusStep(spec.radius) ?? "sm"),
   backgroundColor: colorRole(theme, "skeleton"),
 });
 

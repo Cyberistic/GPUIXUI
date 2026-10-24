@@ -28,6 +28,7 @@ import {
   STEP_INTERVAL_MS as coreStepInterval,
 } from "./index.js";
 import { testTheme } from "./testing/theme.fixture.js";
+import type { RadiusStep } from "./theme.js";
 
 /**
  * Guards the discrete-step loading indicators.
@@ -65,6 +66,16 @@ describe("skeletonStyle", () => {
     expect(style.borderRadius).toBe(testTheme.radius.md);
     expect(skeletonStyle({}, testTheme).height).toBe(
       testTheme.typography.body.lineHeight,
+    );
+  });
+
+  it("keeps its documented corner for a stored radius name the release dropped", () => {
+    // The bug: a saved placeholder's radius arrived as a name a later release
+    // dropped, so the recipe shipped `rounded-<name>` as an unsupported class
+    // and the block lost the `sm` corner its page documents.
+    const stored = "xl2" as RadiusStep; // the storage boundary
+    expect(skeletonStyle({ radius: stored }, testTheme).borderRadius).toBe(
+      testTheme.radius.sm,
     );
   });
 

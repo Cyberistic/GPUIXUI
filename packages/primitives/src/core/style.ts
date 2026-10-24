@@ -41,6 +41,7 @@ import {
   controlPaddingOf,
   familyOf,
   iconSideOf,
+  radiusStep,
   radiusValue,
   spaceValue,
   typeOf,
@@ -453,8 +454,8 @@ export const surfaceStyle = (
     if (sides.left !== undefined)
       style.paddingLeft = spaceValue(theme, sides.left);
   }
-  if (spec.radius !== undefined)
-    style.borderRadius = radiusValue(theme, spec.radius);
+  const corner = radiusStep(spec.radius);
+  if (corner !== undefined) style.borderRadius = radiusValue(theme, corner);
   if (spec.border === true) {
     style.borderWidth = borderWidthOf(theme, "thin");
     style.borderColor = colorRole(theme, "border");

@@ -193,6 +193,34 @@ export interface RadiusSource {
 export const radiusValue = (theme: RadiusSource, step: RadiusStep): number =>
   scaleValue(theme.radius, libraryRadius, step);
 
+/** Every corner the library's scale names, for a stored value's membership read. */
+const RADIUS_STEPS: ReadonlyArray<string> = R.keys(libraryRadius);
+
+/**
+ * Whether a value names a corner step.
+ *
+ * A corner is a stored choice as often as a literal — a saved panel's radius, a
+ * restored placeholder's shape — so a name a release renamed or dropped arrives
+ * as a string the union no longer names. The recipe then asks the compiler for
+ * `rounded-<name>`, which answers an **unsupported class** nobody reads, and
+ * the resolver answers no number.
+ */
+export const isRadiusStep = (step: unknown): step is RadiusStep =>
+  P.isString(step) && Arr.contains(RADIUS_STEPS, step);
+
+/**
+ * The corner a stored name stands for, or **absence** where no release paints one.
+ *
+ * Absence is what each painter documents for a corner it cannot place: a `Box`
+ * and a scroll frame paint none, and a `Skeleton` keeps its documented `sm`.
+ * Membership is the **library's** scale rather than the theme's, because a
+ * theme a store truncated still paints the library's number for a step it lost
+ * ({@link radiusValue}), while a name no release carries has no number to paint
+ * at all.
+ */
+export const radiusStep = (step: unknown): RadiusStep | undefined =>
+  isRadiusStep(step) ? step : undefined;
+
 /**
  * A theme's border-width group, or the shape a stored edge is measured against.
  *

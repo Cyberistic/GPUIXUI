@@ -2469,7 +2469,12 @@ handed to the timer.
       `src/live/accordion.test.ts` (12 cases: the distinct bodies and the
       derived shift, the focus chain, the readout shape, the assertion-site
       count, the locator set, the registry, the README record, and the shipped
-      parts with the content recipe's padding dropped). Docs:
+      parts with the content recipe's padding dropped). Directions measured:
+      enabling the disabled section fails the probe `Down skips the disabled
+      header: expected "accordion-delta-trigger", got
+      "accordion-gamma-trigger"` (exit `1`), and dropping the subtraction from
+      `accordionShift` fails the fixture case `expected 200 to be 80`; both
+      restored green. Docs:
       `apps/playground/README.md` §`accordion-lifecycle`,
       `.artifacts/live/accordion-single.png`, and the `Accordions` row in
       `COMPONENTS.md`.
@@ -6315,6 +6320,38 @@ handed to the timer.
       Docs: `README.md` §The theme, `docs/button.mdx` §API, the Tier 1 preamble
       in `COMPONENTS.md`. No live scenario applies — the box is the
       `TestRenderer`'s paint.
+
+`[x]` `packages/primitives`: **a stored corner name painted an unsupported class
+      and lost the corner** — a radius is a stored choice as often as a literal
+      (a saved panel's corner, a restored placeholder's shape), so a name a
+      release renamed or dropped arrived as a string the union no longer names.
+      Three painters indexed it straight through: `boxClass`,
+      `scrollFrameClass` and `skeletonClass` emitted `rounded-<name>`, which the
+      recipe compiler records as an **unsupported class** nobody reads, and
+      `surfaceStyle`/`skeletonStyle` asked `radiusValue` for a number the scale
+      does not carry — so a Box or a scroll frame painted square (its documented
+      default, at least) while a Skeleton **lost the `sm` corner its page
+      promises**. `isRadiusStep`/`radiusStep` (`core/theme.ts`) are the rule:
+      membership is the release's radius scale, and a name it does not carry is
+      **absence**, which each painter documents — no corner for a Box or a frame,
+      `sm` for a skeleton — while a step a theme lost still paints the library's
+      number (`radiusValue`). Proof: `theme.test.ts` gains `a corner step is a
+      stored choice` (every shipped step accepted, a dropped/padded/blank name, a
+      number and `null` refused, a brand's own number); `style.test.ts` and
+      `loading.test.ts` hold the two resolvers; `recipe.test.ts` compiles the
+      three recipes for a dropped name and requires `unsupported` empty and the
+      documented corner; `presentational.test.tsx` reads the rendered Skeleton;
+      `runtime/loading.runtime.test.tsx` paints it in a real renderer (Skeleton
+      `sm`, Box none). Directions measured: with the raw names restored, the
+      recipe case fails `expected [ 'rounded-xl2' ] to strictly equal []`, the
+      resolver and window Skeleton cases read `expected undefined to be 4`, and
+      the rendered case fails on the missing `borderRadius`; restored the package
+      is 57 files / **1 178** unit tests with `check-types`, `oxlint` and `oxfmt`
+      clean and `loading.runtime` 21/21. Docs: the `radius` rows of
+      `docs/box.mdx`, `docs/skeleton.mdx` and `docs/scroll-area.mdx`, the package
+      README's stored choices, the three `COMPONENTS.md` rows, and `docs.test.ts`
+      holds the seam and the pages together. No live scenario applies — the
+      corner is the `TestRenderer`'s and the window suite's own paint.
 
 `[x]` `packages/primitives`: **a text area dropped a row count the runtime could
       not parse** — `minRows`/`maxRows` are caller arithmetic (a measured height
@@ -12026,38 +12063,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `Delete` left the value at **5**, because the press owns the keyboard path.
       Evidence: `apps/playground/README.md` §`rating-lifecycle`,
       `.artifacts/live/rating-{rest,chosen}.png`.
-
-`[x]` Measure the **shipped `Accordion`** in a window — its rules were all
-      offscreen reads (one section open, a disabled header refused, arrows moving
-      focus), and no window had painted the coordinated section or measured the
-      body the reveal reports: whether `AutoHeight`'s measured clip and the
-      sections below agree with the two caller heights is a layout fact a tree
-      read cannot answer. The `accordion-lifecycle` probe mounts the shipped
-      `Accordion` in single, non-collapsible mode over four bodies of **120 /
-      200 / 80 / 60** points with gamma disabled: at rest the open body and its
-      clip both paint 120 and the closed sections mount nothing; a press on beta
-      reports `open=beta changes=1`, paints 200, unmounts alpha's body and clip,
-      and moves delta's header **80** — the difference of the two measured
-      bodies; the press leaves native focus on the header it hit; Down skips
-      gamma to delta, Down wraps to alpha, Up wraps to delta, Home/End jump the
-      enabled edges, and the readout stays `open=beta` throughout, so a move
-      opens nothing; Enter opens delta (60) and Space on the open section is
-      refused while its body stays painted; a press on gamma changes nothing and
-      mounts no body. **29 checks**, `--only accordion-lifecycle`, green on
-      0.11.0 here (~1.9 s, one capture). Fixture `src/live/accordion.ts` (the
-      distinct bodies, the derived shift, the unbroken focus chain, the readout
-      and the check count) + probe `src/live/accordion-probe.tsx` +
-      `accordion.test.ts` (12 cases: the scene's arithmetic, the locators, the
-      registry and the section, and that the probe composes the package's parts
-      and drops the content padding). Directions measured: enabling the disabled
-      section fails the probe `Down skips the disabled header: expected
-      "accordion-delta-trigger", got "accordion-gamma-trigger"` (exit `1`), and
-      dropping the subtraction from `accordionShift` fails the fixture case
-      `expected 200 to be 80`; both restored green. Docs:
-      `apps/playground/README.md` §`accordion-lifecycle`,
-      `.artifacts/live/accordion-single.png`, and the `Accordions` row in
-      `COMPONENTS.md` (which now reads `yes (measured)` and prints the probe's
-      facts).
 
 ### Docs information architecture (`docs-site`)
 

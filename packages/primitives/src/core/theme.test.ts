@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 import {
   borderWidth as libraryBorderWidth,
   defaultDensity as libraryDensity,
@@ -56,7 +57,9 @@ import {
   familyOf,
   iconSideOf,
   isSpaceStep,
+  isRadiusStep,
   isTextRole,
+  radiusStep,
   radiusValue,
   rowHeightOf,
   scaleValue,
@@ -372,6 +375,39 @@ describe("a spacing step is a stored choice", () => {
     expect(spaceStep({}, "lg")).toBeUndefined();
     // The test theme's group is the one every other case reads.
     expect(spaceStep({ spacing: testTheme.spacing }, "lg")).toBe("lg");
+  });
+});
+
+describe("a corner step is a stored choice", () => {
+  it("reads a name the release does not carry as absence, never a class", () => {
+    // Every corner this release ships is the corner it asks for...
+    Arr.forEach(R.keys(libraryRadius), (step) => {
+      expect(radiusStep(step)).toBe(step);
+    });
+    // ...and a name from another release, a padded one, a number a caller
+    // forwarded or an absent value is **absence**: each painter documents what
+    // it paints for a corner it cannot place, so the Box and the scroll frame
+    // paint none and the Skeleton keeps its `sm`.
+    expect(radiusStep("xl2")).toBeUndefined();
+    expect(radiusStep(" md ")).toBeUndefined();
+    expect(radiusStep("")).toBeUndefined();
+    expect(radiusStep(8)).toBeUndefined();
+    expect(radiusStep(undefined)).toBeUndefined();
+    expect(radiusStep(null)).toBeUndefined();
+    expect(isRadiusStep("xl2")).toBe(false);
+    expect(isRadiusStep("lg")).toBe(true);
+  });
+
+  it("answers a theme's own number for a step it still names", () => {
+    // The userland question is membership in the release's scale; the number
+    // is the theme's, and a theme that lost the group paints the library's —
+    // the rule `radiusValue` states. A bogus name has no number either way.
+    expect(radiusValue(testTheme, "lg")).toBe(testTheme.radius.lg);
+    const brand: PrimitiveTheme = {
+      ...testTheme,
+      radius: { ...testTheme.radius, lg: 11 },
+    };
+    expect(radiusValue(brand, "lg")).toBe(11);
   });
 });
 

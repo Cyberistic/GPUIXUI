@@ -40,7 +40,7 @@ import {
 } from "./style.js";
 import { buttonVariants, BUTTON_VARIANTS, fieldVariant } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
-import type { PrimitiveTheme } from "./theme.js";
+import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 
 /**
  * Guards the theme-role → GPUix `StyleDesc` boundary.
@@ -410,6 +410,16 @@ describe("surfaceStyle", () => {
   it("paints no fill for a transparent surface", () => {
     expect(
       surfaceStyle({ tone: "none" }, testTheme).backgroundColor,
+    ).toBeUndefined();
+  });
+
+  it("paints no corner for a stored radius name the release dropped", () => {
+    // The bug: a saved panel's corner arrives as a name a later release no
+    // longer ships, and the resolver indexed it straight through — no corner,
+    // and its recipe shipped an unsupported class nobody reads.
+    const stored = "xl2" as RadiusStep; // the storage boundary
+    expect(
+      surfaceStyle({ tone: "card", radius: stored }, testTheme).borderRadius,
     ).toBeUndefined();
   });
 
