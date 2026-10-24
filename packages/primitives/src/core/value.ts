@@ -10,6 +10,7 @@
  */
 
 import * as Option from "effect/Option";
+import { storedNumber } from "./stored.js";
 
 /** A closed interval with a quantisation step. `step: 0` means continuous. */
 export interface ValueRange {
@@ -52,6 +53,43 @@ export const normalizeRange = (range: ValueRange): ValueRange => {
   const step = finiteOr(range.step, 0) > 0 ? Math.abs(range.step) : 0;
   return min <= max ? { min, max, step } : { min: max, max: min, step };
 };
+
+/** The bounds a value control was saved with, as a store handed them back. */
+export interface StoredRange {
+  readonly min?: unknown;
+  readonly max?: unknown;
+  readonly step?: unknown;
+}
+
+/**
+ * The range a value control paints from the bounds a store handed back.
+ *
+ * A slider's or a meter's bounds are saved with the form that draws it — a
+ * restored settings pane, a channel control in a record, a gauge in a saved
+ * dashboard — so a bound arrives as whatever the store wrote: `null` for a
+ * field the record never carried, text from a hand-edited export, an object
+ * from an older shape. `??` keeps a control's documented default only for
+ * `null`/`undefined`, so any other unreadable bound reached
+ * {@link normalizeRange}, which answers a bound that is not a number with
+ * `min + 1`: a control documented as `0..100` painted a **0..1** range, so
+ * every value past one pinned its thumb to the end of the track, and a stored
+ * text `step` quietly turned a quantised control continuous.
+ *
+ * A bound that is not a number is **absence**, the rule `storedNumber`
+ * follows, and an absent bound is the default the control documents — so a
+ * restored slider paints the range its page states. A number a store wrote is
+ * still a number, and what `NaN` or an infinity then mean is
+ * {@link normalizeRange}'s decision.
+ */
+export const storedRange = (
+  bounds: StoredRange,
+  defaults: ValueRange,
+): ValueRange =>
+  normalizeRange({
+    min: Option.getOrElse(storedNumber(bounds.min), () => defaults.min),
+    max: Option.getOrElse(storedNumber(bounds.max), () => defaults.max),
+    step: Option.getOrElse(storedNumber(bounds.step), () => defaults.step),
+  });
 
 /**
  * Strip the binary-float tail a snapped step leaves behind.

@@ -21,7 +21,7 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | required | the measurement; clamped into the range |
-| `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of |
+| `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of; a stored bound that is not a number is that default |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role; a stored name the table does not carry reads as `primary` |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm`; a stored name the table does not carry reads as `md` |
 | `label` | `string` | none | accessible name, and `MeterLabel`'s default text; a blank label is no name, and a caption child that says nothing falls back to it rather than painting a blank line |

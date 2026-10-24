@@ -725,6 +725,83 @@ it("never lets the two ends cross", async () => {
   expect(announced(runtime, "Price maximum")).toBe("90");
 });
 
+it("paints a slider's saved bound this release cannot read as the documented range", async () => {
+  // The bug guarded: a slider's bounds are saved with the form that draws it —
+  // a restored settings pane, a channel control in a record — so a bound
+  // arrives as whatever the store wrote, and a text `max` reached
+  // `normalizeRange`, which answers it with `min + 1`. Measured, a 0..1 slider
+  // pinned a value of 40 to the end of the track; the documented range reads it
+  // as 40%.
+  const runtime = await mount(
+    <Stack direction="column">
+      <Slider
+        testId="stored"
+        label="Stored"
+        defaultValue={40}
+        // The cast is the storage boundary: a saved bound is one string.
+        max={"255" as unknown as number}
+      />
+      <Slider testId="documented" label="Documented" defaultValue={40} />
+    </Stack>,
+  );
+  const share = (testId: string): number => {
+    const rail = elementById(
+      runtime,
+      trackOf(runtime, testId).children[0] ?? -1,
+    );
+    const fill = elementById(runtime, rail.children[0] ?? -1);
+    const railBox = Option.getOrElse(runtime.boundsOfId(rail.id), () =>
+      expect.fail(`${testId} painted no rail`),
+    );
+    const fillBox = Option.getOrElse(runtime.boundsOfId(fill.id), () =>
+      expect.fail(`${testId} painted no fill`),
+    );
+    return fillBox.width / railBox.width;
+  };
+  expect(Math.abs(share("stored") - share("documented"))).toBeLessThan(0.02);
+  expect(Math.abs(share("stored") - 0.4)).toBeLessThan(0.02);
+  expect(announced(runtime, "Stored")).toBe("40");
+});
+
+it("paints a meter's saved bound this release cannot read as the documented range", async () => {
+  // The bug guarded: a meter is a widget a dashboard stores, so its bounds
+  // arrive as whatever the record carried. A text `max` reached
+  // `normalizeRange`, which answers a bound that is not a number with
+  // `min + 1` — a 0..1 range for a meter documented as 0..100 — so a 62%
+  // measurement painted the track full (measured: 100% of the rail).
+  const runtime = await mount(
+    <Stack direction="column">
+      <Meter
+        testId="stored-meter"
+        label="Stored"
+        value={62}
+        // The cast is the storage boundary: a saved bound is one string.
+        max={"100" as unknown as number}
+      />
+      <Meter testId="documented-meter" label="Documented" value={62} />
+    </Stack>,
+  );
+  const share = (testId: string): number => {
+    const bar = elementById(
+      runtime,
+      trackOf(runtime, testId).children[0] ?? -1,
+    );
+    const fill = elementById(runtime, bar.children[0] ?? -1);
+    const barBox = Option.getOrElse(runtime.boundsOfId(bar.id), () =>
+      expect.fail(`${testId} painted no track box`),
+    );
+    const fillBox = Option.getOrElse(runtime.boundsOfId(fill.id), () =>
+      expect.fail(`${testId} painted no fill`),
+    );
+    return fillBox.width / barBox.width;
+  };
+  expect(
+    Math.abs(share("stored-meter") - share("documented-meter")),
+  ).toBeLessThan(0.02);
+  expect(Math.abs(share("stored-meter") - 0.62)).toBeLessThan(0.02);
+  expect(announced(runtime, "Stored")).toBe("62");
+});
+
 it("announces a meter's measurement and paints it inside its own range", async () => {
   const runtime = await mount(
     <Meter testId="m" label="Disk" value={25} min={0} max={50} />,

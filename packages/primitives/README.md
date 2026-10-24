@@ -150,6 +150,18 @@ and each is read through a membership test rather than indexed raw:
   own height. `style.test.ts`, `presentational.test.tsx`, `Rating.test.tsx`,
   `layout.test.ts`, `fields.test.tsx`, `layout.runtime.test.tsx`,
   `rating.runtime.test.tsx` and `fields.runtime.test.tsx` hold both directions.
+- a **slider's or meter's bounds** are saved with the form that draws it — a
+  restored settings pane, a channel control in a record, a gauge in a saved
+  dashboard — and `??` keeps the documented range only for `null`/`undefined`:
+  a bound written as text reached `normalizeRange`, which answers a bound that
+  is not a number with `min + 1`, so a control documented as `0..100` painted a
+  **0..1** range and a value of 40 pinned its thumb to the end of the track
+  (measured in a window: the fill covered **100%** of the rail against the
+  **40%** the documented range paints). `storedRange` (`core/value.ts`) reads
+  each bound through `storedNumber` and takes the control's documented default
+  for one it cannot read, so a restored `step` of `"5"` still quantises by one
+  instead of turning the control continuous. `value.test.ts`, `Slider.test.tsx`,
+  `Meter.test.tsx` and `runtime/value.runtime.test.tsx` hold both directions.
 - an **elevation level** is saved with the panel it raises (a workspace record,
   a settings row), so `elevationLevel` (`core/theme.ts`) reads a name the scale
   does not carry as `md`, the default lift `elevationShadow` already answers,

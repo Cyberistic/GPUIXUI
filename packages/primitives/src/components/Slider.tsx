@@ -60,10 +60,10 @@ import {
   decideValueKey,
   moveSpanEnd,
   nearestEnd,
-  normalizeRange,
   normalizeSpan,
   pointerValue,
   spanFrom,
+  storedRange,
   valueFraction,
   verticalPointerValue,
   type ValueRange,
@@ -106,9 +106,9 @@ export interface SliderProps
   /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
-  /** Defaults to 0. */
+  /** Defaults to 0. A stored value that is not a number is that default. */
   readonly min?: number;
-  /** Defaults to 100. */
+  /** Defaults to 100. A stored value that is not a number is that default. */
   readonly max?: number;
   /** Defaults to 1. `0` makes the slider continuous. */
   readonly step?: number;
@@ -156,8 +156,11 @@ export interface RangeSliderProps
     HelpProps {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
+  /** Defaults to 0. A stored value that is not a number is that default. */
   readonly min?: number;
+  /** Defaults to 100. A stored value that is not a number is that default. */
   readonly max?: number;
+  /** Defaults to 1. `0` makes the slider continuous. */
   readonly step?: number;
   readonly size?: ControlSize;
   readonly disabled?: boolean;
@@ -186,16 +189,22 @@ export interface RangeSliderProps
   readonly testId?: string;
 }
 
-/** The range a slider was configured with, normalised. */
+/**
+ * The range a slider was configured with, normalised.
+ *
+ * Each bound is read through {@link storedRange}: one that is not a number is
+ * absence and takes the documented default, so a saved `max` written as text
+ * cannot shrink the slider to `min + 1`.
+ */
 export const sliderRange = (props: {
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
 }): ValueRange =>
-  normalizeRange({
-    min: props.min ?? 0,
-    max: props.max ?? 100,
-    step: props.step ?? 1,
+  storedRange(props, {
+    min: 0,
+    max: 100,
+    step: 1,
   });
 
 /**

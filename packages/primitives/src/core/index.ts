@@ -110,11 +110,13 @@ export {
   pointerValue,
   spanFrom,
   stepValue,
+  storedRange,
   valueFraction,
   valueStep,
   verticalPointerValue,
 } from "./value.js";
 export type {
+  StoredRange,
   TrackBox,
   ValueRange,
   ValueSpan,

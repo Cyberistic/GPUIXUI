@@ -21,6 +21,7 @@ import {
   pointerValue,
   spanFrom,
   stepValue,
+  storedRange,
   valueFraction,
   valueStep,
   verticalPointerValue,
@@ -49,6 +50,52 @@ describe("normalizeRange", () => {
       max: 0,
       step: 1,
     });
+  });
+});
+
+describe("storedRange", () => {
+  it("reads a bound that is not a number as the range's documented default", () => {
+    // The bug guarded: a slider's and a meter's bounds are saved with the form
+    // that draws them, and `??` keeps the documented default only for
+    // `null`/`undefined`. A bound a store wrote as text — a hand-edited export,
+    // a settings row that saved its field as a string — reached
+    // `normalizeRange`, which answers a bound that is not a number with
+    // `min + 1`: a control documented as 0..100 painted a 0..1 range, so every
+    // value past one pinned its thumb to the end of the track. A `step` written
+    // as text quietly turned a quantised control continuous.
+    expect(
+      storedRange({ min: "0", max: "255", step: "5" }, RANGE),
+    ).toStrictEqual(RANGE);
+    expect(
+      storedRange({ min: {}, max: null, step: true }, RANGE),
+    ).toStrictEqual(RANGE);
+  });
+
+  it("keeps every number a store wrote", () => {
+    expect(storedRange({ min: 10, max: 20, step: 5 }, RANGE)).toStrictEqual({
+      min: 10,
+      max: 20,
+      step: 5,
+    });
+    // A bound the record never carried is the default, not zero: the two ends
+    // take their own defaults, so a saved `min` alone keeps the documented max.
+    expect(storedRange({ min: 10 }, RANGE)).toStrictEqual({
+      min: 10,
+      max: 100,
+      step: 1,
+    });
+  });
+
+  it("still normalises what the numbers mean", () => {
+    expect(storedRange({ min: 100, max: 0, step: -2 }, RANGE)).toStrictEqual({
+      min: 0,
+      max: 100,
+      step: 0,
+    });
+    // `NaN` is a number the store wrote; what it means is the arithmetic's.
+    expect(
+      storedRange({ min: Number.NaN, max: 0, step: 1 }, RANGE),
+    ).toStrictEqual({ min: 0, max: 0, step: 1 });
   });
 });
 

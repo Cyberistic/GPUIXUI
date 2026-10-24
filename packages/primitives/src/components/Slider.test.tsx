@@ -29,6 +29,7 @@ import {
   SliderTrack,
   type RangeSliderHandlers,
   type SliderHandlers,
+  type SliderProps,
   type SliderState,
 } from "./Slider.js";
 import type { FocusState } from "./internal.js";
@@ -127,6 +128,53 @@ describe("Slider", () => {
     expect(expectSome(hostStyle(stored, "height"))).toBe(
       testTheme.density.controlHeight.md,
     );
+  });
+
+  it("reads a saved bound it cannot read as the documented range", () => {
+    // The bug guarded: a slider's bounds are saved with the form that draws it
+    // — a restored settings pane, a channel control in a record — so a bound
+    // arrives as whatever the store wrote. `??` kept the documented default
+    // only for `null`/`undefined`, and `normalizeRange` answers any other
+    // unreadable bound with `min + 1`, so a stored text `max` painted a 0..1
+    // slider: 40 was clamped to 1 and its fill sat at the end of the track
+    // instead of at 40%.
+    const stored = renderSlider(
+      { value: 40, max: "255" } as unknown as SliderProps,
+      testTheme,
+      valueOf(40),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    const fallback = renderSlider(
+      { value: 40 },
+      testTheme,
+      valueOf(40),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    const fill = partsOf(stored)[0] ?? expect.fail("no fill");
+    const documented = partsOf(fallback)[0] ?? expect.fail("no fill");
+    expect(expectSome(hostStyle(fill, "width"))).toBe(
+      expectSome(hostStyle(documented, "width")),
+    );
+    expect(expectSome(hostStyle(fill, "width"))).toBe("40%");
+    // A stored `step` is the same read: text is not a number, so the documented
+    // step of one still quantises the control. Read as `0` it was continuous,
+    // and the thumb reported the raw pointer position.
+    expect(
+      expectSome(
+        hostProp(
+          renderSlider(
+            { value: 41.4, step: "5" } as unknown as SliderProps,
+            testTheme,
+            valueOf(41.4),
+            idle,
+            sliderHandlers(vi.fn()),
+          ),
+          "aria-valuetext",
+        ),
+      ),
+    ).toBe("41");
   });
 
   it("is a named slider that announces its value instead of aria-valuenow", () => {

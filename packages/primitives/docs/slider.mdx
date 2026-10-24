@@ -33,8 +33,8 @@ const [quality, setQuality] = useState(62);
 | `onValueChange` | `(value: number) => void` | — | called only when the value changed |
 | `onValueCommit` | `(value: number) => void` | — | the value a gesture ended on: once per drag release, once per key that moved it |
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
-| `min` / `max` | `number` | `0` / `100` | the closed range |
-| `step` | `number` | `1` | quantisation; `0` is continuous |
+| `min` / `max` | `number` | `0` / `100` | the closed range; a stored bound that is not a number is that default |
+| `step` | `number` | `1` | quantisation; `0` is continuous; a stored step that is not a number is `1` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb `iconSize`, track `density.controlHeight` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity |
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |

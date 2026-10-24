@@ -34,8 +34,8 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
 | `onValueCommit` | `(value: readonly [number, number]) => void` | — | the span a gesture ended on: once per drag release, once per key that moved an end |
 | `onChange` | `(value: readonly [number, number]) => void` | — | deprecated alias for `onValueChange` |
-| `min` / `max` | `number` | `0` / `100` | the closed range |
-| `step` | `number` | `1` | quantisation; `0` is continuous |
+| `min` / `max` | `number` | `0` / `100` | the closed range; a stored bound that is not a number is that default |
+| `step` | `number` | `1` | quantisation; `0` is continuous; a stored step that is not a number is `1` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |

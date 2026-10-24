@@ -22,6 +22,7 @@ import {
   renderMeter,
   renderMeterLabel,
   renderMeterValue,
+  type MeterProps,
 } from "./Meter.js";
 import {
   elementChildren,
@@ -89,6 +90,25 @@ describe("Meter", () => {
     expect(expectSome(hostStyle(trackOf(stored), "height"))).toBe(
       testTheme.spacing.sm,
     );
+  });
+
+  it("reads a saved bound it cannot read as the documented range", () => {
+    // The bug guarded: a meter is a widget a dashboard stores, so its bounds
+    // arrive as whatever the record carried. `??` kept the documented default
+    // only for `null`/`undefined`, and `normalizeRange` answers any other
+    // unreadable bound with `min + 1` — a 0..1 range for a meter documented as
+    // 0..100 — so a 62% measurement painted the track full while its label
+    // still read the measurement.
+    const stored = renderMeter(
+      { value: 62, max: "100" } as unknown as MeterProps,
+      testTheme,
+    );
+    const fallback = renderMeter({ value: 62, max: 100 }, testTheme);
+    expect(stringIn(fillOf(stored), "width")).toBe(
+      stringIn(fillOf(fallback), "width"),
+    );
+    expect(stringIn(fillOf(stored), "width")).toBe("62%");
+    expect(expectSome(hostProp(stored, "aria-valuetext"))).toBe("62");
   });
 
   it("paints the fill when its tone name is one the table does not carry", () => {

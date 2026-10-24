@@ -37,7 +37,7 @@ import {
   type ProgressSize,
   type ProgressTone,
 } from "../core/style.js";
-import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
+import { clampValue, storedRange, valueFraction } from "../core/value.js";
 import { spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { progressFillClass, progressTrackClass } from "../recipe/index.js";
@@ -48,9 +48,9 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface MeterProps extends ElementHostProps {
   readonly value: number;
-  /** Defaults to 0. */
+  /** Defaults to 0. A stored value that is not a number is that default. */
   readonly min?: number;
-  /** Defaults to 100. */
+  /** Defaults to 100. A stored value that is not a number is that default. */
   readonly max?: number;
   /** Defaults to `primary`. */
   readonly tone?: ProgressTone;
@@ -87,9 +87,9 @@ export const meterPart = (
   props: MeterProps,
   theme: PrimitiveTheme,
 ): MeterPart => {
-  const range = normalizeRange({
-    min: props.min ?? 0,
-    max: props.max ?? 100,
+  const range = storedRange(props, {
+    min: 0,
+    max: 100,
     step: 0,
   });
   const value = clampValue(props.value, range);
