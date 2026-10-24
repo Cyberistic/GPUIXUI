@@ -310,11 +310,19 @@ export const decorative = (style: StyleDesc): StyleDesc =>
  * Density moves numbers and never colour, so the override swaps the `density`
  * group and nothing else — and an absent override returns the theme *itself*,
  * so a re-render cannot silently clone a palette.
+ *
+ * A stored override is decoded JSON, which writes `null` for a field the record
+ * never carried: `null` is the same absence as an omitted prop, the rule
+ * `ThemeOverridesSource` and `MessagesSource` keep. Read as an override, it
+ * replaced a brand's own density box with `null` — every control fell back to
+ * the library's metrics while the palette, type and radii stayed the brand's,
+ * and a consumer reading `theme.density` directly threw.
  */
 export const withDensity = (
   theme: PrimitiveTheme,
-  density: Density | undefined,
-): PrimitiveTheme => (density === undefined ? theme : { ...theme, density });
+  density: Density | null | undefined,
+): PrimitiveTheme =>
+  density === null || density === undefined ? theme : { ...theme, density };
 
 /** Whether a control holds focus, and the handlers that track it. */
 export interface FocusState {

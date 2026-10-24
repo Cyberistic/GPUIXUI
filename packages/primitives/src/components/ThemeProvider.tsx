@@ -39,8 +39,13 @@ export interface ThemeProviderProps {
    * Resolved density metrics to use instead of `theme.density`. Density moves
    * numbers, never colours; build one with tokens' `extendTheme(theme, { density })`
    * so this package owns no second copy of the presets.
+   *
+   * A stored override is decoded JSON: `null` is the field a settings record
+   * never carried, so it is **no override** — the theme's own density stands,
+   * rather than being replaced by a hole that painted the library's metrics
+   * (and that a consumer reading `theme.density` directly could not read at all).
    */
-  readonly density?: Density;
+  readonly density?: Density | null;
   /**
    * The words the controls below announce — a localised interface's copy. A
    * stored table is the shape a settings record holds ([`MessagesSource`]), and

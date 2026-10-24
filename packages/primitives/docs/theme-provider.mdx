@@ -23,7 +23,7 @@ import { darkTheme } from "@gpuixui/tokens";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `theme` | `PrimitiveTheme` | required | every colour, size, radius and font a primitive paints |
-| `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
+| `density` | `Density \| null` | `theme.density` | swaps the numeric metrics group; colours stay, and a stored `null` is no override |
 | `messages` | `MessagesSource \| null` | the shipped English | the words a control announces; see §Words |
 | `children` | `ReactNode` | — | the tree that may render primitives |
 
@@ -58,7 +58,10 @@ was never set) is absence whole — the table above stands.
   from storage is decoded JSON, where a numeric group it did not carry is
   `null`; a lost group paints the library's own numbers rather than throwing
   from the first layout that asks for a gap, and the gate still refuses it — run
-  `missingTokens` and rebuild it with `extendTheme`.
+  `missingTokens` and rebuild it with `extendTheme`. The **override** keeps the
+  same rule: `density={null}` — the field a settings record never carried — is
+  no override, so the theme's own preset paints instead of being replaced by a
+  hole.
 - The colour group follows the same absence rule, answered instead of refused:
   a stored theme that lost it paints **no role** — the control keeps its
   recipe's resting fill — because a role is additive. `invalidColorRoles` names

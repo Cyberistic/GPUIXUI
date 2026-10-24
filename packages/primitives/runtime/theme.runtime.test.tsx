@@ -17,7 +17,12 @@
  */
 
 import { expect, it } from "vitest";
-import { darkTheme, densityPresets, lightTheme } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  densityPresets,
+  extendTheme,
+  lightTheme,
+} from "@gpuixui/tokens";
 import {
   ThemeProvider as TokensThemeProvider,
   useTheme as useSharedTheme,
@@ -38,7 +43,7 @@ import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
-import type { PrimitiveTheme } from "../src/core/theme.js";
+import type { Density, PrimitiveTheme } from "../src/core/theme.js";
 import type { Runtime } from "./harness.js";
 import { openWindow } from "./fixture.js";
 import { painted, paintedColours, rgbOf } from "./theme.js";
@@ -120,6 +125,29 @@ it("carries the density override into the shared context", async () => {
     () => -1,
   );
   expect(height).toBe(densityPresets.compact.controlHeight.md);
+});
+
+it("keeps the theme's density when a stored override is absent", async () => {
+  // The bug guarded: a density override is read from a settings row, and JSON
+  // writes `null` for a field the record never carried. Read as an override, it
+  // replaced a brand's compact box with a hole: this probe — the way every
+  // `@gpuixui/components` part reads the shared context — threw on
+  // `theme.density.controlHeight`, and a primitive fell back to the library's
+  // metrics while the brand's palette stayed. `null` is absence, so the theme's
+  // own density paints.
+  const stored: Density | null = null;
+  const brand = extendTheme(lightTheme, { density: densityPresets.compact });
+  const runtime = await rendered(
+    <ThemeProvider theme={brand} density={stored}>
+      <SharedProbe testId="shared" />
+    </ThemeProvider>,
+  );
+  const height = Option.getOrElse(
+    Option.map(runtime.bounds("shared"), (bounds) => bounds.height),
+    () => -1,
+  );
+  expect(height).toBe(densityPresets.compact.controlHeight.md);
+  expect(height).not.toBe(lightTheme.density.controlHeight.md);
 });
 
 it("paints each role from the theme it is given", async () => {

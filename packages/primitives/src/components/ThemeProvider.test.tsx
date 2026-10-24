@@ -94,6 +94,23 @@ describe("withDensity", () => {
     expect(withDensity(testTheme, undefined)).toBe(testTheme);
   });
 
+  it("reads a stored override that was never carried as no override", () => {
+    // The bug guarded: a density override is read from a settings row, and JSON
+    // writes `null` for a field the record never carried. `withDensity` tested
+    // only `undefined`, so `density={null}` replaced the theme's own box with a
+    // hole: a brand that ships a compact preset painted the library's metrics
+    // while its palette, type and radii stayed the brand's, and a consumer
+    // reading `theme.density` directly threw on the null.
+    const stored: Density | null = null;
+    expect(withDensity(testTheme, stored)).toBe(testTheme);
+    const element = ThemeProvider({
+      theme: testTheme,
+      density: stored,
+      children: null,
+    });
+    expect(densityOf(element)).toBe(testTheme.density);
+  });
+
   it("replaces only the density group, so the palette is shared not copied", () => {
     const dense = withDensity(testTheme, compact);
     expect(dense.density).toBe(compact);

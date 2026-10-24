@@ -40,7 +40,10 @@ context.
 Density is a multiplier over the theme's metrics, never a second palette:
 `<ThemeProvider theme={theme} density={extendedTheme.density}>` changes numbers
 only. Building density presets is `@gpuixui/tokens`' job, so this package owns no
-second copy of them.
+second copy of them. A **stored** override is decoded JSON, so a settings record
+that never carried one hands over `null`: that is the same absence as an omitted
+prop, and the theme's own preset paints rather than being replaced by a hole
+(`withDensity`; `ThemeProvider.test.tsx` and `runtime/theme.runtime.test.tsx`).
 
 The **control size** a component is given is a stored choice too — a settings
 row persists it, and `@gpuixui/tokens` publishes `controlSizes` beside
