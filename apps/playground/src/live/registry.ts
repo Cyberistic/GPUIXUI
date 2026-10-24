@@ -828,6 +828,12 @@ export const liveRegistry = [
       "Input: the shipped ColorPicker paints the theme's six roles as swatches, marks the chosen one with a page-filled pip, commits a typed shorthand as one normal form and refuses a draft it cannot read",
     capability: "input",
   },
+  {
+    id: "mention-input-lifecycle",
+    title:
+      "Input: the shipped MentionInput places its suggestion list below the field, paints the arrow's row in the theme's accent, inserts by Enter and by a press through the floating layer, and keeps its dismissed rows while they leave",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

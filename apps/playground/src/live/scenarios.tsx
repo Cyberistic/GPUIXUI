@@ -1133,6 +1133,7 @@ import { AccordionProbe, accordionSteps } from "./accordion-probe.js";
 import { LogViewerProbe, logViewerSteps } from "./log-viewer-probe.js";
 import { FileTreeProbe, fileTreeSteps } from "./file-tree-probe.js";
 import { ColorPickerProbe, colorPickerSteps } from "./color-picker-probe.js";
+import { MentionInputProbe, mentionInputSteps } from "./mention-input-probe.js";
 import {
   PropertyPanelProbe,
   propertyPanelSteps,
@@ -30706,5 +30707,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "color-picker-lifecycle",
     view: () => <ColorPickerProbe />,
     steps: colorPickerSteps,
+  },
+  "mention-input-lifecycle": {
+    id: "mention-input-lifecycle",
+    view: () => <MentionInputProbe />,
+    steps: mentionInputSteps,
   },
 };

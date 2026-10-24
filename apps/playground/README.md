@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-132 probes a real window can prove, of which twenty-nine mount shipped
+133 probes a real window can prove, of which twenty-nine mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -7502,6 +7502,62 @@ Fixture `src/live/color-picker.ts`, probe `src/live/color-picker-probe.tsx`,
 guard `src/live/color-picker.test.ts`.
 
 
+### `mention-input-lifecycle` — measured on 0.11.0 here
+
+The **shipped** `@gpuixui/components` `MentionInput` and a disabled twin: a
+field that offers four people (`ada`, `grace`, `alan`, `margaret`) in a floating
+list, ranks a query by prefix, and paints the row the arrows reach in the
+theme's `accent`. The behaviour suite reads `aria-selected` and fires synthetic
+presses; three of the component's claims are a window's to prove:
+
+- **the list is a floating layer**, placed four points below the field and
+  aligned to the field's own edge;
+- **the highlight is paint** — a window's automation protocol has no
+  accessibility verb, so `aria-selected` is invisible here and the accent fill
+  is the evidence;
+- **a row is a pointer target**, because the layer sits outside the field's
+  element and the window's hit test decides what the press reaches.
+
+The second half is the dismissal. A list that leaves keeps the rows it was
+dismissed with while its exit runs, and a locked field opens nothing at all.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `text=[] mentions=0`; the field paints and no list does |
+| type `@` | the list paints in one **4-point** gap below the field and starts on the field's edge; all four rows paint |
+| capture `mention-open` | the first row paints the accent role: **14 470** accent pixels in its inner crop, while `grace`'s row paints **0** |
+| `Down` | the highlight moves: `grace` paints **14 329** accent pixels and `ada` paints **0** |
+| `Enter` | `text=[@grace ] mentions=1`; the list leaves, and the field keeps the focus |
+| type `@al` | only the prefix match paints (`alan`); `ada`, `grace` and `margaret` paint no row |
+| `Enter` | `text=[@grace @alan ] mentions=2` — the second insertion keeps the first |
+| type `@m`, press `Margaret Hamilton` | `text=[@grace @alan @margaret ] mentions=3`; a press on a row of the floating layer reaches it, and the list leaves |
+| `Escape` on `@g` | the dismissed list still paints `grace` while its exit runs, then it is gone |
+| a locked field, `@`, `a` | the field's value stays empty and no list ever paints |
+
+**The `@` key is `2->@`.** `Keystroke::parse` gives a printable key its own
+character, so `shift-2` types `2`; only the explicit `key->key_char` form carries
+the shifted character into the runtime's input handler. The probe types the
+punctuation that opens the query this way, and the query itself key by key.
+
+**A press before the last query is not a focus restore.** After the pointer
+insertion the probe focuses the field with `focusElement` rather than pressing
+it: a press places the caret where it lands, and a query typed into the middle of
+the draft is not the trailing `@` token the component reads. The measured run
+shows the difference — a press there opened no list, and the dismissal check
+passed against a list that was never there.
+
+```sh
+nub apps/playground/dist/live/run.js --only mention-input-lifecycle
+```
+
+24 checks, `--only mention-input-lifecycle`, one window and four captures
+(`mention-open`, `mention-second`, `mention-filtered`, `mention-dismiss`), green
+on 0.11.0 here (three runs, 12.7–15.9 s). Fixture `src/live/mention-input.ts` +
+probe `src/live/mention-input-probe.tsx` + `mention-input.test.ts` (the readout,
+the people a query selects, the id set, the row crop, the check count, the
+registry and this section). Evidence:
+`.artifacts/live/mention-{open,second,filtered,dismiss}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7755,7 +7811,8 @@ narrower. Each deviation is deliberate and measured:
   `motion-interruption` and `panel-group-lifecycle` and
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
-  `color-picker-lifecycle` (74 probes, each run alone).
+  `color-picker-lifecycle` and `mention-input-lifecycle` (75 probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,
