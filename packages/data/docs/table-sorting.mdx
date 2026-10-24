@@ -53,6 +53,43 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
 | `useTable` | `toggleSort` | `(field, additive?) => void` | — | the same cycle without the runtime's modifiers |
 | `useTable` | `setSort` | `(next: Option<SortState>) => void` | — | replace the order with one field, or clear it |
 
+## A saved order is read
+
+A store-driven grid builds its table with `constructGrid`, so the state it
+restores — a workspace's sorting, its query, its chosen ids — arrives as data
+rather than as React state. JSON writes a field that was never set as `null`,
+and a release that renames a column leaves the entry it named behind, so the
+state is read before the core sees it: `readGridState(stored)` answers the three
+slices as the shapes they mean, and `constructGrid` reads its own `state` the
+same way.
+
+- a sorting list that is not a list is **no sort** (the source order), and an
+  entry that names no column is dropped;
+- a query that is not text is **no query** — nothing typed narrowed the set;
+- a chosen set keeps only the ids the store set to `true`.
+
+Measured before the read: `globalFilter: null` threw `Cannot read properties of
+null (reading 'trim')` out of the first build, `sorting: null` threw
+`state.sorting is not iterable`, and a `[null]` entry threw `Cannot read
+properties of null (reading 'id')` — a grid that remembered its state could not
+reopen at all. The same rule covers `hiddenColumns`: a stored list that is not a
+list of text ids hides nothing.
+
+```ts
+import { constructGrid, readGridState } from "@gpuixui/data";
+
+// `saved` is whatever the store handed back.
+const table = constructGrid({
+  rows,
+  keyOf: (row) => row.id,
+  columns,
+  state: readGridState(saved),
+  onSortingChange: setSorting,
+  onGlobalFilterChange: setQuery,
+  onRowSelectionChange: setChosen,
+});
+```
+
 ## Limitations
 
 - No `aria-sort`: direction and place are spoken, not attached to the header.

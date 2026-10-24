@@ -38,7 +38,13 @@ import {
   type Table,
 } from "@tanstack/table-core";
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
+import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
 
 /**
  * The features every grid registers.
@@ -76,6 +82,91 @@ export interface GridState {
   readonly rowSelection: Readonly<Record<string, true>>;
 }
 
+/** A sorting entry a store wrote: a column id, and its direction when it had one. */
+class StoredSort extends Schema.Class<StoredSort>("StoredSort")({
+  id: Schema.String,
+  desc: Schema.optionalKey(Schema.Boolean),
+}) {}
+
+const decodeStoredSort = Schema.decodeUnknownOption(StoredSort);
+
+/** A record a store wrote, read as its keys and whatever they carry. */
+const StoredRecord = Schema.Record(Schema.String, Schema.Unknown);
+
+const decodeStoredRecord = Schema.decodeUnknownOption(StoredRecord);
+
+/** The record a store wrote, or an empty one when it wrote something else. */
+const storedRecord = (stored: unknown): Record<string, unknown> =>
+  Option.getOrElse(decodeStoredRecord(stored), () =>
+    R.empty<string, unknown>(),
+  );
+
+/** One slice of a stored record, or absence when the key is not there. */
+const storedSlice = (record: Record<string, unknown>, key: string): unknown =>
+  Option.getOrUndefined(R.get(record, key));
+
+/** The sorting list a store wrote: the entries that name a column, in order. */
+const storedSorting = (stored: unknown): SortingState =>
+  Arr.isArray(stored)
+    ? Arr.map(
+        Arr.getSomes(Arr.map(stored, (entry) => decodeStoredSort(entry))),
+        (entry) => ({
+          id: entry.id,
+          desc: entry.desc === true,
+        }),
+      )
+    : [];
+
+/** The query a store wrote: text, or no query at all. */
+const storedQuery = (stored: unknown): string =>
+  P.isString(stored) ? stored : "";
+
+/** The chosen ids a store wrote: the ones it set to `true`. */
+const storedChosen = (stored: unknown): Readonly<Record<string, true>> =>
+  Option.match(decodeStoredRecord(stored), {
+    onNone: () => ({}),
+    onSome: (record) =>
+      R.fromEntries(
+        Arr.filterMap(R.toEntries(record), ([key, value]) =>
+          value === true
+            ? Result.succeed([key, true] as const)
+            : Result.failVoid,
+        ),
+      ),
+  });
+
+/**
+ * A grid state a store handed back, read as the shape the core takes.
+ *
+ * `constructGrid` is the seam an Effect- or store-driven grid builds its table
+ * with, so the state is **stored data** as often as it is React state: a saved
+ * workspace restores its sorting, its query and its chosen ids in one record,
+ * and JSON writes a field that was never set as `null`. Measured before this
+ * read: `globalFilter: null` threw `Cannot read properties of null (reading
+ * 'trim')` out of the first build and `sorting: null` threw `state.sorting is
+ * not iterable`, while an entry that named no column threw
+ * `Cannot read properties of null (reading 'id')` — a grid that remembered its
+ * state could not reopen at all.
+ *
+ * Each slice is read, not dereferenced: a sorting list that is not a list is
+ * **no sort** (the source order) and an entry that names no column is dropped,
+ * a query that is not text is **no query** (nothing narrowed the set), and a
+ * chosen set keeps only the ids the store set to `true`. A `hiddenColumns`
+ * list follows the same rule: one that is not a list hides nothing.
+ */
+export const readGridState = (stored: unknown): GridState => {
+  const record = storedRecord(stored);
+  return {
+    sorting: storedSorting(storedSlice(record, "sorting")),
+    globalFilter: storedQuery(storedSlice(record, "globalFilter")),
+    rowSelection: storedChosen(storedSlice(record, "rowSelection")),
+  };
+};
+
+/** The visible-column opt-outs a store wrote: only text ids are ids. */
+const storedIds = (stored: unknown): ReadonlyArray<string> =>
+  Arr.isArray(stored) ? Arr.filter(stored, P.isString) : [];
+
 /** How a grid reports a slice the core changed through its own API. */
 export interface GridChange {
   readonly onSortingChange: (next: SortingState) => void;
@@ -94,9 +185,18 @@ export interface ConstructGridOptions<Row> extends GridChange {
    * A hidden column is still **sorted** — the order belongs to the records, and
    * hiding the column a reader sorted by must not silently restore the source
    * order. It is not **searched**: a row kept by text no painted cell shows
-   * reads as a filter that does not work.
+   * reads as a filter that does not work. The list is read as data: one that is
+   * not a list of text ids hides nothing.
    */
   readonly hiddenColumns?: ReadonlyArray<string>;
+  /**
+   * The controlled state the core derives its row models from.
+   *
+   * It is read through {@link readGridState}, so a record a store restored — a
+   * `null` slice, a sorting entry that names no column — reads as the absence it
+   * is rather than taking the build down. A consumer that decodes before holding
+   * it can call the same function at its own boundary.
+   */
   readonly state: GridState;
 }
 
@@ -126,6 +226,11 @@ const columnDefs = <Row extends RowData>(
  * Rebuilt whenever the state, the rows or the columns change: the core is a
  * pure function of them, and a grid's state changes on a press, not per frame —
  * a wheel or a window move re-renders the parts without re-running a model.
+ *
+ * The state is read through {@link readGridState} first, so a restored record
+ * narrows and sorts the set instead of taking the renderer down; the callbacks'
+ * own fallback is that same read, so an updater never receives a slice the core
+ * could not read.
  */
 export const constructGrid = <Row extends RowData>({
   rows,
@@ -136,10 +241,14 @@ export const constructGrid = <Row extends RowData>({
   onSortingChange,
   onGlobalFilterChange,
   onRowSelectionChange,
-}: ConstructGridOptions<Row>): GridTable<Row> =>
-  constructTable({
+}: ConstructGridOptions<Row>): GridTable<Row> => {
+  const current = readGridState(state);
+  return constructTable({
     features: gridFeatures,
-    columns: columnDefs(columns, HashSet.fromIterable(hiddenColumns ?? [])),
+    columns: columnDefs(
+      columns,
+      HashSet.fromIterable(storedIds(hiddenColumns)),
+    ),
     data: rows,
     getRowId: keyOf,
     /**
@@ -148,15 +257,16 @@ export const constructGrid = <Row extends RowData>({
      * an empty table (`table-filter-lifecycle`).
      */
     state: {
-      sorting: [...state.sorting],
-      globalFilter: state.globalFilter.trim(),
-      rowSelection: state.rowSelection,
+      sorting: [...current.sorting],
+      globalFilter: current.globalFilter.trim(),
+      rowSelection: current.rowSelection,
     },
     globalFilterFn: "includesString",
     onSortingChange: (updater) =>
-      onSortingChange(functionalUpdate(updater, state.sorting)),
+      onSortingChange(functionalUpdate(updater, current.sorting)),
     onGlobalFilterChange: (updater) =>
-      onGlobalFilterChange(functionalUpdate(updater, state.globalFilter)),
+      onGlobalFilterChange(functionalUpdate(updater, current.globalFilter)),
     onRowSelectionChange: (updater) =>
-      onRowSelectionChange(functionalUpdate(updater, state.rowSelection)),
+      onRowSelectionChange(functionalUpdate(updater, current.rowSelection)),
   });
+};

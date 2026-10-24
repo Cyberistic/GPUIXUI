@@ -11,12 +11,24 @@
  * The last case holds the premise the controller's render-time retention rests
  * on: the core keeps a chosen id a filter hides, so a query that widens back to
  * the record can paint it chosen again.
+ *
+ * A **restored state** is read, not dereferenced: `constructGrid` is the seam a
+ * store-driven grid builds with, and JSON writes a slice that was never set as
+ * `null`. Before the read, `globalFilter: null` threw `Cannot read properties of
+ * null (reading 'trim')`, `sorting: null` threw `state.sorting is not iterable`
+ * and a sorting entry that named no column threw `Cannot read properties of null
+ * (reading 'id')` — the grid could not reopen with the state it saved.
  */
 
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import type { SortingState } from "@tanstack/table-core";
-import { constructGrid, type GridColumn } from "./grid-core.js";
+import {
+  constructGrid,
+  readGridState,
+  type GridColumn,
+  type GridTable,
+} from "./grid-core.js";
 
 interface Row {
   readonly id: string;
@@ -163,5 +175,99 @@ describe("a hidden column", () => {
     expect(
       ids({ sorting: [{ id: "status", desc: true }], hidden: ["status"] }),
     ).toEqual(["r2", "r1", "r3"]);
+  });
+});
+
+/**
+ * Build a grid from a value a store handed back.
+ *
+ * The `@ts-expect-error` is the point of the suite — a store hands over
+ * `unknown`, and the boundary is what has to survive it. It is the one
+ * suppression this package's tests carry for store-written values, rather than
+ * an `as` that would hide the same crossing without a parser watching it.
+ */
+const restoredGrid = (
+  state: unknown,
+  hiddenColumns?: unknown,
+): GridTable<Row> =>
+  constructGrid({
+    rows,
+    keyOf: (row) => row.id,
+    columns,
+    // @ts-expect-error a stored list is decoded by the core, not trusted
+    hiddenColumns,
+    // @ts-expect-error a stored state is decoded by the core, not trusted
+    state,
+    onSortingChange: () => {},
+    onGlobalFilterChange: () => {},
+    onRowSelectionChange: () => {},
+  });
+
+/** The painted ids of a restored grid, in row-model order. */
+const restoredIds = (state: unknown): ReadonlyArray<string> =>
+  Arr.map(restoredGrid(state).getRowModel().rows, (row) => row.id);
+
+describe("a grid state a store restored", () => {
+  it("reads each slice as the absence an unreadable one means", () => {
+    const state = readGridState({
+      sorting: [null, { id: "size" }, "name", { id: 42 }],
+      globalFilter: null,
+      rowSelection: { r1: true, r2: "yes", r3: false },
+    });
+    expect(state.sorting).toEqual([{ id: "size", desc: false }]);
+    expect(state.globalFilter).toBe("");
+    expect(state.rowSelection).toEqual({ r1: true });
+  });
+
+  it("reads a state that is not a record as no state at all", () => {
+    const emptyState = { sorting: [], globalFilter: "", rowSelection: {} };
+    expect(
+      Arr.map([null, undefined, 42, "sorting"], (stored) =>
+        readGridState(stored),
+      ),
+    ).toEqual([emptyState, emptyState, emptyState, emptyState]);
+  });
+
+  it("builds the table from the slices that used to take the build down", () => {
+    // The three shapes a JSON round trip writes for slices it never set.
+    const table = restoredGrid({
+      sorting: null,
+      globalFilter: null,
+      rowSelection: null,
+    });
+    expect(Arr.map(table.getRowModel().rows, (row) => row.id)).toEqual([
+      "r3",
+      "r1",
+      "r2",
+    ]);
+    expect(table.getSelectedRowIds()).toEqual([]);
+  });
+
+  it("keeps the sort and the query the store wrote", () => {
+    // `desc` absent is the ascending direction it means; `auth` narrows first,
+    // then the sort orders what the query kept.
+    expect(
+      restoredIds({
+        sorting: [{ id: "size" }],
+        globalFilter: "auth",
+        rowSelection: { r1: true },
+      }),
+    ).toEqual(["r3", "r1"]);
+  });
+
+  it("hides only the text ids a stored column list names", () => {
+    // A number is not a list of ids, and a list holding one keeps the ids it
+    // does name: `status` leaves the search either way, `size` does not.
+    const query = { sorting: [], globalFilter: "modified", rowSelection: {} };
+    expect(restoredIds(query)).toEqual(["r3"]);
+    expect(
+      Arr.map(
+        restoredGrid(query, ["status", 42]).getRowModel().rows,
+        (row) => row.id,
+      ),
+    ).toEqual([]);
+    expect(
+      Arr.map(restoredGrid(query, 42).getRowModel().rows, (row) => row.id),
+    ).toEqual(["r3"]);
   });
 });
