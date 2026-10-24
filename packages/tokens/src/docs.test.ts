@@ -953,6 +953,43 @@ describe("the resolvers refuse an axis they do not ship", () => {
       "reads a name the index does not carry as `body`",
     );
   });
+
+  /**
+   * The control-size axis is the second paint seam, and its failure was quieter
+   * than the type role's: `density.controlHeight[size]` and `switchScale[size]`
+   * answered `undefined` where both callers declare a number, so a saved `"xs"`
+   * spread `height: undefined` (dropped by the serializer, the box laid out at
+   * its content's height) or scaled a switch's box into `NaN` — no throw, no
+   * report, just a control that is the wrong size. `md` is the default step, the
+   * rule `iconPixels` follows, and every surface that teaches the density says so.
+   */
+  it("reads a stored control size as the default step, and says so", () => {
+    expect(stylesSource).toContain(
+      'theme.density.controlHeight[isControlSize(size) ? size : "md"]',
+    );
+    expect(stylesSource).toContain(
+      'theme.density.controlPaddingX[isControlSize(size) ? size : "md"]',
+    );
+    expect(read("./switch.ts")).toContain(
+      'switchScale[isControlSize(size) ? size : "md"]',
+    );
+
+    const pages = [catalogue, readme, designSystem].map((page) =>
+      page.replace(/\s+/g, " "),
+    );
+
+    pages.forEach((page, index) => {
+      expect(page, `page ${index}`).toContain("`isControlSize`");
+      expect(page, `page ${index}`).toContain("`switchMetricsAt`");
+    });
+    expect(pages[0]).toContain(
+      "read a name this release does not ship as **`md`**",
+    );
+    expect(pages[0]).toContain("`controlPaddingX`");
+    [pages[1], pages[2]].forEach((page) =>
+      expect(page).toContain("read a size this release does not ship as `md`"),
+    );
+  });
 });
 
 /**

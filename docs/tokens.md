@@ -3589,6 +3589,17 @@ A platform style picks the preset its native controls sit at — macOS `compact`
 Windows `comfortable`, Linux `spacious` — so `platformTheme` carries a density
 too. Layer `extendTheme` to change it without losing the platform's look.
 
+A **control size** is a stored preference as often as a literal (a toolbar's
+compact mode, a settings row, a saved panel), so the three seams that index it
+read a name this release does not ship as **`md`**: `controlHeight` and
+`controlPaddingX` answer the default step rather than the `undefined` the lookup
+returned (a `number` whose caller spread it into `style.height`, where the
+serialiser dropped it and the box laid out at its content's height), and
+`switchMetricsAt` scales the platform's published box instead of painting
+`NaN` — the same rule `iconPixels` follows for an icon size. Narrow a stored
+size with `isControlSize` where the caller can tell the reader what it
+substituted.
+
 A brand can change one size without restating the preset. `DensityOverrides`
 takes a partial `controlHeight` and `controlPaddingX`, and `extendTheme` merges
 them size by size, so the recorded metrics stay complete — a record a brand
@@ -4398,10 +4409,12 @@ and the guard that prevents it:
 `themeFromStored`, above, is the route that never throws: it narrows each axis
 before the resolver sees it.
 
-A **paint seam** is the one exception, and it is deliberate: `textStyle` is called
-mid-render, so it reads a role the scale does not carry as `body` instead of
-throwing and emptying the window (§Typography). Narrow a stored role with
-`isTextRole` where the caller can tell the reader what it substituted.
+A **paint seam** is the one exception, and it is deliberate: a paint seam is
+called mid-render, so it reads a name the scale does not carry as its default
+step instead of throwing or painting nothing — `textStyle` reads a role as `body`
+(§Typography) and `controlHeight`/`controlPaddingX`/`switchMetricsAt` read a
+control size as `md` (§Density). Narrow a stored role or size with `isTextRole`
+or `isControlSize` where the caller can tell the reader what it substituted.
 
 ## React binding
 

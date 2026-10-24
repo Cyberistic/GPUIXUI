@@ -294,8 +294,16 @@ describe("the secondary variant paints the derived fills", () => {
   it("holds the four documents to the fixed paint", () => {
     // The deviation was printed as a measured fact in all four, so the same
     // four have to carry its closure: the history stays (a reader can check the
-    // claim) and the retracted "still swaps" sentence does not.
-    [catalogue, designSystem, inventory, readme].forEach((document) => {
+    // claim) and the retracted "still swaps" sentence does not. The inventory is
+    // read through the row that taught the deviation, not through the whole
+    // file: "still swaps" is an ordinary phrase for the text-swap components and
+    // their honest limits, so only the `Action fills` row can retract it.
+    const row = inventory.slice(
+      inventory.indexOf("| Action fills |"),
+      inventory.indexOf("\n", inventory.indexOf("| Action fills |")),
+    );
+
+    [catalogue, designSystem, row, readme].forEach((document) => {
       const text = document.replace(/\s+/g, " ");
 
       expect(text).toContain("15 of its 32 pointer placements");

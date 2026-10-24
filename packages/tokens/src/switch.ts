@@ -41,7 +41,7 @@ import {
 } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
-import type { ControlSize } from "./scale.js";
+import { isControlSize, type ControlSize } from "./scale.js";
 import type { SwitchColors, SwitchMetrics } from "./theme.js";
 
 /**
@@ -246,7 +246,7 @@ export const switchMetricsAt = (
   metrics: SwitchMetrics,
   size: ControlSize,
 ): SwitchMetrics => {
-  const scale = switchScale[size];
+  const scale = switchScale[isControlSize(size) ? size : "md"];
   if (scale === 1) return metrics;
   const height = Math.round(metrics.height * scale);
   const inset = Math.round(metrics.inset * scale);

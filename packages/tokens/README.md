@@ -192,8 +192,12 @@ route that never throws.
 `textStyle` is a **paint** seam, so it is total on the name: a role the scale does
 not carry reads as `body` rather than throwing `Cannot read properties of
 undefined (reading 'fontSize')` mid-render, the rule `@gpuixui/primitives`' own
-`typeOf` follows. Narrow a stored role with `isTextRole` where the caller can tell
-the reader what it substituted.
+`typeOf` follows. The control-size seams follow the same rule and read a size this
+release does not ship as `md` — `controlHeight`/`controlPaddingX` answered
+`undefined` where they declare a number, and `switchMetricsAt` scaled the
+platform's box by `undefined` into a `NaN` that painted nothing. Narrow a stored
+role or size with `isTextRole` or `isControlSize` where the caller can tell the
+reader what it substituted.
 
 ## High contrast
 

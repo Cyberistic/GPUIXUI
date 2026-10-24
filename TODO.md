@@ -371,7 +371,33 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 215/215
+`[x]` `[██████████]` 216/216
+
+`[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
+(`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
+`switchScale[size]`, both with no membership test: a control size is a stored preference as
+often as a literal (a toolbar's compact mode, a settings row, a saved panel), and a name this
+release does not ship made the first two answer `undefined` **where they declare `number`** —
+the caller spread it into `style.height`, the serialiser dropped it and the box laid out at its
+content's height — while the switch scaled its box by `undefined` into `NaN`, which the batch
+drops, so the platform's toggle painted no box at all. Neither threw and no report saw it.
+`styles.ts` and `switch.ts` now read a size the scale does not carry as **`md`** — the default
+every component falls back to and the box `switchMetricsAt` already calls the platform's
+published control — the rule `iconPixels` follows for an icon size, while the preset-name
+resolver keeps refusing (a theme is resolved at a boundary, a box is painted mid-render).
+`styles.test.ts` gains `reads a size the scale does not carry as the default step` (cast as the
+storage boundary; measured failing with `expected undefined to be 32`), `switch.test.ts` gains
+`reads a size the scale does not carry as the default box` (measured failing with
+`{ width: NaN, height: NaN }`), and `docs.test.ts` gains `reads a stored control size as the
+default step, and says so`, which reads all three seams and requires the catalogue, the README
+and `docs/design-system.md` to state the fallback and the guard. Also scoped
+`action-feedback.test.ts`'s retraction assertion to the `Action fills` inventory row: it read the
+whole of `COMPONENTS.md` for "still swaps", and the motion workstream's honest *Rolling text* /
+*Sliding text* rows legitimately use that verb, so a foreign row turned the tokens suite red
+(measured: the phrase restored inside the `Action fills` row still fails it). Green: 49 files /
+**2 972** tests, `check-types` clean. Docs: `docs/tokens.md` §Density and §Persisted choices,
+`docs/design-system.md` §6, the package README and the `Density, type and spacing scales` row.
+No native scenario applies — a pure name lookup and its fallback.
 
 `[x]` Read a **stored type role as the body role**, and give the scale its index — `textStyle(theme,
 role)` did `theme.typography[role]` with no membership test, and `TextRole` derives from

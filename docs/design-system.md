@@ -235,6 +235,15 @@ It changes control height, horizontal padding and row height only. Type sizes
 and the spacing scale stay fixed, so a density switch cannot reflow text
 unexpectedly.
 
+A **control size** is a stored preference as often as a literal, so the seams
+that index it are total on the name: `controlHeight`, `controlPaddingX` and
+`switchMetricsAt` read a size this release does not ship as `md`, the default
+every component falls back to and the box a platform publishes. A name that
+reached them through a saved toolbar used to answer `undefined` where a number
+was declared — a box that laid out at its content's height — or scale the
+switch's box into a `NaN` that painted nothing. `isControlSize` narrows a stored
+size where the caller can tell the reader what it substituted (§11).
+
 **Only control geometry follows it in both packages.** The primitives compile
 their recipes against a density-driven registry, so a control's box, side and
 padding are the theme's. The components package compiles against `@gpuixui/tw`'s

@@ -34,7 +34,7 @@ import {
   platformTheme,
   themes,
 } from "./theme.js";
-import { controlSizes } from "./scale.js";
+import { controlSizes, type ControlSize } from "./scale.js";
 import type { TextRole } from "./typography.js";
 
 const tones = statusTones;
@@ -124,6 +124,30 @@ describe("control metrics", () => {
         lightTheme.density.controlPaddingX[size],
       );
     });
+  });
+
+  /**
+   * A control size is a stored preference as often as a literal — a toolbar's
+   * compact mode, a settings row, a saved panel — and `density.controlHeight[size]`
+   * answered `undefined` for a name this release does not ship while the helper
+   * declares `number`: the caller spread it into `style.height`, the property was
+   * dropped and the box laid out at whatever its content needed, so a saved
+   * `"xs"` from an older release silently un-sized every control. `md` is the
+   * default step — the size every component falls back to and the one
+   * `switchMetricsAt` calls the platform's published control — the rule
+   * `iconPixels` already follows for an icon size.
+   */
+  it("reads a size the scale does not carry as the default step", () => {
+    // The cast is the storage boundary: a saved preference is unknown input.
+    const stored = JSON.parse('"xs"') as ControlSize;
+
+    expect(controlHeight(lightTheme, stored)).toBe(
+      controlHeight(lightTheme, "md"),
+    );
+    expect(controlPaddingX(lightTheme, stored)).toBe(
+      controlPaddingX(lightTheme, "md"),
+    );
+    expect(controlHeight(lightTheme, stored)).toBeGreaterThan(0);
   });
 });
 

@@ -33,6 +33,7 @@ import {
   switchPlacements,
   switchSurfaces,
   themes,
+  type ControlSize,
   type SwitchAuditSource,
   type SwitchMetrics,
   type Theme,
@@ -440,6 +441,24 @@ describe("the box a declared switch is drawn in", () => {
       switchMetricFailures(brand),
     );
     expect(auditTheme(brand).passed).toBe(false);
+  });
+
+  /**
+   * A control size is a stored preference as often as a literal, and
+   * `switchScale[size]` answered `undefined` for a name this release does not
+   * ship: `Math.round(metrics.width * undefined)` is `NaN`, which the batch
+   * serialiser drops, so a saved `"xs"` from an older release painted no box at
+   * all rather than a switch at the default step. `md` is the platform's own
+   * published control, so that is the step an unshipped name reads as.
+   */
+  it("reads a size the scale does not carry as the default box", () => {
+    // The cast is the storage boundary: a saved preference is unknown input.
+    const stored = JSON.parse('"xs"') as ControlSize;
+
+    expect(switchMetricsAt(apple, stored)).toEqual(
+      switchMetricsAt(apple, "md"),
+    );
+    expect(switchMetricsAt(apple, stored).width).toBeGreaterThan(0);
   });
 });
 

@@ -7,7 +7,7 @@ import {
 } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
-import type { ControlSize } from "./scale.js";
+import { isControlSize, type ControlSize } from "./scale.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 import { isTextRole, type FontWeight, type TextRole } from "./typography.js";
 
@@ -64,13 +64,22 @@ export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
   };
 }
 
-/** Control or input height for a size at the theme's density. */
+/**
+ * Control or input height for a size at the theme's density.
+ *
+ * A control size is a stored preference as often as a literal — a toolbar's
+ * compact mode, a settings row, a saved panel — so a name this release does not
+ * ship reads as the `md` default rather than the `undefined` the lookup answered,
+ * which a caller spread into `style.height` as a `number` and the serialiser
+ * dropped: the box laid out at its content's height. Narrow a stored size with
+ * `isControlSize` where the caller can tell the reader what it substituted.
+ */
 export const controlHeight = (theme: Theme, size: ControlSize): number =>
-  theme.density.controlHeight[size];
+  theme.density.controlHeight[isControlSize(size) ? size : "md"];
 
 /** Horizontal control padding for a size at the theme's density. */
 export const controlPaddingX = (theme: Theme, size: ControlSize): number =>
-  theme.density.controlPaddingX[size];
+  theme.density.controlPaddingX[isControlSize(size) ? size : "md"];
 
 /**
  * The four status colour families a component can announce, in documentation
