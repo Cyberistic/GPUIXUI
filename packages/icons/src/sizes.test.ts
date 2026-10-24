@@ -99,7 +99,9 @@ describe("the scale's source", () => {
     // source read at suite load are not domain I/O, and this package has no
     // platform dependency to provide a `FileSystem` layer from.
     const source = readFileSync(new URL("./sizes.ts", import.meta.url), "utf8");
-    expect(source).toContain('import { iconSize, isIconSize } from "@gpuixui/tokens"');
+    expect(source).toContain(
+      'import { iconSize, isIconSize } from "@gpuixui/tokens"',
+    );
     expect(source).not.toContain("ICON_STEPS");
     expect(source).not.toMatch(/const\s+isIconSize\s*=/);
   });
