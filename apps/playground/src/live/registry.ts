@@ -870,6 +870,12 @@ export const liveRegistry = [
       "Input: the shipped Switch toggles by press and Space, moves its knob by the track's own travel on the motion clock, and paints a platform style's own toggle",
     capability: "input",
   },
+  {
+    id: "inline-edit-lifecycle",
+    title:
+      "Input: the shipped InlineEdit swaps its painted value for a real input, the window focuses the editor it mounts, Enter commits once and Escape discards, and each close returns the focus to the display",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

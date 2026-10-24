@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-139 probes a real window can prove, of which thirty mount shipped
+140 probes a real window can prove, of which thirty-one mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -57,7 +57,7 @@ the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail, the image zoom, the accordion, the
-pinned list and the hotkey recorder), one mounts `@gpuixui/files`' shipped `LogViewer` and one its `FileTree`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
+pinned list, the hotkey recorder and the inline edit), one mounts `@gpuixui/files`' shipped `LogViewer` and one its `FileTree`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
 shipped `DockLayout`, eleven mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Switch, Slider, Text,
 Tooltip, the Rating, the ScrollArea and the Button, and the media probe's
@@ -902,7 +902,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle`, `modal-scroll-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in; an open modal's own body scrolls while the page it covers and the veil it paints move nothing |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
-| input update/validation | `text-input`, `checkbox-toggle`, `switch-lifecycle`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle`, `hotkey-recorder-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a press and the Space key toggle a checkbox; a switch moves its knob from one inset to the same inset on the far side, on the motion clock, and a disabled twin reports nothing; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats; the shipped `HotkeyRecorder` stores the chord the window delivers, paints it as keycaps, cancels on Escape, and the key it swallows is still measured on the app-level channel |
+| input update/validation | `text-input`, `checkbox-toggle`, `switch-lifecycle`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle`, `hotkey-recorder-lifecycle`, `inline-edit-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a press and the Space key toggle a checkbox; a switch moves its knob from one inset to the same inset on the far side, on the motion clock, and a disabled twin reports nothing; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats; the shipped `HotkeyRecorder` stores the chord the window delivers, paints it as keycaps, cancels on Escape, and the key it swallows is still measured on the app-level channel; and an inline edit swaps its painted value for a real input, the window focuses the editor it mounts, Enter commits once and returns the focus, Escape discards the draft, and a disabled twin refuses to open |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
@@ -7968,6 +7968,61 @@ capturing the halfway frame without advancing the clock fails
 (`expected true, got false`). Evidence:
 `.artifacts/live/switch-{rest,on,frozen,partial,settled,platform-off,platform-on}.png`.
 
+### `inline-edit-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped `InlineEdit` really move the focus across its swap?** An
+inline edit is not a value; it is a **swap** — a painted `<text>` becomes a real
+`<input>`, and back — and focus does not follow a replaced element. The component
+therefore asks the renderer for the focus in both directions (`focusElement`
+after the editor mounts, and again when the display returns). The package's
+behaviour suite drives that through the offscreen renderer, where `focusElement`
+is synchronous and every handler is called; only a window can say the editor
+holds the **window's** focus, that the commit gives it back, and what a disabled
+control or an empty one does.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `value=Untitled workspace commits=0 edits=0 draft=Untitled workspace editing=false`; the display paints `Untitled workspace` |
+| a press | `edits=1 editing=true` and the window's focus is `inline-edit-field` — the editor the swap mounted, not the display it replaced |
+| `cmd-a`, `x` | `draft=x editing=true`, and the caller's value has not moved (`commits=0`): an edit is a draft |
+| `Enter` | `value=x commits=1 edits=1 draft=x editing=false`; the display paints `x`, and the focus is `inline-edit-field` again |
+| `Enter`, `Enter` | the first reopens (`edits=2`, `editing=true`), the second closes it with **no** commit (`commits=1`): an unchanged draft calls nothing |
+| `Enter`, `cmd-a`, `y` | the draft reached the caller (`draft=y editing=true`) while the value stayed `x` |
+| `Escape` | `value=x commits=1 draft=y editing=false` — the draft is discarded, the focus returns to the display, and the display still paints `x` |
+| the disabled twin, pressed | the window focuses it (`tabIndex: -1` keeps it out of the Tab walk, not out of a press) and it reports `edits=0 commits=0`; `Enter` opens nothing |
+| the empty twin | paints `Name this project`; `Enter` on an unchanged empty draft commits nothing; `p` then `Enter` commits `value=p`, `draft=p`, and the placeholder is replaced |
+
+Four rules a rename flow can plan on:
+
+1. **The component owns the focus, not the runtime.** Both directions are
+   explicit `renderer.focusElement` calls; a consumer that replaced the element
+   without the second call would leave the window focused on a removed input.
+2. **One commit per edit.** Enter reaches the input's `onKeyDown` *and* the
+   host's submit, and the readout stays at `commits=1`, so a form that also
+   submits on the press cannot write twice.
+3. **A draft is the caller's channel.** A window's painted text of an `<input>`
+   is **empty**, so the probe reads the draft from `onChange`, which is what a
+   consumer's state holds; reading the input's text would assert `""` against a
+   component that works.
+4. **A disabled control still takes the press focus.** `tabIndex: -1` removes it
+   from the Tab order, but a press gives it the window's focus; the contract is
+   that it refuses to open, which the `Enter` step proves. Its blur route is not
+   claimed here: this window delivers **no blur** at all on any route
+   (`blur-delivery-lifecycle`), so the component's blur commit stays the
+   renderer suite's measurement.
+
+22 checks, `--only inline-edit-lifecycle`, green on 0.11.0 here (two runs,
+9.5–9.6 s, four captures: `inline-edit-rest`, `inline-edit-editing`,
+`inline-edit-committed`, `inline-edit-empty-committed`). Fixture
+`src/live/inline-edit.ts` + probe `src/live/inline-edit-probe.tsx` +
+`inline-edit.test.ts` (the readout codec, the ids, the three mounts, the draft
+witness, the steps, the component's two `focusElement` calls, the count, the
+registry entry and this section). Negative control measured, exit `1`, restored
+green: dropping the probe's `onEditingChange` wiring fails
+`a press reports one edit and no commit` (`expected "… edits=1 …", got
+"… edits=0 …"`) — the readout is read off the window, not a declared value.
+Evidence: `.artifacts/live/inline-edit-{rest,editing,committed,empty-committed}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -8224,7 +8279,7 @@ narrower. Each deviation is deliberate and measured:
   `color-picker-lifecycle` and `mention-input-lifecycle` and
   `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` and
   `hotkey-recorder-lifecycle` and `diff-viewer-lifecycle` and
-  `switch-lifecycle` (81 probes, each run alone).
+  `switch-lifecycle` and `inline-edit-lifecycle` (82 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,

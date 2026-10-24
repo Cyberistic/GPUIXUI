@@ -3335,7 +3335,47 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 193/193
+`[x]` `[██████████]` 194/194
+
+`[x]` Measure the **shipped `InlineEdit`'s swap in a window** — the component's
+      contract is a swap (a painted value becomes a real `<input>` and back) and
+      the focus move that makes it usable, and the package's behaviour suite
+      drives it through the offscreen renderer where `focusElement` is
+      synchronous. `inline-edit-lifecycle` (**22 checks**, 0.11.0) mounts the
+      shipped control, a disabled twin and an empty one: a press reports one
+      edit and the window's focus reaches the editor the swap mounted; `cmd-a`
+      + `x` reaches the caller's `onChange` as `draft=x` while `commits=0`; Enter
+      commits once (`value=x commits=1 edits=1 draft=x editing=false`), the
+      display paints it and the focus returns; a second edit with no change
+      closes with no commit; Escape keeps `value=x` and `commits=1` while the
+      draft `y` it discarded stays visible, and the focus returns too. The
+      disabled twin **takes the press focus** (`tabIndex: -1` leaves the Tab walk
+      only) and refuses the Enter; the empty twin paints its placeholder,
+      commits nothing unchanged and paints `p` after a typed commit. Two measured
+      boundaries: a window's painted text of an `<input>` is empty, so the draft
+      is read off `onChange` (the channel a consumer has); and the blur route is
+      not claimed because this window delivers **no blur** on any route
+      (`blur-delivery-lifecycle`). Fixture `src/live/inline-edit.ts` + probe
+      `src/live/inline-edit-probe.tsx` + `inline-edit.test.ts` (14 cases: the
+      readout codec, the ids, the three mounts, the draft witness, the steps, the
+      component's two `focusElement` calls, the count, the registry entry and the
+      README section). Directions measured: dropping the probe's
+      `onEditingChange` wiring fails `a press reports one edit and no commit`
+      (`edits=0`), and printing `21 checks` in the README fails the count case by
+      name. Green: `--only inline-edit-lifecycle` 1/1 on 0.11.0 (9.5–9.9 s over
+      three runs), the four captures `inline-edit-{rest,editing,committed,empty-committed}.png`,
+      the playground suite 135 files / 1 376 tests, `build` and `check-types`
+      clean. Docs: `apps/playground/README.md` §`inline-edit-lifecycle` and the
+      input row of §The critical interactions.
+
+`[ ]` Cite the **window measurement on the InlineEdit page and inventory row** —
+      `packages/components/docs/inline-edit.mdx` §Limitations still says "Blur
+      commits in an active app; a live window cannot prove it" without the
+      measured reason (this window delivers no blur at all, see
+      `blur-delivery-lifecycle`) and its §Verification cites the renderer suite
+      only, while `COMPONENTS.md`'s Inline edit row says "Enter commits and blur
+      is proven offscreen"; both should cite `inline-edit-lifecycle` for the swap
+      focus, the single commit, Escape and the disabled rule. Owner: components.
 
 `[x]` Measure the **shipped `DiffViewer`'s paint, pairing and clip in a window** —
       the editor package's page claims an added line tints the `success` soft

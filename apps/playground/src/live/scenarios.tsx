@@ -1129,6 +1129,7 @@ import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
 import { RatingProbe, ratingSteps } from "./rating-probe.js";
 import { RadioGroupProbe, radioGroupSteps } from "./radio-group-probe.js";
 import { SwitchProbe, switchSteps } from "./switch-probe.js";
+import { InlineEditProbe, inlineEditSteps } from "./inline-edit-probe.js";
 import { RippleProbe, rippleSteps } from "./ripple-button-probe.js";
 import { TypingTextProbe, typingTextSteps } from "./typing-text-probe.js";
 import { PinnedListProbe, pinnedSteps } from "./pinned-list-probe.js";
@@ -30751,5 +30752,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "switch-lifecycle",
     view: () => <SwitchProbe />,
     steps: switchSteps,
+  },
+  "inline-edit-lifecycle": {
+    id: "inline-edit-lifecycle",
+    view: () => <InlineEditProbe />,
+    steps: inlineEditSteps,
   },
 };
