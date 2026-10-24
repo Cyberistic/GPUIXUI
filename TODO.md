@@ -13661,7 +13661,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[~]` `[██████████]` 401/402
+`[x]` `[██████████]` 402/402
 
 `[x]` Teach the **accordion's saved open set** on the served page — a workspace
       saves which sections are open, so `Accordion`'s `value` and `defaultValue`
@@ -13697,15 +13697,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
       often as a literal'`; restored, the file is 12/12. No native scenario
       applies — a page, the seam it teaches and the ledger row that describes it.
 
-`[ ]` Teach the **three modules `/docs/motion` names and does not explain** —
+`[x]` Teach the **three modules `/docs/motion` names and does not explain** —
       springs (`springPhysics`, `sampleSpring`, `atRest`, `retarget`, including
       the sampler's repair of a physics field a store cannot read), keyframes
       (`keyframe`, `sampleKeyframes`, `stagger`, `Sequence`) and inertia
-      (`inertia`, `project`, `sampleInertia`) each appear only in the page's
+      (`inertia`, `project`, `sampleInertia`) each appeared only in the page's
       module table, while `packages/motion/README.md` documents every rule; a
-      reader who arrives from the page's own description expects them. Owner:
-      docs-site, with `motion-page.test.ts` growing a case per rule the way its
-      curve and stored-duration cases do.
+      reader who arrived from the page's own description expected them. The page
+      gains **Springs**, **Keyframes** and **Inertia**, each with a snippet whose
+      comments are executed values and the rules a stored declaration gets. The
+      spring section teaches the elapsed-time sample, the rest thresholds that
+      answer `settled`, and `retarget` carrying value and velocity into a new
+      run; keyframes teach offsets-not-declaration-order, the instant jump at a
+      repeated offset, the empty set's `0`, both stagger directions and the one
+      clock `Sequence.sample`/`complete` read; inertia teaches the projected
+      rest (`position + velocity × tau`), the wall a coast stops at only while
+      it moves into it, and the repairs a store's declaration gets.
+      `motion-page.test.ts` grows five cases (13 → **17**): each executes the
+      rules it prints — `39.7` at 80 ms and `settled` at 2 s, `springPhysics({})`
+      = 260/28/1 and `retarget(null, 2)`, `50`/`70` across out-of-order frames,
+      `20` then `30` at a repeated offset, `80`/`120` staggers and a `300` ms
+      sequence, `210` rest and `132.7` after one time constant, the inward wall
+      release still unsettled and the outward one settled — then requires the
+      page's sentences and printed values.
+      Directions measured: changing `39.7` to `39.8` fails the spring case by
+      name, changing `50` to `51` and `210` to `211` fails the keyframe and
+      inertia cases; restored, the file is 17/17. `docs/preview-strategy.md`
+      needed no rule — the page is a topic page, not a component page.
+      No native scenario applies — a page and the samplers it teaches.
 
 `[x]` Teach the **command palette's saved lists** on the page the site serves —
       `CommandMenu` reads an `actions` list a registry is still loading (or a

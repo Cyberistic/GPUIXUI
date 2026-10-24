@@ -47,6 +47,22 @@ motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
 
 A duration that is not positive and finite is the house surface arrival (`motionLevels.normal`) rather than a `NaN` on the runtime, and the options object is a config as often as a literal: `null` is the house timing, a phase it does not name is `standard`, and a preference is read by the policy in **Reduced motion**.
 
+## Springs
+
+A spring is sampled at an elapsed time you pass — the package owns no clock, so a resumed panel is read at the frame it was saved at. `sampleSpring(physics, from, target, velocity, elapsedMs)` answers `{ value, velocity, target, settled }`; a sample inside the physics' rest thresholds (`restDelta` `0.001`, `restSpeed` `0.01`) is the target, with zero velocity and `settled: true`.
+
+```ts
+import { layoutSpring, retarget, sampleSpring } from "@gpuixui/motion";
+
+const mid = sampleSpring(layoutSpring, 0, 100, 0, 80); // 39.7 at 80 ms, still moving
+const next = retarget(mid, 200); // the same value and velocity, toward 200
+sampleSpring(layoutSpring, 0, 100, 0, 2000).settled; // true — at rest
+```
+
+`retarget` is how a running spring changes its mind: it carries the sampled value and velocity into a new run, so sample the new run at `0` to continue from that frame. The presets are `affordanceSpring`, `layoutSpring` (collapse, expand, insert, remove) and `continuitySpring` (a retargeted pane, divider or zoom); `atRest(physics, value, target, velocity)` is the threshold rule on its own, for a driver that keeps its own state.
+
+A physics and a sample are caller data as often as literals, so the samplers repair what they are handed: a field that cannot be read takes the house default (`springPhysics({})` — stiffness `260`, damping `28`, mass `1`), a declaration carrying no physics at all is that same house spring, and `retarget(null, 2)` is a run from `0` toward `2` rather than a `TypeError` in the render that resumed it.
+
 ## Curves
 
 The timing table hands the runtime a **name**; a movement this package samples needs a function. `motionCurve(name)` resolves the same name to the same curve, so the two halves of one transition trace one path:
@@ -59,6 +75,44 @@ motionCurve("ease")(0.5); // 0.8024 — cubic-bezier(0.25, 0.1, 0.25, 1)
 ```
 
 The five names are the binding's own curves, not cubic polynomials that share their labels — a lookalike paints `0.875` at the midpoint where the runtime paints `0.685`, so a number counted beside a tweened box would run at a different speed from the box. `linear` is the progress itself, the one curve a control-point pair cannot describe, and `bezier(x1, y1, x2, y2)` is the same cubic for your own control points. A name this release does not carry is the linear progress as well: the runtime rejects a description naming an easing it does not know, so there is no curve to imitate.
+
+## Keyframes
+
+```ts
+import { keyframe, sampleKeyframes, Sequence, stagger } from "@gpuixui/motion";
+
+const journey = [keyframe(1, 40), keyframe(0, 0), keyframe(0.5, 100)];
+sampleKeyframes(journey, 0.25); // 50 — read by offset, not declaration order
+sampleKeyframes(journey, 0.75); // 70
+
+stagger(40, 2, 4); // 80 ms — the third of four, from the start
+stagger(40, 0, 4, "end"); // 120 ms — the first of four from the end
+
+const sequence = new Sequence<string>().at("title", 0, 120).append("body", 180);
+sequence.duration(); // 300
+```
+
+`keyframe(at, value, easing?)` is a stop at normalized progress, and a segment takes the easing of the stop it ends at. The set is read as stops, not as the order it was declared — a caller building frames from a map hands them over in whatever order the source iterates — and two frames at one offset are an instant jump, the value declared last at it holding from that offset on. A stored timeline whose list never decoded, or an entry that is not a frame, is no stop: a set with none paints `0`.
+
+`stagger(stepMs, index, count, from)` spaces a group from `start` (the house), `end` or `center`; an out-of-range index or an empty group answers `0`, as does a step that is not a wait.
+
+`Sequence` places keyed steps at absolute elapsed time and samples them all from one clock: `at(key, startMs, durationMs, easing?)` and `append(key, durationMs, easing?)` place them, `stagger(keys, startMs, stepMs, durationMs)` places a group, and `sample`/`complete` read the clock the same way — a clock before the sequence is its start and a duration a step cannot run ends it at its start, so the two entry points cannot disagree about the end.
+
+## Inertia
+
+```ts
+import { inertia, project, sampleInertia } from "@gpuixui/motion";
+
+const coast = inertia(); // the house 350 ms time constant, no bounds
+project(coast, 0, 600); // 210 — where the release comes to rest
+sampleInertia(coast, 0, 600, 350).value; // 132.7 after one time constant
+
+project(inertia(350, { max: 100 }), 0, 600); // 100 — a wall is the rest
+```
+
+The rest a release projects is `position + velocity × tau`, clamped to its bounds; `sampleInertia` decelerates toward it and reports `settled` once the speed reaches `0.001`. A bound is a wall the coast stops at only while it moves into it — a surface released *on* a wall with its velocity pointing back into the range is at the start of a journey, not the end of one, so it travels inward instead of being reported settled at the far rest.
+
+An `Inertia` is structural too: a time constant that cannot run takes the house 350 ms, an inverted bound pair is swapped, an unreadable position or velocity is a standstill, and a declaration carrying no object at all is the house coast. A rest the arithmetic cannot represent has no frame to paint: the coast lands on the nearest finite destination — a wall in the direction it was thrown, else the frame it was released from.
 
 ## Reduced motion
 

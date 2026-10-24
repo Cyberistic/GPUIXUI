@@ -1,9 +1,27 @@
 import { readFileSync } from "node:fs";
 import { linear, motionCurve } from "../../../../packages/motion/src/easing.js";
 import {
+  inertia,
+  project,
+  sampleInertia,
+} from "../../../../packages/motion/src/inertia.js";
+import {
   delayedTiming,
   presenceTiming,
 } from "../../../../packages/motion/src/presence.js";
+import {
+  atRest,
+  layoutSpring,
+  retarget,
+  sampleSpring,
+  springPhysics,
+} from "../../../../packages/motion/src/spring.js";
+import {
+  keyframe,
+  sampleKeyframes,
+  Sequence,
+  stagger,
+} from "../../../../packages/motion/src/timeline.js";
 import {
   motionLevels,
   motionTimingOf,
@@ -370,5 +388,173 @@ describe("the motion page", () => {
     expect(page).toContain("`fadeFromSide(side, offset)`");
     expect(page).toContain("`fadeFrom(axis, offset)`");
     expect(page).not.toMatch(/fadeFrom\("top"\)/);
+  });
+
+  it("teaches how a spring is sampled and retargeted", () => {
+    // Bug guarded: the page named `springPhysics`, `sampleSpring`, `atRest` and
+    // `retarget` only in its module table, so a reader could not learn that a
+    // spring is sampled at an elapsed time they own, that a sample inside the
+    // rest thresholds is the target, or that `retarget` seeds the next run from
+    // the frame on screen instead of restarting it.
+    const mid = sampleSpring(layoutSpring, 0, 100, 0, 80);
+    const next = retarget(mid, 200);
+
+    expect(mid.settled).toBe(false);
+    expect(mid.value.toFixed(1)).toBe("39.7");
+    expect(next.value).toBe(mid.value);
+    expect(next.velocity).toBe(mid.velocity);
+    expect(next.target).toBe(200);
+    expect(sampleSpring(layoutSpring, 0, 100, 0, 2000).settled).toBe(true);
+    expect(atRest(layoutSpring, 100, 100, 0)).toBe(true);
+
+    expect(page).toContain("## Springs");
+    expect(page).toContain(
+      `const mid = sampleSpring(layoutSpring, 0, 100, 0, 80); // ${mid.value.toFixed(1)} at 80 ms, still moving`,
+    );
+    expect(page).toContain("the same value and velocity, toward 200");
+    expect(page).toContain(
+      "`retarget` is how a running spring changes its mind",
+    );
+    expect(page).toContain("`atRest(physics, value, target, velocity)`");
+    expect(page).toContain("`settled: true`");
+  });
+
+  it("teaches the physics a stored declaration gets", () => {
+    // Bug guarded: `springPhysics` and the samplers repair a structural
+    // declaration, and the page never said so — a saved physics whose stiffness
+    // a decode lost, or one that carries no physics at all, reaches the sampler
+    // as the house spring rather than as a `NaN` trajectory or a `TypeError`.
+    const house = springPhysics({});
+
+    expect(house).toEqual({
+      mass: 1,
+      stiffness: 260,
+      damping: 28,
+      restDelta: 0.001,
+      restSpeed: 0.01,
+    });
+    expect(springPhysics({ stiffness: Number.NaN })).toEqual(house);
+    expect(retarget(null, 2)).toEqual({
+      value: 0,
+      velocity: 0,
+      target: 2,
+      settled: false,
+    });
+
+    expect(page).toContain(
+      "`springPhysics({})` — stiffness `260`, damping `28`, mass `1`",
+    );
+    expect(page).toContain(
+      "a declaration carrying no physics at all is that same house spring",
+    );
+    expect(page).toContain("`retarget(null, 2)` is a run from `0` toward `2`");
+  });
+
+  it("teaches how a keyframe set and its stagger are read", () => {
+    // Bug guarded: the page named `keyframe`, `sampleKeyframes` and `stagger`
+    // only in its module table, so a reader could not learn that a set is read
+    // by its offsets rather than by declaration order, that a repeated offset is
+    // an instant jump, or what a stored timeline paints.
+    const journey = [keyframe(1, 40), keyframe(0, 0), keyframe(0.5, 100)];
+
+    expect(sampleKeyframes(journey, 0.25)).toBe(50);
+    expect(sampleKeyframes(journey, 0.75)).toBe(70);
+    // Two frames at one offset jump, and the one declared last holds.
+    const jump = [
+      keyframe(0, 0),
+      keyframe(0.5, 100),
+      keyframe(0.5, 20),
+      keyframe(1, 40),
+    ];
+    expect(sampleKeyframes(jump, 0.5)).toBe(20);
+    expect(sampleKeyframes(jump, 0.75)).toBe(30);
+    // A timeline a store never wrote is no stop.
+    expect(sampleKeyframes(null, 0.5)).toBe(0);
+
+    expect(stagger(40, 2, 4)).toBe(80);
+    expect(stagger(40, 0, 4, "end")).toBe(120);
+    expect(stagger(40, 0, 0)).toBe(0);
+
+    expect(page).toContain("## Keyframes");
+    expect(page).toContain(
+      `sampleKeyframes(journey, 0.25); // ${sampleKeyframes(journey, 0.25)} — read by offset, not declaration order`,
+    );
+    expect(page).toContain(
+      `sampleKeyframes(journey, 0.75); // ${sampleKeyframes(journey, 0.75)}`,
+    );
+    expect(page).toContain(`stagger(40, 2, 4); // ${stagger(40, 2, 4)} ms`);
+    expect(page).toContain(
+      `stagger(40, 0, 4, "end"); // ${stagger(40, 0, 4, "end")} ms`,
+    );
+    expect(page).toContain("two frames at one offset are an instant jump");
+    expect(page).toContain("a set with none paints `0`");
+  });
+
+  it("teaches the sequence clock both entry points read", () => {
+    // Bug guarded: `Sequence` appeared in the module table and nowhere else, so
+    // a reader could not learn how steps are placed, or that `sample` and
+    // `complete` read one clock — the two used to disagree about a clock before
+    // the sequence and a sequence with nothing left to run.
+    const sequence = new Sequence<string>().at("title", 0, 120).append(
+      "body",
+      180,
+    );
+
+    expect(sequence.duration()).toBe(300);
+    expect(sequence.sample(-5).map((step) => step.state)).toEqual([
+      "active",
+      "pending",
+    ]);
+    expect(sequence.complete(-5)).toBe(false);
+    expect(sequence.complete(sequence.duration())).toBe(true);
+
+    expect(page).toContain(
+      'const sequence = new Sequence<string>().at("title", 0, 120).append("body", 180);',
+    );
+    expect(page).toContain(`sequence.duration(); // ${sequence.duration()}`);
+    expect(page).toContain("`sample`/`complete` read the clock the same way");
+    expect(page).toContain("a clock before the sequence is its start");
+  });
+
+  it("teaches the rest a coast projects and the walls it stops at", () => {
+    // Bug guarded: `inertia`, `project` and `sampleInertia` appeared only in the
+    // module table, so a reader could not learn the rest a release settles on,
+    // that a bound stops a coast only while it moves into it, or how a stored
+    // declaration is repaired.
+    const coast = inertia();
+
+    expect(coast).toEqual({ tau: 0.35, min: null, max: null });
+    expect(project(coast, 0, 600)).toBe(210);
+    expect(sampleInertia(coast, 0, 600, 350).value.toFixed(1)).toBe("132.7");
+    expect(project(inertia(350, { max: 100 }), 0, 600)).toBe(100);
+
+    // Released on a wall, moving back into the range: a journey, not a rest.
+    const inward = sampleInertia(inertia(350, { max: 100 }), 100, -200, 0);
+    expect(inward.settled).toBe(false);
+    expect(inward.velocity).toBe(-200);
+    // Moving into it is the rest it stops at.
+    expect(sampleInertia(inertia(350, { max: 100 }), 100, 200, 50).settled).toBe(
+      true,
+    );
+
+    // A declaration a store wrote is read the way the samplers read it.
+    expect(inertia(Number.NaN)).toEqual(coast);
+    expect(inertia(350, { min: 100, max: 0 })).toEqual({
+      tau: 0.35,
+      min: 0,
+      max: 100,
+    });
+    // A rest the arithmetic cannot represent lands on the release frame.
+    expect(project(coast, 1.7e308, 1.7e308)).toBe(1.7e308);
+
+    expect(page).toContain("## Inertia");
+    expect(page).toContain(`project(coast, 0, 600); // ${project(coast, 0, 600)}`);
+    expect(page).toContain(
+      `sampleInertia(coast, 0, 600, 350).value; // ${sampleInertia(coast, 0, 600, 350).value.toFixed(1)}`,
+    );
+    expect(page).toContain(
+      "a surface released *on* a wall with its velocity pointing back into the range",
+    );
+    expect(page).toContain("an inverted bound pair is swapped");
   });
 });
