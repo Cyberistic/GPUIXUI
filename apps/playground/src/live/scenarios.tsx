@@ -1069,6 +1069,7 @@ import {
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import { SidebarClipProbe, sidebarClipSteps } from "./sidebar-clip-probe.js";
 import { MediaFrameProbe, mediaFrameSteps } from "./media-frame-probe.js";
+import { MediaPlayerProbe, mediaPlayerSteps } from "./media-player-probe.js";
 import { MenuRadioProbe, menuRadioSteps } from "./menu-radio-probe.js";
 import { AppChromeProbe, appChromeSteps } from "./app-chrome-probe.js";
 import { SecondWindowProbe, secondWindowSteps } from "./second-window-probe.js";
@@ -29450,6 +29451,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "media-frame-lifecycle",
     view: () => <MediaFrameProbe />,
     steps: mediaFrameSteps,
+  },
+  "media-player-lifecycle": {
+    id: "media-player-lifecycle",
+    view: () => <MediaPlayerProbe />,
+    steps: mediaPlayerSteps,
   },
   "menu-radio-lifecycle": {
     id: "menu-radio-lifecycle",

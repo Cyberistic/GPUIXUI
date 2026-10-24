@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-117 probes a real window can prove, of which twenty-three mount shipped
+118 probes a real window can prove, of which twenty-three mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6378,6 +6378,56 @@ fails `a press starts the clip and its app clock advances it` with
 `expected a string containing "playing=true", got "playing=false playhead=0"`.
 Evidence: `.artifacts/live/media-{rest,playing,paused,sought}.png`.
 
+### `media-player-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped `MediaPlayer` paint what its package promises?**
+`media-frame-lifecycle` measured the route a clip can take on this runtime — a
+buffer the app re-pushes, an interval the app owns, a transport the app draws.
+That is the *composition*; the library ships the wrapper (`@gpuixui/media`'s
+`MediaPlayer`), and every claim the package made about its own transport had
+been held only by the offscreen renderer. This probe gives the shipped player
+the same four-second clip and reads the window.
+
+The fixture adds nothing a caller would not: the frame function, eight
+amplitude samples, the clip's length, a 250 ms tick and the two report
+callbacks. Everything the probe asserts about the clock, the fill and the keys
+is the **package's own arithmetic** (`@gpuixui/media/player/logic`), so the
+window is measured against the rule the component ships rather than a copy.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `playing=false playhead=0 reports=0`, the clock reads `0:00 / 0:04`, the action offers **Play**, and the fill is empty |
+| the picture | 240×135; the first frame's `#1e3a8a` fills its own box (within the 5% capture tolerance), and no later frame paints |
+| the waveform | 200×32, one tinted silhouette in the palette's `mutedForeground` `#C1C7D1`; its first and last rows are the page `#11141A`, so it is a silhouette rather than a filled box |
+| a press on play | the action reads **Pause**, the player reports `playing=true`, the playhead passes a quarter of the clip, and the reports count every move |
+| a second press | the player reports `playing=false`, the clock holds that playhead, and the fill is exactly `progressWidth(held.playhead, 4000, 200)` wide |
+| End, then Home | `0:04 / 0:04` with the fill full, then `0:00 / 0:04` |
+| three Rights | `0:03 / 0:04`, with the fill at 150 of the track's 200 |
+| the seek's paint | the picture repaints to the third second's `#047857`, and none of the first frame survives |
+| disabled | the picture keeps painting the frame it was on while the action refuses a press and the playhead does not move |
+
+Three rules the shipped player owes:
+
+1. **The component owns the clock.** The interval, the clamp and the stop at the
+   clip's end live in `MediaPlayer`, so a caller supplies frames and hears
+   reports. A probe that starts its own interval would be measuring the
+   composition again, not the wrapper.
+2. **The transport is the package's arithmetic.** The fill is `progressWidth`,
+   the words are `timeLabel`, and Home/End/Left/Right are `seekPlayhead`; a
+   window that paints them is evidence those pure functions are the ones the
+   view uses.
+3. **`disabled` refuses the transport and keeps the picture.** Disabling stops a
+   running clock, refuses the keys and drops the seek pad's tab stop; the frame
+   and the waveform keep painting, because a disabled player is still a poster.
+
+51 checks, `--only media-player-lifecycle`, green on 0.11.0 here (~5.8 s, three
+captures). Fixture `src/live/media-player.ts` (the ids, the clip, the peaks and
+the readout) + `media-player-probe.tsx` (the view and steps) +
+`media-player.test.ts` (the component's ids and defaults, the frame schedule,
+the report grammar, the registry and wiring, the probe's clock-free route, the
+count and this section). Evidence:
+`.artifacts/live/media-player-{rest,sought,disabled}.png`.
+
 ### `menu-radio-lifecycle` — measured on 0.11.0 here
 
 **What does an exclusive-choice menu paint, and what does a choice do?** A
@@ -6775,6 +6825,8 @@ src/live/notification-centre.ts the notification queue's bound, stack geometry a
 src/live/notification-centre-probe.tsx the notification centre's view and steps (one module)
 src/live/media-frame.ts the clip's frames, buffer bytes and transport arithmetic
 src/live/media-frame-probe.tsx  the player's view and steps (one module)
+src/live/media-player.ts the shipped player's ids, clip, peaks and readout
+src/live/media-player-probe.tsx the shipped player's view and steps (one module)
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -6842,8 +6894,9 @@ narrower. Each deviation is deliberate and measured:
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
-  `media-frame-lifecycle` and `menu-radio-lifecycle` and `app-chrome-lifecycle`
-  and `second-window-lifecycle` and `qr-matrix` (fifty-nine probes, each run
+  `media-frame-lifecycle` and `media-player-lifecycle` and
+  `menu-radio-lifecycle` and `app-chrome-lifecycle`
+  and `second-window-lifecycle` and `qr-matrix` (sixty probes, each run
   alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples

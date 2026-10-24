@@ -715,6 +715,12 @@ export const liveRegistry = [
     capability: "content",
   },
   {
+    id: "media-player-lifecycle",
+    title:
+      "Content: the shipped MediaPlayer paints the frame the playhead names, a waveform silhouette, and a transport that seeks and refuses",
+    capability: "content",
+  },
+  {
     id: "menu-radio-lifecycle",
     title:
       "Input: an exclusive-choice menu paints its mark on the chosen row, a choice closes it, and the chosen row reports nothing",

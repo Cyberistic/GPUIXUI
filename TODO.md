@@ -1867,7 +1867,36 @@ the report built on it.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 158/158
+`[x]` `[██████████]` 159/159
+
+`[x]` Measure the **shipped `MediaPlayer`** in a window — `@gpuixui/media`
+      ships `MediaPlayer`, and every claim its package made about the transport
+      was held only by the offscreen renderer: the one window evidence was
+      `media-frame-lifecycle`'s *composition* (a buffer the app pushes, an
+      interval the app owns, a transport the app draws), not the wrapper. The
+      `media-player-lifecycle` probe gives the shipped player the same
+      four-second clip and reads it on 0.11.0: the picture is 240×135 and paints
+      the frame the playhead names (`#047857` after the seek, none of the first
+      frame); the waveform is a 200×32 silhouette in the palette's `#C1C7D1`
+      whose first and last rows are the page `#11141A`; a press starts the
+      transport (`playing=true`, every move reported), a second press holds the
+      clock and the fill at `progressWidth`'s share; End/Home/three Rights read
+      `0:04 / 0:04`, `0:00 / 0:04`, `0:03 / 0:04` with a full, empty and
+      three-quarter fill; and a disabled player keeps its picture while refusing
+      the press. **51 checks**, `--only media-player-lifecycle`, green here
+      (~5.8 s, three captures). Fixture `src/live/media-player.ts` +
+      `media-player-probe.tsx` + `media-player.test.ts` (the component's ids and
+      defaults read from the package, the frame schedule, the report grammar,
+      the registry and wiring, the probe's clock-free route, the count and the
+      README section). Directions measured: the first two runs were red — `a
+      press starts the shipped transport` (`expected "Pause", got "Play"`) and
+      `the probe's own switch turns the player off` — because a window state
+      reaches the paint a frame after the press, so both now read through
+      `settleUntil`; and the fixture test fails by name when the probe's tick is
+      set back to the component's default (`expected 100 to be greater than
+      100`). Evidence: `apps/playground/README.md` §`media-player-lifecycle`,
+      `.artifacts/live/media-player-{rest,sought,disabled}.png`. The
+      `COMPONENTS.md` citation is the Interlocks task below.
 
 `[x]` Follow the **tooltip's presence seam** after the primitives moved it —
       `tooltip-fade.test.ts` held the tip's entry level by reading
@@ -8368,6 +8397,9 @@ non-overlapping probe (`grid-focus-lifecycle`) afterwards, so no work was lost
 this time.
 
 ## Interlocks (cross-workstream dependencies)
+
+| Cite the **shipped player's paint** in the media row — `COMPONENTS.md`'s *Video / audio player + waveform* row says the paint route "is the live `media-frame-lifecycle` probe's, which composes the same pieces in a window", and the `media-player-lifecycle` probe (51 checks, 0.11.0) now paints the **shipped** `MediaPlayer` itself: the frame the playhead names, a 200×32 waveform silhouette, the clock and fill, the four seek keys and the disabled refusal. The row's evidence sentence should cite this probe beside the composition one | media (`COMPONENTS.md`, docs `media-player.mdx`) | open — the probe, fixture, README section and guards are landed in the playground workstream; the row is this file's other owner |
+| Restore the **charts probe citation** the page prune removed — `packages/data/docs/charts.mdx` names `chart-surface-lifecycle` **0** times at `HEAD` (`e065c733` pruned the pages), while `apps/playground/src/live/chart-surface.test.ts`'s `cites the probe where the shipped charts are called window-verified` requires it on the page and both the `Charts` inventory row and the package README already carry it. `nub run --filter playground test` is therefore red at `HEAD` on that one case (1 failed / 4 passed in the file), not on a playground change | data (`packages/data/docs/charts.mdx`) | open — found 2026-10-24 while finishing the media-player probe; the test and the other two surfaces agree with each other |
 
 | A **nested split reports its subtree as the whole layout** — `DockSplitView` hands every nested `DockNodeView` the **root's** `onLayoutChange`, so a divider inside a nested split calls it with `{ ...node, size }` for that subtree; a caller that stores the reported tree, which is the documented `onLayoutChange` usage (`setLayout`), replaces the whole workspace with the pane it resized. The root-level divider is correct, and `setActiveTab` always recurses from the root, so only a resize is affected. The fix is to compose the updater so every level rewrites its split by id in the tree it was handed (or to pass a path down). Found 2026-10-24 while drawing `/docs/dock/dock-layout` for the site; the preview draws the one-level tree the page's example uses, so it does not depend on the nested path | dock (`packages/dock/src/dock-layout.tsx`, `dock-layout.test.ts`) | open — direction to add: resize the inner split of the `root → right → …` tree in `dock-layout.test.ts`'s fixture and require `layout.first` to be the untouched editor group while `layout.second.size` moves |
 

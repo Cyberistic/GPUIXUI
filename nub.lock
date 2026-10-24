@@ -241,6 +241,9 @@ importers:
       '@gpuixui/dock':
         specifier: workspace:*
         version: link:../../packages/dock
+      '@gpuixui/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
