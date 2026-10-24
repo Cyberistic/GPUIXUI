@@ -24,7 +24,7 @@ import {
   waitFor,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-import { MotionProvider } from "../motion.js";
+import { MotionProvider, surfaceLevelOf } from "../motion.js";
 import { PageTransition } from "../page-transition.js";
 import type { PageTransitionProps } from "../page-transition.js";
 
@@ -63,6 +63,24 @@ describe("PageTransition", () => {
 
       await waitFor(() => expect(shownText(page)).toEqual(["b"]));
       expect(page.renderer.findByTestId("content-a")).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("swaps in the frame it changes for a stored none read through the reader", () => {
+    // A saved route carries its transition level, and the table's own reader
+    // answers `normal` for `"none"` — the reader beside the prop vocabulary is
+    // what keeps the saved choice still.
+    const saved: unknown = "none";
+    const page = renderComponent(scene("a"));
+    try {
+      page.renderer.clockPause();
+      page.rerender(scene("b", { level: surfaceLevelOf(saved) }));
+      settle(page);
+
+      expect(shownText(page)).toEqual(["b"]);
+      expect(offsetX(page)).toBeCloseTo(0, 1);
     } finally {
       page.unmount();
     }

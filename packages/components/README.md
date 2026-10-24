@@ -312,6 +312,15 @@ renamed setting, a checkbox column written as `"true"` — is read as `"reduced"
 The fail-safe direction is deliberate: animating a reader who asked for less
 motion is the failure the policy exists to prevent.
 
+A surface's `level` is a **stored** value too. Four surfaces — `PageTransition`,
+`CodeBlock`, `CopyButton` and `ThemeToggler` — also accept `"none"`, the word a
+caller uses when an element should simply be there. `@gpuixui/motion`'s
+`motionLevelOf` is the table's reader and does not carry that word, so a saved
+`"none"` decoded through it becomes the house `normal` arrival; `src/motion.tsx`
+publishes `surfaceLevelOf` beside the prop vocabulary (`SurfaceLevel`) to keep
+it — `"none"` stays itself and every other value is `motionLevelOf`'s answer —
+and each of the four props is read through it rather than compared raw.
+
 A reduced run is a zero-duration assignment — the resting frame still paints.
 `src/behaviour/presence.test.tsx` measures the movement, the exit window, the
 reduced negative control, the accordion's measured height and the pill in the

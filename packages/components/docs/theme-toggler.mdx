@@ -38,12 +38,13 @@ const [mode, setMode] = useState<"light" | "dark">("dark");
 | `lightLabel` | `string` | `"Switch to light theme"` |
 | `darkLabel` | `string` | `"Switch to dark theme"` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `level` | `MotionLevel \| "none"` | `"fast"` |
+| `level` | `SurfaceLevel` | `"fast"` |
 | `className` | `string` | — |
 | `style` | `StateStyle<ThemeTogglerState>` | — |
 
 ## Limitations
 
+- `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - The component holds no theme state.
 - One glyph, not a cross-fade — no `transform`.
 - The glyph does not follow the hover tint.

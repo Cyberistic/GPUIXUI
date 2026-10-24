@@ -27,9 +27,44 @@
  * the per-surface table.
  */
 
+import { motionLevelOf, type MotionLevel } from "@gpuixui/motion/timing";
+
 export {
   MotionProvider,
   useMotionPreference,
   type MotionProviderProps,
 } from "./internal/presence.js";
 export type { MotionPreference } from "@gpuixui/motion/timing";
+
+/**
+ * The level a surface's `level` prop names: a level of the motion table, or
+ * `"none"` for a surface that paints its resting frame in the frame it appears.
+ *
+ * Four surfaces widen the table this way — `PageTransition`, `CodeBlock`,
+ * `CopyButton` and `ThemeToggler` — because a caller sometimes wants an element
+ * to simply be there: a page swapped by a route the reader did not ask to
+ * animate, a block in a screenshot, a glyph in a toolbar. `"none"` is the prop's
+ * word, not the table's, so it is read by {@link surfaceLevelOf} rather than by
+ * `@gpuixui/motion`'s `motionLevelOf`.
+ */
+export type SurfaceLevel = MotionLevel | "none";
+
+/**
+ * The surface level a value names, read from a level a store wrote.
+ *
+ * A level is a persisted choice as often as a literal — a saved page, a
+ * dashboard widget's speed, a settings row — so an application decodes one from
+ * storage before it paints. `@gpuixui/motion` publishes `motionLevelOf` for that
+ * read, but the table it reads cannot answer `"none"`: to it the word is a name
+ * it does not carry, so it reads as the house `normal` arrival and a surface a
+ * caller asked to paint still animates. This reader keeps `"none"` as itself and
+ * routes every other value through `motionLevelOf`, so a stored choice and the
+ * prop's vocabulary cannot disagree — a name the table does not carry is still
+ * the house arrival rather than a `NaN` duration.
+ *
+ * ```tsx
+ * <PageTransition viewKey={view.id} level={surfaceLevelOf(saved.level)}>
+ * ```
+ */
+export const surfaceLevelOf = (value: unknown): SurfaceLevel =>
+  value === "none" ? "none" : motionLevelOf(value);

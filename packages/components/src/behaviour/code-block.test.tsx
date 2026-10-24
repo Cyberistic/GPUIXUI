@@ -28,7 +28,7 @@ import {
 import { renderComponent } from "../internal/test-root.js";
 import { CodeBlock } from "../code-block.js";
 import { COPY_ACKNOWLEDGEMENT_MS } from "../copy-button/logic.js";
-import { MotionProvider } from "../motion.js";
+import { MotionProvider, surfaceLevelOf } from "../motion.js";
 
 const SOURCE = "const answer = 42;";
 
@@ -160,6 +160,26 @@ describe("CodeBlock", () => {
       expect(offsetOf(page)).toBeCloseTo(0, 1);
 
       page.rerender(framed(<CodeBlock code={SOURCE} level="none" />));
+      settle(page);
+      expect(offsetOf(page)).toBeCloseTo(0, 1);
+      expect(
+        page.renderer.findByTestId("code-block")?.customProps?.motion,
+      ).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints at rest for a stored none read through the surface reader", () => {
+    // A saved block carries its entrance level, and `@gpuixui/motion`'s
+    // `motionLevelOf` answers the table's `normal` for `"none"` — the reader
+    // beside the prop vocabulary is the one that keeps the word.
+    const saved: unknown = "none";
+    const page = renderComponent(
+      framed(<CodeBlock code={SOURCE} level={surfaceLevelOf(saved)} />),
+    );
+    try {
+      page.renderer.clockPause();
       settle(page);
       expect(offsetOf(page)).toBeCloseTo(0, 1);
       expect(

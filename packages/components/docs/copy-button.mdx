@@ -28,12 +28,13 @@ const [mirror, setMirror] = useState("");
 | `size` | `"sm" \| "md" \| "lg"` | `"sm"` |
 | `disabled` | `boolean` | `false` |
 | `color` | `string` | `mutedForeground` |
-| `level` | `MotionLevel \| "none"` | `"fast"` |
+| `level` | `SurfaceLevel` | `"fast"` |
 | `className` | `string` | — |
 | `style` | `StateStyle<CopyButtonState>` | — |
 
 ## Limitations
 
+- `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - No clipboard write; the control calls `onCopy` and acknowledges the press.
 - The confirmation is the button's name; no live region exists.
 - The glyph fades and rises; it does not scale.

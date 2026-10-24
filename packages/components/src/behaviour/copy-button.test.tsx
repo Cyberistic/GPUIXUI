@@ -25,7 +25,7 @@ import {
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { CopyButton } from "../copy-button.js";
-import { MotionProvider } from "../motion.js";
+import { MotionProvider, surfaceLevelOf } from "../motion.js";
 
 /** The one `button` node's accessible name, `""` when there is none. */
 const buttonName = (renderer: TestRenderer): string =>
@@ -144,6 +144,31 @@ describe("CopyButton", () => {
       expect(glyphOffset(reduced)).toBeCloseTo(0, 1);
     } finally {
       reduced.unmount();
+    }
+  });
+
+  it("paints a stored none at rest on the acknowledgement's first frame", () => {
+    // A saved action carries its acknowledgement level; decoding `"none"` with
+    // the table's own reader would answer `normal` and move a glyph the caller
+    // asked to paint still.
+    const saved: unknown = "none";
+    const page = renderComponent(
+      <CopyButton
+        text="value"
+        onCopy={() => undefined}
+        level={surfaceLevelOf(saved)}
+      />,
+    );
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "copy-button");
+      settle(page);
+      expect(glyphOffset(page)).toBeCloseTo(0, 1);
+      expect(
+        page.renderer.findByTestId("copy-button-glyph")?.customProps?.motion,
+      ).toBeUndefined();
+    } finally {
+      page.unmount();
     }
   });
 

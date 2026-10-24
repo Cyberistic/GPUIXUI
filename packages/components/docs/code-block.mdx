@@ -28,7 +28,7 @@ import { CodeBlock } from "@gpuixui/components/code-block";
 | `language` | `string` | path's extension |
 | `lineNumbers` | `boolean` | `false` |
 | `height` | `number` | — |
-| `level` | `MotionLevel \| "none"` | `"normal"` |
+| `level` | `SurfaceLevel` | `"normal"` |
 | `emptyLabel` | `string` | `"No code"` |
 | `copyLabel` | `string` | `"Copy"` |
 | `copiedLabel` | `string` | `"Copied"` |
@@ -38,6 +38,7 @@ import { CodeBlock } from "@gpuixui/components/code-block";
 
 ## Limitations
 
+- `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - The code text is not exposed to assistive technology.
 - `@tanstack/highlight` decides what a run is; the palette only colours it.
 - A language the tokenizer does not ship falls back to plain text.

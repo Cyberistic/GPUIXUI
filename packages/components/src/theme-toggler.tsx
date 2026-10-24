@@ -23,12 +23,12 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { IconButton, type ButtonSize } from "./internal/button.js";
 import { useTheme } from "./internal/theme.js";
+import { surfaceLevelOf, type SurfaceLevel } from "./motion.js";
 import { Reveal } from "./reveal.js";
 import {
   toggleIcon,
@@ -61,9 +61,10 @@ export interface ThemeTogglerProps extends Omit<
   readonly size?: ButtonSize;
   /**
    * The glyph's entrance level, or `"none"` to paint it at rest. Default
-   * `"fast"` (160 ms).
+   * `"fast"` (160 ms). Read through `surfaceLevelOf`, so a level an application
+   * restored from storage can be decoded with the same reader.
    */
-  readonly level?: MotionLevel | "none";
+  readonly level?: SurfaceLevel;
   /** A Tailwind class string for the control, joined last. */
   readonly className?: string;
   /** A style for the control, or a function of `{ mode, reducedMotion }`. */
@@ -83,7 +84,7 @@ export const ThemeToggler = ({
   lightLabel,
   darkLabel,
   size = "md",
-  level = "fast",
+  level: storedLevel = "fast",
   className,
   style,
   testId,
@@ -91,6 +92,7 @@ export const ThemeToggler = ({
 }: ThemeTogglerProps) => {
   const theme = useTheme();
   const preference = useMotionPreference();
+  const level = surfaceLevelOf(storedLevel);
   const base = testId ?? "theme-toggler";
   const glyph = (
     <Icon name={toggleIcon(mode)} size="sm" color={theme.colors.foreground} />

@@ -29,12 +29,13 @@ import { PageTransition } from "@gpuixui/components";
 | `children` | `ReactNode` | — |
 | `direction` | `"forward" \| "back"` | `"forward"` |
 | `distance` | `number` | `16` |
-| `level` | `MotionLevel \| "none"` | `"normal"` |
+| `level` | `SurfaceLevel` | `"normal"` |
 | `className` | `string` | — |
 | `style` | `StateStyle<PageTransitionPaint>` | — |
 
 ## Limitations
 
+- `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - One view at a time; the two never cross-fade.
 - A clipped region; travel is a relative `left`.
 - No vertical direction.

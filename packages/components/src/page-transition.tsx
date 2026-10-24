@@ -30,7 +30,6 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Option from "effect/Option";
@@ -44,6 +43,7 @@ import {
 } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
+import { surfaceLevelOf, type SurfaceLevel } from "./motion.js";
 import {
   PAGE_TRAVEL,
   finishPage,
@@ -83,9 +83,11 @@ export interface PageTransitionProps extends Omit<Props, "children" | "style"> {
   readonly distance?: number;
   /**
    * The motion level of both halves, or `"none"` to swap in the frame it
-   * changes. Default `"normal"` (200 ms each way).
+   * changes. Default `"normal"` (200 ms each way). Read through
+   * `surfaceLevelOf`, so a level an application restored from storage can be
+   * decoded with the same reader and passed here.
    */
-  readonly level?: MotionLevel | "none";
+  readonly level?: SurfaceLevel;
   /** A Tailwind class string for the region, joined after the resting style. */
   readonly className?: string;
   /** A style for the region, or a function of the swap. */
@@ -106,7 +108,7 @@ export const PageTransition = ({
   children,
   direction = "forward",
   distance,
-  level = "normal",
+  level: storedLevel = "normal",
   className,
   style,
   testId,
@@ -114,6 +116,7 @@ export const PageTransition = ({
 }: PageTransitionProps) => {
   const theme = useTheme();
   const preference = useMotionPreference();
+  const level = surfaceLevelOf(storedLevel);
   const timing = useSurfaceTiming(level === "none" ? "normal" : level);
   const instant = preference === "reduced" || level === "none";
   const [transition, setTransition] = useState(() =>

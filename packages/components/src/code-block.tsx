@@ -27,7 +27,6 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import {
@@ -48,6 +47,7 @@ import {
   codeRowCount,
   hasCode,
 } from "./code-block/logic.js";
+import { surfaceLevelOf, type SurfaceLevel } from "./motion.js";
 
 /** The block's resting appearance: a page-filled card with a field's edge. */
 const CODE_BLOCK_ROOT =
@@ -99,9 +99,10 @@ export interface CodeBlockProps extends Omit<Props, "children" | "style"> {
   readonly height?: number;
   /**
    * The entrance's motion level, or `"none"` to paint at rest. Default
-   * `"normal"` (200 ms).
+   * `"normal"` (200 ms). Read through `surfaceLevelOf`, so a level an application
+   * restored from storage can be decoded with the same reader.
    */
-  readonly level?: MotionLevel | "none";
+  readonly level?: SurfaceLevel;
   /** What an empty source paints. Default `"No code"`. */
   readonly emptyLabel?: string;
   /** The copy action's name. Default `"Copy"`. */
@@ -135,7 +136,7 @@ export const CodeBlock = ({
   language,
   lineNumbers = false,
   height,
-  level = "normal",
+  level: storedLevel = "normal",
   emptyLabel = "No code",
   copyLabel = "Copy",
   copiedLabel = "Copied",
@@ -150,6 +151,7 @@ export const CodeBlock = ({
   const preference = useMotionPreference();
   const header = codeBlockHeader({ title, path, language });
   const content = hasCode(code);
+  const level = surfaceLevelOf(storedLevel);
   const timing = useSurfaceTiming(level === "none" ? "normal" : level);
   const presence = useSurfacePresence(true, timing);
   const base = testId ?? "code-block";

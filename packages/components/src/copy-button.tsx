@@ -24,13 +24,13 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import { useEffect, useRef, useState } from "react";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { IconButton, type ButtonSize } from "./internal/button.js";
 import { useTheme } from "./internal/theme.js";
+import { surfaceLevelOf, type SurfaceLevel } from "./motion.js";
 import { Reveal } from "./reveal.js";
 import {
   acknowledgementWindow,
@@ -74,9 +74,10 @@ export interface CopyButtonProps extends Omit<Props, "children" | "style"> {
   readonly color?: string;
   /**
    * The acknowledgement glyph's entrance, or `"none"` to paint it at rest.
-   * Default `"fast"` (160 ms).
+   * Default `"fast"` (160 ms). Read through `surfaceLevelOf`, so a level an
+   * application restored from storage can be decoded with the same reader.
    */
-  readonly level?: MotionLevel | "none";
+  readonly level?: SurfaceLevel;
   /** A Tailwind class string for the control, joined last. */
   readonly className?: string;
   /** A style for the control, or a function of its state. */
@@ -101,7 +102,7 @@ export const CopyButton = ({
   size = "sm",
   disabled = false,
   color,
-  level = "fast",
+  level: storedLevel = "fast",
   className,
   style,
   testId,
@@ -109,6 +110,7 @@ export const CopyButton = ({
 }: CopyButtonProps) => {
   const theme = useTheme();
   const preference = useMotionPreference();
+  const level = surfaceLevelOf(storedLevel);
   const [acknowledged, setAcknowledged] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const base = testId ?? "copy-button";

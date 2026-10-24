@@ -21877,9 +21877,9 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 10/10
+`[x]` `[██████████]` 11/11
 
-`[ ]` `packages/components`: **a stored "no entrance" reads as an entrance** —
+`[x]` `packages/components`: **a stored "no entrance" read as an entrance** —
       four surfaces widen their `level` prop past the motion table —
       `PageTransition`, `CodeBlock`, `CopyButton` and `ThemeToggler` accept
       `MotionLevel | "none"`, where `"none"` means "paint the resting frame in
@@ -21894,6 +21894,31 @@ numbers).
       one case per surface that a stored `"none"` paints the resting frame in the
       first paint. Measure the direction on `PageTransition` first: its swap is
       already `instant` on a literal `"none"`.
+      **Landed 2026-10-24:** `src/motion.tsx` publishes the vocabulary
+      (`SurfaceLevel`) and its read (`surfaceLevelOf`): `"none"` is itself and
+      every other value is `motionLevelOf`'s answer. All four props are typed
+      `SurfaceLevel`, and each surface destructures `level: storedLevel` and
+      reads it through the one reader before any branch — `PageTransition`'s
+      `instant`/timing, `CodeBlock`'s motion and the `"fast"` it hands its copy
+      action, `CopyButton`'s acknowledgement, `ThemeToggler`'s glyph. Proof:
+      `src/motion-level.test.ts` (3 cases — the word kept while `motionLevelOf`
+      answers `normal` for it, every table level and twelve stored shapes read
+      through the table, and the four sources held to the prop type, the
+      destructure and the read with the old union refused) and one behaviour case
+      per surface that a `"none"` decoded from a stored value paints at rest on
+      its first frame (`code-block`/`theme-toggler`/`copy-button` measure the
+      offset and the absent `motion`, `page-transition` the swap itself).
+      Directions measured: with `surfaceLevelOf` delegating straight to
+      `motionLevelOf`, **8** cases fail by name — the four new ones
+      (`expected 4 to be close to +0`, `3`, `2.5`, `expected [ 'a' ] to deeply
+      equal [ 'b' ]`) and the four literal-`"none"` cases beside them; with
+      `code-block`'s three reads reverted the source case fails
+      `expected [ 'code-block' ] to deeply equal []`. Restored: the reader file
+      3/3, the four behaviour files **32/32**, and the inventory, docs, provider,
+      presence-contract and surface-budget suites **90/90** with `check-types`
+      clean. Docs: the four package pages' `level` row and §Limitations,
+      `packages/components/README.md` §Motion, the four `COMPONENTS.md` rows
+      (the Theme toggler's count 6 → **7**).
 
 > Every phase is landed. The text catalogue closes with `gradient-text` sampled
 > per glyph — the honest form of a text ramp while the host paints no text fill

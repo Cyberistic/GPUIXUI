@@ -24,7 +24,7 @@ import {
   settle,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-import { MotionProvider } from "../motion.js";
+import { MotionProvider, surfaceLevelOf } from "../motion.js";
 import { ThemeToggler } from "../theme-toggler.js";
 
 /** The one `button` node's accessible name, `""` when there is none. */
@@ -102,6 +102,29 @@ describe("ThemeToggler", () => {
       );
       settle(page);
       expect(buttonName(page.renderer)).toBe("Go light");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints the glyph at rest for a stored none read through the reader", () => {
+    // The `level` prop is a persisted choice as often as a literal; the reader
+    // beside the vocabulary is what keeps a saved `"none"` still.
+    const saved: unknown = "none";
+    const page = renderComponent(
+      <ThemeToggler
+        mode="dark"
+        level={surfaceLevelOf(saved)}
+        onChange={() => undefined}
+      />,
+    );
+    try {
+      page.renderer.clockPause();
+      settle(page);
+      expect(glyphOffset(page)).toBeCloseTo(0, 1);
+      expect(
+        page.renderer.findByTestId("theme-toggler-glyph")?.customProps?.motion,
+      ).toBeUndefined();
     } finally {
       page.unmount();
     }
