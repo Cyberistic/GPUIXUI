@@ -6801,6 +6801,33 @@ a merge over a stored theme.
 
 `[x]` `[██████████]` 23/23
 
+`[x]` `packages/primitives`: **a stored `Separator` orientation painted a
+      caption with no rule under it** — an orientation is a saved workspace's
+      value as often as a literal (each divider records the axis it runs on), so
+      a name a release renamed or dropped reaches the component as a string the
+      union no longer names. `renderSeparator` read it twice and disagreed with
+      itself: the recipe drew a **vertical** hairline for anything that was not
+      `horizontal`, while the caption branch dropped the caption only for
+      `vertical` — so the stale name painted a row around two vertical rules,
+      a caption with nothing running under it. `orientationOf`
+      (`core/keyboard.ts`) now resolves the axis once, against the horizontal
+      rule a region divider defaults to, in `ruleStyle`, `separatorClass` and
+      the component, so all three agree for a stored name as well as a shipped
+      one. Proof: `recipe.test.ts` gains `draws a stored orientation this release
+      does not carry as a horizontal rule` (the recipe and the core resolver
+      agree, height = the theme's `thin`), `presentational.test.tsx` holds the
+      stored name to the shipped `horizontal` tree and the inner rule's axis, and
+      `runtime/layout.runtime.test.tsx` `draws a separator's stored orientation
+      this release does not carry as a horizontal rule` (measured in a window
+      against a shipped `horizontal` width and `vertical` hairline).
+      Directions measured: with the two raw reads restored, the unit case fails
+      on the tree and the window case reads `expected +0 to be 1` for the rule's
+      height; restored, `presentational` is 59/59, the recipe/style pair 101/101
+      and `layout.runtime` 36/36. Docs: `docs/separator.mdx`'s API row,
+      `packages/primitives/README.md`'s stored-value list and the `COMPONENTS.md`
+      Separator row. No live scenario applies — a stored-name read with its two
+      paint paths.
+
 `[x]` `packages/primitives` + `packages/icons`: **the gates were red after the
       docs prune, and a switch geometry bug fell out of the same run.** The
       operator's e065c733 rewrote every package page to usage, API and

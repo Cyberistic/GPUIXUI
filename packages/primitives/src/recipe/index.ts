@@ -42,6 +42,7 @@ import type {
   TextTone,
 } from "../core/style.js";
 import type { ElevationLevel, RadiusStep, SpaceStep } from "../core/theme.js";
+import { type Orientation, orientationOf } from "../core/keyboard.js";
 import { selectionAccentOf } from "../core/selection.js";
 import {
   buttonVariantOf,
@@ -385,13 +386,20 @@ export const toggleClass = (
 
 // ── Separator ────────────────────────────────────────────────────────
 
-/** The class string a separator rule resolves from its orientation and inset. */
+/**
+ * The class string a separator rule resolves from its orientation and inset.
+ *
+ * A stored orientation this release does not carry draws the horizontal rule,
+ * the rule a region divider is drawn in — the same answer `ruleStyle` gives
+ * (`orientationOf`). Read raw, the recipe painted a vertical hairline while the
+ * caption branch kept the caption, so a stale name painted a row around a rule.
+ */
 export const separatorClass = (
-  orientation: "horizontal" | "vertical",
+  orientation: Orientation,
   inset?: SpaceStep,
 ): string => {
   const step = inset ?? "0";
-  return orientation === "horizontal"
+  return orientationOf(orientation, "horizontal") === "horizontal"
     ? cn("h-px shrink-0 bg-border", `ml-${step}`, `mr-${step}`)
     : cn("w-px shrink-0 bg-border", `mt-${step}`, `mb-${step}`);
 };

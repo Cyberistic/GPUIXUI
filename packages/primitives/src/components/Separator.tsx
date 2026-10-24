@@ -16,6 +16,7 @@ import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import { visibleCopy } from "../core/a11y.js";
+import { orientationOf } from "../core/keyboard.js";
 import type { RuleSpec } from "../core/style.js";
 import { spaceStep, spaceValue } from "../core/theme.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -44,10 +45,11 @@ export const renderSeparator = (
   { orientation, inset, label, style, className, testId }: SeparatorProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
-  const classes = cn(separatorClass(orientation, inset), className);
+  const axis = orientationOf(orientation, "horizontal");
+  const classes = cn(separatorClass(axis, inset), className);
   const rule = mergeStyle(recipeTw.classesToStyle(classes, theme).style, style);
   const caption = visibleCopy(label);
-  if (caption === undefined || orientation === "vertical") {
+  if (caption === undefined || axis === "vertical") {
     return <div testId={testId} style={rule} />;
   }
   const grown = mergeStyle(

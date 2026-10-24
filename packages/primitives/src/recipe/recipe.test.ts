@@ -41,6 +41,7 @@ import {
   scrollStyle,
   surfaceStyle,
   textStyle,
+  type RuleSpec,
   type TextAlign,
   type TextSpec,
 } from "../core/style.js";
@@ -592,6 +593,24 @@ describe("Separator recipe", () => {
         ).toEqual(ruleStyle({ orientation, inset }, testTheme));
       });
     });
+  });
+
+  it("draws a stored orientation this release does not carry as a horizontal rule", () => {
+    // The bug guarded: an orientation is a saved workspace's value, and the
+    // recipe compared the raw name — so a stale one painted the **vertical**
+    // hairline while the component's caption branch kept the caption, a caption
+    // with no rule running under it. Both paint seams now resolve the name
+    // against the horizontal rule a region divider defaults to, so the oracle
+    // this suite exists for still holds for a name the union no longer names.
+    // The cast is the storage boundary: a saved orientation is a string.
+    const stored = "Horizontal" as RuleSpec["orientation"];
+    const painted = recipeTw.classesToStyle(
+      separatorClass(stored),
+      testTheme,
+    ).style;
+    expect(painted).toEqual(ruleStyle({ orientation: stored }, testTheme));
+    expect(painted.height).toBe(testTheme.borderWidth.thin);
+    expect(painted.width).toBeUndefined();
   });
 });
 

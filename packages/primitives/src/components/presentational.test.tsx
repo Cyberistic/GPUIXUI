@@ -23,7 +23,7 @@ import {
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import type { SpinnerAccent } from "../core/loading.js";
-import type { TextTone } from "../core/style.js";
+import type { RuleSpec, TextTone } from "../core/style.js";
 import type {
   ElevationLevel,
   PrimitiveTheme,
@@ -217,6 +217,41 @@ describe("layout containers", () => {
         "height",
       ),
     ).toStrictEqual(Option.some(testTheme.borderWidth.thin));
+  });
+
+  it("draws a stored orientation this release does not carry as the rule it defaults to", () => {
+    // The bug guarded: an orientation is a stored layout choice — a saved
+    // workspace's divider — so a name this release renamed or dropped arrives
+    // as a string the union no longer names. `renderSeparator` read that name
+    // twice and disagreed with itself: the recipe painted a **vertical**
+    // hairline for anything that was not `horizontal`, while the caption branch
+    // only dropped the caption for `vertical` — so the stale name painted a
+    // row around two vertical rules, a caption with no rule to sit on. The axis
+    // is resolved once, against the horizontal rule a region divider is drawn
+    // in, so the stale name paints the tree an omitted default does.
+    // The cast is the storage boundary: a saved orientation is a string.
+    const stored = renderSeparator(
+      {
+        orientation: "Horizontal" as RuleSpec["orientation"],
+        label: "or",
+      },
+      testTheme,
+    );
+    expect(stored).toStrictEqual(
+      renderSeparator({ orientation: "horizontal", label: "or" }, testTheme),
+    );
+    // The rule the caption sits between runs across, not up.
+    const rule = expectSome(Arr.head(elementChildren(stored)));
+    expect(numberIn(rule, "height")).toStrictEqual(
+      Option.some(testTheme.borderWidth.thin),
+    );
+    expect(numberIn(rule, "width")).toStrictEqual(Option.none());
+    // A shipped vertical rule still refuses the caption row it cannot carry.
+    expect(
+      elementChildren(
+        renderSeparator({ orientation: "vertical", label: "or" }, testTheme),
+      ),
+    ).toEqual([]);
   });
 
   it("paint no caption for a caption that says nothing", () => {

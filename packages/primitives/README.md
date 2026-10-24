@@ -171,6 +171,16 @@ and each is read through a membership test rather than indexed raw:
   whole keyboard contract was dead on a name. `decideMove` itself also answers
   `None` for an axis the table does not carry, so a consumer calling it directly
   cannot be emptied by a stored name.
+- a **separator's `orientation`** is stored with the layout that draws it, and it
+  was read twice in disagreement: the recipe drew a **vertical** hairline for
+  anything that was not `horizontal`, while the caption branch kept the caption
+  for anything that was not `vertical` — so a stale name painted a row around
+  two vertical rules, a caption with no rule under it. `orientationOf`
+  (`core/keyboard.ts`) now resolves it once, against the horizontal rule a
+  region divider defaults to, in `ruleStyle`, `separatorClass` and the component;
+  `recipe.test.ts`, `presentational.test.tsx` and
+  `runtime/layout.runtime.test.tsx` hold a stored name to the shipped
+  `horizontal` tree (measured in a window: the rule's height was `0`).
 - an **option list** and a **saved selection** are what a store hands back, so
   JSON's `null` (a field a record never set) and a deleted record (`null` inside
   an array) reach the data props. `Select`'s `options`, the three groups'

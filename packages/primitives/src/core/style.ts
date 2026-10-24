@@ -33,6 +33,7 @@ import type {
   TextRole,
 } from "./theme.js";
 import { controlRing } from "./focus.js";
+import { type Orientation, orientationOf } from "./keyboard.js";
 import { pressWash } from "./pointer.js";
 import {
   borderWidthOf,
@@ -522,7 +523,18 @@ export const surfaceStyle = (
 // ── Rules, scrollers, progress ───────────────────────────────────────
 
 export interface RuleSpec {
-  readonly orientation: "horizontal" | "vertical";
+  /**
+   * Which way the rule runs.
+   *
+   * An orientation is a stored layout choice — a saved workspace records the
+   * axis each divider runs on — so a name this release renamed or dropped
+   * arrives as a string the union no longer names. Read raw, the two paint
+   * paths disagreed: the rule drew the **vertical** hairline while the caption
+   * branch kept the caption, which is the one shape a separator cannot be. The
+   * name is resolved once through `orientationOf`, against the horizontal rule
+   * a region divider is drawn in.
+   */
+  readonly orientation: Orientation;
   /** A step on the spacing scale, applied to both ends of the rule. */
   readonly inset?: SpaceStep;
 }
@@ -530,7 +542,7 @@ export interface RuleSpec {
 /** A separator: one border, on the theme's border colour, never a literal. */
 export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
   const inset = spec.inset === undefined ? 0 : spaceValue(theme, spec.inset);
-  return spec.orientation === "horizontal"
+  return orientationOf(spec.orientation, "horizontal") === "horizontal"
     ? {
         height: borderWidthOf(theme, "thin"),
         flexShrink: 0,

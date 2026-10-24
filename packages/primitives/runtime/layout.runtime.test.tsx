@@ -29,7 +29,7 @@ import {
 import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
-import type { ScrollAxis } from "../src/core/style.js";
+import type { RuleSpec, ScrollAxis } from "../src/core/style.js";
 import type {
   Density,
   ElevationLevel,
@@ -270,6 +270,31 @@ it("draws a horizontal Separator as one border step across the surface", async (
   );
   expect(rule.height).toBe(testTheme.borderWidth.thin);
   expect(rule.width).toBe(next.width);
+});
+
+it("draws a separator's stored orientation this release does not carry as a horizontal rule", async () => {
+  // The bug guarded: a saved workspace records the axis each divider runs on,
+  // so an orientation this release renamed or dropped arrives as a string. The
+  // paint paths disagreed about that name — the recipe drew a **vertical**
+  // hairline for anything that was not `horizontal`, the caption branch kept
+  // the caption for anything that was not `vertical` — so a stale name painted
+  // a row of two vertical rules around a caption. Resolved once, the name reads
+  // as the horizontal rule a region divider is drawn in.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Separator
+        orientation={"Horizontal" as RuleSpec["orientation"]}
+        testId="stored-rule"
+      />
+      <Separator orientation="vertical" testId="vertical-rule" />
+    </Surface>,
+  );
+  const stored = boundsOf(runtime, "stored-rule");
+  const vertical = boundsOf(runtime, "vertical-rule");
+  expect(stored.height).toBe(testTheme.borderWidth.thin);
+  expect(stored.width).toBe(next.width);
+  expect(vertical.width).toBe(testTheme.borderWidth.thin);
 });
 
 it("keeps a rule a blank caption says nothing about one hairline tall", async () => {
