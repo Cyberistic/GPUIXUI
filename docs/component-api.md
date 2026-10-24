@@ -445,7 +445,7 @@ component re-implements a part of it.
 | ----- | ---- |
 | `@gpuixui/tw` | the resting recipe, including shadcn's motion classes as provenance |
 | `@gpuixui/motion/timing` | the levels (120 / 160 / 200 / 320 / 500 ms), the per-phase easing and the reduced-motion policy |
-| `@gpuixui/motion/presence` | the frames (fade + offset), the pointer rule and the window conversions |
+| `@gpuixui/motion/presence` | the frames (fade + offset), the pointer rule, the window conversions and `presenceTimingOf`, the reader that turns a stored timing back into the table |
 | `@gpuixui/motion/react` | the preference provider and the mounted window (`useSurfacePresence`) |
 | `packages/components/src/internal/presence.tsx` | the re-publication of those entries under one import, and `PresenceShield` — the one piece a host element paints |
 

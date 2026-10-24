@@ -19,7 +19,9 @@ import {
   presenceMotion,
   presenceStyle,
   presenceTiming,
+  presenceTimingOf,
   transitionWindowMs,
+  type PresenceTiming,
   type PresenceTransition,
 } from "./presence.js";
 import { motionTiming } from "./timing.js";
@@ -242,6 +244,38 @@ describe("the motion prop", () => {
       animate: frames.exit,
       transition: timing.exit,
     });
+  });
+});
+
+describe("a timing a caller stored", () => {
+  it("reads a phase the value does not name as no transition", () => {
+    // The bug this guards: `PresenceTiming` is exported and structural (a config
+    // decoded from storage can carry no object at all, or one phase), and
+    // `@gpuixui/motion/presence` is a published entry for a consumer painting
+    // its own surface. `useSurfacePresence` projected the hold window from
+    // `.exit` inside its render, so a stored value threw `TypeError` and the
+    // surface never mounted.
+    expect(presenceTimingOf(null)).toEqual({ enter: {}, exit: {} });
+    expect(
+      presenceTimingOf({ enter: { duration: 0.32 } } as PresenceTiming),
+    ).toEqual({ enter: { duration: 0.32 }, exit: {} });
+    // A complete pair keeps the transitions it was given.
+    expect(presenceTimingOf(presenceTiming("fast"))).toEqual(
+      presenceTiming("fast"),
+    );
+  });
+
+  it("holds a surface that names no phase for no window, and paints it at rest", () => {
+    const stored = { enter: { duration: 0.32 } } as PresenceTiming;
+    expect(exitWindowMs(stored)).toBe(0);
+    expect(exitWindowMs(null as unknown as PresenceTiming)).toBe(0);
+    expect(transitionWindowMs(null as unknown as PresenceTransition)).toBe(0);
+    expect(delayedTiming(null as unknown as PresenceTransition, 80)).toEqual(
+      {},
+    );
+    expect(
+      presenceMotion(fadeFrom("top", 8), false, stored).transition,
+    ).toEqual({});
   });
 });
 

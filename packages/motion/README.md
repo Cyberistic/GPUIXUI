@@ -146,6 +146,11 @@ A surface that enters and leaves reads one table, exported from
   level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"` (and
   under a stored preference the union does not name, the rule `preferenceOf`
   keeps);
+- `presenceTimingOf(timing)` reads the table back from a value a caller may have
+  stored: `PresenceTiming` is exported and structural, so a config that did not
+  decode can arrive with no object at all or with only one phase, and a phase the
+  value does not name is **no transition** — the surface paints its resting frame
+  at once instead of throwing out of the render that projected its window;
 - `presenceMotion(frames, present, timing)` is the runtime's `motion` prop for a
   surface — the frames' first paint, the resting frame while it is open or the
   exit frame while it leaves, and that phase's transition — so a consumer that

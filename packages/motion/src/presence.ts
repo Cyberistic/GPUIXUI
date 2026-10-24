@@ -174,6 +174,26 @@ export const fadeFromAnchor = (
 };
 
 /**
+ * The timing a surface paints, read from a value a caller may have stored.
+ *
+ * `PresenceTiming` is exported and structural, and this module is a published
+ * subpath for a consumer painting its own surface, so a config that did not
+ * decode can arrive with **no object at all** (JSON has no `undefined`, so a
+ * field the config never carried reads back as `null`) or with a phase it never
+ * named. Reading `.enter`/`.exit` off it threw `TypeError` out of the render that
+ * projected the window. A phase the value does not name is **no transition** —
+ * the answer {@link transitionWindowMs} already gives a field it cannot read —
+ * so the surface paints its resting frame at once rather than throwing, and the
+ * window and the frame cannot disagree about what a run is.
+ */
+export const presenceTimingOf = (
+  timing: PresenceTiming | null | undefined,
+): PresenceTiming => ({
+  enter: timing?.enter ?? {},
+  exit: timing?.exit ?? {},
+});
+
+/**
  * The timings a surface at `level` moves with, under a preference.
  *
  * The enter decelerates and the exit accelerates, so the two are separate
@@ -218,7 +238,7 @@ const milliseconds = (seconds: number | undefined): number => {
  * for a number the scheduler cannot take.
  */
 export const transitionWindowMs = (timing: PresenceTransition): number => {
-  const total = milliseconds(timing.duration) + milliseconds(timing.delay);
+  const total = milliseconds(timing?.duration) + milliseconds(timing?.delay);
   return Number.isFinite(total) ? Math.round(total) : 0;
 };
 
@@ -230,7 +250,7 @@ export const transitionWindowMs = (timing: PresenceTransition): number => {
  * preference change rescales both.
  */
 export const exitWindowMs = (timing: PresenceTiming): number =>
-  transitionWindowMs(timing.exit);
+  transitionWindowMs(presenceTimingOf(timing).exit);
 
 /**
  * A house timing that waits `delayMs` before it runs — a stagger.
@@ -256,10 +276,10 @@ export const delayedTiming = (
   timing: PresenceTransition,
   delayMs: number,
 ): PresenceTransition =>
-  milliseconds(timing.duration) === 0 ||
+  milliseconds(timing?.duration) === 0 ||
   !Number.isFinite(delayMs) ||
   delayMs <= 0
-    ? timing
+    ? (timing ?? {})
     : { ...timing, delay: delayMs / 1000 };
 
 /** The `motion` prop a surface paints for its current presence. */
@@ -271,11 +291,14 @@ export const presenceMotion = <Frames extends PresenceFrames>(
   readonly initial: Frames["initial"];
   readonly animate: Frames["animate"] | Frames["exit"];
   readonly transition: PresenceTransition;
-} => ({
-  initial: frames.initial,
-  animate: present ? frames.animate : frames.exit,
-  transition: present ? timing.enter : timing.exit,
-});
+} => {
+  const phases = presenceTimingOf(timing);
+  return {
+    initial: frames.initial,
+    animate: present ? frames.animate : frames.exit,
+    transition: present ? phases.enter : phases.exit,
+  };
+};
 
 /**
  * The pointer rule a surface paints for its current presence.

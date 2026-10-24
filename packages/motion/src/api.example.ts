@@ -27,6 +27,7 @@ import {
   presenceMotion,
   presenceStyle,
   presenceTiming,
+  presenceTimingOf,
   transitionWindowMs,
 } from "./presence.js";
 
@@ -81,11 +82,13 @@ export const compositionExample = (): readonly number[] => {
  * The window a leaving surface stays mounted for, counted from the timing.
  *
  * A wait is part of the window, and a field that cannot be scheduled adds no
- * time to it: a negative wait never shortens the exit it precedes.
+ * time to it: a negative wait never shortens the exit it precedes. A timing a
+ * caller stored that names no exit is no journey at all, so it holds nothing.
  */
 export const presenceWindowExample = (): readonly number[] => [
   exitWindowMs(presenceTiming("normal")),
   transitionWindowMs({ duration: 0.32, delay: -0.1 }),
+  exitWindowMs(presenceTimingOf(null)),
 ];
 
 /**

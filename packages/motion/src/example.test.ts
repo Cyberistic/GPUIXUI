@@ -100,7 +100,7 @@ describe("the usage example", () => {
     // the window, so the documented example unmounted a box before the tween it
     // paints ended. `presenceTiming("normal")` is 200 ms, and the 100 ms wait is
     // no wait rather than 100 ms subtracted from it.
-    expect(presenceWindowExample()).toEqual([200, 320]);
+    expect(presenceWindowExample()).toEqual([200, 320, 0]);
   });
 
   it("composes the frames, the timing and the pointer rule a surface paints", () => {

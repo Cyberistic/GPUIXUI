@@ -51,6 +51,7 @@ import {
 import {
   exitWindowMs,
   presenceTiming,
+  presenceTimingOf,
   type PresenceTiming,
 } from "./presence.js";
 import { useMotionPreference } from "./provider.js";
@@ -111,7 +112,10 @@ export const useSurfacePresence = (
   // The hold is the window, not the duration: a delayed exit sits out its wait
   // before the tween, so keying the timer to the duration would unmount a box
   // before its journey began — and a changed wait would not re-arm it at all.
-  const windowMs = exitWindowMs(timing);
+  // A stored timing that names no phase is read as no transition here too, so a
+  // surface handed one paints at once instead of throwing in this render.
+  const phases = presenceTimingOf(timing);
+  const windowMs = exitWindowMs(phases);
 
   useLayoutEffect(() => {
     if (open) setMounted(true);
@@ -127,7 +131,7 @@ export const useSurfacePresence = (
     return () => clearTimeout(handle);
   }, [mounted, open, windowMs]);
 
-  return { mounted, present: open, timing };
+  return { mounted, present: open, timing: phases };
 };
 
 /** The sampled scalar state a hook publishes. */

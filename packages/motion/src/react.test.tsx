@@ -24,7 +24,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { inertia } from "./inertia.js";
 import { tween } from "./motion.js";
-import { useInertia, useMotion, useTransition } from "./react.js";
+import { presenceTiming, type PresenceTiming } from "./presence.js";
+import {
+  useInertia,
+  useMotion,
+  useSurfacePresence,
+  useTransition,
+} from "./react.js";
 
 /** The retained inertia every coast case reads; the hook takes a stable one. */
 const coast = inertia();
@@ -114,6 +120,12 @@ const ReducedCompletion = ({ initial }: { readonly initial?: number }) => {
   return <>{String(complete)}</>;
 };
 
+/** The mount state a surface paints from a timing a caller may have stored. */
+const StoredTimingFrame = ({ timing }: { readonly timing: PresenceTiming }) => {
+  const presence = useSurfacePresence(true, timing);
+  return <>{`${presence.mounted}:${String(presence.timing.exit.duration)}`}</>;
+};
+
 describe("the first published frame", () => {
   it("is the value the caller asked for", () => {
     expect(renderToStaticMarkup(<Frame target={100} initial={0} />)).toBe("0");
@@ -184,5 +196,24 @@ describe("the first published frame", () => {
     expect(renderToStaticMarkup(<ReducedCompletion />)).toBe("false");
     // The animated control keeps the start: the preference is what changed.
     expect(renderToStaticMarkup(<Frame target={100} initial={0} />)).toBe("0");
+  });
+});
+
+describe("the window a stored timing names", () => {
+  it("mounts a surface whose timing carries no exit phase", () => {
+    // The defect: `PresenceTiming` is structural and this hook projects the hold
+    // window from `.exit` in its render, so a config that decoded without one
+    // threw out of the render and the surface never mounted at all. A phase the
+    // value does not name is no transition, which is also no window.
+    const stored = { enter: { duration: 0.32 } } as PresenceTiming;
+    expect(renderToStaticMarkup(<StoredTimingFrame timing={stored} />)).toBe(
+      "true:undefined",
+    );
+    // A complete timing still reports the exit it names.
+    expect(
+      renderToStaticMarkup(
+        <StoredTimingFrame timing={presenceTiming("normal")} />,
+      ),
+    ).toBe("true:0.2");
   });
 });

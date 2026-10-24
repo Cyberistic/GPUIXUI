@@ -299,8 +299,9 @@ describe("the house timing", () => {
     expect(Str.includes("export const delayedTiming")(shared)).toBe(true);
     // The rule is the module's own reading of a duration, not a literal zero:
     // a stored timing whose duration is absent, unreadable or not positive is
-    // no journey either, and the window conversion reads it the same way.
-    expect(Str.includes("milliseconds(timing.duration) === 0")(shared)).toBe(
+    // no journey either, and the window conversion reads it the same way. The
+    // read is nullish-safe because `PresenceTransition` is structural too.
+    expect(Str.includes("milliseconds(timing?.duration) === 0")(shared)).toBe(
       true,
     );
     expect(Str.includes("delay: delayMs / 1000")(shared)).toBe(true);

@@ -17915,6 +17915,27 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `@gpuixui/motion`: **a timing a caller stored took the surface's render down** — `PresenceTiming`
+is exported and structural, and `/presence` is now a published entry for a consumer painting its own
+surface, so a config decoded from storage can hand `useSurfacePresence` **no object at all** (JSON
+has no `undefined`, so a field the config never carried reads back as `null`) or only one phase.
+Both entry points read `.enter`/`.exit` straight off it: `useSurfacePresence` projected the hold
+window from `.exit` **in its render**, so the surface never mounted, and `presenceMotion` read the
+transition off the same value. `presenceTimingOf` is the one read now — a phase the value does not
+name is **no transition**, the answer `transitionWindowMs` already gives a field it cannot read — and
+`transitionWindowMs`, `delayedTiming`, `exitWindowMs`, `presenceMotion` and the hook all compose it,
+so the window and the frame cannot disagree about what a run is. Proof: `src/presence.test.ts`'s
+`a timing a caller stored` (2 cases: the repair, the kept pair, no window for a missing phase, the
+composed motion prop, a null transition) and `src/react.test.tsx`'s `the window a stored timing
+names` (a surface mounted from `{ enter }` through `renderToStaticMarkup`, which paints the frame
+the throw lives in). Directions measured at `HEAD`: both hook/value cases fail with
+`TypeError: Cannot read properties of undefined (reading 'duration')` and both reader cases with
+`TypeError: presenceTimingOf is not a function`, four failed / 180 passed; restored, the package is
+14 files / **184 tests** with `check-types`, `oxfmt`, `oxlint` and `check:tests` clean. Docs: the
+README's presence table gains the entry (held by `docs.test.ts`, which requires every export of the
+subpath to be taught), the executed `presenceWindowExample` prints the null-timing window, and
+`docs/component-api.md` §11 names the reader in the package's row. No native scenario applies — the
+value is a React render's first frame and no shipped surface passes an incomplete timing today.
 `[x]` `packages/components`: **a reordered list placed every header by the section that used to be there** —
 `PinnedList` renders its sections keyed by `title` (the doc says "It is also the section's key"), and it kept the
 measured heights in a **positional** array, so a caller that reorders `sections` — a saved order, a sorted group,
