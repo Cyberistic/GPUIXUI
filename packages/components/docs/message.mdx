@@ -67,3 +67,7 @@ MessageRoot
   ships reads as the documented `assistant` default, so the row keeps its
   author name, its mirror and its body box instead of painting an unnamed
   assistant line.
+- A tool call's `status` restored from a saved transcript that this release no
+  longer names paints `Unknown`. A state the component cannot name is not a
+  blank line, and it is not claimed to be `Done` or `Running`; only a shipped
+  `error` paints the failure glyph.

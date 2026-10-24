@@ -107,8 +107,11 @@ const rowVariant = (variant: unknown): MessageVariant =>
 const listOf = <A,>(value: ReadonlyArray<A> | undefined): ReadonlyArray<A> =>
   Array.isArray(value) ? value : [];
 
+/** How a tool call ended, as the guard reads it. */
+const MessageToolStatuses = Schema.Literals(["running", "complete", "error"]);
+
 /** How a tool call ended. */
-export type MessageToolStatus = "running" | "complete" | "error";
+export type MessageToolStatus = typeof MessageToolStatuses.Type;
 
 /** One tool call a reply made. */
 export interface MessageToolCall {
@@ -151,6 +154,25 @@ const TOOL_STATUS: Readonly<Record<MessageToolStatus, string>> = {
   complete: "Done",
   error: "Failed",
 };
+
+/** The word a status this release cannot name paints. */
+const TOOL_STATUS_UNKNOWN = "Unknown";
+
+/**
+ * The status a saved tool call paints.
+ *
+ * A status is conversation data as often as a literal: a transcript restored
+ * from storage carries the status its transport wrote, so a name this release
+ * renamed or dropped arrives as a string the union no longer names.
+ * `TOOL_STATUS[call.status]` answered `undefined`, so the call painted its
+ * name, its result and no state at all. The table does not carry such a name,
+ * so it paints `Unknown` — the honest word for a state this release cannot
+ * name, where `Done` or `Running` would claim one.
+ */
+const toolStatusWord = (status: unknown): string =>
+  Schema.is(MessageToolStatuses)(status)
+    ? TOOL_STATUS[status]
+    : TOOL_STATUS_UNKNOWN;
 
 /** {@link MessageRoot} props. */
 export interface MessageRootProps extends Omit<Props, "children"> {
@@ -320,7 +342,7 @@ const ToolCall = ({ call }: { readonly call: MessageToolCall }) => {
             // surfaces a card sits on; the word carries the meaning.
             <Icon name="error" size="xs" color={theme.colors.destructive} />
           ) : null}
-          <text>{TOOL_STATUS[call.status]}</text>
+          <text>{toolStatusWord(call.status)}</text>
         </div>
       </div>
       {call.result === undefined ? null : (

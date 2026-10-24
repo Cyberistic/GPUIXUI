@@ -202,6 +202,12 @@ every action in the menu down with it.
 `src/behaviour/dropdown-menu.test.tsx` holds both stored shapes beside a shipped
 `destructive` row.
 
+A tool call's `status` is saved with the transcript it belongs to, so
+`message.tsx`'s `toolStatusWord` reads it before the state word: a name this
+release does not ship paints `Unknown` rather than a blank status line, and
+never claims the call finished or failed. `src/behaviour/message.test.tsx` holds
+the fallback beside a shipped `error` call as the negative control.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

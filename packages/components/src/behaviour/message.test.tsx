@@ -4,7 +4,8 @@
  * The bugs these guard: a row whose variant changes nothing (a user message
  * that reads as an assistant's); a bubble that borrows the wrong role; a
  * reasoning panel that is open by default (the plan's contract is closed); a
- * tool call whose failed state is invisible; citations that are not a list; a
+ * tool call whose failed state is invisible; a stored tool status that paints no
+ * state word; citations that are not a list; a
  * streaming marker that stays after the stream ends; an action row that renders
  * controls no handler can serve — and a part used in the wrong parent of its own
  * family, which must name both sides instead of painting in the wrong place.
@@ -307,6 +308,36 @@ describe("Message", () => {
     ).toBeUndefined();
 
     root.unmount();
+  });
+
+  it("reads a stored tool status it does not name as Unknown, not a blank line", () => {
+    // The bug this guards: `TOOL_STATUS[call.status]` read the status straight
+    // off the table, and a tool call's status arrives with a saved transcript as
+    // often as from a live transport. A status a release renamed or dropped
+    // answered `undefined`, so the call painted its name, its result and no
+    // state word at all — a finished or failed call read like a blank slot.
+    // `Unknown` is the honest word for a state this release cannot name; `Done`
+    // or `Running` would claim one.
+    const root = renderComponent(
+      <Row
+        toolCalls={[
+          // @ts-expect-error — a status a store wrote, not the union the prop declares.
+          { name: "search", status: "succeeded", result: "3 files" },
+          { name: "deploy", status: "error", result: "No credentials" },
+        ]}
+      />,
+    );
+    try {
+      const text = root.renderer.getAllText();
+
+      expect(text).toEqual(
+        expect.arrayContaining(["search", "Unknown", "deploy", "Failed"]),
+      );
+      // The unknown state is not a failure: only the error call carries the glyph.
+      expect(root.renderer.findByType("svg")).toHaveLength(1);
+    } finally {
+      root.unmount();
+    }
   });
 
   it("lists every tool call with its status and marks a failed one", () => {
