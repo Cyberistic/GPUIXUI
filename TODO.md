@@ -20901,7 +20901,9 @@ fails the case by name; restored, the file is 44/44 and
       executes the retained frames (50 then 100, with a re-declared run still
       completing at the original 200 ms), executes the duration rules (`NaN`,
       infinity, `1e300` → `300`; `1e12` kept; `0`/negative an instant assignment;
-      `transitionEquals` true for a repaired declaration) and holds the row to
+      `transitionEquals` true for a repaired declaration), carries the sibling
+      rule the same release landed on Inertia (`inertia(1e300)` is the house
+      coast, `inertia(1e12)` keeps its 1e9-second constant), and holds the row to
       `motion.ts`'s own `export const`/`export class` names, both ways.
       Directions measured: against the committed page all three fail by name
       (`expected [ 'DEFAULT_TWEEN_MS' ] to deeply equal []`, the missing

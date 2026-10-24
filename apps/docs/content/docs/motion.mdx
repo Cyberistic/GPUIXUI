@@ -112,7 +112,7 @@ project(inertia(350, { max: 100 }), 0, 600); // 100 — a wall is the rest
 
 The rest a release projects is `position + velocity × tau`, clamped to its bounds; `sampleInertia` decelerates toward it and reports `settled` once the speed reaches `0.001`. A bound is a wall the coast stops at only while it moves into it — a surface released *on* a wall with its velocity pointing back into the range is at the start of a journey, not the end of one, so it travels inward instead of being reported settled at the far rest.
 
-An `Inertia` is structural too: a time constant that cannot run takes the house 350 ms, an inverted bound pair is swapped, an unreadable position or velocity is a standstill, and a declaration carrying no object at all is the house coast. A rest the arithmetic cannot represent has no frame to paint: the coast lands on the nearest finite destination — a wall in the direction it was thrown, else the frame it was released from.
+An `Inertia` is structural too: a time constant that cannot run, or one past the seconds a clock can name (`1e300` is a 1e297-second coast whose decay never starts), takes the house 350 ms, an inverted bound pair is swapped, an unreadable position or velocity is a standstill, and a declaration carrying no object at all is the house coast. A rest the arithmetic cannot represent has no frame to paint: the coast lands on the nearest finite destination — a wall in the direction it was thrown, else the frame it was released from.
 
 ## Values
 

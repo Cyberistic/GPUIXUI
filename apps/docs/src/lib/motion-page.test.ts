@@ -561,8 +561,11 @@ describe("the motion page", () => {
       sampleInertia(inertia(350, { max: 100 }), 100, 200, 50).settled,
     ).toBe(true);
 
-    // A declaration a store wrote is read the way the samplers read it.
+    // A declaration a store wrote is read the way the samplers read it. A
+    // time constant past the seconds a clock can name never starts decaying.
     expect(inertia(Number.NaN)).toEqual(coast);
+    expect(inertia(1e300)).toEqual(coast);
+    expect(inertia(1e12).tau).toBe(1e9);
     expect(inertia(350, { min: 100, max: 0 })).toEqual({
       tau: 0.35,
       min: 0,
@@ -582,6 +585,8 @@ describe("the motion page", () => {
       "a surface released *on* a wall with its velocity pointing back into the range",
     );
     expect(page).toContain("an inverted bound pair is swapped");
+    expect(page).toContain("past the seconds a clock can name");
+    expect(page).toContain("1e297-second coast whose decay never starts");
   });
 
   it("holds the value row to the values and class the module exports", () => {
