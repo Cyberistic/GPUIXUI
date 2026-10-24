@@ -138,6 +138,32 @@ describe("the density both packages read", () => {
     expect(components).not.toMatch(/theme\.density|controlHeight\(/);
   });
 
+  it("says which seam paints a control box, and which answers absence", () => {
+    // The two packages answer a theme that lost the density group differently:
+    // the primitives paint the library's preset through their own seam, while a
+    // component builds a box from the token helper, which answers `undefined`.
+    // A page that named one answer for both sent a consumer to the wrong one.
+    const direct = sourcesIn("../../components/src/").filter(([, text]) =>
+      text.includes("controlHeight("),
+    );
+    expect(
+      direct.length,
+      "components reading the token helper",
+    ).toBeGreaterThan(8);
+    expect(
+      sourcesIn("../../components/src/").some(([, text]) =>
+        text.includes("controlHeightOf("),
+      ),
+    ).toBe(false);
+
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain("`controlHeightOf`");
+      expect(text, page).toContain("library's preset");
+      expect(text, page).toContain("no height");
+      expect(text, page).toContain("`@gpuixui/components`");
+    });
+  });
+
   it("still keeps the boxes that share an edge with a density-driven control", () => {
     // The exception is what makes the two halves line up: a list row is built at
     // the theme's row height, and a component's control box is a control height.

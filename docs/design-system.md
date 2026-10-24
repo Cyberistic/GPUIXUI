@@ -1176,7 +1176,14 @@ lost is no box, not a
 does not ship is still the `md` step — while a `Theme` still answers a colour or
 a height outright — so no surface throws on the defect
 the report just
-explained (§7). The **retint** keeps the same rule: `extendTheme` restates a
+explained (§7). **The token helper and the paint path answer differently, by
+design:** `@gpuixui/primitives` resolves a control's box through its own
+`controlHeightOf`/`controlPaddingOf` (`packages/primitives/src/core/theme.ts`),
+which paint the theme's number or the **library's preset** so a truncated theme
+still lays a control out, while `@gpuixui/components` calls `controlHeight`
+directly and those boxes answer `undefined` — no height — until the theme is
+rebuilt. `density-adoption.test.ts` reads both call paths and both pages.
+The **retint** keeps the same rule: `extendTheme` restates a
 stored scale level by level, so a level the theme lost stays absent and the report
 still names it, and an entry whose colour the seam cannot measure is left as
 written — restated in the tint it would read as a full share, so a faint shadow a

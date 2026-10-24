@@ -1531,6 +1531,17 @@ still refuses a theme that lost the group — `missingTokens` names it — but a
 surface can paint a theme nobody has audited yet, so the seam cannot be the
 refusal.
 
+**Which seam paints.** The token helper and the paint path answer differently,
+and both answers are documented on purpose. `@gpuixui/primitives` resolves a
+control's box through its own `controlHeightOf`/`controlPaddingOf`
+(`packages/primitives/src/core/theme.ts`), which paint the theme's number or the
+**library's preset**, so a truncated theme still lays its controls out.
+`@gpuixui/components` calls `controlHeight(theme, size)` directly, so the same
+theme paints those boxes at **no height** — the `undefined` this section
+documents — until the theme is rebuilt. The gate refuses the theme either way
+(`missingTokens`); the split is about what a surface does before the audit runs.
+`density-adoption.test.ts` reads both call paths and both pages.
+
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the
 contracts that measure a pair or a placement take the same colour source: a pair
