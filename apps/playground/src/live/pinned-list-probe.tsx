@@ -83,10 +83,11 @@ export const PinnedListProbe = (): ReactNode => {
       <text
         style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
       >
-        A pinned list has no sticky child: the title is a layer repositioned from
-        the measured offset. Does it paint over the rows it holds above, and does
-        a press on the row beneath it still reach the row? The second pair is the
-        control: a filled cover over a row takes the press aimed at it.
+        A pinned list has no sticky child: the title is a layer repositioned
+        from the measured offset. Does it paint over the rows it holds above,
+        and does a press on the row beneath it still reach the row? The second
+        pair is the control: a filled cover over a row takes the press aimed at
+        it.
       </text>
       <PinnedList
         testId={PINNED_IDS.list}
@@ -163,7 +164,10 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     /** The list's own offset; `NaN` while it has no scroll handle. */
     const offsetY = (): Effect.Effect<number, Smoke.SmokeHostError> =>
       Effect.map(
-        Effect.map(ctx.host.scrollOffset(PINNED_IDS.list), Option.fromNullishOr),
+        Effect.map(
+          ctx.host.scrollOffset(PINNED_IDS.list),
+          Option.fromNullishOr,
+        ),
         Option.match({
           onNone: () => Number.NaN,
           onSome: (offset) => offset.y,
@@ -171,7 +175,10 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       );
 
     /** The readout once it names `expected`. */
-    const readout = (label: string, expected: string): Effect.Effect<void, Failure> =>
+    const readout = (
+      label: string,
+      expected: string,
+    ): Effect.Effect<void, Failure> =>
       Effect.gen(function* () {
         yield* ctx.expectContains(
           label,
@@ -292,12 +299,24 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.click(PINNED_IDS.controlRow);
     yield* readout(
       "a filled cover takes a press aimed at the row under it",
-      pinnedReadout({ offsetY: 0, today: 0, yesterday: 0, covered: 0, cover: 1 }),
+      pinnedReadout({
+        offsetY: 0,
+        today: 0,
+        yesterday: 0,
+        covered: 0,
+        cover: 1,
+      }),
     );
     yield* ctx.host.click(PINNED_IDS.rowToday);
     yield* readout(
       "the first row takes a press while its title travels with it",
-      pinnedReadout({ offsetY: 0, today: 1, yesterday: 0, covered: 0, cover: 1 }),
+      pinnedReadout({
+        offsetY: 0,
+        today: 1,
+        yesterday: 0,
+        covered: 0,
+        cover: 1,
+      }),
     );
 
     // ── One wheel: the title holds, its section travels ──────────────────────
