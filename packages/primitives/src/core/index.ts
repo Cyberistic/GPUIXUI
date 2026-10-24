@@ -272,6 +272,8 @@ export {
 export type { ButtonVariant, ToggleVariant } from "./variants.js";
 
 export {
+  colorRole,
+  colorsOf,
   controlSize,
   elevationLevel,
   familyOf,
@@ -284,6 +286,7 @@ export {
 export type {
   BorderWidth,
   ColorRef,
+  ColorSource,
   ControlSize,
   Density,
   DensityName,

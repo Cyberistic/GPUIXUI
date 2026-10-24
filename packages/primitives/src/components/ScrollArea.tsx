@@ -63,7 +63,7 @@ import { spokenWord } from "../core/a11y.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { scrollTarget } from "../core/scroll.js";
 import { scrollAxis, type ScrollSpec } from "../core/style.js";
-import { rowHeightOf } from "../core/theme.js";
+import { colorRole, rowHeightOf } from "../core/theme.js";
 import type { PrimitiveTheme, RadiusStep, SpaceStep } from "../core/theme.js";
 import { scrollClass, scrollFrameClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -78,7 +78,7 @@ interface ScrollPart {
   readonly onScroll: ((event: EventPayload) => void) | undefined;
   readonly onScrollChange: ((event: EventPayload) => void) | undefined;
   readonly onLayout: ((event: EventPayload) => void) | undefined;
-  readonly scrollbarColor: string;
+  readonly scrollbarColor: string | undefined;
   readonly scrollbarWidth: number | undefined;
   /** Whether the viewport is a tab stop and answers the scroll keys. */
   readonly focusable: boolean;
@@ -138,7 +138,7 @@ export const scrollPart = (
   onScroll,
   onScrollChange,
   onLayout,
-  scrollbarColor: scrollbarColor ?? theme.colors.scrollbar,
+  scrollbarColor: scrollbarColor ?? colorRole(theme, "scrollbar"),
   scrollbarWidth,
   focusable: focusable ?? true,
   label,

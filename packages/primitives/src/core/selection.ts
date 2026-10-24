@@ -26,7 +26,7 @@ import {
   targetSize,
 } from "@gpuixui/tokens";
 import type { SwitchColors } from "@gpuixui/tokens";
-import { iconSideOf, radiusValue, spaceValue } from "./theme.js";
+import { iconSideOf, colorRole, radiusValue, spaceValue } from "./theme.js";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
@@ -145,27 +145,30 @@ const filled = (spec: SelectionSpec): boolean => spec.state !== "unchecked";
 const accentRole = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
-): { readonly background: string; readonly foreground: string } =>
+): {
+  readonly background: string | undefined;
+  readonly foreground: string | undefined;
+} =>
   spec.accent === "destructive"
     ? {
-        background: theme.colors.destructive,
-        foreground: theme.colors.destructiveForeground,
+        background: colorRole(theme, "destructive"),
+        foreground: colorRole(theme, "destructiveForeground"),
       }
     : {
-        background: theme.colors.primary,
-        foreground: theme.colors.primaryForeground,
+        background: colorRole(theme, "primary"),
+        foreground: colorRole(theme, "primaryForeground"),
       };
 
 /** The mark inside a filled checkbox/radio: a check, a dash, or the dot. */
 export const selectionMarkColor = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
-): string =>
+): string | undefined =>
   filled(spec)
     ? accentRole(spec, theme).foreground
     : spec.invalid === true
-      ? theme.colors.destructive
-      : theme.colors.mutedForeground;
+      ? colorRole(theme, "destructive")
+      : colorRole(theme, "mutedForeground");
 
 /**
  * The fill a filled selection control paints while hovered or pressed.
@@ -209,8 +212,8 @@ export const selectionBoxStyle = (
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true
-      ? theme.colors.destructive
-      : theme.colors.borderStrong;
+      ? colorRole(theme, "destructive")
+      : colorRole(theme, "borderStrong");
   const style: StyleDesc = {
     display: "flex",
     alignItems: "center",
@@ -229,7 +232,7 @@ export const selectionBoxStyle = (
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
       ? feedbackFill(spec, theme, "hover")
-      : { backgroundColor: theme.colors.hover },
+      : { backgroundColor: colorRole(theme, "hover") },
     active: filled(spec)
       ? feedbackFill(spec, theme, "press")
       : { backgroundColor: pressWash(theme) },
@@ -400,7 +403,7 @@ const switchFill = (
     : filled(spec)
       ? theme.switch.on
       : spec.invalid === true
-        ? theme.colors.destructive
+        ? colorRole(theme, "destructive")
         : theme.switch.off;
 
 /**
@@ -417,7 +420,7 @@ export const switchTrackPaint = (
   const edge = filled(spec)
     ? fill
     : spec.invalid === true
-      ? theme.colors.destructive
+      ? colorRole(theme, "destructive")
       : (theme.switch?.edge ?? fill);
   const box = switchBox(spec.size, source);
   return {
@@ -432,7 +435,7 @@ export const switchTrackPaint = (
             offsetY: 0,
             blurRadius: 0,
             spreadRadius: 1,
-            color: edge,
+            color: edge ?? fill,
           }
         : undefined,
     hover: { backgroundColor: fill, borderColor: edge },
@@ -470,12 +473,12 @@ export const switchTrackStyle = (
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true
-      ? theme.colors.destructive
-      : theme.colors.borderStrong;
+      ? colorRole(theme, "destructive")
+      : colorRole(theme, "borderStrong");
   const paint = switchTrackPaint(spec, source);
   const fill =
     paint?.backgroundColor ??
-    (filled(spec) ? role.background : theme.colors.muted);
+    (filled(spec) ? role.background : colorRole(theme, "muted"));
   const edge =
     paint?.borderColor ?? (filled(spec) ? role.background : emptyBorder);
   const style: StyleDesc = {
@@ -496,7 +499,7 @@ export const switchTrackStyle = (
       paint?.hover ??
       (filled(spec)
         ? feedbackFill(spec, theme, "hover")
-        : { backgroundColor: theme.colors.hover }),
+        : { backgroundColor: colorRole(theme, "hover") }),
     active:
       paint?.active ??
       (filled(spec)
@@ -549,7 +552,7 @@ export const switchThumbStyle = (
       paint?.backgroundColor ??
       (filled(spec)
         ? accentRole(spec, theme).foreground
-        : theme.colors.foreground),
+        : colorRole(theme, "foreground")),
     boxShadow: paint?.boxShadow,
   };
 };

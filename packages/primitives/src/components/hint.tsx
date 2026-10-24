@@ -25,7 +25,7 @@ import { disabledOpacity } from "@gpuixui/tokens";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 import { visibleCopy } from "../core/a11y.js";
-import { controlPaddingOf } from "../core/theme.js";
+import { colorRole, controlPaddingOf } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
@@ -159,8 +159,8 @@ export const fieldHint = (
           hintType(theme, spec),
         ),
         props.disabled === true
-          ? { color: theme.colors.placeholder, opacity: disabledOpacity }
-          : { color: theme.colors.placeholder },
+          ? { color: colorRole(theme, "placeholder"), opacity: disabledOpacity }
+          : { color: colorRole(theme, "placeholder") },
       ),
     })),
   );

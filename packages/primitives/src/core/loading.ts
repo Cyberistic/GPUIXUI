@@ -15,7 +15,7 @@ import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import { motionLevels } from "@gpuixui/motion/timing";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
-import { radiusValue, typeOf } from "./theme.js";
+import { colorRole, radiusValue, typeOf } from "./theme.js";
 
 /** How many steps a pulse visits before repeating. */
 export const PULSE_STEPS = 2;
@@ -122,7 +122,7 @@ export const skeletonStyle = (
     spec.circle === true
       ? radiusValue(theme, "full")
       : radiusValue(theme, spec.radius ?? "sm"),
-  backgroundColor: theme.colors.skeleton,
+  backgroundColor: colorRole(theme, "skeleton"),
 });
 
 /**
@@ -217,20 +217,22 @@ export const spinnerDots = (
 
 /** The role each accent paints, one entry per accent. */
 const ACCENT_COLOR: Readonly<
-  Record<SpinnerAccent, (theme: PrimitiveTheme) => string>
+  Record<SpinnerAccent, (theme: PrimitiveTheme) => string | undefined>
 > = {
-  primary: (theme) => theme.colors.primary,
-  destructive: (theme) => theme.colors.destructive,
-  muted: (theme) => theme.colors.mutedForeground,
-  "on-primary": (theme) => theme.colors.primaryForeground,
-  "on-secondary": (theme) => theme.colors.secondaryForeground,
-  "on-destructive": (theme) => theme.colors.destructiveForeground,
-  "on-accent": (theme) => theme.colors.accentForeground,
-  "on-disabled": (theme) => theme.colors.disabledForeground,
+  primary: (theme) => colorRole(theme, "primary"),
+  destructive: (theme) => colorRole(theme, "destructive"),
+  muted: (theme) => colorRole(theme, "mutedForeground"),
+  "on-primary": (theme) => colorRole(theme, "primaryForeground"),
+  "on-secondary": (theme) => colorRole(theme, "secondaryForeground"),
+  "on-destructive": (theme) => colorRole(theme, "destructiveForeground"),
+  "on-accent": (theme) => colorRole(theme, "accentForeground"),
+  "on-disabled": (theme) => colorRole(theme, "disabledForeground"),
 };
 
-const accentColor = (accent: SpinnerAccent, theme: PrimitiveTheme): string =>
-  ACCENT_COLOR[spinnerAccentOf(accent)](theme);
+const accentColor = (
+  accent: SpinnerAccent,
+  theme: PrimitiveTheme,
+): string | undefined => ACCENT_COLOR[spinnerAccentOf(accent)](theme);
 
 /**
  * One dot of the indicator.

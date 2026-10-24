@@ -61,7 +61,7 @@ import { accessibleName } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { revealScroll } from "../core/scroll.js";
 import type { ControlSpec } from "../core/style.js";
-import { controlSize } from "../core/theme.js";
+import { colorRole, controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import { Icon } from "@gpuixui/icons";
@@ -226,7 +226,7 @@ export const selectTriggerStyle = (
     // trigger's own colour is what a placeholder inherits. Without this an
     // empty select paints its hint in the value role and reads as chosen.
     if (state.placeholder === true) {
-      style = mergeStyle(style, { color: theme.colors.placeholder });
+      style = mergeStyle(style, { color: colorRole(theme, "placeholder") });
     }
     if (spec.invalid === true) style = mergeStyle(style, resolved.invalid);
     if (state.disabled === true) {
@@ -286,23 +286,28 @@ export const renderSelectRow = (
   option: SelectOption,
   theme: PrimitiveTheme,
   state: SelectItemState,
-): ReactElement => (
-  <div
-    role="option"
-    aria-label={accessibleName(option.label)}
-    aria-selected={state.selected}
-    style={recipeTw.classesToStyle(selectItemRowClass, theme).style}
-  >
-    {option.label}
-    {/*
-      The selected mark is decorative: the row's `aria-selected` is the state,
-      so the glyph carries no second name.
-    */}
-    {state.selected ? (
-      <Icon name="check" size="sm" color={theme.colors.popoverForeground} />
-    ) : null}
-  </div>
-);
+): ReactElement => {
+  // A stored theme that lost the colour group has no mark colour; the row's
+  // `aria-selected` still carries the state, so the glyph is simply absent.
+  const mark = colorRole(theme, "popoverForeground");
+  return (
+    <div
+      role="option"
+      aria-label={accessibleName(option.label)}
+      aria-selected={state.selected}
+      style={recipeTw.classesToStyle(selectItemRowClass, theme).style}
+    >
+      {option.label}
+      {/*
+        The selected mark is decorative: the row's `aria-selected` is the state,
+        so the glyph carries no second name.
+      */}
+      {state.selected && mark !== undefined ? (
+        <Icon name="check" size="sm" color={mark} />
+      ) : null}
+    </div>
+  );
+};
 
 /**
  * Bring the row the keyboard moved onto into view.

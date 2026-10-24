@@ -26,11 +26,8 @@
  * the same colour, so the two cannot drift.
  */
 
-import {
-  pointerWash,
-  type ThemeColors,
-  type ThemeContrast,
-} from "@gpuixui/tokens";
+import { pointerWash } from "@gpuixui/tokens";
+import { colorRole, type PaintSource } from "./theme.js";
 
 /**
  * The fill a control paints while the pointer is down.
@@ -41,14 +38,12 @@ import {
  * the role, and a control that cannot derive a press paints the role it has,
  * which is the absence rule every other contract follows.
  *
- * The source needs only the `active` role and whichever of `hover`,
- * `foreground` the stored theme still carries, so a partial record from storage
- * is a value this can be asked about rather than a cast.
+ * The source is the colour group as a store can hand it back, so a theme that
+ * lost the group answers `undefined` — no press wash — instead of throwing from
+ * the fallback read.
  */
-export const pressWash = (theme: {
-  readonly colors: Partial<ThemeColors> & Pick<ThemeColors, "active">;
-  readonly contrast?: ThemeContrast;
-}): string => pointerWash(theme, "active", "hover") ?? theme.colors.active;
+export const pressWash = (theme: PaintSource): string | undefined =>
+  pointerWash(theme, "active", "hover") ?? colorRole(theme, "active");
 
 /**
  * Whether a pointer event is the primary button's press.

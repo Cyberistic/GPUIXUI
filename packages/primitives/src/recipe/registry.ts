@@ -28,6 +28,7 @@ import { pressWash } from "../core/pointer.js";
 import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 import {
+  colorRole,
   controlHeightOf,
   controlPaddingOf,
   familyOf,
@@ -203,7 +204,7 @@ export const recipeTw = createTw({
     // is composited and held to both floors by `@gpuixui/tokens`.
     "select-text": (theme) => ({
       userSelect: "text",
-      selectionColor: theme.colors.selection,
+      selectionColor: colorRole(theme, "selection"),
     }),
     "text-start": () => ({ textAlign: "start" }),
     "text-end": () => ({ textAlign: "end" }),

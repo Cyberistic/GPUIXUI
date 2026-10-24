@@ -35,6 +35,7 @@ import type {
 import { controlRing } from "./focus.js";
 import { pressWash } from "./pointer.js";
 import {
+  colorRole,
   controlHeightOf,
   controlPaddingOf,
   familyOf,
@@ -123,7 +124,7 @@ export const controlStyle = (
   const rest = paint(variant.background, theme);
   const border =
     spec.invalid === true
-      ? theme.colors.destructive
+      ? colorRole(theme, "destructive")
       : paint(variant.border, theme);
 
   const style: StyleDesc = {
@@ -209,7 +210,7 @@ export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => {
     fontWeight: body.fontWeight,
     cursor: "text",
     userSelect: "text",
-    selectionColor: theme.colors.selection,
+    selectionColor: colorRole(theme, "selection"),
   };
 };
 
@@ -264,12 +265,12 @@ export const textToneOf = (value: unknown): TextTone =>
   isTextTone(value) ? value : "default";
 
 const tones: Record<TextTone, Paint> = {
-  default: (theme) => theme.colors.foreground,
-  muted: (theme) => theme.colors.mutedForeground,
+  default: (theme) => colorRole(theme, "foreground"),
+  muted: (theme) => colorRole(theme, "mutedForeground"),
   /** `primary` is a fill role, so brand text is the derived colour, as a link. */
   primary: brandText,
   /** The status text role tokens measure as page text, not the solid fill. */
-  destructive: (theme) => theme.colors.destructiveSoftForeground,
+  destructive: (theme) => colorRole(theme, "destructiveSoftForeground"),
   /** Take the colour already in effect — for text on a coloured surface. */
   inherit: undefined,
 };
@@ -324,7 +325,8 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
   if (spec.align !== undefined) style.textAlign = spec.align;
   // A selectable run paints the design system's wash, not the runtime's
   // accent-at-35% default: `selection` is the role the token contract measures.
-  if (spec.selectable === true) style.selectionColor = theme.colors.selection;
+  if (spec.selectable === true)
+    style.selectionColor = colorRole(theme, "selection");
   if (spec.truncate === true) {
     style.whiteSpace = "nowrap";
     style.textOverflow = "ellipsis";
@@ -357,13 +359,13 @@ export type SurfaceTone = (typeof SURFACE_TONES)[number];
 
 const surfaces: Record<SurfaceTone, Paint> = {
   none: undefined,
-  background: (theme) => theme.colors.background,
-  card: (theme) => theme.colors.card,
-  popover: (theme) => theme.colors.popover,
-  muted: (theme) => theme.colors.muted,
-  accent: (theme) => theme.colors.accent,
-  selected: (theme) => theme.colors.selected,
-  skeleton: (theme) => theme.colors.skeleton,
+  background: (theme) => colorRole(theme, "background"),
+  card: (theme) => colorRole(theme, "card"),
+  popover: (theme) => colorRole(theme, "popover"),
+  muted: (theme) => colorRole(theme, "muted"),
+  accent: (theme) => colorRole(theme, "accent"),
+  selected: (theme) => colorRole(theme, "selected"),
+  skeleton: (theme) => colorRole(theme, "skeleton"),
 };
 
 /** The two edge styles the runtime paints. */
@@ -453,7 +455,7 @@ export const surfaceStyle = (
     style.borderRadius = radiusValue(theme, spec.radius);
   if (spec.border === true) {
     style.borderWidth = theme.borderWidth.thin;
-    style.borderColor = theme.colors.border;
+    style.borderColor = colorRole(theme, "border");
     if (spec.borderStyle === "dashed") style.borderStyle = "dashed";
   }
   Option.map(
@@ -488,14 +490,14 @@ export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
     ? {
         height: theme.borderWidth.thin,
         flexShrink: 0,
-        backgroundColor: theme.colors.border,
+        backgroundColor: colorRole(theme, "border"),
         marginLeft: inset,
         marginRight: inset,
       }
     : {
         width: theme.borderWidth.thin,
         flexShrink: 0,
-        backgroundColor: theme.colors.border,
+        backgroundColor: colorRole(theme, "border"),
         marginTop: inset,
         marginBottom: inset,
       };
@@ -534,7 +536,7 @@ export interface ScrollSpec {
  * A scrollable container's overflow axes.
  *
  * The axes are theme-free, so they stay in this resolver. The thumb tint
- * (`theme.colors.scrollbar`) and thickness belong to the viewport, which has a
+ * (`colorRole(theme, "scrollbar")`) and thickness belong to the viewport, which has a
  * theme: `ScrollArea`'s `ScrollAreaViewport` sets the runtime's real
  * `scrollbarColor`/`scrollbarWidth` (verified on 0.11.0). There is still no
  * fade mask and no per-part thumb to configure.
@@ -570,9 +572,9 @@ const PROGRESS_TONE_NAMES: ReadonlyArray<string> = PROGRESS_TONES;
 
 const progressTones: Record<ProgressTone, ColorRef> = {
   primary: brandText,
-  success: (theme) => theme.colors.success,
-  destructive: (theme) => theme.colors.destructive,
-  muted: (theme) => theme.colors.mutedForeground,
+  success: (theme) => colorRole(theme, "success"),
+  destructive: (theme) => colorRole(theme, "destructive"),
+  muted: (theme) => colorRole(theme, "mutedForeground"),
 };
 
 /**
@@ -631,7 +633,7 @@ export const progressTrackStyle = (
   width: "100%",
   height: spaceValue(theme, PROGRESS_HEIGHT[progressSizeOf(spec.size)]),
   borderRadius: radiusValue(theme, "full"),
-  backgroundColor: theme.colors.muted,
+  backgroundColor: colorRole(theme, "muted"),
   overflow: "hidden",
 });
 
@@ -730,7 +732,7 @@ export const sliderRailStyle = (
         width: spaceValue(theme, "xs"),
         height: "100%",
         borderRadius: radiusValue(theme, "full"),
-        backgroundColor: theme.colors.muted,
+        backgroundColor: colorRole(theme, "muted"),
         display: "flex",
         // The runtime has no `column-reverse`, so the track reverses its parts
         // and packs them to the floor: the start's fill is the bottom one and
@@ -744,7 +746,7 @@ export const sliderRailStyle = (
         width: "100%",
         height: spaceValue(theme, "xs"),
         borderRadius: radiusValue(theme, "full"),
-        backgroundColor: theme.colors.muted,
+        backgroundColor: colorRole(theme, "muted"),
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
@@ -764,7 +766,9 @@ export const sliderFillStyle = (
   style.flexShrink = 0;
   style.borderRadius = radiusValue(theme, "full");
   style.backgroundColor =
-    spec.invalid === true ? theme.colors.destructive : theme.colors.primary;
+    spec.invalid === true
+      ? colorRole(theme, "destructive")
+      : colorRole(theme, "primary");
   style.pointerEvents = "none";
   return style;
 };
@@ -790,10 +794,12 @@ export const sliderThumbStyle = (
     height: side,
     flexShrink: 0,
     borderRadius: radiusValue(theme, "full"),
-    backgroundColor: theme.colors.input,
+    backgroundColor: colorRole(theme, "input"),
     borderWidth: theme.borderWidth.strong,
     borderColor:
-      spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
+      spec.invalid === true
+        ? colorRole(theme, "destructive")
+        : colorRole(theme, "primary"),
     ...(isVertical(spec)
       ? { marginTop: -half, marginBottom: -half }
       : { marginLeft: -half, marginRight: -half }),
@@ -847,7 +853,7 @@ export const numberStepperStyle = (
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
   };
   if (spec.disabled !== true) {
-    style.hover = { backgroundColor: theme.colors.hover };
+    style.hover = { backgroundColor: colorRole(theme, "hover") };
     // The press replaces the hover, so it is derived against it (`core/pointer.ts`).
     style.active = { backgroundColor: pressWash(theme) };
   }
@@ -937,12 +943,12 @@ export const ratingStarColor = (
   filled: boolean,
   theme: PrimitiveTheme,
   invalid?: boolean,
-): string =>
+): string | undefined =>
   filled
     ? invalid === true
-      ? theme.colors.destructive
-      : theme.colors.primary
-    : theme.colors.mutedForeground;
+      ? colorRole(theme, "destructive")
+      : colorRole(theme, "primary")
+    : colorRole(theme, "mutedForeground");
 
 // ── One-time-code fields ─────────────────────────────────────────────
 

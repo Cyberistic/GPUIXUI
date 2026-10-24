@@ -15,9 +15,12 @@ import {
   isTextRole,
   radius as libraryRadius,
   spacing as librarySpacing,
+  themeColors,
   typography as libraryTypography,
   type ControlSize,
   type ElevationLevel,
+  type ThemeColors,
+  type ThemeContrast,
 } from "@gpuixui/tokens";
 import type {
   Density,
@@ -26,7 +29,6 @@ import type {
   Spacing,
   TextRole,
   TextStyle,
-  Theme,
 } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -332,9 +334,63 @@ export const familyOf = (
 };
 
 /**
+ * A theme's colour group, or the shape a store gave back.
+ *
+ * A role is additive: the tokens package **reports** a group a theme lost
+ * (`invalidColorRoles`) rather than refusing the theme, and JSON writes `null`
+ * where a stored theme carried none — the absence `themeColors` already models
+ * for the same reason. A paint seam reads through {@link colorsOf} rather than
+ * the group, so a truncated theme paints nothing instead of throwing.
+ */
+export interface ColorSource {
+  readonly colors?: Partial<ThemeColors>;
+}
+
+/**
+ * A theme as a colour reference sees it: the roles, and the contrast mode a
+ * derivation reads.
+ *
+ * The shape `@gpuixui/tokens`' `BrandSource` uses, so a token helper can be a
+ * {@link ColorRef} without a wrapper.
+ */
+export type PaintSource = ColorSource & {
+  readonly contrast?: ThemeContrast;
+};
+
+/**
+ * The colour roles a theme still carries.
+ *
+ * A paint seam runs mid-render, so it never throws. Reading the group directly
+ * threw `TypeError: Cannot read properties of null (reading 'primary')` from the
+ * first control that asked for its fill, and one truncated theme emptied the
+ * window; the token contract answers `{}` for the same theme instead, so a
+ * paint answers `undefined` and leaves the surface its recipe already painted.
+ *
+ * The gate is still the tokens package's — `missingTokens` names the group and
+ * `invalidColorRoles` names every role it cannot read — because a role is
+ * additive, unlike a scale a layout needs to measure.
+ */
+export const colorsOf = (theme: ColorSource): Partial<ThemeColors> =>
+  themeColors(theme);
+
+/**
+ * One semantic role a theme still carries, or `undefined` when it lost it.
+ *
+ * The role name is a key of `ThemeColors`, so a misspelled role is a compile
+ * error rather than a lookup that answers nothing, and the answer is the
+ * absence every paint seam already models for a role the theme does not ship.
+ */
+export const colorRole = (
+  theme: ColorSource,
+  role: keyof ThemeColors,
+): string | undefined => colorsOf(theme)[role];
+
+/**
  * How a colour is reached from a theme.
  *
  * A function rather than a dot-path string: a misspelled path is a compile
- * error, and a variant can derive a colour instead of only naming one.
+ * error, and a variant can derive a colour instead of only naming one. The
+ * answer may be absent — a role a stored theme lost — so every painter reads
+ * it as no paint rather than handing the runtime a `null`.
  */
-export type ColorRef = (theme: Theme) => string;
+export type ColorRef = (theme: PaintSource) => string | undefined;

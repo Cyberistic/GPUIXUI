@@ -168,6 +168,7 @@ export const renderCheckboxIndicator = (
     justifyContent: "center",
     pointerEvents: "none",
   };
+  const mark = selectionMarkColor(spec, theme);
   return (
     <div
       style={mergeStyle(
@@ -178,13 +179,14 @@ export const renderCheckboxIndicator = (
         props.style,
       )}
     >
-      {props.children ?? (
-        <Icon
-          name={markName(spec.state)}
-          size={iconSideOf(theme, "sm")}
-          color={selectionMarkColor(spec, theme)}
-        />
-      )}
+      {props.children ??
+        (mark === undefined ? null : (
+          <Icon
+            name={markName(spec.state)}
+            size={iconSideOf(theme, "sm")}
+            color={mark}
+          />
+        ))}
     </div>
   );
 };

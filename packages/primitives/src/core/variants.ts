@@ -6,7 +6,7 @@
  * cannot mean one thing in the library and another in its documentation.
  *
  * A variant references **theme roles**, never colours: `(theme) =>
- * theme.colors.primary`. A colour the theme does not ship is derived from a
+ * colorRole(theme, "primary")`. A colour the theme does not ship is derived from a
  * role instead — a link paints `brandText`, the brand moved until it reads as
  * text. A filled action's feedback is derived the same way: `filledHover` and
  * `filledPressed` move the fill toward the theme's foreground and keep it
@@ -24,7 +24,7 @@ import {
 } from "@gpuixui/tokens";
 import type { SpinnerAccent } from "./loading.js";
 import { pressWash } from "./pointer.js";
-import type { PrimitiveTheme } from "./theme.js";
+import { colorRole, type PaintSource, type PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
 
 export const BUTTON_VARIANTS = [
@@ -90,8 +90,8 @@ const filled = (
  * component can enforce — but only one variant paints the primary role.
  */
 const primary: ControlVariant = {
-  background: (theme) => theme.colors.primary,
-  foreground: (theme) => theme.colors.primaryForeground,
+  background: (theme) => colorRole(theme, "primary"),
+  foreground: (theme) => colorRole(theme, "primaryForeground"),
   border: undefined,
   ...filled("primary"),
 };
@@ -107,9 +107,9 @@ const primary: ControlVariant = {
  * which is what the components package adds to the same action.
  */
 const secondary: ControlVariant = {
-  background: (theme) => theme.colors.secondary,
-  foreground: (theme) => theme.colors.secondaryForeground,
-  border: (theme) => theme.colors.borderStrong,
+  background: (theme) => colorRole(theme, "secondary"),
+  foreground: (theme) => colorRole(theme, "secondaryForeground"),
+  border: (theme) => colorRole(theme, "borderStrong"),
   ...filled("secondary"),
 };
 
@@ -123,7 +123,7 @@ const secondary: ControlVariant = {
  * (`core/pointer.ts`).
  */
 const washed: Pick<ControlVariant, "hover" | "active"> = {
-  hover: (theme) => ({ backgroundColor: theme.colors.hover }),
+  hover: (theme) => ({ backgroundColor: colorRole(theme, "hover") }),
   active: (theme) => ({ backgroundColor: pressWash(theme) }),
 };
 
@@ -136,23 +136,23 @@ const washed: Pick<ControlVariant, "hover" | "active"> = {
  */
 const outline: ControlVariant = {
   background: undefined,
-  foreground: (theme) => theme.colors.foreground,
-  border: (theme) => theme.colors.borderStrong,
+  foreground: (theme) => colorRole(theme, "foreground"),
+  border: (theme) => colorRole(theme, "borderStrong"),
   ...washed,
 };
 
 /** No chrome at rest: for toolbars and dense rows. */
 const ghost: ControlVariant = {
   background: undefined,
-  foreground: (theme) => theme.colors.foreground,
+  foreground: (theme) => colorRole(theme, "foreground"),
   border: undefined,
   ...washed,
 };
 
 /** Destructive: deletes, revokes, disconnects. Never the default action. */
 const destructive: ControlVariant = {
-  background: (theme) => theme.colors.destructive,
-  foreground: (theme) => theme.colors.destructiveForeground,
+  background: (theme) => colorRole(theme, "destructive"),
+  foreground: (theme) => colorRole(theme, "destructiveForeground"),
   border: undefined,
   ...filled("destructive"),
 };
@@ -165,7 +165,7 @@ const link: ControlVariant = {
   foreground: brandText,
   border: undefined,
   hover: (theme) => ({
-    backgroundColor: theme.colors.hover,
+    backgroundColor: colorRole(theme, "hover"),
     textDecoration: "underline",
   }),
   active: (theme) => ({ backgroundColor: pressWash(theme) }),
@@ -191,11 +191,24 @@ export const buttonVariants: Record<ButtonVariant, ControlVariant> = {
  * Read from the variant table, so a variant added there answers here without a
  * second list, and a layer painted over an action (a busy loader, a chevron or
  * an effect's wash) tints in the role the action's own label paints.
+ *
+ * A complete theme answers a colour; a theme a store gave back answers the
+ * absence of a role it lost, the pair `@gpuixui/tokens`' `statusTone` uses.
  */
-export const actionOnColor = (
+export function actionOnColor(
   theme: PrimitiveTheme,
   variant: ButtonVariant,
-): string => buttonVariants[buttonVariantOf(variant)].foreground(theme);
+): string;
+export function actionOnColor(
+  theme: PaintSource,
+  variant: ButtonVariant,
+): string | undefined;
+export function actionOnColor(
+  theme: PaintSource,
+  variant: ButtonVariant,
+): string | undefined {
+  return buttonVariants[buttonVariantOf(variant)].foreground(theme);
+}
 
 const FILLED_SPINNER_ACCENT: Readonly<
   Partial<Record<ButtonVariant, SpinnerAccent>>
@@ -269,11 +282,11 @@ export const paintsFilledSurface = (variant: ButtonVariant): boolean =>
  * has one appearance, and only `invalid` changes it.
  */
 export const fieldVariant: ControlVariant = {
-  background: (theme) => theme.colors.input,
-  foreground: (theme) => theme.colors.inputForeground,
-  border: (theme) => theme.colors.border,
-  hover: (theme) => ({ borderColor: theme.colors.borderStrong }),
-  active: (theme) => ({ borderColor: theme.colors.ring }),
+  background: (theme) => colorRole(theme, "input"),
+  foreground: (theme) => colorRole(theme, "inputForeground"),
+  border: (theme) => colorRole(theme, "border"),
+  hover: (theme) => ({ borderColor: colorRole(theme, "borderStrong") }),
+  active: (theme) => ({ borderColor: colorRole(theme, "ring") }),
 };
 
 /** The live variant table, so a docs page can enumerate every variant. */
@@ -318,7 +331,7 @@ export const toggleVariantOf = (value: unknown): ToggleVariant =>
 /** No chrome at rest; the accent fill is what says "this mode is on". */
 const toggleRest: ControlVariant = {
   background: undefined,
-  foreground: (theme) => theme.colors.foreground,
+  foreground: (theme) => colorRole(theme, "foreground"),
   border: undefined,
   ...washed,
 };
@@ -326,8 +339,8 @@ const toggleRest: ControlVariant = {
 /** Border only at rest, so a toggle reads as a control in a toolbar. */
 const toggleOutlineRest: ControlVariant = {
   background: undefined,
-  foreground: (theme) => theme.colors.foreground,
-  border: (theme) => theme.colors.borderStrong,
+  foreground: (theme) => colorRole(theme, "foreground"),
+  border: (theme) => colorRole(theme, "borderStrong"),
   ...washed,
 };
 
@@ -335,8 +348,8 @@ const toggleOutlineRest: ControlVariant = {
 const togglePressedBase = (
   border: ControlVariant["border"],
 ): ControlVariant => ({
-  background: (theme) => theme.colors.accent,
-  foreground: (theme) => theme.colors.accentForeground,
+  background: (theme) => colorRole(theme, "accent"),
+  foreground: (theme) => colorRole(theme, "accentForeground"),
   border,
   // A pressed toggle is a filled face, so its feedback is the theme's derived
   // accent fill — opaque, and clamped where the label would lose its floor. The
@@ -363,7 +376,7 @@ export const toggleVariants: Readonly<
   },
   outline: {
     rest: toggleOutlineRest,
-    pressed: togglePressedBase((theme) => theme.colors.borderStrong),
+    pressed: togglePressedBase((theme) => colorRole(theme, "borderStrong")),
   },
 };
 

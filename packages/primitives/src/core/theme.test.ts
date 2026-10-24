@@ -14,20 +14,39 @@ import {
   textRoles,
   typography as libraryScale,
 } from "@gpuixui/tokens";
-import { sliderInset, sliderThumbStyle, sliderTrackStyle } from "./style.js";
+import {
+  sliderInset,
+  sliderFillStyle,
+  sliderThumbStyle,
+  sliderTrackStyle,
+} from "./style.js";
 import { stackStyle } from "./layout.js";
-import { controlStyle } from "./style.js";
+import {
+  controlStyle,
+  progressTrackStyle,
+  ratingStarColor,
+  ruleStyle,
+  surfaceStyle,
+  textStyle,
+  toneColor,
+} from "./style.js";
+import { skeletonStyle } from "./loading.js";
 import { keyboardRing } from "./focus.js";
 import {
   radioDotStyle,
   selectionBoxStyle,
+  selectionMarkColor,
   selectionTargetStyle,
   switchBox,
   switchThumbStyle,
+  switchTrackStyle,
 } from "./selection.js";
-import { buttonVariants } from "./variants.js";
+import { pressWash } from "./pointer.js";
+import { actionOnColor, buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import {
+  colorRole,
+  colorsOf,
   controlHeightOf,
   controlPaddingOf,
   controlSize,
@@ -83,6 +102,27 @@ const walk = (dir: string): ReadonlyArray<string> =>
     entry.isDirectory()
       ? walk(join(dir, entry.name))
       : isSource(entry.name)
+        ? [join(dir, entry.name)]
+        : [],
+  );
+
+/**
+ * The paint sources, components included.
+ *
+ * A colour is read in `.tsx` as often as in a resolver — the components own
+ * their own role reads — so the colour scan cannot reuse {@link walk}, which
+ * stays on the `.ts` sources the hex and numeric scans read.
+ */
+const isPaintSource = (name: string): boolean =>
+  (name.endsWith(".ts") || name.endsWith(".tsx")) &&
+  !name.includes(".test.") &&
+  !name.endsWith(".d.ts");
+
+const walkPaint = (dir: string): ReadonlyArray<string> =>
+  Arr.flatMap(readdirSync(dir, { withFileTypes: true }), (entry) =>
+    entry.isDirectory()
+      ? walkPaint(join(dir, entry.name))
+      : isPaintSource(entry.name)
         ? [join(dir, entry.name)]
         : [],
   );
@@ -502,6 +542,141 @@ describe("a numeric group a store gave back", () => {
         page.includes("missingTokens") &&
         page.includes("extendTheme"),
     }).toEqual({ readers: true, rule: true, gate: true, page: true });
+  });
+});
+
+describe("a colour group a store gave back", () => {
+  // Bug guarded: a theme restored from storage writes `null` for a group it
+  // did not carry and JSON has no `undefined`, so every painter read a role off
+  // the group directly — `theme.colors.primary` and 87 more — and the first
+  // control to ask for its fill threw `TypeError: Cannot read properties of
+  // null (reading 'primary')`, emptying the window. A role is additive, so the
+  // tokens package *reports* the group (`invalidColorRoles`) rather than
+  // refusing the theme; the paint seam answers no role for it, and the control
+  // keeps whatever its recipe already declared.
+  // The cast is the storage boundary: a stored theme is decoded JSON, where a
+  // group it did not carry is `null` rather than absent.
+  const stored = (colors: unknown): PrimitiveTheme =>
+    ({ ...testTheme, colors }) as unknown as PrimitiveTheme;
+
+  it("reads the roles the theme still carries", () => {
+    expect(colorsOf(testTheme)).toBe(testTheme.colors);
+    expect(colorRole(testTheme, "primary")).toBe(testTheme.colors.primary);
+    expect(colorRole(testTheme, "skeleton")).toBe(testTheme.colors.skeleton);
+    // A brand's own role is the one that paints.
+    const brand = {
+      ...testTheme,
+      colors: { ...testTheme.colors, primary: "#123456" },
+    };
+    expect(colorRole(brand, "primary")).toBe("#123456");
+  });
+
+  it("answers no role for a group, or a role, the theme lost", () => {
+    expect(colorsOf({})).toEqual({});
+    expect(colorsOf(stored(null))).toEqual({});
+    expect(colorRole({}, "primary")).toBeUndefined();
+    expect(colorRole({}, "card")).toBeUndefined();
+    // A key a store kept without a value is a token that is not there: JSON
+    // writes `null`, and a hand-edited literal can carry a number.
+    const nulled = stored({ primary: null, card: 7 });
+    expect(colorsOf(nulled)).toEqual({});
+    expect(colorRole(nulled, "primary")).toBeUndefined();
+  });
+
+  it("keeps every painter on its feet with the colour group a store lost", () => {
+    const lost = stored(null);
+    const control = controlStyle(
+      { variant: buttonVariants.primary, size: "md" },
+      lost,
+    );
+    // Only the colour is gone: the metrics the same resolver reads still paint,
+    // so a lost role does not collapse the control's box with its fill.
+    const complete = controlStyle(
+      { variant: buttonVariants.primary, size: "md" },
+      testTheme,
+    );
+    expect(control.backgroundColor).toBeUndefined();
+    expect(control.color).toBeUndefined();
+    expect(control.height).toBe(complete.height);
+    expect(control.fontSize).toBe(complete.fontSize);
+    // The four probes the group was reported on.
+    expect(
+      surfaceStyle({ tone: "card" }, lost).backgroundColor,
+    ).toBeUndefined();
+    expect(
+      textStyle({ role: "body", tone: "default" }, lost).color,
+    ).toBeUndefined();
+    expect(
+      selectionBoxStyle(
+        { state: "checked", size: "md", accent: "primary" },
+        lost,
+      ).backgroundColor,
+    ).toBeUndefined();
+    // And the rest of the paint seams, so a second raw read cannot hide here.
+    expect(toneColor(lost, "primary")).toBeUndefined();
+    expect(ratingStarColor(true, lost)).toBeUndefined();
+    expect(actionOnColor(lost, "primary")).toBeUndefined();
+    expect(pressWash(lost)).toBeUndefined();
+    expect(ruleStyle({ orientation: "horizontal" }, lost).backgroundColor).toBe(
+      control.backgroundColor,
+    );
+    expect(
+      progressTrackStyle({ tone: "primary", size: "md" }, lost).backgroundColor,
+    ).toBeUndefined();
+    expect(skeletonStyle({}, lost).backgroundColor).toBeUndefined();
+    expect(
+      selectionMarkColor(
+        { state: "checked", size: "md", accent: "primary" },
+        lost,
+      ),
+    ).toBeUndefined();
+    expect(
+      switchTrackStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        lost,
+      ).backgroundColor,
+    ).toBeUndefined();
+    expect(
+      switchThumbStyle(
+        { state: "unchecked", size: "md", accent: "primary" },
+        lost,
+      ).backgroundColor,
+    ).toBeUndefined();
+    expect(
+      sliderFillStyle(0.5, { size: "md" }, lost).backgroundColor,
+    ).toBeUndefined();
+    expect(sliderThumbStyle({ size: "md" }, lost).borderColor).toBeUndefined();
+  });
+
+  it("is the read every painter takes the colour group through", () => {
+    // A second direct read would be a second rule, and the painter would throw
+    // on the theme the seam survives. The tokens' own reader is the one place
+    // the group is opened; the package reads a role through `colorRole`.
+    const read = /\.colors\b/;
+    const offenders = Arr.filter(walkPaint(sourceDir), (path) =>
+      read.test(readFileSync(path, "utf8")),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("teaches the colour absence where a consumer hands a theme over", () => {
+    const read = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+    const readme = read("../../README.md");
+    const page = read("../../docs/theme-provider.mdx");
+    expect({
+      readers: ["colorsOf", "colorRole", "ColorRef"].every((name) =>
+        readme.includes(name),
+      ),
+      rule:
+        readme.includes("paints nothing") &&
+        readme.includes("themeColors") &&
+        readme.includes("invalidColorRoles"),
+      page:
+        page.includes("no role") &&
+        page.includes("resting fill") &&
+        page.includes("invalidColorRoles"),
+    }).toEqual({ readers: true, rule: true, page: true });
   });
 });
 

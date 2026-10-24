@@ -157,6 +157,23 @@ and each is read through a membership test rather than indexed raw:
   release to rebuild it from. `theme.test.ts` holds the readers, every painter
   and a source scan that keeps a direct index out of the rest of the package;
   `docs/theme-provider.mdx` states the rule where a consumer hands a theme over.
+- the **colour group** is the other half of a stored theme, and the tokens
+  package **reports** it rather than refusing the theme: a role is additive, so
+  `invalidColorRoles` names one the theme lost where `missingTokens` names a
+  lost scale. Every painter read a role off the group directly —
+  `theme.colors.primary` and eighty-seven more across the resolvers, the recipe
+  registry and six components — so the same truncated theme threw
+  `TypeError: Cannot read properties of null (reading 'primary')` from its first
+  control and took the window down. `colorsOf` is the primitives' port over the
+  tokens' `themeColors`, and `colorRole(theme, role)` reads one role through it:
+  a role the theme carries paints, and a role it lost **paints nothing** — the
+  control keeps the resting appearance its recipe already declared. A mark whose
+  role is gone is skipped rather than painted black: `Icon` keeps its required
+  tint, and the four glyph sites draw nothing when the role they read is absent.
+  `ColorRef` answers `string | undefined` for the same reason. `theme.test.ts`
+  holds the readers, every painter and a source scan that keeps a direct read
+  out of the package; `docs/theme-provider.mdx` states the rule where a
+  consumer hands a theme over.
 
 `theme.test.ts`, `Button.test.tsx`, `Toggle.test.tsx`, `Checkbox.test.tsx`,
 `Switch.test.tsx`, `presentational.test.tsx`, `Progress.test.tsx`,

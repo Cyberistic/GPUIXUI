@@ -241,13 +241,19 @@ export const renderRating = (
     );
   }
   /** One glyph, in the role its fill carries. */
-  const glyph = (filled: boolean): ReactElement => (
-    <Icon
-      name={filled ? "star-filled" : "star"}
-      size={controlSize(props.size)}
-      color={ratingStarColor(filled, theme, props.invalid)}
-    />
-  );
+  const glyph = (filled: boolean): ReactElement | null => {
+    // A stored theme that lost the colour group has no mark colour to paint; a
+    // black glyph would be invisible on a dark surface, so the mark is absent
+    // rather than wrong.
+    const color = ratingStarColor(filled, theme, props.invalid);
+    return color === undefined ? null : (
+      <Icon
+        name={filled ? "star-filled" : "star"}
+        size={controlSize(props.size)}
+        color={color}
+      />
+    );
+  };
   const star = (index: number): ReactElement => {
     const fill = starFill(index, lit);
     return (

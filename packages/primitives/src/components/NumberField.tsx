@@ -60,7 +60,7 @@ import { accessibleName, fieldHelp } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
-import { controlSize } from "../core/theme.js";
+import { colorRole, controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   numberFieldClass,
@@ -501,6 +501,12 @@ const renderStepper = (
       onNone: () => false,
       onSome: (gesture) => gesture.consumedClick(),
     });
+  // A stored theme that lost the colour group has no chevron tint; the stepper
+  // keeps its hit area and its words, and paints no glyph rather than a black
+  // one on a dark surface.
+  const glyphColor = inert
+    ? colorRole(part.theme, "placeholder")
+    : colorRole(part.theme, "mutedForeground");
   return (
     <div
       role="presentation"
@@ -528,17 +534,14 @@ const renderStepper = (
         style,
       )}
     >
-      {children ?? (
-        <Icon
-          name={direction === 1 ? "chevron-up" : "chevron-down"}
-          size="xs"
-          color={
-            inert
-              ? part.theme.colors.placeholder
-              : part.theme.colors.mutedForeground
-          }
-        />
-      )}
+      {children ??
+        (glyphColor === undefined ? null : (
+          <Icon
+            name={direction === 1 ? "chevron-up" : "chevron-down"}
+            size="xs"
+            color={glyphColor}
+          />
+        ))}
     </div>
   );
 };
