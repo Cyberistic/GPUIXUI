@@ -13949,6 +13949,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
       native scenario applies — the controller's arithmetic under the shipped
       parts.
 
+`[x]` Return a **predicate-tree change to the first page** — the paging rule
+      named the text query and the three sort gestures, while `filterTree`
+      arrives as a controlled prop: a reader on page three of ten files who
+      narrowed to the five odd ones painted the narrowed **last** page
+      (`page 2/2 · 2 rows`) instead of its first, because nothing reset the
+      index. The pagination state is stamped with the tree it was measured
+      against, so a replacement paints page one in the same commit (no effect,
+      the rule a query already follows) and every later gesture stamps the tree
+      it was made against. `behaviour/table-pagination` gains `returns to the
+      first page when the predicate tree narrows the set` (green
+      `page 1/2 · 3 rows`, red `page 2/2 · 2 rows`) and steps once after the
+      reset as the positive control. Green: 298 unit / 218 behaviour cases,
+      `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs
+      `docs/virtualization.mdx` §Paging, the README's paging rules and the
+      `filterTree` option's JSDoc. No native scenario applies — the controller's
+      page state under the shipped parts.
+
 ## Phase E — specialised components
 
 `[x]` `[██████████]` 2/2
