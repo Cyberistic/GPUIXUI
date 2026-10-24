@@ -48,7 +48,7 @@ A high-contrast base keeps its own colours.
 
 ## Follow the desktop's palette
 
-A desktop hands over a small `SystemPalette` — a page, an ink, an accent, a quiet strip, a border, an error colour and a selection colour — not a `Theme`. `paletteToTokens(palette, base)` maps the roles the palette names and keeps the base's value for every role it does not, so two colours produce a page and an ink rather than a half-built theme. `paletteMode(palette)` returns the mode the palette states and falls back to the page's lightness only when it states none.
+A desktop hands over a small `SystemPalette` — a page, an ink, an accent, a quiet strip, a border, an error colour and a selection colour — not a `Theme`. `paletteToTokens(palette, base)` maps the roles the palette names and keeps the base's value for every role it does not, so two colours produce a page and an ink rather than a half-built theme. `paletteMode(palette)` returns the mode the palette states and otherwise reads it from the page's lightness — including a stated mode this release does not ship, such as the upper-cased `Dark` a consumer's decoder writes, an old release's name or a `null` a store kept, because the call site below hands the answer straight to `getTheme`, which refuses a name it does not know. A palette that names no page, or a page in a colour form this library cannot measure, has no mode, so the caller's own default stands.
 
 ```tsx
 import {
