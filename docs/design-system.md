@@ -1450,7 +1450,9 @@ The extension mechanism is deliberately small:
   it. It is the one seam that reads those two labels, because `extendTheme` keeps
   its base's by design — a saved dark theme under the light base painted the dark
   roles on a theme that still said light and handed it the light chart and code
-  tables. A stored density box keeps its preset name with it.
+  tables. A stored density box keeps its preset name with it. A store that kept
+  no theme — JSON's `null`, an `undefined` settings row — answers the light
+  theme rather than throwing on the labels it does not carry.
 - `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
   (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
   colour, a selection wash). It chooses each filled role's on-colour by

@@ -150,7 +150,9 @@ code tables for it. `restoreTheme(stored)` starts from the shipped theme the
 saved `mode` and `contrast` name (through `themeModeOf`/`themeContrastOf`, so a
 label this release does not ship is read from its page) and applies the saved
 groups with `extendTheme`. A stored density box keeps its preset name, so the
-preset a theme reports is the one it paints.
+preset a theme reports is the one it paints. A store that kept no theme — `null`
+from JSON, an `undefined` settings row — answers the light theme, the base its
+absent labels would have named.
 
 ```ts
 import { restoreTheme } from "@gpuixui/tokens";

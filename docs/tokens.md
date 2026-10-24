@@ -4605,7 +4605,10 @@ an unshipped variant is held to the strict one — and then applies the saved
 groups with `extendTheme`. Every shipped, high-contrast, platform and authored
 theme round-trips through it equal, its density box's preset name included. It
 decodes nothing: the boundary still decodes, and `missingTokens`/`auditTheme`
-still own whether the result is complete and shippable.
+still own whether the result is complete and shippable. A store that kept **no
+theme** at all — JSON's `null` for a row never written, a settings value that is
+`undefined` — answers the light theme the absent labels would have named rather
+than throwing on them, the same value `missingTokens` already reads as nothing.
 
 ```ts
 import { auditTheme, restoreTheme } from "@gpuixui/tokens";

@@ -26,6 +26,7 @@ import {
   highContrastThemes,
   invalidNumbers,
   lightTheme,
+  missingTokens,
   platformNames,
   platformTheme,
   restoreTheme,
@@ -606,6 +607,29 @@ describe("restoreTheme", () => {
     expect(restoreTheme(unlabelled).colors).toEqual(darkTheme.colors);
   });
 
+  /**
+   * The other shape a store hands back: no theme at all.
+   *
+   * `missingTokens` already answers `null` — "the `null` a store writes for no
+   * saved theme at all" — as every group missing, and the report exists so a
+   * consumer can decide **before** it restores. `restoreTheme` then read its two
+   * labels off that value and threw `Cannot read properties of null (reading
+   * 'mode')`, so the documented order (`missingTokens`, then restore) crashed on
+   * the one value the report had just described; a settings row that never held
+   * a theme read `undefined` the same way.
+   */
+  it("answers the light theme for a store that kept no theme", () => {
+    expect(missingTokens(null)).toEqual(missingTokens({}));
+    expect(restoreTheme(null)).toBe(lightTheme);
+    expect(restoreTheme(undefined)).toBe(lightTheme);
+    // A saved theme with absent labels is still a theme to merge, so the two
+    // absences stay distinct: only the value that is no theme at all is the
+    // shipped default.
+    expect(
+      restoreTheme({ colors: { primary: "#123456" } }).colors.primary,
+    ).toBe("#123456");
+  });
+
   it("teaches the restore path and the defect it closes", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8")
@@ -627,6 +651,12 @@ describe("restoreTheme", () => {
     // complete box replaces the base's has to be taught where it is decided.
     expect(surfaces["docs/tokens.md"]).toContain("whole box");
     expect(surfaces["COMPONENTS.md"]).toContain("whole density box");
+    // The absence one value up — a store that kept no theme at all. Every
+    // surface that teaches the seam says what it answers, because the
+    // documented order (report, then restore) is what crashed.
+    Object.entries(surfaces).forEach(([name, text]) => {
+      expect(text, name).toContain("kept no theme");
+    });
   });
 });
 

@@ -389,7 +389,31 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 250/250
+`[x]` `[██████████]` 251/251
+
+`[x]` Answer a **store that kept no theme at all** with the light theme, not a
+`TypeError` — `restoreTheme` is the seam a store-based consumer calls, and its
+contract is "the value the store handed back, rebuilt from its own labels"; the
+two shapes a store writes for **no saved theme** — the `null` JSON keeps for a
+row never written, the `undefined` a settings row that never held one reads as —
+read `.mode`/`.contrast` off that value and threw `TypeError: Cannot read
+properties of null (reading 'mode')` out of the documented order
+(`missingTokens` first, then restore), on the one input `missingTokens` had
+already been taught to answer as "every group missing". `restoreTheme` now takes
+the absence in its type (`StoredTheme | null | undefined`) and answers the
+shipped light theme — the base the absent labels would have named — while a
+saved theme with absent labels is still a theme to merge, so the two absences
+stay distinct. `theme.test.ts` gains `answers the light theme for a store that
+kept no theme` (the two absences, the report agreeing on `null`, and a
+label-less store still landing its values) and the teaching case now holds every
+surface to the rule. Directions measured: with the direct read restored the case
+fails `TypeError: Cannot read properties of null (reading 'mode')`, and removing
+the sentence from the package README fails `teaches the restore path and the
+defect it closes` by name; restored, the package is 50 files / **3 096** tests
+with `check-types` and `oxfmt` clean. Docs: `docs/tokens.md` §Theme API,
+`docs/design-system.md` §11, the package README, the seam's own JSDoc and the
+`Theme extension` inventory row. No native scenario applies — a seam's input
+and the prose that teaches it.
 
 `[x]` Read a **control-size scale a store lost** as no rungs, not a `TypeError`
 — `density` is not one scale but a record of two (`controlHeight`,

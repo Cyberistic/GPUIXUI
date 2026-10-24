@@ -747,6 +747,13 @@ export type StoredTheme = ThemeOverridesSource & {
  * downgrading a high-contrast palette. A label the theme does not carry at all
  * restores onto the light default theme, the mode `getTheme` starts from.
  *
+ * A store that kept **no theme** at all — the `null` JSON writes for a row that
+ * was never saved, the `undefined` a settings value that never held one reads
+ * as — is that same absence one value up, and answers the light theme itself.
+ * Reading the two labels off it threw `Cannot read properties of null (reading
+ * 'mode')` out of the seat a store-based consumer calls after {@link missingTokens}
+ * has already answered the value as nothing.
+ *
  * Nothing is decoded here: the application's boundary still turns its own file
  * or column into {@link StoredTheme}, and {@link missingTokens} and
  * {@link auditTheme} still own whether the result is complete and shippable.
@@ -760,7 +767,14 @@ export type StoredTheme = ThemeOverridesSource & {
  * auditTheme(theme).passed;
  * ```
  */
-export function restoreTheme(stored: StoredTheme): Theme {
+export function restoreTheme(stored: StoredTheme | null | undefined): Theme {
+  // `null` is a store's "saved nothing" (JSON has no `undefined`) and a settings
+  // value can be `undefined`; both are no theme rather than a theme whose labels
+  // are absent, and both answered `Cannot read properties of null (reading
+  // 'mode')` before this — the one seam a store-based consumer calls.
+  if (stored === null || stored === undefined) {
+    return lightTheme;
+  }
   return extendTheme(
     getTheme(themeModeOf(stored), themeContrastOf(stored)),
     stored,
