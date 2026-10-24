@@ -87,6 +87,15 @@ const readsRowHeight = (text: string): boolean =>
   text.includes("density.rowHeight") || /rowHeightOf\(\s*theme\s*\)/.test(text);
 
 /**
+ * Whether a two-line row adds one spacing step above the row height, through
+ * either route: the theme's own group (`spacing.md`) or a guarded read that
+ * paints the library's step for a theme a store gave back without it. A row
+ * built at the bare step lays its second line inside the first line's box.
+ */
+const addsSpacingStep = (text: string): boolean =>
+  /\+\s*(?:theme\.spacing\.md|spaceValue\(\s*theme,\s*"md"\s*\))/.test(text);
+
+/**
  * The sources that build a box at the row height, derived from the tree rather
  * than listed by hand. `@gpuixui/tw` is included because its `row-height`
  * utility resolves the same step for a caller's class name; the tokens package
@@ -167,8 +176,14 @@ describe("the density both packages read", () => {
   it("still keeps the boxes that share an edge with a density-driven control", () => {
     // The exception is what makes the two halves line up: a list row is built at
     // the theme's row height, and a component's control box is a control height.
-    expect(read("../../components/src/list.tsx")).toContain(
-      "theme.density.rowHeight",
+    // The route to the step is the row's own choice — `readsRowHeight` admits
+    // both the theme's group and the seam that reads it — so a row that takes
+    // the seam does not red this suite, while a row that stops reading the step,
+    // or loses the second line's space, still fails by name.
+    const list = read("../../components/src/list.tsx");
+    expect(readsRowHeight(list), "list.tsx reads no row height").toBe(true);
+    expect(addsSpacingStep(list), "list.tsx adds no second-line space").toBe(
+      true,
     );
     const readers = sources("../../components/src/").filter(([, text]) =>
       text.includes("controlHeight("),
@@ -177,6 +192,29 @@ describe("the density both packages read", () => {
       readers.length,
       "components reading a control height",
     ).toBeGreaterThan(8);
+  });
+
+  it("holds the list row's two boxes to the step, not to one route to it", () => {
+    // Both routes are the same box: the seam reads the theme's own step and
+    // paints the library's row for a theme a store truncated, so the guard
+    // cannot prefer one spelling without holding the fix hostage.
+    const seam =
+      'height: dense ? rowHeightOf(theme) : rowHeightOf(theme) + spaceValue(theme, "md")';
+    const raw =
+      "height: dense ? theme.density.rowHeight : theme.density.rowHeight + theme.spacing.md";
+    [seam, raw].forEach((box) => {
+      expect(readsRowHeight(box), box).toBe(true);
+      expect(addsSpacingStep(box), box).toBe(true);
+    });
+    // The controls: a single-line box adds no space, the second line is the
+    // documented `md` step and not another step, and a control box is not a row.
+    expect(addsSpacingStep("height: rowHeightOf(theme)")).toBe(false);
+    expect(addsSpacingStep("rowHeightOf(theme) + theme.spacing.lg")).toBe(
+      false,
+    );
+    expect(readsRowHeight("height: theme.density.controlHeight.md")).toBe(
+      false,
+    );
   });
 });
 
