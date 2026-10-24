@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import { marksFor, sweptRanges } from "./highlight-text/logic.js";
+import { washFor } from "./highlight-text/wash.js";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -64,5 +65,25 @@ describe("the range rule the page teaches", () => {
     expect(page).toContain("UTF-16 units");
     expect(page).toMatch(/wins\s+over `query`/);
     expect(Str.includes("| `ranges` |")(page)).toBe(true);
+  });
+});
+
+describe("the wash a truncated theme hands over", () => {
+  const component = read("./highlight-text.tsx");
+  const seam = read("./highlight-text/wash.ts");
+
+  it("leaves the host its own wash, and the page says so", () => {
+    // A theme restored from storage can predate a group. The derivation answers
+    // `undefined`, the component spreads no colour (so the runtime's own wash
+    // paints), and the page a consumer reads states the rule. A direct read of
+    // `derived.color` threw out of the search's first paint instead.
+    expect(washFor({}, {}, 1)).toBeUndefined();
+    expect(seam).toContain("if (derived === undefined) return undefined;");
+    expect(component).toContain("wash === undefined");
+    expect(component).toContain("? { ranges: marksOnHost }");
+    expect(component).toContain("{ ranges: marksOnHost, ...wash }");
+
+    expect(page).toContain("hands the host **no colour**");
+    expect(page).toContain("highlightFailures(theme)");
   });
 });

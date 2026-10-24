@@ -45,3 +45,4 @@ negative offset to the runtime's `highlight`, which reads absolute units.
 - The sweep is a real-time timer, not a motion-clock tween.
 - `ranges` index UTF-16 units; `ranges` wins over `query`.
 - The default wash is the theme's translucent `findHighlight` pair, which holds the matched text to the theme's body floor; a caller's own `color`/`activeColor` is not measured.
+- A theme restored from storage that cannot derive the pair — it lost the accent, the ink a match must keep readable, one of the strips the pair is measured on, or the corner step — hands the host **no colour**, so the runtime's own wash paints and the search keeps its text instead of throwing on the first paint. `highlightFailures(theme)` names the absence.

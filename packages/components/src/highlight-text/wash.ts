@@ -14,7 +14,7 @@
  */
 
 import * as Option from "effect/Option";
-import { findHighlight, type Theme } from "../internal/theme.js";
+import { findHighlight, type FindHighlightSource } from "../internal/theme.js";
 
 /** The colours a caller may name, and the mark it may make active. */
 export interface WashInput {
@@ -48,21 +48,29 @@ export const activeMarkOf = (
   painted: number,
 ): number | undefined =>
   Option.getOrUndefined(
-    Option.filter(Option.fromNullishOr(index), (value) =>
-      Number.isInteger(value) && value >= 0 && value < painted,
+    Option.filter(
+      Option.fromNullishOr(index),
+      (value) => Number.isInteger(value) && value >= 0 && value < painted,
     ),
   );
 
 /**
  * The wash a component paints: the theme's measured find pair unless the caller
  * names a colour, and the corner the theme's radius scale carries.
+ *
+ * A theme restored from storage that lost a role the pair is derived from — the
+ * accent, the ink the wash must keep readable, one of the four strips, or the
+ * corner step — answers `undefined`, the rule `findHighlight` itself follows:
+ * the host keeps the wash it paints on its own and the gate names the absence,
+ * instead of a search losing the window on its first paint.
  */
 export const washFor = (
-  theme: Theme,
+  source: FindHighlightSource,
   input: WashInput,
   painted: number,
-): Wash => {
-  const derived = findHighlight(theme);
+): Wash | undefined => {
+  const derived = findHighlight(source);
+  if (derived === undefined) return undefined;
   return {
     color: input.color ?? derived.color,
     activeColor: input.activeColor ?? derived.activeColor,

@@ -10,8 +10,10 @@
  *
  * The default wash is the theme's `findHighlight` pair — the colours
  * `@gpuixui/tokens` derives from `primary` so the matched text keeps the body
- * floor — with the active mark painted at the stronger share. The reveal is a
- * real-time timer, so a paused renderer clock does not hold it.
+ * floor — with the active mark painted at the stronger share. A theme restored
+ * from storage that cannot derive the pair hands the host **no colour**, so the
+ * runtime's own wash paints instead of the search throwing on its first paint.
+ * The reveal is a real-time timer, so a paused renderer clock does not hold it.
  */
 
 import type { Props } from "@gpuix/react";
@@ -175,14 +177,16 @@ export const HighlightText = ({
     { color, activeColor, activeIndex },
     Arr.length(painted),
   );
+  const marksOnHost = hostRanges(painted);
 
   return (
     <div
       {...rest}
-      highlight={{
-        ranges: hostRanges(painted),
-        ...wash,
-      }}
+      highlight={
+        wash === undefined
+          ? { ranges: marksOnHost }
+          : { ranges: marksOnHost, ...wash }
+      }
       style={mergeStyles(
         recipeStyle(cn(className), theme),
         resolveStyle(style, state),

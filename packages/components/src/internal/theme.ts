@@ -42,6 +42,7 @@ import {
   textStyle,
   type BoxShadow,
   type ElevationLevel,
+  type FindHighlightSource,
   type NativeTextFill,
   type PlatformName,
   type PointerWashSurface,
@@ -79,6 +80,7 @@ export {
 export type {
   BoxShadow,
   ElevationLevel,
+  FindHighlightSource,
   NativeTextFill,
   PlatformName,
   StatusTone,
