@@ -1153,6 +1153,10 @@ import {
   breadcrumbNavigationSteps,
 } from "./breadcrumb-navigation-probe.js";
 import { KeyHoldProbe, keyHoldSteps } from "./key-hold-probe.js";
+import {
+  HotkeyRecorderProbe,
+  hotkeyRecorderSteps,
+} from "./hotkey-recorder-probe.js";
 import { TextUndoProbe, textUndoSteps } from "./text-undo-probe.js";
 import { FocusRevealProbe, focusRevealSteps } from "./focus-reveal-probe.js";
 import { ZIndexProbe, zIndexSteps } from "./z-index-probe.js";
@@ -30595,6 +30599,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "key-hold-lifecycle",
     view: () => <KeyHoldProbe />,
     steps: keyHoldSteps,
+  },
+  "hotkey-recorder-lifecycle": {
+    id: "hotkey-recorder-lifecycle",
+    view: () => <HotkeyRecorderProbe />,
+    steps: hotkeyRecorderSteps,
   },
   "text-undo-lifecycle": {
     id: "text-undo-lifecycle",

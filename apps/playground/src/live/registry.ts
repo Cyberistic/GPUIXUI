@@ -691,6 +691,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "hotkey-recorder-lifecycle",
+    title:
+      "Input: the shipped HotkeyRecorder stores the chord the window delivers, paints its glyphs, cancels on Escape, and its page's swallowing claim is measured against the app-level handler",
+    capability: "input",
+  },
+  {
     id: "text-undo-lifecycle",
     title:
       "Input: a field's own cmd-z restores its text and reports it through onChange, a value pushed in from outside clears the history, and the text area undoes too",

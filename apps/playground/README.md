@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-136 probes a real window can prove, of which twenty-nine mount shipped
+137 probes a real window can prove, of which thirty mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -56,8 +56,8 @@ the command palette, the tabs, the list, the collapsible section, the popover,
 the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
-the modal focus rule and the breadcrumb trail, the image zoom, the accordion and
-the pinned list), one mounts `@gpuixui/files`' shipped `LogViewer` and one its `FileTree`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
+the modal focus rule and the breadcrumb trail, the image zoom, the accordion, the
+pinned list and the hotkey recorder), one mounts `@gpuixui/files`' shipped `LogViewer` and one its `FileTree`, one mounts the data package's shipped `PropertyPanel`, one mounts `@gpuixui/dock`'s
 shipped `DockLayout`, ten mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 Rating, the ScrollArea and the Button, and the media probe's play/pause
@@ -902,7 +902,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle`, `modal-scroll-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in; an open modal's own body scrolls while the page it covers and the veil it paints move nothing |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
-| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats |
+| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `key-hold-lifecycle`, `text-undo-lifecycle`, `hotkey-recorder-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field; a held key arrives with `isHeld` set and the shipped `Button` activates once through its repeats; the shipped `HotkeyRecorder` stores the chord the window delivers, paints it as keycaps, cancels on Escape, and the key it swallows is still measured on the app-level channel |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
@@ -6246,6 +6246,68 @@ capture: every claim is a readout. `AsyncSmokeHost` gained `keyDown(keystroke,
 isHeld)` for this — the automation protocol's only route that carries the flag —
 documented in `packages/testing/README.md`.
 
+### `hotkey-recorder-lifecycle` — measured on 0.11.0 here
+
+**Does a recorded key reach the application's own binding?** The recorder's page
+describes the one thing a recorder is for: the chord it captures is swallowed, so
+the app's own binding does not fire while somebody is recording. Nothing had
+driven the recorder in a window — `src/behaviour/hotkey-recorder.test.tsx` reads
+the renderer's tree, where `preventDefault` is a declaration — so the recorded
+chord, the glyphs it paints and the app-level channel were all unmeasured. The
+probe mounts the shipped recorder beside a disabled twin and an app-level
+handler registered through the root's `onKeyDown` (the only seam GPUix publishes
+for a window key), and reads both channels.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `Click to record`, `value=none reports=0` |
+| a press (pointer) | `Press keys…` — a press arms the recorder |
+| `shift` on its own | still `Press keys…`, no report — a modifier is not a chord |
+| `cmd-shift-k` | `value=Mod+Shift+K reports=1` — the canonical chord |
+| the recorder's paint | `⇧` `⌘` `K` keycaps with the clear control beside them, never the raw `Mod+Shift+K` |
+| the `k` release | `reports=1` — a captured key's release re-arms nothing |
+| the app-level handler | `window=shift,k` — **the swallowed key still reaches the app-level handler** |
+| the clear control | `value=none reports=2`, and the placeholder returns — clearing does not arm |
+| a press, then `escape` | `value=none reports=2`, placeholder — Escape cancels instead of recording |
+| a press, then `space` | `value=Space reports=3`, the `␣` keycap — Space is a chord, not an activation |
+| the `space` release | `reports=3` — the captured release adds nothing |
+| the tab walk | recorder → `hotkey-recorder-clear` → `hotkey-plain`; the disabled twin is skipped |
+| a press on the disabled twin | `reports=0` and its placeholder — both routes refuse |
+
+The three rules a plan needs:
+
+1. **The stored value is the canonical chord, the paint is keycaps.** A window
+   delivers `cmd` as `meta`, which normalizes to `Mod` on a platform whose
+   primary modifier is Command, so `cmd-shift-k` is stored as `Mod+Shift+K` — the
+   string a keymap, a settings file or a saved shortcut binds. The paint is
+   `formatSymbols`' keycaps (`⇧ ⌘ K`), separate text nodes with no `+`; Space is
+   the named key and paints `␣`. A component that painted the stored string would
+   pass a re-render test and show the wrong thing in a window.
+2. **A modifier is not a chord, and Escape is not one either.** `shift` alone
+   leaves the recorder listening with nothing reported; Escape returns it to the
+   placeholder without a report. Space *is* a chord while recording, and its
+   release adds nothing — the recorder owns the keyup that follows a capture, so
+   Space does not become a second activation.
+3. **`preventDefault` stops the element's default, not the app root's delivery.**
+   The page's claim that a recorded key "does not also run the application's
+   binding" is true only for a binding attached to the element or its ancestors
+   below the root. The root handler runs after the focused element and still
+   receives the key — measured as `window=shift,k` in the bound capture — so an
+   app-level shortcut has to check the recorder's state itself if it must not
+   fire while a chord is being recorded. The probe asserts the measured answer;
+   the component's own prose is the components workstream's to correct (recorded
+   in `TODO.md` → Interlocks).
+
+25 checks, `--only hotkey-recorder-lifecycle`, green on 0.11.0 here (two runs,
+8.1 s and 8.8 s). Fixture `src/live/hotkey-recorder.ts` (the ids, the chord the
+window presses, the readout codecs, the keycap rule and the count) +
+`hotkey-recorder.test.ts` (the readouts, the canonical chord per platform, the
+keycap rule, the ids, the probe's mounts and routes, the registry entry and this
+section). Negative control measured, exit `1`: asserting the page's swallowing
+claim fails `the application's window handler still hears the swallowed key`
+(`expected false, got true`); restored, green. Captures:
+`.artifacts/live/hotkey-armed.png` and `.artifacts/live/hotkey-bound.png`.
+
 ### `text-undo-lifecycle` — measured on 0.11.0 here
 
 **What does a field's own undo do to the app?** MISSION lists **input editing**
@@ -8042,7 +8104,8 @@ narrower. Each deviation is deliberate and measured:
   `accordion-lifecycle` and `log-viewer-lifecycle` and `property-panel-lifecycle` and
   `dock-layout-lifecycle` and `file-tree-lifecycle` and
   `color-picker-lifecycle` and `mention-input-lifecycle` and
-  `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` (78 probes, each run alone).
+  `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` and
+  `hotkey-recorder-lifecycle` (79 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,
