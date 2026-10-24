@@ -79,6 +79,11 @@ A gate's message is copy on the same rule. `Some("")` still **refuses** the move
 
 ## Limitations
 
+- **A workflow is data as well as code**: a `steps` list restored from a saved
+  definition is read at the boundary (`stepsOf`), so JSON's `null` for a list a
+  record never carried paints nothing rather than throwing on `steps.length`,
+  and an entry without a text `id` is not a step — it is dropped while its
+  neighbours paint.
 - **The draft is the caller's**: the component stores the step index and a
   refusal per step `id`, so a caller that reorders `steps` never paints one
   step's message under another.

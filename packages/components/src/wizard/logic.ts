@@ -10,6 +10,7 @@
  */
 
 import { spokenSentence } from "@gpuixui/primitives/core";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
 /** What a step may refuse a move with. */
@@ -17,6 +18,48 @@ export interface StepGate {
   /** The message that keeps the reader on this step, or `None` to allow. */
   readonly gate?: () => Option.Option<string>;
 }
+
+/**
+ * Whether a stored entry is a step: an object naming itself with a text id.
+ *
+ * The id is the step's identity — the indicator's key and the name a refusal is
+ * kept with — so an entry without one is not a step. Nothing else is read here:
+ * a step's content is React nodes, which no structural read can describe.
+ */
+const isStep = <Step extends { readonly id: string }>(
+  entry: unknown,
+): entry is Step => {
+  if (typeof entry !== "object" || entry === null || !("id" in entry)) {
+    return false;
+  }
+  const id = entry.id;
+  return typeof id === "string" && id.length > 0;
+};
+
+/**
+ * The steps a caller's list carries, read at the boundary.
+ *
+ * A workflow is code as often as data — an app that composes its wizard from a
+ * saved definition, a step list restored with a draft — so JSON's `null` for a
+ * list a record never carried reaches the component, and `steps.length` threw
+ * `Cannot read properties of null (reading 'length')` before the first step
+ * painted. The same applies to an entry a store left as `null` inside the list,
+ * which threw on its `id` while its neighbours painted. Only a real list is a
+ * list, and an entry that does not name itself is dropped, so one malformed
+ * record cannot take the workflow down; the result feeds the count the
+ * arithmetic already clamps against, and an empty one paints nothing.
+ */
+export const stepsOf = <Step extends { readonly id: string }>(
+  value: ReadonlyArray<Step> | null | undefined,
+): ReadonlyArray<Step> => {
+  const list = Option.getOrElse(
+    Option.filter(Option.fromNullishOr(value), (entries): boolean =>
+      Arr.isArray(entries),
+    ),
+    () => [],
+  );
+  return Arr.filter(list, isStep);
+};
 
 /** The step a value names, held inside `1…count`. A count below one reads as 1. */
 export const stepOf = (value: number, count: number): number => {

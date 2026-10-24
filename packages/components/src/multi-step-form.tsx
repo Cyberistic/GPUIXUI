@@ -33,6 +33,7 @@ import {
   refusalText,
   stepAnnouncement,
   stepOf,
+  stepsOf,
   type StepGate,
 } from "./wizard/logic.js";
 
@@ -53,7 +54,7 @@ export interface MultiStepFormProps extends Omit<
   Props,
   "children" | "onSubmit"
 > {
-  /** The steps, in order. An empty list paints nothing. */
+  /** The steps, in order. An empty list paints nothing, and so does a value that is not a list — a saved definition's `null`; a step without a text `id` is not a step. */
   readonly steps: ReadonlyArray<MultiStep>;
   /** The controlled current step, 1-based; `undefined` is uncontrolled. */
   readonly step?: number;
@@ -120,7 +121,12 @@ export const MultiStepForm = ({
   const submitWord = accessibleName(submitLabel) ?? DEFAULT_SUBMIT_LABEL;
   const nextWord = accessibleName(nextLabel) ?? DEFAULT_NEXT_LABEL;
   const backWord = accessibleName(backLabel) ?? DEFAULT_BACK_LABEL;
-  const count = steps.length;
+  // A workflow is data as often as code: a saved definition writes `null` where
+  // it carried no list, and one deleted record leaves a `null` entry. Both read
+  // as no step rather than throwing out of the render — an empty list already
+  // paints nothing, which is the state a workflow with no readable step is in.
+  const list = stepsOf(steps);
+  const count = list.length;
   const [value, setStep] = useControllableState({
     value: stepProp,
     defaultValue: defaultStep,
@@ -131,7 +137,7 @@ export const MultiStepForm = ({
 
   if (count === 0) return null;
 
-  const step = steps[current - 1];
+  const step = list[current - 1];
   if (step === undefined) return null;
   const title = stepName(step.title, current);
   const last = isLastStep(current, count);
@@ -207,7 +213,7 @@ export const MultiStepForm = ({
         label={name ?? "Steps"}
         testId="multi-step-steps"
       >
-        {steps.map((entry, at) => (
+        {list.map((entry, at) => (
           <StepperStep
             key={entry.id}
             value={at + 1}

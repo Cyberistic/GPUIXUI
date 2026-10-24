@@ -15,7 +15,12 @@
  */
 
 import { readFileSync } from "node:fs";
-import { darkTheme, defaultDensity, lightTheme, spacing } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  defaultDensity,
+  lightTheme,
+  spacing,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { listRowHeight } from "../list.js";
 
@@ -26,7 +31,9 @@ describe("the height a list row paints at", () => {
   it("reads a theme that lost its density group as the library's row", () => {
     // The two shapes a store writes for "no group": `null` from JSON, and the
     // absent key a hand-edited literal leaves.
-    expect(listRowHeight({ density: null }, true)).toBe(defaultDensity.rowHeight);
+    expect(listRowHeight({ density: null }, true)).toBe(
+      defaultDensity.rowHeight,
+    );
     expect(listRowHeight({}, true)).toBe(defaultDensity.rowHeight);
     // The two-line row adds the library's `md` step to the library's row, not a
     // `NaN` from an addition against a missing scale.

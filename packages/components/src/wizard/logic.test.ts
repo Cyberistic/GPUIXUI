@@ -18,6 +18,7 @@ import {
   REFUSAL_FALLBACK,
   stepAnnouncement,
   stepOf,
+  stepsOf,
 } from "./logic.js";
 
 describe("stepOf", () => {
@@ -88,5 +89,27 @@ describe("stepAnnouncement", () => {
     expect(stepAnnouncement("Review", 2, 3)).toBe("Review, step 2 of 3");
     expect(stepAnnouncement("Review", 9, 3)).toBe("Review, step 3 of 3");
     expect(stepAnnouncement("Review", 1, 0)).toBe("Review, step 1 of 1");
+  });
+});
+
+describe("stepsOf", () => {
+  const step = (id: string, title: string) => ({ id, title, content: null });
+
+  it("reads a list a store wrote, and no steps for anything else", () => {
+    // The bug guarded: a workflow restored from storage writes `null` for a list
+    // it never carried, and the component read `steps.length` off it before the
+    // first step painted.
+    const saved = [step("name", "Name"), step("review", "Review")];
+    expect(stepsOf(saved)).toEqual(saved);
+    expect(stepsOf(null)).toEqual([]);
+    expect(stepsOf(undefined)).toEqual([]);
+  });
+
+  it("drops an entry that names no step, keeping the ones beside it", () => {
+    // A deleted record leaves `null` inside the list, and an entry whose id is
+    // not text has no identity for the indicator's key or the refusal's step.
+    const kept = [step("name", "Name"), step("review", "Review")];
+    const stored = [null, step("name", "Name"), "", step("", "Blank"), kept[1]];
+    expect(stepsOf(stored as unknown as typeof kept)).toEqual(kept);
   });
 });

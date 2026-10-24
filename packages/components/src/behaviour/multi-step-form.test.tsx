@@ -360,4 +360,63 @@ describe("MultiStepForm", () => {
     expect(text(wizard)).not.toContain("   ");
     wizard.unmount();
   });
+
+  it("paints a stored step list that is not a list as no workflow", () => {
+    // The bug guarded: a workflow is data as often as code — an app composing its
+    // wizard from a saved definition — and JSON writes `null` for a list it never
+    // carried. `steps.length` threw `Cannot read properties of undefined
+    // (reading 'length')` before the first step painted, taking the whole screen
+    // with it, where the documented empty list paints nothing.
+    const wizard = renderComponent(
+      <div>
+        <text testId="before">Before</text>
+        <MultiStepForm
+          testId="wizard"
+          // @ts-expect-error — the list a store wrote where it carried none.
+          steps={null}
+          onSubmit={() => undefined}
+        />
+      </div>,
+    );
+    const painted = text(wizard);
+    wizard.unmount();
+    // The sibling is the counter: a render that threw takes the whole tree with
+    // it, so an empty read alone could pass on the crash.
+    expect(painted).toStrictEqual(["Before"]);
+  });
+
+  it("keeps the steps beside a stored entry that names none", () => {
+    // A deleted record leaves `null` inside the list, and an entry whose id is
+    // not text has no identity for the indicator's key or the refusal's step:
+    // the row threw on its `id` while its neighbours painted. The workflow paints
+    // the readable steps and the arithmetic counts them.
+    const wizard = renderComponent(
+      <MultiStepForm
+        testId="wizard"
+        label="Workspace setup"
+        onSubmit={() => undefined}
+        steps={[
+          {
+            id: "name",
+            title: "Name",
+            content: <text testId="step-one">Name step</text>,
+          },
+          // @ts-expect-error — a deleted record a store left in the list.
+          null,
+          {
+            id: "review",
+            title: "Review",
+            content: <text testId="step-two">Review step</text>,
+          },
+        ]}
+      />,
+    );
+    const lines = text(wizard);
+    const steps = selectedSteps(wizard);
+    wizard.unmount();
+    expect(lines).toContain("Name");
+    expect(lines).toContain("Review");
+    expect(lines).toContain("Name step");
+    expect(steps).toStrictEqual([true, false]);
+  });
 });

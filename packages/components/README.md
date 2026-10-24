@@ -217,6 +217,14 @@ throwing `Cannot read properties of undefined (reading 'rowHeight')` from the
 first row. `src/list/row.test.ts` holds both groups' absence and a source guard
 that the row does not read the group raw.
 
+A wizard's `steps` are data as often as code, so `wizard/logic.ts`'s `stepsOf`
+reads the list at the boundary: JSON's `null` for a list a saved definition never
+carried paints no workflow (the documented empty state) instead of throwing on
+`steps.length`, and an entry without a text `id` — a deleted record, or an id a
+release renamed — is not a step and is dropped while its neighbours paint.
+`src/behaviour/multi-step-form.test.tsx` holds both shapes beside a mounted
+sibling, so a render that threw cannot pass as an empty tree.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

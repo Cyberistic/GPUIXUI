@@ -389,7 +389,31 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 261/261
+`[x]` `[██████████]` 262/262
+
+`[x]` Take the **system palette's mode as the value a decoder wrote**, not as a
+union the boundary has to assert — `paletteMode` already read a stated mode this
+release does not ship from the page (an upper-cased `Dark`, a `null` a JSON store
+kept, an old release's name), and `SystemPalette` is the shape a **consumer's own
+decoder** writes — the package reads only Omarchy's file — but its `mode` field
+was typed `ThemeMode`. So every documented case that hands a decoder's value over
+(an upper-cased `Dark`, the `null` JSON keeps, a number) could reach the seam only
+through an assertion, which `AGENTS.md` §2 forbids: the test's own `stored()`
+helper was that cast, and the seam's JSDoc called the field a name before it is a
+mode. The field is `unknown` now, the shape every other boundary port in the
+package takes (`Theme.mode`, `StoredTheme.mode`, `ContrastSource.contrast`), so
+the value a file or a settings row wrote reaches `paletteMode` as it is and
+`paletteMode` is where it becomes a `ThemeMode`.
+`system-theme.test.ts`'s `reads a stated mode this release does not ship from the
+page` hands each value over unwrapped — the helper and its cast are gone — and its
+teaching case requires "the value the decoder wrote" on the catalogue and the
+README. Directions measured: restoring `mode?: ThemeMode` fails `check-types` with
+**8** errors across those lines (`Type '"Dark"' is not assignable to type
+'"dark" | "light" | undefined'`), and removing the sentence from `docs/tokens.md`
+fails the teaching case by name. Green: 51 files / **3 117** tests, `check-types`
+clean. Docs: `docs/tokens.md` §System palettes, the package README §System
+palettes and the seam's own `mode` JSDoc. No native scenario applies — a
+boundary field's type and the prose that teaches it.
 
 `[x]` Give the **icon scale the index and guard the persisted-choice contract
 promises** — `iconSize` is the one `Theme` scale a component selects by name
@@ -21671,3 +21695,5 @@ render's, read in the real renderer the behaviour suite drives. Owner: data.
 `[x]` **Follow the four paint seams the guards pinned as expressions, and take the tokens package to green** — `@gpuixui/tokens` was **4 cases red in 4 files** (`3111/3115`) on the shared tree while the data, files and components workstreams moved their painters onto the paint-side seams that answer the library's step for a theme a store truncated (`rowHeightOf`, `iconSideOf`, `borderWidthOf` in `packages/primitives/src/core/theme.ts`); each red was this package pinning the **expression** rather than the rule: `divider.test.ts` expected `borderBottomWidth: theme.borderWidth.thin` where `packages/data/src/table/table.tsx` paints `borderWidthOf(theme, "thin")`; `numbers.test.ts` and `target.test.ts` expected `width: theme.iconSize.md` where the tree row paints `iconSideOf(theme, "md")`; `override-scope.test.ts` expected `theme.density.rowHeight` in `list.tsx`, whose box now reads the density seam; and `density-adoption.test.ts`'s ledger named `list.tsx` for a box the components were moving behind it. Each case now accepts **either route** — the group read or the seam — keeping its own negative control (a painter that stops reading the border width, the icon step or the row box still fails both halves), `density-adoption.test.ts` derives the list row's holder from the **list family** (`list.tsx` and everything under `list/`) and requires exactly one so a second raw read fails by count, and `override-scope.test.ts` reads the family through an `existsSync` filter so no assertion follows one path. Directions measured: on this tree the four cases fail by name on the retired expressions above; with the routes admitted the package is **51 files / 3115 cases green** with `check-types`, `check:tests`, `oxlint` and `oxfmt` clean. No native scenario applies — guards over source text.
 
 `[x]` Re-verify the **seven Tier 4/5 rows and the four Tier 5 component probes** on the tree that lands the list row-height seam (`7ccfe5697`) — no row's status changes (six `done`/`done (composed)`, Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative). After `nub run --filter playground build`, live `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` is **6/6 green** (3.3–13.1 s each; the capabilities report `unverified` because the selection samples each probe group), the workstream's four Tier 5 probes `--only multi-step-form-lifecycle --only crop-overlay --only qr-matrix --only markdown-fence` are **4/4 green** (1.8–13.3 s each), headless `--only editor-surface` is **1/1** (190 ms, `editor=verified`), and `apps/playground/dist/terminal/run.js` in a pty is **4/4** (`terminal-render`, `terminal-resize`, `terminal-pointer`, `terminal-input`, 8.1 s each). The seam changes neither a shipped theme's row (it reads the same numbers) nor any probe's path, so no measured frame moves.
+
+`[x]` `packages/components`: **a saved workflow's step list took the wizard — and the screen — down** — `MultiStepForm` read `steps.length`, `steps[current - 1]` and `steps.map((entry) => entry.id)` straight off the prop, so a wizard composed from a saved definition (JSON writes `null` for a list a record never carried) threw `Cannot read properties of null (reading 'length')` from the render, and a deleted record left as `null` inside the list threw on its `id` while its neighbours painted. `wizard/logic.ts` gains `stepsOf`, which reads only a real list and drops an entry that does not name itself with a text id (the identity the indicator keys and a refusal is kept with), so the documented empty workflow is the answer to both shapes. Proof: `src/wizard/logic.test.ts` gains `reads a list a store wrote, and no steps for anything else` (the saved list kept; `null` and `undefined` read as none) and `drops an entry that names no step, keeping the ones beside it` (`null`, a bare string, and an entry with `""`), and `src/behaviour/multi-step-form.test.tsx` gains `paints a stored step list that is not a list as no workflow` (mounted beside a sibling text, so a render that threw cannot pass as an empty tree) and `keeps the steps beside a stored entry that names none` (two readable steps paint, the indicator holds two, the first is current). Directions measured: with the raw reads restored the two window cases fail by name (`expected [] to strictly equal [ 'Before' ]` and `expected [] to include 'Name'`); restored, the behaviour file is 15/15, the wizard unit file 10/10, `check-types` and `oxlint`/`oxfmt` clean on the touched files. The entry graph crossed its recorded ceiling (1 161 KiB against 1 160), so `src/surface.budget.ts` moves 1160 → 1170 KiB with the measurement and reason in the comment. Docs: `packages/components/docs/multi-step-form.mdx` §Limitations and the `steps` JSDoc, the package README's stored-choices section and the `Multi-step forms` row (13 → 15 native cases, 10 → 12 logic). One red in the package-wide run is foreign and pre-existing at `HEAD`: `src/surface.test.ts`'s `gives a family the presence half of motion, not its physics` reads **36 185** against the 35 840 family ceiling with this change reverted too, so it is another workstream's growth in the motion family. No native scenario applies — the wizard's measured gates and presses are unchanged; this is the boundary read before the paint.

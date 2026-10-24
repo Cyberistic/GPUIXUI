@@ -138,7 +138,10 @@ export const surfaceBudget = {
   // stored-name guard (`badge.tsx` reads `variant`/`size` through their own
   // `Schema.is` guards, the seam `internal/button.tsx`'s `lookOf` already takes),
   // which is the family the 1140 ceiling no longer held: 1140 → 1160 KiB.
-  bytes: 1160 * 1024,
+  // 1 161 KiB measured with the wizard's stored step list (`wizard/logic.ts`'s
+  // `stepsOf` reads a saved definition's list and drops an entry that names no
+  // step), so the ceiling moved 1160 → 1170 KiB for the next family's headroom.
+  bytes: 1170 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
