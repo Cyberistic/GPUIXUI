@@ -3094,7 +3094,30 @@ a merge over a stored theme.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 191/191
+`[x]` `[██████████]` 192/192
+
+`[x]` Measure the **shipped `HotkeyRecorder`'s chord in a window** — the
+      catalogue's *Hotkey-recorder input* row had only the renderer suite, and
+      its page promises that a recorded key is swallowed so "the app's own
+      binding does not fire". `hotkey-recorder-lifecycle` (**25 checks**,
+      0.11.0) mounts the shipped recorder beside a disabled twin and an
+      app-level `onKeyDown` log: a press paints "Press keys…"; `shift` alone is
+      not a chord; `cmd-shift-k` stores the canonical `Mod+Shift+K` and paints
+      the keycaps (`⇧⌘K`) rather than the raw value; its release reports once;
+      **the swallowed key still reaches the app-level handler** (`window=…,k`),
+      so the page's claim is false at the root and an app must gate its own
+      bindings; the clear control reports `null` without arming; Escape cancels;
+      Space records `Space` and its release adds nothing; the tab walk is
+      recorder → clear → past the disabled twin; and the disabled recorder
+      refuses both the press and the key. Fixture `src/live/hotkey-recorder.ts`,
+      probe `src/live/hotkey-recorder-probe.tsx`, `hotkey-recorder.test.ts`
+      (12 cases), captures `hotkey-{armed,bound}.png`. Negative control
+      measured, exit `1` and restored green: expecting the app-level handler
+      **not** to hear the chord fails
+      `the application's window handler still hears the swallowed key`
+      (`expected false, got true`). Docs:
+      `apps/playground/README.md` §`hotkey-recorder-lifecycle`; the page/meta
+      correction is the components owner's interlock row.
 
 `[x]` Measure the **shipped `TypingText`'s reveal in a window** — the
       catalogue's *Typing text* row claimed the reveal is a timer over the
@@ -10961,6 +10984,8 @@ non-overlapping probe (`grid-focus-lifecycle`) afterwards, so no work was lost
 this time.
 
 ## Interlocks (cross-workstream dependencies)
+
+| Correct the **HotkeyRecorder's swallowing claim** — `packages/components/docs/hotkey-recorder.mdx` §Limitations and `hotkeyRecorderMeta.limitations` both say a recorded key is swallowed so "the app's own binding does not fire", and the playground's `hotkey-recorder-lifecycle` (25 checks, 0.11.0) measured the opposite on the only seam GPUix publishes for an app-level key: `preventDefault` removes the element's default action, and the root `onKeyDown` handler still receives the key (`window=shift,k` on the press that stored `Mod+Shift+K`). The page and the meta should teach that an app-level binding must be gated while a recorder is armed, and the component could publish the armed state (an `onRecordingChange` callback) so an app can suspend its shortcuts without owning the state. The probe asserts the measured answer, so a component that later shields the root handler updates that check | components (`packages/components/docs/hotkey-recorder.mdx`, `src/hotkey-recorder.tsx`'s `hotkeyRecorderMeta`, the `COMPONENTS.md` row) | open — measured 2026-10-24 by the playground workstream; `apps/playground/README.md` §`hotkey-recorder-lifecycle` records the measurement and the workaround |
 
 | Verify **the files package's `FileTree` and `PropertyPanel` as the surfaces the inventory names** — `packages/files` ships `FileTree`, `PropertyPanel` and `LogViewer` with only three pure-logic tests and no `.test.tsx` anywhere in the package, and two inventory rows cite live evidence that does not mount the surface they name: Tier 4 *Inspector panels* / *Property editors* (`@gpuixui/files`' `PropertyPanel`) cite `inspector-lifecycle`, whose `InspectorPanel` is composed in the probe from primitives (`apps/playground/src/live/scenarios.tsx`), and *File trees* cites `virtual-tree-lifecycle`, which mounts `@gpuixui/data`'s `TreeView`. The playground now measures two of the package family's surfaces in a window — `log-viewer-lifecycle` (35 checks) for `@gpuixui/files`' `LogViewer` and `property-panel-lifecycle` (18 checks) for `@gpuixui/data`'s `PropertyPanel` — so the files package's own `PropertyPanel` and `FileTree` and the package's behaviour suites are what is left | files/components (`packages/files/src/{tree,property}/`) + playground (`file-tree-lifecycle`, the files `PropertyPanel`'s window half) | **playground half resolved 2026-10-24** — `file-tree-lifecycle` (30 checks, 0.11.0) mounts the files package's own `FileTree`, so the *File trees* row now cites it beside `virtual-tree-lifecycle`; it found a real defect (the checkbox's press also reaches its row — the Interlocks row below carries it) that the probe pins. **Open:** the files package's own `PropertyPanel` has no window probe (the measured `property-panel-lifecycle` mounts `@gpuixui/data`'s), and `packages/files` still has no `.test.tsx` behaviour suite — both are the files owner's |
 | Cite the **shipped player's paint** in the media row — `COMPONENTS.md`'s *Video / audio player + waveform* row says the paint route "is the live `media-frame-lifecycle` probe's, which composes the same pieces in a window", and the `media-player-lifecycle` probe (51 checks, 0.11.0) now paints the **shipped** `MediaPlayer` itself: the frame the playhead names, a 200×32 waveform silhouette, the clock and fill, the four seek keys and the disabled refusal. The row's evidence sentence should cite this probe beside the composition one | media (`COMPONENTS.md`, docs `media-player.mdx`) | **resolved 2026-10-24 (components)** — the player row now cites `media-player-lifecycle` (51 checks, 0.11.0) with the facts it measured — the 240×135 frame the playhead names, the 200×32 `mutedForeground` silhouette, the `0:00 / 0:04` clock, the four seek keys and the disabled refusal — and `packages/media/docs/media-player.mdx` §Limitations opens with the same sentence; `packages/components/src/inventory.test.ts`'s `cites the shipped player's own paint in its row and its page` derives the 51 from the README's own close-out line and fails when either surface prints another number, drops the probe id, or loses one of the three measured facts |
@@ -21624,6 +21649,19 @@ numbers).
       restored 8/8 native and 10/10 logic; `check-types` clean. Docs:
       `packages/components/docs/rotating-text.mdx` §Limitations and the
       `Rotating text` row.
+
+`[x]` `packages/components`: **the motion seam's own budget went red on a motion
+      fix** — `d31ad7500` read a hold window past the scheduler's range as no
+      window, which grew `packages/motion/src/presence.ts` by 731 bytes and took
+      the `familyMotion` graph from 39 512 to **40 243**, while the record still
+      held 39 KiB: `src/surface.test.ts`'s `gives a family the presence half of
+      motion, not its physics` failed `expected 40243 to be less than or equal
+      to 39936` for a behaviour no components module caused. The record is
+      **41 KiB** with the measurement and its reason in the comment; the
+      **5**-module count and the refused physics names did not move, so the graph
+      is still the presence half alone. Measured with
+      `nub scripts/surface.ts --entry src/motion-grid.tsx` (5 modules, 40 KiB);
+      `src/surface.test.ts` 15/15 after.
 
 `[x]` `@gpuixui/motion`: **a finite time constant no clock can reach kept the coast's frame loop alive** — `tauOf` fell back from a time constant that could not be read (`NaN`, an infinity, zero or negative) but kept every finite one, so `inertia(1e300)` — or the `{ tau: 1e300 }` a stored config decoded — was a **1e297-second** coast. Its projected rest is finite (140 for a 400 px/s release), so the overflow guard did not catch it either; at any clock a reader can sit through the decay is still `1`, the velocity never reaches the rest speed, and `MotionValue.sample` answered `active` forever: a frame every 16 ms for the life of the tree with the surface standing still, and no completion. It is the leak the tween's own duration closed one module along, and the README's promise that "a coast therefore always projects a finite rest and settles" was false for it. `tauOf` now reads the field through the package's one clock bound (`duration.ts`'s `schedulableSeconds`), so a constant past `Number.MAX_SAFE_INTEGER` seconds is the house 350 ms — the answer an unreadable one already got — while a large constant the clock can name (`1e12` seconds) is kept. The constructor, the samplers and `sameInertia` read the same repair. Proof: `inertia.test.ts`'s `a time constant no clock can reach` (4 cases — the constructor and the hand-built value against the house coast, a 400 px/s release settling within ten seconds, the `1e12`-second control, and the equality the retained value compares by) and `motion.test.ts`'s `settles a coast whose time constant no clock can reach` (the retained value completes instead of sampling forever). Directions measured: with the old read restored both files fail by name — `expected { tau: 1e+297, … } to deeply equal { tau: 0.35, … }`, `expected false to be true` (the coast's `settled`), the equality case, and `expected +0 to be close to 140` with the retained value still active at ten seconds — while the overflow case now builds its extreme release on a `tau: 3` constant the clock can name, so it still guards the overflow branch. Green: 15 files / **219** tests with `check-types` clean. Docs: the README §Inputs the runtime can paint, the `tauOf`/`inertia` JSDocs and the module header. No live scenario applies — a pure sampler rule the behaviour suite does not paint differently (the house coast is the one it already drives).
 `[x]` `@gpuixui/motion`: **a finite duration no clock can reach kept the frame loop alive** — `runDurationMs` fell back from `NaN` and an infinity but kept any finite value, so `tween(1e300)` — a stored config's duration past the integer milliseconds a clock can name — was a **1e297-second** run: every sample painted a frame short of the target and the hook scheduled another, a frame every 16 ms for the life of the tree, and the run never reported completion. It is the leak the `NaN`/infinity fix already closed, one door along; a duration past `Number.MAX_SAFE_INTEGER` ms (≈285 000 years) is now the house `DEFAULT_TWEEN_MS`, the answer an unreadable duration gets, while a large duration the clock can still name (`1e12` ms) is kept. Proof: `motion.test.ts`'s `falls back from a tween duration that cannot run` gains the `1e300` declaration and the sampling loop over it (measured at HEAD as `expected 1e+300 to be 300`, and its 150 ms sample was `0` rather than `0.5`) plus the reachable control; `transitionEquals` reads the same value, so a hand-built declaration the sampler repairs is still not a new run on every render. Green: 15 files / **214** tests with `check-types` clean. Docs: the README §Inputs the runtime can paint names the finite case beside `NaN`/infinity, and the `runDurationMs` JSDoc gives the bound. No live scenario applies — a pure sampler rule.
