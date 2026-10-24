@@ -6734,9 +6734,10 @@ modal.
 | a wheel on the veil, left of the surface | the page stays `0`, the modal's body stays `0`, and the page's `onScroll` count stays `2` |
 | a wheel inside the modal's body | the body reaches `-100`, its readout `dialog=x0 y-100 events=1`, and the page stays `0` with `events=2` |
 | a `-10000` wheel inside the body | the body clamps at `-976` (`1 432 - 456`), the page still `0`, and a second `-10000` wheel leaves the body at `-976` |
+| the dialog's own close control | paints at `44` inside the surface at rest and at `-932` after the body clamps — it travels with the content (`44 - 976`), so a scrolled dialog loses its visible close, leaving `Escape` and a press on the veil |
 | `Escape` | the modal unpaints, the page is still at `0`, and one more `-10000` wheel clamps it at `-1 128` (`1 600 - 472`) with `events=3` |
 
-Four rules the probe holds:
+Five rules the probe holds:
 
 1. **The veil is a wall against the page.** A wheel aimed at a point the modal
    covers moves neither the page behind it nor the modal's body: the `occlude`
@@ -6753,10 +6754,19 @@ Four rules the probe holds:
    where the reader left it after `Escape`, and its next wheel clamps at its own
    content's end — so the scroller was alive throughout rather than dead under
    the modal.
+5. **A scrolled body takes the close control with it.** The surface is the
+   scroller and the close is `position: "absolute"` inside it, so the control
+   paints 976 points above the surface once the body reaches its end —
+   **measured gap**, not a deliberate layout. The fix is the shield's route: pin
+   the close in the positioned box **outside** the scroller (where the leaving
+   guard already lives), and then this probe's two close checks move with it.
+   The component owner's Interlocks row carries it; the check is asserted as
+   measured, so the fix fails here rather than passing silently.
 
-29 checks, `--only modal-scroll-lifecycle`, green on 0.11.0 here (~1.5–1.9 s).
-Fixture `src/live/modal-scroll.ts` (the row counts, the wheel delta, the row
-width that keeps a page wheel outside the surface, the ids and the two
+35 checks, `--only modal-scroll-lifecycle`, green on 0.11.0 here (~1.5–1.9 s).
+Fixture `src/live/modal-scroll.ts` (the row counts, the two viewports, the
+surface's 232-point chrome, the close control's measured `44`, the wheel delta,
+the row width that keeps a page wheel outside the surface, the ids and the two
 readouts) + `ModalScrollProbe`/`modalScrollSteps` in `src/live/scenarios.tsx` +
 `modal-scroll.test.ts` (the derived clamps, the veil geometry, the registry and
 wiring, the measured check count and this section). **Not measured, and named

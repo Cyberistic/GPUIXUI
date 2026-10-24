@@ -24,6 +24,7 @@ import { liveRegistry } from "./registry.js";
 import {
   BODY_ROWS,
   DIALOG_CHROME_HEIGHT,
+  DIALOG_CLOSE_TOP,
   DIALOG_VIEWPORT,
   MODAL_PAGE_ROWS,
   MODAL_ROW_HEIGHT,
@@ -105,6 +106,10 @@ describe("the fixture's geometry", () => {
     );
     expect(maxOffset(pageContentHeight, PAGE_VIEWPORT)).toBe(-1128);
     expect(maxOffset(dialogContentHeight, DIALOG_VIEWPORT)).toBe(-976);
+    // The close control rides the body's scroll: where it lands at the end.
+    expect(
+      DIALOG_CLOSE_TOP + maxOffset(dialogContentHeight, DIALOG_VIEWPORT),
+    ).toBe(-932);
   });
 
   it("keeps a page wheel short of both ends", () => {
@@ -149,6 +154,16 @@ describe("the reason the probe exists", () => {
     expect(component).toContain('testId="dialog-backdrop"');
     expect(component).toContain('overflow: "scroll"');
   });
+
+  it("holds the close control inside the scroller, which is why it scrolls", () => {
+    // The measured gap: the surface scrolls and its own close control is an
+    // absolutely positioned child of it, so a scrolled body carries the control
+    // out of view. Pinned outside the scroller, this case fails first.
+    expect(component.indexOf('overflow: "scroll"')).toBeLessThan(
+      component.indexOf('testId="dialog-close"'),
+    );
+    expect(component).not.toContain('position: "sticky"');
+  });
 });
 
 describe("the probe", () => {
@@ -182,7 +197,7 @@ describe("the probe", () => {
     const painted = Arr.length(
       Arr.fromIterable(stepsOf().matchAll(/paintedBox\(ctx,/g)),
     );
-    expect(sites + painted).toBe(29);
+    expect(sites + painted).toBe(35);
   });
 });
 
@@ -190,7 +205,7 @@ describe("the record", () => {
   it("documents the probe under the version it was measured on", () => {
     const section = sectionOf();
     expect(section).not.toBe("");
-    expect(section).toContain("29 checks");
+    expect(section).toContain("35 checks");
     expect(section).toContain("`--only modal-scroll-lifecycle`");
   });
 
@@ -206,6 +221,12 @@ describe("the record", () => {
     expect(section).toContain(grouped(pageContentHeight));
     expect(section).toContain(`${PAGE_VIEWPORT}`);
     expect(section).toContain(`${DIALOG_VIEWPORT}`);
+    expect(section).toContain(`${DIALOG_CLOSE_TOP}`);
+    expect(section).toContain(
+      grouped(
+        DIALOG_CLOSE_TOP + maxOffset(dialogContentHeight, DIALOG_VIEWPORT),
+      ),
+    );
   });
 
   it("names the component, the fixture and the wheel-stopping rule", () => {

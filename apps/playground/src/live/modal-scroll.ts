@@ -12,7 +12,9 @@
  *
  * The page is the reader's scroller and the dialog body is the shipped
  * `DialogContent`'s own `overflow: "scroll"`; the readouts live on the page
- * header (a tree read, so the veil does not hide them).
+ * header (a tree read, so the veil does not hide them). The same scroller
+ * carries the surface's close control, which is why this fixture also owns the
+ * point that control paints at rest.
  */
 
 /** The page's rows: 40 × 40px against a ~480px viewport, so it has travel. */
@@ -38,6 +40,15 @@ export const DIALOG_VIEWPORT = 456;
  * what makes the recorded `-976` a derived number rather than a transcript.
  */
 export const DIALOG_CHROME_HEIGHT = 232;
+
+/**
+ * The dialog's close control, measured where it paints at rest.
+ *
+ * The control is `position: "absolute"` inside the surface, and the surface is
+ * the scroller, so this is also the point a scrolled body carries away: `44 +
+ * the body's clamp` is where it paints at the end.
+ */
+export const DIALOG_CLOSE_TOP = 44;
 
 /**
  * The page rows' width: narrow, so a wheel aimed at a row's centre lands left

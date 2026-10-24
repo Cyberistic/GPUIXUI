@@ -410,6 +410,7 @@ import {
 } from "./drawer.js";
 import {
   BODY_ROWS,
+  DIALOG_CLOSE_TOP,
   DIALOG_VIEWPORT,
   MODAL_PAGE_ROWS,
   MODAL_ROW_HEIGHT,
@@ -3254,7 +3255,9 @@ const DrawerProbe = (): ReactNode => {
  * turn and then at the veil between them, and the page's readout says whether
  * its own handler heard any of them — the question a scroll lock would answer,
  * which the app cannot implement as a gesture guard because the host publishes
- * no wheel handler and no `preventDefault`.
+ * no wheel handler and no `preventDefault`. The same scroll carries the
+ * surface's close control out of view, which the probe measures and names as a
+ * component gap rather than hiding.
  */
 const ModalScrollProbe = (): ReactNode => {
   const theme = useTheme();
@@ -11225,6 +11228,18 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y,
       0,
     );
+    const closeAtRest = yield* paintedBox(ctx, "dialog-close");
+    yield* ctx.expectEqual(
+      "the dialog's close control paints where the surface puts it",
+      closeAtRest.y,
+      DIALOG_CLOSE_TOP,
+    );
+    yield* ctx.expectEqual(
+      "the dialog's close control paints inside the surface at rest",
+      closeAtRest.y >= dialogBox.y &&
+        closeAtRest.y + closeAtRest.height <= dialogBox.y + dialogBox.height,
+      true,
+    );
 
     // ── A wheel on the veil, outside the surface, moves nothing ───────
     yield* ctx.host.wheel("page-row-10", 0, MODAL_WHEEL);
@@ -11278,6 +11293,17 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the modal's body clamps at its own content's end",
       clamped,
       maxOffset(dialogContentHeight, DIALOG_VIEWPORT),
+    );
+    const closeScrolled = yield* paintedBox(ctx, "dialog-close");
+    yield* ctx.expectEqual(
+      "a scrolled body carries the dialog's close control with it (measured gap)",
+      closeScrolled.y,
+      closeAtRest.y + clamped,
+    );
+    yield* ctx.expectEqual(
+      "the close control is above the surface once its body has scrolled",
+      closeScrolled.y < dialogBox.y,
+      true,
     );
     yield* ctx.expectEqual(
       "the page still has not moved while the modal clamps",
