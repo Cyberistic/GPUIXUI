@@ -155,6 +155,26 @@ reads the group as the store wrote it, so an **absent** role carries
 carries the value itself — the reader's cue to fill the field, not to rebuild a
 theme the release already carries.
 
+**An edit can be exported as the edit it is.** `extendTheme` builds a theme from
+overrides, and `themeOverrides(theme, base)` is its inverse: the smallest override
+that reproduces `theme` over `base`, so `extendTheme(base, themeOverrides(theme,
+base))` is the theme it started from. A settings panel or a brand editor that
+resolves a `Theme` from the values a reader set stores **what they chose** rather
+than a snapshot of every resolved value — the roles and steps they did not name
+keep following the release, where a whole-theme snapshot pins them. Only what
+moved is named (the identity diff is `{}`); a changed density preset is emitted as
+its whole box, because a partial override keeps the base's preset name; and a
+moved `colors.shadow` names every elevation level, because the merge restates the
+inherited ones in the new tint. A theme of another mode or contrast variant is
+refused rather than diffed — those two are what its numbers mean — and an
+optional whole group the base carries and the theme does not (`switch`,
+`switchMetrics`, `series`, `syntax`, the state `applyStyle` leaves behind when a
+look declares none over a platform style) cannot be expressed by an override at
+all, because an absent group means "keep the base's"; that is the one edit to
+record with `restoreTheme` instead (`theme-overrides.test.ts` holds the round trip
+over every shipped, platform, authored and brand theme, and executes
+`theme-export.example.ts`).
+
 A style is a look over a base, not a layer over a look: `platformTheme` and
 `retroTheme` overlay a *partial* palette that is designed against the base it
 lands on, and a theme does not record that it already wears one, so two shipped

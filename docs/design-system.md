@@ -1487,6 +1487,19 @@ The extension mechanism is deliberately small:
   tables. A stored density box keeps its preset name with it. A store that kept
   no theme — JSON's `null`, an `undefined` settings row — answers the light
   theme rather than throwing on the labels it does not carry.
+- `themeOverrides(theme, base)` — the inverse of `extendTheme`, and the half a
+  reader who *edits* a theme needs: the smallest override that reproduces the
+  theme over its base, so `extendTheme(base, themeOverrides(theme, base))` is the
+  theme it started from. A settings panel that lets a reader change values stores
+  what they chose instead of a snapshot of every resolved value, so the roles and
+  steps they did not name keep following the release. Only what moved is named; a
+  changed density preset is its whole box, because a partial override keeps the
+  base's preset name; and a moved `shadow` role names every elevation level,
+  because the merge restates the inherited ones in the new tint. A theme of
+  another mode or contrast variant is refused rather than diffed — those two are
+  what its numbers mean — and an optional whole group the base carries and the
+  theme does not cannot be expressed by an override (an absent group means "keep
+  the base's"), which is the one edit to record with `restoreTheme` instead.
 - `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
   (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
   colour, a selection wash). It chooses each filled role's on-colour by

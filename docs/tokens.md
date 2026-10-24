@@ -4794,6 +4794,51 @@ const theme = restoreTheme(saved);
 auditTheme(theme).passed;
 ```
 
+#### Exporting an edit
+
+`extendTheme` builds a theme from overrides; `themeOverrides(theme, base)` is its
+inverse — the smallest override that reproduces `theme` over `base`. A settings
+panel, a brand editor or a docs theme editor resolves a `Theme` from the values a
+reader set and then wants to **keep** them. Storing the resolved theme works —
+`restoreTheme` rebuilds it — but it pins every role, step and metric the theme
+carries, so a palette or type fix in a later release never reaches the brand. The
+diff names only what the reader changed and inherits the rest.
+
+```ts
+import { extendTheme, themeOverrides, themes } from "@gpuixui/tokens";
+
+const edited = extendTheme(themes.light, { radius: { md: 4 } });
+themeOverrides(edited, themes.light); // { radius: { md: 4 } }
+extendTheme(themes.light, themeOverrides(edited, themes.light)); // the edit again
+```
+
+Three rules make the round trip exact:
+
+- only what moved is named — a role, a step, a text field, a syntax token or a
+  density size the theme left alone is absent, so the identity diff is `{}`;
+- a **density preset** that changed is the whole box, because a partial override
+  keeps the base's preset name (§Density); a preset whose name is unchanged names
+  only the sizes that moved;
+- a moved **`shadow` role** names every elevation level, because `extendTheme`
+  restates every inherited elevation level in the new tint (§Elevation) — a level
+  the diff left out would be shaded in a colour the theme never asked for.
+
+`mode` and `contrast` are **refused** rather than diffed: a theme of another mode
+is not an edit of this base, so start from `getTheme` for the mode and let
+`restoreTheme` read a stored theme's own labels. And the one edit an override
+cannot express is an optional whole group the base carries and the theme does
+not — `applyStyle` over a platform style clears its `switch` and
+`switchMetrics` when a look declares none, while an absent group means "keep the
+base's", so the diff omits them and re-applying the result keeps the platform's
+paint. Every other value — colour, type, spacing, radius, a density edit,
+elevation, `borderWidth`, `iconSize`, `series`, `syntax`, and a whole
+`switch`/`switchMetrics` the theme *does* carry — round-trips.
+
+The route is executed by `src/theme-export.example.ts`: an edit is exported, the
+theme it reproduces is compared with the original, and the same file applied over
+a later release's base hands every role the reader did not name that release's
+value.
+
 #### What an override reaches
 
 A theme's **colours** reach every component in both packages: a recipe's

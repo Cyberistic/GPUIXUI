@@ -389,7 +389,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 273/273
+`[x]` `[██████████]` 274/274
 
 `[x]` Teach the **switch a brand half-declares** the fallback its painter takes —
       four teaching surfaces said a half-declared `switch` "paints the slots it
@@ -3240,6 +3240,46 @@ a merge over a stored theme.
 `[x]` Remember the **palette's values, not the reader's object**, in the system-theme poll — the value fix above recorded `applied = palette`, the object `read` returned, and `samePalette(applied, palette)` then compared that object with the next read. A reader that fills one palette it reuses — a parser with a module-level result, a watcher that clears and rewrites its record, a record a settings panel keeps — hands the poll the **same reference** every tick, so the field it had just rewritten compared equal to itself and the window kept the theme it had, however many times the desktop moved. The joined key the fix replaced rebuilt its string on every tick and could not miss this, so the two directions are one contract: fields are values, and the delivered values are a copy. `snapshot` copies the object's own fields with `Object.assign` after `onChange` returns and `applied` holds the copy, so `paletteFields` stays the one list of watched fields and a field added to `SystemPalette` is watched without a second one. `system-theme.test.ts` gains `re-applies a palette a reader rewrites in place, not only one it replaces` (an in-place accent rewrite delivered, an in-place `""` after a value delivered, a rewrite-free tick quiet, and the three teaching surfaces held to "rewrites one palette object in place"); its `watches every field the palette offers` comment no longer says the poll compares a key. Directions measured: with `applied = palette` restored the case fails `expected [ { name: 'Light', …(14) } ] to have a length of 2 but got 1`; restored, the package is 51 files / **3 114** tests with `check-types`, `oxlint` and `oxfmt` clean (`check:tests` is red only on `packages/motion/src/scratch-sweep.test.ts`, another workstream's file). Docs: `docs/tokens.md` §Following a change, the package README §System palettes and the `System palettes` row (case count 34 → 35). No native scenario applies — the poll's change comparison.
 
 `[x]` Apply the **documented system-theme call site on the base its palette's mode names** — the catalogue and README teach `watchSystemTheme({ base, baseFor: (palette) => getTheme(paletteMode(palette) ?? base.mode) })`, and warn that a light page on the dark base's surfaces is "exactly the mix `auditTheme` reports"; the runnable `followDesktop` in `system-theme.example.ts` — the call site both pages point at — passed no `baseFor` and pinned `base: getTheme("light")`, so a night desktop following the example painted a **dark page under the light base's white cards and popovers**. It also installed `manualTimer().timer` and returned the stop, so the "poll" fired once and could never tick again: the helper discarded the only handle that drives it, which is the opposite of the follow the example claims. `followDesktop` now takes `{ base, timer }` (defaults: light, `intervalTimer`), asks `paletteMode` per palette for the base it applies — the rule the pages print — and returns the stop. `system-theme.test.ts`'s `executes the documented call site, onto the base the palette's mode names` drives paper → night → deleted through a manual timer and holds the three modes (`light`, `dark`, `light`), the night base's own `card`, and the caller's base on deletion; it also reads the example and both pages. Directions measured: with `baseFor` removed the case fails `expected [ 'light', 'light', 'light' ] to deeply equal [ 'light', 'dark', 'light' ]`; with the catalogue's sentence replaced by the retired "`followDesktop` is the poll" the case fails on the page clause; restored, the file is 35/35 and the package 51 files / **3 114** tests with `check-types`, `oxlint` and `oxfmt` clean. The same pass teaches the two guards that read the data tree row's height to accept the primitives' published paint-side `rowHeightOf` seam (`numbers.test.ts`, `target.test.ts`) instead of only the raw `theme.density.rowHeight` index, which that package is adopting; docs: `docs/tokens.md` §Following a change and the README §System palettes. No native scenario applies — an example's call site and the timer it hands over.
+
+`[x]` Ship the **export half of the theming extension mechanism** — `extendTheme`
+      builds a brand from overrides, and nothing turned an edited theme back into
+      them: a settings panel, a brand editor or the docs theme editor resolves a
+      `Theme` from the values a reader set and could only keep the **whole**
+      resolved theme (`restoreTheme` rebuilds it), which pins every role, step and
+      metric it carries — so a palette or type fix in a later release never reaches
+      that brand, the opposite of the mission's "copyable, readable … never an
+      opaque preset". `themeOverrides(theme, base)` is the inverse:
+      `extendTheme(base, themeOverrides(theme, base))` reproduces `theme`, naming
+      only what moved (the identity diff is `{}`), a changed density preset as its
+      whole box (a partial override keeps the base's preset name), every elevation
+      level when `colors.shadow` moved (`extendTheme` restates the inherited levels
+      in the new tint — a level the diff omitted would be shaded in a colour the
+      theme never asked for), a syntax palette token by token against the table the
+      merge reads, and an optional whole group only when the theme carries one. A
+      theme of another **mode or contrast variant** is refused by name (a mode and a
+      variant are what its numbers mean; the message points at `getTheme` and
+      `restoreTheme`), and an optional group the base carries and the theme does not
+      (`switch`, `switchMetrics`, `series`, `syntax` — the state `applyStyle` leaves
+      when a look declares none over a platform style) is documented as the one edit
+      an override cannot express, because an absent group means "keep the base's".
+      Proof: `theme-overrides.test.ts` (10 cases) holds the empty diff, the exact
+      smallest diff for a brand, the round trip over every platform × base and
+      authored look × base and both brand examples, the preset/edit density split,
+      the shadow-to-levels rule, the palette comparison, the two refusals, the
+      unexpressible group and the executed example. Directions measured: dropping
+      the shadow rule fails `carries a moved shadow role to every elevation level`;
+      emitting a preset partially fails the preset case and the round-trip case;
+      reading `base.syntax` instead of the resolved table fails the palette case;
+      removing the refusal fails `refuses a theme of another mode or contrast
+      variant`; restored, the file is 10/10 and the package **3 169** tests with
+      `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs:
+      `docs/tokens.md` §Theme API → §Exporting an edit, `docs/design-system.md` §11,
+      the package README §Extending a theme, the `Theme extension` row and
+      `src/theme-export.example.ts`. **Remaining (owner: docs-site):** the
+      `/docs/themes` editor's "Copy theme" still serialises its own pin state; it
+      can hand the resolved theme to `themeOverrides(theme, base)` so the copied
+      file is the diff a reader can re-apply. No native scenario applies — a
+      derivation over plain data.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

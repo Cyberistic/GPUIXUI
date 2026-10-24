@@ -8,10 +8,12 @@ import {
 } from "./color.js";
 import {
   darkElevation,
+  elevationLevels,
   elevationWithTint,
   highContrastDarkElevation,
   highContrastLightElevation,
   lightElevation,
+  type BoxShadow,
   type Elevation,
 } from "./elevation.js";
 import {
@@ -28,9 +30,12 @@ import {
   densityNames,
   densityPresets,
   iconSize,
+  iconSizes,
   isDensityName,
   radius,
+  radiusSteps,
   spacing,
+  spacingSteps,
   type BorderWidth,
   type ControlSize,
   type Density,
@@ -43,10 +48,16 @@ import type { SeriesColors } from "./series.js";
 import {
   syntaxColors,
   syntaxPalette,
+  syntaxRoles,
   type StoredSyntax,
   type SyntaxColors,
 } from "./syntax.js";
-import { typography, type TextStyle, type Typography } from "./typography.js";
+import {
+  textRoles,
+  typography,
+  type TextStyle,
+  type Typography,
+} from "./typography.js";
 
 import {
   isThemeContrast,
@@ -716,6 +727,296 @@ export function extendTheme(
     // carries none.
     switch: overrides.switch ?? base.switch,
     switchMetrics: overrides.switchMetrics ?? base.switchMetrics,
+  };
+}
+
+/** The border weights a diff walks, in documentation order. */
+const borderWidthSteps = [
+  "thin",
+  "strong",
+] as const satisfies readonly (keyof BorderWidth)[];
+
+/** A border weight the list forgets, as a build error — the scale indexes' rule. */
+type EveryBorderWidthStepListed<Listed extends keyof BorderWidth> =
+  Exclude<keyof BorderWidth, Listed> extends never
+    ? true
+    : [
+        "a border width step is missing from the list",
+        Exclude<keyof BorderWidth, Listed>,
+      ];
+
+const borderWidthIndex: EveryBorderWidthStepListed<
+  (typeof borderWidthSteps)[number]
+> = true;
+// Keep the guard live under `noUnusedLocals`; the value is never produced.
+void borderWidthIndex;
+
+/** Whether a group a diff built names nothing at all. */
+const isEmptyGroup = (group: object): boolean =>
+  Object.keys(group).length === 0;
+
+/** The steps of one numeric scale a theme moved, or nothing when it moved none. */
+const stepOverrides = <Step extends string>(
+  steps: readonly Step[],
+  theme: Readonly<Record<Step, number>>,
+  base: Readonly<Record<Step, number>>,
+): Partial<Record<Step, number>> | undefined => {
+  const moved = steps.reduce<Partial<Record<Step, number>>>(
+    (overrides, step) =>
+      theme[step] === base[step]
+        ? overrides
+        : { ...overrides, [step]: theme[step] },
+    {},
+  );
+  return isEmptyGroup(moved) ? undefined : moved;
+};
+
+/** The fields of one text role a theme moved, or nothing when it moved none. */
+const textFields = (
+  role: TextStyle,
+  base: TextStyle,
+): Partial<TextStyle> | undefined => {
+  const moved: Partial<TextStyle> = {
+    ...(role.fontSize === base.fontSize ? {} : { fontSize: role.fontSize }),
+    ...(role.lineHeight === base.lineHeight
+      ? {}
+      : { lineHeight: role.lineHeight }),
+    ...(role.fontWeight === base.fontWeight
+      ? {}
+      : { fontWeight: role.fontWeight }),
+  };
+  return isEmptyGroup(moved) ? undefined : moved;
+};
+
+/** The type scale a theme moved, field by field, or nothing when it moved none. */
+const typographyOverrides = (
+  theme: Typography,
+  base: Typography,
+): TypographyOverrides | undefined => {
+  const roles = textRoles.reduce<TypographyOverrides>(
+    (overrides, role) => {
+      const moved = textFields(theme[role], base[role]);
+      return moved === undefined ? overrides : { ...overrides, [role]: moved };
+    },
+    {
+      ...(theme.sans === base.sans ? {} : { sans: theme.sans }),
+      ...(theme.mono === base.mono ? {} : { mono: theme.mono }),
+    },
+  );
+  return isEmptyGroup(roles) ? undefined : roles;
+};
+
+/** Whether two shadow arrays carry the same rungs. */
+const sameShadows = (
+  left: readonly BoxShadow[],
+  right: readonly BoxShadow[],
+): boolean =>
+  left.length === right.length &&
+  left.every((shadow, index) => {
+    const other = right[index];
+    return (
+      other !== undefined &&
+      shadow.offsetX === other.offsetX &&
+      shadow.offsetY === other.offsetY &&
+      shadow.blurRadius === other.blurRadius &&
+      shadow.spreadRadius === other.spreadRadius &&
+      shadow.color === other.color
+    );
+  });
+
+/** The density box a theme moved, or nothing when it moved none. */
+const densityOverrides = (
+  theme: Density,
+  base: Density,
+): ThemeOverrides["density"] | undefined => {
+  // A different preset name is a different box: a partial override keeps the
+  // base's name (that is the merge rule), so the whole box — the shape a stored
+  // theme writes — is what reproduces the preset a theme reports.
+  if (theme.name !== base.name) {
+    return theme;
+  }
+  const controlHeight = stepOverrides(
+    controlSizes,
+    theme.controlHeight,
+    base.controlHeight,
+  );
+  const controlPaddingX = stepOverrides(
+    controlSizes,
+    theme.controlPaddingX,
+    base.controlPaddingX,
+  );
+  const moved: DensityOverrides = {
+    ...(controlHeight === undefined ? {} : { controlHeight }),
+    ...(controlPaddingX === undefined ? {} : { controlPaddingX }),
+    ...(theme.rowHeight === base.rowHeight
+      ? {}
+      : { rowHeight: theme.rowHeight }),
+  };
+  return isEmptyGroup(moved) ? undefined : moved;
+};
+
+/** The syntax palette a theme moved, token by token, or nothing. */
+const syntaxOverrides = (
+  theme: Theme,
+  base: Theme,
+): Partial<SyntaxColors> | undefined => {
+  const carried = theme.syntax;
+  if (carried === undefined) {
+    return undefined;
+  }
+  // The tokens a theme does not name are the base's resolved table when merged,
+  // so the table a diff compares against is the one `extendTheme` reads.
+  const table = syntaxColors(base);
+  const moved = syntaxRoles.reduce<Partial<SyntaxColors>>(
+    (tokens, role) =>
+      carried[role] === table[role]
+        ? tokens
+        : { ...tokens, [role]: carried[role] },
+    {},
+  );
+  return isEmptyGroup(moved) ? undefined : moved;
+};
+
+/** Whether two categorical scales name the same five colours. */
+const sameSeries = (
+  left: SeriesColors,
+  right: SeriesColors | undefined,
+): boolean =>
+  right !== undefined && left.every((colour, index) => colour === right[index]);
+
+/** Whether two switch paints name the same slots, the optional edge included. */
+const sameSwitch = (
+  left: SwitchColors,
+  right: SwitchColors | undefined,
+): boolean =>
+  right !== undefined &&
+  left.on === right.on &&
+  left.off === right.off &&
+  left.knob === right.knob &&
+  left.edge === right.edge;
+
+/** Whether two switch boxes carry the same five numbers. */
+const sameMetrics = (
+  left: SwitchMetrics,
+  right: SwitchMetrics | undefined,
+): boolean =>
+  right !== undefined &&
+  left.width === right.width &&
+  left.height === right.height &&
+  left.knob === right.knob &&
+  left.inset === right.inset &&
+  left.border === right.border;
+
+/**
+ * The overrides that turn `base` into `theme` — the inverse of {@link extendTheme}.
+ *
+ * A consumer that owns its theme edits it as well as reads it: a settings panel,
+ * a brand editor or a docs theme editor resolves a `Theme` from the values a
+ * reader set, and then wants to **keep** the edit. Storing the resolved theme
+ * works ({@link restoreTheme} rebuilds it) but pins every value it carries, so a
+ * palette or type fix in a later release never reaches the brand. This seam hands
+ * back the smallest {@link ThemeOverrides} that reproduces the theme over its
+ * base — copyable, readable, and still inheriting everything the reader did not
+ * change — so the edit round-trips to the shape a theme file is written in.
+ *
+ * ```
+ * extendTheme(base, themeOverrides(theme, base)) // the theme it started from
+ * ```
+ *
+ * Three rules make that round trip exact:
+ *
+ * - only what moved is named. A step, a role, a text field, a syntax token or a
+ *   density size the theme left alone is absent from the result, so the identity
+ *   diff is `{}` and the merge paints the base;
+ * - a **density preset** that changed is emitted as the whole box, because a
+ *   partial override keeps the base's preset name (the merge rule), while a
+ *   preset whose name is unchanged emits only the sizes the brand moved;
+ * - the **shadow role** is a special case: `extendTheme` restates every inherited
+ *   elevation level when `colors.shadow` changes, so a moved role emits every
+ *   level as well. A level the diff left out would be retinted into a shadow the
+ *   theme never asked for.
+ *
+ * The mode and the contrast variant are what a theme's numbers mean and are not
+ * overridable, so a theme of another mode or variant is **refused** rather than
+ * diffed: `themeOverrides(darkTheme, lightTheme)` would reproduce a dark palette
+ * under a theme that still said light — the mix {@link restoreTheme} exists to
+ * prevent. An optional whole group the base carries and the theme does not
+ * (`switch`, `switchMetrics`, `series`, `syntax` — the state `applyStyle` leaves
+ * behind when a look declares none over a platform's own) is the one edit an
+ * override cannot express: an absent group means "keep the base's", so the diff
+ * omits it and re-applying the result keeps the base's paint.
+ *
+ * @example
+ * ```ts
+ * import { extendTheme, themeOverrides, themes } from "@gpuixui/tokens";
+ *
+ * const edited = extendTheme(themes.light, { radius: { md: 4 } });
+ * themeOverrides(edited, themes.light); // { radius: { md: 4 } }
+ * ```
+ */
+export function themeOverrides(theme: Theme, base: Theme): ThemeOverrides {
+  const mode = themeModeOf(theme);
+  const contrast = themeContrastOf(theme);
+  if (mode !== themeModeOf(base) || contrast !== themeContrastOf(base)) {
+    throw new Error(
+      `\`${mode} · ${contrast}\` is not an edit of \`${themeModeOf(base)} · ${themeContrastOf(base)}\`: a mode and a contrast variant are what a theme's numbers mean, so no override can move them. Start from the theme of the same mode with \`getTheme\`, or rebuild a stored theme from its own labels with \`restoreTheme\`.`,
+    );
+  }
+  const colors = colorRoles.reduce<Partial<ThemeColors>>(
+    (overrides, role) =>
+      theme.colors[role] === base.colors[role]
+        ? overrides
+        : { ...overrides, [role]: theme.colors[role] },
+    {},
+  );
+  // The shadow role owns every level's tint, so a moved role names them all.
+  const shadowMoved = theme.colors.shadow !== base.colors.shadow;
+  const elevation = elevationLevels.reduce<Partial<Elevation>>(
+    (overrides, level) =>
+      shadowMoved || !sameShadows(theme.elevation[level], base.elevation[level])
+        ? { ...overrides, [level]: theme.elevation[level] }
+        : overrides,
+    {},
+  );
+  const spacing = stepOverrides(spacingSteps, theme.spacing, base.spacing);
+  const radius = stepOverrides(radiusSteps, theme.radius, base.radius);
+  const borderWidth = stepOverrides(
+    borderWidthSteps,
+    theme.borderWidth,
+    base.borderWidth,
+  );
+  const iconSize = stepOverrides(iconSizes, theme.iconSize, base.iconSize);
+  const name = theme.name === base.name ? undefined : theme.name;
+  const typography = typographyOverrides(theme.typography, base.typography);
+  const density = densityOverrides(theme.density, base.density);
+  const syntax = syntaxOverrides(theme, base);
+  const series =
+    theme.series === undefined || sameSeries(theme.series, base.series)
+      ? undefined
+      : theme.series;
+  const toggle =
+    theme.switch === undefined || sameSwitch(theme.switch, base.switch)
+      ? undefined
+      : theme.switch;
+  const metrics =
+    theme.switchMetrics === undefined ||
+    sameMetrics(theme.switchMetrics, base.switchMetrics)
+      ? undefined
+      : theme.switchMetrics;
+  return {
+    ...(name === undefined ? {} : { name }),
+    ...(isEmptyGroup(colors) ? {} : { colors }),
+    ...(typography === undefined ? {} : { typography }),
+    ...(spacing === undefined ? {} : { spacing }),
+    ...(radius === undefined ? {} : { radius }),
+    ...(density === undefined ? {} : { density }),
+    ...(isEmptyGroup(elevation) ? {} : { elevation }),
+    ...(borderWidth === undefined ? {} : { borderWidth }),
+    ...(iconSize === undefined ? {} : { iconSize }),
+    ...(series === undefined ? {} : { series }),
+    ...(syntax === undefined ? {} : { syntax }),
+    ...(toggle === undefined ? {} : { switch: toggle }),
+    ...(metrics === undefined ? {} : { switchMetrics: metrics }),
   };
 }
 
