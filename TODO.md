@@ -13442,24 +13442,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` `[██████████]` 396/396
 
-`[x]` Collapse **every drawn animation** for a reader who asks for less motion —
+`[x]` Collapse **every drawn journey** for a reader who asks for less motion —
       the library collapses its motion under `prefers-reduced-motion`, and the
-      browser previews that draw the same components animate their own keyframes,
-      so none of them reach the runtime's policy. Measured by a source scan, four
-      animated parts kept moving under the preference: a chart column
-      (`gx-dash-grow`), a leaving toast (`gx-toast-out`), a collapsing body
-      (`gx-collapse-in`) and a copy button's glyph (`gx-roll-in`). Each now has
-      its `animation: none` rule in `src/styles/*.css`. The guard
-      (`src/lib/preview-motion.test.ts`, 3 cases) is structural: every rule that
-      turns an animation on names the class its selector ends in, and that class
-      must appear in a `prefers-reduced-motion: reduce` block of the same sheet;
-      floors on both sides keep a parser that stopped matching from passing.
-      `docs/preview-strategy.md` §A preview honours the reader's motion
-      preference states the rule (`animation: none`, never a shorter duration)
-      and names the guard. Directions measured: removing `.gx-dash-column` from
-      the chart's block fails `blocks.css: .gx-dash-column,` and removing the
-      guard's name from the policy fails the third case. Scoped run:
-      `nub run --filter @gpuixui/docs test src/lib/preview-motion.test.ts` (3/3).
+      browser previews that draw the same components animate their own keyframes
+      and slide their own state, so none of them reach the runtime's policy. A
+      source scan found four animated parts still moving (a chart column,
+      a leaving toast, a collapsing body, a copy button's glyph) and eight
+      movement transitions still travelling (a settings knob, a switch thumb, a
+      carousel dot, a liquid fill, a magnetic card, an image zoom, a motion-grid
+      cell, a preview picture). Each now has its `animation: none` or
+      `transition: none` rule in `src/styles/*.css`; a colour-only transition
+      keeps its fade. The guard (`src/lib/preview-motion.test.ts`, 4 cases) is
+      structural: every rule that turns on an animation or a geometric
+      transition names the selector it applies to, and a reduced-motion block in
+      the same sheet must stop the same property for that selector or its subject
+      compound; floors on both sides keep a parser that stopped matching from
+      passing. `docs/preview-strategy.md` §A preview honours the reader's motion
+      preference states both rules and names the guard. Directions measured:
+      removing `.gx-dash-column` from the chart's block fails
+      `blocks.css: .gx-dash-column,`; the eight transitions were reported by name
+      before their guards landed; and removing the guard's name from the policy
+      fails the fourth case. Scoped run:
+      `nub run --filter @gpuixui/docs test src/lib/preview-motion.test.ts` (4/4).
       No native scenario applies — the preference is the browser's, and the
       drawing is the site's.
 

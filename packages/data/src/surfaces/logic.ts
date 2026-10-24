@@ -44,14 +44,14 @@ import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
 /**
- * The words a property row is painted and named by.
+ * The words a property row or a key-value entry is painted and named by.
  *
- * A row's label is content before it is a literal: a saved object answers `""`
- * for a row whose name key is missing, and the panel paints that label in its
- * label column and hands it to an editable row's field as the field's own name.
- * A blank label therefore reads as the row's **key** — the identity the panel
- * addresses the row by — so a row is never an unnamed field beside an empty
- * column.
+ * A label is content before it is a literal: a saved object answers `""` for a
+ * row whose name key is missing, and both surfaces paint the label in their
+ * label column — the panel also hands it to an editable row's field as the
+ * field's own name. A blank label therefore reads as the row's **key** — the
+ * identity the surface addresses it by — so a row is never an unnamed field
+ * beside an empty column.
  */
 export const propertyName = (label: string, key: string): string =>
   spokenText(Option.fromNullishOr(label), key);

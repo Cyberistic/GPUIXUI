@@ -33,7 +33,7 @@ import { KeyValue } from "@gpuixui/data";
 | Field | Type | Consequence |
 | ----- | ---- | ----------- |
 | `key` | `string` | the stable identity a row is addressed by; the cells derive their ids from it, and an entry whose `key` is not text is not a row |
-| `label` | `string` | the words in the fixed label column |
+| `label` | `string` | the words in the fixed label column; a blank one reads as the row's `key` |
 | `value` | `ReactNode` | the value, already rendered by the caller; a string or a number is painted as its own `Label` |
 
 ## Limitations
@@ -46,3 +46,5 @@ import { KeyValue } from "@gpuixui/data";
   an entry that does not name itself with a `key` is not a row — it has no
   identity to address or key by, so it paints nothing while its neighbours
   paint.
+- A row's `label` is content: a blank one reads as its `key`, so a saved entry a
+  migration lost the title from still names what its value describes.

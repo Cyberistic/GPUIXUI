@@ -29,13 +29,19 @@ import { recordsOf } from "../internal/list.js";
 import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
+import { propertyName } from "./logic.js";
 import { KEY_VALUE_LABEL, KEY_VALUE_ROW, KEY_VALUE_VALUE } from "./recipe.js";
 
 /** One row of the list. */
 export interface KeyValueEntry {
   /** The stable identity a row is addressed by. */
   readonly key: string;
-  /** The label the value sits beside. */
+  /**
+   * The label the value sits beside.
+   *
+   * A blank label reads as {@link key}: a locale table with a missing row
+   * answers `""`, and the key is the identity the row is stored by.
+   */
   readonly label: string;
   /** The value, already rendered by the caller. */
   readonly value: ReactNode;
@@ -128,7 +134,7 @@ export const KeyValue = ({
               flexBasis: labelTrack,
             }}
           >
-            {entry.label}
+            {propertyName(entry.label, entry.key)}
           </text>
           {readable(entry.value, {
             testId:

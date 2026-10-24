@@ -708,8 +708,11 @@ field's name and the sentence, so it never publishes a nameless picker, a value
 field named `" value"` or a sentence that opens on its comparison. A property
 row's label is content too: a blank one reads as the row's key (`propertyName`,
 the one reading the label column and an editable row's field name share), so a
-saved object cannot leave its editor unnamed. A column's label is the same kind
-of content: a blank one reads as its `id` in the column menu (`columnName`).
+saved object cannot leave its editor unnamed. A **key-value entry's** label is
+the same kind of content and reads the same way: a saved row a migration lost
+the title from paints its key rather than an empty label cell beside a value. A
+column's label is the same kind of content: a blank one reads as its `id` in the
+column menu (`columnName`).
 
 The advanced filter's state is a **predicate tree**, not a string: a predicate
 (field, comparison, value), an `all`, an `any` and a `not`. The tree is the

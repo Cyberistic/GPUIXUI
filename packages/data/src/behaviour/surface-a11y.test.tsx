@@ -412,6 +412,31 @@ describe("the data surfaces announce what they paint", () => {
     );
   });
 
+  it("reads a blank key-value label as the key it is stored by", () => {
+    // Bug guarded: a key-value entry's label is content — a saved object
+    // answers `""` (or whitespace) for a row whose name key is missing — and
+    // the list painted it straight into the fixed label column, so the row's
+    // value sat beside an empty cell and the entry never said what it named.
+    // The key is the identity the list addresses the row by, the reading the
+    // property panel's rows already follow (`propertyName`).
+    const tree = treeOf(
+      <KeyValue
+        aria-label="Properties"
+        entries={[
+          { key: "width", label: "", value: "120" },
+          { key: "height", label: "   ", value: "80" },
+        ]}
+      />,
+    );
+
+    expect(labelsUnder(tree, onlyRole(tree, "List"))).toEqual([
+      "width",
+      "120",
+      "height",
+      "80",
+    ]);
+  });
+
   it("reads blank column-menu names as the documented default", () => {
     root = renderData(
       <ColumnMenu
