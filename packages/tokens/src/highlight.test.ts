@@ -34,6 +34,7 @@ import {
   highlightFailures,
   highlightShares,
   highlightSurfaces,
+  type FindHighlightSource,
   type HighlightSurface,
 } from "./highlight.js";
 import { platformNames } from "./platforms.js";
@@ -422,6 +423,43 @@ describe("an accent the surfaces cannot carry", () => {
     // would be painted on is the missing half.
     const noPage = highlightFailures({ colors: { primary: "#5F4BDB" } });
     expect(noPage.every(({ wash }) => wash === undefined)).toBe(true);
+  });
+
+  /**
+   * The source is what a store handed back, not a `Theme`.
+   *
+   * The report already resolved a stated variant through `themeContrastOf`, but
+   * its parameter typed the field `ThemeContrast` and the corner `Partial<Radius>`
+   * — neither admits the `"HIGH"` a store writes or the `null` JSON keeps — so a
+   * decoded theme could be measured only through a cast. `FindHighlightSource`
+   * is the storage port; deleting it and restoring the strict fields fails
+   * `check-types` on the two declarations below (TS2322).
+   */
+  it("reads a stored variant and a nulled scale without a cast", () => {
+    // The strict floors are what a stored `"HIGH"` resolves to: a theme with no
+    // brand still reports the floors every placement was measured against.
+    const high: FindHighlightSource = {
+      colors: withoutColour(lightTheme, "primary").colors,
+      contrast: "HIGH",
+    };
+    const floors = new Set(
+      highlightFailures(high)
+        .filter(({ kind }) => kind === "legibility")
+        .map(({ state, floor }) => `${state}:${floor}`),
+    );
+    expect(floors).toEqual(new Set(["active:7", "match:7"]));
+    // A theme that still carries its brand derives a pair, and a nulled radius
+    // group is the absence it is: no corner, no wash.
+    expect(
+      findHighlight({
+        colors: lightTheme.colors,
+        radius: lightTheme.radius,
+        contrast: "HIGH",
+      }),
+    ).toBeDefined();
+    expect(
+      findHighlight({ colors: lightTheme.colors, radius: null }),
+    ).toBeUndefined();
   });
 });
 

@@ -52,6 +52,7 @@ import {
   seriesFailures,
   seriesSurfaces,
   simulateColorVision,
+  type SeriesSource,
 } from "./series.js";
 import {
   applyStyle,
@@ -540,8 +541,12 @@ describe("the example is executable and its calls are the documented ones", () =
  * the scale designed for the strict floors.
  */
 describe("a stored contrast variant", () => {
-  const stored = (contrast: unknown): Theme =>
-    ({ ...lightTheme, contrast }) as Theme;
+  // The fixture is the shape a store hands back: the strict `Theme` type made
+  // these calls cast, which `AGENTS.md` §2 forbids.
+  const stored = (contrast: unknown): SeriesSource => ({
+    ...lightTheme,
+    contrast,
+  });
 
   it("resolves the scale designed for the strict floors", () => {
     expect(seriesColors(stored("HIGH"))).toBe(highContrastLightSeries);
@@ -562,8 +567,10 @@ describe("a stored contrast variant", () => {
  * ship from the page the theme carries.
  */
 describe("a stored theme mode", () => {
-  const stored = (mode: unknown, base: Theme): Theme =>
-    ({ ...base, mode }) as Theme;
+  const stored = (mode: unknown, base: Theme): SeriesSource => ({
+    ...base,
+    mode,
+  });
 
   it("resolves the scale its page implies", () => {
     expect(seriesColors(stored("Dark", darkTheme))).toBe(darkSeries);

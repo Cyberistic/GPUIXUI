@@ -228,7 +228,11 @@ and step, and `missingTokens` stays the refusal. Their input is the source a
 store hands back — `TypeSource` for `textStyle`, `NativeTextSource` for
 `nativeAccent`/`nativeTextTheme` — so a decoded theme paints without a cast to
 `Theme`, and `ColourSource.colors` admits the `null` JSON keeps for a group a
-theme never carried. `elevationShadow` reads a level this release does not ship as
+theme never carried. The collection and highlight readers take the storage shapes
+too: `SeriesSource`, `SyntaxSource`/`SyntaxAuditSource` and `FindHighlightSource`
+resolve a stated mode or variant this release does not ship through
+`themeModeOf`/`themeContrastOf`, and a `null` radius group is no corner.
+`elevationShadow` reads a level this release does not ship as
 `md` too, rather than a raised panel that silently paints flat, `avatarPixels`
 reads a diameter step this release does not ship as `md` rather than handing the
 renderer `undefined` (which it drops, so the mark painted with no side), and

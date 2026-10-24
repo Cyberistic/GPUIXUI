@@ -201,8 +201,10 @@ export const syntaxSurfaces = ["input", "background"] as const;
 
 /** A theme's mode, contrast variant and optional authored syntax palette. */
 export interface SyntaxSource extends ColourSource {
-  readonly mode: "light" | "dark";
-  readonly contrast?: "default" | "high";
+  /** The theme's mode. A stored name is read through `themeModeOf`. */
+  readonly mode?: unknown;
+  /** The contrast variant. A stored name is read through `themeContrastOf`. */
+  readonly contrast?: unknown;
   readonly syntax?: SyntaxColors;
 }
 
@@ -279,8 +281,10 @@ const readPalette = (
  * value the contract tries to measure.
  */
 export interface SyntaxAuditSource extends ColourSource {
-  readonly mode: "light" | "dark";
-  readonly contrast?: "default" | "high";
+  /** The theme's mode. A stored name is read through `themeModeOf`. */
+  readonly mode?: unknown;
+  /** The contrast variant. A stored name is read through `themeContrastOf`. */
+  readonly contrast?: unknown;
   readonly syntax?: Readonly<Record<string, unknown>>;
 }
 

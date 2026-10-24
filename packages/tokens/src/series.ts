@@ -24,12 +24,7 @@
 import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
-import {
-  themeContrastOf,
-  themeModeOf,
-  type ThemeContrast,
-  type ThemeMode,
-} from "./theme.js";
+import { themeContrastOf, themeModeOf } from "./theme.js";
 
 /**
  * One categorical scale: five colours, in the order a chart assigns them. A
@@ -176,8 +171,10 @@ const seriesPositions = [0, 1, 2, 3, 4] as const;
 
 /** A theme's mode, contrast variant and optional authored series. */
 export interface SeriesSource extends ColourSource {
-  readonly mode: ThemeMode;
-  readonly contrast?: ThemeContrast;
+  /** The theme's mode. A stored name is read through `themeModeOf`. */
+  readonly mode?: unknown;
+  /** The contrast variant. A stored name is read through `themeContrastOf`. */
+  readonly contrast?: unknown;
   readonly series?: SeriesColors;
 }
 

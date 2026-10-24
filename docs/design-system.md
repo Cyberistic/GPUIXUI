@@ -1197,10 +1197,12 @@ lost is no box, not a
 does not ship is still the `md` step — while a `Theme` still answers a colour or
 a height outright — so no surface throws on the defect
 the report just
-explained (§7). The type and document seams take that same source: `textStyle`
-accepts a `TypeSource` and `nativeAccent`/`nativeTextTheme` a
-`NativeTextSource`, so the decoded theme a surface paints reaches them without a
-cast to `Theme`, and `ColourSource` admits the `null` group JSON writes.
+explained (§7). The type, document and report seams take that same source:
+`textStyle` accepts a `TypeSource`, `nativeAccent`/`nativeTextTheme` a
+`NativeTextSource`, and `SeriesSource`/`SyntaxSource`/`FindHighlightSource` the
+stored mode, variant and radius a decode hands back, so the decoded theme a
+surface paints or measures reaches them without a cast to `Theme`, and
+`ColourSource` admits the `null` group JSON writes.
 **The token helper and the paint path answer differently, by
 design:** `@gpuixui/primitives` resolves a control's box through its own
 `controlHeightOf`/`controlPaddingOf` (`packages/primitives/src/core/theme.ts`),

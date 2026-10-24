@@ -53,7 +53,7 @@ import {
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import type { Radius } from "./scale.js";
-import type { Theme, ThemeContrast } from "./theme.js";
+import type { Theme } from "./theme.js";
 
 /**
  * The shares a host paints when nobody names a colour: every match, and the
@@ -222,9 +222,9 @@ const sharesFor = (
  */
 export interface FindHighlightSource extends ColourSource {
   /** The variant whose floors the pair is held to, when the theme states one. */
-  readonly contrast?: ThemeContrast;
+  readonly contrast?: unknown;
   /** The scale's tightest step, which the wash's corner takes. */
-  readonly radius?: Partial<Radius>;
+  readonly radius?: Partial<Radius> | null;
 }
 
 /**
@@ -332,7 +332,7 @@ export interface HighlightFailure {
  * ```
  */
 export function highlightFailures(
-  theme: ColourSource & { readonly contrast?: ThemeContrast },
+  theme: ColourSource & { readonly contrast?: unknown },
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): readonly HighlightFailure[] {
   const colors = themeColors(theme);

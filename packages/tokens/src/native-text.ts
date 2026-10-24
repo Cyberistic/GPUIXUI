@@ -81,7 +81,7 @@ import { decorativeFloor } from "./decorative.js";
 import { radius, spacing, type Radius, type Spacing } from "./scale.js";
 import { statusTone, textStyle, type TypeSource } from "./styles.js";
 import { syntaxColors, type SyntaxColors } from "./syntax.js";
-import { themeModeOf, themeContrastOf, type ThemeMode } from "./theme.js";
+import { themeModeOf, type ThemeMode } from "./theme.js";
 import { typography } from "./typography.js";
 
 /**
@@ -531,11 +531,6 @@ export function nativeTextTheme(
   fill: NativeTextFill = "input",
 ): NativeTextTheme {
   const colors = themeColors(theme);
-  // The mode and variant are stated values a store may have written in a name
-  // this release does not ship, so both are read through their seams once and
-  // handed to the appearance and the syntax palette together.
-  const mode = themeModeOf(theme);
-  const contrast = themeContrastOf(theme);
   // A tone is three roles; one a store lost is a tone the host has no ink for,
   // and the runtime paints its own green or red rather than a guessed role.
   const added = statusTone({ colors }, "success");
@@ -549,7 +544,7 @@ export function nativeTextTheme(
   const h3 = textStyle(theme, "h3");
   const caption = textStyle(theme, "caption");
   return {
-    appearance: mode,
+    appearance: themeModeOf(theme),
     bg: colors[fill],
     text: colors.inputForeground,
     textMuted: colors.mutedForeground,
@@ -618,7 +613,7 @@ export function nativeTextTheme(
     codeText: colors.foreground,
     codeWash: colors.muted,
     border: colors.border,
-    syntax: syntaxColors({ colors, mode, contrast, syntax: theme.syntax }),
+    syntax: syntaxColors(theme),
     // The runtime reads a code block's token colours from here and paints its
     // own dark-default palette when the field is absent, so a light theme's
     // block would be highlighted for a dark canvas.

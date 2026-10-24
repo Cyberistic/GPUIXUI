@@ -36,6 +36,7 @@ import {
   syntaxRoleFloors,
   syntaxRoles,
   syntaxSurfaces,
+  type SyntaxSource,
 } from "./syntax.js";
 import {
   houseAudit,
@@ -287,8 +288,7 @@ describe("the syntax palette", () => {
     // shipping the palette reaches the block with no component-side table. A seam
     // that stopped filling it would put the runtime's own dark palette back.
     const seam = read("./native-text.ts");
-    expect(seam).toContain("syntax: syntaxColors({");
-    expect(seam).toContain("syntax: theme.syntax");
+    expect(seam).toContain("syntax: syntaxColors(theme)");
     const codeBlock = read("../../components/src/code-block.tsx");
     expect(codeBlock).toContain("syntaxColors(theme)");
     expect(codeBlock).toContain("bg-background");
@@ -417,8 +417,12 @@ describe("the syntax palette", () => {
  * the table designed for the strict floors.
  */
 describe("a stored contrast variant", () => {
-  const stored = (contrast: unknown): Theme =>
-    ({ ...lightTheme, contrast }) as Theme;
+  // The fixture is the shape a store hands back: the strict `Theme` type made
+  // these calls cast, which `AGENTS.md` §2 forbids.
+  const stored = (contrast: unknown): SyntaxSource => ({
+    ...lightTheme,
+    contrast,
+  });
 
   it("resolves the table designed for the strict floors", () => {
     expect(syntaxColors(stored("HIGH"))).toBe(highContrastLightSyntax);
@@ -440,8 +444,10 @@ describe("a stored contrast variant", () => {
  * value this release does not ship from the page the theme carries.
  */
 describe("a stored theme mode", () => {
-  const stored = (mode: unknown, base: Theme): Theme =>
-    ({ ...base, mode }) as Theme;
+  const stored = (mode: unknown, base: Theme): SyntaxSource => ({
+    ...base,
+    mode,
+  });
 
   it("resolves the palette its page implies", () => {
     expect(syntaxColors(stored("Dark", darkTheme))).toBe(darkSyntax);
