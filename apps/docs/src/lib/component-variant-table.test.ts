@@ -107,7 +107,7 @@ const cells = (line: string): ReadonlyArray<string> =>
     .split("|")
     .map((cell) => cell.trim());
 
-/** The table under one `###` heading, as a header and its rows. */
+/** The table under one bold label, as a header and its rows. */
 const tableUnder = (
   body: string,
   heading: string,
@@ -115,14 +115,16 @@ const tableUnder = (
   readonly header: ReadonlyArray<string>;
   readonly rows: ReadonlyArray<ReadonlyArray<string>>;
 } => {
-  const start = body.indexOf(`### ${heading}`);
-  expect(start, `no ### ${heading}`).toBeGreaterThan(-1);
-  const after = body.slice(start + heading.length);
-  const end = after.search(/\n#{2,3} /);
-  const section = end === -1 ? after : after.slice(0, end);
-  const lines = section.split("\n").filter((line) => line.startsWith("|"));
-  expect(lines.length, `${heading} prints no table`).toBeGreaterThan(2);
-  const [header = "", , ...rows] = lines;
+  const start = body.search(new RegExp(`^\\*\\*${heading}\\*\\*$`, "m"));
+  expect(start, `no **${heading}**`).toBeGreaterThan(-1);
+  const lines = body.slice(start).split("\n");
+  const first = lines.findIndex((line) => line.startsWith("|"));
+  expect(first, `${heading} prints no table`).toBeGreaterThan(-1);
+  const fromFirst = lines.slice(first);
+  const afterTable = fromFirst.findIndex((line) => !line.startsWith("|"));
+  const table = afterTable === -1 ? fromFirst : fromFirst.slice(0, afterTable);
+  expect(table.length, `${heading} prints no rows`).toBeGreaterThan(2);
+  const [header = "", , ...rows] = table;
   return { header: cells(header), rows: rows.map(cells) };
 };
 
@@ -237,7 +239,8 @@ describe("the card page's treatment table", () => {
     // it was corrected — and that a card's corner is fixed rather than the
     // platform's.
     const body = page("card.mdx");
-    const start = body.indexOf("### Treatments");
+    const start = body.search(/^\*\*Treatments\*\*$/m);
+    expect(start).toBeGreaterThan(-1);
     const end = body.indexOf("\n## ", start + 1);
     const note = body.slice(start, end === -1 ? undefined : end);
     const { style } = paintsIn(

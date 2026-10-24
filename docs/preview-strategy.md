@@ -1054,11 +1054,14 @@ The page is the sentence, the preview, the example, the API and the limits. A
 rationale, a measured story or a section that restates the API belongs in the
 commit or the source comment instead.
 
-A page whose component has a **variant axis** prints a `### Variants` table at
+A page whose component has a **variant axis** prints a **Variants** table at
 the end of **API reference** — one row per member of the recipe's union, one
 column per thing the variant changes (`Fill`, `Ink`, `Edge` for a badge;
-`Treatment`/`Edge`/`Lift` for a card), and **theme roles, never hex** — so the
-`variant` prop's Consequence can point at it. `component-variant-table.test.ts`
+`Edge`/`Lift` under a **Treatments** label for a card), and **theme roles,
+never hex** — so the `variant` prop's Consequence can point at it. The label is
+a bold line rather than a `###` heading because a third-level heading under
+**API reference** names a *part* of the component, which the page template and
+`component-index.test.ts` hold to an export. `component-variant-table.test.ts`
 compiles the component's own classes through `@gpuixui/tw` in both shipped
 themes and requires each page to list every variant the recipe ships and each
 cell to name exactly the role that paints, so renaming a role moves the page.
