@@ -113,6 +113,40 @@ export interface AvatarSize {
 export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 
 /**
+ * The avatar steps, in documentation order.
+ *
+ * The index a size picker iterates and the guard reads, so a stored diameter —
+ * a saved contact list's density, a settings row's preview — is narrowed
+ * without retyping the four names or casting the value.
+ */
+export const avatarSizes = ["xs", "sm", "md", "lg"] as const;
+
+/** A step of the avatar scale, by name. */
+export type AvatarSizeName = (typeof avatarSizes)[number];
+
+/**
+ * Narrow unknown input — a stored avatar size — to a step of the scale.
+ *
+ * Membership is the index's, not the record's: `name in avatarSize` also
+ * answers true for the names `Object.prototype` carries (`toString`,
+ * `constructor`), so a persisted name would pass the guard and the lookup would
+ * hand the runtime a method where a diameter belongs.
+ */
+export const isAvatarSize = (value: unknown): value is AvatarSizeName =>
+  avatarSizes.some((step) => step === value);
+
+/**
+ * The diameter an avatar size names.
+ *
+ * `size` is as often a saved preference as a literal, so a name this release
+ * does not ship reads as the default `md` — the rule `iconPixels` follows. A
+ * bare lookup answered `undefined`, which the renderer drops, so the mark
+ * painted with no side.
+ */
+export const avatarPixels = (size: unknown): number =>
+  isAvatarSize(size) ? avatarSize[size] : avatarSize.md;
+
+/**
  * Pressable-target floors in pixels.
  *
  * A control may paint smaller than its pressable box — a checkbox draws at an

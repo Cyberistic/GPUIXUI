@@ -153,8 +153,8 @@ A complete, executed example lives in
 
 ## Persisted choices
 
-Nine axes are choices a consumer stores or carries, and each has an ordered index
-beside a guard that takes `unknown`: 
+Ten axes are choices a consumer stores or carries, and each has an ordered index
+beside a guard that takes `unknown`:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -167,17 +167,18 @@ beside a guard that takes `unknown`:
 | status tone | `statusTones` | `isStatusTone` |
 | type role | `textRoles` | `isTextRole` |
 | elevation level | `elevationLevels` | `isElevationLevel` |
+| avatar size | `avatarSizes` | `isAvatarSize` |
 
 The unions derive from the indexes, so a settings row iterates the axis and a
 restored preference narrows without retyping the union or casting. Each index is
 held to the data it selects — every mode has both contrast variants, every
 platform a style, every look a style, every preset a metric per size, every type
-role a key of the type scale — by
+role a key of the type scale, every avatar size a key of the diameter record — by
 [`src/guards.test.ts`](./src/guards.test.ts), and
 [`src/elevation.test.ts`](./src/elevation.test.ts) holds the elevation index to
 the shipped scale.
 [`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
-all nine.
+all ten.
 
 ```ts
 import { getTheme, isThemeMode } from "@gpuixui/tokens";

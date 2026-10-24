@@ -19,15 +19,22 @@
  * picker iterates, and a saved workspace raises a surface with the level it
  * stored, so a name from a release that dropped one had no guard to narrow it
  * and `elevationShadow` answered a flat surface.
+ *
+ * The avatar scale is the tenth: an identity mark's size is a stored preference
+ * as often as a literal, and `avatarSize` ships as a fixed record with no index
+ * and no guard, so a saved size could only reach it through a cast.
  */
 import { describe, expect, it } from "vitest";
 import { elevationLevels, isElevationLevel } from "./elevation.js";
 import { isPlatformName, platformNames, platformStyles } from "./platforms.js";
 import { isRetroName, retroNames, retroStyles } from "./retro.js";
 import {
+  avatarSize,
+  avatarSizes,
   controlSizes,
   densityNames,
   densityPresets,
+  isAvatarSize,
   isControlSize,
   isDensityName,
 } from "./scale.js";
@@ -43,6 +50,7 @@ import {
 } from "./theme.js";
 import { isTextRole, textRoles, typography } from "./typography.js";
 import {
+  avatarSizeFromStoredChoice,
   controlSizeFromStoredChoice,
   densityFromStoredChoice,
   elevationFromStoredChoice,
@@ -70,6 +78,7 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isRetroName", guard: isRetroName, index: retroNames },
   { name: "isTextRole", guard: isTextRole, index: textRoles },
   { name: "isElevationLevel", guard: isElevationLevel, index: elevationLevels },
+  { name: "isAvatarSize", guard: isAvatarSize, index: avatarSizes },
 ];
 
 /** Values no guard may accept, whatever its index holds. */
@@ -78,6 +87,11 @@ const notMembers: ReadonlyArray<unknown> = [
   "nope",
   "Light",
   "default ",
+  // Members of `Object.prototype`, which a record-membership test
+  // (`name in scale`) answers true for.
+  "toString",
+  "constructor",
+  "hasOwnProperty",
   null,
   undefined,
   0,
@@ -151,6 +165,16 @@ describe("indexes match the data they select", () => {
     expect(isTextRole("mono")).toBe(false);
   });
 
+  /**
+   * The avatar scale is fixed rather than a theme group, so its index is held to
+   * the record's own keys: a step the scale grows must be listed, and a listed
+   * name the record does not carry has nothing to resolve.
+   */
+  it("names every step of the avatar scale", () => {
+    expect(new Set(avatarSizes)).toEqual(new Set(Object.keys(avatarSize)));
+    expect(avatarSizes).toHaveLength(Object.keys(avatarSize).length);
+  });
+
   it("gives every density preset a metric for every control size", () => {
     densityNames.forEach((preset) => {
       expect(
@@ -199,6 +223,9 @@ describe("a stored choice resolves without a cast", () => {
     expect(elevationFromStoredChoice("lg")).toBe("lg");
     expect(elevationFromStoredChoice("xxl")).toBe("md");
     expect(elevationFromStoredChoice(null)).toBe("md");
+    expect(avatarSizeFromStoredChoice("lg")).toBe("lg");
+    expect(avatarSizeFromStoredChoice("xl")).toBe("md");
+    expect(avatarSizeFromStoredChoice(32)).toBe("md");
     expect(toneFromStoredChoice(getTheme("dark"), "purple").background).toBe(
       statusTone(getTheme("dark"), "info").background,
     );

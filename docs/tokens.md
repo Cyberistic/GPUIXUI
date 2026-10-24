@@ -3983,6 +3983,15 @@ rather than chrome. Neither follows density — a control's height changes with
 the workspace preset, an identity mark does not. A circle's diameter is the
 element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
 
+A stored step is a **name** before it is a diameter, so the scale ships the
+index and guard every other persisted axis has — `avatarSizes` is the four steps
+in documentation order and `isAvatarSize` narrows a restored value.
+`avatarPixels(size)` resolves the diameter and reads a name this release does
+not ship as `md`, the rule `iconPixels` follows: a bare lookup answered
+`undefined`, which the renderer drops, so the mark painted with no side. The
+guard reads the index, not the record — `name in avatarSize` also answers true
+for `toString` and `constructor`.
+
 ### Target sizes
 
 A control may draw smaller than the area a pointer has to hit. A checkbox paints
@@ -4510,10 +4519,11 @@ diffable against shadcn. `override-scope.test.ts` reads both halves.
 
 ### Persisted choices
 
-Nine unions are choices a consumer stores or carries — a settings row, a URL
-parameter, a saved workspace, the role a saved document was written with or the
-lift a saved panel was raised to. Each has an **ordered index** and a guard that
-takes `unknown`, so a restored value neither needs the union retyped nor a cast:
+Ten unions are choices a consumer stores or carries — a settings row, a URL
+parameter, a saved workspace, the role a saved document was written with, the
+lift a saved panel was raised to or an identity mark's diameter. Each has an
+**ordered index** and a guard that takes `unknown`, so a restored value neither
+needs the union retyped nor a cast:
 
 | Axis | Index | Guard |
 | ---- | ----- | ----- |
@@ -4526,15 +4536,16 @@ takes `unknown`, so a restored value neither needs the union retyped nor a cast:
 | status tone | `statusTones` | `isStatusTone` |
 | type role | `textRoles` | `isTextRole` |
 | elevation level | `elevationLevels` | `isElevationLevel` |
+| avatar size | `avatarSizes` | `isAvatarSize` |
 
 The unions derive from the indexes, so adding a mode, platform or tone is one
 edit at the owner and every consumer loop — including this package's own tests —
 covers it. The indexes are held to the data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
 density preset has a metric for every control size, every tone has its own soft
-roles, every type role is a key of the type scale and every elevation level a key
-of the elevation scale (`guards.test.ts`; §Elevation holds the index itself to
-the shipped scale).
+roles, every type role is a key of the type scale, every elevation level a key
+of the elevation scale and every avatar size a key of the diameter record
+(`guards.test.ts`; §Elevation holds the index itself to the shipped scale).
 
 ```ts
 import { getTheme, isThemeContrast, isThemeMode } from "@gpuixui/tokens";
@@ -4549,10 +4560,11 @@ const themeFromStored = (stored: {
   );
 ```
 
-`src/persisted-choices.example.ts` resolves all nine axes the same way, and
+`src/persisted-choices.example.ts` resolves all ten axes the same way, and
 `guards.test.ts` runs it: a stored `dark`/`high` pair returns the AAA dark theme,
 an unknown pair keeps the light one, a document's dropped `subtitle` role reads
-as `body`, and a saved panel's dropped lift reads as `md`.
+as `body`, a saved panel's dropped lift reads as `md`, and a saved avatar's
+dropped `xl` step reads as `md`.
 
 The **theme resolvers refuse** a value outside these indexes rather than
 answering around it — the sentence names the value, the values this release ships
@@ -4574,10 +4586,12 @@ called mid-render, so it reads a name the scale does not carry as its default
 step instead of throwing or painting nothing — `textStyle` reads a role as `body`
 (§Typography), `controlHeight`/`controlPaddingX`/`switchMetricsAt` read a
 control size as `md` (§Density), `elevationShadow` reads a level this release
-does not ship as `md` (§Elevation), and `statusTone` reads a tone this release
-does not ship as `info` (§Status tones). Narrow a stored role, size, tone or
-level with `isTextRole`, `isControlSize`, `isStatusTone` or `isElevationLevel`
-where the caller can tell the reader what it substituted.
+does not ship as `md` (§Elevation), `avatarPixels` reads a diameter step as `md`
+(§Borders, icons and identity marks) and `statusTone` reads a tone this release
+does not ship as `info` (§Status tones). Narrow a stored role, size, tone, level
+or avatar step with `isTextRole`, `isControlSize`, `isStatusTone`,
+`isElevationLevel` or `isAvatarSize` where the caller can tell the reader what it
+substituted.
 
 A theme's **mode** is a stated value of the same kind, and a whole theme is
 documented as storable. `themeModeOf(theme)` reads a mode this release does not

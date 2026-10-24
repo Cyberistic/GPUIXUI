@@ -336,7 +336,9 @@ Linux style carries Adwaita's 4/6/12/16 steps.
 Pills and avatars use `full` (clamped by the renderer to half the short side).
 Identity marks use their own diameter scale — 20, 26, 32, 40 — with 32 as the
 default. It is fixed rather than theme-driven, and never follows density: a
-circle is content, not a control.
+circle is content, not a control. A stored step is still a name: `avatarSizes` is
+the index, `isAvatarSize` narrows a restored value and `avatarPixels` reads a
+step this release dropped as the default `md`.
 
 Two border roles:
 

@@ -4,10 +4,11 @@
  * A preference restored from storage is `unknown`: a settings row, a URL
  * parameter or a persisted workspace can carry a mode, a contrast variant, a
  * platform, a look, a density, a control size, a status tone, the type role a
- * saved document was written with or the elevation a saved panel was raised to
- * that this build no longer ships. Each axis has an ordered index beside its
- * guard, so a consumer narrows the stored value and falls back to a readable
- * default instead of retyping the union or casting the value.
+ * saved document was written with, the elevation a saved panel was raised to or
+ * an identity mark's diameter, any of which this build may no longer ship. Each
+ * axis has an ordered index beside its guard, so a consumer narrows the stored
+ * value and falls back to a readable default instead of retyping the union or
+ * casting the value.
  *
  * The example is executed in [`guards.test.ts`](./guards.test.ts).
  */
@@ -16,9 +17,11 @@ import { isElevationLevel, type ElevationLevel } from "./elevation.js";
 import { isPlatformName, type PlatformName } from "./platforms.js";
 import { isRetroName, type RetroName } from "./retro.js";
 import {
+  isAvatarSize,
   isControlSize,
   isDensityName,
   densityPresets,
+  type AvatarSizeName,
   type ControlSize,
   type Density,
 } from "./scale.js";
@@ -62,6 +65,17 @@ export const controlSizeFromStoredChoice = (value: unknown): ControlSize =>
  */
 export const elevationFromStoredChoice = (value: unknown): ElevationLevel =>
   orDefault(isElevationLevel, "md", value);
+
+/**
+ * Resolve the diameter a saved identity mark was drawn at.
+ *
+ * A contact list, a settings row or a restored inspector panel stores the step
+ * its avatar used, so a release that renames or drops one hands the painter a
+ * name the record no longer carries. `avatarPixels` reads that name as `md` on
+ * its own; narrowing here is what tells the consumer which value it substituted.
+ */
+export const avatarSizeFromStoredChoice = (value: unknown): AvatarSizeName =>
+  orDefault(isAvatarSize, "md", value);
 
 /** Resolve a stored status tone to the roles a soft surface needs. */
 export const toneFromStoredChoice = (

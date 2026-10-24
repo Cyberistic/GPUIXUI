@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  avatarPixels,
   avatarSize,
+  avatarSizes,
   borderWidth,
   controlSizes,
   densityNames,
@@ -158,5 +160,22 @@ describe("avatar sizes", () => {
     expect(avatarSize.sm).toBe(26);
     expect(avatarSize.md).toBe(densityPresets.comfortable.controlHeight.md);
     expect(avatarSize.lg).toBe(densityPresets.spacious.controlHeight.lg);
+  });
+
+  /**
+   * The defect this holds: `avatarPixels` did not exist and the scale shipped no
+   * index, so a stored avatar size — a saved contact list's density, a settings
+   * row's preview — could only reach the scale through a cast (`AGENTS.md` §2
+   * forbids it) or a second hand-written list of the four names.
+   */
+  it("reads every step at its own diameter, and a dropped one at the default", () => {
+    avatarSizes.forEach((step) => {
+      expect(avatarPixels(step), step).toBe(avatarSize[step]);
+    });
+    // A name a release renamed or dropped, a name the record's prototype
+    // carries, and a value that is not a name at all: all paint the default.
+    ["xl", "huge", "toString", "constructor", "", 32, null].forEach((value) => {
+      expect(avatarPixels(value), String(value)).toBe(avatarSize.md);
+    });
   });
 });
