@@ -45,3 +45,4 @@ import { AvatarGroup } from "@gpuixui/components/avatar-group";
 - **A stored member list is read**: a group restored from a saved record carries JSON's `null` for a list it never carried, so a value that is not a list paints no faces instead of throwing from the first one, and an entry without a text `name` is not a member — it is dropped while its neighbours paint (`membersOf`).
 - The chip is not interactive; compose a Popover to reach members.
 - A stored `size` the token scale does not carry paints the `md` row rather than discs stepped by `NaN`.
+- A stored `label` that is not text is no name: `nameOf` reads it at the boundary, so the group is named by its size.

@@ -183,8 +183,8 @@ export const ChatRoot = ({
   // record restored from storage, hands over `""` or `"   "`, which is an
   // absence rather than a name. Read once here so the region, the transcript and
   // the failed-reply row cannot disagree.
-  const name = accessibleName(label) ?? DEFAULT_CONVERSATION_LABEL;
-  const failure = spokenSentence(error ?? "", DEFAULT_ERROR);
+  const name = accessibleName(textOf(label)) ?? DEFAULT_CONVERSATION_LABEL;
+  const failure = spokenSentence(textOf(error), DEFAULT_ERROR);
   const [status, setStatus] = useControllableState({
     value: statusProp,
     defaultValue: defaultStatus,
@@ -274,9 +274,9 @@ export const ChatMessages = ({
   // The empty panel's copy is interface copy like a name: a blank title or
   // description lays out a line that says nothing, so it reads as the
   // component's own sentence.
-  const title = spokenSentence(emptyTitle ?? "", DEFAULT_EMPTY_TITLE);
+  const title = spokenSentence(textOf(emptyTitle), DEFAULT_EMPTY_TITLE);
   const description = spokenSentence(
-    emptyDescription ?? "",
+    textOf(emptyDescription),
     DEFAULT_EMPTY_DESCRIPTION,
   );
 
@@ -411,10 +411,11 @@ export const ChatComposer = ({
   // Names and copy are interface text too: a blank one is an absence, so the
   // field and the two actions keep the words this module documents rather than
   // publishing an unnamed control.
-  const name = accessibleName(label) ?? DEFAULT_COMPOSER_LABEL;
-  const submitWord = accessibleName(submitLabel) ?? DEFAULT_SUBMIT_LABEL;
-  const stopWord = accessibleName(stopLabel) ?? DEFAULT_STOP_LABEL;
-  const hintCopy = visibleCopy(hint);
+  const name = accessibleName(textOf(label)) ?? DEFAULT_COMPOSER_LABEL;
+  const submitWord =
+    accessibleName(textOf(submitLabel)) ?? DEFAULT_SUBMIT_LABEL;
+  const stopWord = accessibleName(textOf(stopLabel)) ?? DEFAULT_STOP_LABEL;
+  const hintCopy = visibleCopy(textOf(hint));
   const busy = Machine.isChatBusy(status);
   const empty = draft.trim() === "";
   const state: ChatComposerState = { status, busy, empty, disabled };

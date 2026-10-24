@@ -34,6 +34,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { nameOf } from "./internal/text.js";
 import { useTheme } from "./internal/theme.js";
 import {
   motionGridHeight,
@@ -125,6 +126,7 @@ export const MotionGrid = ({
   const count = Arr.length(items);
   const rows = motionGridRows(count, layout.columns);
   const reduced = preference === "reduced";
+  const gridName = nameOf(label);
   const state: MotionGridState = {
     count,
     columns: layout.columns,
@@ -135,7 +137,9 @@ export const MotionGrid = ({
   return (
     <div
       {...rest}
-      {...(label === undefined ? {} : { role: "group", "aria-label": label })}
+      {...(gridName === undefined
+        ? {}
+        : { role: "group", "aria-label": gridName })}
       motion={{
         // The frame is painted at its height on mount, and retargets from the
         // height on screen when a reorder needs another row.

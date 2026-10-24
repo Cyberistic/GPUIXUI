@@ -101,6 +101,24 @@ describe("ColorPicker", () => {
     picker.unmount();
   });
 
+  it("reads a stored label that is not text as the default name", () => {
+    // The bug guarded: a label a saved record kept as a number or an object threw
+    // `self.trim is not a function` out of `accessibleName` before the group
+    // painted, where a blank label already reads as the documented default.
+    const picker = renderComponent(
+      // @ts-expect-error — the label a stored picker config wrote.
+      <ColorPicker label={42} value="#000000" />,
+    );
+
+    try {
+      const names = Arr.map(a11yNodes(picker.renderer), (node) => node.name);
+      expect(names).toContain("Color picker");
+      expect(names).toContain("Color picker hex value");
+    } finally {
+      picker.unmount();
+    }
+  });
+
   it("offers six swatches from the theme", () => {
     const picker = renderComponent(<Harness />);
 

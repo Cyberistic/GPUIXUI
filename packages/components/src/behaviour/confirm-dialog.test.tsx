@@ -151,6 +151,36 @@ describe("ConfirmDialog", () => {
     }
   });
 
+  it("reads a stored action label that is not text as the default", () => {
+    // The bug guarded: a name is copy a saved dialog config writes as readily as
+    // a literal, and `accessibleName` trims the string it is handed — a label the
+    // record kept as a number or an object threw `self.trim is not a function`
+    // before either action painted, taking down the one surface that guards an
+    // irreversible action.
+    const confirm = renderComponent(
+      <ConfirmDialog
+        open
+        onOpenChange={() => undefined}
+        title="Delete workspace"
+        description="The workspace and its 42 files are removed permanently."
+        // @ts-expect-error — the labels a stored dialog config wrote.
+        confirmLabel={42}
+        // @ts-expect-error — the labels a stored dialog config wrote.
+        cancelLabel={{ text: "Cancel" }}
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    try {
+      const names = nodesWithRole(confirm.renderer, "button").map(
+        (node) => node.name,
+      );
+      expect(names).toEqual(expect.arrayContaining(["Cancel", "Confirm"]));
+    } finally {
+      confirm.unmount();
+    }
+  });
+
   it("paints the busy mark in the destructive tone's own label role", () => {
     const confirm = renderComponent(
       <Harness onConfirm={vi.fn()} loading tone="danger" />,

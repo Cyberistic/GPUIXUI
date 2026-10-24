@@ -28,7 +28,6 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import type { MotionLevel } from "@gpuixui/motion/timing";
-import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -40,6 +39,7 @@ import {
   type ZoomPointer,
 } from "./image-zoom/logic.js";
 import { measuredPoint } from "./internal/measure.js";
+import { nameOf } from "./internal/text.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { surfaceOriginStyle, useSurfaceBox } from "./internal/surface-box.js";
@@ -171,7 +171,7 @@ export const ImageZoom = ({
   };
 
   const corner = cornerOf(Option.fromNullishOr(radius), theme);
-  const pictureName = accessibleName(alt) ?? PICTURE_NAME;
+  const pictureName = nameOf(alt) ?? PICTURE_NAME;
   const state: ImageZoomState = {
     zoomed: Option.isSome(pointer) && geometry.scale > 1,
     reducedMotion: preference === "reduced",

@@ -32,3 +32,4 @@ import { CountingNumber } from "@gpuixui/components";
 - Re-rendered text, not a rolling reel; no per-digit slide.
 - One tween per value change; no spring or stagger.
 - The clock is real time, not the renderer's motion clock.
+- A stored `label` that is not text is no name: `nameOf` reads it at the boundary, so the announcement is the value the count reads.

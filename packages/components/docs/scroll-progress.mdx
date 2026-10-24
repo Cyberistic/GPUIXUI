@@ -42,3 +42,4 @@ import { ScrollProgress } from "@gpuixui/components/scroll-progress";
 - No tween; the line follows the offset.
 - Vertical only.
 - No `aria-valuenow`; the reading is text.
+- A stored `label` that is not text is no name: `nameOf` reads it at the boundary, so the region keeps the primitives' `Scroll region` default and the bar is announced by value.

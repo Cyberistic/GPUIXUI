@@ -252,6 +252,44 @@ describe("Message", () => {
     root.unmount();
   });
 
+  it("reads a slot name that is not text as the documented words", () => {
+    // The bug guarded: the three labels are copy a saved reply writes as readily
+    // as a literal, and `accessibleName` trims the string it is handed — a label
+    // the record kept as a number or an object threw
+    // `self.trim is not a function` before the row painted, taking the whole
+    // transcript down with it.
+    const root = renderComponent(
+      <div style={{ width: 520, padding: 24 }}>
+        <MessageRoot variant="assistant">
+          <MessageContent
+            reasoning="Checked the layout pass."
+            // @ts-expect-error — the names a stored reply wrote.
+            reasoningLabel={42}
+            sources={[{ label: "Docs" }]}
+            // @ts-expect-error — the names a stored reply wrote.
+            sourcesLabel={{ text: "Sources" }}
+            streaming
+            // @ts-expect-error — the names a stored reply wrote.
+            streamingLabel={42}
+          >
+            <text>Body</text>
+          </MessageContent>
+        </MessageRoot>
+      </div>,
+    );
+
+    try {
+      const lists = nodesWithRole(root.renderer, "list").map(
+        (node) => node.name,
+      );
+      expect(lists).toEqual(["Sources"]);
+      expect(root.renderer.findByText("Reasoning")).toBeDefined();
+      expect(root.renderer.findByText("Streaming…")).toBeDefined();
+    } finally {
+      root.unmount();
+    }
+  });
+
   it("mirrors a user row and leaves an assistant row leading", () => {
     const user = renderComponent(<Row variant="user" />);
     expect(user.renderer.findByTestId("row")?.style.flexDirection).toBe(

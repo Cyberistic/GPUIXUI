@@ -23,6 +23,7 @@ import { useState, type ReactNode } from "react";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { statusTone, useTheme } from "./internal/theme.js";
 import { Stepper, StepperStep } from "./stepper.js";
 import { stepName } from "./stepper/logic.js";
@@ -115,13 +116,14 @@ export const MultiStepForm = ({
   ...rest
 }: MultiStepFormProps) => {
   const theme = useTheme();
-  const name = accessibleName(label);
+  const name = accessibleName(textOf(label));
   // A default covers only an absent prop, so an action label that arrived blank
   // (an i18n table's missing key) would paint an unnamed button — the only
   // route forward. Read the three through the same absence rule as every name.
-  const submitWord = accessibleName(submitLabel) ?? DEFAULT_SUBMIT_LABEL;
-  const nextWord = accessibleName(nextLabel) ?? DEFAULT_NEXT_LABEL;
-  const backWord = accessibleName(backLabel) ?? DEFAULT_BACK_LABEL;
+  const submitWord =
+    accessibleName(textOf(submitLabel)) ?? DEFAULT_SUBMIT_LABEL;
+  const nextWord = accessibleName(textOf(nextLabel)) ?? DEFAULT_NEXT_LABEL;
+  const backWord = accessibleName(textOf(backLabel)) ?? DEFAULT_BACK_LABEL;
   // A workflow is data as often as code: a saved definition writes `null` where
   // it carried no list, and one deleted record leaves a `null` entry. Both read
   // as no step rather than throwing out of the render — an empty list already

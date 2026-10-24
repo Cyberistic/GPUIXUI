@@ -33,6 +33,7 @@ import {
 } from "./dialog.js";
 import type { PartChildren } from "./internal/parts.js";
 import { Button, actionOnColor } from "./internal/button.js";
+import { textOf } from "./internal/text.js";
 import { useTheme } from "./internal/theme.js";
 
 /** The words a blank action label falls back to. */
@@ -86,8 +87,10 @@ export const ConfirmDialog = ({
   const theme = useTheme();
   // A default covers only an absent prop, so a label table's missing key would
   // paint both actions nameless — including the one that cannot be undone.
-  const confirmWord = accessibleName(confirmLabel) ?? DEFAULT_CONFIRM_LABEL;
-  const cancelWord = accessibleName(cancelLabel) ?? DEFAULT_CANCEL_LABEL;
+  const confirmWord =
+    accessibleName(textOf(confirmLabel)) ?? DEFAULT_CONFIRM_LABEL;
+  const cancelWord =
+    accessibleName(textOf(cancelLabel)) ?? DEFAULT_CANCEL_LABEL;
   const cancel = useRef<PublicInstance | null>(null);
   const variant = Match.value(tone).pipe(
     Match.when("danger", () => "danger" as const),

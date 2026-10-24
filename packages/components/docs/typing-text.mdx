@@ -40,3 +40,4 @@ import { TypingText } from "@gpuixui/components";
 - The caret cannot follow a wrapped line.
 - No per-glyph paint or stagger.
 - **A stored `role` the type scale does not carry paints `"body"`**: the string and its caret both read the role through `textStyle`, so a preference a release renamed keeps the text paintable instead of taking the surface down.
+- A stored `label` that is not text is no name: `nameOf` reads it at the boundary, so the announcement is the phrase the reveal paints.

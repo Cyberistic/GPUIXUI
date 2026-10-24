@@ -36,6 +36,7 @@ import {
 import { useControllableState } from "./internal/controllable.js";
 import { activationHandlers } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import {
   controlHeight,
   keepContent,
@@ -143,7 +144,7 @@ export const ColorPicker = ({
   // A label is copy from an i18n table as often as a literal: a blank one is
   // the absence the documented default names, not an empty group announced
   // beside a field called `" hex value"`.
-  const name = accessibleName(label) ?? DEFAULT_COLOR_PICKER_LABEL;
+  const name = accessibleName(textOf(label)) ?? DEFAULT_COLOR_PICKER_LABEL;
   const [value, setValue] = useControllableState({
     // A colour is saved with the control: a record's `null` is the absence the
     // controlled prop already reads as uncontrolled, and an absent default is

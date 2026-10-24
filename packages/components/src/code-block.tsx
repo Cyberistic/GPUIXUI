@@ -37,6 +37,7 @@ import {
   useSurfaceTiming,
 } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { nameOf } from "./internal/text.js";
 import { syntaxColors, textStyle, useTheme } from "./internal/theme.js";
 import { CopyButton } from "./copy-button.js";
 import { codeLines } from "./code-block/tokenize.js";
@@ -188,7 +189,7 @@ export const CodeBlock = ({
     <div
       {...rest}
       role="group"
-      aria-label={ariaLabel ?? codeBlockName(header)}
+      aria-label={nameOf(ariaLabel) ?? codeBlockName(header)}
       aria-description={codeBlockDescription(
         codeRowCount(code),
         header.language,

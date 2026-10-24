@@ -45,6 +45,7 @@ import {
 } from "./avatar-group/logic.js";
 import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { nameOf } from "./internal/text.js";
 import { avatarPixels, textStyle, useTheme } from "./internal/theme.js";
 
 /** One face in a group. */
@@ -168,7 +169,10 @@ export const AvatarGroup = ({
   return (
     <div
       role="group"
-      aria-label={groupName(Option.fromNullishOr(label), Arr.length(members))}
+      aria-label={groupName(
+        Option.fromNullishOr(nameOf(label)),
+        Arr.length(members),
+      )}
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(className), theme), {

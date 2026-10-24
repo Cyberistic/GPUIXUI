@@ -23,6 +23,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { ScrollSurface } from "./internal/scroll-surface.js";
+import { nameOf } from "./internal/text.js";
 import { alpha, useTheme } from "./internal/theme.js";
 import {
   edgeGradient,
@@ -100,13 +101,14 @@ export const ScrollFade = ({
   const theme = useTheme();
   const base = testId ?? "scroll-fade";
   const size = scrollSize(Option.fromNullishOr(edgeSize), 32);
+  const name = nameOf(label);
   const solid = color ?? theme.colors.background;
   const stops = { solid, clear: alpha(solid, 0) };
 
   return (
     <ScrollSurface
       testId={testId}
-      label={label}
+      label={name}
       className={className}
       style={style}
       chrome={(metrics) => (

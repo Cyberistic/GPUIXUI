@@ -25,6 +25,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { ScrollSurface } from "./internal/scroll-surface.js";
+import { nameOf } from "./internal/text.js";
 import { useTheme } from "./internal/theme.js";
 import { scrollSize, type ScrollMetrics } from "./scroll/metrics.js";
 
@@ -123,11 +124,12 @@ export const ScrollProgress = ({
 }: ScrollProgressProps) => {
   const theme = useTheme();
   const base = testId ?? "scroll-progress";
+  const name = nameOf(label);
 
   return (
     <ScrollSurface
       testId={testId}
-      label={label}
+      label={name}
       className={className}
       style={style}
       chrome={(metrics) => (
@@ -137,7 +139,7 @@ export const ScrollProgress = ({
           thickness={scrollSize(Option.fromNullishOr(thickness), 3)}
           color={color ?? theme.colors.primary}
           trackColor={trackColor ?? theme.colors.muted}
-          label={label}
+          label={name}
           base={base}
         />
       )}

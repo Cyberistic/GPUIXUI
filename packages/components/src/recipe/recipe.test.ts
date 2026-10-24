@@ -249,7 +249,9 @@ describe("The recipe seam", () => {
     expect(height).toBe(darkTheme.density.controlHeight.md);
     expect(height).not.toBe(36);
     expect(source).not.toContain("h-9` = 36");
-    expect(source).toContain(`\`h-9\` is \`md\` (${height} in the default theme)`);
+    expect(source).toContain(
+      `\`h-9\` is \`md\` (${height} in the default theme)`,
+    );
   });
 });
 

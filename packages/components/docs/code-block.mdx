@@ -42,3 +42,4 @@ import { CodeBlock } from "@gpuixui/components/code-block";
 - The code text is not exposed to assistive technology.
 - `@tanstack/highlight` decides what a run is; the palette only colours it.
 - A language the tokenizer does not ship falls back to plain text.
+- A stored `aria-label` (or copy label) that is not text is no name: `nameOf` reads it at the boundary, so the block announces its header's title (or `Code`) and the action its default words.

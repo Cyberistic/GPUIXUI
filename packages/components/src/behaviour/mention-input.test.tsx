@@ -367,9 +367,9 @@ describe("the list's exit", () => {
 
     expect(onMention).not.toHaveBeenCalled();
     expect(valueOf(mention)).toBe("@an");
-    expect(mention.renderer.findByTestId("row-ana")?.customProps?.tabIndex).toBe(
-      -1,
-    );
+    expect(
+      mention.renderer.findByTestId("row-ana")?.customProps?.tabIndex,
+    ).toBe(-1);
     mention.unmount();
   });
 

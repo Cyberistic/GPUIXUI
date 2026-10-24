@@ -38,3 +38,4 @@ const [mirror, setMirror] = useState("");
 - No clipboard write; the control calls `onCopy` and acknowledges the press.
 - The confirmation is the button's name; no live region exists.
 - The glyph fades and rises; it does not scale.
+- A stored `label` or `copiedLabel` that is not text is no name: `nameOf` reads it at the boundary, so the action is named `Copy` and `Copied` rather than throwing on `Str.trim`.

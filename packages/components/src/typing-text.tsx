@@ -24,7 +24,7 @@ import { cn } from "@gpuixui/tw";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { textOf } from "./internal/text.js";
+import { nameOf, textOf } from "./internal/text.js";
 import {
   textStyle,
   useTheme,
@@ -182,7 +182,7 @@ export const TypingText = ({
       )}
     >
       <text
-        aria-label={label ?? phrase}
+        aria-label={nameOf(label) ?? phrase}
         style={{
           ...textStyle(theme, role),
           color: theme.colors.foreground,

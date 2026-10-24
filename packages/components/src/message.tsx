@@ -64,6 +64,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { textOf } from "./internal/text.js";
 import { useTheme } from "./internal/theme.js";
 
 /** Who a row is from, as the guard reads it. The default is `assistant`. */
@@ -403,10 +404,10 @@ export const MessageContent = ({
   // documented words rather than painting an unnamed list or an empty line.
   const calls = listOf(toolCalls);
   const citations = listOf(sources);
-  const thought = visibleCopy(reasoning);
-  const streamingWord = accessibleName(streamingLabel) ?? "Streaming…";
-  const reasoningWord = accessibleName(reasoningLabel) ?? "Reasoning";
-  const citationsWord = accessibleName(sourcesLabel) ?? "Sources";
+  const thought = visibleCopy(textOf(reasoning));
+  const streamingWord = accessibleName(textOf(streamingLabel)) ?? "Streaming…";
+  const reasoningWord = accessibleName(textOf(reasoningLabel)) ?? "Reasoning";
+  const citationsWord = accessibleName(textOf(sourcesLabel)) ?? "Sources";
 
   return (
     <div

@@ -15,13 +15,13 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useEffect, useRef } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { nameOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 import { at, nextIndex, phraseAt, phrasesOf } from "./rotating-text/logic.js";
 
@@ -116,7 +116,7 @@ export const RotatingText = ({
     <text
       key={index}
       {...rest}
-      aria-label={accessibleName(label) ?? accessibleName(phrase)}
+      aria-label={nameOf(label) ?? nameOf(phrase)}
       motion={{
         initial: { opacity: 0 },
         animate: { opacity: 1 },

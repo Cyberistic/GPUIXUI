@@ -486,4 +486,64 @@ describe("Chat", () => {
       page.unmount();
     }
   });
+
+  it("reads the names and the help a stored conversation wrote as text", () => {
+    // The bug guarded: a conversation restored from storage carries the fields
+    // the record kept, and `accessibleName`/`spokenSentence` trim the string they
+    // are handed — a label, a failure sentence or a help line the decoder wrote
+    // as a number threw `self.trim is not a function` out of the first paint.
+    const Surface = ({ status }: { readonly status?: ChatStatus }) => (
+      <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
+        <ChatRoot
+          // @ts-expect-error — the name a stored conversation wrote.
+          label={42}
+          // @ts-expect-error — the sentence a stored conversation wrote.
+          error={{ text: "The reply failed." }}
+          status={status}
+          onSubmit={() => undefined}
+          onStop={() => undefined}
+        >
+          <ChatMessages
+            // @ts-expect-error — the copy a stored conversation wrote.
+            emptyTitle={42}
+            // @ts-expect-error — the copy a stored conversation wrote.
+            emptyDescription={{ text: "Messages you send appear here." }}
+          />
+          <ChatComposer
+            // @ts-expect-error — the names a stored composer wrote.
+            label={42}
+            // @ts-expect-error — the names a stored composer wrote.
+            submitLabel={42}
+            // @ts-expect-error — the names a stored composer wrote.
+            stopLabel={{ text: "Stop" }}
+            // @ts-expect-error — the help a stored composer wrote.
+            hint={42}
+          />
+        </ChatRoot>
+      </div>
+    );
+
+    const page = renderComponent(<Surface />);
+    try {
+      expect(
+        nodesWithRole(page.renderer, "region").map((node) => node.name),
+      ).toEqual(["Conversation"]);
+      expect(
+        nodesWithRole(page.renderer, "multilinetextinput").map(
+          (node) => node.name,
+        ),
+      ).toEqual(["Message"]);
+      expect(
+        nodesWithRole(page.renderer, "button").map((node) => node.name),
+      ).toEqual(["Send"]);
+      expect(page.renderer.getAllText()).toEqual(
+        expect.arrayContaining([
+          "Start the conversation",
+          "Messages you send appear here.",
+        ]),
+      );
+    } finally {
+      page.unmount();
+    }
+  });
 });

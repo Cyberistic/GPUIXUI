@@ -417,6 +417,50 @@ describe("MultiStepForm", () => {
     expect(painted).toStrictEqual(["Before"]);
   });
 
+  it("reads a stored wizard name and action labels that are not text", () => {
+    // The bug guarded: a wizard composed from a saved definition carries the
+    // fields the record kept, so a name or action label the decoder wrote as a
+    // number reached `accessibleName`, whose `trim` threw
+    // `self.trim is not a function` out of the first paint — the whole workflow
+    // went down instead of painting the words it documents.
+    const wizard = renderComponent(
+      <MultiStepForm
+        testId="wizard"
+        // @ts-expect-error — the names a saved workflow definition wrote.
+        label={42}
+        // @ts-expect-error — the names a saved workflow definition wrote.
+        submitLabel={42}
+        // @ts-expect-error — the names a saved workflow definition wrote.
+        nextLabel={{ text: "Next" }}
+        // @ts-expect-error — the names a saved workflow definition wrote.
+        backLabel={42}
+        onSubmit={() => undefined}
+        steps={[
+          {
+            id: "name",
+            title: "Name",
+            content: <text testId="step-one">Name step</text>,
+          },
+          {
+            id: "review",
+            title: "Review",
+            content: <text testId="step-two">Review step</text>,
+          },
+        ]}
+      />,
+    );
+    try {
+      expect(
+        nodesWithRole(wizard.renderer, "list").map((node) => node.name),
+      ).toStrictEqual(["Steps"]);
+      expect(
+        nodesWithRole(wizard.renderer, "button").map((node) => node.name),
+      ).toEqual(expect.arrayContaining(["Back", "Next"]));
+    } finally {
+      wizard.unmount();
+    }
+  });
+
   it("names a step whose stored title is not text by its position", () => {
     // The bug guarded: a workflow composed from a saved definition carries the
     // field the record kept, so a title the decoder wrote as a number reached

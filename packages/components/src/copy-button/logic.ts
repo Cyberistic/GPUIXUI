@@ -13,7 +13,7 @@
 
 import { pipe } from "effect";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
+import { nameOf } from "../internal/text.js";
 
 /** The name the action carries at rest. */
 const DEFAULT_LABEL = "Copy";
@@ -24,21 +24,24 @@ const DEFAULT_COPIED_LABEL = "Copied";
 /** How long the acknowledgement stays, in milliseconds. */
 export const COPY_ACKNOWLEDGEMENT_MS = 1_200;
 
-/** A caller's name, or the fallback when it is absent or blank. */
-const named = (value: string | undefined, fallback: string): string =>
-  pipe(
-    Option.fromNullishOr(value),
-    Option.map(Str.trim),
-    Option.filter(Str.isNonEmpty),
-    Option.getOrElse(() => fallback),
-  );
+/**
+ * A caller's name, or the fallback when it is absent or says nothing.
+ *
+ * A name is a stored value as often as a literal — a toolbar saved with its
+ * button labels, an i18n row, a settings record — so it arrives as whatever the
+ * store wrote. `nameOf` reads it as text or nothing, so a `null` a record kept
+ * and a number a column held both take the fallback instead of `Str.trim`
+ * throwing out of the render.
+ */
+const named = (value: unknown, fallback: string): string =>
+  Option.getOrElse(Option.fromNullishOr(nameOf(value)), () => fallback);
 
 /** {@link copyButtonLabel} input: the two names a caller may override. */
 export interface CopyButtonLabels {
   /** The name at rest. Default `"Copy"`. */
-  readonly label?: string;
+  readonly label?: unknown;
   /** The name after a press. Default `"Copied"`. */
-  readonly copiedLabel?: string;
+  readonly copiedLabel?: unknown;
 }
 
 /** The name a reader hears, from the acknowledgement state. */

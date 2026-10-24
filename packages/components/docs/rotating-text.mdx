@@ -42,3 +42,4 @@ import { RotatingText } from "@gpuixui/components/rotating-text";
 - No width animation.
 - No `aria-live`; a screen reader is not pushed a phrase.
 - The phrase list is read at the boundary: a stored list that is absent reads as no phrases (the frame still paints), and an entry that is not text is dropped rather than painted as a blank frame. A blank `label` reads as the phrase on screen.
+- A stored `label` that is not text is no name: `nameOf` reads it at the boundary, so the announcement is the phrase on screen.

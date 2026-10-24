@@ -28,6 +28,7 @@ import * as Option from "effect/Option";
 import { countDuration, countedText } from "./counting-number/logic.js";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { nameOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 
 /** What a counting number draws at one frame. */
@@ -108,7 +109,7 @@ export const CountingNumber = ({
   return (
     <text
       {...rest}
-      aria-label={label ?? countedText(value, { decimals, format })}
+      aria-label={nameOf(label) ?? countedText(value, { decimals, format })}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(className), theme), {
           ...textStyle(theme, role),

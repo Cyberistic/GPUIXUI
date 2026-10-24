@@ -32,6 +32,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { nameOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 import {
   columnTop,
@@ -185,7 +186,7 @@ export const SlidingNumber = ({
     <div
       {...rest}
       role="status"
-      aria-label={label ?? layout.text}
+      aria-label={nameOf(label) ?? layout.text}
       style={mergeStyles(
         { display: "flex", flexDirection: "row", alignItems: "flex-start" },
         mergeStyles(

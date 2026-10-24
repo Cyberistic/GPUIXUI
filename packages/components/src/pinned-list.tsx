@@ -29,6 +29,7 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { measuredHeight } from "./internal/measure.js";
 import { ScrollSurface } from "./internal/scroll-surface.js";
+import { nameOf } from "./internal/text.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 import {
   headerHeightOf,
@@ -179,7 +180,7 @@ export const PinnedList = ({
   return (
     <ScrollSurface
       testId={testId}
-      label={label}
+      label={nameOf(label)}
       style={style}
       onScrollChange={onScrollChange}
       onLayout={onLayout}

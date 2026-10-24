@@ -54,3 +54,4 @@ import { ImageZoom } from "@gpuixui/components/image-zoom";
 - **A blank picture name reads as `"Picture"`**: the runtime publishes an
   `<img>` as an `Image` node named by its `alt`, so an empty name — an i18n row,
   or a saved record's `null` — would otherwise be announced with no name at all.
+- A stored `alt` that is not text is no name: `nameOf` reads it at the boundary, so the picture is named `Picture`.
