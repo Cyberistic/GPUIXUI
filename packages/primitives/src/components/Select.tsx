@@ -59,7 +59,7 @@ import {
   type SelectItemState,
   type SelectTriggerState,
 } from "@gpuix/react/select";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, visibleCopy } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { revealScroll } from "../core/scroll.js";
 import { storedList, storedText } from "../core/stored.js";
@@ -126,10 +126,10 @@ const storedOption = (entry: unknown): Option.Option<SelectOption> => {
   if (value === undefined) return Option.none();
   return Option.some({
     value,
-    // A missing or blank name reads as the value it carries: the row and the
-    // closed trigger both announce the option, and an unnamed row is a row a
-    // reader cannot tell from its neighbour.
-    label: storedText(entry["label"]) ?? value,
+    // A missing label is absence, not a repetition of the value: a blank name
+    // is the package's documented rule (the row's content names it), so the
+    // reader does not invent copy the caller never wrote.
+    label: storedText(entry["label"]) ?? "",
     disabled: entry["disabled"] === true,
   });
 };
@@ -563,8 +563,13 @@ export const renderSelect = (
         role="listbox"
         style={selectContentStyle(theme)}
       >
-        {Arr.map(entries, (entry, index) =>
-          isSelectGroup(entry) ? (
+        {Arr.map(entries, (entry, index) => {
+          if (!isSelectGroup(entry)) return renderItem(entry);
+          // A caption that arrived blank is no caption: an empty `<text>` is
+          // 0px but a run of spaces lays out a full line, which drew a blank
+          // band between two groups of rows.
+          const caption = visibleCopy(entry.label);
+          return (
             <Fragment key={`group-${index}`}>
               {index === 0 ? null : (
                 <SelectSeparator style={selectSeparatorStyle(theme)} />
@@ -574,13 +579,12 @@ export const renderSelect = (
                 plain `div`, so the `group` role and the caption are what a
                 reader hears before the group's options.
               */}
-              <SelectGroup
-                role="group"
-                aria-label={accessibleName(entry.label)}
-              >
-                <SelectLabel style={selectLabelStyle(theme)}>
-                  {entry.label}
-                </SelectLabel>
+              <SelectGroup role="group" aria-label={accessibleName(caption)}>
+                {caption === undefined ? null : (
+                  <SelectLabel style={selectLabelStyle(theme)}>
+                    {caption}
+                  </SelectLabel>
+                )}
                 {/*
                   Spread, not nested: the parts helper walks a component's
                   children and flattens fragments, so an array left as one child
@@ -590,10 +594,8 @@ export const renderSelect = (
                 {...Arr.map(entry.options, renderItem)}
               </SelectGroup>
             </Fragment>
-          ) : (
-            renderItem(entry)
-          ),
-        )}
+          );
+        })}
       </SelectContent>
     </GpuixSelect>
   );

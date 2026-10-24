@@ -175,9 +175,9 @@ and each is read through a membership test rather than indexed raw:
   promise: `null` at `Arr.map`/`Arr.length`, a `null` entry at its `.value` or
   inside `isSelectGroup`'s `in`. `selectEntries` (`Select.tsx`) and
   `groupOptions` (`group.tsx`) read only a real array, drop an entry with no
-  text `value` — a missing or blank name reads as that value — and drop a
-  `Select` group whose list is not one; `toggleGroupValues` reads a value it
-  cannot use as **no values**. The shared boundary reads live in
+  text `value`, leave a missing or blank name unnamed (the row's content names
+  it) and drop a `Select` group whose list is not one; `toggleGroupValues` reads
+  a value it cannot use as **no values**. The shared boundary reads live in
   `core/stored.ts` (`storedList`, `storedText`). `Select.test.tsx`, the three
   groups' suites and `runtime/fields.runtime.test.tsx` (a window) hold them.
 - the **theme itself** is what a store gave back, and a numeric group it did not

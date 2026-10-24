@@ -185,18 +185,45 @@ describe("Select's stored list", () => {
       "pear",
       { label: "No value" },
       { value: "pear" },
+      { value: "fig", label: "   " },
     ]);
     // A deleted record leaves `null` in a saved array; an option with no text
-    // value is a record this release cannot place, and one missing name reads as
-    // the value it carries.
+    // value is a record this release cannot place, and a missing label is
+    // absence rather than a repetition of the value.
     expect(entries).toEqual([
       { value: "apple", label: "Apple", disabled: false },
-      { value: "pear", label: "pear", disabled: false },
+      { value: "pear", label: "", disabled: false },
+      { value: "fig", label: "   ", disabled: false },
     ]);
     expect(selectOptions(entries).map((option) => option.value)).toEqual([
       "apple",
       "pear",
+      "fig",
     ]);
+  });
+
+  it("paints no caption line for a stored group whose name arrived blank", () => {
+    // The bug guarded: a caption is copy as often as a literal, and a blank one
+    // lays out a full line of spaces (measured: `""` is 0px and `"   "` is 16px)
+    // above the group's rows, so a restored group with no name drew a blank band.
+    const element = renderSelect(
+      {
+        options: [
+          {
+            label: "   ",
+            options: [{ value: "apple", label: "Apple" }],
+          },
+        ],
+      },
+      testTheme,
+    );
+    const content =
+      elementChildren(element)[1] ??
+      expect.fail("the select rendered no content part");
+    const group =
+      elementChildren(content)[0] ?? expect.fail("the select painted no group");
+    expect(elementChildren(group)).toHaveLength(1);
+    expect(Option.isNone(elementProp(group, "aria-label"))).toBe(true);
   });
 
   it("reads a group's list, and drops a group whose list is not one", () => {

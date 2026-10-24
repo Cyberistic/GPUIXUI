@@ -50,4 +50,4 @@ import { RadioGroup } from "@gpuixui/primitives";
 
 - No `aria-checked`: state is announced through `aria-valuetext`.
 - `description` is announced as `aria-description`; there is no `aria-describedby`.
-- `""` is a value: an empty-string option paints checked when the group is `""`. A stored `options` list is read structurally — an entry with no text `value` is dropped rather than hiding the rows beside it, and a missing or blank `label` reads as the value.
+- `""` is a value: an empty-string option paints checked when the group is `""`. A stored `options` list is read structurally — an entry with no text `value` is dropped rather than hiding the rows beside it, and a missing or blank `label` stays unnamed (the row's content can name it).

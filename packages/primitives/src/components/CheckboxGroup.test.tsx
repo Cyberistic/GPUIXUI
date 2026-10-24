@@ -26,7 +26,7 @@ import {
   type CheckboxItemState,
   type CheckboxGroupOption,
 } from "./CheckboxGroup.js";
-import { type GroupFocus, optionBody } from "./group.js";
+import { type GroupFocus, groupOptions, optionBody } from "./group.js";
 import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -550,12 +550,15 @@ describe("checkboxGroupItems", () => {
     // an array whose record was deleted. Read raw, that entry threw
     // `Cannot read properties of null (reading 'value')` and took every row
     // beside it out of the render.
-    const items = checkboxGroupItems({
-      // @ts-expect-error — a record a store wrote as absent.
-      options: [null, { value: "email" }, { label: "No value" }],
-    });
+    const items = groupOptions([
+      null,
+      { value: "email" },
+      { value: "push", label: "   " },
+      { label: "No value" },
+    ]);
     expect(items).toEqual([
-      { value: "email", label: "email", disabled: false },
+      { value: "email", label: "", disabled: false },
+      { value: "push", label: "   ", disabled: false },
     ]);
   });
 

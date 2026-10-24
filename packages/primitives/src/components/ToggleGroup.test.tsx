@@ -15,7 +15,7 @@ import { Icon } from "@gpuixui/icons";
 import { decideTypeAhead } from "../core/keyboard.js";
 import { toggleSelection } from "../core/selection.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { type GroupFocus } from "./group.js";
+import { type GroupFocus, groupOptions } from "./group.js";
 import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -508,11 +508,16 @@ describe("toggleGroupItems", () => {
     // an array whose record was deleted. Read raw, that entry threw
     // `Cannot read properties of null (reading 'value')` and took every row
     // beside it out of the render.
-    const items = toggleGroupItems({
-      // @ts-expect-error — a record a store wrote as absent.
-      options: [null, { value: "bold" }, { label: "No value" }],
-    });
-    expect(items).toEqual([{ value: "bold", label: "bold", disabled: false }]);
+    const items = groupOptions([
+      null,
+      { value: "bold" },
+      { value: "italic", label: "   " },
+      { label: "No value" },
+    ]);
+    expect(items).toEqual([
+      { value: "bold", label: "", disabled: false },
+      { value: "italic", label: "   ", disabled: false },
+    ]);
   });
 
   it("draws an item's rich content inside its button", () => {

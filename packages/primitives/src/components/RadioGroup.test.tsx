@@ -28,6 +28,7 @@ import {
   type RadioItemState,
   type RadioOption,
 } from "./RadioGroup.js";
+import { groupOptions } from "./group.js";
 import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -494,12 +495,15 @@ describe("RadioGroupItem", () => {
     // an array whose record was deleted. Read raw, that entry threw
     // `Cannot read properties of null (reading 'value')` and took every row
     // beside it out of the render.
-    const items = radioItems({
-      // @ts-expect-error — a record a store wrote as absent.
-      options: [null, { value: "alpha" }, { label: "No value" }],
-    });
+    const items = groupOptions([
+      null,
+      { value: "alpha" },
+      { value: "beta", label: "   " },
+      { label: "No value" },
+    ]);
     expect(items).toEqual([
-      { value: "alpha", label: "alpha", disabled: false },
+      { value: "alpha", label: "", disabled: false },
+      { value: "beta", label: "   ", disabled: false },
     ]);
   });
 

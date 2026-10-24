@@ -109,9 +109,9 @@ const storedOption = (entry: unknown): Option.Option<GroupOption> => {
   const content = storedContent(entry["content"]);
   return Option.some({
     value,
-    // A missing or blank name reads as the value the row carries, so the row
-    // is never an unnamed control whose words are absent.
-    label: storedText(entry["label"]) ?? value,
+    // A missing label is absence, not an invented name: a blank name leaves
+    // the row's own content to name it, the rule the option body follows.
+    label: storedText(entry["label"]) ?? "",
     disabled: entry["disabled"] === true,
     ...(description === undefined ? {} : { description }),
     ...(content === undefined ? {} : { content }),

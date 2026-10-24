@@ -62,4 +62,4 @@ import { ToggleGroup } from "@gpuixui/primitives";
 
 - No `aria-pressed`: the pressed state is announced as `aria-valuetext`.
 - One tab stop, so an option is not reachable by Tab.
-- No overflow-to-menu, dividers or shortcut registration. A stored `options` list is read structurally — an entry with no text `value` is dropped rather than hiding the rows beside it, and a missing or blank `label` reads as the value — and a stored `value`/`defaultValue` that is `null` or a shape this release does not carry reads as no selection.
+- No overflow-to-menu, dividers or shortcut registration. A stored `options` list is read structurally — an entry with no text `value` is dropped rather than hiding the rows beside it, a missing or blank `label` stays unnamed (the row's content can name it) — and a stored `value`/`defaultValue` that is `null` or a shape this release does not carry reads as no selection.
