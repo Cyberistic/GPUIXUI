@@ -104,6 +104,14 @@ export const isStatusTone = (value: unknown): value is StatusTone =>
   statusTones.some((tone) => tone === value);
 
 /**
+ * The tone a name this release does not ship paints as: `info`, the neutral
+ * family, and the tone the boundary resolver substitutes for a stored value it
+ * cannot narrow (`persisted-choices.example.ts`), so the seam every component
+ * paints through and the narrowing a consumer does at the boundary agree.
+ */
+const defaultStatusTone: StatusTone = "info";
+
+/**
  * The share of a status tone's solid role that its soft surface's edge paints.
  * The edge sits between the tone's own tint and the page, so both sides are held
  * to the decorative perceptibility floor (`decorative.ts`).
@@ -141,6 +149,16 @@ export interface StatusToneStyle {
  * and the runtime paints nothing, the rule {@link elevationShadow} follows for an
  * absent level.
  *
+ * A **tone name is content too**: a notification record, a log line's level or a
+ * saved status item carries the family it was written with, and a release that
+ * renames one hands this function a name `statusTones` no longer carries. It
+ * reads that name as `info` — the tone
+ * [`persisted-choices.example.ts`](./persisted-choices.example.ts) substitutes —
+ * rather than looking up `dangerSoft`, painting nothing and answering `undefined`
+ * where the `Theme` overload promises a tone. Narrow a stored tone with
+ * {@link isStatusTone} where the caller can tell the reader what it substituted;
+ * a theme that lost the *roles* is the gate's report, not a name to replace.
+ *
  * @example
  * ```tsx
  * const tone = statusTone(theme, "info");
@@ -162,10 +180,11 @@ export function statusTone(
   theme: ColourSource,
   tone: StatusTone,
 ): StatusToneStyle | undefined {
+  const name = isStatusTone(tone) ? tone : defaultStatusTone;
   const colors = themeColors(theme);
-  const background = colors[`${tone}Soft`];
-  const foreground = colors[`${tone}SoftForeground`];
-  const edge = colors[tone];
+  const background = colors[`${name}Soft`];
+  const foreground = colors[`${name}SoftForeground`];
+  const edge = colors[name];
   return background === undefined ||
     foreground === undefined ||
     edge === undefined

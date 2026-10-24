@@ -203,9 +203,11 @@ release does not ship as `md` — `controlHeight`/`controlPaddingX` answered
 `undefined` where they declare a number, and `switchMetricsAt` scaled the
 platform's box by `undefined` into a `NaN` that painted nothing. `elevationShadow`
 reads a level this release does not ship as `md` too, rather than a raised panel
-that silently paints flat. Narrow a stored role, size or level with `isTextRole`,
-`isControlSize` or `isElevationLevel` where the caller can tell the reader what it
-substituted.
+that silently paints flat, and `statusTone` reads a tone this release does not
+ship as `info` — the family the boundary narrowing substitutes — rather than
+answering `undefined` to a caller that destructures it. Narrow a stored role, size,
+tone or level with `isTextRole`, `isControlSize`, `isStatusTone` or
+`isElevationLevel` where the caller can tell the reader what it substituted.
 
 A whole theme is storable, so its **mode** is a stated value before it is a union.
 There is no strict reading of light and dark, so `themeModeOf(theme)` reads a mode
@@ -242,7 +244,11 @@ absent or `null` variant is "declares nothing" and keeps the default floors.
 The four status families — `info`, `success`, `warning` and `destructive` — each
 have a solid role with a readable foreground and a soft pair for alerts, badges
 and toasts. `statusTone` resolves the soft surface, its readable foreground and a
-30%-alpha edge; `alpha` turns any hex role into a translucent one.
+30%-alpha edge; `alpha` turns any hex role into a translucent one. A tone **name**
+is content too — a notification record or a saved status item carries the family
+it was written with — so `statusTone` reads a tone this release does not ship as
+`info`, the family `toneFromStoredChoice` substitutes, rather than a role the
+palette has no family for; narrow a stored one with `isStatusTone`.
 
 ```ts
 import { alpha, statusTone } from "@gpuixui/tokens";

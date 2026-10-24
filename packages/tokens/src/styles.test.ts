@@ -21,9 +21,11 @@ import {
   filledPressed,
   statusTone,
   statusTones,
+  isStatusTone,
   textStyle,
   type FilledAction,
   type FilledRole,
+  type StatusTone,
 } from "./styles.js";
 import {
   darkTheme,
@@ -221,6 +223,42 @@ describe("statusTone", () => {
         );
       });
     });
+  });
+
+  /**
+   * A tone is content as often as a literal: a notification record, a log line's
+   * level or a saved status item carries the family it was written with, and a
+   * release that renames one hands the painter a name `statusTones` no longer
+   * carries. The lookup answered `undefined` — `dangerSoft` is no role — so a
+   * message painted **nothing**, in the one function the `Theme` overload
+   * promises a tone outright and whose callers destructure it (a component's
+   * `const { background, border, foreground } = statusTone(theme, tone)` threw
+   * `Cannot read properties of undefined (reading 'background')`). `info` is the
+   * default family — the tone the boundary resolver substitutes — so the seam
+   * and the boundary agree instead of one painting and the other refusing.
+   */
+  it("reads a tone this release does not ship as the default tone", () => {
+    // The cast is the storage boundary: a saved record's tone is unknown input.
+    const stored = JSON.parse('"danger"') as StatusTone;
+
+    toneThemes.forEach(([label, theme]) => {
+      expect(statusTone(theme, stored), label).toEqual(
+        statusTone(theme, "info"),
+      );
+    });
+    // The cast is what a consumer's own record needs, so the guard is the route
+    // that says which value it substituted.
+    expect(isStatusTone(stored)).toBe(false);
+    expect(isStatusTone("destructive")).toBe(true);
+    // A name the index does carry still paints its own family.
+    tones.forEach((tone) => {
+      expect(statusTone(lightTheme, tone).background).toBe(
+        lightTheme.colors[`${tone}Soft`],
+      );
+    });
+    // A theme that lost the *roles* is the gate's report, not a name to replace:
+    // its answer stays the absence every seam gives it.
+    expect(statusTone({ colors: {} }, stored)).toBeUndefined();
   });
 });
 

@@ -279,6 +279,20 @@ surfaces. See [Decorative surfaces](#decorative-surfaces) for the palette step
 that follows from it. The label on the soft surface is text, so it is in the
 contrast table instead: `xSoftForeground` on `xSoft` at the body floor.
 
+**A tone name is content as often as a literal.** A notification record, a log
+line's level or a saved status item carries the family it was written with, so
+`statusTone` reads a tone this release does not ship as `info` — the neutral
+family `persisted-choices.example.ts`'s `toneFromStoredChoice` substitutes, so a
+paint seam and the boundary narrowing give one answer. Before that the lookup
+asked for `dangerSoft`, found no role and answered `undefined` where the `Theme`
+overload promises a tone: the message painted nothing, and a caller destructuring
+the result — `const { background, border, foreground } = statusTone(theme, tone)`,
+which is how both packages read it — drew
+`Cannot read properties of undefined (reading 'background')` mid-render. Narrow a
+stored tone with `isStatusTone` where the caller can tell the reader what it
+substituted. A theme that lost the three **roles** is the gate's report rather
+than a name to replace: it still answers the absence every seam answers.
+
 `foreground` is the role to paint a status message **as text**, whether it sits
 on the tone's soft surface (an Alert) or directly on `background`/`card`, a
 popover or a `muted` strip (a field error, an inline warning, a destructive menu
@@ -4503,10 +4517,11 @@ A **paint seam** is the one exception, and it is deliberate: a paint seam is
 called mid-render, so it reads a name the scale does not carry as its default
 step instead of throwing or painting nothing — `textStyle` reads a role as `body`
 (§Typography), `controlHeight`/`controlPaddingX`/`switchMetricsAt` read a
-control size as `md` (§Density), and `elevationShadow` reads a level this
-release does not ship as `md` (§Elevation). Narrow a stored role, size or level
-with `isTextRole`, `isControlSize` or `isElevationLevel` where the caller can
-tell the reader what it substituted.
+control size as `md` (§Density), `elevationShadow` reads a level this release
+does not ship as `md` (§Elevation), and `statusTone` reads a tone this release
+does not ship as `info` (§Status tones). Narrow a stored role, size, tone or
+level with `isTextRole`, `isControlSize`, `isStatusTone` or `isElevationLevel`
+where the caller can tell the reader what it substituted.
 
 A theme's **mode** is a stated value of the same kind, and a whole theme is
 documented as storable. `themeModeOf(theme)` reads a mode this release does not

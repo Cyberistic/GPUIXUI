@@ -389,7 +389,9 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 228/228
+`[x]` `[██████████]` 229/229
+
+`[x]` Read a **stored status tone as the default family** — `statusTone(theme, tone)` looked its three roles up by the name it was handed (`colors[`${tone}Soft`]`), so a tone name this release does not ship — the `"danger"` a notification record, a log line's level or a saved status item was written with before a rename, an old release's spelling — asked for `dangerSoft`, found no role and answered `undefined` **where the `Theme` overload promises a `StatusToneStyle`**: the message painted nothing, and a caller destructuring it (`const { background, border, foreground } = statusTone(theme, tone)`, which is how both packages read it) drew `Cannot read properties of undefined (reading 'background')` mid-render. Every other name a paint seam reads is already total on it (`textStyle` → `body`, `controlHeight`/`controlPaddingX`/`switchMetricsAt` → `md`, `elevationShadow` → `md`) and the page said so, so the tone was the fifth axis missing from its own rule. It reads an unshipped name as **`info`** now — the neutral family `persisted-choices.example.ts`'s `toneFromStoredChoice` substitutes, so the paint seam and the boundary narrowing give one answer — while a theme that lost the three *roles* still answers the absence every seam answers. `styles.test.ts` gains `reads a tone this release does not ship as the default tone` (the stored name in both shipped themes resolving to the `info` roles, `isStatusTone` refusing it and accepting a shipped one, every shipped tone still its own family, and a theme that lost the roles still `undefined`); `docs.test.ts` gains `reads a stored tone as the default tone, and says so`, which reads the seam and the const and requires the catalogue, the README and `docs/design-system.md` to state the fallback and the guard and the catalogue to keep the error it replaced. Directions measured: with the direct lookup restored the styles case fails `light: expected undefined to deeply equal { background: '#C5D8FF', …(2) }`, and rewording `docs/design-system.md` to "a family this release does not ship" fails the page case with `page 2: … to contain 'tone this release does not ship as `info`'`. Green: 49 files / **3 024** tests, `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs in `docs/tokens.md` §Status tones and §Persisted choices, `docs/design-system.md` §2, the package README and the `Status tones` row. No native scenario applies — a pure name lookup and its fallback.
 
 `[x]` Hold a **row's box to the line it paints**, not only to the press it takes — `density.rowHeight` was measured by `pressable` alone, while a tree row paints its label at `textStyle(theme, "body")` and leads it with a chevron in a `theme.iconSize.md` slot inside `height: theme.density.rowHeight` (`packages/data/src/tree/row.tsx`) and a log viewer lays each line at `textStyle(theme, "code")` in the same box (`packages/files/src/log/log-viewer.tsx`). A brand that shaved its rows to the 24px floor while its reading leading was 26 therefore shipped a tree or log row that clipped its own line with **every report empty**: the row reached the floor, the control boxes (28/32/36) still contained the leading, the scale stayed in order and no colour moved. `invalidNumbers` now holds `rowHeight` to the same `fits` ceiling a control's box is held to — `max(body.lineHeight, code.lineHeight, iconSize.md)`, derived from those two painters' roles rather than a second list — reported on the row that has to grow, with the height read once and a row already under the floor reported by `pressable` alone. `controlContent` became `contentCeiling(typography, iconSize, roles)` with `controlRoles` (`label`/`body`) and `rowRoles` (`body`/`code`) as the only difference between the two boxes, and `missingFit` states the comparison once. No shipped palette or preset moved: every preset's row is 28/32/36 against a 20px ceiling. `numbers.test.ts` gains `a row's box fits the line it paints` (8 cases): the shaved row under a 26px body leading, the same under a 26px `md` chevron slot, the `code` role a log viewer paints, a row exactly at the ceiling, the pressable report keeping a sub-floor row to one line, every preset derived against the ceiling, the two painters read from source so a carrier cannot outlive its paint, and the executed brand; the catalogue case moves to the new table row and a new one holds the `fits` snippet and both source paths on the page. `numbers.example.ts` gains `shavedRowTheme`/`shavedRowAudit` as the ninth brand. Directions measured: with `inspectRowHeight`'s fit half removed, 5 cases fail by name (`expected [] to deeply equal [ [ 'rowHeight', 'fits' ] ]`); restored, 49 files / **3 022** tests with `check-types`, `oxlint` and `oxfmt` clean on the package. Docs in `docs/tokens.md` §Numbers (the table row, a new **box of text** paragraph and the executed snippet), `docs/design-system.md` §6/§9, the package README and the `Token numbers` row. No native scenario applies — a pure comparison of tokens a painter lays out.
 
@@ -11512,7 +11514,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 371/372
+`[x]` `[██████████]` 372/373
 
 `[x]` Draw the **data lane's sorting and selection pages** — the two interactions
 MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{table-sorting,table-selection}.mdx` are the package's Markdown, so the site mounts both from `package-preview.ts`. The drawings run the package's own rules instead of a copy — `pressSortOrder` for the header cycle, `constructGrid` for the painted order (the core `useTable` runs on), and `pressSelection`/`pressMode` over the visible keys for a press — so the deploy queue's order, its Shift range and its chord toggle are the package's and only the paint is the browser's. `table-rule-demos.test.tsx` (8 cases) holds the duration-desc order (`reports → … → gateway`), a two-field environment/service order, each header's package announcement and `↓1`/`↑2` place, the painted row order, the Shift range from the anchor, the chord toggle, and a source guard refusing a local copy. Directions measured: with `sortedRows` returning the fixture, 5 cases fail by name (`expected [ Array(6) ] to deeply equal [ 'reports', 'search', 'media', …(3) ]` and the two-field case); restored, 8/8. Served build on `vite preview`: `/docs/data-display/table-sorting` and `/table-selection` both answer **200** with `gx-trule-demo` and their readouts. `docs/preview-strategy.md` now says the data lane draws three surfaces and names the seams; the `apps/docs/README.md` ledger names the module. No native scenario applies — browser drawings over the package's pure row model and press reducers.
@@ -11564,12 +11566,34 @@ MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{tabl
       No native scenario applies — browser drawings over pure package logic,
       which each package's own suite holds.
 
+`[x]` Publish the **in-window chrome** the shell parts paint, measured in a
+      window — the record's *Application menu (adding items)* row could only tell
+      a reader to "draw the menu inside the window" and said nothing about
+      whether the shipped parts paint one, so the proof lived only in
+      `apps/playground/README.md` §`app-chrome-lifecycle` (47 checks on 0.11.0).
+      `docs/gpuix-capabilities.md` gains **In-window application chrome**
+      (`supported, with limits`; composed, not provided): the dropdown paints
+      below its trigger with the row's accelerator, `Right` replaces the rows
+      and wraps past a disabled menu, `Escape` returns the focus to the trigger,
+      the toolbar's roving moves the **window's** focus and skips a disabled
+      action, the overflow rows paint, and a status tone paints its own ink.
+      Both measured limits are recorded: the toolbar's overflow menu does not
+      answer `Escape` (use its trigger's `Enter`) and an `AppMenu` hover writes
+      the state it read at render, so a press with no pointer move leaves the
+      panel shut. `/docs/runtime`'s measured table publishes the row and §5's
+      owed-probe list names `app-chrome-lifecycle`. `capability-doc.test.ts`
+      gains `records the chrome the shipped shell parts paint, from the probe`:
+      it reads the probe's own section for the 47 checks and the three rules,
+      requires both surfaces and §5, and refuses a row that drops either limit.
+      Directions measured: deleting the record row fails by name
+      (`expected undefined to be 'supported, with limits'`); restored, the file
+      is 7/7. No native scenario applies — a record row and the probe it cites.
+
 `[ ]` Draw the **shell lane's three surfaces** — `packages/shell/docs/{toolbar,
       status-bar,app-menu}.mdx` still ship no preview. The shell's reducers are
       pure (`splitOverflow`/`moveRoving`, `step`/`hoverOpen`/`dismiss`,
-      `statusToneOf`/`toneForeground`) but import `@gpuixui/primitives`' root,
-      which pulls the native component tree into a browser bundle, so a
-      `@gpuixui/shell/logic` subpath (the shape `@gpuixui/dock/logic` already
+      `statusToneOf`/`toneForeground`) but import `@gpuixui/primitives`' root, so
+      a `@gpuixui/shell/logic` subpath (the shape `@gpuixui/dock/logic` already
       uses) is the route. Owner: **shell** for that subpath; **docs-site** then
       adds the demo modules, their CSS and the `package-preview.ts` rows, as the
       files lane now does. No invented drawing: the strip runs the package's
@@ -11579,8 +11603,23 @@ MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{tabl
       `@gpuixui/primitives/core` also exports, while `status-bar/logic.ts`
       imports only `effect/Option` and `@gpuixui/tokens` — so the subpath can be
       `export * from` the three logic modules after that one import moves to
-      `./core` (no new logic, no behaviour change); the docs half is then the
-      three demo modules, their style sheet and three `package-preview.ts` rows.
+      `./core` (no new logic, no behaviour change). **Second pass, same day: the
+      root import was attempted and reverted, with two measured reasons.** It
+      *builds* — the demos chunk carries the rules and none of the component
+      modules or the renderer, because the package is side-effect free — but
+      `nub run --filter @gpuixui/docs check-types` then pulls the package's
+      `.tsx` files into the docs program and fails on the missing per-file
+      `/** @jsxImportSource @gpuix/react */` pragma (TS2322 on `boxShadow`,
+      TS2339 on `KeyEvent.modifiers`, TS2416/TS2322 on `ref`) — the class the
+      primitives/icons pragma pass fixed — and the entry point does not export
+      **`hoverOpen`**, the reducer `AppMenu` itself imports. So the subpath must
+      export the three logic modules *and* `hoverOpen`; the docs half is then the
+      three demo modules, their style sheet and three `package-preview.ts` rows,
+      and the root becomes usable only after a pragma pass. The drawing's
+      approximations are settled by the held sample: a real `<button>` where the
+      native action is a `div role="button"`, the panel inside the frame where
+      the native one is anchored at window coordinates, and the recipe's fixed
+      24px/16px menu corners beside a platform-radius control.
 
 `[x]` Teach a reader to **read the theme editor's audit** — `/docs/themes` said
       what the controls do and nothing about the readout, so the first line an

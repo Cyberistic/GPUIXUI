@@ -59,7 +59,11 @@ carry a solid role with a readable foreground and a soft pair (`xSoft`,
 so an informational message can never be mistaken for a primary action. A
 component names a status family and reads its roles; it never mixes a readable
 text colour out of a solid status colour at runtime, and never special-cases a
-mode to make a tint readable.
+mode to make a tint readable. **A family name is content** — a notification
+record or a saved status item carries the one it was written with — so
+`statusTone` reads a tone this release does not ship as `info` rather than
+looking up a role the palette has no family for and painting nothing; narrow a
+stored one with `isStatusTone` where the caller can say what it substituted.
 
 A chart breaks that rule on purpose: a series colour means "a different
 category", not "this is a warning", so data marks are the one place a component

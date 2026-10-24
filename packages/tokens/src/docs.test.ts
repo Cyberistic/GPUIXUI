@@ -1017,6 +1017,40 @@ describe("the resolvers refuse an axis they do not ship", () => {
       );
     });
   });
+
+  /**
+   * A status tone is the fifth name a paint seam reads, and it failed in the
+   * worst of the two ways: the lookup asked for `dangerSoft` — no role — so
+   * `statusTone` answered `undefined` where its `Theme` overload promises a
+   * tone, the message painted nothing, and a caller destructuring the result
+   * threw `Cannot read properties of undefined (reading 'background')` mid-render.
+   * `info` is the default family, the tone the boundary narrowing substitutes,
+   * so the seam and the boundary agree. The pages state the fallback and the
+   * guard beside the other four.
+   */
+  it("reads a stored tone as the default tone, and says so", () => {
+    expect(stylesSource).toContain(
+      "const name = isStatusTone(tone) ? tone : defaultStatusTone;",
+    );
+    expect(stylesSource).toContain(
+      'const defaultStatusTone: StatusTone = "info";',
+    );
+
+    const pages = [catalogue, readme, designSystem].map((page) =>
+      page.replace(/\s+/g, " "),
+    );
+
+    pages.forEach((page, index) => {
+      expect(page, `page ${index}`).toContain("`isStatusTone`");
+      expect(page, `page ${index}`).toContain("`statusTone`");
+      expect(page, `page ${index}`).toContain(
+        "tone this release does not ship as `info`",
+      );
+    });
+    expect(pages[0]).toContain(
+      "Cannot read properties of undefined (reading 'background')",
+    );
+  });
 });
 
 /**
