@@ -344,7 +344,11 @@ that moved the group while the previews kept the server's palette is the bug,
 and the same session then proves the enabled press works. A preview build can
 hydrate before the probe's first read, so the probe reopens the document (eight
 attempts, address reset each time) until it observes the closed gate; a run
-that never observes it fails rather than passing on the wrong page.
+that never observes it fails rather than passing on the wrong page. The
+measured press also waits for the gate to **open**: the content can carry React's
+props a beat before the marker's effect runs, and a probe that pressed then
+clicked a still-disabled button and read `pressing Light left no surface in
+light mode` against a working switch — measured against `vite preview`.
 
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the

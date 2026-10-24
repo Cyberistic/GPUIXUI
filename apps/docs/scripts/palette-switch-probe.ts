@@ -113,6 +113,7 @@ const ready = (label: string): string => `(() => {
     (node) => node.textContent === ${JSON.stringify(label)},
   );
   if (button === undefined) return "no-button";
+  if (button.disabled) return "closed";
   const props = Object.entries(button).find(([key]) =>
     key.startsWith("__reactProps"),
   )?.[1];

@@ -12384,8 +12384,12 @@ Work that this workstream needs but does not own. Another agent owns each row.
       while the page content was unmounted`). `palette-switch.test.ts` is 17/17,
       the docs suite **189 files / 1 946 tests** green, and `check-types` clean.
       `docs/preview-strategy.md` §The palette switch is a measured click records
-      the gate and the early press. No native scenario applies — a browser
-      switch and its markup.
+      the gate and the early press. Measured 2026-10-24 against `vite preview` too:
+      `early: the disabled switch refused the press`, `light: 3 of 3 surfaces
+      painted #F2F2F7`, exit `0` — and that run found the probe pressing a beat
+      too early (the content carried React's props before the marker's effect),
+      so its measured press now waits for the gate to open as well. No native
+      scenario applies — a browser switch and its markup.
 
 `[x]` Wait for the **surface the palette probe measures** before pressing —
       `palette-switch-probe.ts` pressed the sidebar's Light button as soon as

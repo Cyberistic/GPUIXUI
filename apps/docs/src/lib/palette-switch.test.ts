@@ -81,6 +81,14 @@ describe("the switch's press path", () => {
     const pressAt = probe.indexOf('press("Light")');
     expect(probe).toContain("__reactProps");
     expect(probe).toContain("typeof props.onClick");
+    const start = probe.indexOf("const ready = ");
+    const end = probe.indexOf("const press = ");
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    // The handler is not enough any more: the switch is disabled until the
+    // content mounts, so a read that ignored the gate would press a button
+    // that refuses the click and report that the press did nothing.
+    expect(probe.slice(start, end)).toContain("button.disabled");
     expect(readyAt).toBeGreaterThan(-1);
     expect(pressAt).toBeGreaterThan(readyAt);
   });
