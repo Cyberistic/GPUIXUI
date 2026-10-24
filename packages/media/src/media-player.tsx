@@ -43,6 +43,7 @@ import {
   advancePlayhead,
   clampPlayhead,
   durationOf,
+  frameAtOf,
   isFinished,
   isFrame,
   isScrubPress,
@@ -55,16 +56,13 @@ import {
   stepOf,
   timeLabel,
   waveformSvg,
-  type MediaFrame,
+  type MediaFrameAt,
   type MediaKey,
   type MediaPointer,
   type MediaState,
 } from "./player/logic.js";
 
-export type { MediaFrame } from "./player/logic.js";
-
-/** The frame a playhead stands on; `None` paints no new picture. */
-export type MediaFrameAt = (playhead: number) => Option.Option<MediaFrame>;
+export type { MediaFrame, MediaFrameAt } from "./player/logic.js";
 
 /** The handler side of the transport, owned by the React wrapper. */
 export interface MediaPlayerSurface {
@@ -84,9 +82,10 @@ export interface MediaPlayerProps extends Omit<Props, "children"> {
   readonly duration: number;
   /**
    * The frame each playhead stands on. Omit it for an audio-style player: the
-   * waveform and the transport still paint, with no picture.
+   * waveform and the transport still paint, with no picture. A value that is
+   * not a function — the `null` a saved record wrote — paints the same player.
    */
-  readonly frameAt?: MediaFrameAt;
+  readonly frameAt?: MediaFrameAt | null;
   /** The picture's accessible name. A blank one reads as the player's name. */
   readonly alt: string;
   /** The player's accessible name. Default `"Media player"`; a blank name reads as the default. */
@@ -203,6 +202,7 @@ export const renderMediaPlayer = (
   const boxHeight = sideOf(height, DEFAULT_HEIGHT);
   const barWidth = sideOf(trackWidth, DEFAULT_TRACK_WIDTH);
   const waveform = waveformSvg(peaksOf(peaks), barWidth, WAVEFORM_HEIGHT);
+  const frameSource = frameAtOf(frameAt);
 
   return (
     <div
@@ -214,7 +214,7 @@ export const renderMediaPlayer = (
         style,
       )}
     >
-      {frameAt === undefined ? null : (
+      {frameSource === undefined ? null : (
         <img
           testId="media-poster"
           ref={poster}
@@ -428,7 +428,7 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
   // the layout effect puts them on the element before the frame that shows it.
   useLayoutEffect(() => {
     const instance = poster.current;
-    const frameAt = props.frameAt;
+    const frameAt = frameAtOf(props.frameAt);
     if (instance === null || frameAt === undefined) return;
     Option.match(Option.filter(frameAt(state.playhead), isFrame), {
       onNone: () => undefined,

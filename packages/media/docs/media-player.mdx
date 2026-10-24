@@ -34,7 +34,7 @@ const frameAt = (playhead: number): Option.Option<MediaFrame> =>
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `duration` | `number` (milliseconds) | required |
-| `frameAt` | `(playhead) => Option<MediaFrame>` | — (no picture) |
+| `frameAt` | `(playhead) => Option<MediaFrame>` (a value that is not a function reads as no source) | — (no picture) |
 | `alt` | `string` | required (a blank name reads as the player's own) |
 | `label` | `string` | `"Media player"` (a blank name reads as the default) |
 | `width` | `number` | `240` |
@@ -126,6 +126,10 @@ without a second measurement.
 - **Values that cannot be laid out read as defaults**: a stored `duration` that
   is not positive is a zero-length clip, and a stored `tickMs`, `seekStep`,
   `width`, `height` or `trackWidth` that is not positive reads as its default.
+- **A frame source that is not a function is no source.** A player restored with
+  a workspace carries `null` for a field its record never held, so only a
+  function is a frame source: the audio-style player paints instead of the
+  layout effect throwing `frameAt is not a function` (`frameAtOf`).
 - **A decoded frame is read structurally.** `frameAt`'s answer is a decoder's
   output, so a frame that arrived without its bytes, with a partial buffer or
   with a box that cannot be laid out paints no picture and keeps the transport

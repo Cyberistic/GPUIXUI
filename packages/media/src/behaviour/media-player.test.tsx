@@ -317,6 +317,34 @@ describe("MediaPlayer transport", () => {
     page.root.unmount();
   });
 
+  it("seeks a player whose stored frame source is not a function", () => {
+    // The bug guarded: a player restored from a saved workspace carries JSON's
+    // `null` for the frame source its record never held, and the layout effect
+    // called it — `frameAt is not a function` out of every playhead paint,
+    // unmounting the transport with the picture.
+    const root = createTestRoot({ width: 800, height: 600 });
+    const playheads: number[] = [];
+    root.render(
+      <ThemeProvider theme={lightTheme}>
+        <MediaPlayer
+          testId="player"
+          duration={4000}
+          alt="A clip's frame"
+          frameAt={null}
+          onPlayheadChange={(playhead) => playheads.push(playhead)}
+        />
+      </ThemeProvider>,
+    );
+    focusSeek(root);
+    root.renderer.simulateKeystrokes("end");
+    const poster = root.renderer.findByTestId("media-poster");
+    const clock = textOf(root, "media-time");
+    root.unmount();
+    expect(poster).toBeUndefined();
+    expect(playheads.at(-1)).toBe(4000);
+    expect(clock).toBe("0:04 / 0:04");
+  });
+
   it("keeps the transport when a decoded frame carries no bytes", () => {
     // The bug guarded: the frame was trusted, so a decoder that answered a box
     // without bytes threw `Cannot read properties of undefined (reading

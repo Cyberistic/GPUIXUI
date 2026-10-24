@@ -14,6 +14,7 @@ import {
   clampPlayhead,
   durationOf,
   formatClock,
+  frameAtOf,
   isFinished,
   isFrame,
   isScrubPress,
@@ -233,6 +234,17 @@ describe("the waveform", () => {
     expect(peaksOf({ 0: 0.5, 1: 1 })).toStrictEqual([]);
     expect(peaksOf("abcd")).toStrictEqual([]);
     expect(waveformSvg(peaksOf(3), 20, 16)).toBe("");
+  });
+
+  it("reads a stored frame source as one only when it is a function", () => {
+    // The bug guarded: a player restored with a workspace carries JSON's `null`
+    // for the frame source its record never held, and the layout effect called
+    // it — `frameAt is not a function` out of every playhead paint, taking the
+    // transport down with the picture.
+    const source = (): Option.Option<never> => Option.none();
+    expect(frameAtOf(source)).toBe(source);
+    expect(frameAtOf(null)).toBeUndefined();
+    expect(frameAtOf(undefined)).toBeUndefined();
   });
 
   it("reads a stored sample that is not a number as silence", () => {

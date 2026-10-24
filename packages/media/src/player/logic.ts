@@ -35,6 +35,22 @@ export interface MediaFrame {
   readonly pixels: Uint8Array;
 }
 
+/** The frame a playhead stands on; `None` paints no new picture. */
+export type MediaFrameAt = (playhead: number) => Option.Option<MediaFrame>;
+
+/**
+ * The frame source a saved player carries, or no source at all.
+ *
+ * A player is composed in code as often as it is restored with a workspace, and
+ * a record writes `null` for a field it never carried: only a **function** is a
+ * frame source, so the `null` a store wrote paints the audio-style player
+ * instead of throwing `frameAt is not a function` from the layout effect that
+ * paints each playhead.
+ */
+export const frameAtOf = (
+  value: MediaFrameAt | null | undefined,
+): MediaFrameAt | undefined => (typeof value === "function" ? value : undefined);
+
 /**
  * Whether a value is a frame the picture can paint.
  *
