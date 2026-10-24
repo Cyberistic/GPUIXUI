@@ -17,6 +17,7 @@
  */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
+import * as Order from "effect/Order";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(new URL("./examples.tsx", import.meta.url), "utf8");
@@ -26,6 +27,18 @@ const componentRegistry = readFileSync(
   new URL("../../../../packages/components/examples/index.ts", import.meta.url),
   "utf8",
 );
+
+/** The files package's registry, read the same way. */
+const filesRegistry = readFileSync(
+  new URL("../../../../packages/files/examples/index.ts", import.meta.url),
+  "utf8",
+);
+
+/** The kebab-case ids a registry literal declares. */
+const screenIds = (registry: string): ReadonlyArray<string> =>
+  Arr.fromIterable(registry.matchAll(/^  "?([a-z0-9-]+)"?:/gm)).map(
+    (match) => match[1] ?? "",
+  );
 
 const readme = readFileSync(
   new URL("../../README.md", import.meta.url),
@@ -176,16 +189,32 @@ describe("the example gallery's registry", () => {
     expect(source).toContain("...shellExamples");
   });
 
+  it("merges the files package's three screens too", () => {
+    expect(source).toContain('from "@gpuixui/files/examples"');
+    expect(source).toContain("...fileExamples");
+    // The registry's own keys are what the gallery pages, so the merge is read
+    // rather than the import alone: a renamed example is still mounted under
+    // the id its docs use.
+    expect(
+      Arr.sort(Arr.fromIterable(screenIds(filesRegistry)), Order.String),
+    ).toEqual(["file-tree", "log-viewer", "property-panel"]);
+  });
+
   it("gives the merged ids no name the components registry already uses", () => {
     // A shared id would mount one screen under two names, which the run's
-    // no-two-pages-paint-one-screen check would report after 79 mounts instead
+    // no-two-pages-paint-one-screen check would report after every mount instead
     // of here.
     const componentIds = Arr.fromIterable(
       componentRegistry.matchAll(/^  "([a-z0-9-]+)":/gm),
     ).map((match) => match[1] ?? "");
     expect(Arr.length(componentIds)).toBeGreaterThan(40);
-    expect(
-      Arr.intersection(componentIds, ["app-menu", "status-bar", "toolbar"]),
-    ).toEqual([]);
+    const merged = [
+      "app-menu",
+      "status-bar",
+      "toolbar",
+      ...screenIds(filesRegistry),
+    ];
+    expect(merged).toHaveLength(6);
+    expect(Arr.intersection(componentIds, merged)).toEqual([]);
   });
 });

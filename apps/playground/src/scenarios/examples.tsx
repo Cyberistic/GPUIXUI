@@ -23,6 +23,7 @@ import * as Str from "effect/String";
 import { useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import { examples as componentExamples } from "@gpuixui/components/examples";
+import { examples as fileExamples } from "@gpuixui/files/examples";
 import {
   AppMenuExample,
   StatusBarExample,
@@ -42,10 +43,19 @@ const shellExamples: Readonly<Record<string, ComponentType>> = {
   toolbar: ToolbarExample,
 };
 
-/** The one registry the gallery pages: the components' and the shell's. */
+/**
+ * The one registry the gallery pages: the components', the shell's and the
+ * files package's.
+ *
+ * The files examples were the one registry no scenario mounted: its surfaces
+ * had window probes for part of the family, but the screens the docs quote — a
+ * file tree, a log viewer, a property panel over one object — painted nowhere
+ * until they joined the gallery.
+ */
 export const examples: Readonly<Record<string, ComponentType>> = {
   ...componentExamples,
   ...shellExamples,
+  ...fileExamples,
 };
 
 /**

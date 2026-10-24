@@ -655,10 +655,13 @@ grid's `overflowX` fails `a horizontal wheel pans the grid`
 
 `packages/components/examples/index.ts` is the registry of every screen the
 component docs quote, and this app is its only consumer. The shell package ships
-three components instead of a registry, so the gallery merges them into the same
-list under the kebab-case ids the docs index uses (`app-menu`, `status-bar`,
-`toolbar`). Nothing proved those screens *mount*: a component's behaviour suite
-proves its parts, not a composition of parts with caller-owned state.
+three components instead of a registry and `packages/files` ships a registry of
+its own, so the gallery merges all three into the same list under the kebab-case
+ids the docs index uses (`app-menu`, `status-bar`, `toolbar`, `file-tree`,
+`log-viewer`, `property-panel`). Nothing proved those screens *mount*: a
+component's behaviour suite proves its parts, not a composition of parts with
+caller-owned state — and the files package's three were not mounted by any
+scenario until they joined this list.
 `examples-mount` pages through the merged registry in sorted id order — one
 screen mounted at a time, because mounting the whole registry at once lays out a
 very tall tree and leaves a screen's timer or `Effect` fiber running behind the
@@ -7684,11 +7687,11 @@ narrower. Each deviation is deliberate and measured:
   `dock-layout-lifecycle` and `file-tree-lifecycle` (73
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
-  pages through the components' registry and the shell package's three examples
-  (four checks per page plus two for the run, the shape `examples.test.ts`
-  derives from the probe's assertion sites) and fails when a page paints nothing
-  or two ids show one screen. Its two negative controls are named in §The
-  example gallery.
+  pages through the components' registry, the shell package's three examples and
+  the files package's three screens (four checks per page plus two for the run,
+  the shape `examples.test.ts` derives from the probe's assertion sites) and
+  fails when a page paints nothing or two ids show one screen. Its two negative
+  controls are named in §The example gallery.
 - The terminal-mode probe proves the runtime paints a view into a pty:
   `terminal-render`, `terminal-resize`, `terminal-pointer` and `terminal-input`
   (4/4 on 0.11.0) decode the platform's kitty frames to an 800×640 page with
