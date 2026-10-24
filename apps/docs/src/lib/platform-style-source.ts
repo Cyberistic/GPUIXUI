@@ -25,7 +25,18 @@ const pad = (depth: number): string => "  ".repeat(depth);
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-/** A value as TypeScript, indented for the depth it sits at. */
+/**
+ * A value as TypeScript, indented for the depth it sits at.
+ *
+ * Every value a `PlatformStyle` carries is a string, a number or a record of
+ * them, so the throw below is an invariant of this generator rather than a
+ * failure a caller can hand it: a value that is not printable means the style
+ * shape changed and the block needs a case, not that input was bad.
+ *
+ * `JSON.stringify` is the string-literal quoter here, not a JSON codec: the
+ * output is a TypeScript file, and its escaping is the one a JS string literal
+ * wants.
+ */
 const literal = (value: unknown, depth: number): string => {
   if (typeof value === "string") return JSON.stringify(value);
   if (typeof value === "number" || typeof value === "boolean") {
