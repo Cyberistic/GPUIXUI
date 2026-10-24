@@ -1,0 +1,200 @@
+---
+title: Auth
+description: The auth surface — sign in, sign up, password reset and a one-time code, composed from the card and the primitives.
+---
+
+The auth surface is a set of **recipes**, not a component: four cards a product
+composes from `@gpuixui/components/card` and the primitives, in the shape
+shadcn/ui presents its auth blocks. Each card owns one job and one status row, so
+copy the recipe, wire its handlers and ship it. The
+[sign-in page](/docs/blocks/sign-in) is the page-level composition of the same
+parts.
+
+## Examples
+
+Each example is a browser reproduction of the native parts plus the real
+`@gpuixui/*` source. A submission walks idle → loading → success or error, and
+every state lives in a reserved row, so the card never moves.
+
+### Sign in
+
+Email, password, a way to the reset card, the primary action, a divider and two
+OAuth buttons. Submit empty fields for the error state, or a well-formed address
+and password for the success state.
+
+<ComponentPreview name="auth-sign-in" />
+
+### Sign up
+
+A name, email, password and confirmation, the terms checkbox and the footer that
+leads back. A short password, a mismatch and unticked terms each have their own
+message.
+
+<ComponentPreview name="auth-sign-up" />
+
+### Forgot password
+
+One email field, the send action and an inline note that names the address the
+link went to.
+
+<ComponentPreview name="auth-forgot-password" />
+
+### One-time code
+
+Six code cells, a verify action and a resend countdown. The preview accepts
+`123456`, so the error state is reachable too; Backspace moves focus one cell
+back.
+
+<ComponentPreview name="auth-one-time-code" />
+
+## Installation
+
+The cards need the primitives and the card surface. Both are workspace packages:
+
+<Install packageName="@gpuixui/primitives" importName="Button" />
+
+<Install packageName="@gpuixui/components" importName="Card" />
+
+## Usage
+
+A sign-in card is a `Card` with a header, a column of fields and a footer. The
+same shape carries all four recipes; only the fields and the callbacks change.
+
+```tsx
+import {
+  Button,
+  Input,
+  Label,
+  Separator,
+  Stack,
+  Text,
+} from "@gpuixui/primitives";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+
+export function SignInCard() {
+  return (
+    <Card variant="outline" style={{ width: 360 }}>
+      <CardHeader>
+        <CardTitle>Sign in</CardTitle>
+        <CardDescription>Welcome back. Enter your details to continue.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Stack direction="column" gap="md">
+          <Label>Email</Label>
+          <Input label="Email" placeholder="you@example.com" fullWidth />
+          <Label>Password</Label>
+          <Input label="Password" placeholder="••••••••" fullWidth />
+          <Button variant="primary" fullWidth onActivate={signIn}>
+            Sign in
+          </Button>
+          <Separator label="or continue with" />
+          <Button variant="secondary" fullWidth onActivate={signInWithGitHub}>
+            GitHub
+          </Button>
+        </Stack>
+      </CardContent>
+      <Text role="caption" tone="muted">
+        Don't have an account?
+      </Text>
+    </Card>
+  );
+}
+```
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Card` | the centred surface, one per card; `variant="outline"` at the fixed measure |
+| `CardHeader` / `CardTitle` / `CardDescription` | the mark, the title and the one sentence under it |
+| `CardContent` | the field column, the actions and the divider |
+| `CardFooter` | the route to the neighbouring card |
+| `Label` / `Input` | one named field; the label is visible, the placeholder is an example |
+| `Checkbox` | the terms gate on sign-up and the remembered session on sign-in |
+| `OTPField` | the six cells and their arrow, typing and Backspace contract |
+| `Separator` | the "or continue with" divider between the primary action and the providers |
+| `Button` | the primary action, the providers, the links and the resend control |
+| `Text` | the footer sentence and the inline note |
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| `Tab` | walks the fields, the links, the primary action, both providers and the footer in that order |
+| `Enter` | submits the focused form; the primary action carries the busy state |
+| `Space` | toggles the focused checkbox; the terms gate is submitted with the form |
+| `Backspace` | in an empty one-time-code cell, moves focus to the previous cell |
+| `Tab` from a code cell | leaves the group; the cells are one tab stop each, not a roving group |
+
+## API reference
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Card` | a bordered or elevated surface | `variant`, `style`, `className` |
+| `CardHeader` | the title block | `children` |
+| `CardContent` | the body block | `children` |
+| `CardFooter` | the footer row | `children` |
+| `Input` | a single-line field | `label`, `placeholder`, `value`, `defaultValue`, `invalid`, `fullWidth`, `disabled` |
+| `Checkbox` | a labelled box | `label`, `checked`, `defaultChecked`, `disabled` |
+| `OTPField` | six cells in a group | `label`, `value`, `onValueChange`, `onComplete`, `invalid` |
+| `Separator` | a rule with an optional caption | `label`, `orientation` |
+| `Button` | an action with a pressed and busy state | `variant`, `size`, `fullWidth`, `loading`, `disabled` |
+| `Stack` | one-dimensional layout | `direction`, `gap`, `align`, `justify`, `grow` |
+
+## Theming
+
+The cards read the semantic roles only: `card` for the surface, `border` for its
+edge, `foreground` for the title, `muted-foreground` for the description and the
+footer, `primary` for the action and the links, and `destructive` for the error
+note. The status row keeps its height in every state, so a message changes
+colour and outline only.
+
+The browser reproduction adds no colour of its own: the mark is the site's mask
+in the `primary` role, and the illustration on the
+[sign-in page](/docs/blocks/sign-in) is a gradient and two rings mixed from the
+same role. Switching the platform or the palette therefore repaints the whole
+surface.
+
+## Accessibility and limitations
+
+Each field is named by a visible `Label`; the one-time-code group is labelled
+"Verification code", and each cell carries its own position. The preview's
+status row is `aria-live="polite"`, so a submission result is announced without
+stealing focus.
+
+The runtime's budget is the cross-cutting contract on
+[Accessibility](/docs/accessibility): a component publishes the seven attributes
+the runtime supports and refuses the rest. The cards therefore do not promise
+`aria-describedby` or an error association beyond the label; a page that needs
+one must render the message beside the field and keep the copy in the field's
+`description`.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuixui/primitives` | the fields, the actions, the divider, the layout and the type |
+| `@gpuixui/components` | the card surface and its four parts |
+
+The reproduction is HTML and CSS; the shipped cards render through GPUix, not
+the DOM.
+
+## Related
+
+- [Card](/docs/components/card) — the surface every recipe composes.
+- [Field](/docs/components/field) — one message slot and submit-time validation.
+- [Form](/docs/components/form) — the submit lifecycle a real sign-in wires to.
+- [Button](/docs/components/button) — the primary action and its busy state.
+
+## Status
+
+There is no `COMPONENTS.md` row for Auth: the cards are recipes over shipped
+parts, not a component. Each part's status is its own row in the inventory — the
+[Card](/docs/components/card) and [Form](/docs/components/form) pages print
+theirs — and the recipes add no behaviour beyond those parts.

@@ -31,6 +31,16 @@ import {
   searchReplaceDemoSource,
 } from "./search-replace-demo";
 import {
+  ForgotPasswordRender,
+  LoginRender,
+  OtpRender,
+  SignupRender,
+  forgotPasswordSource,
+  loginSource,
+  otpSource,
+  signupSource,
+} from "./auth-blocks";
+import {
   AvatarStates,
   AvatarWorkflow,
   avatarStatesSource,
@@ -2837,6 +2847,26 @@ export const demos: Readonly<Record<string, Demo>> = {
   "alert-composition": {
     render: AlertComposition,
     source: alertCompositionSource,
+    composition: true,
+  },
+  "auth-forgot-password": {
+    render: ForgotPasswordRender,
+    source: forgotPasswordSource,
+    composition: true,
+  },
+  "auth-one-time-code": {
+    render: OtpRender,
+    source: otpSource,
+    composition: true,
+  },
+  "auth-sign-in": {
+    render: LoginRender,
+    source: loginSource,
+    composition: true,
+  },
+  "auth-sign-up": {
+    render: SignupRender,
+    source: signupSource,
     composition: true,
   },
   "avatar-states": { render: AvatarStates, source: avatarStatesSource },

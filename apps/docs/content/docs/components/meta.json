@@ -4,6 +4,7 @@
   "pages": [
     "accordion",
     "alert",
+    "auth",
     "avatar",
     "badge",
     "breadcrumb",
@@ -14,10 +15,6 @@
     "collapsible",
     "color-picker",
     "combobox",
-    "command-menu",
-    "confirm-dialog",
-    "context-menu",
-    "date-picker",
     "dialog",
     "drawer",
     "dropdown-menu",

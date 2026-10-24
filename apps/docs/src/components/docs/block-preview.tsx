@@ -42,8 +42,21 @@ export function BlockPreview({ name }: { name: string }) {
           </TabsList>
           <CopyRecipe block={block} />
         </div>
-        <TabsContent className="gx-component-panel" value="preview">
-          <PreviewSurface className="gx-block-demo">
+        <TabsContent
+          className={
+            block.fullBleed === true
+              ? "gx-component-panel gx-component-panel-page"
+              : "gx-component-panel"
+          }
+          value="preview"
+        >
+          <PreviewSurface
+            className={
+              block.fullBleed === true
+                ? "gx-block-demo gx-block-page"
+                : "gx-block-demo"
+            }
+          >
             {block.render()}
           </PreviewSurface>
         </TabsContent>

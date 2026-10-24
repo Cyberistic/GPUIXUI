@@ -38,12 +38,9 @@ playground.mdx               The companion native app: run commands, the probe c
 reference.mdx                The public entry points and the symbols behind them
 themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
-blocks/login.mdx             A centered sign-in card
-blocks/signup.mdx            A registration card: four fields, the terms checkbox, the footer
-blocks/forgot-password.mdx   A centered reset card: one email field, the sent note, the way back
-blocks/otp.mdx               A one-time-code card: six cells, verify, the resend countdown
-blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
+blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated quote panel
+blocks/settings.mdx          A settings page with tabbed sections
 blocks/kanban.mdx            A project task board: sidebar, four counted columns, cards that move
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
@@ -54,6 +51,7 @@ blocks/conversations.mdx     A macOS Messages window: threads, search and a comp
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
+components/auth.mdx          Curated: the four auth cards, the states and the sign-in page
 components/avatar.mdx        Curated: the fallback table, the measured dot roles, the roster panel
 components/badge.mdx         Curated: the seven variants, the fixed sizes, the press it leaves to its row
 components/breadcrumb.mdx    Curated: the collapse budget, the separator that leaves with its item
@@ -257,11 +255,11 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
-src/components/docs/blocks.tsx            The block registry: Login, Settings, Dashboard, Kanban, Settings dialog, File manager and Email inbox
+src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Kanban, Settings dialog, File manager and Email inbox
 src/components/docs/block-preview.tsx     A block's browser rendering
 src/components/docs/block-icons.tsx       The glyphs the block previews draw
 src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
-src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions and recipes
+src/components/docs/auth-blocks.tsx       The auth examples, the sign-in page and their recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
