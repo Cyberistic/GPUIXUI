@@ -147,9 +147,8 @@ describe("the dark-mode page's palette follow", () => {
     // which refuses a name it does not know. The narrower rule describes
     // software this package does not ship.
     const body =
-      systemTheme
-        .split("export function paletteMode")[1]
-        ?.split("\n}")[0] ?? "";
+      systemTheme.split("export function paletteMode")[1]?.split("\n}")[0] ??
+      "";
     const intro = page.slice(
       page.indexOf("Follow the desktop's palette"),
       page.indexOf("```tsx", page.indexOf("Follow the desktop's palette")),
@@ -157,9 +156,7 @@ describe("the dark-mode page's palette follow", () => {
 
     // The seam's whole answer: a name it ships is the answer; every other
     // stated name is measured off the page like an absent one.
-    expect(body).toContain(
-      "isThemeMode(mode) ? mode : pageMode(background)",
-    );
+    expect(body).toContain("isThemeMode(mode) ? mode : pageMode(background)");
     // The refusal the page names is the package's own sentence, not one the
     // page may invent, so the reason cannot drift from `getTheme`.
     expect(read("packages/tokens/src/theme.ts")).toContain(

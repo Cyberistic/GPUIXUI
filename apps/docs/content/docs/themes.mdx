@@ -9,6 +9,8 @@ Edit the tokens and watch them apply to a preview in real time. The editor reads
 
 Light and dark are independent. Edits persist to the URL and `localStorage`; **Reset** returns to the selected platform style. **Copy theme** prints a whole resolved `createTheme` module you can ship.
 
+A browser that refuses site storage — the reader blocked site data, or the store has no room — keeps the editor, the URL and every preview: the edit applies, the link carries it and the next visit opens on the base style. **Copy theme** answers a browser with no clipboard as a failed copy rather than an error.
+
 ## Reading the audit
 
 The readout under the preview is `auditTheme`'s result, one line per finding:

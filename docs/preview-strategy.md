@@ -507,6 +507,50 @@ refused one is the retired twin of the page it expects, and each query appears
 in prose on the page it must find — plus the typing and submit order, this
 section and the site's ledger.
 
+### The theme editor is measured
+
+`/docs/themes` is the other interaction with no browser measurement: the page a
+consumer opens to take a style, change it and copy the result. Its editor was
+also the one remembered preference that read `localStorage` **directly** — from
+its mount effect, on every colour keystroke and on **Reset** — while the
+platform switch had already learned that a browser may refuse the store. A
+reader who blocks site data threw a `SecurityError` out of that effect and lost
+the page to `Something went wrong`; measured on the served build by making every
+`Storage.prototype` call throw and navigating to `/docs/themes`.
+
+`apps/docs/scripts/theme-editor-probe.ts` opens the page with that refusal
+installed **before the page's own scripts** (`Page.addScriptToEvaluateOnNewDocument`,
+so the mount effect meets it), and walks the editor's path. It reads the page's
+own `background` value and writes it into `primary`: the failing pair is the one
+`themeFindings` reports, not a chosen hex. It then requires the audit to name
+`primary`, `?theme=` to carry the edit, the editor to stay mounted — and
+**Reset** to return the field to the value the page opened on and to drop the
+parameter.
+
+Two mechanisms are measured rather than assumed:
+
+- **A preloaded script is the only way to refuse the store.** A patch run after
+  load arrives after the mount effect has read it, which is the bug, not the
+  test; the DevTools `Page` domain also has to be enabled before
+  `addScriptToEvaluateOnNewDocument`, or the script never reaches the document
+  and the run silently measures a working store.
+- **A refused call is counted.** The preload increments `__storeAttempts` before
+  it throws, so a probe that never reached the store cannot pass as one that
+  survived it.
+
+The negative controls are the failures a passing probe would hide. Restoring
+the direct `localStorage` read makes the app crash during hydration and prints
+`FAIL the editor never hydrated within 90000 ms (it carries no React onClick)`;
+a Reset that leaves the edit prints `FAIL Reset left ?theme= in the URL`.
+`src/lib/theme-editor-probe.test.ts` holds the probe's premise to the site — its
+edit is the gate's own finding, its selectors are the editor's, the refusal
+names all three calls, and its readout parser refuses a truncated line.
+
+Measured 2026-10-24 on master against the dev server, headless Chrome on macOS
+15.8.1 x86_64: the base painted `primary #0A6CD6` after **36** refused storage
+calls, the edit produced **28** audit findings and wrote `?theme=`, Reset
+restored the base and the passing audit, exit `0`.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those

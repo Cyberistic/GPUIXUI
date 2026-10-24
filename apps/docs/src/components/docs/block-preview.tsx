@@ -6,6 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "fumadocs-ui/components/tabs";
+import { writeClipboard } from "../../lib/clipboard";
 import { platformLabel } from "../../lib/platform";
 import { blocks, type Block } from "./blocks";
 import { usePlatform } from "./platform-toggle";
@@ -81,10 +82,9 @@ function CopyRecipe({ block }: { block: Block }) {
   const [state, setState] = useState<CopyState>("idle");
 
   const copy = () => {
-    navigator.clipboard
-      .writeText(block.source)
-      .then(() => setState("copied"))
-      .catch(() => setState("error"));
+    void writeClipboard(block.source).then((copied) =>
+      setState(copied ? "copied" : "error"),
+    );
   };
 
   return (

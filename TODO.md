@@ -10385,6 +10385,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     after it behaviour is 142/142, unit 221/221 and `check-types` clean.
     `docs/{table-selection,column-configuration}.mdx` and the README state the
     rule. Owner: data.
+  - [x] Read a **blank field name as the field it reads** — `AdvancedFilter`'s
+    `labelOf` fell back to a field's own name only when the field was **absent**
+    from the list, so a locale table's missing row (`label: ""`) left three
+    controls unnamed: the picker's trigger, the choice inside its menu, and the
+    value field, which read `" value"`. The label is now read through
+    `spokenText` with the field's own name as the fallback, and the menu row
+    calls the same reader, so the one blank cannot name three controls
+    differently. `behaviour/surface-a11y.test.tsx` gains `reads a blank field
+    name as the field it reads` (10 in the file): the trigger is named
+    `status`, the value field `status value`, and the opened menu's row
+    `status`. Directions measured: before the fix the button names are
+    `[ '', 'equals', 'Add clause', … ]` and the case fails on the missing
+    `status`; after it the file is 10/10. `docs/advanced-filter.mdx`'s `fields`
+    row, the README's blank-name paragraph and the Advanced filtering row state
+    the fallback. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -11430,7 +11445,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 369/370
+`[x]` `[██████████]` 370/371
+
+`[x]` Keep the **theme editor working when the browser refuses its store** — `/docs/themes` promised its edits persist to the URL and `localStorage`, and `ThemeEditorSurface` read that store **directly**: `localStorage.getItem` in the mount effect, `setItem` on every colour keystroke and `removeItem` on **Reset**. A reader who blocks site data throws `SecurityError` from all three, and an effect that throws takes the tree with it — measured on the served build by blocking `Storage.prototype` and navigating to `/docs/themes`: `Something went wrong!`, no editor. It is the exact class the platform switch had already fixed (`platform-storage.ts`'s guarded adapter, with `/docs/theming` stating the refusal), so the editor was the one remembered preference left unguarded. `src/lib/browser-storage.ts` is now the one store adapter (`KeyValueStore`, `guarded`, `browserStore`) and both preferences read it — `platform-storage.ts` keeps its public names and loses its private `attempt`. `src/components/docs/theme-editor-storage.ts` owns the editor's key and read/write/clear through that guard, so a refusal is a visit that forgets: the edit applies, the URL carries it, the next visit opens on the base style. **Copy** had the same shape (`navigator.clipboard.writeText` throws a `TypeError` in an insecure context, out of the click handler, where `.catch` cannot see it): `src/lib/clipboard.ts`'s `writeClipboard` answers an absent API and a refused write as `false`, and the editor, the page copy action and a block's recipe copy route through it. Proof: `scripts/theme-editor-probe.ts` opens `/docs/themes` with `Storage.prototype` patched **before the page's own scripts** (`Page.addScriptToEvaluateOnNewDocument`, and `Page.enable` first or the script never lands), reads the page's own `background` value into `primary`, requires the audit to name `primary`, `?theme=` to carry the edit and the editor to stay mounted, then requires **Reset** to restore the value the page opened on and drop the parameter. Measured on the dev server: `primary #0A6CD6` after **36** refused storage calls, the edit produced **28** findings and wrote `?theme=`, Reset restored the base and the pass, exit `0`. Directions measured: restoring the direct `localStorage` read prints `FAIL the editor never hydrated within 90000 ms (it carries no React onClick)`, and a Reset that keeps the parameter prints `FAIL Reset left ?theme= in the URL`. Tests: `src/lib/browser-storage.test.ts` (5), `src/components/docs/theme-editor-storage.test.ts` (6, including the source guard that the editor touches neither `localStorage` nor `navigator.clipboard`), `src/lib/clipboard.test.ts` (5), and `src/lib/theme-editor-probe.test.ts` (6, whose failing edit is `themeFindings`' own answer and whose parser refuses a truncated readout). Docs: `/docs/themes` states what a refused store and an absent clipboard do, `docs/preview-strategy.md` §The theme editor is measured records the probe and both controls, the `apps/docs/README.md` ledger names the four modules and the probe. No native scenario applies — a browser page and the store it may be denied.
 
 `[x]` Read the **palette follow's two declarations where the package puts them** — `packages/tokens` moved `missingTokens`/`MissingTokenKind` into `missing.ts` (`audit.ts` re-publishes the function), so `palette-follow-page.test.ts` read a file rather than the package and went red — `expected [] to deeply equal [ 'group', 'step', 'family' ]` and `[ 'missingTokens' ]` — while `/docs/dark-mode` still named every seam and every kind correctly. The guard now reads every non-test module under `packages/tokens/src` and requires exactly one `MissingTokenKind` declaration beside the seam, so a module move is not a page failure and a vanished kind still is. Directions measured: skipping `missing.ts` fails both cases by name (`[ 'missingTokens' ]` and `expected 1 to be 2`); restored, the file is 7/7 and the page is unchanged. No native scenario applies — a page and the declarations it cites.
 

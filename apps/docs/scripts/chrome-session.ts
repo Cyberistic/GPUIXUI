@@ -129,6 +129,18 @@ const connect = async (port: number): Promise<DevTools> => {
   return { send, close: () => socket.close() };
 };
 
+/** What `openChrome` may do before the page's own scripts run. */
+export interface ChromeOptions {
+  /**
+   * A script installed on every new document, before the page's own scripts.
+   *
+   * This is what makes a browser capability measurable as absent: a probe that
+   * needs `localStorage` to refuse has to patch `Storage.prototype` before the
+   * application mounts, and a script run after load is too late.
+   */
+  readonly preload?: string;
+}
+
 /** A page open in the browser, and the frame it paints. */
 export interface ChromePage {
   /** Evaluate an expression in the page, and read its string result. */
@@ -145,6 +157,7 @@ export const openChrome = async (
   url: string,
   width = 800,
   height = 600,
+  options: ChromeOptions = {},
 ): Promise<{
   readonly page: ChromePage;
   readonly close: () => Promise<void>;
@@ -179,7 +192,14 @@ export const openChrome = async (
   try {
     const devtools = await connect(await portOf(profile));
     const targetId = asText(
-      field(await devtools.send("Target.createTarget", { url }), "targetId"),
+      field(
+        await devtools.send("Target.createTarget", {
+          // A preloaded script must exist before the page's first script, so the
+          // target opens blank and is navigated after the script is installed.
+          url: options.preload === undefined ? url : "about:blank",
+        }),
+        "targetId",
+      ),
     );
     if (targetId === undefined) throw new Error("the browser opened no page");
 
@@ -193,6 +213,17 @@ export const openChrome = async (
       ),
     );
     if (sessionId === undefined) throw new Error("the page never attached");
+
+    if (options.preload !== undefined) {
+      // The script only reaches the new document once `Page` is enabled.
+      await devtools.send("Page.enable", {}, sessionId);
+      await devtools.send(
+        "Page.addScriptToEvaluateOnNewDocument",
+        { source: options.preload },
+        sessionId,
+      );
+      await devtools.send("Page.navigate", { url }, sessionId);
+    }
 
     const evaluate = async (expression: string): Promise<unknown> =>
       field(

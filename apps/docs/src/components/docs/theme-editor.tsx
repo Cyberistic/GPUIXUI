@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { themes, type Theme, type ThemeMode } from "@gpuixui/tokens";
+import { browserStore } from "../../lib/browser-storage";
+import { writeClipboard } from "../../lib/clipboard";
 import { platformThemes } from "../../lib/platform";
 import { toCssVars } from "../../lib/theme-css";
 import { usePlatformOptional } from "./platform-toggle";
@@ -14,8 +16,12 @@ import {
   type EditableRole,
   type EditorState,
 } from "./theme-editor-logic";
+import {
+  clearStoredEditorState,
+  readStoredEditorState,
+  writeStoredEditorState,
+} from "./theme-editor-storage";
 
-const STORAGE_KEY = "gpuixui-theme";
 const URL_PARAM = "theme";
 
 /** The browser rendering of one resolved theme, driven only by CSS variables. */
@@ -85,17 +91,16 @@ export function ThemeEditorSurface({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const raw =
-      new URLSearchParams(window.location.search).get(URL_PARAM) ??
-      localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return;
-    const parsed = decodeState(raw);
-    if (parsed !== undefined) setState(parsed);
+    const shared = new URLSearchParams(window.location.search).get(URL_PARAM);
+    const initial =
+      (shared === null ? undefined : decodeState(shared)) ??
+      readStoredEditorState(browserStore());
+    if (initial !== undefined) setState(initial);
   }, []);
 
   const commit = useCallback((next: EditorState) => {
     setState(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    writeStoredEditorState(browserStore(), next);
     const url = new URL(window.location.href);
     url.searchParams.set(URL_PARAM, JSON.stringify(next));
     window.history.replaceState(null, "", url.toString());
@@ -118,25 +123,22 @@ export function ThemeEditorSurface({
 
   const reset = () => {
     setState(defaultState());
-    localStorage.removeItem(STORAGE_KEY);
+    clearStoredEditorState(browserStore());
     const url = new URL(window.location.href);
     url.searchParams.delete(URL_PARAM);
     window.history.replaceState(null, "", url.toString());
   };
 
+  const resolved = resolveTheme(mode, pins, base);
+  const findings = themeFindings(mode, pins, base);
+
   const copy = () => {
-    const resolved = {
+    const both = {
       light: resolveTheme("light", state.light, bases.light),
       dark: resolveTheme("dark", state.dark, bases.dark),
     };
-    navigator.clipboard
-      .writeText(themeSource(resolved))
-      .then(() => setCopied(true))
-      .catch(() => setCopied(false));
+    void writeClipboard(themeSource(both)).then(setCopied);
   };
-
-  const resolved = resolveTheme(mode, pins, base);
-  const findings = themeFindings(mode, pins, base);
 
   return (
     <div className="gx-theme-editor not-prose">

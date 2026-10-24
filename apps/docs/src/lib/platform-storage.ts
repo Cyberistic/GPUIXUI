@@ -1,3 +1,4 @@
+import { browserStore, guarded } from "./browser-storage";
 import {
   parseLook,
   parseMode,
@@ -18,9 +19,10 @@ import {
  * A browser may also refuse the store outright: a reader who blocks site data
  * gets a `SecurityError` from the `window.localStorage` getter, and one who
  * allows it gets a `QuotaExceededError` on write when there is no room. The
- * switch is a preference, not a requirement, so this module is the one adapter
- * that turns a refusal into absence: the switch then shows the URL's choice (or
- * the identity) and simply does not remember it.
+ * switch is a preference, not a requirement, so a refusal is the absence of an
+ * answer: the switch then shows the URL's choice (or the identity) and simply
+ * does not remember it. The guard lives in `browser-storage.ts`, shared with the
+ * theme editor, which reads the same store for its own pins.
  */
 
 /** The part of `Storage` this module needs, so a test can stand in for it. */
@@ -54,32 +56,21 @@ export const defaultRememberedChoice: RememberedChoice = {
   mode: previewMode,
 };
 
-/** Run a storage call, reading a throw as the absence of an answer. */
-const attempt = <A>(run: () => A): A | undefined => {
-  try {
-    return run();
-  } catch {
-    return undefined;
-  }
-};
-
 /**
  * The browser's store, or `undefined` when it refuses one.
  *
  * Both the property access and the writes can throw, so the switch reads this
  * once and hands it to the helpers; a reader with site data blocked keeps a
- * working switch that forgets between pages instead of a broken one.
+ * working switch that forgets between pages instead of a broken one. The guard
+ * is `browser-storage.ts`'s, shared with the theme editor.
  */
-export const browserChoiceStorage = (): ChoiceStorage | undefined =>
-  typeof window === "undefined"
-    ? undefined
-    : attempt(() => window.localStorage);
+export const browserChoiceStorage = browserStore;
 
 const readKey = (
   storage: ChoiceStorage | undefined,
   key: string,
 ): string | null =>
-  storage === undefined ? null : (attempt(() => storage.getItem(key)) ?? null);
+  storage === undefined ? null : (guarded(() => storage.getItem(key)) ?? null);
 
 /**
  * What `storage` remembers, defaulting each axis on its own to `fallback`.
@@ -117,7 +108,7 @@ export const writeRememberedChoice = (
   choice: RememberedChoice,
 ): void => {
   if (storage === undefined) return;
-  attempt(() => storage.setItem(platformStorageKey, choice.platform));
-  attempt(() => storage.setItem(lookStorageKey, choice.look));
-  attempt(() => storage.setItem(modeStorageKey, choice.mode));
+  guarded(() => storage.setItem(platformStorageKey, choice.platform));
+  guarded(() => storage.setItem(lookStorageKey, choice.look));
+  guarded(() => storage.setItem(modeStorageKey, choice.mode));
 };

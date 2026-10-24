@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { writeClipboard } from "@/lib/clipboard";
 import { readPageMarkdown, type PageOrigin } from "@/lib/page-markdown";
 
 const label = {
@@ -24,8 +25,8 @@ export function CopyPage({
 
   const copy = () => {
     readPageMarkdown({ data: { origin, path } })
-      .then((markdown) => navigator.clipboard.writeText(markdown))
-      .then(() => setState("copied"))
+      .then(writeClipboard)
+      .then((copied) => setState(copied ? "copied" : "error"))
       .catch(() => setState("error"));
   };
 
