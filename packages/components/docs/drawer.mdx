@@ -93,9 +93,10 @@ scrolls a 30-row body and holds the control's box).
 - A `size` restored from persisted state that the union does not name paints the
   house `md` box; the table lookup never hands the renderer an `undefined`, so a
   renamed or dropped size cannot shrink the panel to its content.
-- A dismissed drawer stays painted for its exit and takes no presses; its own
-  close control leaves the Tab order for that window, while a control you
-  compose inside the body keeps its stop until the runtime publishes an
+- A dismissed drawer stays painted for its exit and takes no presses; the two
+  close actions the component paints — the top-right control and a
+  `DrawerClose` in the body — leave the Tab order for that window, while a
+  control you compose yourself keeps its stop until the runtime publishes an
   inherited `inert`.
 
 ## Related

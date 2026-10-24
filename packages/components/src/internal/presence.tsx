@@ -182,3 +182,17 @@ export const PresenceShield = ({ present }: { readonly present: boolean }) =>
       style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
     />
   );
+
+/**
+ * The Tab stop a surface's **own** control wears, for the presence it sits in.
+ *
+ * A surface kept for its exit tween is still painted, and the runtime decides
+ * the Tab order element by element, so a control the library paints inside the
+ * ghost needs its own stop dropped — the shield takes the press, not the
+ * traversal. `-1` keeps the control addressable from code and a press while it
+ * is out of the window's order for that window, and the caller's own
+ * `tabIndex` still wins when this is spread before their props.
+ */
+export const presenceTabStop = (
+  present: boolean,
+): { readonly tabIndex?: number } => (present ? {} : { tabIndex: -1 });

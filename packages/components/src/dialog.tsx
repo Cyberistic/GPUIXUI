@@ -67,6 +67,7 @@ import {
   PresenceShield,
   presenceMotion,
   presenceStyle,
+  presenceTabStop,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -177,9 +178,10 @@ export const DialogTrigger = ({ onClick, ...rest }: ButtonProps) => {
 
 /** Closes the dialog it sits in. An ordinary button in every other respect. */
 export const DialogClose = ({ onClick, ...rest }: ButtonProps) => {
-  const { setOpen } = useDialogContext();
+  const { open, setOpen } = useDialogContext();
   return (
     <Button
+      {...presenceTabStop(open)}
       {...rest}
       onClick={(event) => {
         onClick?.(event);
@@ -357,11 +359,7 @@ export const DialogContent = ({
                 label="Close"
                 size="sm"
                 testId="dialog-close"
-                // Only an open surface is a keyboard target: the ghost stays
-                // painted for its exit, but the runtime decides the Tab order
-                // per element, so its stop would land the reader on a control
-                // that unmounts under them (`presence.test.tsx`).
-                tabIndex={presence.present ? undefined : -1}
+                {...presenceTabStop(presence.present)}
                 onClick={close}
                 motion={presenceMotion(fadeFrom("top", 8), presence)}
               >

@@ -53,6 +53,7 @@ import {
   PresenceShield,
   presenceMotion,
   presenceStyle,
+  presenceTabStop,
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
@@ -159,9 +160,10 @@ export const DrawerTrigger = ({ onClick, ...rest }: ButtonProps) => {
 
 /** Closes the drawer it sits in. An ordinary button in every other respect. */
 export const DrawerClose = ({ onClick, ...rest }: ButtonProps) => {
-  const { setOpen } = useDrawerContext();
+  const { open, setOpen } = useDrawerContext();
   return (
     <Button
+      {...presenceTabStop(open)}
       {...rest}
       onClick={(event) => {
         onClick?.(event);
@@ -386,10 +388,7 @@ export const DrawerContent = ({
                 label="Close drawer"
                 size="sm"
                 testId="drawer-close"
-                // A leaving panel is painted for its exit but is not a keyboard
-                // target: the runtime decides the Tab order per element, so the
-                // ghost's stop would unmount under the reader.
-                tabIndex={presence.present ? undefined : -1}
+                {...presenceTabStop(presence.present)}
                 onClick={close}
                 motion={presenceMotion(fadeFromSide(side, 12), presence)}
               >

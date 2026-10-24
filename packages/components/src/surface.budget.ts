@@ -154,10 +154,13 @@ export const surfaceBudget = {
    * 32 KiB → 34 KiB when the easing grammar moved into `@gpuixui/motion`'s
    * `timing.ts` (`motionEasingNames`, `isMotionEasing`) — the module the
    * presence half already loads — so a stored transition is read against the
-   * renderer's grammar before it is handed over. Measured 34 204 bytes with
+   * renderer's grammar before it is handed over. 34 KiB → 35 KiB when
+   * `presenceTabStop` joined `internal/presence.tsx`: the one rule a surface's
+   * own control reads to leave the Tab order while its ghost paints, beside the
+   * shield that takes the press. Measured 35 024 bytes with
    * `nub scripts/surface.ts --entry src/motion-grid.tsx`.
    */
-  familyMotion: { modules: 4, bytes: 34 * 1024 },
+  familyMotion: { modules: 4, bytes: 35 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

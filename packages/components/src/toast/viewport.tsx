@@ -35,6 +35,7 @@ import {
   PresenceShield,
   presenceMotion,
   presenceStyle,
+  presenceTabStop,
   useMotionPreference,
   type SurfaceFrames,
   type SurfaceTiming,
@@ -312,7 +313,7 @@ const ToastCard = ({
               // Only a live card is a target: a leaving one is painted for its
               // exit, but the keyboard must not land on a control that unmounts
               // under it (the runtime decides the Tab order element by element).
-              tabIndex={present ? undefined : -1}
+              {...presenceTabStop(present)}
               onClick={() => {
                 onSelect();
                 dismiss(toast.id);
@@ -328,7 +329,7 @@ const ToastCard = ({
           label="Dismiss"
           size="sm"
           testId="toast-dismiss"
-          tabIndex={present ? undefined : -1}
+          {...presenceTabStop(present)}
           onClick={() => dismiss(toast.id)}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}

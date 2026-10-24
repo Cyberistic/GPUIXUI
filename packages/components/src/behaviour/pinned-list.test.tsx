@@ -179,8 +179,9 @@ describe("PinnedList", () => {
     // still reaches the row — but the layer is not the element that paints.
     // Each header paints its own surface and its own `<text>`, so the runtime's
     // hit test stopped there and the row under the held title lost the press.
-    // Measured in a window by `pinned-list-lifecycle` (`presses` stayed 1);
-    // this case reads the same hit test off the renderer.
+    // The window read the defect as `presses` staying at 1 and now reads
+    // `presses=2,0` on the same probe (`pinned-list-lifecycle`); this case reads
+    // the same hit test off the renderer.
     let presses = 0;
     const page = renderComponent(
       <PinnedList

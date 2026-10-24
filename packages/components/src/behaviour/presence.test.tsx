@@ -196,9 +196,10 @@ describe("a modal surface", () => {
     try {
       clickCentreOf(page, "open");
       await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
-      // While the surface is open its close control is a stop, or the ghost walk
-      // below would pass on a tree that never had it.
+      // While the surface is open its close controls are stops, or the ghost
+      // walk below would pass on a tree that never had them.
       expect(tabWalk(page, "before", 5)).toContain("dialog-close");
+      expect(tabWalk(page, "before", 5)).toContain("cancel");
 
       // Escape has to be delivered inside the surface: the dismiss stack reads
       // the key a surface's own handler is offered.
@@ -211,6 +212,46 @@ describe("a modal surface", () => {
       expect(Option.getOrElse(focusedTestId(page), () => "none")).toBe("open");
 
       expect(tabWalk(page, "before", 5)).not.toContain("dialog-close");
+      // The same rule reaches the close action the library composes into the
+      // body: it is the library's control too, so a footer's Cancel must not
+      // stay a stop while the surface it closes is a ghost.
+      expect(tabWalk(page, "before", 5)).not.toContain("cancel");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps a dismissed drawer's own close controls out of the window's tab order", async () => {
+    // The same defect one surface over: a drawer keeps its panel painted for the
+    // exit tween, and both the close control the library paints and the
+    // `DrawerClose` a caller composes into the footer would otherwise stay stops
+    // a reader can land on as they unmount.
+    const page = renderComponent(
+      <Page>
+        <Button testId="before">Before</Button>
+        <Drawer>
+          <DrawerTrigger testId="open">Filters</DrawerTrigger>
+          <DrawerContent label="Filters" testId="drawer">
+            <DrawerClose testId="cancel">Cancel</DrawerClose>
+          </DrawerContent>
+        </Drawer>
+      </Page>,
+    );
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "drawer")).toBe(true));
+      expect(tabWalk(page, "before", 5)).toContain("drawer-close");
+      expect(tabWalk(page, "before", 5)).toContain("cancel");
+
+      page.renderer.focusElement(
+        page.renderer.findByTestId("cancel")?.id ?? -1,
+      );
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "drawer")).toBe(true);
+
+      expect(tabWalk(page, "before", 5)).not.toContain("drawer-close");
+      expect(tabWalk(page, "before", 5)).not.toContain("cancel");
     } finally {
       page.unmount();
     }
