@@ -50,14 +50,6 @@ const read = (path: string): string =>
 /** A document's prose with its line breaks folded away. */
 const flat = (text: string): string => text.replace(/\s+/g, " ");
 
-/**
- * A palette as a JSON store hands one back, where a field is unknown before it
- * is a union and a key can hold `null`. The cast is the storage boundary, the
- * rule `styles.test.ts`'s stored role and size cases follow.
- */
-const stored = (palette: Record<string, unknown>): SystemPalette =>
-  JSON.parse(JSON.stringify(palette)) as SystemPalette;
-
 const isBaseValue = (
   base: Theme,
   palette: SystemPalette,
@@ -69,7 +61,7 @@ const isBaseValue = (
 /**
  * A theme as a JSON store hands one back with its colour group truncated: JSON
  * has no `undefined`, so a group a theme never carried arrives as `null`. The
- * cast is the storage boundary, the rule `stored` above follows; this package
+ * cast is the storage boundary; this package
  * ships no decoder by design, so the consumer's boundary owns the decode.
  */
 const storedTheme = (theme: Theme): Theme =>
@@ -315,37 +307,35 @@ describe("the palette a desktop hands over", () => {
 
   it("reads a stated mode this release does not ship from the page", () => {
     // The bug this guards: a `SystemPalette` is written by a consumer's decoder,
-    // so its `mode` is unknown input at that boundary even though the type names
-    // two modes. `paletteMode` returned the stated string unchanged and the
-    // documented call site hands it straight to `getTheme`, which refuses a mode
-    // it does not know — an upper-cased `Dark` threw out of `followPalette`
-    // instead of following the desktop's page.
-    expect(paletteMode(stored({ ...nightPalette, mode: "Dark" }))).toBe("dark");
-    expect(paletteMode(stored({ ...paperPalette, mode: "LIGHT" }))).toBe(
-      "light",
-    );
+    // so its `mode` is unknown input at that boundary. `paletteMode` returned the
+    // stated string unchanged and the documented call site hands it straight to
+    // `getTheme`, which refuses a mode it does not know — an upper-cased `Dark`
+    // threw out of `followPalette` instead of following the desktop's page. The
+    // field is typed as what the decoder wrote, so each value below is handed
+    // over as written rather than through a cast — `check-types` holds that:
+    // restoring `mode?: ThemeMode` fails on every one of these lines.
+    expect(paletteMode({ ...nightPalette, mode: "Dark" })).toBe("dark");
+    expect(paletteMode({ ...paperPalette, mode: "LIGHT" })).toBe("light");
     // A key a store kept without a value is the absence it is, and the page still
     // answers; a number is not a mode either.
-    expect(paletteMode(stored({ ...nightPalette, mode: null }))).toBe("dark");
-    expect(paletteMode(stored({ ...paperPalette, mode: 7 }))).toBe("light");
+    expect(paletteMode({ ...nightPalette, mode: null })).toBe("dark");
+    expect(paletteMode({ ...paperPalette, mode: 7 })).toBe("light");
     // No page to measure is no answer, so the caller's own default stands rather
     // than a mode invented from a label nobody ships.
-    expect(
-      paletteMode(stored({ accent: "#B49CFF", mode: "solar" })),
-    ).toBeUndefined();
+    expect(paletteMode({ accent: "#B49CFF", mode: "solar" })).toBeUndefined();
   });
 
   it("follows the page for a palette whose mode names a name it does not ship", () => {
-    const followed = followPalette(stored({ ...nightPalette, mode: "Dark" }));
+    const followed = followPalette({ ...nightPalette, mode: "Dark" });
 
     expect(followed.mode).toBe("dark");
     expect(followed.colors.background).toBe(nightPalette.background);
     expect(followed.name).toBe(darkTheme.name);
     // A palette that only names the paper page and a stale label still gets the
     // light base, which is what `paletteToTokens`' own default reads.
-    expect(
-      paletteToTokens(stored({ ...paperPalette, mode: "DARK" })).mode,
-    ).toBe("light");
+    expect(paletteToTokens({ ...paperPalette, mode: "DARK" }).mode).toBe(
+      "light",
+    );
   });
 
   it("teaches the fallback a stated mode name gets, on every page", () => {
@@ -357,7 +347,7 @@ describe("the palette a desktop hands over", () => {
     const readme = read("../README.md");
     const inventory = read("../../../COMPONENTS.md");
 
-    expect(paletteMode(stored({ ...nightPalette, mode: "Dark" }))).toBe("dark");
+    expect(paletteMode({ ...nightPalette, mode: "Dark" })).toBe("dark");
 
     [catalogue, readme, inventory].forEach((page) => {
       expect(flat(page)).toContain("stated mode this release does not ship");
@@ -368,6 +358,10 @@ describe("the palette a desktop hands over", () => {
     expect(flat(design)).toContain(
       "`paletteMode` reads a system palette's stated mode",
     );
+    // The field is the boundary's value, not a union the decoder has to assert:
+    // both pages a consumer reads say so where they print the seam.
+    expect(flat(catalogue)).toContain("the value the decoder wrote");
+    expect(flat(readme)).toContain("the value the decoder wrote");
 
     // The poll's pace has the same kind of fallback, and the pages state it
     // beside the pace they pass: `setInterval` honours 1 … 2 147 483 647 ms and

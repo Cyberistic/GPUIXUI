@@ -91,8 +91,15 @@ export interface SystemPalette {
    * is what {@link paletteMode} returns. Omit it and the page decides; state a
    * name this release does not ship and the page decides too, because a decoder
    * that writes the palette is a boundary where the value is still unknown.
+   *
+   * The field is therefore `unknown`, the shape a boundary writes: a decoder
+   * reads TOML or JSON and hands over what the file said, so an upper-cased
+   * `Dark`, a release's old name or a `null` a store kept reaches the seam
+   * without the assertion `AGENTS.md` §2 forbids — `paletteMode` is where the
+   * name becomes a `ThemeMode`, and it answers the page's own mode when it
+   * cannot.
    */
-  readonly mode?: ThemeMode;
+  readonly mode?: unknown;
   /** The window's own page fill. */
   readonly background?: string;
   /** The page's body ink. */

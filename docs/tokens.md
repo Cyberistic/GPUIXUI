@@ -1242,7 +1242,10 @@ an inverted theme is a choice. `paletteMode` reads a stated mode this release
 does not ship from the page, the rule `themeModeOf` follows for a theme: a
 consumer's own decoder writes the `SystemPalette`, so the upper-cased `Dark` a
 file or a store carries is a name before it is a mode, and the call below hands
-the answer straight to `getTheme`, which refuses a mode it does not know. A
+the answer straight to `getTheme`, which refuses a mode it does not know. The
+`mode` field is therefore **the value the decoder wrote** — `unknown` until
+`paletteMode` reads it — so a file that says `Dark` reaches the seam without a
+cast. A
 palette with no page to measure answers no mode, so the caller's own default
 stands rather than a mode invented from the label. Use it to hand the matching
 built-in theme to `paletteToTokens` (and to keep the app's mode switch honest),

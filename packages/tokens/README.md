@@ -843,7 +843,9 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 A system palette is what a desktop offers the application — a page, an ink, an
 accent, a quiet strip, a border, an error colour, a selection wash, and the mode
 it states — and `paletteToTokens(palette, base)` turns it into a theme.
-`SystemPalette` is that shape (every field optional), `paletteMode(palette)`
+`SystemPalette` is that shape (every field optional, and `mode` is the value the
+decoder wrote — `unknown` until `paletteMode` reads it, so a file that says
+`Dark` reaches the seam without a cast), `paletteMode(palette)`
 returns the mode the palette states or the one its page implies, and
 `watchSystemTheme` follows a palette through a poll because the runtime has no
 file watcher:
