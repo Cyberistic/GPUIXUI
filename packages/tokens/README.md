@@ -172,8 +172,10 @@ The unions derive from the indexes, so a settings row iterates the axis and a
 restored preference narrows without retyping the union or casting. Each index is
 held to the data it selects — every mode has both contrast variants, every
 platform a style, every look a style, every preset a metric per size, every type
-role a key of the scale, every elevation level a shadow — by
+role a key of the type scale — by
 [`src/guards.test.ts`](./src/guards.test.ts), and
+[`src/elevation.test.ts`](./src/elevation.test.ts) holds the elevation index to
+the shipped scale.
 [`src/persisted-choices.example.ts`](./src/persisted-choices.example.ts) resolves
 all nine.
 

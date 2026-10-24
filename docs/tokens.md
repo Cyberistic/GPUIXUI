@@ -4429,8 +4429,9 @@ edit at the owner and every consumer loop — including this package's own tests
 covers it. The indexes are held to the data they select: every mode has both
 contrast variants, every platform has a style, every look has a style, every
 density preset has a metric for every control size, every tone has its own soft
-roles, every type role is a key of the scale and every elevation level a shadow
-in it (`guards.test.ts`).
+roles, every type role is a key of the type scale and every elevation level a key
+of the elevation scale (`guards.test.ts`; §Elevation holds the index itself to
+the shipped scale).
 
 ```ts
 import { getTheme, isThemeContrast, isThemeMode } from "@gpuixui/tokens";
