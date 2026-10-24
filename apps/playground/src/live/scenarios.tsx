@@ -1110,6 +1110,7 @@ import { MenuRadioProbe, menuRadioSteps } from "./menu-radio-probe.js";
 import { AppChromeProbe, appChromeSteps } from "./app-chrome-probe.js";
 import { SecondWindowProbe, secondWindowSteps } from "./second-window-probe.js";
 import { QrMatrixProbe, qrMatrixSteps } from "./qr-matrix-probe.js";
+import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -30279,5 +30280,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "modal-scroll-lifecycle",
     view: () => <ModalScrollProbe />,
     steps: modalScrollSteps,
+  },
+  "image-zoom-lifecycle": {
+    id: "image-zoom-lifecycle",
+    view: () => <ImageZoomProbe />,
+    steps: imageZoomSteps,
   },
 };

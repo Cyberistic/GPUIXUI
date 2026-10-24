@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-120 probes a real window can prove, of which twenty-five mount shipped
+121 probes a real window can prove, of which twenty-six mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -50,7 +50,7 @@ the command palette, the tabs, the list, the collapsible section, the popover,
 the popover's reflow, the scrolling modal,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
-the modal focus rule and the breadcrumb trail), nine mount
+the modal focus rule and the breadcrumb trail, and the image zoom), nine mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 ScrollArea and the Button, and the media probe's play/pause action), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one mounts the package's shipped charts, one mounts the
@@ -6777,6 +6777,69 @@ restored green: expecting the veil wheel to move the page fails
 `a wheel on the veil leaves the page where the reader left it` with
 `expected -100, got 0`. Evidence: `.artifacts/live/modal-scroll.png`.
 
+### `image-zoom-lifecycle` — measured on 0.11.0 here
+
+**Does a magnifier magnify?** `ImageZoom` shipped with an offscreen suite that
+reads the box the runtime is handed, and two of its claims came from elsewhere:
+that an `<img>` host **scales its own buffer into the box it is given** was
+measured for a chart's pixel buffer (`chart-raster`), and that the pan keeps the
+spot under the pointer in place was box arithmetic only. The probe mounts the
+shipped component on a synthetic **240×160** picture with three **16×16** marks
+— green `#37C871` at the corner (`13,13`), amber `#E8B30B` under the point it
+hovers (`60,120`), pink `#D94B8F` right of centre (`183,103`) — at the default
+**1.6×** and reads the frame it paints. The pointer is a new host verb,
+`hoverAt(testId, offset)`, because `hover` aims at an element's centre and a
+magnifier is defined by where inside its frame the pointer is.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | frame `240×160`; picture box `0,0,240,160`; all three marks paint their own colours; the frame's top edge is the picture, not the page |
+| hover `60,120` | the view prints `point=60,120 moves=2 leaves=0`; the picture's box is **`384×256` at `−36,−72`** — `1.6` of the frame on each axis, still covering it; the pointed spot keeps its own share (`0.25, 0.75`) |
+| the capture there | the pointer paints the amber mark; the green and pink marks are **absent** from the frame; the amber mark's exact paint is **48×48** device pixels against **30×30** at rest (1.6 the linear size) |
+| the frame | does not move: the same box, to one point, before and after |
+| hover `200,120` | box `384×256` at **`−120,−72`**; the pointer paints the picture's background `#2B3240`; the amber mark is out of frame; the pink mark paints where the panned box puts it |
+| hover a box beside the frame | the picture returns to `0,0,240,160`, the corner mark paints again, and the view prints `leaves=1` |
+
+Five rules the probe holds:
+
+1. **The pointed spot keeps its paint.** The pointer's share of the frame is the
+   share of the picture painted under it, so the amber mark stays under the
+   pointer while the picture grows — a box that magnified without panning drifts
+   that spot and a box centred on the frame loses it.
+2. **The picture is scaled by its box.** The mark's *exact* paint measured
+   30×30 device pixels at rest and 48×48 magnified at this display's 2× — the
+   buffer followed the box, so a bigger box is a bigger picture rather than a
+   same-size picture with a moving clip.
+3. **The frame is the fixed thing.** Its painted box is identical before, during
+   and after the pan; the picture is the element that travels.
+4. **The window moves to the picture, not the picture under a still window.**
+   The marks the magnified window leaves out are absent from the capture, and a
+   later pan puts a different mark inside it, in the place the measured box
+   names.
+5. **A measured limitation: the magnified picture's corners are square.** The
+   resting picture carries the frame's radius on the image itself, so the
+   capture's corner is the page; magnified, the runtime clips an overflowing
+   child to its box and not to the frame's corner radius, so the corner paints
+   the picture's own `#2B3240`. Both readings are asserted, so a runtime that
+   learns a rounded clip fails here before the page keeps teaching the old
+   shape.
+
+54 checks, `--only image-zoom-lifecycle`, green on 0.11.0 here (~6.5–10 s).
+Fixture `src/live/image-zoom.ts` (the embedded 240×160 PNG, the three marks, the
+two hover points, the two invariants over a measured box and the readout) +
+`ImageZoomProbe`/`imageZoomSteps` in `src/live/image-zoom-probe.tsx` +
+`image-zoom.test.ts` (the decoded bytes against the declarations in both
+directions, the invariants measured failing for a still, a centred and a
+half-panned box, the mapping round trip, the registry and wiring, the component's
+own picture id and this section). Two negative controls measured, exit `1`,
+restored green: asserting the pointed share at the *other* hover point fails
+`the pointed spot keeps its own share of the frame` with
+`expected true, got false`, and handing the component `scale={2}` while the probe
+still requires 1.6 fails
+`the magnified picture is larger than the frame by the scale it was given` with
+`expected true, got false`. Evidence:
+`.artifacts/live/image-zoom-{rest,mark,other,returned}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -7022,7 +7085,8 @@ narrower. Each deviation is deliberate and measured:
   `media-frame-lifecycle` and `media-player-lifecycle` and
   `menu-radio-lifecycle` and `app-chrome-lifecycle`
   and `second-window-lifecycle` and `qr-matrix` and `drawer-lifecycle` and
-  `modal-scroll-lifecycle` (62 probes, each run alone).
+  `modal-scroll-lifecycle` and `image-zoom-lifecycle` (63 probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`

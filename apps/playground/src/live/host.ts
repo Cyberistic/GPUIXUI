@@ -265,6 +265,13 @@ export const createLiveHost = ({
     clickWith: (testId, modifiers) =>
       call(`clickWith ${testId}`, () => modifiedPress(at(testId), modifiers)),
     hover: (testId) => call(`hover ${testId}`, () => at(testId).hover()),
+    hoverAt: (testId, offset) =>
+      Effect.gen(function* () {
+        const box = yield* call(`hoverAt ${testId}`, () => at(testId).bounds());
+        yield* call(`hoverAt ${testId}`, () =>
+          app.mouse.move({ x: box.x + offset.x, y: box.y + offset.y }),
+        );
+      }),
     drag: (testId, deltaX, deltaY, options) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY, options)),
     /**

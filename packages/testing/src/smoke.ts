@@ -515,6 +515,20 @@ export interface AsyncSmokeHost {
    */
   readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**
+   * Moves the pointer to a point **inside** `testId`'s painted box.
+   *
+   * `offset` is in the element's own coordinates, from its painted top-left
+   * corner, so a probe that measures a pointer-relative surface (a magnifier, a
+   * crop handle, a marquee) aims at the spot it samples instead of at the
+   * element's centre. The protocol sends a real move, so the payload carries the
+   * point and an element listening to `onMouseMove` runs its handler — the same
+   * path a pointer takes.
+   */
+  readonly hoverAt: (
+    testId: string,
+    offset: Offset,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
    * Presses on `testId` and drags the pointer by the given offset, releasing
    * there.
    *

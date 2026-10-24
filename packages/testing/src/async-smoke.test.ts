@@ -32,6 +32,7 @@ const inertHost: AsyncSmokeHost = {
   rightClick: () => Effect.void,
   clickWith: () => Effect.void,
   hover: () => Effect.void,
+  hoverAt: () => Effect.void,
   drag: () => Effect.void,
   wheel: () => Effect.void,
   scrollOffset: () => Effect.succeed(null),

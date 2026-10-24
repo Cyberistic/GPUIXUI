@@ -129,10 +129,15 @@ scenarios are the evidence for the focus pair. A probe that reports "no focus
 event" must say which window it measured, and a component may not be called
 verified on a blur commit from a live run alone.
 
-Pointer input is four verbs. `click` presses and releases, `drag` presses and
+Pointer input is five verbs. `click` presses and releases, `drag` presses and
 travels, and `hover` moves the pointer onto the element's centre **without
 pressing** — the only way to drive the enter/leave pair a tooltip or a
 hover style listens for, since any press also fires the press handlers.
+`hoverAt(testId, offset)` moves the pointer to a point **inside** the element's
+painted box, measured from its top-left corner: a pointer-relative surface is
+defined by where the pointer is *inside* it, so a magnifier, a crop handle or a
+marquee aims at the spot it samples rather than at the centre. The
+`image-zoom-lifecycle` probe is the first consumer.
 `drag` also takes an `offset` (`AsyncDragOptions`), the distance from the
 element's centre where the press lands: a surface the **runtime** paints inside
 an element — a scrollbar thumb on a scroller's trailing edge — is not a node a

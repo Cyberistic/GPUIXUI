@@ -756,6 +756,12 @@ export const liveRegistry = [
       "Overlay: an open modal contains the wheel — its own body scrolls, the page behind it and the veil it paints move nothing",
     capability: "modal",
   },
+  {
+    id: "image-zoom-lifecycle",
+    title:
+      "Content: the shipped image zoom paints the marked spot under the pointer where the pointer is, magnifies the picture into a box larger than its frame, and returns to rest when the pointer leaves",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
