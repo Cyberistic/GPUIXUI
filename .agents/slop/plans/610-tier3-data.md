@@ -715,6 +715,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   (`expected [ 'Name', 'Size' ] to include 'No rows'`). 253 unit / 180
   behaviour, `check-types` clean.
 
+- **A theme without the density group still builds a row**: `TreeRowView` wrote
+  `height ?? theme.density.rowHeight` and `VirtualTree` handed the same raw read
+  to its normaliser, so a theme a store gave back without the group threw
+  `TypeError: Cannot read properties of undefined (reading 'rowHeight')` from the
+  first row a tree painted. `tree/row.tsx` exports `treeRowHeight(height, theme)`
+  over the primitives' `rowHeightOf(theme)` — the published reader that answers
+  the library's row — and both trees resolve through it;
+  `src/tree/row.test.ts` (3 cases) holds the two absence shapes, a shipped
+  theme's own step, a caller's height and the source rule. Directions measured:
+  restoring either raw read fails the absence case on the `TypeError` and the
+  source case by name. Docs: `docs/tree-view.mdx`, `docs/virtual-tree.mdx`, the
+  README and the two inventory rows.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

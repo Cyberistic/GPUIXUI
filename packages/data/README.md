@@ -53,6 +53,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | `onVisibleRange` lags the paint | `virtual-list-windowed` | The reported range is **not** the window's source: the window follows the runtime's **scroll anchor** (`getListScrollTop`), which is exact even while the row heights are estimates. A window built from the reported range paints blank rows. |
 | A reveal moves the window first | `virtual-list-windowed` | `useVirtualRows` moves the window to the row's own position in the same render, and the body scrolls to it in the layout effect after that commit. |
 | A row height the window can divide | `rowheight.test.tsx`, `window.test.ts` | `rowHeightOf` reads a computed row height once — a finite height above zero, else `DEFAULT_ROW_HEIGHT` (37, what the shipped row paints) — and the runtime's estimate, the anchor, a reveal and the tree's cursor walks all read it. A height nothing could be read from used to mount a row per pixel and to clamp the anchor's offset to `0`, so a thousand-row table painted nothing past its first window. |
+| A theme without the density group still builds a row | `tree/row.test.ts` | The step a tree row defaults to is the primitives' density reader (`rowHeightOf(theme)`), which answers the library's row for a theme a store gave back without the group. Indexing the group directly threw `TypeError: Cannot read properties of undefined (reading 'rowHeight')` from the first row, in the plain tree and the windowed one alike. |
 
 ## Shape
 
@@ -402,6 +403,15 @@ else `DEFAULT_ROW_HEIGHT` (37), which is what the shipped row paints: a
 `text-sm` line inside `py-2` plus the row's rule, measured by
 `behaviour/rowheight.test.tsx`. The estimate, the anchor, the reveal and the
 tree's cursor walks all read that one number.
+
+**A theme that lost the density group still builds a row.** A theme a store
+hands back can lack the group — JSON writes `null` where a record never carried
+it, a hand-edited literal drops the key — and both tree painters used to index
+it: the first row a surface painted threw
+`TypeError: Cannot read properties of undefined (reading 'rowHeight')`. The row
+step now comes from the primitives' density reader (`rowHeightOf(theme)`), which
+answers the library's row for that absence, and the windowed tree resolves its
+`rowHeight` through the same read. `tree/row.test.ts` holds it.
 
 **An overdraw the window cannot read is the documented default.**
 `@tanstack/virtual-core` multiplies `overdraw` into both edges of every range,

@@ -24,6 +24,7 @@
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
+import { rowHeightOf, type DensitySource } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
@@ -33,6 +34,19 @@ import { TREE_CHEVRON, TREE_ROW, TREE_ROW_ACTIVE } from "./recipe.js";
 
 /** The left inset the first level takes, in pixels. */
 export const TREE_INSET = 8;
+
+/**
+ * The height a tree row paints at: the caller's, or the theme's row step.
+ *
+ * The step comes from the primitives' density reader, which answers the
+ * library's row for a theme a store gave back without the group — indexing the
+ * group directly threw from the first row a surface painted. Both trees resolve
+ * their rows through this function.
+ */
+export const treeRowHeight = (
+  height: number | undefined,
+  theme: DensitySource,
+): number => height ?? rowHeightOf(theme);
 
 /** {@link TreeRowView} props. */
 export interface TreeRowViewProps<T> {
@@ -104,7 +118,7 @@ export const TreeRowView = <T,>({
       onKeyDown={onKeyDown}
       style={{
         ...recipeStyle(cn(active ? TREE_ROW_ACTIVE : TREE_ROW), theme),
-        height: height ?? theme.density.rowHeight,
+        height: treeRowHeight(height, theme),
         paddingLeft: TREE_INSET + row.depth * TREE_INDENT,
         // The recipe's own `hover` record is replaced by a style's, so the wash
         // is restated here beside the press it derives.

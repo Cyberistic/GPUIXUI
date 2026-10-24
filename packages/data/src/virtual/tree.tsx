@@ -47,6 +47,7 @@
 
 import { useGpuix, type Props, type PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { rowHeightOf } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -64,7 +65,7 @@ import { TreeRowView } from "../tree/row.js";
 import { useTree } from "../tree/use-tree.js";
 import { VirtualList, type VisibleRange } from "./list.js";
 import { useVirtualRows } from "./use-virtual-rows.js";
-import { anchorOffset, rowHeightOf } from "./window.js";
+import { anchorOffset, rowHeightOf as windowRowHeight } from "./window.js";
 
 /** {@link VirtualTree} props. */
 export interface VirtualTreeProps<T> extends Omit<
@@ -141,7 +142,9 @@ export const VirtualTree = <T,>({
   // The tree's rows are built at the density's step, so a declaration the
   // window cannot divide falls back to it rather than to `NaN`: the two cursor
   // walks below divide by this number, and a `NaN` index reaches no row at all.
-  const rowHeight = rowHeightOf(namedRowHeight, theme.density.rowHeight);
+  // The step is the primitives' reader, so a theme a store gave back without
+  // the density group answers the library's row.
+  const rowHeight = windowRowHeight(namedRowHeight, rowHeightOf(theme));
   // The height the list is drawn at: the caller's, or the box this component
   // measured for it. An unbound tree takes its layout's share and windows
   // against the height that box painted; without that measurement the window

@@ -66,6 +66,12 @@ read**: the paint, the accessible name and the type-ahead match. A tree whose
 names never arrived therefore still paints a word and a typed prefix reaches it
 (`behaviour/tree.test.tsx`'s blank-label cases).
 
+A row is built at the density's `rowHeight`, read through the primitives'
+density seam (`rowHeightOf(theme)`): a theme a store restored without the
+density group paints the library's row instead of throwing from the first row
+(`tree/row.test.ts`), and `VirtualTree` resolves its own `rowHeight` through the
+same seam.
+
 ## Limitations
 
 - One active row; a multi-select tree is not shipped.
