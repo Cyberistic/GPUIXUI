@@ -174,6 +174,18 @@ export const laneRows: ReadonlyArray<{
       "a composition of SplitPane and an editor field per pane; the window holds one platform text session, and the page teaches the press that moves it and the divider that parks it",
   },
   {
+    row: "Workspace layouts",
+    file: "apps/docs/content/docs/workspace/index.mdx",
+    reason:
+      "the dock tree plus the app's stored arrangement; the page teaches the schema, the default on a decode failure and the re-mount the one-window runtime allows",
+  },
+  {
+    row: "Detachable / movable tabs",
+    file: "apps/docs/content/docs/workspace/index.mdx",
+    reason:
+      "the shipped Tabs plus the caller's drag state; the page teaches the move between strips, the one-process window and the portal route a detached tab cannot take",
+  },
+  {
     row: "Syntax highlighting",
     file: "apps/docs/content/docs/runtime.mdx",
     reason:

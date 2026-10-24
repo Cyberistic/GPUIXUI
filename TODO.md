@@ -2334,7 +2334,30 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 166/166
+`[x]` `[██████████]` 167/167
+
+`[x]` Verify and mark the **two Tier 4 workspace rows that still read `todo`** —
+       *Detachable / movable tabs* and *Workspace layouts* both had measured
+       evidence and no status: the first said "blocked by a second window
+       (unfiled)" as `todo`, the second said `yes (measured)` with a paragraph of
+       window readouts as `todo`, so a reader of `COMPONENTS.md` or the docs lane
+       table was told two capabilities did not exist. Re-ran the three probes on
+       this tree: `--only workspace-restore --only movable-tabs-lifecycle
+       --only second-window-lifecycle` is **3/3** live green on 0.11.0 (6.3 s,
+       10.4 s, 4.4 s). *Detachable / movable tabs* is now `done (composed)` with
+       `partial` support and the blocked note the inventory requires (a tab moves
+       between strips by drag or `Cmd+Shift+Arrow`; a detached tab needs a second
+       process, measured by `second-window-lifecycle`, and `portal-layer`'s
+       `createPortal` is the move inside the one window); *Workspace layouts* is
+       `done` with the restore/move/reflow citations it already carried. Because
+       a `done` row must be published on a page, the workspace lane page gained
+       **Moving a tab** (the four measured move rules and the one-process
+       refusal) and both rows joined `laneRows`. Guards green: the components
+       inventory suite 38/38, the docs suite 186 files / **1 893** tests, and the
+       playground file unchanged. Directions measured: with the two rows marked
+       `done` and no `laneRows` entries, the docs `publishes every shipped row on
+       a page` case fails listing both rows by name; with the entries and the
+       page section it is green, and that page section is what the entries cite.
 
 `[x]` Measure the **animation interruption** the capability record claims and
       no probe changed a target for — the record's *Animation interruption* row

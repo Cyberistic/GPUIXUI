@@ -49,3 +49,21 @@ import * as Schema from "effect/Schema";
 const saved = Schema.encodeUnknownSync(DockNodeJson)(layout);
 const restored = Schema.decodeUnknownSync(DockNodeJson)(saved);
 ```
+
+## Moving a tab
+
+A tab strip is the shipped `Tabs` plus the app's own drag state. The playground's
+`movable-tabs-lifecycle` probe measured the move on this runtime: a dragged tab
+leaves its strip, the source selects the tab that took its slot, the destination
+inserts it at the slot the drop names, the moved panel's draft survives because
+it changed parent (so the app restores the focus the remount dropped),
+`Cmd+Shift+Left`/`Right` step it without wrapping or passing the ends, and a
+release outside both strips is a miss.
+
+**A detached tab is not available.** The window holds one process and one
+window: the playground's `second-window-lifecycle` probe measured a second
+`GpuixRenderer.init()` refused with `A GPUI application already exists on this
+thread`, and the refused renderer reported `isInitialized() === false` while the
+running window kept painting and taking presses. A "detached" tab is therefore a
+move to another pane or layer **inside** that window through `createPortal`
+(measured by `portal-layer`), and a real detach needs a second process.
