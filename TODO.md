@@ -2326,7 +2326,31 @@ handed to the timer.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 165/165
+`[x]` `[██████████]` 166/166
+
+`[x]` Measure the **animation interruption** the capability record claims and
+      no probe changed a target for — the record's *Animation interruption* row
+      says "a target change starts the next transition from the current visible
+      value", while a collapsible sidebar reopened mid-close and a split pane
+      dragged while its width travels both rest on that sentence alone. The
+      `motion-interruption` probe drives a box 120 → 400 and cuts to 240 1.2s in
+      (painted **212**), then drives it 400 → 120 and cuts back to 400 (painted
+      **307**): the frame after each cut paints **212.5** and **306.5**, so the
+      run continues from the width on screen rather than restarting at 120 (or
+      400) or finishing the abandoned target, and each settles on the new target
+      (**240** / **400**). The cut is from the measured travel, not assumed:
+      the same declared duration painted a ~3s run on this loaded box and, per
+      `motion-geometry`, a few hundred milliseconds on an idle one, so the probe
+      **polls** for the target instead of sleeping. **20 checks**,
+      `--only motion-interruption`, green in two consecutive runs (~14.4s each).
+      Fixture `src/live/motion-interruption.ts` + `MotionInterruptProbe`/
+      `motionInterruptSteps` + `motion-interruption.test.ts` (13 cases: the two
+      failure shapes below the 60-point tolerance in both directions, the
+      registry/body wiring, the 20-check count derived from the assertion sites,
+      and the poll guard — measured failing when a `millis(3xxx)` sleep returns
+      to the steps). README §`motion-interruption`,
+      `.artifacts/live/motion-interrupt-{far,rest}.png`. The docs half is the
+      interlock row below.
 
 `[x]` Count a **leave the pointer actually took**, and name the flake the probe was reporting — `image-zoom-lifecycle` failed twice under a loaded box with `point=60,120 moves=2 leaves=1` where `leaves=0` was required, and the leave was the probe's **own park**: a full run's previous probe can leave the pointer over the frame's box, the frame is then entered at mount and left when the probe parks, and the resting check read that cumulative leave as this pointer's. Reproduced deterministically by entering the frame before the park: `leaves=1` with the cumulative counter and `leaves=0` with a reset on the frame's own entry, in the same run. `ImageZoomProbe` now resets `leaves` in `onMouseEnter`, the check reads *no leave arrived between the pointer reaching the frame and this read*, and `image-zoom.test.ts` gains `counts a leave from the pointer's own arrival`, measured failing without the reset (`to contain 'onMouseEnter={() => setLeaves(0)}'`). The paint checks were already the guard against a real drop (a collapsed picture fails `the magnified picture is larger than the frame`), so the components flake row is closed with no component change. `--only image-zoom-lifecycle` green twice on 0.11.0 here (54 checks, 5.9 s and 7.3 s); `README.md` §`image-zoom-lifecycle` states the per-arrival rule and the reproduction.
 
@@ -9735,6 +9759,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Read the **menu bar's state at the event, not at the render** — `AppMenu`'s `onMouseEnter` writes `hoverOpen(state, …)` with the state captured by the render that installed it (`packages/shell/src/app-menu/app-menu.tsx:291`), so an entry the runtime delivers in the same batch as a press overwrites the open the press just set and the dropdown never paints. Measured by the playground's `app-chrome-lifecycle` on 0.11.0, 2026-10-24: a press with no preceding pointer move (the automation's `click` dispatches a down/up at the trigger's centre and no move) leaves the panel unpainted (`a press on File paints its dropdown: expected a value, got none`), and `onMouseEnter={() => setState((current) => hoverOpen(current, specs, index))}` makes the same press 47/47 green — the one-line change was measured and reverted, so the fix is proven, not guessed. A window can deliver that order too (a click that arrives with no move in that window — a pointer already resting on the trigger when the window opens), so the stale read is the component's. The probe half landed 2026-10-24: `app-chrome-lifecycle` presses the way a pointer does (park → enter → press) and is green again, `app-chrome.test.ts` fails when any menubar press loses its move (`expected 2 to be 3`) or its park, and `apps/playground/README.md` §`app-chrome-lifecycle` records the ordering and the fix | shell (one functional update in `app-menu.tsx`) | **open — the probe is green; the component still closes a menu for a press delivered without a move** |
 
+| Publish a **`@gpuixui/shell/logic` subpath** — the shell lane's three drawings (`apps/docs/src/lib/{toolbar,app-menu,status-bar}-demo.tsx` behind `apps/docs/src/lib/shell-logic.ts`) read the package's own `src/{toolbar,app-menu,status-bar}/logic.ts` because `packages/shell/package.json` publishes only `.` and `./examples`, and the root re-exports GPUix JSX a DOM app cannot compile. The seam is guarded and temporary (`apps/docs/src/lib/shell-logic.test.ts` fails the day the subpath exists and says to delete it), but a package's internal file path is not a public API: moving a logic module breaks the site's type check. The subpath can `export * from` the three logic modules plus `hoverOpen`, after `toolbar/logic.ts` and `app-menu/logic.ts` import `decideMove` from `@gpuixui/primitives/core` rather than the root (the root import also pulls the package's `.tsx` files, and their missing `/** @jsxImportSource @gpuix/react */` pragmas, into the docs program) | shell (`packages/shell/package.json`, the two logic imports) | **open — the docs half is landed; the site reads the package's files until the subpath exists** |
+
+| Publish the **animation interruption** a window measured — the capability record's *Animation interruption* row (`supported` — "a target change starts the next transition from the current visible value") is the one supported row with **no probe**, and `@gpuixui/motion`'s `retarget` makes the same promise for a spring. The new `motion-interruption` probe (20 checks, 0.11.0) drove a box 120 → 400 and cut to 240 1.2s in (painted **212**), then 400 → 120 and cut back to 400 (painted **307**): the frame after each cut painted **212.5** and **306.5** and each run settled on its new target (**240** / **400**), so the next transition starts from the visible value rather than the run's start or the abandoned target, in both directions, and the new run keeps its own full timing | docs-site (`docs/gpuix-capabilities.md` *Animation interruption*, `/docs/runtime#measured-in-a-window`) | **open — the playground half landed 2026-10-24** — `apps/playground/src/live/motion-interruption.ts` + `MotionInterruptProbe`/`motionInterruptSteps` + `motion-interruption.test.ts` (13 cases) + README §`motion-interruption`; green twice (`--only motion-interruption`, 20 checks, ~14.4s). The row should name the probe, the two cut readings and the settle rule, and `/docs/runtime` should publish it |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -11539,7 +11567,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 372/373
+`[x]` `[██████████]` 373/373
 
 `[x]` Draw the **data lane's sorting and selection pages** — the two interactions
 MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{table-sorting,table-selection}.mdx` are the package's Markdown, so the site mounts both from `package-preview.ts`. The drawings run the package's own rules instead of a copy — `pressSortOrder` for the header cycle, `constructGrid` for the painted order (the core `useTable` runs on), and `pressSelection`/`pressMode` over the visible keys for a press — so the deploy queue's order, its Shift range and its chord toggle are the package's and only the paint is the browser's. `table-rule-demos.test.tsx` (8 cases) holds the duration-desc order (`reports → … → gateway`), a two-field environment/service order, each header's package announcement and `↓1`/`↑2` place, the painted row order, the Shift range from the anchor, the chord toggle, and a source guard refusing a local copy. Directions measured: with `sortedRows` returning the fixture, 5 cases fail by name (`expected [ Array(6) ] to deeply equal [ 'reports', 'search', 'media', …(3) ]` and the two-field case); restored, 8/8. Served build on `vite preview`: `/docs/data-display/table-sorting` and `/table-selection` both answer **200** with `gx-trule-demo` and their readouts. `docs/preview-strategy.md` now says the data lane draws three surfaces and names the seams; the `apps/docs/README.md` ledger names the module. No native scenario applies — browser drawings over the package's pure row model and press reducers.
@@ -11614,37 +11642,40 @@ MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{tabl
       (`expected undefined to be 'supported, with limits'`); restored, the file
       is 7/7. No native scenario applies — a record row and the probe it cites.
 
-`[ ]` Draw the **shell lane's three surfaces** — `packages/shell/docs/{toolbar,
-      status-bar,app-menu}.mdx` still ship no preview. The shell's reducers are
-      pure (`splitOverflow`/`moveRoving`, `step`/`hoverOpen`/`dismiss`,
-      `statusToneOf`/`toneForeground`) but import `@gpuixui/primitives`' root, so
-      a `@gpuixui/shell/logic` subpath (the shape `@gpuixui/dock/logic` already
-      uses) is the route. Owner: **shell** for that subpath; **docs-site** then
-      adds the demo modules, their CSS and the `package-preview.ts` rows, as the
-      files lane now does. No invented drawing: the strip runs the package's
-      roving and menu reducers, and only the paint is the browser's. **Measured
-      2026-10-24:** the root import is one symbol — `toolbar/logic.ts` and
-      `app-menu/logic.ts` import `decideMove` from `@gpuixui/primitives`, which
-      `@gpuixui/primitives/core` also exports, while `status-bar/logic.ts`
-      imports only `effect/Option` and `@gpuixui/tokens` — so the subpath can be
-      `export * from` the three logic modules after that one import moves to
-      `./core` (no new logic, no behaviour change). **Second pass, same day: the
-      root import was attempted and reverted, with two measured reasons.** It
-      *builds* — the demos chunk carries the rules and none of the component
-      modules or the renderer, because the package is side-effect free — but
-      `nub run --filter @gpuixui/docs check-types` then pulls the package's
-      `.tsx` files into the docs program and fails on the missing per-file
-      `/** @jsxImportSource @gpuix/react */` pragma (TS2322 on `boxShadow`,
-      TS2339 on `KeyEvent.modifiers`, TS2416/TS2322 on `ref`) — the class the
-      primitives/icons pragma pass fixed — and the entry point does not export
-      **`hoverOpen`**, the reducer `AppMenu` itself imports. So the subpath must
-      export the three logic modules *and* `hoverOpen`; the docs half is then the
-      three demo modules, their style sheet and three `package-preview.ts` rows,
-      and the root becomes usable only after a pragma pass. The drawing's
-      approximations are settled by the held sample: a real `<button>` where the
-      native action is a `div role="button"`, the panel inside the frame where
-      the native one is anchored at window coordinates, and the recipe's fixed
-      24px/16px menu corners beside a platform-radius control.
+`[x]` Draw the **shell lane's three surfaces** — `packages/shell/docs/{toolbar,
+      status-bar,app-menu}.mdx` shipped no preview, so three shipped components
+      had props and limitations and no drawing. The package publishes its
+      components and their types but no `./logic` subpath (the route the dock
+      lane takes), and its root re-exports GPUix JSX a DOM app cannot compile,
+      so `src/lib/shell-logic.ts` reads the three logic modules the package
+      ships and the drawings import that one seam. The seam is **temporary and
+      guarded**: `src/lib/shell-logic.test.ts` (2 cases) requires each module
+      and every name the seam re-exports to exist (removing `hoverOpen` fails
+      `to contain 'hoverOpen'`), and fails the day
+      `packages/shell/package.json` publishes `./logic`, saying to delete the
+      seam and import the package. `toolbar-demo.tsx`, `app-menu-demo.tsx` and
+      `status-bar-demo.tsx` run the package's own
+      `splitOverflow`/`initialRoving`/`moveRoving`,
+      `initial`/`step`/`hoverOpen`/`dismiss` and
+      `statusToneOf`/`toneForeground`; only the paint is the browser's.
+      `package-preview.ts` mounts each above its package page, `demos.tsx`
+      registers the three, `demos.css` paints them from the platform-switch
+      variables with no literal, and the three demo suites (16 cases) hold the
+      overflow split, the single tab stop that skips a disabled action and
+      wraps, the menu's traversal/hover/dismissal and the tone roles. Direction
+      measured: a local copy of the split (`Arr.take(actions, Arr.length(actions))`)
+      fails three toolbar cases by name (`expected [ 'new', 'open', 'save',
+      'undo', …(2) ] to deeply equal [ 'new', 'open', 'save', 'undo' ]`, the
+      wrap, and `6 of 8` in the readout). `docs/preview-strategy.md` says the
+      shell lane draws its three surfaces, states the two approximations (a real
+      `<button>` where the native action is a `div role="button"`; the dropdown
+      inside the frame where the shipped one anchors at window coordinates) and
+      keeps the seam's retirement rule; `native-run-note.test.tsx` now refuses
+      the retracted "the shell lane still ships none". Green: the docs suite is
+      184 files / **1 880** tests, and no file under `apps/docs` has a
+      `check-types` error. No native scenario applies — browser drawings over
+      the package's pure reducers. **Still owed by shell:** the `./logic`
+      subpath itself (the interlock row below), after which the seam is deleted.
 
 `[x]` Teach a reader to **read the theme editor's audit** — `/docs/themes` said
       what the controls do and nothing about the readout, so the first line an

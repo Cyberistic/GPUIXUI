@@ -165,6 +165,10 @@ src/components/docs/dock-layout-demo.tsx  The dock tree's split, tab strips and 
 src/components/docs/file-tree-demo.tsx     The workspace tree's rows, glyphs and selection, on the files and data packages' rules
 src/components/docs/log-viewer-demo.tsx    The build log's parse, filter and level tints, on the log package's rules
 src/components/docs/files-property-panel-demo.tsx The inspector's four row kinds and the object they repaint, on the property package's record
+src/components/docs/toolbar-demo.tsx      The toolbar's overflow split and roving tab stop, on the shell package's reducers
+src/components/docs/app-menu-demo.tsx     The menu bar's traversal and hover rule, on the shell package's reducers
+src/components/docs/status-bar-demo.tsx   The status bar's tone roles and its two groups, on the shell package's rule
+src/lib/shell-logic.ts                    The shell package's own reducers, read while it publishes no logic subpath
 src/components/docs/browser-icon.tsx       One icon's shipped markup, painted in the surrounding ink
 src/components/docs/mounted-preview.tsx    The preview a package page gets from the site's own table
 src/components/docs/dock-demo.tsx         The dock's browser rendering and its SplitPane source

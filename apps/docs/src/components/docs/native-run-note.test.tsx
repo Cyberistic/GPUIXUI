@@ -100,7 +100,12 @@ describe("the native playground note", () => {
     // old rule.
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("that page's preview is **strategy 3**");
-    expect(policy).toContain("the shell lane still ships none");
+    expect(policy).toContain(
+      "the shell lane draws its three surfaces (`toolbar`, `app-menu`, `status-bar`)",
+    );
+    // The shell lane was the one lane with no drawing; the policy cannot
+    // return to saying so while the pages mount one.
+    expect(policy).not.toContain("the shell lane still ships none");
     expect(policy).toContain("the files lane draws its three surfaces");
     expect(policy).toContain("the dock lane draws all three of its surfaces");
     expect(policy).toContain("the media lane draws all six of its surfaces");

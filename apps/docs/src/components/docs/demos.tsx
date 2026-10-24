@@ -25,6 +25,9 @@ import {
   FilesPropertyPanelDemo,
   filesPropertyPanelDemoSource,
 } from "./files-property-panel-demo";
+import { ToolbarDemo, toolbarDemoSource } from "./toolbar-demo";
+import { AppMenuDemo, appMenuDemoSource } from "./app-menu-demo";
+import { StatusBarDemo, statusBarDemoSource } from "./status-bar-demo";
 import { DockLayoutDemo, dockLayoutDemoSource } from "./dock-layout-demo";
 import { PanelGroupDemo, panelGroupDemoSource } from "./panel-group-demo";
 import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
@@ -3086,6 +3089,9 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: FilesPropertyPanelDemo,
     source: filesPropertyPanelDemoSource,
   },
+  "toolbar-demo": { render: ToolbarDemo, source: toolbarDemoSource },
+  "app-menu-demo": { render: AppMenuDemo, source: appMenuDemoSource },
+  "status-bar-demo": { render: StatusBarDemo, source: statusBarDemoSource },
   "hotkey-recorder-demo": {
     render: HotkeyRecorderDemo,
     source: hotkeyRecorderDemoSource,

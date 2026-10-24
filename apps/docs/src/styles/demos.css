@@ -11895,6 +11895,306 @@
   color: var(--foreground);
 }
 
+/* ---- shell: the toolbar, the application menu and the status bar. Each
+   drawing runs the package's own reducers — `@gpuixui/shell`'s `splitOverflow`,
+   `initialRoving`, `moveRoving`, `step`, `hoverOpen`, `dismiss`, `statusToneOf`
+   and `toneForeground` — so only the paint is the browser's. ---- */
+.gx-shell-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 640px;
+  text-align: left;
+}
+
+.gx-shell-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-shell-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-shell-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-shell-group {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-shell-choice {
+  height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.gx-shell-choice[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-shell-choice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* The strip: one row of actions, a hairline between groups, one tab stop. */
+.gx-shell-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--control-height-sm);
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-shell-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-shell-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-shell-action:hover {
+  background: var(--hover);
+}
+
+.gx-shell-action[data-disabled="true"] {
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+/* The tab stop is a ring on the slot that holds it, as the runtime paints it. */
+.gx-shell-action[data-tab-stop="true"] {
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.gx-shell-action:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-shell-separator {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}
+
+/* The overflow menu: a floating surface below the strip's last slot. */
+.gx-shell-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.gx-shell-menu-item {
+  display: flex;
+  align-items: center;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-shell-menu-item:hover {
+  background: var(--hover);
+}
+
+.gx-shell-menu-item[aria-disabled="true"] {
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+/* The menu bar: a row of titles, each with its dropdown under it. */
+.gx-shell-menubar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--control-height-sm);
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-shell-menu-slot {
+  position: relative;
+  display: inline-flex;
+}
+
+.gx-shell-trigger {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gx-shell-trigger:hover {
+  background: var(--hover);
+}
+
+.gx-shell-trigger[data-highlighted="true"] {
+  background: var(--hover);
+}
+
+.gx-shell-trigger[data-open="true"] {
+  background: var(--active);
+}
+
+.gx-shell-trigger[aria-disabled="true"] {
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+.gx-shell-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-shell-dropdown {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.gx-shell-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-shell-row[aria-selected="true"] {
+  background: var(--hover);
+}
+
+.gx-shell-row[aria-disabled="true"] {
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+.gx-shell-row-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-shell-accelerator {
+  flex: none;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* The status bar: two groups, a hairline between their items. */
+.gx-shell-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--control-height-sm);
+  padding: 4px 8px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--muted);
+  color: var(--foreground);
+  font-size: 11.5px;
+}
+
+.gx-shell-status-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gx-shell-status-gap {
+  flex: 1 1 auto;
+}
+
+.gx-shell-status-item {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .gx-props {
   display: flex;
   flex-wrap: wrap;

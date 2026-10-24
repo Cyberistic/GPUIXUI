@@ -217,6 +217,9 @@ describe("the preview strategy document", () => {
       "packages/media/docs/image-preview.mdx",
       "packages/media/docs/media-player.mdx",
       "packages/media/docs/qr-code.mdx",
+      "packages/shell/docs/app-menu.mdx",
+      "packages/shell/docs/status-bar.mdx",
+      "packages/shell/docs/toolbar.mdx",
     ]);
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("Property panels");
@@ -224,6 +227,7 @@ describe("the preview strategy document", () => {
     expect(policy).toContain("the media lane draws all six of its surfaces");
     expect(policy).toContain("the editor lane draws all four of its own");
     expect(policy).toContain("the files lane draws its three surfaces");
+    expect(policy).toContain("the shell lane draws its three surfaces");
     expect(policy).toContain("`src/lib/package-preview.ts`");
   });
 

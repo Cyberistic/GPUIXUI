@@ -584,12 +584,14 @@ A page that ships a demo mounts it exactly as a curated page does, so
 that page's preview is **strategy 3**: a browser approximation, labelled, with
 the real API tables and limitations beside it. A page that ships none has only
 its source and limitations: **strategy 4**. A component page ships none when the
-interaction has no honest browser reproduction to draw; today the shell lane
-still ships none, the files lane draws its three surfaces (`file-tree`,
+interaction has no honest browser reproduction to draw; the files lane draws its
+three surfaces (`file-tree`,
 `log-viewer`, `property-panel`)
 through the site's own table — `src/lib/package-preview.ts` mounts the drawing
 above a package page, because the Markdown a package ships is the package's and
-the site may not add a line to it — the dock lane draws all three of its surfaces
+the site may not add a line to it — the shell lane draws its three surfaces
+(`toolbar`, `app-menu`, `status-bar`) through the same table, the dock lane
+draws all three of its surfaces
 (`split-pane` through `panel-preview`, `panel-group`, `dock-layout`), while the
 media lane draws all six of its surfaces
 (`crop-area`, `qr-code`, `image-preview`, `file-upload`, `drop-zone`,
@@ -602,11 +604,16 @@ and the editor lane draws all four of its own (`code-editor`, `diff-viewer`,
 `togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
 `qr/encode` and `upload/queue`, `@gpuixui/files`' `tree/logic`, `log/logic` and
 `property/logic` over `@gpuixui/data`'s tree flattening, cursor and selection,
-and `@gpuixui/editor`'s `diff/logic`,
-`markdown/logic` and `search/logic` — so a group's fractions and its resize,
+`@gpuixui/editor`'s `diff/logic`,
+`markdown/logic` and `search/logic`, and `@gpuixui/shell`'s toolbar, menu-bar
+and status-bar logic (`splitOverflow`, `initialRoving`, `moveRoving`, `step`,
+`hoverOpen`, `dismiss`, `statusToneOf`, `toneForeground`) — so a group's
+fractions and its resize,
 collapse and step reducers, the crop's masks and handlers, the symbol's modules,
 the queue's lifecycle, the diff's edit script, the fence a preview must close
-and the matches a replace-all removes are the components', and only the paint is
+and the matches a replace-all removes are the components', the toolbar's
+overflow split and roving tab stop, the menu bar's traversal and hover rule
+and the status bar's tone roles are the shell's, and only the paint is
 the browser's. The panel group's preview is a fixed 620px frame where the shipped group
 measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
@@ -621,6 +628,27 @@ selects is the records the package would paint. Property panels was the first
 drawer outside the component and primitive lanes — one object read by a preview,
 a field, a table and a metric card, every one of which the browser can draw
 honestly.
+
+**The shell lane's drawings are the shell's rules.** `@gpuixui/shell` publishes
+its components and their types, and its root re-exports the components: GPUix
+JSX the docs app — a DOM app — cannot compile. So `src/lib/shell-logic.ts`
+reads the three logic modules the package ships, which is where the rules live
+and what the package's own tests read. That is a **temporary** state, and
+`src/lib/shell-logic.test.ts` is what ends it: the day the package publishes a
+`./logic` subpath, the seam has to go and the drawings import the package.
+Until then, the drawings read the package's own files, so a reducer that moves
+moves the drawing with it.
+
+Two of the shell's three surfaces differ from the shipped frame in ways a
+reader has to be told about. The **application menu's dropdown** is a
+`FloatingLayer` anchored at **window** coordinates in the shipped component,
+while the drawing hangs it under the title that opened it inside the frame; the
+accelerator is drawn as the host's keycaps by `@gpuixui/keyboard`'s
+`formatSymbols`, while the drawing prints the chord the caller wrote
+(`mod+s`). The **status bar's tone** is the shipped rule in full — a named tone
+paints the tone's readable role and the bar's own tone keeps the bar's
+foreground — so the colours in the drawing are the theme's own roles and move
+with the platform switch.
 
 **A drawing is mounted from either side.** A package that can write
 `<ComponentPreview>` into its own page does, and the page carries the drawing. A
