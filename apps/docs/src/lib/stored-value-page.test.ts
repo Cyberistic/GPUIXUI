@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 /**
  * The value a store kept, on the pages the site serves.
  *
- * A variant, size, tone, axis or activation is stored with the workspace as
- * often as it is a literal, so it arrives as a name a later release renamed or
- * dropped. Every one of these components reads the stored value through a guard
+ * A variant, size, tone, axis, edge or activation is stored with the workspace
+ * as often as it is a literal, so it arrives as a name a later release renamed
+ * or dropped. Every one of these components reads the stored value through a guard
  * (`Schema.is(...) ? value : "<default>"`) because the raw table read painted
  * the wrong thing: a badge with no ink, a card with no boundary, a tab set laid
  * out vertical, a menu row that threw out of its matcher.
@@ -38,6 +38,7 @@ interface StoredValue {
 
 const badge = "packages/components/src/badge.tsx";
 const card = "packages/components/src/card.tsx";
+const drawer = "packages/components/src/drawer.tsx";
 const mentionMenu = "packages/components/src/menu/item.tsx";
 const tabs = "packages/components/src/tabs/logic.ts";
 const stepper = "packages/components/src/stepper/logic.ts";
@@ -47,6 +48,8 @@ const storedValues: ReadonlyArray<StoredValue> = [
   { page: "badge.mdx", prop: "variant", source: badge, reader: "variantOf" },
   { page: "badge.mdx", prop: "size", source: badge, reader: "sizeOf" },
   { page: "card.mdx", prop: "variant", source: card, reader: "variantOf" },
+  { page: "drawer.mdx", prop: "side", source: drawer, reader: "drawerSide" },
+  { page: "drawer.mdx", prop: "size", source: drawer, reader: "drawerSize" },
   { page: "alert.mdx", prop: "tone", source: alertTone, reader: "toneOf" },
   {
     page: "tabs.mdx",
@@ -88,7 +91,7 @@ const fallbackOf = (source: string, reader: string): string | undefined => {
   const start = new RegExp(`const ${reader} =`).exec(source);
   if (start === null) return undefined;
   const body = source.slice(start.index, start.index + 400);
-  return /\? value : "([a-z]+)"/.exec(body)?.[1];
+  return /\? \w+ : "([a-z]+)"/.exec(body)?.[1];
 };
 
 /** The table row that documents a prop, from its name cell. */
@@ -136,5 +139,19 @@ describe("a value a store kept", () => {
         return gaps.map((gap) => `${value.page}: ${value.prop} — ${gap}`);
       }),
     ).toEqual([]);
+  });
+
+  it("answers a stored side with its edge, not with the size's absence", () => {
+    // Bug guarded: the served Drawer page merged the two guards into one
+    // sentence — a `size` the union does not name "paints the house `md` box
+    // instead of an `undefined` side" — so a reader storing a dropped `side`
+    // was told the component leaves an edge undefined, when `drawerSide` reads
+    // it as the house `right` edge the box, layout and entry travel all use.
+    const page = pageText("drawer.mdx").replace(/\s+/g, " ");
+
+    expect(page).not.toContain("an `undefined` side");
+    expect(page).toContain("A `side` restored from storage");
+    expect(page).toContain("house `right` edge");
+    expect(page).toContain("house `md` box");
   });
 });
