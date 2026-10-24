@@ -51,10 +51,23 @@ Card
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `variant` | `"outline" \| "elevated" \| "plain"` | `"outline"` | the surface treatment in the table above |
+| `variant` | `"outline" \| "elevated" \| "plain"` | `"outline"` | the edge and lift in **Treatments** below |
 | `className` | `string` | none | a recipe class string joined after the component's own, so it wins a conflict |
 | `style` | `StyleDesc` | none | merged last, after the compiled recipe |
 | `children` | `PartChildren` | none | the parts; text and numbers are rejected for every part that hosts parts |
+
+### Treatments
+
+| Treatment | Edge | Lift |
+| --------- | ---- | ---- |
+| `outline` | 1px `border` | none |
+| `elevated` | none | `elevation.sm` |
+| `plain` | none | none |
+
+All three paint the `card` fill and a fixed 8px corner (`rounded-lg`), so a
+platform's `radius` and density do not reshape a card. `outline` spells its edge
+`border-input`, which this library compiles to the `border` role — `input` is the
+fill a field paints, not an edge.
 
 ## Limitations
 

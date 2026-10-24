@@ -26,11 +26,37 @@ import { Badge } from "@gpuixui/components/badge";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `variant` | `"neutral" \| "primary" \| "success" \| "warning" \| "danger" \| "info" \| "outline"` | `"neutral"` | the fill, ink and edge in the table above |
-| `size` | `"sm" \| "md"` | `"md"` | the fixed type step and the pill's height |
+| `variant` | `"neutral" \| "primary" \| "success" \| "warning" \| "danger" \| "info" \| "outline"` | `"neutral"` | the fill, ink and edge in **Variants** below |
+| `size` | `"sm" \| "md"` | `"md"` | the fixed type step and the pill's height in **Sizes** below |
 | `className` | `string` | none | a recipe class string joined after the component's own, so it wins a conflict |
 | `style` | `StyleDesc` | none | merged last, after the compiled recipe and the pointer refusal |
 | `children` | `ReactNode` | — | the label: a word, a count or a short version |
+
+### Variants
+
+| Variant | Fill | Ink | Edge |
+| ------- | ---- | --- | ---- |
+| `neutral` | `muted` | `mutedForeground` | none |
+| `primary` | `primary` | `primaryForeground` | none |
+| `success` | `successSoft` | `successSoftForeground` | `success` at 30% |
+| `warning` | `warningSoft` | `warningSoftForeground` | `warning` at 30% |
+| `danger` | `destructiveSoft` | `destructiveSoftForeground` | `destructive` at 30% |
+| `info` | `infoSoft` | `infoSoftForeground` | `info` at 30% |
+| `outline` | none | `mutedForeground` | `borderStrong` |
+
+A tone's edge is the solid role at 30%, not a fourth role: the soft fill carries
+the meaning and the edge only closes the pill. `outline` is the one variant with
+no fill, and the only one whose edge is opaque.
+
+### Sizes
+
+| Size | Type | Pill height |
+| ---- | ---- | ----------- |
+| `sm` | 12/16, weight 400 | 20px |
+| `md` | 14/20, weight 500 | 24px |
+
+The pill is `rounded-full` — a full round, not a radius step — and every size
+keeps 8px sides and 2px above and below its line.
 
 ## Limitations
 

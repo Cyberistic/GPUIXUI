@@ -1054,6 +1054,18 @@ The page is the sentence, the preview, the example, the API and the limits. A
 rationale, a measured story or a section that restates the API belongs in the
 commit or the source comment instead.
 
+A page whose component has a **variant axis** prints a `### Variants` table at
+the end of **API reference** — one row per member of the recipe's union, one
+column per thing the variant changes (`Fill`, `Ink`, `Edge` for a badge;
+`Treatment`/`Edge`/`Lift` for a card), and **theme roles, never hex** — so the
+`variant` prop's Consequence can point at it. `component-variant-table.test.ts`
+compiles the component's own classes through `@gpuixui/tw` in both shipped
+themes and requires each page to list every variant the recipe ships and each
+cell to name exactly the role that paints, so renaming a role moves the page.
+The same file refuses "the table above/below" in a section that prints no
+table: both variant pages carried that sentence after the prune removed the
+table it described.
+
 `src/lib/component-page.test.ts` checks every curated page for the required
 sections and their order, a preview, and the package it installs from. It also
 **resolves the API table**: every backticked name in a table's prop column must

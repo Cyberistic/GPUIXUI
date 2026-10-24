@@ -11695,7 +11695,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 374/374
+`[x]` `[██████████]` 375/375
+
+`[x]` Print the **variant tables two pages pointed at** — `badge.mdx` and
+      `card.mdx` answered their `variant` prop with "the table above" while the
+      page printed no variants table: the prune that removed the old prose took
+      the table and left the reference, so a reader was told what a variant
+      changes and could not find it on two pages MISSION asks for the important
+      variants. Badge gains **Variants** (seven rows: each fill, its ink, and
+      the soft tones' edge at 30%) and **Sizes** (12/16 at weight 400 in a 20px
+      pill, 14/20 at 500 in 24px), Card gains **Treatments** (`outline` is 1px
+      `border` — `border-input` compiles to that role, not `input` — `elevated`
+      is `elevation.sm`, `plain` neither, all on the `card` fill with a fixed
+      8px corner). `src/lib/component-variant-table.test.ts` (5 cases) compiles
+      each recipe through `classesToStyle` in both shipped themes and holds
+      every row and cell to it — the roles come from the component's classes and
+      their values from the compile, so a paint change moves the page — plus a
+      general rule that a page may not point at a table its own section does not
+      print. `docs/preview-strategy.md` §The component page template records the
+      table and the guard. Directions measured: at `HEAD` all five cases fail,
+      the dangling case naming both pages (`badge.mdx: ## API reference points
+      at a table it does not print`); renaming `neutral`'s fill to `accent`
+      fails the badge case alone; the touched guards are 52/52 with
+      `check-types` clean. No native scenario applies — page text and a pure
+      class compiler.
 
 `[x]` Draw the **data lane's sorting and selection pages** — the two interactions
 MISSION names ("table sort/selection") had no drawing: `packages/data/docs/{table-sorting,table-selection}.mdx` are the package's Markdown, so the site mounts both from `package-preview.ts`. The drawings run the package's own rules instead of a copy — `pressSortOrder` for the header cycle, `constructGrid` for the painted order (the core `useTable` runs on), and `pressSelection`/`pressMode` over the visible keys for a press — so the deploy queue's order, its Shift range and its chord toggle are the package's and only the paint is the browser's. `table-rule-demos.test.tsx` (8 cases) holds the duration-desc order (`reports → … → gateway`), a two-field environment/service order, each header's package announcement and `↓1`/`↑2` place, the painted row order, the Shift range from the anchor, the chord toggle, and a source guard refusing a local copy. Directions measured: with `sortedRows` returning the fixture, 5 cases fail by name (`expected [ Array(6) ] to deeply equal [ 'reports', 'search', 'media', …(3) ]` and the two-field case); restored, 8/8. Served build on `vite preview`: `/docs/data-display/table-sorting` and `/table-selection` both answer **200** with `gx-trule-demo` and their readouts. `docs/preview-strategy.md` now says the data lane draws three surfaces and names the seams; the `apps/docs/README.md` ledger names the module. No native scenario applies — browser drawings over the package's pure row model and press reducers.
