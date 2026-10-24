@@ -8,6 +8,11 @@
  * section's end must really retire its title while leaving the second at the
  * top. The printed check count is derived from the probe's own assertion sites,
  * so a check added without the README fails here.
+ *
+ * The press the held title lets through is a premise now that the component's
+ * painted header carries the opt-out: the probe's expectation, the page's rule
+ * and the component's two declarations are held together, so restoring the
+ * measured limitation fails before a window opens.
  */
 
 import { readFileSync } from "node:fs";
@@ -28,10 +33,10 @@ import {
   rowCentre,
 } from "./pinned-list.js";
 
-const readme = readFileSync(
-  new URL("../../README.md", import.meta.url),
-  "utf8",
-);
+const read = (path: string): string =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
+
+const readme = read("../../README.md");
 
 describe("the pinned-list fixture", () => {
   it("gives the list more content than it shows", () => {
@@ -85,14 +90,65 @@ describe("the pinned-list fixture", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("records the limitation the window measured, and its control", () => {
-    // The layer declares `pointerEvents: "none"`, but the held title paints its
-    // own fill and takes the press in a window. The section must say so, or the
-    // next reader inherits the claim the offscreen suite makes.
+  it("presses the row through the held title, and records the rule", () => {
+    // The press the window measures is the row's own. Restoring the pre-fix
+    // expectation would make the probe red against the shipped component, so
+    // the premise is held here rather than discovered when a window opens.
+    const probe = read("./pinned-list-probe.tsx");
+    const press = probe.indexOf(
+      "a press through the held title reaches the row beneath it",
+    );
+    expect(press).toBeGreaterThan(-1);
+    expect(probe.slice(press, press + 300)).toContain("today: 2");
+    expect(probe).not.toContain(
+      "the held title takes the press the row beneath it would have taken",
+    );
+
     const section = readme.slice(readme.indexOf("### `pinned-list-lifecycle`"));
     expect(section).toContain(
-      "the held title still takes the press the row beneath it would have taken",
+      "| a press on the row **under the held title** | `presses=2,0` — the press reaches the row |",
     );
+    expect(section).toContain("The opt-out belongs to the element that paints.");
     expect(section).toContain("filled cover");
+    expect(section).not.toContain("`presses` stays `1`");
+  });
+
+  it("prints the checks the probe actually asserts", () => {
+    // A helper costs one check per call: `box`, `capture`, `sample` and
+    // `readout` each read one assertion, and every direct `ctx.expect*` call
+    // stands alone. The helpers' own inner assertion sites are subtracted, so a
+    // definition is not counted as a step, and the helper *calls* — including
+    // the ones a `const` binds — are added once per call.
+    const probe = read("./pinned-list-probe.tsx");
+    // The steps start at the first read of the mounted list; the definitions
+    // above it are the helpers, whose own assertions are counted through their
+    // calls instead.
+    const steps = probe.slice(probe.indexOf("const viewport = yield* box("));
+    const direct = steps.match(/yield\* ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
+    const throughHelpers =
+      steps.match(/yield\* (?:box|capture|sample|readout)\(/g)?.length ?? 0;
+    const asserted = direct + throughHelpers;
+    expect(asserted).toBeGreaterThan(30);
+    const printed = Number(
+      /(\d+) checks, `--only pinned-list-lifecycle`/.exec(readme)?.[1] ??
+        Number.NaN,
+    );
+    expect(printed).toBe(asserted);
+  });
+
+  it("carries the opt-out on the header and the text that paint", () => {
+    // A declaration on the layer alone leaves the title's own fill in the hit
+    // test; both elements have to say it, which is why the rule is stated here
+    // as well as in the component's behaviour suite.
+    const pinned = read("../../../../packages/components/src/pinned-list.tsx");
+    const header = pinned.slice(
+      pinned.indexOf("testId={`pinned-header-${frame.index}`}"),
+    );
+    expect(header.slice(0, header.indexOf("<text"))).toContain(
+      'pointerEvents: "none"',
+    );
+    expect(header.slice(0, header.indexOf("</div>"))).toContain(
+      'pointerEvents: "none"',
+    );
   });
 });

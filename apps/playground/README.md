@@ -7201,19 +7201,21 @@ delivers every press to the element it names.
 | the held title | paints the `card` role at the row's own centre, and the row's fill is still there below it — the title is opaque, not a wash |
 | a press on the row at rest | `presses=1,0` |
 | a press on a row under the filled cover | `control=0,1` — the cover takes the press |
-| a press on the row **under the held title** | `presses` stays `1`: the title takes it |
+| a press on the row **under the held title** | `presses=2,0` — the press reaches the row |
 | a wheel past the first section's end | the offset clamps at **−304** (two 232-point sections in a 160-point viewport); the first title paints nothing and the second takes the viewport's top |
 | a wheel back | the offset returns to `0` and the first title paints at its rest place again |
 
-**The measured limitation.** The component declares `pointerEvents: "none"` on
-the header layer, and the offscreen suite reads that declaration back; in a
-window the held title still takes the press the row beneath it would have taken.
-GPUI's opt-out belongs to the element that paints, and the title is a child with
-its own fill, so the declaration on the layer does not reach it. A row under a
-held title must therefore keep its own actionable content below the header's
-band (or the title's element needs the opt-out itself — recorded for the
-component's owner in `TODO.md` → Interlocks). This probe pins the measured
-behaviour; when the component changes, the check flips and the section follows.
+**The opt-out belongs to the element that paints.** GPUI's hit test stops at the
+element that paints, so the declaration on the header layer does not reach the
+title's own filled child: the first measurement found the held title taking the
+press the row beneath it would have taken (`presses` stayed at `1`). The
+component's painted header **and** its text carry `pointerEvents: "none"` now,
+and the same press reaches the row (`presses=2,0`) while the filled-cover
+control still takes the press aimed at the row under it — so the pass-through is
+a hit-test result, not a host that delivers every press to the element it names.
+`packages/components/src/behaviour/pinned-list.test.tsx` holds both sides of the
+rule offscreen; this probe is the window evidence. A row under a held title may
+now carry actionable content anywhere in its own body.
 
 ```sh
 nub apps/playground/dist/live/run.js --only pinned-list-lifecycle
@@ -7224,7 +7226,7 @@ nub apps/playground/dist/live/run.js --only pinned-list-lifecycle
 0.11.0 here (~8.1 s). Fixture `src/live/pinned-list.ts` + probe
 `src/live/pinned-list-probe.tsx` + `pinned-list.test.ts` (the geometry, the
 pressed centre under the title, the end-of-section arithmetic, the readout, the
-id set and the limitation recorded below). Evidence:
+id set and the press the held title lets through). Evidence:
 `apps/playground/README.md` §`pinned-list-lifecycle`,
 `.artifacts/live/pinned-list-{rest,scrolled,end}.png`.
 

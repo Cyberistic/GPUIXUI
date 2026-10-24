@@ -398,20 +398,18 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The press: the layer's opt-out does not reach its painted title ──────
-    // The component declares `pointerEvents: "none"` on the layer, and the
-    // offscreen suite reads that declaration back. In a window the held title
-    // still takes the press the row beneath it would have taken: GPUI's opt-out
-    // belongs to the element that paints, and the title is a child with its own
-    // fill. The check pins the measured limitation so the component's owner can
-    // see it in the suite; the rest press above is its control (the same row
-    // hears a press while the title is not over it).
+    // ── The press: the painted header no longer takes the row's press ───────
+    // The layer's opt-out does not reach the element that paints, so the header
+    // and its text carry their own `pointerEvents: "none"`; the row beneath a
+    // held title therefore hears the press aimed at it. The cover control above
+    // is the hit-test counterweight: a host that delivered presses by id would
+    // count both.
     yield* ctx.host.click(PINNED_IDS.rowToday);
     yield* readout(
-      "the held title takes the press the row beneath it would have taken",
+      "a press through the held title reaches the row beneath it",
       pinnedReadout({
         offsetY: scrolled,
-        today: 1,
+        today: 2,
         yesterday: 0,
         covered: 0,
         cover: 1,
@@ -463,7 +461,7 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the readout reports the presses each element took",
       pinnedReadout({
         offsetY: 0,
-        today: 1,
+        today: 2,
         yesterday: 0,
         covered: 0,
         cover: 1,

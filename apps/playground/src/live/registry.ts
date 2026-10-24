@@ -783,7 +783,7 @@ export const liveRegistry = [
   {
     id: "pinned-list-lifecycle",
     title:
-      "Scroll: a pinned title is a repositioned layer that holds at the viewport's top, paints opaquely over the rows under it and takes no press from the row beneath",
+      "Scroll: a pinned title is a repositioned layer that holds at the viewport's top, paints opaquely over the rows under it and lets a press through to the row beneath",
     capability: "scroll",
   },
   {
