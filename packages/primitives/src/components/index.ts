@@ -40,6 +40,10 @@ export {
   ButtonGroup,
   BUTTON_GROUP_MODES,
   BUTTON_GROUP_ORIENTATIONS,
+  buttonGroupModeOf,
+  buttonGroupOrientationOf,
+  isButtonGroupMode,
+  isButtonGroupOrientation,
 } from "./ButtonGroup.js";
 export type {
   ButtonGroupMode,

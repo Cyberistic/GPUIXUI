@@ -21,8 +21,8 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced group |
-| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | a row, or a column with one shared width |
+| `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced group; a stored name this release does not carry reads as the default (`buttonGroupModeOf`) |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | a row, or a column with one shared width; a stored name reads as the default (`buttonGroupOrientationOf`) |
 | `gap` | spacing step | `"sm"` | the gap in separated mode |
 | `label` | `string` | none | the group's accessible name, written as `aria-label` |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |

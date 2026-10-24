@@ -90,6 +90,13 @@ and each is read through a membership test rather than indexed raw:
   exported `scrollStyle` resolver and the key contract (`core/scroll.ts`). Read
   raw, an unknown name painted **both** scrollbars while the keys matched no
   axis at all, so the region's one tab stop moved nothing.
+- a **button group's `mode` and `orientation`** are saved with the toolbar they
+  describe, so `isButtonGroupMode`/`buttonGroupModeOf` and
+  `isButtonGroupOrientation`/`buttonGroupOrientationOf`
+  (`components/ButtonGroup.tsx`) read a name the table does not carry as
+  `attached`/`horizontal`. Read raw, the recipe's `attached` check was false for
+  a renamed mode and the group painted itself **separated** — a gap and no
+  clipped silhouette — although `attached` is the default it documents.
 - a **text `tone`** is written into an audit row, a saved message or a settings
   record, so `isTextTone`/`textToneOf` (`core/style.ts`) read a name the table
   does not carry as `default`; the class string otherwise lost its colour and

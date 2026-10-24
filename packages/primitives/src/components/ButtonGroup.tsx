@@ -20,6 +20,8 @@
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import * as Arr from "effect/Array";
+import * as P from "effect/Predicate";
 import { accessibleName } from "../core/a11y.js";
 import type { PrimitiveTheme, SpaceStep } from "../core/theme.js";
 import { buttonGroupClass } from "../recipe/index.js";
@@ -30,9 +32,42 @@ import { useTheme } from "./ThemeProvider.js";
 export const BUTTON_GROUP_MODES = ["attached", "separated"] as const;
 export type ButtonGroupMode = (typeof BUTTON_GROUP_MODES)[number];
 
+const MODE_NAMES: ReadonlyArray<string> = BUTTON_GROUP_MODES;
+
+/** Whether a value names a group mode. */
+export const isButtonGroupMode = (value: unknown): value is ButtonGroupMode =>
+  P.isString(value) && Arr.contains(MODE_NAMES, value);
+
+/**
+ * The mode a group paints: the name, or the documented `attached`.
+ *
+ * A toolbar is saved with its mode (`attached` while it reads as one segmented
+ * control), so a name a release renamed reaches the component as a string the
+ * union no longer names. Read raw, the class recipe's `mode === "attached"` was
+ * false and the group painted the **separated** gap — the opposite of the
+ * prop's documented default — so a restored toolbar came back with its actions
+ * pulled apart.
+ */
+export const buttonGroupModeOf = (value: unknown): ButtonGroupMode =>
+  isButtonGroupMode(value) ? value : "attached";
+
 /** The axis a group lays its actions on. */
 export const BUTTON_GROUP_ORIENTATIONS = ["horizontal", "vertical"] as const;
 export type ButtonGroupOrientation = (typeof BUTTON_GROUP_ORIENTATIONS)[number];
+
+const ORIENTATION_NAMES: ReadonlyArray<string> = BUTTON_GROUP_ORIENTATIONS;
+
+/** Whether a value names a group axis. */
+export const isButtonGroupOrientation = (
+  value: unknown,
+): value is ButtonGroupOrientation =>
+  P.isString(value) && Arr.contains(ORIENTATION_NAMES, value);
+
+/** The axis a group paints: the name, or the documented `horizontal`. */
+export const buttonGroupOrientationOf = (
+  value: unknown,
+): ButtonGroupOrientation =>
+  isButtonGroupOrientation(value) ? value : "horizontal";
 
 export interface ButtonGroupProps {
   /** Defaults to `attached`. */
@@ -58,8 +93,8 @@ export interface ButtonGroupProps {
 
 export const renderButtonGroup = (
   {
-    mode = "attached",
-    orientation = "horizontal",
+    mode,
+    orientation,
     gap = "sm",
     label,
     style,
@@ -69,8 +104,12 @@ export const renderButtonGroup = (
   }: ButtonGroupProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
+  // Both are stored toolbar choices, resolved once so the classes and the
+  // actions they clip cannot disagree.
+  const shape = buttonGroupModeOf(mode);
+  const axis = buttonGroupOrientationOf(orientation);
   const resolved = recipeTw.classesToStyle(
-    cn(buttonGroupClass(mode, gap, orientation), className),
+    cn(buttonGroupClass(shape, gap, axis), className),
     theme,
   );
   return (
@@ -80,7 +119,7 @@ export const renderButtonGroup = (
       testId={testId}
       style={mergeStyle(resolved.style, style)}
     >
-      <AttachedGroup.Provider value={mode === "attached"}>
+      <AttachedGroup.Provider value={shape === "attached"}>
         {children}
       </AttachedGroup.Provider>
     </div>

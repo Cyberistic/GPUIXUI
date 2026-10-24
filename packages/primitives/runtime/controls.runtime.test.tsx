@@ -29,7 +29,10 @@ import {
 import type { EventPayload } from "@gpuix/react";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
-import { ButtonGroup } from "../src/components/ButtonGroup.js";
+import {
+  ButtonGroup,
+  type ButtonGroupMode,
+} from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Icon } from "@gpuixui/icons";
@@ -708,7 +711,7 @@ it("squares an attached group's children so its seams do not show the page", asy
   // The bug: `attached` only rounded and clipped the container, so each child
   // kept the recipe's radius and two adjacent rounded fills left a notch at
   // every seam where the page showed through.
-  const radii = async (mode: "attached" | "separated") => {
+  const radii = async (mode: ButtonGroupMode) => {
     const runtime = await openWindow();
     runtime.render(
       <Surface>
@@ -732,6 +735,12 @@ it("squares an attached group's children so its seams do not show the page", asy
     Option.some(testTheme.radius.md),
     Option.some(testTheme.radius.md),
   ]);
+  // A stored mode name reads as the documented `attached`, so its children are
+  // squared too: the paint and the context it feeds resolve one answer.
+  expect(
+    // The cast is the storage boundary: a saved mode is one string.
+    await radii("segmented" as ButtonGroupMode),
+  ).toStrictEqual([Option.some(0), Option.some(0)]);
 });
 
 it("names a ButtonGroup for assistive technology", async () => {

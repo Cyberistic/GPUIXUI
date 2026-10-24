@@ -27,7 +27,11 @@ import type { TextRole } from "../core/theme.js";
 import * as primitives from "../index.js";
 import { renderBox } from "./Box.js";
 import { renderButton } from "./Button.js";
-import { renderButtonGroup } from "./ButtonGroup.js";
+import {
+  renderButtonGroup,
+  type ButtonGroupMode,
+  type ButtonGroupOrientation,
+} from "./ButtonGroup.js";
 import { labelledBy, renderLabel } from "./Label.js";
 import {
   DEFAULT_SCROLL_NAME,
@@ -511,6 +515,30 @@ describe("layout containers", () => {
     expect(numberIn(vertical, "gap")).toStrictEqual(Option.some(0));
   });
 
+  // Bug guarded: a toolbar is saved with its mode, and the mode had no
+  // membership test — read raw, the class recipe's `attached` check was false
+  // for a name this release does not carry, so a restored toolbar came back
+  // **separated** (a gap and no clipped silhouette) although `attached` is the
+  // documented default. The paint and the actions it wraps read one answer now.
+  it("paints the documented mode for a stored name the union does not carry", () => {
+    // The cast is the storage boundary: a saved mode is one string.
+    const stored = renderButtonGroup(
+      { mode: "segmented" as ButtonGroupMode },
+      testTheme,
+    );
+    expect(numberIn(stored, "gap")).toStrictEqual(Option.some(0));
+    expect(stringIn(stored, "overflow")).toStrictEqual(Option.some("hidden"));
+    const actions =
+      elementChildren(stored)[0] ?? expect.fail("the group wrapped no actions");
+    expect(elementProp(actions, "value")).toStrictEqual(Option.some(true));
+    // A stored axis reads as the documented horizontal row.
+    const row = renderButtonGroup(
+      { orientation: "diagonal" as ButtonGroupOrientation },
+      testTheme,
+    );
+    expect(styleProp(row, "flexDirection")).toStrictEqual(Option.some("row"));
+  });
+
   it("give the group a name when it is labelled", () => {
     const named = renderButtonGroup(
       { mode: "attached", label: "Text alignment" },
@@ -896,5 +924,19 @@ describe("ButtonGroup's public surface", () => {
       "horizontal",
       "vertical",
     ]);
+  });
+
+  // An ordered index a consumer can persist beside the guard that reads it
+  // back: the pair the tokens package keeps for every stored union.
+  it("guards both choices and answers the documented default", () => {
+    expect(primitives.isButtonGroupMode("separated")).toBe(true);
+    expect(primitives.isButtonGroupMode("segmented")).toBe(false);
+    expect(primitives.buttonGroupModeOf("segmented")).toBe("attached");
+    expect(primitives.buttonGroupModeOf(undefined)).toBe("attached");
+
+    expect(primitives.isButtonGroupOrientation("vertical")).toBe(true);
+    expect(primitives.isButtonGroupOrientation("diagonal")).toBe(false);
+    expect(primitives.buttonGroupOrientationOf("diagonal")).toBe("horizontal");
+    expect(primitives.buttonGroupOrientationOf(42)).toBe("horizontal");
   });
 });
