@@ -389,7 +389,41 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 255/255
+`[x]` `[██████████]` 256/256
+
+`[x]` Read a **switch box a store hands back** as the box it is, and name a slot
+once — `switchMetricsAt` declared the authored `SwitchMetrics` only, so the one
+control whose box is a platform's own could be resolved from what a store
+returned (a saved style, a settings row, a theme file) only through a cast
+(`AGENTS.md` §2), and the resolver scaled whatever it was handed. Measured on the
+old code: a lost `height` at `sm` answered `{ width: 30, height: NaN, knob: NaN,
+inset: 1, border: 0 }` (the batch drops `NaN`, so the switch painted no box), a
+`null` height a **zero-height** pill `{ 30, 0, 0, 1, 0 }`, a `"38"` width a
+silently coerced `30`, and at `md` the stored value came back untouched
+(`height: null` in the box). The report already named the slot; the resolver now
+takes `SwitchBoxSource` (a second overload, so the authored box still answers
+`SwitchMetrics` and the primitives' `switchBox` is unchanged) and answers nothing
+for a box that lost a number or wrote one its rule refuses — the absence
+`elevationShadow` answers for a lost level. The same reader found a **second
+line** for one number: `boxFit` compared a slot the rule had already reported, so
+a zero height earned `{ slot: "height", rule: "positive" }` *and*
+`{ slot: "height", rule: "fits", needs: 22 }`. The fit relations read only the
+numbers the report did not name now, so one slot is one defect.
+`switch.test.ts` gains `reads the box a store hands back, and answers nothing for
+one that lost a slot` (a whole stored box resolves to Apple's `md` and the same
+`sm` scale as the authored one; a dropped, string, negative, `null` and
+`undefined` shape each answers nothing; a decoded theme's own `switchMetrics`
+resolves through the report's source without a cast) and `names a slot once, even
+when it fails both its rule and the fit`; the teaching case now requires
+`SwitchBoxSource`, "answers nothing" and `NaN` on the catalogue, the design
+system and the README, and the row. Directions measured: with the old resolver
+restored the two cases fail (`expected { width: 38, height: null, …(3) } to be
+undefined`, and the `fits` line beside `positive`); with `SwitchBoxSource` dropped
+from the catalogue the teaching case fails by name. Green: 50 files / **3 108**
+tests, `check-types`, `oxfmt` clean. Docs: `docs/tokens.md` §Platform styles (the
+box paragraph), `docs/design-system.md` §8, the package README and the
+`Platform styles` row. No native scenario applies — a pure resolver over the box
+a store wrote.
 
 `[x]` Read **every ink a status tint carries** in the derived selection wash,
 not the page's alone — `selectionOn(theme, surface)` moved the theme's own
@@ -13078,9 +13112,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
       print that default beside the rule; it also proves the nine fallbacks span
       at least five distinct answers, so a page cannot pass by printing one
       word. Directions measured: at `HEAD` the case fails naming all nine rows
-      (`badge.mdx: variant — rule` first), and it fails again on a row whose
-      default is renamed. Green: the file is 2/2 and the docs suite is 199 files
-      / **2 021** tests.
+      (`badge.mdx: variant — rule` first), and it fails again when the guard it
+      reads is swapped for a sibling's: pointing Badge's `variant` row at
+      `sizeOf` fails with `badge.mdx: variant — md`. Green: the file is 2/2 and
+      the docs suite is 199 files / **2 021** tests.
 
 `[x]` Re-anchor the **two docs guards to the seams that moved** — two page guards
       read a package file's shape and went red on `master` while their pages were
