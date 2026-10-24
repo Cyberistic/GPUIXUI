@@ -121,6 +121,24 @@ export interface PlatformStyle extends PlatformType {
 }
 
 /**
+ * The dark syntax table the three platform styles carry.
+ *
+ * A platform style repaints the page, and a `<markdown>` host's fenced code
+ * block paints 3.5% of a neutral ink over that page (`nativeFenceFill`), so the
+ * fence sits a step above the base theme's and the dark `keyword` — the one
+ * token with no room — needs a brighter value. Measured: the identity's
+ * `#A7A9FF` clears the page in every dark style and misses the body floor on the
+ * fence in all three platforms (6.49:1 on Linux dark, 6.85:1 on Windows,
+ * 6.92:1 on macOS), and `#B0B2FF` is the smallest 2% step toward white that
+ * clears them (7.09:1). A light base keeps its page, so the light mode resolves
+ * the identity's table.
+ */
+const platformDarkSyntax: SyntaxColors = {
+  ...darkSyntax,
+  keyword: "#B0B2FF",
+};
+
+/**
  * Platform styles. `sans` is GPUI's sentinel everywhere — GPUI maps it to the
  * platform's own UI font, so a theme never names a face the operating system
  * may not have. `mono` names the family each platform installs. `default` is
@@ -147,24 +165,6 @@ export interface PlatformStyle extends PlatformType {
  * a pressed destructive row, under the body floor. A role a set omits keeps the
  * base theme's value.
  */
-/**
- * The dark syntax table the three platform styles carry.
- *
- * A platform style repaints the page, and a `<markdown>` host's fenced code
- * block paints 3.5% of a neutral ink over that page (`nativeFenceFill`), so the
- * fence sits a step above the base theme's and the dark `keyword` — the one
- * token with no room — needs a brighter value. Measured: the identity's
- * `#A7A9FF` clears the page in every dark style and misses the body floor on the
- * fence in all three platforms (6.49:1 on Linux dark, 6.85:1 on Windows,
- * 6.92:1 on macOS), and `#B0B2FF` is the smallest 2% step toward white that
- * clears them (7.09:1). A light base keeps its page, so the light mode resolves
- * the identity's table.
- */
-const platformDarkSyntax: SyntaxColors = {
-  ...darkSyntax,
-  keyword: "#B0B2FF",
-};
-
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
     label: "macOS",

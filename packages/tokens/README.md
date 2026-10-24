@@ -1428,7 +1428,7 @@ block paints **756** solid `#3B2C8F` pixels, the dark **896** `#A7A9FF`, and a
 third block handed the same seam **without** `syntax` paints **832** of the
 runtime's own `#8F96ED` — so the colour travels with the theme object, and the
 fallback a palette-less host inherits is real. Evidence:
-[`apps/playground/README.md` §`syntax-palette`](../apps/playground/README.md).
+[`apps/playground/README.md` §`syntax-palette`](../../apps/playground/README.md).
 
 ## For documentation sites
 

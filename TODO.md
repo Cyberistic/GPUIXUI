@@ -389,7 +389,42 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 256/256
+`[x]` `[██████████]` 258/258
+
+`[x]` Follow every relative reference **from the document that writes it** — the
+README's syntax-palette evidence row was `../apps/playground/README.md`, which
+resolves against `packages/tokens/README.md` to
+`packages/apps/playground/README.md` — a path this repository does not have —
+while every sibling row links `../../`, so the one row a reader opens to check
+the measured pixels was a 404. `links.test.ts` (4 cases) resolves every relative
+link in the catalogue, the design-system page and the package README against its
+own file, and reads every `#anchor` against the headings of the page it points
+into; a fenced block is skipped, because a copied `](…)` snippet is not a link.
+Target texts and heading slugs are read once — re-reading the playground README
+per link cost more than the suite's two-second budget (a first pass timed out at
+2000 ms; with the cache the four cases take 6–124 ms). Directions measured: at
+HEAD the file case fails `../README.md:1431: ../apps/playground/README.md is not
+a file on disk`, and the anchor case fails on a renamed heading instead of
+passing with the link unread. Green: 51 files / 3 113 tests, `check-types` and
+`oxfmt` clean. Docs: `docs/tokens.md` §Syntax palette (its own links were
+already correct — the guard exists so a later edit is held to the same rule).
+
+`[x]` Give the **platform table the documentation its own comment describes** —
+`platformStyles` is the one value a consumer copies to start a look of their own
+(`applyStyle` takes its shape), and its architecture note was written above a
+**second** comment block: the note documented nothing, the second block
+documented the private `platformDarkSyntax` table, and an editor showed
+`platformStyles` with no description while every other export carried one
+(AGENTS.md §5, EF-11). The private table and its note now sit above the
+documented export. `exports.test.ts` gains `gives every exported declaration the
+JSDoc that names it` (the file is 3 cases): it walks the published sources
+(tests and examples excluded), keeps the first declaration of each name — an
+overload's second signature borrows the first one's block — and fails a
+declaration whose nearest non-blank line above does not close a `*/`. Directions
+measured: over `HEAD`'s `platforms.ts` the guard reports `platformStyles@168 has
+no JSDoc`, and the reordered worktree reports none. Green: 51 files / 3 113
+tests, `check-types` and `oxfmt` clean. No native scenario applies — a comment
+block and the export it documents.
 
 `[x]` Read a **switch box a store hands back** as the box it is, and name a slot
 once — `switchMetricsAt` declared the authored `SwitchMetrics` only, so the one
