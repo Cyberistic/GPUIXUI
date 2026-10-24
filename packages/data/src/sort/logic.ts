@@ -16,6 +16,7 @@
  * header announces, nothing that reorders a list.
  */
 
+import { spokenText } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { pipe } from "effect";
@@ -148,29 +149,46 @@ export const sortLabel = (
 ): string => sortOrderLabel(label, Option.toArray(sort), field);
 
 /**
+ * The words a column is painted and announced by.
+ *
+ * A label is content before it is a literal: an i18n table missing its row
+ * answers `""`, and a saved column configuration can restore a header with no
+ * words. A blank label therefore reads as the column's **field** — the stable
+ * identity the header sorts by, and the word the advanced filter's field picker
+ * already falls back to. Without it the control was named `", sortable"`: the
+ * state without the column it belongs to.
+ */
+export const columnName = (label: string, field: string): string =>
+  spokenText(Option.fromNullishOr(label), field);
+
+/**
  * The announced name of a column within an order.
  *
  * The state is the same as {@link sortLabel}'s, with the field's place in a
  * multi-column order appended — "Name, sorted descending, sort 1 of 2" — so a
- * reader learns both the direction and which field decides first.
+ * reader learns both the direction and which field decides first. A blank label
+ * reads as the field (see {@link columnName}), so the name always says which
+ * column the state belongs to.
  */
 export const sortOrderLabel = (
   label: string,
   order: SortOrder,
   field: string,
-): string =>
-  Option.match(
+): string => {
+  const name = columnName(label, field);
+  return Option.match(
     Option.all([directionIn(order, field), sortPosition(order, field)]),
     {
-      onNone: () => `${label}, sortable`,
+      onNone: () => `${name}, sortable`,
       onSome: ([direction, position]) => {
-        const state = `${label}, sorted ${direction === "asc" ? "ascending" : "descending"}`;
+        const state = `${name}, sorted ${direction === "asc" ? "ascending" : "descending"}`;
         return order.length > 1
           ? `${state}, sort ${position} of ${order.length}`
           : state;
       },
     },
   );
+};
 
 /**
  * The glyph a column paints within an order.

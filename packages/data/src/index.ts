@@ -118,6 +118,7 @@ export type {
 export { TableSortHeader, sortGlyph } from "./sort/header.js";
 export type { TableSortHeaderProps } from "./sort/header.js";
 export {
+  columnName,
   directionIn,
   directionOf,
   pressSortOrder,

@@ -160,6 +160,13 @@ A consumer that owns one sort keeps the single-column callback —
 page is `docs/table-sorting.mdx`, and `src/behaviour/table.test.tsx` presses a
 second header with Shift and reads the tie-break out of the painted rows.
 
+A column's `label` is content, not chrome: a locale table missing its row and a
+saved column configuration both hand over `""`, and the control's name is the
+only channel this runtime has for the sort state. A blank label therefore reads
+as the column's `field` — `columnName` is the one reading, used for the painted
+header and the announced name alike — so a press on such a column says
+`name, sorted ascending` rather than `", sorted ascending"`.
+
 A **checkbox column** is a fixed track at the head of the header and every row.
 The controller supplies the tri-state over the painted set, so the header cannot
 claim a record a filter hides:

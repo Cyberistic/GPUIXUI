@@ -37,7 +37,7 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
 | Part | Prop | Type | Default | Consequence |
 | ---- | ---- | ---- | ------- | ----------- |
 | `TableSortHeader` | `field` | `string` | — | the column the press sorts by |
-| `TableSortHeader` | `label` | `string` | — | the visible label, and the base of the announced name |
+| `TableSortHeader` | `label` | `string` | — | the visible label, and the base of the announced name; a blank label reads as `field`, so a sortable column is never unnamed |
 | `TableSortHeader` | `sort` | `Option<SortState>` | — | the primary sort, for the glyph and the single-sort callback |
 | `TableSortHeader` | `order` | `SortOrder` | `sort` alone | the whole order; a multi-entry order adds each field's place to the glyph and the name |
 | `TableSortHeader` | `onSortPress` | `(field, initialDirection, modifiers?) => void` | — | the raw press, for a controller that composes an order (`useTable().pressSort`) |

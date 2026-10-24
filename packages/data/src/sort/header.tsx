@@ -31,6 +31,7 @@ import type { CellAlign } from "../table/table.js";
 import { TableHeaderCell } from "../table/table.js";
 import { useTheme } from "../theme.js";
 import {
+  columnName,
   sortOrderGlyph,
   sortOrderLabel,
   toggleSort,
@@ -43,7 +44,7 @@ import {
 interface TableSortHeaderShape {
   /** The field this column sorts by. */
   readonly field: string;
-  /** The column's visible label, and the base of its accessible name. */
+  /** The column's visible label, and the base of its accessible name. A blank label reads as `field`. */
   readonly label: string;
   /**
    * The table's current sort: the primary field.
@@ -116,6 +117,9 @@ export const TableSortHeader = (props: TableSortHeaderProps) => {
   const theme = useTheme();
   const order = orderProp ?? Option.toArray(sort);
   const glyph = sortOrderGlyph(order, field);
+  // The paint and the name read one value: a header a reader can press shows
+  // which column it sorts, and a blank label is content that says nothing.
+  const name = columnName(label, field);
   return (
     <TableHeaderCell width={width} align={align} testId={testId}>
       <Button
@@ -144,7 +148,7 @@ export const TableSortHeader = (props: TableSortHeaderProps) => {
           )
         }
       >
-        {label}
+        {name}
       </Button>
       {width === undefined || resize === undefined ? null : (
         <TableColumnDivider width={width} {...resize} />

@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
+  columnName,
   directionIn,
   directionOf,
   pressSortOrder,
@@ -130,6 +131,30 @@ describe("the announced state", () => {
       "Name, sorted descending, sort 2 of 2",
     );
     expect(sortOrderLabel("Size", order, "size")).toBe("Size, sortable");
+  });
+
+  it("reads a blank label as the field the column sorts by", () => {
+    // A label is content: an i18n table missing its row answers `""`, and a
+    // stored column configuration can restore a header with no words. The name
+    // used to open with a comma — `", sortable"` — so a reader heard the state
+    // and not the column. The field is the identity the header sorts by.
+    expect(columnName("", "name")).toBe("name");
+    expect(columnName("   ", "size")).toBe("size");
+    expect(columnName("  Status  ", "status")).toBe("Status");
+    expect(sortLabel("", Option.none(), "name")).toBe("name, sortable");
+    expect(
+      sortLabel(" ", Option.some({ field: "size", direction: "desc" }), "size"),
+    ).toBe("size, sorted descending");
+    expect(
+      sortOrderLabel(
+        "",
+        [
+          { field: "name", direction: "asc" },
+          { field: "status", direction: "desc" },
+        ],
+        "status",
+      ),
+    ).toBe("status, sorted descending, sort 2 of 2");
   });
 
   it("carries the place in the glyph only when the order has more than one", () => {
