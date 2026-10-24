@@ -25,12 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  type DialogSize,
 } from "../dialog.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  requireBounds,
+  settleMotion,
   waitFor,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
@@ -43,11 +46,13 @@ const Workspace = ({
   onOpenChange,
   dismissible = true,
   onBehind,
+  size,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly dismissible?: boolean;
   readonly onBehind?: () => void;
+  readonly size?: DialogSize;
 }) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 20, padding: 20 }}
@@ -57,7 +62,11 @@ const Workspace = ({
     </Button>
     <Dialog open={open} onOpenChange={onOpenChange} dismissible={dismissible}>
       <DialogTrigger testId="open">Delete workspace</DialogTrigger>
-      <DialogContent label="Delete workspace" testId="dialog" size="sm">
+      <DialogContent
+        label="Delete workspace"
+        testId="dialog"
+        size={size ?? "sm"}
+      >
         <DialogHeader>
           <DialogTitle>Delete workspace</DialogTitle>
           <DialogDescription>This cannot be undone.</DialogDescription>
@@ -105,6 +114,25 @@ describe("Dialog", () => {
     expect(dialog.renderer.findByType("anchored")).toHaveLength(1);
 
     dialog.unmount();
+  });
+
+  it("paints the default width when the size it was stored as names no variant", () => {
+    // The bug this guards: `size` is a stored choice, so the union the props
+    // declare is not a runtime guarantee. The table lookup handed `Math.min` an
+    // `undefined`, the renderer dropped the resulting `NaN` width, and the box
+    // shrank to its content — the confirmation modal became a strip the width
+    // of its own copy instead of the 480px default.
+    // @ts-expect-error — a size a store wrote, not the union the props declare.
+    const stored: DialogSize = "xl";
+
+    const dialog = renderComponent(<Workspace size={stored} />);
+    try {
+      clickCentreOf(dialog, "open");
+      settleMotion(dialog);
+      expect(requireBounds(dialog, "dialog").width).toBe(480);
+    } finally {
+      dialog.unmount();
+    }
   });
 
   it("blocks a click that lands behind the modal", async () => {

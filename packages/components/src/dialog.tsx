@@ -37,6 +37,7 @@ import {
   DIALOG_OVERLAY,
   DIALOG_TITLE,
 } from "@gpuixui/tw";
+import * as Schema from "effect/Schema";
 import {
   createContext,
   useCallback,
@@ -75,11 +76,26 @@ import { useTheme } from "./internal/theme.js";
 /** The surface widths a dialog offers: 360, 480 or 640 pixels. */
 export type DialogSize = "sm" | "md" | "lg";
 
+/** The sizes a dialog can paint, as the guard reads them. */
+const DialogSizes = Schema.Literals(["sm", "md", "lg"]);
+
 const MAX_WIDTH: Readonly<Record<DialogSize, number>> = {
   sm: 360,
   md: 480,
   lg: 640,
 };
+
+/**
+ * The surface width a dialog paints, read from a value a caller may have stored.
+ *
+ * `DialogSize` is a compile-time guarantee, but a persisted setting is not: a
+ * name a release dropped or renamed reaches the component at runtime, and the
+ * table lookup then hands `Math.min` an `undefined` — the renderer serialises
+ * the resulting `NaN` as `null` and drops the width, so the box shrank to its
+ * content. A size the table does not name is the component's own default, `md`.
+ */
+const dialogSize = (size: unknown): DialogSize =>
+  Schema.is(DialogSizes)(size) ? size : "md";
 
 /** The rules a {@link DialogContent} follows; throws outside a {@link Dialog}. */
 interface DialogContextValue {
@@ -175,7 +191,13 @@ export const DialogClose = ({ onClick, ...rest }: ButtonProps) => {
 
 /** {@link DialogContent} props. */
 export interface DialogContentProps extends Omit<Props, "children"> {
-  /** Default `"md"` (480px). */
+  /**
+   * Default `"md"` (480px).
+   *
+   * A value restored from storage that names no variant (a size a release
+   * dropped, or a `null`) paints the default width rather than an unmeasured
+   * box.
+   */
   readonly size?: DialogSize;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
@@ -203,7 +225,7 @@ export interface DialogContentProps extends Omit<Props, "children"> {
  * a library variant shadcn expresses with responsive classes.
  */
 export const DialogContent = ({
-  size = "md",
+  size: requestedSize = "md",
   label,
   showClose = true,
   initialFocus,
@@ -236,6 +258,9 @@ export const DialogContent = ({
 
   if (!presence.mounted) return null;
 
+  // One size for the box it paints: a stored name the table does not carry is
+  // the component's default rather than an `undefined` that drops the width.
+  const size = dialogSize(requestedSize);
   const close = () => setOpen(false);
 
   const handleKeyDown = (event: KeyEvent): void => {
@@ -486,6 +511,7 @@ export const dialogMeta = {
   limitations: [
     "no aria-modal and no aria-labelledby in 0.11.0: the dialog is named with aria-label and its title is a heading",
     "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
+    "a size restored from storage that names no variant paints the default `md` width: the guarded lookup never hands the renderer an undefined width",
   ],
   docs: "docs/dialog.mdx",
   example: "examples/dialog.example.tsx",

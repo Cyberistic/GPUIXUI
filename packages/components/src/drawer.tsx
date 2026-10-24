@@ -71,6 +71,9 @@ const DrawerEdges = Schema.Literals(["left", "right", "bottom"]);
 /** The surface sizes a drawer offers. */
 export type DrawerSize = "sm" | "md" | "lg";
 
+/** The sizes a drawer can paint, as the guard reads them. */
+const DrawerSizes = Schema.Literals(["sm", "md", "lg"]);
+
 const WIDTH: Readonly<Record<DrawerSize, number>> = {
   sm: 320,
   md: 400,
@@ -179,7 +182,9 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
    * right-hand panel that rises from the bottom.
    */
   readonly side?: DrawerSide;
-  /** Default `"md"`. */
+  /** Default `"md"`. A value restored from storage that names no variant (a
+   * size a release dropped, or a `null`) paints the default box rather than an
+   * unmeasured one. */
   readonly size?: DrawerSize;
   /** The accessible name — required, because 0.11.0 has no `aria-labelledby`. */
   readonly label: string;
@@ -206,6 +211,19 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
  */
 const drawerSide = (side: unknown): DrawerSide =>
   Schema.is(DrawerEdges)(side) ? side : "right";
+
+/**
+ * The surface size a drawer paints, read from a value a caller may have stored.
+ *
+ * `DrawerSize` is a compile-time guarantee, but a persisted setting is not: a
+ * name a release dropped or renamed reaches the component at runtime, and the
+ * table lookup then hands `Math.min` an `undefined` — the renderer serialises
+ * the resulting `NaN` as `null` and drops the width and height, so the panel
+ * shrank to its content. A size the table does not name is the component's own
+ * default, `md`.
+ */
+const drawerSize = (size: unknown): DrawerSize =>
+  Schema.is(DrawerSizes)(size) ? size : "md";
 
 /** Whether a side lays the surface across the window's width. */
 const isVertical = (side: DrawerSide): boolean => side === "bottom";
@@ -241,7 +259,7 @@ const surfaceStyle = (
  */
 export const DrawerContent = ({
   side: requestedSide,
-  size = "md",
+  size: requestedSize = "md",
   label,
   showClose = true,
   initialFocus,
@@ -264,6 +282,9 @@ export const DrawerContent = ({
   // One edge for the box, the layout and the entry travel: a side a store
   // wrote that names no window edge lands on the component's own default.
   const side = drawerSide(requestedSide);
+  // One size for the box the panel paints; a stored name the table does not
+  // carry is the component's default rather than an `undefined` side.
+  const size = drawerSize(requestedSize);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
@@ -510,6 +531,7 @@ export const drawerMeta = {
     "no aria-modal or aria-labelledby in 0.11.0: the surface is named with aria-label",
     "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface",
     "sizes are layout constants: tokens carry no drawer-size role",
+    "a size restored from storage that names no variant paints the default `md` box: the guarded lookup never hands the renderer an undefined width or height",
   ],
   docs: "docs/drawer.mdx",
   example: "examples/drawer.example.tsx",

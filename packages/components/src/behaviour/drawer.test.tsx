@@ -238,6 +238,31 @@ describe("Drawer", () => {
     }
   });
 
+  it("paints the default box when the size it was stored as names no variant", () => {
+    // The bug this guards: `size` is a stored choice, so the union the props
+    // declare is not a runtime guarantee. The table lookup handed `Math.min` an
+    // `undefined`, the renderer dropped the resulting `NaN` width and height,
+    // and the panel shrank to its content instead of opening at the default
+    // 400×window box — a stored size the library no longer ships resized the
+    // surface rather than ignoring it.
+    // @ts-expect-error — a size a store wrote, not the union the props declare.
+    const stored: DrawerSize = "xl";
+
+    const page = renderComponent(<Workspace size={stored} />);
+    try {
+      clickCentreOf(page, "open");
+      settleMotion(page);
+      const box = requireBounds(page, "drawer");
+      const window = page.renderer.getWindowSize();
+
+      expect(box.width).toBe(400);
+      expect(box.height).toBe(window.height);
+      expect(box.x + box.width).toBe(window.width);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("reads the surface and veil from whichever theme is active", () => {
     const theme = renderComponent(<Workspace />, "light");
     clickCentreOf(theme, "open");

@@ -62,13 +62,32 @@ Drawer
 
 ## Limitations
 
-- Slides 12px from its edge; a full-width slide is not available.
+- **Measured in a window**: the playground's `drawer-lifecycle` (34 checks,
+  0.11.0) mounts the shipped Drawer and reads the surface flush to the edge it
+  names — `500,0,400,520` for a right `md` column, `340,0,560,520` for a right
+  `lg`, `0,0,400,520` for a left `md`, and `0,100,900,420` for a bottom `lg` —
+  over a veil that measurably dims the page it leaves uncovered. A press is
+  hit-tested: one inside the surface keeps the drawer open, while the veil's
+  dismisses it, reports the close and returns the focus to the opener. The Tab
+  trap is the window's own traversal, so the opener is never a stop while the
+  drawer is open, and `dismissible={false}` removes Escape and the veil while
+  the close control still works.
+- Slides 12px from its edge and fills the window's other axis; a full-width
+  column is not available.
 - No swipe-to-dismiss; no drag host feature.
+- The entry is a fade and a 12px travel from the named edge, not a slide across
+  the window: the runtime has no `transform`, and animating `width`/`left`
+  would reflow the content.
+- No `aria-modal` or `aria-labelledby` in 0.11.0: the surface is named by its own
+  `label`, and the Tab traversal is the containment a reader gets.
 - Not portalled; painted at window coordinates.
 - Sizes are layout constants, not tokens.
 - A `side` restored from persisted state that the union does not name opens the
   house `right` edge, and travels in from it; the box, the layout and the entry
   frame read one edge, so a panel never opens from an edge it is not on.
+- A `size` restored from persisted state that the union does not name paints the
+  house `md` box; the table lookup never hands the renderer an `undefined`, so a
+  renamed or dropped size cannot shrink the panel to its content.
 
 ## Related
 
