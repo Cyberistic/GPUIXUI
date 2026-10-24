@@ -1,6 +1,10 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { firstReady, hasHandler, propsOfScript } from "../../scripts/react-ready";
+import {
+  firstReady,
+  hasHandler,
+  propsOfScript,
+} from "../../scripts/react-ready";
 
 /**
  * Reading a node React has committed.
@@ -124,10 +128,9 @@ describe("a node React has committed", () => {
     const paintedReady = chromeNode(pressable, 30);
 
     const pick = (matches: ReadonlyArray<unknown>): unknown =>
-      new Function(
-        "document",
-        `return ${firstReady("button")};`,
-      )({ querySelectorAll: () => matches });
+      new Function("document", `return ${firstReady("button")};`)({
+        querySelectorAll: () => matches,
+      });
 
     // The page renders more than one copy (a header trigger and the sidebar's)
     // and commits them at different times: the painted committed one wins over

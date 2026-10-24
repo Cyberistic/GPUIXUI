@@ -36,8 +36,9 @@ import { SlidingNumber } from "../sliding-number.js";
 import { TypingText } from "../typing-text.js";
 
 /** The names the frame just painted into the accessibility tree. */
-const names = (page: ReturnType<typeof renderComponent>): ReadonlyArray<string> =>
-  a11yNodes(page.renderer).map((node) => node.name);
+const names = (
+  page: ReturnType<typeof renderComponent>,
+): ReadonlyArray<string> => a11yNodes(page.renderer).map((node) => node.name);
 
 /** A render that threw leaves no sibling behind; "Before" is the control. */
 const survived = (page: ReturnType<typeof renderComponent>): void =>
@@ -89,9 +90,9 @@ describe("a stored name that is not text", () => {
     );
     try {
       survived(page);
-      expect(nodesWithRole(page.renderer, "image").map((node) => node.name)).toEqual([
-        "Picture",
-      ]);
+      expect(
+        nodesWithRole(page.renderer, "image").map((node) => node.name),
+      ).toEqual(["Picture"]);
     } finally {
       page.unmount();
     }
@@ -110,9 +111,9 @@ describe("a stored name that is not text", () => {
     );
     try {
       survived(page);
-      expect(nodesWithRole(page.renderer, "group").map((node) => node.name)).toEqual([
-        "2 avatars",
-      ]);
+      expect(
+        nodesWithRole(page.renderer, "group").map((node) => node.name),
+      ).toEqual(["2 avatars"]);
     } finally {
       page.unmount();
     }
@@ -195,9 +196,9 @@ describe("a stored name that is not text", () => {
     );
     try {
       survived(page);
-      expect(nodesWithRole(page.renderer, "status").map((node) => node.name)).toEqual([
-        "7",
-      ]);
+      expect(
+        nodesWithRole(page.renderer, "status").map((node) => node.name),
+      ).toEqual(["7"]);
     } finally {
       page.unmount();
     }

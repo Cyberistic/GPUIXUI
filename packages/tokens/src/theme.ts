@@ -829,7 +829,10 @@ const stepOverrides = <Step extends string>(
 };
 
 /** The fields of one text role a theme moved, or nothing when it moved none. */
-const textFields = (role: unknown, base: TextStyle): Partial<TextStyle> | undefined => {
+const textFields = (
+  role: unknown,
+  base: TextStyle,
+): Partial<TextStyle> | undefined => {
   const size = storedNumber(role, "fontSize");
   const leading = storedNumber(role, "lineHeight");
   const weight = storedNumber(role, "fontWeight");
@@ -920,7 +923,9 @@ const densityOverrides = (
   // A preset name is the whole box, and a preset this release does not ship still
   // names the box the theme asked for; the merge refuses that name by name.
   if (typeof density === "string") {
-    return isDensityName(density) && density !== base.name ? density : undefined;
+    return isDensityName(density) && density !== base.name
+      ? density
+      : undefined;
   }
   if (!isStepRecord(density)) {
     return undefined;
@@ -964,15 +969,12 @@ const syntaxOverrides = (
   // The tokens a theme does not name are the base's resolved table when merged,
   // so the table a diff compares against is the one `extendTheme` reads.
   const table = syntaxColors(base);
-  const moved = syntaxRoles.reduce<Partial<SyntaxColors>>(
-    (tokens, role) => {
-      const value = carried[role];
-      return namesColour(value) && value !== table[role]
-        ? { ...tokens, [role]: value }
-        : tokens;
-    },
-    {},
-  );
+  const moved = syntaxRoles.reduce<Partial<SyntaxColors>>((tokens, role) => {
+    const value = carried[role];
+    return namesColour(value) && value !== table[role]
+      ? { ...tokens, [role]: value }
+      : tokens;
+  }, {});
   return isEmptyGroup(moved) ? undefined : moved;
 };
 
@@ -983,7 +985,10 @@ const syntaxOverrides = (
  * a scale a store wrote short has no colour at the positions it lost, and those
  * positions are the base's, so a short table is not the same scale.
  */
-const sameSeries = (left: StoredSeries, right: SeriesColors | undefined): boolean =>
+const sameSeries = (
+  left: StoredSeries,
+  right: SeriesColors | undefined,
+): boolean =>
   right !== undefined && right.every((colour, index) => left[index] === colour);
 
 /** Whether two switch paints name the same slots, the optional edge included. */
@@ -1056,7 +1061,10 @@ const sameMetrics = (
  * themeOverrides(edited, themes.light); // { radius: { md: 4 } }
  * ```
  */
-export function themeOverrides(theme: StoredTheme, base: Theme): ThemeOverrides {
+export function themeOverrides(
+  theme: StoredTheme,
+  base: Theme,
+): ThemeOverrides {
   const mode = themeModeOf(theme);
   const contrast = themeContrastOf(theme);
   if (mode !== themeModeOf(base) || contrast !== themeContrastOf(base)) {

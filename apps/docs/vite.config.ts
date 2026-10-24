@@ -90,11 +90,17 @@ export default defineConfig({
       // `Module not found` on the first one), so each names the file its export
       // map already points at.
       ...nativeEntry("@gpuix/native/host", `${nativeDir}/dist/host.js`),
-      ...nativeEntry("@gpuix/native/cpu-throttle", `${nativeDir}/dist/cpu-throttle.js`),
+      ...nativeEntry(
+        "@gpuix/native/cpu-throttle",
+        `${nativeDir}/dist/cpu-throttle.js`,
+      ),
       ...nativeEntry("@gpuix/native/idle-gc", `${nativeDir}/dist/idle-gc.js`),
       ...nativeEntry("@gpuix/native/testing", `${nativeDir}/dist/testing.js`),
       ...nativeEntry("@gpuix/native/runtime", `${nativeDir}/dist/runtime.js`),
-      ...nativeEntry("@gpuix/native/automation", `${nativeDir}/dist/automation/index.js`),
+      ...nativeEntry(
+        "@gpuix/native/automation",
+        `${nativeDir}/dist/automation/index.js`,
+      ),
       {
         find: /^@gpuix\/native\/wasm\/(.+)$/,
         replacement: `${nativeDir}/wasm/$1`,

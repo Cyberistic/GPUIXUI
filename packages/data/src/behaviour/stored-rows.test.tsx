@@ -355,9 +355,9 @@ describe("a tree whose saved row list holds a hole", () => {
       </div>,
     );
     expect(paintedText(mounted)).toContain("after");
-    expect(
-      mounted.renderer.findByTestId("absent-virtual-tree"),
-    ).not.toBe(undefined);
+    expect(mounted.renderer.findByTestId("absent-virtual-tree")).not.toBe(
+      undefined,
+    );
   });
 
   it("paints a windowed tree's rows around a hole", () => {

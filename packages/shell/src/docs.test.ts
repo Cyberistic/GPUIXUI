@@ -22,12 +22,11 @@ const root = fileURLToPath(new URL("./", import.meta.url));
 
 /** Every TypeScript source the package ships, read once. */
 const sources = (): ReadonlyArray<string> =>
-  (
-    ["app-menu", "status-bar", "toolbar", "behaviour"] as const
-  ).flatMap((directory) =>
-    readdirSync(`${root}${directory}`)
-      .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
-      .map((name) => read(`./${directory}/${name}`)),
+  (["app-menu", "status-bar", "toolbar", "behaviour"] as const).flatMap(
+    (directory) =>
+      readdirSync(`${root}${directory}`)
+        .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
+        .map((name) => read(`./${directory}/${name}`)),
   );
 
 /** The props every `*Props` interface in those sources declares. */

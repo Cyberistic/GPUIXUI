@@ -56,7 +56,9 @@ const declaredProps = (source: string, type: string): ReadonlyArray<string> => {
   const end = source.indexOf("\n}", open);
   if (open < 0 || end < 0) return [];
   return Arr.map(
-    Arr.fromIterable(source.slice(open, end).matchAll(/^ {2}readonly ([A-Za-z]+)\??:/gm)),
+    Arr.fromIterable(
+      source.slice(open, end).matchAll(/^ {2}readonly ([A-Za-z]+)\??:/gm),
+    ),
     (match) => match[1] ?? "",
   );
 };

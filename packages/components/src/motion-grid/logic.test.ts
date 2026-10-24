@@ -22,7 +22,8 @@ import {
   motionGridRowHeight,
   motionGridRows,
   motionGridSlot,
-  motionGridWidth,  itemsOf,
+  motionGridWidth,
+  itemsOf,
 } from "./logic.js";
 
 /** The suite's grid: 3 columns of 100 × 80 with 10 px gaps. */

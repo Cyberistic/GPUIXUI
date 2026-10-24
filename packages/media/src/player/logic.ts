@@ -49,7 +49,8 @@ export type MediaFrameAt = (playhead: number) => Option.Option<MediaFrame>;
  */
 export const frameAtOf = (
   value: MediaFrameAt | null | undefined,
-): MediaFrameAt | undefined => (typeof value === "function" ? value : undefined);
+): MediaFrameAt | undefined =>
+  typeof value === "function" ? value : undefined;
 
 /**
  * Whether a value is a frame the picture can paint.

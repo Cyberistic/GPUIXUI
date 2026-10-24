@@ -21,7 +21,12 @@
  * page.
  */
 
-import { namesColour, themeColors, type ColourSource, type ThemeColors } from "./color.js";
+import {
+  namesColour,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
 import { themeContrastOf, themeModeOf } from "./mode.js";
