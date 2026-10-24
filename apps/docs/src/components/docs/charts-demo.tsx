@@ -58,14 +58,9 @@ export const chartTicks = axisTicks(chartCeiling, 4);
 export const chartPalette = (theme: Theme): ReadonlyArray<string> =>
   seriesColors(theme);
 
-/** One series' grouped bars, in paint order. */
-export const seriesBars = (series: ChartSeries): ReadonlyArray<ChartMark> =>
-  Option.getOrElse(
-    Arr.head(
-      groupedBarMarks([series], chartPlot, chartCeiling, CHART_LABELS.length),
-    ),
-    () => [],
-  );
+/** Every series' grouped bars, one list per series, in paint order. */
+export const chartBarGroups = (): ReadonlyArray<ReadonlyArray<ChartMark>> =>
+  groupedBarMarks(CHART_SERIES, chartPlot, chartCeiling, CHART_LABELS.length);
 
 /** One series' line through its category centres. */
 export const seriesLine = (series: ChartSeries): Option.Option<string> =>
@@ -86,7 +81,7 @@ export interface ChartDrawing {
 export const chartDrawing = (theme: Theme, mode: ChartMode): ChartDrawing => ({
   mode,
   palette: chartPalette(theme),
-  bars: Arr.map(CHART_SERIES, seriesBars),
+  bars: chartBarGroups(),
   lines: Arr.map(CHART_SERIES, seriesLine),
 });
 

@@ -10,6 +10,7 @@ import {
   axisTicks,
   chartBox,
   chartScale,
+  groupedBarMarks,
   linePath,
   seriesColour,
   tickLabel,
@@ -53,11 +54,11 @@ import {
   CHART_SERIES,
   CHART_WIDTH,
   ChartDemoBody,
+  chartBarGroups,
   chartCeiling,
   chartDrawing,
   chartPlot,
   chartTicks,
-  seriesBars,
   seriesLine,
 } from "./charts-demo";
 import {
@@ -306,7 +307,15 @@ describe("the Charts preview", () => {
     );
     expect(chartCeiling).toBe(chartScale(CHART_SERIES, CHART_LABELS.length));
     expect(chartTicks).toEqual(axisTicks(chartCeiling, 4));
-    expect(drawing.bars).toEqual(CHART_SERIES.map(seriesBars));
+    expect(drawing.bars).toEqual(
+      groupedBarMarks(
+        CHART_SERIES,
+        chartPlot,
+        chartCeiling,
+        CHART_LABELS.length,
+      ),
+    );
+    expect(drawing.bars).toEqual(chartBarGroups());
 
     const marks = Arr.filter(
       drawing.bars.flat(),
@@ -314,11 +323,18 @@ describe("the Charts preview", () => {
         mark.kind === "rect",
     );
     expect(bars.match(/<rect /g)).toHaveLength(marks.length);
-    // Every bar stands on the plot's floor, inside the package's box.
+    // Every bar stands on the plot's floor, inside the package's box, and the
+    // two series share each slot side by side rather than over each other.
     Arr.forEach(marks, (mark) => {
       expect(mark.x + mark.width).toBeLessThanOrEqual(chartPlot.width);
       expect(mark.y + mark.height).toBe(chartPlot.height);
     });
+    const revenue = drawing.bars[0]?.[0];
+    const cost = drawing.bars[1]?.[0];
+    expect(revenue?.kind).toBe("rect");
+    expect(cost?.kind).toBe("rect");
+    if (revenue?.kind !== "rect" || cost?.kind !== "rect") return;
+    expect(revenue.x + revenue.width).toBeLessThanOrEqual(cost.x);
   });
 
   it("paints each series in the theme's own categorical order", () => {
