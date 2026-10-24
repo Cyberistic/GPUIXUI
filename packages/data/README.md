@@ -584,7 +584,9 @@ unnamed image.
 A chart's list is **stored data** too, so every part reads it through `listOf`:
 only a list is a list, and a saved configuration whose `series`, `labels`,
 `data`, `values` or legend `items` is `null` paints its empty frame instead of
-throwing out of the render and taking the surface down.
+throwing out of the render and taking the surface down. A series' own `values`
+is read the same way, so a saved series with no samples paints no layer while
+the rest of the chart paints.
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

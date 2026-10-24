@@ -290,7 +290,12 @@ const ChartFrame = ({
     width: DEFAULT_CHART_WIDTH,
     height: DEFAULT_CHART_HEIGHT,
   });
-  const rows = listOf(series);
+  const rows = Arr.map(listOf(series), (one) => ({
+    ...one,
+    // A series' own list is a stored field too: a saved chart writes `null`
+    // where a series carried no values, and the geometry would throw on it.
+    values: listOf(one.values),
+  }));
   const categories = listOf(labels);
   const scale = scaleOf(rows, categories.length);
   const palette = seriesColors(theme);

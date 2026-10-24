@@ -95,7 +95,8 @@ import {
 
 - A chart's lists are stored data: only a list paints, so a saved `series`,
   `labels`, `data`, `values` or legend `items` a record wrote as `null` paints
-  the empty frame (`src/behaviour/chart-boundary.test.tsx` holds it).
+  the empty frame, and a series whose own `values` is `null` paints no layer
+  (`src/behaviour/chart-boundary.test.tsx` holds it).
 - One tint per layer: two colours inside one series need two layers.
 - No tooltips, hover readouts or zoom.
 - No animation between data sets.

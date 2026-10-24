@@ -81,6 +81,21 @@ describe("a chart whose stored list is null", () => {
     expect(paintedText(mounted)).toContain("after");
   });
 
+  it("paints a series whose stored values are null", () => {
+    const mounted = mount(
+      <div>
+        <BarChart
+          aria-label="Revenue"
+          labels={["Q1"]}
+          // @ts-expect-error — a list a store wrote as absent.
+          series={[{ key: "revenue", label: "Revenue", values: null }]}
+        />
+        <text>after</text>
+      </div>,
+    );
+    expect(paintedText(mounted)).toContain("after");
+  });
+
   it("paints a ring with no data list", () => {
     const mounted = mount(
       <div>
