@@ -127,6 +127,30 @@ export const SearchReplace = ({
     setActiveIndex((active + step + count) % count);
   };
 
+  /**
+   * Rewrite the query or an option, and start again at the first match.
+   *
+   * The active index numbers one range set: a refined query or a flipped option
+   * produces a different set, so the old index names a match the reader never
+   * stepped to (and can skip the first ones entirely). A document edit is
+   * different — the bar reports the match after a single replace, which is the
+   * one the reader is working through.
+   */
+  const changeQuery = (next: string): void => {
+    setQuery(next);
+    setActiveIndex(0);
+  };
+
+  const changeMatchCase = (next: boolean): void => {
+    setMatchCase(next);
+    setActiveIndex(0);
+  };
+
+  const changeWholeWord = (next: boolean): void => {
+    setWholeWord(next);
+    setActiveIndex(0);
+  };
+
   const replaceOne = (): void => {
     if (disabled || count === 0) return;
     const range = Arr.getUnsafe(ranges, active);
@@ -154,7 +178,7 @@ export const SearchReplace = ({
     <div testId={testId} style={recipeStyle(cn(SEARCH_ROOT, className), theme)}>
       <Input
         value={query}
-        onValueChange={setQuery}
+        onValueChange={changeQuery}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         label={findName}
@@ -167,7 +191,7 @@ export const SearchReplace = ({
         size="sm"
         square
         pressed={matchCase}
-        onPressedChange={setMatchCase}
+        onPressedChange={changeMatchCase}
         label="Match case"
         disabled={disabled}
         testId={`${testId}-case`}
@@ -179,18 +203,14 @@ export const SearchReplace = ({
         size="sm"
         square
         pressed={wholeWord}
-        onPressedChange={setWholeWord}
+        onPressedChange={changeWholeWord}
         label="Match whole word"
         disabled={disabled}
         testId={`${testId}-word`}
       >
         W
       </Toggle>
-      <text
-        role="status"
-        aria-label={readout}
-        testId={`${testId}-count`}
-      >
+      <text role="status" aria-label={readout} testId={`${testId}-count`}>
         {readout}
       </text>
       <Button

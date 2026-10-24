@@ -4,8 +4,10 @@
  * The bugs guarded: a case or whole-word toggle that changes the match count
  * but not the replacement (the count and a replace-all must agree on the same
  * ranges); a toggle the reader cannot reach; a default that silently matched a
- * different case than the count reported; and a **disabled** bar that still
- * stepped its match, because a read-only host keeps receiving keys.
+ * different case than the count reported; a **disabled** bar that still stepped
+ * its match, because a read-only host keeps receiving keys; and an active match
+ * index that outlived the query it numbered, so a refined query reported a match
+ * the reader never stepped to.
  */
 
 import { useState, type ReactNode } from "react";
@@ -146,11 +148,10 @@ describe("SearchReplace", () => {
       <Harness initial="cat cat" onChange={() => undefined} />,
     );
     const statuses = (): ReadonlyArray<unknown> =>
-      Object.values(search.renderer.getA11yTree().nodes ?? {}).flatMap(
-        (node) =>
-          node.aria?.role === "Status" && node.aria.label !== undefined
-            ? [node.aria.label]
-            : [],
+      Object.values(search.renderer.getA11yTree().nodes ?? {}).flatMap((node) =>
+        node.aria?.role === "Status" && node.aria.label !== undefined
+          ? [node.aria.label]
+          : [],
       );
     typeInto(search, "search-replace-find", "cat");
     expect(statuses()).toEqual(["1 / 2"]);
@@ -243,6 +244,51 @@ describe("SearchReplace", () => {
     typeInto(search, "search-replace-replace", "dog");
     press(search, "search-replace-replace-one");
     expect(changes.at(-1)).toBe("dog cat");
+    search.unmount();
+  });
+
+  it("starts a changed query at its first match", () => {
+    // The bug guarded: the active index numbered the *previous* range set. A
+    // reader who stepped to `4 / 6` and then refined the query to three matches
+    // saw `3 / 3` — a match they never navigated to — and `Next` wrapped to the
+    // first instead of stepping from it.
+    const search = render(
+      <Harness initial="aa aa aa" onChange={() => undefined} />,
+    );
+    const field = search.renderer.findByTestId("search-replace-find");
+    typeInto(search, "search-replace-find", "a");
+    expect(text(search)).toContain("1 / 6");
+    [0, 1, 2].forEach(() =>
+      search.renderer.nativeSimulateKeyDown(field?.id ?? -1, "f3"),
+    );
+    expect(text(search)).toContain("4 / 6");
+
+    typeInto(search, "search-replace-find", "a");
+    expect(text(search)).toContain("1 / 3");
+    expect(text(search)).not.toContain("3 / 3");
+
+    search.renderer.nativeSimulateKeyDown(field?.id ?? -1, "f3");
+    expect(text(search)).toContain("2 / 3");
+    search.unmount();
+  });
+
+  it("starts a changed option at its first match", () => {
+    // The bug guarded: a toggle rewrote the ranges the active index pointed
+    // into, while the index survived — so the readout named its old position in
+    // a set it had never been stepped through.
+    const search = render(
+      <Harness initial="aa aa aa" onChange={() => undefined} />,
+    );
+    typeInto(search, "search-replace-find", "aa");
+    expect(text(search)).toContain("1 / 3");
+    const field = search.renderer.findByTestId("search-replace-find");
+    [0, 1].forEach(() =>
+      search.renderer.nativeSimulateKeyDown(field?.id ?? -1, "f3"),
+    );
+    expect(text(search)).toContain("3 / 3");
+
+    press(search, "search-replace-case");
+    expect(text(search)).toContain("1 / 3");
     search.unmount();
   });
 });
