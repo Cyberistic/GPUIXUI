@@ -28,6 +28,7 @@ import type {
   ElevationLevel,
   PrimitiveTheme,
   RadiusStep,
+  SpaceStep,
   TextRole,
 } from "../core/theme.js";
 import * as primitives from "../index.js";
@@ -698,6 +699,64 @@ describe("layout containers", () => {
         "aria-label",
       ),
     ).toStrictEqual(Option.none());
+  });
+
+  // Bug guarded: a toolbar is saved with its gap as readily as its mode, and
+  // `spaceStep`'s own JSDoc names "a restored toolbar's gap" as its motivating
+  // case — while this group was the one caller that read the step raw. `gap:
+  // null` (JSON's field a record never wrote) and a step this release dropped
+  // became the classes `gap-null` / `gap-huge`, which the compiler records as
+  // unsupported and nobody reads, so a **separated** group painted its actions
+  // flush although the prop documents `sm`.
+  it("paints the documented gap for a stored step the theme does not carry", () => {
+    // The cast is the storage boundary: a saved record's gap is whatever its
+    // decoder wrote, and a step this release does not carry has no type here.
+    const stored: ReadonlyArray<SpaceStep | null> = [null, "huge" as SpaceStep];
+    Arr.forEach(stored, (gap) => {
+      expect(
+        numberIn(
+          renderButtonGroup({ mode: "separated", gap }, testTheme),
+          "gap",
+        ),
+        String(gap),
+      ).toStrictEqual(Option.some(testTheme.spacing.sm));
+    });
+    // A step the theme paints is still the caller's, and `attached` still owns
+    // the silhouette whatever gap it was handed.
+    expect(
+      numberIn(
+        renderButtonGroup({ mode: "separated", gap: "lg" }, testTheme),
+        "gap",
+      ),
+    ).toStrictEqual(Option.some(testTheme.spacing.lg));
+    expect(
+      numberIn(
+        renderButtonGroup({ mode: "attached", gap: "lg" }, testTheme),
+        "gap",
+      ),
+    ).toStrictEqual(Option.some(0));
+  });
+
+  it("hands a group of actions its own element", () => {
+    // The bug guarded: the group painted one `div` and published only a
+    // `testId`, so a layout measuring a toolbar, a scroll naming the region it
+    // holds or an automation host addressing it had to wrap the group — and the
+    // wrapper is the flex item that paints. Every other layout primitive takes
+    // the runtime's own trio; the group is a layout of actions.
+    const onLayout = () => {};
+    const hold = () => {};
+    const group = renderButtonGroup(
+      { label: "Text alignment", "aria-id": "toolbar", onLayout, ref: hold },
+      testTheme,
+    );
+    expect(expectSome(hostProp(group, "aria-id"))).toBe("toolbar");
+    expect(hostProp(group, "onLayout")).toStrictEqual(Option.some(onLayout));
+    expect(hostProp(group, "ref")).toStrictEqual(Option.some(hold));
+    // A group given none of the trio invents none of it.
+    const plain = renderButtonGroup({}, testTheme);
+    expect(hostProp(plain, "aria-id")).toStrictEqual(Option.none());
+    expect(hostProp(plain, "onLayout")).toStrictEqual(Option.none());
+    expect(hostProp(plain, "ref")).toStrictEqual(Option.none());
   });
 });
 

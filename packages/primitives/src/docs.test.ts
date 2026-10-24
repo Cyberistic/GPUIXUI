@@ -1488,6 +1488,31 @@ describe("the primitives docs page contract", () => {
     expect(painter).not.toContain("theme.spacing[size]");
   });
 
+  it("keeps a restored toolbar's gap, and says so", () => {
+    // Bug guarded: a toolbar is saved with its gap as readily as its mode, and
+    // the group read the step raw — `gap: null` (JSON's field a record never
+    // set) and a step this release dropped became `gap-null` / `gap-huge`,
+    // classes the compiler records as unsupported, so a separated group painted
+    // its actions flush although the prop documents `sm`. The same pass gave the
+    // group the address trio a layout needs, and the page must carry both.
+    const page = read("button-group.mdx");
+    expect(page).toContain("| `gap` |");
+    expect(page).toContain("spaceStep");
+    expect(page).toContain("documented default");
+    expect(page).toContain("| `ref` |");
+    expect(page).toContain("| `aria-id` |");
+    expect(page).toContain("| `onLayout` |");
+
+    const painter = readFileSync(
+      fileURLToPath(
+        new URL("../src/components/ButtonGroup.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    expect(painter).toContain(`spaceStep(theme, gap) ?? "sm"`);
+    expect(painter).not.toContain("buttonGroupClass(shape, gap");
+  });
+
   it("paints the value a number field holds when its formatter says nothing", () => {
     // Bug guarded: `formatValue?.(value) ?? displayNumber(...)` read a blank
     // answer as a value, so a locale table's missing row (or a masked format of

@@ -164,11 +164,13 @@ and each is read through a membership test rather than indexed raw:
   `isSpaceStep`/`spaceStep` (`core/theme.ts`) ask the **theme's own group**
   whether it paints the name, and answer absence when it does not. Absence is
   what every layout prop already documents for an omitted step, so a name no
-  release ships paints the same box as one the caller left out; `Spacer` is the
-  one caller whose documented default is not "none" (an omitted `size` is a
-  flexible filler), so a stored step it cannot read fills instead of painting a
-  **fixed** item with no width or height — measured 0px wide beside a 6px `sm`
-  spacer, with the sibling it exists to push sitting against its neighbour.
+  release ships paints the same box as one the caller left out; `Spacer` and
+  `ButtonGroup` are the two callers whose documented default is not "none" — an
+  omitted `size` is a flexible filler, a separated group's gap is `sm` — so a
+  stored step they cannot read takes that default instead of painting a
+  **fixed** spacer with no width or height (measured 0px wide beside a 6px `sm`
+  spacer, with the sibling it exists to push sitting against its neighbour) or
+  a toolbar whose actions sit **flush**, the silhouette `attached` paints.
   `theme.test.ts`, `presentational.test.tsx` and `runtime/layout.runtime.test.tsx`
   hold both paths to the one answer.
 - a **corner step** is stored the same way — a saved panel's radius, a restored
@@ -485,8 +487,11 @@ differs from the role it starts from (`tone="primary"` paints `brandText`, as
 
 The **layout primitives are the caller's element**: `Box`, `Stack`, `Grid` and
 `Spacer` extend `ElementHostProps`, the runtime's `ref`/`aria-id`/`onLayout`, so
-a panel is measured, named for automation and held where it is painted. `Text`
-takes the same trio, because a run of type is the other leaf a caller measures —
+a panel is measured, named for automation and held where it is painted.
+`ButtonGroup` takes the same trio on the wrapper that clips its ends — a toolbar
+is a region a layout measures, while an action inside it is addressed by its own
+`testId`. `Text` takes the same trio, because a run of type is the other leaf a
+caller measures —
 the height a heading wraps to and the node an automation host addresses belong
 to the `<text>`, not to a wrapper that would become the flex item. The four
 **status leaves** — `Progress`, `Meter`, `Skeleton` and `Spinner` — take it too:

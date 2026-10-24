@@ -19,6 +19,8 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
+import { createRef } from "react";
+import type { PublicInstance } from "@gpuix/react";
 import {
   alpha,
   filledHover,
@@ -50,7 +52,7 @@ import {
   type Runtime,
 } from "./harness.js";
 import { TYPE_AHEAD_RESET_MS } from "../src/core/keyboard.js";
-import type { ControlSize } from "../src/core/theme.js";
+import type { ControlSize, SpaceStep } from "../src/core/theme.js";
 import { pressWash } from "../src/core/pointer.js";
 import { sleep, Surface, openWindow, testTheme } from "./fixture.js";
 
@@ -798,6 +800,76 @@ it("names a ButtonGroup for assistive technology", async () => {
       a11yNode(runtime.a11y(), { role: "Group", label: "Text alignment" }),
     ),
   ).toBe(true);
+});
+
+it("keeps a restored toolbar's gap when its stored step is absent", async () => {
+  // The bug guarded: a toolbar is saved with its gap as readily as its mode,
+  // and the group read the step raw — `gap: null` (JSON's field a record never
+  // set) and a step this release dropped became classes the compiler records as
+  // unsupported, so a **separated** group painted its actions flush while the
+  // prop documents `sm`. Measured as the distance between two painted actions.
+  const gapOf = async (gap: SpaceStep | null): Promise<number> => {
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <ButtonGroup mode="separated" gap={gap} testId="g">
+          <Button testId="one">One</Button>
+          <Button testId="two">Two</Button>
+        </ButtonGroup>
+      </Surface>,
+    );
+    const one = boundsOf(runtime, "one");
+    const two = boundsOf(runtime, "two");
+    return two.x - (one.x + one.width);
+  };
+  // The cast is the storage boundary: a saved record's gap is whatever its
+  // decoder wrote, and a step this release does not carry has no type here.
+  expect(await gapOf(null)).toBe(testTheme.spacing.sm);
+  expect(await gapOf("huge" as SpaceStep)).toBe(testTheme.spacing.sm);
+  expect(await gapOf("lg")).toBe(testTheme.spacing.lg);
+});
+
+it("addresses and measures the group's own element", async () => {
+  // The bug guarded: the group published only a `testId`, so a layout
+  // measuring a toolbar or an automation host addressing it had to wrap the
+  // group — and the wrapper is the flex item that paints. The address lands on
+  // the element the group itself paints, and its box is the toolbar's.
+  const runtime = await openWindow();
+  const ref = createRef<PublicInstance>();
+  const measured: Array<{ readonly x: number; readonly width: number }> = [];
+  runtime.render(
+    <Surface>
+      <ButtonGroup
+        label="Text alignment"
+        testId="g"
+        aria-id="toolbar"
+        ref={ref}
+        onLayout={(event) =>
+          measured.push({ x: event.x ?? 0, width: event.width ?? 0 })
+        }
+      >
+        <Button testId="one">One</Button>
+        <Button testId="two">Two</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const group = Option.getOrElse(runtime.element("g"), () =>
+    expect.fail("the runtime painted no button group"),
+  );
+  expect(ref.current?.id).toBe(group.id);
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Group", label: "Text alignment" }),
+    () => expect.fail("the runtime painted no group node"),
+  );
+  expect(node.aria?.author_id).toBe("toolbar");
+  const box = Option.getOrElse(runtime.bounds("g"), () =>
+    expect.fail("the group painted no box"),
+  );
+  expect(measured).toHaveLength(1);
+  expect(measured[0]?.x).toBe(box.x);
+  expect(measured[0]?.width).toBe(box.width);
 });
 
 it("jumps a RadioGroup to its enabled ends with Home and End", async () => {

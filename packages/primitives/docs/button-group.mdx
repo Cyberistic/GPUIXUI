@@ -23,11 +23,14 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced group; a stored name this release does not carry reads as the default (`buttonGroupModeOf`) |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | a row, or a column with one shared width; a stored name reads as the default (`buttonGroupOrientationOf`) |
-| `gap` | spacing step | `"sm"` | the gap in separated mode |
+| `gap` | spacing step, or `null` | `"sm"` | the gap in separated mode; a step the theme does not carry — including the `null` JSON writes for a field a record never set — reads as the documented default (`spaceStep`) |
 | `label` | `string` | none | the group's accessible name, written as `aria-label` |
+| `ref` | `Ref<PublicInstance>` | — | the group's own wrapper, the element that clips the two ends — not an action; press one through its `testId` |
+| `aria-id` | `string` | — | the wrapper's author id, exposed as the platform's automation id |
+| `onLayout` | `(event: EventPayload) => void` | — | the wrapper's painted box after the first paint and each resize |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
-| `testId` | `string` | — | stable locator |
+| `testId` | `string` | — | stable locator for the wrapper |
 | `children` | `ReactNode` | — | the buttons |
 
 ## Limitations

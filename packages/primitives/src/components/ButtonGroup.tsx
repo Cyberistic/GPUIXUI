@@ -23,10 +23,15 @@ import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as P from "effect/Predicate";
 import { accessibleName } from "../core/a11y.js";
+import { spaceStep } from "../core/theme.js";
 import type { PrimitiveTheme, SpaceStep } from "../core/theme.js";
 import { buttonGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle, AttachedGroup } from "./internal.js";
+import {
+  mergeStyle,
+  AttachedGroup,
+  type ElementHostProps,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export const BUTTON_GROUP_MODES = ["attached", "separated"] as const;
@@ -69,7 +74,7 @@ export const buttonGroupOrientationOf = (
 ): ButtonGroupOrientation =>
   isButtonGroupOrientation(value) ? value : "horizontal";
 
-export interface ButtonGroupProps {
+export interface ButtonGroupProps extends ElementHostProps {
   /** Defaults to `attached`. */
   readonly mode?: ButtonGroupMode;
   /**
@@ -77,8 +82,15 @@ export interface ButtonGroupProps {
    * actions, so their ends line up; a square action keeps its own size.
    */
   readonly orientation?: ButtonGroupOrientation;
-  /** A gap on the theme's spacing scale, for `separated`. Defaults to `sm`. */
-  readonly gap?: SpaceStep;
+  /**
+   * A gap on the theme's spacing scale, for `separated`. Defaults to `sm`.
+   *
+   * A toolbar is saved with its gap as readily as with its mode, and JSON keeps
+   * a field a record never set as `null` rather than absent — so the prop takes
+   * that absence, and both it and a step this release does not carry paint the
+   * documented `sm` rather than the actions flush (`spaceStep`).
+   */
+  readonly gap?: SpaceStep | null;
   /**
    * The group's accessible name. The runtime has no `aria-labelledby`, so a
    * visible heading cannot name it by reference; pass the same words here.
@@ -101,21 +113,31 @@ export const renderButtonGroup = (
     className,
     children,
     testId,
+    ref,
+    "aria-id": controlId,
+    onLayout,
   }: ButtonGroupProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
-  // Both are stored toolbar choices, resolved once so the classes and the
-  // actions they clip cannot disagree.
+  // Mode, axis and gap are the three choices a toolbar is saved with, and each
+  // is resolved once here so the classes and the actions they clip cannot
+  // disagree. A gap the theme does not carry is the documented `sm`: a group
+  // whose saved step went missing came back with its actions touching, which is
+  // the silhouette of `attached` and not of a separated group.
   const shape = buttonGroupModeOf(mode);
   const axis = buttonGroupOrientationOf(orientation);
+  const distance = spaceStep(theme, gap) ?? "sm";
   const resolved = recipeTw.classesToStyle(
-    cn(buttonGroupClass(shape, gap, axis), className),
+    cn(buttonGroupClass(shape, distance, axis), className),
     theme,
   );
   return (
     <div
+      ref={ref}
       role="group"
       aria-label={accessibleName(label)}
+      aria-id={controlId}
+      onLayout={onLayout}
       testId={testId}
       style={mergeStyle(resolved.style, style)}
     >
