@@ -31,8 +31,8 @@ const [code, setCode] = useState("");
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `length` | `number` | `6` | number of cells; a nonsense value resolves to at least one |
-| `value` | `string` | — | controlled code, normalised to letters/digits |
-| `defaultValue` | `string` | — | initial code when uncontrolled |
+| `value` | `string` | — | controlled code, normalised to letters/digits; a stored value that is not text is no code |
+| `defaultValue` | `string` | — | initial code when uncontrolled; a stored value that is not text is no code |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
 | `onChange` | `(value: string) => void` | — | deprecated alias for `onValueChange` |
 | `onComplete` | `(value: string) => void` | — | fires when an edit makes the code full |

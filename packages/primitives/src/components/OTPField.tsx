@@ -380,7 +380,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   );
   const state = useControlState(
     props.value,
-    normalizeOtp(props.defaultValue ?? "", limit),
+    normalizeOtp(props.defaultValue, limit),
     valueChange(props),
   );
   const focusCell = (index: number): void => {
@@ -397,7 +397,10 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
     );
   };
   const apply = (edit: OtpEdit): void => {
-    const previous = state.value.current;
+    // The previous code is the one the field **painted**, read through the same
+    // seam the cells are: a stored value that is not text painted no code, so
+    // it cannot be the "unfinished code" a completion is measured from.
+    const previous = normalizeOtp(state.value.current, limit);
     if (edit.value !== previous) {
       state.set(edit.value);
       // Completing means the edit turned an unfinished code into a full one.

@@ -21,6 +21,7 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
+import { storedText } from "./stored.js";
 
 /** A usable cell count: a whole number, at least one. */
 export const otpLength = (length: number): number =>
@@ -31,9 +32,19 @@ export const otpLength = (length: number): number =>
  *
  * A code is alphanumeric by contract. Rejecting other characters (rather than
  * guessing at a locale or an escape) mirrors `core/number.ts`'s rule.
+ *
+ * A code is also **content**, so it arrives from a saved form record as often
+ * as from a literal — and a verification code is numeric often enough that a
+ * record keeps it as a number. Only text is a code (`storedText`'s rule), so a
+ * value that is not text is **no code**, the empty field an omitted value
+ * already means; read raw, `Str.replace` answered
+ * `TypeError: self.replace is not a function` out of the first paint and took
+ * the screen with it.
  */
-export const normalizeOtp = (value: string, length: number): string =>
-  Str.takeLeft(otpLength(length))(Str.replace(/[^0-9A-Za-z]/g, "")(value));
+export const normalizeOtp = (value: unknown, length: number): string =>
+  Str.takeLeft(otpLength(length))(
+    Str.replace(/[^0-9A-Za-z]/g, "")(storedText(value) ?? ""),
+  );
 
 /** The value and focus index an edit produces. */
 export interface OtpEdit {
@@ -43,7 +54,7 @@ export interface OtpEdit {
 
 /** The compact code as one string per cell, padded with empty cells. */
 export const otpCells = (
-  value: string,
+  value: unknown,
   length: number,
 ): ReadonlyArray<string> => {
   const limit = otpLength(length);
@@ -79,7 +90,7 @@ const withCell = (
  * at the end, so a gap can never exist in the value a caller receives.
  */
 export const applyOtpInput = (
-  current: string,
+  current: unknown,
   index: number,
   text: string,
   length: number,
@@ -130,7 +141,7 @@ export const applyOtpInput = (
  * through `onChange`, and handling it here too would delete twice.
  */
 export const decideOtpKey = (
-  current: string,
+  current: unknown,
   index: number,
   key: string,
   length: number,

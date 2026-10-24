@@ -21,7 +21,7 @@ import type { TestElement } from "@gpuix/react/testing";
 import { Button } from "../src/components/Button.js";
 import { OTPField, OTPFieldInput } from "../src/components/OTPField.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The reported values, in order. */
@@ -144,6 +144,48 @@ it("reports Enter as a submit and leaves the code alone", async () => {
   runtime.type("enter");
   expect(lastValue(field.values)).toBe("12");
   expect(submitted).toBe(1);
+});
+
+it("paints a stored code that is not text as an empty field a reader can still fill", async () => {
+  // The bug guarded: a code is content a form record carries, and a
+  // verification code is numeric often enough that the record keeps it as a
+  // number. Read raw, the field called `Str.replace` on that value during its
+  // first paint and threw `self.replace is not a function`, which unmounted the
+  // whole screen. Only text is a code, so the stored shape paints the empty
+  // field an omitted value means — and the first key still lands.
+  // The cast is the storage boundary: the record wrote the code as a number.
+  const stored = { defaultValue: 123456, value: 123456 } as unknown as {
+    readonly defaultValue?: string;
+    readonly value?: string;
+  };
+  const editable = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      defaultValue={stored.defaultValue}
+      onChange={editable.onChange}
+    />,
+  );
+  expect(cells(runtime)).toHaveLength(6);
+  // An empty cell announces no value at all, which is what a reader must hear
+  // for a code the record could not describe.
+  expect(a11yValueOf(runtime.a11y(), { role: "TextInput" })).toStrictEqual(
+    Option.none(),
+  );
+  runtime.click("otp-cell-1");
+  runtime.type("1");
+  expect(lastValue(editable.values)).toBe("1");
+
+  // The controlled shape is the same read: the field paints no code rather
+  // than throwing, and the owner's next value still reaches it.
+  const controlled = await mount(
+    <OTPField testId="otp" label="Verification code" value={stored.value} />,
+  );
+  expect(cells(controlled)).toHaveLength(6);
+  expect(a11yValueOf(controlled.a11y(), { role: "TextInput" })).toStrictEqual(
+    Option.none(),
+  );
 });
 
 it("moves native focus into the next cell as a character lands", async () => {

@@ -389,6 +389,17 @@ row's help: every option row in `RadioGroup`, `CheckboxGroup` and
 already uses — the runtime has no `aria-describedby`. A blank caption is
 absence there too, so it paints and announces nothing.
 
+**A code is content, not only a literal**, and a verification code is numeric
+often enough that the record holding it keeps a number: `OTPField`'s `value` and
+`defaultValue` reached `normalizeOtp`, which called `Str.replace` on them and
+answered `TypeError: self.replace is not a function` out of the field's first
+paint — the whole screen with it. Only text is a code (`storedText`'s rule), so
+a stored shape this release cannot read is **no code**, the empty field an
+omitted value already means, and the completion rule measures from the code the
+cells painted rather than from the raw prop; `core/otp.test.ts`,
+`components/OTPField.test.tsx` and `runtime/otp.runtime.test.tsx` hold the unit,
+the tree and the window.
+
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.
 

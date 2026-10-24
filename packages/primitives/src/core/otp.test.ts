@@ -27,6 +27,20 @@ describe("normalizeOtp", () => {
     expect(normalizeOtp("ab12", 4)).toBe("ab12");
   });
 
+  it("reads a stored code that is not text as no code", () => {
+    // A code is content a form record carries, and a verification code is
+    // numeric often enough that the record keeps it as one. Read raw,
+    // `Str.replace` answered `self.replace is not a function` out of the
+    // field's first paint. Only text is a code, so any other shape is the
+    // empty field an omitted value means.
+    expect(normalizeOtp(123456, 6)).toBe("");
+    expect(normalizeOtp(0, 6)).toBe("");
+    expect(normalizeOtp(true, 6)).toBe("");
+    expect(normalizeOtp({ code: "123456" }, 6)).toBe("");
+    expect(normalizeOtp(null, 6)).toBe("");
+    expect(normalizeOtp(undefined, 6)).toBe("");
+  });
+
   it("truncates to the field and tolerates a nonsense length", () => {
     expect(normalizeOtp("1234567", 6)).toBe("123456");
     expect(otpLength(0)).toBe(1);
@@ -40,6 +54,11 @@ describe("otpCells", () => {
     expect(otpCells("12", 4)).toStrictEqual(["1", "2", "", ""]);
     expect(otpCells("", 3)).toStrictEqual(["", "", ""]);
     expect(otpCells("abcdef", 3)).toStrictEqual(["a", "b", "c"]);
+  });
+
+  it("pads a stored code that is not text to empty cells", () => {
+    expect(otpCells(123456, 3)).toStrictEqual(["", "", ""]);
+    expect(otpCells(null, 2)).toStrictEqual(["", ""]);
   });
 });
 

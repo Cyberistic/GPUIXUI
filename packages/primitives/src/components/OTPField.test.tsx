@@ -116,6 +116,26 @@ describe("OTPField", () => {
     expect(otpCellLabel(undefined, 0)).toBe("Code digit 1");
   });
 
+  it("paints a stored code that is not text as empty, editable cells", () => {
+    // Bug guarded: a code is content a form record carries, and a verification
+    // code is numeric often enough that the record keeps it as one. Read raw,
+    // `normalizeOtp` called `Str.replace` on the stored value and threw
+    // `self.replace is not a function` out of the field's first paint, taking
+    // the tree with it. Only text is a code, so the stored shape paints the
+    // empty field an omitted value means.
+    const element = render(
+      { length: 3, label: "Verification code" },
+      123456 as unknown as string,
+    );
+    const cells = cellsOf(element);
+    expect(cells).toHaveLength(3);
+    Arr.forEach(cells, (input) => {
+      expect(expectSome(hostProp(input, "value"))).toBe("");
+    });
+    // The tab stop is the cell an empty code starts on.
+    expect(expectSome(hostProp(cell(element, 0), "tabIndex"))).toBe(0);
+  });
+
   it("keeps one cell in the tab order: the one the code has reached", () => {
     // The bug: every cell was tabIndex=0, so Tab walked through all six.
     const tabStops = (value: string, length = 4) =>

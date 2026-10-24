@@ -2240,6 +2240,33 @@ describe("the primitives API tables", () => {
     expect(problems).toEqual([]);
   });
 
+  it("holds the code a stored form wrote to the field's own read", () => {
+    // Bug guarded: a code is content a form record carries, and a verification
+    // code is numeric often enough that the record keeps it as one. Read raw,
+    // `normalizeOtp` called `Str.replace` on the stored value and threw
+    // `self.replace is not a function` out of the field's first paint. Only
+    // text is a code, and both cells a page documents say so.
+    const rule = readFileSync(
+      fileURLToPath(new URL("src/core/otp.ts", packageRoot)),
+      "utf8",
+    );
+    const stored = "a stored value that is not text is no code";
+    const rows = (prop: string): string =>
+      Option.getOrElse(
+        Arr.findFirst(read("otp-field.mdx").split("\n"), (line) =>
+          Str.startsWith(`| \`${prop}\` |`)(line),
+        ),
+        () => "",
+      );
+    expect({
+      // The read: text or nothing, then the letters and digits it keeps.
+      guarded: rule.includes('storedText(value) ?? ""'),
+      code: rule.includes("export const normalizeOtp = (value: unknown"),
+      value: rows("value").includes(stored),
+      initial: rows("defaultValue").includes(stored),
+    }).toEqual({ guarded: true, code: true, value: true, initial: true });
+  });
+
   it("reads a composed props type through extends, an alias and Omit", () => {
     // The reader itself: an interface's own fields and its parents, an alias's
     // intersection, and an `Omit` that must subtract. Measured against the
