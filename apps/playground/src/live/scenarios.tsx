@@ -1112,6 +1112,7 @@ import { SecondWindowProbe, secondWindowSteps } from "./second-window-probe.js";
 import { QrMatrixProbe, qrMatrixSteps } from "./qr-matrix-probe.js";
 import { ImageZoomProbe, imageZoomSteps } from "./image-zoom-probe.js";
 import { CarouselProbe, carouselSteps } from "./carousel-probe.js";
+import { RatingProbe, ratingSteps } from "./rating-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -27755,23 +27756,33 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     // The header sorts by the column it hit, and the selection is kept by record
     // rather than by position.
-    yield* ctx.host.click(DATA_TABLE_NAME_SORT);
-    yield* Effect.sleep(SETTLE);
+    //
+    // A press is delivered natively and its re-render commits on a later frame,
+    // so each press **waits for the order it produces** instead of sleeping a
+    // fixed 120ms: on a loaded box the first press's commit outlived the sleep
+    // and the second press landed before it, which read `name-asc` where
+    // `name-desc` was expected (measured 2026-10-24). A press that is genuinely
+    // lost still fails here — the poll is bounded and reports the token it
+    // settled on.
+    const pressSort = (expected: string) =>
+      Effect.gen(function* () {
+        yield* ctx.host.click(DATA_TABLE_NAME_SORT);
+        return yield* settleUntil(readout(), (text) => text.includes(expected));
+      });
+    const sorted = yield* pressSort(DATA_TABLE_SORT_ASC);
     yield* ctx.expectContains(
       "a header press sorts ascending",
-      yield* readout(),
+      sorted,
       `${DATA_TABLE_SORT_ASC}`,
     );
     yield* ctx.expectContains(
       "the selection survives the sort",
-      yield* readout(),
+      sorted,
       "2 selected",
     );
-    yield* ctx.host.click(DATA_TABLE_NAME_SORT);
-    yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
       "a second press flips the direction",
-      yield* readout(),
+      yield* pressSort(DATA_TABLE_SORT_DESC),
       `${DATA_TABLE_SORT_DESC}`,
     );
     const top = yield* ctx.expectSome(
@@ -30291,5 +30302,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "carousel-lifecycle",
     view: () => <CarouselProbe />,
     steps: carouselSteps,
+  },
+  "rating-lifecycle": {
+    id: "rating-lifecycle",
+    view: () => <RatingProbe />,
+    steps: ratingSteps,
   },
 };

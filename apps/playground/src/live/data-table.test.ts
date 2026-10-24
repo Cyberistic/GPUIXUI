@@ -176,6 +176,25 @@ describe("the data-table fixture", () => {
     expect(probe).toContain('dataExamples["table"]');
   });
 
+  it("waits for the order each sort press produces", () => {
+    // A press is delivered natively and its re-render commits on a later frame.
+    // The step slept a fixed 120ms between the two presses, and on a loaded box
+    // the first commit outlived it: the second press landed before it and the
+    // readout still said `name-asc` where `name-desc` was expected (measured
+    // 2026-10-24 on `5afe679d`). Each press now polls the readout for the order
+    // it produces, so a real regression still fails — on the token it settled
+    // on — while a slow frame cannot.
+    expect(probe).toContain("const pressSort = (expected: string) =>");
+    expect(probe).toContain("return yield* settleUntil(readout(), (text) =>");
+    expect(probe).toContain("text.includes(expected)");
+    expect(probe).toContain("yield* pressSort(DATA_TABLE_SORT_ASC)");
+    expect(probe).toContain("yield* pressSort(DATA_TABLE_SORT_DESC)");
+    // The retracted shape: the header pressed and slept, never waited.
+    expect(probe).not.toContain(
+      "yield* ctx.host.click(DATA_TABLE_NAME_SORT);\n    yield* Effect.sleep(SETTLE);",
+    );
+  });
+
   it("prints every measured readout in its section", () => {
     const start = readme.indexOf("### `data-table-lifecycle`");
     const end = readme.indexOf("\n### ", start + 1);

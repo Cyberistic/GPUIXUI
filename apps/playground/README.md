@@ -4937,15 +4937,22 @@ The last row is a design rule rather than a quirk: `useTable` retains the store
 and computes the visible selection during render, so a query releases what it
 hides without dropping it, and the next wider query paints it again. A grid that
 needs a permanent release must commit one on the query change; the filter probe
-page says the same beside its own contract. Three harness notes the probe
+page says the same beside its own contract. Four harness notes the probe
 records: a window's press commits its state on the next frame, so every read of
 the readout follows a settle (the first run failed `a press chooses the row it
 hit` on the pre-press readout); the automation's `key` runs no native edit for a
 named key, so the query is replaced by select-all-then-type rather than
-backspaces; and a drag that follows a menu action waits for that menu's exit —
+backspaces; a drag that follows a menu action waits for that menu's exit —
 the shipped surface keeps a no-press shield for its leaving tween, so a press
 inside that window dismisses rather than resizes, and the probe now waits for the
-toggle row to unpaint before dragging.
+toggle row to unpaint before dragging; and the two sort presses **poll for the
+order each one produces** rather than sleeping between them — a fixed 120 ms
+sleep raced the first press's commit on a loaded box, so the second press landed
+before it re-rendered and the readout still said `name-asc` where `name-desc`
+was expected (measured 2026-10-24 on `5afe679d`; the immediate rerun passed, the
+signature of a slow frame rather than a lost press). A press that is genuinely
+lost still fails: the poll is bounded and the assertion reports the token it
+settled on.
 
 44 checks, `--only data-table-lifecycle`, green on 0.11.0 (~7 s, three
 consecutive runs). Fixture: `src/live/data-table.ts` (the example's ids, its
