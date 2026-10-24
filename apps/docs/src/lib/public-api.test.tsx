@@ -251,13 +251,23 @@ describe("the rendered reference", () => {
   });
 
   it("prints every symbol the packages publish, with the file it lives in", () => {
-    const missing = publicSymbolIndex.packages.flatMap((pkg) =>
-      pkg.symbols
-        .filter((row) => !markup.includes(row.module))
-        .map((row) => `${pkg.name}/${row.name}`),
+    const rows = publicSymbolIndex.packages.flatMap((pkg) =>
+      pkg.symbols.map((row) => ({
+        module: row.module,
+        label: `${pkg.name}/${row.name}`,
+      })),
+    );
+    // 2 325 rows share 290 modules: search the 1.35 MB markup once per module,
+    // not once per symbol.
+    const absent = new Set(
+      [...new Set(rows.map((row) => row.module))].filter(
+        (module) => !markup.includes(module),
+      ),
     );
 
-    expect(missing).toEqual([]);
+    expect(
+      rows.filter((row) => absent.has(row.module)).map((row) => row.label),
+    ).toEqual([]);
   });
 
   it("prints the summary a symbol's doc comment carries", () => {
