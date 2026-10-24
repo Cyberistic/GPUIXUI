@@ -249,7 +249,10 @@ the picker surfaces keep their scroll/positioning in `style`.
 
 The overlays, the disclosure panels and the tab rail move: a surface fades and
 travels a few pixels, a body grows to its measured height, and the pill slides
-between measured trigger boxes. The split is deliberate — the recipe owns the
+between measured trigger boxes. The pill and the carousel dot are **movements
+between two resting states**, so they read the timing table's `standard` phase
+through the seam's `useMoveTiming` rather than the `enter` curve a surface
+arriving paints. The split is deliberate — the recipe owns the
 resting appearance, and `@gpuixui/motion` owns everything that makes a surface
 move: `@gpuixui/motion/timing` the five levels and the per-phase easing,
 `@gpuixui/motion/presence` the frames and the pointer rule, and
