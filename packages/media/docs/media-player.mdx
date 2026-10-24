@@ -77,6 +77,13 @@ and Space and leaves the tab order while disabled.
 
 ## Limitations
 
+- **Measured in a window**: `media-player-lifecycle` (51 checks, 0.11.0) mounts
+  the shipped player on a four-second clip and reads the frame the playhead
+  names (240×135), a 200×32 waveform silhouette in the palette's
+  `mutedForeground` with page-coloured first and last rows, the `0:00 / 0:04`
+  clock, the fill at the package's own `progressWidth`, `End`/`Home` and three
+  `Right`s seeking to `0:03` with the picture repainted to that second's frame,
+  and `disabled` refusing the transport while the picture keeps painting.
 - **No audio, and no decoding.** The runtime declares no `video` or `audio`
   element and no playback verb, so the caller supplies each frame's bytes. This
   player is the picture and the transport; a clip's frames must arrive from the

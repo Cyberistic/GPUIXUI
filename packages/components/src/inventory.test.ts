@@ -747,6 +747,161 @@ describe("the measured target rows", () => {
     );
   });
 
+  /**
+   * The checks a probe prints, read from the README's own close-out line.
+   *
+   * The count is the playground's to derive — its own guard counts the
+   * assertion sites — so this suite reads the number the README promises rather
+   * than inventing a second one, and a row or page that prints another fails.
+   */
+  const readmeChecks = (heading: string, probe: string): number =>
+    Number(
+      new RegExp(`(\\d+) checks, \`--only ${probe}\``).exec(
+        readmeSection(heading),
+      )?.[1] ?? Number.NaN,
+    );
+
+  /** One row, failing by name when the inventory holds a different count. */
+  const oneRow = (name: string): Row => {
+    const rows = rowsNamed(name);
+    if (rows.length !== 1) {
+      throw new Error(`COMPONENTS.md: ${rows.length} rows named ${name}`);
+    }
+    return Option.getOrElse(Arr.head(rows), () => {
+      throw new Error(`COMPONENTS.md: no row named ${name}`);
+    });
+  };
+
+  /** One package docs page, read from disk. */
+  const pageText = (file: string): string =>
+    readFileSync(fileURLToPath(new URL(`docs/${file}`, packageRoot)), "utf8");
+
+  /** The claims a surface is missing, so a row and its page cannot drift apart. */
+  const missingClaims = (
+    label: string,
+    text: string,
+    claims: ReadonlyArray<string>,
+  ): ReadonlyArray<string> =>
+    Arr.flatMap(claims, (claim) =>
+      text.includes(claim) ? [] : [`${label} does not cite ${claim}`],
+    );
+
+  it("cites the edge, veil and press the drawer probe measured", () => {
+    const heading = "### `drawer-lifecycle` — measured on 0.11.0 here";
+    const probe = "drawer-lifecycle";
+    const checks = readmeChecks(heading, probe);
+    expect(Number.isFinite(checks)).toBe(true);
+    expect(readmeSection(heading)).toContain(
+      `${checks} checks, \`--only ${probe}\``,
+    );
+
+    const claims = [
+      `\`${probe}\` (${checks} checks`,
+      "500,0,400,520",
+      "0,100,900,420",
+      "returns the focus to the opener",
+    ];
+    expect(
+      missingClaims(
+        "COMPONENTS.md's Drawer row",
+        rowText(oneRow("Drawer")),
+        claims,
+      ),
+    ).toEqual([]);
+    expect(missingClaims("drawer.mdx", pageText("drawer.mdx"), claims)).toEqual(
+      [],
+    );
+    // The honest limits the measurement does not remove.
+    expect(rowText(oneRow("Drawer"))).toContain("no swipe-to-dismiss");
+    expect(pageText("drawer.mdx")).toContain("`aria-modal`");
+  });
+
+  it("cites the paint and the frame the carousel probe measured", () => {
+    const heading = "### `carousel-lifecycle` — measured on 0.11.0 here";
+    const probe = "carousel-lifecycle";
+    const checks = readmeChecks(heading, probe);
+    expect(Number.isFinite(checks)).toBe(true);
+    expect(readmeSection(heading)).toContain(
+      `${checks} checks, \`--only ${probe}\``,
+    );
+
+    const claims = [
+      `\`${probe}\` (${checks} checks`,
+      "122 → 162 → 102",
+      "18×6",
+      "6×6",
+    ];
+    expect(
+      missingClaims(
+        "COMPONENTS.md's Carousel row",
+        rowText(oneRow("Carousel")),
+        claims,
+      ),
+    ).toEqual([]);
+    expect(
+      missingClaims("carousel.mdx", pageText("carousel.mdx"), claims),
+    ).toEqual([]);
+    // A slide's local state cannot survive a visit: only the mounted one exists.
+    expect(pageText("carousel.mdx")).toContain("does not survive a visit");
+  });
+
+  it("cites the magnification and the corner the image-zoom probe measured", () => {
+    const heading = "### `image-zoom-lifecycle` — measured on 0.11.0 here";
+    const probe = "image-zoom-lifecycle";
+    const checks = readmeChecks(heading, probe);
+    expect(Number.isFinite(checks)).toBe(true);
+    expect(readmeSection(heading)).toContain(
+      `${checks} checks, \`--only ${probe}\``,
+    );
+
+    const claims = [
+      `\`${probe}\` (${checks} checks`,
+      "384×256 at −36,−72",
+      "30×30 → 48×48",
+    ];
+    expect(
+      missingClaims(
+        "COMPONENTS.md's Image zoom row",
+        rowText(oneRow("Image zoom")),
+        claims,
+      ),
+    ).toEqual([]);
+    expect(
+      missingClaims("image-zoom.mdx", pageText("image-zoom.mdx"), claims),
+    ).toEqual([]);
+    // The measured fidelity gap: the runtime clips an overflowing child square.
+    expect(pageText("image-zoom.mdx")).toContain("magnified corner is square");
+  });
+
+  it("cites the shipped player's own paint in its row and its page", () => {
+    const heading = "### `media-player-lifecycle` — measured on 0.11.0 here";
+    const probe = "media-player-lifecycle";
+    const checks = readmeChecks(heading, probe);
+    expect(Number.isFinite(checks)).toBe(true);
+    expect(readmeSection(heading)).toContain(
+      `${checks} checks, \`--only ${probe}\``,
+    );
+
+    const claims = [
+      `\`${probe}\` (${checks} checks`,
+      "240×135",
+      "200×32",
+      "0:00 / 0:04",
+    ];
+    expect(
+      missingClaims(
+        "COMPONENTS.md's player row",
+        rowText(oneRow("Video / audio player + waveform")),
+        claims,
+      ),
+    ).toEqual([]);
+    const page = readFileSync(
+      fileURLToPath(new URL("packages/media/docs/media-player.mdx", repoRoot)),
+      "utf8",
+    );
+    expect(missingClaims("media-player.mdx", page, claims)).toEqual([]);
+  });
+
   it("cites the frame surface a media card composes", () => {
     const read = (path: string): string =>
       readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");

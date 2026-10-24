@@ -34,6 +34,17 @@ import { ImageZoom } from "@gpuixui/components/image-zoom";
 
 ## Limitations
 
+- **Measured in a window**: `image-zoom-lifecycle` (54 checks, 0.11.0) hovers the
+  shipped magnifier over a 240×160 picture at the default 1.6×. Its box becomes
+  **384×256 at −36,−72** for a pointer at `60,120`, the pointed mark keeps its
+  share of the frame, the frame itself does not move, and a mark's exact paint
+  grows **30×30 → 48×48** device pixels — so the host really scales its own
+  buffer rather than the component drawing a second copy.
+- **The magnified corner is square.** At rest the picture carries the frame's
+  radius, but the runtime clips an overflowing child square, so while magnified
+  the corner paints the picture's own pixels. Rounding it needs a rounded clip
+  from the runtime or a mask, and `0.11.0` has neither; document the corner or
+  leave the picture's edges inset from the frame.
 - No wheel, pinch or drag-to-pan; the pointer is the only lens.
 - The source is what gets magnified; ship one large enough for `scale`.
 - One image per frame; compose a Carousel for a gallery.

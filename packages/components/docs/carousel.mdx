@@ -49,6 +49,17 @@ Carousel
 
 ## Limitations
 
+- **Measured in a window**: `carousel-lifecycle` (97 checks, 0.11.0) mounts the
+  shipped carousel on three slides that each carry their own fill, label ink and
+  height. The two slides not on screen paint **0** fill and **0** ink at every
+  index — the renderer ignores `display: none`, so unmounting is what keeps them
+  out — and the frame takes the height of the slide on screen (122 → 162 → 102)
+  while its origin and width hold, which is why the track does not travel. In
+  the press's own frame the indicator's inks have already swapped while the
+  widths are still the previous ones (an 18×6 `primary` pill and 6×6
+  `mutedForeground` dots, measured inside their 24px targets).
 - The track does not travel; the frame is sized by the slide on screen.
 - No swipe, drag or scroll snap.
 - No auto-advance or thumbnails.
+- A slide's local state does not survive a visit, because only the mounted slide
+  exists.
