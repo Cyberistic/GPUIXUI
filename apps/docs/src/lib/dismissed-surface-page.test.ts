@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
  * inherited `inert`.
  *
  * The components workstream measured the defect and taught it on the
- * **package** pages, and on the five surfaces below the site's curated page
+ * **package** pages, and on the six surfaces below the site's curated page
  * keeps the same URL, so the package files are shadowed and never served. A
  * reader of the canonical page was taught the paint and not the keyboard
  * window. This guard holds the page the site *serves* to the painters' own
@@ -59,6 +59,20 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
     packagePage: "packages/components/docs/dialog.mdx",
     painters: ["packages/components/src/dialog.tsx"],
     flags: ["presenceTabStop(presence.present)"],
+    window: {
+      kind: "level",
+      level: "slow",
+      source: "packages/components/src/dialog.tsx",
+    },
+  },
+  {
+    name: "Command menu",
+    page: "command-menu.mdx",
+    packagePage: "packages/components/docs/command-menu.mdx",
+    painters: ["packages/components/src/command-menu.tsx"],
+    // The palette's field is the one control the library paints inside the
+    // dialog; the rows are highlighted, never focused, so they have no stop.
+    flags: ["presenceTabStop(present)"],
     window: {
       kind: "level",
       level: "slow",

@@ -64,7 +64,7 @@ components/checkbox.mdx      Curated: the three states, the 24px target, the mix
 components/color-picker.mdx  Curated: the hex grammar, the commit split, the swatch's own tab stop
 components/collapsible.mdx   Curated: the measured reveal, the unmount, the disabled gate
 components/combobox.mdx      Curated: the ranked list, the disabled row, the create row
-components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
+components/command-menu.mdx  Curated: the palette's matcher, group ranking, keys and exit window
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
 components/context-menu.mdx  Curated: the pointer point, the restore gate, the type-ahead window
 components/date-picker.mdx   Curated: the six-row grid, inclusive bounds, the clamped key path

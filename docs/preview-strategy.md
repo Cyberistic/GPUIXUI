@@ -1232,7 +1232,7 @@ the installed `@gpuix/native` typings. `src/lib/package-page-template.test.ts`
 holds every package page to its own `## API` and `## Limitations`.
 
 A page that documents a **dismissing surface** — a dialog, a drawer, a toast
-card, a menu or a navigation panel — teaches the window it leaves in: the
+card, a menu, a navigation panel or a command palette — teaches the window it leaves in: the
 surface stays painted for its exit, the seam's shield takes the presses, and
 every control the library paints inside it drops its own Tab stop, because the
 runtime decides that order element by element and neither `pointerEvents` nor a

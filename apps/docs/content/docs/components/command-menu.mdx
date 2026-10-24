@@ -67,7 +67,7 @@ CommandMenu
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `CommandMenu` | the composed `Dialog` surface | `open` (required), `onOpenChange` (required), `actions` (required; a stored value that is not a list paints the empty state), `recents` (a stored value that is not a list carries no recents), `filter`, `children` |
-| `CommandMenuInput` | host `<input>` | `placeholder` (default `"Type a command…"`), `label` (default `"Search commands"`), `className` |
+| `CommandMenuInput` | host `<input>` | `placeholder` (default `"Type a command…"`; an empty field announces it as `aria-description`), `label` (default `"Search commands"`), `className` |
 | `CommandMenuList` | scrolling match column | `className`; the root's ranked matches are its content |
 | `CommandMenuItem` | one runnable row | `action` (required), `className` |
 | `CommandMenuEmpty` | the no-match message | `children` (default `No matching commands`), `className` |
@@ -75,5 +75,11 @@ CommandMenu
 ## Limitations
 
 - The dialog is named `Command menu`, the input `Search commands`; rows are `option` with `aria-selected`.
-- An empty query announces the painted hint as `aria-description`.
+- **A dismissed palette is a ghost, not a target.** It stays painted for the
+  dialog's **320 ms** exit (a fade and an 8 px rise) and the field the library
+  paints leaves the window's Tab order for that window: the runtime decides the
+  order element by element, so `Escape` then `Tab` walks past the field. Rows
+  are highlighted, never focused, so they were never stops; a control you
+  compose inside the palette keeps its stop until the runtime publishes an
+  inherited `inert`.
 - **No `aria-activedescendant` or `aria-controls`** in 0.11.0: the active row is visual only.
