@@ -102,6 +102,32 @@ describe("HighlightText", () => {
     }
   });
 
+  it("marks the part of a caller's range that lies inside the phrase", () => {
+    // The bug this guards: `ranges` is caller arithmetic — a find bar's
+    // `indexOf` answers -1 for no match — and the pair was passed to the
+    // runtime's `highlight` as it arrived. A negative start is "from the end"
+    // to `String#slice` and an absolute offset to the host, so the mark painted
+    // nothing (and `[NaN, NaN]` was handed over for a failed reading). A range
+    // is the part of it inside the phrase, so the in-range part is marked and
+    // the unreadable pair is no range at all.
+    const page = renderComponent(
+      <HighlightText
+        testId="hint"
+        text="native"
+        ranges={[
+          [-1, 2],
+          [Number.NaN, 4],
+        ]}
+        stepMs={0}
+      />,
+    );
+    try {
+      expect(marked(page.renderer)).toEqual(["na"]);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("marks a whole word only when asked", () => {
     const page = renderComponent(
       <HighlightText

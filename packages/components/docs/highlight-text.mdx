@@ -30,6 +30,16 @@ import { HighlightText } from "@gpuixui/components/highlight-text";
 | `className` | `string` | — |
 | `style` | `StateStyle<HighlightTextState>` | — |
 
+## Ranges
+
+`ranges` names `[start, end)` pairs in the phrase's **UTF-16 units** and wins
+over `query`. A pair is the part of it **inside the phrase**: a start below `0`
+or an end past the phrase is clamped to it, a fractional index is truncated to
+the unit it names, and a pair that is not two numbers or whose ends meet after
+that is **no range at all**. A find bar can therefore pass the ranges its own
+arithmetic produced — `indexOf` answers `-1` for no match — without sending a
+negative offset to the runtime's `highlight`, which reads absolute units.
+
 ## Limitations
 
 - The sweep is a real-time timer, not a motion-clock tween.

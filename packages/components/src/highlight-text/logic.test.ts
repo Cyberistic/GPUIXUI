@@ -67,6 +67,34 @@ describe("marksFor", () => {
   it("marks nothing when neither a query nor ranges is given", () => {
     expect(marksFor("native", {})).toEqual([]);
   });
+
+  it("marks the part of a range that lies inside the phrase", () => {
+    // The bug this guards: `ranges` is caller arithmetic — a find bar's
+    // `indexOf` answers `-1` for no match, a document offset is measured, a
+    // selection end is rounded — and the pair reached the runtime's `highlight`
+    // verbatim. A negative start is read by `String#slice` as "from the end"
+    // while the range keeps the number it was given, so a partly-in-range pair
+    // painted nothing and the host was handed `[-1, -1]`; a `NaN` pair reached
+    // the host as `[NaN, NaN]`. A range is the part of it inside the phrase.
+    expect(marksFor("native", { ranges: [[-1, 3]] })).toEqual([[0, 3]]);
+    expect(marksFor("native", { ranges: [[2.9, 4.2]] })).toEqual([[2, 4]]);
+    expect(marksFor("native", { ranges: [[0, 99]] })).toEqual([[0, 6]]);
+  });
+
+  it("drops a pair that is not a range the phrase can paint", () => {
+    expect(
+      marksFor("native", {
+        ranges: [
+          [Number.NaN, 4],
+          [1, Number.POSITIVE_INFINITY],
+          [20, 30],
+          [-4, -1],
+          [4, 4],
+          [5, 2],
+        ],
+      }),
+    ).toEqual([]);
+  });
 });
 
 describe("sweepLength", () => {
@@ -99,6 +127,29 @@ describe("sweptRanges", () => {
 
   it("advances a whole code point over an emoji", () => {
     expect(sweptRanges("a🖥b", [[1, 3]], 1)).toEqual([[1, 3]]);
+  });
+
+  it("never hands the host a pair it cannot paint", () => {
+    // The sweep is the other door a caller's range reaches: a set built by hand
+    // can carry a `NaN`, a fraction or a negative start, and every one of them
+    // used to be copied into the range the runtime's `highlight` is handed. The
+    // marks are the part of each pair inside the phrase, so the sweep paints
+    // those and nothing else.
+    expect(
+      sweptRanges(
+        "native",
+        [
+          [Number.NaN, 4],
+          [-1, 2],
+          [1.5, 3],
+        ],
+        9,
+      ),
+    ).toEqual([
+      [0, 2],
+      [1, 3],
+    ]);
+    expect(sweepLength("native", [[Number.NaN, 4]])).toBe(0);
   });
 });
 

@@ -42,6 +42,35 @@ const codePoints = (
 const spanOf = (text: string, range: Range): number =>
   Arr.length(codePoints(text, range[0], range[1]));
 
+/**
+ * A caller's pair as the part of the phrase it names.
+ *
+ * `ranges` is caller arithmetic — a find bar's `indexOf` answers `-1` for no
+ * match, a document offset is measured, a selection end is rounded — while the
+ * runtime's `highlight` reads an absolute `[start, end)` pair of UTF-16 units.
+ * A start `String#slice` reads as "from the end" would mark the tail of the
+ * phrase here and reach the host as a negative number, and a `NaN` or a
+ * fraction is not a unit at all. A pair is therefore the **part of it inside
+ * the phrase**: each end is a whole number clamped to the phrase, and two ends
+ * that meet after that name nothing.
+ */
+const readRange = (text: string, range: Range): Result.Result<Range, void> => {
+  const [start, end] = range;
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return Result.failVoid;
+  const first = Math.min(Math.max(Math.trunc(start), 0), text.length);
+  const last = Math.min(Math.max(Math.trunc(end), 0), text.length);
+  return last > first
+    ? Result.succeed([first, last] as const)
+    : Result.failVoid;
+};
+
+/** The ranges a phrase can paint, read from the ones a caller supplied. */
+const paintableRanges = (
+  text: string,
+  ranges: ReadonlyArray<Range>,
+): ReadonlyArray<Range> =>
+  Arr.filterMap(ranges, (range) => readRange(text, range));
+
 /** Whether a code unit begins a character the whole-word rule refuses as a neighbour. */
 const isWordCode = (code: number | undefined): boolean =>
   Option.match(Option.fromNullishOr(code), {
@@ -98,7 +127,7 @@ export const marksFor = (
   },
 ): ReadonlyArray<Range> =>
   Option.match(Option.fromNullishOr(input.ranges), {
-    onSome: (ranges) => ranges,
+    onSome: (ranges) => paintableRanges(text, ranges),
     onNone: () =>
       Option.match(Option.fromNullishOr(input.query), {
         onNone: () => [],
@@ -129,16 +158,20 @@ export const sweptRanges = (
   step: number,
 ): ReadonlyArray<Range> => {
   const start: Sweep = { budget: Math.max(0, Math.floor(step)), ranges: [] };
-  const sweep = Arr.reduce(ranges, start, (state, range) => {
-    if (state.budget <= 0) return state;
-    const points = codePoints(text, range[0], range[1]);
-    const visible = Arr.take(points, state.budget);
-    const width = Arr.reduce(visible, 0, (sum, point) => sum + point.length);
-    return {
-      budget: state.budget - visible.length,
-      ranges: [...state.ranges, [range[0], range[0] + width] as const],
-    };
-  });
+  const sweep = Arr.reduce(
+    paintableRanges(text, ranges),
+    start,
+    (state, range) => {
+      if (state.budget <= 0) return state;
+      const points = codePoints(text, range[0], range[1]);
+      const visible = Arr.take(points, state.budget);
+      const width = Arr.reduce(visible, 0, (sum, point) => sum + point.length);
+      return {
+        budget: state.budget - visible.length,
+        ranges: [...state.ranges, [range[0], range[0] + width] as const],
+      };
+    },
+  );
 
   return sweep.ranges;
 };
@@ -148,7 +181,11 @@ export const sweepLength = (
   text: string,
   ranges: ReadonlyArray<Range>,
 ): number =>
-  Arr.reduce(ranges, 0, (total, range) => total + spanOf(text, range));
+  Arr.reduce(
+    paintableRanges(text, ranges),
+    0,
+    (total, range) => total + spanOf(text, range),
+  );
 
 /** The house pace of a sweep, in milliseconds per code point. */
 const STEP_MS = 60;

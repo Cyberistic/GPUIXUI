@@ -54,7 +54,13 @@ export interface HighlightTextProps extends Omit<Props, "children" | "style"> {
   readonly text: string;
   /** The substring to mark; every occurrence, case-insensitively by default. */
   readonly query?: string;
-  /** Explicit `[start, end)` ranges in the phrase's UTF-16 units; wins over `query`. */
+  /**
+   * Explicit `[start, end)` ranges in the phrase's UTF-16 units; wins over
+   * `query`. A pair is the part of it **inside** the phrase: each end is a
+   * whole number clamped to the phrase, and a pair that is not two numbers or
+   * whose ends meet after that is no range — so a find bar's `indexOf` may
+   * answer `-1` for no match without handing the runtime a negative offset.
+   */
   readonly ranges?: ReadonlyArray<Range>;
   /** Match `query` case-sensitively. Default `false`. */
   readonly caseSensitive?: boolean;
@@ -164,7 +170,11 @@ export const HighlightText = ({
     reducedMotion,
   };
   const painted = sweptRanges(text, marks, revealed);
-  const wash = washFor(theme, { color, activeColor, activeIndex }, Arr.length(painted));
+  const wash = washFor(
+    theme,
+    { color, activeColor, activeIndex },
+    Arr.length(painted),
+  );
 
   return (
     <div
