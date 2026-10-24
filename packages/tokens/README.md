@@ -463,6 +463,12 @@ points out with the strip showing through the gap, and the control and its
 sibling keep their boxes. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+A theme restored from storage is unknown input at both seams: a lost `ring` role
+keeps the geometry and paints no colour, and `keyboardFocusRing` and `focusRing`
+fall back to the library's `borderWidth.strong` for a theme that lost the border
+scale. A paint seam cannot be the gate — `missingTokens` refuses the theme — and
+a ring that threw emptied the window from the first control a reader focused.
+
 A **filled action's** own face is why the ring is separated. `ring` *is* the
 brand, so a flush line merges with `primary` (**1.00–1.15:1**) and `destructive`
 (**1.00–1.38:1**) in all 18 styles, and at `outlineOffset: 0` one colour

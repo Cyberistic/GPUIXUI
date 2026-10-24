@@ -4091,6 +4091,15 @@ const overlayContentStyle = (theme: Theme, focused: boolean) =>
 // }
 ```
 
+A theme restored from storage is unknown input at both seams. A lost `ring` role
+keeps the geometry and paints no colour — the runtime draws its own outline — and
+a theme that lost the whole **border scale** still gets a ring:
+`keyboardFocusRing` and `focusRing` fall back to the library's `borderWidth.strong`
+for the line and its offset instead of reading a group that is not there. That is
+the rule §Paint-ready values gives the type and density seams — the gate
+(`missingTokens`) refuses such a theme, the paint answers anyway — because a
+throwing ring empties the window from the first control a reader focuses.
+
 `controlFocusRing(theme, { disabled, invalid })` is the ring a **control**
 declares, because a control's own state changes what it may paint. While the
 control can act it is exactly `keyboardFocusRing`. A **failed validation**

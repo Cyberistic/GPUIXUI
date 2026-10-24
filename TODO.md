@@ -389,7 +389,32 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 234/234
+`[x]` `[██████████]` 235/235
+
+`[x]` Keep the **focus ring's geometry when a store truncated the border scale** —
+`keyboardFocusRing` and `focusRing` read `theme.borderWidth.strong` straight off
+the group for the line's width and its offset, while their colour already came
+through `themeColors`, so a theme restored past that group threw
+`TypeError: Cannot read properties of undefined (reading 'strong')` from the
+first control a window focused or a mouse-opened overlay's first frame — the one
+affordance a reader needs to find where Tab went took the window down, and the
+catalogue's own promise that "the focus ring keeps its geometry with no colour"
+was false for the width. `BorderSource` is the storage port (`borderWidth?:`)
+and `borderStep` answers the library's `borderWidth.strong` for a lost group, a
+nulled one, or a step a store wrote as `"3"`/`NaN` — the rule `textStyle` and
+`nativeTextTheme` follow for a lost type, radius or spacing step — while a theme
+that carries the scale paints its own number; `keyboardFocusRing` and
+`controlFocusRing` take the `FocusRingSource` their `focusRing` sibling already
+read, so a decoded theme is callable there without a cast. `focus.test.ts` gains
+three cases (the keyboard ring's two lengths per stored shape, the control's
+invalid ring keeping the destructive colour on the library's line, the shadow's
+spread, each with a brand's `3` still winning) and a fourth holding the fallback
+on `docs/tokens.md`, `docs/design-system.md`, the package README and the
+`Focus state` row. Directions measured: with the direct reads restored, all four
+fail by name on the exact `TypeError: Cannot read properties of undefined
+(reading 'strong')`; restored, `focus.test.ts` is 19/19 and the package 49 files
+/ **3 038** tests with `check-types` clean. No native scenario applies — a pure
+width lookup and its fallback.
 
 `[x]` Paint a **stored theme's type instead of throwing** — `textStyle` read `theme.typography[name]` and `nativeTextTheme` read `typography.sans`, `radius.lg` and `spacing.xl` straight off the groups, so a theme a store truncated past the type, radius or spacing group took the window down mid-render: `textStyle(stored, "body")` threw `TypeError: Cannot read properties of undefined (reading 'body')` from every components painter that spreads it (`AvatarGroup`, `CodeBlock`, `PinnedList` and the five motion text components), and `nativeTextTheme(stored)` threw `… (reading 'sans')` from the first field, code block or document a window mounted. The gate refuses such a theme (`missingTokens`), but a surface can paint one nobody has audited yet, so both seams answer the library's own scale — the rule the primitives' `typeOf`/`familyOf` and the density seam already follow: `textStyle` reads a lost role, group or blank family as `shippedTypography`'s role and face, and `nativeTextTheme` reads every document role through it plus a finite-step reader for `radius`/`spacing`. A complete brand still paints its own numbers. `styles.test.ts` gains `answers the library's type for a theme that lost it` (lost and nulled group, blank family, nulled role, a `NaN` size, and a brand's own type still winning) and `native-text.test.ts` the same for the host (families, every metric, nulled radius/spacing, a dropped leading, a brand's 20/24 code role and 12/24 geometry); `incomplete.test.ts`'s absent-step and blank-family cases now hold the fallback beside the refusal. Directions measured: with the direct reads restored, both new cases fail by name on the exact `TypeError`s and 2 `incomplete.test.ts` cases fail their assertions; with the seams the package is 49 files / **3 034** tests with `check-types` clean. Docs: `docs/tokens.md` §Paint-ready values/§Native text hosts, `docs/design-system.md` §9, the package README and the `Native text hosts` inventory row state the split (the gate refuses, the paint answers), held by `styles.test.ts`'s `the type group's paint rule` (2 cases). No native scenario applies — a pure fallback with the same values a complete theme handed over.
 
@@ -11235,6 +11260,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
     Row selection inventory row state the fallback.
     No native scenario applies — the name is read off the renderer's tree, and
     the shipped `modifier-select-lifecycle` paint is unchanged.
+    Owner: data.
+  - [x] Read a **blank divider name as the documented default** — the column
+    divider is a focusable `separator`, and its `label` is copy: a locale table
+    missing its row or a saved label answers `""`, so the one control that
+    resizes a column was nameless in the tree while its width stayed announced
+    (measured: the `Splitter` carried no label, and a whitespace label read
+    `"   "`). `DEFAULT_RESIZE_LABEL` (`Resize column`) is the reading through
+    `spokenText`, and a name that says **which** column is composed from
+    `columnName(column.label, column.id)` — the header's and the menu's reading
+    — so a column restored without a title is named by its id rather than
+    `Resize the  column`. The shipped example, `docs/column-configuration.mdx`
+    and the README carry that composition; the example's non-sortable header
+    cell reads the same words. `src/behaviour/surface-a11y.test.tsx` gains
+    `reads a blank divider name as the documented default` (an empty and a
+    whitespace label, both names read off the tree) and
+    `src/columns/docs.test.ts` gains `names the divider from the column's own
+    words`. Directions measured: before the reading the window case fails
+    `expected [] to deeply equal [ 'Resize column', 'Resize column' ]`, and
+    reverting the example's composition fails the docs case
+    `expected '…' to contain 'columnName(column.label, column.id)'`; after
+    them the file is 14/14 and the package is 232 unit / 155 behaviour cases.
+    Docs: the page's divider table (`label` defaults to `Resize column`), the
+    README's divider paragraph and the Tier 3 Resizable columns row.
+    No native scenario applies — the names are read off the renderer's tree,
+    and the shipped `column-resize-lifecycle` paint is unchanged.
     Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)

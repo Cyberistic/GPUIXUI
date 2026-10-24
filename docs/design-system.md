@@ -780,6 +780,15 @@ exactly how a mouse-opened dialog or menu focuses its content. That path keeps
 `borderWidth.strong`, painted while the overlay holds focus. Both draw outside
 the border box, so neither reflows the layout.
 
+A theme restored from storage is unknown input at both seams: a lost `ring` role
+keeps the geometry and paints no colour, and the width answers the library's own
+step — `keyboardFocusRing` and `focusRing` fall back to the library's `borderWidth.strong`
+for a theme that lost the border scale. The gate (`missingTokens`) refuses such a
+theme, but a paint seam cannot be the gate, and a throwing ring empties the window
+from the first control a reader focuses. The width is a length, so a lost group
+answers the library's step; the colour is a role, so a lost one answers nothing
+and the runtime draws its own outline.
+
 The keyboard line is **separated from the control's own fill by one line's
 width** (one `borderWidth.strong`, 2 points in the shipped themes), so the strip
 behind the control shows through the gap and the ring is read against that strip.

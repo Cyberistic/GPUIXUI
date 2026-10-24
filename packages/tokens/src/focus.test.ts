@@ -14,10 +14,18 @@
  *    colour from the `ring` role, so a brand's border and focus colour follow.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { contrastPairs } from "./contrast.js";
 import { focusExample } from "./focus-ring.example.js";
-import { controlFocusRing, focusRing, keyboardFocusRing } from "./styles.js";
+import {
+  controlFocusRing,
+  focusRing,
+  keyboardFocusRing,
+  type BorderSource,
+  type FocusRingSource,
+} from "./styles.js";
+import { borderWidth as shippedBorderWidth } from "./scale.js";
 import {
   darkTheme,
   extendTheme,
@@ -84,6 +92,51 @@ describe("keyboardFocusRing", () => {
       keyboardFocusRing(darkTheme).focusVisible.outlineColor,
     );
   });
+
+  /**
+   * A stored theme is unknown input, and a store that truncated the theme past
+   * `borderWidth` is exactly the shape `missingTokens` refuses — but the seams
+   * paint mid-render, so the gate cannot be the answer. Both rings read
+   * `theme.borderWidth.strong` straight off the group, so that theme threw
+   * `TypeError: Cannot read properties of undefined (reading 'strong')` from the
+   * first control a window focused: the keyboard affordance, the one paint a
+   * reader needs to find where Tab went, took the window down instead. The line
+   * answers the library's own width now — the rule `textStyle` and
+   * `nativeTextTheme` follow for a lost type, radius or spacing step — while a
+   * brand that carries the scale still paints its own number.
+   */
+  it("keeps its geometry when the theme lost the border scale", () => {
+    // The storage boundary: a restored theme is read through `BorderSource`.
+    const stored: ReadonlyArray<readonly [string, BorderSource]> = [
+      ["no group", { colors: lightTheme.colors }],
+      ["a nulled group", { borderWidth: null, colors: lightTheme.colors }],
+      ["a step a store wrote", JSON.parse('{"borderWidth":{"strong":"3"}}')],
+      [
+        "a step that is not a number",
+        { borderWidth: { strong: NaN }, colors: lightTheme.colors },
+      ],
+    ];
+
+    stored.forEach(([label, theme]) => {
+      const { focusVisible } = keyboardFocusRing(theme);
+      expect(focusVisible.outlineWidth, label).toBe(shippedBorderWidth.strong);
+      expect(focusVisible.outlineOffset, label).toBe(shippedBorderWidth.strong);
+    });
+
+    // A lost group is a lost width, not a lost ring: the colour still paints.
+    expect(
+      keyboardFocusRing({ colors: lightTheme.colors }).focusVisible
+        .outlineColor,
+    ).toBe(lightTheme.colors.ring);
+
+    // A brand that carries the scale still paints its own number.
+    expect(
+      keyboardFocusRing({
+        borderWidth: { strong: 3 },
+        colors: lightTheme.colors,
+      }).focusVisible.outlineWidth,
+    ).toBe(3);
+  });
 });
 
 describe("controlFocusRing", () => {
@@ -114,6 +167,21 @@ describe("controlFocusRing", () => {
     expect(
       controlFocusRing(darkTheme, { disabled: true, invalid: true }),
     ).toBeUndefined();
+  });
+
+  it("follows the ring's width for a theme that lost the border scale", () => {
+    // The control's ring is the keyboard ring plus a state, so the width
+    // fallback has one home: a stored theme's invalid ring keeps the library's
+    // line and still takes the destructive colour.
+    const stored: FocusRingSource = { colors: lightTheme.colors };
+    expect(controlFocusRing(stored)?.focusVisible).toEqual(
+      keyboardFocusRing(stored).focusVisible,
+    );
+    expect(controlFocusRing(stored, { invalid: true })?.focusVisible).toEqual({
+      outlineWidth: shippedBorderWidth.strong,
+      outlineColor: lightTheme.colors.destructive,
+      outlineOffset: shippedBorderWidth.strong,
+    });
   });
 
   it("reads the width and the two roles from the theme, not a literal", () => {
@@ -185,6 +253,40 @@ describe("focusRing", () => {
       },
     });
   });
+
+  /**
+   * The shadow has one property that is not a colour: its spread is the border
+   * scale's strong step. A stored theme that lost that group — the shape the
+   * gate refuses, and one a surface can still paint before the audit runs —
+   * threw `TypeError: Cannot read properties of undefined (reading 'strong')`
+   * out of a mouse-opened dialog's first focused frame. The width answers the
+   * library's own step; the missing colour still answers `undefined`, because a
+   * ring drawn in no colour is a ring nobody can see.
+   */
+  it("spreads by the library's line when the theme lost the border scale", () => {
+    const stored: ReadonlyArray<readonly [string, BorderSource]> = [
+      ["no group", { colors: { ring: "#7A57FA" } }],
+      ["a nulled group", { borderWidth: null, colors: { ring: "#7A57FA" } }],
+      [
+        "a step a store wrote",
+        JSON.parse(
+          '{"borderWidth":{"strong":"3"},"colors":{"ring":"#7A57FA"}}',
+        ),
+      ],
+    ];
+
+    stored.forEach(([label, theme]) => {
+      expect(focusRing(theme)?.boxShadow.spreadRadius, label).toBe(
+        shippedBorderWidth.strong,
+      );
+    });
+
+    // A brand that carries the scale still spreads by its own number.
+    expect(
+      focusRing({ borderWidth: { strong: 3 }, colors: { ring: "#7A57FA" } })
+        ?.boxShadow.spreadRadius,
+    ).toBe(3);
+  });
 });
 
 describe("focus example", () => {
@@ -212,5 +314,34 @@ describe("focus example", () => {
     );
     expect(disabled.focusVisible).toBeUndefined();
     expect(disabled.backgroundColor).toBe(lightTheme.colors.disabled);
+  });
+});
+
+describe("the ring's width rule", () => {
+  /**
+   * §Paint-ready values promises that "the focus ring keeps its geometry with no
+   * colour" for a stored theme, and that was only true for the colour: both
+   * rings read the width off `theme.borderWidth` and threw on the group. The
+   * sentence a consumer plans a truncated theme around is now the seam's own
+   * rule, and it is printed wherever the ring is taught so a reader meets the
+   * fallback before the audit does.
+   */
+  it("states the library's line a stored theme gets, on every page that teaches a ring", () => {
+    const pages = [
+      ["docs/tokens.md", "../../../docs/tokens.md"],
+      ["docs/design-system.md", "../../../docs/design-system.md"],
+      ["packages/tokens/README.md", "../README.md"],
+      ["COMPONENTS.md", "../../../COMPONENTS.md"],
+    ] as const;
+
+    pages.forEach(([path, url]) => {
+      const page = readFileSync(new URL(url, import.meta.url), "utf8").replace(
+        /\s+/g,
+        " ",
+      );
+      expect(page, path).toContain(
+        "`keyboardFocusRing` and `focusRing` fall back to the library's `borderWidth.strong`",
+      );
+    });
   });
 });

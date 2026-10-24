@@ -7,7 +7,12 @@ import {
 } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
-import { isControlSize, type BorderWidth, type ControlSize } from "./scale.js";
+import {
+  borderWidth as shippedBorderWidth,
+  isControlSize,
+  type BorderWidth,
+  type ControlSize,
+} from "./scale.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 import {
   isTextRole,
@@ -301,14 +306,42 @@ export interface FocusRing {
 }
 
 /**
- * The source `focusRing` reads: the roles, and the width of the line it draws.
- * A {@link Theme} is one; a theme restored from storage that predates a role is
- * the other, which is why the roles are optional.
+ * A theme, or anything shaped like one, as the border scale is read.
+ *
+ * The ring's line is the one paint that is a length rather than a colour, and a
+ * group a store truncated past is the same absence there: a theme restored from
+ * storage that predates the scale has no group, and JSON writes `null` where one
+ * was never carried. The colour roles have the same port in {@link ColourSource}.
  */
-export interface FocusRingSource extends ColourSource {
-  /** The scale's strong width, which is the ring's spread. */
-  readonly borderWidth: BorderWidth;
+export interface BorderSource {
+  readonly borderWidth?: Readonly<Partial<BorderWidth>> | null;
 }
+
+/**
+ * The width a border scale holds for a step, or the library's own where the
+ * theme paints none.
+ *
+ * A paint seam cannot be the gate: `missingTokens` refuses a theme that lost the
+ * group, but a surface can paint one nobody has audited yet, and the ring is the
+ * affordance a reader needs to find where Tab went — so a lost group paints the
+ * library's line rather than throwing out of a focused control. The rule
+ * `textStyle` and `nativeTextTheme` follow for a lost type, radius or spacing
+ * step; a stored value that is not a finite number is the same absence, because
+ * the runtime drops a `"2"` where a length belongs.
+ */
+const borderStep = (source: BorderSource, step: keyof BorderWidth): number => {
+  const value = source.borderWidth?.[step];
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : shippedBorderWidth[step];
+};
+
+/**
+ * The source a ring reads: the roles, and the width of the line it draws.
+ * A {@link Theme} is one; a theme restored from storage that lost a role or the
+ * whole border scale is the other, which is why both are optional.
+ */
+export interface FocusRingSource extends ColourSource, BorderSource {}
 
 /**
  * The unconditional focus ring.
@@ -322,7 +355,10 @@ export interface FocusRingSource extends ColourSource {
  * A theme restored from storage that lost its `ring` role answers `undefined`
  * rather than throwing — the rule {@link controlFocusRing} follows for a
  * disabled control — so a programmatic focus paints no ring instead of losing
- * the window; a `Theme` answers a ring outright.
+ * the window; a `Theme` answers a ring outright. A theme that lost the border
+ * scale keeps its ring and spreads by the library's `borderWidth.strong`: a
+ * missing colour is a ring nobody can see, but a missing length is a line the
+ * library ships.
  *
  * @example
  * ```tsx
@@ -341,7 +377,7 @@ export function focusRing(source: FocusRingSource): FocusRing | undefined {
       offsetX: 0,
       offsetY: 0,
       blurRadius: 0,
-      spreadRadius: source.borderWidth.strong,
+      spreadRadius: borderStep(source, "strong"),
       color,
     },
   };
@@ -394,19 +430,25 @@ export interface KeyboardFocusRing {
  * a two-point offset paints the ring three points out with the strip showing
  * through the gap, and the control and its sibling keep their boxes.
  *
+ * A theme restored from storage is unknown input at this seam: a lost `ring`
+ * role keeps the geometry and hands the runtime no colour, and a lost border
+ * scale paints the library's own line rather than throwing out of a focused
+ * control — the gate (`missingTokens`) is what refuses that theme, not the paint.
+ *
  * @example
  * ```tsx
  * <div style={{ ...keyboardFocusRing(theme), backgroundColor: theme.colors.input }} />
  * ```
  */
-export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
+export function keyboardFocusRing(theme: FocusRingSource): KeyboardFocusRing {
+  const line = borderStep(theme, "strong");
   return {
     focusVisible: {
-      outlineWidth: theme.borderWidth.strong,
+      outlineWidth: line,
       // A role a stored theme lost is a colour the runtime does not get, so it
       // paints its own outline rather than the `null` JSON wrote.
       outlineColor: themeColors(theme).ring,
-      outlineOffset: theme.borderWidth.strong,
+      outlineOffset: line,
     },
   };
 }
@@ -449,7 +491,7 @@ export interface ControlFocusState {
  * ```
  */
 export function controlFocusRing(
-  theme: Theme,
+  theme: FocusRingSource,
   state: ControlFocusState = {},
 ): KeyboardFocusRing | undefined {
   if (state.disabled === true) {
