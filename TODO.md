@@ -12144,6 +12144,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `docs/charts.mdx`'s `color` row and §Limitations, the README's sparkline
     paragraph, the `Sparkline` JSDoc and the Charts inventory row. No native
     scenario applies — the paint is the real renderer's. Owner: data.
+  - [x] Read a **blank toolbar hint as the documented `Search…`** — the search
+    placeholder is copy as often as a literal, and `query.placeholder ??
+    "Search…"` only covers an **absent** prop: a locale table's missing row
+    answered `""` (or a whitespace run), so the field painted no hint while
+    `docs/data-toolbar.mdx` printed `Search…` as its default. The hint is read
+    through the primitives' published `visibleCopy` and a blank one takes the
+    exported `DEFAULT_SEARCH_PLACEHOLDER`, while a caller's own hint is kept as
+    written. `behaviour/surfaces.test.tsx` gains `paints the hint the page
+    documents` (blank, whitespace and a real hint in one mount); direction
+    measured: with the `??` restored the case fails `expected 'Find' to
+    contain 'Search…'`. Docs: `docs/data-toolbar.mdx`'s `placeholder` row and
+    §Limitations, the README's toolbar paragraph, the `ToolbarSearch` JSDoc
+    and the Data toolbars inventory row. No native scenario applies — the hint
+    is read off the real renderer. Owner: data.
   - [x] Keep an **expandable row's keys to the row that holds focus** — the
     disclosure row answered Enter/Space on every key its handler heard, and a
     key is dispatched along the **focus path**

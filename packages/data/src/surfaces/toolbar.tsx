@@ -22,7 +22,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Input } from "@gpuixui/primitives";
-import { spokenText } from "@gpuixui/primitives/core";
+import { spokenText, visibleCopy } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import { Debouncer } from "@tanstack/pacer";
 import * as Option from "effect/Option";
@@ -37,7 +37,12 @@ export interface ToolbarSearch {
   readonly value: string;
   /** Receives the debounced query. */
   readonly onValueChange: (next: string) => void;
-  /** The hint a reader sees in the empty field. */
+  /**
+   * The hint a reader sees in the empty field.
+   *
+   * Defaults to `Search…`; a blank hint is that default too, because a default
+   * only covers an absent prop.
+   */
   readonly placeholder?: string;
   /**
    * The field's accessible name. Defaults to `Search`; a blank name is the
@@ -71,6 +76,9 @@ export const DEFAULT_SEARCH_DEBOUNCE_MS = 150;
 
 /** The name a toolbar's search field is announced by when none is given. */
 export const DEFAULT_SEARCH_LABEL = "Search";
+
+/** The hint a toolbar's search field shows when none is given. */
+export const DEFAULT_SEARCH_PLACEHOLDER = "Search…";
 
 /**
  * The wait the debouncer can schedule.
@@ -137,7 +145,9 @@ export const DataToolbar = ({
               Option.fromNullishOr(query.label),
               DEFAULT_SEARCH_LABEL,
             )}
-            placeholder={query.placeholder ?? "Search…"}
+            placeholder={
+              visibleCopy(query.placeholder) ?? DEFAULT_SEARCH_PLACEHOLDER
+            }
             value={query.value}
             onValueChange={(next) => {
               if (wait <= 0) report.current(next);

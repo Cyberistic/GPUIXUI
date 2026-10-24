@@ -774,7 +774,10 @@ owns the wait); the table's own filter field is deliberately not, because
 wait is a reporting delay (`150` ms by default) that `debounceMs: 0` turns off;
 a wait the toolbar cannot read — `NaN`, an infinity, a negative — is the
 default rather than the immediate timer `setTimeout` makes of it, because a
-`debounceMs` read from a setting is often not a number.
+`debounceMs` read from a setting is often not a number. The field's **hint** is
+copy as often as a literal: a blank `placeholder` reads the documented `Search…`
+(`visibleCopy`), because a default written as `placeholder ?? "Search…"` only
+covers an absent prop, and a locale table's missing row is not an absent one.
 
 ## Styling
 

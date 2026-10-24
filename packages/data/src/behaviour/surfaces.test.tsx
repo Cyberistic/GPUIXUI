@@ -40,7 +40,10 @@ import {
   UNREADABLE_TREE,
   type FilterTree,
 } from "../surfaces/logic.js";
-import { DataToolbar } from "../surfaces/toolbar.js";
+import {
+  DataToolbar,
+  DEFAULT_SEARCH_PLACEHOLDER,
+} from "../surfaces/toolbar.js";
 
 let root: DataTestRoot | undefined;
 
@@ -679,5 +682,37 @@ describe("the toolbar's wait", () => {
     typeInto(mounted, "wait-search", "logo");
     mounted.renderer.flush();
     expect(reported(mounted)).toBe("logo");
+  });
+});
+
+describe("a toolbar whose saved hint is blank", () => {
+  it("paints the hint the page documents", () => {
+    // Bug guarded: the placeholder is copy as often as a literal — a locale
+    // table with a missing row answers `""` — and `placeholder ?? "Search…"`
+    // only covers an **absent** prop, so the field painted no hint while
+    // `docs/data-toolbar.mdx` printed `Search…` as its default.
+    const mounted = renderData(
+      <div>
+        <DataToolbar
+          testId="blank-hint"
+          search={{ value: "", placeholder: "", onValueChange: () => {} }}
+        />
+        <DataToolbar
+          testId="spaces-hint"
+          search={{ value: "", placeholder: "   ", onValueChange: () => {} }}
+        />
+        <DataToolbar
+          testId="own-hint"
+          search={{ value: "", placeholder: "Find", onValueChange: () => {} }}
+        />
+      </div>,
+    );
+    root = mounted;
+    settle(mounted);
+
+    const painted = paintedText(mounted);
+    expect(painted).toContain(DEFAULT_SEARCH_PLACEHOLDER);
+    // A caller's own hint is kept as written.
+    expect(painted).toContain("Find");
   });
 });

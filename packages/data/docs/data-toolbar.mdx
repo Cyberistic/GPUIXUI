@@ -30,7 +30,7 @@ import { DataToolbar } from "@gpuixui/data";
 | ----- | ---- | ------- | ----------- |
 | `value` | `string` | — | the query the field shows; the toolbar owns no state |
 | `onValueChange` | `(next: string) => void` | — | receives the **debounced** query |
-| `placeholder` | `string` | `Search…` | the hint a reader sees in the empty field |
+| `placeholder` | `string` | `Search…` | the hint a reader sees in the empty field; a blank one reads as the default |
 | `label` | `string` | `Search` | the field's accessible name; a blank name reads as `Search` |
 | `debounceMs` | `number` | `150` | how long the query waits before it is reported; `0` reports every edit at once, and a value that is not finite or is negative reads as `150` |
 
@@ -43,3 +43,5 @@ import { DataToolbar } from "@gpuixui/data";
   the row's own controls still paint.
 - A blank `search.label` reads as `Search`: a locale table's missing row is
   absence, not an unnamed field.
+- A blank `search.placeholder` reads as the documented `Search…`, for the same
+  reason: the default covers a blank hint, not only an absent one.
