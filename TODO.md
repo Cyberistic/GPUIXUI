@@ -10628,8 +10628,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
     262, the pointer leaves the window, a 2px hover stays at 262, and a fresh
     press drags on from 262 to 268. Direction measured: without the guard the
     hover reads `w=264`. `docs/column-configuration.mdx` gains §The drag, the
-    README's resize rule row and the Resizable columns row state the rule.
-    Owner: data.
+    README's resize rule row and the Resizable columns row state the rule. Live
+    verification: `--only data-table-lifecycle` 1/1 in a real window, whose drag
+    step then widened the shipped column, so a captured move really reports the
+    held button. Owner: data.
+  - [ ] The **second sort press** in the live `data-table-lifecycle` probe can
+    read `name-asc` where it expects `name-desc`: measured 2026-10-24 on
+    `5afe679d`, one run failed at `a second press flips the direction` with
+    `60 rows · 2 selected · cols=name,status,size · w=260 · content=460 ·
+    name-asc` and the immediate rerun passed 1/1, so either the press landed
+    before the first press's re-render committed or the probe's settle is too
+    short for a loaded box. Find out which (log the click's delivery) before
+    loosening the wait, and keep the live scenario honest.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
