@@ -9,6 +9,8 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
 /** One selectable option. */
@@ -18,6 +20,76 @@ export interface ComboboxOption {
   readonly description?: string;
   readonly disabled?: boolean;
 }
+
+/**
+ * An option a stored list wrote: the value it is addressed by, and the fields a
+ * record may or may not have carried.
+ *
+ * A picker's choices are saved data as often as literals — a settings pane, a
+ * picker inside a saved record, a restored toolbar — so JSON's `null` reaches
+ * the component for a label, a description or the flag a record never set.
+ */
+class StoredOption extends Schema.Class<StoredOption>("StoredOption")({
+  value: Schema.String,
+  label: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  description: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  disabled: Schema.optionalKey(Schema.NullOr(Schema.Boolean)),
+}) {}
+
+const decodeStoredOption = Schema.decodeUnknownOption(StoredOption);
+
+/**
+ * The options a caller's list carries, read at the boundary.
+ *
+ * `options` is a saved list as often as a literal, and `.flatMap`/`.map` over a
+ * record's `null` threw out of the render and took the trigger and every
+ * control beside it down. Only a list is a list, and an entry that does not
+ * carry a text value is not an option — it is dropped, so one malformed record
+ * cannot hide the rows beside it. A missing or `null` label is absence, so the
+ * option's value names it (the rule {@link labelOf} already applies to a blank
+ * one), and a missing flag is `false`.
+ */
+export const optionsOf = (value: unknown): ReadonlyArray<ComboboxOption> =>
+  Arr.isArray(value)
+    ? Arr.getSomes(
+        Arr.map(value, (entry) =>
+          Option.map(decodeStoredOption(entry), (option) => ({
+            value: option.value,
+            label: Option.getOrElse(
+              Option.fromNullishOr(option.label),
+              () => option.value,
+            ),
+            ...Option.match(Option.fromNullishOr(option.description), {
+              onNone: () => ({}),
+              onSome: (description) => ({ description }),
+            }),
+            disabled: Option.getOrElse(
+              Option.fromNullishOr(option.disabled),
+              () => false,
+            ),
+          })),
+        ),
+      )
+    : [];
+
+/**
+ * The selection a caller's value carries, read at the boundary.
+ *
+ * A selection is stored with the control, and JSON writes `null` for the field
+ * a record never set. The component spread or indexed that value before it
+ * painted, so an absent saved selection threw out of the render. A string is
+ * one value, a list is a set (an entry that is not text carries no value), and
+ * anything else is **absence**: an absent controlled value still means
+ * uncontrolled, the rule every field in this package follows.
+ */
+export const selectionOf = (
+  value: unknown,
+): Option.Option<string | ReadonlyArray<string>> =>
+  P.isString(value)
+    ? Option.some(value)
+    : Arr.isArray(value)
+      ? Option.some(Arr.filter(value, P.isString))
+      : Option.none();
 
 /**
  * The text shown for an option, falling back to its value.

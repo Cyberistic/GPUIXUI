@@ -89,3 +89,4 @@ preference="reduced"` removes the journey: the box is gone in the frame it close
 - Create-new is single-select and offered only when nothing matches.
 - No `aria-activedescendant`; `aria-selected` is the signal.
 - The rows a leaving popup shows are the runtime's list read with the query it was dismissed with, not a snapshot the component took: a caller that changes `options` during those 200 ms sees the change under the fade.
+- A picker restored from storage reads its saved slots at the boundary: `options` that is not a list paints no rows (an entry without a text value is dropped, keeping the rows beside it, and a lost label is named by the value), and a `value` that is neither text nor a list means uncontrolled. A record's `null` therefore paints the picker instead of throwing out of the render.

@@ -835,4 +835,62 @@ describe("the popup's entrance and exit", () => {
     expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
     picker.unmount();
   });
+
+  it("paints a picker whose saved option list and selection are not lists", async () => {
+    // A picker's rows and its selection are saved with the control — a settings
+    // pane, a picker inside a saved record — and a store writes `null` for the
+    // fields it never carried. The component filtered `.flatMap` over the list
+    // and spread/indexed the selection before anything painted, so one absent
+    // slot threw out of the render and took the trigger and the surface with it.
+    const picker = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <text>Before</text>
+        <Combobox
+          // @ts-expect-error — the list a store wrote where it carried no options.
+          options={null}
+          // @ts-expect-error — the selection a store wrote where it carried none.
+          value={null}
+        >
+          <ComboboxTrigger label="Assign reviewer" />
+          <ComboboxContent>
+            <ComboboxInput label="Search reviewers" />
+            <ComboboxList label="Reviewers" />
+            <ComboboxEmpty>No reviewers</ComboboxEmpty>
+          </ComboboxContent>
+        </Combobox>
+      </div>,
+    );
+
+    expect(picker.renderer.findByText("Before")).toBeDefined();
+    expect(picker.renderer.findByTestId("combobox-trigger")).toBeDefined();
+
+    await open(picker);
+    expect(picker.renderer.findByText("No reviewers")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("keeps the rows beside an option a store wrote as a hole", async () => {
+    const stored: ReadonlyArray<ComboboxOption> = [
+      // @ts-expect-error — a record a store saved as a hole in the list.
+      null,
+      { value: "calendar", label: "Calendar" },
+    ];
+    const picker = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <Combobox options={stored}>
+          <ComboboxTrigger label="Assign reviewer" />
+          <ComboboxContent>
+            <ComboboxInput label="Search reviewers" />
+            <ComboboxList label="Reviewers" />
+          </ComboboxContent>
+        </Combobox>
+      </div>,
+    );
+
+    await open(picker);
+    expect(picker.renderer.getAllText()).toContain("Calendar");
+
+    picker.unmount();
+  });
 });

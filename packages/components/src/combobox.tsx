@@ -69,6 +69,8 @@ import {
   isCreateRow,
   labelOf,
   offersCreate,
+  optionsOf,
+  selectionOf,
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -147,9 +149,11 @@ const useCombobox = (): ComboboxContextValue => {
 
 /** {@link Combobox} props. */
 export interface ComboboxProps {
+  /** The options to choose from. A value that is not a list — a saved record's `null` — carries no rows, and an entry without a text value is dropped. */
   readonly options: ReadonlyArray<ComboboxOption>;
-  /** The controlled selection. `undefined` means uncontrolled. */
+  /** The controlled selection. `undefined` means uncontrolled; a stored value that is neither text nor a list means uncontrolled. */
   readonly value?: string | ReadonlyArray<string>;
+  /** The initial selection, read the same way. */
   readonly defaultValue?: string | ReadonlyArray<string>;
   readonly onValueChange?: (value: ComboboxSelection) => void;
   /** Default `false`: one value and the popup closes on select. */
@@ -182,18 +186,20 @@ export interface ComboboxProps {
 
 /** Narrow the public selection to the runtime's value shape. */
 const toRuntimeValue = (
-  value: string | ReadonlyArray<string> | undefined,
+  value: Option.Option<string | ReadonlyArray<string>>,
   multiple: boolean,
 ): ComboboxValue | undefined =>
-  value === undefined
-    ? undefined
-    : multiple
-      ? typeof value === "string"
-        ? [value]
-        : [...value]
-      : typeof value === "string"
-        ? value
-        : (value[0] ?? null);
+  Option.match(value, {
+    onNone: () => undefined,
+    onSome: (chosen) =>
+      multiple
+        ? typeof chosen === "string"
+          ? [chosen]
+          : [...chosen]
+        : typeof chosen === "string"
+          ? chosen
+          : (chosen[0] ?? null),
+  });
 
 /** The option carrying `value`, if any. */
 const optionOf = (
@@ -305,9 +311,10 @@ export const Combobox = ({
   }, [disabled, open, query]);
 
   const [selected, setSelected] = useControllableState<ComboboxValue>({
-    value: toRuntimeValue(valueProp, multiple),
+    value: toRuntimeValue(selectionOf(valueProp), multiple),
     defaultValue:
-      toRuntimeValue(defaultValue, multiple) ?? (multiple ? [] : null),
+      toRuntimeValue(selectionOf(defaultValue), multiple) ??
+      (multiple ? [] : null),
     onChange: onValueChange,
   });
 
@@ -317,8 +324,12 @@ export const Combobox = ({
       ? []
       : [selected];
 
+  // A picker's rows are saved data as often as literals: a stored record's
+  // `null` is read as no rows here, once, so the filter, the label lookup and
+  // every part share the one list.
+  const optionList = optionsOf(options);
   const visible =
-    shouldFilter === true ? filterOptions(options, query) : options;
+    shouldFilter === true ? filterOptions(optionList, query) : optionList;
   const create = offersCreate(
     visible,
     query,
@@ -339,7 +350,7 @@ export const Combobox = ({
   const labelFor = (value: string): string =>
     isCreateRow(value)
       ? createLabel(createRowQuery(value))
-      : Option.match(optionOf(options, value), {
+      : Option.match(optionOf(optionList, value), {
           onNone: () => value,
           onSome: labelOf,
         });
@@ -386,7 +397,7 @@ export const Combobox = ({
   return (
     <ComboboxContext.Provider
       value={{
-        options,
+        options: optionList,
         selectedValues,
         open,
         disabled,
@@ -395,7 +406,7 @@ export const Combobox = ({
         labelFor,
         isDisabled: (value) =>
           Option.exists(
-            optionOf(options, value),
+            optionOf(optionList, value),
             (option) => option.disabled === true,
           ),
         trigger,

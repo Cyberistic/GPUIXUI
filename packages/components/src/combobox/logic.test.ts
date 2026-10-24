@@ -18,7 +18,9 @@ import {
   isCreateRow,
   labelOf,
   offersCreate,
+  optionsOf,
   selectedLabel,
+  selectionOf,
   toggledSelection,
   type ComboboxOption,
 } from "./logic.js";
@@ -146,5 +148,64 @@ describe("selectedLabel", () => {
     expect(selectedLabel(catalogue, Option.some("nope"))).toEqual(
       Option.none(),
     );
+  });
+});
+
+describe("optionsOf", () => {
+  it("reads the options a store kept", () => {
+    expect(
+      optionsOf([
+        { value: "a", label: "Alpha", description: "First", disabled: true },
+      ]),
+    ).toEqual([
+      { value: "a", label: "Alpha", description: "First", disabled: true },
+    ]);
+  });
+
+  it("reads an absent slot, a lost label and a lost flag as their defaults", () => {
+    // JSON writes `null` where a saved record carried nothing: the label is
+    // absence (the value names the row), the description is not painted and the
+    // row is selectable.
+    expect(
+      optionsOf([
+        { value: "a", label: null, description: null, disabled: null },
+        { value: "b" },
+      ]),
+    ).toEqual([
+      { value: "a", label: "a", disabled: false },
+      { value: "b", label: "b", disabled: false },
+    ]);
+  });
+
+  it("answers no rows for a value that is not a list", () => {
+    expect(optionsOf(null)).toEqual([]);
+    expect(optionsOf(undefined)).toEqual([]);
+    expect(optionsOf("a")).toEqual([]);
+    expect(optionsOf({ value: "a" })).toEqual([]);
+  });
+
+  it("drops an entry it cannot address, keeping the rows beside it", () => {
+    expect(
+      optionsOf([null, { value: "a", label: "Alpha" }, { label: "No value" }]),
+    ).toEqual([{ value: "a", label: "Alpha", disabled: false }]);
+  });
+});
+
+describe("selectionOf", () => {
+  it("reads one value or a stored set", () => {
+    expect(selectionOf("a")).toEqual(Option.some("a"));
+    expect(selectionOf(["a", "b"])).toEqual(Option.some(["a", "b"]));
+  });
+
+  it("reads an absent selection as no selection, never a crash", () => {
+    // A store writes `null` for the field it never set; the component spread
+    // and indexed that value before it painted.
+    expect(selectionOf(null)).toEqual(Option.none());
+    expect(selectionOf(undefined)).toEqual(Option.none());
+    expect(selectionOf(3)).toEqual(Option.none());
+  });
+
+  it("keeps the values a stored set carries and drops the holes", () => {
+    expect(selectionOf(["a", null, "b"])).toEqual(Option.some(["a", "b"]));
   });
 });
