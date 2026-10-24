@@ -14,11 +14,12 @@ import {
   retainTransition,
   sameCoast,
   sameFrame,
+  tweenSpecOf,
   type CoastDeclaration,
 } from "./hook-read.js";
 import { easeOut, linear } from "./easing.js";
 import { inertia } from "./inertia.js";
-import { tween, type MotionFrame } from "./motion.js";
+import { DEFAULT_TWEEN_MS, tween, type MotionFrame } from "./motion.js";
 import { springPhysics, layoutSpring } from "./spring.js";
 
 const frame = (
@@ -99,6 +100,50 @@ describe("the declaration a hook runs with", () => {
       velocity: 400,
     };
     expect(sameCoast(pair, swapped)).toBe(true);
+  });
+});
+
+describe("the spec a tween hook reads", () => {
+  it("is the documented tween when the value does not name one", () => {
+    // The bug this guards: `useTransition` read `.durationMs` off the spec
+    // object, so a config that decoded with no spec at all threw
+    // `TypeError: Cannot read properties of null (reading 'durationMs')` out of
+    // the render that mounted the hook, while its three siblings repaired the
+    // declaration they were handed.
+    expect(tweenSpecOf(null)).toEqual({
+      durationMs: DEFAULT_TWEEN_MS,
+      easing: easeOut,
+    });
+    expect(tweenSpecOf(undefined)).toEqual({
+      durationMs: DEFAULT_TWEEN_MS,
+      easing: easeOut,
+    });
+    // A field the record lost is the same absence: JSON has no `undefined`.
+    expect(tweenSpecOf({ durationMs: null, easing: null })).toEqual({
+      durationMs: DEFAULT_TWEEN_MS,
+      easing: easeOut,
+    });
+  });
+
+  it("keeps the pair a caller states, including a zero duration", () => {
+    expect(tweenSpecOf({ durationMs: 120, easing: linear })).toEqual({
+      durationMs: 120,
+      easing: linear,
+    });
+    expect(tweenSpecOf({ durationMs: 0 })).toEqual({
+      durationMs: 0,
+      easing: easeOut,
+    });
+  });
+
+  it("takes a value that is not a curve as the default curve", () => {
+    // A stored easing a release renamed is a string, and passing it through
+    // reaches the sampler's linear fallback — the default names `easeOut`, so a
+    // stored spec must not quietly change the curve it did not name.
+    // @ts-expect-error — a stored easing the library did not type-check.
+    expect(tweenSpecOf({ durationMs: 120, easing: "easeInOut" }).easing).toBe(
+      easeOut,
+    );
   });
 });
 

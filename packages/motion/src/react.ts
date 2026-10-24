@@ -29,17 +29,17 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { easeOut, type Easing } from "./easing.js";
 import {
   retainCoast,
   retainTransition,
   sameCoast,
   sameFrame,
+  tweenSpecOf,
   type CoastDeclaration,
+  type TweenSpec,
 } from "./hook-read.js";
 import { project, type Inertia } from "./inertia.js";
 import {
-  DEFAULT_TWEEN_MS,
   MotionValue,
   springTransition,
   tween,
@@ -125,10 +125,7 @@ export interface MotionOptions {
 }
 
 /** Tween parameters accepted by {@link useTransition}. */
-export interface TweenSpec {
-  readonly durationMs?: number;
-  readonly easing?: Easing;
-}
+export type { TweenSpec } from "./hook-read.js";
 
 const FRAME_MS = 16;
 
@@ -358,14 +355,17 @@ export const useSpring = (
 /**
  * Animates `target` with a duration/easing tween. Retargeting keeps position
  * and recomputes velocity.
+ *
+ * The spec is the shape a stored setting has, so a decoded record reaches the
+ * hook without an assertion: no spec at all, or a field it never carried, is the
+ * documented tween ({@link tweenSpecOf}).
  */
 export const useTransition = (
   target: number,
-  spec: TweenSpec = {},
+  spec: TweenSpec | null = {},
   options: MotionOptions = {},
 ): MotionState => {
-  const durationMs = spec.durationMs ?? DEFAULT_TWEEN_MS;
-  const easing = spec.easing ?? easeOut;
+  const { durationMs, easing } = tweenSpecOf(spec);
   const transition = useMemo(
     () => tween(durationMs, easing),
     [durationMs, easing],

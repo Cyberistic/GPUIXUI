@@ -15,7 +15,9 @@
 
 import type { Inertia } from "./inertia.js";
 import { sameInertia } from "./inertia-read.js";
+import { easeOut, type Easing } from "./easing.js";
 import {
+  DEFAULT_TWEEN_MS,
   transitionEquals,
   type MotionFrame,
   type Transition,
@@ -37,6 +39,43 @@ export interface CoastDeclaration {
   readonly inertia: Inertia;
   readonly velocity: number;
 }
+
+/**
+ * A tween as a caller — or a config it decoded — states it.
+ *
+ * The fields are what a stored setting has: JSON has no `undefined`, so a key a
+ * record never carried reads back as `null`, and a release that renamed the
+ * easing leaves a value that is not a curve. Both absences mean the documented
+ * default, so a consumer passes its decoded record straight through.
+ */
+export interface TweenSpec {
+  readonly durationMs?: number | null;
+  readonly easing?: Easing | null;
+}
+
+/**
+ * The tween a hook runs, read from a spec a caller may have stored.
+ *
+ * `useTransition`'s siblings all read the declaration they are handed — a
+ * `Transition`, a `SpringPhysics`, an `Inertia` — and this one read `.durationMs`
+ * off the spec object itself, so a config that decoded with **no spec at all**
+ * (a field a record never carried) threw `TypeError: Cannot read properties of
+ * null (reading 'durationMs')` out of the render that mounted the hook. A spec
+ * the value does not name is the documented tween: the house 300 ms and
+ * `easeOut`. A field the value does not name keeps its own default, and an
+ * easing that is not a function is no curve — it takes `easeOut` rather than
+ * reaching the sampler, which would fall back to the *linear* progress instead
+ * of the curve the default names.
+ */
+export const tweenSpecOf = (
+  spec: TweenSpec | null | undefined,
+): { readonly durationMs: number; readonly easing: Easing } => {
+  const easing = spec?.easing;
+  return {
+    durationMs: spec?.durationMs ?? DEFAULT_TWEEN_MS,
+    easing: typeof easing === "function" ? easing : easeOut,
+  };
+};
 
 /** The release velocity a coast runs with: one it cannot read is a standstill. */
 const releaseOf = (velocity: number): number =>

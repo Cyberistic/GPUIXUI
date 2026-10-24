@@ -262,7 +262,10 @@ instance, so the run retargets instead of restarting.
 Each hook returns `{ value, velocity, complete }`. Map `value` onto a GPUix
 `MotionStyle` numeric field — `width`, `height`, `top`, `right`, `bottom`,
 `left`, `opacity` (0–1), `borderRadius`. `useTransition(target, { durationMs,
-easing })` tweens; `useInertia(velocity, inertia)` coasts with momentum from
+easing })` tweens; a spec read back from storage is read the same way — no spec
+at all, or a field the record lost (JSON's `null`), is the documented 300 ms
+`easeOut` tween, and an easing that is not a curve takes that default rather than
+the sampler's linear fallback. `useInertia(velocity, inertia)` coasts with momentum from
 `options.initial` (zero by default) and may be given its inertia inline — the
 declaration is compared by the physics it reads, so `inertia()` rebuilt on a
 render does not restart the coast.

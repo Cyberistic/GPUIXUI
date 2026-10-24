@@ -169,6 +169,16 @@ const OverriddenTWEENFrame = ({
   return <>{String(value)}</>;
 };
 
+/** The tween hook's frame from a spec a caller may have stored. */
+const StoredSpecFrame = ({
+  spec,
+}: {
+  readonly spec: { readonly durationMs?: number | null } | null;
+}) => {
+  const { value } = useTransition(100, spec, { initial: 0 });
+  return <>{String(value)}</>;
+};
+
 describe("the preference the provider supplies", () => {
   it("is the frame a hook publishes when the caller states none", () => {
     // The defect: every physics hook read `options.reducedMotion` alone, while
@@ -216,6 +226,25 @@ describe("the preference the provider supplies", () => {
         </MotionProvider>,
       ),
     ).toBe("100");
+  });
+});
+
+describe("the spec a tween hook reads", () => {
+  it("mounts from a value a caller may have stored", () => {
+    // The defect: `useTransition` read `.durationMs` off the spec object, so a
+    // config that decoded with no spec at all threw `TypeError: Cannot read
+    // properties of null (reading 'durationMs')` out of the render that mounted
+    // the hook, while its siblings repaired the declaration they were handed.
+    // A spec the value does not name is the documented tween, so the hook
+    // mounts and paints the start it was given.
+    expect(renderToStaticMarkup(<StoredSpecFrame spec={null} />)).toBe("0");
+    expect(
+      renderToStaticMarkup(<StoredSpecFrame spec={{ durationMs: null }} />),
+    ).toBe("0");
+    // A readable spec keeps its own duration, and the start is still the start.
+    expect(
+      renderToStaticMarkup(<StoredSpecFrame spec={{ durationMs: 120 }} />),
+    ).toBe("0");
   });
 });
 
