@@ -25,7 +25,12 @@ import {
 } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useLayoutEffect, useState } from "react";
-import { normalizeHex, sameHex } from "./color/hex.js";
+import {
+  normalizeHex,
+  sameHex,
+  storedDraft,
+  storedSwatches,
+} from "./color/hex.js";
 import { useControllableState } from "./internal/controllable.js";
 import { activationHandlers } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
@@ -92,12 +97,13 @@ export interface ColorPickerProps extends Omit<
 > {
   /** The group's accessible name. */
   readonly label: string;
-  /** The controlled normalised hex value. `undefined` means uncontrolled. */
+  /** The controlled normalised hex value. `undefined` means uncontrolled; a stored value that is not text means uncontrolled too. */
   readonly value?: string;
+  /** The initial value, read the same way; a stored value that is not text reads as the documented colour. */
   readonly defaultValue?: string;
   /** Every committed colour (a swatch press, or a valid typed hex). */
   readonly onValueChange?: (value: string) => void;
-  /** Defaults to six theme colours. */
+  /** Defaults to six theme colours. A value that is not a list — a saved brand's `null` — reads as the defaults, and an entry that is not a colour is dropped. */
   readonly swatches?: ReadonlyArray<string>;
   readonly disabled?: boolean;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -112,11 +118,14 @@ export interface ColorPickerState {
   readonly valid: boolean;
 }
 
+/** The colour the field starts from when the caller gave none. */
+const DEFAULT_COLOUR = "#000000";
+
 /** Swatches plus a HEX field, with a preview of the current colour. */
 export const ColorPicker = ({
   label,
   value: valueProp,
-  defaultValue = "#000000",
+  defaultValue = DEFAULT_COLOUR,
   onValueChange,
   swatches: swatchesProp,
   disabled = false,
@@ -127,12 +136,22 @@ export const ColorPicker = ({
 }: ColorPickerProps) => {
   const theme = useTheme();
   const [value, setValue] = useControllableState({
-    value: valueProp,
-    defaultValue,
+    // A colour is saved with the control: a record's `null` is the absence the
+    // controlled prop already reads as uncontrolled, and an absent default is
+    // the documented colour rather than an empty draft the field cannot show.
+    value: Option.getOrUndefined(storedDraft(valueProp)),
+    defaultValue: Option.getOrElse(
+      storedDraft(defaultValue),
+      () => DEFAULT_COLOUR,
+    ),
     onChange: onValueChange,
   });
   const [draft, setDraft] = useState(value);
-  const swatches = swatchesProp ?? defaultSwatches(theme);
+  // A saved palette is a list as often as a literal, and one hole cannot hide
+  // the swatches beside it.
+  const swatches = Option.getOrElse(storedSwatches(swatchesProp), () =>
+    defaultSwatches(theme),
+  );
   const valid = Option.isSome(normalizeHex(draft));
 
   // An external change (a swatch press or the caller) wins over a stale draft.

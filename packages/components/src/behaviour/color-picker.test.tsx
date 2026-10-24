@@ -277,4 +277,53 @@ describe("ColorPicker", () => {
 
     expect(failures).toEqual([]);
   });
+
+  it("paints a picker whose saved colour and swatch list are not lists", () => {
+    // A colour and its palette are saved with the control — a settings pane, a
+    // saved brand — and a store writes `null` for the slots it never carried.
+    // The picker normalised the value and mapped the swatches before it painted,
+    // so either absent slot threw out of the render.
+    const picker = renderComponent(
+      <ColorPicker
+        testId="picker"
+        label="Accent colour"
+        // @ts-expect-error — the colour a store wrote where it carried none.
+        value={null}
+        // @ts-expect-error — the palette a store wrote where it carried none.
+        swatches={null}
+      />,
+    );
+
+    expect(hexValue(picker)).toBe("#000000");
+    expect(
+      picker.renderer.findByTestId("picker-preview")?.style.backgroundColor,
+    ).toBe("#000000");
+    expect(
+      picker.renderer.findByTestId("picker-swatch-0")?.style.backgroundColor,
+    ).toBe(darkTheme.colors.primary);
+    expect(picker.renderer.findByTestId("picker-swatch-6")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("keeps the swatches beside an entry that names no colour", () => {
+    const picker = renderComponent(
+      <ColorPicker
+        testId="picker"
+        label="Accent colour"
+        // @ts-expect-error — a record a store saved as a hole in the palette.
+        swatches={["#112233", null, "", "  ", "#445566"]}
+      />,
+    );
+
+    expect(
+      picker.renderer.findByTestId("picker-swatch-0")?.style.backgroundColor,
+    ).toBe("#112233");
+    expect(
+      picker.renderer.findByTestId("picker-swatch-1")?.style.backgroundColor,
+    ).toBe("#445566");
+    expect(picker.renderer.findByTestId("picker-swatch-2")).toBeUndefined();
+
+    picker.unmount();
+  });
 });

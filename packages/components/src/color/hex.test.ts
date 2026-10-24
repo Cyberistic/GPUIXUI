@@ -8,7 +8,13 @@
 
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { isHexColor, normalizeHex, sameHex } from "./hex.js";
+import {
+  isHexColor,
+  normalizeHex,
+  sameHex,
+  storedDraft,
+  storedSwatches,
+} from "./hex.js";
 
 describe("normalizeHex", () => {
   it("expands a three-digit shorthand", () => {
@@ -53,5 +59,44 @@ describe("sameHex", () => {
     expect(sameHex("#ABC", "aabbcc")).toBe(true);
     expect(sameHex("#abc", "#abd")).toBe(false);
     expect(sameHex("nope", "#abc")).toBe(false);
+  });
+});
+
+describe("storedDraft", () => {
+  it("keeps a draft as written, partial values included", () => {
+    expect(storedDraft("#AABBCC")).toEqual(Option.some("#AABBCC"));
+    expect(storedDraft("#12")).toEqual(Option.some("#12"));
+  });
+
+  it("reads a value that is not text as absence", () => {
+    // A store writes `null` where the record carried no colour; the picker
+    // normalised that value before it painted.
+    expect(storedDraft(null)).toEqual(Option.none());
+    expect(storedDraft(undefined)).toEqual(Option.none());
+    expect(storedDraft(3)).toEqual(Option.none());
+  });
+});
+
+describe("storedSwatches", () => {
+  it("keeps the saved palette as written", () => {
+    expect(storedSwatches(["#112233", "#abc"])).toEqual(
+      Option.some(["#112233", "#abc"]),
+    );
+  });
+
+  it("reads a palette that is not a list as absence, so the theme's stand", () => {
+    expect(storedSwatches(null)).toEqual(Option.none());
+    expect(storedSwatches(undefined)).toEqual(Option.none());
+    expect(storedSwatches("#112233")).toEqual(Option.none());
+  });
+
+  it("drops an entry it cannot paint or name, keeping the rest", () => {
+    expect(storedSwatches(["#112233", null, "", "  ", 7, "#abc"])).toEqual(
+      Option.some(["#112233", "#abc"]),
+    );
+  });
+
+  it("keeps an empty palette empty, because it is a caller's own choice", () => {
+    expect(storedSwatches([])).toEqual(Option.some([]));
   });
 });

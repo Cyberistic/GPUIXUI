@@ -36,3 +36,4 @@ import { ColorPicker } from "@gpuixui/components";
 - No saturation/value square; two-stop gradients only.
 - No alpha, HSL/RGB fields or eyedropper.
 - HEX only; named colours are not parsed.
+- A colour and its palette read from storage are read at the boundary: a `value` that is not text means uncontrolled, a stored `defaultValue` that is not text paints the documented colour, a `swatches` value that is not a list paints the theme's defaults, and an entry that is not a non-blank colour is dropped.
