@@ -642,10 +642,11 @@ describe("an absent numeric group", () => {
  * cannot see the absence because they walk the steps a theme carries
  * (`invalidNumbers` reads `Object.entries`), so `auditTheme` returned
  * `passed: true` for a theme no component can paint: `textStyle(theme,
- * "codeBlock")` reads `typography.codeBlock.fontSize`, which is a `TypeError` at
- * the first paint that asks for the role, and a missing `lineHeight` is a
- * property the serialised batch drops, so the role paints at the runtime's
- * leading with every report empty.
+ * "codeBlock")` reads `typography.codeBlock.fontSize`, which was a `TypeError` at
+ * the first paint that asked for the role (the seam now answers the library's
+ * role, so a surface that paints before the audit survives), and a missing
+ * `lineHeight` is a property the serialised batch drops, so the role paints at
+ * the runtime's leading with every report empty.
  *
  * The decision is the group rule one level down: a step is what the components
  * read, so the gate refuses a theme missing one and names the path instead of
@@ -654,15 +655,18 @@ describe("an absent numeric group", () => {
  * list to edit.
  */
 describe("an absent numeric step", () => {
-  it("is a theme no report describes and no paint survives", () => {
+  it("is a theme no report describes and the paint reads from the library", () => {
     const missingRole = stored({
       typography: omit(lightTheme.typography, "codeBlock"),
     });
 
     // The number report walks the steps a theme carries, so it is silent about
-    // one that is not there; the first paint that asks for the role throws.
+    // one that is not there; the seam answers the library's role rather than
+    // throwing, and the gate is what refuses the theme.
     expect(invalidNumbers(missingRole)).toEqual([]);
-    expect(() => textStyle(missingRole, "codeBlock")).toThrow(TypeError);
+    expect(textStyle(missingRole, "codeBlock")).toEqual(
+      textStyle(lightTheme, "codeBlock"),
+    );
     expect(refusedWith(missingRole)).toContain(
       "`typography.codeBlock` is missing",
     );
@@ -1048,7 +1052,10 @@ describe("the parts a theme lost, as data", () => {
  * gate asked only that it be there. `sans: ""` is present, so `requireSteps`'
  * absence rule read it as complete while `textStyle` handed the runtime
  * `fontFamily: ""` and every text role painted the renderer's fallback — the
- * face a theme exists to state, gone with every report empty. The playground's
+ * face a theme exists to state, gone with every report empty. The seam now
+ * answers the library's own face for a blank family, so a surface that paints
+ * before the audit keeps a real typeface; the gate is what refuses the theme.
+ * The playground's
  * `register-font` probe measures what an unknown family does: the installed face
  * lays `ABm` out at its own 80px and a family no runtime knows paints the
  * fallback's 44px, so an empty name is the whole identity lost, not a cosmetic
@@ -1057,7 +1064,7 @@ describe("the parts a theme lost, as data", () => {
  * step and group above follow.
  */
 describe("an unnamed font family", () => {
-  it("is a theme no report measures and every role falls back from", () => {
+  it("is a theme no report measures and the paint answers the library's face", () => {
     const blank = stored({
       typography: { ...lightTheme.typography, sans: "" },
     });
@@ -1065,8 +1072,10 @@ describe("an unnamed font family", () => {
     // Every other contract reads its own kind of value, so each is silent.
     expect(invalidNumbers(blank)).toEqual([]);
     expect(invalidColorRoles(blank)).toEqual([]);
-    // The string the batch would hand the runtime for every sans role.
-    expect(textStyle(blank, "body").fontFamily).toBe("");
+    // The seam answers the library's family rather than handing the runtime "".
+    expect(textStyle(blank, "body").fontFamily).toBe(
+      lightTheme.typography.sans,
+    );
     expect(refusedWith(blank)).toContain("`typography.sans` is blank");
   });
 

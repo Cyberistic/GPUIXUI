@@ -207,7 +207,10 @@ truncated past answers `undefined` — no box, which the runtime lays out at the
 caller's content — rather than `TypeError: Cannot read properties of undefined
 (reading 'controlHeight')` from the first control a surface lays out, while a
 `Theme` still answers a height outright and the gate refuses such a theme by name
-(`missingTokens`). `elevationShadow` reads a level this release does not ship as
+(`missingTokens`). `textStyle` and `nativeTextTheme` are total on the type,
+radius and spacing groups for the same reason: a surface can paint a theme nobody
+has audited yet, so a lost role or group paints the library's own role, family
+and step, and `missingTokens` stays the refusal. `elevationShadow` reads a level this release does not ship as
 `md` too, rather than a raised panel that silently paints flat, and `statusTone`
 reads a tone this release does not ship as `info` — the family the boundary
 narrowing substitutes — rather than answering `undefined` to a caller that
@@ -892,12 +895,14 @@ missing **numeric step** is not
 something the reports can describe: `invalidNumbers` walks the steps a theme
 carries, so it says nothing about one that is not there — the pairs it compares
 (the emphasis, a control's fit) skip a member that is absent rather than reading
-through it — while `textStyle(theme, "codeBlock")` reads
-`typography.codeBlock.fontSize` and throws
-at the first paint that asks for the role. So `auditTheme` refuses a theme missing
+through it — so `auditTheme` refuses a theme missing
 a step — or a whole numeric group — and names the path (`typography.codeBlock`,
 `density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
-`extendTheme`. The two numeric reports make that refusal themselves: a group is
+`extendTheme`. The paint seams are not the refusal: `textStyle` and
+`nativeTextTheme` answer the library's own role, family, radius and spacing step
+for a group or role a store lost, so a surface that paints before the audit keeps
+its text and geometry instead of taking the window down. The two numeric reports
+make that refusal themselves: a group is
 the one absence a walk cannot step around, so `invalidNumbers` and
 `invalidScales` name it the way the gate does instead of throwing
 `TypeError: Cannot convert undefined or null to object`. A font family is refused the same way when it is blank: the gate
@@ -1256,9 +1261,10 @@ gone and the host paints its own default: `statusTone` answers `undefined` when 
 tone lost one of its three roles, so `diffAdd`/`diffDel` are absent instead of
 the seam throwing on `.foreground`; a theme that lost the whole `colors` group
 hands the host no colour field at all; and `nativeAccent` answers `undefined`
-when there is no `primary` to derive from. The type scale and the palette are not
-part of that rule — a lost numeric group is refused by the gate, and `syntax`
-resolves from the shipped table.
+when there is no `primary` to derive from. The type scale follows the same
+paint-seam rule: a lost numeric group is still refused by the gate, but
+`textStyle` and `nativeTextTheme` answer the library's own role, family, radius
+and spacing step for it, and `syntax` resolves from the shipped table.
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own `metrics` when an element's

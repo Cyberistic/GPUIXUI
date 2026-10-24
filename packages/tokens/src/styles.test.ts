@@ -37,6 +37,7 @@ import {
   lightTheme,
   platformTheme,
   themes,
+  type Theme,
 } from "./theme.js";
 import { controlSizes, type ControlSize } from "./scale.js";
 import type { TextRole } from "./typography.js";
@@ -114,6 +115,106 @@ describe("textStyle", () => {
       lineHeight: lightTheme.typography.h1.lineHeight,
       fontWeight: lightTheme.typography.h1.fontWeight,
       fontFamily: lightTheme.typography.sans,
+    });
+  });
+
+  /**
+   * The bug this guards: a theme restored from storage can predate the type
+   * group, lose it to a truncating store, or carry a role JSON nulled or wrote
+   * as `"14"` where a size belongs. `textStyle` read `theme.typography[name]`
+   * directly, so `AvatarGroup`, `CodeBlock`, `PinnedList` and the five motion
+   * text components — every painter that spreads this seam — threw
+   * `TypeError: Cannot read properties of undefined (reading 'body')` on their
+   * first paint and took the window down. The gate refuses such a theme
+   * (`missingTokens`), but a surface can paint one nobody has audited yet, so
+   * the seam answers the library's own role, the rule the primitives' `typeOf`
+   * and `familyOf` already follow. The shipped type group is unchanged.
+   */
+  it("answers the library's type for a theme that lost it", () => {
+    const stored = (typography: unknown) =>
+      ({ ...lightTheme, typography }) as Theme;
+    const lost = stored(undefined);
+    const nulled = stored(null);
+
+    expect(textStyle(lost, "body")).toEqual(textStyle(lightTheme, "body"));
+    expect(textStyle(nulled, "codeBlock")).toEqual(
+      textStyle(lightTheme, "codeBlock"),
+    );
+    // A family the store blanked, and a role it nulled, are the same absence.
+    expect(textStyle(lost, "code").fontFamily).toBe(lightTheme.typography.mono);
+    const blank = stored({
+      typography: { ...lightTheme.typography, sans: " " },
+    });
+    expect(textStyle(blank, "h2").fontFamily).toBe(lightTheme.typography.sans);
+    const droppedRole = stored({
+      typography: { ...lightTheme.typography, body: null },
+    });
+    expect(textStyle(droppedRole, "body")).toEqual(
+      textStyle(lightTheme, "body"),
+    );
+    // A value the serialiser drops is no size at all.
+    const droppedSize = stored({
+      typography: {
+        ...lightTheme.typography,
+        caption: { ...lightTheme.typography.caption, fontSize: Number.NaN },
+      },
+    });
+    expect(textStyle(droppedSize, "caption").fontSize).toBe(
+      lightTheme.typography.caption.fontSize,
+    );
+    // A complete theme still paints its own scale and face.
+    const brand = extendTheme(lightTheme, {
+      typography: { body: { fontSize: 16, lineHeight: 24 }, sans: "Brand" },
+    });
+    expect(textStyle(brand, "body")).toMatchObject({
+      fontSize: 16,
+      lineHeight: 24,
+      fontFamily: "Brand",
+    });
+  });
+});
+
+/**
+ * The type group's paint rule, held on every surface a reader meets it on.
+ *
+ * The bug the seam cases above guard has a documentation half: three pages said
+ * a stored theme that lost the type group (or a step in it) was "refused" and
+ * left it at that, so a reader could only conclude the paint seam throws. The
+ * rule is the split `controlHeight` already documents — the gate refuses, a
+ * surface that paints before the audit answers the library's scale — and the
+ * catalogue, the design system and the README state it together.
+ */
+describe("the type group's paint rule", () => {
+  const read = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+  const catalogue = read("../../../docs/tokens.md");
+  const designSystem = read("../../../docs/design-system.md");
+  const readme = read("../README.md");
+  const seam = read("./styles.ts");
+  const host = read("./native-text.ts");
+
+  it("reads the library's role in the seam, not the theme group alone", () => {
+    expect(seam).toContain("shippedTypography[name]");
+    expect(seam).toContain("shippedTypography[roleFamily[name]]");
+    expect(host).toContain('familyOf(theme, "sans")');
+    expect(host).toContain("stepOf(theme.radius, radius");
+    expect(host).toContain("stepOf(theme.spacing, spacing");
+    // The direct reads the seam replaced would throw on a lost group.
+    expect(seam).not.toContain("theme.typography[name];");
+    expect(host).not.toContain("theme.typography.sans");
+  });
+
+  it("states the split on the catalogue, the design system and the README", () => {
+    // The same rule, in each page's own words: the gate refuses, the paint
+    // answers the library's scale.
+    expect(catalogue).toContain("the paint is a fallback");
+    expect(designSystem).toContain("The paint seams still do not throw");
+    expect(readme).toContain("The paint seams are not the refusal");
+    [catalogue, designSystem, readme].forEach((page) => {
+      expect(page).toContain("missingTokens");
+      expect(page).toContain("library's own role");
+      // The retracted sentence: the seam does not throw.
+      expect(page).not.toContain("so an absent role throws");
     });
   });
 });

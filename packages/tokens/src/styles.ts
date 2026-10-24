@@ -9,7 +9,13 @@ import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
 import { isControlSize, type BorderWidth, type ControlSize } from "./scale.js";
 import type { Theme, ThemeContrast } from "./theme.js";
-import { isTextRole, type FontWeight, type TextRole } from "./typography.js";
+import {
+  isTextRole,
+  typography as shippedTypography,
+  type FontWeight,
+  type TextStyle,
+  type TextRole,
+} from "./typography.js";
 
 /** Text style properties accepted by GPUix's `StyleDesc`. */
 export interface TextStyleProperties {
@@ -42,9 +48,13 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
  * A role name is content as often as a literal, so a name this release does not
  * ship reads as `body` rather than a lookup that answers `undefined`: the first
  * property read used to be `TypeError: Cannot read properties of undefined
- * (reading 'fontSize')` in the middle of a render. Narrow a stored role with
- * `isTextRole` before it reaches here; a theme that lost the role itself is the
- * gate's business (`missingTokens` names it).
+ * (reading 'fontSize')` in the middle of a render. A theme's type group is the
+ * same kind of input — a stored theme can predate it, JSON writes `null` where
+ * it carried none, and a role can arrive with a value the renderer drops — and
+ * this seam paints mid-render, so it answers the library's own role instead of
+ * throwing: the gate (`missingTokens`) is what refuses such a theme, and a
+ * surface can paint one nobody has audited yet, the rule `@gpuixui/primitives`'
+ * `typeOf`/`familyOf` already follow.
  *
  * @example
  * ```tsx
@@ -55,14 +65,34 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
  */
 export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
   const name = isTextRole(role) ? role : "body";
-  const style = theme.typography[name];
+  const authored: unknown = theme.typography?.[name];
+  const style = isTextStyle(authored) ? authored : shippedTypography[name];
+  const family = theme.typography?.[roleFamily[name]];
   return {
     fontSize: style.fontSize,
     lineHeight: style.lineHeight,
     fontWeight: style.fontWeight,
-    fontFamily: theme.typography[roleFamily[name]],
+    fontFamily:
+      typeof family === "string" && family.trim() !== ""
+        ? family
+        : shippedTypography[roleFamily[name]],
   };
 }
+
+/** A stored role's numbers, when the role carries every one this seam paints. */
+const isTextStyle = (value: unknown): value is TextStyle =>
+  typeof value === "object" &&
+  value !== null &&
+  "fontSize" in value &&
+  isFiniteNumber(value.fontSize) &&
+  "lineHeight" in value &&
+  isFiniteNumber(value.lineHeight) &&
+  "fontWeight" in value &&
+  isFiniteNumber(value.fontWeight);
+
+/** A number the runtime can lay out, as opposed to a dropped or dropped-looking one. */
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
 
 /**
  * A theme, or anything shaped like one, as the density metrics read it.

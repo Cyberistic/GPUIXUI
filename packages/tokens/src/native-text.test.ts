@@ -1798,6 +1798,58 @@ describe("a theme a store gave back", () => {
     expect(host.syntax).toBe(lightSyntax);
   });
 
+  /**
+   * The bug this guards: `nativeTextTheme` read `typography.sans`,
+   * `typography.codeBlock`, `radius.lg` and `spacing.xl` straight off the theme,
+   * so a theme a store truncated past the type, radius or spacing group threw
+   * `TypeError: Cannot read properties of undefined (reading 'sans')` from the
+   * first field, code block or document a window mounted. The gate refuses such
+   * a theme (`missingTokens`), but a surface can paint one nobody has audited
+   * yet, so the host is handed the library's own scale — the rule the
+   * primitives' paint seams already follow — instead of taking the window down.
+   */
+  it("answers the library's type for a theme that lost it", () => {
+    const host = nativeTextTheme(stored({ typography: undefined }));
+    const complete = nativeTextTheme(lightTheme);
+
+    expect(host.fontSans).toBe(lightTheme.typography.sans);
+    expect(host.fontMono).toBe(lightTheme.typography.mono);
+    expect(host.metrics).toEqual(complete.metrics);
+
+    // The same for a group a store nulled, a role it blanked, and a step it
+    // wrote as something the renderer drops.
+    const nulled = nativeTextTheme(stored({ radius: null, spacing: null }));
+    expect(nulled.metrics).toEqual(complete.metrics);
+    const blank = nativeTextTheme(
+      stored({ typography: { ...lightTheme.typography, mono: "" } }),
+    );
+    expect(blank.fontMono).toBe(lightTheme.typography.mono);
+    const dropped = nativeTextTheme(
+      stored({
+        typography: {
+          ...lightTheme.typography,
+          h1: { ...lightTheme.typography.h1, lineHeight: Number.NaN },
+        },
+      }),
+    );
+    expect(dropped.metrics.mdHeadingLineHeights[0]).toBe(
+      lightTheme.typography.h1.lineHeight,
+    );
+
+    // A complete brand still hands over its own type and geometry.
+    const brand = nativeTextTheme(
+      extendTheme(lightTheme, {
+        typography: { codeBlock: { fontSize: 20, lineHeight: 28 } },
+        radius: { lg: 12 },
+        spacing: { xl: 24 },
+      }),
+    );
+    expect(brand.metrics.codeTextSize).toBe(20);
+    expect(brand.metrics.codeLineHeight).toBe(28);
+    expect(brand.metrics.mdCodeRadius).toBe(12);
+    expect(brand.metrics.diffRowPaddingX).toBe(24);
+  });
+
   // 47 roles × both fills: the broad guard a role added to the colour group must
   // pass without a new case. It reads the paint report and the seam, not a whole
   // `auditTheme` per role: 846 audits took 29.7 s against the twenty-second

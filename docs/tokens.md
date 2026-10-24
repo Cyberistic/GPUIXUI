@@ -1585,10 +1585,7 @@ is what the components read, so a theme stored by an older release must be rebui
 from a shipped one with `extendTheme`.
 ```
 
-— because the components read every step in a group, and a stored theme that
-lost one cannot be painted with the numbers an audit would have passed:
-`textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize`, so an
-absent role throws at the first paint that asks for it, while `invalidNumbers`
+— because the components read every step in a group, and `invalidNumbers`
 walks the steps a theme carries and says nothing about one that is not there —
 including the two pairs it compares, the emphasis (`bodyStrong` against `body`)
 and a control's fit (the `label` and `body` leadings): a missing member is no
@@ -1597,6 +1594,16 @@ missing `density.controlHeight.sm` and a single absent `typography.body.lineHeig
 are refused the same way, by path. The required list is derived from the scales
 this package ships, so a role or a metric added to one is required on the next
 release without a second list to edit.
+
+**The gate refuses; the paint answers.** A surface can paint a theme nobody has
+audited yet, so the seams that resolve a type role do not throw on the group the
+gate refuses: `textStyle` reads a lost role — or a whole lost group, or a family
+a store blanked — as the library's own role and family, and `nativeTextTheme`
+hands a document host the library's type, radius and spacing steps instead of
+taking the window down from its first paint. That is the rule
+`@gpuixui/primitives`' `typeOf`/`familyOf` already follow, and the same split
+§Density documents for a control's box: the audit is the refusal, the paint is a
+fallback. A brand that carries the scale still paints its own numbers.
 
 A font family is the third refusal, and it is not about absence: `typography.sans`
 and `typography.mono` are **names**, so the gate asks that each say something —
@@ -1608,9 +1615,10 @@ fallback instead of the theme — a theme stored without it must be rebuilt from
 shipped one with `extendTheme`.
 ```
 
-— because `sans: ""` is present, so no report can see it, while `textStyle` hands
-the runtime `fontFamily: ""` for every sans role and the text paints in the
-renderer's fallback. The playground's `register-font` probe measures what a
+— because `sans: ""` is present, so no report can see it, while a blank family
+names no face at all: `textStyle` answers the library's own family for it rather
+than handing the runtime `fontFamily: ""`, and the gate is what refuses the
+theme. The playground's `register-font` probe measures what a
 family no runtime knows does: the installed face lays `ABm` out at 80px and the
 unknown one at the fallback's 44px. A face the machine lacks is still a **name** —
 the gate reads a non-blank string, not a registered one — so a custom family
@@ -3192,9 +3200,10 @@ of its three roles, and reading `.foreground` off that answer threw
 `<diff>`'s first paint; `diffAdd`/`diffDel` are absent now instead. A theme that
 lost the whole `colors` group hands the host no colour at all, and
 `nativeAccent(theme)` answers `undefined` when there is no `primary` to derive
-from. The type scale and the palette are not part of that absence: a theme that
-lost a numeric group is refused by the gate, and `syntax` resolves from the
-shipped table when the theme carries none.
+from. The type scale is read through the same paint seam rather than the gate: a
+lost type, radius or spacing group answers the library's own value (the rule
+`textStyle` follows), while `missingTokens` remains the refusal, and `syntax`
+resolves from the shipped table when the theme carries none.
 
 ### The document's own marks
 

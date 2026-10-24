@@ -1199,7 +1199,12 @@ inside one — is not treated this way: adding either is a breaking change rathe
 than an additive one, because the components read every step, so the gate refuses
 a theme missing one and names the group or the path (`typography.codeBlock`,
 `density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
-`extendTheme`. The two numeric reports make that refusal themselves: a group is
+`extendTheme`. The paint seams still do not throw: `textStyle` and
+`nativeTextTheme` answer the library's own role, family, radius and spacing step
+for a group or role a store lost, the rule §5 states and the primitives'
+`typeOf`/`familyOf` already follow — a surface can paint a theme nobody has
+audited yet, and the gate is what refuses it. The two numeric reports make that
+refusal themselves: a group is
 the one absence a walk cannot step over, so `invalidNumbers` and `invalidScales`
 name it rather than reading `Object.entries(undefined)` and throwing the
 runtime's `TypeError`. A key a store **kept without a value** is that same absence: a

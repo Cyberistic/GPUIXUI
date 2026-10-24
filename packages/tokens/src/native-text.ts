@@ -78,9 +78,37 @@ import {
   type ContrastFloors,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
-import { statusTone } from "./styles.js";
+import { radius, spacing } from "./scale.js";
+import { statusTone, textStyle } from "./styles.js";
 import { syntaxColors, type SyntaxColors } from "./syntax.js";
 import { themeModeOf, type Theme, type ThemeMode } from "./theme.js";
+import { typography } from "./typography.js";
+
+/**
+ * A numeric step a stored theme may have lost, or one it wrote as something the
+ * renderer drops (`"12"`, `null`, `NaN`). A paint seam answers the library's own
+ * step instead of throwing: the gate refuses such a theme, and a host can be
+ * handed one nobody has audited yet — the rule `@gpuixui/primitives`'
+ * `scaleValue` already follows.
+ */
+const stepOf = <Step extends string>(
+  scale: Readonly<Partial<Record<Step, number>>> | null | undefined,
+  library: Readonly<Record<Step, number>>,
+  step: Step,
+): number => {
+  const value = scale?.[step];
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : library[step];
+};
+
+/** The font family a theme paints with, or the library's own face. */
+const familyOf = (theme: Theme, family: "sans" | "mono"): string => {
+  const name: unknown = theme.typography?.[family];
+  return typeof name === "string" && name.trim() !== ""
+    ? name
+    : typography[family];
+};
 
 /**
  * The fills a field paints, which decide the surface the host's value,
@@ -260,8 +288,10 @@ export interface NativeTextMetrics {
  *
  * The colour fields are optional for the same reason the runtime's are: a role
  * a stored theme lost is a property the host is not handed, and it paints its
- * own default for it. The type scale and the syntax palette are complete — a
- * theme that lost a numeric group is refused by `auditTheme`, and the palette
+ * own default for it. The type scale and the syntax palette are always complete:
+ * a stored theme that lost the type group, a role, or a radius or spacing step
+ * paints the library's own value — a host is built mid-render, and the gate
+ * (`missingTokens`) is the seam that refuses such a theme. The syntax palette
  * resolves from the shipped table when the theme carries none.
  */
 export interface NativeTextTheme {
@@ -484,6 +514,14 @@ export function nativeTextTheme(
   // and the runtime paints its own green or red rather than a guessed role.
   const added = statusTone({ colors }, "success");
   const removed = statusTone({ colors }, "destructive");
+  // Every type role a document host reads, through the one seam: a stored theme
+  // that lost the group answers the library's role rather than throwing here.
+  const code = textStyle(theme, "codeBlock");
+  const body = textStyle(theme, "body");
+  const h1 = textStyle(theme, "h1");
+  const h2 = textStyle(theme, "h2");
+  const h3 = textStyle(theme, "h3");
+  const caption = textStyle(theme, "caption");
   return {
     appearance: themeModeOf(theme),
     bg: colors[fill],
@@ -494,54 +532,51 @@ export function nativeTextTheme(
     // the role is derived for that composite rather than handed over raw.
     accent: nativeAccent(theme),
     caret: colors.primary,
-    fontSans: theme.typography.sans,
-    fontMono: theme.typography.mono,
+    fontSans: familyOf(theme, "sans"),
+    fontMono: familyOf(theme, "mono"),
     // A `<code>` host sizes its block from the runtime theme, not from a style
     // property, so the scale's block role is handed over here. The runtime's
     // own default is 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`), which
     // is not this library's type scale: without this a brand's `codeBlock` role
-    // stops at the code host while every other role reaches it.
+    // stops at the code host while every other role reaches it. Each role reads
+    // through the paint seam, so a stored theme that lost the group answers the
+    // library's role rather than throwing at a host's first paint.
     metrics: {
-      codeTextSize: theme.typography.codeBlock.fontSize,
-      codeLineHeight: theme.typography.codeBlock.lineHeight,
+      codeTextSize: code.fontSize,
+      codeLineHeight: code.lineHeight,
       // A diff is code, so it follows the block role rather than the runtime's
       // own 12/21: a brand that changes its code scale expects both.
-      diffTextSize: theme.typography.codeBlock.fontSize,
-      diffLineHeight: theme.typography.codeBlock.lineHeight,
+      diffTextSize: code.fontSize,
+      diffLineHeight: code.lineHeight,
       // A rendered document is prose, so its body and headings are the scale's.
-      mdTextSize: theme.typography.body.fontSize,
-      mdLineHeight: theme.typography.body.lineHeight,
-      mdHeadingSizes: [
-        theme.typography.h1.fontSize,
-        theme.typography.h2.fontSize,
-        theme.typography.h3.fontSize,
-        theme.typography.body.fontSize,
-      ],
+      mdTextSize: body.fontSize,
+      mdLineHeight: body.lineHeight,
+      mdHeadingSizes: [h1.fontSize, h2.fontSize, h3.fontSize, body.fontSize],
       mdHeadingLineHeights: [
-        theme.typography.h1.lineHeight,
-        theme.typography.h2.lineHeight,
-        theme.typography.h3.lineHeight,
-        theme.typography.body.lineHeight,
+        h1.lineHeight,
+        h2.lineHeight,
+        h3.lineHeight,
+        body.lineHeight,
       ],
-      mdCodeRadius: theme.radius.lg,
+      mdCodeRadius: stepOf(theme.radius, radius, "lg"),
       // A fence's language strip is a quiet label rather than code, so it
       // follows the scale's label role; the runtime's own 11 belongs to no role
       // and would stay put while the rest of a brand's type moved.
-      mdCodeHeaderTextSize: theme.typography.caption.fontSize,
-      mdInlineCodeRadius: theme.radius.sm,
+      mdCodeHeaderTextSize: caption.fontSize,
+      mdInlineCodeRadius: stepOf(theme.radius, radius, "sm"),
       // The document host's insets and gaps are padding, so they are the
       // spacing scale's: the runtime's own are Comet's (10 and 5 are not steps
       // here), and a brand that retunes spacing expects a document to follow.
-      codeGutterPaddingRight: theme.spacing.lg,
-      diffRowPaddingX: theme.spacing.xl,
-      diffBodyBottomPad: theme.spacing.md,
-      mdBlockGap: theme.spacing.lg,
-      mdTableCellPadding: theme.spacing.lg,
-      mdCodePaddingX: theme.spacing.lg,
-      mdCodePaddingY: theme.spacing.md,
+      codeGutterPaddingRight: stepOf(theme.spacing, spacing, "lg"),
+      diffRowPaddingX: stepOf(theme.spacing, spacing, "xl"),
+      diffBodyBottomPad: stepOf(theme.spacing, spacing, "md"),
+      mdBlockGap: stepOf(theme.spacing, spacing, "lg"),
+      mdTableCellPadding: stepOf(theme.spacing, spacing, "lg"),
+      mdCodePaddingX: stepOf(theme.spacing, spacing, "lg"),
+      mdCodePaddingY: stepOf(theme.spacing, spacing, "md"),
       // A language strip is a tight label strip, so it takes the hairline-
       // adjacent step rather than a card's inset.
-      mdCodeHeaderPaddingY: theme.spacing.xs,
+      mdCodeHeaderPaddingY: stepOf(theme.spacing, spacing, "xs"),
     },
     // The tone's readable role, not its solid fill: the ink is painted as text
     // (a file's `+12`, a line's marker and number) and the same value is the
