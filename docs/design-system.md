@@ -1194,12 +1194,15 @@ elevation level or the whole elevation scale the library has added since, or hav
 lost the whole `colors` group, and JSON has no `undefined`, so a
 value that was absent when the theme was saved comes back as `null`. **A colour
 a store cleared — `null`, or the blank string a cleared editor field writes — is
-the absence it is**: `themeColors` keeps only the strings that name a colour, so
+the absence it is to every paint seam**: `themeColors` keeps only the strings
+that name a colour, so
 a blank role paints the absence every seam answers rather than the black the
 renderer draws for a value it cannot parse, and `extendTheme` keeps the base's
 role instead of erasing it. The reports
-carry the absence rather than throwing — `invalidColorRoles` returns the role with
-`value: undefined` (`themeColors` reads a group the store lost as none),
+carry the absence rather than throwing — `invalidColorRoles` returns an **absent**
+role with `value: undefined`, and a role the store *did* write — the blank a
+cleared field holds, or the number a hand-edited export carries — with that
+value, because the report is the one place a reader sees what to repair —
 `invalidShadowColors` returns the level once at position `0`
 with no colour (every level, when the scale itself is gone), the measuring seam
 reads any non-colour value as unmeasurable
@@ -1485,7 +1488,10 @@ The extension mechanism is deliberately small:
 - `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
   (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
   colour, a selection wash). It chooses each filled role's on-colour by
-  measurement and names no colour of its own; a selection colour arrives as a
+  measurement and names no colour of its own; a field the palette left blank
+  names no colour (`namesColour`), so the base keeps that role and the fill
+  beside it is measured against the inks that were named; a selection colour
+  arrives as a
   **fill** and is painted at the base theme's share, because the role is a wash
   behind text that keeps its own colour; `watchSystemTheme` follows a
   palette through a poll, because the runtime has no file watcher. A base a store

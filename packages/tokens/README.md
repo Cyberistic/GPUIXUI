@@ -149,7 +149,11 @@ write — names no colour, so `extendTheme` keeps the base's role instead of
 erasing it, and the paint seams read a theme that carries one as the absence they
 answer for a lost role. The renderer parses no colour from a blank value and
 paints it black, which is the failure the absence rule exists to avoid
-(`color.test.ts`).
+(`color.test.ts`). The report is where the two part company: `invalidColorRoles`
+reads the group as the store wrote it, so an **absent** role carries
+`value: undefined` while a cleared field (or a number a hand-edited export wrote)
+carries the value itself — the reader's cue to fill the field, not to rebuild a
+theme the release already carries.
 
 A style is a look over a base, not a layer over a look: `platformTheme` and
 `retroTheme` overlay a *partial* palette that is designed against the base it
@@ -918,12 +922,22 @@ default rather than an invented one.
 
 A palette names roles, and each maps to the role of the same name (`accent` is
 the `primary` fill, `danger` is `destructive`); an unnamed role keeps the base
-theme's value. The mapper chooses each filled role's on-colour by measuring the
+theme's value. **A field the desktop left blank names no colour**: a palette is
+decoded at a boundary, so a cleared value arrives as `""` (or whitespace) rather
+than as a missing key, and `namesColour` reads it as the role the palette omits —
+the base keeps it, and a filled role beside it is measured against the inks that
+were named. Read as a stated fill, a blank erased the base's role and skipped the
+ink measurement: a pale `#FFE08A` accent kept the light base's white on-colour at
+**1.29:1** where the base's own ink reads 13.09:1. A value the desktop **named**
+but the renderer cannot parse is still handed over as written, for `auditTheme`
+to report.
+The mapper chooses each filled role's on-colour by measuring the
 palette's own page and ink — it never blends a new colour — and the first read is
 applied at once while an unchanged palette calls nothing. Every field is compared
 as its own value rather than through a joined key, so a decoder that reports a
-colour as `""` where it previously omitted it is delivered: the mapper keeps the
-base's role for the absent field and states the empty one. The values a tick
+colour as `""` where it previously omitted it is delivered: the two are different
+reads, and both name no colour, so the theme delivered keeps the base's role
+rather than a blank fill. The values a tick
 delivered are copied rather than remembered by reference, so a reader that
 rewrites one palette object in place is a change too. A selection colour
 arrives as a **fill** and is painted at the base theme's share, because the role
@@ -1130,14 +1144,12 @@ Each report is also a function of its own:
   reported with `value: undefined`, which is the shape a theme restored from
   storage has when it predates a role the library added: the source is
   `Partial<ThemeColors>` and `isPaintableColor` takes `unknown`, so absence is a
-  line in the report rather than a `TypeError`. **A colour a store cleared is the
-  absence it is** — `null` is what JSON writes for a role never carried, and the
-  empty string is what a cleared editor field writes — so `themeColors` drops a
-  blank role (a fill the renderer would paint black), `extendTheme` keeps the
-  base's role rather than erasing it, and the report still names the role on the
-  value the store wrote. The whole `colors` group may be
-  gone too, and `themeColors(theme)` is the read every contract shares — it
-  answers `{}` there, so all 47 roles are reported at once. The measurement
+  line in the report rather than a `TypeError`. A role the store *did* write
+  keeps that value in the report even when every paint seam answers it as no
+  colour — the blank of a cleared field, a number a hand-edited export wrote — so
+  a reader repairs the value instead of rebuilding a theme the release already
+  carries. The whole `colors` group may be
+  gone too, and the report names every role at once. The measurement
   dialect is the grammar the renderer paints minus the perceptual spaces: every
   hex length —
   shorthand `#fff` widens, with or without the `#`, and a fully opaque `FF` alpha

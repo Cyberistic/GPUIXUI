@@ -1246,7 +1246,7 @@ const palette: SystemPalette = readSystemPalette(); // your decoder
 const theme = paletteToTokens(palette, getTheme(paletteMode(palette) ?? "light"));
 ```
 
-The mapping has four rules, and all of them matter.
+The mapping has five rules, and all of them matter.
 
 - **A role maps to the role of the same name.** `background`, `foreground`,
   `muted`, `border`, `danger` and `selection` land on their roles; `accent` is
@@ -1254,6 +1254,18 @@ The mapping has four rules, and all of them matter.
   its `destructive`. Every role the palette does not name keeps the base
   theme's value, so a palette of two colours gives a page and an ink rather than
   a half-built theme.
+- **A field the desktop left blank names no colour.** A palette is decoded at a
+  boundary, so a cleared value arrives as `""` — or whitespace — rather than as a
+  missing key: an empty entry in a theme file, a template's unset variable.
+  `namesColour` is the read (§Paint-ready values), and such a field reads as the
+  role the palette omits — the base's stays — while a filled role beside it is
+  measured against the inks that **were** named. Read as a stated fill, a blank
+  erased the base's role *and* skipped the mapper's own measurement: the blank
+  lost the ink comparison at 0:1, the merge then dropped it, and the fill kept
+  the base's on-colour for the base's accent — measured on the light base, a pale
+  `#FFE08A` accent carried white at **1.29:1** while the base's own ink was there
+  to measure. A value the desktop **named** but the renderer cannot parse is not
+  this case: it is handed over as written, for `auditTheme` to report.
 - **No colour is invented.** The one decision the mapper makes is which ink a
   filled role carries — the palette's page or its body ink, whichever measures
   further from the fill (`contrastRatio`, never a blend). A palette whose ink
@@ -1646,12 +1658,20 @@ keeps only the strings that name one. **A colour a store cleared is the absence
 it is**: `null` is what JSON writes for a role that was never carried, and the
 empty string (or whitespace) is what a brand editor's empty field and an empty
 swatch in a theme file write — a value the renderer parses no colour from and
-paints black. `themeColors` reads it as the absence, so `statusTone`,
+paints black. `namesColour` is that read, and it is exported because every seam
+that reads a colour a decoder wrote asks the same question: a theme's role
+(`themeColors`), an override (`extendTheme`), and a **desktop palette**'s field
+(`paletteToTokens`, §System palettes). `themeColors` reads the blank as the
+absence, so `statusTone`,
 `brandText`, `nativeTextTheme` and every other paint seam answer what they answer
 for a role that is gone, and `extendTheme`/`restoreTheme` read it as no override,
-keeping the base theme's role instead of erasing it; `invalidColorRoles` still
-names the role on the value the store wrote, so the gate reports the theme rather
-than passing a fill nothing paints. The collection
+keeping the base theme's role instead of erasing it; `invalidColorRoles` reads
+the group as the store wrote it, so the report carries the blank (or the number,
+or the object) a reader has to repair, and the gate reports the theme rather than
+passing a fill nothing paints. A value the boundary **named** but the
+renderer cannot parse is not this case: `namesColour("brand")` is true and the
+hand-over is reported by the gate, because "did the decoder write a colour here"
+and "can the renderer paint it" are two questions. The collection
 and highlight readers accept the storage shapes too: `SeriesSource`,
 `SyntaxSource`/`SyntaxAuditSource` and `FindHighlightSource` resolve a stated
 mode or variant this release does not ship through `themeModeOf`/
