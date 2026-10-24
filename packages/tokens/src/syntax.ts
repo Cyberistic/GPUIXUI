@@ -39,7 +39,7 @@ import {
   contrastRatio,
   type ContrastFloors,
 } from "./contrast.js";
-import { themeContrastOf } from "./theme.js";
+import { themeContrastOf, themeModeOf } from "./theme.js";
 
 /**
  * The token types a syntax theme paints, in the runtime's own order, so
@@ -200,7 +200,7 @@ export const highContrastDarkSyntax: SyntaxColors = {
 export const syntaxSurfaces = ["input", "background"] as const;
 
 /** A theme's mode, contrast variant and optional authored syntax palette. */
-export interface SyntaxSource {
+export interface SyntaxSource extends ColourSource {
   readonly mode: "light" | "dark";
   readonly contrast?: "default" | "high";
   readonly syntax?: SyntaxColors;
@@ -230,12 +230,11 @@ export function syntaxColors(theme: SyntaxSource): SyntaxColors {
   if (theme.syntax != null) {
     return theme.syntax;
   }
+  const mode = themeModeOf(theme);
   if (themeContrastOf(theme) === "high") {
-    return theme.mode === "dark"
-      ? highContrastDarkSyntax
-      : highContrastLightSyntax;
+    return mode === "dark" ? highContrastDarkSyntax : highContrastLightSyntax;
   }
-  return theme.mode === "dark" ? darkSyntax : lightSyntax;
+  return mode === "dark" ? darkSyntax : lightSyntax;
 }
 
 /** One token colour a reader cannot read, or cannot be measured. */
@@ -264,7 +263,12 @@ export interface SyntaxFailure {
 const readPalette = (
   theme: SyntaxAuditSource,
 ): Readonly<Record<string, unknown>> =>
-  theme.syntax ?? syntaxColors({ mode: theme.mode, contrast: theme.contrast });
+  theme.syntax ??
+  syntaxColors({
+    mode: theme.mode,
+    contrast: theme.contrast,
+    colors: theme.colors,
+  });
 
 /**
  * A theme with the fields a syntax audit reads.

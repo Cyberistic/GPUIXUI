@@ -6,6 +6,7 @@
  * the contrast variant the caller asked for — every group's `undefined` inherits
  * rather than erasing a role.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { almostBrandAudit } from "./theme-audit.example.js";
@@ -28,6 +29,7 @@ import {
   switchFailures,
   syntaxColors,
   themeContrasts,
+  themeModeOf,
   themeModes,
   themes,
   type PlatformName,
@@ -93,6 +95,73 @@ describe("a resolver refuses an axis value this release does not ship", () => {
     expect(() => platformTheme(lightTheme, stored)).toThrow(/isPlatformName/);
     platformNames.forEach((platform) => {
       expect(platformTheme(lightTheme, platform).mode).toBe("light");
+    });
+  });
+});
+
+/**
+ * Guards the mode a stored theme is read as.
+ *
+ * A theme is documented as storable, so `theme.mode` is unknown input before it
+ * is a union: an upper-cased `Dark`, a release's old name, a theme another app
+ * wrote. Every seam that branches on it compared `mode === "dark"`, so a dark
+ * palette stored that way was handed the **light** categorical scale and the
+ * light syntax palette, and `applyStyle` picked no palette at all from the
+ * platform style — it applied the radii and families but not the colours.
+ * `themeModeOf` reads a value this release does not ship from the page the
+ * theme carries, which is the one question a palette can answer by itself.
+ */
+describe("a theme mode this release does not ship", () => {
+  const stored = (mode: unknown, base: Theme): Theme =>
+    ({ ...base, mode }) as Theme;
+
+  it("reads a shipped mode as it is and another from the page", () => {
+    themeModes.forEach((mode) =>
+      expect(themeModeOf(getTheme(mode)), mode).toBe(mode),
+    );
+    expect(themeModeOf(stored("Dark", darkTheme))).toBe("dark");
+    expect(themeModeOf(stored("LIGHT", lightTheme))).toBe("light");
+    // A theme a store lost the field on has only its page to answer with.
+    expect(themeModeOf(stored(undefined, darkTheme))).toBe("dark");
+    expect(themeModeOf(stored(null, lightTheme))).toBe("light");
+  });
+
+  it("keeps the default mode when no colour grammar reads the page", () => {
+    const unreadable = stored("solar", {
+      ...darkTheme,
+      colors: { ...darkTheme.colors, background: "oklch(0.2 0 0)" },
+    });
+
+    expect(themeModeOf(unreadable)).toBe("light");
+  });
+
+  it("applies a platform style's palette in the mode its page implies", () => {
+    platformNames.forEach((platform) => {
+      expect(
+        platformTheme(stored("Dark", darkTheme), platform).colors,
+        platform,
+      ).toEqual(platformTheme(darkTheme, platform).colors);
+      expect(
+        platformTheme(stored("LIGHT", lightTheme), platform).colors,
+        platform,
+      ).toEqual(platformTheme(lightTheme, platform).colors);
+    });
+  });
+
+  it("is taught where the seam and its fallback are", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const pages = [
+      read("../../../docs/tokens.md"),
+      read("../../../docs/design-system.md"),
+      read("../README.md"),
+    ];
+
+    pages.forEach((page) => {
+      expect(page).toContain("themeModeOf");
+      expect(page).toContain("the page it carries");
     });
   });
 });

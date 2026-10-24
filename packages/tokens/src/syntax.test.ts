@@ -427,3 +427,39 @@ describe("a stored contrast variant", () => {
     expect(syntaxColors(stored(undefined))).toBe(lightSyntax);
   });
 });
+
+/**
+ * Guards the table a stated-but-unshipped mode resolves.
+ *
+ * `syntaxColors` compared `theme.mode === "dark"`, so a theme restored from
+ * storage with the upper-cased `Dark` handed its code blocks the **light**
+ * palette on the dark fill a `<code>` host paints — measured, the light
+ * `keyword` reads under the body floor there — and `syntaxFailures` was handed
+ * the same table. The mode is read through `themeModeOf` now, which reads a
+ * value this release does not ship from the page the theme carries.
+ */
+describe("a stored theme mode", () => {
+  const stored = (mode: unknown, base: Theme): Theme =>
+    ({ ...base, mode }) as Theme;
+
+  it("resolves the palette its page implies", () => {
+    expect(syntaxColors(stored("Dark", darkTheme))).toBe(darkSyntax);
+    expect(syntaxColors(stored("LIGHT", lightTheme))).toBe(lightSyntax);
+    expect(syntaxColors(stored("Dark", highContrastDarkTheme))).toBe(
+      highContrastDarkSyntax,
+    );
+    // A stored theme that lost the field is read from its page too.
+    expect(syntaxColors(stored(undefined, lightTheme))).toBe(lightSyntax);
+  });
+
+  it("measures the palette the code block will paint", () => {
+    expect(syntaxFailures(stored("Dark", darkTheme))).toEqual([]);
+    // The premise: the table a stated mode this release does not ship once
+    // resolved is not the one the dark page clears.
+    expect(
+      syntaxFailures({ ...darkTheme, mode: "light" }).some(
+        (failure) => failure.role === "keyword",
+      ),
+    ).toBe(true);
+  });
+});

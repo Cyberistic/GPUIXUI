@@ -3,6 +3,8 @@ import {
   highContrastDarkColors,
   highContrastLightColors,
   lightColors,
+  themeColors,
+  type ColourSource,
   type ThemeColors,
 } from "./color.js";
 import {
@@ -20,6 +22,7 @@ import {
   type PlatformName,
   type PlatformStyle,
 } from "./platforms.js";
+import { pageMode } from "./luminance.js";
 import {
   borderWidth,
   defaultDensity,
@@ -114,13 +117,59 @@ export const themeContrastOf = (theme: {
 };
 
 /**
+ * The mode a theme's **values** are read as.
+ *
+ * The mode decides which categorical and syntax tables a painter is handed
+ * (`seriesColors`, `syntaxColors`), the appearance a native text host is given
+ * (`nativeTextTheme`), and which of a platform style's two palettes `applyStyle`
+ * wears. A theme is documented as storable, so a value this release does not
+ * ship reaches those seams — an upper-cased `Dark`, a release's old name, a
+ * theme another app wrote. Read as light it handed a dark palette the **light**
+ * tables: a code block highlighted for a light canvas, a chart drawn in the
+ * light categorical scale, and a platform style that applied its radii and
+ * families but not its colours.
+ *
+ * A value this release does not ship — or none at all — is therefore read from
+ * the page the theme carries: a fill closer to white is a dark theme's page,
+ * because that theme's ink is designed to read on it. That is the one question
+ * the palette can answer without trusting the label, and it is the rule
+ * {@link paletteMode} already follows for a system palette. A page no colour
+ * grammar reads keeps `light`, the mode `getTheme` starts from.
+ *
+ * Narrow a stored preference with {@link isThemeMode} where the caller can tell
+ * the reader which mode it substituted; this is the read a paint or report seam
+ * makes, where there is no one to tell.
+ *
+ * @example
+ * ```ts
+ * import { darkTheme, lightTheme, themeModeOf } from "@gpuixui/tokens";
+ *
+ * themeModeOf(darkTheme); // "dark"
+ * themeModeOf({ ...darkTheme, mode: "Dark" }); // "dark" — read from its page
+ * ```
+ */
+export const themeModeOf = (
+  theme: ColourSource & { readonly mode?: unknown },
+): ThemeMode => {
+  const stated = theme.mode;
+  if (isThemeMode(stated)) {
+    return stated;
+  }
+  return pageMode(themeColors(theme).background) ?? "light";
+};
+
+/**
  * A complete, resolved design theme. Every field is plain data, so a theme can
  * be passed through React context, stored, or built at startup.
  */
 export interface Theme {
   /** Human-readable theme name, used by previews and diagnostics. */
   readonly name: string;
-  /** The mode this theme was built for. Never changed by an override. */
+  /**
+   * The mode this theme was built for. Never changed by an override. A value a
+   * store wrote that this release does not ship is read through
+   * {@link themeModeOf}, which reads the mode the theme's page implies.
+   */
   readonly mode: ThemeMode;
   /**
    * The contrast variant this theme carries. Absent on a hand-built theme, so
@@ -604,21 +653,22 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
   // A palette — and the scale its plots are drawn in — is designed against the
   // floors of one contrast variant; a base that needs more keeps its own.
   const applies = contrast === style.contrast;
+  const mode = themeModeOf(base);
   const themed = extendTheme(base, {
     name: `${base.name} · ${style.label}`,
     typography: { sans: style.sans, mono: style.mono },
     radius: style.radius,
     density: style.density,
-    colors: applies ? style.colors[base.mode] : undefined,
-    series: applies ? style.series?.[base.mode] : undefined,
-    syntax: applies ? style.syntax?.[base.mode] : undefined,
+    colors: applies ? style.colors[mode] : undefined,
+    series: applies ? style.series?.[mode] : undefined,
+    syntax: applies ? style.syntax?.[mode] : undefined,
   });
   // A switch paint belongs to the look, not to the base: an authored look
   // declares none, so applying it over a platform's theme clears the platform's
   // toggle instead of leaving a green Apple switch in Luna's chrome.
   return {
     ...themed,
-    switch: applies ? style.switch?.[base.mode] : base.switch,
+    switch: applies ? style.switch?.[mode] : base.switch,
     switchMetrics: applies ? style.switchMetrics : base.switchMetrics,
   };
 }

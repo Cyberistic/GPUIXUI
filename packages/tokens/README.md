@@ -202,6 +202,15 @@ platform's box by `undefined` into a `NaN` that painted nothing. Narrow a stored
 role or size with `isTextRole` or `isControlSize` where the caller can tell the
 reader what it substituted.
 
+A whole theme is storable, so its **mode** is a stated value before it is a union.
+There is no strict reading of light and dark, so `themeModeOf(theme)` reads a mode
+this release does not ship from the page it carries: a fill closer to white is a
+dark theme's page. `seriesColors`, `syntaxColors`, `nativeTextTheme`'s
+`appearance` and the palette `applyStyle` wears all read the mode there — read as
+light, an upper-cased `Dark` was handed the light chart scale and the light code
+palette on its dark fill, and lost the platform style's palette while keeping its
+radii and families.
+
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1

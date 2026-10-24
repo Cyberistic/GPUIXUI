@@ -371,7 +371,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 218/218
+`[x]` `[██████████]` 219/219
 
 `[x]` Read a **stored control size as the default step** — `controlHeight`/`controlPaddingX`
 (`styles.ts`) did `theme.density.controlHeight[size]` and `switchMetricsAt` did
@@ -2149,6 +2149,42 @@ clean (`@gpuixui/primitives` and `@gpuixui/components` type-check against the
 widened parameter). Docs in `docs/tokens.md` §Contrast, `docs/design-system.md`
 §9, the package README §High contrast and the `Contrast contract` row. No native
 scenario applies — the floors, the gate and two tables read from one value.
+
+`[x]` Read a **stated theme mode this release does not ship as the mode its page
+implies** — a whole theme is documented as storable (`Theme` says so on its own
+interface), so `theme.mode` is unknown input before it is a union: an upper-cased
+`Dark`, an old release's name, a field a store lost. Four seams branched on it —
+`seriesColors` and `syntaxColors` compared `theme.mode === "dark"` and
+`nativeTextTheme` handed `appearance: theme.mode` to the host, while `applyStyle`
+indexed `style.colors[base.mode]` — so a **dark** palette stored that way was
+handed the **light** categorical scale (five dark hues drawn on a near-black
+page) and the **light** code palette (measured, 48 token/surface failures on the
+dark code fill), the host was told the wrong appearance, and a platform style
+applied its radii, families and density but **no palette at all** (`undefined`
+for an absent key inherits the base, so half a style with no error anywhere).
+`themeModeOf` reads a mode this release does not ship — or none at all — from
+the page the theme carries: a fill closer to white is a dark theme's page, the
+one question its palette can answer without trusting the label, and a page no
+colour grammar reads keeps `light`. The WCAG luminance and the page→mode rule
+moved to one internal module (`luminance.ts`), which `contrastRatio` and
+`system-theme.ts`'s `paletteMode` now share instead of the mode rule existing
+twice; `seriesColors`, `syntaxColors`, `nativeTextTheme` and `applyStyle` read
+the seam, and `seriesFailures`/`syntaxFailures` resolve the table through it too,
+so a report measures the paint it will actually see. Proof: `theme.test.ts` gains
+`a theme mode this release does not ship` (4 cases: a shipped mode reads as
+itself while `Dark`/`LIGHT`/absent/`null` read from the page, an unreadable page
+keeps `light`, every platform style's palette is the one the shipped mode gets,
+and the three pages print the seam), `series.test.ts` and `syntax.test.ts` two
+cases each (the resolved table, and the report agreeing with the painter), and
+`native-text.test.ts` one (`appearance`). Directions measured: restoring the four
+comparisons fails six cases by name (`expected 'Dark' to be 'dark'`, the light
+and dark tables in both suites, the 48 report rows, and `darwin: expected {
+background: '#11141A', … } to deeply equal { background: '#1C1C1E', … }`);
+restored, the four files are 153/153, the package is 49 files / **2 995** tests
+with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs in
+`docs/tokens.md` §Persisted choices, `docs/design-system.md` §11, the package
+README §Persisted choices and the `Design tokens` row. No native scenario applies
+— a pure name read and the tables it selects.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

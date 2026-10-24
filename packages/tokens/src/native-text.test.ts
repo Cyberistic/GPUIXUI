@@ -213,6 +213,14 @@ describe("nativeTextTheme", () => {
     expect(darkColors.background).not.toBe(lightTheme.colors.background);
   });
 
+  it("reads a mode this release does not ship from the page it carries", () => {
+    // The cast is the storage boundary: a theme restored from a store is
+    // unknown input, and an upper-cased mode is what such a store writes.
+    const stored = (mode: unknown): Theme => ({ ...darkTheme, mode }) as Theme;
+
+    expect(nativeTextTheme(stored("Dark")).appearance).toBe("dark");
+  });
+
   it("names the fill its value and placeholder sit on", () => {
     const onInput = nativeTextTheme(lightTheme, "input");
     const onPage = nativeTextTheme(lightTheme, "background");

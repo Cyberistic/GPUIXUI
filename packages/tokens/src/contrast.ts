@@ -7,23 +7,8 @@
  */
 
 import { themeColors, type ThemeColors } from "./color.js";
-import { opaqueRgb } from "./measure.js";
+import { relativeLuminance } from "./luminance.js";
 import { themeContrastOf, type ThemeContrast } from "./theme.js";
-
-const channel = (rgb: string, at: number): number => {
-  const srgb = Number.parseInt(rgb.slice(at, at + 2), 16) / 255;
-  return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
-};
-
-/** WCAG 2.1 relative luminance of an opaque colour. */
-const relativeLuminance = (color: string | undefined): number | undefined => {
-  const rgb = color === undefined ? undefined : opaqueRgb(color);
-  return rgb === undefined
-    ? undefined
-    : 0.2126 * channel(rgb, 1) +
-        0.7152 * channel(rgb, 3) +
-        0.0722 * channel(rgb, 5);
-};
 
 /**
  * The WCAG 2.1 contrast ratio between two opaque colours: 1 for identical

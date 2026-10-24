@@ -549,3 +549,36 @@ describe("a stored contrast variant", () => {
     expect(seriesColors(stored(undefined))).toBe(lightSeries);
   });
 });
+
+/**
+ * Guards the table a stated-but-unshipped mode resolves.
+ *
+ * `seriesColors` compared `theme.mode === "dark"`, so a chart in a theme
+ * restored from storage with the upper-cased `Dark` was drawn in the **light**
+ * categorical scale while its page was the dark one — five dark hues measured
+ * against a light page, read on a near-black fill — and `seriesFailures`
+ * measured that same table, so the gate agreed with the wrong paint. The mode
+ * is read through `themeModeOf` now, which reads a value this release does not
+ * ship from the page the theme carries.
+ */
+describe("a stored theme mode", () => {
+  const stored = (mode: unknown, base: Theme): Theme =>
+    ({ ...base, mode }) as Theme;
+
+  it("resolves the scale its page implies", () => {
+    expect(seriesColors(stored("Dark", darkTheme))).toBe(darkSeries);
+    expect(seriesColors(stored("LIGHT", lightTheme))).toBe(lightSeries);
+    expect(seriesColors(stored("Dark", highContrastDarkTheme))).toBe(
+      highContrastDarkSeries,
+    );
+    // A stored theme that lost the field is read from its page too.
+    expect(seriesColors(stored(undefined, lightTheme))).toBe(lightSeries);
+  });
+
+  it("measures the table the chart will paint", () => {
+    // The premise: the light table does not clear the dark page, so a report
+    // that resolved it would name the swatches the painter never uses.
+    expect(seriesColors(stored("Dark", darkTheme))).not.toBe(lightSeries);
+    expect(seriesFailures(stored("Dark", darkTheme)).surfaces).toEqual([]);
+  });
+});

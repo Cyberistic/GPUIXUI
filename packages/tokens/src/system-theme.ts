@@ -51,6 +51,7 @@
 
 import { alpha, alphaOf, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
+import { pageMode } from "./luminance.js";
 import { extendTheme, getTheme, type Theme, type ThemeMode } from "./theme.js";
 
 /**
@@ -148,15 +149,7 @@ export function paletteMode(palette: SystemPalette): ThemeMode | undefined {
   if (mode !== undefined) {
     return mode;
   }
-  if (background === undefined) {
-    return undefined;
-  }
-  const onWhite = contrastRatio(background, "#FFFFFF");
-  const onBlack = contrastRatio(background, "#000000");
-  if (onWhite === undefined || onBlack === undefined) {
-    return undefined;
-  }
-  return onWhite > onBlack ? "dark" : "light";
+  return pageMode(background);
 }
 
 /**

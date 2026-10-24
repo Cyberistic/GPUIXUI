@@ -1229,7 +1229,18 @@ floors: the disabled fade is a
 mechanism, so it is held to `contrastFloors.disabled` in every variant
 (§8 records why the fade cannot carry a high-contrast theme), and the keyboard
 dim is a where-can-Tab-go cue rather than a reading mode, so it is held to
-`decorativeFloor` (1.05:1) in every variant (§8). The parts are
+`decorativeFloor` (1.05:1) in every variant (§8).
+
+A theme's **mode** is a stated value of the same kind, but there is no strict
+reading of light and dark: `themeModeOf(theme)` reads a mode this release does
+not ship from the page it carries — a fill closer to white is a dark theme's page,
+and a page no colour grammar reads keeps `light`. The chart scale, the code
+palette, a native host's `appearance` and the palette `applyStyle` wears all read
+it there. Read as light, an upper-cased `Dark` was handed the light tables on a
+dark fill and lost a platform style's palette while keeping its radii and
+families.
+
+The parts are
 public too: `contrastRatio(foreground, background)`
 measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,

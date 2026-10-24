@@ -4435,6 +4435,17 @@ step instead of throwing or painting nothing — `textStyle` reads a role as `bo
 control size as `md` (§Density). Narrow a stored role or size with `isTextRole`
 or `isControlSize` where the caller can tell the reader what it substituted.
 
+A theme's **mode** is a stated value of the same kind, and a whole theme is
+documented as storable. `themeModeOf(theme)` reads a mode this release does not
+ship — an upper-cased `Dark`, a release's old name, a field a store lost — from
+the **page it carries**: a fill closer to white is a dark theme's page, because
+that theme's ink is designed to read on it, and a page no colour grammar reads
+keeps `light`. Every seam that branches on the mode reads it there —
+`seriesColors`, `syntaxColors`, `nativeTextTheme`'s `appearance` and the palette
+`applyStyle` wears — because reading a stored `Dark` as light handed a dark
+palette the light chart scale, the light code palette and no platform palette at
+all while the radii and families still applied.
+
 ## React binding
 
 ```tsx

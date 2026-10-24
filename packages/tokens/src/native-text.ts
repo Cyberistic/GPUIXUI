@@ -80,7 +80,7 @@ import {
 import { decorativeFloor } from "./decorative.js";
 import { statusTone } from "./styles.js";
 import { syntaxColors, type SyntaxColors } from "./syntax.js";
-import type { Theme, ThemeMode } from "./theme.js";
+import { themeModeOf, type Theme, type ThemeMode } from "./theme.js";
 
 /**
  * The fills a field paints, which decide the surface the host's value,
@@ -485,7 +485,7 @@ export function nativeTextTheme(
   const added = statusTone({ colors }, "success");
   const removed = statusTone({ colors }, "destructive");
   return {
-    appearance: theme.mode,
+    appearance: themeModeOf(theme),
     bg: colors[fill],
     text: colors.inputForeground,
     textMuted: colors.mutedForeground,

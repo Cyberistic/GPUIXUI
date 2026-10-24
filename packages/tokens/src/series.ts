@@ -26,6 +26,7 @@ import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
 import {
   themeContrastOf,
+  themeModeOf,
   type ThemeContrast,
   type ThemeMode,
 } from "./theme.js";
@@ -174,7 +175,7 @@ const deficiencyMatrices: Readonly<
 const seriesPositions = [0, 1, 2, 3, 4] as const;
 
 /** A theme's mode, contrast variant and optional authored series. */
-export interface SeriesSource {
+export interface SeriesSource extends ColourSource {
   readonly mode: ThemeMode;
   readonly contrast?: ThemeContrast;
   readonly series?: SeriesColors;
@@ -204,12 +205,11 @@ export function seriesColors(theme: SeriesSource): SeriesColors {
   if (theme.series != null) {
     return theme.series;
   }
+  const mode = themeModeOf(theme);
   if (themeContrastOf(theme) === "high") {
-    return theme.mode === "dark"
-      ? highContrastDarkSeries
-      : highContrastLightSeries;
+    return mode === "dark" ? highContrastDarkSeries : highContrastLightSeries;
   }
-  return theme.mode === "dark" ? darkSeries : lightSeries;
+  return mode === "dark" ? darkSeries : lightSeries;
 }
 
 /** One series colour that is not perceivable on a surface it can be drawn on. */
@@ -450,7 +450,11 @@ export function seriesFailures(
   const deficiencyFloor = contract.deficiency ?? seriesDeficiencyFloor;
   const series: ReadonlyArray<string | undefined> =
     theme.series ??
-    seriesColors({ mode: theme.mode, contrast: theme.contrast });
+    seriesColors({
+      mode: theme.mode,
+      contrast: theme.contrast,
+      colors: theme.colors,
+    });
   /**
    * The colour a position paints, read as the value a store hands back: a short
    * table has no entry there and a holed one has `null`, and neither is a colour
