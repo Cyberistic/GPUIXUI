@@ -33,7 +33,12 @@
  * with a keyword a step brighter than this identity's.
  */
 
-import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
+import {
+  namesColour,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -84,6 +89,19 @@ export type SyntaxRole = (typeof syntaxRoles)[number];
  * missing a key would silently inherit the runtime's foreign colour for it.
  */
 export type SyntaxColors = Readonly<Record<SyntaxRole, string>>;
+
+/**
+ * A syntax palette as a store hands it back.
+ *
+ * A saved palette is not the tuple the paint path promises: a row written by a
+ * release that shipped fewer token types holds a subset of {@link syntaxRoles},
+ * JSON writes `null` for a token it never carried, and a palette exported by a
+ * design tool names only the tokens someone edited. Widening the boundary to
+ * this shape is what lets a consumer's own decoder hand its value over without
+ * the cast `AGENTS.md` §2 forbids — the rule `SyntaxAuditSource` and every other
+ * storage port in the package already follows.
+ */
+export type StoredSyntax = Readonly<Record<string, unknown>>;
 
 /**
  * The contrast floor each token type is held to.
@@ -207,25 +225,75 @@ export interface SyntaxSource extends ColourSource {
   readonly contrast?: unknown;
   /**
    * The palette the theme authors, when it carries one. A store writes `null`
-   * for a table it never carried, so a saved theme reaches this seam without a
-   * cast — the same rule {@link SeriesSource} follows. A *partial* table is the
-   * audit's shape ({@link SyntaxAuditSource}): a paint seam hands a host the
-   * whole table or the shipped one.
+   * for a table it never carried and a shorter table for the tokens it does
+   * not name, so a saved theme reaches this seam without a cast — the rule
+   * {@link StoredSyntax} describes. A theme's own complete palette is handed
+   * back as the object it is; a short one is read role by role
+   * ({@link syntaxPalette}).
    */
-  readonly syntax?: SyntaxColors | null;
+  readonly syntax?: StoredSyntax | null;
+}
+
+/** The table a theme with no palette of its own resolves, by mode and variant. */
+const shippedSyntax = (theme: SyntaxSource): SyntaxColors => {
+  const mode = themeModeOf(theme);
+  if (themeContrastOf(theme) === "high") {
+    return mode === "dark" ? highContrastDarkSyntax : highContrastLightSyntax;
+  }
+  return mode === "dark" ? darkSyntax : lightSyntax;
+};
+
+/** Whether a stored palette names a colour for every token the runtime reads. */
+const isCompleteSyntax = (palette: StoredSyntax): palette is SyntaxColors =>
+  syntaxRoles.every((role) => namesColour(palette[role]));
+
+/**
+ * A stored palette read over the table it inherits from.
+ *
+ * A token the store named as a colour is its own; a token it did not name — one
+ * an older release had not shipped, one JSON wrote as `null`, one a field
+ * cleared to `""` — answers the fallback's value rather than being handed to a
+ * host, whose own palette for a missing key is the dark-designed one this seam
+ * exists to replace. That is the rule every colour role follows: the paint
+ * answers the value the theme carries, and the report (`syntaxFailures`) names
+ * the value the store wrote, so the gate still refuses a theme that lost a
+ * token.
+ *
+ * @example
+ * ```ts
+ * import { darkSyntax, lightSyntax, syntaxPalette } from "@gpuixui/tokens";
+ *
+ * // A stored palette that names one token, read over the light table:
+ * syntaxPalette({ keyword: "#7A1F5C" }, lightSyntax).number; // lightSyntax.number
+ * ```
+ */
+export function syntaxPalette(
+  stored: StoredSyntax,
+  fallback: SyntaxColors,
+): SyntaxColors {
+  if (isCompleteSyntax(stored)) {
+    return stored;
+  }
+  return syntaxRoles.reduce<SyntaxColors>((palette, role) => {
+    const value = stored[role];
+    return namesColour(value) ? { ...palette, [role]: value } : palette;
+  }, fallback);
 }
 
 /**
  * The syntax palette a theme's code blocks paint in.
  *
- * A theme that carries `syntax` owns it — every role is its own, replacing the
- * shipped table whole — and every other theme resolves the table for its mode
- * and contrast variant.
+ * A theme that carries `syntax` owns it — every role it names is its own — and
+ * every role it does not name answers the shipped table for its mode and
+ * contrast variant, so a saved palette that predates a token type paints this
+ * package's colour for it rather than the host's foreign default. A complete
+ * palette is handed back as the object it is, and every other theme resolves the
+ * table for its mode and contrast variant.
  *
  * **A table a store wrote as `null` is the absence it is**: JSON has no
  * `undefined`, so a saved theme comes back with `null` where it carried no
  * palette, and handing that to a code host is a painter reading a token off
- * `null`. The palette is the theme's own when it holds one, and the shipped
+ * `null`. The palette is the theme's own where it holds one, and the shipped
  * table for its mode and variant otherwise.
  *
  * @example
@@ -236,14 +304,8 @@ export interface SyntaxSource extends ColourSource {
  * ```
  */
 export function syntaxColors(theme: SyntaxSource): SyntaxColors {
-  if (theme.syntax != null) {
-    return theme.syntax;
-  }
-  const mode = themeModeOf(theme);
-  if (themeContrastOf(theme) === "high") {
-    return mode === "dark" ? highContrastDarkSyntax : highContrastLightSyntax;
-  }
-  return mode === "dark" ? darkSyntax : lightSyntax;
+  const table = shippedSyntax(theme);
+  return theme.syntax == null ? table : syntaxPalette(theme.syntax, table);
 }
 
 /** One token colour a reader cannot read, or cannot be measured. */
@@ -262,16 +324,16 @@ export interface SyntaxFailure {
 }
 
 /**
- * The palette a syntax audit reads: the theme's own, or the shipped table for
- * its mode and variant.
+ * The palette a syntax audit reads: the theme's own **as the store wrote it**,
+ * or the shipped table for its mode and variant.
  *
- * It is an open record rather than `SyntaxColors` because a decoded palette is
- * not the tuple the paint path promises: it can hold a subset of the tokens, or
- * a token a store wrote as `null` — the value JSON writes for an absent one.
+ * It is the stored shape rather than `SyntaxColors` on purpose: the report's job
+ * is to name a token a theme lost, so it reads the table the store handed over
+ * and not the completed one the paint seam builds from it — a palette that names
+ * three tokens is three colours and twenty-one absences, which is exactly what
+ * fails the gate.
  */
-const readPalette = (
-  theme: SyntaxAuditSource,
-): Readonly<Record<string, unknown>> =>
+const readPalette = (theme: SyntaxAuditSource): StoredSyntax =>
   theme.syntax ??
   syntaxColors({
     mode: theme.mode,
@@ -320,10 +382,10 @@ const tokenColour = (
  * rather than counted as a pass.
  *
  * **A token the palette does not carry is one of those unmeasurable values**, so
- * every one of {@link syntaxRoles} is reported: a theme that carries `syntax`
- * replaces the shipped table whole, and a palette that names only some tokens
- * would otherwise paint the runtime's own defaults for the rest while the audit
- * passed.
+ * every one of {@link syntaxRoles} is reported. The paint seam completes the
+ * table ({@link syntaxColors}), so the theme still paints a readable colour for
+ * the token it lost — but the gate's job is to name the field to repair, not to
+ * pass a palette the store no longer carries.
  *
  * @example
  * ```ts

@@ -1212,7 +1212,8 @@ a failing report that names the role instead of a `TypeError`
 (`docs/tokens.md` §Paint-ready values). The two **nested tables** a theme may
 carry are measured the same way: every one of the five series positions is read
 even when a stored table is short, and a `syntax` palette that names only some
-tokens is reported token by token rather than left to the host's own colours.
+tokens is reported token by token and completed from the shipped table when
+painted, rather than left to the host's own colours.
 The paint follows the same rule: a role
 the theme lost paints nothing, `elevationShadow` returns `undefined` for a
 level — or a whole scale — it does not carry, `brandText`/`statusTone`
@@ -1377,11 +1378,12 @@ Every token that names code is held to the body floor on both fills a native
 host paints, and a comment to the secondary floor (AAA in a high-contrast
 theme); `docs/tokens.md` §Syntax palette has the tables and the measured
 tightest cell — a `string` at 7.66:1 on the Windows XP (Luna) look's light page.
-A brand owns the palette by carrying `syntax`, which **replaces the table
-whole** — the host reads all twenty-four keys — so recolouring one token means
-spreading `syntaxColors(theme)`, and a stored palette that names only some
-tokens is reported by `syntaxFailures` rather than painted from the host's own
-defaults.
+A brand owns the palette **token by token**: `syntaxColors(theme)` completes
+every token a theme does not name from the shipped table for its mode and
+variant, so a brand names only the token it recolours and a look's per-mode table
+follows the same rule, while a stored palette that names only some tokens is
+reported by `syntaxFailures` — the gate names each lost token even though the
+paint no longer falls back to the host's own defaults.
 
 The **fence** inside a rendered document is the surface that decides the tightest
 cell: the runtime paints 3.5% of a neutral ink over the page and another 2% under

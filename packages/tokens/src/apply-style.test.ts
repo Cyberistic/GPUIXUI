@@ -34,6 +34,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { applyStyle, highContrastThemes, themes, type Theme } from "./theme.js";
+import { darkSyntax, syntaxRoles } from "./syntax.js";
 import {
   platformStyles,
   systemUiFont,
@@ -225,6 +226,23 @@ describe("a platform style a store hands back", () => {
 
     expect(() => applyStyle(themes.dark, stale)).toThrow(
       "is not a density preset",
+    );
+  });
+
+  it("completes a look's palette from the base, token by token", () => {
+    // A style file is edited by hand as often as it is copied whole: its dark
+    // table names one token. The rest answer the base theme's table for the
+    // mode, exactly as a theme's own short palette does — not the host's
+    // dark-designed default.
+    const edited = stored({ syntax: { dark: { keyword: "#C7CBFF" } } });
+    const resolved = applyStyle(themes.dark, edited);
+
+    expect(resolved.syntax?.keyword).toBe("#C7CBFF");
+    expect(resolved.syntax?.number).toBe(darkSyntax.number);
+    expect(Object.keys(resolved.syntax ?? {})).toHaveLength(syntaxRoles.length);
+    // The authored table is the positive control: its own keyword is untouched.
+    expect(applyStyle(themes.dark, darwin).syntax?.keyword).toBe(
+      darwin.syntax?.dark?.keyword,
     );
   });
 

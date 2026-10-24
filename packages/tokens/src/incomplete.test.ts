@@ -1265,11 +1265,15 @@ describe("a scale a store wrote", () => {
     expect(catalogue).toContain("every position the scale names");
     expect(catalogue).toContain("A **token the palette does not name**");
     expect(catalogue).toContain("the `null` JSON writes");
+    expect(catalogue).toContain("**completes** the palette it paints");
     expect(designSystem).toContain("every one of the five series positions");
-    expect(designSystem).toContain("replaces the table whole");
+    expect(designSystem).toContain(
+      "completed from the shipped table when painted",
+    );
     // The measurement seam and both nested tables, from the package's side.
     expect(readme).toContain("`measuredColour`/`opaqueRgb`/`alphaOf`");
     expect(readme).toContain("every one of the five");
+    expect(readme).toContain("a token the theme names is its own");
   });
 
   it("reads every shipped style's own tables, which are complete", () => {
@@ -1393,7 +1397,9 @@ describe("a shadow a store wrote", () => {
  * The decision is the absence rule the suites above follow. A `null` table is the
  * state every shipped theme is in — no declared switch, so the accent toggle; no
  * authored scale or palette, so the shipped table for the mode and variant — not
- * a table with no entries. An authored table is still the theme's own, whole.
+ * a table with no entries. An authored table is still the theme's own: whole for
+ * a series, and token by token for a palette, whose unnamed tokens are the
+ * shipped table's.
  */
 describe("an optional table a store nulled", () => {
   /** The shape a store writes for a theme that declared none: `null`, not absent. */
@@ -1456,18 +1462,27 @@ describe("an optional table a store nulled", () => {
 
   it("keeps a table the theme does carry, whole", () => {
     const short = lightSeries.slice(0, 2);
-    const partial = { keyword: "#3B2C8F" };
     const declared = stored({
       switch: { on: "#30D158", off: "#DCDCE1", knob: "#FFFFFF" },
     });
 
     expect(seriesColors(stored({ series: short }))).toBe(short);
-    expect(syntaxColors(stored({ syntax: partial }))).toBe(partial);
     expect(switchFailures(declared)).toEqual({
       paint: [],
       placements: [],
       metrics: [],
     });
+  });
+
+  it("keeps the tokens a palette names and completes the ones it does not", () => {
+    const partial = { keyword: "#3B2C8F" };
+    const palette = syntaxColors(stored({ syntax: partial }));
+
+    // The token it names is its own; every other token answers the light table
+    // rather than the runtime's dark-designed default for a missing key.
+    expect(palette.keyword).toBe(partial.keyword);
+    expect(palette.constructor).toBe(lightSyntax.constructor);
+    expect(palette.number).toBe(lightSyntax.number);
   });
 
   it("reads every shipped style's nulled tables as the shipped ones", () => {

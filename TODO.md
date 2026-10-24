@@ -389,7 +389,50 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 270/270
+`[x]` `[█████████░]` 271/272
+
+`[x]` Read a **syntax palette as the tokens a store or a brand wrote**, not as a
+      table that replaced the shipped one whole — `extendTheme` copied an
+      override's `syntax` and `syntaxColors` handed it to a host as-is, so a
+      palette saved by a release that shipped fewer token types, a token JSON
+      wrote as `null`, or a field a theme editor cleared reached a `<code>` host
+      with keys missing, and the runtime painted its own dark-designed colour for
+      each one — the foreign palette this seam exists to remove; the audit refused
+      the row, but nothing on the paint path did, and `Theme.syntax` promised a
+      complete table the value did not carry. A mode's table in a stored
+      `PlatformStyle` had the same shape and needed a cast to hand a shortened one
+      over. `syntaxPalette(stored, fallback)` is the rule every colour role
+      follows: a token the store named as a colour is its own, every token it did
+      not name answers the shipped table for the theme's mode and variant, and a
+      complete palette is handed back as the object it is. `syntaxColors` paints
+      through it (so `nativeTextTheme` always hands the host a complete table),
+      `extendTheme` merges token by token from the base's resolved table,
+      `syntaxFailures` still reads the palette **as the store wrote it** so the
+      gate names every lost token, `ThemeOverrides.syntax` and
+      `PlatformStyle.syntax` (authored) take a partial table, and
+      `ThemeOverridesSource.syntax`/`PlatformStyleSource.syntax` take the storage
+      shape (`StoredSyntax`) without a cast. `syntax.test.ts` gains `a palette a
+      store wrote short` (5 cases: the restored theme, the host object, the report
+      that still refuses the row, a complete palette handed back as itself, and an
+      authored one-token override) and `apply-style.test.ts` gains `completes a
+      look's palette from the base, token by token` (with the authored table as
+      the positive control). Directions measured: with HEAD's `syntax.ts` and
+      `theme.ts` restored, five cases fail by name (`expected null to be
+      '#A1A9B7'` three times, `expected undefined to be '#FFC94D'` twice) while
+      the complete-palette case still passes. Green: 53 files / **3 151** tests,
+      `check-types`, `oxlint`, `oxfmt`, `check:tests` and `check:exports` clean.
+      Docs: `docs/tokens.md` §Syntax palette/§Paint-ready values,
+      `docs/design-system.md` §9, the package README §Syntax palette and the
+      `Theme`/`ThemeOverrides` JSDoc. Verified in a runtime: live
+      `syntax-palette` **1/1** (the probe paints the palette this seam hands the
+      host); the merge and the report have no scenario of their own.
+
+`[ ]` Carry the **token-by-token palette rule into the inventory** — the
+      `Syntax palette` row in `COMPONENTS.md` still says a brand "replaces the
+      table whole" and that a host "would otherwise paint its own colour for that
+      token"; both are false since `syntaxColors` completes a stored palette, and
+      the row should say so beside the report that still refuses the lost token.
+      Owner: inventory (not a `tokens-theme` path).
 
 `[x]` Read the **value a store wrote apart from the role an older release never
       carried** — the previous fix read a blank colour as the absence it is and

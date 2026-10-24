@@ -40,7 +40,12 @@ import {
   type Spacing,
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
-import type { SyntaxColors } from "./syntax.js";
+import {
+  syntaxColors,
+  syntaxPalette,
+  type StoredSyntax,
+  type SyntaxColors,
+} from "./syntax.js";
 import { typography, type TextStyle, type Typography } from "./typography.js";
 
 import {
@@ -109,7 +114,9 @@ export interface Theme {
   /**
    * The palette a native `<code>` host highlights with. Absent on every shipped
    * theme, which resolves the table for its mode and contrast variant; a theme
-   * that carries one replaces the table whole.
+   * that carries one names the tokens it paints, and a token it does not name is
+   * completed from that same shipped table when the theme is merged
+   * ({@link extendTheme}).
    */
   readonly syntax?: SyntaxColors;
   /**
@@ -234,11 +241,13 @@ export interface ThemeOverrides {
    */
   readonly series?: SeriesColors;
   /**
-   * Replace the syntax palette whole. A palette is complete — every token type
-   * the runtime reads — so a brand that recolors one keyword spreads the resolved
-   * table it wants to keep: `syntax: { ...syntaxColors(theme), keyword: … }`.
+   * The syntax palette's tokens to repaint. A token a brand names is its own and
+   * every token it omits answers the base theme's table for its mode and
+   * variant, so recolouring one keyword names one keyword — a complete table is
+   * a member of this shape. A stored palette that lost a token is completed when
+   * the theme is merged, not painted from the host's own defaults.
    */
-  readonly syntax?: SyntaxColors;
+  readonly syntax?: Partial<SyntaxColors>;
   /**
    * Replace the platform switch paint whole, or declare one on a theme that
    * carries none. A style declares one when its platform's toggle is not the
@@ -281,7 +290,7 @@ export type Stored<T> =
       : T | null;
 
 /** The groups an override replaces whole, so a stored one is not merged. */
-type WholeGroup = "series" | "syntax" | "switch" | "switchMetrics";
+type WholeGroup = "series" | "switch" | "switchMetrics";
 
 /**
  * A partial theme as a store hands it back.
@@ -309,7 +318,13 @@ export type ThemeOverridesSource = {
 } & {
   readonly [K in Exclude<keyof ThemeOverrides, "name">]?: K extends WholeGroup
     ? ThemeOverrides[K] | null
-    : Stored<ThemeOverrides[K]>;
+    : K extends "syntax"
+      ? // A palette is named token by token, and a store writes the tokens it
+        // carries — an older release's subset, a cleared field's `null`. The
+        // open record is the shape a decoder hands over without a cast; the
+        // missing tokens are completed from the base's table when merged.
+        StoredSyntax | null
+      : Stored<ThemeOverrides[K]>;
 };
 
 /**
@@ -620,6 +635,14 @@ export function getTheme(
  * the theme report a number where its type promises a string, and the next
  * `applyStyle` over it threw `TypeError: base.name.trim is not a function`.
  *
+ * A **syntax palette** is read token by token, like a colour role: the tokens an
+ * override names are its own, and a token it does not name — one an older
+ * release had not shipped, one JSON wrote as `null`, one a cleared field wrote
+ * as `""` — answers the base's table for its mode and variant instead of the
+ * runtime's dark-designed default. The merged palette is complete, so the type
+ * a `Theme` promises is the one the painter reads; `syntaxFailures` still reads
+ * the stored shape and names the token to repair.
+ *
  * A **base** a store truncated past the type scale or the density box is read
  * as the identity theme of the base's own mode and contrast for that group — the
  * values a painter answers anyway — because neither type has a partial form for
@@ -675,10 +698,17 @@ export function extendTheme(
     borderWidth: overlay(base.borderWidth, overrides.borderWidth),
     iconSize: overlay(base.iconSize, overrides.iconSize),
     series: overrides.series ?? base.series,
-    // A complete palette, like a series: twenty-four token types are the set the
-    // runtime reads, so a partial one would leave a token on the runtime's own
-    // colour. A brand edits one token by spreading the table it keeps.
-    syntax: overrides.syntax ?? base.syntax,
+    // A palette is named token by token: the tokens an override names are its
+    // own, and every one it does not name answers the table the base resolves
+    // for its mode and variant. That is the rule every colour role follows —
+    // painting the base's value, while `syntaxFailures` reads the palette as the
+    // store wrote it and names the absent token for the gate. Reading the two as
+    // one group handed a code host a table missing twenty-one keys, which the
+    // runtime paints from its own dark-designed palette.
+    syntax:
+      overrides.syntax == null
+        ? base.syntax
+        : syntaxPalette(overrides.syntax, syntaxColors(base)),
     // A switch is one control's paint in three slots; a half-declared one paints
     // the slots it lost with nothing, so an override replaces the set whole. An
     // override that names none keeps the base's declaration — the accent switch

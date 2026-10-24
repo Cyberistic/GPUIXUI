@@ -16,7 +16,7 @@ import {
   type Radius,
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
-import { darkSyntax, type SyntaxColors } from "./syntax.js";
+import { darkSyntax, type StoredSyntax, type SyntaxColors } from "./syntax.js";
 import type {
   SwitchColors,
   SwitchMetrics,
@@ -111,8 +111,12 @@ export interface PlatformStyle extends PlatformType {
    * reason it owns a `series`: the tokens are read against that page. It follows
    * the same rule as {@link colors} — a base of another contrast variant keeps
    * its own palette.
+   *
+   * A mode's table is read **token by token**, like a theme's: the tokens a look
+   * names are its own and the rest answer the base theme's table for that mode,
+   * so a style can repaint a keyword without restating twenty-three tokens.
    */
-  readonly syntax?: Readonly<Partial<Record<ThemeMode, SyntaxColors>>>;
+  readonly syntax?: Readonly<Partial<Record<ThemeMode, Partial<SyntaxColors>>>>;
   /**
    * The contrast variant the palette is designed for. A base theme that needs
    * more keeps its own colours — accessibility outranks the platform look — so
@@ -165,7 +169,7 @@ export interface PlatformStyleSource {
   /** The categorical scale the look paints, per mode, or `null` for none. */
   readonly series?: Partial<Record<ThemeMode, SeriesColors>> | null;
   /** The syntax palette the look highlights with, per mode, or `null` for none. */
-  readonly syntax?: Partial<Record<ThemeMode, SyntaxColors>> | null;
+  readonly syntax?: Partial<Record<ThemeMode, StoredSyntax | null>> | null;
   /** The platform's own switch paint, per mode, or `null` for the accent switch. */
   readonly switch?: Partial<Record<ThemeMode, SwitchColors>> | null;
   /** The box the platform's own switch is drawn in. */

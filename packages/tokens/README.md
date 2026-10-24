@@ -1113,8 +1113,9 @@ tables** follow the same rule. `seriesFailures` measures every one of the five
 positions a chart indexes, so a stored table shorter than that — or with a `null`
 position — is reported on every surface and in every pair instead of passing
 while series 2 to 5 paint nothing. `syntaxFailures` reports every token a stored
-palette does not name, because carrying `syntax` replaces the shipped table whole
-and the host would otherwise paint its own colour for that token; the palette is
+palette does not name: the paint completes it from the shipped table for the
+theme's mode and variant, but the gate still names the field a store lost rather
+than passing a palette that no longer carries it; the palette is
 read as a colour per token, so the `constructor` key a hand-written literal
 inherits from `Object.prototype` is the missing token it is, not a function the
 contract tries to measure.
@@ -1466,15 +1467,18 @@ high-contrast tables hold their comment at AAA too.
 import { extendTheme, syntaxColors } from "@gpuixui/tokens";
 
 syntaxColors(theme).keyword; // the mode's keyword colour
-const brand = extendTheme(theme, {
-  syntax: { ...syntaxColors(theme), keyword: "#7A1F5C" },
-});
-syntaxColors(brand).number; // the value it spread
+const brand = extendTheme(theme, { syntax: { keyword: "#7A1F5C" } });
+syntaxColors(brand).number; // the base theme's table, completed when merged
 ```
 
-A brand's palette **replaces the table whole** — the host reads all twenty-four
-keys, so a partial palette would leave the rest on the runtime's colours — and
-a `PlatformStyle` may carry one per mode for its own page. The **fence** inside a
+A brand's palette is owned **token by token**: a token the theme names is its
+own, and every token it does not name answers the shipped table for the theme's
+mode and contrast variant (`syntaxPalette(stored, fallback)` is that rule alone),
+so a brand names only the token it recolours and a saved palette that predates a
+token type still paints this package's colour for it. A `PlatformStyle` may carry
+one per mode for its own page, read by the same rule.
+
+The **fence** inside a
 rendered document is the surface that decides the tightest cell: the runtime
 paints 3.5% of a neutral ink over the page (`nativeFenceInk`) and another 2% under
 the language strip (`nativeFenceHeaderInk`), so a token that clears the page can

@@ -3377,7 +3377,8 @@ lost the whole `colors` group hands the host no colour at all, and
 from. The type scale is read through the same paint seam rather than the gate: a
 lost type, radius or spacing group answers the library's own value (the rule
 `textStyle` follows), while `missingTokens` remains the refusal, and `syntax`
-resolves from the shipped table when the theme carries none.
+resolves from the shipped table when the theme carries none, completing a palette
+that names only some tokens when the theme is merged.
 
 ### The document's own marks
 
@@ -3748,34 +3749,53 @@ fenced block paints a fill of its own on top of one of them, so the palette is
 measured there too, and a style that repaints the page carries its own table
 (§The fence a document paints).
 
+`syntaxColors(theme)` **completes** the palette it paints. A theme that carries
+`syntax` names the tokens it paints, and every token it does not name — one an
+older release had not shipped, one JSON wrote as `null`, one a cleared field
+wrote as `""` — answers the shipped table for the theme's mode and variant. A
+saved palette that predates a token type therefore cannot hand a host a key it
+would paint from its own palette, and recolouring one token never means
+restating the other twenty-three. `syntaxPalette(stored, fallback)` is that rule
+alone, for a caller holding a stored table and the table it inherits from;
+`StoredSyntax` is the shape both take (`ThemeOverridesSource.syntax` is that same
+shape), so a decoder hands its value over without the cast the storage boundary
+used to need.
+
 `syntaxFailures(theme, floors?)` reports every token that misses its floor,
 naming the token, the fill and the measured ratio, and reporting a colour it
 cannot measure rather than skipping it. A **token the palette does not name** is
-one of those unmeasurable values: a theme that carries `syntax` replaces the
-table whole, so a stored palette with a token missing would otherwise leave the
-host on its own colour for that token while the audit passed. `auditTheme`
-includes that report, so a brand is held to it. A theme owns a palette by
-carrying `syntax`, which **replaces the table whole** — the host reads all
-twenty-four keys, so a partial palette would leave the rest on the runtime's own
-colours. Recolor one token by spreading the table the theme resolves:
+one of those unmeasurable values: the report reads the palette **as the store
+wrote it**, so a saved palette with a token missing still names every token to
+repair, even though the paint completes it from the shipped table. `auditTheme`
+includes that report, so a brand is held to it — and the gate is run on the row a
+store hands back, not only on the theme restored from it.
+
+An **authored** palette is read the same way, so a brand names only the tokens
+it repaints — a complete table is a member of the same shape:
 
 ```ts
-import { auditTheme, extendTheme, syntaxColors } from "@gpuixui/tokens";
+import { auditTheme, extendTheme, restoreTheme, syntaxColors } from "@gpuixui/tokens";
 
 const brand = extendTheme(theme, {
-  syntax: { ...syntaxColors(theme), keyword: "#7A1F5C", string: "#0B5E4A" },
+  syntax: { keyword: "#7A1F5C", string: "#0B5E4A" },
 });
 
 syntaxColors(brand).keyword; // the brand's own
-syntaxColors(brand).number; // the value it spread
-auditTheme(brand).syntax; // [] — every token still clears its floor
+syntaxColors(brand).number; // the base theme's table
+auditTheme(brand).syntax; // [] — the merged paint clears every floor
+
+// A row a store wrote short: the paint completes it, the report names what it lost.
+const saved = decodeTheme(fromStorage); // your boundary, typed `StoredTheme`
+syntaxColors(restoreTheme(saved)).comment; // the theme's table, not the runtime's
+syntaxFailures(saved); // one line per token the store did not carry
 ```
 
 A **look** owns one the same way, in the `PlatformStyle` shape: a style may
 declare `syntax` per mode, `applyStyle` hands it over under the rule its palette
 follows (a high-contrast base keeps its own), and a style that declares none
-resolves the base theme's table. A runnable example resolves the palette for a
-brand and audits it; see
+resolves the base theme's table. A mode's table is read token by token too, so a
+saved look that names one token answers the base theme's for the rest. A
+runnable example resolves the palette for a brand and audits it; see
 [`src/syntax.example.ts`](../packages/tokens/src/syntax.example.ts).
 
 **Adoption.** `nativeTextTheme` hands `syntaxColors(theme)` to the host as

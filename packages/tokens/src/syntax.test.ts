@@ -36,6 +36,8 @@ import {
   syntaxRoleFloors,
   syntaxRoles,
   syntaxSurfaces,
+  type StoredSyntax,
+  type SyntaxColors,
   type SyntaxSource,
 } from "./syntax.js";
 import {
@@ -54,7 +56,9 @@ import {
   highContrastLightTheme,
   lightTheme,
   platformTheme,
+  restoreTheme,
   themes,
+  type StoredTheme,
   type Theme,
 } from "./theme.js";
 
@@ -196,7 +200,7 @@ describe("the syntax palette", () => {
     expect(syntaxColors(houseSyntaxTheme)).toBe(houseSyntaxTheme.syntax);
   });
 
-  it("replaces a brand's palette whole, and leaves an untouched theme absent", () => {
+  it("merges a brand's palette token by token, and leaves an untouched theme absent", () => {
     const brand = extendTheme(lightTheme, {
       syntax: { ...syntaxColors(lightTheme), keyword: "#7A1F5C" },
     });
@@ -468,5 +472,98 @@ describe("a stored theme mode", () => {
         (failure) => failure.role === "keyword",
       ),
     ).toBe(true);
+  });
+});
+
+/**
+ * Guards the palette a store wrote short.
+ *
+ * `syntax` was a whole group: `extendTheme` copied the table the store wrote and
+ * `syntaxColors` handed it to the native host as-is. A row saved by a release
+ * that shipped fewer token types — or one whose field was cleared, which JSON
+ * writes as `null` — reached a `<code>` host with keys missing, and the runtime
+ * painted its own dark-designed colour for each one: the foreign palette this
+ * seam exists to remove. The report refused it, but the paint had no such guard,
+ * and `Theme.syntax` promised a complete table the value did not carry.
+ *
+ * The rule now matches every colour role: painting completes the table from the
+ * shipped one for the theme's mode and variant, while the report keeps reading
+ * the palette as the store wrote it and names the token that was lost.
+ */
+describe("a palette a store wrote short", () => {
+  // The shape a store hands back, typed without a cast. `keyword` is the token
+  // it named, `comment` one JSON wrote as `null`, `number` a cleared field, and
+  // `string` a dialect the measurement cannot resolve.
+  const stored: StoredTheme = {
+    mode: "dark",
+    syntax: {
+      keyword: "#A7A9FF",
+      comment: null,
+      number: "",
+      string: "oklch(0.7 0.14 150)",
+    },
+  };
+
+  it("completes the table a restored theme paints", () => {
+    const restored = restoreTheme(stored);
+
+    // The token it named is its own, and every token it lost is the dark table's
+    // rather than a key the runtime would paint from its own palette.
+    expect(restored.syntax?.keyword).toBe("#A7A9FF");
+    expect(restored.syntax?.comment).toBe(darkSyntax.comment);
+    expect(restored.syntax?.number).toBe(darkSyntax.number);
+    // A named value is not rewritten by the paint: the report measures it.
+    expect(restored.syntax?.string).toBe("oklch(0.7 0.14 150)");
+    expect(Object.keys(restored.syntax ?? {}).toSorted()).toEqual(
+      [...syntaxRoles].toSorted(),
+    );
+  });
+
+  it("completes the palette the native host is handed", () => {
+    const host = nativeTextTheme({ ...darkTheme, syntax: stored.syntax });
+
+    expect(host.syntax.keyword).toBe("#A7A9FF");
+    expect(host.syntax.comment).toBe(darkSyntax.comment);
+    expect(syntaxRoles.every((role) => host.syntax[role] !== undefined)).toBe(
+      true,
+    );
+  });
+
+  it("still reports every token the store lost", () => {
+    // The row a consumer audits: the theme it saved, with the palette its store
+    // wrote — no cast, because the report takes the storage shape.
+    const row = { ...darkTheme, syntax: stored.syntax };
+    const lost = syntaxRoles.filter((role) => role !== "keyword");
+    const reported = syntaxFailures(row).map(({ role }) => role);
+
+    // The one token it named is measured; every token it did not name is
+    // reported unmeasurable on both fills, so the gate names the palette.
+    expect(reported.toSorted()).toEqual([...lost, ...lost].toSorted());
+    // The paint completes it; the gate still refuses it.
+    expect(restoreTheme(stored).syntax?.comment).toBe(darkSyntax.comment);
+    expect(auditTheme(row).passed).toBe(false);
+    expect(new Set(auditTheme(row).syntax.map(({ role }) => role))).toEqual(
+      new Set(lost),
+    );
+  });
+
+  it("hands a complete palette back as the object it is", () => {
+    const authored: SyntaxColors = { ...darkSyntax, keyword: "#C7CBFF" };
+    const complete: StoredSyntax = authored;
+
+    expect(syntaxColors({ mode: "dark", syntax: authored })).toBe(authored);
+    expect(syntaxColors({ mode: "dark", syntax: complete })).toBe(complete);
+    // The shipped themes keep resolving their table by mode and variant.
+    expect(syntaxColors(darkTheme)).toBe(darkSyntax);
+  });
+
+  it("reads an authored override token by token", () => {
+    // The type a brand writes: the tokens it repaints, not the whole table.
+    const brand = extendTheme(darkTheme, { syntax: { keyword: "#C7CBFF" } });
+
+    expect(brand.syntax?.keyword).toBe("#C7CBFF");
+    expect(brand.syntax?.number).toBe(darkSyntax.number);
+    expect(brand.syntax?.comment).toBe(darkSyntax.comment);
+    expect(Object.keys(brand.syntax ?? {})).toHaveLength(syntaxRoles.length);
   });
 });

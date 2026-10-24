@@ -80,7 +80,11 @@ import {
 import { decorativeFloor } from "./decorative.js";
 import { radius, spacing, type Radius, type Spacing } from "./scale.js";
 import { statusTone, textStyle, type TypeSource } from "./styles.js";
-import { syntaxColors, type SyntaxColors } from "./syntax.js";
+import {
+  syntaxColors,
+  type StoredSyntax,
+  type SyntaxColors,
+} from "./syntax.js";
 import { themeModeOf, type ThemeMode } from "./mode.js";
 import { typography } from "./typography.js";
 
@@ -99,7 +103,13 @@ export interface NativeTextSource extends TypeSource, ColourSource {
   readonly spacing?: Readonly<Partial<Spacing>> | null;
   readonly mode?: unknown;
   readonly contrast?: unknown;
-  readonly syntax?: SyntaxColors;
+  /**
+   * The syntax palette as the theme carries it — a saved table may name only
+   * some tokens, and {@link syntaxColors} completes it from the table for the
+   * theme's mode and variant, so a host is never handed a key the runtime would
+   * paint from its own palette.
+   */
+  readonly syntax?: StoredSyntax | null;
 }
 
 /**
