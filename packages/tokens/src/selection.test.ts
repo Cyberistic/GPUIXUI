@@ -870,8 +870,20 @@ describe("the wash a theme cannot derive", () => {
     // The seam list a reader checks a stored theme against names every paint
     // helper, so a page that drops this one sends them to an unlisted throw.
     expect(catalogue).toContain(
-      "`brandTextOn`, `filledHover`, `filledPressed`, `selectionOn` and `statusTone`",
+      "answer `undefined` when the roles they move are gone",
     );
+    [
+      "brandText",
+      "brandTextOn",
+      "disabledAction",
+      "filledHover",
+      "filledPressed",
+      "focusRing",
+      "selectionOn",
+      "statusTone",
+    ].forEach((helper) => {
+      expect(catalogue).toContain(`\`${helper}\``);
+    });
     expect(design).toContain(
       "`selectionOn` (for a surface, the wash or the page",
     );

@@ -1141,10 +1141,10 @@ The paint follows the same rule: a role
 the theme lost paints nothing, `elevationShadow` returns `undefined` for a
 level — or a whole scale — it does not carry, `brandText`/`statusTone`
 answer `undefined` when the roles they derive from are gone, as do
-`selectionOn` (for a surface, the wash or the page it cannot read) and the
-action fills `filledHover`/`filledPressed` (for a role or foreground a stored
-theme lost) — a `Theme` still answers a colour outright — so no surface throws
-on the defect
+`selectionOn` (for a surface, the wash or the page it cannot read), the action
+fills `filledHover`/`filledPressed`, the disabled pair `disabledAction` and the
+programmatic ring `focusRing` — a `Theme` still answers a colour outright — so
+no surface throws on the defect
 the report just
 explained (§7). The **retint** keeps the same rule: `extendTheme` restates a
 stored scale level by level, so a level the theme lost stays absent and the report

@@ -897,8 +897,9 @@ than throwing (`elevationShadow` returns `undefined` for a level a theme does no
 carry — or for every level when the scale is gone — and for a level a store wrote
 as anything but a list, or a list holding a `null`, which `invalidShadowColors`
 names at its position with no colour; `brandText`/`statusTone`, the derived
-action fills (`filledHover`/`filledPressed`) and the per-surface `selectionOn`
-answer `undefined` when the roles they derive from are gone).
+action fills (`filledHover`/`filledPressed`), the disabled pair
+(`disabledAction`), the programmatic ring (`focusRing`) and the per-surface
+`selectionOn` answer `undefined` when the roles they derive from are gone).
 
 A store hands back `null` where the theme had no value — JSON has no
 `undefined` — and the suite reads that as the absence it is: a numeric token kept

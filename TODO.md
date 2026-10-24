@@ -389,7 +389,25 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 224/224
+`[x]` `[██████████]` 225/225
+
+`[x]` Answer the **programmatic ring and the disabled pair from the roles a theme still carries** —
+`focusRing` (`styles.ts`) read `theme.colors.ring` and `disabledAction` (`disabled.ts`) read
+`theme.colors.disabled`/`disabledForeground` straight off the group, so a theme a store truncated past it threw
+`TypeError: Cannot read properties of undefined (reading 'ring')` / `(reading 'disabled')` from a mouse-opened
+dialog's first paint and a disabled action's first frame — while their siblings (`controlFocusRing`,
+`keyboardFocusRing`, `statusTone`, `filledFeedback`) answer `undefined` and the gate reports the absence. Both
+now read `themeColors` and answer `undefined` under a colour-source overload (`FocusRing`/`DisabledActionStyle`
+for a `Theme`, `| undefined` for a stored one), the pair `statusTone` uses. The primitives' disabled branch
+already falls back to the fade on an absent pair, so no consumer changed and no paint moved. `focus.test.ts`
+gains `paints no ring for a theme that lost the role, not a throw` (the whole group, an empty group, and one
+role still painting), `disabled.test.ts` `answers no pair for a theme that lost the roles, not a throw` (the
+whole group, one role, and a complete pair), and `incomplete.test.ts`'s `paints nothing through the seams the
+reports share` names both plus the inventory clause. Directions measured: with the direct reads restored, 3
+cases fail by name (`Cannot read properties of undefined (reading 'ring')`, `(reading 'disabled')`); with the
+seams the package is 49 files / 3 008 tests and both consumer packages type-check. Docs: `docs/tokens.md`
+§Paint-ready values, `docs/design-system.md` §9, the package README and the `Focus state` row. No native
+scenario applies — two pure derivations and their absence rule.
 
 `[x]` Derive the **action fills from the seam that already models absence** — `filledHover`/`filledPressed`
 (`styles.ts`) read `theme.colors[role]` and `theme.colors.foreground` directly even though their sibling

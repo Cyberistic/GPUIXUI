@@ -160,6 +160,31 @@ describe("focusRing", () => {
       focusRing(lightTheme).boxShadow.spreadRadius,
     );
   });
+
+  it("paints no ring for a theme that lost the role, not a throw", () => {
+    // A programmatic focus is the one path with no `focusVisible` fallback, so
+    // the ring has to answer rather than empty the window — the rule
+    // `controlFocusRing` follows for a disabled control.
+    expect(focusRing({ borderWidth: lightTheme.borderWidth })).toBeUndefined();
+    expect(
+      focusRing({ borderWidth: lightTheme.borderWidth, colors: {} }),
+    ).toBeUndefined();
+    // The absence is the role, not the group: one role still paints.
+    expect(
+      focusRing({
+        borderWidth: lightTheme.borderWidth,
+        colors: { ring: "#7A57FA" },
+      }),
+    ).toEqual({
+      boxShadow: {
+        offsetX: 0,
+        offsetY: 0,
+        blurRadius: 0,
+        spreadRadius: lightTheme.borderWidth.strong,
+        color: "#7A57FA",
+      },
+    });
+  });
 });
 
 describe("focus example", () => {

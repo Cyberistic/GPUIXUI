@@ -39,10 +39,12 @@ import {
   defaultDensity,
   densityNames,
   densityPresets,
+  disabledAction,
   elevationShadow,
   extendTheme,
   filledHover,
   filledPressed,
+  focusRing,
   highlightFailures,
   invalidColorRoles,
   invalidNumbers,
@@ -462,6 +464,19 @@ describe("an absent colour group", () => {
     // resting paint instead of losing the window.
     expect(filledHover(theme, "primary")).toBeUndefined();
     expect(filledPressed(theme, "primary")).toBeUndefined();
+    // The programmatic focus ring and the disabled pair are paint seams too.
+    expect(focusRing(theme)).toBeUndefined();
+    expect(disabledAction(theme)).toBeUndefined();
+    // The inventory records the pair as the seam it is, so a reader checking a
+    // stored theme finds both names beside the others.
+    const inventory = readFileSync(
+      new URL("../../../COMPONENTS.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(inventory).toContain(
+      "`focusRing` answers `undefined` when the theme lost `ring`",
+    );
   });
 
   it("reads every shipped style as whole", () => {

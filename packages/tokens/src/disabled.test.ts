@@ -392,6 +392,19 @@ describe("the fade's page scope", () => {
       ).toBeGreaterThanOrEqual(contrastFloors.disabled);
     });
   });
+
+  it("answers no pair for a theme that lost the roles, not a throw", () => {
+    // A stored theme that predates the group falls back to the fade the control
+    // already knows, rather than losing the window on its first disabled frame.
+    expect(disabledAction({})).toBeUndefined();
+    expect(disabledAction({ colors: { disabled: "#E3E3E8" } })).toBeUndefined();
+    // The absence is the role, not the group: one role alone is not a pair.
+    expect(
+      disabledAction({
+        colors: { disabled: "#E3E3E8", disabledForeground: "#767A82" },
+      }),
+    ).toEqual({ backgroundColor: "#E3E3E8", color: "#767A82" });
+  });
 });
 
 /**

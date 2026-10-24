@@ -7,7 +7,7 @@ import {
 } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
-import { isControlSize, type ControlSize } from "./scale.js";
+import { isControlSize, type BorderWidth, type ControlSize } from "./scale.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 import { isTextRole, type FontWeight, type TextRole } from "./typography.js";
 
@@ -183,6 +183,16 @@ export interface FocusRing {
 }
 
 /**
+ * The source `focusRing` reads: the roles, and the width of the line it draws.
+ * A {@link Theme} is one; a theme restored from storage that predates a role is
+ * the other, which is why the roles are optional.
+ */
+export interface FocusRingSource extends ColourSource {
+  /** The scale's strong width, which is the ring's spread. */
+  readonly borderWidth: BorderWidth;
+}
+
+/**
  * The unconditional focus ring.
  *
  * A zero-offset, zero-blur shadow spread by the theme's `borderWidth.strong`:
@@ -191,19 +201,30 @@ export interface FocusRing {
  * keyboard input — a dialog or menu opened by a mouse. For keyboard focus use
  * {@link keyboardFocusRing}, which the runtime paints itself.
  *
+ * A theme restored from storage that lost its `ring` role answers `undefined`
+ * rather than throwing — the rule {@link controlFocusRing} follows for a
+ * disabled control — so a programmatic focus paints no ring instead of losing
+ * the window; a `Theme` answers a ring outright.
+ *
  * @example
  * ```tsx
  * <div style={focused ? focusRing(theme) : undefined} />
  * ```
  */
-export function focusRing(theme: Theme): FocusRing {
+export function focusRing(theme: Theme): FocusRing;
+export function focusRing(source: FocusRingSource): FocusRing | undefined;
+export function focusRing(source: FocusRingSource): FocusRing | undefined {
+  const color = themeColors(source).ring;
+  if (color === undefined) {
+    return undefined;
+  }
   return {
     boxShadow: {
       offsetX: 0,
       offsetY: 0,
       blurRadius: 0,
-      spreadRadius: theme.borderWidth.strong,
-      color: theme.colors.ring,
+      spreadRadius: source.borderWidth.strong,
+      color,
     },
   };
 }

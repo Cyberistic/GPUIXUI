@@ -24,9 +24,10 @@
  * anywhere else.
  */
 
-import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
+import { themeColors, type ColourSource } from "./color.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
 import { fadedPair, type FadeFailure, type FadePair } from "./fade.js";
+import type { Theme } from "./theme.js";
 
 /**
  * The share of itself a control keeps while disabled.
@@ -158,14 +159,26 @@ export interface DisabledActionStyle {
  * (`decorative.ts` §disabledFace). Both high-contrast themes shipped it equal to
  * `secondary`; it is the quiet step now.
  *
+ * A theme restored from storage that lost either role answers `undefined` rather
+ * than throwing — the rule {@link statusTone} follows — so a control falls back
+ * to the fade instead of losing the window; a `Theme` answers a pair outright.
+ *
  * @example
  * ```tsx
  * <div style={disabled ? disabledAction(theme) : undefined} />
  * ```
  */
-export const disabledAction = (theme: {
-  readonly colors: ThemeColors;
-}): DisabledActionStyle => ({
-  backgroundColor: theme.colors.disabled,
-  color: theme.colors.disabledForeground,
-});
+export function disabledAction(theme: Theme): DisabledActionStyle;
+export function disabledAction(
+  theme: ColourSource,
+): DisabledActionStyle | undefined;
+export function disabledAction(
+  theme: ColourSource,
+): DisabledActionStyle | undefined {
+  const colors = themeColors(theme);
+  const background = colors.disabled;
+  const label = colors.disabledForeground;
+  return background === undefined || label === undefined
+    ? undefined
+    : { backgroundColor: background, color: label };
+}

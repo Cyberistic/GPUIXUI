@@ -1499,10 +1499,10 @@ every pair, strip and mark is reported unmeasurable, and `auditTheme` returns a
 failing report with the other groups still measured instead of throwing
 `TypeError: Cannot read properties of undefined (reading 'background')`. The
 paint helpers that derive a colour from roles read the same seam: `brandText`,
-`brandTextOn`, `filledHover`, `filledPressed`, `selectionOn` and `statusTone`
-answer `undefined` when the roles they move are gone — the absence rule
-`elevationShadow` follows for a level — while a `Theme` still answers a colour
-outright, because its type carries the group.
+`brandTextOn`, `disabledAction`, `filledHover`, `filledPressed`, `focusRing`,
+`selectionOn` and `statusTone` answer `undefined` when the roles they move are
+gone — the absence rule `elevationShadow` follows for a level — while a `Theme`
+still answers a colour outright, because its type carries the group.
 
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the
