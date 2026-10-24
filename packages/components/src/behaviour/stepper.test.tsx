@@ -164,6 +164,49 @@ describe("Stepper", () => {
     vertical.unmount();
   });
 
+  it("paints a stored orientation name it does not carry as the horizontal axis", () => {
+    // The bug guarded: the root indexed `STEPPER_ORIENTATION[orientation]` raw,
+    // so an axis a workspace saved under a name this release does not carry
+    // (`"column"`, an older spelling) answered `undefined`, the recipe dropped
+    // the entry, and the list painted with no axis and no alignment at all —
+    // a stepper a record saved as vertical laid its steps out side by side in
+    // the runtime's own row. The documented `horizontal` is the answer for a
+    // name the union does not carry, the rule `Tabs` follows for its axis.
+    const stepper = renderComponent(
+      // @ts-expect-error a stored name is not the union's literal
+      <Stepper value={1} testId="stepper" orientation="column">
+        <StepperStep value={1} label="Account" />
+      </Stepper>,
+    );
+
+    try {
+      expect(stepper.renderer.findByTestId("stepper")?.style).toMatchObject({
+        flexDirection: "row",
+        alignItems: "flex-start",
+      });
+    } finally {
+      stepper.unmount();
+    }
+  });
+
+  it("keeps a shipped orientation when it was stored as one", () => {
+    // The negative control: the guard must not flatten every list to a row.
+    const stepper = renderComponent(
+      <Stepper value={1} testId="stepper" orientation="vertical">
+        <StepperStep value={1} label="Account" />
+      </Stepper>,
+    );
+
+    try {
+      expect(stepper.renderer.findByTestId("stepper")?.style).toMatchObject({
+        flexDirection: "column",
+        alignItems: "stretch",
+      });
+    } finally {
+      stepper.unmount();
+    }
+  });
+
   it("names the list and reports list and listitem roles", () => {
     const stepper = renderComponent(<Checkout value={1} />);
 

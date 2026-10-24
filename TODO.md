@@ -2654,11 +2654,17 @@ a merge over a stored theme.
       and the row records the two address limits read from the source: no child
       `testId` is derived (`PanelGroup` and `SplitPane` derive theirs), and the
       strip answers no key. Directions measured: the README printing 31 checks
-      fails the guard by name, and `splitWidths` reading the full width instead
-      of the space minus the divider fails `derives each pane from the split's
-      own share arithmetic` (`expected 412.1 to be 412.1` on the second pane,
-      first pane 224 vs 221.9). Green: the probe is 1/1 live, the guard file
-      passes, and `nub run --filter playground test` is green beside it. Docs:
+      fails the guard (`expected 31 to be 32`); `splitWidths` reading the full
+      width instead of the space minus the divider fails the fixture case
+      (`expected 224 to be close to 221.89999999999998`); and expecting the
+      press to report `split:root` (the behaviour a fixed component would have)
+      fails the live probe with `expected "layout=split:root
+      reports=split:root changes=1", got "layout=tabs:editor
+      reports=tabs:editor changes=1"`. Green: `--only dock-layout-lifecycle` is
+      1/1 on three runs (10.2 s, 10.2 s, 9.4 s), the guard file is green, the
+      full headless suite is 48/48, the playground suite is 121 files / 1 211
+      tests, and `@gpuixui/testing` is 8 files / 81 tests with `check-types`
+      clean. Docs:
       `apps/playground/README.md` §`dock-layout-lifecycle`, the *Tabbed panels*,
       *Nested panel arrangements* and *Docking layouts* rows in `COMPONENTS.md`,
       and the dock-owner row in `TODO.md` → Interlocks.
@@ -10456,6 +10462,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Take the **physics-free presence entry in the primitives** — `@gpuixui/motion` publishes `@gpuixui/motion/react/presence` (the provider and the two presence hooks, without the spring/inertia/timeline samplers), and `packages/components`' seam composes it so a family that only enters and leaves pays **4 modules / 29 KiB** of motion instead of 13 / 101 KiB (measured with `nub scripts/surface.ts --entry src/motion-grid.tsx`). `packages/primitives` still imports `useMotionPreference` from `@gpuixui/motion/react` in `src/components/Spinner.tsx` (and its Tooltip's presence seam from the same entry), so every components family that reaches a primitive button — `popover.tsx` measured at 12 motion modules — still loads the physics through the primitives. Changing the two import sites to `@gpuixui/motion/react/presence` closes it; the entries publish the same bindings, so nothing else moves | primitives (owns `src/components/Spinner.tsx` and `src/core/presence.ts`) | open — the motion package's half landed 2026-10-24 (`packages/motion/src/entries.test.ts`, the components seam, `docs/component-api.md` §11); the primitives' swap is the remaining half |
 
+| Fix the **`DockLayout` it renders from reporting a node where a tree is promised** — measured 2026-10-24 by the playground's `dock-layout-lifecycle` (32 checks, 0.11.0) on the shipped `@gpuixui/dock` layout: `onLayoutChange` is documented as "the next tree after a tab switch or a resize", and both handlers report the **node they changed** (`DockTabsView`'s `onLayoutChange?.(setActiveTab(node, node.id, tab.id))`, `DockSplitView`'s `{ ...node, size }`), so `onLayoutChange={setLayout}` — the call `packages/dock/README.md` and `panel-group.mdx` document — replaces the whole tree with one group. Measured: a split of two tab groups, pressing `Logs` reports `layout=tabs:editor reports=tabs:editor changes=1` and `explorer` leaves the stage; a press on the tab a group already shows reports a node too, so the report is wrong even when the switch is a no-op. The fix is for the view to splice the changed node back into the tree it was handed (`replaceNode(root, next)` by id) and keep `onLayoutChange`'s signature. The same probe measured two address limits: `DockLayout` derives no child `testId` (unlike `PanelGroup`'s `${testId}-pane-${id}` and `SplitPane`'s `${testId}-divider`), so the documented "stable locator for automation" reaches the root alone (the probe presses a trigger by the words it paints), and the trigger answers `onClick` only with no arrow-key route on the strip | dock (`packages/dock/src/dock-layout.tsx`) | open — measured 2026-10-24 by the playground workstream; the probe pins the current report, so a fix flips its checks, and `apps/playground/README.md` §`dock-layout-lifecycle` plus the Tier 4 *Tabbed panels* and *Nested panel arrangements* rows record it |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
@@ -11309,6 +11317,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `check-types` clean. Docs: `docs/charts.mdx` §Limitations, the README's
     chart paragraph and the Charts row. No native scenario applies — the words
     are read off the real renderer. Owner: data.
+  - [x] Read a **saved expansion set** as data, not as an iterable —
+    `useExpandedRows` built its first cursor with `HashSet.fromIterable` over
+    `initialExpanded`, and a workspace's open folders are stored data: JSON has
+    no `Set`, so a record written by another release or a field a migration
+    truncated can hand back an object (`{ "src": true }`), a number or `null`,
+    and the hook threw `TypeError: … is not iterable` during the first render —
+    a restored tree failed to open at all. `expandedSet` (`tree/logic.ts`) is
+    the reader: a list or a `Set` of text keys is the expansion, an entry that
+    is not text is not a key, and anything else is **no expansion**, the state
+    a fresh tree starts in. `tree/logic.test.ts` gains three cases (20 in the
+    file) and `src/behaviour/tree.test.tsx` mounts a tree whose saved set is an
+    object (13 in the file); directions measured: before the reader the window
+    paints nothing (`expected '' to contain 'src'`), and with it the roots
+    paint and the stored branch stays closed. Green: 253 unit / 178 behaviour
+    with `check-types` clean. Docs: `docs/tree-view.mdx` §API, the README's
+    tree paragraph and the Tree views row. No native scenario applies — the
+    mount is the real renderer. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
@@ -20429,3 +20454,5 @@ render's, read in the real renderer the behaviour suite drives. Owner: data.
 
 
 `[x]` `packages/primitives`: **a stored selection that was not a list threw the group out of the render** — a group's `value`/`defaultValue` is saved with the control (a restored settings pane, a saved permissions set), and a record written by another release can hold a map of chosen ids where this one writes a list. `CheckboxGroup` passed it to `useControlState` as the value type promises, so the first `Arr.contains(selected, …)` iterated the object: measured in a window, `TypeError: self is not iterable` left no accessibility node for any row. `storedTextList` (`core/stored.ts`) reads a list and keeps its text entries, and answers **absence** for anything else — so a `null` or an older shape leaves the group uncontrolled rather than pinning it to an empty choice nobody made; `CheckboxGroup` reads both props through it, and `ToggleGroup`'s `storedSelection` does the same for its string-or-list value. Proof: `core/stored.test.ts` (3 cases: `storedText`, `storedList`, `storedTextList`) and `runtime/groups.runtime.test.tsx`'s `paints a stored selection it cannot read as no selection, not a crash` (the rows paint unselected and a press paints the choice). Directions measured: with the raw `props.value`/`defaultValue ?? []` restored the window case fails on the exact `TypeError: self is not iterable` (`no accessibility node announced Xray`), and the `storedTextList` case fails without its guard; restored, the package is 58 files / **1 198** unit cases and the groups window suite 7/7, with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs: `docs/checkbox-group.mdx` §Limitations, the README's stored-choices bullet and the `Checkbox group` row.
+
+`[x]` `packages/components`: **a stored stepper orientation the union no longer carried laid the steps out in the runtime's own row** — `Stepper` indexed `STEPPER_ORIENTATION[orientation]` raw, so an axis a workspace saved under a name a release renamed (`"column"`, an older spelling) answered `undefined`: the recipe dropped the entry and the root painted `flex gap-6` with **no direction and no alignment at all** — a stepper a record saved as vertical laid its steps out side by side in the runtime's default row, while the component documents `horizontal` as its default and `Tabs` already reads its axis through a guard. `stepper/logic.ts` now owns `StepperOrientations` (`Schema.Literals`, the `StepperOrientation` type derived from it) and `orientationOf`, and `Stepper` resolves the caller's value **once** into the root's recipe and the step context, so the paint and the context cannot disagree; a name this release does not ship paints the documented `horizontal` axis. Proof: `src/behaviour/stepper.test.tsx` gains `paints a stored orientation name it does not carry as the horizontal axis` (a stored `"column"` paints `flexDirection: "row"` and `alignItems: "flex-start"`) and the negative control `keeps a shipped orientation when it was stored as one` (a stored `vertical` keeps `column`/`stretch`), and `src/stepper/logic.test.ts` gains two cases (both shipped axes kept; `"column"`, an upper-cased, a padded name, `undefined`, `null` and a number read as `horizontal`). Direction measured: at `HEAD` the window case fails with the painted style holding only `{ display: 'flex', gap: 24 }` against the documented axis, the negative control passes; restored, the file is 11/11 and the package is 104 files / **988** unit and 99 files / **1 059** behaviour cases green — the only reds are the four foreign `combobox-remote.test.tsx` cases recorded on the alert row above (`reveal.test.tsx`'s motion-clock case flakes under a parallel run and passes alone) — with `check-types`, `oxlint`, `oxfmt` and `check:tests` clean. Docs: `packages/components/docs/stepper.mdx` §API/§Limitations, the package README's stored-choices section and the `Stepper` row (11 native cases). No native scenario applies — the axis is the renderer's own painted style, and the four Tier 5 probes drive no stepper.

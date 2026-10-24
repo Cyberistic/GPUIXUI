@@ -9,7 +9,27 @@
 
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
-import { currentStep, statusOf } from "./logic.js";
+import { currentStep, orientationOf, statusOf } from "./logic.js";
+
+describe("orientationOf", () => {
+  it("keeps the two axes this release ships", () => {
+    expect(orientationOf("horizontal")).toBe("horizontal");
+    expect(orientationOf("vertical")).toBe("vertical");
+  });
+
+  it("reads a name it does not ship as the documented horizontal axis", () => {
+    // A saved workspace writes the axis it was built with, and a release can
+    // rename it: the root's recipe then has no entry to paint, so the list
+    // falls back to the runtime's own row with no alignment — a vertical
+    // stepper laid out side by side.
+    expect(orientationOf("column")).toBe("horizontal");
+    expect(orientationOf("Vertical")).toBe("horizontal");
+    expect(orientationOf(" vertical")).toBe("horizontal");
+    expect(orientationOf(undefined)).toBe("horizontal");
+    expect(orientationOf(null)).toBe("horizontal");
+    expect(orientationOf(1)).toBe("horizontal");
+  });
+});
 
 describe("currentStep", () => {
   it("keeps a value it can read, including one below the first step", () => {

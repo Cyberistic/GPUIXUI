@@ -40,13 +40,19 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { controlHeight, useTheme, type Theme } from "./internal/theme.js";
-import { currentStep, statusOf, type StepperStatus } from "./stepper/logic.js";
-
-/** The two axes a stepper can run along. */
-export type StepperOrientation = "horizontal" | "vertical";
+import {
+  currentStep,
+  orientationOf,
+  statusOf,
+  type StepperOrientation,
+  type StepperStatus,
+} from "./stepper/logic.js";
 
 /** Where a step sits relative to the current one. */
 export type { StepperStatus } from "./stepper/logic.js";
+
+/** The two axes a stepper can run along. */
+export type { StepperOrientation } from "./stepper/logic.js";
 
 /** What a step derives from the root. */
 interface StepperContextValue {
@@ -111,7 +117,7 @@ export interface StepperProps extends Omit<Props, "children"> {
  */
 export const Stepper = ({
   value,
-  orientation = "horizontal",
+  orientation: requestedOrientation = "horizontal",
   label,
   className,
   children,
@@ -119,6 +125,9 @@ export const Stepper = ({
   ...rest
 }: StepperProps) => {
   const theme = useTheme();
+  // An axis saved with the workspace reaches the root as a name this release
+  // may not carry; the recipe, the alignment and the context read one answer.
+  const orientation = orientationOf(requestedOrientation);
   assertParts(stepperRoot, children);
 
   return (

@@ -186,6 +186,13 @@ and the wash while the ink stayed the tone's.
 `src/behaviour/alert.test.tsx` holds the fallback and a shipped `danger` alert
 as the negative control.
 
+A stepper's `orientation` is saved with the workflow, so `stepper/logic.ts`'s
+`orientationOf` reads it once before the root's recipe and the step context: a
+name this release does not ship paints the documented `horizontal` axis instead
+of falling back to the runtime's own row with no alignment.
+`src/behaviour/stepper.test.tsx` holds the fallback and a shipped `vertical`
+list as the negative control.
+
 ## Keyboard activation
 
 Enter activates on the press; **Space activates on the release**, and the press

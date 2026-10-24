@@ -16,8 +16,29 @@
  * an observation, and the component still has to paint somewhere.
  */
 
+import * as Schema from "effect/Schema";
+
 /** Where a step sits relative to the current one. */
 export type StepperStatus = "complete" | "current" | "upcoming";
+
+/** The two axes a stepper can run along. */
+export const StepperOrientations = Schema.Literals(["horizontal", "vertical"]);
+
+/** The two axes a stepper can run along. */
+export type StepperOrientation = typeof StepperOrientations.Type;
+
+/**
+ * The axis a stored name names.
+ *
+ * An orientation is saved with the workspace as often as it is a literal — a
+ * workflow record, a restored settings pane — so a name a release renamed
+ * reaches the root's recipe with no entry to paint: the list falls back to the
+ * runtime's own row with no alignment, and a stepper a record saved as vertical
+ * lays its steps out side by side. The documented `horizontal` is the answer
+ * for a name this release does not carry, the rule `Tabs` follows for its axis.
+ */
+export const orientationOf = (value: unknown): StepperOrientation =>
+  Schema.is(StepperOrientations)(value) ? value : "horizontal";
 
 /**
  * The current step a caller named, or the first step when it cannot be read.
