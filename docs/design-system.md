@@ -189,13 +189,14 @@ radius and `md` control height back from the runtime (28 / 36 / 32px), with the
 base radius as its negative control, which read `expected 10, got 8` at the
 pre-HIG scale and reads `expected 14, got 8` now that this style's `lg` is 14.
 
-**A look is not a platform.** The four platform names are the operating systems a
-window runs on, and the persisted choice the docs toggle offers; a look is a
-`PlatformStyle` applied by name, and the package ships three more of them —
-Windows XP's Luna, Windows 7's Aero and Omarchy — in `retroStyles`, resolved with
-`retroTheme`. Both read the same way a platform style does: the look is carried
-by colour, radius and density, while `sans` stays the sentinel and the mono
-family is the look's own. Two provenances for the dark editions: neither Windows
+**A look is not a platform.** Three of the four platform names — macOS, Linux
+and Windows — are the operating systems a window runs on, and the fourth,
+`default`, is the library's own identity; all four are what the docs toggle
+offers. A look is a `PlatformStyle` applied by name, and the package ships three
+more of them — Windows XP's Luna, Windows 7's Aero and Omarchy — in
+`retroStyles`, resolved with `retroTheme`. Both read the same way a platform
+style does: the look is carried by colour, radius and density, while `sans`
+stays the sentinel and the mono family is the look's own. Two provenances for the dark editions: neither Windows
 era had a dark mode, so those dark editions are authored for this library
 (invented, not reconstructed), while Omarchy's pair is the shell's own palette
 (Tokyo Night dark, Flexoki Light light, from its `colors.toml`). All six themes

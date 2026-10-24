@@ -389,7 +389,23 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 236/236
+`[x]` `[██████████]` 237/237
+
+`[x]` Count the **operating systems among the platform names**, not all four —
+`platformNames` is `darwin`, `linux`, `win32` **and `default`**, and `default`
+is the library's own identity (its own test file says so), while
+`docs/tokens.md`'s limitations and `docs/design-system.md` §5 both told a reader
+the docs toggle "offers the four operating systems" / "the four platform names
+are the operating systems a window runs on" — so the identity was taught as a
+fourth OS, contradicting the same section's next sentence. Both pages name the
+three systems and the identity now. `platforms.test.ts` gains `says which
+platform names are operating systems`: it derives the styled names from
+`platformNames` (pinning the three), refuses both retracted phrases on the two
+pages, and requires each page's corrected sentence. Directions measured: at
+HEAD the case fails naming `docs/tokens.md` and `four operating systems`;
+corrected, the package is 49 files / **3 040** tests with `check-types` and
+`check:tests` clean. No native scenario applies — a count and the prose that
+prints it.
 
 `[x]` Print the **page→mode rule in the direction it answers** — a theme whose
 `mode` a store wrote as an unsupported name is read from the page it carries,

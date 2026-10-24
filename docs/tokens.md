@@ -4956,12 +4956,12 @@ cannot go untested. Evidence:
   A consumer who wants both starts from `platformStyles` and checks the result
   with `contrastRatio`.
 - The authored looks are styles, not platform names: the docs platform toggle
-  offers the four operating systems, so a site that wants to preview Luna, Aero
-  or Omarchy resolves `retroTheme` itself. The two Windows looks' dark editions
-  are invented — neither era shipped one — while Omarchy's pair is the shell's
-  own Tokyo Night and Flexoki Light palettes. The UI face is still the sentinel
-  on all three, and each look's monospace family falls back where the machine
-  lacks it.
+  offers the three operating systems and the library's `default`, so a site that
+  wants to preview Luna, Aero or Omarchy resolves `retroTheme` itself. The two
+  Windows looks' dark editions are invented — neither era shipped one — while
+  Omarchy's pair is the shell's own Tokyo Night and Flexoki Light palettes. The
+  UI face is still the sentinel on all three, and each look's monospace family
+  falls back where the machine lacks it.
 - `.SystemUIFont` is a name GPUI documents, and the theme asserts it as the UI
   family on every platform; what face the runtime resolves it to is not measured
   anywhere. The playground's `theme-platform` proves the platform **mono**

@@ -155,6 +155,35 @@ describe("platformStyles", () => {
     expect(identity.density).toEqual(lightTheme.density);
   });
 
+  it("says which platform names are operating systems", () => {
+    // `default` is the library's own identity, not a fourth operating system,
+    // and both pages called the toggle's four entries "four operating systems"
+    // — a reader planning a platform style was told the identity was an OS.
+    expect(styled).toEqual(["darwin", "linux", "win32"]);
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8")
+        .replace(/\s+/g, " ")
+        .replace(/\*\*/g, "");
+    const pages: Readonly<Record<string, string>> = {
+      "docs/tokens.md": read("../../../docs/tokens.md"),
+      "docs/design-system.md": read("../../../docs/design-system.md"),
+    };
+    Object.entries(pages).forEach(([name, text]) => {
+      expect(text, name).not.toContain("four operating systems");
+      expect(text, name).not.toContain(
+        "four platform names are the operating systems",
+      );
+    });
+    expect(
+      pages["docs/tokens.md"],
+      "the catalogue names the three systems and the identity",
+    ).toContain("offers the three operating systems and the library's `default`");
+    expect(
+      pages["docs/design-system.md"],
+      "the design system says three of the four names are systems",
+    ).toContain("Three of the four platform names");
+  });
+
   it("keeps `full` round on every platform so pills stay pills", () => {
     platforms.forEach((platform) => {
       expect(platformStyles[platform].radius.full, platform).toBeGreaterThan(
