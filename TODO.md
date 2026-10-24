@@ -19597,6 +19597,16 @@ numbers).
 > — and the effects that need `transform` or a filter are declined with
 > measured evidence rather than imitated. Every primitive that could be painted
 > honestly has shipped.
+`[x]` `packages/components`: **the remote-combobox suite still expected a disabled popup to cut** — the
+combobox's exit landed after that suite was written, so a dismissed popup is kept painted for its
+exit window and takes no presses; the interaction suite states the rule in so many words ("the claim
+is that the box goes rather than that it has already gone") and waits it out, while
+`combobox-remote.test.tsx` read `combobox-content` in the frame the disable committed and failed
+`expected { id: 26, … } to be undefined` — and its leaked root then failed the file's other three
+cases with `renderComponent: a root is still mounted`. The case waits the window out now (the
+`waitFor` the sibling suite uses), so it measures the popup going without contradicting the motion it
+paints. Green: `combobox-remote.test.tsx` 6/6, the package's behaviour suite 99 files / 1059 tests.
+No native scenario applies — the renderer paints the exit itself.
 `[x]` `@gpuixui/motion` + `packages/components`: **the presence half shared the physics entry, so
 every fade loaded the spring** — the React half of the presence table was published only on
 `@gpuixui/motion/react`, whose physics hooks drive a retained `MotionValue` and reach the spring,

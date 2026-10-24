@@ -10,7 +10,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  waitFor,
+} from "../internal/interaction.js";
 import * as Option from "effect/Option";
 import {
   renderComponent,
@@ -143,7 +147,12 @@ describe("Combobox with a remote list", () => {
     await settle();
 
     expect(queries).toHaveLength(before);
-    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    // The dismissed box is painted for its exit window, the rule the interaction
+    // suite states ("the claim is that the box goes rather than that it has
+    // already gone"), so the popup leaves rather than cutting.
+    await waitFor(() =>
+      expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
+    );
 
     picker.unmount();
   });
