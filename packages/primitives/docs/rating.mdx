@@ -46,5 +46,5 @@ const [score, setScore] = useState(0);
 ## Limitations
 
 - A stored `value` is placed on the painted scale: without `allowHalf`, the stars a score has fully earned paint (`4.9` is four stars.
-- Halves are the finest score; a quarter star is not expressible.
-- The pointer preview is paint-only: a reader hears the value, not the preview.
+- Halves are the finest score; a quarter star is not expressible. A half star is a **clipped glyph**, not a tint: the filled star is painted whole and cut at the cell's midpoint, so the outline still shows in the right half. The `rating-lifecycle` probe measured it in a window — 47 checks on 0.11.0 — where a star at `0.5` paints 168 primary pixels in its left half and 0 primary / 98 muted in its right, against a whole star's 270 primary and no muted, and the roles reach the glass rather than tinting over it (an unrated star paints no `primary`, a failure `destructive` and no brand).
+- The pointer preview is paint-only: a reader hears the value, not the preview. A press also owns the keyboard path — the probe pressed the disabled group before the clear key and `Delete` left the value at `5`, because native focus had moved to a group that refuses input; a composition that drives a rating by key moves focus back to it after pressing another control.

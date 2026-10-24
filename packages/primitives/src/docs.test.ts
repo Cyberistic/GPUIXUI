@@ -1488,6 +1488,78 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("keeps the window that measured a rating's inks registered and recorded", () => {
+    // Bug guarded: the Rating page and row taught every ink from the element
+    // tree and each icon's `style.color` — what the component asked for — while
+    // the live `rating-lifecycle` probe has measured what reached the glass: an
+    // unrated star paints no brand at all, a half star is a clipped glyph (the
+    // brand ink in its left half, the outline in its right), and a press moves
+    // the keyboard path with the focus. A page that drops the citation teaches
+    // the claim again instead of the measurement.
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const fixture = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/rating.ts", repoRoot)),
+      "utf8",
+    );
+    const record = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    const measured = probeRecord(record, "`rating-lifecycle`");
+    const checks = Option.getOrElse(
+      Option.map(
+        Option.fromNullishOr(/(\d+) checks/.exec(measured)?.[1]),
+        Number.parseInt,
+      ),
+      () => 0,
+    );
+    const declared = Option.getOrElse(
+      Option.fromNullishOr(/RATING_CHECKS = (\d+)/.exec(fixture)?.[1]),
+      () => "",
+    );
+    // The pixel counts are one run's measurement, so they are read off the
+    // record rather than re-derived: a surface prints what the window saw, and
+    // a re-run that moves a count moves the row with it.
+    const counts = ["196", "270", "168", "98", "274", "282"];
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(catalogue.split("\n"), (line) =>
+        Str.startsWith("| Rating | done |")(line),
+      ),
+      () => "",
+    );
+    const page = read("rating.mdx");
+
+    expect({
+      registered: registry.includes('id: "rating-lifecycle"'),
+      counted: declared === `${checks}` && checks > 0,
+      recorded: Arr.every(counts, (count) => measured.includes(`**${count}**`)),
+      row:
+        row.includes("`rating-lifecycle`") &&
+        row.includes(`${checks} checks`) &&
+        row.includes("clipped glyph") &&
+        Arr.every(counts, (count) => row.includes(`**${count}**`)),
+      page:
+        page.includes("`rating-lifecycle`") &&
+        page.includes(`${checks} checks`) &&
+        page.includes("clipped glyph") &&
+        page.includes("168") &&
+        page.includes("98"),
+    }).toEqual({
+      registered: true,
+      counted: true,
+      recorded: true,
+      row: true,
+      page: true,
+    });
+  });
+
   it("names only package paths that exist", () => {
     // Bug guarded: ScrollArea's limitations handed the virtual-list work to a
     // `data-grid` package "when it lands" — a directory this workspace has
