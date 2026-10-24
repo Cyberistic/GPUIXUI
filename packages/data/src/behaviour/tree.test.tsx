@@ -142,6 +142,35 @@ const BlankNameTree = () => {
   );
 };
 
+/**
+ * A tree whose saved expansion set the store wrote as something else.
+ *
+ * A workspace records its open folders, and JSON has no `Set`: a record saved
+ * by one release and read by another can hand back an object (`{ "src": true }`)
+ * or any other value where the expansion list belongs.
+ */
+const StoredExpansionTree = () => {
+  const tree = useExpandedRows({
+    roots: fieldTree,
+    keyOf: fieldKeyOf,
+    childrenOf: fieldChildrenOf,
+    labelOf: fieldKeyOf,
+    // @ts-expect-error — an expansion a store wrote as something else.
+    initialExpanded: { src: true },
+  });
+  return (
+    <TreeView
+      testId="stored-tree"
+      aria-label="Files"
+      height={120}
+      rows={tree.rows}
+      cursor={tree.cursor}
+      onCursorChange={tree.setCursor}
+      labelOf={fieldKeyOf}
+    />
+  );
+};
+
 describe("the file tree", () => {
   it("opens the folder a press lands on, and reports the row", () => {
     const root = mount();
@@ -381,5 +410,23 @@ describe("the file tree", () => {
     root.renderer.flush();
 
     expect(focusedTestId(root)).toEqual(Option.some("blank-tree-row-beta"));
+  });
+
+  it("opens a stored expansion set the store wrote as a non-list", () => {
+    // Bug guarded: a saved workspace records its open folders, and JSON has no
+    // `Set`, so a record can hand back an object where the expansion list
+    // belongs. The controller built its set with `HashSet.fromIterable` straight
+    // off the prop, which threw `TypeError: object is not iterable` during the
+    // first render — a restored tree failed to open at all. A value that is not
+    // an iterable of text keys is no expansion, which is the state a fresh tree
+    // starts in: every folder closed, every root painted.
+    root = renderData(<StoredExpansionTree />);
+    settle(root);
+
+    expect(paintedText(root)).toContain("src");
+    expect(paintedText(root)).toContain("readme.md");
+    expect(root.renderer.findByTestId("stored-tree-row-child.ts")).toBe(
+      undefined,
+    );
   });
 });

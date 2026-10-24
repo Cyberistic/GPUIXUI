@@ -29,6 +29,15 @@ const tree = useExpandedRows({
 
 ## API
 
+### `useExpandedRows`
+
+The controller holds the expansion set and the cursor. A saved workspace hands
+its open folders back, so `initialExpanded` is **data**: only an iterable
+carrying text keys opens anything (`expandedSet`), and a value a store wrote as
+something else — an object where JSON has no `Set`, a number, `null` — is **no
+expansion**, the state a fresh tree starts in, rather than a `TypeError` on the
+first render. An entry that is not text is not a key.
+
 ### `TreeView`
 
 | Prop | Type | Default | Consequence |

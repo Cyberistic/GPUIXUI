@@ -26,6 +26,7 @@ import {
   expandAll,
   expandTo,
   expandedPath,
+  expandedSet,
   flattenTree,
   isExpanded,
   setExpanded,
@@ -310,5 +311,31 @@ describe("the name a row is painted by", () => {
     expect(treeName("", "readme.md")).toBe("readme.md");
     expect(treeName("   ", "src")).toBe("src");
     expect(treeName("  readme.md  ", "readme.md")).toBe("readme.md");
+  });
+});
+
+describe("an expansion set a store restored", () => {
+  it("reads a list or a set of text keys", () => {
+    // A workspace saves its open folders as a list; an app may pass a `Set`.
+    const saved = Arr.fromIterable(expandedSet(["src", "docs"]));
+    expect(saved).toHaveLength(2);
+    expect(saved).toEqual(expect.arrayContaining(["src", "docs"]));
+    expect(Arr.fromIterable(expandedSet(new Set(["src"])))).toEqual(["src"]);
+  });
+
+  it("is no expansion when the store wrote something that is not iterable", () => {
+    // JSON has no `Set`, and a truncated or hand-edited record can hand back
+    // anything here. `HashSet.fromIterable` threw on these during the first
+    // render, so a restored tree never opened.
+    expect(HashSet.size(expandedSet(null))).toBe(0);
+    expect(HashSet.size(expandedSet(42))).toBe(0);
+    expect(HashSet.size(expandedSet({ src: true }))).toBe(0);
+    expect(HashSet.size(expandedSet(undefined))).toBe(0);
+  });
+
+  it("drops an entry that is not a text key", () => {
+    const keys = Arr.fromIterable(expandedSet(["src", 7, null, "docs"]));
+    expect(keys).toHaveLength(2);
+    expect(keys).toEqual(expect.arrayContaining(["src", "docs"]));
   });
 });

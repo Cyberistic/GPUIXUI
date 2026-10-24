@@ -344,6 +344,7 @@ export {
   expandAll,
   expandTo,
   expandedPath,
+  expandedSet,
   findRow,
   flattenTree,
   isExpanded,

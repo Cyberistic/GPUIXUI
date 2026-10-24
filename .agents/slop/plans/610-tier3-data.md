@@ -697,6 +697,15 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   a window case in `src/behaviour/chart-a11y.test.tsx`; directions measured:
   the old description reads `Q1 3, null 6` in the unit case and `Q1 3,  6` in
   the window. 250 unit / 177 behaviour, `check-types` clean.
+- **A saved expansion set is read, not iterated raw**: `useExpandedRows` built
+  its cursor with `HashSet.fromIterable(initialExpanded)`, so a restored
+  workspace whose open-folder field JSON wrote as an object (a `Set` has no JSON
+  form), a number or `null` threw `TypeError: … is not iterable` in the first
+  render and the tree never painted. `expandedSet` (`tree/logic.ts`) accepts a
+  list or a `Set` of text keys and reads anything else as no expansion; three
+  unit cases in `tree/logic.test.ts` and a window case in
+  `src/behaviour/tree.test.tsx` hold it (direction measured: the mount paints
+  nothing before the reader). 253 unit / 178 behaviour, `check-types` clean.
 
 ## 5. Acceptance
 

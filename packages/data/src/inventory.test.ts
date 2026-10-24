@@ -135,11 +135,15 @@ describe("the data lane's printed case counts", () => {
     // is still correct for the expandable rows, so a whole-lane search would
     // forbid a true claim.
     //
-    // Each retracted figure is matched on a word boundary: a plain substring
-    // search cannot tell `7` from the `27` the row grew to, so the guard would
-    // report a correct count as the retracted one.
+    // Each retracted figure is matched on a word boundary and the path it was
+    // printed against: a plain substring search cannot tell `7` from the `27`
+    // the row grew to, and `13 cases` is the Tree views row's **correct** count
+    // for `behaviour/tree.test.tsx` while it was the retracted count for
+    // `tree/logic.test.ts`, so the retraction names the file it belonged to.
     expect(row("Tables")).not.toMatch(/\b7 native behaviour cases/);
-    expect(row("Tree views")).not.toMatch(/\b13 cases/);
+    expect(row("Tree views")).not.toMatch(
+      /`src\/tree\/logic\.test\.ts` \(13 cases\)/,
+    );
     expect(row("Tables")).not.toMatch(/\b6 cases/);
   });
 });

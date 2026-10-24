@@ -28,6 +28,7 @@ import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { neighbourKey } from "../selection/logic.js";
 
@@ -150,6 +151,23 @@ export const toggleExpanded = (
 
 /** Nothing open. */
 export const collapseAll = (): HashSet.HashSet<string> => HashSet.empty();
+
+/**
+ * An expansion set handed over as data: a list or a set of text keys.
+ *
+ * A saved workspace records its open folders, and a store is not a `Set`: JSON
+ * writes a `Set` as a list, but a record written by another release, a
+ * hand-edited layout, or a field a migration truncated can hand back anything
+ * where the keys belong. Building the set with `HashSet.fromIterable` straight
+ * off that value threw `TypeError: … is not iterable` during the first render,
+ * so a restored tree failed to open at all. Only an iterable carrying text
+ * entries is an expansion; anything else is the state a fresh tree starts in
+ * (nothing open) rather than a crash.
+ */
+export const expandedSet = (value: unknown): HashSet.HashSet<string> =>
+  P.isIterable(value)
+    ? HashSet.fromIterable(Arr.filter(Arr.fromIterable(value), P.isString))
+    : HashSet.empty();
 
 /** Every branch open, which is what "expand all" means. */
 export const expandAll = <T>(

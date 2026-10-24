@@ -471,6 +471,12 @@ next tick, after the runtime has handed the pressed control the focus. A key tha
 left the cursor where it was is not a move the tree made, so it cannot suppress
 that retake.
 
+A saved workspace records the folders a reader left open, so `initialExpanded`
+is **data**: only an iterable carrying text keys opens anything (`expandedSet`),
+and a value a store wrote as something else — an object (JSON has no `Set`), a
+number, `null` — is no expansion, the state a fresh tree starts in, rather than
+a `TypeError` on the first render. An entry that is not text is not a key.
+
 A tree of thousands uses **`VirtualTree`**: the same rows and keyboard over the
 runtime's `itemCount` window, so only the rows around the viewport are retained.
 A cursor move to a row outside the window moves the window first, then focuses

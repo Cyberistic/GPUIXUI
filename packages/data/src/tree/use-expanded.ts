@@ -18,6 +18,7 @@ import {
   collapseAll,
   expandAll,
   expandTo,
+  expandedSet,
   flattenTree,
   setExpanded,
   toggleExpanded,
@@ -35,7 +36,14 @@ export interface UseExpandedRowsOptions<T> extends TreeSpec<T> {
   readonly roots: ReadonlyArray<T>;
   /** The row's label: its accessible name and what type-ahead matches. */
   readonly labelOf: (node: T) => string;
-  /** The nodes open at first paint. Defaults to none. */
+  /**
+   * The nodes open at first paint. Defaults to none.
+   *
+   * A saved workspace records the folders a reader left open, so this is
+   * **data**: only an iterable carrying text keys opens anything
+   * ({@link expandedSet}), and anything else is no expansion rather than a
+   * crash on the first render.
+   */
   readonly initialExpanded?: Iterable<string>;
   /** The key the keyboard starts on. Defaults to the first row. */
   readonly initialActive?: string;
@@ -87,10 +95,7 @@ export const useExpandedRows = <T>({
   initialActive,
 }: UseExpandedRowsOptions<T>): ExpandedRowsController<T> => {
   const [cursor, setCursor] = useState<TreeCursor>(() => ({
-    expanded: Option.match(Option.fromNullishOr(initialExpanded), {
-      onNone: collapseAll,
-      onSome: (keys) => HashSet.fromIterable(keys),
-    }),
+    expanded: expandedSet(initialExpanded),
     active: Option.fromNullishOr(initialActive),
   }));
 
