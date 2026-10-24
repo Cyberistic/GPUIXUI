@@ -245,6 +245,38 @@ describe("invalidColorRoles", () => {
 
     expect(invalidColorRoles(translucent)).toEqual([]);
   });
+
+  it("keeps the value a store wrote apart from the absence of a role", () => {
+    // Every paint seam answers a cleared field and a role an older release never
+    // carried as the same absence, and for a paint that is right. This report is
+    // the one surface where the two part company: a reader repairing a theme has
+    // to see the `""` their editor wrote — or the number a hand-edited export
+    // carries — instead of being told the role is missing from their release.
+    const stored = {
+      colors: {
+        background: "#FFFFFF",
+        foreground: null,
+        primary: "",
+        ring: "   ",
+        card: 42,
+        popover: { hex: "#FFFFFF" },
+      },
+    };
+    const reported = new Map(
+      invalidColorRoles(stored).map(({ role, value }) => [role, value]),
+    );
+
+    expect(reported.get("primary")).toBe("");
+    expect(reported.get("ring")).toBe("   ");
+    expect(reported.get("card")).toBe(42);
+    expect(reported.get("popover")).toEqual({ hex: "#FFFFFF" });
+    // `null` is what JSON writes for a key the theme never carried, so it reads
+    // as the absence `undefined` is rather than a value to print back.
+    expect(reported.has("foreground")).toBe(true);
+    expect(reported.get("foreground")).toBeUndefined();
+    // A role the store did write as a colour is not reported at all.
+    expect(reported.has("background")).toBe(false);
+  });
 });
 
 /**
@@ -283,10 +315,10 @@ describe("the roles a store cleared", () => {
     // answers the absence, and the gate still fails the theme rather than
     // passing a role the renderer would paint black.
     expect(invalidColorRoles(cleared("primary", ""))).toEqual([
-      { role: "primary", value: undefined },
+      { role: "primary", value: "" },
     ]);
     expect(invalidColorRoles(cleared("primary", "  "))).toEqual([
-      { role: "primary", value: undefined },
+      { role: "primary", value: "  " },
     ]);
   });
 

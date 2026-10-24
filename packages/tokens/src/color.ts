@@ -196,9 +196,10 @@ export interface ThemeColors {
  * the group may be absent or `null`, because a store can lose it and JSON has no
  * `undefined`, and a role may be **any** value, because a hand-edited literal or
  * a design-tool export can carry a number or an object where a colour belongs.
- * {@link themeColors} keeps only the strings that name a colour, which is what
- * {@link invalidColorRoles} reports by — so the shape this seam documents is the
- * shape its type accepts.
+ * {@link themeColors} keeps only the strings that name a colour — the shape a
+ * paint seam paints — while {@link invalidColorRoles} reads the group as the
+ * store wrote it, so the value a reader has to repair is printed back. Both
+ * accept this shape, which is why it is the one the source type names.
  *
  * A role written as `null` is the same absence JSON writes for one a theme never
  * carried, and it is why the fields are `unknown` rather than `string | null`:
@@ -210,15 +211,32 @@ export interface ColourSource {
 }
 
 /**
- * Whether a stored role names a colour: a string that carries one.
+ * Whether a value a boundary read names a colour: a string that carries one.
  *
  * A blank value is not a colour. It is what a brand editor writes when its field
  * is cleared, and what an empty swatch in a theme file holds, and the renderer
  * paints it as nothing — it parses no colour and the property keeps black. That
  * is the same absence a `null` role is, so the paint seams read it that way
  * rather than handing the runtime a value that vanishes.
+ *
+ * Exported because every seam that reads a colour a decoder wrote asks the same
+ * question: a theme's role ({@link themeColors}), an override
+ * ({@link extendTheme}), and a desktop's palette field
+ * ({@link paletteToTokens}), whose blank value is a field the desktop did not
+ * name rather than a fill it chose. A **named** value the renderer cannot parse
+ * is a different answer: it is handed over as written for {@link invalidColorRoles}
+ * to report, so this predicate does not become a paint check.
+ *
+ * @example
+ * ```ts
+ * import { namesColour } from "@gpuixui/tokens";
+ *
+ * namesColour("#5F4BDB"); // true
+ * namesColour("  "); // false — a cleared field names no colour
+ * namesColour(null); // false — the absence JSON writes
+ * ```
  */
-const namesColour = (value: unknown): value is string =>
+export const namesColour = (value: unknown): value is string =>
   typeof value === "string" && value.trim() !== "";
 
 /**
@@ -251,8 +269,9 @@ const isRoleTable = (
  * field and an empty swatch in a theme file write, and the renderer paints
  * neither: it parses no colour and the property keeps black. The seam reads a
  * blank role as the absence it names, so a control keeps its own resting fill
- * instead of painting the runtime's black, while `invalidColorRoles` still names
- * the role on the value the store wrote.
+ * instead of painting the runtime's black, while `invalidColorRoles` reads the
+ * group as the store wrote it and prints the blank — or the number, or the
+ * object — back, so the gate names the field to repair.
  *
  * @example
  * ```ts
@@ -881,11 +900,34 @@ export interface InvalidColorRole {
   /** The role, in documentation order. */
   readonly role: keyof ThemeColors;
   /**
-   * The value the theme carries, or `undefined` when the role is absent — a
-   * theme restored from storage can predate a role the library added.
+   * The value the group carries for it, or `undefined` when the role is absent —
+   * a theme restored from storage can predate a role the library added.
+   *
+   * It is the value the **store** wrote rather than the colour a paint seam
+   * answers: `null` is the absence JSON writes for a key a theme never carried,
+   * while a blank string (a cleared brand-editor field), a number or an object (a
+   * hand-edited literal, a design-tool export) is a value this report prints
+   * back, so a reader repairs the field instead of rebuilding a theme the
+   * release already carries.
    */
-  readonly value: string | undefined;
+  readonly value: unknown;
 }
+
+/**
+ * The value a theme's colour group carries for one role, as the store wrote it.
+ *
+ * `null` is what JSON writes for a key a theme never carried, so it reads as the
+ * absence `undefined` is; every other value is the value the store wrote, which
+ * the report prints back. It is read off the group rather than through
+ * {@link themeColors} because that seam answers a blank or non-string role as
+ * the absence it is for a **paint** — the right answer there, and the wrong one
+ * here, where telling a cleared field from a role an older release never carried
+ * is the whole job.
+ */
+const storedRole = (theme: ColourSource, role: keyof ThemeColors): unknown => {
+  const value: unknown = theme.colors?.[role];
+  return value === null ? undefined : value;
+};
 
 /**
  * Every semantic role whose value is not a colour GPUix can paint.
@@ -903,16 +945,20 @@ export interface InvalidColorRole {
  * added since, and the runtime cannot paint what is not there. **The whole
  * `colors` group may be gone too** — a store truncated past it, or a literal
  * that omitted it — in which case every role is reported the same way; the
- * group is read through {@link themeColors}, so the absence is one report per
- * role rather than a `TypeError` at the first lookup. The source is therefore
+ * group is read by role, so the absence is one report per role rather than a
+ * `TypeError` at the first lookup. The source is therefore
  * `Partial<ThemeColors>`, so a complete theme and a decoded one are both
  * accepted, and the contracts that measure a pair treat the absence as an
  * unmeasurable pair rather than a crash. A value a store wrote as `null` — what
  * JSON writes for an absent one — is the same absence and is reported the same
- * way, and so is a **blank** one, the colour a store cleared: the role is
- * named, so the theme is refused rather than passing with a fill nothing paints
- * ({@link themeColors}). The report carries a colour or nothing rather than
- * whatever the decoder happened to hand over.
+ * way.
+ *
+ * **A value the store wrote is kept in the report**, because this is the one
+ * place it is visible: every paint seam answers a blank or non-string role as
+ * the absence it is for a paint ({@link themeColors}), so a cleared field would
+ * otherwise read as a role the release never carried. A blank string, a number
+ * or an object is printed back — the value to repair — and the theme is refused
+ * either way, rather than passing with a fill nothing paints.
  *
  * @example
  * ```ts
@@ -925,6 +971,9 @@ export interface InvalidColorRole {
  * invalidColorRoles({ colors: restored });
  * // [{ role: "primary", value: undefined }] — a stored theme older than the role
  *
+ * invalidColorRoles({ colors: { ...lightColors, primary: "" } });
+ * // [{ role: "primary", value: "" }] — the field a reader cleared, not an absence
+ *
  * invalidColorRoles({});
  * // every one of the 47 roles, with no value — a store that lost the group
  * ```
@@ -932,11 +981,8 @@ export interface InvalidColorRole {
 export function invalidColorRoles(
   theme: ColourSource,
 ): readonly InvalidColorRole[] {
-  const colors = themeColors(theme);
   return colorRoles.flatMap((role) => {
-    const value = colors[role];
-    return isPaintableColor(value)
-      ? []
-      : [{ role, value: typeof value === "string" ? value : undefined }];
+    const value = storedRole(theme, role);
+    return isPaintableColor(value) ? [] : [{ role, value }];
   });
 }
