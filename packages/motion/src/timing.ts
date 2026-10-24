@@ -60,9 +60,8 @@ export type MotionEasingName = (typeof motionEasingNames)[number];
 export type MotionEasing = MotionEasingName | MotionCurve;
 
 /** Whether a value is one of the five easing names the runtime accepts. */
-export const isMotionEasingName = (
-  value: unknown,
-): value is MotionEasingName => motionEasingNames.some((name) => name === value);
+export const isMotionEasingName = (value: unknown): value is MotionEasingName =>
+  motionEasingNames.some((name) => name === value);
 
 /** A value a curve can read: a finite number. */
 const isFiniteNumber = (value: unknown): value is number =>

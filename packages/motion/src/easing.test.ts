@@ -107,10 +107,7 @@ describe("easing", () => {
         if (bindingSample(middle, x1, x2) < progress) low = middle;
         else high = middle;
       }
-      return Math.min(
-        1,
-        Math.max(0, bindingSample((low + high) / 2, y1, y2)),
-      );
+      return Math.min(1, Math.max(0, bindingSample((low + high) / 2, y1, y2)));
     };
 
     /** The binding's control points, and `null` for the one name it does not
@@ -159,7 +156,9 @@ describe("easing", () => {
       easeInOut,
     };
     phases.forEach((phase) => {
-      expect(motionCurve(motionEasings[phase])).toBe(curves[motionEasings[phase]]);
+      expect(motionCurve(motionEasings[phase])).toBe(
+        curves[motionEasings[phase]],
+      );
     });
     // A name this release does not carry is the linear progress, the fallback
     // `eased` takes for a curve it cannot call.
