@@ -14,6 +14,7 @@
 import { Order, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 
 /** One matching item, with its score and its declaration index. */
@@ -114,3 +115,27 @@ export const rankByGroup = <A>(
     ),
   );
 };
+
+/**
+ * The commands a palette was handed: only a list is a list.
+ *
+ * A palette's action list is built by the app, and while a registry loads — or
+ * when a saved toolbar's list was restored — the slot can be the `null` a store
+ * writes. The matcher reduced over that value before the first row painted, so
+ * the absence threw out of the render. An absent list is no rows, which is the
+ * empty state the palette already has.
+ */
+export const commandListOf = <A,>(
+  value: ReadonlyArray<A> | null | undefined,
+): ReadonlyArray<A> => (Arr.isArray(value) ? value : []);
+
+/**
+ * The recent command ids a store kept: its text entries, in order.
+ *
+ * Recents are saved with the app — the palette's history is part of a
+ * workspace — so a restored record's `null` reaches the palette, and the
+ * membership set built from it threw. Only a list is a list, and an entry that
+ * is not an id is dropped, so a hole cannot hide the recents beside it.
+ */
+export const recentIdsOf = (value: unknown): ReadonlyArray<string> =>
+  Arr.isArray(value) ? Arr.filter(value, P.isString) : [];

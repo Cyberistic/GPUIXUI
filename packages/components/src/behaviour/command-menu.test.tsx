@@ -542,4 +542,54 @@ describe("CommandMenu", () => {
 
     palette.unmount();
   });
+
+  it("opens a palette whose saved action and recents lists are not lists", () => {
+    // A palette's rows are built by the app and its recents are saved with it:
+    // a store writes `null` for either slot. The matcher reduced over the action
+    // list and the recents set was built from the ids before the first row
+    // painted, so an absent either threw out of the render.
+    const palette = renderComponent(
+      <CommandMenu
+        open
+        onOpenChange={() => undefined}
+        // @ts-expect-error — the action list a store wrote where it carried none.
+        actions={null}
+        // @ts-expect-error — the recents a store wrote where it carried none.
+        recents={null}
+      >
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>,
+    );
+
+    expect(palette.renderer.findByTestId("command-input")).toBeDefined();
+    expect(palette.renderer.getAllText()).toContain("No matching commands");
+
+    palette.unmount();
+  });
+
+  it("keeps the recents beside an id a store wrote as a hole", () => {
+    const perform = vi.fn();
+    const palette = renderComponent(
+      <CommandMenu
+        open
+        onOpenChange={() => undefined}
+        actions={actions(perform)}
+        // @ts-expect-error — a record a store saved as a hole in the recents.
+        recents={["save", null, "open-file"]}
+      >
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>,
+    );
+
+    const texts = palette.renderer.getAllText();
+    expect(texts).toContain("Recent");
+    expect(texts).toContain("Save");
+    expect(texts).toContain("Open file");
+
+    palette.unmount();
+  });
 });

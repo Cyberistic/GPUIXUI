@@ -47,3 +47,4 @@ CommandMenu
 - `open` is controlled; the app owns the shortcut that opens it.
 - No `aria-activedescendant` or `aria-controls`; the highlight is visual.
 - `shortcut` is display only; the component binds no keys.
+- `actions` and `recents` read from a saved state are read at the boundary: an `actions` value that is not a list paints the empty state, a `recents` value that is not a list carries no recents, and an entry that is not an id is dropped.

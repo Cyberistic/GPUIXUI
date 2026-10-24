@@ -11,9 +11,11 @@
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
+  commandListOf,
   fuzzyMatches,
   fuzzyScore,
   rankByGroup,
+  recentIdsOf,
   type FuzzyMatch,
 } from "./fuzzy.js";
 
@@ -122,5 +124,34 @@ describe("command menu fuzzy matching", () => {
 
     expect(ranked).not.toContain("goto");
     expect(ranked).toEqual(["save", "about"]);
+  });
+});
+
+describe("commandListOf", () => {
+  it("keeps the list the palette was handed", () => {
+    expect(commandListOf(["open", "save"])).toEqual(["open", "save"]);
+  });
+
+  it("reads a value that is not a list as no rows", () => {
+    // A palette whose registry has not loaded yet, or a saved toolbar's `null`,
+    // reduced over the value before the first row painted.
+    expect(commandListOf(null)).toEqual([]);
+    expect(commandListOf(undefined)).toEqual([]);
+  });
+});
+
+describe("recentIdsOf", () => {
+  it("keeps the saved recents in order", () => {
+    expect(recentIdsOf(["save", "open"])).toEqual(["save", "open"]);
+  });
+
+  it("reads a value that is not a list as no recents", () => {
+    expect(recentIdsOf(null)).toEqual([]);
+    expect(recentIdsOf(undefined)).toEqual([]);
+    expect(recentIdsOf("save")).toEqual([]);
+  });
+
+  it("drops an entry that is not an id, keeping the rest", () => {
+    expect(recentIdsOf(["save", null, 2, "open"])).toEqual(["save", "open"]);
   });
 });

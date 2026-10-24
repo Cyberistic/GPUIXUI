@@ -65,6 +65,7 @@ import {
   selectionWash,
   useTheme,
 } from "./internal/theme.js";
+import { commandListOf, recentIdsOf } from "./menu/fuzzy.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
 import { fuzzyMatches, rankByGroup } from "./menu/fuzzy.js";
 import {
@@ -117,11 +118,13 @@ const useCommandMenu = (): CommandMenuContextValue => {
 export interface CommandMenuProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
+  /** The commands to search. A value that is not a list — a palette's loading state, a saved toolbar's `null` — carries no rows. */
   readonly actions: ReadonlyArray<CommandAction>;
   /**
    * Action ids, most recently used first. With an empty query and the default
    * filter they are shown under one "Recent" heading, in this order; a typed
-   * query keeps the normal ranking.
+   * query keeps the normal ranking. A value that is not a list carries no
+   * recents, and an entry that is not an id is dropped.
    */
   readonly recents?: ReadonlyArray<string>;
   /** Replace the default ranked fuzzy match; accepted rows keep declaration order. */
@@ -197,14 +200,19 @@ export const CommandMenu = ({
   );
   const input = useRef<PublicInstance | null>(null);
 
+  // A palette's rows are built by the app, and its recents are saved with it:
+  // the `null` a store writes for either slot is read as no rows here, once, so
+  // the matcher and the recents membership cannot throw before the first paint.
+  const commands = commandListOf(actions);
+  const recentIds = recentIdsOf(recents);
   const recent =
-    Str.isEmpty(Str.trim(query)) && recents !== undefined
-      ? withRecents(actions, recents)
+    Str.isEmpty(Str.trim(query)) && recentIds.length > 0
+      ? withRecents(commands, recentIds)
       : undefined;
   const matches =
     filter !== undefined
-      ? Arr.filter(actions, (action) => filter(action, query))
-      : (recent ?? defaultMatches(actions, query));
+      ? Arr.filter(commands, (action) => filter(action, query))
+      : (recent ?? defaultMatches(commands, query));
   const rows = specs(matches);
 
   // The stored index may point at a filtered-out row after typing. Fall back to
