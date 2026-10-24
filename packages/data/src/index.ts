@@ -171,7 +171,7 @@ export type {
 export { DEFAULT_FILTER_LABEL, TableFilterField } from "./filter/field.js";
 export type { TableFilterFieldProps } from "./filter/field.js";
 
-export { constructGrid, gridFeatures } from "./grid-core.js";
+export { constructGrid, gridFeatures, readGridState } from "./grid-core.js";
 export type {
   ConstructGridOptions,
   GridChange,
@@ -198,6 +198,7 @@ export {
   clampColumnWidth,
   clampWidth,
   columnBounds,
+  columnConfig,
   columnOffset,
   columnResizeKeys,
   columnWidth,
@@ -212,6 +213,7 @@ export {
   resetColumns,
   resizeColumn,
   resizeWidthByKey,
+  restoreColumns,
   setColumnVisible,
   toggleColumn,
   visibleColumns,
@@ -219,6 +221,7 @@ export {
 } from "./columns/logic.js";
 export type {
   Column,
+  ColumnConfig,
   ColumnDef,
   ColumnState,
   ColumnWidthBounds,
