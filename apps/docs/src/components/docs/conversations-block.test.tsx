@@ -290,7 +290,11 @@ describe("the four platform dresses", () => {
     expect(rule(".gx-conv-lights i:nth-child(3)").toLowerCase()).toContain(
       "#28c840",
     );
-    const media = css.slice(css.lastIndexOf("@media (max-width: 760px)"));
+    const start = css.indexOf("---- conversations");
+    const section = css.slice(start, css.indexOf("/* ----", start + 10));
+    const media = section.slice(
+      section.lastIndexOf("@media (max-width: 760px)"),
+    );
     const narrow = media.slice(0, media.indexOf("\n}\n"));
     expect(narrow).toContain(".gx-conv-thread");
     expect(narrow).toContain("display: none");
