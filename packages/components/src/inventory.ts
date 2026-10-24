@@ -54,6 +54,7 @@ import { mentionInputMeta } from "./mention-input.js";
 import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
 import { motionGridMeta } from "./motion-grid.js";
+import { multiStepFormMeta } from "./multi-step-form.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
 import { pageTransitionMeta } from "./page-transition.js";
 import { paginationMeta } from "./pagination.js";
@@ -149,6 +150,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   messageMeta,
   messageScrollerMeta,
   motionGridMeta,
+  multiStepFormMeta,
   navigationMenuMeta,
   pageTransitionMeta,
   paginationMeta,

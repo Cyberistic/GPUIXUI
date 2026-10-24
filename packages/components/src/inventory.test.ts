@@ -134,6 +134,14 @@ const packageRows = (): ReadonlyArray<Row> => [
 /**
  * Whether a row owes this package an inventory record.
  *
+/** The Tier 5 target rows this package's own specialised component lands in. */
+const tier5Rows = (): ReadonlyArray<Row> =>
+  rowsBetween("## Tier 5 — specialised", "## Animated primitives (plan 600)");
+
+/** Every row a record of this package's can name, wherever its table lives. */
+const recordRows = (): ReadonlyArray<Row> => [...packageRows(), ...tier5Rows()];
+
+/**
  * A **composed** row ships no component of its own — it is a documented
  * composition of parts from this package and the primitives, with no docs page,
  * example or behaviour suite a record could name — so it owes none. The marker
@@ -170,7 +178,10 @@ describe("inventory", () => {
   });
 
   it("agrees with its COMPONENTS.md row", () => {
-    const rows = packageRows();
+    // A record's row is wherever its own table lives: the Tier 2 and animated
+    // tables for this package's parts, and the Tier 5 target table for
+    // `MultiStepForm`, the one specialised component here.
+    const rows = recordRows();
     const problems = Arr.flatMap(inventory, (meta) => {
       const row = Arr.findFirst(
         rows,
@@ -184,7 +195,11 @@ describe("inventory", () => {
               `${meta.name}: row says ${found.status}, record says ${meta.status}`,
             ];
           }
-          if (found.support !== meta.gpuixSupport) {
+          // A Tier 5 row qualifies its verdict with how it was proven
+          // (`yes (measured)`); the qualifier states the evidence, not a
+          // second answer, so the verdict before it is the one compared.
+          const verdict = found.support.replace(/\s\(.*\)$/, "");
+          if (verdict !== meta.gpuixSupport) {
             return [
               `${meta.name}: row says support ${found.support}, record says ${meta.gpuixSupport}`,
             ];
@@ -241,7 +256,7 @@ describe("inventory", () => {
   });
 
   it("states the real native test count where a row claims one", () => {
-    const rows = packageRows();
+    const rows = recordRows();
     const problems = Arr.flatMap(
       Arr.filter(inventory, (meta: ComponentMeta) => meta.status === "done"),
       (meta: ComponentMeta) => {

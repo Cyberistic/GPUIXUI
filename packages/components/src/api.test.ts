@@ -17,11 +17,13 @@
  * shares no prefix with its root (KeyboardShortcuts' `Keycap`) is covered only
  * by the forward direction; the forward direction is exact.
  *
- * The props half reads each Tier 2 page's `## API` against the `*Props`
- * interfaces its own source declares, so a prop added to a type is reported
- * until the page names it. The shape props every part carries (`className`,
- * `children`, `style`, `ref`, `testId`, `aria-id`, `onLayout`) are the
- * package-wide convention in `docs/component-api.md` and are exempt.
+ * The props half reads each recorded component page's `## API` against the
+ * `*Props` interfaces its own source declares for its **exported** parts, so a
+ * prop added to a public type is reported until the page names it while an
+ * internal part's own props (a field's loop, not its caller's surface) are not.
+ * The shape props every part carries (`className`, `children`, `style`, `ref`,
+ * `testId`, `aria-id`, `onLayout`) are the package-wide convention in
+ * `docs/component-api.md` and are exempt.
  *
  * `node:fs` is a test-time repository read, as in `inventory.test.ts`; no
  * component runtime imports it.
@@ -497,6 +499,17 @@ const slugOf = (meta: ComponentMeta): string =>
   Str.replace(/\.mdx$/, "")(Str.replace(/^docs\//, "")(meta.docs));
 
 /** The `*Props` types the record's own source file or directory declares. */
+/**
+ * The props types one page is held to: the exported parts declared in its own
+ * source.
+ *
+ * An **internal** part is not public API — `Bubbles`' `Bubble`, `Stars`' `Star`
+ * and `Gradient`'s `Breath` are the implementation behind the field a caller
+ * names, and their `spec`/`ink`/`radius` props are the field's own loop, not
+ * something a consumer passes. Holding a page to them would demand it document
+ * a type nobody can import. A part this package exports, or one named in the §8
+ * parts table, is the surface a reader compiles against.
+ */
 const pageTypes = (
   meta: ComponentMeta,
   types: TypeIndex,
@@ -507,6 +520,7 @@ const pageTypes = (
     const file = local?.file ?? "";
     return (
       Str.endsWith("Props")(name) &&
+      isExportedPart(name.slice(0, -"Props".length)) &&
       local !== undefined &&
       (file === `${slug}.tsx` || Str.startsWith(`${slug}/`)(file))
     );
@@ -681,12 +695,15 @@ describe("component API contract", () => {
     // `style`/`ref`/`testId`/`aria-id`/`onLayout` surface is the half a reader
     // copies most often, and the pages omitted it from Accordion to Field.
     const types = declaredTypes();
-    const tier2: ReadonlyArray<ComponentMeta> = Arr.filter(
+    // Every recorded component page is held, the specialised row included:
+    // `MultiStepForm` is a Tier 5 component like the Tier 2 ones, and its page
+    // was the one place a prop could ship undocumented.
+    const recorded: ReadonlyArray<ComponentMeta> = Arr.filter(
       inventory,
-      (meta) => meta.tier === 2,
+      (meta) => meta.tier === 2 || meta.tier === 5,
     );
     let checked = 0;
-    const problems = Arr.flatMap(tier2, (meta) => {
+    const problems = Arr.flatMap(recorded, (meta) => {
       const documented = documentedProps(pageOf(meta.docs));
       return Arr.flatMap(pageTypes(meta, types), (name) => {
         const props = Arr.dedupe(propsOf(name, types));
