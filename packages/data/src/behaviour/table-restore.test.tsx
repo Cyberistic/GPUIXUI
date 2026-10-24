@@ -14,9 +14,25 @@
  * release cannot use reads as the slice it can — an unreadable sorting list is
  * no sort, a query that is not text is no query, and a chosen set keeps only the
  * ids the store set to `true`.
+ *
+ * The record is also **written** here: `table.save()` composes the state the
+ * grid runs (the order it can actually sort, the query, the core's chosen ids)
+ * and a remount reads it back, so the round trip a workspace depends on is one
+ * window case rather than a caller re-deriving the wire shape. A chosen record
+ * a filter hides is saved because retention is a view, not a write — the saved
+ * ids are the core's. A saved sort that names a column this release dropped is
+ * not a sort: the row model already skipped it, so counting it in the order
+ * made a Shift press announce "sort 2 of 2" above one sort.
  */
 
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as Str from "effect/String";
+import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
+import { Button } from "@gpuixui/primitives/button";
+import { TableSortHeader } from "../sort/header.js";
+import type { GridConfig } from "../grid-core.js";
 import {
   Table,
   TableBody,
@@ -27,7 +43,7 @@ import {
   TableViewport,
 } from "../table/table.js";
 import { TableFilterField } from "../filter/field.js";
-import { paintedText } from "../internal/interaction.js";
+import { paintedText, typeInto } from "../internal/interaction.js";
 import {
   renderData,
   settle,
@@ -152,5 +168,259 @@ describe("a grid reopened from a saved state", () => {
     // Only the id the store set to `true` is chosen; the string is no choice.
     expect(root.renderer.findByTestId("restore-row-readme")).toBeDefined();
     expect(root.renderer.findByTestId("restore-row-alpha")).toBeDefined();
+  });
+});
+
+/** A row with a size, so a sort has two fields to order by. */
+interface SizedFile {
+  readonly id: string;
+  readonly name: string;
+  readonly size: number;
+}
+
+const SIZED_FILES: ReadonlyArray<SizedFile> = [
+  { id: "alpha", name: "alpha.ts", size: 30 },
+  { id: "notes", name: "notes.txt", size: 20 },
+  { id: "readme", name: "readme.md", size: 40 },
+];
+
+const SIZED_COLUMNS = [
+  {
+    id: "name",
+    label: "Name",
+    width: 200,
+    valueOf: (row: SizedFile) => row.name,
+  },
+  {
+    id: "size",
+    label: "Size",
+    width: 90,
+    valueOf: (row: SizedFile) => row.size,
+  },
+];
+
+const sizedKeyOf = (row: SizedFile): string => row.id;
+
+/** One row of the window's text, found by the words it contains. */
+const textWith = (testRoot: DataTestRoot, words: string): string =>
+  Option.getOrElse(
+    Arr.findFirst(testRoot.renderer.getAllText(), Str.includes(words)),
+    () => {
+      throw new Error(`behaviour: no painted text containing "${words}"`);
+    },
+  );
+
+/** Press `testId` through the runtime's real hit testing. */
+const pressSaved = (testRoot: DataTestRoot, testId: string): void => {
+  const element = testRoot.renderer.findByTestId(testId);
+  if (element === undefined)
+    throw new Error(`behaviour: no element with testId "${testId}"`);
+  const bounds = testRoot.renderer.getElementBounds(element.id);
+  if (bounds === null)
+    throw new Error(`behaviour: no painted box for ${testId}`);
+  testRoot.renderer.nativeSimulateClick(
+    bounds.x + bounds.width / 2,
+    bounds.y + bounds.height / 2,
+  );
+  testRoot.renderer.flush();
+};
+
+/** A grid a reader sorts, chooses, narrows and then saves. */
+const SavedGrid = ({
+  stored,
+  onSave,
+}: {
+  readonly stored: unknown;
+  readonly onSave: (next: GridConfig) => void;
+}) => {
+  const table = useTable({
+    rows: SIZED_FILES,
+    keyOf: sizedKeyOf,
+    columns: SIZED_COLUMNS,
+    stored,
+  });
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "row", gap: 8 }}>
+        <Button testId="save-grid" onActivate={() => onSave(table.save())}>
+          Save
+        </Button>
+        <Button testId="show-all" onActivate={() => table.setQuery("")}>
+          Show all
+        </Button>
+        <text testId="saved-readout">
+          {`${table.keys.length} rows · ${table.selectedCount} selected`}
+        </text>
+        <text testId="saved-order">
+          {`order: ${Arr.join(
+            Arr.map(table.rows, (row) => row.name),
+            " ",
+          )}`}
+        </text>
+        <text testId="saved-choice">
+          {table.isSelected("alpha") ? "alpha chosen" : "alpha free"}
+        </text>
+      </div>
+      <TableFilterField
+        value={table.query}
+        onValueChange={table.setQuery}
+        testId="saved-filter"
+      />
+      <Table height={240}>
+        <TableViewport>
+          <TableHeader>
+            <TableRow>
+              <TableSortHeader
+                field="name"
+                label="Name"
+                sort={table.sort}
+                order={table.sortOrder}
+                onSortPress={table.pressSort}
+                width={200}
+                testId="saved-name"
+              />
+              <TableHeaderCell width={90}>Size</TableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.rows.map((row) => (
+              <TableRow
+                key={row.id}
+                testId={`saved-row-${row.id}`}
+                selected={table.isSelected(row.id)}
+                onClick={() => table.press(row.id)}
+              >
+                <TableCell width={200}>{row.name}</TableCell>
+                <TableCell width={90}>{`${row.size}`}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </TableViewport>
+      </Table>
+    </div>
+  );
+};
+
+/**
+ * The saved record, held where a store would hold it.
+ *
+ * A keyed remount is the "open the workspace again" step: `useTable` reads
+ * `stored` once, so the fresh mount is the only reading a saved record gets.
+ */
+const SaveHarness = () => {
+  const [saved, setSaved] = useState<unknown>(undefined);
+  const [generation, setGeneration] = useState(0);
+  return (
+    <SavedGrid
+      key={generation}
+      stored={saved}
+      onSave={(next) => {
+        setSaved(next);
+        setGeneration((current) => current + 1);
+      }}
+    />
+  );
+};
+
+describe("the record a grid writes to a store", () => {
+  it("reopens the sorted, narrowed and chosen grid it saved", () => {
+    root = renderData(<SaveHarness />);
+    settle(root);
+
+    // Sort by name, descending: readme, notes, alpha.
+    pressSaved(root, "saved-name-sort");
+    pressSaved(root, "saved-name-sort");
+    expect(textWith(root, "order:")).toBe(
+      "order: readme.md notes.txt alpha.ts",
+    );
+
+    // Choose alpha, then narrow the set until alpha is not painted: the view
+    // releases it, while the core still holds the id.
+    pressSaved(root, "saved-row-alpha");
+    expect(paintedText(root)).toContain("3 rows · 1 selected");
+    typeInto(root, "saved-filter", "no");
+    root.renderer.flush();
+    expect(paintedText(root)).toContain("1 rows · 0 selected");
+
+    // Save, and reopen from the record.
+    pressSaved(root, "save-grid");
+    expect(paintedText(root)).toContain("1 rows · 0 selected");
+    expect(textWith(root, "order:")).toBe("order: notes.txt");
+    expect(paintedText(root)).toContain("alpha free");
+
+    // The query widened: the record the store saved is chosen again, and the
+    // sort is the order the reader left.
+    pressSaved(root, "show-all");
+    expect(paintedText(root)).toContain("3 rows · 1 selected");
+    expect(textWith(root, "order:")).toBe(
+      "order: readme.md notes.txt alpha.ts",
+    );
+    expect(paintedText(root)).toContain("alpha chosen");
+  });
+});
+
+/** A grid opened from a record, with the one gesture that reads the order. */
+const PhantomSortGrid = ({ stored }: { readonly stored?: unknown }) => {
+  const table = useTable({
+    rows: SIZED_FILES,
+    keyOf: sizedKeyOf,
+    columns: SIZED_COLUMNS,
+    stored,
+  });
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "row", gap: 8 }}>
+        <Button
+          testId="phantom-shift"
+          onActivate={() =>
+            table.pressSort("name", "asc", {
+              shift: true,
+              ctrl: false,
+              alt: false,
+              cmd: false,
+            })
+          }
+        >
+          Tie-break by name
+        </Button>
+        <text testId="phantom-order">
+          {`${table.sortOrder.length} sorts · ${Arr.join(
+            Arr.map(table.sortOrder, (entry) => entry.field),
+            ",",
+          )}`}
+        </text>
+        <text testId="phantom-rows">
+          {Arr.join(
+            Arr.map(table.rows, (row) => row.id),
+            ",",
+          )}
+        </text>
+      </div>
+    </div>
+  );
+};
+
+describe("a saved sort that names a column this release dropped", () => {
+  it("is not an order the grid counts", () => {
+    // The release that saved this sorted by `path`; the column is gone, so the
+    // row model cannot compare it and paints the source order.
+    root = renderData(
+      <PhantomSortGrid
+        stored={{
+          sorting: [{ id: "path", desc: true }],
+          globalFilter: "",
+          rowSelection: {},
+        }}
+      />,
+    );
+    settle(root);
+
+    expect(textWith(root, "sorts · ")).toBe("0 sorts · ");
+    expect(paintedText(root)).toContain("alpha,notes,readme");
+
+    // A Shift press on a live column is the only sort: the dropped one must not
+    // become its tie-break, which announced "sort 2 of 2" above one sort.
+    pressSaved(root, "phantom-shift");
+    expect(textWith(root, "sorts · ")).toBe("1 sorts · name");
   });
 });

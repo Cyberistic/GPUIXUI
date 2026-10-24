@@ -759,6 +759,24 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   3.6 s + 10.0 s); the runner-level mount marker for any two probes that share
   an id is `TODO.md` → Interlocks.
 
+- **A grid's saved state round-trips, and a sort it cannot run is not counted**:
+  the record was read (`readGridState`, `useTable({ stored })`) while nothing
+  wrote it — a workspace had to rebuild `{ sorting: [{ id, desc }],
+  globalFilter, rowSelection }` itself, and a save written from
+  `table.selection` (the retained view) lost every chosen record a filter hid.
+  `gridConfig(state)` is the inverse of `readGridState` and `useTable().save`
+  composes it from the core's chosen ids; `retainSorting` drops a saved sort
+  naming a column this release no longer holds, which the row model already
+  skipped while `sortOrder` still counted it (a Shift press announced "sort 2
+  of 2" above one sort). `src/grid-core.test.ts` gains four cases and
+  `behaviour/table-restore.test.tsx` two (the round trip through a keyed
+  remount, and the dropped column read as `0 sorts`). Directions measured:
+  writing the view fails the round trip (`expected '… 3 rows · 0 selected …'`);
+  reverting `sortOrder` to the raw state fails the dropped-column case
+  (`expected '1 sorts · path' to be '0 sorts · '`). Docs:
+  `docs/table-sorting.mdx` §Saving the state a grid holds, the README and the
+  Tier 3 Tables row.
+
 ## 5. Acceptance
 
 - The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`

@@ -78,8 +78,11 @@ import { useCallback, useMemo, useState } from "react";
 import type { RowData, SortingState } from "@tanstack/table-core";
 import {
   constructGrid,
+  gridConfig,
   readGridState,
+  retainSorting,
   type GridColumn,
+  type GridConfig,
   type GridTable,
 } from "./grid-core.js";
 import { filterByTree, type FilterTree } from "./surfaces/logic.js";
@@ -202,6 +205,17 @@ export interface TableController<Row extends RowData> {
   readonly tabStop: Option.Option<string>;
   /** The core table the controller runs on, for a consumer that needs more. */
   readonly table: GridTable<Row>;
+  /**
+   * The record to keep: the sorting, the query and the chosen ids.
+   *
+   * The chosen ids are the **core's**, not the retained view — a filter hides a
+   * chosen record from the paint but does not clear it — so a grid saved while
+   * narrowed restores that record when the query widens again. The sort is the
+   * order the grid runs, so an entry naming a column this release dropped is
+   * not written back. The range anchor is a gesture cursor, not state: it
+   * starts fresh on the next press.
+   */
+  readonly save: () => GridConfig;
   readonly setSort: (next: Option.Option<SortState>) => void;
   /**
    * The next sort for one field.
@@ -365,6 +379,14 @@ export const useTable = <Row extends RowData>({
   );
 
   const painted = table.getRowModel().rows;
+  /**
+   * The order the grid runs: a saved entry naming a column this set dropped is
+   * not a sort, and the readouts must not count it (the core already skips it).
+   */
+  const order = useMemo(
+    () => retainSorting(sorting, columns),
+    [sorting, columns],
+  );
   const visible = useMemo(
     () => Arr.map(painted, (row) => row.original),
     [painted],
@@ -402,9 +424,9 @@ export const useTable = <Row extends RowData>({
     setAnchor(next.anchor);
   }, []);
 
-  const sortOrder = sortOrderOf(sorting);
+  const sortOrder = sortOrderOf(order);
   const writeSort = useCallback(
-    (order: SortOrder) => setSorting(sortingOfOrder(order)),
+    (next: SortOrder) => setSorting(sortingOfOrder(next)),
     [],
   );
 
@@ -413,7 +435,7 @@ export const useTable = <Row extends RowData>({
     keys,
     kept,
     table,
-    sort: sortOf(sorting),
+    sort: sortOf(order),
     sortOrder,
     query,
     selection,
@@ -422,6 +444,8 @@ export const useTable = <Row extends RowData>({
     someSelected: someSelected(selection, keys),
     activeKey: currentKey(selection),
     tabStop: Option.orElse(currentKey(selection), () => Arr.head(keys)),
+    save: () =>
+      gridConfig({ sorting: order, globalFilter: query, rowSelection }),
     setSort: (next) => setSorting(sortingOf(next)),
     toggleSort: (field, additive = false) =>
       writeSort(pressSortOrder(sortOrder, field, "asc", additive)),

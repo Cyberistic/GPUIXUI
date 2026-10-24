@@ -25,7 +25,9 @@ import * as Arr from "effect/Array";
 import type { SortingState } from "@tanstack/table-core";
 import {
   constructGrid,
+  gridConfig,
   readGridState,
+  retainSorting,
   type GridColumn,
   type GridTable,
 } from "./grid-core.js";
@@ -269,5 +271,69 @@ describe("a grid state a store restored", () => {
     expect(
       Arr.map(restoredGrid(query, 42).getRowModel().rows, (row) => row.id),
     ).toEqual(["r3"]);
+  });
+
+  it("drops a sort that names a column this grid does not hold", () => {
+    // The release that saved this order sorted by `path`; the column is gone.
+    // The row model already skipped it — there is no column to compare — while
+    // the controller counted it, so a Shift press on `name` announced
+    // "sort 2 of 2" above one sort and `sortOrder` named a field no header
+    // paints.
+    const saved = readGridState({
+      sorting: [
+        { id: "path", desc: true },
+        { id: "size", desc: false },
+      ],
+      globalFilter: "",
+      rowSelection: {},
+    });
+    expect(retainSorting(saved.sorting, columns)).toEqual([
+      { id: "size", desc: false },
+    ]);
+    // The order the grid runs is the order it paints: the dropped entry never
+    // decided anything.
+    expect(
+      Arr.map(
+        restoredGrid({
+          sorting: saved.sorting,
+          globalFilter: saved.globalFilter,
+          rowSelection: saved.rowSelection,
+        }).getRowModel().rows,
+        (row) => row.id,
+      ),
+    ).toEqual(["r2", "r3", "r1"]);
+  });
+});
+
+describe("the record a grid writes to a store", () => {
+  it("reads back through the seam that restores it", () => {
+    const state = readGridState({
+      sorting: [{ id: "size", desc: true }, { id: "name" }],
+      globalFilter: "auth",
+      rowSelection: { r1: true, r2: true },
+    });
+    expect(readGridState(gridConfig(state))).toEqual(state);
+  });
+
+  it("writes an empty record for a state it cannot read", () => {
+    expect(gridConfig(readGridState(null))).toEqual({
+      sorting: [],
+      globalFilter: "",
+      rowSelection: {},
+    });
+  });
+
+  it("writes lists of its own, so a store never holds the controller's", () => {
+    // A store that kept the controller's arrays would see them change on the
+    // next sort, and a serialiser could not walk the record safely.
+    const state = readGridState({
+      sorting: [{ id: "size", desc: false }],
+      globalFilter: "",
+      rowSelection: { r1: true },
+    });
+    const saved = gridConfig(state);
+    expect(saved.sorting).not.toBe(state.sorting);
+    expect(saved.sorting[0]).not.toBe(state.sorting[0]);
+    expect(saved.rowSelection).not.toBe(state.rowSelection);
   });
 });

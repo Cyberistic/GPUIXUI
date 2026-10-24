@@ -48,10 +48,11 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
 | `TableSortHeader` | `testId` | `string` | — | the header cell's test id; the press control is `${testId}-sort` |
 | `TableSortHeader` | `resize` | `TableColumnResizeProps` | — | the divider's bounds and callback |
 | `useTable` | `sort` | `Option<SortState>` | — | the primary sort |
-| `useTable` | `sortOrder` | `SortOrder` | `[]` | every field in the order, primary first |
+| `useTable` | `sortOrder` | `SortOrder` | `[]` | every field in the order, primary first; an entry naming a column this grid does not hold is not counted |
 | `useTable` | `pressSort` | `(field, initialDirection, modifiers?) => void` | — | the order a header press produces; Shift adds a tie-break |
 | `useTable` | `toggleSort` | `(field, additive?) => void` | — | the same cycle without the runtime's modifiers |
 | `useTable` | `setSort` | `(next: Option<SortState>) => void` | — | replace the order with one field, or clear it |
+| `useTable` | `save` | `() => GridConfig` | — | the record to keep: the order the grid runs, the query and the core's chosen ids |
 
 ## A saved order is read
 
@@ -67,6 +68,12 @@ same way.
   entry that names no column is dropped;
 - a query that is not text is **no query** — nothing typed narrowed the set;
 - a chosen set keeps only the ids the store set to `true`.
+
+A saved order can also name a **column this release dropped**: the row model
+skips an entry it has no column to compare, and the order the grid reports —
+`sortOrder`, and every header's "sort N of M" — drops the entry too, because a
+sort that cannot run is not a sort. A column this grid still holds keeps its
+entry whether or not it is hidden.
 
 Measured before the read: `globalFilter: null` threw `Cannot read properties of
 null (reading 'trim')` out of the first build, `sorting: null` threw
@@ -89,6 +96,34 @@ const table = constructGrid({
   onRowSelectionChange: setChosen,
 });
 ```
+
+## Saving the state a grid holds
+
+`gridConfig(state)` writes the record `readGridState` reads, and
+`useTable().save` composes it from the controller — the shape a workspace keeps
+beside `columnConfig`'s:
+
+```tsx
+import { useTable } from "@gpuixui/data";
+
+const table = useTable({ rows, keyOf: (row) => row.id, columns, stored });
+
+// wherever the workspace persists its state
+const saved = table.save();
+// { sorting: [{ id, desc }], globalFilter, rowSelection: { [id]: true } }
+```
+
+The record is written from the order the grid **runs**, so an entry naming a
+dropped column is not persisted back, and from the **core's** chosen ids rather
+than the retained view: a filter that hides a chosen record keeps it in the
+core, so a grid saved while narrowed restores that record when the query widens
+again. The range anchor is a gesture cursor, not state — it starts fresh at the
+next press after a restore. `save` returns its own arrays and record, so a store
+can serialise the value without aliasing what the grid paints from.
+
+`nub run --filter @gpuixui/data test:behaviour` measures the round trip in the
+renderer: a grid sorted by name, a chosen record, and a query that hides it are
+saved and reopened as they were left.
 
 ## Limitations
 

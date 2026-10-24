@@ -152,7 +152,10 @@ const storedChosen = (stored: unknown): Readonly<Record<string, true>> =>
  * **no sort** (the source order) and an entry that names no column is dropped,
  * a query that is not text is **no query** (nothing narrowed the set), and a
  * chosen set keeps only the ids the store set to `true`. A `hiddenColumns`
- * list follows the same rule: one that is not a list hides nothing.
+ * list follows the same rule: one that is not a list hides nothing. A sorting
+ * entry that names a column **this grid does not hold** is dropped when the
+ * table is built ({@link retainSorting}), because only the column list knows
+ * which ids still exist.
  */
 export const readGridState = (stored: unknown): GridState => {
   const record = storedRecord(stored);
@@ -166,6 +169,54 @@ export const readGridState = (stored: unknown): GridState => {
 /** The visible-column opt-outs a store wrote: only text ids are ids. */
 const storedIds = (stored: unknown): ReadonlyArray<string> =>
   Arr.isArray(stored) ? Arr.filter(stored, P.isString) : [];
+
+/**
+ * The sorting entries this grid can run.
+ *
+ * A saved order names the columns of the release that wrote it, and a column
+ * set outlives the release: a renamed or dropped column leaves an entry no
+ * header paints. The core skips such an entry — there is no column to compare —
+ * but the controller still counted it, so a Shift press on a live column
+ * announced "sort 2 of 2" above one sort and `sortOrder` named a field that does
+ * not exist. Dropping it here keeps the row model, the headers and every
+ * readout on the same order.
+ */
+export const retainSorting = <Row>(
+  sorting: SortingState,
+  columns: ReadonlyArray<GridColumn<Row>>,
+): SortingState =>
+  Arr.filter(sorting, (entry) =>
+    Arr.some(columns, (column) => column.id === entry.id),
+  );
+
+/**
+ * The state to persist: the sorting, the query and the chosen ids.
+ *
+ * The inverse of {@link readGridState}, and the shape a store keeps beside
+ * `columnConfig`'s: a workspace writes it, hands it back as `useTable`'s
+ * `stored` or `constructGrid`'s `state`, and the grid reopens as it was left.
+ * The record is written from the reader's own normalisation and holds copies, so
+ * a store can serialise it without aliasing the arrays the controller paints
+ * from.
+ */
+export interface GridConfig {
+  readonly sorting: SortingState;
+  readonly globalFilter: string;
+  readonly rowSelection: Readonly<Record<string, true>>;
+}
+
+/** Write the record a store keeps for one grid. */
+export const gridConfig = (state: GridState): GridConfig => {
+  const current = readGridState(state);
+  return {
+    sorting: Arr.map(current.sorting, (entry) => ({
+      id: entry.id,
+      desc: entry.desc,
+    })),
+    globalFilter: current.globalFilter,
+    rowSelection: R.map(current.rowSelection, () => true as const),
+  };
+};
 
 /** How a grid reports a slice the core changed through its own API. */
 export interface GridChange {
@@ -257,7 +308,7 @@ export const constructGrid = <Row extends RowData>({
      * an empty table (`table-filter-lifecycle`).
      */
     state: {
-      sorting: [...current.sorting],
+      sorting: [...retainSorting(current.sorting, columns)],
       globalFilter: current.globalFilter.trim(),
       rowSelection: current.rowSelection,
     },

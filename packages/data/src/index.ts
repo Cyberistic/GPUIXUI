@@ -172,11 +172,18 @@ export type {
 export { DEFAULT_FILTER_LABEL, TableFilterField } from "./filter/field.js";
 export type { TableFilterFieldProps } from "./filter/field.js";
 
-export { constructGrid, gridFeatures, readGridState } from "./grid-core.js";
+export {
+  constructGrid,
+  gridConfig,
+  gridFeatures,
+  readGridState,
+  retainSorting,
+} from "./grid-core.js";
 export type {
   ConstructGridOptions,
   GridChange,
   GridColumn,
+  GridConfig,
   GridState,
   GridTable,
 } from "./grid-core.js";
