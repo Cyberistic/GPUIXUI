@@ -404,7 +404,14 @@ Verification.
       `brandText(theme)`, the anywhere-safe colour that clears the floor on all
       eight surfaces in all 18 styles. `colorRoles` gains the
       `EveryColorRoleListed` guard, so a role added to `ThemeColors` without a
-      line fails `check-types` naming it. `brand-text.test.ts` gains three cases
+      line fails `check-types` naming it (measured: a `ghost` role added alone
+      fails `Type 'boolean' is not assignable to type '["a colour role is
+      missing from the index", "ghost"]'`). The `pointer-wash` painter guard now
+      reads the **role** the press falls back to rather than a binding name —
+      the data package's in-flight `themeColors` refactor renamed
+      `theme.colors.active` to `colors.active` and the guard was asserting the
+      expression, so it failed a paint that had not changed.
+      `brand-text.test.ts` gains three cases
       and `color.test.ts` the guard case; directions measured: restoring the raw
       read fails the two brand cases (`expected '#5F4BDB' to be '#5B48D0'` and
       `light: expected 4.298… to be greater than or equal to 4.5`), and renaming
