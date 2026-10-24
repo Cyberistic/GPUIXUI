@@ -893,9 +893,10 @@ asks every font family to name a face, because `sans: ""` is present but paints
 the renderer's fallback for every text role instead of the face the theme states.
 The required steps are derived from the scales the package ships, so a role or
 metric added to one is required on the next release. All three lists are available
-**before** the refusal as `missingTokens`: called with a theme, it returns
-`{ group, path, kind }` entries, with a group named once and a step once rather
-than once per field, so
+**before** the refusal as `missingTokens`: called with what a store handed back —
+`unknown`, so a decoded value needs no cast, and the `null` of no saved theme
+carries no group — it returns `{ group, path, kind }` entries, with a group named
+once and a step once rather than once per field, so
 a caller deciding whether to restore a stored theme reads the absence as data
 instead of catching the gate's error; `auditTheme` builds its messages from the
 same list, so the report and the error cannot drift. An additive absence (a

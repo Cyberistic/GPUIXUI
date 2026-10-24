@@ -99,6 +99,16 @@ const requiredSteps: readonly RequiredStep[] = [
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
+/**
+ * A stored value as a group source: the object it is, or an empty one when the
+ * store wrote no theme at all. `missingTokens` is the report a caller runs
+ * **before** it trusts a decoded value, so a `null` (no saved theme), a string
+ * from a corrupt row or a number carries no group rather than throwing out of
+ * the decision the report exists to answer.
+ */
+const groupSource = (theme: unknown): NumericGroupSource =>
+  isRecord(theme) ? theme : {};
+
 /** The value at a dotted `path`, or `undefined` when a key on the way is absent. */
 const readPath = (source: unknown, path: string): unknown =>
   path
@@ -150,14 +160,19 @@ export interface MissingToken {
  * a stored theme is decoded or cast, so the type cannot say whether it predates
  * a scale, a step or a family this release ships, and a caller deciding whether
  * to restore it — or which release it came from — reads the absence instead of
- * catching the gate's error. A group the theme does not carry is named **once**:
- * none of its steps exists to name, so listing them would bury the one decision
- * the reader has to make. A step is named once too, rather than once per field
- * it would have carried. **Absence is both of the shapes a store writes**: a key
- * it dropped (`undefined`) and a key it kept without a value (`null`). A token is
- * never nullable, so both are the step the gate must refuse — reading only
- * `undefined` let `{ spacing: { md: null } }` pass the gate while the runtime
- * dropped the length and the gap painted as nothing.
+ * catching the gate's error. **The source is `unknown`**, because that is what a
+ * store hands back: a decoded value a caller cannot narrow without a cast, and
+ * the `null` a store writes for no saved theme at all. A value that is not an
+ * object — `null`, `undefined`, a string from a corrupt row, a number — carries
+ * no group, so it answers every group missing instead of throwing out of the
+ * decision this report exists to answer. A group the theme does not carry is
+ * named **once**: none of its steps exists to name, so listing them would bury
+ * the one decision the reader has to make. A step is named once too, rather than
+ * once per field it would have carried. **Absence is both of the shapes a store
+ * writes**: a key it dropped (`undefined`) and a key it kept without a value
+ * (`null`). A token is never nullable, so both are the step the gate must
+ * refuse — reading only `undefined` let `{ spacing: { md: null } }` pass the
+ * gate while the runtime dropped the length and the gap painted as nothing.
  *
  * An **additive** absence is not here: a colour role, an elevation level or the
  * whole elevation scale a theme lost is a report (`invalidColorRoles`,
@@ -171,7 +186,7 @@ export interface MissingToken {
  * import { lightTheme, missingTokens } from "@gpuixui/tokens";
  *
  * missingTokens(lightTheme); // [] — a shipped theme carries every part
- * const stored = JSON.parse(fromStorage) as typeof lightTheme;
+ * const stored: unknown = JSON.parse(fromStorage);
  * missingTokens(stored);
  * // [
  * //   { group: "density", path: "rowHeight", kind: "step" },
@@ -179,11 +194,10 @@ export interface MissingToken {
  * // ]
  * ```
  */
-export function missingTokens(
-  theme: NumericGroupSource,
-): readonly MissingToken[] {
+export function missingTokens(theme: unknown): readonly MissingToken[] {
+  const source = groupSource(theme);
   const carries = (group: MissingToken["group"]): boolean =>
-    !isAbsent(theme[group]);
+    !isAbsent(source[group]);
   const groups = numericGroups
     .filter((group) => !carries(group))
     .map((group): MissingToken => ({ group, path: "", kind: "group" }));
@@ -191,7 +205,7 @@ export function missingTokens(
     if (!carries(group)) {
       return [];
     }
-    const step = readPath(theme[group], path);
+    const step = readPath(source[group], path);
     if (isAbsent(step)) {
       return [{ group, path, kind: "step" as const }];
     }
@@ -207,7 +221,7 @@ export function missingTokens(
     if (family !== true || !carries(group)) {
       return [];
     }
-    const value = readPath(theme[group], path);
+    const value = readPath(source[group], path);
     // An absent family is the step rule's; this is the one a store wrote as a
     // present but empty name.
     return isAbsent(value) || (typeof value === "string" && value.trim() !== "")
@@ -246,7 +260,7 @@ const refuseGroups = (missing: readonly MissingToken[]): void => {
 };
 
 /** {@link refuseGroups} for a theme, which a numeric report runs before its walk. */
-export const requireGroups = (theme: NumericGroupSource): void =>
+export const requireGroups = (theme: unknown): void =>
   refuseGroups(missingTokens(theme));
 
 /**
@@ -255,11 +269,15 @@ export const requireGroups = (theme: NumericGroupSource): void =>
  * A stored theme is decoded or cast, so the type cannot catch this: without the
  * guard the first report reads `Object.entries(undefined)` and the consumer sees
  * `TypeError: Cannot convert undefined or null to object` with no hint which
- * group their release lost. Throwing is deliberate — this is an invariant of the
- * gate's input rather than a theme state the reports can describe — and the same
- * three lists are readable without the throw through {@link missingTokens}.
+ * group their release lost. The source is `unknown` for the reason
+ * {@link missingTokens} takes one — this is the refusal a caller runs on the
+ * value a store handed back, so a `null` is every group missing rather than a
+ * `TypeError` from the guard itself. Throwing is deliberate — this is an
+ * invariant of the gate's input rather than a theme state the reports can
+ * describe — and the same three lists are readable without the throw through
+ * {@link missingTokens}.
  */
-export const requireTokens = (theme: NumericGroupSource): void => {
+export const requireTokens = (theme: unknown): void => {
   const missing = missingTokens(theme);
   refuseGroups(missing);
   const steps = missing.filter(({ kind }) => kind === "step");

@@ -1183,7 +1183,10 @@ the theme states (§5). The three refusals are also **readable before they are
 thrown**: `missingTokens` returns `{ group, path, kind }` for the stored theme,
 so an application deciding whether to restore one reads the absence as data
 instead of catching the gate's error, and the gate's three messages are built
-from that same list (`docs/tokens.md` §Paint-ready values).
+from that same list (`docs/tokens.md` §Paint-ready values). Its source is what the
+store handed back — `unknown`, the `null` of no saved theme included — so a
+decoded value never needs a cast to be read: a value that is not an object
+carries no group and answers every group missing.
 
 A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 `Infinity` arrive as `null`, the property is dropped, and the element paints as

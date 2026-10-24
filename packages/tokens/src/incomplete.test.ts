@@ -907,6 +907,53 @@ describe("the parts a theme lost, as data", () => {
     expect(drift).toEqual([]);
   });
 
+  it("reads what a store handed back, including no theme at all", () => {
+    // The bug this holds: `missingTokens` took the partial group source a `Theme`
+    // structurally satisfies, so a caller holding a decoded value had to cast it —
+    // `JSON.parse(fromStorage) as typeof lightTheme`, the assertion `AGENTS.md`
+    // forbids — to ask the one report that decides whether a theme is restorable.
+    // And the value a store writes for **no saved theme**, `null`, threw
+    // `TypeError: Cannot read properties of null (reading 'spacing')` out of that
+    // decision, while every value that is not a theme at all carries no group.
+    const everyGroup = missingTokens({});
+
+    [null, undefined, "light", 42, true, []].forEach((stored) => {
+      expect(() => missingTokens(stored)).not.toThrow();
+      expect(missingTokens(stored)).toEqual(everyGroup);
+    });
+    // No group exists to name a step inside, so the six groups are the whole
+    // answer rather than six groups plus every step.
+    expect(everyGroup.map(({ path }) => path)).toEqual(
+      everyGroup.map(() => ""),
+    );
+    expect(everyGroup.map(({ kind }) => kind)).toEqual(
+      everyGroup.map(() => "group"),
+    );
+    // And a complete theme is still whole: the seam did not turn into a parser.
+    expect(missingTokens(lightTheme)).toEqual([]);
+  });
+
+  it("teaches the source it takes on both token pages, the seam and the README", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const seam = read("./missing.ts");
+
+    expect(seam).toContain("export function missingTokens(theme: unknown)");
+    // A cast is the thing the source type makes unnecessary; a page that teaches
+    // one sends the reader back to the assertion the report exists to avoid.
+    expect(seam).not.toContain("as typeof lightTheme");
+    expect(catalogue).not.toContain("as typeof lightTheme");
+    expect(catalogue).toContain("The source is what the store handed back");
+    expect(catalogue).toContain(
+      "const stored: unknown = JSON.parse(fromStorage);",
+    );
+    expect(designSystem).toContain("so a decoded value never needs a cast");
+    expect(readme).toContain("called with what a store handed back");
+  });
+
   it("is taught on both token pages and the package README", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");

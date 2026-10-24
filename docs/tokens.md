@@ -1604,12 +1604,20 @@ rule's. An **additive** absence is not in the list — a colour role or an
 elevation level a stored theme lost is `invalidColorRoles`/`invalidShadowColors`'
 business and a failing gate, because the runtime can paint the rest.
 
+**The source is what the store handed back, not a `Theme`.** The report runs
+before a decoded value is trusted, so its input is `unknown`: a value that is not
+an object at all — the `null` a store writes for no saved theme, a string from a
+corrupt row, a number — carries no group, and the report answers every group
+missing instead of throwing out of the decision it exists to answer. A caller
+therefore never casts a decoded value to call it (`requireTokens`, the refusing
+half, takes the same source).
+
 ```ts
 import { lightTheme, missingTokens } from "@gpuixui/tokens";
 
 missingTokens(lightTheme); // [] — a shipped theme carries every part
 
-const stored = JSON.parse(fromStorage) as typeof lightTheme;
+const stored: unknown = JSON.parse(fromStorage);
 missingTokens(stored);
 // [
 //   { group: "density", path: "rowHeight", kind: "step" },
