@@ -127,6 +127,11 @@ for less motion is the failure this policy exists to prevent, while a journey
 the application can see it lost is one a developer fixes. `motionTiming` reads
 the same rule, so a surface that builds its own timing gets it too.
 
+The provider's `preference` prop takes that shape rather than the union — a
+stored row reaches it straight from the store, with no assertion between the
+two — so a renamed setting or a `"true"` column lands in the decoder instead of
+being refused by the type checker at the one call site an application writes.
+
 ## The presence table
 
 A surface that enters and leaves reads one table, exported from

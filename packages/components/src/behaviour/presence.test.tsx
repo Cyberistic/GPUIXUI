@@ -443,10 +443,7 @@ describe("the preference", () => {
    */
   it("fails safe when the stored preference is not a name the library carries", () => {
     const tree = (preference: string | null) => (
-      <PackageMotionProvider
-        // @ts-expect-error — a settings row the library did not type-check.
-        preference={preference}
-      >
+      <PackageMotionProvider preference={preference}>
         <div
           testId="frame"
           style={{ display: "flex", flexDirection: "column" }}

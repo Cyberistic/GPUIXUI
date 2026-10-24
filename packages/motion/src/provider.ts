@@ -26,12 +26,18 @@ const MotionPreferenceContext = createContext<MotionPreference>("animated");
 /** Props for {@link MotionProvider}. */
 export interface MotionProviderProps {
   /**
-   * The reader's preference. Default `"animated"`.
+   * The reader's preference, as the value the application holds. Default
+   * `"animated"`.
    *
-   * A value read back from storage is decoded by `preferenceOf`: an absent one
-   * keeps the default and one the union does not name is the reduced policy.
+   * This is a **stored** value as often as a literal — a settings row read back
+   * from a store, a checkbox column, a value a release renamed — so the prop
+   * takes what the application has rather than the union the library carries,
+   * and {@link preferenceOf} decodes it: an absent (nullish) value keeps the
+   * default and one that is present and not a name is the reduced policy. A
+   * consumer therefore passes its decoded row straight through, with no
+   * assertion between the store and the provider.
    */
-  readonly preference?: MotionPreference;
+  readonly preference?: unknown;
   readonly children?: ReactNode;
 }
 

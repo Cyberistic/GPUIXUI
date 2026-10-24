@@ -58,20 +58,28 @@ describe("the motion preference", () => {
   });
 
   /**
-   * The bug this guards: the preference is a `MotionPreference` to TypeScript
-   * and a value from storage to the application — a settings row that is `NULL`,
-   * a renamed setting, a checkbox column written as `"true"`. The provider
-   * published whatever it was handed, so `useMotionPreference()` could answer a
-   * value outside its own union and every surface's `=== "reduced"` read false:
-   * a reader who asked for less motion got the journey, with nothing to see.
+   * The bug this guards: the preference is a `MotionPreference` to the library
+   * and a value from storage to the application — a settings row that is
+   * `NULL`, a renamed setting, a checkbox column written as `"true"`. The
+   * provider published whatever it was handed, so `useMotionPreference()` could
+   * answer a value outside its own union and every surface's `=== "reduced"`
+   * read false: a reader who asked for less motion got the journey, with
+   * nothing to see.
+   *
+   * The prop is typed as the value the application holds — `unknown` — because
+   * that is what a store hands back, and `preferenceOf` is the decoder. The old
+   * `MotionPreference` prop refused the row in its type, so a consumer could
+   * only pass its own stored value through an assertion.
    */
   it("publishes only a name the library carries", () => {
+    // The rows below are what a store answered: a `string | null` and a value
+    // typed as the setting an application keeps. Neither is a name the union
+    // carries, and neither needs an assertion to reach the provider.
+    const renamed: string | null = "Reduced";
+    const neverStored: string | null = null;
     expect(
       markup(
-        <Provider.MotionProvider
-          // @ts-expect-error — a settings row the library did not type-check.
-          preference={"Reduced"}
-        >
+        <Provider.MotionProvider preference={renamed}>
           <Preference />
         </Provider.MotionProvider>,
       ),
@@ -80,13 +88,27 @@ describe("the motion preference", () => {
     // carried the setting decodes to a nullish value.
     expect(
       markup(
-        <Provider.MotionProvider
-          // @ts-expect-error — a `NULL` column.
-          preference={null}
-        >
+        <Provider.MotionProvider preference={neverStored}>
           <Preference />
         </Provider.MotionProvider>,
       ),
     ).toBe("animated");
+    // A row a decoder never saw at all (the shape `JSON.parse` leaves where a
+    // key is missing) is the same absence, and a present non-name — a checkbox
+    // column written as `"true"` — is the reduced policy.
+    expect(
+      markup(
+        <Provider.MotionProvider preference={undefined}>
+          <Preference />
+        </Provider.MotionProvider>,
+      ),
+    ).toBe("animated");
+    expect(
+      markup(
+        <Provider.MotionProvider preference={"true"}>
+          <Preference />
+        </Provider.MotionProvider>,
+      ),
+    ).toBe("reduced");
   });
 });
