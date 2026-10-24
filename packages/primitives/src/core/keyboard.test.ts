@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
+import * as core from "./index.js";
 import {
   decideAbsolute,
   decideActivation,
@@ -156,6 +157,15 @@ describe("a stored orientation", () => {
     expect(isOrientation("row")).toBe(false);
     expect(isOrientation(undefined)).toBe(false);
     expect(isOrientation(1)).toBe(false);
+  });
+
+  it("is published where a consumer with a stored orientation can reach it", () => {
+    // Every other persisted name's guard is on the package's core surface
+    // (`isTextTone`, `isProgressTone`, `isSelectionAccent`, …), so a caller
+    // restoring an orientation from storage has the same seam instead of
+    // casting. A guard that stays module-local is one nobody outside can use.
+    expect(core.isOrientation).toBe(isOrientation);
+    expect(core.orientationOf).toBe(orientationOf);
   });
 });
 

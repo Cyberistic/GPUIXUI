@@ -45,8 +45,10 @@ export {
   decideToggle,
   decideTypeAhead,
   ENTER_KEY,
+  isOrientation,
   isPlainKey,
   isTypeAheadKey,
+  orientationOf,
   SPACE_KEY,
   TYPE_AHEAD_RESET_MS,
 } from "./keyboard.js";
