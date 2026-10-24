@@ -20,6 +20,12 @@
  *     row's accent both become the light palette's own roles — so the switch is
  *     a `ThemeProvider` re-render and not a repaint of the swatch alone.
  *
+ * The keyboard half is the sidebar's roving contract: the open row is the
+ * list's **only** tab stop, an arrow steps the cursor with a clamp, opens the
+ * entry it lands on and carries the native focus with it, and a move to either
+ * end reveals the row it opened. A sidebar of one stop per row cost a keyboard
+ * reader a press per scenario to reach the stage, and no key moved between rows.
+ *
  * The row has to be **revealed** before the press: the renderer keeps a scroll
  * offset per `testId`, so a list another scenario left scrolled can hold the row
  * outside the viewport (see `shell-nav.ts`).
@@ -198,43 +204,177 @@ export const shellSelectionScenario: ScenarioBody = {
         palettes.light.colors.accent,
       );
 
-      // The keyboard route: the shell's rows are `role="button"` surfaces, so a
-      // reader who never touches the pointer must be able to Tab to one and
-      // activate it. The palette press above left the focus on that button, and
-      // the first row is the next stop in tree order.
+      // The keyboard route: the sidebar is **one roving stop** — the row the app
+      // has open — so a reader who never touches the pointer reaches it from the
+      // palette and leaves the list in one more press. The arrows step the
+      // cursor with a clamp and carry the native focus and the scroller with it,
+      // the contract `focus-reveal-lifecycle` measured for the library's lists.
+      // The palette press above left the focus on its own button.
       yield* ctx.expectEqual(
         "the palette press left the focus on that button",
         ctx.host.focused() === paletteId(TARGET_PALETTE),
         true,
       );
       yield* ctx.expectEqual(
-        "the first row is in the Tab order",
-        yield* focusTo(ctx, navId(first.id)),
+        "the Tab walk reaches the row the app has open",
+        yield* focusTo(ctx, navId(target.id)),
         true,
       );
 
-      ctx.host.key("enter");
+      ctx.host.focusNext();
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "one more Tab leaves the list for the stage",
+        ctx.host.focused() === TARGET_MARKER,
+        true,
+      );
+      ctx.host.focusPrevious();
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "the step back returns to the list's one stop",
+        ctx.host.focused() === navId(target.id),
+        true,
+      );
+      ctx.host.focusPrevious();
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "the open row is the list's only stop",
+        ctx.host.focused() === paletteId("high"),
+        true,
+      );
+      ctx.host.focusNext();
       ctx.host.advance(16);
 
+      const targetIndex = yield* ctx.expectSome(
+        "the pressed entry sits in the registry",
+        Arr.findFirstIndex(scenarios, (scenario) => scenario.id === target.id),
+      );
+      const following = yield* ctx.expectSome(
+        "the registry lists an entry after the pressed one",
+        Option.fromNullishOr(scenarios[targetIndex + 1]),
+      );
+
+      ctx.host.key("down");
+      ctx.host.advance(16);
       yield* ctx.expectEqual(
-        "Enter opens the row that holds the focus",
+        "an arrow opens the entry after the open one",
         yield* ctx.expectSome(
-          "the header paints its title after Enter",
+          "the header paints its title after the arrow",
+          textOf(ctx, "app-title"),
+        ),
+        following.title,
+      );
+      yield* ctx.expectEqual(
+        "the arrow's row paints the accent",
+        yield* ctx.expectSome(
+          "the arrow's row paints a fill",
+          fillOf(ctx, navId(following.id)),
+        ),
+        palettes.light.colors.accent,
+      );
+      yield* ctx.expectEqual(
+        "the row the arrow left returns to the page",
+        yield* ctx.expectSome(
+          "the row the arrow left paints a fill",
+          fillOf(ctx, navId(target.id)),
+        ),
+        palettes.light.colors.background,
+      );
+      yield* ctx.expectEqual(
+        "the native focus follows the cursor",
+        ctx.host.focused() === navId(following.id),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the entry the cursor left is unmounted",
+        Option.isNone(Option.fromNullishOr(ctx.host.bounds(TARGET_MARKER))),
+        true,
+      );
+
+      ctx.host.key("up");
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "an arrow back opens the entry it came from",
+        yield* ctx.expectSome(
+          "the header paints its title after the arrow back",
+          textOf(ctx, "app-title"),
+        ),
+        target.title,
+      );
+
+      // The list is taller than its box, so a move to either end owes the reader
+      // the reveal the runtime does not do for free (`focus-reveal-lifecycle`).
+      const listBox = yield* ctx.expectSome(
+        "the sidebar paints its scroller",
+        Option.fromNullishOr(ctx.host.bounds(SHELL_LIST)),
+      );
+      const last = yield* ctx.expectSome(
+        "the registry has a last entry",
+        Arr.last(scenarios),
+      );
+      const lastBefore = yield* ctx.expectSome(
+        "the last row is painted off screen",
+        Option.fromNullishOr(ctx.host.bounds(navId(last.id))),
+      );
+      yield* ctx.expectEqual(
+        "the last row starts outside the list",
+        inside(listBox, lastBefore),
+        false,
+      );
+
+      ctx.host.key("end");
+      ctx.host.advance(16);
+      const lastAfter = yield* ctx.expectSome(
+        "the last row is painted after End",
+        Option.fromNullishOr(ctx.host.bounds(navId(last.id))),
+      );
+      yield* ctx.expectEqual(
+        "End opens the last entry",
+        yield* ctx.expectSome(
+          "the header paints the last title",
+          textOf(ctx, "app-title"),
+        ),
+        last.title,
+      );
+      yield* ctx.expectEqual(
+        "End reveals the row it opened",
+        inside(listBox, lastAfter),
+        true,
+      );
+
+      ctx.host.key("home");
+      ctx.host.advance(16);
+      const firstAfter = yield* ctx.expectSome(
+        "the first row is painted after Home",
+        Option.fromNullishOr(ctx.host.bounds(navId(first.id))),
+      );
+      yield* ctx.expectEqual(
+        "Home opens the first entry",
+        yield* ctx.expectSome(
+          "the header paints the first title",
           textOf(ctx, "app-title"),
         ),
         first.title,
       );
       yield* ctx.expectEqual(
-        "the keyboard's row paints the accent",
+        "Home reveals the row it opened",
+        inside(listBox, firstAfter),
+        true,
+      );
+
+      ctx.host.key("up");
+      ctx.host.advance(16);
+      yield* ctx.expectEqual(
+        "an arrow up at the first row keeps it",
         yield* ctx.expectSome(
-          "the keyboard's row paints a fill",
-          fillOf(ctx, navId(first.id)),
+          "the header still paints the first title",
+          textOf(ctx, "app-title"),
         ),
-        palettes.light.colors.accent,
+        first.title,
       );
       yield* ctx.expectEqual(
-        "the scenario the pointer opened is unmounted",
-        Option.isNone(Option.fromNullishOr(ctx.host.bounds(TARGET_MARKER))),
+        "the focus stays on the clamped row",
+        ctx.host.focused() === navId(first.id),
         true,
       );
 

@@ -94,8 +94,13 @@ describe("the shell-selection probe", () => {
     expect(palettes.light.colors.accent).not.toBe(palettes.dark.colors.accent);
   });
 
-  it("gives the shell's rows and palette a keyboard route", () => {
+  it("gives the sidebar one roving stop and the arrows a route", () => {
     const shell = source("app.tsx");
+    expect(shell).toContain("tabIndex={selected === scenario.id ? 0 : -1}");
+    expect(shell).toContain("sidebarCursor(event.key, cursor, list.length)");
+    expect(shell).toContain("renderer?.focusElement?.(row.id)");
+    expect(shell).toContain("row.scrollIntoView?.()");
+    expect(source("sidebar.ts")).toContain("export const sidebarCursor");
     const handlers = Arr.length(
       Arr.fromIterable(shell.matchAll(/isActivationKey\(event\.key\)/g)),
     );
@@ -103,6 +108,16 @@ describe("the shell-selection probe", () => {
     const ui = source("ui.tsx");
     expect(ui).toContain("export const isActivationKey");
     expect(ui).toContain("isActivationKey(event.key)");
+  });
+
+  it("drives the arrows and states the roving rule", () => {
+    expect(
+      Arr.every(["down", "up", "home", "end"], (key) =>
+        probe.includes(`ctx.host.key("${key}")`),
+      ),
+    ).toBe(true);
+    expect(readme).toContain("one roving stop");
+    expect(readme).toContain("End reveals the row it opened");
   });
 
   it("prints the number of checks the probe asserts", () => {

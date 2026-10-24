@@ -39,9 +39,10 @@ shortcut probe
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open — `shell-selection`,
-which proves the app **opens** it on either route — a press, or a key on a row the
-window's traversal reached (the header, the mounted view and its live field, the
-selection's paint and the palette switch),
+which proves the app **opens** it on either route — a press, or the sidebar's one
+roving stop driven by the arrows and by `Home`/`End` (the header, the mounted
+view and its live field, the selection's paint, the row the move revealed and
+the palette switch),
 `shell-stage-scroll`, which proves a scenario taller than the window can be
 read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
@@ -747,22 +748,27 @@ measured:
 | a press | the header moves to the pressed entry's title, its view mounts with a box, its row paints the accent and the entry the app opened on returns to the page |
 | the mounted view is live | a press into that view's own field and one key reach **its** readout (`value=g`), so the stage mounts the real scenario rather than a picture |
 | the palette switch | pressing `theme-mode-light` repaints the root's fill **and** the selected row's accent to the light palette's own roles |
-| the keyboard route | the rows and the palette buttons are `role="button"` surfaces with `tabIndex: 0`, so the same walk the pointer takes is available to a key: the window's own traversal reaches the first row, `Enter` opens it (the header follows and the pointer's scenario unmounts), and two steps back plus `Enter` switches the palette |
+| the keyboard route | the sidebar is **one roving stop**: the row the app has open carries `tabIndex: 0` and every other row `-1`, so the palette's own walk reaches the open row and one more `Tab` leaves the list for the stage (`input-field`). An arrow steps the cursor with a clamp at both ends, opens the entry it lands on and carries the native focus with it — `down`/`up` step, `Home`/`End` jump, and a move to either end reveals the row it opened: the last row starts outside the list's box and is inside it after `End` |
+| the palette's route | a step back from the list reaches the last palette button (`high`), the walk on from there reaches `dark`, and `Enter` switches the palette — so the switch has the same keyboard route the rows do |
 
-**42 checks**, `--only shell-selection`, green on 0.11.0. Four negative controls
-measured, `exit 1` each and restored green: removing the sidebar row's `onClick`
-fails `the header names the pressed scenario` (`got "Flex layout, gaps and
-absolute positioning"`), removing its `onKeyDown` fails `Enter opens the row that
-holds the focus` (`expected "Flex layout, gaps and absolute positioning", got
-"Input editing, onChange and onSubmit"`), removing the palette switch's
-`onSelect` fails `the palette switch repaints the shell's root` (`expected
-"#F6F8FA", got "#11141A"`), and removing its `onKeyDown` fails `Enter switches
-the palette it landed on`. `shell-selection.test.ts` (6 cases) holds the premises
-a host with no binding cannot: the pressed entry exists and is not the one the
-app opens on, that entry's own view declares both `testId`s, the shell declares
-every address the probe presses and reads, the pressed palette is one the shell
-offers and paints differently from the other, and the count above is the number
-of assertions in the probe's own source.
+**67 checks**, `--only shell-selection`, green on 0.11.0. The roving stop was
+measured by removing it, `exit 1` each and restored green: leaving every row at
+`tabIndex: 0` fails `one more Tab leaves the list for the stage` (the walk lands
+on the next row instead), dropping the arrow branch of the row's `onKeyDown`
+fails `an arrow opens the entry after the open one` (`got "Input editing,
+onChange and onSubmit"`), and dropping the reveal call fails
+`End reveals the row it opened` (the last row keeps its box outside the list). Two earlier negative
+controls still hold: removing the row's `onClick` fails `the header names the
+pressed scenario` (`got "Flex layout, gaps and absolute positioning"`), and
+removing the palette switch's `onSelect` fails `the palette switch repaints the
+shell's root` (`expected "#F6F8FA", got "#11141A"`).
+`shell-selection.test.ts` (7 cases) holds the premises a host with no binding
+cannot: the pressed entry exists and is not the one the app opens on, that
+entry's own view declares both `testId`s, the shell declares every address the
+probe presses and reads, the pressed palette is one the shell offers and paints
+differently from the other, the shell keeps one roving stop and drives every
+arrow the rule owns, the page states the roving rule, and the count above is the
+number of assertions in the probe's own source.
 
 ## The stage scrolls a tall scenario to its bottom
 
@@ -829,7 +835,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | window size | `getWindowSize()` is the box the layout fills (not the retired 800×600 constant): `useWindowSize()` reads the same pair, and `zoomWindow()` takes a 900×520 window to 1680×923 while the flexible pane reflows and `onLayout` reports the new width (`window-resize-reflow`) |
-| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit — and so does `Enter` on a row the window's traversal reached, so the shell is drivable without a pointer: the header, the mounted view and the selection's paint follow, the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row on either route (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
+| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit, and the sidebar is drivable without a pointer: it is **one roving stop** (the open row), the arrows step the cursor with a clamp and open what they land on, `Home`/`End` jump and reveal the row they opened, and `Tab` leaves the list in one press — so the header, the mounted view and the selection's paint follow on either route; the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row (`shell-selection`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
 | content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence

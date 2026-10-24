@@ -14,13 +14,16 @@
  * offering a button that cannot work. `main.tsx` refuses to start at all on a
  * host with no binding.
  */
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { useGpuix } from "@gpuix/react";
+import type { PublicInstance } from "@gpuix/react";
 import { textStyle } from "@gpuixui/tokens";
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { paletteIds, palettes, type PaletteId } from "./palettes.js";
+import { sidebarCursor } from "./sidebar.js";
 import type { PlaygroundScenario } from "./types.js";
 import { Body, Readout, isActivationKey } from "./ui.js";
 
@@ -79,6 +82,119 @@ const PaletteSwitch = ({
   );
 };
 
+/**
+ * The scenario list: one roving tab stop, arrows that open the next entry.
+ *
+ * Every row used to be a stop, so a keyboard reader paid a press per scenario to
+ * reach the stage and no key moved between rows. The open row is the list's only
+ * stop now; an arrow steps the cursor with a clamp, and the step carries the
+ * native focus and the scroller with it — the contract `focus-reveal-lifecycle`
+ * measured for the library's own lists. Focus and reveal are called from a
+ * layout effect because the `tabIndex` change has to paint first (a call from
+ * the key handler moved nothing, measured by `virtual-tree-lifecycle`).
+ */
+const ScenarioList = ({
+  list,
+  selected,
+  onSelect,
+}: {
+  readonly list: ReadonlyArray<PlaygroundScenario>;
+  readonly selected: string;
+  readonly onSelect: (id: string) => void;
+}) => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const rows = useRef<Array<PublicInstance | null>>([]);
+  const moved = useRef(false);
+  const cursor = Option.getOrElse(
+    Arr.findFirstIndex(list, (scenario) => scenario.id === selected),
+    () => 0,
+  );
+
+  useLayoutEffect(() => {
+    if (!moved.current) return;
+    moved.current = false;
+    const row = rows.current[cursor];
+    if (row === null || row === undefined) return;
+    renderer?.focusElement?.(row.id);
+    row.scrollIntoView?.();
+  }, [cursor, renderer]);
+
+  /** Opens `next` and moves the focus with the cursor; the open row is the stop. */
+  const move = (next: number): void => {
+    const target = Option.fromNullishOr(list[next]);
+    if (Option.isNone(target) || target.value.id === selected) return;
+    moved.current = true;
+    onSelect(target.value.id);
+  };
+
+  return (
+    <div
+      testId="shell-nav-list"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        flexGrow: 1,
+        minHeight: 0,
+        overflowY: "scroll",
+      }}
+    >
+      {Arr.map(list, (scenario, index) => (
+        <div
+          key={scenario.id}
+          testId={`nav-${scenario.id}`}
+          ref={(row) => {
+            rows.current[index] = row;
+          }}
+          tabIndex={selected === scenario.id ? 0 : -1}
+          role="button"
+          onClick={() => onSelect(scenario.id)}
+          onKeyDown={(event) => {
+            const next = sidebarCursor(event.key, cursor, list.length);
+            if (Option.isSome(next)) {
+              event.preventDefault();
+              move(next.value);
+              return;
+            }
+            if (!isActivationKey(event.key)) return;
+            event.preventDefault();
+            onSelect(scenario.id);
+          }}
+          style={{
+            padding: theme.spacing.md,
+            borderRadius: theme.radius.md,
+            cursor: "pointer",
+            flexShrink: 0,
+            backgroundColor:
+              selected === scenario.id
+                ? theme.colors.accent
+                : theme.colors.background,
+            hover: { backgroundColor: theme.colors.muted },
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              color: theme.colors.foreground,
+            }}
+          >
+            {scenario.title}
+          </text>
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {scenario.capability}
+          </text>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const Shell = ({
   palette,
   onPalette,
@@ -132,60 +248,7 @@ const Shell = ({
         >
           Scenarios
         </text>
-        <div
-          testId="shell-nav-list"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-            flexGrow: 1,
-            minHeight: 0,
-            overflowY: "scroll",
-          }}
-        >
-          {Arr.map(list, (scenario) => (
-            <div
-              key={scenario.id}
-              testId={`nav-${scenario.id}`}
-              tabIndex={0}
-              role="button"
-              onClick={() => setSelected(scenario.id)}
-              onKeyDown={(event) => {
-                if (!isActivationKey(event.key)) return;
-                event.preventDefault();
-                setSelected(scenario.id);
-              }}
-              style={{
-                padding: theme.spacing.md,
-                borderRadius: theme.radius.md,
-                cursor: "pointer",
-                flexShrink: 0,
-                backgroundColor:
-                  selected === scenario.id
-                    ? theme.colors.accent
-                    : theme.colors.background,
-                hover: { backgroundColor: theme.colors.muted },
-              }}
-            >
-              <text
-                style={{
-                  ...textStyle(theme, "label"),
-                  color: theme.colors.foreground,
-                }}
-              >
-                {scenario.title}
-              </text>
-              <text
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.mutedForeground,
-                }}
-              >
-                {scenario.capability}
-              </text>
-            </div>
-          ))}
-        </div>
+        <ScenarioList list={list} selected={selected} onSelect={setSelected} />
       </div>
 
       <div
