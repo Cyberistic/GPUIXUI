@@ -315,6 +315,9 @@ export const notificationCentreSteps: Smoke.AsyncSmokeScenario["steps"] = (
       titleAt(2),
     );
 
+    // The stack rests folded; hovering it unfolds all three cards.
+    yield* ctx.host.hover(notificationCardId("3"));
+    yield* Effect.sleep(ENTER);
     const boxes = yield* Effect.forEach(
       notificationIds(3),
       (id) => boxOf(ctx, notificationCardId(id)),
@@ -337,6 +340,7 @@ export const notificationCentreSteps: Smoke.AsyncSmokeScenario["steps"] = (
       { concurrency: 1, discard: true },
     );
     yield* ctx.host.capture("notification-stack");
+    yield* ctx.host.hover(NOTIFICATION_IDS.push(3));
 
     yield* ctx.host.click(NOTIFICATION_IDS.push(3));
     yield* Effect.sleep(ENTER);
@@ -368,7 +372,10 @@ export const notificationCentreSteps: Smoke.AsyncSmokeScenario["steps"] = (
     );
     yield* ctx.host.capture("notification-expired");
 
-    yield* ctx.host.click("toast-action");
+    // Expand again: only the front card answers while the stack is folded.
+    yield* ctx.host.hover(notificationCardId("4"));
+    yield* Effect.sleep(ENTER);
+    yield* ctx.host.click(`toast-action-${notificationIds(4)[0]}`);
     yield* Effect.sleep(EXIT);
     yield* ctx.expectEqual(
       "a card's action dismisses its card",

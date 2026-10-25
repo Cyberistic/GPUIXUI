@@ -383,18 +383,34 @@ export const COMMAND_HINT = "text-xs text-muted-foreground";
 // (highlight, selected, destructive, hover/focus) and the renderer-owned
 // positioning/scroll stay in the component's `style`, exactly as before.
 
-/** `toast/viewport.tsx` — the bottom-right stack container. The corner
- * anchoring (`position`, `right`, `bottom`) stays in `style`; the flex
- * direction, right alignment, gap, width cap and pass-through pointer are the
- * resting recipe. */
+/** `toast/viewport.tsx` — the corner region. The corner anchoring (`position`,
+ * right, bottom) stays in `style`; the column, right alignment, width and
+ * pass-through pointer are the resting recipe. */
 export const TOAST_VIEWPORT =
-  "flex flex-col items-end gap-3 max-w-[356px] pointer-events-none";
+  "flex flex-col items-end w-[356px] pointer-events-none";
 
-/** `toast/viewport.tsx` — one card. The status glyph's tone and the hover fan
- * stay in `style` (state-driven); the surface, border, radius and elevation are
- * fixed shadcn. */
+/** `toast/viewport.tsx` — the stack. The cards and their gaps are in flow, so
+ * the stack has no gap of its own: the gap is a measured spacer that animates
+ * between the collapsed and expanded shapes. */
+export const TOAST_STACK = "flex flex-col items-end w-full";
+
+/** `toast/viewport.tsx` — one card's surface. The height, inset and opacity are
+ * the stack's geometry and stay in `style`; the surface, border, radius and
+ * elevation are fixed shadcn. */
 export const TOAST_CARD =
-  "flex flex-row items-start w-[356px] bg-popover text-popover-foreground border border-border rounded-md shadow-md pointer-events-auto";
+  "w-full bg-popover text-popover-foreground border border-border rounded-xl shadow-md pointer-events-auto overflow-hidden";
+
+/** `toast/viewport.tsx` — the card's measured body: the padding and row the
+ * outer surface clips. */
+export const TOAST_BODY = "flex flex-row items-start gap-2.5 px-4 py-3.5";
+
+/** `toast/viewport.tsx` — the swipe's grab area: the glyph and copy, never the
+ * action or the close, because a pointer capture on their ancestor swallows a
+ * ghost control's click. */
+export const TOAST_DRAG = "flex flex-row items-start gap-2.5 flex-grow min-w-0";
+
+/** `toast/viewport.tsx` — the title/description column. */
+export const TOAST_COPY = "flex flex-col gap-1 flex-grow min-w-0";
 
 /** `toast/viewport.tsx` — the card title. */
 export const TOAST_TITLE =

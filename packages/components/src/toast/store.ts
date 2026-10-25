@@ -7,6 +7,11 @@
  * cancels its timer at once and every timer dies with the scope. Ids are a
  * monotonic counter rather than a random value, so a timer can never dismiss a
  * toast other than the one it was scheduled for, and tests stay deterministic.
+ *
+ * `hold` is the stack's clock: while the pointer or a focus rests in the stack
+ * every timer is paused, and a toast pushed or updated during that hold starts
+ * paused rather than running unseen. `update` is the promise toast's one row —
+ * the loading card settles in place, its timer rescheduled for the answer.
  */
 
 import { Effect, pipe } from "effect";
@@ -23,16 +28,13 @@ import type * as Scope from "effect/Scope";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { Toast, ToastInput } from "./model.js";
+import { Toast, ToastInput, type ToastDraft } from "./model.js";
 
 /** The queue and its id counter, in one value so every update is atomic. */
 interface State {
   readonly seq: number;
   readonly toasts: ReadonlyArray<Toast>;
 }
-
-/** A toast a caller may push, as plain data. */
-export type ToastDraft = typeof ToastInput.Encoded;
 
 /** What the store can do. */
 export interface ToastStoreService {
@@ -44,6 +46,15 @@ export interface ToastStoreService {
   readonly push: (
     draft: ToastDraft,
   ) => Effect.Effect<Toast, Schema.SchemaError>;
+  /**
+   * Replace a queued toast's content in place and reschedule its timer, for a
+   * promise that settled. A toast that has already left is `None`: the answer
+   * arrived after the reader dismissed the loading card.
+   */
+  readonly update: (
+    id: string,
+    draft: ToastDraft,
+  ) => Effect.Effect<Option.Option<Toast>, Schema.SchemaError>;
   /** Drop one toast and cancel its timer. */
   readonly dismiss: (id: string) => Effect.Effect<void>;
   /** Drop every toast and cancel every timer. */
@@ -52,6 +63,12 @@ export interface ToastStoreService {
   readonly pause: (id: string) => Effect.Effect<void>;
   /** Restart it with the remaining time, dismissing at once when none is left. */
   readonly resume: (id: string) => Effect.Effect<void>;
+  /**
+   * Hold every timer while the pointer or a focus rests in the stack, and
+   * release them with the time each has left. A card queued during a hold is
+   * born held, so it cannot expire before the reader sees it.
+   */
+  readonly hold: (held: boolean) => Effect.Effect<void>;
 }
 
 /** The store tag. One runtime, and so one store, exists per provider. */
@@ -113,6 +130,8 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
   const deadlines = yield* Ref.make(HashMap.empty<string, number>());
   /** Remaining millis of the paused timers. Absent means "not paused". */
   const paused = yield* Ref.make(HashMap.empty<string, number>());
+  /** Whether the stack is holding every clock. */
+  const held = yield* Ref.make(false);
 
   /** Drop `id` from the queue. Touches no timer, so a timer may call it. */
   const drop = Effect.fnUntraced(function* (id: string) {
@@ -131,6 +150,12 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
 
   /** Sleep `millis`, then drop; record the deadline while it runs. */
   const schedule = Effect.fnUntraced(function* (id: string, millis: number) {
+    // A card queued or settled during a hold starts paused: its clock is the
+    // stack's, and the pointer is the reason the stack is still open.
+    if (yield* Ref.get(held)) {
+      yield* Ref.update(paused, HashMap.set(id, millis));
+      return;
+    }
     const now = yield* Clock.currentTimeMillis;
     yield* Ref.update(deadlines, HashMap.set(id, now + millis));
     yield* FiberMap.run(
@@ -204,6 +229,67 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     });
   });
 
+  const hold = Effect.fn("ToastStore.hold")(function* (value: boolean) {
+    yield* Ref.set(held, value);
+    const current = yield* SubscriptionRef.get(state);
+    // One at a time: each pause interrupts the sibling fiber it owns.
+    yield* Effect.forEach(
+      current.toasts,
+      (toast) => (value ? pause(toast.id) : resume(toast.id)),
+      { concurrency: 1, discard: true },
+    );
+  });
+
+  /** The toast `id` after `build` replaced its content, `None` when it left. */
+  const replace = Effect.fnUntraced(function* (
+    id: string,
+    build: (current: Toast) => Toast,
+  ) {
+    const existing = Arr.findFirst(
+      (yield* SubscriptionRef.get(state)).toasts,
+      (toast) => toast.id === id,
+    );
+    if (Option.isNone(existing)) return Option.none<Toast>();
+    const next = build(existing.value);
+    yield* SubscriptionRef.update(state, (current) => ({
+      ...current,
+      toasts: Arr.map(current.toasts, (toast) =>
+        toast.id === id ? next : toast,
+      ),
+    }));
+    return Option.some(next);
+  });
+
+  const update = Effect.fn("ToastStore.update")(function* (
+    id: string,
+    draft: ToastDraft,
+  ) {
+    const input = yield* decodeDraft(draft);
+    // Cancel the loading card's clock before the content changes, so a timer
+    // cannot dismiss the row between the replacement and the reschedule.
+    yield* forget(id);
+    const replaced = yield* replace(
+      id,
+      (current) =>
+        new Toast({
+          id: current.id,
+          title: input.title,
+          description: input.description,
+          action: input.action,
+          tone: input.tone,
+          phase: input.phase,
+        }),
+    );
+
+    if (Option.isNone(replaced)) return replaced;
+
+    const duration = Option.getOrElse(input.duration, () => fallback);
+    if (replaced.value.phase === "settled" && dismisses(duration)) {
+      yield* schedule(id, Duration.toMillis(duration));
+    }
+    return replaced;
+  });
+
   const push = Effect.fn("ToastStore.push")(function* (draft: ToastDraft) {
     const input = yield* decodeDraft(draft);
     const { toast, expired } = yield* SubscriptionRef.modify(
@@ -215,6 +301,7 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
           description: input.description,
           action: input.action,
           tone: input.tone,
+          phase: input.phase,
         });
         const appended = Arr.append(current.toasts, toast);
         const overflow = Math.max(0, Arr.length(appended) - max);
@@ -233,7 +320,7 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     yield* Effect.forEach(expired, forget, { concurrency: 1, discard: true });
 
     const duration = Option.getOrElse(input.duration, () => fallback);
-    if (dismisses(duration)) {
+    if (toast.phase === "settled" && dismisses(duration)) {
       yield* schedule(toast.id, Duration.toMillis(duration));
     }
 
@@ -250,10 +337,12 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
       Stream.map((current) => current.toasts),
     ),
     push,
+    update,
     dismiss,
     dismissAll,
     pause,
     resume,
+    hold,
   };
 });
 

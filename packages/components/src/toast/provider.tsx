@@ -6,10 +6,17 @@
  * a `ManagedRuntime`, the provider subscribes to the store's change stream, and
  * every command is a fire-and-forget fork on that runtime. Everything else in the
  * toast system is Effect-native or purely presentational.
+ *
+ * `promise` is Base UI's `Toast.promise` in this shape: one loading row is
+ * queued, the answer updates that row in place, and the caller's promise is
+ * returned untouched so its value and rejection still reach the caller. The
+ * update is a fork on the same runtime, so it cannot race a dismissal the
+ * reader made first — a toast that already left answers `None`.
  */
 
-import { Effect } from "effect";
+import { Effect, Exit } from "effect";
 import * as Arr from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Fiber from "effect/Fiber";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -25,11 +32,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Toast } from "./model.js";
+import {
+  toastStep,
+  type Toast,
+  type ToastDraft,
+  type ToastPromiseStep,
+} from "./model.js";
 import {
   ToastStore,
   layer as storeLayer,
-  type ToastDraft,
   type ToastStoreOptions,
 } from "./store.js";
 import { createRuntimeLifecycle } from "./lifecycle.js";
@@ -40,18 +51,38 @@ export interface ToastPushOptions {
   readonly onAction?: () => void;
 }
 
+/** The three states of a promise toast. */
+export interface ToastPromiseOptions<Value> {
+  /** Queued at once and held until the promise settles. */
+  readonly loading: ToastDraft;
+  /** The row's content when the promise resolves. */
+  readonly success: ToastPromiseStep<Value>;
+  /** The row's content when the promise rejects. */
+  readonly error: ToastPromiseStep<unknown>;
+}
+
 /** What a component inside the provider can do with toasts. */
 export interface ToastApi {
   /** The queued toasts, oldest first. Re-renders on every change. */
   readonly toasts: ReadonlyArray<Toast>;
   /** Queue a toast. Invalid input is dropped by the store, not thrown. */
   readonly push: (draft: ToastDraft, options?: ToastPushOptions) => void;
+  /**
+   * Queue a loading toast and settle the same row with the promise's answer.
+   * Returns the caller's promise: its value and rejection are unchanged.
+   */
+  readonly promise: <Value>(
+    source: Promise<Value>,
+    options: ToastPromiseOptions<Value>,
+  ) => Promise<Value>;
   readonly dismiss: (id: string) => void;
   readonly dismissAll: () => void;
   /** Stop the auto-dismiss clock, e.g. while the pointer rests on the card. */
   readonly pause: (id: string) => void;
   /** Restart it with the remaining time. */
   readonly resume: (id: string) => void;
+  /** Hold or release every clock: the stack's pointer and focus rule. */
+  readonly hold: (held: boolean) => void;
   /** The handler for a queued action. Absence means the caller supplied none. */
   readonly actionFor: (id: string) => Option.Option<() => void>;
 }
@@ -145,6 +176,50 @@ export const ToastProvider = ({
     [runtime],
   );
 
+  const promise = useCallback(
+    <Value,>(
+      source: Promise<Value>,
+      options: ToastPromiseOptions<Value>,
+    ): Promise<Value> => {
+      runtime.runFork(
+        Effect.gen(function* () {
+          const store = yield* ToastStore;
+          const toast = yield* store.push({
+            ...options.loading,
+            phase: "loading",
+          });
+          const result = yield* Effect.exit(
+            Effect.tryPromise({
+              try: () => source,
+              catch: (cause) => cause,
+            }),
+          );
+          const draft = Exit.isSuccess(result)
+            ? toastStep(options.success, result.value)
+            : toastStep(options.error, Cause.squash(result.cause));
+          // A step the model rejects (an empty title from a mapper) must not
+          // leave the loading row on screen forever: the row closes and the
+          // rejection is reported, rather than a card that never settles.
+          const settled = yield* Effect.exit(store.update(toast.id, draft));
+          if (Exit.isFailure(settled)) {
+            yield* Effect.logWarning(
+              "toast promise answer rejected",
+              Cause.squash(settled.cause),
+            );
+            yield* store.dismiss(toast.id);
+          }
+        }).pipe(
+          Effect.tapError((error) =>
+            Effect.logWarning("toast promise rejected", error),
+          ),
+          Effect.ignore,
+        ),
+      );
+      return source;
+    },
+    [runtime],
+  );
+
   const dismiss = useCallback(
     (id: string) => {
       runtime.runFork(Effect.flatMap(ToastStore, (store) => store.dismiss(id)));
@@ -170,6 +245,13 @@ export const ToastProvider = ({
     [runtime],
   );
 
+  const hold = useCallback(
+    (held: boolean) => {
+      runtime.runFork(Effect.flatMap(ToastStore, (store) => store.hold(held)));
+    },
+    [runtime],
+  );
+
   const actionFor = useCallback(
     (id: string): Option.Option<() => void> => HashMap.get(actions, id),
     [actions],
@@ -179,13 +261,25 @@ export const ToastProvider = ({
     () => ({
       toasts,
       push,
+      promise,
       dismiss,
       dismissAll,
       pause,
       resume,
+      hold,
       actionFor,
     }),
-    [actionFor, dismiss, dismissAll, pause, push, resume, toasts],
+    [
+      actionFor,
+      dismiss,
+      dismissAll,
+      hold,
+      pause,
+      promise,
+      push,
+      resume,
+      toasts,
+    ],
   );
 
   return <ToastContext.Provider value={api}>{children}</ToastContext.Provider>;

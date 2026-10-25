@@ -1,6 +1,6 @@
 ---
 title: Toast
-description: A bounded, auto-dismissing notification stack — Effect store, one provider, one viewport
+description: A stacked, auto-dismissing notification queue — Effect store, one provider, one viewport
 ---
 
 <ComponentPreview name="toast-workflow" />
@@ -49,9 +49,21 @@ const PublishBar = () => {
 export const App = () => (
   <ToastProvider>
     <PublishBar />
+    {/* Render the viewport last: the runtime paints in order. */}
     <ToastViewport />
   </ToastProvider>
 );
+```
+
+A promise toast is one row that changes state; the caller's promise is
+returned unchanged:
+
+```tsx
+const rows = await toast.promise(importRows(file), {
+  loading: { title: "Importing rows", description: "Reading the file…" },
+  success: (count) => ({ title: `Imported ${count} rows`, tone: "success" }),
+  error: (cause) => ({ title: "Import failed", description: String(cause), tone: "danger" }),
+});
 ```
 
 ## Composition
@@ -68,34 +80,60 @@ ToastProvider
 | `ToastProvider` | `max` | `number` — toasts kept before the oldest is dropped | `3` |
 | `ToastProvider` | `defaultDuration` | `Duration.Input` | 5 seconds |
 | `ToastProvider` | `children` | the tree that may push | — |
+| `ToastViewport` | `swipe` | `boolean` — sideways drag to dismiss | `true` |
 | `ToastViewport` | `children` | an optional control before the stack | — |
 | `ToastViewport` | `className` | `string` — joined after the recipe | — |
 | `useToast` | `toasts` | `ReadonlyArray<Toast>` — oldest first | — |
-| `useToast` | `push` | `(draft, options?) => void` — `title` required; `description`, `tone`, `duration`, `action` optional | — |
+| `useToast` | `push` | `(draft, options?) => void` — `title` required; `description`, `tone`, `duration`, `action`, `phase` optional | — |
+| `useToast` | `promise` | `(p, { loading, success, error }) => Promise` — settles one row | — |
 | `useToast` | `dismiss` | `(id: string) => void` | — |
 | `useToast` | `dismissAll` | `() => void` | — |
-| `useToast` | `pause` | `(id: string) => void` — stop the clock | — |
+| `useToast` | `pause` | `(id: string) => void` — stop one clock | — |
 | `useToast` | `resume` | `(id: string) => void` — restart with the remaining time | — |
+| `useToast` | `hold` | `(held: boolean) => void` — the stack's clock | — |
 | `useToast` | `actionFor` | `(id: string) => Option<() => void>` — the queued handler | — |
 | `ToastInput` | `title` | `string` — non-empty; empty input is dropped | required |
 | `ToastInput` | `description` | `string` | — |
 | `ToastInput` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` |
-| `ToastInput` | `duration` | `Duration.Input` | the provider's default |
+| `ToastInput` | `phase` | `"loading" \| "settled"` — a loading row has no clock | `"settled"` |
+| `ToastInput` | `duration` | `Duration.Input` — `0` keeps it until dismissed | the provider's default |
 | `ToastInput` | `action` | `{ label }` — the handler travels beside the draft | — |
+
+## Behaviour
+
+- **Stack.** The newest card is full; the two behind it are short, dimmed,
+  inset strips. The fourth push expires the oldest (`max`).
+- **Unfold.** Hovering or focusing the stack turns the strips into full cards
+  with one gap; leaving folds them back. Every clock pauses while the stack is
+  held and resumes with the time it had left, so a card pushed during the hold
+  starts paused.
+- **Swipe.** A sideways drag moves the card on its `left` axis. Past 40 px, or a
+  fast 12 px flick, the release dismisses it toward the edge it travelled; under
+  that it springs back.
+- **Action.** One action per card runs once and dismisses it; a label without a
+  handler paints nothing.
+- **Close.** The X dismisses, and both it and the action are labelled buttons.
+
+## Motion
+
+The card fades and slides **16 px** in from the right, and leaves by fading while
+it slides 16 px toward the edge it was dismissed from. The stack unfolds on its
+own table: **220 ms** in, **200 ms** to unfold, **180 ms** out. A dismissed card
+stays painted for its exit (180 ms) with the content it was thrown with, and its
+action and dismiss controls leave the Tab order for that window.
+`MotionProvider preference="reduced"` snaps every frame and keeps the resting
+appearance.
 
 ## Limitations
 
-- The viewport is `role="status"` with `aria-label="Notifications"`; each card's
-  dismiss control is a labelled button, and **`@gpuix/native@0.11.0` publishes no
-  `aria-live` or `aria-atomic`**, so a status region is the supported
-  announcement.
-- **A dismissed card is a ghost, not a target.** It stays painted for its
-  **180 ms** exit with the content it was dismissed with, while its own action
-  and dismiss controls leave the window's Tab order for that window: the runtime
-  decides the order element by element, so a control the library paints has to
-  drop its own stop. A control you compose inside a card is your content and
-  keeps its stop until the runtime publishes an inherited `inert`.
-- **The stack keeps 3 cards by default** (`max`) and the next push expires the
-  oldest, so the store is a queue rather than a history: a notification centre
-  that must list what expired owns that history itself. **No progress indicator**
-  for the remaining time.
+- **No `aria-live` or `aria-atomic`**: a card paints `role="status"` (`alert` for
+  the destructive tone) inside a labelled group — a marker, not an announcement —
+  and the runtime offers no inherited `inert`.
+- **The stack shows 3 cards while collapsed**; more stay queued and unfold only
+  with the stack, so the store is a queue rather than a history — a notification
+  centre that must list expired titles owns that history itself. **No progress
+  indicator** for the remaining time, and a `Tab` traversal does not hold the
+  clock on `0.11.0`, so an action a keyboard reader must reach uses
+  `duration: 0`.
+- **Swipe travels one axis (horizontal)**: the runtime has no `transform`, and a
+  card at an arbitrary angle would paint over the page.

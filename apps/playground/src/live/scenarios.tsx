@@ -9858,7 +9858,7 @@ const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("toast-queued");
 
-    yield* ctx.host.click("toast-dismiss");
+    yield* ctx.host.click("toast-dismiss-1");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
       "the card's dismiss control empties the queue",

@@ -1909,9 +1909,9 @@ records every title it pushed, and then asks which half paints what.
 | ---- | ----- |
 | mount | `queued=0 ids=none`, the panel paints `No notices yet`, no card paints |
 | push one | `queued=1 ids=1`, the viewport paints its title and the centre keeps it |
-| push two more | `queued=3 ids=1,2,3`; every card paints, one width and right edge, 12px apart in push order |
+| push two more | `queued=3 ids=1,2,3`; hovering unfolds the stack — every card paints full width and right edge, 12px apart in push order |
 | push a fourth | `queued=3 ids=2,3,4`; card 1 unpaints, its title leaves the viewport, and the **centre still lists it** |
-| press the live card's action | `actions=1`, the queue is `ids=3,4`, and the survivors reflow into one column |
+| unfold and press the oldest card's action | `actions=1`, the queue is `ids=3,4`, and the survivors reflow into one column |
 | press the app's clear | `queued=0 ids=none` and no card paints once the exit window ends |
 | push the 700 ms transient | it queues and paints, then `queued=0 ids=none` **without a press** |
 
@@ -1932,9 +1932,10 @@ section's numbers). The view and the steps live in
 
 Two honest limits. The **card's own dismiss control** is `toast-lifecycle`'s
 measurement (one card, its `Dismiss` press); this probe clears the queue with
-the app's `useToast().dismissAll` after measuring the action's single report,
-because every card carries the same `toast-dismiss` locator and an automation
-press cannot say which card it means. And the centre is **in-window only**: the
+the app's `useToast().dismissAll` after measuring the action's single report.
+Each card's control is scoped to its toast (`toast-dismiss-<id>`,
+`toast-action-<id>`), so the locator can name one — but this probe's claim is
+about the store's bound, not a per-card press. The centre is **in-window only**: the
 binding publishes no notification API (`@gpuix/native@0.11.0`'s `index.d.ts` has
 no notification method), so an OS-level notification is not a surface this
 probe can compose.

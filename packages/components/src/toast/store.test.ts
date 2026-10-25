@@ -345,4 +345,109 @@ describe("ToastStore", () => {
       }),
     ),
   );
+
+  it.effect("keeps a loading toast until its promise settles", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({
+          title: "Importing",
+          phase: "loading",
+          duration: Duration.seconds(1),
+        });
+
+        yield* TestClock.adjust(Duration.hours(1));
+
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+      }),
+    ),
+  );
+
+  it.effect("settles the same row and starts the answer's clock", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Importing", phase: "loading" });
+
+        const settled = yield* store.update("1", {
+          title: "Imported 12 rows",
+          tone: "success",
+          duration: Duration.seconds(1),
+        });
+
+        expect(Option.map(settled, (toast) => toast.id)).toEqual(
+          Option.some("1"),
+        );
+        expect(Option.map(settled, (toast) => toast.phase)).toEqual(
+          Option.some("settled"),
+        );
+
+        yield* TestClock.adjust(Duration.millis(900));
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+
+        yield* TestClock.adjust(Duration.millis(200));
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("answers None for an answer that outlived its card", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Importing", phase: "loading" });
+        yield* store.dismiss("1");
+
+        const settled = yield* store.update("1", {
+          title: "Imported",
+          tone: "success",
+        });
+
+        expect(Option.isNone(settled)).toBe(true);
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("holds a toast pushed while the stack is held", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.hold(true);
+        yield* store.push({ title: "Read me" });
+
+        yield* TestClock.adjust(Duration.hours(1));
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+
+        yield* store.hold(false);
+        yield* TestClock.adjust(Duration.millis(4_900));
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+
+        yield* TestClock.adjust(Duration.millis(200));
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("holds a settled promise toast until the stack is released", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Importing", phase: "loading" });
+        yield* store.hold(true);
+        yield* store.update("1", {
+          title: "Imported",
+          tone: "success",
+          duration: Duration.seconds(1),
+        });
+
+        yield* TestClock.adjust(Duration.minutes(1));
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+
+        yield* store.hold(false);
+        yield* TestClock.adjust(Duration.seconds(1));
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
 });

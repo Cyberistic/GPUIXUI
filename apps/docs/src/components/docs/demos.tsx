@@ -2433,8 +2433,12 @@ interface PreviewToast {
   readonly duration?: number;
 }
 
-/** The vertical lift, in pixels, one hovered stack fans each older card by. */
-const TOAST_FAN_STEP = 8;
+/** The height of one peeking strip, in pixels (the native stack's `STACK_PEEK`). */
+const TOAST_PEEK = 12;
+/** How far each further card insets from its right edge, in pixels. */
+const TOAST_INSET = 8;
+/** The opacity step between the front card and each strip behind it. */
+const TOAST_DIM = 0.3;
 /** How long a leaving card stays mounted for its exit tween. */
 const TOAST_EXIT_MS = 180;
 /** The auto-dismiss delay a draft without a `duration` takes. */
@@ -2442,16 +2446,41 @@ const TOAST_DEFAULT_MS = 5_000;
 /** Cards kept before the oldest drops, mirroring the store's default `max`. */
 const TOAST_MAX = 3;
 
+/** One card's place in the preview stack. */
+export interface ToastStackSlot {
+  /** `undefined` means the measured content height; a number is the peek. */
+  readonly height: number | undefined;
+  readonly inset: number;
+  readonly opacity: number;
+  readonly interactive: boolean;
+}
+
 /**
- * The hover fan's rule: the newest card rests still and each older card lifts
- * one step further, so hovering widens the gap between neighbours by `step`
- * while the stack as a whole rises. A single card does not fan.
+ * The preview's stack rule, the native `toast/stack.ts` in browser form.
+ *
+ * The newest card is last in the DOM (the order the store appends), so rank is
+ * counted from the end. Collapsed: the newest is full, the two behind are short
+ * inset strips, and a fourth card has no height. Expanded: every card is full,
+ * un-inset and interactive.
  */
-export const toastFanLift = (
+export const toastStackSlot = (
   index: number,
   count: number,
-  step = TOAST_FAN_STEP,
-): number => (count > 1 ? Math.max(0, count - 1 - index) * step : 0);
+  expanded: boolean,
+): ToastStackSlot => {
+  const rank = count - 1 - index;
+  if (expanded)
+    return { height: undefined, inset: 0, opacity: 1, interactive: true };
+  if (rank === 0)
+    return { height: undefined, inset: 0, opacity: 1, interactive: true };
+  if (rank >= 3) return { height: 0, inset: 0, opacity: 0, interactive: false };
+  return {
+    height: TOAST_PEEK,
+    inset: TOAST_INSET * rank,
+    opacity: 1 - TOAST_DIM * rank,
+    interactive: false,
+  };
+};
 
 /** A 24px status glyph, tinted by `currentColor`; the tone colours it. */
 const ToastGlyph = ({ children }: { readonly children: ReactNode }) => (
@@ -2504,21 +2533,26 @@ interface PreviewEntry {
 const ToastCardPreview = ({
   toast,
   leaving,
-  fanLift,
+  slot,
   onDismiss,
   onAction,
 }: {
   readonly toast: PreviewToast;
   readonly leaving: boolean;
-  readonly fanLift: number;
+  readonly slot: ToastStackSlot;
   readonly onDismiss: () => void;
   readonly onAction?: () => void;
 }) => (
   <div
     className={`gx-toast-card gx-toast-${toast.tone}${
       leaving ? " gx-toast-leaving" : ""
-    }`}
-    style={fanLift > 0 ? { transform: `translateY(-${fanLift}px)` } : undefined}
+    }${slot.interactive ? "" : " gx-toast-behind"}`}
+    style={{
+      height: slot.height,
+      width: `calc(100% - ${slot.inset * 2}px)`,
+      marginRight: slot.inset,
+      opacity: slot.opacity,
+    }}
   >
     <ToastGlyph>{toastGlyph[toast.tone]}</ToastGlyph>
     <div className="gx-toast-copy">
@@ -2528,13 +2562,19 @@ const ToastCardPreview = ({
       )}
     </div>
     {toast.actionLabel === undefined ? null : (
-      <button className="gx-toast-action" onClick={onAction} type="button">
+      <button
+        className="gx-toast-action"
+        disabled={!slot.interactive}
+        onClick={onAction}
+        type="button"
+      >
         {toast.actionLabel}
       </button>
     )}
     <button
       aria-label="Dismiss"
       className="gx-toast-dismiss"
+      disabled={!slot.interactive}
       onClick={onDismiss}
       type="button"
     >
@@ -2551,6 +2591,7 @@ const ToastCardPreview = ({
  */
 const useToastPreview = (
   seed: ReadonlyArray<Omit<PreviewToast, "id">> = [],
+  startExpanded = false,
 ) => {
   const [entries, setEntries] = useState<ReadonlyArray<PreviewEntry>>(() =>
     seed.map((draft, index) => ({
@@ -2558,7 +2599,7 @@ const useToastPreview = (
       leaving: false,
     })),
   );
-  const [hovered, setHovered] = useState(false);
+  const [hovered, setHovered] = useState(startExpanded);
   const nextId = useRef(seed.length);
   const running = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const deadlines = useRef(new Map<string, number>());
@@ -2693,8 +2734,8 @@ const ToastWorkflow = () => {
           </button>
         </div>
         <p className="gx-toast-hint">
-          A fourth toast drops the oldest. Hover the stack to fan it and pause
-          every clock; leaving resumes them.
+          A fourth toast drops the oldest. Hover the stack to unfold it and
+          pause every clock; leaving resumes them.
         </p>
       </div>
       <div
@@ -2706,11 +2747,12 @@ const ToastWorkflow = () => {
           className="gx-toast-stack"
           onMouseEnter={onStackEnter}
           onMouseLeave={onStackLeave}
+          style={{ rowGap: hovered ? 12 : 0 }}
         >
           {entries.map((entry, index) => (
             <ToastCardPreview
               key={entry.toast.id}
-              fanLift={hovered ? toastFanLift(index, entries.length) : 0}
+              slot={toastStackSlot(index, entries.length, hovered)}
               leaving={entry.leaving}
               onAction={
                 entry.toast.actionLabel === undefined
@@ -2765,7 +2807,7 @@ const toastToneSamples: ReadonlyArray<Omit<PreviewToast, "id">> = [
 /** The four tones, held open so their colour and glyph can be compared. */
 const ToastTones = () => {
   const { entries, hovered, dismiss, onStackEnter, onStackLeave } =
-    useToastPreview(toastToneSamples);
+    useToastPreview(toastToneSamples, true);
 
   return (
     <div className="gx-toast-demo gx-toast-tones">
@@ -2778,11 +2820,12 @@ const ToastTones = () => {
           className="gx-toast-stack"
           onMouseEnter={onStackEnter}
           onMouseLeave={onStackLeave}
+          style={{ rowGap: hovered ? 12 : 0 }}
         >
           {entries.map((entry, index) => (
             <ToastCardPreview
               key={entry.toast.id}
-              fanLift={hovered ? toastFanLift(index, entries.length) : 0}
+              slot={toastStackSlot(index, entries.length, hovered)}
               leaving={entry.leaving}
               onAction={
                 entry.toast.actionLabel === undefined

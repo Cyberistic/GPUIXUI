@@ -9,8 +9,8 @@
  * **not** run the card's `onFocus`. The hold works on the pointer and on a press
  * that focuses a control, and `duration: 0` stays the route for an actionable
  * toast that must outlive the reader's journey to it. This holds the prose to
- * the two source rules it depends on — the card still holds on hover and on a
- * focus event, and the store still treats a non-positive duration as no
+ * the source rules it depends on: the stack pauses every clock while the pointer
+ * or a focus is in it, and the store still treats a non-positive duration as no
  * auto-dismiss at all.
  */
 
@@ -37,12 +37,15 @@ describe("the toast hold", () => {
     expect(text).not.toContain("focuses=1");
   });
 
-  it("holds on the pointer and on a focus event", () => {
+  it("holds every clock on the pointer and on a focus event", () => {
     const code = viewport();
 
-    expect(code).toContain("setHover(");
-    expect(code).toContain("setFocus(");
-    expect(code).toContain("onFocus=");
+    // The stack is the hold's only owner: one state feeds the store's `hold`,
+    // and the pointer, the focus set and a drag are its three inputs.
+    expect(code).toContain("syncHold");
+    expect(code).toContain("hold(held)");
+    expect(code).toContain("onHover(true)");
+    expect(code).toContain("onFocusChange(toast.id, true)");
   });
 
   it("keeps a non-positive duration persistent, as the page advises", () => {
