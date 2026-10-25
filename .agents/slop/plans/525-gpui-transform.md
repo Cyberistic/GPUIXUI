@@ -1002,3 +1002,19 @@ discussion, never promoted to an accepted issue; the only implementation is
 `0xErwin1/zed` @ `fc4c1586`. Last three comments (2026-06-08, 06-16, 10-05) all
 ask for a PR or a gpui-ce landing. There is no upstream path to wait for — the
 fork is the path.
+
+## 15. Landed as a PR (2026-10-25)
+
+`remorses/zed#17` — `feat/transform` @ `04016ba`, seven files, authored by
+Ignacio Perez (the patch's author) and re-resolved here. Ready for review, not a
+draft. All 299 GPUI lib tests pass (24 of them the transform suite), clippy is
+clean, and the touched regions are rustfmt-clean.
+
+There is no upstream PR to link: #53306 was never promoted from a discussion,
+so the implementation only ever existed on `0xErwin1/zed`
+`feature/53306-07-text-raster-subpixel-regressions` @ `fc4c1586`. The PR body
+links the discussion and that branch.
+
+Gate 2 is unchanged: the `darwin-x64` prebuild, the `StyleDesc.transform`
+surface and a release are still ahead. Once #17 merges, gpuix can bump its
+submodule and expose the property.
