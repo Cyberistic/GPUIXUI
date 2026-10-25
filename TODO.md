@@ -9716,6 +9716,7 @@ a merge over a stored theme.
     - [x] `toast/store.ts` + test (queue, monotonic ids, `FiberMap` timers, `TestClock`)
     - [x] `validation/logic.ts` + test (`validate` / `validateAll` over schema issues)
     - [x] `toast/provider.tsx` + `viewport.tsx` + `toast.tsx` (ManagedRuntime boundary, `useToast`, viewport) + 7 native behaviour tests
+    - [x] Toast parity rebuild — a three-card peeking stack that unfolds on hover/focus (`toast/stack.ts`), one-axis swipe (`toast/swipe.ts`), `duration: 0` as sticky, `promise(p, …)` settling one row, a stack-wide `hold`, `role=status`/`alert` per card; 24 native behaviour tests, docs/example/inventory and the Base UI licence record updated
     - [x] `field.tsx` (Field/FieldLabel/FieldDescription/FieldError/FieldInput) + 5 native behaviour tests
     - [x] Examples, docs pages and inventory rows for Toast and Field
   - [x] Date / time picker (plan 119) — the day picker is done; a time picker is documented as out of scope
