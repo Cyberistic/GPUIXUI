@@ -1018,3 +1018,25 @@ links the discussion and that branch.
 Gate 2 is unchanged: the `darwin-x64` prebuild, the `StyleDesc.transform`
 surface and a release are still ahead. Once #17 merges, gpuix can bump its
 submodule and expose the property.
+
+### 15.1 Decorations follow the scale (2026-10-25)
+
+A second commit on #17 (`951ff5f`) closes the limitation that mattered at our
+scale range: a quad, shadow and underline now scale their corner radii, border
+widths, blur radius and thickness with the element, so a 1.5× hover card keeps
+proportional borders instead of looking like wire.
+
+`TransformationMatrix::uniform_scale()` returns the scale only for a pure
+scale-and-translate. A rotated or anisotropic matrix leaves decorations alone:
+`Corners<ScaledPixels>` has no elliptical form, so guessing (min axis, geometric
+mean) would be a silent lie. Three scene tests hold both directions — uniform
+scales, anisotropic does not — and each fails with the helper disabled.
+
+Subpixel AA stays as the import left it. It is enabled only at integer scales,
+which means text sharpens once as an animation settles; enabling it at
+fractional scales would trade that frame for colour fringing *while the element
+moves*. That is the correct side of the trade, so it is documented rather than
+"fixed".
+
+Rotation and scaled **shadow offsets** (the blur is scaled, a rotated shadow is
+not) remain a shader project for a canvas surface, not a tail on this PR.

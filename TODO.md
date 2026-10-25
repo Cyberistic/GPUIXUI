@@ -195,9 +195,11 @@ expressed (the builder marks the descendant, not a container reference) — plan
 (plan 708), draft **#121**: a sync read (the pinned GPUI has no macOS async read),
 text-only, an empty string is a real entry, and the test renderer never touches
 the system clipboard.
-`[ ]` **transform** — **zed#17** (`feat/transform` @ `04016ba`) carries the
-ported `ElementTransform` on top of `f77e5cf`: 299 lib tests (24 transform),
-clippy clean, authored by the original author. No upstream PR exists to link —
+`[ ]` **transform** — **zed#17** (`feat/transform`) carries the ported
+`ElementTransform` on top of `f77e5cf` (`04016ba`), plus `951ff5f`, which scales
+corner radii, border widths, shadow blur and underline thickness with the
+element (anisotropic/rotated matrices keep the old behaviour). 302 lib tests
+(24 transform + 3 decoration), clippy clean, authored by the original author. No upstream PR exists to link —
 #53306 was never promoted from a discussion, so the code came from
 `0xErwin1/zed` @ `fc4c1586`. Next: `StyleDesc.transform` + `MotionStyle` in gpuix
 once it merges (plan 525 §15). `darwin-x64` is still absent from the prebuild
