@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | **research complete + optional patch ported** — `patches/gpui/0001-transform.patch` compiles and passes the GPUI lib tests; the fork is still not distributable, so the fallback remains the shipping path. |
+| Status | **research complete + optional patch ported** — `patches/gpui/0001-transform.patch` compiles and passes the GPUI lib tests, and re-verified 2026-10-25: it applies clean to the current `remorses/zed` `gpuix` tip `f77e5cf` (§14). The fork is still not distributable, so the fallback remains the shipping path. |
 | Phase | infra (renderer capability) |
 | Owner | a dedicated `transform` workstream; reviewed by the components owner |
 | Depends on | `020` (GPUix runtime capability), `524` (the `unsupported` channel), `140` (darwin-x64 binding) |
@@ -977,3 +977,28 @@ Resolution summary:
 Limitations are unchanged (§3.5). Gate 2 (§7.1) is untouched: the patch is not
 a published fork, has no five-target prebuilds, and is not consumed by
 `packages/tw` or any component.
+
+## 14. Re-verification against the current pin (2026-10-25)
+
+`remorses/zed` `gpuix` moved from the audited `2565b8a3` (2026-10-16) to
+`f77e5cfe` (2026-10-20). The seven commits in between touch
+`crates/gpui/src/gpui.rs` (queue re-export gates) and the wgpu/metal renderers —
+**none of the seven files the transform patch changes**.
+
+```sh
+cd <a checkout of remorses/zed at f77e5cfe>
+git apply --3way --check patches/gpui/0001-transform.patch   # all 7 files clean
+```
+
+So the rebase cost recorded in §4 has already been paid once, and landing the
+patch on the fork is now **one commit with no conflict resolution**. What still
+blocks distribution is unchanged (§7.1 gate 2): the `StyleDesc.transform` /
+`MotionStyle` surface, a release with the zed bump, and `darwin-x64`, which the
+gpuix CI matrix does not build (it ships `aarch64-apple-darwin`,
+`x86_64-unknown-linux-gnu`, `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`).
+
+Upstream status, checked the same day: #53306 is still a **Feature Request**
+discussion, never promoted to an accepted issue; the only implementation is
+`0xErwin1/zed` @ `fc4c1586`. Last three comments (2026-06-08, 06-16, 10-05) all
+ask for a PR or a gpui-ce landing. There is no upstream path to wait for — the
+fork is the path.

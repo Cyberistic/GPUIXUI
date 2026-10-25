@@ -7,7 +7,7 @@
 | Owner | runtime owner |
 | Depends on | zed#15 merged |
 | Source | `references/fc-gpui` (Apache-2.0) `crates/gpui/src/app.rs:1209-1233`, `platform/mac/tray.rs`, `platform/{windows,linux}/tray.rs`; upstream `remorses/zed` at the pin; `remorses/gpuix` fork |
-| Feeds | the tray row's `partial` support; a tray-anchored popover (plan 706) |
+| Feeds | the tray row's `partial` support; a tray-anchored popover (plan 706); the badge work (plan 715) builds on the icon-bytes path |
 
 ---
 ## Goal

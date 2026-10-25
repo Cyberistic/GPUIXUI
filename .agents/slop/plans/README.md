@@ -57,6 +57,7 @@ code and are cherry-picks, not copies of the fork.
 | [712](./712-biometrics.md) | Biometric unlock | binding | 713 | planned |
 | [713](./713-keyring.md) | Keyring credentials | binding | — | planned |
 | [714](./714-power-and-network-events.md) | Power, idle and network events | runtime | 702 | planned |
+| [715](./715-tray-and-dock-badge.md) | Tray title, tray badge, dock badge | runtime | 702 | planned |
 
 Not adopted from the survey, deliberately: their deprecated toast element
 (components live in React), the 11-crate split and `gpui-compat` facade, the
