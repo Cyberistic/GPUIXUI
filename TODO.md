@@ -210,14 +210,16 @@ submodule bump.
 overlay windows, quit mode, resource profiles, downstream fixture, screen
 capture, biometrics, keyring, power/network.
 
-`[!]` **Docs deploy** — master is ahead of the live site. `deploy:docs` cannot
-run from this environment: the box has no Cloudflare provider in the `default`
-profile, and on the Mac the stored token has no access to the
-`gpuixui.sudokw.com` zone while the OAuth profiles (`cyberistic`, `alkitab`,
-`seenkw`) need an interactive
-`alchemy profile refresh --profile <name> --provider Cloudflare` to select
-scopes. Unblock: refresh one profile (or supply a token for the right account),
-then `nub run deploy:docs`.
+`[x]` **Docs deploy** — the toast rebuild is live at
+<https://gpuixui.sudokw.com/docs/components/toast> (deployed 2026-10-26 from
+`f16c46bb8`). Credentials live in `/Users/cyberistic/Documents/Sudo/sudokw/.env`
+(`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`,
+`ALCHEMY_STAGE`) and must be sourced into the environment: alchemy's `default`
+profile token belongs to a different account (it only sees `bravenlab.com`), and
+the OAuth profiles (`cyberistic`, `alkitab`, `seenkw`) have no scopes, so the
+deploy only works with those variables set. Verified in Chrome: the page renders,
+`Publish changes` pushes a stacked card with Undo and dismiss, and the console
+shows no app errors (one blocked external resource from an ad blocker).
 
 ### Keyboard workstream (`@gpuixui/keyboard`)
 
