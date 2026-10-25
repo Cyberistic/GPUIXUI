@@ -189,7 +189,9 @@ typed no-op on Windows/Linux, example menu entries.
 `aria-invalid`/`required`/`modal`/`current`/`haspopup` need fork builders first
 (plan 700).
 `[ ]` **gpuix clipboard** — `writeToClipboard`/`readFromClipboard` + `copyText`
-(plan 708).
+(plan 708), draft **#121**: a sync read (the pinned GPUI has no macOS async read),
+text-only, an empty string is a real entry, and the test renderer never touches
+the system clipboard.
 `[ ]` **transform** — the ported patch applies clean to the current pin
 (`f77e5cf`); landing it on `remorses/zed` plus `StyleDesc.transform` and a
 release is plan 525 §14. `darwin-x64` is not in the gpuix prebuild matrix.
