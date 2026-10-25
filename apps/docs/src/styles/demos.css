@@ -2549,9 +2549,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 12px;
   width: 100%;
   pointer-events: auto;
+  transition: row-gap 200ms ease-in-out;
 }
 
 .gx-toast-card {
@@ -2567,8 +2567,14 @@
   color: var(--popover-foreground);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   pointer-events: auto;
+  overflow: hidden;
   animation: gx-toast-in 220ms ease-out;
-  transition: transform 220ms ease-out;
+  transition: opacity 200ms ease-in-out;
+}
+
+/* A peeking strip is a size, not a scaled card: the runtime has no transform. */
+.gx-toast-behind {
+  pointer-events: none;
 }
 
 .gx-toast-leaving {

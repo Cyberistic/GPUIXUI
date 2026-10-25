@@ -1,17 +1,17 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { toastFanLift } from "./demos";
+import { toastStackSlot } from "./demos";
 
 /**
- * The toast preview's fan and hold, as a DOM shim of the native viewport.
+ * The toast preview's stack and hold, as a DOM shim of the native viewport.
  *
- * The hover fan is the sonner rule: the newest card rests still and each older
- * card lifts one step further, so hovering widens the gap between neighbours.
- * The pause mirrors the store's `pause`/`resume`: hovering the stack stops every
- * clock, leaving restarts each with the time it had left. The two are wired to
- * the stack's pointer enter/leave, and the enter/exit tween collapses under
- * `prefers-reduced-motion`, which the preview's CSS declares.
+ * The collapsed stack is the native one: the newest card is full and the two
+ * behind are short, dimmed, inset strips; expanding gives every card its content
+ * height and one gap. The pause mirrors the store's `pause`/`resume`: hovering
+ * the stack stops every clock, leaving restarts each with the time it had left.
+ * The two are wired to the stack's pointer enter/leave, and the enter/exit tween
+ * collapses under `prefers-reduced-motion`, which the preview's CSS declares.
  */
 
 const demos = (): string =>
@@ -23,31 +23,52 @@ const styles = (): string =>
     "utf8",
   );
 
-describe("toastFanLift", () => {
-  it("rests the newest card and lifts each older card one step further", () => {
-    expect(toastFanLift(0, 3)).toBe(16);
-    expect(toastFanLift(1, 3)).toBe(8);
-    expect(toastFanLift(2, 3)).toBe(0);
+describe("toastStackSlot", () => {
+  it("rests the newest card and shortens each older card one step", () => {
+    expect(toastStackSlot(2, 3, false)).toEqual({
+      height: undefined,
+      inset: 0,
+      opacity: 1,
+      interactive: true,
+    });
+    expect(toastStackSlot(1, 3, false)).toEqual({
+      height: 12,
+      inset: 8,
+      opacity: 0.7,
+      interactive: false,
+    });
+    expect(toastStackSlot(0, 3, false)).toEqual({
+      height: 12,
+      inset: 16,
+      opacity: 0.4,
+      interactive: false,
+    });
   });
 
-  it("does not fan a single card", () => {
-    expect(toastFanLift(0, 1)).toBe(0);
-    expect(toastFanLift(0, 0)).toBe(0);
+  it("keeps a fourth card out of the collapsed stack", () => {
+    expect(toastStackSlot(0, 4, false)).toEqual({
+      height: 0,
+      inset: 0,
+      opacity: 0,
+      interactive: false,
+    });
   });
 
-  it("widens the gap between neighbours by exactly one step", () => {
-    expect(toastFanLift(0, 4) - toastFanLift(1, 4)).toBe(8);
-    expect(toastFanLift(1, 4) - toastFanLift(2, 4)).toBe(8);
+  it("gives every card its content height when expanded", () => {
+    expect(toastStackSlot(0, 3, true)).toEqual({
+      height: undefined,
+      inset: 0,
+      opacity: 1,
+      interactive: true,
+    });
   });
 });
 
 describe("the toast preview", () => {
-  it("fans the stack on hover and pauses every clock while held", () => {
+  it("unfolds the stack on hover and pauses every clock while held", () => {
     const source = demos();
 
-    // The fan applies the rule to each card, gated on the stack being hovered.
-    expect(source).toContain("toastFanLift(index, entries.length)");
-    // The hold mirrors the store's pause/resume, wired to the stack's enter/leave.
+    expect(source).toContain("toastStackSlot(index, entries.length, hovered)");
     expect(source).toContain("onMouseEnter={onStackEnter}");
     expect(source).toContain("onMouseLeave={onStackLeave}");
     expect(source).toContain("pauseTimers");

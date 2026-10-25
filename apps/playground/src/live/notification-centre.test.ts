@@ -202,6 +202,6 @@ describe("the README", () => {
       ),
     ).toEqual([]);
     expect(flat).toContain("no notification method");
-    expect(flat).toContain("`toast-dismiss`");
+    expect(flat).toContain("`toast-dismiss-<id>`");
   });
 });

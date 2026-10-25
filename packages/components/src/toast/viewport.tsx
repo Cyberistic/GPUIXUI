@@ -1,21 +1,38 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * The toast viewport: a paint-order stack in the bottom-right corner.
+ * The toast viewport: a stacked notice queue in a corner.
  *
- * GPUix has no `zIndex`; stacking is paint order, so the viewport must be the
- * **last child of the app root**. The container is `pointerEvents: "none"` so the
- * page underneath stays usable; each card turns pointer events back on.
+ * GPUix has no `transform` and no `zIndex`, so the stack is **flow plus
+ * height** rather than a scaled fan: the newest card is the last child and the
+ * only full one, and each older card is a short, dimmed, inset strip above it.
+ * Hovering or focusing the stack gives every card its measured height and one
+ * shared gap, so the strips unfold into a readable column; leaving folds them
+ * back. The viewport is `position: absolute`, so neither shape moves the page.
+ *
+ * The measure is the inner content's `onLayout`, the same rule `AutoHeight`
+ * uses: the outer box clips, the inner box keeps its natural height. A stack
+ * card is therefore a surface that owns the border, radius and elevation, and a
+ * body that owns the padding and reports what it needs.
+ *
+ * Timers are the store's Effect `Clock`, not animation frames; this file only
+ * tells the store when the stack is held. The hold is the pointer anywhere in
+ * the stack or a focus in one card's controls, with a short release grace so
+ * moving between two cards cannot fold the stack between them.
  */
 
-import type { Props } from "@gpuix/react";
+import type { EventPayload, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import { motionTimingOf } from "@gpuixui/motion/timing";
+import { motionTimingOf, type MotionTiming } from "@gpuixui/motion/timing";
 import {
   cn,
+  TOAST_BODY,
   TOAST_CARD,
+  TOAST_COPY,
   TOAST_DESCRIPTION,
+  TOAST_DRAG,
   TOAST_GLYPH,
+  TOAST_STACK,
   TOAST_TITLE,
   TOAST_VIEWPORT,
 } from "@gpuixui/tw";
@@ -23,28 +40,35 @@ import { HashMap, HashSet, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import { monotonicNanos } from "../internal/clock.js";
 import { Button, IconButton } from "../internal/button.js";
+import {
+  measuredBox,
+  measuredHeight,
+  measuredPoint,
+} from "../internal/measure.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
 import {
   exitWindowMs,
   PresenceShield,
-  presenceMotion,
   presenceStyle,
   presenceTabStop,
   useMotionPreference,
-  type SurfaceFrames,
   type SurfaceTiming,
 } from "../internal/presence.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { tone, useTheme, type Tone } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
 import { useToast } from "./provider.js";
+import { stackGap, toastSlots, type ToastSlot } from "./stack.js";
+import { swipeEdge } from "./swipe.js";
 
 /** The status tone behind a toast's bar and icon. */
 const asTone = (value: ToastTone): Tone =>
@@ -57,7 +81,9 @@ const asTone = (value: ToastTone): Tone =>
   );
 
 /** The icon each tone shows beside its title. */
-const glyph = (value: ToastTone): "info" | "success" | "warning" | "error" =>
+const glyph = (
+  value: ToastTone,
+): "info" | "success" | "warning" | "error" | "loader" =>
   Match.value(value).pipe(
     Match.when("info", () => "info" as const),
     Match.when("success", () => "success" as const),
@@ -70,29 +96,35 @@ const glyph = (value: ToastTone): "info" | "success" | "warning" | "error" =>
  *  faster than it entered, so the stack reads as arriving gently and leaving
  *  promptly. The durations are sonner's, not a shared level's, so the toast's
  *  feel never drags another surface along (or the reverse). */
-const useToastTiming = (): SurfaceTiming => {
+interface ToastTiming {
+  readonly enter: MotionTiming;
+  readonly exit: MotionTiming;
+  readonly move: MotionTiming;
+}
+
+const useToastTiming = (): ToastTiming => {
   const preference = useMotionPreference();
   return {
     enter: motionTimingOf(220, { phase: "enter", preference }),
     exit: motionTimingOf(180, { phase: "exit", preference }),
+    move: motionTimingOf(200, { phase: "standard", preference }),
   };
 };
 
-/**
- * The toast's enter and exit frames: it rises `16px` into place (a `top` travel,
- * the runtime's slide-up) and leaves by fading while it slides `16px` to the
- * right (a `left` travel). `fanLift` is the hover fan's resting offset: while
- * the stack is hovered the older cards rest that far above their slot, so the
- * runtime tweens `top` between the fanned and unfanned frames.
- */
-const toastFrames = (fanLift: number): SurfaceFrames => ({
-  initial: { opacity: 0, top: 16, left: 0 },
-  animate: { opacity: 1, top: -fanLift, left: 0 },
-  exit: { opacity: 0, top: -fanLift, left: 16 },
-});
+/** The horizontal distance a card arrives from and leaves toward, in pixels. */
+const EDGE_TRAVEL = 16;
 
-/** The vertical lift, in pixels, one hovered stack fans each older card by. */
-const FAN_STEP = 8;
+/** How long a lost pointer or focus may stay lost before the stack folds. */
+const HOLD_GRACE_MS = 120;
+
+/** A slot no card should need: a broken measurement paints nothing, not the stack. */
+const EMPTY_SLOT: ToastSlot = {
+  rank: 0,
+  height: 0,
+  inset: 0,
+  opacity: 1,
+  interactive: false,
+};
 
 /** One painted card: a live toast, or one playing out its exit. */
 interface StackEntry {
@@ -186,56 +218,54 @@ const useToastStack = (
   return entries;
 };
 
-/** One card. Its tone icon carries the status; the surface is neutral. */
+/**
+ * One card: a surface whose height is the slot's, around a body that measures
+ * itself. The row is the same one the viewport has always painted — tone glyph,
+ * title, description, one action, one dismiss — now split into a clipping
+ * surface and a measured body so the shorter strip keeps the card's real edge.
+ */
 const ToastCard = ({
   toast,
   present,
+  slot,
+  stackWidth,
   timing,
-  fanLift,
-  stackHovered,
-  onHoverChange,
+  swipe,
+  onMeasure,
+  onHover,
+  onFocusChange,
+  onDrag,
 }: {
   readonly toast: Toast;
   readonly present: boolean;
-  readonly timing: SurfaceTiming;
-  readonly fanLift: number;
-  readonly stackHovered: boolean;
-  readonly onHoverChange: (hovered: boolean) => void;
+  readonly slot: ToastSlot;
+  /** The stack's measured width, `0` until it reports. */
+  readonly stackWidth: number;
+  readonly timing: ToastTiming;
+  readonly swipe: boolean;
+  readonly onMeasure: (id: string, height: number) => void;
+  readonly onHover: (entered: boolean) => void;
+  readonly onFocusChange: (id: string, focused: boolean) => void;
+  readonly onDrag: (active: boolean) => void;
 }) => {
   const theme = useTheme();
-  const { dismiss, pause, resume, actionFor } = useToast();
+  const { dismiss, actionFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
-  const focus = useRef(0);
-  const paused = useRef(false);
-
-  /** Pause while the stack is hovered or a control holds focus; resume only
-   *  when the last reason leaves. */
-  const syncHold = (): void => {
-    const after = stackHovered || focus.current > 0;
-    if (after === paused.current) return;
-    paused.current = after;
-    if (after) pause(toast.id);
-    else resume(toast.id);
-  };
-
-  /** The card's own hover feeds the stack fan; the hold reads `stackHovered`. */
-  const setHover = (value: boolean): void => onHoverChange(value);
-
-  /** Two controls can hold focus; a count keeps moving between them held. */
-  const setFocus = (value: boolean): void => {
-    focus.current = Math.max(0, focus.current + (value ? 1 : -1));
-    syncHold();
-  };
+  const [drag, setDrag] = useState(0);
+  const dragX = useRef(0);
+  const press = useRef<
+    Option.Option<{ readonly x: number; readonly at: bigint }>
+  >(Option.none());
+  const exitLeft = useRef(EDGE_TRAVEL);
+  const fired = useRef(false);
+  const entered = useRef(false);
 
   useEffect(() => {
-    syncHold();
-  }, [stackHovered]);
+    entered.current = true;
+  }, []);
 
   const action = Option.flatMap(toast.action, (candidate) =>
-    Option.map(actionFor(toast.id), (onSelect) => ({
-      candidate,
-      onSelect,
-    })),
+    Option.map(actionFor(toast.id), (onSelect) => ({ candidate, onSelect })),
   );
   // The provider prunes a toast's handler when it leaves the queue, while this
   // card is still painted for its exit: a ghost keeps the content it was
@@ -243,66 +273,143 @@ const ToastCard = ({
   const lastAction = useRef(action);
   if (Option.isSome(action)) lastAction.current = action;
 
+  const measure = (event: EventPayload): void => {
+    Option.match(measuredHeight(event), {
+      onNone: () => undefined,
+      onSome: (value) => onMeasure(toast.id, value),
+    });
+  };
+
+  /** Pointer travel is the horizontal axis only; the card paints on `left`. */
+  const startDrag = (event: EventPayload): void => {
+    if (!present || !slot.interactive) return;
+    Option.match(measuredPoint(event), {
+      onNone: () => undefined,
+      onSome: (point) => {
+        press.current = Option.some({ x: point.x, at: monotonicNanos() });
+        dragX.current = 0;
+        onDrag(true);
+      },
+    });
+  };
+
+  const moveDrag = (event: EventPayload): void => {
+    Option.match(press.current, {
+      onNone: () => undefined,
+      onSome: (begin) =>
+        Option.match(measuredPoint(event), {
+          onNone: () => undefined,
+          onSome: (point) => {
+            dragX.current = point.x - begin.x;
+            setDrag(dragX.current);
+          },
+        }),
+    });
+  };
+
+  const endDrag = (event: EventPayload): void => {
+    Option.match(press.current, {
+      onNone: () => undefined,
+      onSome: (begin) => {
+        press.current = Option.none();
+        onDrag(false);
+        const dx = Option.match(measuredPoint(event), {
+          onNone: () => dragX.current,
+          onSome: (point) => point.x - begin.x,
+        });
+        const elapsed = Number(monotonicNanos() - begin.at) / 1_000_000;
+        Option.match(Option.fromNullishOr(swipeEdge(dx, elapsed)), {
+          onNone: () => setDrag(0),
+          onSome: (edge) => {
+            exitLeft.current =
+              dx + (edge === "left" ? -EDGE_TRAVEL : EDGE_TRAVEL);
+            dismiss(toast.id);
+          },
+        });
+      },
+    });
+  };
+
+  const dragTransition: MotionTiming = { duration: 0 };
+
+  const motion = present
+    ? {
+        initial: { opacity: 0, left: EDGE_TRAVEL, height: slot.height },
+        animate: { opacity: slot.opacity, left: drag, height: slot.height },
+        transition:
+          drag !== 0
+            ? dragTransition
+            : entered.current
+              ? timing.move
+              : timing.enter,
+      }
+    : {
+        initial: false as const,
+        animate: {
+          opacity: 0,
+          left: exitLeft.current,
+          height: slot.height,
+        },
+        transition: timing.exit,
+      };
+
   return (
     <div
       testId={`toast-${toast.id}`}
-      motion={presenceMotion(toastFrames(fanLift), {
-        mounted: true,
-        present,
-        timing,
+      role={toast.tone === "danger" ? "alert" : "status"}
+      aria-label={toast.title}
+      motion={motion}
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
+      onFocus={() => onFocusChange(toast.id, true)}
+      onBlur={() => onFocusChange(toast.id, false)}
+      style={mergeStyles(overlaySurfaceStyle(TOAST_CARD, undefined, theme), {
+        position: "relative",
+        // The card keeps its right edge and loses the same inset on both
+        // sides, so a peeking strip reads as a smaller card, not a moved one.
+        width: stackWidth > 0 ? stackWidth - slot.inset * 2 : "100%",
+        marginRight: slot.inset,
+        ...presenceStyle(present, "wrapper"),
       })}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={mergeStyles(
-        overlaySurfaceStyle(TOAST_CARD, undefined, theme),
-        // A positioned box is what the leaving guard is inset against.
-        { position: "relative", ...presenceStyle(present) },
-      )}
     >
       <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "flex-start",
-          gap: 10,
-          flexGrow: 1,
-          paddingTop: 14,
-          paddingBottom: 14,
-          paddingLeft: 16,
-          paddingRight: 16,
-        }}
+        onLayout={measure}
+        style={mergeStyles(recipeStyle(TOAST_BODY, theme), {
+          // The body always measures at the full stack width: a peeking card is
+          // clipped, not reflowed, so expanding it cannot change its answer.
+          width: stackWidth > 0 ? stackWidth : "100%",
+        })}
       >
         <div
-          style={mergeStyles(recipeStyle(TOAST_GLYPH, theme), {
-            color: palette.fg,
-            width: theme.iconSize.md,
-          })}
+          onMouseDown={swipe ? startDrag : undefined}
+          onMouseMove={swipe ? moveDrag : undefined}
+          onMouseUp={swipe ? endDrag : undefined}
+          style={recipeStyle(TOAST_DRAG, theme)}
         >
-          <Icon
-            name={glyph(toast.tone)}
-            size="sm"
-            color={palette.fg}
-            label={toast.tone}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing["2xs"],
-            flexGrow: 1,
-            minWidth: 0,
-          }}
-        >
-          <text style={recipeStyle(TOAST_TITLE, theme)}>{toast.title}</text>
-          {Option.match(toast.description, {
-            onNone: () => null,
-            onSome: (description) => (
-              <text style={recipeStyle(TOAST_DESCRIPTION, theme)}>
-                {description}
-              </text>
-            ),
-          })}
+          <div
+            style={mergeStyles(recipeStyle(TOAST_GLYPH, theme), {
+              color: palette.fg,
+              width: theme.iconSize.md,
+            })}
+          >
+            <Icon
+              name={toast.phase === "loading" ? "loader" : glyph(toast.tone)}
+              size="sm"
+              color={palette.fg}
+              label={toast.phase === "loading" ? "loading" : toast.tone}
+            />
+          </div>
+          <div style={recipeStyle(TOAST_COPY, theme)}>
+            <text style={recipeStyle(TOAST_TITLE, theme)}>{toast.title}</text>
+            {Option.match(toast.description, {
+              onNone: () => null,
+              onSome: (description) => (
+                <text style={recipeStyle(TOAST_DESCRIPTION, theme)}>
+                  {description}
+                </text>
+              ),
+            })}
+          </div>
         </div>
         {Option.match(lastAction.current, {
           onNone: () => null,
@@ -310,17 +417,18 @@ const ToastCard = ({
             <Button
               size="sm"
               variant="secondary"
-              testId="toast-action"
-              // Only a live card is a target: a leaving one is painted for its
-              // exit, but the keyboard must not land on a control that unmounts
-              // under it (the runtime decides the Tab order element by element).
-              {...presenceTabStop(present)}
+              testId={`toast-action-${toast.id}`}
+              disabled={!present || !slot.interactive}
+              // A live card's controls are the window's; a ghost's and a
+              // peeking card's are not (the runtime decides the Tab order
+              // element by element, so the control owns its own stop).
+              {...presenceTabStop(present && slot.interactive)}
               onClick={() => {
+                if (fired.current) return;
+                fired.current = true;
                 onSelect();
                 dismiss(toast.id);
               }}
-              onFocus={() => setFocus(true)}
-              onBlur={() => setFocus(false)}
             >
               {candidate.label}
             </Button>
@@ -329,11 +437,13 @@ const ToastCard = ({
         <IconButton
           label="Dismiss"
           size="sm"
-          testId="toast-dismiss"
-          {...presenceTabStop(present)}
-          onClick={() => dismiss(toast.id)}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          testId={`toast-dismiss-${toast.id}`}
+          disabled={!present || !slot.interactive}
+          {...presenceTabStop(present && slot.interactive)}
+          onClick={() => {
+            exitLeft.current = EDGE_TRAVEL;
+            dismiss(toast.id);
+          }}
         >
           <Icon name="x" size="sm" color={theme.colors.foreground} />
         </IconButton>
@@ -343,75 +453,190 @@ const ToastCard = ({
   );
 };
 
+/** The invisible spacer that opens a gap between full cards. */
+const ToastGap = ({
+  held,
+  timing,
+}: {
+  readonly held: boolean;
+  readonly timing: ToastTiming;
+}) => (
+  <div
+    style={{ width: "100%", pointerEvents: "none" }}
+    motion={{
+      initial: false,
+      animate: { height: stackGap(held) },
+      transition: timing.move,
+    }}
+  />
+);
+
 /** {@link ToastViewport} props: where the stack sits in the app root. */
 export interface ToastViewportProps extends Props {
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   /** An optional element before the toasts, e.g. a "dismiss all" action. */
   readonly children?: ReactNode;
+  /** Whether a card may be swiped sideways to dismiss it. Default `true`. */
+  readonly swipe?: boolean;
 }
 
 /**
- * The bottom-right stack. Render it **last** in the app root: the runtime paints
- * in order, so anything after it would cover the toasts.
+ * The corner stack. Render it **last** in the app root: the runtime paints in
+ * order, so anything after it would cover the toasts.
  */
 export const ToastViewport = ({
   children,
   className,
   style,
+  swipe = true,
   ...rest
 }: ToastViewportProps) => {
   const theme = useTheme();
-  const { toasts } = useToast();
+  const { toasts, hold } = useToast();
   const timing = useToastTiming();
   const stack = useToastStack(toasts, timing);
-  // Which card the pointer rests on, so a leave that never arrives — one
-  // dismissed under the pointer unmounts without hearing it — cannot hold the
-  // next stack. The ids are read against the cards on screen, so a hover that
-  // outlives its card stops counting when the card leaves.
-  const [hovered, setHovered] = useState<HashSet.HashSet<string>>(
-    HashSet.empty,
+  const [held, setHeld] = useState(false);
+  const [stackWidth, setStackWidth] = useState(0);
+  const [heights, setHeights] = useState<HashMap.HashMap<string, number>>(
+    HashMap.empty,
   );
-  const onHoverChange = (id: string, value: boolean): void =>
-    setHovered((current) =>
-      value ? HashSet.add(current, id) : HashSet.remove(current, id),
+  // The hold is built from three inputs and applied through one state, so a
+  // card's mount, leave and drag cannot each own a competing pause. Hover and
+  // focus are **sets of card ids**, read against the cards on screen: a card
+  // dismissed under the pointer unmounts without hearing its leave, and a
+  // boolean would keep the whole stack held forever.
+  const hovered = useRef(HashSet.empty<string>());
+  const focused = useRef(HashSet.empty<string>());
+  const dragging = useRef(false);
+  const heldNow = useRef(false);
+  const grace = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearGrace = (): void => {
+    if (grace.current === null) return;
+    clearTimeout(grace.current);
+    grace.current = null;
+  };
+
+  /** Apply a hold; a release waits out the grace so a card-to-card move holds. */
+  const applyHold = (next: boolean): void => {
+    if (next) {
+      clearGrace();
+      if (!heldNow.current) {
+        heldNow.current = true;
+        setHeld(true);
+      }
+      return;
+    }
+    if (!heldNow.current || grace.current !== null) return;
+    grace.current = setTimeout(() => {
+      grace.current = null;
+      heldNow.current = false;
+      setHeld(false);
+    }, HOLD_GRACE_MS);
+  };
+
+  const syncHold = (): void => {
+    applyHold(
+      HashSet.size(hovered.current) > 0 ||
+        HashSet.size(focused.current) > 0 ||
+        dragging.current,
     );
+  };
+
+  useEffect(
+    () => () => {
+      clearGrace();
+    },
+    [],
+  );
+
+  // A toast pushed while the stack is held is born paused; releasing the stack
+  // resumes every clock with the time it has left.
+  useEffect(() => {
+    hold(held);
+  }, [held, hold]);
+
+  useEffect(
+    () => () => {
+      hold(false);
+    },
+    [hold],
+  );
+
+  // A card that leaves cannot blur: the runtime unmounts the focused control
+  // without a blur event on 0.11.0. Its id is dropped from the focus set with
+  // the card, and an empty stack forgets a hover whose leave it never heard.
+  useEffect(() => {
+    if (!Arr.some(stack, (entry) => entry.present)) {
+      hovered.current = HashSet.empty();
+    }
+    const live = HashSet.fromIterable(
+      Arr.map(
+        Arr.filter(stack, (entry) => entry.present),
+        (entry) => entry.toast.id,
+      ),
+    );
+    hovered.current = HashSet.filter(hovered.current, (id) =>
+      HashSet.has(live, id),
+    );
+    focused.current = HashSet.filter(focused.current, (id) =>
+      HashSet.has(live, id),
+    );
+    syncHold();
+  }, [stack]);
+
+  // The height a card reported belongs to that card; a card that unmounts does
+  // not keep an entry in the measurement map.
   useEffect(() => {
     const live = HashSet.fromIterable(
       Arr.map(stack, (entry) => entry.toast.id),
     );
-    setHovered((current) => {
-      const next = HashSet.filter(current, (id) => HashSet.has(live, id));
-      return HashSet.size(next) === HashSet.size(current) ? current : next;
+    setHeights((current) => {
+      const next = HashMap.filter(current, (_, id) => HashSet.has(live, id));
+      return HashMap.size(next) === HashMap.size(current) ? current : next;
     });
   }, [stack]);
-  // The fan lifts the older cards: the newest rests still and each older card
-  // sits one step higher, so hovering widens the gap between neighbours.
-  /**
-   * The rank of every card **in the stack**, the ghosts included.
-   *
-   * A card's exit frame is written at the lift it rests at, so a rank read from
-   * the cards still present took that lift away in the frame the card started
-   * leaving and the ghost fell back into its slot while it slid away. Ranks from
-   * the whole stack keep the lift through the exit, and they stay continuous
-   * when a ghost unmounts: the size shrinks by the same one as every later rank.
-   */
-  const rankById = HashMap.fromIterable(
-    Arr.map(stack, (entry, index) => [entry.toast.id, index] as const),
-  );
-  /**
-   * The fan is open while the pointer rests on a card that is **painted** — a
-   * ghost is one, so dismissing the card the pointer is on does not close the fan
-   * in the frame its exit starts. The set holds only ids on screen (the prune
-   * above reads the stack), so the fan closes when the ghost unmounts.
-   */
-  const stackHovered = Arr.some(stack, (entry) =>
-    HashSet.has(hovered, entry.toast.id),
+
+  const onMeasure = (id: string, height: number): void => {
+    setHeights((current) =>
+      Option.match(HashMap.get(current, id), {
+        onNone: () => HashMap.set(current, id, height),
+        onSome: (known) =>
+          known === height ? current : HashMap.set(current, id, height),
+      }),
+    );
+  };
+
+  const onHover = (id: string, entered: boolean): void => {
+    hovered.current = entered
+      ? HashSet.add(hovered.current, id)
+      : HashSet.remove(hovered.current, id);
+    syncHold();
+  };
+
+  const onFocusChange = (id: string, focusedNow: boolean): void => {
+    focused.current = focusedNow
+      ? HashSet.add(focused.current, id)
+      : HashSet.remove(focused.current, id);
+    syncHold();
+  };
+
+  const onDrag = (active: boolean): void => {
+    dragging.current = active;
+    syncHold();
+  };
+
+  const slots = toastSlots(
+    Arr.map(stack, (entry) =>
+      Option.getOrElse(HashMap.get(heights, entry.toast.id), () => 0),
+    ),
+    held,
   );
 
   return (
     <div
-      role="status"
+      role="group"
       aria-label="Notifications"
       testId="toast-viewport"
       {...rest}
@@ -425,24 +650,37 @@ export const ToastViewport = ({
       )}
     >
       {children}
-      {Arr.map(stack, (entry) => {
-        const fanLift = Option.match(HashMap.get(rankById, entry.toast.id), {
-          onNone: () => 0,
-          onSome: (rank) =>
-            stackHovered ? (HashMap.size(rankById) - 1 - rank) * FAN_STEP : 0,
-        });
-        return (
-          <ToastCard
-            key={entry.toast.id}
-            toast={entry.toast}
-            present={entry.present}
-            timing={timing}
-            fanLift={fanLift}
-            stackHovered={stackHovered}
-            onHoverChange={(value) => onHoverChange(entry.toast.id, value)}
-          />
-        );
-      })}
+      <div
+        testId="toast-stack"
+        onLayout={(event) => {
+          Option.match(measuredBox(event), {
+            onNone: () => undefined,
+            onSome: (box) => setStackWidth(box.width),
+          });
+        }}
+        style={recipeStyle(TOAST_STACK, theme)}
+      >
+        {Arr.map(stack, (entry, index) => {
+          const slot = slots[index] ?? EMPTY_SLOT;
+          return (
+            <Fragment key={entry.toast.id}>
+              {index === 0 ? null : <ToastGap held={held} timing={timing} />}
+              <ToastCard
+                toast={entry.toast}
+                present={entry.present}
+                slot={slot}
+                stackWidth={stackWidth}
+                timing={timing}
+                swipe={swipe}
+                onMeasure={onMeasure}
+                onHover={(entered) => onHover(entry.toast.id, entered)}
+                onFocusChange={onFocusChange}
+                onDrag={onDrag}
+              />
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -455,8 +693,10 @@ export const toastMeta = {
   gpuixSupport: "yes",
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
+    "no aria-live or aria-atomic: a card paints role=status (alert for danger) and does not claim an announcement",
+    "the stack shows three cards while collapsed; more stay queued and unfold only when the stack is expanded",
     "no progress indicator for the remaining auto-dismiss time",
-    "a card's action and dismiss controls leave the tab order while it fades (the ghost takes no presses); a card dismissed from its own control still unmounts the focused element, because 0.11.0 moves focus nowhere when one goes",
+    "swipe travels one axis (horizontal), because the runtime has no transform and an arbitrary-angle card would cover the page",
   ],
   docs: "docs/toast.mdx",
   example: "examples/toast.example.tsx",

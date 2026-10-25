@@ -1025,6 +1025,7 @@ const FanPage = () => {
           flexDirection: "column",
           width: 600,
           height: 500,
+          position: "relative",
         }}
       >
         <Button
@@ -1047,7 +1048,15 @@ const ToastPage = () => {
   const toast = useToast();
   return (
     <Page>
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 1200,
+          height: 760,
+          position: "relative",
+        }}
+      >
         <Button testId="push" onClick={() => toast.push({ title: "Saved" })}>
           Push
         </Button>
@@ -1058,16 +1067,13 @@ const ToastPage = () => {
 };
 
 describe("a notice", () => {
-  it("rises into the stack and slides away to its right edge", async () => {
+  it("slides in from the right edge and slides away toward it", async () => {
     // The toast moves on its own timing (`motionTimingOf`), not a shared level:
-    // it arrives from 16 px below its slot on a 220 ms `top` travel and leaves
-    // by fading while it slides 16 px to the right on a 180 ms `left` one. Both
-    // halves are measured on the painted box, because the fade itself is a paint
-    // value the native tree does not report (`surface-fade` proves it in a
-    // window). The bug this guards: a suite that asserts the direction the card
-    // no longer travels — the toast was rewritten to sonner's look and this case
-    // still read an `x` entry offset, so it failed at rest and then reported
-    // every later case in the file as a leaked root.
+    // it arrives 16 px to the right of its slot on a 220 ms `left` travel and
+    // leaves by fading while it slides 16 px further right on a 180 ms one. The
+    // horizontal axis is measured because the fade is a paint value the native
+    // tree does not report (`surface-fade` proves it in a window) and because
+    // the stack's height animation moves `y` for an unrelated reason.
     const page = renderComponent(
       <ToastProvider>
         <ToastPage />
@@ -1077,15 +1083,15 @@ describe("a notice", () => {
       page.renderer.clockPause();
       clickCentreOf(page, "push");
       await delay();
-      const entering = where(page.renderer, "toast-1", "y");
+      settle(page);
+      const entering = where(page.renderer, "toast-1", "x");
       page.renderer.clockFastForward(700);
       await delay();
-      const resting = where(page.renderer, "toast-1", "y");
-      // The card starts a rise below the slot it settles in.
+      settle(page);
+      const resting = where(page.renderer, "toast-1", "x");
       expect(entering - resting).toBe(16);
-      const restX = where(page.renderer, "toast-1", "x");
 
-      clickCentreOf(page, "toast-dismiss");
+      clickCentreOf(page, "toast-dismiss-1");
       await delay();
       expect(painted(page.renderer, "toast-1")).toBe(true);
       // Start the exit under the paused clock, then advance half of its 180 ms:
@@ -1094,9 +1100,10 @@ describe("a notice", () => {
       await delay();
       page.renderer.clockFastForward(80);
       await delay();
+      settle(page);
       const leavingX = where(page.renderer, "toast-1", "x");
-      expect(leavingX).toBeGreaterThan(restX);
-      expect(leavingX).toBeLessThan(restX + 16);
+      expect(leavingX).toBeGreaterThan(resting);
+      expect(leavingX).toBeLessThan(resting + 16);
 
       await waitFor(() =>
         expect(painted(page.renderer, "toast-1")).toBe(false),
@@ -1107,10 +1114,12 @@ describe("a notice", () => {
     }
   });
 
-  it("fans the older cards while the pointer rests on the stack", async () => {
-    // The bug this guards: every card painted at one spacing, so the reader
-    // could not see which stack a hover would hold. Hovering lifts each card
-    // that is not the newest by one step, and leaving puts the stack back.
+  it("unfolds the strips and folds them back on leave", async () => {
+    // The bug this guards: the collapsed stack had no movement of its own — the
+    // older cards were full and lifted 8px, so a hover only shifted the stack.
+    // The rebuild gives the older cards their measured height on the `standard`
+    // phase; this measures the two resting shapes in the real renderer, and the
+    // table's own row holds the 200 ms phase (`presence-contract.test.ts`).
     const page = renderComponent(
       <ToastProvider>
         <FanPage />
@@ -1120,67 +1129,27 @@ describe("a notice", () => {
       page.renderer.clockPause();
       clickCentreOf(page, "push-two");
       await waitFor(() => expect(painted(page.renderer, "toast-2")).toBe(true));
+      settle(page);
       page.renderer.clockFastForward(700);
+      settle(page);
       await delay();
-      const older = where(page.renderer, "toast-1", "y");
-      const newest = where(page.renderer, "toast-2", "y");
+      const folded = heightOf(page.renderer, "toast-1");
 
       hoverCentreOf(page, "toast-2");
       page.renderer.clockFastForward(400);
+      settle(page);
       await delay();
-      // The older card rises one step; the newest stays where it arrived.
-      expect(where(page.renderer, "toast-1", "y")).toBe(older - 8);
-      expect(where(page.renderer, "toast-2", "y")).toBe(newest);
+      const unfolded = heightOf(page.renderer, "toast-1");
+      expect(unfolded).toBeGreaterThan(folded);
 
+      // The release waits out the hold's grace before the fold begins.
       hoverCentreOf(page, "push-two");
+      await new Promise((resolve) => setTimeout(resolve, 160));
+      settle(page);
       page.renderer.clockFastForward(400);
+      settle(page);
       await delay();
-      expect(where(page.renderer, "toast-1", "y")).toBe(older);
-      expect(where(page.renderer, "toast-2", "y")).toBe(newest);
-    } finally {
-      page.renderer.clockResume();
-      page.unmount();
-    }
-  });
-
-  it("keeps the fan lift a dismissed card held while it leaves", async () => {
-    // The bug this guards: the fan ranked only the cards still in the queue, so
-    // a card dismissed while the stack was hovered lost its lift in the frame it
-    // became a ghost. Its exit frame is written at `-fanLift` — a leaving card
-    // slides right at the lift it rests at — so dropping the rank turned that
-    // exit into a fall out of the fan: the ghost travelled back down to its
-    // slot while it faded, which is a journey no page describes.
-    const page = renderComponent(
-      <ToastProvider>
-        <FanPage />
-      </ToastProvider>,
-    );
-    try {
-      page.renderer.clockPause();
-      clickCentreOf(page, "push-two");
-      await waitFor(() => expect(painted(page.renderer, "toast-2")).toBe(true));
-      page.renderer.clockFastForward(700);
-      await delay();
-      // The pointer rests on the newest card, so the older one is fanned up.
-      hoverCentreOf(page, "toast-2");
-      page.renderer.clockFastForward(400);
-      await delay();
-      const lifted = where(page.renderer, "toast-1", "y");
-      const restX = where(page.renderer, "toast-1", "x");
-
-      // Dismiss the older card from the stack it is still fanned in.
-      clickCentreOf(page, "toast-dismiss");
-      await delay();
-      expect(painted(page.renderer, "toast-1")).toBe(true);
-      page.renderer.clockFastForward(1);
-      await delay();
-      page.renderer.clockFastForward(159);
-      await delay();
-
-      // The ghost is on its way out to the right...
-      expect(where(page.renderer, "toast-1", "x")).toBeGreaterThan(restX);
-      // ...at the lift it was resting at, not falling back into its slot.
-      expect(where(page.renderer, "toast-1", "y")).toBe(lifted);
+      expect(heightOf(page.renderer, "toast-1")).toBeCloseTo(folded, 0);
     } finally {
       page.renderer.clockResume();
       page.unmount();
@@ -1256,7 +1225,15 @@ const heightOf = (renderer: TestRoot["renderer"], testId: string): number => {
 const PreferenceToast = ({ reduced }: { readonly reduced: boolean }) => (
   <ToastProvider>
     <Page reducedMotion={reduced}>
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 1200,
+          height: 760,
+          position: "relative",
+        }}
+      >
         <ToastPusher />
         <ToastViewport />
       </div>
@@ -1346,11 +1323,12 @@ describe("the preference", () => {
       clickCentreOf(page, "push-notice");
       await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
       // Let the card land, so its dismiss control is where the pointer is.
+      settle(page);
       page.renderer.clockFastForward(700);
       settle(page);
       await delay();
 
-      clickCentreOf(page, "toast-dismiss");
+      clickCentreOf(page, "toast-dismiss-1");
       await delay();
       expect(painted(page.renderer, "toast-1")).toBe(true);
 
@@ -1503,10 +1481,11 @@ describe("a control inside a leaving surface", () => {
     try {
       clickCentreOf(page, "push");
       await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
+      settle(page);
       settleMotion(page);
       expect(page.renderer.findByTestId("presence-shield")).toBeUndefined();
 
-      clickCentreOf(page, "toast-dismiss");
+      clickCentreOf(page, "toast-dismiss-1");
       await delay();
       expect(painted(page.renderer, "toast-1")).toBe(true);
       expect(painted(page.renderer, "presence-shield")).toBe(true);
@@ -1561,17 +1540,18 @@ describe("a control inside a leaving surface", () => {
     try {
       clickCentreOf(page, "push");
       await waitFor(() =>
-        expect(painted(page.renderer, "toast-action")).toBe(true),
+        expect(painted(page.renderer, "toast-action-1")).toBe(true),
       );
+      settle(page);
       settleMotion(page);
-      const resting = Option.getOrElse(boundsOf(page, "toast-action"), () => {
+      const resting = Option.getOrElse(boundsOf(page, "toast-action-1"), () => {
         throw new Error("behaviour: the action painted no box");
       });
 
-      clickCentreOf(page, "toast-dismiss");
+      clickCentreOf(page, "toast-dismiss-1");
       await delay();
       expect(painted(page.renderer, "toast-1")).toBe(true);
-      const leaving = Option.getOrElse(boundsOf(page, "toast-action"), () => {
+      const leaving = Option.getOrElse(boundsOf(page, "toast-action-1"), () => {
         throw new Error("behaviour: the ghost lost its action");
       });
       expect([leaving.width, leaving.height]).toEqual([
@@ -1580,7 +1560,7 @@ describe("a control inside a leaving surface", () => {
       ]);
 
       // A ghost answers nothing: the shield, not the action, takes the press.
-      clickCentreOf(page, "toast-action");
+      clickCentreOf(page, "toast-action-1");
       expect(onAction).not.toHaveBeenCalled();
 
       await waitFor(() =>

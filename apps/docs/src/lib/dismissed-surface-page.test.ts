@@ -96,7 +96,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
     page: "toast.mdx",
     packagePage: "packages/components/docs/toast.mdx",
     painters: ["packages/components/src/toast/viewport.tsx"],
-    flags: ["presenceTabStop(present)"],
+    flags: ["presenceTabStop(present && slot.interactive)"],
     window: {
       kind: "explicit",
       milliseconds: 180,

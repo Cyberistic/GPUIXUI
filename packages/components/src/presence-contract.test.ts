@@ -901,12 +901,12 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
   },
   {
     surface: "Toast",
-    prints: ["16px", "rise", "slide", "220 ms", "180 ms"],
+    prints: ["16px", "slide", "220 ms", "180 ms", "unfold", "peeking strips"],
     paints: [
-      { file: "src/toast/viewport.tsx", marker: "top: 16" },
-      { file: "src/toast/viewport.tsx", marker: "left: 16" },
+      { file: "src/toast/viewport.tsx", marker: "EDGE_TRAVEL = 16" },
       { file: "src/toast/viewport.tsx", marker: "motionTimingOf(220" },
       { file: "src/toast/viewport.tsx", marker: "motionTimingOf(180" },
+      { file: "src/toast/stack.ts", marker: "STACK_PEEK = 12" },
     ],
   },
   {
@@ -977,17 +977,18 @@ describe("the per-surface table", () => {
     expect(wrong).toEqual([]);
   });
 
-  it("teaches the toast's own timing, not the level it left behind", () => {
-    // The retracted reading: the card used to come in from the right edge on the
-    // shared `notice` level. A row that names either again sends a consumer to a
-    // motion the library does not paint.
+  it("teaches the toast's own timing, not a shared level", () => {
+    // The retracted reading: the card used to come in from the right edge on
+    // the shared `notice` level while it rose instead. The movement is the
+    // toast's own now, and the row must say both halves and the unfold the
+    // rebuild added (the three peeking strips are the collapsed stack, not a
+    // second entrance).
     const text = rowText("Toast");
-    expect(Str.includes("from the right edge")(text)).toBe(false);
     expect(Str.includes("notice")(text)).toBe(false);
     expect(Str.includes("motiontimingof")(text)).toBe(true);
-    // Both halves are stated: the rise it arrives on and the slide it leaves on.
-    expect(Str.includes("rise")(text)).toBe(true);
     expect(Str.includes("slide")(text)).toBe(true);
+    expect(Str.includes("unfold")(text)).toBe(true);
+    expect(Str.includes("peeking strips")(text)).toBe(true);
   });
 });
 

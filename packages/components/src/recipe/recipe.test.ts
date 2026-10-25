@@ -224,9 +224,13 @@ import {
   TIME_PICKER_ROOT,
   TIME_PICKER_SEGMENT,
   TIME_PICKER_SEPARATOR,
+  TOAST_BODY,
   TOAST_CARD,
+  TOAST_COPY,
   TOAST_DESCRIPTION,
+  TOAST_DRAG,
   TOAST_GLYPH,
+  TOAST_STACK,
   TOAST_TITLE,
   TOAST_VIEWPORT,
 } from "@gpuixui/tw";
@@ -1307,27 +1311,58 @@ describe("Command recipe", () => {
 });
 
 describe("Toast recipe", () => {
-  it("resolves the viewport stack and the card surface", () => {
+  it("resolves the region, the stack and the card surface", () => {
     expect(style(TOAST_VIEWPORT)).toEqual({
       display: "flex",
       flexDirection: "column",
       alignItems: "flex-end",
-      gap: 12,
-      maxWidth: 356,
+      width: 356,
       pointerEvents: "none",
     });
-    expect(style(TOAST_CARD)).toEqual({
+    expect(style(TOAST_STACK)).toEqual({
       display: "flex",
-      flexDirection: "row",
-      alignItems: "flex-start",
-      width: 356,
+      flexDirection: "column",
+      alignItems: "flex-end",
+      width: "100%",
+    });
+    expect(style(TOAST_CARD)).toEqual({
+      width: "100%",
       backgroundColor: darkTheme.colors.popover,
       color: darkTheme.colors.popoverForeground,
       borderWidth: 1,
       borderColor: darkTheme.colors.border,
-      borderRadius: 6,
+      borderRadius: 12,
       boxShadow: elevationShadow(darkTheme, "md"),
       pointerEvents: "auto",
+      overflow: "hidden",
+    });
+  });
+
+  it("resolves the measured body and the copy column", () => {
+    expect(style(TOAST_BODY)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+      paddingLeft: 16,
+      paddingRight: 16,
+      paddingTop: 14,
+      paddingBottom: 14,
+    });
+    expect(style(TOAST_COPY)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      flexGrow: 1,
+      minWidth: 0,
+    });
+    expect(style(TOAST_DRAG)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+      flexGrow: 1,
+      minWidth: 0,
     });
   });
 

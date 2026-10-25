@@ -1,6 +1,6 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Toast example: three outcomes from one Save button.
+ * Toast example: the stack, an action, and a promise that settles in place.
  *
  * The provider owns one store and one runtime; the viewport is the last child so
  * it paints above the card. A caller only sees `useToast()`.
@@ -12,6 +12,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { ToastProvider, ToastViewport, useToast } from "../src/toast.js";
+
+/** Resolves after `ms`, so the promise toast shows its loading state. */
+const after = <Value,>(ms: number, value: Value): Promise<Value> =>
+  new Promise((resolve) => {
+    setTimeout(() => resolve(value), ms);
+  });
 
 /** The panel inside the provider. */
 const SavePanel = () => {
@@ -68,6 +74,30 @@ const SavePanel = () => {
           Restore draft
         </Button>
         <Button
+          onClick={() =>
+            void toast
+              .promise(after(900, 12), {
+                loading: {
+                  title: "Importing rows",
+                  description: "Reading the file…",
+                },
+                success: (rows) => ({
+                  title: `Imported ${rows} rows`,
+                  description: "The table is up to date.",
+                  tone: "success",
+                }),
+                error: (cause) => ({
+                  title: "Import failed",
+                  description: String(cause),
+                  tone: "danger",
+                }),
+              })
+              .catch(() => undefined)
+          }
+        >
+          Import rows
+        </Button>
+        <Button
           variant="danger"
           onClick={() =>
             toast.push({
@@ -88,8 +118,8 @@ const SavePanel = () => {
           paddingBottom: theme.spacing.lg,
         }}
       >
-        Toasts dismiss themselves; the ✕ cancels one early and an action runs
-        before its toast closes.
+        Hover the stack to unfold it; drag a card sideways to dismiss it. The ✕
+        closes one early, and Undo runs before its toast closes.
       </text>
     </Card>
   );

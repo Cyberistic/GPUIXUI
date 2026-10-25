@@ -2,13 +2,12 @@
  * Toast behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a pushed toast never reaching the viewport; the stack
- * painting in the wrong order (the newest must be below the oldest); dismissing
- * one toast removing another; `dismissAll` leaving a card behind; the viewport
- * swallowing clicks on the page behind it; and a toast painted with the wrong
- * theme surface. It also guards a toast that auto-dismissed while keyboard focus
- * was on its own dismiss control, dropping the user's focus with it. An action
- * could render with no handler (a dead button), run twice, leave its toast
- * behind, or let the toast expire while its action held keyboard focus.
+ * painting every card at one size (so a reader could not tell which card the
+ * corner owned); a hover that folded before the pointer finished moving between
+ * two cards; a swipe that dismissed on the first pixel or never; an action that
+ * ran twice or outlived its card; a promise that queued a second card instead of
+ * settling the loading one; a dismissed card that stayed a Tab stop while it
+ * faded; and a viewport that moved the page when the stack unfolded.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -21,8 +20,12 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  requireBounds,
+  settle,
+  settleMotion,
   waitFor,
 } from "../internal/interaction.js";
+import { MotionProvider } from "../internal/presence.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -30,8 +33,10 @@ import {
   type TestTheme,
 } from "../internal/test-root.js";
 import { ToastProvider, ToastViewport, useToast } from "../toast.js";
+import { STACK_GAP, STACK_PEEK } from "../toast/stack.js";
+import { SWIPE_THRESHOLD } from "../toast/swipe.js";
 
-/** A page with two push buttons, a dismiss-all and an unrelated control. */
+/** A page with the controls every case drives, plus an unrelated sibling. */
 const Controls = ({
   onElsewhere,
   onAction,
@@ -57,6 +62,16 @@ const Controls = ({
         }
       >
         Push
+      </Button>
+      <Button
+        testId="push-three"
+        onClick={() => {
+          toast.push({ title: "First", description: "The oldest card" });
+          toast.push({ title: "Second", description: "The middle card" });
+          toast.push({ title: "Third", description: "The newest card" });
+        }}
+      >
+        Push three
       </Button>
       <Button
         testId="push-action"
@@ -88,6 +103,74 @@ const Controls = ({
       >
         Push warning
       </Button>
+      <Button
+        testId="push-danger"
+        onClick={() =>
+          toast.push({ title: "Upload failed", tone: "danger", duration: 0 })
+        }
+      >
+        Push danger
+      </Button>
+      <Button
+        testId="push-promise"
+        onClick={() => {
+          void toast
+            .promise(
+              new Promise<string>((resolve) => {
+                setTimeout(() => resolve("12 rows"), 150);
+              }),
+              {
+                loading: {
+                  title: "Importing",
+                  description: "Reading the file",
+                },
+                success: (rows) => ({
+                  title: `Imported ${rows}`,
+                  description: "The table is up to date.",
+                  tone: "success",
+                }),
+                error: (cause) => ({
+                  title: "Import failed",
+                  description: String(cause),
+                  tone: "danger",
+                }),
+              },
+            )
+            .catch(() => undefined);
+        }}
+      >
+        Push promise
+      </Button>
+      <Button
+        testId="push-rejected"
+        onClick={() => {
+          void toast
+            .promise(Promise.reject(new Error("network down")), {
+              loading: { title: "Importing" },
+              success: { title: "Imported", tone: "success" },
+              error: (cause) => ({
+                title: "Import failed",
+                description: String(cause),
+                tone: "danger",
+              }),
+            })
+            .catch(() => undefined);
+        }}
+      >
+        Push rejected promise
+      </Button>
+      <Button
+        testId="push-later"
+        onClick={() => {
+          setTimeout(
+            () =>
+              toast.push({ title: "Later", description: "Queued by a timer" }),
+            400,
+          );
+        }}
+      >
+        Push later
+      </Button>
       <Button testId="dismiss-all" onClick={toast.dismissAll}>
         Dismiss all
       </Button>
@@ -102,37 +185,59 @@ const Harness = ({
   onElsewhere,
   onAction,
   duration,
+  swipe,
+  reduced,
 }: {
   readonly onElsewhere?: () => void;
   readonly onAction?: () => void;
   readonly duration?: Duration.Input;
+  readonly swipe?: boolean;
+  readonly reduced?: boolean;
 }) => (
   // One root element: the native test renderer reports a single tree root, and a
   // provider's children are siblings of each other.
   <div style={{ width: 1200, height: 760 }}>
-    <ToastProvider defaultDuration={duration}>
-      <Controls
-        onElsewhere={onElsewhere ?? (() => undefined)}
-        onAction={onAction}
-      />
-      <ToastViewport />
-    </ToastProvider>
+    <MotionProvider preference={reduced === true ? "reduced" : "animated"}>
+      <ToastProvider defaultDuration={duration}>
+        <Controls
+          onElsewhere={onElsewhere ?? (() => undefined)}
+          onAction={onAction}
+        />
+        <ToastViewport swipe={swipe} />
+      </ToastProvider>
+    </MotionProvider>
   </div>
 );
 
 /** The store updates through its runtime, so let the microtask queue drain. */
-const settle = async (): Promise<void> => {
+const drain = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 };
 
-/**
- * Walk the window's Tab order: focus `from`, then take `steps` stops in turn.
- *
- * A card's ghost is decided element by element by the runtime, so this is the
- * only route a suite can ask which painted controls the keyboard can reach.
- */
+/** Drain the store, deliver the layout reports, and land every entry tween. */
+const sync = async (root: ComponentTestRoot): Promise<void> => {
+  await drain();
+  settle(root);
+  root.renderer.clockFastForward(1_000);
+  settle(root);
+  await drain();
+};
+
+/** A measured height, or a broken-fixture failure. */
+const heightOf = (root: ComponentTestRoot, testId: string): number =>
+  Option.getOrElse(boundsOf(root, testId), () => {
+    throw new Error(`behaviour: no box for "${testId}"`);
+  }).height;
+
+/** The measured x of a card, or a broken-fixture failure. */
+const xOf = (root: ComponentTestRoot, testId: string): number =>
+  Option.getOrElse(boundsOf(root, testId), () => {
+    throw new Error(`behaviour: no box for "${testId}"`);
+  }).x;
+
+/** Walk the window's Tab order: focus `from`, then take `steps` stops. */
 const tabWalk = (
   root: ComponentTestRoot,
   from: string,
@@ -146,58 +251,264 @@ const tabWalk = (
   });
 };
 
-/** The measured y of a toast card, or a broken-fixture failure. */
-const toastY = (root: ComponentTestRoot, testId: string): number =>
-  Option.getOrElse(boundsOf(root, testId), () => {
-    throw new Error(`behaviour: no toast "${testId}"`);
-  }).y;
+/** Press a card and drag it `dx` pixels sideways, then release. */
+const swipe = async (
+  root: ComponentTestRoot,
+  testId: string,
+  dx: number,
+  holdMs = 0,
+): Promise<void> => {
+  const box = requireBounds(root, testId);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  root.renderer.nativeSimulateMouseDown(x, y);
+  root.renderer.nativeSimulateMouseMove(x + dx / 2, y, 0);
+  root.renderer.nativeSimulateMouseMove(x + dx, y, 0);
+  if (holdMs > 0) await new Promise((resolve) => setTimeout(resolve, holdMs));
+  root.renderer.nativeSimulateMouseUp(x + dx, y);
+};
 
 describe("Toast", () => {
-  it("shows a pushed toast and exposes the viewport as a status region", async () => {
+  it("shows a pushed toast in a labelled group, as a named status", async () => {
     const page = renderComponent(<Harness />);
-    expect(
-      page.renderer.findByTestId("toast-viewport")?.customProps?.role,
-    ).toBe("status");
+    try {
+      const viewport = page.renderer.findByTestId("toast-viewport");
+      expect(viewport?.customProps?.role).toBe("group");
+      expect(viewport?.customProps?.["aria-label"]).toBe("Notifications");
 
-    clickCentreOf(page, "push");
-    await settle();
+      clickCentreOf(page, "push");
+      await sync(page);
 
-    expect(page.renderer.getAllText()).toContain("Saved changes");
-    expect(page.renderer.getAllText()).toContain("3 files");
-
-    page.unmount();
+      expect(page.renderer.getAllText()).toContain("Saved changes");
+      expect(page.renderer.getAllText()).toContain("3 files");
+      expect(page.renderer.findByTestId("toast-1")?.customProps?.role).toBe(
+        "status",
+      );
+      expect(
+        page.renderer.findByTestId("toast-1")?.customProps?.["aria-label"],
+      ).toBe("Saved changes");
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("stacks a newer toast below the older one", async () => {
+  it("announces a destructive card as an alert", async () => {
     const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push-danger");
+      await sync(page);
 
-    clickCentreOf(page, "push");
-    await settle();
-    clickCentreOf(page, "push-warning");
-    await settle();
-
-    expect(toastY(page, "toast-2")).toBeGreaterThan(toastY(page, "toast-1"));
-
-    page.unmount();
+      expect(page.renderer.findByTestId("toast-1")?.customProps?.role).toBe(
+        "alert",
+      );
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("dismisses only the toast whose control was pressed", async () => {
+  it("paints the newest card full and the two older cards as peeking strips", async () => {
     const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
 
-    clickCentreOf(page, "push");
-    await settle();
-    clickCentreOf(page, "push-warning");
-    await settle();
+      const newest = requireBounds(page, "toast-3");
+      const middle = requireBounds(page, "toast-2");
+      const oldest = requireBounds(page, "toast-1");
 
-    clickCentreOf(page, "toast-dismiss");
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
+      // The newest card is the corner's card: full width and readable height.
+      expect(newest.height).toBeGreaterThan(STACK_PEEK * 2);
+      expect(middle.height).toBeCloseTo(STACK_PEEK, 0);
+      expect(oldest.height).toBeCloseTo(STACK_PEEK, 0);
 
-    expect(page.renderer.getAllText()).not.toContain("Saved changes");
-    expect(page.renderer.getAllText()).toContain("Disk nearly full");
+      // Each older card is inset from the right and sits above the one below.
+      expect(middle.x).toBeGreaterThan(newest.x);
+      expect(oldest.x).toBeGreaterThan(middle.x);
+      expect(oldest.y + oldest.height).toBeLessThanOrEqual(middle.y + 1);
+      expect(middle.y + middle.height).toBeLessThanOrEqual(newest.y + 1);
+      expect(oldest.width).toBeLessThan(middle.width);
+      expect(middle.width).toBeLessThan(newest.width);
+    } finally {
+      page.unmount();
+    }
+  });
 
-    page.unmount();
+  it("unfolds into full cards on hover and folds back on leave", async () => {
+    const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
+      const folded = heightOf(page, "toast-1");
+
+      hoverCentreOf(page, "toast-3");
+      page.renderer.clockFastForward(400);
+      await sync(page);
+
+      expect(heightOf(page, "toast-1")).toBeGreaterThan(folded * 2);
+      const oldest = requireBounds(page, "toast-1");
+      const middle = requireBounds(page, "toast-2");
+      const newest = requireBounds(page, "toast-3");
+      expect(oldest.width).toBeCloseTo(newest.width, 0);
+      expect(newest.y - (middle.y + middle.height)).toBeCloseTo(STACK_GAP, 0);
+      expect(middle.y - (oldest.y + oldest.height)).toBeCloseTo(STACK_GAP, 0);
+
+      hoverCentreOf(page, "elsewhere");
+      // The release waits out the hold's grace before the stack folds.
+      await new Promise((resolve) => setTimeout(resolve, 160));
+      page.renderer.clockFastForward(800);
+      await sync(page);
+
+      expect(heightOf(page, "toast-1")).toBeCloseTo(STACK_PEEK, 0);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("does not move the page when the stack unfolds", async () => {
+    const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
+      const before = requireBounds(page, "elsewhere");
+
+      hoverCentreOf(page, "toast-3");
+      page.renderer.clockFastForward(400);
+      await sync(page);
+      const after = requireBounds(page, "elsewhere");
+
+      expect(after).toEqual(before);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("pauses every clock while the pointer rests and resumes with the remaining time", async () => {
+    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
+    try {
+      clickCentreOf(page, "push");
+      await sync(page);
+
+      hoverCentreOf(page, "toast-1");
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      await sync(page);
+
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+      hoverCentreOf(page, "elsewhere");
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      await sync(page);
+
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps a card pushed during a hold until the stack is released", async () => {
+    // The bug this guards: a card queued while the pointer rested on the stack
+    // was scheduled with a running timer, so it expired under the pointer that
+    // had asked for time to read it. The second push is queued by a timer, so
+    // the pointer never leaves the stack between the two cards.
+    const page = renderComponent(<Harness duration={Duration.millis(300)} />);
+    try {
+      clickCentreOf(page, "push-later");
+      clickCentreOf(page, "push");
+      await sync(page);
+      hoverCentreOf(page, "toast-1");
+
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      await sync(page);
+
+      expect(page.renderer.findByTestId("toast-2")).toBeDefined();
+
+      hoverCentreOf(page, "elsewhere");
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      await sync(page);
+
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps a toast whose duration has not elapsed on a frozen motion clock", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "push");
+      await sync(page);
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await sync(page);
+
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
+  });
+
+  it("dismisses on its own while the motion clock is frozen", async () => {
+    const page = renderComponent(<Harness duration={Duration.millis(120)} />);
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "push");
+      await sync(page);
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await sync(page);
+
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+      );
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
+  });
+
+  it("keeps a sticky toast past every duration", async () => {
+    const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push-danger");
+      await sync(page);
+
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      await sync(page);
+
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("dismisses only the card whose control was pressed", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push");
+      await sync(page);
+      clickCentreOf(page, "push-warning");
+      await sync(page);
+
+      // The front card is the newest one.
+      clickCentreOf(page, "toast-dismiss-2");
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
+      );
+
+      expect(page.renderer.getAllText()).not.toContain("Disk nearly full");
+      expect(page.renderer.getAllText()).toContain("Saved changes");
+    } finally {
+      page.unmount();
+    }
   });
 
   it("keeps a dismissed card's controls out of the window's tab order", async () => {
@@ -205,32 +516,27 @@ describe("Toast", () => {
     // and the shield takes the presses, but the runtime decides the Tab order
     // element by element — neither `pointerEvents` nor the shield reaches a
     // descendant's stop. A reader Tab-browsing while a card expired could land
-    // on its dismiss control and have it unmount under the keyboard, the class
-    // the menu family and the navigation panel each fixed for their own rows.
+    // on its dismiss control and have it unmount under the keyboard.
     const page = renderComponent(<Harness duration={Duration.millis(600)} />);
     try {
       clickCentreOf(page, "push-action");
-      await settle();
+      await sync(page);
 
-      // While the card is live its controls are stops, or the ghost walk below
-      // would pass on a tree that never had them.
-      expect(tabWalk(page, "push", 8)).toContain("toast-dismiss");
+      expect(tabWalk(page, "push", 20)).toContain("toast-dismiss-1");
 
-      // Dismissed from the keyboard's point of view: the pointer presses the
-      // card's own control with focus on the page, so no hold is in play.
       page.renderer.focusElement(
         page.renderer.findByTestId("elsewhere")?.id ?? -1,
       );
-      clickCentreOf(page, "toast-dismiss");
+      clickCentreOf(page, "toast-dismiss-1");
       await waitFor(() =>
         expect(page.renderer.findByTestId("toast-1")?.style.pointerEvents).toBe(
           "none",
         ),
       );
 
-      const ghost = tabWalk(page, "push", 8);
-      expect(ghost).not.toContain("toast-action");
-      expect(ghost).not.toContain("toast-dismiss");
+      const ghost = tabWalk(page, "push", 20);
+      expect(ghost).not.toContain("toast-action-1");
+      expect(ghost).not.toContain("toast-dismiss-1");
 
       await waitFor(() =>
         expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
@@ -241,38 +547,38 @@ describe("Toast", () => {
   });
 
   it("clears the stack with dismissAll", async () => {
-    const page = renderComponent(<Harness />);
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
 
-    clickCentreOf(page, "push");
-    await settle();
-    clickCentreOf(page, "push-warning");
-    await settle();
+      clickCentreOf(page, "dismiss-all");
+      await sync(page);
 
-    clickCentreOf(page, "dismiss-all");
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
-    );
-
-    page.unmount();
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+      );
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-3")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
   });
 
   it("does not block a click on the page behind the viewport", async () => {
     const onElsewhere = vi.fn();
     const page = renderComponent(<Harness onElsewhere={onElsewhere} />);
+    try {
+      clickCentreOf(page, "push");
+      await sync(page);
 
-    clickCentreOf(page, "push");
-    await settle();
+      clickCentreOf(page, "elsewhere");
 
-    clickCentreOf(page, "elsewhere");
-
-    expect(onElsewhere).toHaveBeenCalledTimes(1);
-
-    page.unmount();
+      expect(onElsewhere).toHaveBeenCalledTimes(1);
+    } finally {
+      page.unmount();
+    }
   });
 
   it("paints the toast surface from whichever theme is active", async () => {
@@ -281,257 +587,199 @@ describe("Toast", () => {
       popover: string,
     ): Promise<void> => {
       const page = renderComponent(<Harness />, theme);
-      clickCentreOf(page, "push");
-      await settle();
+      try {
+        clickCentreOf(page, "push");
+        await sync(page);
 
-      expect(page.renderer.findByTestId("toast-1")?.style.backgroundColor).toBe(
-        popover,
-      );
-
-      page.unmount();
+        expect(
+          page.renderer.findByTestId("toast-1")?.style.backgroundColor,
+        ).toBe(popover);
+      } finally {
+        page.unmount();
+      }
     };
 
     await assertTheme("dark", darkTheme.colors.popover);
     await assertTheme("light", lightTheme.colors.popover);
   });
 
-  it("keeps the queue working after a dismiss", async () => {
-    const page = renderComponent(<Harness />);
+  it("returns every card to its strip after dismissing the front", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
 
-    clickCentreOf(page, "push");
-    await settle();
-    clickCentreOf(page, "toast-dismiss");
-    await settle();
-    clickCentreOf(page, "push-warning");
-    await settle();
+      clickCentreOf(page, "toast-dismiss-3");
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-3")).toBeUndefined(),
+      );
+      // Leaving the stack folds it; the pointer is on the close that just went.
+      hoverCentreOf(page, "elsewhere");
+      await new Promise((resolve) => setTimeout(resolve, 160));
+      page.renderer.clockFastForward(800);
+      await sync(page);
 
-    expect(page.renderer.getAllText()).toContain("Disk nearly full");
-
-    page.unmount();
+      // Two cards remain; the middle card is now the full one.
+      expect(heightOf(page, "toast-2")).toBeGreaterThan(STACK_PEEK * 2);
+      expect(heightOf(page, "toast-1")).toBeCloseTo(STACK_PEEK, 0);
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("pauses auto-dismiss while the pointer rests on the toast", async () => {
-    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
-
-    clickCentreOf(page, "push");
-    await settle();
-
-    hoverCentreOf(page, "toast-1");
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-
-    hoverCentreOf(page, "elsewhere");
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    page.unmount();
-  });
-
-  it("pauses auto-dismiss when a focus event reaches the dismiss control", async () => {
-    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
-
-    clickCentreOf(page, "push");
-    await settle();
-
-    const dismiss = page.renderer.findByTestId("toast-dismiss");
-    expect(dismiss).toBeDefined();
-    page.renderer.focusElement(dismiss?.id ?? -1);
-
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-
-    page.renderer.focusElement(
-      page.renderer.findByTestId("elsewhere")?.id ?? -1,
-    );
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    page.unmount();
-  });
-
-  it("does not hold the next card with a hover that outlived its own card", async () => {
-    // The bug this guards: a card dismissed while the pointer rests on it
-    // unmounts without ever hearing a leave, so a hover count kept in the
-    // viewport stays above zero and every card pushed afterwards is born held.
-    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
-
-    clickCentreOf(page, "push");
-    await settle();
-    hoverCentreOf(page, "toast-1");
-    // The press is inside the card it dismisses; the ghost then unmounts under
-    // a pointer that never moved away from it.
-    clickCentreOf(page, "toast-dismiss");
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    clickCentreOf(page, "push-warning");
-    await settle();
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
-    );
-
-    page.unmount();
-  });
-
-  it("keeps the hold when the pointer leaves while a control still holds focus", async () => {
-    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
-
-    clickCentreOf(page, "push");
-    await settle();
-
-    hoverCentreOf(page, "toast-1");
-    page.renderer.focusElement(
-      page.renderer.findByTestId("toast-dismiss")?.id ?? -1,
-    );
-    hoverCentreOf(page, "elsewhere");
-
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-
-    page.renderer.focusElement(
-      page.renderer.findByTestId("elsewhere")?.id ?? -1,
-    );
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    page.unmount();
-  });
-
-  it("renders the labelled action, runs it once and dismisses the toast", async () => {
+  it("runs an action once and dismisses its toast", async () => {
     const onAction = vi.fn();
     const page = renderComponent(<Harness onAction={onAction} />);
+    try {
+      clickCentreOf(page, "push-action");
+      await sync(page);
 
-    clickCentreOf(page, "push-action");
-    await settle();
+      expect(page.renderer.getAllText()).toContain("Undo");
 
-    expect(page.renderer.getAllText()).toContain("Undo");
+      clickCentreOf(page, "toast-action-1");
+      clickCentreOf(page, "toast-action-1");
+      await sync(page);
 
-    clickCentreOf(page, "toast-action");
-    await settle();
-
-    expect(onAction).toHaveBeenCalledTimes(1);
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    page.unmount();
+      expect(onAction).toHaveBeenCalledTimes(1);
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
   });
 
   it("renders no action control when the label has no handler", async () => {
     const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push-unhandled");
+      await sync(page);
 
-    clickCentreOf(page, "push-unhandled");
-    await settle();
-
-    expect(page.renderer.getAllText()).toContain("Archived, no handler");
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-action")).toBeUndefined(),
-    );
-
-    page.unmount();
+      expect(page.renderer.getAllText()).toContain("Archived, no handler");
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-action-1")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("renders no action control for a toast without an action", async () => {
+  it("dismisses the card a swipe past the threshold travelled with", async () => {
     const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push");
+      await sync(page);
+      settleMotion(page);
 
-    clickCentreOf(page, "push");
-    await settle();
+      await swipe(page, "toast-1", -(SWIPE_THRESHOLD + 40));
+      await sync(page);
 
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-action")).toBeUndefined(),
-    );
-
-    page.unmount();
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+      );
+      expect(page.renderer.getAllText()).not.toContain("3 files");
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("pauses auto-dismiss when a focus event reaches the action control", async () => {
-    const page = renderComponent(
-      <Harness duration={Duration.millis(600)} onAction={() => undefined} />,
-    );
+  it("springs a short swipe back to its resting place", async () => {
+    const page = renderComponent(<Harness />);
+    try {
+      clickCentreOf(page, "push");
+      await sync(page);
+      settleMotion(page);
+      const rest = xOf(page, "toast-1");
 
-    clickCentreOf(page, "push-action");
-    await settle();
+      // A slow drag under the distance threshold: 20px over 120ms is a
+      // deliberate movement, not a flick, so the card springs back.
+      await swipe(page, "toast-1", -(SWIPE_THRESHOLD - 20), 120);
+      page.renderer.clockFastForward(400);
+      await sync(page);
 
-    page.renderer.focusElement(
-      page.renderer.findByTestId("toast-action")?.id ?? -1,
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-
-    page.renderer.focusElement(
-      page.renderer.findByTestId("elsewhere")?.id ?? -1,
-    );
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    page.unmount();
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+      expect(xOf(page, "toast-1")).toBeCloseTo(rest, 0);
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("dismisses on its own while the motion clock is frozen", async () => {
-    const page = renderComponent(<Harness duration={Duration.millis(120)} />);
+  it("leaves swipe off for a viewport that asks", async () => {
+    const page = renderComponent(<Harness swipe={false} />);
+    try {
+      clickCentreOf(page, "push");
+      await sync(page);
+      settleMotion(page);
 
-    // A toast timer driven by animation frames would be frozen with this clock
-    // and the card would stay forever; the store's timer is Effect `Clock` time.
-    page.renderer.clockPause();
+      await swipe(page, "toast-1", -(SWIPE_THRESHOLD + 80));
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await sync(page);
 
-    clickCentreOf(page, "push");
-    await settle();
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    await settle();
-
-    await waitFor(() =>
-      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
-    );
-
-    page.renderer.clockResume();
-    page.unmount();
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    } finally {
+      page.unmount();
+    }
   });
 
-  it("keeps a toast whose duration has not elapsed on a frozen motion clock", async () => {
-    const page = renderComponent(<Harness duration={Duration.seconds(30)} />);
+  it("moves a promise toast from loading to success in place", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-promise");
+      await sync(page);
 
-    page.renderer.clockPause();
+      expect(page.renderer.getAllText()).toContain("Importing");
+      expect(page.renderer.getAllText()).toContain("Reading the file");
 
-    clickCentreOf(page, "push");
-    await settle();
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    await settle();
+      await waitFor(() =>
+        expect(page.renderer.getAllText()).toContain("Imported 12 rows"),
+      );
+      await sync(page);
 
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+      // One row changed state; it did not queue a second card.
+      expect(page.renderer.findByTestId("toast-2")).toBeUndefined();
+      expect(page.renderer.findByTestId("toast-1")?.customProps?.role).toBe(
+        "status",
+      );
+    } finally {
+      page.unmount();
+    }
+  });
 
-    page.renderer.clockResume();
-    page.unmount();
+  it("settles a rejected promise on the same row in the danger tone", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-rejected");
+      await sync(page);
+
+      await waitFor(() =>
+        expect(page.renderer.getAllText()).toContain("Import failed"),
+      );
+      await sync(page);
+
+      expect(page.renderer.findByTestId("toast-1")?.customProps?.role).toBe(
+        "alert",
+      );
+      expect(page.renderer.findByTestId("toast-2")).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("unfolds at once under the reduced preference", async () => {
+    const page = renderComponent(<Harness reduced />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
+
+      hoverCentreOf(page, "toast-3");
+      await sync(page);
+
+      // No fast-forward: the reduced policy is an instant assignment.
+      expect(heightOf(page, "toast-1")).toBeGreaterThan(STACK_PEEK * 2);
+    } finally {
+      page.unmount();
+    }
   });
 });
