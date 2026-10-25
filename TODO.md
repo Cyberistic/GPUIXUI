@@ -173,6 +173,32 @@ of a generic "unknown class".
 `[x]` Document the matrix on `/docs/runtime` (table + `isTerminal()` + per-gap
 "what to do instead"), linked from the installation page and sidebar.
 
+### Upstream runtime PRs (`remorses/gpuix`, `remorses/zed`)
+
+`[ ]` `[██░░░░░░░░]` 2/7
+
+`[x]` **zed#15** — tray on macOS (`NSStatusItem`), Windows (`Shell_NotifyIconW`),
+Linux (SNI/`ksni`); native callbacks only fill a channel, one foreground task
+drains it; `App::keep_running`; `TrayHandle::set_title`. Independently re-ran
+279 lib tests, clippy, Windows and Linux checks, and the PR body now argues the
+maintainer's two points.
+`[x]` **zed#16** — `App::set_dock_badge` (stacked on #15); `dockTile.badgeLabel`,
+typed no-op on Windows/Linux, example menu entries.
+`[ ]` **gpuix a11y props** — wire the 12 GPUI aria builders the binding ignores
+(`aria-valuenow`, `aria-pressed`, `aria-keyshortcuts`, set/row/column indices, …);
+`aria-invalid`/`required`/`modal`/`current`/`haspopup` need fork builders first
+(plan 700).
+`[ ]` **gpuix clipboard** — `writeToClipboard`/`readFromClipboard` + `copyText`
+(plan 708).
+`[ ]` **transform** — the ported patch applies clean to the current pin
+(`f77e5cf`); landing it on `remorses/zed` plus `StyleDesc.transform` and a
+release is plan 525 §14. `darwin-x64` is not in the gpuix prebuild matrix.
+`[ ]` **gpuix wrappers** for tray/dock/clipboard — wait on the zed merges and a
+submodule bump.
+`[ ]` **plans 702–714** — tray completion, hotkeys, single instance, auto-launch,
+overlay windows, quit mode, resource profiles, downstream fixture, screen
+capture, biometrics, keyring, power/network.
+
 ### Keyboard workstream (`@gpuixui/keyboard`)
 
 `[x]` `[██████████]` 4/4
