@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | **planned — not started** |
+| Status | **planned — `set_title` already shipped in zed#15; dock badge and the icon badge recipe remain** |
 | Phase | runtime (GPUI fork) + binding |
 | Owner | runtime owner |
 | Depends on | 702 (icon bytes, tray anchor), zed#15 |
@@ -39,11 +39,13 @@ their doc comment "taskbar overlay text" is aspirational. Do not copy that.
    (`Accessory`) has no dock tile to badge, so the call is a visible no-op there.
    Windows/Linux return a typed `unsupported`-style no-op with that reason; do
    not pretend an overlay icon is a badge.
-2. **`setTrayTitle(text: Option<SharedString>)`** — macOS sets the status item's
-   button title (verify the tray follow-up's `set_title` is the same thing and
-   keep one name); Linux sets `XAyatanaLabel` behind a best-effort path and
-   documents that hosts may ignore it; Windows no-op. Text is the honest
-   cross-platform count ("3", "9+"), and it is what menu-bar users expect.
+2. **`setTrayTitle(text: Option<SharedString>)`** — **already landed** as
+   `TrayHandle::set_title` in zed#15 (`df99375`): macOS sets the status item's
+   button title, Windows/Linux are documented no-ops. Do not add a second name.
+   The remaining work is Linux: set `XAyatanaLabel` behind a best-effort path
+   where the host supports it, and document that most SNI hosts ignore it. Text
+   is the honest cross-platform count ("3", "9+"), and it is what menu-bar users
+   expect.
 3. **`setTrayBadge(count: Option<u32>)`** — the dot/count case, implemented as a
    documented recipe over plan 702's icon bytes: the caller composes the icon and
    passes it; we add no rasterizer. If two shipped apps need it, revisit a Rust
