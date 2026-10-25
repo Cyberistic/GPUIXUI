@@ -32,6 +32,37 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `300–399` | free — `300–303` are the components workstream's §9 part migrations |
 | `400–499` | docs site |
 
+## fc-gpui platform adoption (block `700–714`)
+
+Source: `references/fc-gpui` (Adabraka's GPUI fork, Apache-2.0), surveyed
+2026-10-25. Each plan ports the same *default no-op on `Platform` → per-OS impl →
+thin `App` method* shape, keeps the pin small (additive patches, not a fork
+switch), and names the fc-gpui paths it is taken from. Plans 700–701 are Zed's own
+code and are cherry-picks, not copies of the fork.
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [700](./700-a11y-tree.md) | Accessibility tree: roles, `aria-*`, focus | runtime | — | planned |
+| [701](./701-a11y-test-tree.md) | Headless accessibility assertions | testing | 700 | planned |
+| [702](./702-tray-completion.md) | Tray: separators, click kinds, icon bytes, anchor | runtime | zed#15 | planned |
+| [703](./703-global-hotkeys.md) | Global hotkeys | runtime | — | planned |
+| [704](./704-single-instance.md) | Single-instance lock and activation | binding | 702 | planned |
+| [705](./705-auto-launch.md) | Auto-launch at login | binding | 704 | planned |
+| [706](./706-overlay-windows.md) | Overlay and pop-up windows | runtime | 700, 702 | planned |
+| [707](./707-quit-mode.md) | Explicit quit mode | runtime | 702 | planned |
+| [708](./708-clipboard.md) | Clipboard read/write | binding | — | planned |
+| [709](./709-resource-profiles.md) | Resource profiles for background apps | runtime | 707 | planned |
+| [710](./710-native-downstream-fixture.md) | Downstream compile fixture against the pin | tooling | — | planned |
+| [711](./711-screen-capture.md) | Screen capture | runtime | — | planned |
+| [712](./712-biometrics.md) | Biometric unlock | binding | 713 | planned |
+| [713](./713-keyring.md) | Keyring credentials | binding | — | planned |
+| [714](./714-power-and-network-events.md) | Power, idle and network events | runtime | 702 | planned |
+
+Not adopted from the survey, deliberately: their deprecated toast element
+(components live in React), the 11-crate split and `gpui-compat` facade, the
+`vendor/` trees, and the process-global `App::set_tray_*` threading (our
+per-renderer command pump is the shape we keep).
+
 ## The plan set
 
 Numbering is reserved per workstream so concurrent agents never collide:
