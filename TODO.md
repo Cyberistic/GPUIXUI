@@ -197,18 +197,27 @@ text-only, an empty string is a real entry, and the test renderer never touches
 the system clipboard.
 `[ ]` **transform** — **zed#17** (`feat/transform`) carries the ported
 `ElementTransform` on top of `f77e5cf` (`04016ba`), plus `951ff5f`, which scales
-corner radii, border widths, shadow blur and underline thickness with the
-element (anisotropic/rotated matrices keep the old behaviour). 302 lib tests
-(24 transform + 3 decoration), clippy clean, authored by the original author. No upstream PR exists to link —
-#53306 was never promoted from a discussion, so the code came from
-`0xErwin1/zed` @ `fc4c1586`. Next: `StyleDesc.transform` + `MotionStyle` in gpuix
-once it merges (plan 525 §15). `darwin-x64` is still absent from the prebuild
-matrix.
+corner radii, border widths, shadow blur and underline thickness with the element
+(anisotropic/rotated matrices keep the old behaviour). 302 lib tests (24
+transform + 3 decoration), clippy clean, authored by the original author. No
+upstream PR exists to link — #53306 was never promoted from a discussion, so the
+code came from `0xErwin1/zed` @ `fc4c1586`. Next: `StyleDesc.transform` +
+`MotionStyle` in gpuix once it merges (plan 525 §15). `darwin-x64` is still
+absent from the prebuild matrix.
 `[ ]` **gpuix wrappers** for tray/dock/clipboard — wait on the zed merges and a
 submodule bump.
 `[ ]` **plans 702–714** — tray completion, hotkeys, single instance, auto-launch,
 overlay windows, quit mode, resource profiles, downstream fixture, screen
 capture, biometrics, keyring, power/network.
+
+`[!]` **Docs deploy** — master is ahead of the live site. `deploy:docs` cannot
+run from this environment: the box has no Cloudflare provider in the `default`
+profile, and on the Mac the stored token has no access to the
+`gpuixui.sudokw.com` zone while the OAuth profiles (`cyberistic`, `alkitab`,
+`seenkw`) need an interactive
+`alchemy profile refresh --profile <name> --provider Cloudflare` to select
+scopes. Unblock: refresh one profile (or supply a token for the right account),
+then `nub run deploy:docs`.
 
 ### Keyboard workstream (`@gpuixui/keyboard`)
 
