@@ -40,6 +40,7 @@ import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
 ## Limitations
 
 - Cancel holds the initial focus; Enter on an untouched dialog cancels.
+- The surface carries `role="alertdialog"` (the runtime maps it to `Role::AlertDialog`), so it is announced as an interruptive dialog; it is named by `aria-label`, because 0.11.0 has no `aria-labelledby`.
 - Confirm does not close; the caller runs the work and closes it.
 - Controlled only; there is no uncontrolled mode.
 - **A blank action label reads as its default**: `confirmLabel` and `cancelLabel`

@@ -104,6 +104,7 @@ export const ConfirmDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange} dismissible={!loading}>
       <DialogContent
         label={title}
+        role="alertdialog"
         size="sm"
         showClose={false}
         initialFocus={() => cancel.current?.id ?? null}

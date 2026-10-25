@@ -47,6 +47,17 @@ const Harness = ({
 };
 
 describe("ConfirmDialog", () => {
+  it("publishes the alertdialog role, and the plain dialog keeps its own", () => {
+    const confirm = renderComponent(<Harness onConfirm={vi.fn()} />);
+
+    // The runtime maps `alertdialog` to `Role::AlertDialog`, so a confirmation
+    // is announced as interruptive rather than as an ordinary dialog.
+    expect(nodesWithRole(confirm.renderer, "alertdialog")).toHaveLength(1);
+    expect(nodesWithRole(confirm.renderer, "dialog")).toEqual([]);
+
+    confirm.unmount();
+  });
+
   it("opens with focus on Cancel, not on Confirm", () => {
     const confirm = renderComponent(<Harness onConfirm={vi.fn()} />);
 

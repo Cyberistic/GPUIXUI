@@ -206,6 +206,12 @@ export interface DialogContentProps extends Omit<Props, "children"> {
   readonly className?: string;
   /** The accessible name — required, because 0.11.0 has no `aria-labelledby`. */
   readonly label: string;
+  /**
+   * The modal role. Default `"dialog"`; a confirmation uses `"alertdialog"`,
+   * which the runtime maps to `Role::AlertDialog` and announces as a
+   * interruptive dialog.
+   */
+  readonly role?: "dialog" | "alertdialog";
   /** Renders the top-right close control. Default `true`. */
   readonly showClose?: boolean;
   /**
@@ -230,6 +236,7 @@ export interface DialogContentProps extends Omit<Props, "children"> {
 export const DialogContent = ({
   size: requestedSize = "md",
   label,
+  role = "dialog",
   showClose = true,
   initialFocus,
   children,
@@ -319,7 +326,7 @@ export const DialogContent = ({
           }}
         >
           <div
-            role="dialog"
+            role={role}
             aria-label={label}
             tabIndex={-1}
             {...rest}
