@@ -184,10 +184,13 @@ drains it; `App::keep_running`; `TrayHandle::set_title`. Independently re-ran
 maintainer's two points.
 `[x]` **zed#16** — `App::set_dock_badge` (stacked on #15); `dockTile.badgeLabel`,
 typed no-op on Windows/Linux, example menu entries.
-`[ ]` **gpuix a11y props** — wire the 12 GPUI aria builders the binding ignores
-(`aria-valuenow`, `aria-pressed`, `aria-keyshortcuts`, set/row/column indices, …);
-`aria-invalid`/`required`/`modal`/`current`/`haspopup` need fork builders first
-(plan 700).
+`[ ]` **gpuix a11y props** — draft **#122**: 13 props wired
+(`aria-keyshortcuts`, `aria-placeholder`, `aria-pressed` → `Toggled`,
+`aria-valuenow`/`min`/`max`, `aria-orientation`, `aria-posinset`/`setsize`,
+`aria-rowindex`/`colindex`/`rowcount`/`colcount`), with the `aria-*` allowlist
+opened in both host adapters. `aria-invalid`/`required`/`modal`/`current`/
+`haspopup` still need fork builders, and `aria-activedescendant` cannot be
+expressed (the builder marks the descendant, not a container reference) — plan 700.
 `[ ]` **gpuix clipboard** — `writeToClipboard`/`readFromClipboard` + `copyText`
 (plan 708), draft **#121**: a sync read (the pinned GPUI has no macOS async read),
 text-only, an empty string is a real entry, and the test renderer never touches
