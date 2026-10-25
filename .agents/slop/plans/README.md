@@ -42,8 +42,8 @@ code and are cherry-picks, not copies of the fork.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [700](./700-a11y-tree.md) | Accessibility tree: roles, `aria-*`, focus | runtime | — | planned |
-| [701](./701-a11y-test-tree.md) | Headless accessibility assertions | testing | 700 | planned |
+| [700](./700-a11y-tree.md) | Accessibility tree: remaining `aria-*` wiring | runtime | — | partly landed |
+| [701](./701-a11y-test-tree.md) | Headless accessibility assertions | testing | 700 | landed |
 | [702](./702-tray-completion.md) | Tray: separators, click kinds, icon bytes, anchor | runtime | zed#15 | planned |
 | [703](./703-global-hotkeys.md) | Global hotkeys | runtime | — | planned |
 | [704](./704-single-instance.md) | Single-instance lock and activation | binding | 702 | planned |
@@ -57,7 +57,7 @@ code and are cherry-picks, not copies of the fork.
 | [712](./712-biometrics.md) | Biometric unlock | binding | 713 | planned |
 | [713](./713-keyring.md) | Keyring credentials | binding | — | planned |
 | [714](./714-power-and-network-events.md) | Power, idle and network events | runtime | 702 | planned |
-| [715](./715-tray-and-dock-badge.md) | Tray title, tray badge, dock badge | runtime | 702 | planned |
+| [715](./715-tray-and-dock-badge.md) | Tray badge, dock badge | runtime | 702 | dock badge in zed#16 |
 
 Not adopted from the survey, deliberately: their deprecated toast element
 (components live in React), the 11-crate split and `gpui-compat` facade, the

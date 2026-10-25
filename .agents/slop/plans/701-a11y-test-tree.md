@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | **planned — not started** |
+| Status | **landed** — `TestGpuixRenderer.getA11yTree()` exists in `packages/native/src/test_renderer.rs:1124`, backed by `Window::debug_a11y_tree_json()`. Remaining: a typed `a11yTree()` helper in `packages/testing` and converting suites to read it. |
 | Phase | testing (GPUI fork + binding tests) |
 | Owner | runtime owner; reviewed by the components workstream |
 | Depends on | 700 |

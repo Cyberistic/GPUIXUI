@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | **planned — `set_title` already shipped in zed#15; dock badge and the icon badge recipe remain** |
+| Status | **dock badge landed as zed#16** (`App::set_dock_badge`, macOS `dockTile.badgeLabel`); `set_title` shipped in zed#15; the icon-dot recipe and the Linux label remain |
 | Phase | runtime (GPUI fork) + binding |
 | Owner | runtime owner |
 | Depends on | 702 (icon bytes, tray anchor), zed#15 |
