@@ -2459,12 +2459,10 @@ interface PreviewToast {
   readonly duration?: number;
 }
 
-/** The height of one peeking strip, in pixels (the native stack's `STACK_PEEK`). */
+/** The height of one peeking slice, in pixels (the native stack's `STACK_PEEK`). */
 const TOAST_PEEK = 12;
-/** How far each further card insets from its right edge, in pixels. */
+/** How far each further card insets from each side, in pixels. */
 const TOAST_INSET = 8;
-/** The opacity step between the front card and each strip behind it. */
-const TOAST_DIM = 0.3;
 /** How long a leaving card stays mounted for its exit tween. */
 const TOAST_EXIT_MS = 180;
 /** The auto-dismiss delay a draft without a `duration` takes. */
@@ -2477,7 +2475,6 @@ export interface ToastStackSlot {
   /** `undefined` means the measured content height; a number is the peek. */
   readonly height: number | undefined;
   readonly inset: number;
-  readonly opacity: number;
   readonly interactive: boolean;
 }
 
@@ -2486,27 +2483,27 @@ export interface ToastStackSlot {
  *
  * The newest card is last in the DOM (the order the store appends), so rank is
  * counted from the end. Collapsed: the newest is full, the two behind are short
- * inset strips, and a fourth card has no height. Expanded: every card is full,
- * un-inset and interactive.
+ * inset peeks of the card's own top, and a fourth card has no height. Expanded:
+ * every card is full, un-inset and interactive. A rank never changes a card's
+ * paint — the peeks were dimmed once, and every push re-faded the whole stack.
  */
 export const toastStackSlot = (
-  index: number,
-  count: number,
+  rank: number,
   expanded: boolean,
 ): ToastStackSlot => {
-  const rank = count - 1 - index;
-  if (expanded)
-    return { height: undefined, inset: 0, opacity: 1, interactive: true };
-  if (rank === 0)
-    return { height: undefined, inset: 0, opacity: 1, interactive: true };
-  if (rank >= 3) return { height: 0, inset: 0, opacity: 0, interactive: false };
+  if (expanded) return { height: undefined, inset: 0, interactive: true };
+  if (rank === 0) return { height: undefined, inset: 0, interactive: true };
+  if (rank >= 3) return { height: 0, inset: 0, interactive: false };
   return {
     height: TOAST_PEEK,
     inset: TOAST_INSET * rank,
-    opacity: 1 - TOAST_DIM * rank,
     interactive: false,
   };
 };
+
+/** How many cards newer than the one at `index` are still live. */
+const rankAt = (entries: ReadonlyArray<PreviewEntry>, index: number): number =>
+  entries.slice(index + 1).filter((entry) => !entry.leaving).length;
 
 /** A 24px status glyph, tinted by `currentColor`; the tone colours it. */
 const ToastGlyph = ({ children }: { readonly children: ReactNode }) => (
@@ -2549,10 +2546,11 @@ const toastGlyph: Readonly<Record<PreviewToast["tone"], ReactNode>> = {
   ),
 };
 
-/** A queued toast plus whether it is playing out its exit tween. */
+/** A queued toast, whether it is leaving, and the slot it left with. */
 interface PreviewEntry {
   readonly toast: PreviewToast;
   readonly leaving: boolean;
+  readonly frozen?: ToastStackSlot;
 }
 
 /** One card. Its tone glyph carries the status; the surface is neutral. */
@@ -2570,42 +2568,45 @@ const ToastCardPreview = ({
   readonly onAction?: () => void;
 }) => (
   <div
-    className={`gx-toast-card gx-toast-${toast.tone}${
-      leaving ? " gx-toast-leaving" : ""
-    }${slot.interactive ? "" : " gx-toast-behind"}`}
+    className={`gx-toast-slot${leaving ? " gx-toast-leaving" : ""}`}
+    data-whole={slot.height === undefined ? "true" : "false"}
     style={{
       height: slot.height,
       width: `calc(100% - ${slot.inset * 2}px)`,
-      marginRight: slot.inset,
-      opacity: slot.opacity,
     }}
   >
-    <ToastGlyph>{toastGlyph[toast.tone]}</ToastGlyph>
-    <div className="gx-toast-copy">
-      <p className="gx-toast-title">{toast.title}</p>
-      {toast.description === undefined ? null : (
-        <p className="gx-toast-desc">{toast.description}</p>
+    <div
+      className={`gx-toast-card gx-toast-${toast.tone}${
+        slot.interactive ? "" : " gx-toast-behind"
+      }`}
+    >
+      <ToastGlyph>{toastGlyph[toast.tone]}</ToastGlyph>
+      <div className="gx-toast-copy">
+        <p className="gx-toast-title">{toast.title}</p>
+        {toast.description === undefined ? null : (
+          <p className="gx-toast-desc">{toast.description}</p>
+        )}
+      </div>
+      {toast.actionLabel === undefined ? null : (
+        <button
+          className="gx-toast-action"
+          disabled={!slot.interactive}
+          onClick={onAction}
+          type="button"
+        >
+          {toast.actionLabel}
+        </button>
       )}
-    </div>
-    {toast.actionLabel === undefined ? null : (
       <button
-        className="gx-toast-action"
+        aria-label="Dismiss"
+        className="gx-toast-dismiss"
         disabled={!slot.interactive}
-        onClick={onAction}
+        onClick={onDismiss}
         type="button"
       >
-        {toast.actionLabel}
+        ✕
       </button>
-    )}
-    <button
-      aria-label="Dismiss"
-      className="gx-toast-dismiss"
-      disabled={!slot.interactive}
-      onClick={onDismiss}
-      type="button"
-    >
-      ✕
-    </button>
+    </div>
   </div>
 );
 
@@ -2640,8 +2641,14 @@ const useToastPreview = (
     deadlines.current.delete(id);
     remaining.current.delete(id);
     setEntries((list) =>
-      list.map((entry) =>
-        entry.toast.id === id ? { ...entry, leaving: true } : entry,
+      list.map((entry, index) =>
+        entry.toast.id === id
+          ? {
+              ...entry,
+              leaving: true,
+              frozen: toastStackSlot(rankAt(list, index), hovered),
+            }
+          : entry,
       ),
     );
     setTimeout(() => {
@@ -2787,7 +2794,9 @@ const ToastWorkflow = () => {
           {entries.map((entry, index) => (
             <ToastCardPreview
               key={entry.toast.id}
-              slot={toastStackSlot(index, entries.length, hovered)}
+              slot={
+                entry.frozen ?? toastStackSlot(rankAt(entries, index), hovered)
+              }
               leaving={entry.leaving}
               onAction={
                 entry.toast.actionLabel === undefined
@@ -2860,7 +2869,9 @@ const ToastTones = () => {
           {entries.map((entry, index) => (
             <ToastCardPreview
               key={entry.toast.id}
-              slot={toastStackSlot(index, entries.length, hovered)}
+              slot={
+                entry.frozen ?? toastStackSlot(rankAt(entries, index), hovered)
+              }
               leaving={entry.leaving}
               onAction={
                 entry.toast.actionLabel === undefined

@@ -3,40 +3,40 @@
  *
  * GPUix has no `transform`, so a toast cannot be scaled and translated into a
  * fan. The stack is therefore **flow plus height**: the newest card is the last
- * child and paints over nothing, and each older card is a short clipped strip
+ * child and paints over nothing, and each older card is a clipped top slice
  * above it. Expanding the stack gives every card its measured height and one
- * shared gap; collapsing it returns the older cards to their peeking strip.
+ * shared gap; collapsing it returns the older cards to their peeking slice.
  *
  * Heights are oldest-first, the order the store queues and the viewport paints.
  * Rank is measured from the end: rank 0 is the newest — the card nearest the
  * corner, fully readable and the only target while the stack is collapsed.
+ *
+ * A peeking card is the **top of the card**, not a small card: the slot clips a
+ * full-height surface, so its bottom edge is the cut, not a rounded end. That is
+ * the reading Base UI's stack has, and it keeps one surface role (border, radius
+ * and elevation) for every state of the card.
  */
 
 /** How many cards a collapsed stack shows. `max` may keep more. */
 export const STACK_VISIBLE = 3;
 
-/** The height of one peeking strip, in pixels. */
+/** The height of one peeking slice, in pixels. */
 export const STACK_PEEK = 12;
 
-/** How far each further card insets from its right edge, in pixels. */
+/** How far each further card insets from each side, in pixels. */
 export const STACK_INSET = 8;
-
-/** The width a peeking card loses on each side, per rank. */
-export const STACK_DIM = 0.3;
 
 /** The gap between full cards in an expanded stack, in pixels. */
 export const STACK_GAP = 12;
 
-/** What one card paints at: its box, its inset, its dimming and its reach. */
+/** What one card paints at: its box, its inset and its reach. */
 export interface ToastSlot {
   /** 0 is the newest card. */
   readonly rank: number;
-  /** The painted height of the card's outer box. */
+  /** The painted height of the card's slot. */
   readonly height: number;
-  /** The distance the card is inset from the stack's right edge. */
+  /** The distance the card is inset from each side of the stack. */
   readonly inset: number;
-  /** The surface's opacity: older cards are dimmer. */
-  readonly opacity: number;
   /** Whether the card's controls answer a press or a Tab. */
   readonly interactive: boolean;
 }
@@ -45,22 +45,31 @@ export interface ToastSlot {
 const readHeight = (height: number): number =>
   Number.isFinite(height) && height > 0 ? height : 0;
 
-/** One card's slot, from its rank and its measured height. */
-const slotAt = (rank: number, height: number, expanded: boolean): ToastSlot => {
+/**
+ * One card's slot, from its rank and its measured height.
+ *
+ * A card past the visible three keeps its measured height in the slot's place:
+ * the viewport paints it at no height, and expanding the stack is what gives it
+ * a box. It is never interactive, because a reader cannot see it to press it.
+ */
+export const toastSlotOf = (
+  rank: number,
+  height: number,
+  expanded: boolean,
+): ToastSlot => {
   if (expanded) {
-    return { rank, height, inset: 0, opacity: 1, interactive: true };
+    return { rank, height, inset: 0, interactive: true };
   }
   if (rank === 0) {
-    return { rank, height, inset: 0, opacity: 1, interactive: true };
+    return { rank, height, inset: 0, interactive: true };
   }
   if (rank >= STACK_VISIBLE) {
-    return { rank, height: 0, inset: 0, opacity: 0, interactive: false };
+    return { rank, height: 0, inset: 0, interactive: false };
   }
   return {
     rank,
     height: STACK_PEEK,
     inset: STACK_INSET * rank,
-    opacity: 1 - STACK_DIM * rank,
     interactive: false,
   };
 };
@@ -68,19 +77,17 @@ const slotAt = (rank: number, height: number, expanded: boolean): ToastSlot => {
 /**
  * One slot per card, oldest first.
  *
- * The heights are the cards' measured full heights; a card beyond the visible
- * three keeps its measured height so expanding the stack can show it. A
- * measurement that never arrived reads as no height rather than a `NaN` the
- * runtime drops.
+ * The heights are the cards' measured full heights, so a card beyond the visible
+ * three keeps its own measurement. A measurement that never arrived reads as no
+ * height rather than a `NaN` the runtime drops.
  */
 export const toastSlots = (
   heights: ReadonlyArray<number>,
   expanded: boolean,
 ): ReadonlyArray<ToastSlot> =>
-  heights.map((value, index) => {
-    const rank = heights.length - 1 - index;
-    return slotAt(rank, readHeight(value), expanded);
-  });
+  heights.map((value, index) =>
+    toastSlotOf(heights.length - 1 - index, readHeight(value), expanded),
+  );
 
 /** The gap painted before each card after the first. */
 export const stackGap = (expanded: boolean): number =>

@@ -1322,7 +1322,7 @@ describe("Toast recipe", () => {
     expect(style(TOAST_STACK)).toEqual({
       display: "flex",
       flexDirection: "column",
-      alignItems: "flex-end",
+      alignItems: "center",
       width: "100%",
     });
     expect(style(TOAST_CARD)).toEqual({

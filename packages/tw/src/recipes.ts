@@ -391,12 +391,18 @@ export const TOAST_VIEWPORT =
 
 /** `toast/viewport.tsx` — the stack. The cards and their gaps are in flow, so
  * the stack has no gap of its own: the gap is a measured spacer that animates
- * between the collapsed and expanded shapes. */
-export const TOAST_STACK = "flex flex-col items-end w-full";
+ * between the collapsed and expanded shapes. Cards are centred, so an inset
+ * card loses the same width on both sides and reads as a smaller card behind
+ * the front one rather than a card pushed to one edge. */
+export const TOAST_STACK = "flex flex-col items-center w-full";
 
-/** `toast/viewport.tsx` — one card's surface. The height, inset and opacity are
- * the stack's geometry and stay in `style`; the surface, border, radius and
- * elevation are fixed shadcn. */
+/** `toast/viewport.tsx` — one card's surface. The slot's height and width are
+ * the stack's geometry and stay in `style`; the surface keeps its measured
+ * height and is clipped by that slot, so a peeking card is the top of a card
+ * rather than a small one. The lift is the slot's to paint — the visible box is
+ * the slot, and a surface's own shadow would be clipped with its content — so
+ * the viewport copies this recipe's radius and shadow onto a slot that is the
+ * whole card. */
 export const TOAST_CARD =
   "w-full bg-popover text-popover-foreground border border-border rounded-xl shadow-md pointer-events-auto overflow-hidden";
 

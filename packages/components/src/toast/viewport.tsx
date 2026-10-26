@@ -4,15 +4,21 @@
  *
  * GPUix has no `transform` and no `zIndex`, so the stack is **flow plus
  * height** rather than a scaled fan: the newest card is the last child and the
- * only full one, and each older card is a short, dimmed, inset strip above it.
- * Hovering or focusing the stack gives every card its measured height and one
- * shared gap, so the strips unfold into a readable column; leaving folds them
- * back. The viewport is `position: absolute`, so neither shape moves the page.
+ * only full one, and every older card is a short inset **slice of the card's own
+ * top** above it. Hovering or focusing the stack gives every card its measured
+ * height and one shared gap, so the peeks unfold into a readable column; leaving
+ * folds them back. The viewport is `position: absolute`, so neither shape moves
+ * the page.
  *
- * The measure is the inner content's `onLayout`, the same rule `AutoHeight`
- * uses: the outer box clips, the inner box keeps its natural height. A stack
- * card is therefore a surface that owns the border, radius and elevation, and a
- * body that owns the padding and reports what it needs.
+ * A card is a **slot** that owns the rank's box and clips, around a **surface**
+ * that keeps the border, radius and elevation at its measured height. That is
+ * what makes a peek read as a card behind this one rather than a bar — the cut
+ * is the slot's bottom edge, not the card's — and it is what lets a leaving card
+ * close its own slot while the content inside stays whole.
+ *
+ * The measure is the surface's `onLayout`, the same rule `AutoHeight` uses: the
+ * slot clips, the surface keeps its natural height, so a rank change cannot
+ * change what the card measured.
  *
  * Timers are the store's Effect `Clock`, not animation frames; this file only
  * tells the store when the stack is held. The hold is the pointer anywhere in
@@ -23,7 +29,11 @@
 import type { EventPayload, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import { motionTimingOf, type MotionTiming } from "@gpuixui/motion/timing";
+import {
+  motionTimingOf,
+  type MotionCurve,
+  type MotionTiming,
+} from "@gpuixui/motion/timing";
 import {
   cn,
   TOAST_BODY,
@@ -67,7 +77,7 @@ import { recipeStyle } from "../internal/recipe.js";
 import { tone, useTheme, type Tone } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
 import { useToast } from "./provider.js";
-import { stackGap, toastSlots, type ToastSlot } from "./stack.js";
+import { stackGap, toastSlotOf, type ToastSlot } from "./stack.js";
 import { swipeEdge } from "./swipe.js";
 
 /** The status tone behind a toast's bar and icon. */
@@ -94,20 +104,36 @@ const glyph = (
 
 /** The toast's own timing: it arrives a touch slower than a menu and leaves
  *  faster than it entered, so the stack reads as arriving gently and leaving
- *  promptly. The durations are sonner's, not a shared level's, so the toast's
- *  feel never drags another surface along (or the reverse). */
+ *  promptly. They are the toast's, not a shared level's, so its feel never drags
+ *  another surface along (or the reverse).
+ *
+ *  `move` is the stack's own displacement — a card taking the rank in front of
+ *  it, a peek unfolding, a row closing, a swipe returning to its edge — and it
+ *  is longer than the arrival because a card that changes size must not outrun
+ *  the card that arrived. It eases on Base UI's stack curve (`[0.22, 1, 0.36,
+ *  1]`): a fast departure and a long settle, which is the closest a `motion`
+ *  prop gets to sonner's spring, because the runtime clamps a tween to its
+ *  target and a bezier cannot overshoot. Base UI's own 500 ms reads as sluggish
+ *  at this size beside a 240 ms arrival. */
 interface ToastTiming {
   readonly enter: MotionTiming;
   readonly exit: MotionTiming;
   readonly move: MotionTiming;
 }
 
+/** Base UI's stack curve: leaves fast, settles slowly, never past the edge. */
+const STACK_CURVE: MotionCurve = [0.22, 1, 0.36, 1];
+
 const useToastTiming = (): ToastTiming => {
   const preference = useMotionPreference();
   return {
-    enter: motionTimingOf(220, { phase: "enter", preference }),
+    enter: motionTimingOf(240, { phase: "enter", preference }),
     exit: motionTimingOf(180, { phase: "exit", preference }),
-    move: motionTimingOf(200, { phase: "standard", preference }),
+    move: motionTimingOf(260, {
+      phase: "standard",
+      preference,
+      ease: STACK_CURVE,
+    }),
   };
 };
 
@@ -122,7 +148,6 @@ const EMPTY_SLOT: ToastSlot = {
   rank: 0,
   height: 0,
   inset: 0,
-  opacity: 1,
   interactive: false,
 };
 
@@ -219,15 +244,24 @@ const useToastStack = (
 };
 
 /**
- * One card: a surface whose height is the slot's, around a body that measures
- * itself. The row is the same one the viewport has always painted — tone glyph,
- * title, description, one action, one dismiss — now split into a clipping
- * surface and a measured body so the shorter strip keeps the card's real edge.
+ * One card: a slot that clips to the rank's box, around the card's own surface.
+ *
+ * The split is what makes a peeking card read as **the top of a card** rather
+ * than a small one: the slot owns the rank's height and width and clips, and the
+ * surface inside keeps its border, radius and shadow at its measured height. A
+ * card arriving has no measured height yet, so it waits off its edge behind
+ * `opacity: 0` and enters on the first frame that has one — the runtime reads
+ * `initial` at mount only, and a card that replayed it would flash on every push.
+ *
+ * A leaving card keeps the slot it left with (the viewport freezes it) and
+ * collapses that slot to nothing, so the stack closes as the card fades instead
+ * of holding a hole for the exit to finish in.
  */
 const ToastCard = ({
   toast,
   present,
   slot,
+  naturalHeight,
   stackWidth,
   timing,
   swipe,
@@ -239,6 +273,8 @@ const ToastCard = ({
   readonly toast: Toast;
   readonly present: boolean;
   readonly slot: ToastSlot;
+  /** The surface's measured height: the box it keeps while a slot clips it. */
+  readonly naturalHeight: number;
   /** The stack's measured width, `0` until it reports. */
   readonly stackWidth: number;
   readonly timing: ToastTiming;
@@ -258,11 +294,12 @@ const ToastCard = ({
   >(Option.none());
   const exitLeft = useRef(EDGE_TRAVEL);
   const fired = useRef(false);
-  const entered = useRef(false);
+  /** Whether the card has painted a measured frame — its arrival is over. */
+  const placed = useRef(false);
 
   useEffect(() => {
-    entered.current = true;
-  }, []);
+    if (slot.height > 0) placed.current = true;
+  }, [slot.height]);
 
   const action = Option.flatMap(toast.action, (candidate) =>
     Option.map(actionFor(toast.id), (onSelect) => ({ candidate, onSelect })),
@@ -332,26 +369,47 @@ const ToastCard = ({
 
   const dragTransition: MotionTiming = { duration: 0 };
 
+  // The rank's box, in the runtime's own fields: the slot narrows by its inset
+  // and the surface inside clips to it. `width` is absent until the stack
+  // reports, so a card never animates from a width nothing measured.
+  const width = stackWidth > 0 ? stackWidth - slot.inset * 2 : undefined;
+  const frame = width === undefined ? {} : { width };
+  /** A card paints once its height is known: until then it waits off its edge. */
+  const live = present && slot.height > 0;
+
   const motion = present
     ? {
-        initial: { opacity: 0, left: EDGE_TRAVEL, height: slot.height },
-        animate: { opacity: slot.opacity, left: drag, height: slot.height },
+        initial: { opacity: 0, left: EDGE_TRAVEL, height: 0, ...frame },
+        animate: {
+          opacity: live ? 1 : 0,
+          left: live ? drag : EDGE_TRAVEL,
+          height: live ? slot.height : 0,
+          ...frame,
+        },
         transition:
           drag !== 0
             ? dragTransition
-            : entered.current
+            : placed.current
               ? timing.move
               : timing.enter,
       }
     : {
+        // A leaving card keeps the slot it left with and closes it: the fade and
+        // the travel play out while the row collapses under them.
         initial: false as const,
-        animate: {
-          opacity: 0,
-          left: exitLeft.current,
-          height: slot.height,
-        },
+        animate: { opacity: 0, left: exitLeft.current, height: 0, ...frame },
         transition: timing.exit,
       };
+
+  const surface = overlaySurfaceStyle(TOAST_CARD, undefined, theme);
+  // A card that fills its slot paints the card's edge — radius and lift, from
+  // the surface's own recipe, because a shadow on the clipped surface would go
+  // with its content. A peeking slot is a cut through that card, so it carries
+  // neither: the corners a reader sees are the surface's top ones.
+  const whole = naturalHeight > 0 && slot.height >= naturalHeight;
+  const edge = whole
+    ? { borderRadius: surface.borderRadius, boxShadow: surface.boxShadow }
+    : {};
 
   return (
     <div
@@ -359,94 +417,100 @@ const ToastCard = ({
       role={toast.tone === "danger" ? "alert" : "status"}
       aria-label={toast.title}
       motion={motion}
-      onMouseEnter={() => onHover(true)}
-      onMouseLeave={() => onHover(false)}
-      onFocus={() => onFocusChange(toast.id, true)}
-      onBlur={() => onFocusChange(toast.id, false)}
-      style={mergeStyles(overlaySurfaceStyle(TOAST_CARD, undefined, theme), {
+      style={mergeStyles(edge, {
         position: "relative",
-        // The card keeps its right edge and loses the same inset on both
-        // sides, so a peeking strip reads as a smaller card, not a moved one.
-        width: stackWidth > 0 ? stackWidth - slot.inset * 2 : "100%",
-        marginRight: slot.inset,
-        ...presenceStyle(present, "wrapper"),
+        overflow: "hidden",
+        width: width === undefined ? "100%" : undefined,
+        // The slot is the card's visible box, so it is a target while the card
+        // is live; a leaving slot takes no presses, and the shield covers the
+        // surface it still paints.
+        ...presenceStyle(present, "target"),
       })}
     >
       <div
-        onLayout={measure}
-        style={mergeStyles(recipeStyle(TOAST_BODY, theme), {
-          // The body always measures at the full stack width: a peeking card is
-          // clipped, not reflowed, so expanding it cannot change its answer.
-          width: stackWidth > 0 ? stackWidth : "100%",
-        })}
+        style={surface}
+        testId={`toast-surface-${toast.id}`}
+        onMouseEnter={() => onHover(true)}
+        onMouseLeave={() => onHover(false)}
+        onFocus={() => onFocusChange(toast.id, true)}
+        onBlur={() => onFocusChange(toast.id, false)}
       >
         <div
-          onMouseDown={swipe ? startDrag : undefined}
-          onMouseMove={swipe ? moveDrag : undefined}
-          onMouseUp={swipe ? endDrag : undefined}
-          style={recipeStyle(TOAST_DRAG, theme)}
+          onLayout={measure}
+          style={mergeStyles(recipeStyle(TOAST_BODY, theme), {
+            // The body always measures at the full stack width: a peeking card is
+            // clipped, not reflowed, so expanding it cannot change its answer.
+            width: stackWidth > 0 ? stackWidth : "100%",
+          })}
         >
           <div
-            style={mergeStyles(recipeStyle(TOAST_GLYPH, theme), {
-              color: palette.fg,
-              width: theme.iconSize.md,
-            })}
+            onMouseDown={swipe ? startDrag : undefined}
+            onMouseMove={swipe ? moveDrag : undefined}
+            onMouseUp={swipe ? endDrag : undefined}
+            style={recipeStyle(TOAST_DRAG, theme)}
           >
-            <Icon
-              name={toast.phase === "loading" ? "loader" : glyph(toast.tone)}
-              size="sm"
-              color={palette.fg}
-              label={toast.phase === "loading" ? "loading" : toast.tone}
-            />
-          </div>
-          <div style={recipeStyle(TOAST_COPY, theme)}>
-            <text style={recipeStyle(TOAST_TITLE, theme)}>{toast.title}</text>
-            {Option.match(toast.description, {
-              onNone: () => null,
-              onSome: (description) => (
-                <text style={recipeStyle(TOAST_DESCRIPTION, theme)}>
-                  {description}
-                </text>
-              ),
-            })}
-          </div>
-        </div>
-        {Option.match(lastAction.current, {
-          onNone: () => null,
-          onSome: ({ candidate, onSelect }) => (
-            <Button
-              size="sm"
-              variant="secondary"
-              testId={`toast-action-${toast.id}`}
-              disabled={!present || !slot.interactive}
-              // A live card's controls are the window's; a ghost's and a
-              // peeking card's are not (the runtime decides the Tab order
-              // element by element, so the control owns its own stop).
-              {...presenceTabStop(present && slot.interactive)}
-              onClick={() => {
-                if (fired.current) return;
-                fired.current = true;
-                onSelect();
-                dismiss(toast.id);
-              }}
+            <div
+              style={mergeStyles(recipeStyle(TOAST_GLYPH, theme), {
+                color: palette.fg,
+                width: theme.iconSize.md,
+              })}
             >
-              {candidate.label}
-            </Button>
-          ),
-        })}
-        <IconButton
-          label="Dismiss"
-          size="sm"
-          testId={`toast-dismiss-${toast.id}`}
-          disabled={!present || !slot.interactive}
-          {...presenceTabStop(present && slot.interactive)}
-          onClick={() => {
-            exitLeft.current = EDGE_TRAVEL;
-            dismiss(toast.id);
-          }}
-        >
-          <Icon name="x" size="sm" color={theme.colors.foreground} />
-        </IconButton>
+              <Icon
+                name={toast.phase === "loading" ? "loader" : glyph(toast.tone)}
+                size="sm"
+                color={palette.fg}
+                label={toast.phase === "loading" ? "loading" : toast.tone}
+              />
+            </div>
+            <div style={recipeStyle(TOAST_COPY, theme)}>
+              <text style={recipeStyle(TOAST_TITLE, theme)}>{toast.title}</text>
+              {Option.match(toast.description, {
+                onNone: () => null,
+                onSome: (description) => (
+                  <text style={recipeStyle(TOAST_DESCRIPTION, theme)}>
+                    {description}
+                  </text>
+                ),
+              })}
+            </div>
+          </div>
+          {Option.match(lastAction.current, {
+            onNone: () => null,
+            onSome: ({ candidate, onSelect }) => (
+              <Button
+                size="sm"
+                variant="secondary"
+                testId={`toast-action-${toast.id}`}
+                disabled={!present || !slot.interactive}
+                // A live card's controls are the window's; a ghost's and a
+                // peeking card's are not (the runtime decides the Tab order
+                // element by element, so the control owns its own stop).
+                {...presenceTabStop(present && slot.interactive)}
+                onClick={() => {
+                  if (fired.current) return;
+                  fired.current = true;
+                  onSelect();
+                  dismiss(toast.id);
+                }}
+              >
+                {candidate.label}
+              </Button>
+            ),
+          })}
+          <IconButton
+            label="Dismiss"
+            size="sm"
+            testId={`toast-dismiss-${toast.id}`}
+            disabled={!present || !slot.interactive}
+            {...presenceTabStop(present && slot.interactive)}
+            onClick={() => {
+              exitLeft.current = EDGE_TRAVEL;
+              dismiss(toast.id);
+            }}
+          >
+            <Icon name="x" size="sm" color={theme.colors.foreground} />
+          </IconButton>
+        </div>
       </div>
       <PresenceShield present={present} />
     </div>
@@ -455,17 +519,17 @@ const ToastCard = ({
 
 /** The invisible spacer that opens a gap between full cards. */
 const ToastGap = ({
-  held,
+  open,
   timing,
 }: {
-  readonly held: boolean;
+  readonly open: boolean;
   readonly timing: ToastTiming;
 }) => (
   <div
     style={{ width: "100%", pointerEvents: "none" }}
     motion={{
       initial: false,
-      animate: { height: stackGap(held) },
+      animate: { height: stackGap(open) },
       transition: timing.move,
     }}
   />
@@ -627,12 +691,51 @@ export const ToastViewport = ({
     syncHold();
   };
 
-  const slots = toastSlots(
-    Arr.map(stack, (entry) =>
-      Option.getOrElse(HashMap.get(heights, entry.toast.id), () => 0),
+  // Ranks count the cards a reader can see, and a leaving card is not one: the
+  // cards behind it take their new places in the commit that dismisses it and
+  // tween there, while the ghost keeps the slot it left with (below) and closes
+  // its own row. Ranking by position instead — the shape this had — re-slotted
+  // the ghost on the way out, so an evicted card widened to the stack's full
+  // width as it faded: the flash every older card seemed to share.
+  const present = Arr.filter(stack, (entry) => entry.present);
+  const presentCount = Arr.length(present);
+  const liveSlots = HashMap.fromIterable(
+    Arr.map(
+      present,
+      (entry, index) =>
+        [
+          entry.toast.id,
+          toastSlotOf(
+            presentCount - 1 - index,
+            Option.getOrElse(HashMap.get(heights, entry.toast.id), () => 0),
+            held,
+          ),
+        ] as const,
     ),
-    held,
   );
+  /** The slot a card last painted while it was live; what a ghost keeps. */
+  const lastSlots = useRef(HashMap.empty<string, ToastSlot>());
+
+  const slotFor = (entry: StackEntry): ToastSlot =>
+    Option.getOrElse(
+      HashMap.get(
+        entry.present ? liveSlots : lastSlots.current,
+        entry.toast.id,
+      ),
+      () => EMPTY_SLOT,
+    );
+  const slots = Arr.map(stack, slotFor);
+
+  useLayoutEffect(() => {
+    const live = HashSet.fromIterable(
+      Arr.map(stack, (entry) => entry.toast.id),
+    );
+    lastSlots.current = Arr.reduce(
+      present,
+      HashMap.filter(lastSlots.current, (_, id) => HashSet.has(live, id)),
+      (map, entry) => HashMap.set(map, entry.toast.id, slotFor(entry)),
+    );
+  }, [present, stack, liveSlots, held, heights]);
 
   return (
     <div
@@ -662,13 +765,23 @@ export const ToastViewport = ({
       >
         {Arr.map(stack, (entry, index) => {
           const slot = slots[index] ?? EMPTY_SLOT;
+          const above = stack[index - 1];
           return (
             <Fragment key={entry.toast.id}>
-              {index === 0 ? null : <ToastGap held={held} timing={timing} />}
+              {index === 0 ? null : (
+                <ToastGap
+                  open={held && entry.present && above?.present === true}
+                  timing={timing}
+                />
+              )}
               <ToastCard
                 toast={entry.toast}
                 present={entry.present}
                 slot={slot}
+                naturalHeight={Option.getOrElse(
+                  HashMap.get(heights, entry.toast.id),
+                  () => 0,
+                )}
                 stackWidth={stackWidth}
                 timing={timing}
                 swipe={swipe}

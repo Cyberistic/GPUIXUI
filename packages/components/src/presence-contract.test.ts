@@ -901,11 +901,20 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
   },
   {
     surface: "Toast",
-    prints: ["16px", "slide", "220 ms", "180 ms", "unfold", "peeking strips"],
+    prints: [
+      "16px",
+      "slide",
+      "240 ms",
+      "180 ms",
+      "260 ms",
+      "unfold",
+      "peeking card tops",
+    ],
     paints: [
       { file: "src/toast/viewport.tsx", marker: "EDGE_TRAVEL = 16" },
-      { file: "src/toast/viewport.tsx", marker: "motionTimingOf(220" },
+      { file: "src/toast/viewport.tsx", marker: "motionTimingOf(240" },
       { file: "src/toast/viewport.tsx", marker: "motionTimingOf(180" },
+      { file: "src/toast/viewport.tsx", marker: "motionTimingOf(260" },
       { file: "src/toast/stack.ts", marker: "STACK_PEEK = 12" },
     ],
   },
@@ -988,7 +997,7 @@ describe("the per-surface table", () => {
     expect(Str.includes("motiontimingof")(text)).toBe(true);
     expect(Str.includes("slide")(text)).toBe(true);
     expect(Str.includes("unfold")(text)).toBe(true);
-    expect(Str.includes("peeking strips")(text)).toBe(true);
+    expect(Str.includes("peeking card tops")(text)).toBe(true);
   });
 });
 
