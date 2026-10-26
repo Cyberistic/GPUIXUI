@@ -271,9 +271,17 @@ mounted through the exit; the first open now reads the target through
 frame). Chevrons cross-fade 200ms — no transform, so no rotation. Reduced
 motion snaps. 31 behaviour tests, reverting four files fails 5 of them; native
 `accordion-lifecycle` 1/1.
-`[~]` **Toast polish** — agent on `fix/toast-polish`: the older cards replay the
-enter animation on every push (the "flashing" report) and the collapsed strips
-read as bars rather than cards.
+`[x]` **Toast polish** — the flash was not a remount: a card's `opacity` and
+`width`/inset were plain style recomputed from rank, so the commit a push landed
+re-faded and re-widened every card, and the evicted card was re-slotted at the
+full stack width (`x 844 → 828`, `width 324 → 356`) while it faded. A card is now
+a slot around a surface, rank changes animate (never paint), the leaving card
+keeps the box it faded with, and ranks count live cards only. `motionTimingOf`
+gained an `ease`; measured that the runtime clamps a tween to its target, so a
+spring is impossible and the swipe-back is a fast-out return. 27 behaviour
+cases (3 new, each failing on the old source), 1057 package, 1138
+behaviour, 2065 docs; deployed and checked in Chrome — the stack reads as card
+tops now.
 `[x]` **Raven study** — 73.5k-LOC C11 toolkit; take the layout-height spring for
 disclosure components, the four motion presets with one reduce-motion gate, an
 `announce` capability, and the `run_until_still` test pattern. Not the renderer,
