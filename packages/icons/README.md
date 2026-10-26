@@ -28,11 +28,12 @@ same `colors` roles).
 
 | Export | What it is |
 | ------ | ---------- |
-| `Icon` | the component: `name`, `color`, `size?`, `label?`, `testId?` |
+| `Icon` | the component: `name`, `color`, `size?`, `label?`, `testId?`, `rotation?` |
 | `ICON_NAMES` / `IconName` | every name, sorted; the source of truth for which icons exist |
 | `isIconName` | the membership guard for a decoded name |
 | `icons` | markup by name, for a library that renders the `<svg>` itself |
 | `iconMarkup` / `FALLBACK_ICON` | the resolver a stored name goes through, and the `help` mark it paints when the name is absent |
+| `rotatedIconMarkup` | the same markup turned clockwise by degrees, written into the document because the runtime has no transform |
 | `ICON_SIZES` / `iconPixels` | the `xs`…`xl` scale and its resolver |
 
 Two rules the component enforces, because both are silent bugs otherwise:
@@ -46,6 +47,12 @@ Two rules the component enforces, because both are silent bugs otherwise:
 
 The rendered `<svg>` also sets `pointerEvents: "none"`, so an icon inside a
 control cannot swallow the press meant for the control.
+
+`rotation` turns the mark clockwise by degrees about the 24x24 centre. It is
+written into the markup (`<g transform="rotate(… 12 12)">`) because GPUix has no
+renderer transform and an `<svg>` host would ignore one anyway; resvg resolves
+the attribute as part of the geometry. `90`, `180` and `270` are exact, any
+finite angle works, and `NaN` reads as no turn.
 
 ## Sizes
 

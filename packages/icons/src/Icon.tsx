@@ -1,7 +1,7 @@
 /** @jsxImportSource @gpuix/react */
 import type { ReactElement } from "react";
 import type { SvgProps } from "@gpuix/react";
-import { iconMarkup } from "./registry.js";
+import { iconMarkup, rotatedIconMarkup } from "./registry.js";
 import type { IconName } from "./names.js";
 import { iconPixels, type IconSize } from "./sizes.js";
 
@@ -28,6 +28,14 @@ export interface IconProps {
   label?: string;
   /** Stable locator for automation. */
   testId?: string;
+  /**
+   * Turn the icon clockwise by this many degrees, about the 24x24 centre.
+   *
+   * GPUix has no renderer transform and an `<svg>` host ignores one anyway, so
+   * the turn is written into the document (`<g transform="rotate(...)">`) and
+   * resvg resolves it. `90`, `180` and `270` are exact; any finite angle works.
+   */
+  readonly rotation?: number;
 }
 
 /**
@@ -56,6 +64,7 @@ export const Icon = ({
   size = "md",
   label,
   testId,
+  rotation = 0,
 }: IconProps): ReactElement<SvgProps> => {
   const pixels = iconPixels(size);
   const named = iconLabel(label);
@@ -69,7 +78,7 @@ export const Icon = ({
   };
   return (
     <svg
-      source={iconMarkup(name)}
+      source={rotatedIconMarkup(name, rotation)}
       role={named === undefined ? "presentation" : "img"}
       aria-label={named}
       testId={testId}

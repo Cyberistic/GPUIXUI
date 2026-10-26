@@ -175,3 +175,32 @@ export const FALLBACK_ICON = "help" satisfies IconName;
  */
 export const iconMarkup = (name: unknown): IconMarkup =>
   isIconName(name) ? icons[name] : icons[FALLBACK_ICON];
+
+/** Markup already turned, keyed by name and normalised degrees. */
+const turned = new Map<string, IconMarkup>();
+
+/**
+ * The icon's markup turned by `degrees` clockwise about the 24x24 centre.
+ *
+ * GPUix paints `<svg source>` through resvg, so a `transform` inside the
+ * document is part of the geometry — the only way to rotate an icon today.
+ * `StyleDesc` has no transform, and an `<svg>` host would ignore it anyway: the
+ * patch that adds one is limited to `div`/`text`. A quarter turn is exact; any
+ * finite angle is passed through, and a non-finite one (a measured value that
+ * never arrived) reads as no turn rather than painting nothing.
+ */
+export const rotatedIconMarkup = (name: unknown, degrees: number): IconMarkup => {
+  const turn = Number.isFinite(degrees) ? ((degrees % 360) + 360) % 360 : 0;
+  if (turn === 0) return iconMarkup(name);
+
+  const key = `${String(name)}:${turn}`;
+  const cached = turned.get(key);
+  if (cached !== undefined) return cached;
+
+  const markup = iconMarkup(name).replace(
+    /^(<svg[^>]*>)([\s\S]*)(<\/svg>)$/,
+    `$1<g transform="rotate(${turn} 12 12)">$2</g>$3`,
+  );
+  turned.set(key, markup);
+  return markup;
+};

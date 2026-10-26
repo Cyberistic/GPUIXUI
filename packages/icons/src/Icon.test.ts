@@ -3,7 +3,12 @@ import type { ReactElement } from "react";
 import type { SvgProps } from "@gpuix/react";
 import { Icon } from "./Icon.js";
 import type { IconName } from "./names.js";
-import { FALLBACK_ICON, icons } from "./registry.js";
+import {
+  FALLBACK_ICON,
+  iconMarkup,
+  icons,
+  rotatedIconMarkup,
+} from "./registry.js";
 import { ICON_SIZES } from "./sizes.js";
 
 /**
@@ -31,6 +36,51 @@ describe("Icon", () => {
     const { props } = render({ name: "check", color: "#123456" });
     expect(props.role).toBe("presentation");
     expect(props["aria-label"]).toBeUndefined();
+  });
+
+  it("turns the icon in the markup, because the runtime has no transform", () => {
+    // GPUix's `<svg>` host ignores `StyleDesc.transform`, so the turn has to be
+    // part of the document resvg resolves. A quarter turn about the 24×24
+    // centre is the case a chevron or an arrow needs.
+    const { props } = render({
+      name: "chevron-right",
+      color: "#123456",
+      rotation: 90,
+    });
+
+    expect(props.source).toContain('<g transform="rotate(90 12 12)">');
+    // The geometry is the registry's own, not a second copy written for the turn.
+    expect(props.source).toContain('<path d="m9 18 6-6-6-6"/>');
+    expect(props.source).toBe(rotatedIconMarkup("chevron-right", 90));
+  });
+
+  it("normalises the turn and ignores a value that never arrived", () => {
+    expect(
+      render({ name: "arrow-up", color: "#123456", rotation: -90 }).props.source,
+    ).toBe(rotatedIconMarkup("arrow-up", 270));
+    expect(
+      render({
+        name: "arrow-up",
+        color: "#123456",
+        rotation: Number.NaN,
+      }).props.source,
+    ).toBe(iconMarkup("arrow-up"));
+    expect(
+      render({ name: "arrow-up", color: "#123456", rotation: 360 }).props.source,
+    ).toBe(iconMarkup("arrow-up"));
+  });
+
+  it("turns the fallback mark rather than painting an unturned unknown", () => {
+    expect(rotatedIconMarkup("not-an-icon", 180)).toContain(
+      'rotate(180 12 12)',
+    );
+    const fallback = iconMarkup("not-an-icon");
+    const geometry = fallback.slice(
+      fallback.indexOf(">") + 1,
+      fallback.lastIndexOf("</svg>"),
+    );
+    expect(rotatedIconMarkup("not-an-icon", 180)).toContain('rotate(180 12 12)');
+    expect(rotatedIconMarkup("not-an-icon", 180)).toContain(geometry);
   });
 
   it("announces a labelled icon as an image", () => {
