@@ -150,7 +150,11 @@ describe("RotatingText", () => {
     try {
       expect(painted(page)).toBe("Faster");
       await waitFor(() => expect(onIndexChange).toHaveBeenCalledWith(1));
-      expect(painted(page)).toBe("Safer");
+      // The callback fires before the frame that paints the new phrase, so a
+      // fast machine passed this on the same tick and a loaded one read the
+      // previous phrase. Waiting for the paint still fails if the blank entry is
+      // the one that reaches the surface.
+      await waitFor(() => expect(painted(page)).toBe("Safer"));
     } finally {
       page.unmount();
     }
