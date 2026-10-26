@@ -231,6 +231,17 @@ press; live at `?platform=darwin&look=aero` → press Linux → `--primary`
 from the URL. Docs suite 2060 tests green; deployed.
 `[x]` **`DialogContent.role` documented** — `dialog.mdx` had no API row for the
 prop, so `component-page.test.ts` failed on master; the row is in.
+`[x]` **Each platform previews its own UI font** — a platform style names
+`.SystemUIFont`, which the runtime resolves to the host font, so every platform
+painted in San Francisco on a Mac and the switch had no typographic axis. The
+preview now starts with the selected platform's family (verified live: `win32`
+→ `"Segoe UI", …`, `darwin` → `-apple-system, …`); an authored family wins and
+the runtime is unchanged. `previewFontStack` in `lib/fonts.ts`, 3 tests.
+`[x]` **Topography removed** — not needed as a component. Component, logic,
+behaviour test, example, docs page and demo, inventory and catalogue rows,
+related link, and CSS all gone; plan 600's catalogue reads 46 and the entry
+budget 173 → 171 modules. `/docs/components/topography` is 404, Hexagon stays.
+Components 1055 and docs 2061 tests green.
 `[~]` **Accordion motion** — agent on `fix/accordion-motion`: height + opacity
 over ~200ms with the content mounted until exit; the chevron cannot rotate (no
 transform), so it cross-fades. shadcn and Kitze both animate height only.
