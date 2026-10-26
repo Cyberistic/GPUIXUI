@@ -1,7 +1,7 @@
 /** @jsxImportSource @gpuix/react */
 import type { ReactElement } from "react";
 import type { SvgProps } from "@gpuix/react";
-import { iconMarkup, rotatedIconMarkup } from "./registry.js";
+import { rotatedIconMarkup } from "./registry.js";
 import type { IconName } from "./names.js";
 import { iconPixels, type IconSize } from "./sizes.js";
 
