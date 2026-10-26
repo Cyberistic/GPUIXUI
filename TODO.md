@@ -237,14 +237,21 @@ painted in San Francisco on a Mac and the switch had no typographic axis. The
 preview now starts with the selected platform's family (verified live: `win32`
 → `"Segoe UI", …`, `darwin` → `-apple-system, …`); an authored family wins and
 the runtime is unchanged. `previewFontStack` in `lib/fonts.ts`, 3 tests.
+`[x]` **Flaky rotating-text test** — the assertion read the paint on the same
+tick as `onIndexChange`, which passed on a fast machine and read the previous
+phrase under load; it now waits for the frame (master was red on this).
 `[x]` **Topography removed** — not needed as a component. Component, logic,
 behaviour test, example, docs page and demo, inventory and catalogue rows,
 related link, and CSS all gone; plan 600's catalogue reads 46 and the entry
 budget 173 → 171 modules. `/docs/components/topography` is 404, Hexagon stays.
 Components 1055 and docs 2061 tests green.
-`[~]` **Accordion motion** — agent on `fix/accordion-motion`: height + opacity
-over ~200ms with the content mounted until exit; the chevron cannot rotate (no
-transform), so it cross-fades. shadcn and Kitze both animate height only.
+`[x]` **Accordion motion** — panel height `0 → measured` over 200ms `easeOut`
+with opacity 20ms behind on open, `measured → 0` `easeIn` on close, content
+mounted through the exit; the first open now reads the target through
+`getElementBounds` before the frame (the old `onLayout` path painted one zero
+frame). Chevrons cross-fade 200ms — no transform, so no rotation. Reduced
+motion snaps. 31 behaviour tests, reverting four files fails 5 of them; native
+`accordion-lifecycle` 1/1.
 `[~]` **Toast polish** — agent on `fix/toast-polish`: the older cards replay the
 enter animation on every push (the "flashing" report) and the collapsed strips
 read as bars rather than cards.
