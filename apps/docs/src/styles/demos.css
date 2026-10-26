@@ -2688,6 +2688,13 @@
 .gx-toast-action,
 .gx-toast-dismiss {
   flex: 0 0 auto;
+  /* The action and the close mark are fixed-height boxes: without flex the
+     inherited 28px line box overflows a 24px button and the label sits ~4px
+     high. Centring the box's only child is the rule the library's Button
+     already uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 24px;
   border: 1px solid transparent;
   border-radius: var(--radius);
@@ -2695,6 +2702,7 @@
   color: var(--muted-foreground);
   font-family: var(--font-sans);
   font-size: 12px;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -5929,6 +5937,9 @@
 }
 
 .gx-table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 28px;
   height: 28px;
   padding: 0;
