@@ -271,6 +271,15 @@ mounted through the exit; the first open now reads the target through
 frame). Chevrons cross-fade 200ms — no transform, so no rotation. Reduced
 motion snaps. 31 behaviour tests, reverting four files fails 5 of them; native
 `accordion-lifecycle` 1/1.
+`[x]` **Preview note removed** — the "Browser preview … not the DOM" paragraph is
+gone from both preview surfaces (component and block), with its imports and the
+test that required its live link. `/live` is now reachable by address only; the
+route still mounts the real renderer. The `.gx-component-note` rule stays for the
+theme editor, which still renders one.
+`[x]` **Fixed-height controls centre their label** — the toast action and close
+mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
+the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The
+table row icon button got the same rule.
 `[x]` **Toast polish** — the flash was not a remount: a card's `opacity` and
 `width`/inset were plain style recomputed from rank, so the commit a push landed
 re-faded and re-widened every card, and the evicted card was re-slotted at the
