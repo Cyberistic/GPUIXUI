@@ -237,6 +237,25 @@ painted in San Francisco on a Mac and the switch had no typographic axis. The
 preview now starts with the selected platform's family (verified live: `win32`
 → `"Segoe UI", …`, `darwin` → `-apple-system, …`); an authored family wins and
 the runtime is unchanged. `previewFontStack` in `lib/fonts.ts`, 3 tests.
+`[x]` **Icons rotate in their own markup** — GPUI Kit's `Icon::rotate` cannot
+map onto `StyleDesc.transform` (no renderer transform, and an `<svg>` host
+ignores one), so `Icon` gains `rotation?: number` (clockwise degrees) that wraps
+the document in `<g transform="rotate(… 12 12)">`; resvg resolves it, so 90/180/
+270 are exact and any finite angle works. Cached per name and normalised angle;
+`NaN` reads as no turn; the fallback mark turns too. 3 tests + the icon page's
+API row and its stale "no rotation" limitation corrected.
+`[x]` **One preview card** — fumadocs' tab shell was a second card inside
+`.gx-component`; it is flattened, so the page has one border, one bar, one note.
+`[x]` **Flat scene + dot field** — the 720px radial gradient is gone; the scene
+paints its own palette's background with Kitze's 16px dot field (foreground at
+9%). Verified live: `background-image` is the two-stop dot radial and no
+`720px` gradient remains.
+`[x]` **Previews open on the component** — dialog, popover and confirmation
+dialog start open (their trigger still reopens them for the interactive pass);
+grid tiles are inert (`PreviewSurface interactive={false}`), so a press on the
+index cannot install a window listener. Avatar opens on its states scene, and
+the first preview measures zero tables. Tabs stay put across a switch (the
+demo's list sits at y=437 before and after).
 `[x]` **Flaky rotating-text test** — the assertion read the paint on the same
 tick as `onIndexChange`, which passed on a fast machine and read the previous
 phrase under load; it now waits for the frame (master was red on this).
