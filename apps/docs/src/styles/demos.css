@@ -2548,10 +2548,27 @@
 .gx-toast-stack {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   width: 100%;
   pointer-events: auto;
-  transition: row-gap 200ms ease-in-out;
+  transition: row-gap 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The native viewport's slot: the rank's box clips a full-height card, so a
+ * peeking card is the top of a card rather than a small one. */
+.gx-toast-slot {
+  overflow: hidden;
+  animation: gx-toast-in 240ms ease-out;
+  transition:
+    height 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease-in;
+}
+
+/* Only a card that fills its slot paints the card's edge; a peek is a clip. */
+.gx-toast-slot[data-whole="true"] {
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .gx-toast-card {
@@ -2565,30 +2582,27 @@
   border-radius: var(--radius);
   background: var(--popover);
   color: var(--popover-foreground);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   pointer-events: auto;
-  overflow: hidden;
-  animation: gx-toast-in 220ms ease-out;
-  transition: opacity 200ms ease-in-out;
 }
 
-/* A peeking strip is a size, not a scaled card: the runtime has no transform. */
+/* A peeking card keeps its own paint; only its controls are out of reach. */
 .gx-toast-behind {
   pointer-events: none;
 }
 
 .gx-toast-leaving {
   animation: gx-toast-out 180ms ease-in forwards;
+  pointer-events: none;
 }
 
 @keyframes gx-toast-in {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateX(16px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
@@ -2687,7 +2701,7 @@
 @media (prefers-reduced-motion: reduce) {
   .gx-btn,
   .gx-spinner,
-  .gx-toast-card,
+  .gx-toast-slot,
   .gx-toast-leaving {
     transition: none;
     animation: none;

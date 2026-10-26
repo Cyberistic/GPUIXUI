@@ -59,9 +59,11 @@ is `"info" | "success" | "warning" | "danger"`, `duration: 0` keeps the card, an
 ## Behaviour
 
 - **Stack.** Up to three cards show while the stack rests: the newest is full
-  and the two behind are short, dimmed, inset strips. The viewport keeps
-  `max` cards, so a fourth push expires the oldest.
-- **Expand.** Hovering or focusing the stack unfolds the strips into a column of
+  and the two behind are short, inset peeks of the card's own top. The viewport
+  keeps `max` cards, so a fourth push expires the oldest; the leaving card fades
+  and closes its row without re-slotting, so a push animates the card that
+  arrived and nothing else.
+- **Expand.** Hovering or focusing the stack unfolds the peeks into a column of
   full cards with one shared gap; leaving folds them back. Every clock pauses
   while the pointer or a focus is in the stack and resumes with the time it had
   left, so a card pushed during the hold starts paused.
@@ -77,13 +79,16 @@ is `"info" | "success" | "warning" | "danger"`, `duration: 0` keeps the card, an
 
 ## Motion
 
-A card fades and slides 16 px in from the right, and leaves by fading while it
-slides 16 px toward the edge it was dismissed from. The stack unfolds on the
-same table: 220 ms in, 200 ms to unfold, 180 ms out. The card is kept painted
-for that exit and takes no presses; **its action and dismiss controls drop out
-of the Tab order for the same window**, so a reader Tab-browsing cannot land on
-a control that is about to unmount. `MotionProvider preference="reduced"` snaps
-every frame and keeps the resting appearance.
+A card fades and slides 16 px in from the right once its height is known, and
+leaves by fading while it slides 16 px toward the edge it was dismissed from.
+Everything the stack does to itself — a rank change, an unfold, a closing row, a
+swipe returning — runs on one movement: 260 ms of Base UI's
+`[0.22, 1, 0.36, 1]` curve. The arrival is 240 ms and the exit 180 ms. The card
+is kept painted for that exit and takes no presses; **its action and dismiss
+controls drop out of the Tab order for the same window**, so a reader
+Tab-browsing cannot land on a control that is about to unmount.
+`MotionProvider preference="reduced"` snaps every frame and keeps the resting
+appearance.
 
 ## Limitations
 
@@ -91,5 +96,6 @@ every frame and keeps the resting appearance.
   destructive tone), so new rows are not announced.
 - A traversal does not hold the clock; use `duration: 0` for an actionable toast.
 - No progress indicator for the remaining time.
-- The runtime has no `transform`, so nothing scales: the stack's strips are
-  clipped height, not a shrunk card.
+- The runtime has no `transform`, so nothing scales and a tween cannot
+  overshoot: a peek is a clip of a full card, and a swipe-back returns fast and
+  settles rather than springing past the edge.

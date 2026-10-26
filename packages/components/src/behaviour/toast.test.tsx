@@ -174,6 +174,15 @@ const Controls = ({
       <Button testId="dismiss-all" onClick={toast.dismissAll}>
         Dismiss all
       </Button>
+      <Button
+        testId="dismiss-front"
+        onClick={() => {
+          const front = toast.toasts[toast.toasts.length - 1];
+          if (front !== undefined) toast.dismiss(front.id);
+        }}
+      >
+        Dismiss front
+      </Button>
       <Button testId="elsewhere" onClick={onElsewhere}>
         Elsewhere
       </Button>
@@ -592,7 +601,7 @@ describe("Toast", () => {
         await sync(page);
 
         expect(
-          page.renderer.findByTestId("toast-1")?.style.backgroundColor,
+          page.renderer.findByTestId("toast-surface-1")?.style.backgroundColor,
         ).toBe(popover);
       } finally {
         page.unmount();
@@ -778,6 +787,88 @@ describe("Toast", () => {
 
       // No fast-forward: the reduced policy is an instant assignment.
       expect(heightOf(page, "toast-1")).toBeGreaterThan(STACK_PEEK * 2);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps an evicted card the box it faded with", async () => {
+    // The bug this guards: pushing a fourth toast dropped the oldest from the
+    // store and the viewport re-slotted it by its position on the way out, so
+    // the leaving card widened from its rank's inset to the stack's full width
+    // as it faded — every push flashed a bright full-width bar above the stack.
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
+      const oldest = requireBounds(page, "toast-1");
+
+      clickCentreOf(page, "push");
+      await drain();
+      settle(page);
+
+      expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+      const ghost = requireBounds(page, "toast-1");
+      expect(ghost.x).toBeCloseTo(oldest.x, 0);
+      expect(ghost.width).toBeCloseTo(oldest.width, 0);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("moves the cards behind a push by a tween, never by their inset", async () => {
+    // The same flash seen from the other side: a rank's inset is part of the
+    // slot's width, so applying it as a style snapped every card in the stack
+    // sideways in the frame the push landed.
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
+      const before = [1, 2, 3].map((id) => requireBounds(page, `toast-${id}`));
+
+      clickCentreOf(page, "push");
+      await drain();
+      settle(page);
+      page.renderer.clockFastForward(16);
+      settle(page);
+      const after = [1, 2, 3].map((id) => requireBounds(page, `toast-${id}`));
+
+      // One frame of the stack's fast-out curve moves a card at most about half
+      // its inset; a snapped inset moved the whole width (16 px for a card one
+      // rank further back, 32 px for the card the push evicted) in that frame.
+      Arr.forEach(after, (box, index) => {
+        const previous = before[index];
+        if (previous === undefined) return;
+        expect(Math.abs(box.x - previous.x)).toBeLessThan(6);
+        expect(Math.abs(box.width - previous.width)).toBeLessThan(6);
+      });
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("closes the stack while the front card leaves, not after it is gone", async () => {
+    // The bug this guards: the cards behind a leaving one kept their ranks until
+    // its exit window ended, so the stack sat still for 180 ms and then jumped
+    // into its new shape once the ghost unmounted.
+    const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
+    try {
+      clickCentreOf(page, "push-three");
+      await sync(page);
+      settleMotion(page);
+
+      clickCentreOf(page, "dismiss-front");
+      await drain();
+      settle(page);
+      page.renderer.clockFastForward(120);
+      settle(page);
+
+      // The ghost is still painted, and the card behind it has already taken
+      // the front and is growing into it.
+      expect(page.renderer.findByTestId("toast-3")).toBeDefined();
+      expect(heightOf(page, "toast-2")).toBeGreaterThan(STACK_PEEK * 2);
     } finally {
       page.unmount();
     }
