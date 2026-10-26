@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
+import { previewFontStack } from "../../lib/fonts";
 import { toCssVars } from "../../lib/theme-css";
 import { usePlatform } from "./platform-toggle";
 
@@ -21,6 +22,16 @@ export function PreviewSurface({
   readonly className?: string;
 }) {
   const { look, platform, theme } = usePlatform();
+  // A platform style names `.SystemUIFont`, which the runtime resolves to the
+  // host's font; the preview starts with the platform's own family instead so
+  // the switch has a typographic axis on every host. An authored family wins.
+  const vars = useMemo(
+    () => ({
+      ...toCssVars(theme),
+      "--font-sans": previewFontStack(theme, platform),
+    }),
+    [platform, theme],
+  );
 
   return (
     <div
@@ -28,7 +39,7 @@ export function PreviewSurface({
       data-look={look}
       data-mode={theme.mode}
       data-platform={platform}
-      style={toCssVars(theme)}
+      style={vars}
     >
       {children}
     </div>
