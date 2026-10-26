@@ -1,7 +1,19 @@
-import { useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { previewFontStack } from "../../lib/fonts";
 import { toCssVars } from "../../lib/theme-css";
 import { usePlatform } from "./platform-toggle";
+
+/**
+ * Whether the scene is a live page preview or a still tile.
+ *
+ * A grid tile is inert and shows the component's opening state; it must not
+ * install the window listeners a reader-opened surface needs, or a press
+ * anywhere on the index would dismiss every tile's overlay at once.
+ */
+const PreviewInteractive = createContext(true);
+
+export const usePreviewInteractive = (): boolean =>
+  useContext(PreviewInteractive);
 
 /**
  * A browser preview surface.
@@ -17,9 +29,12 @@ import { usePlatform } from "./platform-toggle";
 export function PreviewSurface({
   children,
   className,
+  interactive = true,
 }: {
   readonly children: ReactNode;
   readonly className?: string;
+  /** A still tile opens on the component's state but installs no listener. */
+  readonly interactive?: boolean;
 }) {
   const { look, platform, theme } = usePlatform();
   // A platform style names `.SystemUIFont`, which the runtime resolves to the
@@ -34,14 +49,16 @@ export function PreviewSurface({
   );
 
   return (
-    <div
-      className={className === undefined ? "gx-demo" : `gx-demo ${className}`}
-      data-look={look}
-      data-mode={theme.mode}
-      data-platform={platform}
-      style={vars}
-    >
-      {children}
-    </div>
+    <PreviewInteractive.Provider value={interactive}>
+      <div
+        className={className === undefined ? "gx-demo" : `gx-demo ${className}`}
+        data-look={look}
+        data-mode={theme.mode}
+        data-platform={platform}
+        style={vars}
+      >
+        {children}
+      </div>
+    </PreviewInteractive.Provider>
   );
 }

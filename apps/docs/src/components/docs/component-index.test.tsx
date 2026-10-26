@@ -51,6 +51,7 @@ vi.mock("./preview-surface", () => ({
   PreviewSurface: ({ children }: { readonly children: ReactNode }) => (
     <div className="gx-demo">{children}</div>
   ),
+  usePreviewInteractive: () => true,
 }));
 
 const markup = renderToStaticMarkup(

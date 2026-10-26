@@ -79,6 +79,17 @@ const mounts = (): ReadonlyArray<readonly [string, string]> => [
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
+/** The declarations of the first `selector { … }` block in a style sheet. */
+const block = (css: string, selector: string): string => {
+  const pattern = new RegExp(
+    `^[ \\t]*${selector.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{`,
+    "m",
+  );
+  const match = pattern.exec(css);
+  if (match === null) throw new Error(`no ${selector} block`);
+  return css.slice(match.index, css.indexOf("}", match.index));
+};
+
 /** The curated pages: everything in `content/docs/components/` but the index. */
 const curated = (): ReadonlyArray<{
   readonly slug: string;
@@ -240,6 +251,62 @@ describe("the component previews", () => {
     expect(strategy).toContain("rounded-4xl");
     expect(strategy).toContain("elevation.lg");
     expect(strategy).toContain("differ in radius");
+  });
+});
+
+describe("the preview chrome", () => {
+  it("draws one card, not fumadocs' card inside the page's own frame", () => {
+    // Bug guarded: `.gx-component` drew a border, radius and `--card` fill,
+    // and the fumadocs `Tabs` root inside it drew `rounded-xl border
+    // bg-fd-secondary` too — every component page opened in a double card.
+    // The tab shell is flattened; the frame keeps the only border.
+    const app = read("apps/docs/src/styles/app.css");
+    const frame = block(app, ".gx-component");
+    const tabs = block(app, ".gx-component-tabs");
+
+    expect(frame).toContain("border: 1px solid var(--border)");
+    expect(frame).toContain("background: var(--card)");
+    expect(tabs).toContain("border: 0");
+    expect(tabs).toContain("border-radius: 0");
+    expect(tabs).toContain("background: transparent");
+  });
+
+  it("gives the panel a flat surface and leaves the code panel without dots", () => {
+    // Bug guarded: the preview panel was inset by fumadocs' `p-4` and painted
+    // `bg-fd-background`, so its rounded content box read as a second card.
+    const app = read("apps/docs/src/styles/app.css");
+    const panel = block(app, ".gx-component-panel");
+
+    expect(panel).toContain("padding: 0");
+    expect(panel).toContain("border-radius: 0");
+    expect(panel).toContain("background: transparent");
+    expect(block(app, ".gx-component-code")).toContain(
+      "background: var(--card)",
+    );
+  });
+
+  it("paints the dotted scene grid instead of a preview-background wash", () => {
+    // Bug guarded: `.gx-demo` carried `radial-gradient(720px 220px …)` as its
+    // sole background, a blue wash no other surface had. The gradient is gone;
+    // the scene now carries Kitze's 16px dot field in the theme's own ink.
+    const css = read("apps/docs/src/styles/demos.css");
+    const scene = block(css, ".gx-demo");
+
+    expect(scene).not.toContain("radial-gradient(720px");
+    expect(scene).toContain(
+      "color-mix(in srgb, var(--foreground) 9%, transparent)",
+    );
+    expect(scene).toContain("background-size: 16px 16px");
+    expect(scene).toContain("background-color: var(--background)");
+  });
+
+  it("gives the tabs scene one width, so a tab press cannot resize it", () => {
+    // Bug guarded: `.gx-demo-tabs` had no width in the scene's flex row, so
+    // the selected panel's text sized the box and choosing another tab moved
+    // the strip (574px → 623px) under the pointer. One declared width holds it.
+    const css = read("apps/docs/src/styles/demos.css");
+
+    expect(block(css, ".gx-demo-tabs")).toContain("width: min(100%, 460px)");
   });
 });
 

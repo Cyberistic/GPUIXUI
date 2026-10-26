@@ -376,11 +376,17 @@ describe("preview style sheets", () => {
     // only a host outside a preview wears.
     const scene = block(read("../styles/demos.css"), ".gx-demo");
     expect(declarations(scene)).toEqual([]);
-    // The scene paints nothing of its own surface: the page behind it shows
-    // through, and only the role-tinted wash above it is drawn. A scene that
-    // went back to a solid `var(--background)` would box every preview in a
-    // colour the surface it sits on does not own.
-    expect(scene).toContain("background-color: transparent");
+    // The scene owns the preview's flat surface now: the panel is chrome and
+    // cannot read the palette `PreviewSurface` writes on the scene, so painting
+    // `--background` here is what keeps a light preview light on a dark page.
+    // The only other paint is the dotted grid (Kitze's 16px field); the old
+    // radial wash is gone.
+    expect(scene).toContain("background-color: var(--background)");
+    expect(scene).toContain("background-size: 16px 16px");
+    expect(scene).toContain(
+      "color-mix(in srgb, var(--foreground) 9%, transparent)",
+    );
+    expect(scene).not.toContain("radial-gradient(720px");
     expect(scene).toContain("color: var(--foreground)");
 
     // The one host outside a preview is the landing's product window, and it

@@ -8,6 +8,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { usePreviewInteractive } from "./preview-surface";
 import {
   CountingNumberDemo,
   countingNumberDemoSource,
@@ -515,24 +516,35 @@ const CardComposition = () => (
 );
 
 const DialogDemo = () => {
-  const [open, setOpen] = useState(false);
+  // The scene opens on the surface, not an empty box: the first paint is a
+  // static dialog, and a press on the trigger reopens it for the interactive
+  // states. Only a reader's own open moves focus into the panel.
+  const interactive = usePreviewInteractive();
+  const [open, setOpen] = useState(true);
+  const openedByReader = useRef(false);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    panel.current?.focus();
+    if (!open || !interactive) return;
+    if (openedByReader.current) {
+      openedByReader.current = false;
+      panel.current?.focus();
+    }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, interactive]);
 
   return (
     <div className="gx-demo-dialog">
       <button
         className="gx-btn gx-btn-primary"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          openedByReader.current = true;
+          setOpen(true);
+        }}
         type="button"
       >
         Rename project
@@ -599,11 +611,14 @@ const DialogDemo = () => {
 };
 
 const PopoverDemo = () => {
-  const [open, setOpen] = useState(false);
+  // The popover is inline, so its open state is the honest resting preview:
+  // the panel and the trigger are both on screen at first paint.
+  const interactive = usePreviewInteractive();
+  const [open, setOpen] = useState(true);
   const anchor = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !interactive) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
@@ -616,7 +631,7 @@ const PopoverDemo = () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("mousedown", onPress);
     };
-  }, [open]);
+  }, [open, interactive]);
 
   return (
     <div className="gx-demo-popover">
@@ -1623,6 +1638,7 @@ const PreviewConfirm = ({
   error,
   onCancel,
   onConfirm,
+  takesFocus = true,
 }: {
   readonly title: string;
   readonly description: string;
@@ -1632,13 +1648,16 @@ const PreviewConfirm = ({
   readonly error?: string;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
+  /** Whether this render is a live surface the reader opened. */
+  readonly takesFocus?: boolean;
 }) => {
   const cancel = useRef<HTMLButtonElement>(null);
   // The contract the component exists for: focus lands on Cancel, so Enter on an
-  // untouched dialog cancels instead of destroying something.
+  // untouched dialog cancels instead of destroying something. A static preview
+  // (the page's first paint) leaves the reader's focus on the page.
   useEffect(() => {
-    if (!loading) cancel.current?.focus();
-  }, [loading]);
+    if (takesFocus && !loading) cancel.current?.focus();
+  }, [takesFocus, loading]);
 
   return (
     <div
@@ -1698,7 +1717,12 @@ const PreviewConfirm = ({
  * decides what happens next.
  */
 const ConfirmDialogDemo = () => {
-  const [open, setOpen] = useState(false);
+  // The scene opens on the dialog, so the page shows the component without a
+  // press. The trigger stays for the interactive pass and only its own open is
+  // a live surface that takes focus.
+  const interactive = usePreviewInteractive();
+  const [open, setOpen] = useState(true);
+  const openedByReader = useRef(false);
   const [phase, setPhase] = useState<"idle" | "saving" | "failed" | "archived">(
     "idle",
   );
@@ -1719,13 +1743,13 @@ const ConfirmDialogDemo = () => {
   }, [phase, attempt]);
 
   useEffect(() => {
-    if (!open || phase === "saving") return;
+    if (!open || phase === "saving" || !interactive) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, phase]);
+  }, [open, phase, interactive]);
 
   return (
     <div className="gx-confirm-demo">
@@ -1733,6 +1757,7 @@ const ConfirmDialogDemo = () => {
         <button
           className="gx-btn gx-btn-destructive"
           onClick={() => {
+            openedByReader.current = true;
             setAttempt(0);
             setPhase("idle");
             setOpen(true);
@@ -1762,6 +1787,7 @@ const ConfirmDialogDemo = () => {
             setPhase("idle");
           }}
           onConfirm={() => setPhase("saving")}
+          takesFocus={interactive && openedByReader.current}
           title="Archive this project?"
           tone="danger"
         />
@@ -1792,6 +1818,7 @@ const ConfirmDialogStates = () => {
             loading={state === "loading"}
             onCancel={() => setShown(false)}
             onConfirm={() => setState("loading")}
+            takesFocus={false}
             title="Archive this project?"
             tone={state === "default" ? "default" : "danger"}
           />
@@ -2692,8 +2719,17 @@ const useToastPreview = (
 
 /** A publish/undo workflow, capped at three cards like the store. */
 const ToastWorkflow = () => {
+  // The scene's first paint is a resting toast, not an empty viewport: the
+  // store's own success card is already on screen when the page opens.
   const { entries, hovered, push, dismiss, onStackEnter, onStackLeave } =
-    useToastPreview();
+    useToastPreview([
+      {
+        title: "Changes published",
+        description: "The site rebuilds in about a minute.",
+        tone: "success",
+        actionLabel: "Undo",
+      },
+    ]);
 
   return (
     <div className="gx-toast-demo">
