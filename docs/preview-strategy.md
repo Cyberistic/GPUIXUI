@@ -459,6 +459,14 @@ to Windows` — so a page whose one preview never re-resolved cannot pass on the
 surfaces that did. `src/lib/platform-switch.test.ts` holds the policy, the
 command, both measurements and the parser the assertions read.
 
+A platform press also clears an authored look. A look is an overlay: it fixes
+the palette, radii and density over whatever platform is showing, so with
+`?look=aero` remembered the sidebar's press moved only the label and every
+preview kept the look's paint — the failure a reader reports as "the switch does
+nothing". `choosingPlatform` in `src/lib/platform.ts` is that rule, and
+`platform.test.ts` holds both directions: the stale look paints the same page in
+two platforms, and the cleared one does not.
+
 ### The look picker is a measured click
 
 The authored looks are the third axis (`?look=luna|aero|omarchy`), and the

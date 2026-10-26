@@ -11,6 +11,7 @@ import {
 import type { PlatformName, Theme, ThemeMode } from "@gpuixui/tokens";
 import {
   browserSignals,
+  choosingPlatform,
   detectLook,
   detectPlatform,
   lookFromSearch,
@@ -160,7 +161,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       theme,
       contentReady,
       markContentMounted,
-      setPlatform: (next) => choose({ ...choice, platform: next }),
+      setPlatform: (next) => choose(choosingPlatform(choice, next)),
       setLook: (next) => choose({ ...choice, look: next }),
       setMode: (next) => choose({ ...choice, mode: next }),
     }),

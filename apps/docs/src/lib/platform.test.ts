@@ -23,6 +23,7 @@ import {
   platformLabel,
   platformOrder,
   platformSearch,
+  choosingPlatform,
   previewMode,
   resolvePlatformTheme,
 } from "./platform";
@@ -97,6 +98,43 @@ describe("the palette query parameter", () => {
   it("labels both palettes the way the switch shows them", () => {
     expect(modeLabel("dark")).toBe("Dark");
     expect(modeLabel("light")).toBe("Light");
+  });
+});
+
+describe("choosing a platform", () => {
+  it("returns to the platform's own style", () => {
+    const choice = { platform: "darwin", look: "aero", mode: "dark" } as const;
+
+    expect(choosingPlatform(choice, "linux")).toEqual({
+      platform: "linux",
+      look: "native",
+      mode: "dark",
+    });
+  });
+
+  it("is what makes a platform press visible under an authored look", () => {
+    // The reported bug: with `look=aero` remembered, pressing Linux moved the
+    // label while every surface kept the look's palette and density, because
+    // the look had already overridden the platform. Clearing it on the press is
+    // the difference the reader sees.
+    const stale = resolvePlatformTheme("linux", "dark", "aero");
+    const pressed = choosingPlatform(
+      { platform: "win32", look: "aero", mode: "dark" },
+      "linux",
+    );
+    const shown = resolvePlatformTheme(
+      pressed.platform,
+      pressed.mode,
+      pressed.look,
+    );
+
+    expect(stale.colors.background).toBe(
+      resolvePlatformTheme("win32", "dark", "aero").colors.background,
+    );
+    expect(shown.colors.background).not.toBe(stale.colors.background);
+    expect(shown.density.controlHeight.md).not.toBe(
+      stale.density.controlHeight.md,
+    );
   });
 });
 

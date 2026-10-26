@@ -262,6 +262,20 @@ export const openingChoice = (
 });
 
 /**
+ * Choosing a platform returns to that platform's own style.
+ *
+ * The authored look is an overlay chosen on the Theming page: it repaints over
+ * whatever platform is showing, so leaving it in place made the sidebar's
+ * platform press change only the label — the look had already fixed the
+ * palette, radii and density. A platform press therefore clears it, which is
+ * what keeps the switch's promise ("every preview changes") true.
+ */
+export const choosingPlatform = (
+  choice: PreviewChoice,
+  platform: PlatformName,
+): PreviewChoice => ({ ...choice, platform, look: "native" });
+
+/**
  * The theme a preview shows: the library's platform variant over one of its
  * built-in modes, then the authored look over that when one is chosen.
  *
