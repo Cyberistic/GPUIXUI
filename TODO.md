@@ -221,6 +221,32 @@ deploy only works with those variables set. Verified in Chrome: the page renders
 `Publish changes` pushes a stacked card with Undo and dismiss, and the console
 shows no app errors (one blocked external resource from an ad blocker).
 
+### Docs and component polish (2026-10-26)
+
+`[x]` **The platform switch changes the previews** — a remembered authored look
+(`aero`) fixes the palette, radii and density over the platform, so pressing
+Linux moved only the label. `choosingPlatform` clears the look on a platform
+press; live at `?platform=darwin&look=aero` → press Linux → `--primary`
+`#5FB6F2`→`#78AEED`, `--radius` 4→6, `--control-height-md` 32→36, `look` dropped
+from the URL. Docs suite 2060 tests green; deployed.
+`[x]` **`DialogContent.role` documented** — `dialog.mdx` had no API row for the
+prop, so `component-page.test.ts` failed on master; the row is in.
+`[~]` **Accordion motion** — agent on `fix/accordion-motion`: height + opacity
+over ~200ms with the content mounted until exit; the chevron cannot rotate (no
+transform), so it cross-fades. shadcn and Kitze both animate height only.
+`[~]` **Toast polish** — agent on `fix/toast-polish`: the older cards replay the
+enter animation on every push (the "flashing" report) and the collapsed strips
+read as bars rather than cards.
+`[x]` **Raven study** — 73.5k-LOC C11 toolkit; take the layout-height spring for
+disclosure components, the four motion presets with one reduce-motion gate, an
+`announce` capability, and the `run_until_still` test pattern. Not the renderer,
+the spring solver, or its paint-time scale transitions.
+`[x]` **Kitze UI study** — a shadcn source registry on Base UI; take the
+single-prop Button (loading/icon/href), the menu item that works across
+dropdown/context/drawer with the inline *Sure?* confirmation, the dialog width
+ramp + footer-action props, the docs preview chrome, and `llms.txt`. Not its
+transform motion or Framer.
+
 ### Keyboard workstream (`@gpuixui/keyboard`)
 
 `[x]` `[██████████]` 4/4
