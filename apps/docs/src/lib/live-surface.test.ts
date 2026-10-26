@@ -203,12 +203,10 @@ describe("the live surface's route", () => {
     );
   });
 
-  it("links the real surface from every component preview's honesty note", () => {
-    // A reader who has just been told "this is a drawing" is the reader who
-    // wants the real thing; the link cannot be retired while /live exists.
-    expect(read("src/components/docs/component-preview.tsx")).toContain(
-      'href="/live"',
-    );
+  it("keeps the real surface mounted on its own route", () => {
+    // The preview's honesty note was removed, so /live is reached by its
+    // address rather than a link under every demo; the route must still mount
+    // the real renderer.
     expect(read("src/routes/live.tsx")).toContain("LiveSurface");
   });
 

@@ -5,9 +5,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "fumadocs-ui/components/tabs";
-import { platformLabel } from "../../lib/platform";
 import { demos } from "./demos";
-import { usePlatform } from "./platform-toggle";
 import { PreviewSurface } from "./preview-surface";
 
 /**
@@ -23,7 +21,6 @@ export function ComponentPreview({ name }: { name: string }) {
     throw new Error(`ComponentPreview: no demo named "${name}"`);
   }
 
-  const { platform } = usePlatform();
 
   return (
     <div className="gx-component not-prose">
@@ -44,15 +41,6 @@ export function ComponentPreview({ name }: { name: string }) {
           <HighlightedCode lang="tsx" code={demo.source} />
         </TabsContent>
       </Tabs>
-      <p className="gx-component-note">
-        {demo.composition === true
-          ? "A composition of native parts, not a new component. "
-          : "Browser preview: the geometry, palette and states of the native component. "}
-        Drawn in the {platformLabel(platform)} type style; the shipped code
-        renders through GPUix, not the DOM.{" "}
-        <a href="/live">Open /live to see a real GPUix frame</a> — the wasm
-        build of the same renderer, painting one library control.
-      </p>
     </div>
   );
 }

@@ -7,9 +7,7 @@ import {
   TabsTrigger,
 } from "fumadocs-ui/components/tabs";
 import { writeClipboard } from "../../lib/clipboard";
-import { platformLabel } from "../../lib/platform";
 import { blocks, type Block } from "./blocks";
-import { usePlatform } from "./platform-toggle";
 import { PreviewSurface } from "./preview-surface";
 
 const copyLabel = {
@@ -31,7 +29,6 @@ export function BlockPreview({ name }: { name: string }) {
     throw new Error(`BlockPreview: no block named "${name}"`);
   }
 
-  const { platform } = usePlatform();
 
   return (
     <div className="gx-component not-prose">
@@ -68,12 +65,6 @@ export function BlockPreview({ name }: { name: string }) {
           <HighlightedCode lang="tsx" code={block.source} />
         </TabsContent>
       </Tabs>
-      <p className="gx-component-note">
-        A recipe composed from {block.packages.join(" and ")}, not a new
-        component. Browser preview: the geometry, palette and states of the
-        native parts, drawn in the {platformLabel(platform)} type style; the
-        shipped block renders through GPUix, not the DOM.
-      </p>
     </div>
   );
 }
