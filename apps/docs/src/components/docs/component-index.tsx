@@ -181,7 +181,10 @@ function ComponentTile({
           className="pointer-events-none flex aspect-[4/3] items-center justify-center overflow-hidden border-t border-border"
           inert
         >
-          <PreviewSurface className="gx-grid-preview h-full w-full">
+          <PreviewSurface
+            className="gx-grid-preview h-full w-full"
+            interactive={false}
+          >
             <Scene />
           </PreviewSurface>
         </div>

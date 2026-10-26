@@ -82,7 +82,7 @@
 .gx-demo {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
   gap: 10px;
   min-height: 180px;
@@ -90,12 +90,17 @@
   position: relative;
   overflow: auto;
   color-scheme: dark;
-  background-color: transparent;
+  /* The scene owns the preview's flat surface — the palette the surface wrote,
+     not the docs chrome behind it — so a light preview is light on a dark page.
+     The code panel never wears it. `safe center` above keeps a scene taller
+     than the panel scrollable from its first row instead of clipping the top. */
+  background-color: var(--background);
+  /* Kitze's 16px dot field in the scene's own ink. */
   background-image: radial-gradient(
-    720px 220px at 50% 0%,
-    color-mix(in srgb, var(--primary) 6%, transparent),
-    transparent 65%
+    color-mix(in srgb, var(--foreground) 9%, transparent) 0.7px,
+    transparent 0.7px
   );
+  background-size: 16px 16px;
   color: var(--foreground);
   font-family: var(--font-sans);
 }
@@ -471,7 +476,10 @@
 
 /* ---- dialog: mirrors components/src/dialog.tsx ---- */
 .gx-demo-dialog {
-  min-height: 340px;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100%;
 }
 
 .gx-dialog-backdrop {
@@ -830,10 +838,20 @@
    role; Confirm is `primary` or, for `tone="danger"`, the `destructive` fill.
    While `loading` both actions paint the neutral disabled pair rather than a
    fade, because a fade composites a filled action's label into its own fill. */
+/* An overlay scene is the surface: it takes the whole preview so its backdrop
+   dims every dot behind the dialog instead of floating in the scene's padding. */
+.gx-demo:has(.gx-confirm-demo),
+.gx-demo:has(.gx-demo-dialog) {
+  padding: 0;
+}
+
 .gx-confirm-demo {
   position: relative;
+  display: grid;
+  flex: 1 0 100%;
+  place-items: center;
+  align-self: stretch;
   width: 100%;
-  min-height: 360px;
 }
 
 .gx-confirm {
@@ -1264,6 +1282,10 @@
   align-items: stretch;
   gap: 0;
   padding: 0;
+  /* The scene is a shrink-to-fit flex item, so without a declared width the
+     selected panel's text sized the whole tab strip and every press moved it.
+     One width and one floor keep the list and the panel still. */
+  width: min(100%, 460px);
   min-height: 240px;
 }
 
@@ -6954,15 +6976,26 @@
 
 /* Avatar — the disc, its fallback, the presence dot and the roster panel. */
 
-.gx-avatar-demo {
+/* The roster is the page-level composition, so it keeps its card. The states
+   sheet is the component itself and sits directly on the scene. */
+.gx-avatar-demo,
+.gx-avatar-states {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+.gx-avatar-demo {
   padding: var(--spacing-lg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
   color: var(--card-foreground);
+}
+
+.gx-avatar-states {
+  width: min(100%, 560px);
+  color: var(--foreground);
 }
 
 .gx-avatar-head {

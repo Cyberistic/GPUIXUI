@@ -203,7 +203,7 @@ export function AvatarStatesBody() {
   ] as const;
 
   return (
-    <div className="gx-avatar-demo">
+    <div className="gx-avatar-states">
       <Run label="Presence">
         {presenceStates.map((status) => (
           <span className="gx-avatar-state" key={status}>

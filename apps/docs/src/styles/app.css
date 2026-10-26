@@ -134,13 +134,24 @@ body {
   color: var(--primary);
 }
 
-/* The component page frame: Preview / Code tabs, as shadcn presents them. */
+/* The component page frame: Preview / Code tabs, as shadcn presents them.
+   Fumadocs' tabs carry a card of their own (`rounded-xl border
+   bg-fd-secondary`); this frame is the page's only card, so the tab shell is
+   flattened and its bar, panel and note supply every edge. */
 .gx-component {
   margin: 1.5rem 0;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
   background: var(--card);
+}
+
+.gx-component-tabs {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
 }
 
 .gx-component-bar {
@@ -171,7 +182,10 @@ body {
 .gx-component-panel {
   margin: 0;
   height: 520px;
+  padding: 0;
   overflow: auto;
+  border-radius: 0;
+  background: transparent;
 }
 
 .gx-component-panel .gx-demo {
@@ -181,6 +195,7 @@ body {
 .gx-component-code {
   max-height: 520px;
   overflow: auto;
+  background: var(--card);
 }
 
 .gx-component-code figure {
