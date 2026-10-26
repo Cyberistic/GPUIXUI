@@ -81,7 +81,6 @@ import { themeTogglerMeta } from "./theme-toggler.js";
 import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
-import { topographyMeta } from "./topography.js";
 import { typingTextMeta } from "./typing-text.js";
 
 /** One component's inventory record. */
@@ -177,6 +176,5 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   timelineMeta,
   timePickerMeta,
   toastMeta,
-  topographyMeta,
   typingTextMeta,
 ];

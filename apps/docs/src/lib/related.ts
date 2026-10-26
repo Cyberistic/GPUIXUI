@@ -153,7 +153,6 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("bubbles", "Bubbles"),
       component("fireworks", "Fireworks"),
       component("hexagon", "Hexagon"),
-      component("topography", "Topography"),
       component("gradient", "Gradient"),
     ],
   },

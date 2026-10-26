@@ -53,10 +53,13 @@ Overlaps with the animated catalogue: **Button**, **Tooltip**, **Tabs**,
 
 `image-zoom`, `avatar-group`, `pinned-list`, `motion-grid`, `particles`
 
-### Backgrounds (9)
+### Backgrounds (8)
 
 `bubble`, `fireworks`, `glyph`, `gradient`, `gravity-stars`, `hexagon`, `hole`,
-`stars`, `topography`
+`stars`
+
+Topography was removed from the library on 2026-10-26: it was not needed as a
+component, and the shared `internal/pattern-field.tsx` frame keeps Hexagon.
 
 ### Blocks (5)
 

@@ -111,7 +111,7 @@ export const surfaceBudget = {
   // flow + height) and `toast/swipe.ts` (the one-axis dismissal threshold and
   // flick speed). Both are renderer-free, which is what lets their suites hold
   // the stack and the gesture without a window.
-  modules: 173,
+  modules: 171,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -127,6 +127,8 @@ export const surfaceBudget = {
   // pattern frame included); 976 KiB measured with ImageZoom, under the ceiling.
   // 988 KiB measured with MotionGrid: the ceiling moved 990 → 1030 KiB then,
   // because the next family would otherwise have had two kilobytes to fit in.
+  // 173 → 171 for removing Topography (`topography.tsx` and its logic), which
+  // the library no longer ships.
   // 1 029 KiB measured with Glyph (the wall's logic and its text hosts, the
   // marked figures above), so the ceiling moved 1030 → 1070 KiB for the next
   // family's headroom. 1 072 KiB measured with the leaving surface guard on

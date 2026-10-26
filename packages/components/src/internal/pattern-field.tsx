@@ -6,7 +6,7 @@
  * arrives on the house entrance, and (unless the reader asked for less motion)
  * breathes by opacity. Two families paint through this module:
  *
- * - **Line art** (`Hexagon`, `Topography`) is one `<svg source>` path, which the
+ * - **Line art** (`Hexagon`) is one `<svg source>` path, which the
  *   runtime scales by the element's width alone and centres inside a content
  *   area it does not clip (the `svg-pattern` probe). `PatternField` generates a
  *   view box from the measured box so that scale is 1:1 instead.

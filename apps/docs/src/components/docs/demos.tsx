@@ -354,7 +354,6 @@ import {
 } from "./splitting-text-demo";
 import { StarsDemo, starsDemoSource } from "./stars-demo";
 import { ThemeTogglerDemo, themeTogglerDemoSource } from "./theme-toggler-demo";
-import { TopographyDemo, topographyDemoSource } from "./topography-demo";
 import { TypingTextDemo, typingTextDemoSource } from "./typing-text-demo";
 
 /**
@@ -3376,7 +3375,6 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: ThemeTogglerDemo,
     source: themeTogglerDemoSource,
   },
-  "topography-demo": { render: TopographyDemo, source: topographyDemoSource },
   "typing-text-demo": { render: TypingTextDemo, source: typingTextDemoSource },
   "counting-number-demo": {
     render: CountingNumberDemo,

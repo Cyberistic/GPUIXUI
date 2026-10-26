@@ -81,7 +81,6 @@ export * from "./theme-toggler.js";
 export * from "./timeline.js";
 export * from "./time-picker.js";
 export * from "./toast.js";
-export * from "./topography.js";
 export * from "./typing-text.js";
 
 export type { PartChildren } from "./internal/parts.js";

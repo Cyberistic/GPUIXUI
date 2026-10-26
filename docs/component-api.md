@@ -398,7 +398,6 @@ the honest parts.
 | Gravity stars | `GravityStars` (one part) | — | plan 600 |
 | Glyph | `Glyph` (one part) | — | plan 600 |
 | Hexagon | `Hexagon` (one part) | — | plan 600 |
-| Topography | `Topography` (one part) | — | plan 600 |
 | Stars | `Stars` (one part) | — | plan 600 |
 | Code block | `CodeBlock` (one part) | — | plan 600 |
 | Copy button | `CopyButton` (one part) | — | plan 600 |

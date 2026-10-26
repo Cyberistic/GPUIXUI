@@ -10021,10 +10021,8 @@
   }
 }
 
-/* ---- hexagon / topography: generated line-art fields, one `<svg>` and a
-   breathing ink. ---- */
-.gx-hexagon,
-.gx-topography {
+/* ---- hexagon: a generated line-art field, one `<svg>` and a breathing ink. ---- */
+.gx-hexagon {
   width: min(520px, 100%);
   height: 220px;
   border: 1px solid var(--border);
@@ -11201,7 +11199,6 @@
   .gx-gravitystars-dot,
   .gx-fireworks-spark,
   .gx-hexagon,
-  .gx-topography,
   .gx-glyph-mark,
   .gx-gradient-layer,
   .gx-typing-caret,

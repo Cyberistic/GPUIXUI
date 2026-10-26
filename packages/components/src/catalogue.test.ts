@@ -134,7 +134,6 @@ const placements: Readonly<Record<string, Placement>> = {
   hexagon: { _tag: "row", name: "Hexagon" },
   hole: { _tag: "declined", gap: "two-stop" },
   stars: { _tag: "row", name: "Stars" },
-  topography: { _tag: "row", name: "Topography" },
   "code-block": { _tag: "row", name: "Code block" },
   "copy-button": { _tag: "row", name: "Copy button" },
   "page-transition": { _tag: "row", name: "Page transition" },
