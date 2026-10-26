@@ -532,8 +532,11 @@ still paints its resting state.
 
 A surface with its own feel names its duration instead of borrowing a level:
 `motionTimingOf(durationMs, options)` builds the same timing from a millisecond
-value, so `@gpuixui/components`' toast arrives over 220 ms and leaves over 180 ms
-without dragging another surface along (or the reverse). It is the one place a
+value, so `@gpuixui/components`' toast arrives over 240 ms, leaves over 180 ms and
+re-slots on 260 ms of its own curve without dragging another surface along (or
+the reverse). `options.ease` names that curve, read through `isMotionEasing` so a
+value the renderer cannot read falls back to the phase's; the renderer clamps a
+tween to its target, so a curve cannot overshoot. It is the one place a
 duration becomes a timing, so the reduced rule cannot be re-implemented beside
 it, and a duration that is not positive and finite — or one past the clock the
 renderer schedules — reads as the house surface arrival (`normal`) rather than a
@@ -548,8 +551,9 @@ zeroed falls back the same way instead of throwing in the render:
 ```ts
 import { motionTimingOf } from "@gpuixui/motion/timing";
 
-motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }
+motionTimingOf(240, { phase: "enter" }); // { duration: 0.24, ease: "easeOut" }
 motionTimingOf(180, { phase: "exit", preference: "reduced" }); // { duration: 0 }
+motionTimingOf(260, { ease: [0.22, 1, 0.36, 1] }); // the named curve
 motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
 motionTimingOf(1e300); // the same house timing: no clock can schedule it
 motionTimingOf(200, null); // the same house timing: an absent config

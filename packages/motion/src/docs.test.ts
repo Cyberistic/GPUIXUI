@@ -170,11 +170,19 @@ describe("the level table the timing seam describes", () => {
     // duration or a reduced branch that changes fails this page by name.
     expect(readme).toContain("motionTimingOf");
     expect(readme).toContain(
-      'motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }',
+      'motionTimingOf(240, { phase: "enter" }); // { duration: 0.24, ease: "easeOut" }',
     );
-    expect(motionTimingOf(220, { phase: "enter" })).toEqual({
-      duration: 0.22,
+    expect(motionTimingOf(240, { phase: "enter" })).toEqual({
+      duration: 0.24,
       ease: "easeOut",
+    });
+    // The curve a surface names, printed beside the duration it applies to.
+    expect(readme).toContain(
+      "motionTimingOf(260, { ease: [0.22, 1, 0.36, 1] }); // the named curve",
+    );
+    expect(motionTimingOf(260, { ease: [0.22, 1, 0.36, 1] })).toEqual({
+      duration: 0.26,
+      ease: [0.22, 1, 0.36, 1],
     });
     expect(
       motionTimingOf(180, { phase: "exit", preference: "reduced" }),

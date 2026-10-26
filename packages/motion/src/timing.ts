@@ -185,6 +185,23 @@ export interface MotionTimingOptions {
    * refused at the call site and asserted into a `MotionPreference`.
    */
   readonly preference?: unknown;
+  /**
+   * The curve this run eases with, in place of its phase's. Default: the
+   * phase's own ({@link motionEasings}).
+   *
+   * A surface with its own feel names its curve the way it names its duration —
+   * a swipe's return leaves fast and settles, where the `standard` phase eases
+   * at both ends. Read through {@link isMotionEasing}, because the value arrives
+   * from a persisted setting as often as from a literal: one the renderer cannot
+   * read is the phase's curve, not a description it refuses whole (which paints
+   * no frame at all). The reduced preference still wins, so a curve never
+   * resurrects a journey the reader removed.
+   *
+   * The curve is a shape, not a spring: the renderer clamps a tween to its
+   * target, so a cubic-bezier whose `y` controls exceed one still stops at the
+   * value — an overshoot cannot paint.
+   */
+  readonly ease?: unknown;
 }
 
 /**
@@ -264,6 +281,11 @@ const runnableMs = (durationMs: number): number =>
  * back as `null` — is the house timing a caller who states nothing gets, and an
  * option it does not name falls back the same way. Reading `.phase` off the
  * absent object threw out of the render that built the surface's timing.
+ *
+ * `ease` names the run's own curve, read through {@link isMotionEasing}: a value
+ * the renderer cannot read is the phase's curve rather than a description it
+ * refuses whole, and the reduced branch above returns before it, so a curve can
+ * never outlive the journey the reader removed.
  */
 export const motionTimingOf = (
   durationMs: number,
@@ -271,9 +293,10 @@ export const motionTimingOf = (
 ): MotionTiming => {
   const phase = options?.phase ?? "standard";
   if (preferenceOf(options?.preference) === "reduced") return { duration: 0 };
+  const named = options?.ease;
   return {
     duration: runnableMs(durationMs) / 1000,
-    ease: motionEasings[phaseOf(phase)],
+    ease: isMotionEasing(named) ? named : motionEasings[phaseOf(phase)],
   };
 };
 
