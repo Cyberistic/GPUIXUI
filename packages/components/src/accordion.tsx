@@ -6,8 +6,11 @@
  * plus a boolean, because single mode has to decide what "opening another"
  * means and multiple mode has to preserve the order sections were opened in.
  *
- * The indicator is an icon swap (`chevron-down`/`chevron-up`), not a rotation:
- * `@gpuix/native@0.11.0` has no `transform` in `StyleDesc`.
+ * The indicator is a cross-fade (`chevron-down`/`chevron-up`), not a rotation:
+ * `@gpuix/native@0.11.0` has no `transform` in `StyleDesc`, so both marks share
+ * one slot, the incoming one rising two pixels as it fades in and the outgoing
+ * one leaving upward. That is the 180° read a rotation would give, painted with
+ * the `opacity` and `top` keys the runtime does have.
  */
 
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
@@ -17,7 +20,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { Icon } from "@gpuixui/icons";
+import { Icon, iconPixels, type IconName } from "@gpuixui/icons";
 import {
   ACCORDION_CONTENT,
   ACCORDION_INDICATOR,
@@ -36,6 +39,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -67,6 +71,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -408,6 +413,63 @@ export interface AccordionTriggerState {
   readonly focused: boolean;
 }
 
+/** The square the indicator reserves; both marks are painted inside it. */
+const CHEVRON_SIZE = iconPixels("xs");
+
+/** How far a mark travels while it fades, so a cross-fade reads as a flip. */
+const CHEVRON_TRAVEL = 2;
+
+/**
+ * One of the two marks the indicator cross-fades.
+ *
+ * The runtime has no `transform`, so the 180° turn is a swap of two glyphs:
+ * both stay mounted, and the slot's `opacity` and `top` move together. The mark
+ * the section is not showing keeps no accessible name, so it stays decoration.
+ */
+const Chevron = ({
+  name,
+  shown,
+  travel,
+  roleLabel,
+  color,
+  testId,
+}: {
+  readonly name: IconName;
+  readonly shown: boolean;
+  readonly travel: number;
+  readonly roleLabel: string;
+  readonly color: string;
+  readonly testId?: string;
+}) => {
+  const timing = useSurfaceTiming("normal");
+  // The frame the mark mounted with, so a later toggle tweens from where it is
+  // rather than from a start frame that moved with the target.
+  const mountedShown = useRef(shown).current;
+  const frame = (atRest: boolean) => ({
+    opacity: atRest ? 1 : 0,
+    top: atRest ? 0 : travel,
+  });
+
+  return (
+    <div
+      motion={{
+        initial: frame(mountedShown),
+        animate: frame(shown),
+        transition: shown ? timing.enter : timing.exit,
+      }}
+      style={{ position: "absolute", left: 0 }}
+      testId={testId}
+    >
+      <Icon
+        name={name}
+        size="xs"
+        color={color}
+        label={shown ? roleLabel : undefined}
+      />
+    </div>
+  );
+};
+
 /** The full-width heading button of one section. */
 export const AccordionTrigger = ({
   onClick,
@@ -468,6 +530,11 @@ export const AccordionTrigger = ({
     if (isActivation(event, "up")) flip();
   };
 
+  // The caller's testId locates the header; its two marks are named from it, so
+  // a suite can hold the cross-fade to the state the header reports.
+  const glyphId = (mark: "up" | "down"): string | undefined =>
+    rest.testId === undefined ? undefined : `${rest.testId}-chevron-${mark}`;
+
   return (
     <div
       role="button"
@@ -511,12 +578,29 @@ export const AccordionTrigger = ({
       )}
     >
       <div style={recipeStyle(ACCORDION_TRIGGER_ROW, theme)}>{children}</div>
-      <div style={recipeStyle(ACCORDION_INDICATOR, theme)}>
-        <Icon
-          name={open ? "chevron-up" : "chevron-down"}
-          size="xs"
+      <div
+        style={{
+          ...recipeStyle(ACCORDION_INDICATOR, theme),
+          position: "relative",
+          width: CHEVRON_SIZE,
+          height: CHEVRON_SIZE,
+        }}
+      >
+        <Chevron
+          name="chevron-down"
+          shown={!open}
+          travel={-CHEVRON_TRAVEL}
+          roleLabel="Expand"
           color={theme.colors.mutedForeground}
-          label={open ? "Collapse" : "Expand"}
+          testId={glyphId("down")}
+        />
+        <Chevron
+          name="chevron-up"
+          shown={open}
+          travel={CHEVRON_TRAVEL}
+          roleLabel="Collapse"
+          color={theme.colors.mutedForeground}
+          testId={glyphId("up")}
         />
       </div>
     </div>
@@ -588,8 +672,7 @@ export const accordionMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "the indicator is an icon swap: 0.11.0's StyleDesc has no transform",
-    "the panel grows through `AutoHeight`'s measured height, so its first open paints at zero for a frame before it grows",
+    "the panel grows to the content's measured height, and the indicator cross-fades two marks instead of rotating one: 0.11.0's StyleDesc has no transform",
   ],
   docs: "docs/accordion.mdx",
   example: "examples/accordion.example.tsx",

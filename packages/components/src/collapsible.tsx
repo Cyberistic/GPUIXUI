@@ -217,7 +217,6 @@ export const collapsibleMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "the first open paints the body at zero for a frame while it measures, then grows to the reported height",
     "the body unmounts after its collapse tween, so state inside it does not survive a close",
   ],
   docs: "docs/collapsible.mdx",

@@ -51,9 +51,19 @@ Accordion
 | `AccordionContent` | `children` | `PartChildren` | — |
 | `AccordionContent` | `className` | `string` | — |
 
+## Motion
+
+The panel's height and its content move on the same 200 ms clock:
+
+- **Open** grows the clipping box from `0` to the height the content measures, easing out, while the content fades in. The fade waits `20 ms` so it does not race the box. The height is read before the opening frame paints, so the first open starts growing at once instead of resting for a frame.
+- **Close** shrinks the box back and fades the content out, easing in. The body stays mounted for the 200 ms exit and unmounts after it, so the sections below travel with the box rather than jumping when it disappears.
+- **Reduced motion** (`MotionProvider preference="reduced"`) is a zero-duration assignment: the panel paints at its measured height in the opening frame.
+
+The trigger's indicator is a cross-fade, not a rotation: GPUix has no `transform` style key, so both chevrons stay mounted in one slot, the incoming one rising 2 px as it fades in and the outgoing one leaving upward.
+
 ## Limitations
 
 - No `aria-controls`; the trigger–body relationship is positional.
 - A `Tab` traversal focuses the trigger **without running its `onFocus`**; the ring is declared at rest.
-- The body grows and collapses through its measured height.
+- The indicator cross-fades two chevrons instead of rotating one; the runtime has no `transform`.
 - A `multiple` accordion's open set is read at the boundary: a `value` that is not a list means uncontrolled (the state the `defaultValue` starts), and an entry that is not a section id is dropped, so a saved workspace's `null` does not throw out of the first render.
