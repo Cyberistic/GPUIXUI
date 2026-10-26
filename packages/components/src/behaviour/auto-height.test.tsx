@@ -26,6 +26,12 @@ const height = (page: ReturnType<typeof renderComponent>): number =>
     () => -1,
   );
 
+/** The motion description the runtime is running for `testId`. */
+const motionOf = (
+  page: ReturnType<typeof renderComponent>,
+  testId: string,
+): unknown => page.renderer.findByTestId(testId)?.customProps?.motion;
+
 /** A reveal over a body of `height` pixels. */
 const Reveal = ({
   open,
@@ -48,6 +54,51 @@ const opened = (page: ReturnType<typeof renderComponent>): void => {
 };
 
 describe("AutoHeight", () => {
+  /**
+   * The bug this guards: `onLayout` reports after the frame that painted the
+   * reveal, so the opening frame handed the runtime a target of zero. The panel
+   * painted at rest and only began to grow once the event arrived — a visible
+   * stall on the first open. The content is laid out when it commits, so the
+   * target has to be the measured height on the frame the reveal opens.
+   */
+  it("hands the runtime the measured height on the frame it opens", () => {
+    const page = renderComponent(<Reveal open={false} />);
+    try {
+      page.renderer.clockPause();
+      page.rerender(<Reveal open />);
+
+      expect(motionOf(page, "box")).toMatchObject({
+        initial: { height: 0 },
+        animate: { height: 80 },
+      });
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("fades the content in after the box starts to grow, and out with it", () => {
+    // The panel's 0.02s lead: the height starts first, so the arriving content
+    // is not a flash inside a box that is still opening.
+    const page = renderComponent(<Reveal open={false} />);
+    try {
+      page.renderer.clockPause();
+      page.rerender(<Reveal open />);
+      expect(motionOf(page, "box-measured")).toMatchObject({
+        animate: { opacity: 1 },
+        transition: { duration: 0.2, delay: 0.02, ease: "easeOut" },
+      });
+
+      page.rerender(<Reveal open={false} />);
+      settle(page);
+      expect(motionOf(page, "box-measured")).toMatchObject({
+        animate: { opacity: 0 },
+        transition: { duration: 0.2, ease: "easeIn" },
+      });
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("grows from nothing to the height its content reports", async () => {
     const page = renderComponent(<Reveal open={false} />);
     try {

@@ -144,11 +144,18 @@ export const moveTiming = (
 export const useMoveTiming = (level: MotionLevel): PresenceTransition =>
   moveTiming(level, useMotionPreference());
 
-/** The `motion` prop a surface paints for its current presence. */
+/**
+ * The `motion` prop a surface paints for its current presence.
+ *
+ * `timing` is an optional pair for a layer that moves on a different phase than
+ * the surface it sits in — a reveal's content waits before it fades in while
+ * the box around it starts to grow.
+ */
 export const presenceMotion = (
   frames: SurfaceFrames,
   presence: SurfacePresence,
-): MotionProps => motionOfPresence(frames, presence.present, presence.timing);
+  timing: SurfaceTiming = presence.timing,
+): MotionProps => motionOfPresence(frames, presence.present, timing);
 
 /**
  * The layer a leaving surface paints over its content.

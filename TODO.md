@@ -22129,7 +22129,7 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 15/15
+`[x]` `[██████████]` 16/16
 
 `[x]` `packages/components`: **a stored value made the swap state's `text` a
       non-string** — `RollingText` and `SlidingText` hand their prop to
@@ -23261,6 +23261,27 @@ scenario applies — the timings are pure values.
       twelve package pages' §Limitations and the twelve rows plus the section
       intro in `COMPONENTS.md`. No native scenario applies — the reads are the
       render's own, which the behaviour suite drives in the real renderer.
+
+`[x]` `packages/components`: **the accordion's panel motion was not shadcn's** —
+      the reveal's height target arrived through `onLayout` after the opening
+      frame, so the first open painted a box with no target and began to grow a
+      frame late, and the indicator swapped one chevron for the other in a
+      single frame. The reveal now reads its content through
+      `renderer.getElementBounds` in a layout effect, before that frame paints,
+      and keeps it current through `onLayout`; the content fades in 20 ms after
+      the height starts and fades out with it, and a close shrinks for its
+      200 ms window before the subtree unmounts. With no `transform`, the
+      indicator cross-fades two marks in one slot, the incoming one rising 2 px.
+      `behaviour/accordion.test.tsx` gains five cases and
+      `behaviour/auto-height.test.tsx` two: the measured target on the opening
+      frame, intermediate heights on open and close, the section below moving
+      by exactly the panel gained, the cross-fade, and the reduced snap.
+      Direction measured: reverting the two sources fails the target cases with
+      `animate.height` `0` (expected the settled height) and the cross-fade
+      cases with `undefined`; restored, the component suite is **1063/1063**
+      and the behaviour suite **1141/1141** across 100 files. Docs: the
+      accordion and auto-height pages, their inventory rows,
+      `docs/component-api.md` and the docs demo's copy.
 
 ## TanStack cores
 

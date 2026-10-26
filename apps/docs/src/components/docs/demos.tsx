@@ -2005,7 +2005,7 @@ const accordionSections = [
   {
     value: "motion",
     label: "Why does the panel animate its height?",
-    body: "The body reports its painted height through onLayout, so the collapse is a real measurement rather than a guessed maximum. The runtime has no transform, so the box resizes instead of scaling.",
+    body: "The panel grows to the height its body measures: it eases out on the way open and in on the way back, and the content fades in 20 ms later so the two do not race. The runtime has no transform, so the chevron cross-fades two marks instead of rotating.",
   },
 ] as const;
 
@@ -2164,7 +2164,7 @@ import {
 const sections = [
   ["surface", "What is a GPUix surface?", "A GPUix component is not a DOM node…"],
   ["keys", "Does Tab reach every section?", "Only the header rows are tab stops…"],
-  ["motion", "Why does the panel animate its height?", "The body reports its painted height…"],
+  ["motion", "Why does the panel animate its height?", "The panel grows to the height its body measures, easing out on open and in on close…"],
 ] as const;
 
 export const Questions = () => {

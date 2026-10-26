@@ -27,8 +27,12 @@ import { AutoHeight } from "@gpuixui/components/auto-height";
 | `contentClassName` | `string` | — |
 | `style` | `StateStyle<AutoHeightState>` | — |
 
+## Motion
+
+The box grows to the content's measured height on the `normal` level (200 ms): it eases out on the way open and in on the way back. The content fades in `20 ms` after the height starts, so the two do not race, and it fades out with the closing box. The subtree stays mounted for the exit window and unmounts after it. Under `MotionProvider preference="reduced"` the duration is zero and the measured height paints at once.
+
 ## Limitations
 
-- The first open paints at zero for one frame.
+- The first measurement is read through the renderer's `getElementBounds` before the opening frame paints; a host without that optional method starts the growth on the `onLayout` report a frame later.
 - A measurement belongs to the content on screen: a reveal reopened after its body changed grows to the new height, not the one it closed with.
 - A closed reveal unmounts its subtree after the collapse.

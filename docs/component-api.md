@@ -513,7 +513,7 @@ the tree a level's window later.
 | Mention suggestions | fade + 4px out from its field's bottom (the rows it showed are kept for the exit; a list that only narrows to nothing is cut) | `normal` |
 | Preview card | fade + 4px from the trigger's side | `fast` (160 ms) |
 | Toast | fade + a 16px slide in from the right edge, then a fade + 16px slide to the right out; the stack itself unfolds from three peeking strips to full cards on hover or focus (measured heights and a shared gap, never a scale) | its own timing: 220 ms in, 180 ms out, 200 ms to unfold (`motionTimingOf`) |
-| Accordion panel | height from 0 to the body's measured height, plus a fade | `normal` |
+| Accordion panel | height from 0 to the body's measured height (known before the opening frame paints), plus a fade that starts 20 ms in; the trigger cross-fades its two chevrons rather than rotating one | `normal` |
 | Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes, on the `standard` phase (it eases at both ends) | `normal` |
 | Carousel indicator | `width` between the 6px dot and the 18px pill, on the `standard` phase (both dots retarget from the widths on screen) | `fast` (160 ms) |
 | Page transition | the outgoing view fades and travels 16px out, the incoming one travels in from the far edge | `normal` (200 ms) |

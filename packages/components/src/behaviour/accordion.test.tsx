@@ -18,11 +18,14 @@ import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
 import {
   clickCentreOf,
+  requireBounds,
+  settle,
   waitFor,
   focusedTestId,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
+import { MotionProvider } from "../motion.js";
 import {
   Accordion,
   AccordionContent,
@@ -61,6 +64,220 @@ const Faq = ({
     {section("three", "Is it free?", true)}
   </Accordion>
 );
+
+/**
+ * The accordion the motion cases drive: two fixed bodies, so the panel's
+ * painted heights and the shift of the section below are arithmetic.
+ */
+const MotionAccordion = ({
+  reduced = false,
+}: {
+  readonly reduced?: boolean;
+}) => (
+  <MotionProvider preference={reduced ? "reduced" : "animated"}>
+    <Accordion type="single" collapsible>
+      <AccordionItem value="one" testId="item-one">
+        <AccordionTrigger testId="trigger-one">One</AccordionTrigger>
+        <AccordionContent testId="content-one">
+          <div style={{ height: 80 }} />
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="two" testId="item-two">
+        <AccordionTrigger testId="trigger-two">Two</AccordionTrigger>
+        <AccordionContent testId="content-two">
+          <div style={{ height: 40 }} />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </MotionProvider>
+);
+
+/** The motion description the runtime is running for `testId`. */
+const motionOf = (
+  page: ReturnType<typeof renderComponent>,
+  testId: string,
+): unknown => page.renderer.findByTestId(testId)?.customProps?.motion;
+
+/** The painted height of `testId`. */
+const heightOf = (
+  page: ReturnType<typeof renderComponent>,
+  testId: string,
+): number => requireBounds(page, testId).height;
+
+/** The painted top edge of `testId`. */
+const topOf = (
+  page: ReturnType<typeof renderComponent>,
+  testId: string,
+): number => requireBounds(page, testId).y;
+
+/** The painted heights of a panel at 20 ms steps, for the frames it is moving. */
+const steps = (
+  page: ReturnType<typeof renderComponent>,
+  testId: string,
+): ReadonlyArray<number> =>
+  Array.from({ length: 9 }, () => {
+    page.renderer.clockFastForward(20);
+    settle(page);
+    const element = page.renderer.findByTestId(testId);
+    return element === undefined
+      ? -1
+      : (page.renderer.getElementBounds(element.id)?.height ?? -1);
+  });
+
+describe("Accordion motion", () => {
+  /**
+   * The bug this guards: the panel's target arrived through `onLayout` after its
+   * first paint, so the opening frame was handed height 0 and the growth started
+   * a frame late. The target is the height the panel settles on, known before
+   * that frame paints.
+   */
+  it("hands the runtime the measured height on the frame it opens", () => {
+    const page = renderComponent(<MotionAccordion />);
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "trigger-one");
+      const opening = motionOf(page, "content-one");
+      settle(page);
+      page.renderer.clockFastForward(400);
+      settle(page);
+      const resting = heightOf(page, "content-one");
+
+      expect(resting).toBeGreaterThan(0);
+      expect(opening).toMatchObject({
+        initial: { height: 0 },
+        animate: { height: resting },
+        transition: { duration: 0.2, ease: "easeOut" },
+      });
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("moves through intermediate heights while it opens and shrinks before it unmounts", async () => {
+    const page = renderComponent(<MotionAccordion />);
+    try {
+      page.renderer.clockPause();
+      const before = topOf(page, "item-two");
+      clickCentreOf(page, "trigger-one");
+      settle(page);
+      const opening = steps(page, "content-one");
+      page.renderer.clockFastForward(400);
+      settle(page);
+      const resting = heightOf(page, "content-one");
+      const after = topOf(page, "item-two");
+
+      expect(
+        opening.filter((height) => height > 0 && height < resting).length,
+      ).toBeGreaterThan(1);
+      // The section below moves by exactly the panel it gained, so nothing jumps.
+      expect(after - before).toBe(resting);
+
+      clickCentreOf(page, "trigger-one");
+      settle(page);
+      const closing = steps(page, "content-one");
+
+      // It shrinks through real frames rather than vanishing...
+      expect(
+        closing.filter((height) => height > 0 && height < resting).length,
+      ).toBeGreaterThan(1);
+      expect(closing.at(-1) ?? resting).toBeLessThan(resting);
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("content-one")).toBeUndefined(),
+      );
+      // ...and the page below lands where it started.
+      expect(topOf(page, "item-two")).toBe(before);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps the section below moving through the open, not jumping to its place", () => {
+    const page = renderComponent(<MotionAccordion />);
+    try {
+      page.renderer.clockPause();
+      const before = topOf(page, "item-two");
+      clickCentreOf(page, "trigger-one");
+      settle(page);
+      const moving = Array.from({ length: 9 }, () => {
+        const y = topOf(page, "item-two");
+        page.renderer.clockFastForward(20);
+        settle(page);
+        return y;
+      });
+
+      // A snap mounts the open body at its full height in one frame and leaves
+      // the section below with two positions; a height tween moves it through
+      // several.
+      expect(new Set(moving).size).toBeGreaterThan(2);
+      expect(moving.every((y) => y >= before)).toBe(true);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("cross-fades its two chevrons instead of swapping the mark", () => {
+    // The runtime has no `transform`, so the indicator cannot rotate: both marks
+    // stay mounted in the header and cross-fade, the incoming one rising 2px.
+    const page = renderComponent(<MotionAccordion />);
+    try {
+      page.renderer.clockPause();
+      const header = heightOf(page, "trigger-one");
+      expect(motionOf(page, "trigger-one-chevron-down")).toMatchObject({
+        animate: { opacity: 1, top: 0 },
+        transition: { duration: 0.2, ease: "easeOut" },
+      });
+      expect(motionOf(page, "trigger-one-chevron-up")).toMatchObject({
+        animate: { opacity: 0, top: 2 },
+        transition: { duration: 0.2, ease: "easeIn" },
+      });
+
+      clickCentreOf(page, "trigger-one");
+      settle(page);
+
+      expect(motionOf(page, "trigger-one-chevron-down")).toMatchObject({
+        animate: { opacity: 0, top: -2 },
+      });
+      expect(motionOf(page, "trigger-one-chevron-up")).toMatchObject({
+        animate: { opacity: 1, top: 0 },
+      });
+      // Both marks stay painted, which is what makes it a cross-fade.
+      expect(
+        page.renderer.findByTestId("trigger-one-chevron-down"),
+      ).toBeDefined();
+      expect(
+        page.renderer.findByTestId("trigger-one-chevron-up"),
+      ).toBeDefined();
+      // The two marks share one slot, so the header keeps its box.
+      expect(heightOf(page, "trigger-one")).toBe(header);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("paints the measured height at once under the reduced preference", () => {
+    const page = renderComponent(<MotionAccordion reduced />);
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "trigger-one");
+      settle(page);
+      const first = heightOf(page, "content-one");
+
+      expect(first).toBeGreaterThan(0);
+      expect(motionOf(page, "content-one")).toMatchObject({
+        transition: { duration: 0 },
+      });
+      // The fade snaps with the box, so the delay it wears while animated goes.
+      expect(motionOf(page, "content-one-measured")).toMatchObject({
+        transition: { duration: 0 },
+      });
+      page.renderer.clockFastForward(400);
+      settle(page);
+      expect(heightOf(page, "content-one")).toBe(first);
+    } finally {
+      page.unmount();
+    }
+  });
+});
 
 describe("Accordion", () => {
   it("opens the clicked section and closes the previous one", async () => {
