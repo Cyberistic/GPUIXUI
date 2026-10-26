@@ -199,9 +199,13 @@ export const surfaceBudget = {
    * (5 modules, 40 KiB) after the motion package's `d31ad7500`; the module count
    * did not move, so only the ceiling follows. 41 984 → 42 179 bytes measured
    * 2026-10-24 on the tree that lands the motion package's shared preference
-   * read, still 5 modules, so 42 KiB keeps a family's headroom.
+   * read, still 5 modules, so 42 KiB keeps a family's headroom. 42 179 → 43 707
+   * bytes measured 2026-10-26 with `nub scripts/surface.ts --entry
+   * src/motion-grid.tsx` (5 modules): the timing seam takes an `ease` a surface
+   * can name, which is the stack's re-slot curve — one entry point for a
+   * duration's curve, so the presence route is unchanged and still 5 modules.
    */
-  familyMotion: { modules: 5, bytes: 42 * 1024 },
+  familyMotion: { modules: 5, bytes: 43 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.

@@ -380,6 +380,28 @@ describe("motionTimingOf", () => {
     });
   });
 
+  it("takes the curve a surface names, and refuses one it cannot read", () => {
+    // The bug this guards: a surface with a feel of its own named its duration
+    // here but not its curve, so the toast's swipe-back borrowed the `standard`
+    // phase's ease-in-out and settled flat. A stored curve reaches this
+    // function as often as a literal, and the renderer refuses the **whole**
+    // description for one it cannot read — no frame at all — so an unreadable
+    // value is the phase's curve rather than the runtime's refusal.
+    const curve = [0.22, 1, 0.36, 1] as const;
+    expect(motionTimingOf(260, { phase: "standard", ease: curve })).toEqual({
+      duration: 0.26,
+      ease: curve,
+    });
+    expect(motionTimingOf(260, { phase: "standard", ease: "bouncy" })).toEqual({
+      duration: 0.26,
+      ease: "easeInOut",
+    });
+    // The preference still removes the journey: a curve never resurrects it.
+    expect(motionTimingOf(260, { preference: "reduced", ease: curve })).toEqual(
+      { duration: 0 },
+    );
+  });
+
   it("reads a duration it cannot run as the house surface arrival", () => {
     // The same fallback `motionTiming` applies to an unknown level: a NaN or a
     // zero must not hand the runtime a NaN or an instant tween the caller did
