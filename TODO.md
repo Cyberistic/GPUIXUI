@@ -271,6 +271,18 @@ mounted through the exit; the first open now reads the target through
 frame). Chevrons cross-fade 200ms — no transform, so no rotation. Reduced
 motion snaps. 31 behaviour tests, reverting four files fails 5 of them; native
 `accordion-lifecycle` 1/1.
+`[x]` **Accordion and Auto height previews animate** — both previews mounted and
+unmounted their body, so the panel snapped and the centred card moved under the
+pointer that had just opened it. The body stays mounted and a grid row track
+grows (200ms, fade leading by 20ms); the cards are pinned to the top of the
+scene; reduced motion drops the tween. Measured on the live page: the accordion
+reveal goes 0 → 7 → 10 → 16 → 24 → 40 px across frames, and the Auto height
+button stays at y=354 through the collapse.
+`[x]` **Liquid button preview** — the fill is absolutely positioned and the label
+was a bare text node, so the flood painted over it. The label is a positioned
+span above the fill (verified `position: relative; z-index: 1`). The native
+component still paints the layer after `children`; fix it when the effects
+branch lands.
 `[x]` **Combobox preview** — the control sat left because `.gx-demo-combobox`
 filled the row without being a flex container; the prose card is gone, the field
 is a 320px column centred in the scene, the caret/check/search marks are icons
