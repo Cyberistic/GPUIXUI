@@ -23,6 +23,10 @@
  *
  * A field is decoration: it publishes no accessibility node and takes no pointer
  * input, so the content painted above it keeps its name and its presses.
+ *
+ * The measured box and the breath's phase are `pattern-field/store.ts`: both are
+ * state that outlives a render, and both are written by an event (a layout, a
+ * completed tween) rather than by React.
  */
 
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
@@ -34,8 +38,10 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { useOwnedStore, useStoreSnapshot } from "./effect-store.js";
 import { measuredBox } from "./measure.js";
+import { makeFieldStore } from "./pattern-field/store.js";
 import { fadeOnly, useMotionPreference, useSurfaceTiming } from "./presence.js";
 import { recipeStyle } from "./recipe.js";
 import { durationOf } from "./scatter.js";
@@ -106,12 +112,15 @@ const Breath = ({
   art,
   legMs,
   id,
+  lit,
+  onLanded,
 }: {
   readonly art: ReactNode;
   readonly legMs: number;
   readonly id: string;
+  readonly lit: boolean;
+  readonly onLanded: () => void;
 }) => {
-  const [lit, setLit] = useState(false);
   const motion: MotionProps = {
     initial: { opacity: patternDim },
     animate: { opacity: lit ? patternDim : 1 },
@@ -122,7 +131,7 @@ const Breath = ({
     <div
       testId={`${id}-breath`}
       motion={motion}
-      onMotionComplete={() => setLit((current) => !current)}
+      onMotionComplete={onLanded}
       style={{
         position: "absolute",
         top: 0,
@@ -164,25 +173,17 @@ export const DecorativeField = ({
     patternBreatheFloor,
     patternBreatheCap,
   );
-  const [box, setBox] = useState<Option.Option<PatternBox>>(Option.none());
+  const store = useOwnedStore(() => makeFieldStore());
+  const field = useStoreSnapshot(store);
 
   const noteBox = (event: EventPayload): void => {
     Option.match(measuredBox(event), {
       onNone: () => undefined,
-      onSome: (next) =>
-        setBox((held) =>
-          Option.match(held, {
-            onNone: () => Option.some(next),
-            onSome: (current) =>
-              current.width === next.width && current.height === next.height
-                ? held
-                : Option.some(next),
-          }),
-        ),
+      onSome: (next) => store.note({ width: next.width, height: next.height }),
     });
   };
 
-  const measured: PatternBox = Option.getOrElse(box, () => ({
+  const measured: PatternBox = Option.getOrElse(field.box, () => ({
     width: 0,
     height: 0,
   }));
@@ -213,7 +214,13 @@ export const DecorativeField = ({
         still ? (
           art(measured, id)
         ) : (
-          <Breath art={art(measured, id)} legMs={legMs} id={id} />
+          <Breath
+            art={art(measured, id)}
+            legMs={legMs}
+            id={id}
+            lit={field.lit}
+            onLanded={store.breathe}
+          />
         )
       ) : undefined}
       {children}
