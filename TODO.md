@@ -299,8 +299,14 @@ theme editor, which still renders one.
 `shine-button`, `stars`, `gravity-stars` on one branch; `hexagon`,
 `splitting-text`, plus the reported-broken `rolling-text` and `image-zoom` on the
 other. Shared internals are off-limits so the branches cannot collide.
-`[~]` **Blocks full size** — an agent strips the 520px card from block pages and
-replaces the index's live tiles with images.
+`[x]` **Blocks full size, indexed as images** — a block page renders the screen
+in the page column (`.gx-block-stage`, 836×1310 for the dashboard) with the
+recipe in a collapsed disclosure under it; no 520px card, no Preview/Code frame.
+The index paints one `alt=""` WebP per block, generated from the real pages by
+`nub run --filter @gpuixui/docs blocks:thumbnails` (11 files, 8–29 KiB, checked
+in). Verified live: 11 images loaded, 0 live scenes on the index. Thumbnails are
+one palette by nature; the block page still follows the switch. The dashboard
+donut legend wraps instead of clipping at the wider column.
 `[x]` **Fixed-height controls centre their label** — the toast action and close
 mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
 the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The
