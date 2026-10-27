@@ -72,7 +72,7 @@ function Trail({
 /** A repository trail with the budget as a control, the composition the component is for. */
 const BreadcrumbWorkflow = (): ReactNode => {
   const [budget, setBudget] = useState<number | "all">(BUDGETS[1]);
-  const [opened, setOpened] = useState("Nothing opened yet");
+  const [, setOpened] = useState("Nothing opened yet");
   const entries = collapseCrumbs(
     CRUMBS,
     budget === "all" ? CRUMBS.length : budget,
