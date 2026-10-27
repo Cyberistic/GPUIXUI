@@ -12,33 +12,38 @@
  * frame's origin fresh, and this store holds only what the reader did.
  */
 
-import { Option } from "effect";
-import { makeEffectStore, type EffectStore } from "../internal/effect-store.js";
+import { Effect } from "effect";
+import * as Option from "effect/Option";
+import * as SubscriptionRef from "effect/SubscriptionRef";
+import { makeLocalState, type LocalState } from "../internal/local-state.js";
 import { samePointer, type ZoomPointer } from "./logic.js";
 
 /** {@link ImageZoom}'s pointer state and the two events that move it. */
-export interface ZoomStore extends EffectStore<Option.Option<ZoomPointer>> {
+export interface ZoomStore {
+  readonly local: LocalState<Option.Option<ZoomPointer>>;
   /** Follow a pointer reading; a repeat of the held point writes nothing. */
-  readonly follow: (point: ZoomPointer) => void;
+  readonly follow: (point: ZoomPointer) => Effect.Effect<void>;
   /** The pointer left the frame: the picture returns to rest. */
-  readonly leave: () => void;
+  readonly leave: Effect.Effect<void>;
 }
 
 /** A zoom at rest: no pointer over the frame. */
-export const makeZoomStore = (): ZoomStore => {
-  const store = makeEffectStore<Option.Option<ZoomPointer>>(Option.none());
+export const makeZoomStore: Effect.Effect<ZoomStore> = Effect.gen(function* () {
+  const local = yield* makeLocalState<Option.Option<ZoomPointer>>(
+    Option.none(),
+  );
 
-  return {
-    ...store,
-    follow: (point) => {
-      const held = store.read();
-      if (Option.exists(held, (previous) => samePointer(previous, point))) {
-        return;
-      }
-      store.set(Option.some(point));
-    },
-    leave: () => {
-      if (Option.isSome(store.read())) store.set(Option.none());
-    },
-  };
-};
+  const follow = Effect.fnUntraced(function* (point: ZoomPointer) {
+    const held = yield* SubscriptionRef.get(local.state);
+    if (Option.exists(held, (previous) => samePointer(previous, point))) return;
+    yield* local.write(Option.some(point));
+  });
+
+  const leave = Effect.gen(function* () {
+    const held = yield* SubscriptionRef.get(local.state);
+    if (Option.isNone(held)) return;
+    yield* local.write(Option.none());
+  });
+
+  return { local, follow, leave };
+});

@@ -11,9 +11,11 @@
  */
 
 import type { StaggerFrom } from "@gpuixui/motion/timeline";
-import { Option } from "effect";
+import { Effect } from "effect";
 import * as Arr from "effect/Array";
-import { makeEffectStore, type EffectStore } from "../internal/effect-store.js";
+import * as Option from "effect/Option";
+import * as SubscriptionRef from "effect/SubscriptionRef";
+import { makeLocalState, type LocalState } from "../internal/local-state.js";
 import { splitUnits, type SplitLine, type SplitMode } from "./logic.js";
 
 /** What one phrase splits into, with the settings that produced it. */
@@ -36,9 +38,10 @@ export interface SplitInput {
 }
 
 /** {@link SplitState} and the event that moves it. */
-export interface SplittingStore extends EffectStore<SplitState> {
+export interface SplittingStore {
+  readonly local: LocalState<SplitState>;
   /** Split `input`, unless it is the phrase already painted. */
-  readonly show: (input: SplitInput) => void;
+  readonly show: (input: SplitInput) => Effect.Effect<void>;
 }
 
 /** The reveal `input` describes, split for the renderer. */
@@ -66,14 +69,17 @@ const sameInput = (state: SplitState, input: SplitInput): boolean =>
   Option.getOrNull(state.stepMs) === (input.stepMs ?? null);
 
 /** A store holding `input`'s split. */
-export const makeSplittingStore = (input: SplitInput): SplittingStore => {
-  const store = makeEffectStore(splitOf(input));
+export const makeSplittingStore = (
+  input: SplitInput,
+): Effect.Effect<SplittingStore> =>
+  Effect.gen(function* () {
+    const local = yield* makeLocalState<SplitState>(splitOf(input));
 
-  return {
-    ...store,
-    show: (next) => {
-      if (sameInput(store.read(), next)) return;
-      store.set(splitOf(next));
-    },
-  };
-};
+    const show = Effect.fnUntraced(function* (next: SplitInput) {
+      const current = yield* SubscriptionRef.get(local.state);
+      if (sameInput(current, next)) return;
+      yield* local.write(splitOf(next));
+    });
+
+    return { local, show };
+  });

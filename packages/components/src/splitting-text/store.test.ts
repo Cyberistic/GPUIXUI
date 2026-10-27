@@ -7,7 +7,8 @@
  * stale split paints the previous headline.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import { makeSplittingStore, type SplitInput } from "./store.js";
 
 const phrase: SplitInput = {
@@ -21,66 +22,58 @@ const unitsOf = (text: string): ReadonlyArray<string> =>
   text.split(/\s+/).filter((unit) => unit !== "");
 
 describe("SplittingStore", () => {
-  it("splits the phrase it mounts with", () => {
-    const store = makeSplittingStore(phrase);
-    try {
-      expect(store.read().text).toBe(phrase.text);
-      expect(store.read().units).toBe(unitsOf(phrase.text).length);
+  it.effect("splits the phrase it mounts with", () =>
+    Effect.gen(function* () {
+      const store = yield* makeSplittingStore(phrase);
+      expect(store.local.read().text).toBe(phrase.text);
+      expect(store.local.read().units).toBe(unitsOf(phrase.text).length);
       expect(
-        store.read().lines.flatMap((line) => line.units.map((u) => u.text)),
+        store.local
+          .read()
+          .lines.flatMap((line) => line.units.map((unit) => unit.text)),
       ).toEqual(unitsOf(phrase.text));
-    } finally {
-      store.stop();
-    }
-  });
+    }),
+  );
 
-  it("keeps the split for an unchanged phrase and its settings", () => {
-    // The bug this guards: a render recomputed the whole reveal, so a character
-    // split of a long headline allocated a new unit array per paint.
-    const store = makeSplittingStore(phrase);
-    try {
-      const held = store.read();
-      store.show({ ...phrase });
-      expect(store.read()).toBe(held);
-    } finally {
-      store.stop();
-    }
-  });
+  it.effect("keeps the split for an unchanged phrase and its settings", () =>
+    Effect.gen(function* () {
+      // The bug this guards: a render recomputed the whole reveal, so a character
+      // split of a long headline allocated a new unit array per paint.
+      const store = yield* makeSplittingStore(phrase);
+      const held = store.local.read();
+      yield* store.show({ ...phrase });
+      expect(store.local.read()).toBe(held);
+    }),
+  );
 
-  it("re-splits when the phrase changes", () => {
-    const store = makeSplittingStore(phrase);
-    try {
-      store.show({ ...phrase, text: "Ship" });
+  it.effect("re-splits when the phrase changes", () =>
+    Effect.gen(function* () {
+      const store = yield* makeSplittingStore(phrase);
+      yield* store.show({ ...phrase, text: "Ship" });
 
-      expect(store.read().text).toBe("Ship");
-      expect(store.read().units).toBe(1);
-    } finally {
-      store.stop();
-    }
-  });
+      expect(store.local.read().text).toBe("Ship");
+      expect(store.local.read().units).toBe(1);
+    }),
+  );
 
-  it("re-splits when the split mode changes", () => {
-    // The bug this guards: the mode is a prop like the phrase, and a store that
-    // compared only the text kept a word split under a character request.
-    const store = makeSplittingStore(phrase);
-    try {
-      store.show({ ...phrase, split: "characters" });
+  it.effect("re-splits when the split mode changes", () =>
+    Effect.gen(function* () {
+      // The bug this guards: the mode is a prop like the phrase, and a store that
+      // compared only the text kept a word split under a character request.
+      const store = yield* makeSplittingStore(phrase);
+      yield* store.show({ ...phrase, split: "characters" });
 
-      expect(store.read().mode).toBe("characters");
-      expect(store.read().units).toBe(phrase.text.length);
-    } finally {
-      store.stop();
-    }
-  });
+      expect(store.local.read().mode).toBe("characters");
+      expect(store.local.read().units).toBe(phrase.text.length);
+    }),
+  );
 
-  it("re-splits when the stagger changes", () => {
-    const store = makeSplittingStore(phrase);
-    try {
-      store.show({ ...phrase, stepMs: 80 });
+  it.effect("re-splits when the stagger changes", () =>
+    Effect.gen(function* () {
+      const store = yield* makeSplittingStore(phrase);
+      yield* store.show({ ...phrase, stepMs: 80 });
 
-      expect(store.read().lines[0]?.units[1]?.delayMs).toBe(80);
-    } finally {
-      store.stop();
-    }
-  });
+      expect(store.local.read().lines[0]?.units[1]?.delayMs).toBe(80);
+    }),
+  );
 });

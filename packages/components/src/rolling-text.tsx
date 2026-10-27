@@ -30,7 +30,7 @@ import { Match } from "effect";
 import { useEffect } from "react";
 import { rollFrames, type RollDirection } from "./rolling-text/logic.js";
 import { makeRollingStore } from "./rolling-text/store.js";
-import { useOwnedStore, useStoreSnapshot } from "./internal/effect-store.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import { useMotionPreference } from "./internal/presence.js";
 import { swapHalves, type SwapPhase } from "./internal/text-swap.js";
 import { recipeStyle } from "./internal/recipe.js";
@@ -89,13 +89,13 @@ export const RollingText = ({
   const reduced = preference === "reduced";
   /** The value a saved record may have lost; JSON writes `null` for it. */
   const value = textOf(text);
-  const store = useOwnedStore(() => makeRollingStore(value));
-  const roll = useStoreSnapshot(store);
+  const store = useLocalStore(makeRollingStore(value));
+  const roll = useLocalState(store.local);
 
   // The value is a prop, so a change is forwarded to the store rather than kept
   // in React; the store decides whether it starts an exit.
   useEffect(() => {
-    store.show(value, { reduced, swapMs: timing.swapMs });
+    send(store.show(value, { reduced, swapMs: timing.swapMs }));
   }, [store, value, reduced, timing.swapMs]);
 
   const metrics = textStyle(theme, role);
@@ -157,7 +157,7 @@ export const RollingText = ({
         // The entry's own completion is what ends the swap: the runtime's
         // motion clock is the one the journey runs on, so the phase cannot
         // settle on a wall-clock window the software paint might outrun.
-        onMotionComplete={() => store.entered()}
+        onMotionComplete={() => send(store.entered)}
         style={{
           position: "relative",
           ...metrics,

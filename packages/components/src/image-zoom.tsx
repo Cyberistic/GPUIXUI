@@ -41,7 +41,7 @@ import {
   zoomRest,
 } from "./image-zoom/logic.js";
 import { makeZoomStore } from "./image-zoom/store.js";
-import { useOwnedStore, useStoreSnapshot } from "./internal/effect-store.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import { measuredPoint } from "./internal/measure.js";
 import { nameOf } from "./internal/text.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
@@ -134,8 +134,8 @@ export const ImageZoom = ({
     height: Option.fromNullishOr(height),
     scale: Option.fromNullishOr(scale),
   });
-  const store = useOwnedStore(() => makeZoomStore());
-  const pointer = useStoreSnapshot(store);
+  const store = useLocalStore(makeZoomStore);
+  const pointer = useLocalState(store.local);
   const surface = useSurfaceBox();
 
   const box = Option.match(Option.all({ pointer, surface: surface.box }), {
@@ -153,13 +153,13 @@ export const ImageZoom = ({
     surface.read();
     Option.match(measuredPoint(event), {
       onNone: () => undefined,
-      onSome: store.follow,
+      onSome: (point) => send(store.follow(point)),
     });
   };
 
   const leave = (event: EventPayload) => {
     onMouseLeave?.(event);
-    store.leave();
+    send(store.leave);
   };
 
   const corner = cornerOf(Option.fromNullishOr(radius), theme);
