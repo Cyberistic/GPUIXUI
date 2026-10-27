@@ -33,8 +33,18 @@ export interface MenuRow extends MenuItemSpec {
   readonly activate: () => void;
 }
 
-/** Why a menu closed, which decides where focus goes afterwards. */
-export type MenuCloseReason = "activate" | "dismiss" | "outside" | "leave";
+/**
+ * Why a menu closed, which decides where focus goes afterwards.
+ *
+ * `pointer` is the pointer leaving the menu; it is the one reason that moves
+ * nothing but the surface, because the pointer is already where the reader put it.
+ */
+export type MenuCloseReason =
+  | "activate"
+  | "dismiss"
+  | "outside"
+  | "leave"
+  | "pointer";
 
 /** The rules a menu part follows; throws outside a menu content. */
 export interface MenuContextValue {
@@ -55,20 +65,33 @@ export interface MenuContextValue {
   /** Run the active row, if there is one. */
   readonly activateActive: () => void;
   /**
+   * A row or the surface's own box reports the pointer on itself. The surface's
+   * owner turns that into a hold or a wait; a menu that ignores the pointer does
+   * nothing (the Dropdown).
+   */
+  readonly notePointer: (present: boolean) => void;
+  /**
    * Close the menu. `activate` and `dismiss` return focus to the trigger;
-   * `leave` (Tab) and `outside` (a press elsewhere) leave focus where it went.
+   * `leave` (Tab), `outside` (a press elsewhere) and `pointer` leave focus where
+   * it went, because the reader already put it there.
    */
   readonly close: (reason: MenuCloseReason) => void;
   /**
-   * Close the submenu opened from this menu, if one is open. Silent: the pointer
-   * is already where the user put it, so focus must not move.
+   * Close the submenu opened from this menu, if one is open and it is not the
+   * one `rowId` opens.
+   *
+   * A row that is not a submenu trigger closes whatever submenu is open when the
+   * pointer reaches it. The trigger of the open submenu is the exception — the
+   * pointer coming back to it is not a reason to close it. The row that opened
+   * the closed submenu takes the focus back: here the highlight is real focus.
    */
-  readonly closeSubmenu: () => void;
+  readonly closeSubmenu: (rowId?: number) => void;
   /**
-   * Register an open submenu. Opening another closes the previous one. Returns
-   * the release function the submenu calls when it closes or unmounts.
+   * Register an open submenu and the row that opens it. Opening another closes
+   * the previous one. Returns the release function the submenu calls when it
+   * closes or unmounts.
    */
-  readonly claimSubmenu: (close: () => void) => () => void;
+  readonly claimSubmenu: (close: () => void, triggerId?: number) => () => void;
 }
 
 export const MenuContext = createContext<MenuContextValue | undefined>(
@@ -103,6 +126,9 @@ export const useMenuContext = (): MenuContextValue => {
   return value;
 };
 
+/** A surface that does not follow the pointer ignores every row's report. */
+const ignorePointer = (): void => undefined;
+
 /** Replace the row with the same id, or append it. Order is registration order. */
 const upsert = (
   rows: ReadonlyArray<MenuRow>,
@@ -126,6 +152,7 @@ const upsert = (
  */
 export const useMenuState = (
   close: (reason: MenuCloseReason) => void,
+  notePointer: (present: boolean) => void = ignorePointer,
 ): MenuContextValue => {
   const renderer = useGpuix().renderer;
   const [rows, setRows] = useState<ReadonlyArray<MenuRow>>([]);
@@ -194,20 +221,26 @@ export const useMenuState = (
 
   // One submenu per menu. A ref, not state: this is an imperative handle, and
   // putting it in state would re-render every row when a submenu opens.
-  const submenu = useRef<(() => void) | null>(null);
+  const submenu = useRef<{
+    readonly close: () => void;
+    readonly triggerId: number | undefined;
+  } | null>(null);
 
-  const closeSubmenu = useCallback(() => {
-    const close = submenu.current;
+  const closeSubmenu = useCallback((rowId?: number) => {
+    const open = submenu.current;
+    if (open === null || (rowId !== undefined && open.triggerId === rowId)) {
+      return;
+    }
     submenu.current = null;
-    close?.();
+    open.close();
   }, []);
 
-  const claimSubmenu = useCallback((close: () => void) => {
+  const claimSubmenu = useCallback((close: () => void, triggerId?: number) => {
     const previous = submenu.current;
-    submenu.current = close;
-    if (previous !== null && previous !== close) previous();
+    submenu.current = { close, triggerId };
+    if (previous !== null && previous.close !== close) previous.close();
     return () => {
-      if (submenu.current === close) submenu.current = null;
+      if (submenu.current?.close === close) submenu.current = null;
     };
   }, []);
 
@@ -222,6 +255,7 @@ export const useMenuState = (
       typeahead,
       activateActive,
       close,
+      notePointer,
       closeSubmenu,
       claimSubmenu,
     }),
@@ -233,6 +267,7 @@ export const useMenuState = (
       closeSubmenu,
       focusRow,
       noteFocus,
+      notePointer,
       register,
       rows,
       step,

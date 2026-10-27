@@ -32,6 +32,7 @@ import {
 import { pushDismissLayer } from "../internal/dismiss-layer.js";
 import { useDismissDepth } from "../internal/dismiss-scope.js";
 import { claimEvent } from "../internal/event-claim.js";
+import { useHoverDelays } from "../internal/hover.js";
 import { isDown, isLeft, isRight, isUp } from "../internal/key.js";
 import {
   assertParts,
@@ -56,6 +57,7 @@ import {
   MenuSeparator,
   type MenuItemProps,
 } from "./item.js";
+import { MenuPointer, menuCloseGraceMs, submenuOpenDelayMs } from "./hover.js";
 import {
   MenuContext,
   useMenuContext,
@@ -67,7 +69,14 @@ import { MenuSurface } from "./surface.js";
 /** The rules a {@link MenuSubContent} follows; throws outside a sub. */
 interface SubContextValue {
   readonly open: boolean;
-  readonly setOpen: (open: boolean) => void;
+  /** Open now, from a key or a press; a pending hover wait is not the reader's. */
+  readonly openNow: () => void;
+  /** Close this level only; the menu it sits in decides for itself. */
+  readonly close: (reason: MenuCloseReason) => void;
+  /** The pointer on the trigger row: hold the submenu, or rest towards opening it. */
+  readonly hoverTrigger: (present: boolean) => void;
+  /** The pointer on the submenu surface: hold it, or start the grace to close. */
+  readonly hoverContent: (present: boolean) => void;
   /** The SubTrigger row: it positions the surface and receives returned focus. */
   readonly trigger: RefObject<PublicInstance | null>;
   /** Set by the content while mounted: focus the submenu's first or last row. */
@@ -91,16 +100,82 @@ export interface MenuSubProps {
 }
 
 /**
- * A group of actions behind one secondary level. It owns its open state; only
- * one submenu per menu is open at a time.
+ * A group of actions behind one secondary level. It owns its open state, its
+ * hover intent and its close, so only one submenu per menu is open at a time and
+ * every route into and out of it is decided here.
  */
 export const MenuSub = ({ children }: MenuSubProps) => {
+  const renderer = useGpuix().renderer;
+  const parent = useMenuContext();
   const [open, setOpen] = useState(false);
   const trigger = useRef<PublicInstance | null>(null);
   const focusEdge = useRef<((edge: "first" | "last") => void) | null>(null);
+  const restoreFocus = useRef(false);
+
+  /** Put the focus back on the row that opens this level. */
+  const focusTrigger = useCallback(() => {
+    Option.match(Option.fromNullishOr(trigger.current), {
+      onNone: () => undefined,
+      onSome: (instance) => renderer?.focusElement?.(instance.id),
+    });
+  }, [renderer, trigger]);
+
+  // One timer for this submenu: a rest on the trigger opens it, a grace after
+  // the pointer leaves the trigger or the surface closes it. A hover close is
+  // silent but hands the focus back to the row that opened the level, because
+  // here the highlight is real focus — and it is silent about the parent, which
+  // the whole menu's own pointer leave closes.
+  const hover = useHoverDelays({
+    open,
+    setOpen: (next) => {
+      if (!next) restoreFocus.current = true;
+      setOpen(next);
+    },
+    openDelay: submenuOpenDelayMs,
+    closeDelay: menuCloseGraceMs,
+  });
+
+  const openNow = useCallback(() => {
+    hover.cancel();
+    setOpen(true);
+  }, [hover]);
+
+  const close = useCallback(
+    (reason: MenuCloseReason) => {
+      restoreFocus.current = reason === "dismiss" || reason === "pointer";
+      hover.cancel();
+      setOpen(false);
+      // A hover close is this submenu's alone: the whole menu's pointer leave is
+      // the root's, and it closes every level with it.
+      if (reason === "pointer") return;
+      Match.value(reason).pipe(
+        Match.when("activate", () => parent.close("activate")),
+        Match.when("leave", () => parent.close("leave")),
+        Match.when("outside", () => parent.close("outside")),
+        Match.when("dismiss", () => undefined),
+        Match.exhaustive,
+      );
+    },
+    [hover, parent],
+  );
+
+  useLayoutEffect(() => {
+    if (open || !restoreFocus.current) return;
+    restoreFocus.current = false;
+    focusTrigger();
+  }, [focusTrigger, open]);
+
   const value = useMemo<SubContextValue>(
-    () => ({ open, setOpen, trigger, focusEdge }),
-    [open],
+    () => ({
+      open,
+      openNow,
+      close,
+      hoverTrigger: (present) => hover.pointer("trigger", present),
+      hoverContent: (present) => hover.pointer("content", present),
+      trigger,
+      focusEdge,
+    }),
+    [close, hover, open, openNow],
   );
   assertParts(menuSub, children);
 
@@ -115,31 +190,36 @@ export interface MenuSubTriggerProps extends Omit<
 
 /**
  * The row that opens its submenu. It is a normal menu row: arrow keys and
- * type-ahead treat it like an action, and clicking, Enter, Space, `ArrowRight`
- * or hover opens the secondary level.
+ * type-ahead treat it like an action. `Enter`/`Space` toggle it, `ArrowRight`
+ * opens it and moves into it, and a pointer that rests on the row opens it after
+ * Base UI's delay — a disabled row opens nothing.
  */
 export const MenuSubTrigger = ({
   children,
   trailing,
   textValue,
+  disabled = false,
   onKeyDown,
   onFocus,
   onMouseEnter,
+  onMouseLeave,
   ref,
   ...rest
 }: MenuSubTriggerProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, focusEdge } = useSubContext();
+  const { open, openNow, close, hoverTrigger, trigger, focusEdge } =
+    useSubContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
     <MenuItem
       {...rest}
       ref={setTrigger}
+      disabled={disabled}
       closeOnSelect={false}
       aria-expanded={open}
       textValue={textValue}
-      onSelect={() => setOpen(true)}
+      onSelect={() => (open ? close("dismiss") : openNow())}
       onFocus={(event) => {
         // A pointer press focuses the row after React has opened the submenu
         // and moved focus to its first row; the row's own focus event is the
@@ -148,19 +228,28 @@ export const MenuSubTrigger = ({
         onFocus?.(event);
       }}
       onMouseEnter={(event) => {
-        setOpen(true);
+        if (!disabled) hoverTrigger(true);
         onMouseEnter?.(event);
+      }}
+      onMouseLeave={(event) => {
+        if (!disabled) hoverTrigger(false);
+        onMouseLeave?.(event);
       }}
       onKeyDown={(event) => {
         if (!open) {
-          if (isRight(event)) setOpen(true);
+          // A rest is not the only way in: the arrow that points at the submenu,
+          // and the arrows that travel it, open it at once.
+          if (isRight(event) || isDown(event) || isUp(event)) openNow();
         } else if (isDown(event) || isUp(event)) {
           // Focus is still on the trigger (a pointer open): Down/Up enter the
           // submenu instead of moving the parent highlight past it.
           claimEvent(event);
           focusEdge.current?.(isDown(event) ? "first" : "last");
+        } else if (isRight(event)) {
+          claimEvent(event);
+          focusEdge.current?.("first");
         } else if (isLeft(event)) {
-          setOpen(false);
+          close("dismiss");
         }
         onKeyDown?.(event);
       }}
@@ -207,30 +296,17 @@ export const MenuSubContent = ({
   ...rest
 }: MenuSubContentProps) => {
   const renderer = useGpuix().renderer;
-  const { open, setOpen, trigger, focusEdge } = useSubContext();
+  const { open, close, hoverContent, trigger, focusEdge } = useSubContext();
   const parent = useMenuContext();
+  const pointer = useContext(MenuPointer);
   assertParts(menuSubContent, children);
-  const parentClose = parent.close;
   const parentClaim = parent.claimSubmenu;
-  const restoreFocus = useRef(false);
   const surface = useRef<PublicInstance | null>(null);
 
-  const close = useCallback(
-    (reason: MenuCloseReason) => {
-      restoreFocus.current = reason === "dismiss";
-      setOpen(false);
-      Match.value(reason).pipe(
-        Match.when("activate", () => parentClose("activate")),
-        Match.when("leave", () => parentClose("leave")),
-        Match.when("outside", () => parentClose("outside")),
-        Match.when("dismiss", () => undefined),
-        Match.exhaustive,
-      );
-    },
-    [parentClose, setOpen],
-  );
-
-  const menu = useMenuState(close);
+  const menu = useMenuState(close, (present) => {
+    hoverContent(present);
+    pointer?.pointer("trigger", present);
+  });
 
   const depth = useDismissDepth();
 
@@ -282,7 +358,10 @@ export const MenuSubContent = ({
 
   useLayoutEffect(() => {
     if (!open) return;
-    const release = parentClaim(() => setOpen(false));
+    const release = parentClaim(
+      () => closeRef.current("pointer"),
+      trigger.current?.id,
+    );
     const pop = pushDismissLayer((event) => {
       if (event.eventType === "mouseDownOutside" && insideSurface(event))
         return;
@@ -292,14 +371,7 @@ export const MenuSubContent = ({
       pop();
       release();
     };
-  }, [depth, insideSurface, open, parentClaim, setOpen]);
-
-  useLayoutEffect(() => {
-    if (open || !restoreFocus.current) return;
-    restoreFocus.current = false;
-    const instance = trigger.current;
-    if (instance !== null) renderer?.focusElement?.(instance.id);
-  }, [open, renderer, trigger]);
+  }, [depth, insideSurface, open, parentClaim, trigger]);
 
   const [point, setPoint] = useState<{ x: number; y: number } | undefined>();
 

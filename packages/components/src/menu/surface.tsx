@@ -118,6 +118,9 @@ export const MenuSurface = ({
   leaving = false,
   onKeyDown,
   onKeyUp,
+  onMouseEnter,
+  onMouseLeave,
+  onMouseMove,
   className,
   style,
   ...rest
@@ -133,6 +136,21 @@ export const MenuSurface = ({
       tabIndex={-1}
       autoFocus
       {...rest}
+      // The pointer's route through this surface: the whole box reports, not just
+      // its rows, because the padding and a separator's hairline hold the menu
+      // open as much as a row does.
+      onMouseEnter={(event) => {
+        menu.notePointer(true);
+        onMouseEnter?.(event);
+      }}
+      onMouseMove={(event) => {
+        menu.notePointer(true);
+        onMouseMove?.(event);
+      }}
+      onMouseLeave={(event) => {
+        menu.notePointer(false);
+        onMouseLeave?.(event);
+      }}
       onKeyDown={(event) => {
         keys.onKeyDown(event);
         onKeyDown?.(event);

@@ -191,6 +191,7 @@ export const MenuItem = ({
   onFocus,
   onClick,
   onMouseEnter,
+  onMouseLeave,
   className,
   style,
   ref,
@@ -202,7 +203,7 @@ export const MenuItem = ({
   const emphasis = menuToneOf(requestedTone);
   // Only stable members here: the context object changes whenever a row
   // registers, and depending on it would re-register in a loop.
-  const { activeId, register, noteFocus, close, closeSubmenu } =
+  const { activeId, register, noteFocus, notePointer, close, closeSubmenu } =
     useMenuContext();
   // A row of a surface that is only painted for its exit leaves the window's Tab
   // order with it: the row cannot be pressed, so it must not be a stop either.
@@ -264,10 +265,17 @@ export const MenuItem = ({
       }}
       onMouseEnter={(event) => {
         // Moving onto another row leaves the submenu that belonged to the row
-        // the pointer came from. A SubTrigger re-opens its own in the same
-        // event, so React's batch ends on `true`.
-        closeSubmenu();
+        // the pointer came from — but the row that opened it keeps it, so
+        // coming back to that trigger is not a close.
+        notePointer(true);
+        closeSubmenu(instance?.id);
         onMouseEnter?.(event);
+      }}
+      onMouseLeave={(event) => {
+        // A row-to-row move releases and holds again in the same gesture; a move
+        // onto anything else releases the menu, which closes after its grace.
+        notePointer(false);
+        onMouseLeave?.(event);
       }}
       style={mergeStyles(
         menuRowStyle(theme, emphasis, active, disabled, className),
