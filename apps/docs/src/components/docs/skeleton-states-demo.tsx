@@ -39,3 +39,40 @@ const skeletonStatesSource = `import { Skeleton } from "@gpuixui/components/skel
 <Skeleton width="60%" height={14} animate={false} />;`;
 
 export { skeletonStatesSource };
+
+/** The list shape a caller builds from rows, not a component of its own. */
+export const SkeletonList = () => (
+  <div className="gx-demo gx-demo-column gx-skel-scene">
+    <div className="gx-skel-card gx-skel-list">
+      {[0, 1, 2].map((row) => (
+        <div className="gx-skel-row" key={row}>
+          <span className="gx-skel gx-skel-circle gx-skel-avatar" />
+          <div className="gx-skel-lines">
+            <span className="gx-skel gx-skel-body" />
+            <span className="gx-skel gx-skel-body gx-skel-body-short" />
+          </div>
+        </div>
+      ))}
+    </div>
+    <p className="gx-demo-label">
+      Rows are composition: a circle, two lines and the caller's own gap.
+    </p>
+  </div>
+);
+
+const skeletonListSource = `import { Skeleton } from "@gpuixui/components/skeleton";
+import { Stack } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="md">
+  {people.map((person) => (
+    <Stack key={person.id} direction="row" align="center" gap="sm">
+      <Skeleton circle width={32} height={32} />
+      <Stack direction="column" gap="xs" style={{ flexGrow: 1 }}>
+        <Skeleton height={12} width="45%" />
+        <Skeleton height={12} width="70%" />
+      </Stack>
+    </Stack>
+  ))}
+</Stack>;`;
+
+export { skeletonListSource };

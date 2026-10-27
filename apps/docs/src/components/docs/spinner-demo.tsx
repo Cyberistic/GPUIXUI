@@ -58,3 +58,69 @@ const spinnerDemoSource = `import { Spinner, Stack, Text } from "@gpuixui/primit
 <Spinner accent="muted" label="Loading" />;`;
 
 export { spinnerDemoSource };
+
+/** The action state a reader meets most often: a button holding the mark. */
+export const SpinnerInButtons = () => (
+  <div className="gx-demo gx-demo-column gx-spin3-scene">
+    <p className="gx-demo-label">Inside the action the mark belongs to</p>
+    <div className="gx-demo-row">
+      <button className="gx-btn gx-btn-primary" type="button">
+        <span
+          aria-label="Saving"
+          className="gx-spin3"
+          data-size="sm"
+          role="status"
+        >
+          <span className="gx-spin3-dot" />
+          <span className="gx-spin3-dot" />
+          <span className="gx-spin3-dot" />
+        </span>
+        Saving…
+      </button>
+      <button className="gx-btn gx-btn-secondary" type="button">
+        <span
+          aria-label="Loading"
+          className="gx-spin3"
+          data-size="sm"
+          role="status"
+        >
+          <span className="gx-spin3-dot" />
+          <span className="gx-spin3-dot" />
+          <span className="gx-spin3-dot" />
+        </span>
+        Refresh
+      </button>
+      <button className="gx-btn gx-btn-destructive" disabled type="button">
+        <span
+          aria-label="Deleting"
+          className="gx-spin3"
+          data-size="sm"
+          role="status"
+        >
+          <span className="gx-spin3-dot" />
+          <span className="gx-spin3-dot" />
+          <span className="gx-spin3-dot" />
+        </span>
+        Deleting…
+      </button>
+    </div>
+    <p className="gx-demo-label">
+      Native <code>Button loading</code>: the mark replaces the leading icon and
+      the label stays.
+    </p>
+  </div>
+);
+
+const spinnerInButtonsSource = `import { Button } from "@gpuixui/primitives";
+
+<Button variant="primary" loading loadingLabel="Saving">
+  Save changes
+</Button>;
+
+<Button loading>Refresh</Button>;
+
+<Button variant="destructive" loading disabled>
+  Deleting…
+</Button>;`;
+
+export { spinnerInButtonsSource };
