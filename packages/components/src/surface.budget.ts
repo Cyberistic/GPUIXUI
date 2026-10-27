@@ -193,23 +193,17 @@ export const surfaceBudget = {
   // drain or a sweep holds, which is 24 KiB over the five `useState`/`useEffect`
   // seams they replace. The ceiling moved 1230 → 1260 KiB so the next family
   // keeps the same headroom.
-<<<<<<< HEAD
   // 177 → 181 for the four stores that followed on the same seam: the swap and
   // its exit window (`rolling-text/store.ts`), the pointer (`image-zoom/store.ts`),
   // the measured box and the breath's phase (`pattern-field/store.ts`) and the
   // phrase's units (`splitting-text/store.ts`). They landed on a parallel seam
   // (`internal/effect-store.ts`), now deleted: one seam binds a store to React,
   // so the module count is the four stores alone. 1 243 KiB measured with all
-  // nine stores, under the ceiling. 1 310 KiB with the Sidebar family and the
-  // account menu (plan 340) rebased over them, so the ceiling moved 1260 → 1350
-  // KiB; the six shadcn surfaces and their two rules land on top of that.
-  bytes: 1350 * 1024,
-=======
-  // 1 272 KiB measured 2026-10-27 with the calendar family (the grid, its rules
-  // and its store) beside the picker that now composes it. The ceiling moved
-  // 1260 → 1290 KiB for the next family's headroom.
-  bytes: 1290 * 1024,
->>>>>>> aa307e086 (feat(components): add a Calendar and compose DatePicker from it)
+  // nine stores, 1 310 KiB with the Sidebar family and the account menu rebased
+  // over them, and the calendar family beside the picker that composes it
+  // (1 371 KiB measured) — so the ceiling moved 1260 → 1400 KiB for the next
+  // family's headroom.
+  bytes: 1400 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
