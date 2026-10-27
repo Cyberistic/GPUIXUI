@@ -1,65 +1,103 @@
 /**
  * Browser preview for the Rating page.
  *
- * A rating is a score in stars, whole or in halves. The preview draws a
- * half-star score, a cleared state and a read-only display. The Code tab shows
- * the native usage.
+ * A score is pressed on a star, and the drawing rates through the primitive's
+ * **own** arithmetic: `rateAt` reads the half of the star the press landed in
+ * (`pointerRating`) and the keyboard steps with `decideRating`, where Delete and
+ * Backspace are the only way back to zero. The old drawing printed "press a
+ * star to rate" beside stars that took no press, and offered a row of number
+ * buttons instead.
+ *
+ * The Code tab shows the native usage.
  */
 
-import { useState } from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import * as Option from "effect/Option";
+import { decideRating, starCount, starState } from "@gpuixui/primitives/core";
+import { rateAt } from "./rating-preview";
+
+const MAX = 5;
 
 const Star = ({
-  filled,
-  half = false,
+  state,
+  onPress,
+  label,
 }: {
-  readonly filled: boolean;
-  readonly half?: boolean;
-}) => (
-  <span
-    aria-hidden="true"
-    className="gx-rating-star"
-    data-filled={filled ? "" : undefined}
-    data-half={half ? "" : undefined}
-  >
-    ★
-  </span>
-);
+  readonly state: "checked" | "half" | "unchecked";
+  readonly onPress?: (element: HTMLElement, clientX: number) => void;
+  readonly label?: string;
+}) =>
+  onPress === undefined ? (
+    <span aria-hidden="true" className="gx-rating-star" data-half={state === "half" ? "" : undefined} data-filled={state === "checked" ? "" : undefined}>
+      ★
+    </span>
+  ) : (
+    <button
+      aria-label={label}
+      className="gx-rating-star"
+      data-filled={state === "checked" ? "" : undefined}
+      data-half={state === "half" ? "" : undefined}
+      type="button"
+      onClick={(event) =>
+        onPress(event.currentTarget, event.clientX)
+      }
+    >
+      ★
+    </button>
+  );
 
 const Stars = ({ value }: { readonly value: number }) => (
-  <span className="gx-rating" role="img" aria-label={`${value} of 5`}>
-    {[0, 1, 2, 3, 4].map((index) => (
-      <Star filled={index < value} half={value - index === 0.5} key={index} />
+  <span className="gx-rating" role="img" aria-label={`${value} of ${MAX}`}>
+    {Array.from({ length: MAX }, (_, index) => (
+      <Star key={index} state={starState(index + 1, value)} />
     ))}
   </span>
 );
 
 export const RatingDemo = () => {
   const [value, setValue] = useState(3.5);
+
+  const rate = (star: number, element: HTMLElement, clientX: number) =>
+    setValue(rateAt(star, clientX, element.getBoundingClientRect(), true));
+
+  const key = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const next = decideRating(value, MAX, event.key.toLowerCase(), true);
+    if (Option.isNone(next)) return;
+    event.preventDefault();
+    setValue(next.value);
+  };
+
   return (
     <div className="gx-demo gx-demo-column gx-rating-scene">
       <div className="gx-rating-block">
-        <Stars value={value} />
+        <div className="gx-rating" onKeyDown={key} role="group" aria-label="Rate this">
+          {Array.from({ length: starCount(MAX) }, (_, index) => (
+            <Star
+              key={index}
+              label={`Rate ${index + 1} of ${MAX}`}
+              state={starState(index + 1, value)}
+              onPress={(element, clientX) => rate(index + 1, element, clientX)}
+            />
+          ))}
+        </div>
         <span className="gx-rating-readout">
-          {value === 0 ? "Not rated" : `${value} of 5`} — press a star to rate
+          {value === 0 ? "Not rated" : `${value} of ${MAX}`} — press a star's
+          left half for a half
         </span>
         <div className="gx-demo-row">
-          {[0, 1, 2, 3, 4, 5].map((score) => (
-            <button
-              aria-pressed={value === score}
-              className="gx-btn gx-btn-sm gx-btn-outline"
-              key={score}
-              onClick={() => setValue(score)}
-              type="button"
-            >
-              {score === 0 ? "Clear" : score}
-            </button>
-          ))}
+          <button
+            className="gx-btn gx-btn-sm gx-btn-outline"
+            onClick={() => setValue(0)}
+            type="button"
+          >
+            Clear
+          </button>
         </div>
       </div>
       <div className="gx-rating-block">
         <Stars value={0} />
         <span className="gx-rating-readout">
-          Cleared — Delete or Backspace clears
+          Read only — Delete or Backspace clears a rating
         </span>
       </div>
     </div>
@@ -69,17 +107,18 @@ export const RatingDemo = () => {
 const ratingDemoSource = `import { Rating, Stack, Text } from "@gpuixui/primitives";
 import { useState } from "react";
 
-const [score, setScore] = useState(0);
+const [score, setScore] = useState(3.5);
 
-<Stack direction="column" gap="xs">
-  <Rating label="Quality" value={score} onValueChange={setScore} />
-  <Text role="caption" tone="muted">
-    {score === 0 ? "Not rated" : \`\${score} of 5\`}
-  </Text>
+<Stack direction="column" gap="sm">
+  <Text role="caption" tone="muted">{score === 0 ? "Not rated" : \`\${score} of 5\`}</Text>
+  <Rating
+    label="Rate this"
+    value={score}
+    onValueChange={setScore}
+    half
+  />
 </Stack>;
 
-// Halves are the finest score; allowHalf rounds to the nearer half.
-<Rating label="Quality" value={3.5} allowHalf />;
-<Rating label="Quality" value={4} readOnly />;`;
+<Rating label="Read only" value={4.5} halves readOnly />;`;
 
 export { ratingDemoSource };

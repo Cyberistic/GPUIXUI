@@ -8656,6 +8656,18 @@
   align-items: center;
   width: 100%;
   height: var(--control-height-md);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.gx-slider:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+}
+
+.gx-slider[data-disabled] {
+  cursor: default;
 }
 
 .gx-slider-track {
@@ -8685,10 +8697,23 @@
   top: 50%;
   width: var(--icon-size-md);
   height: var(--icon-size-md);
+  padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: 9999px;
   background: var(--foreground);
   transform: translate(-50%, -50%);
+  cursor: grab;
+}
+
+/* A thumb is the range's own tab stop, so it paints the ring on the keyboard
+   route only — a pointer press already moves the value. */
+.gx-slider-thumb:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-slider-thumb:active {
+  cursor: grabbing;
 }
 
 .gx-slider[data-invalid] .gx-slider-thumb {
@@ -8722,9 +8747,23 @@
 .gx-rating-star {
   position: relative;
   display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
   font-size: 22px;
   line-height: 1;
   color: var(--muted-foreground);
+}
+
+button.gx-rating-star {
+  cursor: pointer;
+}
+
+button.gx-rating-star:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .gx-rating-star[data-filled] {

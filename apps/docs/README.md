@@ -136,7 +136,8 @@ src/components/docs/bubble-demo.tsx        The seven surfaces, joined corners an
 src/components/docs/chat-demo.tsx          The chat block: fixed header, transcript, rail and composer
 src/components/docs/empty-state-demo.tsx   The empty panel's three shapes
 src/components/docs/fieldset-demo.tsx      The named group's enabled and disabled states
-src/components/docs/hotkey-recorder-demo.tsx The chord recorder's three states
+src/components/docs/hotkey-chord.ts       The browser key in the recorder's chord grammar
+src/components/docs/hotkey-recorder-demo.tsx The chord recorder's three states, and a real chord
 src/components/docs/keyboard-shortcuts-demo.tsx The cheat sheet's groups and keycaps
 src/components/docs/mention-input-demo.tsx The mention field's query and ranked list
 src/components/docs/message-demo.tsx       The conversation row's variants and slots
@@ -238,18 +239,20 @@ src/components/docs/input-demo.tsx        The field's resting, invalid and disab
 src/components/docs/label-demo.tsx        The visible name's plain, required and invalid paint
 src/components/docs/meter-demo.tsx        The measurement's four tones
 src/components/docs/number-field-demo.tsx The field chrome and its pointer steppers
-src/components/docs/otp-field-demo.tsx    The six cells and an invalid code
+src/components/docs/otp-field-demo.tsx    The six cells that advance and take a paste, and an invalid code
 src/components/docs/progress-demo.tsx     The determinate fill, buffer and indeterminate segment
 src/components/docs/progress-values-demo.tsx A value stated against its maximum, and an indeterminate bar
 src/components/docs/radio-group-demo.tsx  The one-choice group and its selected dot
-src/components/docs/range-slider-demo.tsx The two thumbs and the fill between them
-src/components/docs/rating-demo.tsx       The stars, whole and half
+src/components/docs/range-slider-demo.tsx The two draggable thumbs and the fill between them
+src/components/docs/rating-preview.ts     The half a press on a star lands in
+src/components/docs/rating-demo.tsx       The pressable stars, whole and half
 src/components/docs/scroll-area-demo.tsx  The vertical and horizontal bounded frames
 src/components/docs/separator-demo.tsx    The horizontal, vertical and captioned rules
 src/components/docs/separator-roles-demo.tsx The semantic and decorative rules
 src/components/docs/skeleton-demo.tsx     The pulsing placeholder shapes
 src/components/docs/skeleton-states-demo.tsx The composed card, the circle and the still frame
-src/components/docs/slider-demo.tsx       The track, fill, thumb and disabled paint
+src/components/docs/slider-preview.ts     The end a range press grabbed
+src/components/docs/slider-demo.tsx       The draggable track, its keyboard and the disabled paint
 src/components/docs/slider-values-demo.tsx One value and a two-thumb range
 src/components/docs/spacer-demo.tsx       The fixed step and the flexible filler
 src/components/docs/spinner-demo.tsx      The three dots, their sizes and accents

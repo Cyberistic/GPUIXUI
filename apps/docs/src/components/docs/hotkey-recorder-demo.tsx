@@ -3,12 +3,19 @@
  *
  * The shipped control captures the next chord the reader presses and shows it
  * as keycaps; clearing is a real control beside it, not Backspace (the test
- * renderer emits no key event for it). The preview draws the three states — an
- * empty recorder, a bound chord, and the "Press keys…" listening state — and
- * records a real chord from the browser's own keys.
+ * renderer emits no key event for it). The preview records a real chord from
+ * the browser's own keys through `chordOf` — the same `parseHotkey`,
+ * `hasNonModifierKey` and `normalizeHotkey` the runtime path ends in — so ⌘⇧P
+ * binds three keys instead of the letter the old drawing kept. Glyphs come from
+ * `glyphsOf`, which is the component's own `formatSymbols`.
  */
 
-import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
+import * as Option from "effect/Option";
+import { chordOf, glyphsOf } from "./hotkey-chord";
 
 const PLACEHOLDER = "Click to record";
 
@@ -16,32 +23,47 @@ const Keycap = ({ children }: { readonly children: string }) => (
   <kbd className="gx-keycap">{children}</kbd>
 );
 
-function CapturedChord() {
-  return (
-    <span className="gx-hotkey-keys">
-      <Keycap>⌘</Keycap>
-      <Keycap>⇧</Keycap>
-      <Keycap>P</Keycap>
-    </span>
-  );
-}
+const Keys = ({ chord }: { readonly chord: string }) => (
+  <span className="gx-hotkey-keys">
+    {glyphsOf(chord).map((glyph, index) => (
+      <Keycap key={index}>{glyph}</Keycap>
+    ))}
+  </span>
+);
+
+const BOUND = "mod+shift+p";
 
 export function HotkeyRecorderDemo() {
   const [recording, setRecording] = useState(false);
-  const [value, setValue] = useState<string | null>("mod+shift+p");
+  const [value, setValue] = useState<string | null>(BOUND);
+  /** The modifiers being held, painted while the recorder waits for a key. */
+  const [held, setHeld] = useState<string | null>(null);
 
-  const clear = () => setValue(null);
+  const stop = () => {
+    setRecording(false);
+    setHeld(null);
+  };
 
   const capture = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (!recording) return;
     event.preventDefault();
-    if (event.key === "Escape") {
-      setRecording(false);
-      return;
+    if (event.key === "Escape") return stop();
+    const chord = chordOf(event);
+    if (Option.isSome(chord)) {
+      setValue(chord.value);
+      return stop();
     }
-    if (event.key.length !== 1) return;
-    setValue(`${event.key.toLowerCase()}`);
-    setRecording(false);
+    // Only modifiers so far: show them and keep listening.
+    setHeld(
+      [
+        event.metaKey ? "mod" : null,
+        event.ctrlKey ? "ctrl" : null,
+        event.altKey ? "alt" : null,
+        event.shiftKey ? "shift" : null,
+      ]
+        .filter((part): part is string => part !== null)
+        .join("+") || null,
+    );
   };
 
   return (
@@ -52,27 +74,31 @@ export function HotkeyRecorderDemo() {
           aria-label="Toggle command palette"
           className="gx-hotkey"
           data-recording={recording ? "" : undefined}
-          onKeyDown={capture}
-          onClick={() => setRecording((current) => !current)}
           role="button"
           tabIndex={0}
+          onClick={() => (recording ? stop() : setRecording(true))}
+          onKeyDown={capture}
         >
           {recording ? (
-            <span className="gx-hotkey-text">Press keys…</span>
+            held === null ? (
+              <span className="gx-hotkey-text">Press keys…</span>
+            ) : (
+              <Keys chord={held} />
+            )
           ) : value === null ? (
             <span className="gx-hotkey-text">{PLACEHOLDER}</span>
           ) : (
-            <CapturedChord />
+            <Keys chord={value} />
           )}
-          {value === null ? null : (
+          {value === null || recording ? null : (
             <button
               aria-label="Clear shortcut"
               className="gx-hotkey-clear"
+              type="button"
               onClick={(event) => {
                 event.stopPropagation();
-                clear();
+                setValue(null);
               }}
-              type="button"
             >
               ✕
             </button>
@@ -91,9 +117,9 @@ export function HotkeyRecorderDemo() {
         <div className="gx-hotkey-state">
           <p className="gx-hotkey-state-label">empty</p>
           <div
+            aria-label="Empty recorder"
             className="gx-hotkey"
             role="button"
-            aria-label="Empty recorder"
             tabIndex={0}
           >
             <span className="gx-hotkey-text">{PLACEHOLDER}</span>
@@ -102,17 +128,13 @@ export function HotkeyRecorderDemo() {
         <div className="gx-hotkey-state">
           <p className="gx-hotkey-state-label">bound</p>
           <div
+            aria-label="Bound recorder"
             className="gx-hotkey"
             role="button"
-            aria-label="Bound recorder"
             tabIndex={0}
           >
-            <CapturedChord />
-            <button
-              aria-label="Clear shortcut"
-              className="gx-hotkey-clear"
-              type="button"
-            >
+            <Keys chord={BOUND} />
+            <button aria-label="Clear shortcut" className="gx-hotkey-clear" type="button">
               ✕
             </button>
           </div>
