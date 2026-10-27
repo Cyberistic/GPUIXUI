@@ -292,10 +292,14 @@ import {
 import { PreviewCardDemo, previewCardDemoSource } from "./preview-card-demo";
 import { BoxDemo, boxDemoSource } from "./box-demo";
 import { ButtonGroupDemo, buttonGroupDemoSource } from "./button-group-demo";
+import { AspectRatioDemo, aspectRatioDemoSource } from "./aspect-ratio-demo";
 import {
   CheckboxGroupDemo,
   checkboxGroupDemoSource,
 } from "./checkbox-group-demo";
+import { HoverCardDemo, hoverCardDemoSource } from "./hover-card-demo";
+import { InputGroupDemo, inputGroupDemoSource } from "./input-group-demo";
+import { ItemDemo, itemDemoSource } from "./item-demo";
 import { GridDemo, gridDemoSource } from "./grid-demo";
 import { IconButtonDemo, iconButtonDemoSource } from "./icon-button-demo";
 import { InputDemo, inputDemoSource } from "./input-demo";
@@ -3320,6 +3324,16 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: PreviewCardDemo,
     source: previewCardDemoSource,
   },
+  "aspect-ratio-demo": {
+    render: AspectRatioDemo,
+    source: aspectRatioDemoSource,
+  },
+  "hover-card-demo": { render: HoverCardDemo, source: hoverCardDemoSource },
+  "input-group-demo": {
+    render: InputGroupDemo,
+    source: inputGroupDemoSource,
+  },
+  "item-demo": { render: ItemDemo, source: itemDemoSource },
   "box-demo": { render: BoxDemo, source: boxDemoSource },
   "button-group-demo": {
     render: ButtonGroupDemo,

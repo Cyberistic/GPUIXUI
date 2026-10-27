@@ -1,0 +1,82 @@
+---
+title: Item
+description: One row of a list — media, text and actions on a line
+---
+
+<ComponentPreview name="item-demo" />
+
+## Usage
+
+```tsx
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@gpuixui/components/item";
+
+export const Files = () => (
+  <ItemGroup>
+    <Item variant="outline">
+      <ItemMedia variant="icon">▤</ItemMedia>
+      <ItemContent>
+        <ItemTitle>design-system.md</ItemTitle>
+        <ItemDescription>Tokens and semantic roles.</ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <Button size="sm">Open</Button>
+      </ItemActions>
+    </Item>
+  </ItemGroup>
+);
+```
+
+## Composition
+
+```text
+ItemGroup
+└── Item
+    ├── ItemHeader      (own line, above)
+    ├── ItemMedia       (before the content)
+    ├── ItemContent
+    │   ├── ItemTitle
+    │   └── ItemDescription
+    ├── ItemActions     (after the content)
+    └── ItemFooter      (own line, below)
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Item` | `variant` | `"default" \| "outline" \| "muted"` | `"default"` |
+| `Item` | `size` | `"default" \| "sm"` | `"default"` |
+| `Item` | `className` | `string` | — |
+| `Item` | `children` | `PartChildren` | — |
+| `ItemGroup` | `className` / `children` | `string` / `PartChildren` | — |
+| `ItemMedia` | `variant` | `"default" \| "icon" \| "image"` | `"default"` |
+| `ItemMedia` | `className` / `children` | `string` / `PartChildren` | — |
+| `ItemContent` | `className` / `children` | `string` / `PartChildren` | — |
+| `ItemTitle` | `className` / `children` | `string` / `ReactNode` | — |
+| `ItemDescription` | `className` / `children` | `string` / `ReactNode` | — |
+| `ItemActions` | `className` / `children` | `string` / `PartChildren` | — |
+| `ItemHeader` | `className` / `children` | `string` / `PartChildren` | — |
+| `ItemFooter` | `className` / `children` | `string` / `PartChildren` | — |
+
+## Limitations
+
+- The row is a layout primitive: it paints no hover, focus or press state. Wrap
+  it in a `ListItem` or a `Button` when the whole row acts.
+- `line-clamp-2` has no native utility, so a long description clips its
+  overflow rather than ending in an ellipsis after two lines.
+- No `ItemSeparator`: put a `Separator` between rows when the surfaces are all
+  `default`.
+
+## Related
+
+- **List** — the selectable rows a settings list is built from.
+- **Card** — the bordered surface when a single record needs a frame.
+- **Separator** — the divider between rows.

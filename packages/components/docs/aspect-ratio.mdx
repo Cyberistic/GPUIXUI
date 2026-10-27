@@ -1,0 +1,53 @@
+---
+title: Aspect ratio
+description: A box whose height follows its width through one ratio
+---
+
+<ComponentPreview name="aspect-ratio-demo" />
+
+## Usage
+
+```tsx
+import { AspectRatio } from "@gpuixui/components/aspect-ratio";
+
+export const Still = () => (
+  <div style={{ width: 360 }}>
+    <AspectRatio ratio={16 / 9}>
+      <div style={{ width: "100%", height: "100%" }} />
+    </AspectRatio>
+  </div>
+);
+```
+
+## Composition
+
+```text
+AspectRatio
+└── content
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `AspectRatio` | `ratio` | `number` — width divided by height | `1` |
+| `AspectRatio` | `className` | `string` | — |
+| `AspectRatio` | `style` | `StyleDesc` — merged last | — |
+| `AspectRatio` | `children` | `ReactNode` — the content that fills the box | — |
+| `AspectRatio` | `testId` | `string` | — |
+
+## Limitations
+
+- The ratio owns the axis that is **not** definite: give the box a width (a
+  column does by default) and it derives the height. Two definite dimensions
+  leave the ratio unconsulted, so a runtime ratio change needs one axis open.
+- The box sizes itself, not its child: a child fills it only when it declares
+  `width`/`height: 100%` (or stretches in a flex parent).
+- A ratio the renderer cannot divide by (zero, negative, `NaN`) paints no ratio,
+  and the box then takes its content's height.
+
+## Related
+
+- **Card** — the surface a ratio often frames a picture in.
+- **Avatar** — the square every avatar already is.
+- **Image zoom** — a picture that keeps its frame while it scales.

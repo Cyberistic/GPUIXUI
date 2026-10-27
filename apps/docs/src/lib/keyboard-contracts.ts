@@ -378,6 +378,16 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
+    url: "/docs/components/hover-card",
+    sources: ["packages/components/src/hover-card.tsx"],
+    notes: [
+      {
+        keys: ["Escape"],
+        action: "closes the card and returns focus to the trigger",
+      },
+    ],
+  },
+  {
     url: "/docs/components/preview-card",
     sources: ["packages/components/src/preview-card.tsx"],
     notes: [{ keys: ["Escape"], action: "closes the open card" }],

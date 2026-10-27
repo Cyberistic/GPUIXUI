@@ -1,0 +1,73 @@
+---
+title: Hover card
+description: A rich surface previewed from a name, on hover or on focus
+---
+
+<ComponentPreview name="hover-card-demo" />
+
+## Usage
+
+```tsx
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@gpuixui/components/hover-card";
+
+export const Mention = () => (
+  <HoverCard>
+    <HoverCardTrigger>@ada</HoverCardTrigger>
+    <HoverCardContent label="Ada Lovelace">
+      <text>Mathematician · Analytical Engine</text>
+    </HoverCardContent>
+  </HoverCard>
+);
+```
+
+## Composition
+
+```text
+HoverCard
+├── HoverCardTrigger
+└── HoverCardContent
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `HoverCard` | `open` / `defaultOpen` | `boolean` | — / `false` |
+| `HoverCard` | `onOpenChange` | `(open: boolean) => void` | — |
+| `HoverCard` | `openDelay` | `number` — milliseconds of hover before opening | `700` |
+| `HoverCard` | `closeDelay` | `number` — milliseconds after the last hold leaves | `300` |
+| `HoverCard` | `children` | `PartChildren` | — |
+| `HoverCardTrigger` | action props | `variant` (`"ghost"` by default), `size`, `disabled`, `onClick`, `aria-label`, `style`, `ref`, `testId` — the shared `Button` contract | `size="md"` |
+| `HoverCardContent` | `label` | `string` — the surface's accessible name | — |
+| `HoverCardContent` | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
+| `HoverCardContent` | `align` | `"start" \| "center" \| "end"` | `"center"` |
+| `HoverCardContent` | `sideOffset` | `number` | `4` |
+| `HoverCardContent` | `collisionPadding` | `number` | `8` |
+| `HoverCardContent` | `className` / `style` | `string` / `StyleDesc` | — |
+| `HoverCardContent` | `testId` / `children` | `string` / `PartChildren` | — |
+
+## Limitations
+
+- The trigger is a `Button`, not an HTML anchor: the runtime has no link host, so
+  a link-shaped trigger is a ghost action.
+- No `aria-haspopup` and no per-trigger delays; the waits belong to the card.
+- `Tab` does not open the card (a traversal moves focus without running the
+  trigger's `onFocus`); a focus the caller moves, or a press, does.
+- Focus opens the card immediately, and a `Tab` out of it closes after
+  `closeDelay` — the runtime does not say how focus arrived.
+- Escape reaches the card while focus is on its trigger or inside the card. A
+  card opened by the pointer alone, with focus elsewhere, cannot hear a window
+  Escape: 0.11.0 delivers window keys only to the application's render handler.
+- A press focuses the trigger before its click arrives, so the focus path does
+  not open the card during a press — the click is the open, and one gesture
+  cannot open and close it in the same turn.
+
+## Related
+
+- **Preview card** — the same idea with a longer read and a press route.
+- **Popover** — a surface the reader keeps open and acts in.
+- **Tooltip** — a one-line label with no content to travel into.
