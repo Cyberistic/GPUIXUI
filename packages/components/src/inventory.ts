@@ -70,6 +70,7 @@ import { scrollFadeMeta } from "./scroll-fade.js";
 import { scrollProgressMeta } from "./scroll-progress.js";
 import { searchInputMeta } from "./search-input.js";
 import { shineButtonMeta } from "./shine-button.js";
+import { sidebarMeta } from "./sidebar.js";
 import { slidingNumberMeta } from "./sliding-number.js";
 import { slidingTextMeta } from "./sliding-text.js";
 import { splittingTextMeta } from "./splitting-text.js";
@@ -82,6 +83,7 @@ import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
 import { typingTextMeta } from "./typing-text.js";
+import { userMenuMeta } from "./user-menu.js";
 
 /** One component's inventory record. */
 export interface ComponentMeta {
@@ -165,6 +167,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   scrollProgressMeta,
   searchInputMeta,
   shineButtonMeta,
+  sidebarMeta,
   slidingNumberMeta,
   slidingTextMeta,
   splittingTextMeta,
@@ -177,4 +180,5 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   timePickerMeta,
   toastMeta,
   typingTextMeta,
+  userMenuMeta,
 ];

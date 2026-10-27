@@ -57,9 +57,19 @@ let mounted = false;
  * harness is a programming error at the boundary, not a domain failure a caller
  * could recover from (plan 110 §8.6 takes the same line for compound parts).
  */
+/** The window a suite renders in. Default 1280×800, the size every suite reads. */
+export interface TestViewport {
+  readonly width: number;
+  readonly height: number;
+}
+
+/** The default test window: wide enough for the desktop layouts. */
+export const DEFAULT_VIEWPORT: TestViewport = { width: 1280, height: 800 };
+
 export const renderComponent = (
   node: ReactNode,
   theme: RenderTheme = "dark",
+  viewport: TestViewport = DEFAULT_VIEWPORT,
 ): ComponentTestRoot => {
   if (mounted) {
     throw new Error(
@@ -68,7 +78,10 @@ export const renderComponent = (
   }
 
   const resolved = typeof theme === "string" ? testThemes[theme] : theme;
-  const root = createTestRoot({ width: 1280, height: 800 });
+  const root = createTestRoot({
+    width: viewport.width,
+    height: viewport.height,
+  });
   const render = (next: ReactNode): void => {
     root.render(<ThemeProvider theme={resolved}>{next}</ThemeProvider>);
   };

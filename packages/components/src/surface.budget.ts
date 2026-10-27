@@ -111,7 +111,12 @@ export const surfaceBudget = {
   // flow + height) and `toast/swipe.ts` (the one-axis dismissal threshold and
   // flick speed). Both are renderer-free, which is what lets their suites hold
   // the stack and the gesture without a window.
-  modules: 171,
+  modules: 176,
+  // 171 → 176 for the Sidebar family and the account menu (plan 340):
+  // `sidebar.tsx`, `sidebar/logic.ts`, `sidebar/store.ts`,
+  // `sidebar/preference.ts` and `user-menu.tsx`. The ceiling follows the
+  // measured 1 272 KiB (1 302 031 bytes) with 4 KiB of headroom.
+
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -161,7 +166,7 @@ export const surfaceBudget = {
   // surface + measured body, the shared hold, the promise phase and the swipe
   // gesture (two pure rules, `toast/stack.ts` and `toast/swipe.ts`). The
   // ceiling moved 1190 → 1230 KiB for the next family's headroom.
-  bytes: 1230 * 1024,
+  bytes: 1276 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

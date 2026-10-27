@@ -70,6 +70,7 @@ export * from "./scroll-fade.js";
 export * from "./scroll-progress.js";
 export * from "./search-input.js";
 export * from "./shine-button.js";
+export * from "./sidebar.js";
 export * from "./sliding-number.js";
 export * from "./sliding-text.js";
 export * from "./splitting-text.js";
@@ -82,6 +83,7 @@ export * from "./timeline.js";
 export * from "./time-picker.js";
 export * from "./toast.js";
 export * from "./typing-text.js";
+export * from "./user-menu.js";
 
 export type { PartChildren } from "./internal/parts.js";
 
