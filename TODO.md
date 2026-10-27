@@ -310,12 +310,23 @@ zoom's `max-width: 100%` squashed the height) and both have native parity
 guards. `LocalState` gained `running()` so the rolling exit window is not re-armed
 mid-exit; 1114 package and 1140 behaviour tests, and 28 of 46 cases fail with
 `send` neutered. One seam now, `181` modules / 1 243 KiB measured.
-`[~]` **Sidebar component** — the library has none today. An agent is building
-shadcn's family (Provider/Trigger/Rail/Inset/Header/Content/Footer/Group/Menu/…,
-offcanvas/icon/none, ⌘B, cookie, mobile sheet) plus the standalone user menu from
-the screenshot.
-`[ ]` **Sidebar blocks 01–16** — recreated from shadcn's
-`apps/v4/registry/bases/base/blocks/sidebar-0x`, after the shell lands.
+`[x]` **Sidebar component** — the whole shadcn family (`SidebarProvider` →
+`SidebarMenuSubButton`, `useSidebar`, the width constants) with offcanvas/icon/
+none, ⌘B on the provider subtree, a `SidebarPreference` seam standing in for the
+cookie, icon-rail tooltips, the mobile dialog sheet and the gap arithmetic, plus
+a standalone `UserMenu`/`SidebarUserMenu` (avatar, identity, Upgrade/Account/
+Billing/Notifications, Log out). 121 unit files / 1 131 cases, 103 behaviour
+files / 1 160 cases, docs 2 079; deployed.
+`[x]` **Sheet** — `sheet.tsx` re-exports the drawer surface under shadcn's names
+(the drawer gained the `top` edge in the box, layout and entry travel), with a
+behaviour suite for the top anchor, the dialog role and Escape returning focus.
+`[!]` **Sidebar store seam** — `sidebar/store.ts` carries its own
+`SubscriptionRef` + subscriber list, written before `internal/local-state.ts`
+reached master. Port it onto the one seam; a third way to bind a store to React
+is the duplication the effects branches just removed.
+`[~]` **Sidebar blocks 01–16** — recreating shadcn's
+`apps/v4/registry/bases/base/blocks/sidebar-0x` on the shipped shell, with a
+page and a captured thumbnail each.
 `[x]` **Blocks full size, indexed as images** — a block page renders the screen
 in the page column (`.gx-block-stage`, 836×1310 for the dashboard) with the
 recipe in a collapsed disclosure under it; no 520px card, no Preview/Code frame.
