@@ -320,13 +320,19 @@ files / 1 160 cases, docs 2 079; deployed.
 `[x]` **Sheet** — `sheet.tsx` re-exports the drawer surface under shadcn's names
 (the drawer gained the `top` edge in the box, layout and entry travel), with a
 behaviour suite for the top anchor, the dialog role and Escape returning focus.
-`[!]` **Sidebar store seam** — `sidebar/store.ts` carries its own
-`SubscriptionRef` + subscriber list, written before `internal/local-state.ts`
-reached master. Port it onto the one seam; a third way to bind a store to React
-is the duplication the effects branches just removed.
-`[~]` **Sidebar blocks 01–16** — recreating shadcn's
-`apps/v4/registry/bases/base/blocks/sidebar-0x` on the shipped shell, with a
-page and a captured thumbnail each.
+`[x]` **Sidebar blocks 01–16** — all sixteen recreated on the shipped shell: one
+drawing per block (`blocks/sidebar-01…16.tsx`), a copyable `@gpuixui/*` recipe,
+an MDX page and a captured WebP each (27 tiles on the index, all loading). The
+kit shares the family's geometry so a block cannot invent its own widths. Where
+the shell differs, the block was translated and said so: `04` paints at 256
+because no width override exists, `09` is two `Sidebar` siblings in one provider
+rather than a nested sidebar, `07/08/16` paint expanded (no collapse is faked).
+`block-index.test.tsx` now accepts digits in a slug — its `[a-z-]+` pattern had
+silently skipped every `sidebar-NN` card.
+`[x]` **Sidebar store on the one seam** — the provider's private
+`SubscriptionRef` + subscriber list + `send` are gone; `sidebar/store.ts` keeps
+only its commands (`setOpen` persists through `SidebarPreference`) and the
+provider reads it with `useLocalState`. One React↔Effect seam again.
 `[~]` **Sidebar component** — the library has none today. An agent is building
 shadcn's family (Provider/Trigger/Rail/Inset/Header/Content/Footer/Group/Menu/…,
 offcanvas/icon/none, ⌘B, cookie, mobile sheet) plus the standalone user menu from
