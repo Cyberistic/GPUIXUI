@@ -22210,12 +22210,14 @@ numbers).
       `ImageZoom`, `SplittingText` and the generated field behind `Hexagon`
       (shared with `Glyph`) sequenced their work with `useState` + `useEffect` +
       `setTimeout`, against the doctrine that state and timing live in Effect and
-      React only paints. One seam now binds a component's `SubscriptionRef` to
-      React (`internal/effect-store.ts`: `makeEffectStore`, `useStoreSnapshot`,
-      `useOwnedStore`; a write is `Effect.runSync`, a timer is `Effect.runFork`,
-      `stop` interrupts what the mount started), and four stores hold the state:
+      React only paints. One seam binds a component's `SubscriptionRef` to React
+      (`internal/local-state.ts`: `makeLocalState`, `useLocalStore`, `send`,
+      `useLocalState`/`useLocalSlice`; a write signals its subscribers in the
+      same turn, one timer belongs to the store via `after`/`running`/`cancel`,
+      and `Effect.run*` lives only there), and four stores hold the state:
       `rolling-text/store.ts` (the swap and its exit window — the window belongs
-      to the exit the change started, `Effect.sleep` + `cancel` on replace),
+      to the exit the change started, `local.after(swapMs, settle)` guarded by
+      `local.running()` so a value arriving mid-exit cannot re-arm it),
       `image-zoom/store.ts` (the pointer, with the repeated-point read as no
       change), `pattern-field/store.ts` (the measured box and the breath's phase,
       read by Hexagon and Glyph) and `splitting-text/store.ts` (the phrase and the
@@ -22239,10 +22241,15 @@ numbers).
       to 28` and `expected 1 to be close to 1.6`. The stores have their own suites
       (`rolling-text/store.test.ts` 7, `image-zoom/store.test.ts` 5,
       `pattern-field/store.test.ts` 5, `splitting-text/store.test.ts` 5) and the
-      existing behaviour suites are the parity proof, unchanged: 112 unit files /
-      **1 079** cases and 99 behaviour files / **1 140** cases green. The entry
-      graph moved 171 → 176 modules (1 222 KiB measured), so `surface.budget.ts`
-      records the seam and the four stores.
+      seam's own (`internal/local-state.test.ts` 6, the same-turn signal, the
+      replaced timer, its read and its cancel — the cases the deleted
+      `internal/effect-store.test.ts` held), and the existing behaviour suites are
+      the parity proof: 118 unit files / **1 114** cases and 99 behaviour files /
+      **1 140** cases green. The entry graph moved 177 → 181 modules (1 243 KiB
+      measured), so `surface.budget.ts` records the four stores and the one seam;
+      the parallel `internal/effect-store.ts` was deleted, and with `send`
+      neutered the five behaviour files these four components own fail 28 of 46
+      cases.
 
 `[x]` `packages/components`: **a stored value made the swap state's `text` a
       non-string** — `RollingText` and `SlidingText` hand their prop to
