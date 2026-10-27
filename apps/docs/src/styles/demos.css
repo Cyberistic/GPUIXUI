@@ -2980,48 +2980,28 @@
    names `disabledForeground` rather than fading, because a fade composites the
    label into the popover fill that no contrast pair holds. */
 .gx-demo-combobox {
-  width: 100%;
-  justify-content: center;
-}
-
-.gx-combobox-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 14px;
-  width: min(420px, 100%);
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 4px);
-  background: var(--card);
-}
-
-.gx-combobox-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.gx-combobox-meta {
-  margin: 4px 0 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--muted-foreground);
+  width: 100%;
 }
 
 .gx-combobox-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  width: min(320px, 100%);
   /* The popup is positioned against the control, so the root is the anchor. */
   position: relative;
 }
 
 .gx-combobox-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--placeholder);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
 }
 
 .gx-combobox {
@@ -3036,14 +3016,14 @@
   gap: 8px;
   width: 100%;
   height: var(--control-height-md);
-  padding: 0 8px;
+  padding: 0 10px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--background);
   color: var(--foreground);
   font: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
   text-align: left;
   cursor: pointer;
 }
@@ -3073,9 +3053,22 @@
   white-space: nowrap;
 }
 
-.gx-combobox-caret {
+.gx-combobox-caret,
+.gx-combobox-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
   color: var(--muted-foreground);
-  font-size: 12px;
+}
+
+.gx-combobox-check {
+  color: var(--foreground);
+}
+
+.gx-combobox-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .gx-combobox-popup {
@@ -3098,21 +3091,31 @@
   box-shadow: 0 12px 28px var(--shadow);
 }
 
-.gx-combobox-search {
+.gx-combobox-search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   height: var(--control-height-sm);
   padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--input);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.gx-combobox-search {
+  flex: 1 1 auto;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--input-foreground);
   font: inherit;
   font-size: 12.5px;
   outline: none;
 }
 
-.gx-combobox-search:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+.gx-combobox-search::placeholder {
+  color: var(--placeholder);
 }
 
 .gx-combobox-list {
@@ -3172,11 +3175,6 @@
 
 .gx-combobox-row[aria-selected="true"] .gx-combobox-row-label {
   font-weight: 600;
-}
-
-.gx-combobox-check {
-  color: var(--primary);
-  font-size: 11px;
 }
 
 .gx-combobox-create {

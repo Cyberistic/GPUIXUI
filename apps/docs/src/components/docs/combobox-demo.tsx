@@ -13,6 +13,60 @@ import {
 } from "./combobox-preview";
 
 /**
+ * Lucide geometry, inline.
+ *
+ * The preview draws in the browser, so it cannot use `@gpuixui/icons` — those
+ * are markup strings for GPUix's native `<svg source>` host. The shipped
+ * combobox already paints `chevron-down` and a check; the preview drew text
+ * glyphs instead, which is why it read unlike the component.
+ */
+const ChevronDown = () => (
+  <svg
+    aria-hidden="true"
+    className="gx-combobox-icon"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
+const Check = () => (
+  <svg
+    aria-hidden="true"
+    className="gx-combobox-icon gx-combobox-check"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const Search = () => (
+  <svg
+    aria-hidden="true"
+    className="gx-combobox-icon"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+  </svg>
+);
+
+/**
  * Browser previews for the Combobox page.
  *
  * The shipped component wraps GPUix's headless combobox: the runtime owns focus,
@@ -195,21 +249,24 @@ const PreviewCombobox = ({
       >
         <span className="gx-combobox-trigger-text">{text}</span>
         <span aria-hidden="true" className="gx-combobox-caret">
-          ⌄
+          <ChevronDown />
         </span>
       </button>
 
       {open ? (
         <div className="gx-combobox-popup">
-          <input
-            aria-label={label === "" ? "Search" : `Search ${label}`}
-            className="gx-combobox-search"
-            onChange={(event) => onSearchChange(event.target.value)}
-            onKeyDown={onSearchKeyDown}
-            placeholder="Search…"
-            ref={search}
-            value={query}
-          />
+          <div className="gx-combobox-search-row">
+            <Search />
+            <input
+              aria-label={label === "" ? "Search" : `Search ${label}`}
+              className="gx-combobox-search"
+              onChange={(event) => onSearchChange(event.target.value)}
+              onKeyDown={onSearchKeyDown}
+              placeholder="Search…"
+              ref={search}
+              value={query}
+            />
+          </div>
           <div
             aria-label={label}
             className="gx-combobox-list"
@@ -252,11 +309,7 @@ const PreviewCombobox = ({
                         </span>
                       )}
                     </span>
-                    {chosen ? (
-                      <span aria-hidden="true" className="gx-combobox-check">
-                        ✓
-                      </span>
-                    ) : null}
+                    {chosen ? <Check /> : null}
                   </button>
                 );
               })
@@ -308,28 +361,19 @@ export const ComboboxDemo = () => {
 
   return (
     <div className="gx-demo-combobox">
-      <div className="gx-combobox-card">
-        <div>
-          <p className="gx-combobox-title">Assign reviewer</p>
-          <p className="gx-combobox-meta">
-            Search by name, team or focus. The reported value is the option's
-            value, never its label.
-          </p>
-        </div>
-        <div className="gx-combobox-field">
-          <label className="gx-combobox-label" htmlFor="preview-reviewer">
-            Reviewer
-          </label>
-          <PreviewCombobox
-            id="preview-reviewer"
-            label="Reviewer"
-            onCreate={(option) => setCreated((current) => [...current, option])}
-            onSelect={setReviewer}
-            options={options}
-            placeholder="Choose a reviewer…"
-            selected={reviewer}
-          />
-        </div>
+      <div className="gx-combobox-field">
+        <label className="gx-combobox-label" htmlFor="preview-reviewer">
+          Reviewer
+        </label>
+        <PreviewCombobox
+          id="preview-reviewer"
+          label="Reviewer"
+          onCreate={(option) => setCreated((current) => [...current, option])}
+          onSelect={setReviewer}
+          options={options}
+          placeholder="Choose a reviewer…"
+          selected={reviewer}
+        />
         <p className="gx-combobox-readout">
           Assigned: <b>{reviewer[0] ?? "none"}</b> · Shown as:{" "}
           <b>{chosen?.label ?? "nothing"}</b>
@@ -358,42 +402,33 @@ export const ComboboxMultiple = () => {
 
   return (
     <div className="gx-demo-combobox gx-combobox-states">
-      <div className="gx-combobox-card">
-        <div>
-          <p className="gx-combobox-title">Triage labels</p>
-          <p className="gx-combobox-meta">
-            A pick appends, a second pick removes, and the order is the order
-            the reader chose.
-          </p>
-        </div>
-        <div className="gx-combobox-field">
-          <span className="gx-combobox-label">Labels</span>
-          <PreviewCombobox
-            id="preview-labels"
-            label="Labels"
-            multiple
-            onSelect={setChosen}
-            options={labels}
-            placeholder="Add labels…"
-            selected={chosen}
-          />
-        </div>
-        <div className="gx-combobox-field">
-          <span className="gx-combobox-label">Disabled</span>
-          <PreviewCombobox
-            disabled
-            id="preview-labels-disabled"
-            label="Labels, disabled"
-            onSelect={() => undefined}
-            options={labels}
-            placeholder="Add labels…"
-            selected={["bug"]}
-          />
-        </div>
-        <p className="gx-combobox-readout">
-          Values: <b>{chosen.length === 0 ? "[]" : chosen.join(", ")}</b>
-        </p>
+      <div className="gx-combobox-field">
+        <span className="gx-combobox-label">Labels</span>
+        <PreviewCombobox
+          id="preview-labels"
+          label="Labels"
+          multiple
+          onSelect={setChosen}
+          options={labels}
+          placeholder="Add labels…"
+          selected={chosen}
+        />
       </div>
+      <div className="gx-combobox-field">
+        <span className="gx-combobox-label">Disabled</span>
+        <PreviewCombobox
+          disabled
+          id="preview-labels-disabled"
+          label="Labels, disabled"
+          onSelect={() => undefined}
+          options={labels}
+          placeholder="Add labels…"
+          selected={["bug"]}
+        />
+      </div>
+      <p className="gx-combobox-readout">
+        Values: <b>{chosen.length === 0 ? "[]" : chosen.join(", ")}</b>
+      </p>
     </div>
   );
 };
