@@ -50,6 +50,14 @@ export interface AvatarProps extends Props {
   readonly size?: AvatarSize;
   /** Renders the presence dot. Omit for no dot. */
   readonly status?: AvatarStatus;
+  /**
+   * Let a press fall through to the control that labels the avatar.
+   *
+   * `pointerEvents` is not inherited on 0.11.0: the disc paints a fill and takes
+   * the press itself, so an avatar inside a button or a row would swallow the
+   * activation. Both boxes declare it here.
+   */
+  readonly clickThrough?: boolean;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
@@ -80,6 +88,7 @@ export const Avatar = ({
   src,
   size = "md",
   status: statusProp,
+  clickThrough = false,
   className,
   style,
   ...rest
@@ -105,11 +114,17 @@ export const Avatar = ({
         mergeStyles(recipeStyle(cn(AVATAR_ROOT, className), theme), {
           width: diameter,
           height: diameter,
+          ...(clickThrough ? { pointerEvents: "none" as const } : {}),
         }),
         style,
       )}
     >
-      <div style={recipeStyle(AVATAR_DISC, theme)}>
+      <div
+        style={mergeStyles(
+          recipeStyle(AVATAR_DISC, theme),
+          clickThrough ? { pointerEvents: "none" } : undefined,
+        )}
+      >
         {src === undefined ? (
           <text
             role="presentation"
@@ -141,6 +156,7 @@ export const Avatar = ({
             backgroundColor: statusFill(theme, status),
             borderWidth: theme.borderWidth.strong,
             borderColor: theme.colors.card,
+            ...(clickThrough ? { pointerEvents: "none" as const } : {}),
           }}
         />
       )}

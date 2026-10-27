@@ -123,7 +123,10 @@ export const surfaceBudget = {
   // (the swap and its exit window), `image-zoom/store.ts` (the pointer),
   // `pattern-field/store.ts` (the measured box and the breath's phase, shared by
   // Hexagon and Glyph) and `splitting-text/store.ts` (the phrase and its units).
-  modules: 182,
+  // 182 → 187 for the Sidebar family and the account menu (plan 340):
+  // `sidebar.tsx`, `sidebar/logic.ts`, `sidebar/store.ts`,
+  // `sidebar/preference.ts` and `user-menu.tsx`.
+  modules: 187,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -173,6 +176,7 @@ export const surfaceBudget = {
   // surface + measured body, the shared hold, the promise phase and the swipe
   // gesture (two pure rules, `toast/stack.ts` and `toast/swipe.ts`). The
   // ceiling moved 1190 → 1230 KiB for the next family's headroom.
+<<<<<<< HEAD
   // 1 231 KiB measured 2026-10-27 with the five Effect stores and the seam they
   // share (`internal/local-state.ts`): a `SubscriptionRef` of the surface's
   // state, a synchronous signal for `useSyncExternalStore` and the one timer a
@@ -186,7 +190,10 @@ export const surfaceBudget = {
   // (`internal/effect-store.ts`), now deleted: one seam binds a store to React,
   // so the module count is the four stores alone. 1 243 KiB measured with all
   // nine stores, under the ceiling.
-  bytes: 1260 * 1024,
+  bytes: 1300 * 1024,
+=======
+  bytes: 1276 * 1024,
+>>>>>>> e788f7fc9 (feat(components): bring shadcn's sidebar family and the account menu)
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

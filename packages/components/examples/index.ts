@@ -77,6 +77,7 @@ import { ScrollFadeExample } from "./scroll-fade.example.js";
 import { ScrollProgressExample } from "./scroll-progress.example.js";
 import { SearchInputExample } from "./search-input.example.js";
 import { ShineButtonExample } from "./shine-button.example.js";
+import { SidebarExample } from "./sidebar.example.js";
 import { SlidingNumberExample } from "./sliding-number.example.js";
 import { SlidingTextExample } from "./sliding-text.example.js";
 import { SplittingTextExample } from "./splitting-text.example.js";
@@ -89,6 +90,7 @@ import { TimePickerExample } from "./time-picker.example.js";
 import { TimelineExample } from "./timeline.example.js";
 import { ToastExample } from "./toast.example.js";
 import { TypingTextExample } from "./typing-text.example.js";
+import { UserMenuExample } from "./user-menu.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
@@ -157,6 +159,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "scroll-progress": ScrollProgressExample,
   "search-input": SearchInputExample,
   "shine-button": ShineButtonExample,
+  sidebar: SidebarExample,
   "sliding-number": SlidingNumberExample,
   "sliding-text": SlidingTextExample,
   "splitting-text": SplittingTextExample,
@@ -169,4 +172,5 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   timeline: TimelineExample,
   toast: ToastExample,
   "typing-text": TypingTextExample,
+  "user-menu": UserMenuExample,
 };
