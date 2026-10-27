@@ -59,7 +59,7 @@ describe("writing to the clipboard", () => {
   it("is the only clipboard call the three copy controls make", () => {
     const sources = [
       "../components/docs/copy-page.tsx",
-      "../components/docs/block-preview.tsx",
+      "../components/docs/recipe-source.tsx",
       "../components/docs/theme-editor.tsx",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
 

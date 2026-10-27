@@ -36,21 +36,6 @@ import {
   dashboardManagementSource,
 } from "./dashboard-management";
 import { Sidebar01Render, sidebar01Source } from "./blocks/sidebar-01";
-import { Sidebar02Render, sidebar02Source } from "./blocks/sidebar-02";
-import { Sidebar03Render, sidebar03Source } from "./blocks/sidebar-03";
-import { Sidebar04Render, sidebar04Source } from "./blocks/sidebar-04";
-import { Sidebar05Render, sidebar05Source } from "./blocks/sidebar-05";
-import { Sidebar06Render, sidebar06Source } from "./blocks/sidebar-06";
-import { Sidebar07Render, sidebar07Source } from "./blocks/sidebar-07";
-import { Sidebar08Render, sidebar08Source } from "./blocks/sidebar-08";
-import { Sidebar09Render, sidebar09Source } from "./blocks/sidebar-09";
-import { Sidebar10Render, sidebar10Source } from "./blocks/sidebar-10";
-import { Sidebar11Render, sidebar11Source } from "./blocks/sidebar-11";
-import { Sidebar12Render, sidebar12Source } from "./blocks/sidebar-12";
-import { Sidebar13Render, sidebar13Source } from "./blocks/sidebar-13";
-import { Sidebar14Render, sidebar14Source } from "./blocks/sidebar-14";
-import { Sidebar15Render, sidebar15Source } from "./blocks/sidebar-15";
-import { Sidebar16Render, sidebar16Source } from "./blocks/sidebar-16";
 
 /**
  * Block recipes for the docs. A block is a page-level composition of real
@@ -324,165 +309,17 @@ export const blocks: Readonly<Record<string, Block>> = {
     render: ConversationsRender,
     source: conversationsSource,
   },
-  "sidebar-01": {
-    name: "sidebar-01",
-    slug: "sidebar-01",
-    title: "Sidebar 01 — Sectioned docs navigation",
+  sidebar: {
+    name: "sidebar",
+    slug: "sidebar",
+    title: "Sidebar",
     description:
-      "A version switcher, a search field and four labelled docs sections beside a breadcrumbed page.",
+      "All sixteen shadcn sidebar blocks on one page: docs navigation, floating, inset and icon panels, the nested inbox, calendar, settings dialog and site header. Every control is live.",
     packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
+    // The page shows all sixteen; these are its first example, which is also the
+    // frame the index tile captures.
     render: Sidebar01Render,
     source: sidebar01Source,
-  },
-  "sidebar-02": {
-    name: "sidebar-02",
-    slug: "sidebar-02",
-    title: "Sidebar 02 — Collapsible sections",
-    description:
-      "Every docs section folds away, over a long page that scrolls under a sticky header.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar02Render,
-    source: sidebar02Source,
-  },
-  "sidebar-03": {
-    name: "sidebar-03",
-    slug: "sidebar-03",
-    title: "Sidebar 03 — Submenus",
-    description:
-      "One always-open tree: five sections with their pages listed under each.",
-    packages: ["@gpuixui/components"],
-    render: Sidebar03Render,
-    source: sidebar03Source,
-  },
-  "sidebar-04": {
-    name: "sidebar-04",
-    slug: "sidebar-04",
-    title: "Sidebar 04 — Floating submenus",
-    description:
-      "The same tree on a floating, lifted panel with a gutter around it.",
-    packages: ["@gpuixui/components"],
-    render: Sidebar04Render,
-    source: sidebar04Source,
-  },
-  "sidebar-05": {
-    name: "sidebar-05",
-    slug: "sidebar-05",
-    title: "Sidebar 05 — Collapsible submenus",
-    description:
-      "Parent rows open their pages in place; one section starts open.",
-    packages: ["@gpuixui/components", "@gpuixui/icons"],
-    render: Sidebar05Render,
-    source: sidebar05Source,
-  },
-  "sidebar-06": {
-    name: "sidebar-06",
-    slug: "sidebar-06",
-    title: "Sidebar 06 — Dropdown sections",
-    description:
-      "Each section is a dropdown menu, with the newsletter card in the footer.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar06Render,
-    source: sidebar06Source,
-  },
-  "sidebar-07": {
-    name: "sidebar-07",
-    slug: "sidebar-07",
-    title: "Sidebar 07 — Icon rail",
-    description:
-      "A workspace that collapses to icons: team switcher, platform sections, project actions and the account.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar07Render,
-    source: sidebar07Source,
-  },
-  "sidebar-08": {
-    name: "sidebar-08",
-    slug: "sidebar-08",
-    title: "Sidebar 08 — Inset panel",
-    description:
-      "A floating workspace panel beside a rounded content sheet, with Support and Feedback pinned low.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar08Render,
-    source: sidebar08Source,
-  },
-  "sidebar-09": {
-    name: "sidebar-09",
-    slug: "sidebar-09",
-    title: "Sidebar 09 — Nested inbox",
-    description:
-      "An icon folder rail, a searchable message column and the open thread.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar09Render,
-    source: sidebar09Source,
-  },
-  "sidebar-10": {
-    name: "sidebar-10",
-    slug: "sidebar-10",
-    title: "Sidebar 10 — Actions popover",
-    description:
-      "The workspace panel with a header popover holding four groups of page actions.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar10Render,
-    source: sidebar10Source,
-  },
-  "sidebar-11": {
-    name: "sidebar-11",
-    slug: "sidebar-11",
-    title: "Sidebar 11 — File tree",
-    description:
-      "Changed files with their state, and a collapsible repository tree on button.tsx.",
-    packages: ["@gpuixui/components", "@gpuixui/icons"],
-    render: Sidebar11Render,
-    source: sidebar11Source,
-  },
-  "sidebar-12": {
-    name: "sidebar-12",
-    slug: "sidebar-12",
-    title: "Sidebar 12 — Calendar",
-    description:
-      "A month picker above three calendar lists, beside the month's page.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar12Render,
-    source: sidebar12Source,
-  },
-  "sidebar-13": {
-    name: "sidebar-13",
-    slug: "sidebar-13",
-    title: "Sidebar 13 — Settings dialog",
-    description:
-      "A settings modal with its own sidebar of sections and the selected section's settings.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar13Render,
-    source: sidebar13Source,
-  },
-  "sidebar-14": {
-    name: "sidebar-14",
-    slug: "sidebar-14",
-    title: "Sidebar 14 — Right panel",
-    description:
-      "The docs table of contents on the right edge, with its toggle in the page header.",
-    packages: ["@gpuixui/components", "@gpuixui/primitives"],
-    render: Sidebar14Render,
-    source: sidebar14Source,
-  },
-  "sidebar-15": {
-    name: "sidebar-15",
-    slug: "sidebar-15",
-    title: "Sidebar 15 — Two panels",
-    description:
-      "A workspace on the left, the open project in the middle and a calendar on the right.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar15Render,
-    source: sidebar15Source,
-  },
-  "sidebar-16": {
-    name: "sidebar-16",
-    slug: "sidebar-16",
-    title: "Sidebar 16 — Site header",
-    description:
-      "A sticky site header above both columns: toggle, trail and search.",
-    packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: Sidebar16Render,
-    source: sidebar16Source,
   },
 };
 

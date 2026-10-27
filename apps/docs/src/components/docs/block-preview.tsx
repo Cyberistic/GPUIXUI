@@ -1,17 +1,6 @@
-import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
-import { useState } from "react";
-import { HighlightedCode } from "@/components/highlighted-code";
-import { writeClipboard } from "../../lib/clipboard";
-import { blocks, type Block } from "./blocks";
+import { blocks } from "./blocks";
 import { PreviewSurface } from "./preview-surface";
-
-const copyLabel = {
-  idle: "Copy recipe",
-  copied: "Copied",
-  error: "Copy failed",
-} as const;
-
-type CopyState = keyof typeof copyLabel;
+import { RecipeSource } from "./recipe-source";
 
 /**
  * One block page: the recipe's screen, then the source that draws it.
@@ -35,40 +24,7 @@ export function BlockPreview({ name }: { name: string }) {
       <PreviewSurface className="gx-block-stage">
         {block.render()}
       </PreviewSurface>
-      <div className="gx-source">
-        <Accordions collapsible type="single">
-          <Accordion title={`Recipe — ${block.name}`}>
-            <CopyRecipe block={block} />
-            <HighlightedCode lang="tsx" code={block.source} />
-          </Accordion>
-        </Accordions>
-      </div>
+      <RecipeSource label={block.name} source={block.source} />
     </div>
-  );
-}
-
-function CopyRecipe({ block }: { block: Block }) {
-  const [state, setState] = useState<CopyState>("idle");
-
-  const copy = () => {
-    void writeClipboard(block.source).then((copied) =>
-      setState(copied ? "copied" : "error"),
-    );
-  };
-
-  return (
-    <>
-      <button
-        aria-label={`Copy the ${block.title} recipe`}
-        className="gx-copy-button"
-        onClick={copy}
-        type="button"
-      >
-        {copyLabel[state]}
-      </button>
-      <span aria-live="polite" className="sr-only">
-        {state === "copied" ? "Recipe copied to the clipboard." : ""}
-      </span>
-    </>
   );
 }

@@ -14,6 +14,7 @@ import { LookPicker } from "./docs/look-picker";
 import { Pattern, PatternChoices } from "./docs/patterns";
 import { PlatformStyleSource } from "./docs/platform-style-source";
 import { SeriesSwatches } from "./docs/series-swatches";
+import { SidebarExample } from "./docs/sidebar-examples";
 import { StyleReference } from "./docs/style-reference";
 import { ThemeEditor } from "./docs/theme-editor";
 import { ThemeMatrix } from "./docs/theme-matrix";
@@ -45,6 +46,7 @@ export const mdxComponents = {
   PatternChoices,
   PlatformStyleSource,
   SeriesSwatches,
+  SidebarExample,
   StyleReference,
   ThemeEditor,
   ThemeMatrix,
