@@ -338,9 +338,7 @@ tooltips), a 200ms `0fr → 1fr` fold for sections, submenus and 06's dropdowns,
 the 10 actions popover, the footer user menu, 13's settings dialog and Escape
 for every overlay; 13/15's `collapsible="none"` panels carry a caption. The
 guards read the one page and hold all sixteen examples, links, states and the
-single thumbnail. `nub run --filter @gpuixui/docs test` 2122 green; live Chrome
-probe 01/02/07/11/13/10 with 0 console errors under
-`apps/playground/.artifacts/live/`.
+single thumbnail.
 `[x]` **Sidebar parity audit** — the surface matches shadcn's 24 exports and
 their props; two gaps closed: `SidebarProvider width/iconWidth/mobileWidth` (the
 CSS variables as numbers, a bad value reading as the default) and
