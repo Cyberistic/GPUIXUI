@@ -3,7 +3,10 @@
  *
  * The bugs these guard (plan 156 §8, re-measured in plan 323): the runtime puts a
  * centred surface's end on the anchor's centre line, and `fit="snap"` moves a
- * bottom surface up over its trigger instead of flipping it.
+ * bottom surface up over its trigger instead of flipping it. The side was also
+ * read from the surface's **painted** box, measured before the anchored layer
+ * placed it, so every requested side flipped; the last case holds the room rule
+ * that replaced it.
  */
 
 import { describe, expect, it } from "vitest";
@@ -61,6 +64,22 @@ describe("resolvePlacement", () => {
 
   it("keeps the requested side when it does not cover the trigger", () => {
     expect(resolvePlacement(input({ side: "bottom" })).side).toBe("bottom");
+  });
+
+  it("keeps every requested side when the surface is measured before it is placed", () => {
+    // The bug this guards: a surface is measured on the commit it mounts, and
+    // the anchored layer applies `side` after it, so the reported box sits on
+    // the trigger's origin — `overlaps` was true for every surface and every
+    // side, and a requested `top` opened below while a `left` opened right.
+    const unplaced = input({
+      surface: { x: trigger.x, y: trigger.y, width: 160, height: 80 },
+    });
+
+    expect(
+      (["bottom", "top", "right", "left"] as const).map((side) =>
+        resolveSide({ ...unplaced, side }),
+      ),
+    ).toEqual(["bottom", "top", "right", "left"]);
   });
 
   it("opens above a bottom surface that snapping moved over its trigger", () => {
