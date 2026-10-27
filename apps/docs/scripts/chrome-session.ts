@@ -141,14 +141,30 @@ export interface ChromeOptions {
   readonly preload?: string;
 }
 
+/** A page rectangle in CSS pixels, and the codec a capture writes. */
+export interface CaptureOptions {
+  /** Capture this rectangle instead of the viewport. */
+  readonly clip?: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  };
+  readonly format?: "png" | "webp";
+  /** The codec's quality; `webp` only. */
+  readonly quality?: number;
+}
+
 /** A page open in the browser, and the frame it paints. */
 export interface ChromePage {
   /** Evaluate an expression in the page, and read its string result. */
   readonly text: (expression: string) => Promise<string>;
   /** Evaluate an expression for its side effect. */
   readonly run: (expression: string) => Promise<void>;
-  /** The page as a PNG. */
-  readonly capture: () => Promise<Uint8Array>;
+  /** Navigate the open target to `url`; the caller waits for its paint. */
+  readonly goto: (url: string) => Promise<void>;
+  /** The page as an image. */
+  readonly capture: (options?: CaptureOptions) => Promise<Uint8Array>;
 }
 
 /** Open `url` in a headless browser at `width`×`height` CSS pixels. */
@@ -243,10 +259,20 @@ export const openChrome = async (
       run: async (expression) => {
         await evaluate(expression);
       },
-      capture: async () => {
+      goto: async (url) => {
+        await devtools.send("Page.navigate", { url }, sessionId);
+      },
+      capture: async (options = {}) => {
+        const { clip, format = "png", quality } = options;
         const captured = await devtools.send(
           "Page.captureScreenshot",
-          { format: "png" },
+          {
+            format,
+            ...(quality === undefined ? {} : { quality }),
+            ...(clip === undefined
+              ? {}
+              : { clip: { ...clip, scale: 1 }, captureBeyondViewport: true }),
+          },
           sessionId,
         );
         return new Uint8Array(

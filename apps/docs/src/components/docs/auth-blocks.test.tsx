@@ -199,6 +199,12 @@ describe("the sign-in page", () => {
 
 describe("the auth surface's placement", () => {
   it("keeps one auth entry in Blocks, and it is the full page", () => {
+    // The `fullBleed` flag this case read is gone with the preview frame: every
+    // block page now paints its scene at the column's width, so "fills the
+    // preview" is no longer a per-block choice. What makes the sign-in entry a
+    // page is its own markup — navbar, body, quote panel — which the render
+    // check below holds; the registry keeps exactly one auth entry beside the
+    // auth cards on `/docs/components/auth`.
     const auth = blockList.filter((block) =>
       ["login", "signup", "forgot-password", "otp", "sign-in"].includes(
         block.slug,
@@ -206,6 +212,8 @@ describe("the auth surface's placement", () => {
     );
 
     expect(auth.map((block) => block.slug)).toEqual(["sign-in"]);
-    expect(auth[0]?.fullBleed).toBe(true);
+    expect(renderToStaticMarkup(<SignInPageRender />)).toContain(
+      '<div class="gx-auth-page">',
+    );
   });
 });
