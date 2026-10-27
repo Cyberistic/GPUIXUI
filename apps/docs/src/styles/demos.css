@@ -1297,6 +1297,7 @@
 
 /* ---- tabs: mirrors components/src/tabs.tsx ---- */
 .gx-demo-tabs {
+  display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 0;
@@ -3266,7 +3267,12 @@
    row keeps every fill and carries the state in its **text** roles: an opacity
    would composite the selection wash it just painted into the strip behind it. */
 .gx-demo-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
+  /* The card sat at the start of the row because the rule named alignment
+     without making the element a flex container. */
   justify-content: center;
 }
 
@@ -5797,6 +5803,9 @@
    repaints the washes the way the native parts do. */
 
 .gx-demo-table {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
   justify-content: center;
 }
