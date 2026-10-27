@@ -7,6 +7,7 @@
  */
 
 export * from "./alert.js";
+export * from "./aspect-ratio.js";
 export * from "./accordion.js";
 export * from "./auto-height.js";
 export * from "./avatar.js";
@@ -44,9 +45,12 @@ export * from "./gravity-stars.js";
 export * from "./glyph.js";
 export * from "./hexagon.js";
 export * from "./highlight-text.js";
+export * from "./hover-card.js";
 export * from "./hotkey-recorder.js";
 export * from "./image-zoom.js";
 export * from "./inline-edit.js";
+export * from "./input-group.js";
+export * from "./item.js";
 export * from "./keyboard-shortcuts.js";
 export * from "./liquid-button.js";
 export * from "./list.js";
