@@ -302,11 +302,14 @@ one replaceable timer, `useSyncExternalStore` views); 1086 package and 1138
 behaviour tests, 31 of 41 cases fail with `send` neutered. The liquid flood now
 paints under its label in the native component too (a later child paints over an
 earlier one), matching the preview fix.
-`[~]` **Text effects on Effect** — `rolling-text`, `image-zoom`, `hexagon` and
-`splitting-text` are ported, and the two reported defects were preview CSS
-(rolling's clip was `1.3em` against a 26px value; image zoom's `max-width: 100%`
-squashed the height). Merging waits on the seam unification below, because the
-two branches each added one and only `local-state.ts` may survive.
+`[x]` **Text effects on Effect** — `rolling-text`, `image-zoom`, `hexagon` and
+`splitting-text` keep their state in the same `local-state.ts` seam (the second
+seam `effect-store.ts` is deleted, its four cases ported). The two reported
+defects were preview CSS (rolling's clip was `1.3em` against a 26px value; image
+zoom's `max-width: 100%` squashed the height) and both have native parity
+guards. `LocalState` gained `running()` so the rolling exit window is not re-armed
+mid-exit; 1114 package and 1140 behaviour tests, and 28 of 46 cases fail with
+`send` neutered. One seam now, `181` modules / 1 243 KiB measured.
 `[~]` **Sidebar component** — the library has none today. An agent is building
 shadcn's family (Provider/Trigger/Rail/Inset/Header/Content/Footer/Group/Menu/…,
 offcanvas/icon/none, ⌘B, cookie, mobile sheet) plus the standalone user menu from
