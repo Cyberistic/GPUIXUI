@@ -90,7 +90,7 @@ const AuthField = ({
 
   return (
     <div className="gx-auth-field">
-      <label className="gx-block-label" htmlFor={id}>
+      <label className="gx-auth-label" htmlFor={id}>
         {label}
       </label>
       <input
@@ -104,6 +104,13 @@ const AuthField = ({
     </div>
   );
 };
+
+/** The site mark, on its own tile: the card opens with a mark, not a favicon. */
+const AuthMark = () => (
+  <span aria-hidden="true" className="gx-auth-mark">
+    <span className="gx-mark gx-auth-mark-glyph" />
+  </span>
+);
 
 const isEmail = (value: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -149,7 +156,7 @@ export const LoginRender = () => {
         }}
       >
         <div className="gx-auth-head">
-          <span aria-hidden="true" className="gx-mark gx-auth-mark" />
+          <AuthMark />
           <h3 className="gx-auth-title">Sign in</h3>
           <p className="gx-auth-desc">
             Welcome back. Enter your details to continue.
@@ -184,7 +191,8 @@ export const LoginRender = () => {
         >
           {phase === "loading" ? "Signing in…" : "Sign in"}
         </button>
-        <div className="gx-block-divider">or continue with</div>
+        <AuthStatus message={message} phase={phase} />
+        <div className="gx-auth-divider">or continue with</div>
         <div className="gx-auth-oauth">
           <button className="gx-btn gx-btn-secondary" type="button">
             GitHub
@@ -193,7 +201,6 @@ export const LoginRender = () => {
             Google
           </button>
         </div>
-        <AuthStatus message={message} phase={phase} />
         <p className="gx-auth-footer">
           Don't have an account?{" "}
           <a className="gx-auth-link" href="/docs/components/auth#sign-up">
@@ -265,7 +272,7 @@ export const SignupRender = () => {
         }}
       >
         <div className="gx-auth-head">
-          <span aria-hidden="true" className="gx-mark gx-auth-mark" />
+          <AuthMark />
           <h3 className="gx-auth-title">Create your account</h3>
           <p className="gx-auth-desc">
             Start with the free plan. No card required.
@@ -356,7 +363,7 @@ export const ForgotPasswordRender = () => {
         }}
       >
         <div className="gx-auth-head">
-          <span aria-hidden="true" className="gx-mark gx-auth-mark" />
+          <AuthMark />
           <h3 className="gx-auth-title">Reset your password</h3>
           <p className="gx-auth-desc">
             Enter the email on your account and we'll send a reset link.
@@ -430,7 +437,7 @@ export const OtpRender = () => {
     <div className="gx-auth">
       <div className="gx-auth-card">
         <div className="gx-auth-head">
-          <span aria-hidden="true" className="gx-mark gx-auth-mark" />
+          <AuthMark />
           <h3 className="gx-auth-title">Check your email</h3>
           <p className="gx-auth-desc">
             Enter the six-digit code we sent to you@example.com.

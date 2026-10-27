@@ -18,7 +18,7 @@ import {
  * The shipped carousel is **discrete**: GPUix `motion` has no transform and the
  * runtime has no scroll snap, so a sliding track is not honestly expressible.
  * Every slide stays mounted and only the active one is displayed, which the
- * preview mirrors with its own `hidden` slides — the name typed on slide three
+ * preview mirrors with its own stacked slides — the name typed on slide three
  * is still there after visiting slide one, exactly because the slide never
  * unmounted.
  *
@@ -26,6 +26,11 @@ import {
  * the dots all run the same clamp and loop (`carousel-preview.ts`), and the
  * dots are one roving tab stop on the active slide with a wider pill so the
  * state is not colour-only.
+ *
+ * Every slide is stacked in one grid cell, so the frame is as tall as its
+ * tallest slide and the controls never move as a reader steps. The inactive
+ * slides stay mounted and keep their height with `visibility`, and `inert` and
+ * `aria-hidden` take them out of the tab order and the accessibility tree.
  *
  * A preview is a browser rendering: the native root publishes `role="group"`
  * with its `label`, and its dots publish `aria-selected` because `0.11.0` has
@@ -81,30 +86,33 @@ const CarouselPreview = ({
         tabIndex={0}
       >
         <div className="gx-carousel-card">
-          {slides.map((slide, index) => (
-            <div
-              className="gx-carousel-slide"
-              data-active={index === active ? "" : undefined}
-              hidden={index !== active}
-              key={slide.id}
-            >
-              <span className="gx-carousel-kicker">
-                {index + 1} / {count}
-              </span>
-              <h4 className="gx-carousel-title">{slide.title}</h4>
-              <p className="gx-carousel-copy">{slide.copy}</p>
-              {slide.content}
-            </div>
-          ))}
-          {count === 0 ? (
-            <div className="gx-carousel-slide" data-active="">
-              <h4 className="gx-carousel-title">No slides</h4>
-              <p className="gx-carousel-copy">
-                A track with no slides paints no dots and disables both
-                controls.
-              </p>
-            </div>
-          ) : null}
+          <div className="gx-carousel-viewport">
+            {slides.map((slide, index) => (
+              <div
+                aria-hidden={index !== active}
+                className="gx-carousel-slide"
+                data-active={index === active ? "" : undefined}
+                inert={index !== active}
+                key={slide.id}
+              >
+                <span className="gx-carousel-kicker">
+                  {index + 1} / {count}
+                </span>
+                <h4 className="gx-carousel-title">{slide.title}</h4>
+                <p className="gx-carousel-copy">{slide.copy}</p>
+                {slide.content}
+              </div>
+            ))}
+            {count === 0 ? (
+              <div className="gx-carousel-slide" data-active="">
+                <h4 className="gx-carousel-title">No slides</h4>
+                <p className="gx-carousel-copy">
+                  A track with no slides paints no dots and disables both
+                  controls.
+                </p>
+              </div>
+            ) : null}
+          </div>
           <div className="gx-carousel-footer">
             {controls ? (
               <div className="gx-carousel-controls">

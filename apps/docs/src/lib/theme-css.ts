@@ -6,6 +6,7 @@ import {
   filledPressed,
   seriesColors,
   switchMetricsAt,
+  syntaxColors,
   targetSize,
   type BoxShadow,
   type Theme,
@@ -84,11 +85,13 @@ const switchVars = (theme: Theme): CssVars => {
  * icon steps a drawn control takes its side from, the pressable-target floor a
  * control reserves around that drawing, the five categorical series colours
  * as `--series-1` through `--series-5` so a chart or a legend paints the
- * theme's scale instead of a palette of its own, and the rule a row crosses
+ * theme's scale instead of a palette of its own, the rule a row crosses
  * each fill it can wear (`--divider-card`, `--divider-selected`,
  * `--divider-hover`, `--divider-accent`), because a row paints its rule
  * *inside* its own box and the raw `border` role is under the perceptibility
- * floor on a wash.
+ * floor on a wash, and the syntax palette as `--syntax-<kebab role>`, so a code
+ * block draws the palette its native `<code>` host paints rather than a
+ * third-party theme.
  *
  * @example
  * ```tsx
@@ -139,6 +142,12 @@ export const toCssVars = (theme: Theme): CssVars => ({
     dividerOn(theme, theme.colors.accent) ?? theme.colors.border,
   ...Object.fromEntries(
     seriesColors(theme).map((value, index) => [`--series-${index + 1}`, value]),
+  ),
+  ...Object.fromEntries(
+    Object.entries(syntaxColors(theme)).map(([role, value]) => [
+      `--syntax-${toKebab(role)}`,
+      value,
+    ]),
   ),
   ...Object.fromEntries(
     Object.entries(theme.colors).map(([role, value]) => [

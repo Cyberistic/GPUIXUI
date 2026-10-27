@@ -12,6 +12,7 @@ import {
   platformStyles,
   platformTheme,
   retroStyles,
+  syntaxColors,
   targetSize,
   themes,
   type SeriesColors,
@@ -245,6 +246,17 @@ describe("theme bridge", () => {
 
     expect(vars["--font-sans"]).toContain("BlinkMacSystemFont");
     expect(vars["--font-mono"]).toBe(themes.dark.typography.mono);
+  });
+
+  it("publishes the syntax palette a code block paints", () => {
+    // A code preview painted its runs in the body colour because the bridge
+    // carried no syntax roles; the shipped block reads `syntaxColors(theme)`.
+    const palette = syntaxColors(themes.dark);
+    const vars = toCssVars(themes.dark);
+
+    expect(vars["--syntax-keyword"]).toBe(palette.keyword);
+    expect(vars["--syntax-string-special"]).toBe(palette.stringSpecial);
+    expect(vars["--syntax-function-builtin"]).toBe(palette.functionBuiltin);
   });
 });
 

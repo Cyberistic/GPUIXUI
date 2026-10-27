@@ -502,13 +502,34 @@ const PlanCard = ({
   </div>
 );
 
+/** The treatments, each with the caption that names what it paints. */
+const CARD_TREATMENTS = [
+  {
+    variant: "outline",
+    name: "Outline",
+    note: "A one-pixel border, no lift.",
+  },
+  {
+    variant: "elevated",
+    name: "Elevated",
+    note: "A small lift, no border.",
+  },
+  {
+    variant: "plain",
+    name: "Plain",
+    note: "Neither an edge nor a lift.",
+  },
+] as const;
+
 const CardVariants = () => (
   <div className="gx-card-grid">
-    {(["outline", "elevated", "plain"] as const).map((variant) => (
-      <div className="gx-card-column" key={variant}>
-        <p className="gx-demo-label">{variant}</p>
+    {CARD_TREATMENTS.map(({ variant, name, note }) => (
+      <figure className="gx-card-column" key={variant}>
         <PlanCard variant={variant} />
-      </div>
+        <figcaption className="gx-card-caption">
+          <b>{name}</b> {note}
+        </figcaption>
+      </figure>
     ))}
   </div>
 );
@@ -531,7 +552,7 @@ const CardComposition = () => (
         <span className="gx-card-value">Mondays</span>
       </div>
     </div>
-    <div className="gx-card-footer gx-card-footer-padded">
+    <div className="gx-card-footer">
       <button className="gx-btn gx-btn-secondary" type="button">
         Cancel
       </button>

@@ -112,10 +112,10 @@
 .gx-auth-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   width: min(400px, 100%);
   margin: 0;
-  padding: 26px 24px;
+  padding: 28px 24px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 6px);
   background: var(--card);
@@ -125,27 +125,38 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding-bottom: 4px;
+  gap: 8px;
+  padding-bottom: 6px;
   text-align: center;
 }
 
 .gx-auth-mark {
-  width: 28px;
-  height: 28px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--secondary);
+}
+
+.gx-auth-mark-glyph {
+  width: 22px;
+  height: 22px;
 }
 
 .gx-auth-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 650;
   letter-spacing: -0.015em;
   color: var(--foreground);
 }
 
 .gx-auth-desc {
+  max-width: 34ch;
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--muted-foreground);
 }
@@ -156,6 +167,15 @@
   gap: 6px;
 }
 
+/* The shipped `FieldLabel`: 14px medium sans in the body role, not a mono
+   eyebrow. A label names the control; it is not a diagram annotation. */
+.gx-auth-label {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--foreground);
+}
+
 .gx-auth-input {
   width: 100%;
 }
@@ -163,7 +183,26 @@
 .gx-auth-between {
   display: flex;
   justify-content: flex-end;
+  margin-top: -4px;
   font-size: 12.5px;
+}
+
+/* The divider a reader meets between the primary action and the providers. */
+.gx-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-auth-divider::before,
+.gx-auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .gx-auth-link {
@@ -198,11 +237,17 @@
 }
 
 .gx-auth-status {
-  min-height: 34px;
+  min-height: 20px;
   margin: 0;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
   color: var(--muted-foreground);
+}
+
+/* At rest there is no note, and an empty reserved row read as a gap between
+   the primary action and the divider. A state still paints in the same slot. */
+.gx-auth-status:empty {
+  display: none;
 }
 
 .gx-auth-status[data-tone="success"] {
