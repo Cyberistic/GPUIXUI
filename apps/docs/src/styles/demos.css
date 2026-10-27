@@ -10388,8 +10388,11 @@
 }
 
 .gx-rolling-line {
+  /* One line of the value it holds. `1.3em` sized this from the page's 15px
+     type while the value paints at 26px, so the clip cut the top and bottom off
+     every value it showed. */
   position: relative;
-  height: 1.3em;
+  height: 28px;
   overflow: hidden;
 }
 
@@ -10398,6 +10401,7 @@
   display: inline-block;
   color: var(--foreground);
   font-size: 26px;
+  line-height: 28px;
   font-weight: 650;
   animation: gx-roll-in 300ms ease-out both;
 }
@@ -10998,6 +11002,11 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  /* The preflight caps every image at its container's width, so the hover
+     below grew the picture's height alone and squashed it. A magnifier is
+     measured against the frame, not the page. */
+  max-width: none;
+  max-height: none;
   object-fit: cover;
   transition:
     width 300ms ease,
