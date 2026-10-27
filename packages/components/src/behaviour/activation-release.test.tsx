@@ -220,11 +220,9 @@ describe("Space activates on the release, not the press", () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(
       <div style={{ width: 420, padding: 40 }}>
-        <DatePicker
-          today="2026-10-17"
-          defaultValue="2026-10-17"
-          onValueChange={onValueChange}
-        >
+        {/* Nothing is chosen yet, so the release chooses today rather than
+            clearing a value a second press would toggle off. */}
+        <DatePicker today="2026-10-17" onValueChange={onValueChange}>
           <DatePickerTrigger label="Due date" />
           <DatePickerContent>
             <DatePickerCalendar />

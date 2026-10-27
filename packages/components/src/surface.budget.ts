@@ -111,6 +111,10 @@ export const surfaceBudget = {
   // flow + height) and `toast/swipe.ts` (the one-axis dismissal threshold and
   // flick speed). Both are renderer-free, which is what lets their suites hold
   // the stack and the gesture without a window.
+  // 177 → 180 for the calendar: `calendar.tsx`, its pure rule module
+  // (`calendar/logic.ts`) and its view store (`calendar/store.ts`). The picker
+  // keeps its own open store (`date-picker/store.ts`) inside those bytes because
+  // the store was already on the graph through `internal/local-state.ts`.
   // 173 → 177 for the five pointer-and-tween surfaces that moved their state
   // into Effect (`magnetic/store.ts`, `liquid-button/store.ts`,
   // `shine-button/store.ts`, `stars/store.ts`, `gravity-stars/store.ts`) and the
@@ -131,7 +135,9 @@ export const surfaceBudget = {
   // `toggle.tsx`, `toggle-group.tsx`) and the two pure rules they own
   // (`progress/logic.ts`, `slider/logic.ts`): each file is a family, and the
   // barrel names them so the entry carries them.
-  modules: 195,
+  // 195 → 198 for the Calendar (`calendar.tsx`, `calendar/logic.ts`,
+  // `calendar/store.ts`), which replaces the date picker's private grid.
+  modules: 198,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -187,6 +193,7 @@ export const surfaceBudget = {
   // drain or a sweep holds, which is 24 KiB over the five `useState`/`useEffect`
   // seams they replace. The ceiling moved 1230 → 1260 KiB so the next family
   // keeps the same headroom.
+<<<<<<< HEAD
   // 177 → 181 for the four stores that followed on the same seam: the swap and
   // its exit window (`rolling-text/store.ts`), the pointer (`image-zoom/store.ts`),
   // the measured box and the breath's phase (`pattern-field/store.ts`) and the
@@ -197,6 +204,12 @@ export const surfaceBudget = {
   // account menu (plan 340) rebased over them, so the ceiling moved 1260 → 1350
   // KiB; the six shadcn surfaces and their two rules land on top of that.
   bytes: 1350 * 1024,
+=======
+  // 1 272 KiB measured 2026-10-27 with the calendar family (the grid, its rules
+  // and its store) beside the picker that now composes it. The ceiling moved
+  // 1260 → 1290 KiB for the next family's headroom.
+  bytes: 1290 * 1024,
+>>>>>>> aa307e086 (feat(components): add a Calendar and compose DatePicker from it)
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

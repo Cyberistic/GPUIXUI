@@ -28,6 +28,7 @@ import { contextMenuMeta } from "./context-menu.js";
 import { copyButtonMeta } from "./copy-button.js";
 import { countdownMeta } from "./countdown.js";
 import { countingNumberMeta } from "./counting-number.js";
+import { calendarMeta } from "./calendar.js";
 import { datePickerMeta } from "./date-picker.js";
 import { dialogMeta } from "./dialog.js";
 import { drawerMeta } from "./drawer.js";
@@ -132,6 +133,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   copyButtonMeta,
   countdownMeta,
   countingNumberMeta,
+  calendarMeta,
   datePickerMeta,
   dialogMeta,
   drawerMeta,

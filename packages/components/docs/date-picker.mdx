@@ -1,9 +1,11 @@
 ---
 title: Date picker
-description: One day, chosen from a month grid in a popover
+description: A day or a span of days, chosen from a Calendar in a popover
 ---
 
 <ComponentPreview name="date-picker-workflow" />
+
+<ComponentPreview name="date-picker-range" />
 
 ## Usage
 
@@ -15,8 +17,20 @@ import {
   DatePickerTrigger,
 } from "@gpuixui/components/date-picker";
 
-<DatePicker value={due} onValueChange={setDue}>
+<DatePicker value={due} onValueChange={setDue} today="2026-10-22">
   <DatePickerTrigger label="Due date" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
+```
+
+A span is the same parts with `mode="range"`; the value is `{ from, to }` of ISO
+days, and the surface closes when the second day completes it.
+
+```tsx
+<DatePicker mode="range" value={window} onValueChange={setWindow}>
+  <DatePickerTrigger label="Booking window" />
   <DatePickerContent>
     <DatePickerCalendar />
   </DatePickerContent>
@@ -36,13 +50,18 @@ DatePicker
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `DatePicker` | `value` / `defaultValue` | `string \| null` — an ISO day | — / `null` |
-| `DatePicker` | `onValueChange` | `(value: string \| null) => void` | — |
-| `DatePicker` | `weekStartsOn` | `1..7` | `1` |
+| `DatePicker` | `mode` | `"single" \| "range"` | `"single"` |
+| `DatePicker` | `value` / `defaultValue` | ISO day · `{ from, to }` — by mode | — / `null` |
+| `DatePicker` | `onValueChange` | `(value \| range \| null) => void` | — |
+| `DatePicker` | `weekStartsOn` | `0 \| 1` | `1` |
 | `DatePicker` | `min` / `max` | ISO day, inclusive | unbounded |
 | `DatePicker` | `clearable` | `boolean` | `false` |
 | `DatePicker` | `disabled` | `boolean` | `false` |
 | `DatePicker` | `today` | ISO day | runtime clock |
+| `DatePicker` | `numberOfMonths` | `1 \| 2` | `1`, or `2` in range mode |
+| `DatePicker` | `showOutsideDays` | `boolean` | `true` |
+| `DatePicker` | `captionLayout` | `"label" \| "dropdown"` | `"label"` |
+| `DatePicker` | `fromYear` / `toYear` | `number` | today ± 10 |
 | `DatePicker` | `children` | `PartChildren` | — |
 | `DatePickerTrigger` | `placeholder` / `label` | `string` | `"Pick a date"` / — |
 | `DatePickerTrigger` | `className` / `testId` | `string` | — |
@@ -59,3 +78,9 @@ DatePicker
 - Disabling a picker with its calendar open closes it; neither a day nor `Clear` writes the value.
 - No `aria-current`; today is marked by a border.
 - No `aria-disabled`; an unavailable day leaves the tab order.
+
+## Related
+
+- **Calendar** — the grid this control anchors in a popover.
+- **Popover** — the surface and its dismissal rules.
+- **Time picker** — the time of day this control does not own.
