@@ -111,7 +111,13 @@ export const surfaceBudget = {
   // flow + height) and `toast/swipe.ts` (the one-axis dismissal threshold and
   // flick speed). Both are renderer-free, which is what lets their suites hold
   // the stack and the gesture without a window.
-  modules: 171,
+  // 173 → 177 for the five pointer-and-tween surfaces that moved their state
+  // into Effect (`magnetic/store.ts`, `liquid-button/store.ts`,
+  // `shine-button/store.ts`, `stars/store.ts`, `gravity-stars/store.ts`) and the
+  // seam they share (`internal/local-state.ts`): a `SubscriptionRef` is the
+  // state, the store owns the one timer a surface can run, and React subscribes
+  // through `useSyncExternalStore` instead of holding it in `useState`.
+  modules: 177,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -161,7 +167,13 @@ export const surfaceBudget = {
   // surface + measured body, the shared hold, the promise phase and the swipe
   // gesture (two pure rules, `toast/stack.ts` and `toast/swipe.ts`). The
   // ceiling moved 1190 → 1230 KiB for the next family's headroom.
-  bytes: 1230 * 1024,
+  // 1 229 KiB measured 2026-10-26 with the five Effect stores and the seam they
+  // share (`internal/local-state.ts`): a `SubscriptionRef` of the surface's
+  // state, a synchronous signal for `useSyncExternalStore` and the one timer a
+  // drain or a sweep holds, which is 22 KiB over the five `useState`/`useEffect`
+  // seams they replace. The ceiling moved 1230 → 1260 KiB so the next family
+  // keeps the same headroom.
+  bytes: 1260 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
