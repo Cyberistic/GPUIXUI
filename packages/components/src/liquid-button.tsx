@@ -150,8 +150,11 @@ export const LiquidButton = ({
       onLayout={measure}
       style={mergeStyles({ position: "relative", overflow: "hidden" }, style)}
     >
-      {children}
+      {/* The flood paints under the label. The layer is absolute, and a later
+          child paints over an earlier one in GPUI, so the order here is the
+          stacking order the preview needs too. */}
       {layer}
+      {children}
     </Button>
   );
 };
