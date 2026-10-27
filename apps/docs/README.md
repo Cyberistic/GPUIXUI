@@ -159,6 +159,10 @@ src/components/docs/property-panel-demo.tsx The inspector's four readers of that
 src/components/docs/navigation-menu-demo.tsx The nav's two browser renderings and their source strings
 src/components/docs/navigation-menu-preview.ts The nav's reducer, its hover clock and its roving group
 src/components/docs/preview-card-demo.tsx  The hoverable card's open and close
+src/components/docs/hover-card-demo.tsx   The hover card's delay, the travel into it and its two open paths
+src/components/docs/aspect-ratio-demo.tsx The ratio box's height under a width the reader moves
+src/components/docs/item-demo.tsx         The item row's media, text and actions in three surfaces
+src/components/docs/input-group-demo.tsx  The group's one edge, its addons and the field inside
 src/components/docs/breadcrumb-preview.ts The breadcrumb preview's collapse rule and separator count
 src/components/docs/breadcrumb-demo.tsx  The breadcrumb's two browser renderings and their source strings
 src/components/docs/checkbox-preview.ts  The checkbox preview's group arithmetic and keyboard edges

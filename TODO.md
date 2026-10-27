@@ -449,6 +449,19 @@ shadcn recipes' fixed metrics instead of the primitives' density scale.
 
 `[x]` `[██████████]` 39/39
 
+`[x]` Add the four surfaces the shadcn inventory did not carry —
+**`HoverCard`** (700 ms hover open, immediate focus open, 300 ms close after the
+pointer and focus leave, Escape and outside-press dismissal, the popover's
+anchored layer and dismiss stack), **`AspectRatio`** (the runtime's own
+`aspectRatio`, so a width change re-lays the height with no measurement),
+**`Item`** (media/content/actions plus header/footer, three surfaces, two
+densities) and **`InputGroup`** (one bordered row, alignment-driven addons, the
+group's ring following the field, label/description/error slots). `HoverCard`
+and Preview Card share one wait store (`internal/hover.ts`: `LocalState`
+presence and one timer), so the seam is not copied; 4 + 12 + 6 + 6 native
+behaviour cases, four docs pages, four examples, four browser previews and the
+`COMPONENTS.md` / `docs/component-api.md` / related-family rows.
+
 `[x]` Convert the eight leaf components — `Card`, `Badge`, `Alert`, `Avatar`,
 `List`, `Pagination`, `EmptyState`, `Stepper` — onto `@gpuixui/tw`. Each renders
 a `className` recipe (`CARD_*`, `BADGE_*`, … in `packages/tw/src/recipes.ts`)

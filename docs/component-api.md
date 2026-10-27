@@ -318,6 +318,7 @@ the page and the package in the same change.
 | Component | Parts | base-gpui guide | Source |
 | --------- | ----- | --------------- | ------ |
 | Cards | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | — | plan 111 |
+| Aspect ratio | `AspectRatio` | — | — |
 | Badges | `Badge` | — | plan 111 |
 | Avatars | `Avatar` | `AvatarRoot`/`Image`/`Fallback` | plan 111 |
 | Avatar group | `AvatarGroup` | — | plan 600 |
@@ -325,7 +326,10 @@ the page and the package in the same change.
 | Lists / list items | `List`, `ListItem`, `ListItemTitle`, `ListItemDescription` | — | plan 111 |
 | Pinned list | `PinnedList` | — | plan 600 |
 | Empty states | `EmptyState` | — | plan 111 |
+| Hover card | `HoverCard`, `HoverCardTrigger`, `HoverCardContent` | `PreviewCardRoot`/`Trigger`/`Popup` (shape only) | — |
 | Inline validation | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldInput` | `FieldRoot`/`Label`/`Description`/`Error`/`Validity`/`Item`/`Control` | plan 115 |
+| Input group | `InputGroup`, `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea` | — | — |
+| Item | `Item`, `ItemGroup`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`, `ItemHeader`, `ItemFooter` | — | — |
 | Toasts / notifications | `ToastProvider`, `ToastViewport` (+ `useToast`; an action is a draft field with a provider-owned handler, not a part) | `ToastProvider`/`Root`/`Title`/`Description`/`Action`/`Close`/`Viewport`/`Portal`/`Content` | plan 115, 322 |
 | Dialogs | `Dialog`, `DialogTrigger`, `DialogClose`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` | plan 112 |
 | Confirmation dialogs | `ConfirmDialog` (composes the Dialog parts) | `AlertDialogRoot`/`Trigger`/`Popup` | plan 112 |

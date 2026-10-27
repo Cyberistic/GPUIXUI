@@ -11,9 +11,12 @@ source of truth for what is left to do. `COMPONENTS.md` is the inventory.
 Phase C — Tier 1–2 components. **Tier 2 is complete in `packages/components`**:
 39 components/areas, each with a native behaviour suite, at least one working
 example, a docs page and an inventory record checked against `COMPONENTS.md`.
-The newest is **`Calendar`** — the shadcn-shaped month grid the Date picker now
-composes — with single/multiple/range selection, one or two months, outside days,
-disabled matchers and label/dropdown captions.
+The newest are **`Calendar`** — the shadcn-shaped month grid the Date picker now
+composes, with single/multiple/range selection, one or two months, outside days,
+disabled matchers and label/dropdown captions — and four surfaces the inventory
+did not carry: **`HoverCard`** (hover and focus, one shared wait store with
+Preview Card), **`AspectRatio`** (the runtime's own ratio), **`Item`** and
+**`InputGroup`**.
 The last batch closed the twelve gap rows from plan 205 (Drawer, Navigation Menu,
 Preview Card, Timeline, Countdown, Keyboard shortcuts, Carousel, Inline edit,
 Tag input, Mention input, Hotkey recorder, Color picker) — `nub run --filter

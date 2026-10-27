@@ -13269,3 +13269,352 @@
     transition: none;
   }
 }
+
+/* ---- aspect ratio: mirrors components/src/aspect-ratio.tsx ----
+   The native box paints the runtime's `aspectRatio`; the browser paints the
+   CSS property, which is the same arithmetic, so the drawing can show the
+   re-layout a resized width causes. */
+
+.gx-aspect-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+}
+
+.gx-aspect-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.gx-aspect-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.gx-aspect-range {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
+.gx-aspect-readout {
+  min-width: 52px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--foreground);
+}
+
+.gx-aspect-ratios {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+.gx-aspect-ratio {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-aspect-ratio[data-active="true"] {
+  border-color: var(--ring);
+  color: var(--foreground);
+}
+
+.gx-aspect-frame {
+  position: relative;
+}
+
+.gx-aspect-box {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--accent), var(--muted));
+}
+
+.gx-aspect-note,
+.gx-item-note,
+.gx-ig-note,
+.gx-hovercard-note {
+  margin: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+}
+
+/* ---- item: mirrors components/src/item.tsx's ITEM_* recipes ---- */
+
+.gx-item-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.gx-item-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gx-item {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+}
+
+.gx-item[data-variant="outline"] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.gx-item[data-variant="muted"] {
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+.gx-item-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: var(--radius);
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-item-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+}
+
+.gx-item-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-item-description {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  overflow: hidden;
+}
+
+.gx-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-item-action {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gx-item-action:hover {
+  background: var(--hover);
+}
+
+/* ---- input group: mirrors components/src/input-group.tsx ----
+   `:focus-within` stands in for the native focus state; the field inside
+   paints no edge, fill or ring of its own. */
+
+.gx-ig-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.gx-ig-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.gx-ig-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+}
+
+.gx-ig-group:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.gx-ig-addon {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-left: 12px;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+.gx-ig-addon-end {
+  padding-left: 0;
+  padding-right: 12px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.gx-ig-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-height-md);
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.gx-ig-input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-ig-help {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+/* ---- hover card: mirrors components/src/hover-card.tsx ----
+   The waits are the component's (700 open, 300 close); the drawing keeps them
+   so the travel from trigger to card is the one the native card allows. */
+
+.gx-hovercard-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+.gx-hovercard-line {
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--foreground);
+}
+
+.gx-hovercard-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.gx-hovercard-trigger {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.gx-hovercard-trigger:hover {
+  background: var(--hover);
+}
+
+.gx-hovercard {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 256px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+.gx-hovercard-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-hovercard-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted-foreground);
+}
+
+.gx-hovercard-action {
+  align-self: flex-start;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--popover-foreground);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gx-hovercard-action:hover {
+  background: var(--hover);
+}

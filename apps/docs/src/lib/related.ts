@@ -95,6 +95,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("number-field", "NumberField"),
       primitive("otp-field", "OTPField"),
       primitive("select", "Select"),
+      component("input-group", "Input group"),
     ],
   },
   {
@@ -107,6 +108,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("separator", "Separator"),
       primitive("scroll-area", "ScrollArea"),
       component("separator", "Separator"),
+      component("aspect-ratio", "Aspect ratio"),
     ],
   },
   {
@@ -208,6 +210,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
     name: "Lists, tables and pagination",
     pages: [
       component("list", "List"),
+      component("item", "Item"),
       component("table", "Table"),
       component("pagination", "Pagination"),
       component("breadcrumb", "Breadcrumb"),
@@ -231,6 +234,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("sheet", "Sheet"),
       component("popover", "Popover"),
       component("preview-card", "Preview card"),
+      component("hover-card", "Hover card"),
       component("tooltip", "Tooltip"),
     ],
   },

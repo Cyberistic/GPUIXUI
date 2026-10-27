@@ -14,6 +14,7 @@
 import type { ComponentType } from "react";
 import { AccordionExample } from "./accordion.example.js";
 import { AlertExample } from "./alert.example.js";
+import { AspectRatioExample } from "./aspect-ratio.example.js";
 import { AutoHeightExample } from "./auto-height.example.js";
 import { AvatarExample } from "./avatar.example.js";
 import { AvatarGroupExample } from "./avatar-group.example.js";
@@ -51,6 +52,9 @@ import { HighlightTextExample } from "./highlight-text.example.js";
 import { FormExample } from "./form.example.js";
 import { GlyphExample } from "./glyph.example.js";
 import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
+import { HoverCardExample } from "./hover-card.example.js";
+import { InputGroupExample } from "./input-group.example.js";
+import { ItemExample } from "./item.example.js";
 import { ImageZoomExample } from "./image-zoom.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
 import { KeyboardShortcutsExample } from "./keyboard-shortcuts.example.js";
@@ -103,6 +107,7 @@ import { UserMenuExample } from "./user-menu.example.js";
 export const examples: Readonly<Record<string, ComponentType>> = {
   accordion: AccordionExample,
   alert: AlertExample,
+  "aspect-ratio": AspectRatioExample,
   "auto-height": AutoHeightExample,
   avatar: AvatarExample,
   "avatar-group": AvatarGroupExample,
@@ -140,6 +145,9 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   form: FormExample,
   glyph: GlyphExample,
   "hotkey-recorder": HotkeyRecorderExample,
+  "hover-card": HoverCardExample,
+  "input-group": InputGroupExample,
+  item: ItemExample,
   "image-zoom": ImageZoomExample,
   "inline-edit": InlineEditExample,
   "keyboard-shortcuts": KeyboardShortcutsExample,

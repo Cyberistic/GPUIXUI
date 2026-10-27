@@ -1,0 +1,78 @@
+---
+title: Input group
+description: A field and its addons inside one bordered, focus-ringed row
+---
+
+<ComponentPreview name="input-group-demo" />
+
+## Usage
+
+```tsx
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@gpuixui/components/input-group";
+
+export const Search = () => (
+  <InputGroup label="Search" description="Files and people in this space.">
+    <InputGroupInput placeholder="Search…" />
+    <InputGroupAddon align="inline-start">
+      <InputGroupText>⌘</InputGroupText>
+    </InputGroupAddon>
+    <InputGroupAddon align="inline-end">
+      <InputGroupText>K</InputGroupText>
+    </InputGroupAddon>
+  </InputGroup>
+);
+```
+
+## Composition
+
+```text
+InputGroup
+├── label / description / error   (the group's own slots)
+├── InputGroupAddon  align="block-start"
+├── InputGroupAddon  align="inline-start"
+├── InputGroupInput | InputGroupTextarea
+├── InputGroupAddon  align="inline-end"
+├── InputGroupButton
+├── InputGroupText
+└── InputGroupAddon  align="block-end"
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `InputGroup` | `label` | `string` — the visible label and every group field's name | — |
+| `InputGroup` | `description` | `string` — supporting copy, hidden while an error shows | — |
+| `InputGroup` | `error` | `string` — paints the row invalid and takes the description slot | — |
+| `InputGroup` | `invalid` | `boolean` — invalid without a message | `false` |
+| `InputGroup` | `className` / `style` | `string` / `StyleDesc` | — |
+| `InputGroup` | `testId` / `children` | `string` / `PartChildren` | — |
+| `InputGroupAddon` | `align` | `"inline-start" \| "inline-end" \| "block-start" \| "block-end"` | `"inline-start"` |
+| `InputGroupAddon` | `className` / `style` | `string` / `StyleDesc` | — |
+| `InputGroupAddon` | `testId` / `children` | `string` / `ReactNode` | — |
+| `InputGroupButton` | action props | `variant` (`"ghost"` by default), `size`, `disabled`, `onClick` — the shared `Button` contract | `size="sm"` |
+| `InputGroupText` | `className` / `style` | `string` / `StyleDesc` | — |
+| `InputGroupText` | `children` | `ReactNode` | — |
+| `InputGroupInput` | field props | `value`, `defaultValue`, `onValueChange`, `onChange`, `onSubmit`, `placeholder`, `readOnly`, `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `tabIndex`, `description`, `onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`, `ref`, `aria-id`, `onLayout`, `className`, `style`, `testId` — the primitives' input contract | — |
+| `InputGroupTextarea` | field props | the same as `InputGroupInput` without `onSubmit`, plus `minRows` and `maxRows` | — |
+
+## Limitations
+
+- The row's ring follows **any** focus, not keyboard focus: the runtime reports
+  that a field is focused, not how it got there, and an ancestor box cannot wear
+  the focused field's `focusVisible` outline.
+- The field inside paints no edge, fill or ring of its own — the group owns the
+  chrome. A group inside a `Field` therefore reads the group's ring only.
+- Parts are laid out by alignment, wherever they are written (0.11.0 has no
+  `order`); a part wrapped in a fragment is placed with the field.
+
+## Related
+
+- **Field** — the label, control and message block; a group can be its control.
+- **Search input** — a field with its own leading mark and clear action.
+- **Textarea** — the plain multi-line field a group dresses.
