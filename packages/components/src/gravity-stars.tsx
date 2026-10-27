@@ -32,8 +32,8 @@ import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useState } from "react";
 import { measuredBox } from "./internal/measure.js";
+import { send, useLocalSlice, useLocalStore } from "./internal/local-state.js";
 import {
   fadeOnly,
   useMotionPreference,
@@ -52,6 +52,7 @@ import {
   gravityFallCapMs,
   gravityFallFloor,
   gravityFallMs,
+  gravityLifeOf,
   gravityMaxSize,
   gravityMinSize,
   gravityPhases,
@@ -59,8 +60,10 @@ import {
   gravityStars,
   gravityStarsCap,
   type GravityBox,
+  type GravityLife,
   type GravityStar,
 } from "./gravity-stars/logic.js";
+import { makeGravityStore, type GravityStore } from "./gravity-stars/store.js";
 
 /** What a field draws at one frame. */
 export interface GravityStarsState {
@@ -101,16 +104,20 @@ interface StarProps {
   readonly ink: string;
   readonly radius: number;
   readonly still: boolean;
+  readonly store: GravityStore;
 }
 
 /**
  * One star: brightening toward the well, fading into it, then reborn on the edge.
  *
  * The element is keyed by the lap so a landed star mounts fresh; the phase lives
- * here so the two targets are handed over without a timer.
+ * in the field's store as this star's slice, so the two targets are handed over
+ * without a timer.
  */
-const Star = ({ spec, ink, radius, still }: StarProps) => {
-  const [life, setLife] = useState({ lap: 0, landing: false });
+const Star = ({ spec, ink, radius, still, store }: StarProps) => {
+  const life: GravityLife = useLocalSlice(store.local, (state) =>
+    gravityLifeOf(state.lives, spec.key),
+  );
   const phases = gravityPhases(spec);
   const rest = gravityRest(spec);
   const phase = life.landing ? phases.plunge : phases.approach;
@@ -135,12 +142,7 @@ const Star = ({ spec, ink, radius, still }: StarProps) => {
         ? {}
         : {
             motion,
-            onMotionComplete: () =>
-              setLife((current) =>
-                current.landing
-                  ? { lap: current.lap + 1, landing: false }
-                  : { lap: current.lap, landing: true },
-              ),
+            onMotionComplete: () => send(store.advance(spec.key)),
           })}
       style={{
         position: "absolute",
@@ -200,24 +202,13 @@ export const GravityStars = ({
   );
   const ink = color ?? theme.colors.primary;
   const still = preference === "reduced";
-  // The box the field is laid out in. Reporting the same size again must not
-  // churn the tree; a new size re-draws the field from the same seed.
-  const [box, setBox] = useState<Option.Option<GravityBox>>(Option.none());
+  const store = useLocalStore(makeGravityStore);
+  // The field follows the box alone: a star's leg is that star's slice, so one
+  // completion does not re-lay the whole field.
+  const box = useLocalSlice(store.local, (current) => current.box);
 
   const noteBox = (event: EventPayload): void => {
-    Option.match(measuredBox(event), {
-      onNone: () => undefined,
-      onSome: (next) =>
-        setBox((held) =>
-          Option.match(held, {
-            onNone: () => Option.some(next),
-            onSome: (current) =>
-              current.width === next.width && current.height === next.height
-                ? held
-                : Option.some(next),
-          }),
-        ),
-    });
+    send(store.measure(measuredBox(event)));
   };
 
   const measured: GravityBox = Option.getOrElse(box, () => ({
@@ -266,6 +257,7 @@ export const GravityStars = ({
           ink={ink}
           radius={theme.radius.full}
           still={still}
+          store={store}
         />
       ))}
     </div>
