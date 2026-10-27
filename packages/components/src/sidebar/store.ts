@@ -20,11 +20,8 @@
  */
 
 import { Effect, pipe } from "effect";
-import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import * as Ref from "effect/Ref";
-import * as Stream from "effect/Stream";
-import * as SubscriptionRef from "effect/SubscriptionRef";
+import { makeLocalState, type LocalState } from "../internal/local-state.js";
 import { sidebarStateJar, type SidebarPreference } from "./preference.js";
 
 /** The three pieces of sidebar state, in one value so a write is atomic. */
@@ -37,14 +34,8 @@ export interface SidebarSnapshot {
 
 /** What the store can do. */
 export interface SidebarStoreService {
-  /** The single source of truth. */
-  readonly state: SubscriptionRef.SubscriptionRef<SidebarSnapshot>;
-  /** The current value, for `useSyncExternalStore`. */
-  readonly read: () => SidebarSnapshot;
-  /** Register a subscriber; the returned function unregisters it. */
-  readonly subscribe: (listener: () => void) => () => void;
-  /** The snapshot, re-emitted on every change. */
-  readonly changes: Stream.Stream<SidebarSnapshot>;
+  /** The state and the one seam that binds it to React. */
+  readonly local: LocalState<SidebarSnapshot>;
   /** Set the desktop panel and persist the choice. */
   readonly setOpen: (open: boolean) => Effect.Effect<void>;
   /** Flip the desktop panel. */
@@ -83,81 +74,49 @@ export const makeSidebarStore = (
         : Option.none<boolean>();
     const open = options?.initialOpen ?? Option.getOrElse(stored, () => true);
 
-    const state = yield* SubscriptionRef.make<SidebarSnapshot>({
+    const local = yield* makeLocalState<SidebarSnapshot>({
       open,
       mobileOpen: false,
       tooltip: Option.none(),
-    });
-    const listeners = yield* Ref.make<ReadonlyArray<() => void>>(Arr.empty());
-
-    const announce = Effect.fnUntraced(function* () {
-      const current = yield* Ref.get(listeners);
-      yield* Effect.sync(() => Arr.forEach(current, (listener) => listener()));
-    });
-
-    const write = Effect.fnUntraced(function* (next: SidebarSnapshot) {
-      yield* SubscriptionRef.set(state, next);
-      yield* announce();
     });
 
     const setOpen = Effect.fn("SidebarStore.setOpen")(function* (
       next: boolean,
     ) {
-      const current = yield* SubscriptionRef.get(state);
-      yield* write({ ...current, open: next });
+      yield* local.write({ ...local.read(), open: next });
       yield* preference.write(next);
     });
 
     const toggle = Effect.gen(function* () {
-      const current = yield* SubscriptionRef.get(state);
-      yield* setOpen(!current.open);
+      yield* setOpen(!local.read().open);
     });
 
     const setMobileOpen = Effect.fn("SidebarStore.setMobileOpen")(function* (
       next: boolean,
     ) {
-      const current = yield* SubscriptionRef.get(state);
-      yield* write({ ...current, mobileOpen: next });
+      yield* local.write({ ...local.read(), mobileOpen: next });
     });
 
     const toggleMobile = Effect.gen(function* () {
-      const current = yield* SubscriptionRef.get(state);
-      yield* setMobileOpen(!current.mobileOpen);
+      yield* setMobileOpen(!local.read().mobileOpen);
     });
 
     const showTooltip = Effect.fn("SidebarStore.showTooltip")(function* (
       label: string,
     ) {
-      const current = yield* SubscriptionRef.get(state);
-      yield* write({ ...current, tooltip: Option.some(label) });
+      const current = local.read();
+      if (Option.exists(current.tooltip, (shown) => shown === label)) return;
+      yield* local.write({ ...current, tooltip: Option.some(label) });
     });
 
     const hideTooltip = Effect.gen(function* () {
-      const current = yield* SubscriptionRef.get(state);
+      const current = local.read();
       if (Option.isNone(current.tooltip)) return;
-      yield* write({ ...current, tooltip: Option.none() });
+      yield* local.write({ ...current, tooltip: Option.none() });
     });
 
-    const subscribe = (listener: () => void): (() => void) => {
-      Effect.runSync(
-        Ref.update(listeners, (current) => Arr.append(current, listener)),
-      );
-      return () => {
-        Effect.runSync(
-          Ref.update(listeners, (current) =>
-            Arr.filter(current, (held) => held !== listener),
-          ),
-        );
-      };
-    };
-
     return {
-      state,
-      // `getUnsafe` is the read `useSyncExternalStore` needs: the value as it
-      // stands, in the turn the write signalled.
-      read: () => SubscriptionRef.getUnsafe(state),
-      subscribe,
-      changes: SubscriptionRef.changes(state),
+      local,
       setOpen,
       toggle,
       setMobileOpen,
@@ -166,11 +125,6 @@ export const makeSidebarStore = (
       hideTooltip,
     };
   });
-
-/** Run a store command from a React handler. */
-export const send = (command: Effect.Effect<void>): void => {
-  Effect.runFork(command);
-};
 
 /** The state a row's active and disabled look is read through. */
 export const tooltipShown = (

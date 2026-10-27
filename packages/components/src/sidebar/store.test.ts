@@ -31,7 +31,7 @@ describe("SidebarStore", () => {
       const store = yield* makeSidebarStore({
         preference: remembered(false),
       });
-      expect(store.read().open).toBe(false);
+      expect(store.local.read().open).toBe(false);
     }),
   );
 
@@ -41,7 +41,7 @@ describe("SidebarStore", () => {
         initialOpen: true,
         preference: remembered(false),
       });
-      expect(store.read().open).toBe(true);
+      expect(store.local.read().open).toBe(true);
     }),
   );
 
@@ -50,18 +50,18 @@ describe("SidebarStore", () => {
       const preference = remembered(true);
       const store = yield* makeSidebarStore({ preference });
       let notified = 0;
-      const unsubscribe = store.subscribe(() => {
+      const unsubscribe = store.local.subscribe(() => {
         notified += 1;
       });
 
       yield* store.setOpen(false);
-      expect(store.read().open).toBe(false);
+      expect(store.local.read().open).toBe(false);
       expect(yield* preference.read).toEqual(Option.some(false));
       expect(notified).toBe(1);
 
       unsubscribe();
       yield* store.toggle;
-      expect(store.read().open).toBe(true);
+      expect(store.local.read().open).toBe(true);
       expect(notified).toBe(1);
     }),
   );
@@ -71,10 +71,10 @@ describe("SidebarStore", () => {
       const preference = remembered(true);
       const store = yield* makeSidebarStore({ preference });
       yield* store.toggleMobile;
-      expect(store.read().mobileOpen).toBe(true);
+      expect(store.local.read().mobileOpen).toBe(true);
       expect(yield* preference.read).toEqual(Option.some(true));
       yield* store.setMobileOpen(false);
-      expect(store.read().mobileOpen).toBe(false);
+      expect(store.local.read().mobileOpen).toBe(false);
     }),
   );
 
@@ -85,15 +85,15 @@ describe("SidebarStore", () => {
         preference: remembered(false),
       });
       yield* store.showTooltip("Models");
-      expect(tooltipShown(store.read().tooltip, "Models")).toBe(true);
+      expect(tooltipShown(store.local.read().tooltip, "Models")).toBe(true);
       yield* store.showTooltip("Settings");
-      expect(tooltipShown(store.read().tooltip, "Models")).toBe(false);
-      expect(tooltipShown(store.read().tooltip, "Settings")).toBe(true);
+      expect(tooltipShown(store.local.read().tooltip, "Models")).toBe(false);
+      expect(tooltipShown(store.local.read().tooltip, "Settings")).toBe(true);
       yield* store.hideTooltip;
-      expect(Option.isNone(store.read().tooltip)).toBe(true);
+      expect(Option.isNone(store.local.read().tooltip)).toBe(true);
       // A second close is a no-op rather than a notification.
       let notified = 0;
-      const unsubscribe = store.subscribe(() => {
+      const unsubscribe = store.local.subscribe(() => {
         notified += 1;
       });
       yield* store.hideTooltip;

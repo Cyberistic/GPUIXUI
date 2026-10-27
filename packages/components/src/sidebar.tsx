@@ -85,7 +85,6 @@ import {
   SIDEBAR_TOOLTIP,
   SIDEBAR_TOOLTIP_TEXT,
 } from "@gpuixui/tw";
-import { Effect } from "effect";
 import * as Option from "effect/Option";
 import {
   createContext,
@@ -96,7 +95,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { FieldInput } from "./field.js";
@@ -158,7 +156,8 @@ export {
   SIDEBAR_WIDTH_MOBILE,
 } from "./sidebar/logic.js";
 import type { SidebarPreference } from "./sidebar/preference.js";
-import { makeSidebarStore, send, tooltipShown } from "./sidebar/store.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
+import { makeSidebarStore, tooltipShown } from "./sidebar/store.js";
 
 /** The value every part reads. */
 export interface SidebarContextValue {
@@ -244,19 +243,13 @@ export const SidebarProvider = ({
   const variant = variantOf(requestedVariant);
   const collapsible = collapsibleOf(requestedCollapsible);
 
-  const [store] = useState(() =>
-    Effect.runSync(
-      makeSidebarStore({
-        initialOpen: openProp ?? defaultOpen,
-        preference,
-      }),
-    ),
+  const store = useLocalStore(
+    makeSidebarStore({
+      initialOpen: openProp ?? defaultOpen,
+      preference,
+    }),
   );
-  const snapshot = useSyncExternalStore(
-    store.subscribe,
-    store.read,
-    store.read,
-  );
+  const snapshot = useLocalState(store.local);
 
   // A controlled `open` is the authority. The effect applies it to the store so
   // every part paints the caller's value, and a caller that refuses the change
