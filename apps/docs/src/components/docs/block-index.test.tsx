@@ -34,7 +34,7 @@ describe("the Blocks index", () => {
 
   it("links every registered block, once, in registry order", () => {
     const hrefs = [
-      ...markup.matchAll(/<a href="\/docs\/blocks\/([a-z-]+)"/g),
+      ...markup.matchAll(/<a href="\/docs\/blocks\/([a-z0-9-]+)"/g),
     ].map((match) => match[1]);
 
     expect(hrefs).toEqual(blockList.map((block) => block.slug));
