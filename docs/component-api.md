@@ -267,7 +267,9 @@ means base-gpui has no guide for that component and the listed plan defines the
 parts.
 
 This table is **executed**, not prose: `packages/components/src/api.test.ts`
-reads the Tier 2 rows below and fails when a shipped component has no row, when a
+reads the installed rows below — Tier 1 for the six components this package
+publishes as the shadcn-shaped surface of a primitive concept, and Tier 2 for
+the rest — and fails when a shipped component has no row, when a
 row names a part the package does not export, when an exported part of a
 component's family appears in no row, **and when the page that component owns
 documents no row for a part its row names**. The page is the API a consumer
@@ -298,7 +300,7 @@ the page and the package in the same change.
 | Radio groups | `RadioGroup` | `RadioGroupRoot`/`Radio`/`Indicator` | plan 030 |
 | Selects | `Select` | `SelectRoot` + 19 parts | GPUix 0.11.0 `Select` |
 | Switches | `Switch` | `SwitchRoot`/`Thumb` | plan 030 |
-| Progress | `Progress` | `ProgressRoot`/`Track`/`Indicator`/`Label`/`Value` | plan 030 |
+| Progress | `Progress`, `ProgressTrack`, `ProgressIndicator`, `ProgressLabel`, `ProgressValue` | `ProgressRoot`/`Track`/`Indicator`/`Label`/`Value` | plan 030 |
 | Tooltips | `Tooltip` | `TooltipRoot`/`Trigger`/`Popup`/… | GPUix 0.11.0 `Tooltip` |
 | Skeletons | `Skeleton` | — | plan 030 |
 | Loading indicators | `Spinner` | — | plan 030 |
@@ -308,6 +310,7 @@ the page and the package in the same change.
 | Number field | `NumberField` | `NumberFieldRoot`/`Input`/`Increment`/`Decrement`/`Group`/`ScrubArea`/`ScrubAreaCursor` | plan 054 |
 | OTP field | `OTPField` | `OTPFieldRoot`/`Input` | plan 054 |
 | Toggle | `Toggle` | `Toggle` | plan 054 |
+| Toggle group | `ToggleGroup`, `ToggleGroupItem` | `ToggleGroupRoot`/`Item` | plan 054 |
 | Rating | `Rating` | — | plan 054 |
 
 ### Tier 2 — composition and feedback

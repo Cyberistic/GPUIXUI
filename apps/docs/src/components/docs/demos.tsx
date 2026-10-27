@@ -296,13 +296,17 @@ import { MeterDemo, meterDemoSource } from "./meter-demo";
 import { NumberFieldDemo, numberFieldDemoSource } from "./number-field-demo";
 import { OTPFieldDemo, otpFieldDemoSource } from "./otp-field-demo";
 import { ProgressDemo, progressDemoSource } from "./progress-demo";
+import { ProgressValues, progressValuesSource } from "./progress-values-demo";
 import { RadioGroupDemo, radioGroupDemoSource } from "./radio-group-demo";
 import { RangeSliderDemo, rangeSliderDemoSource } from "./range-slider-demo";
 import { RatingDemo, ratingDemoSource } from "./rating-demo";
 import { ScrollAreaDemo, scrollAreaDemoSource } from "./scroll-area-demo";
 import { SeparatorDemo, separatorDemoSource } from "./separator-demo";
+import { SeparatorRoles, separatorRolesSource } from "./separator-roles-demo";
 import { SkeletonDemo, skeletonDemoSource } from "./skeleton-demo";
+import { SkeletonStates, skeletonStatesSource } from "./skeleton-states-demo";
 import { SliderDemo, sliderDemoSource } from "./slider-demo";
+import { SliderValues, sliderValuesSource } from "./slider-values-demo";
 import { SpacerDemo, spacerDemoSource } from "./spacer-demo";
 import { SpinnerDemo, spinnerDemoSource } from "./spinner-demo";
 import { StackDemo, stackDemoSource } from "./stack-demo";
@@ -313,7 +317,12 @@ import {
   themeProviderDemoSource,
 } from "./theme-provider-demo";
 import { ToggleDemo, toggleDemoSource } from "./toggle-demo";
+import { ToggleToolbar, toggleToolbarSource } from "./toggle-toolbar-demo";
 import { ToggleGroupDemo, toggleGroupDemoSource } from "./toggle-group-demo";
+import {
+  ToggleGroupToolbar,
+  toggleGroupToolbarSource,
+} from "./toggle-group-toolbar-demo";
 import { AutoHeightDemo, autoHeightDemoSource } from "./auto-height-demo";
 import { AvatarGroupDemo, avatarGroupDemoSource } from "./avatar-group-demo";
 import { BubblesDemo, bubblesDemoSource } from "./bubbles-demo";
@@ -3310,6 +3319,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "otp-field-demo": { render: OTPFieldDemo, source: otpFieldDemoSource },
   "progress-demo": { render: ProgressDemo, source: progressDemoSource },
+  "progress-values": {
+    render: ProgressValues,
+    source: progressValuesSource,
+  },
   "radio-group-demo": {
     render: RadioGroupDemo,
     source: radioGroupDemoSource,
@@ -3324,8 +3337,20 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: scrollAreaDemoSource,
   },
   "separator-demo": { render: SeparatorDemo, source: separatorDemoSource },
+  "separator-roles": {
+    render: SeparatorRoles,
+    source: separatorRolesSource,
+  },
   "skeleton-demo": { render: SkeletonDemo, source: skeletonDemoSource },
+  "skeleton-states": {
+    render: SkeletonStates,
+    source: skeletonStatesSource,
+  },
   "slider-demo": { render: SliderDemo, source: sliderDemoSource },
+  "slider-values": {
+    render: SliderValues,
+    source: sliderValuesSource,
+  },
   "spacer-demo": { render: SpacerDemo, source: spacerDemoSource },
   "spinner-demo": { render: SpinnerDemo, source: spinnerDemoSource },
   "stack-demo": { render: StackDemo, source: stackDemoSource },
@@ -3336,9 +3361,17 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: themeProviderDemoSource,
   },
   "toggle-demo": { render: ToggleDemo, source: toggleDemoSource },
+  "toggle-toolbar": {
+    render: ToggleToolbar,
+    source: toggleToolbarSource,
+  },
   "toggle-group-demo": {
     render: ToggleGroupDemo,
     source: toggleGroupDemoSource,
+  },
+  "toggle-group-toolbar": {
+    render: ToggleGroupToolbar,
+    source: toggleGroupToolbarSource,
   },
   "auto-height-demo": {
     render: AutoHeightDemo,

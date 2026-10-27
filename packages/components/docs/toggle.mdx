@@ -1,0 +1,70 @@
+---
+title: Toggle
+description: A button that stays on, for a mode the next action uses
+---
+
+<ComponentPreview name="toggle-toolbar" />
+
+## Usage
+
+```tsx
+import { Toggle } from "@gpuixui/components/toggle";
+
+<Toggle pressed={bold} onPressedChange={setBold} label="Bold">
+  Bold
+</Toggle>;
+
+// An icon-only toggle still needs a name.
+<Toggle square label="Grid view" leading={<Icon name="grid" color={colour} />} />;
+```
+
+A toggle is not a `Switch`: a switch changes a setting immediately, while a
+toggle sets a mode for the next action ("bold", "grid view") and lives in a
+toolbar beside other actions.
+
+## Keyboard
+
+`Enter` activates on the key press and `Space` on the release, the platform's
+button contract; a held key does not repeat the activation.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `pressed` | `boolean` | — (uncontrolled) |
+| `defaultPressed` | `boolean` | `false` |
+| `onPressedChange` | `(pressed: boolean) => void` | — |
+| `variant` | `"default" \| "outline"` | `"default"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `square` | `boolean` | `false` |
+| `disabled` | `boolean` | `false` |
+| `loading` | `boolean` | `false` |
+| `loadingLabel` | `string` | the provider's `loading.busy` |
+| `reducedMotion` | `boolean` | the motion provider |
+| `leading` / `trailing` | `ReactNode` | — |
+| `label` | `string` | the text children |
+| `description` | `string` | — |
+| `style` | `StateStyle<ToggleState>` | — |
+| `className` | `string` | — |
+| `testId` | `string` | — |
+| `ref` / `aria-id` / `onLayout` | host props | — |
+
+## Accessibility
+
+- The toggle is a `button` node. 0.11.0 publishes no `aria-pressed`, so the
+  pressed state is announced through `aria-valuetext` ("pressed"/"not pressed")
+  — the only state channel the runtime carries.
+- An icon-only toggle publishes no text, so `label` is its accessible name; an
+  icon with no visible words is otherwise an unnamed button.
+- `loading` shows a spinner and refuses activation but keeps the tab stop, and
+  the busy label is announced as the help.
+
+## Limitations
+
+- **No `aria-pressed`**: a screen reader hears a button with a value, not a
+  pressed button. Keep the state in visible copy where it matters.
+- The pressed face is the theme's `accent` roles; a custom theme that does not
+  distinguish `accent` from `background` gets no pressed cue the contract can
+  measure.
+- A busy toggle (`loading`) is not the same as `disabled`: it stays focusable
+  so the reader can hear why it cannot act.
