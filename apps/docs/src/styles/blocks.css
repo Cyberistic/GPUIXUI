@@ -140,7 +140,7 @@
   background: var(--secondary);
 }
 
-.gx-auth-mark-glyph {
+.gx-auth-mark .gx-auth-mark-glyph {
   width: 22px;
   height: 22px;
 }
