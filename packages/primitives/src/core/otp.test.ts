@@ -18,6 +18,7 @@ import {
   decideOtpKey,
   DEFAULT_OTP_LENGTH,
   normalizeOtp,
+  otpEmptiedCell,
   otpCellCount,
   otpCells,
   otpLength,
@@ -180,5 +181,31 @@ describe("decideOtpKey", () => {
     // handling the key here too would delete twice.
     expect(decideOtpKey("123", 1, "backspace", 4)).toStrictEqual(Option.none());
     expect(decideOtpKey("", 0, "backspace", 4)).toStrictEqual(Option.none());
+  });
+});
+
+describe("otpEmptiedCell", () => {
+  it("reports the cell the key's own edit cleared", () => {
+    // Backspace on the last filled cell is the input's edit; its key up runs
+    // after and must not clear the cell before it as well.
+    expect(otpEmptiedCell("12", "1", 1, 4)).toBe(true);
+  });
+
+  it("answers false for a middle cell, whose neighbour shifts into it", () => {
+    // The code is contiguous, so clearing cell 1 of "123" leaves "13" and the
+    // cell now holds "3"; `decideOtpKey` sees a filled cell and answers none,
+    // so the double delete cannot happen either way.
+    expect(otpEmptiedCell("123", "13", 1, 4)).toBe(false);
+  });
+
+  it("answers false for an edit that cleared nothing", () => {
+    expect(otpEmptiedCell("123", "123", 1, 4)).toBe(false);
+    expect(otpEmptiedCell("123", "12", 1, 4)).toBe(false);
+    expect(otpEmptiedCell("", "", 0, 4)).toBe(false);
+    expect(otpEmptiedCell("123", "125", 2, 4)).toBe(false);
+  });
+
+  it("reads a stored value that is not text as an empty cell", () => {
+    expect(otpEmptiedCell(42, "", 0, 4)).toBe(false);
   });
 });

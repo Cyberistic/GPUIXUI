@@ -153,6 +153,33 @@ export const applyOtpInput = (
 };
 
 /**
+ * Whether this key's own native edit just emptied the cell at `index`.
+ *
+ * Backspace on a filled cell is the input's edit, so it clears the cell and
+ * reports it through `onChange`; the key-up handler runs afterwards and must
+ * not clear the cell before it as well. A host that tracks the key remembers
+ * this answer and returns early. Both the primitive and the docs drawing share
+ * it, so neither can delete twice.
+ *
+ * Only the cell the edit left empty counts. The code is contiguous, so clearing
+ * a cell with characters after it lets the next one shift in; that cell is
+ * filled and `decideOtpKey` answers `none` for its Backspace anyway, so the two
+ * rules cannot both delete.
+ */
+export const otpEmptiedCell = (
+  before: unknown,
+  after: unknown,
+  index: number,
+  length: number,
+): boolean => {
+  const limit = otpLength(length);
+  const at = indexOf(index, limit);
+  const cell = (value: unknown): string =>
+    Option.getOrElse(Arr.get(otpCells(value, limit), at), () => "");
+  return cell(before) !== "" && cell(after) === "";
+};
+
+/**
  * The keys the native input does not already answer.
  *
  * Left/Right/Home/End move between cells instead of the caret — each cell holds

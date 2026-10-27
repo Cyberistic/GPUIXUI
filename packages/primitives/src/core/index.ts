@@ -97,6 +97,7 @@ export {
   normalizeOtp,
   otpCellCount,
   otpCells,
+  otpEmptiedCell,
   otpLength,
 } from "./otp.js";
 export type { OtpEdit } from "./otp.js";

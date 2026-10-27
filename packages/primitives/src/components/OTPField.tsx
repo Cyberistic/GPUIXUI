@@ -57,6 +57,7 @@ import {
   normalizeOtp,
   otpCellCount,
   otpCells,
+  otpEmptiedCell,
   type OtpEdit,
 } from "../core/otp.js";
 import { accessibleName, spokenSentence } from "../core/a11y.js";
@@ -430,13 +431,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
     onEdit: (index, text) => {
       const current = state.value.current;
       const edit = applyOtpInput(current, index, text, limit);
-      emptiedByEdit.current =
-        Option.getOrElse(Arr.get(otpCells(current, limit), index), () => "") !==
-          "" &&
-        Option.getOrElse(
-          Arr.get(otpCells(edit.value, limit), index),
-          () => "",
-        ) === "";
+      emptiedByEdit.current = otpEmptiedCell(current, edit.value, index, limit);
       apply(edit);
     },
     onKey: (index, key) => {

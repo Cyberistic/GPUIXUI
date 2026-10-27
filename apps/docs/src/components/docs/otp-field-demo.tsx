@@ -1,12 +1,28 @@
 /**
  * Browser preview for the OTPField page.
  *
- * An OTP field is one contiguous code held in single-character cells. The
- * preview draws the six cells, a partially-filled and an invalid state. The
- * Code tab shows the native usage.
+ * An OTP field is one contiguous code held in single-character cells, and the
+ * drawing runs the primitive's **own** rules (`@gpuixui/primitives/core`) rather
+ * than re-deriving them: a typed character advances, a pasted code fills
+ * forward from the cell it landed in, and Backspace on an empty cell clears the
+ * one before it. A preview that only appended to the cell under the caret
+ * showed a field nobody ships.
+ *
+ * The Code tab shows the native usage.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import * as Option from "effect/Option";
+import {
+  applyOtpInput,
+  decideOtpKey,
+  normalizeOtp,
+  otpCells,
+  otpEmptiedCell,
+  type OtpEdit,
+} from "@gpuixui/primitives/core";
+
+const CODE_LENGTH = 6;
 
 const Cell = ({
   value,
@@ -25,11 +41,16 @@ const Cell = ({
 );
 
 export const OTPFieldDemo = () => {
-  const [code, setCode] = useState("4 8");
-  const digits = Array.from({ length: 6 }, (_, index) => {
-    const character = code.replace(/\s/g, "")[index] ?? "";
-    return character;
-  });
+  const [code, setCode] = useState("48");
+  const cells = otpCells(code, CODE_LENGTH);
+  const inputs = useRef<Array<HTMLInputElement | null>>([]);
+  /** Whether this key's own edit already cleared the cell, so Backspace clears one. */
+  const emptied = useRef(false);
+
+  const apply = (edit: OtpEdit) => {
+    setCode(edit.value);
+    inputs.current[edit.focus]?.focus();
+  };
 
   return (
     <div className="gx-demo gx-demo-column gx-otp-scene">
@@ -38,24 +59,50 @@ export const OTPFieldDemo = () => {
           Verification code
         </label>
         <div className="gx-otp" role="group" aria-label="Verification code">
-          {digits.map((digit, index) => (
+          {cells.map((cell, index) => (
             <input
               aria-label={`Verification code digit ${index + 1}`}
+              autoComplete={index === 0 ? "one-time-code" : "off"}
               className="gx-otp-cell"
+              data-filled={cell === "" ? undefined : ""}
               id={index === 0 ? "gx-otp-demo" : undefined}
+              inputMode="numeric"
               key={index}
-              maxLength={1}
-              onChange={(event) => {
-                const next = digits.slice();
-                next[index] = event.target.value.slice(-1);
-                setCode(next.join(" "));
+              ref={(element) => {
+                inputs.current[index] = element;
               }}
-              value={digit}
+              value={cell}
+              onChange={(event) => {
+                const edit = applyOtpInput(
+                  code,
+                  index,
+                  event.target.value,
+                  CODE_LENGTH,
+                );
+                emptied.current = otpEmptiedCell(
+                  code,
+                  edit.value,
+                  index,
+                  CODE_LENGTH,
+                );
+                apply(edit);
+              }}
+              onKeyUp={(event) => {
+                const key = event.key.toLowerCase();
+                if (key === "backspace" && emptied.current) {
+                  emptied.current = false;
+                  return;
+                }
+                const edit = decideOtpKey(code, index, key, CODE_LENGTH);
+                if (Option.isSome(edit)) apply(edit.value);
+              }}
             />
           ))}
         </div>
         <span className="gx-input-help">
-          Six digits from your authenticator.
+          {normalizeOtp(code, CODE_LENGTH).length === CODE_LENGTH
+            ? "Complete — a verifier can run."
+            : "Six digits from your authenticator."}
         </span>
       </div>
       <div className="gx-input-block">
