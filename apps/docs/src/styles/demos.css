@@ -2225,8 +2225,36 @@
 .gx-acc {
   display: flex;
   flex-direction: column;
+  /* The scene centres a flex item by its height, so an opening section moved
+     the header the reader had just pressed. Pin the card's top. */
+  align-self: flex-start;
   width: 100%;
   max-width: 520px;
+}
+
+/* The body stays mounted and its row track grows: the same height tween the
+   native panel paints (200ms), with the fade leading by 20ms. */
+.gx-acc-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.gx-acc-reveal[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.gx-acc-reveal-inner {
+  overflow: hidden;
+}
+
+.gx-acc-reveal .gx-acc-body {
+  opacity: 0;
+  transition: opacity 200ms ease-out 20ms;
+}
+
+.gx-acc-reveal[data-open="true"] .gx-acc-body {
+  opacity: 1;
 }
 
 .gx-acc-panel {
@@ -10642,8 +10670,9 @@
   background: var(--primary);
 }
 
-.gx-liquid-btn > :not(.gx-liquid-fill) {
+.gx-liquid-label {
   position: relative;
+  z-index: 1;
 }
 
 /* ---- shine button: a sheen crossing the label on hover. ---- */
@@ -10791,6 +10820,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  /* Pinned like the accordion: a reveal must not move the control that opened
+     it. */
+  align-self: flex-start;
   gap: 12px;
   width: min(360px, 100%);
   padding: 16px;
@@ -10800,11 +10832,21 @@
 }
 
 .gx-autoheight-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.gx-autoheight-content[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.gx-autoheight-inner {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 100%;
-  animation: gx-rotating-in 160ms ease-out both;
+  overflow: hidden;
 }
 
 .gx-autoheight-row {
@@ -13142,6 +13184,16 @@
   .gx-imagezoom img,
   .gx-motiongrid-cell,
   .gx-preview-picture {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The height tweens are journeys, not content: the closed/open frame still
+     paints, only the travel is removed. */
+  .gx-acc-reveal,
+  .gx-autoheight-content,
+  .gx-liquid-fill {
     transition: none;
   }
 }

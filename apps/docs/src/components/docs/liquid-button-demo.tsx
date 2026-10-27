@@ -10,11 +10,11 @@ export function LiquidButtonDemo() {
     <div className="gx-liquid">
       <button className="gx-liquid-btn" type="button">
         <span aria-hidden="true" className="gx-liquid-fill" />
-        Save draft
+        <span className="gx-liquid-label">Save draft</span>
       </button>
       <button className="gx-liquid-btn gx-liquid-btn-primary" type="button">
         <span aria-hidden="true" className="gx-liquid-fill" />
-        Publish
+        <span className="gx-liquid-label">Publish</span>
       </button>
     </div>
   );

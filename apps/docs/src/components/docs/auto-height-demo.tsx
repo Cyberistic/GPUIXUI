@@ -19,8 +19,8 @@ export function AutoHeightDemo() {
       >
         {open ? "Collapse" : "Expand"} build settings
       </button>
-      {open ? (
-        <div className="gx-autoheight-content">
+      <div className="gx-autoheight-content" data-open={open}>
+        <div className="gx-autoheight-inner">
           <div className="gx-autoheight-row">
             <span>Retry budget</span>
             <b>5 attempts</b>
@@ -34,7 +34,7 @@ export function AutoHeightDemo() {
             <b>Enabled</b>
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
