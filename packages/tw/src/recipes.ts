@@ -741,3 +741,137 @@ export const CHAT_COMPOSER_ATTACHMENTS = "flex flex-row flex-wrap gap-1.5";
 
 /** `chat.tsx` — the keyboard hint under the row. */
 export const CHAT_COMPOSER_HINT = "text-xs font-sans text-muted-foreground";
+
+// ── Sidebar (shadcn `sidebar.tsx`, the base registry) ────────────────────────
+//
+// The widths, insets and states are the component's own numbers (the renderer
+// has no CSS variables and no `data-*` selectors); these strings are the resting
+// appearance. shadcn's `--sidebar` roles map to this library's surfaces: the
+// chrome is the `card` role and the content beside it the `background` role,
+// because the theme carries no separate sidebar family.
+
+/** `sidebar.tsx` — the wrapper both the sidebar and its content sit in. */
+export const SIDEBAR_ROOT = "flex flex-row w-full h-full";
+
+/** `sidebar.tsx` — the panel's inner column. */
+export const SIDEBAR_INNER =
+  "flex flex-col w-full h-full bg-card text-card-foreground";
+
+/** `sidebar.tsx` — the floating and inset variants' rounded, lifted panel. */
+export const SIDEBAR_FLOATING = "rounded-lg border border-border shadow-sm";
+
+/** `sidebar.tsx` — the content beside the sidebar. */
+export const SIDEBAR_INSET = "flex flex-col flex-grow bg-background";
+
+/** `sidebar.tsx` — the panel's header. */
+export const SIDEBAR_HEADER = "flex flex-col gap-2 p-2";
+
+/** `sidebar.tsx` — the scrolling middle. The scroll behaviour stays in `style`. */
+export const SIDEBAR_CONTENT = "flex flex-col flex-grow gap-0 min-h-0";
+
+/** `sidebar.tsx` — the panel's footer. */
+export const SIDEBAR_FOOTER = "flex flex-col gap-2 p-2";
+
+/** `sidebar.tsx` — the rule between two regions. */
+export const SIDEBAR_SEPARATOR = "h-px bg-border mx-2";
+
+/** `sidebar.tsx` — one labelled group. */
+export const SIDEBAR_GROUP = "flex flex-col w-full p-2 relative";
+
+/** `sidebar.tsx` — a group's heading row. Its height is the collapse target. */
+export const SIDEBAR_GROUP_LABEL =
+  "flex flex-row items-center gap-2 h-8 px-2 rounded-md overflow-hidden";
+
+/** `sidebar.tsx` — a group heading's text. */
+export const SIDEBAR_GROUP_LABEL_TEXT =
+  "text-xs font-medium font-sans text-muted-foreground";
+
+/** `sidebar.tsx` — a group's trailing action. Size and position stay in `style`. */
+export const SIDEBAR_GROUP_ACTION =
+  "flex flex-row items-center justify-center rounded-md text-card-foreground";
+
+/** `sidebar.tsx` — the rows under a group heading. */
+export const SIDEBAR_GROUP_CONTENT = "flex flex-col w-full text-sm";
+
+/** `sidebar.tsx` — a menu list. */
+export const SIDEBAR_MENU = "flex flex-col w-full gap-0.5";
+
+/** `sidebar.tsx` — one menu row, the anchor for its action and badge. */
+export const SIDEBAR_MENU_ITEM = "relative";
+
+/** `sidebar.tsx` — a menu row's resting box. Height, state and icon collapse
+ * stay in `style`. */
+export const SIDEBAR_MENU_BUTTON =
+  "flex flex-row items-center justify-start w-full gap-2 px-2 rounded-md text-sm text-left text-card-foreground overflow-hidden";
+
+/** `sidebar.tsx` — the button's height by size. */
+export const SIDEBAR_MENU_BUTTON_SIZES = {
+  default: "h-9",
+  sm: "h-8",
+  lg: "h-12",
+} as const;
+
+/** `sidebar.tsx` — the flexible, truncated label inside a menu button. */
+export const SIDEBAR_MENU_LABEL =
+  "flex-grow text-sm font-sans whitespace-nowrap text-ellipsis overflow-hidden";
+
+/** `sidebar.tsx` — a row's trailing action. Size and position stay in `style`. */
+export const SIDEBAR_MENU_ACTION =
+  "flex flex-row items-center justify-center rounded-md text-card-foreground";
+
+/** `sidebar.tsx` — a row's trailing count. Position stays in `style`. */
+export const SIDEBAR_MENU_BADGE =
+  "flex flex-row items-center justify-center h-5 min-w-5 px-1 rounded-md text-xs font-medium font-sans text-muted-foreground";
+
+/** `sidebar.tsx` — a loading row. */
+export const SIDEBAR_MENU_SKELETON =
+  "flex flex-row items-center h-9 gap-2 px-2 rounded-md";
+
+/** `sidebar.tsx` — the skeleton's leading square. */
+export const SIDEBAR_MENU_SKELETON_ICON = "size-4 rounded-md bg-muted";
+
+/** `sidebar.tsx` — the skeleton's text bar. Its width stays in `style`. */
+export const SIDEBAR_MENU_SKELETON_TEXT = "h-4 rounded-md bg-muted flex-grow";
+
+/** `sidebar.tsx` — a submenu list. Its rail stays in `style`. */
+export const SIDEBAR_MENU_SUB = "flex flex-col min-w-0 gap-1 py-0.5";
+
+/** `sidebar.tsx` — one submenu row. */
+export const SIDEBAR_MENU_SUB_ITEM = "relative";
+
+/** `sidebar.tsx` — a submenu row's box. Height and state stay in `style`. */
+export const SIDEBAR_MENU_SUB_BUTTON =
+  "flex flex-row items-center justify-start min-w-0 gap-2 px-2 rounded-md text-muted-foreground overflow-hidden";
+
+/** `sidebar.tsx` — the field in the panel's header. Height stays in `style`. */
+export const SIDEBAR_INPUT = "w-full bg-background";
+
+/** `sidebar.tsx` — the icon-collapse tooltip. */
+export const SIDEBAR_TOOLTIP =
+  "bg-popover text-popover-foreground rounded-md border border-border px-2 py-1 shadow-sm pointer-events-auto";
+
+/** `sidebar.tsx` — the tooltip's text. */
+export const SIDEBAR_TOOLTIP_TEXT =
+  "text-xs font-sans text-popover-foreground whitespace-nowrap";
+
+/** `sidebar.tsx` — the mobile sheet's scrim. */
+export const SIDEBAR_SCRIM = "bg-overlay";
+
+/** `sidebar.tsx` — the mobile sheet's surface. */
+export const SIDEBAR_SHEET =
+  "flex flex-col h-full bg-card text-card-foreground border-border shadow-lg";
+
+/** `user-menu.tsx` — the identity row that opens the menu. */
+export const USER_MENU_TRIGGER =
+  "flex flex-row items-center gap-2 px-2 rounded-md bg-transparent text-card-foreground";
+
+/** `user-menu.tsx` — the name over the address. */
+export const USER_MENU_IDENTITY = "flex flex-col items-start min-w-0 flex-grow";
+
+/** `user-menu.tsx` — the name. */
+export const USER_MENU_NAME =
+  "text-sm font-medium font-sans text-card-foreground whitespace-nowrap text-ellipsis";
+
+/** `user-menu.tsx` — the address. */
+export const USER_MENU_EMAIL =
+  "text-xs font-sans text-muted-foreground whitespace-nowrap text-ellipsis";
