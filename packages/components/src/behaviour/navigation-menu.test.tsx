@@ -9,7 +9,10 @@
  * the panel while the pointer crosses into it, or springs a pressed-closed panel
  * back open from a stale timer — and a panel that vanishes on dismiss instead of
  * running its exit, keeps taking presses while it leaves, or travels under a
- * reduced-motion preference.
+ * reduced-motion preference. The trigger now also paints the lucide chevron in a
+ * fixed slot: opening must repaint that slot without resizing the trigger or
+ * moving a sibling, and the two marks must cross-fade (the runtime has no
+ * `transform`, so shadcn's rotate is a swap).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -31,6 +34,7 @@ import {
   hoverCentreOf,
   pressKey,
   requireBounds,
+  settle,
   waitFor,
 } from "../internal/interaction.js";
 import { MotionProvider } from "../motion.js";
@@ -530,7 +534,92 @@ describe("NavigationMenu", () => {
   });
 });
 
+/** The motion frame of a part, as the runtime paints it. */
+const motionOf = (
+  nav: ReturnType<typeof renderComponent>,
+  testId: string,
+): unknown => nav.renderer.findByTestId(testId)?.customProps?.motion;
+
+/** A nav with a sibling under it, for the shift measurement. */
+const NavWithSibling = () => (
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <Workspace />
+    <div testId="sibling" style={{ width: 200, height: 40 }} />
+  </div>
+);
+
 describe("NavigationMenu motion", () => {
+  it("opens on hover without moving its trigger or a sibling, with one chevron slot", async () => {
+    // The bug this guards: the trigger painted no chevron at all, and the
+    // drawing swapped a `⌄` for a `⌃` — the mark the component did not ship and
+    // the width the trigger did not reserve. A chevron mounted only while the
+    // panel is open widens the trigger under the pointer and pushes every
+    // sibling after it; this holds the box on both sides of the open.
+    const nav = renderComponent(<NavWithSibling />);
+    try {
+      const sibling = requireBounds(nav, "sibling");
+      const trigger = requireBounds(nav, "trigger-platform");
+
+      expect(
+        nav.renderer.findByTestId("trigger-platform-chevron-down"),
+      ).toBeDefined();
+      expect(
+        nav.renderer.findByTestId("trigger-platform-chevron-up"),
+      ).toBeDefined();
+
+      hoverCentreOf(nav, "trigger-platform");
+      await waitFor(() =>
+        expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
+      );
+      settle(nav);
+
+      expect(requireBounds(nav, "trigger-platform")).toEqual(trigger);
+      expect(requireBounds(nav, "sibling")).toEqual(sibling);
+    } finally {
+      nav.unmount();
+    }
+  });
+
+  it("cross-fades lucide's chevron instead of swapping a character", async () => {
+    // The runtime has no `transform`, so shadcn's rotate-180 is two marks in one
+    // fixed slot: the incoming one fades in as it rises 2px, and the outgoing
+    // one fades out. The trigger's text is the label alone — the chevron is an
+    // `svg` mark, not the `⌄` the drawing used to print.
+    const nav = renderComponent(<Workspace />);
+    try {
+      nav.renderer.clockPause();
+
+      expect(nav.renderer.getAllText().join(" ")).not.toMatch(/[⌄⌃]/);
+      expect(motionOf(nav, "trigger-platform-chevron-down")).toMatchObject({
+        animate: { opacity: 1, top: 0 },
+        transition: { duration: 0.2, ease: "easeOut" },
+      });
+      expect(motionOf(nav, "trigger-platform-chevron-up")).toMatchObject({
+        animate: { opacity: 0, top: 2 },
+        transition: { duration: 0.2, ease: "easeIn" },
+      });
+
+      clickCentreOf(nav, "trigger-platform");
+      settle(nav);
+
+      expect(motionOf(nav, "trigger-platform-chevron-down")).toMatchObject({
+        animate: { opacity: 0, top: -2 },
+      });
+      expect(motionOf(nav, "trigger-platform-chevron-up")).toMatchObject({
+        animate: { opacity: 1, top: 0 },
+      });
+      // Both marks stay painted, which is what makes it a cross-fade.
+      expect(
+        nav.renderer.findByTestId("trigger-platform-chevron-down"),
+      ).toBeDefined();
+      expect(
+        nav.renderer.findByTestId("trigger-platform-chevron-up"),
+      ).toBeDefined();
+    } finally {
+      nav.unmount();
+    }
+  });
+
   it("travels 4px toward its trigger and settles there", async () => {
     const nav = renderComponent(<Workspace />);
     nav.renderer.clockPause();

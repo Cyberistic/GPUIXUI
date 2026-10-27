@@ -7,7 +7,9 @@
  * one arrival (the pointer and focus handlers both asking); a card that closes
  * on Escape or an outside press without reporting it, or re-opens on the click
  * that follows the dismissing press; and a card that stays up after the pointer
- * has left both surfaces.
+ * has left both surfaces. The trigger is a **link** — shadcn's is an anchor,
+ * and the ghost chip it used to wear read as a toggle button in a sentence — and
+ * a card at the window's right edge is pulled back inside it.
  */
 
 import * as Option from "effect/Option";
@@ -297,6 +299,62 @@ describe("HoverCard", () => {
       hoverCentreOf(card, "trigger");
       await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(true));
       expect(card.renderer.findByTestId("card")).toBeUndefined();
+    } finally {
+      card.unmount();
+    }
+  });
+});
+
+describe("the hover card's surface and trigger", () => {
+  it("paints its trigger as a link, not a toggle chip", () => {
+    const card = renderComponent(
+      <HoverCard defaultOpen={false}>
+        <HoverCardTrigger testId="trigger">@ada</HoverCardTrigger>
+        <HoverCardContent testId="card" label="Ada Lovelace">
+          <text>Mathematician</text>
+        </HoverCardContent>
+      </HoverCard>,
+    );
+    try {
+      const trigger = card.renderer.findByTestId("trigger")?.style;
+
+      // A link: no fill at rest, no edge, underlined.
+      expect(trigger?.textDecoration).toBe("underline");
+      expect(trigger?.backgroundColor).toBeUndefined();
+      expect(trigger?.borderColor).toBeUndefined();
+      expect(trigger?.borderWidth).toBe(0);
+    } finally {
+      card.unmount();
+    }
+  });
+
+  it("keeps the card inside the window, under a link trigger", () => {
+    // The bug this guards: a card anchored near the window's edge painted past
+    // it — the drawing clipped it under the preview's scroller and the native
+    // surface could hang outside the window. The anchored layer's snap margin is
+    // the frame the card has to stay inside.
+    const card = renderComponent(
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: 10 }}>
+        <HoverCard defaultOpen>
+          <HoverCardTrigger testId="trigger">@ada</HoverCardTrigger>
+          <HoverCardContent testId="card" label="Ada Lovelace">
+            <text>Mathematician · Analytical Engine</text>
+          </HoverCardContent>
+        </HoverCard>
+      </div>,
+    );
+    try {
+      settleMotion(card);
+      const window = card.renderer.getWindowSize();
+      const bounds = requireBounds(card, "card");
+
+      // The trigger is the link look, not a chip...
+      expect(card.renderer.findByTestId("trigger")?.style.textDecoration).toBe(
+        "underline",
+      );
+      // ...and the surface stays inside the frame it is drawn in.
+      expect(bounds.x).toBeGreaterThanOrEqual(8);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(window.width - 8);
     } finally {
       card.unmount();
     }

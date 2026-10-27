@@ -10,6 +10,14 @@
  * - `fit="snap"` clamps to the window instead of flipping, so a bottom surface
  *   near the window edge is moved up **over** its trigger.
  *
+ * The side is therefore chosen from the **room** each side offers, never from
+ * where the runtime has painted the surface: the surface is measured on the
+ * commit it mounts, before the anchored layer applies its side, so its box still
+ * sits on the trigger's origin and "does the surface cover its trigger" was true
+ * for every surface and every side. Every requested side flipped — a `top`
+ * popover opened below, a `left` one opened to the right — until the rule read
+ * the room instead of the unplaced box.
+ *
  * The rules here are pure: the caller measures, this module decides. They are
  * intentionally one-shot — a caller applies the result once per open so a flip
  * can never oscillate.
@@ -38,7 +46,7 @@ export interface WindowBounds {
   readonly height: number;
 }
 
-/** Everything the rule needs; `surface` is the already-snapped box. */
+/** Everything the rule needs; `surface` is the measured box (its size). */
 export interface PlacementInput {
   /**
    * The requested side. `FloatingSide` is a compile-time guarantee, but a
@@ -52,6 +60,11 @@ export interface PlacementInput {
    */
   readonly align: unknown;
   readonly trigger: FloatingBounds;
+  /**
+   * The surface's measured size. Its position is deliberately not read: a
+   * surface is measured before the anchored layer places it, so the box still
+   * sits on the trigger's origin ({@link resolveSide}).
+   */
   readonly surface: FloatingBounds;
   readonly window: WindowBounds;
   readonly margin: number;
@@ -127,20 +140,24 @@ const extentOn = (side: unknown, surface: FloatingBounds): number =>
     Match.exhaustive,
   );
 
-const overlaps = (a: FloatingBounds, b: FloatingBounds): boolean =>
-  a.x < b.x + b.width &&
-  b.x < a.x + a.width &&
-  a.y < b.y + b.height &&
-  b.y < a.y + a.height;
-
 /**
- * The side the surface opens on. The requested side wins unless the snapped
- * surface covers its trigger; then the opposite side is used when it fits, and
- * the roomier of the two otherwise.
+ * The side the surface opens on, chosen from the room each side offers.
+ *
+ * A side fits when its room is at least the surface's extent; the requested
+ * side wins, then the opposite when it fits, then the roomier of the two.
+ *
+ * **Room, not the painted box.** The surface is measured once, on the commit it
+ * mounts, and the anchored layer has not applied its side yet, so its box sits
+ * on the trigger's origin. The old "does the snapped surface cover its trigger"
+ * test was therefore true for every surface and every side, and every requested
+ * side flipped: a `top` popover opened below, a `left` one to the right. The
+ * room a side offers is also the span the runtime's `fit: "snap"` clamps
+ * against, so the two agree by construction.
  */
 export const resolveSide = (input: PlacementInput): FloatingSide => {
   const side = sideOf(input.side);
-  if (!overlaps(input.surface, input.trigger)) return side;
+  const extent = extentOn(side, input.surface);
+  if (roomOn(side, input) >= extent) return side;
 
   const opposite = oppositeSide(side);
   const oppositeRoom = roomOn(opposite, input);

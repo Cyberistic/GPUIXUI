@@ -35,6 +35,7 @@ const MAPPED: ReadonlyArray<readonly [ButtonVariant, PrimitiveVariant]> = [
   ["secondary", "secondary"],
   ["ghost", "ghost"],
   ["danger", "destructive"],
+  ["link", "link"],
 ];
 
 const THEMES: ReadonlyArray<readonly [string, Theme]> = [

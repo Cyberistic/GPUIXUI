@@ -24,6 +24,15 @@ export const Mention = () => (
 );
 ```
 
+## The trigger is a link
+
+shadcn's trigger is an anchor; `0.11.0` has none, so `HoverCardTrigger` is the
+shared action painted as the library's **`link`** look — underlined text with no
+fill and no edge — rather than the ghost chip it used to wear, which read as a
+toggle button sitting in a sentence. It keeps the action's press, focus and
+`aria-expanded`, and opens on hover after `openDelay`, on focus at once, or on a
+press.
+
 ## Composition
 
 ```text
@@ -41,7 +50,7 @@ HoverCard
 | `HoverCard` | `openDelay` | `number` — milliseconds of hover before opening | `700` |
 | `HoverCard` | `closeDelay` | `number` — milliseconds after the last hold leaves | `300` |
 | `HoverCard` | `children` | `PartChildren` | — |
-| `HoverCardTrigger` | action props | `variant` (`"ghost"` by default), `size`, `disabled`, `onClick`, `aria-label`, `style`, `ref`, `testId` — the shared `Button` contract | `size="md"` |
+| `HoverCardTrigger` | action props | `variant` (`"link"` by default), `size`, `disabled`, `onClick`, `aria-label`, `style`, `ref`, `testId` — the shared `Button` contract | `size="md"` |
 | `HoverCardTrigger` | busy props | `loading`, `loadingLabel`, `reducedMotion`, `leading`, `trailing` — the shared `Button` busy contract | — |
 | `HoverCardContent` | `label` | `string` — the surface's accessible name | — |
 | `HoverCardContent` | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
@@ -54,7 +63,7 @@ HoverCard
 ## Limitations
 
 - The trigger is a `Button`, not an HTML anchor: the runtime has no link host, so
-  a link-shaped trigger is a ghost action.
+  a link-shaped trigger is the `link` action (underlined text, no fill).
 - No `aria-haspopup` and no per-trigger delays; the waits belong to the card.
 - `Tab` does not open the card (a traversal moves focus without running the
   trigger's `onFocus`); a focus the caller moves, or a press, does.
@@ -66,6 +75,11 @@ HoverCard
 - A press focuses the trigger before its click arrives, so the focus path does
   not open the card during a press — the click is the open, and one gesture
   cannot open and close it in the same turn.
+
+The card is placed by the popover's measured rules: the requested side is kept
+unless it has no room, the surface is pulled inside the window by
+`collisionPadding`, and its box never overhangs the frame it is drawn in. A
+leaving card stays painted for its `fast` exit and takes no presses.
 
 ## Related
 

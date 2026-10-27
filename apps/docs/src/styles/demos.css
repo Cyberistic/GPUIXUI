@@ -489,6 +489,30 @@
 /* The recipe's footer has no bottom padding; the drawing adds 12px so a last
    row clears the card's clipped corner instead of sitting on its edge. */
 
+/* ---- overlay veil: the house wash behind every modal drawing ----
+   The library paints `alpha(theme.colors.background, 0.55)` (the token roles in
+   `packages/components/src/internal/overlay.ts`); the drawing is the same share
+   of `--background`, plus the 6px blur a browser can paint and the runtime
+   cannot (`StyleDesc` has no `filter`). Every overlay family wears this class and
+   only its own layout rules beside it, so the wash cannot drift between them.
+   The entry is the library's `slow` level: `--gx-overlay-ms` is held to
+   `@gpuixui/motion`'s table by `overlay-veil.test.ts`. */
+:root {
+  --gx-overlay-ms: 320ms;
+}
+
+.gx-overlay-veil {
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  backdrop-filter: blur(6px);
+  animation: gx-veil-in var(--gx-overlay-ms) ease-out;
+}
+
+@keyframes gx-veil-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ---- dialog: mirrors components/src/dialog.tsx ---- */
 .gx-demo-dialog {
   display: grid;
@@ -507,10 +531,18 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  /* shadcn's `bg-black/50 backdrop-blur-sm`: the page stays legible through the
-     veil, so a dialog reads as a layer over it, not a blackout. */
-  background: color-mix(in srgb, var(--background) 55%, transparent);
-  backdrop-filter: blur(6px);
+}
+
+/* The native surface fades and rises 8px on the `slow` level. */
+.gx-dialog {
+  animation: gx-dialog-in var(--gx-overlay-ms) ease-out;
+}
+
+@keyframes gx-dialog-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
 }
 
 .gx-dialog {
@@ -595,12 +627,13 @@
 }
 
 /* ---- drawer: mirrors components/src/drawer.tsx ----
-   The surface is the popover role with a border edge and the recipe's `lg`
-   lift — and it is **square**, because `DRAWER_CONTENT` names no radius
-   utility. The veil is the theme's overlay over the whole frame, and the box
-   comes from `drawer-preview.ts` (the component's own size tables, clamped to
-   the window). The drawing is static: the native surface fades and travels
-   12px on an inset, which is motion the page describes rather than fakes. */
+   The surface is the popover role with a border edge, the `lg` lift and the
+   inner corners rounded, exactly the surface the component paints. The veil is
+   the shared wash over the whole frame, and the box comes from
+   `drawer-preview.ts` (the component's own size tables, clamped to the window).
+   The sheet slides its own span in from the edge — the native surface travels
+   `left`/`top` by the same distance — and a bottom sheet wears the vaul
+   grabber, which the component paints for a top or bottom edge. */
 .gx-drawer-scene {
   position: relative;
 }
@@ -720,15 +753,18 @@
 }
 
 /* The veil covers the drawing's window, as the native veil covers the whole
-   window. It is the one outside-press target the preview offers. */
+   window, and clips the surface that slides in from outside it. It is the one
+   outside-press target the preview offers. */
 .gx-drawer-backdrop {
   position: absolute;
   inset: 0;
   display: flex;
-  background: color-mix(in srgb, var(--background) 55%, transparent);
-  backdrop-filter: blur(6px);
+  overflow: hidden;
 }
 
+/* A sheet arrives from outside the window: the native surface travels its own
+   span on `left`/`top` (it has no `transform`), and the drawing does the same
+   with `translate: 100%` of its own box. The content never reflows. */
 .gx-drawer {
   position: relative;
   display: flex;
@@ -742,6 +778,73 @@
   background: var(--popover);
   color: var(--popover-foreground);
   box-shadow: 0 24px 60px var(--shadow);
+  animation: gx-sheet-in-right var(--gx-overlay-ms) ease-out;
+}
+
+/* Only the corners inside the window round; the edge it opens from is flush. */
+.gx-drawer[data-side="right"] {
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+}
+
+.gx-drawer[data-side="left"] {
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+}
+
+.gx-drawer[data-side="bottom"] {
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* vaul's handle: decoration on a top or bottom sheet (no drag host exists). */
+.gx-drawer-grabber {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  translate: -50% 0;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  pointer-events: none;
+}
+
+@keyframes gx-sheet-in-right {
+  from {
+    translate: 100% 0;
+  }
+}
+
+@keyframes gx-sheet-in-left {
+  from {
+    translate: -100% 0;
+  }
+}
+
+@keyframes gx-sheet-in-bottom {
+  from {
+    translate: 0 100%;
+  }
+}
+
+.gx-drawer[data-side="left"] {
+  animation-name: gx-sheet-in-left;
+}
+
+.gx-drawer[data-side="bottom"] {
+  animation-name: gx-sheet-in-bottom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-overlay-veil,
+  .gx-nav-content,
+  .gx-popover,
+  .gx-dialog,
+  .gx-drawer {
+    animation: none;
+  }
+
+  .gx-nav-chevron-mark {
+    transition: none;
+  }
 }
 
 .gx-drawer[data-side="right"] {
@@ -932,11 +1035,13 @@
 
 .gx-popover-anchor {
   position: relative;
+  display: flex;
 }
 
 .gx-popover {
+  --gx-popover-gap: 6px;
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--gx-popover-gap));
   left: 0;
   z-index: 2;
   width: 260px;
@@ -945,6 +1050,88 @@
   border-radius: calc(var(--radius) + 4px);
   background: var(--popover);
   box-shadow: 0 18px 44px var(--shadow);
+  animation: gx-popover-in 200ms ease-out;
+}
+
+/* The four sides the component asks the anchored layer for. The gap is the
+   component's own `sideOffset` default (6), held to the source by
+   `popover-preview.test.ts`. */
+.gx-popover[data-side="bottom"] {
+  top: calc(100% + var(--gx-popover-gap));
+  left: 0;
+}
+
+.gx-popover[data-side="top"] {
+  top: auto;
+  bottom: calc(100% + var(--gx-popover-gap));
+}
+
+.gx-popover[data-side="right"] {
+  top: 0;
+  left: calc(100% + var(--gx-popover-gap));
+}
+
+.gx-popover[data-side="left"] {
+  top: 0;
+  left: auto;
+  right: calc(100% + var(--gx-popover-gap));
+}
+
+@keyframes gx-popover-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* The sides demo: one trigger, four requested sides, a stage with room for all
+   of them. The collision demo pins its trigger to the frame's right edge. */
+.gx-popover-sides {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  min-height: 0;
+}
+
+.gx-popover-sides-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-popover-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.gx-popover-stage-edge {
+  justify-content: flex-end;
+  padding-right: 24px;
+}
+
+/* The collision panel is a child of the frame, so its `left` is the number the
+   readout prints; it keeps the bottom side and sits under the trigger. */
+.gx-popover.gx-popover-collision {
+  top: calc(50% + 14px + var(--gx-popover-gap));
+}
+
+.gx-popover-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-popover-sided .gx-popover-body code {
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .gx-popover-title {
@@ -9657,9 +9844,44 @@ button.gx-rating-star:focus-visible {
   color: var(--foreground);
 }
 
-.gx-nav-caret {
-  font-size: 11px;
-  color: var(--muted-foreground);
+/* One fixed slot for both marks: the trigger cannot change width when the panel
+   opens, so the neighbouring triggers never move. The marks cross-fade and rise
+   or fall 2px, the native indicator's frames (the runtime has no rotation). */
+.gx-nav-chevron {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.gx-nav-chevron-mark {
+  position: absolute;
+  inset: 0;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  top: 2px;
+  transition:
+    opacity 200ms ease-in,
+    top 200ms ease-in;
+}
+
+.gx-nav-chevron-mark[data-mark="down"] {
+  opacity: 1;
+  top: 0;
+  transition-timing-function: ease-out;
+}
+
+.gx-nav-chevron[data-open] .gx-nav-chevron-mark[data-mark="down"] {
+  opacity: 0;
+  top: -2px;
+  transition-timing-function: ease-in;
+}
+
+.gx-nav-chevron[data-open] .gx-nav-chevron-mark[data-mark="up"] {
+  opacity: 1;
+  top: 0;
+  transition-timing-function: ease-out;
 }
 
 .gx-nav-content {
@@ -9676,6 +9898,15 @@ button.gx-rating-star:focus-visible {
   border-radius: var(--radius-lg);
   background: var(--popover);
   box-shadow: 0 12px 28px var(--shadow);
+  /* The native panel fades and travels 4px out from its trigger in 200ms. */
+  animation: gx-nav-panel-in 200ms ease-out;
+}
+
+@keyframes gx-nav-panel-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
 }
 
 .gx-nav-link {
@@ -13979,7 +14210,9 @@ button.gx-rating-star:focus-visible {
 
 /* ---- hover card: mirrors components/src/hover-card.tsx ----
    The waits are the component's (700 open, 300 close); the drawing keeps them
-   so the travel from trigger to card is the one the native card allows. */
+   so the travel from trigger to card is the one the native card allows. The
+   frame reserves the card's box, so opening it never grows the preview's
+   scroller or clips the surface against it. */
 
 .gx-hovercard-scene {
   display: flex;
@@ -13987,6 +14220,17 @@ button.gx-rating-star:focus-visible {
   align-items: flex-start;
   gap: 16px;
   width: 100%;
+}
+
+.gx-hovercard-frame {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0 132px;
+  /* Trigger row + the 4px gap + the card's tallest shipped body. The side
+     padding gives a card centred on the name room to stay inside the frame. */
+  min-height: 176px;
 }
 
 .gx-hovercard-line {
@@ -14004,13 +14248,15 @@ button.gx-rating-star:focus-visible {
   display: inline-flex;
 }
 
+/* shadcn's trigger is an anchor, and 0.11.0 has none: the drawing paints the
+   link the component's `link` look paints — underlined text, no fill, no edge,
+   no control box that would read as a toggle. */
 .gx-hovercard-trigger {
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
+  margin: 0;
+  padding: 0;
   border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--primary);
+  background: none;
+  color: var(--foreground);
   font: inherit;
   font-size: 14px;
   text-decoration: underline;
@@ -14019,7 +14265,7 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-hovercard-trigger:hover {
-  background: var(--hover);
+  color: var(--primary);
 }
 
 .gx-hovercard {
@@ -14038,6 +14284,21 @@ button.gx-rating-star:focus-visible {
   background: var(--popover);
   color: var(--popover-foreground);
   box-shadow: 0 8px 24px var(--shadow);
+  /* The native card fades and travels 4px out from its trigger on `fast`. */
+  animation: gx-hovercard-in 160ms ease-out;
+}
+
+@keyframes gx-hovercard-in {
+  from {
+    opacity: 0;
+    translate: -50% 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-hovercard {
+    animation: none;
+  }
 }
 
 .gx-hovercard-title {

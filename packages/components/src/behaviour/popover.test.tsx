@@ -2,12 +2,15 @@
  * Popover behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a panel that opens somewhere other than below its
- * trigger; a side other than the default being ignored; Escape not closing or not
- * returning focus; an outside press closing the panel and then the same click
- * re-opening it; a press inside the panel closing it; Tab trapping focus in a
- * non-modal surface; and a controlled popover that opens itself. A caller `ref`
- * on the trigger was also discarded in favour of the internal one, so the
- * picker that composes this trigger lost focus after a selection.
+ * trigger; a requested side that is silently flipped (the placement rule read
+ * the surface's box before the anchored layer placed it, so every side opened on
+ * the opposite one); a panel that overhangs the window instead of pulling back;
+ * Escape not closing or not returning focus; an outside press closing the panel
+ * and then the same click re-opening it; a press inside the panel closing it; Tab
+ * trapping focus in a non-modal surface; and a controlled popover that opens
+ * itself. A caller `ref` on the trigger was also discarded in favour of the
+ * internal one, so the picker that composes this trigger lost focus after a
+ * selection.
  */
 
 import * as Option from "effect/Option";
@@ -28,7 +31,14 @@ import {
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 
-/** A filter popover in a page with another control to press outside on. */
+/**
+ * A filter popover beside another control to press outside on.
+ *
+ * The row is deliberate: the anchored layer measures its **containing block**,
+ * which is the popover's positioning root, so the root must shrink to the
+ * trigger for a side placement to read from the trigger's edge. A column would
+ * stretch the root across the page and anchor `side="right"` to the page's edge.
+ */
 const Filters = ({
   open,
   onOpenChange,
@@ -41,7 +51,13 @@ const Filters = ({
   readonly align?: "start" | "center" | "end";
 }) => (
   <div
-    style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+    style={{
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 300,
+      padding: 40,
+    }}
   >
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
@@ -50,6 +66,36 @@ const Filters = ({
       </PopoverContent>
     </Popover>
     <Button testId="elsewhere">Elsewhere</Button>
+  </div>
+);
+
+/** A trigger with room on all four sides, so each side can be asked for. */
+const SidePopover = ({
+  side,
+}: {
+  readonly side: "top" | "right" | "bottom" | "left";
+}) => (
+  <div style={{ paddingLeft: 400, paddingTop: 300 }}>
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <Popover>
+        <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
+        <PopoverContent testId="panel" side={side} style={{ width: 240 }}>
+          <text>Visible columns</text>
+        </PopoverContent>
+      </Popover>
+    </div>
+  </div>
+);
+
+/** A trigger against the window's right edge, where a panel cannot hang out. */
+const EdgePopover = () => (
+  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+    <Popover>
+      <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
+      <PopoverContent testId="panel" style={{ width: 240 }}>
+        <text>Visible columns</text>
+      </PopoverContent>
+    </Popover>
   </div>
 );
 
@@ -189,17 +235,83 @@ describe("Popover", () => {
     clickCentreOf(popover, "trigger");
     settleMotion(popover);
 
-    const trigger = boundsOf(popover, "trigger");
-    const panel = boundsOf(popover, "panel");
-    if (Option.isNone(trigger) || Option.isNone(panel)) {
-      expect.fail("the trigger or the panel was not measured");
-    }
+    const trigger = requireBounds(popover, "trigger");
+    const panel = requireBounds(popover, "panel");
 
-    expect(panel.value.x).toBeGreaterThanOrEqual(
-      trigger.value.x + trigger.value.width,
-    );
+    // One gap off the trigger's own edge, not the containing block's.
+    expect(panel.x).toBe(trigger.x + trigger.width + 6);
 
     popover.unmount();
+  });
+
+  it("opens on each of the four sides it is asked for", () => {
+    // The bug this guards: the rule read the surface's box before the anchored
+    // layer placed it, so the box sat on the trigger and "covers the trigger"
+    // was true for all four sides — `top` opened below, `left` to the right.
+    const sides = [
+      [
+        "top",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) => expect(panel.y + panel.height).toBe(trigger.y - 6),
+      ],
+      [
+        "bottom",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) => expect(panel.y).toBe(trigger.y + trigger.height + 6),
+      ],
+      [
+        "right",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) => expect(panel.x).toBe(trigger.x + trigger.width + 6),
+      ],
+      [
+        "left",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) => expect(panel.x + panel.width).toBe(trigger.x - 6),
+      ],
+    ] as const;
+
+    for (const [side, expectGap] of sides) {
+      const popover = renderComponent(<SidePopover side={side} />);
+      try {
+        clickCentreOf(popover, "trigger");
+        settleMotion(popover);
+        expectGap(
+          requireBounds(popover, "trigger"),
+          requireBounds(popover, "panel"),
+        );
+      } finally {
+        popover.unmount();
+      }
+    }
+  });
+
+  it("pulls a side-facing panel back inside the window at the edge", () => {
+    const popover = renderComponent(<EdgePopover />);
+    try {
+      clickCentreOf(popover, "trigger");
+      settleMotion(popover);
+
+      const window = popover.renderer.getWindowSize();
+      const trigger = requireBounds(popover, "trigger");
+      const panel = requireBounds(popover, "panel");
+
+      // The snap margin, not one pixel of overhang: the panel keeps its side
+      // (below the trigger) and slides left along that side.
+      expect(panel.y).toBe(trigger.y + trigger.height + 6);
+      expect(panel.x + panel.width).toBe(window.width - 8);
+      expect(panel.x).toBeLessThan(trigger.x);
+    } finally {
+      popover.unmount();
+    }
   });
 
   it("centres a requested panel on its trigger", () => {

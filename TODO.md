@@ -24007,6 +24007,65 @@ green.
 
 ## The owner's shadcn-parity list (2026-10-28)
 
-`[x]` `[███░░░░░░░]` 3/8 — **the drawings run their components' own rules, and the dialog stages have a height.** Items 4, 9, 10, 11, 13 of the owner's list are done: `Skeleton` completed and `Spinner` shipped with `Button loading` painting its mark (the confirmation's loading action now shows the three-dot mark); the list, tabs and table scenes centre (they named flex alignment on plain divs); the confirmation dialog and the dialog page own a 360px stage (their veil is `inset: 0` inside a frame whose only height was `min-height: 100%` against a panel that hugs its content — the dialog page painted a 28px strip and the confirmation clipped its dialog); the hotkey recorder binds the physical key through `parseHotkey → hasNonModifierKey → normalizeHotkey` (⌘⇧P bound `p`, F5 bound nothing); liquid and shine buttons left the buttons family for Effects. Also in this wave: the OTP, slider, range-slider and rating drawings now run the primitive's own arithmetic — the OTP advances and takes a paste (`otpEmptiedCell` is shared), the range slider drags without crossing, a star rates the half it was pressed in. Running with agents: the FileTree rebuild on shadcn's AI elements, the data-display audit, and the overlay family (sheet motion + blur, drawer, popover sides, navigation menu, hover card).
+`[x]` `[█████████░]` 9/10 — **the drawings run their components' own rules, and the dialog stages have a height.** Items 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 of the owner's list are done: `Skeleton` completed and `Spinner` shipped with `Button loading` painting its mark (the confirmation's loading action now shows the three-dot mark); the list, tabs and table scenes centre (they named flex alignment on plain divs); the confirmation dialog and the dialog page own a 360px stage (their veil is `inset: 0` inside a frame whose only height was `min-height: 100%` against a panel that hugs its content — the dialog page painted a 28px strip and the confirmation clipped its dialog); the hotkey recorder binds the physical key through `parseHotkey → hasNonModifierKey → normalizeHotkey` (⌘⇧P bound `p`, F5 bound nothing); liquid and shine buttons left the buttons family for Effects. Also in this wave: the OTP, slider, range-slider and rating drawings now run the primitive's own arithmetic — the OTP advances and takes a paste (`otpEmptiedCell` is shared), the range slider drags without crossing, a star rates the half it was pressed in. The FileTree is rebuilt on shadcn's AI-elements tree (and selects with the accent pair in shadcn's 320px column), the data-display lane's fifteen previews press (the toolbar's dead `Columns` is gone, the chart's `100` tick no longer clips, the window readout separates *in view* from *mounted*), the sheet slides its own span over the slow level with the washed page, the drawer is a vaul-shaped surface with a grabber and inner corners, the popover chooses a side by the room it has (all four match), the navigation menu's chevron is one fixed 12px slot and a hover open moves nothing, and the hover card's `@ada` trigger paints as a link inside a reserved frame.
 
-`[ ]` `[░░░░░░░░░░]` — **open from the same list:** the sheet entering with the dialog's motion and wash (agent), the drawer redone (agent), the popover's four sides (agent), the navigation menu's smoothness and layout shift (agent), the hover card's frame and trigger (agent), the FileTree (agent), the data-display previews (agent), and item 3, which names an image the owner has not yet identified to us.
+`[ ]` `[░░░░░░░░░░]` — **open from the same list:** item 3 only, which names an image the owner has not yet identified to us.
+
+
+## Overlay surfaces (plan 717, 2026-10-28)
+
+`[x]` `[██████████]` 1/1 — the five overlay reports, in the library and the
+drawings.
+
+`[x]` `packages/components` + docs-site: **the five overlay defects** — (1) the
+sheet/drawer now *slides its own span* in from the edge it names (a right `md`
+drawer starts 400px outside the window, clipped by the window-sized veil), which
+is a numeric `left`/`top` offset because the runtime has no `transform`; the
+drawing mirrors it with `translate: 100%` on the motion table's `slow` level and
+honours reduced motion. (2) the drawer is vaul-shaped: inner corners
+(`radius.xl`), the 40×4 grabber on a top/bottom sheet (decoration — no drag host,
+no snap points), the theme's `elevation.lg`, and the grabber and close control
+riding the moving box. (3) the popover's requested side was **always flipped**:
+`resolvePlacement` read the surface's painted box, which is measured before the
+anchored layer places it, so the box sat on the trigger and "covers the trigger"
+was true for every side — the rule now chooses by the **room** each side offers;
+the page gains four-side and collision drawings, and the native suite measures
+the 6px gap on all four sides and the 8px pull-back at the window edge. (4) the
+navigation menu's trigger now ends in lucide's chevron in **one fixed 12px slot**
+(`internal/flip-mark.tsx`, shared with the accordion): `chevron-down` and
+`chevron-up` stay mounted and cross-fade 2px, so opening repaints the trigger
+without resizing it or moving a sibling; the drawing uses the same two lucide
+paths and animates the panel. (5) the hover card's drawing reserves the card's
+box (it overflowed the preview's scroller) and its trigger paints as the new
+`link` look (underlined text, no fill, no edge) instead of a toggle chip. **The
+veil is one wash for every modal family**: `alpha(theme.colors.background, 0.55)`
+on `Dialog`/`Drawer` (and so the confirmation dialog, the command palette and
+`Sheet`), with an outside press still dismissing; the 6px blur is drawing-only
+because `StyleDesc` has no `filter`. Directions measured: the old overlap rule
+fails `expected [ 'top', 'bottom', 'left', 'right' ] to deeply equal [ 'bottom',
+'top', 'right', 'left' ]` and `expected 390 to be 294`; the opaque veil fails
+`washes the page behind dialog`; a 12px travel fails `expected 892 to be 1280`
+(drawer) and `expected 492 to be 800` (sheet); no chevron fails `expected
+undefined to be defined`, and a chevron mounted only while open shifts the
+trigger (`expected { … } to deeply equal { x: 40, y: 40, width: 92, height: 32 }`);
+a ghost trigger fails `expected undefined to be 'underline'`; the drawing without
+its reserved frame fails `to contain 'min-height: 176px'`, with an 8px gap fails
+`to contain '--gx-popover-gap: 6px'`'s case, and with the `⌄` caret fails `not
+to match /[⌄⌃]/`. **The drawing's sheet also had a cause beyond the CSS**: the demo focused its
+surface while the surface was still sliding in, and the browser's `focus()`
+scrolled the preview's scroller by the surface's own travel — the animation ran
+but the view followed it, so the sheet looked static. Every focus in the drawing
+now passes `{ preventScroll: true }` (the native renderer's `focusElement` never
+scrolls), guarded by `overlay-motion.test.ts`'s `takes focus without scrolling
+the moving surface into place`. Gates: components 1 165 unit + 1 295 behaviour,
+docs 2 205, `check-types`, `oxlint`, `oxfmt`, `check:tests`, `check:exports`
+clean; the drawings verified in Chrome at 1280×900 (no console errors): the sheet
+measured `y 717 → 615 → 491 → 397` over its 320 ms slide (started wholly below
+the 340px frame), the navigation bar and its three triggers kept identical bounds
+(`x 360/377/467.9/537.3`, widths `560/86.9/65.4/104.9`) while the second panel
+opened and one chevron flipped, the four popover sides measured exactly
+**6.00px** from the trigger, the collision panel read `panel x 312 · pulled back
+150px · right margin 8` (7px on screen against the frame's 1px border) and the
+hover card sat wholly inside its reserved frame with a transparent, 0px-border,
+underlined, 0-padding trigger.
+

@@ -147,8 +147,12 @@ export const HoverCard = ({
 export type HoverCardTriggerProps = ButtonProps;
 
 /**
- * Opens the card on hover, on focus, or on a press. A ghost action by default:
- * shadcn's trigger is a link, and 0.11.0 has no HTML anchor.
+ * Opens the card on hover, on focus, or on a press.
+ *
+ * Painted as a **link** by default — the `link` look carries no fill and no
+ * edge, and underlines its text — because shadcn's trigger is an anchor and the
+ * ghost action it used to wear read as a toggle button sitting in a sentence.
+ * 0.11.0 has no HTML anchor, so the behaviour is still the shared action's.
  */
 export const HoverCardTrigger = ({
   onClick,
@@ -156,7 +160,7 @@ export const HoverCardTrigger = ({
   onBlur,
   ref,
   disabled = false,
-  variant = "ghost",
+  variant = "link",
   ...rest
 }: HoverCardTriggerProps) => {
   const { open, hover, trigger, dismissedByOutsidePress } = useHoverCard();

@@ -529,8 +529,10 @@ the tree a level's window later.
 | Surface | Movement | Level |
 | ------- | -------- | ----- |
 | Dialog, Command menu | fade + 8px rise | `slow` (320 ms) |
-| Drawer | fade + 12px from its own edge | `slow` |
-| Sheet | fade + 12px from its own edge (the drawer's surface) | `slow` |
+| Drawer | fade + **its own span** from the named edge (a numeric `left`/`top` offset clipped by the window-sized veil; no `transform`) | `slow` (320 ms) |
+| Sheet | the drawer's surface: the same whole-span slide from any of the four edges | `slow` |
+| Dialog/Drawer/Sheet/Command menu veil | the page's background at 55% (a wash); the 6px blur a shadcn veil carries is drawing-only, because `StyleDesc` has no `filter` | the surface's level |
+| Navigation menu trigger | the chevron cross-fades `chevron-down`/`chevron-up` in one fixed slot (2px travel); no rotation, no resize | `normal` (200 ms) |
 | Popover, Dropdown menu, Context menu, submenu | fade + 8px / 4px from the trigger's (or row's) side | `normal` (200 ms) |
 | Navigation menu | fade + 4px out from its trigger's side | `normal` |
 | Combobox popup | fade + 4px out from the requested side (a flipped popup keeps the first frame it mounted with; the rows it showed are kept for the exit) | `normal` |

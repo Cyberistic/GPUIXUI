@@ -27,6 +27,12 @@ import {
   filesPropertyPanelDemoSource,
 } from "./files-property-panel-demo";
 import { ToolbarDemo, toolbarDemoSource } from "./toolbar-demo";
+import {
+  PopoverCollision,
+  PopoverSides,
+  popoverCollisionSource,
+  popoverSidesSource,
+} from "./popover-sides";
 import { AppMenuDemo, appMenuDemoSource } from "./app-menu-demo";
 import { StatusBarDemo, statusBarDemoSource } from "./status-bar-demo";
 import { StatCardDemo, statCardDemoSource } from "./stat-card-demo";
@@ -611,7 +617,7 @@ const DialogDemo = () => {
       </button>
       {open ? (
         <div
-          className="gx-dialog-backdrop"
+          className="gx-dialog-backdrop gx-overlay-veil"
           onClick={() => setOpen(false)}
           role="presentation"
         >
@@ -1202,7 +1208,11 @@ const CommandMenuDemo = () => {
         Last action: <b>{lastAction ?? "none yet"}</b>
       </p>
       {open ? (
-        <div className="gx-dialog-backdrop" onClick={close} role="presentation">
+        <div
+          className="gx-dialog-backdrop gx-overlay-veil"
+          onClick={close}
+          role="presentation"
+        >
           <div
             aria-label="Command menu"
             aria-modal="true"
@@ -1718,7 +1728,7 @@ const PreviewConfirm = ({
 
   return (
     <div
-      className="gx-dialog-backdrop"
+      className="gx-dialog-backdrop gx-overlay-veil"
       onClick={loading ? undefined : onCancel}
       role="presentation"
     >
@@ -3270,6 +3280,11 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: paginationWorkflowSource,
   },
   "popover-demo": { render: PopoverDemo, source: popoverSource },
+  "popover-sides": { render: PopoverSides, source: popoverSidesSource },
+  "popover-collision": {
+    render: PopoverCollision,
+    source: popoverCollisionSource,
+  },
   "select-states": { render: SelectStates, source: selectStatesSource },
   "select-workflow": { render: SelectDemo, source: selectDemoSource },
   "search-input-states": {

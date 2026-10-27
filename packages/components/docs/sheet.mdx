@@ -25,6 +25,13 @@ the window, a panel on one edge, a focus trap inside it, Escape and an outside
 press to close, and focus returned to the opener. It re-exports that machinery,
 so the drawing above is the Drawer page's — there is one implementation, not two.
 
+The sheet **animates in**: the panel slides its own span from the edge it names
+(a bottom sheet rises a whole 320px) over the `slow` level, the veil fades, and
+the surface is clipped by the window while it travels. A bottom sheet wears the
+vaul grabber and rounded inner corners; `MotionProvider preference="reduced"`
+paints the settled frame at once. The veil is the page's background at 55%; the
+blur the drawing carries has no native route (`StyleDesc` has no `filter`).
+
 ```tsx
 <Sheet>
   <SheetTrigger>Filters</SheetTrigger>
@@ -52,6 +59,7 @@ so the drawing above is the Drawer page's — there is one implementation, not t
 | `SheetContent` | `side` | "left" \| "right" \| "top" \| "bottom" | `"right"` |
 | `SheetContent` | `size` | "sm" \| "md" \| "lg" | `"md"` |
 | `SheetContent` | `label` | `string` (required) | none |
+| `SheetContent` | `grabber` | `boolean` — the vaul handle on a top/bottom sheet | `true` |
 | `SheetContent` | `initialFocus` | `() => number \| null` | none |
 | `SheetHeader` | `children` | `ReactNode` | — |
 | `SheetTitle` | `children` | `ReactNode` | — |
@@ -60,8 +68,11 @@ so the drawing above is the Drawer page's — there is one implementation, not t
 
 ## Limitations
 
-- No swipe-to-dismiss: the runtime has no drag host.
-- The surface fades and travels 12px from its edge rather than sliding its full
-  width; the runtime has no `transform`, and animating `width` would reflow the
-  content.
-- The veil is an anchored element at window coordinates, not a portalled surface.
+- No swipe-to-dismiss and no snap points: the runtime has no drag host, so the
+  grabber cannot be dragged.
+- The slide is a numeric `left`/`top` offset of the surface's own span, not a
+  `transform`; the content keeps its layout because the box moves, not the flow.
+- The veil is an anchored element at window coordinates, not a portalled surface,
+  and it cannot blur the page: `StyleDesc` has no `filter`.
+- The surface rounds only the corners inside the window; the edge it opens from
+  stays flush.

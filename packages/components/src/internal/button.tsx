@@ -42,15 +42,16 @@ import { cn } from "@gpuixui/tw";
 import * as Schema from "effect/Schema";
 import type { Theme } from "./theme.js";
 
-/** The four looks a control can take, as the guard reads them. */
+/** The five looks a control can take, as the guard reads them. */
 const ButtonVariants = Schema.Literals([
   "primary",
   "secondary",
   "ghost",
   "danger",
+  "link",
 ]);
 
-/** The four looks a control can take. */
+/** The five looks a control can take. */
 export type ButtonVariant = typeof ButtonVariants.Type;
 
 /** The control heights the theme's density defines. */
@@ -116,6 +117,9 @@ const LOOKS: Readonly<Record<ButtonVariant, Look>> = {
   secondary: { variant: "secondary", className: "border border-strong" },
   ghost: { variant: "ghost", className: "" },
   danger: { variant: "destructive", className: "" },
+  // A text action: no fill, no edge, no padding of its own, underlined at rest
+  // so a trigger that stands in for a link reads as one (`HoverCardTrigger`).
+  link: { variant: "link", className: "underline underline-offset-4" },
 };
 
 /**

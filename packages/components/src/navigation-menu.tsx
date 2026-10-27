@@ -57,6 +57,7 @@ import {
   useState,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { FlipMark } from "./internal/flip-mark.js";
 import { hoverDelay } from "./internal/clock.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
@@ -545,9 +546,11 @@ export const NavigationMenuTrigger = ({
   onKeyDown,
   onMouseEnter,
   onMouseLeave,
+  trailing,
   disabled = false,
   ...rest
 }: ButtonProps) => {
+  const theme = useTheme();
   const {
     open,
     setOpen,
@@ -561,6 +564,10 @@ export const NavigationMenuTrigger = ({
   } = useNavigationMenu();
   const { value } = useNavItem();
   const expanded = open === value;
+  // The indicator is one fixed slot: both marks are painted, so opening the
+  // panel repaints the chevron without resizing the trigger under the pointer.
+  const chevronId = (mark: "up" | "down"): string | undefined =>
+    rest.testId === undefined ? undefined : `${rest.testId}-chevron-${mark}`;
   const register = useCallback(
     (instance: PublicInstance | null) => registerTrigger(value, instance),
     [registerTrigger, value],
@@ -579,6 +586,18 @@ export const NavigationMenuTrigger = ({
       ref={setTrigger}
       disabled={disabled}
       aria-expanded={expanded}
+      trailing={
+        <>
+          {trailing}
+          <FlipMark
+            off="chevron-down"
+            on="chevron-up"
+            shown={expanded}
+            color={theme.colors.mutedForeground}
+            testIdFor={(mark) => chevronId(mark === "on" ? "up" : "down")}
+          />
+        </>
+      }
       onMouseEnter={(event) => {
         onMouseEnter?.(event);
         if (!disabled) hoverOpen(value);

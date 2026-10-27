@@ -52,6 +52,21 @@ NavigationMenu
             └── NavigationMenuLink
 ```
 
+## The trigger's chevron
+
+shadcn's trigger ends in lucide's `ChevronDown` and rotates it while the panel is
+open. The runtime has no `transform`, so the component paints `chevron-down` and
+`chevron-up` from `@gpuixui/icons` in **one fixed 12px slot** and cross-fades
+them: the outgoing mark fades out 2px downward while the incoming one fades in
+from below. The slot's box never changes, so opening a panel repaints the trigger
+without resizing it or moving a sibling — the layout shift the drawing's old
+`⌄`/`⌃` character swap caused. The chevron is decorative; `aria-expanded` is the
+state a reader hears.
+
+The panel itself enters with a fade and 4px of travel out from its trigger on the
+`normal` level (200 ms), and stays painted for its exit. There is no shared
+viewport animation between panels: each item owns its anchored surface.
+
 ## API reference
 
 | Part | Renders | Props |
@@ -59,7 +74,7 @@ NavigationMenu
 | `NavigationMenu` | `role="navigation"`, named by `label` | `label` (required), `value`, `defaultValue`, `onValueChange`, `openDelay`, `closeDelay`, `className`, `children` |
 | `NavigationMenuList` | `role="list"` row | `className`, `children` |
 | `NavigationMenuItem` | `role="listitem"` | `value` (required), `className`, `children` |
-| `NavigationMenuTrigger` | button carrying `aria-expanded` | every `Button` prop, plus `disabled`; `onActivate` is the action's handler and `onClick` its deprecated alias |
+| `NavigationMenuTrigger` | button carrying `aria-expanded` and a fixed-slot chevron | every `Button` prop, plus `disabled`; `trailing` renders before the chevron; `onActivate` is the action's handler and `onClick` its deprecated alias |
 | `NavigationMenuContent` | anchored `role="group"` panel | `className`, `children` |
 | `NavigationMenuLink` | full-width ghost button row | `onSelect`; `onActivate` with `onClick` as the deprecated alias; every `Button` prop |
 

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
@@ -67,6 +68,61 @@ describe("the navigation menu previews", () => {
     expect(navigationMenuStatesSource).toContain("defaultValue");
     expect(navigationMenuStatesSource).toContain(
       "<NavigationMenuTrigger disabled>",
+    );
+  });
+});
+
+const css = readFileSync(
+  new URL("../../styles/demos.css", import.meta.url),
+  "utf8",
+);
+
+/** The icon scale's smallest step, and the two lucide marks. */
+const scale = readFileSync(
+  new URL("../../../../../packages/tokens/src/scale.ts", import.meta.url),
+  "utf8",
+);
+const registry = readFileSync(
+  new URL("../../../../../packages/icons/src/registry.ts", import.meta.url),
+  "utf8",
+);
+
+/** The declarations of the first `selector { … }` block. */
+const block = (selector: string): string => {
+  const start = css.indexOf(`${selector} {`);
+  return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
+};
+
+describe("the navigation menu's chevron", () => {
+  it("paints both lucide marks in one fixed slot on every trigger", () => {
+    expect(workflow).not.toMatch(/[⌄⌃]/);
+    // Three triggers, two marks each: down is at rest, up is the open flip.
+    expect(workflow.match(/class="gx-nav-chevron"/g)).toHaveLength(3);
+    expect(workflow.match(/data-mark="down"/g)).toHaveLength(3);
+    expect(workflow.match(/data-mark="up"/g)).toHaveLength(3);
+
+    // The slot is one box the size of the icons' `xs` step, so the open state
+    // cannot change the trigger's width.
+    const xs = /export const iconSize[^}]*xs: (\d+)/.exec(scale)?.[1];
+    expect(block(".gx-nav-chevron")).toContain(`width: ${xs}px`);
+    expect(block(".gx-nav-chevron")).toContain(`height: ${xs}px`);
+    expect(block(".gx-nav-chevron")).toContain("flex: none");
+
+    // The two paths are the icon set's own, not a hand-drawn caret.
+    expect(registry).toContain('"chevron-down": \'<path d="m6 9 6 6 6-6"/>\'');
+    expect(workflow).toContain('d="m6 9 6 6 6-6"');
+    expect(workflow).toContain('d="m18 15-6-6-6 6"');
+  });
+
+  it("cross-fades the marks and slides the panel in", () => {
+    // The native trigger cross-fades 2px on the `normal` level; the drawing's
+    // marks do the same, and the panel fades 4px out from its trigger.
+    expect(block(".gx-nav-chevron-mark")).toContain("transition:");
+    expect(
+      block('.gx-nav-chevron[data-open] .gx-nav-chevron-mark[data-mark="up"]'),
+    ).toContain("opacity: 1");
+    expect(block(".gx-nav-content")).toContain(
+      "animation: gx-nav-panel-in 200ms ease-out",
     );
   });
 });

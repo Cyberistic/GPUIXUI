@@ -33,6 +33,30 @@ import {
 </Drawer>;
 ```
 
+## The surface
+
+The shipped surface is vaul's drawer more than a docked column: the **inner
+corners** are rounded (`radius.xl`) while the window edge it opens from stays
+flush, the frame's `elevation.lg` lift is the theme's own, and a `top` or
+`bottom` sheet paints the **grabber** — the 40×4 handle at its inner edge. The
+grabber is decoration: `0.11.0` has no drag host, so no gesture follows it, and
+`grabber={false}` removes it.
+
+## Motion
+
+<ComponentPreview name="drawer-workflow" />
+
+The panel **slides its own span** in from the edge it names — a right `md` drawer
+starts a whole 400px to the right of its resting place — and the veil (the
+window-sized box) clips it while it travels. The runtime has no `transform`, so
+the movement is a numeric `left`/`top` offset on the surface's box rather than a
+scaled or translated element; the surface's content keeps its layout because a
+relative offset moves the box, not the flow. It runs on the `slow` level
+(320 ms), and the grabber and the close control ride the same box.
+
+`MotionProvider preference="reduced"` paints the settled frame at once. A
+dismissed panel stays painted for its exit without taking a press.
+
 ## Composition
 
 ```text
@@ -59,7 +83,7 @@ scrolls a 30-row body and holds the control's box).
 | `Drawer` | nothing; owns open state | `open?`, `defaultOpen?`, `onOpenChange?`, `dismissible?`, `children` |
 | `DrawerTrigger` | button | button props |
 | `DrawerClose` | button | button props |
-| `DrawerContent` | veil + `role="dialog"` surface | `side?`, `size?`, `label` (required), `showClose?`, `initialFocus?`, `className?`, `children` |
+| `DrawerContent` | veil + `role="dialog"` surface | `side`, `size`, `label` (required), `showClose`, `grabber`, `initialFocus`, `className`, `children` |
 | `DrawerHeader` | heading block | `className?`, `children` |
 | `DrawerTitle` | level-2 heading | text props, `className?` |
 | `DrawerDescription` | muted copy | text props, `className?` |
@@ -77,12 +101,14 @@ scrolls a 30-row body and holds the control's box).
   trap is the window's own traversal, so the opener is never a stop while the
   drawer is open, and `dismissible={false}` removes Escape and the veil while
   the close control still works.
-- Slides 12px from its edge and fills the window's other axis; a full-width
-  column is not available.
-- No swipe-to-dismiss; no drag host feature.
-- The entry is a fade and a 12px travel from the named edge, not a slide across
-  the window: the runtime has no `transform`, and animating `width`/`left`
-  would reflow the content.
+- **Slides its own span** from the named edge — a numeric `left`/`top` offset,
+  not a `transform` — and fills the window's other axis. It is still not a
+  full-width column on a vertical edge.
+- No swipe-to-dismiss, no snap points: `0.11.0` has no drag host, so the grabber
+  cannot be dragged and the surface cannot follow the pointer.
+- The veil is the page's own background at 55% (a wash). **The 6px blur shadcn's
+  veil carries is drawing-only**: `StyleDesc` has no `filter`/`backdrop-filter`,
+  so the native veil cannot blur what is behind it.
 - No `aria-modal` or `aria-labelledby` in 0.11.0: the surface is named by its own
   `label`, and the Tab traversal is the containment a reader gets.
 - Not portalled; painted at window coordinates.

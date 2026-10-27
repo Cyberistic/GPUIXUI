@@ -31,11 +31,31 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { recipeStyle } from "./recipe.js";
 import {
+  alpha,
   elevationShadow,
   type BoxShadow,
   type ElevationLevel,
   type Theme,
 } from "./theme.js";
+
+/**
+ * The house veil: the page's own background at 55%, laid over it.
+ *
+ * The wash, not a blackout: the page stays legible through a modal, which is the
+ * look every drawing in `apps/docs` paints and the one the library now matches.
+ * `theme.colors.overlay` is still the token package's opaque scrim for a caption
+ * or a crop bar; a **modal** veil is this share of the surface it covers, so a
+ * reader can still find the control the modal is asking about.
+ *
+ * The 6px blur a shadcn veil carries has no native route: `StyleDesc` has no
+ * `filter` or `backdropFilter`, so the runtime cannot blur what is behind the
+ * veil. The drawings blur; the native surface documents the difference.
+ */
+export const OVERLAY_WASH = 0.55;
+
+/** The veil's fill for one theme: its background at {@link OVERLAY_WASH}. */
+export const overlayVeilColor = (theme: Theme): string =>
+  alpha(theme.colors.background, OVERLAY_WASH);
 
 /**
  * Whether a painted shadow is an edge rather than a lift.

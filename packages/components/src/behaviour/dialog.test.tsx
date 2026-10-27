@@ -27,7 +27,7 @@ import {
   DialogTrigger,
   type DialogSize,
 } from "../dialog.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { alpha, darkTheme, lightTheme } from "../internal/theme.js";
 import {
   boundsOf,
   clickCentreOf,
@@ -276,8 +276,16 @@ describe("Dialog", () => {
       dialog.unmount();
     };
 
-    assertTheme("dark", darkTheme.colors.popover, darkTheme.colors.overlay);
-    assertTheme("light", lightTheme.colors.popover, lightTheme.colors.overlay);
+    assertTheme(
+      "dark",
+      darkTheme.colors.popover,
+      alpha(darkTheme.colors.background, 0.55),
+    );
+    assertTheme(
+      "light",
+      lightTheme.colors.popover,
+      alpha(lightTheme.colors.background, 0.55),
+    );
   });
 
   it("cannot be dismissed when it is not dismissible", () => {

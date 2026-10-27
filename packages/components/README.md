@@ -274,8 +274,9 @@ the picker surfaces keep their scroll/positioning in `style`.
 ## Motion
 
 The overlays, the disclosure panels and the tab rail move: a surface fades and
-travels a few pixels, a body grows to its measured height, and the pill slides
-between measured trigger boxes. The pill and the carousel dot are **movements
+travels a few pixels (a drawer slides its **own span** in from the edge it owns,
+clipped by the window-sized veil), a body grows to its measured height, and the
+pill slides between measured trigger boxes. The pill and the carousel dot are **movements
 between two resting states**, so they read the timing table's `standard` phase
 through the seam's `useMoveTiming` rather than the `enter` curve a surface
 arriving paints. The split is deliberate — the recipe owns the
@@ -406,12 +407,13 @@ number, so the two cannot drift.
 | `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay — a keystroke by its `keystrokeId` and a press by the type, point, button and click count every handler of it shares, because the runtime rebuilds the payload per handler; the scope gives each surface its containment depth |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |
-| `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323), with a stored `side`/`align` read through the house guards (`bottom`/`start`) instead of throwing |
+| `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: a true `center`, and the side chosen from each side's **room** (the surface is measured before the anchored layer places it, so a rule that read its painted box flipped every side), with a stored `side`/`align` read through the house guards (`bottom`/`start`) instead of throwing (`src/internal/placement.test.ts`) |
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
 | `src/internal/measure.ts` | the one reader of an `onLayout` box (four sides, or nothing) and of a pointer's point, for the components that measure themselves |
 | `src/internal/recipe.ts` | the one seam over `@gpuixui/tw`: compiles a class-string recipe to the resting `StyleDesc` (ADR 0006) |
 | `src/internal/text-swap.ts` | the two-phase swap `RollingText` and `SlidingText` share: which phase, what a mid-run value does, and the frames a travel on `top` or `left` paints |
 | `src/internal/button.tsx` | `Button`/`IconButton` — this package's names over `@gpuixui/primitives`' action (the paint, derived fills and disabled rules are the primitive's) |
+| `src/internal/flip-mark.tsx` | a two-glyph indicator in one fixed slot (the accordion's chevron and the navigation menu's trigger): both marks stay mounted and cross-fade 2px, because the runtime has no `transform` to rotate one |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
 | `src/surface.ts`, `src/surface.budget.ts`, `scripts/surface*.ts` | the entry's import graph: the walker, the recorded budget and the report command |

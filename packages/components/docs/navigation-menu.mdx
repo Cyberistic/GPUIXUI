@@ -53,17 +53,29 @@ NavigationMenu
 | `NavigationMenu` | `role="navigation"` named by `label` | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `openDelay?`, `closeDelay?`, `className?`, `children` |
 | `NavigationMenuList` | `role="list"` row | `className?`, `children` |
 | `NavigationMenuItem` | `role="listitem"` | `value` (required), `className?`, `children` |
-| `NavigationMenuTrigger` | button with `aria-expanded` | button props |
+| `NavigationMenuTrigger` | button with `aria-expanded` and a fixed-slot chevron | button props, plus a `trailing` slot rendered before the chevron |
 | `NavigationMenuContent` | anchored `role="group"` panel | `className?`, `children` |
 | `NavigationMenuLink` | a full-width button row | `onSelect?`, `onActivate` (and the deprecated alias `onClick`), `className?`, the shared `Button` props |
 
 ## Motion
 
 The panel enters with the house appearance — a fade plus 4 px of travel out from
-its trigger — and stays painted for its exit after it is dismissed. While it
-leaves it takes no presses and every link inside it drops its own Tab stop, so
-the keyboard cannot land on a link that is about to unmount. `MotionProvider
-preference="reduced"` removes the journey and keeps the resting frame.
+its trigger, at the `normal` level (200 ms) — and stays painted for its exit
+after it is dismissed. While it leaves it takes no presses and every link inside
+it drops its own Tab stop, so the keyboard cannot land on a link that is about to
+unmount. `MotionProvider preference="reduced"` removes the journey and keeps the
+resting frame.
+
+## The trigger's chevron
+
+shadcn's trigger ends in lucide's `ChevronDown` and rotates it 180° while the
+panel is open. `0.11.0` has no `transform`, so the component paints the same two
+`@gpuixui/icons` marks — `chevron-down` and `chevron-up` — in **one fixed slot**
+and cross-fades them: the outgoing mark fades out as it falls 2 px, the incoming
+one fades in as it rises. The slot is a fixed 12 px box, so opening the panel
+repaints the trigger without resizing it or moving a sibling — the layout shift
+the old character swap (`⌄` → `⌃`) caused in the drawing. The chevron is
+decorative; `aria-expanded` on the trigger is the state a reader hears.
 
 ## Limitations
 
