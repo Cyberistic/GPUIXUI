@@ -2989,6 +2989,9 @@
   /* The popup is 280px tall and the scene is a fixed 520px box that clips it,
      so the control starts near the top rather than dead centre: the opened list
      has to fit below it, the way a shadcn demo sits on a page. */
+  /* The scene centres a flex item by its own height, so the column has to
+     stretch before its own justify-content can place the control near the top. */
+  align-self: stretch;
   justify-content: flex-start;
   padding-top: 56px;
   gap: 14px;
