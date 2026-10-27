@@ -329,6 +329,15 @@ because no width override exists, `09` is two `Sidebar` siblings in one provider
 rather than a nested sidebar, `07/08/16` paint expanded (no collapse is faked).
 `block-index.test.tsx` now accepts digits in a slug — its `[a-z-]+` pattern had
 silently skipped every `sidebar-NN` card.
+`[x]` **Sidebar parity audit** — the surface matches shadcn's 24 exports and
+their props; two gaps closed: `SidebarProvider width/iconWidth/mobileWidth` (the
+CSS variables as numbers, a bad value reading as the default) and
+`isSidebarShortcut(event)` so an app root can forward Cmd/Ctrl+B with focus
+outside the provider. Five ceilings stay documented: no `transform` (offcanvas
+tweens `left`/`width`), no cookie (the `SidebarPreference` seam defaults to an
+in-process jar), no window key handler, no `zIndex` (the rail sits inside the
+panel), no CSS variables/pseudo-elements (numbers and boxes instead). Block `04`
+paints at the family width because the drawing, not the component, fixes it.
 `[x]` **Sidebar store on the one seam** — the provider's private
 `SubscriptionRef` + subscriber list + `send` are gone; `sidebar/store.ts` keeps
 only its commands (`setOpen` persists through `SidebarPreference`) and the
