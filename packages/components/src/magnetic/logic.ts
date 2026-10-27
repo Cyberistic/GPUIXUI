@@ -95,3 +95,7 @@ export const magneticFrames = (pull: MagneticPull): MotionStyle => ({
 /** Whether two pulls paint the same offset, so a repeated pointer move re-renders nothing. */
 export const samePull = (a: MagneticPull, b: MagneticPull): boolean =>
   a.left === b.left && a.top === b.top;
+
+/** Whether two pointer readings are the same point, so a repeated move changes nothing. */
+export const samePoint = (a: MagneticPointer, b: MagneticPointer): boolean =>
+  a.x === b.x && a.y === b.y;

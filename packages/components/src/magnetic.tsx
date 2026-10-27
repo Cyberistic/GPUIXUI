@@ -24,8 +24,10 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useEffect, useState, type ReactNode } from "react";
-import { measuredPoint, type MeasuredPoint } from "./internal/measure.js";
+import type { ReactNode } from "react";
+import { useEffect } from "react";
+import { measuredPoint } from "./internal/measure.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { surfaceOriginStyle, useSurfaceBox } from "./internal/surface-box.js";
@@ -36,6 +38,7 @@ import {
   magneticRest,
   samePull,
 } from "./magnetic/logic.js";
+import { makeMagneticStore } from "./magnetic/store.js";
 
 /** What a magnetic surface draws at one frame. */
 export interface MagneticState {
@@ -84,9 +87,8 @@ export const Magnetic = ({
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level).enter;
   const surface = useSurfaceBox();
-  const [pointer, setPointer] = useState<Option.Option<MeasuredPoint>>(
-    Option.none(),
-  );
+  const store = useLocalStore(makeMagneticStore);
+  const pointer = useLocalState(store.local);
   const reduced = preference === "reduced";
 
   // The pull is derived, not stored: the origin the probe reports is a fresh
@@ -113,9 +115,8 @@ export const Magnetic = ({
   // The pointer that earned the removed lean is released with it, so a
   // preference turned back on leans from the next move rather than an old point.
   useEffect(() => {
-    if (!reduced) return;
-    setPointer((current) => (Option.isNone(current) ? current : Option.none()));
-  }, [reduced]);
+    if (reduced) send(store.release);
+  }, [reduced, store]);
 
   const measure = (event: EventPayload) => {
     surface.measure(event);
@@ -126,26 +127,12 @@ export const Magnetic = ({
     onMouseMove?.(event);
     if (reduced) return;
     surface.read();
-    Option.match(measuredPoint(event), {
-      onNone: () => undefined,
-      // A held pointer emits a move per frame; a repeat of the same point is a
-      // frame the runtime would paint identically, so it is not a state change.
-      onSome: (point) =>
-        setPointer((current) =>
-          Option.match(current, {
-            onNone: () => Option.some(point),
-            onSome: (previous) =>
-              previous.x === point.x && previous.y === point.y
-                ? current
-                : Option.some(point),
-          }),
-        ),
-    });
+    send(store.follow(measuredPoint(event)));
   };
 
   const leave = (event: EventPayload) => {
     onMouseLeave?.(event);
-    setPointer(Option.none());
+    send(store.release);
   };
 
   const state: MagneticState = {
