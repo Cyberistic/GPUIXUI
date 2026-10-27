@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import {
   changedLabel,
   closeSection,
@@ -167,9 +167,21 @@ const PolicyBody = ({
 /** A retry policy in a card: one advanced section, one managed section. */
 export const CollapsibleWorkflow = () => {
   const [state, setState] = useState(initialDisclosure);
+  // The body unmounts after it closes (its own note is meant to be lost), but
+  // it stays mounted for the exit so the reveal is a tween, not a snap — the
+  // same window the native panel keeps its content for.
+  const [mounted, setMounted] = useState(state.open);
+  useEffect(() => {
+    if (state.open) {
+      setMounted(true);
+      return;
+    }
+    const timer = setTimeout(() => setMounted(false), 220);
+    return () => clearTimeout(timer);
+  }, [state.open]);
 
   return (
-    <div className="gx-demo gx-collapse-scene">
+    <div className="gx-collapse-scene">
       <div className="gx-collapse-card">
         <div className="gx-collapse-head">
           <span className="gx-collapse-title">Retry policy</span>
@@ -186,27 +198,31 @@ export const CollapsibleWorkflow = () => {
             }
             open={state.open}
           />
-          {state.open ? (
-            <PolicyBody
-              onBackoff={(backoff) =>
-                setState((current) =>
-                  editPolicy(current, { ...current.policy, backoff }),
-                )
-              }
-              onBudget={(delta) =>
-                setState((current) => setBudget(current, delta))
-              }
-              onJitter={() =>
-                setState((current) =>
-                  editPolicy(current, {
-                    ...current.policy,
-                    jitter: !current.policy.jitter,
-                  }),
-                )
-              }
-              policy={state.policy}
-            />
-          ) : null}
+          <div className="gx-collapse-reveal" data-open={state.open}>
+            <div className="gx-collapse-reveal-inner">
+              {mounted ? (
+                <PolicyBody
+                  onBackoff={(backoff) =>
+                    setState((current) =>
+                      editPolicy(current, { ...current.policy, backoff }),
+                    )
+                  }
+                  onBudget={(delta) =>
+                    setState((current) => setBudget(current, delta))
+                  }
+                  onJitter={() =>
+                    setState((current) =>
+                      editPolicy(current, {
+                        ...current.policy,
+                        jitter: !current.policy.jitter,
+                      }),
+                    )
+                  }
+                  policy={state.policy}
+                />
+              ) : null}
+            </div>
+          </div>
         </div>
         <div className="gx-collapse-section">
           <Trigger
@@ -318,7 +334,7 @@ const ControlledSection = () => {
 
 /** The four states a disclosure can be in. */
 export const CollapsibleStates = () => (
-  <div className="gx-demo gx-collapse-scene">
+  <div className="gx-collapse-scene">
     <div className="gx-collapse-states">
       <Tile label="Closed (default)">
         <LocalSection initial={false} label="Advanced options" />

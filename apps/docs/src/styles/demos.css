@@ -5236,10 +5236,29 @@
    height and stays painted for its 200 ms collapse; the preview removes it at
    once, which is the state contract this page teaches. */
 .gx-collapse-scene {
-  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Pinned to the top so an opening body grows downward instead of moving the
+     card the reader just pressed. */
+  align-self: stretch;
+  justify-content: flex-start;
   gap: 14px;
-  min-height: 260px;
   padding: 24px;
+}
+
+.gx-collapse-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.gx-collapse-reveal[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.gx-collapse-reveal-inner {
+  overflow: hidden;
 }
 
 .gx-collapse-card {
@@ -13264,6 +13283,7 @@
   /* The height tweens are journeys, not content: the closed/open frame still
      paints, only the travel is removed. */
   .gx-acc-reveal,
+  .gx-collapse-reveal,
   .gx-autoheight-content,
   .gx-liquid-fill {
     transition: none;
