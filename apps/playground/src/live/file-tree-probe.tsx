@@ -4,12 +4,11 @@
  * The headless `virtual-tree-lifecycle` scenario measured the runtime's
  * `<virtual-list>` around a probe-local flattening, and the Tier 4 *File trees*
  * row cites it for the shipped tree. This probe mounts the **component**: its
- * flattening from a flat path list, its row press, its leading checkbox, its
- * one tab stop and its definite height.
+ * declarative parts built from a flat path list, its folder press, its file
+ * press, its one tab stop and its definite height.
  *
- * What a window alone answers: whether a press on a folder opens it, whether a
- * press on a file replaces the selection the folder held, whether the checkbox
- * adds a row **without** opening the folder it belongs to, whether arrow keys
+ * What a window alone answers: whether a folder press opens only its subtree
+ * and reports no selection, whether a file press selects it, whether arrow keys
  * move native focus row by row, and whether the `height` prop is a scroller
  * rather than a clip.
  *
@@ -22,7 +21,13 @@
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { buildFileTree, FileTree } from "@gpuixui/files";
+import {
+  buildFileTree,
+  FileTree,
+  FileTreeFile,
+  FileTreeFolder,
+  type FileNode,
+} from "@gpuixui/files";
 import type { Smoke } from "@gpuixui/testing";
 import { textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
@@ -31,7 +36,6 @@ import { Readout } from "../ui.js";
 import {
   FILE_TREE_ASSETS,
   FILE_TREE_BUTTON,
-  FILE_TREE_CHECKBOX_PRESSED,
   FILE_TREE_IDS,
   FILE_TREE_INDEX,
   FILE_TREE_INDEX_PICKED,
@@ -45,34 +49,49 @@ import {
   FILE_TREE_SCROLL,
   FILE_TREE_SRC,
   FILE_TREE_VISIBLE_ROWS,
-  fileTreeCheckboxOffset,
   fileTreeReadout,
   fileTreeRow,
   type FileTreeState,
 } from "./file-tree.js";
 import { settleUntil } from "./settle.js";
 
-/** The one capture: the tree with a folder open and two keys chosen. */
+/** The one capture: the tree with a folder open and a file selected. */
 const CAPTURE = "file-tree-open";
 
 const CAPTION =
-  "The shipped FileTree: a press opens a folder and replaces the selection, the checkbox adds a row without opening anything, the arrow keys move native focus, and the height the tree was handed is a scroller.";
+  "The shipped FileTree: a folder press opens only its own subtree, a file press selects it, the arrow keys move native focus, and the height the tree was handed is a scroller.";
+
+/** The parts for one path list, so the probe mounts the component's own tree. */
+const renderNodes = (
+  nodes: ReadonlyArray<FileNode>,
+): ReadonlyArray<ReactNode> =>
+  Arr.map(nodes, (node) =>
+    node.children === undefined ? (
+      <FileTreeFile key={node.path} path={node.path} name={node.name} />
+    ) : (
+      <FileTreeFolder key={node.path} path={node.path} name={node.name}>
+        {renderNodes(node.children)}
+      </FileTreeFolder>
+    ),
+  );
 
 /** The view: the shipped tree over a flat path list and its readout. */
 export const FileTreeProbe = (): ReactNode => {
   const theme = useTheme();
   const [state, setState] = useState<FileTreeState>(FILE_TREE_REST);
-  const roots = useMemo(() => buildFileTree(FILE_TREE_PATHS), []);
-  // Stable callbacks: the component reports the selection from an effect, so a
-  // callback that changed identity on every render would re-run it.
-  const onSelectionChange = useCallback(
-    (keys: ReadonlyArray<string>) =>
-      setState((current) => ({ ...current, selected: Arr.dedupe(keys) })),
+  const roots = useMemo(() => renderNodes(buildFileTree(FILE_TREE_PATHS)), []);
+  const onSelect = useCallback(
+    (path: string) =>
+      setState((current) => ({
+        ...current,
+        selected: [path],
+        picked: Option.some(path),
+      })),
     [],
   );
-  const onActivate = useCallback(
-    (node: { readonly path: string }) =>
-      setState((current) => ({ ...current, picked: Option.some(node.path) })),
+  const onExpandedChange = useCallback(
+    (opens: ReadonlyArray<string>) =>
+      setState((current) => ({ ...current, opens })),
     [],
   );
   return (
@@ -96,19 +115,18 @@ export const FileTreeProbe = (): ReactNode => {
         testId={FILE_TREE_IDS.tree}
         aria-label="Workspace files"
         height={FILE_TREE_VISIBLE_ROWS * theme.density.rowHeight}
-        roots={roots}
-        keyOf={(node) => node.path}
-        childrenOf={(node) => node.children ?? []}
-        labelOf={(node) => node.name}
-        onSelectionChange={onSelectionChange}
-        onActivate={onActivate}
-      />
+        onExpandedChange={onExpandedChange}
+        onSelect={onSelect}
+        selected={state.selected[0]}
+      >
+        {roots}
+      </FileTree>
       <Readout testId={FILE_TREE_IDS.readout}>{fileTreeReadout(state)}</Readout>
     </div>
   );
 };
 
-/** The probe's steps: open a folder, scroll, choose, toggle, walk by keyboard. */
+/** The probe's steps: open a folder, scroll, choose, walk by keyboard. */
 export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(FILE_TREE_IDS.tree);
@@ -141,9 +159,9 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         yield* ctx.host.click(fileTreeRow(path));
       });
 
-    // ── At rest: four roots, a folded child, one definite height ─────────────
+    // ── At rest: four roots, folded children, one definite height ────────────
     yield* ctx.expectEqual(
-      "the readout starts empty and reports no pressed row",
+      "the readout starts empty and reports nothing open",
       yield* readout(fileTreeReadout(FILE_TREE_REST)),
       fileTreeReadout(FILE_TREE_REST),
     );
@@ -183,15 +201,15 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ── A press on a folder opens it and replaces the selection ──────────────
+    // ── A press on a folder opens only its subtree and selects nothing ───────
     yield* press(FILE_TREE_SRC);
     yield* ctx.expectEqual(
-      "the readout reports the pressed folder as the selection",
+      "the readout reports the open folder and no selection",
       yield* readout(fileTreeReadout(FILE_TREE_OPENED)),
       fileTreeReadout(FILE_TREE_OPENED),
     );
     yield* ctx.expectEqual(
-      "a press on a folder opens it and paints its first child",
+      "a press on a folder paints its first child",
       yield* painted(fileTreeRow(FILE_TREE_BUTTON)),
       true,
     );
@@ -199,6 +217,11 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the second child paints below it",
       yield* painted(fileTreeRow(FILE_TREE_INDEX)),
       true,
+    );
+    yield* ctx.expectEqual(
+      "the sibling folder the press did not name stays folded",
+      yield* painted(fileTreeRow(FILE_TREE_LOGO)),
+      false,
     );
 
     // ── The two rows the folder opened sit below the box, and it scrolls ─────
@@ -253,10 +276,10 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A press on a file replaces the selection the folder held ─────────────
+    // ── A press on a file selects it and leaves the folder open ─────────────
     yield* press(FILE_TREE_README);
     yield* ctx.expectEqual(
-      "a press on a file replaces the folder's selection",
+      "a press on a file selects it and reports it once",
       yield* readout(fileTreeReadout(FILE_TREE_README_PICKED)),
       fileTreeReadout(FILE_TREE_README_PICKED),
     );
@@ -266,7 +289,7 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── Back to the top, where the checkbox is reachable ─────────────────────
+    // ── Back to the top, where the keyboard starts ──────────────────────────
     yield* ctx.host.wheel(FILE_TREE_IDS.tree, 0, FILE_TREE_SCROLL);
     const rested = yield* settleUntil(
       Effect.map(
@@ -281,62 +304,11 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The leading checkbox: measured, the press also reaches the row ───────
-    // The component forwards no `testId` to the checkbox, so it is addressable
-    // only by the point a reader presses inside the row: the offset is the depth
-    // inset, the chevron slot the row reports, and half the checkbox's target.
-    const chevron = yield* ctx.expectSome(
-      "the row gives its chevron slot a box",
-      Option.fromNullishOr(
-        yield* ctx.host.bounds(`${fileTreeRow(FILE_TREE_ASSETS)}-slot`),
-      ),
-    );
-    const checkbox = fileTreeCheckboxOffset(chevron.width, assetsRow.height);
-
-    /** Waits for the folder's child to appear or disappear, so a press settles. */
-    const logo = (
-      holds: boolean,
-    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
-      settleUntil(
-        painted(fileTreeRow(FILE_TREE_LOGO)),
-        (shown) => shown === holds,
-      );
-
-    // The component documents the checkbox as toggling a row *in* the selection.
-    // Measured, the same press also reaches the row's own handler, whose replace
-    // wins — so these checks pin what the window does until the component stops
-    // the press (`TODO.md` → Interlocks, the files owner). A fix flips them.
-    yield* ctx.host.clickAt(fileTreeRow(FILE_TREE_ASSETS), checkbox);
-    yield* logo(true);
-    yield* ctx.expectEqual(
-      "the checkbox press reports its row alone, because the row press it also runs replaces the selection",
-      yield* readout(fileTreeReadout(FILE_TREE_CHECKBOX_PRESSED)),
-      fileTreeReadout(FILE_TREE_CHECKBOX_PRESSED),
-    );
-    yield* ctx.expectEqual(
-      "the row press the checkbox also runs opens the folder it belongs to",
-      yield* painted(fileTreeRow(FILE_TREE_LOGO)),
-      true,
-    );
-    yield* ctx.host.clickAt(fileTreeRow(FILE_TREE_ASSETS), checkbox);
-    yield* logo(false);
-    yield* ctx.expectEqual(
-      "a second press on the same point closes the folder again",
-      yield* painted(fileTreeRow(FILE_TREE_LOGO)),
-      false,
-    );
-    yield* ctx.expectEqual(
-      "the second press leaves the same row chosen",
-      yield* readout(fileTreeReadout(FILE_TREE_CHECKBOX_PRESSED)),
-      fileTreeReadout(FILE_TREE_CHECKBOX_PRESSED),
-    );
-
     // ── One tab stop, and the keys move native focus row by row ──────────────
-    yield* ctx.host.hover(fileTreeRow(FILE_TREE_BUTTON));
     yield* press(FILE_TREE_BUTTON);
     yield* Effect.sleep(Duration.millis(200));
     yield* ctx.expectEqual(
-      "the press lands native focus on the row it chose",
+      "the press lands native focus on the row it selected",
       yield* settleUntil(
         focused(),
         (id) => id === fileTreeRow(FILE_TREE_BUTTON),
@@ -354,7 +326,7 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.key("enter");
     yield* ctx.expectEqual(
-      "Enter activates the row the focus holds",
+      "Enter selects the file the focus holds",
       yield* readout(fileTreeReadout(FILE_TREE_INDEX_PICKED)),
       fileTreeReadout(FILE_TREE_INDEX_PICKED),
     );

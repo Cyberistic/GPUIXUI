@@ -825,7 +825,7 @@ export const liveRegistry = [
   {
     id: "file-tree-lifecycle",
     title:
-      "Tree: the shipped FileTree opens a folder on a press, replaces the selection on a file, adds a row from its checkbox without opening the folder, walks native focus by key and scrolls inside the height it was handed",
+      "Tree: the shipped FileTree opens only the folder a press lands on, selects a file from its declarative row, walks native focus by key from one tab stop and scrolls inside the height it was handed",
     capability: "tree",
   },
   {

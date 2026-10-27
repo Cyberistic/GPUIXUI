@@ -2,27 +2,20 @@ import {
   buildFileTree,
   fileIcon,
   fileKindOf,
+  fileTreeTab,
+  visibleFileRows,
   type FileKind,
   type FileNode,
 } from "@gpuixui/files/tree/logic";
 import {
-  TREE_INDENT,
-  flattenTree,
   treeCursorMove,
   type TreeCursor,
   type TreeRow,
 } from "@gpuixui/data/tree/logic";
-import {
-  emptySelection,
-  isSelected,
-  pressSelection,
-  type SelectionState,
-} from "@gpuixui/data/selection/logic";
 import type { IconName } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import * as Order from "effect/Order";
 import { useState, type KeyboardEvent } from "react";
 import { BrowserIcon } from "./browser-icon";
 import { treeKeyOf } from "./tree-keys";
@@ -32,10 +25,9 @@ import { treeKeyOf } from "./tree-keys";
  *
  * `@gpuixui/files`' `FileTree` is a GPUix host tree, so the page cannot mount it
  * and this drawing is a labelled approximation. What it does not approximate is
- * the tree's reasoning: the rows are `@gpuixui/files`' `buildFileTree` and
- * `fileIcon`, flattened by `@gpuixui/data`'s `flattenTree`, moved by
- * `treeCursorMove` and chosen by `pressSelection`. Only the paint is the
- * browser's.
+ * the tree's reasoning: the rows are the package's `visibleFileRows`, the folder
+ * glyph its `fileIcon`, the tab stop its `fileTreeTab`, and the keyboard the
+ * generic tree's `treeCursorMove`. Only the paint is the browser's.
  */
 
 /**
@@ -61,18 +53,9 @@ export const WORKSPACE_PATHS: ReadonlyArray<string> = [
 export const workspaceTree = (): ReadonlyArray<FileNode> =>
   buildFileTree(WORKSPACE_PATHS);
 
-/** The two readers the generic tree asks for; a file has no children. */
-export const fileTreeSpec = {
-  keyOf: (node: FileNode): string => node.path,
-  childrenOf: (node: FileNode): ReadonlyArray<FileNode> => node.children ?? [],
-};
-
 /** A row's kind: a folder is one by its children, a file by its extension. */
 export const kindOf = (node: FileNode): FileKind =>
-  fileKindOf(
-    node.name,
-    Arr.isReadonlyArrayNonEmpty(fileTreeSpec.childrenOf(node)),
-  );
+  fileKindOf(node.name, node.children !== undefined);
 
 /** The glyph a row paints; an open folder paints the open glyph. */
 export const glyphOf = (node: FileNode, expanded: boolean): IconName =>
@@ -82,30 +65,24 @@ export const glyphOf = (node: FileNode, expanded: boolean): IconName =>
 export const fileRows = (
   roots: ReadonlyArray<FileNode>,
   cursor: TreeCursor,
-): ReadonlyArray<TreeRow<FileNode>> =>
-  flattenTree(roots, fileTreeSpec, cursor.expanded);
+): ReadonlyArray<TreeRow<FileNode>> => visibleFileRows(roots, cursor.expanded);
 
-/** The cursor the preview opens on: `src` and `docs` open, `src/index.ts` active. */
+/** The cursor the preview opens on: three folders open and `src/index.ts` active. */
 export const openCursor = (): TreeCursor => ({
   expanded: HashSet.make("src", "docs", "src/components"),
   active: Option.some("src/index.ts"),
 });
 
-/** The keys chosen, in the order they are reported. */
-export const chosenKeys = (state: SelectionState): ReadonlyArray<string> =>
-  Arr.sort(Arr.fromIterable(state.selected), Order.String);
+/** The file the preview opens selected. */
+export const OPEN_SELECTED = "src/index.ts";
 
 /** The line under the frame: what the tree reports after a press. */
-export const selectionReadout = (state: SelectionState): string => {
-  const keys = chosenKeys(state);
-  return keys.length === 0
-    ? "nothing chosen"
-    : `${keys.length} chosen: ${keys.join(", ")}`;
-};
+export const selectionReadout = (selected: string | undefined): string =>
+  selected === undefined ? "nothing selected" : `selected: ${selected}`;
 
 /** The id a row's element carries, so the tree can name its active row. */
 export const rowId = (key: string): string =>
-  `gx-tree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
+  `gx-filetree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
 
 /** The cursor with `key` as the row the keyboard stands on. */
 export const withActive = (cursor: TreeCursor, key: string): TreeCursor => ({
@@ -113,108 +90,121 @@ export const withActive = (cursor: TreeCursor, key: string): TreeCursor => ({
   active: Option.some(key),
 });
 
+/** The cursor a folder press produces: one branch flips, nothing else. */
+export const toggleRow = (
+  rows: ReadonlyArray<TreeRow<FileNode>>,
+  cursor: TreeCursor,
+  key: string,
+): TreeCursor => treeCursorMove(rows, withActive(cursor, key), "enter");
+
+/** The row the tab stop stands on: the selected file, else the first row. */
+export const tabRow = (
+  rows: ReadonlyArray<TreeRow<FileNode>>,
+  selected: string | undefined,
+): Option.Option<TreeRow<FileNode>> => fileTreeTab(rows, selected);
+
 export interface FileTreeFrameProps {
   /** The roots to draw, so a test can hand in its own workspace. */
   readonly roots: ReadonlyArray<FileNode>;
-  /** The cursor to draw, controlled the way `TreeView` takes it. */
+  /** The cursor to draw, controlled the way the shipped tree takes it. */
   readonly cursor: TreeCursor;
-  /** The chosen keys, controlled the same way. */
-  readonly selection: SelectionState;
+  /** The selected file path. */
+  readonly selected: string | undefined;
   /** Reports the next cursor after a folder toggle or a key. */
   readonly onCursorChange: (cursor: TreeCursor) => void;
-  /** Reports the next selection after a row press. */
-  readonly onSelectionChange: (state: SelectionState) => void;
+  /** Reports the file a press selects. */
+  readonly onSelect: (path: string) => void;
 }
 
-/** The drawing itself: one row per visible node, its glyph and its checkbox. */
+/** The drawing itself: one row per visible node, guides, chevron, glyph, name. */
 export function FileTreeFrame({
   roots,
   cursor,
-  selection,
+  selected,
   onCursorChange,
-  onSelectionChange,
+  onSelect,
 }: FileTreeFrameProps) {
   const rows = fileRows(roots, cursor);
   const active = Option.getOrUndefined(cursor.active);
-  const order = Arr.map(rows, (row) => row.key);
+  const tab = Option.getOrUndefined(tabRow(rows, selected));
+  const current = active ?? tab?.key;
 
-  // A press chooses the row and stands on it, the way the shipped tree's roving
-  // tab stop follows the row a reader pressed.
-  const press = (row: TreeRow<FileNode>, toggle: boolean): void => {
+  // A folder press flips only that folder's subtree; a file press selects the
+  // file and stands on it, the way the shipped tree reports a file once.
+  const press = (row: TreeRow<FileNode>): void => {
+    if (row.node.children !== undefined) {
+      onCursorChange(toggleRow(rows, cursor, row.key));
+      return;
+    }
     onCursorChange(withActive(cursor, row.key));
-    onSelectionChange(
-      pressSelection(selection, row.key, toggle ? "toggle" : "replace", order),
-    );
+    onSelect(row.key);
   };
-
-  // The chevron flips *its* row, not whichever row the cursor happens to stand
-  // on, so the cursor moves there first.
-  const flip = (row: TreeRow<FileNode>): void =>
-    onCursorChange(treeCursorMove(rows, withActive(cursor, row.key), "enter"));
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const key = treeKeyOf(event.key);
     if (Option.isNone(key)) return;
     event.preventDefault();
-    onCursorChange(treeCursorMove(rows, cursor, key.value));
+    const next = treeCursorMove(rows, cursor, key.value);
+    onCursorChange(next);
+    if (key.value === "enter" || key.value === "space") {
+      const row = Option.getOrUndefined(
+        Option.flatMap(next.active, (path) =>
+          Arr.findFirst(rows, (candidate) => candidate.key === path),
+        ),
+      );
+      if (row !== undefined && row.node.children === undefined) {
+        onSelect(row.key);
+      }
+    }
   };
 
   return (
     <div
-      aria-activedescendant={active === undefined ? undefined : rowId(active)}
+      aria-activedescendant={current === undefined ? undefined : rowId(current)}
       aria-label="Workspace files"
-      className="gx-tree"
+      className="gx-filetree"
       onKeyDown={onKeyDown}
       role="tree"
       tabIndex={0}
     >
       {Arr.map(rows, (row) => {
         const node = row.node;
-        const chosen = isSelected(selection, row.key);
-        const current = row.key === active;
+        const chosen = node.children === undefined && row.key === selected;
         return (
           <div
             aria-expanded={row.hasChildren ? row.expanded : undefined}
             aria-level={row.depth + 1}
             aria-selected={chosen}
-            className="gx-tree-row"
-            data-chosen={chosen ? "true" : "false"}
-            data-current={current ? "true" : "false"}
+            className="gx-filetree-row"
+            data-current={row.key === current ? "true" : "false"}
             data-icon={glyphOf(node, row.expanded)}
+            data-selected={chosen ? "true" : "false"}
             id={rowId(row.key)}
             key={row.key}
-            onClick={() => press(row, false)}
+            onClick={() => press(row)}
             role="treeitem"
-            style={{ paddingLeft: 6 + row.depth * TREE_INDENT }}
           >
-            <button
-              aria-label={
-                row.expanded ? `Collapse ${node.name}` : `Expand ${node.name}`
-              }
-              className="gx-tree-chevron"
+            {row.depth === 0
+              ? undefined
+              : Arr.map(Arr.range(1, row.depth), (level) => (
+                  <span
+                    className="gx-filetree-guide"
+                    data-guide="true"
+                    key={level}
+                  />
+                ))}
+            <span
+              aria-hidden="true"
+              className="gx-filetree-chevron"
               data-branch={row.hasChildren ? "true" : "false"}
-              disabled={!row.hasChildren}
-              onClick={(event) => {
-                event.stopPropagation();
-                flip(row);
-              }}
-              type="button"
             >
-              {row.expanded ? "▾" : "▸"}
-            </button>
+              {row.hasChildren ? (row.expanded ? "▾" : "▸") : ""}
+            </span>
             <BrowserIcon
-              className="gx-tree-glyph"
+              className="gx-filetree-glyph"
               name={glyphOf(node, row.expanded)}
             />
-            <span className="gx-tree-name">{node.name}</span>
-            <input
-              aria-label={`Choose ${node.name}`}
-              checked={chosen}
-              className="gx-tree-box"
-              onChange={() => press(row, true)}
-              onClick={(event) => event.stopPropagation()}
-              type="checkbox"
-            />
+            <span className="gx-filetree-name">{node.name}</span>
           </div>
         );
       })}
@@ -222,52 +212,58 @@ export function FileTreeFrame({
   );
 }
 
-/** The page's preview: the workspace, the row it stands on and what is chosen. */
+/** The page's preview: the workspace, its tab stop and the selected file. */
 export function FileTreeDemo() {
   const roots = workspaceTree();
   const [cursor, setCursor] = useState<TreeCursor>(openCursor);
-  const [selection, setSelection] = useState<SelectionState>(emptySelection);
+  const [selected, setSelected] = useState<string | undefined>(OPEN_SELECTED);
 
   return (
     <div className="gx-demo-frame">
       <FileTreeFrame
         cursor={cursor}
         onCursorChange={setCursor}
-        onSelectionChange={setSelection}
+        onSelect={setSelected}
         roots={roots}
-        selection={selection}
+        selected={selected}
       />
-      <p className="gx-demo-readout">{selectionReadout(selection)}</p>
+      <p className="gx-demo-readout">{selectionReadout(selected)}</p>
       <p className="gx-demo-hint">
-        Press a row to choose it, or its box to add it. Focus the tree and use ↑
-        ↓ ← →, Home and End; Enter or Space flips a folder.
+        Press a folder to open it and a file to select it. Focus the tree and
+        use ↑ ↓ ← →, Home and End; Enter or Space opens a folder or selects a
+        file.
       </p>
     </div>
   );
 }
 
-export const fileTreeDemoSource = `import { buildFileTree, FileTree } from "@gpuixui/files";
+export const fileTreeDemoSource = `import {
+  FileTree,
+  FileTreeFile,
+  FileTreeFolder,
+} from "@gpuixui/files";
 import { useState } from "react";
 
-const roots = buildFileTree([
-  "src/index.ts",
-  "src/components/button.tsx",
-  "docs/installation.mdx",
-  "readme.md",
-]);
-
 export function ProjectFiles() {
-  const [chosen, setChosen] = useState<string[]>([]);
+  const [file, setFile] = useState("src/index.ts");
   return (
     <FileTree
       aria-label="Workspace files"
+      defaultExpanded={["src"]}
       height={280}
-      roots={roots}
-      keyOf={(node) => node.path}
-      childrenOf={(node) => node.children ?? []}
-      labelOf={(node) => node.name}
-      onSelectionChange={setChosen}
-      onActivate={(node) => console.log(node.path)}
-    />
+      selected={file}
+      onSelect={setFile}
+    >
+      <FileTreeFolder path="src" name="src">
+        <FileTreeFolder path="src/components" name="components">
+          <FileTreeFile
+            path="src/components/button.tsx"
+            name="button.tsx"
+          />
+        </FileTreeFolder>
+        <FileTreeFile path="src/index.ts" name="index.ts" />
+      </FileTreeFolder>
+      <FileTreeFile path="readme.md" name="readme.md" />
+    </FileTree>
   );
 }`;

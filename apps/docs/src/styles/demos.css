@@ -12583,6 +12583,85 @@ button.gx-rating-star:focus-visible {
   accent-color: var(--primary);
 }
 
+/* The AI Elements file tree: a mono card, one guide cell per ancestor, a
+   chevron that swaps glyphs (no rotation) and one selected file. */
+.gx-filetree {
+  padding: 4px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--background);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-filetree:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-filetree-row {
+  display: flex;
+  align-items: center;
+  height: var(--row-height);
+  padding: 0 8px 0 6px;
+  border-radius: var(--radius);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.gx-filetree-row:hover {
+  background: var(--hover);
+}
+
+.gx-filetree-row[data-selected="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-filetree-row[data-current="true"] {
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.gx-filetree-guide {
+  flex: none;
+  align-self: stretch;
+  width: 16px;
+  border-left: 1px solid var(--border);
+}
+
+.gx-filetree-chevron {
+  flex: none;
+  width: 16px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  text-align: center;
+}
+
+.gx-filetree-row[data-selected="true"] .gx-filetree-chevron {
+  color: var(--selected-foreground);
+}
+
+.gx-filetree-glyph {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  margin-right: 6px;
+  color: var(--muted-foreground);
+}
+
+.gx-filetree-row[data-selected="true"] .gx-filetree-glyph {
+  color: var(--selected-foreground);
+}
+
+.gx-filetree-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* A virtual tree's window: the rows are placed from the package's window, so
    the frame positions them and takes its height from the caller. */
 .gx-tree-window {

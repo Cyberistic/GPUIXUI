@@ -45,6 +45,17 @@ history. No landed component currently deviates.
   by string.
 - The root part owns the controlled-state props; a part never duplicates them.
 
+**A declarative tree is the one part set that does not render itself.**
+`@gpuixui/files`' `FileTree` (outside this contract's two packages) reads
+`FileTreeFolder` / `FileTreeFile` props into the flattened `FileNode` model and
+paints the rows; the parts are declarations, like a router's routes. The
+generic tree must know the visible order to hold one tab stop and walk it with
+the arrow keys, and a recursive part renderer would need a second registration
+pass to answer that. The parts still reject a render outside a `FileTree`, so a
+misplaced declaration fails loudly. Everything else in this document applies:
+one selected path, typed prop names, defaults in the schema/plant, tokens
+through the theme seam.
+
 ## 2. Controlled and uncontrolled — one rule, one place
 
 - `value` makes the part controlled: the selection changes **only** when the

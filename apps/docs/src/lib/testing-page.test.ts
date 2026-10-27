@@ -80,8 +80,9 @@ describe("the testing page", () => {
   });
 
   it("teaches the press at a point, and the two verbs it is not", () => {
-    // `clickAt` exists because `FileTree` gives its row checkbox no address and
-    // because neither `drag` nor a bare move-then-click measures one press:
+    // `clickAt` exists because a part can have no address (the old `FileTree`
+    // row checkbox was the measurement) and because neither `drag` nor a bare
+    // move-then-click measures one press:
     // drag applies its offset to both ends, and a click after no move lands on
     // the last hovered element. Both were measured (packages/testing/README.md).
     const prose = page.replace(/\s+/g, " ");
