@@ -31,6 +31,7 @@ import { countingNumberMeta } from "./counting-number.js";
 import { datePickerMeta } from "./date-picker.js";
 import { dialogMeta } from "./dialog.js";
 import { drawerMeta } from "./drawer.js";
+import { sheetMeta } from "./sheet.js";
 import { dropdownMenuMeta } from "./dropdown-menu.js";
 import { emptyStateMeta } from "./empty-state.js";
 import { fieldMeta } from "./field.js";
@@ -126,6 +127,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   datePickerMeta,
   dialogMeta,
   drawerMeta,
+  sheetMeta,
   dropdownMenuMeta,
   emptyStateMeta,
   fieldMeta,

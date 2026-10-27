@@ -68,7 +68,7 @@ import { useTheme, type Theme } from "./internal/theme.js";
 export type DrawerSide = "left" | "right" | "bottom";
 
 /** The edges a drawer can open from, as the guard reads them. */
-const DrawerEdges = Schema.Literals(["left", "right", "bottom"]);
+const DrawerEdges = Schema.Literals(["left", "right", "top", "bottom"]);
 
 /** The surface sizes a drawer offers. */
 export type DrawerSize = "sm" | "md" | "lg";
@@ -229,7 +229,8 @@ const drawerSize = (size: unknown): DrawerSize =>
   Schema.is(DrawerSizes)(size) ? size : "md";
 
 /** Whether a side lays the surface across the window's width. */
-const isVertical = (side: DrawerSide): boolean => side === "bottom";
+const isVertical = (side: DrawerSide): boolean =>
+  side === "bottom" || side === "top";
 
 /** The surface's measured box for a side and size. */
 const surfaceSize = (
@@ -333,7 +334,8 @@ export const DrawerContent = ({
             display: "flex",
             flexDirection: isVertical(side) ? "column" : "row",
             alignItems: "stretch",
-            justifyContent: side === "left" ? "flex-start" : "flex-end",
+            justifyContent:
+              side === "left" || side === "top" ? "flex-start" : "flex-end",
             ...presenceStyle(presence.present),
           },
         )}

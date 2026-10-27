@@ -222,6 +222,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("dialog", "Dialog"),
       component("confirm-dialog", "Confirmation dialog"),
       component("drawer", "Drawer"),
+      component("sheet", "Sheet"),
       component("popover", "Popover"),
       component("preview-card", "Preview card"),
       component("tooltip", "Tooltip"),

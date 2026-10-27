@@ -36,6 +36,7 @@ import { CountingNumberExample } from "./counting-number.example.js";
 import { DatePickerExample } from "./date-picker.example.js";
 import { DialogExample } from "./dialog.example.js";
 import { DrawerExample } from "./drawer.example.js";
+import { SheetExample } from "./sheet.example.js";
 import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { FieldExample } from "./field.example.js";
@@ -115,6 +116,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "date-picker": DatePickerExample,
   dialog: DialogExample,
   drawer: DrawerExample,
+  sheet: SheetExample,
   "dropdown-menu": DropdownMenuExample,
   "empty-state": EmptyStateExample,
   field: FieldExample,

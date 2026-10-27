@@ -1,0 +1,67 @@
+---
+title: Sheet
+description: A modal panel anchored to a window edge, on any of its four edges.
+---
+
+<ComponentPreview name="drawer-sides" />
+
+## Usage
+
+```tsx
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@gpuixui/components";
+```
+
+`Sheet` is shadcn's name for the surface `Drawer` already paints: a veil over
+the window, a panel on one edge, a focus trap inside it, Escape and an outside
+press to close, and focus returned to the opener. It re-exports that machinery,
+so the drawing above is the Drawer page's — there is one implementation, not two.
+
+```tsx
+<Sheet>
+  <SheetTrigger>Filters</SheetTrigger>
+  <SheetContent side="right" label="Filters">
+    <SheetHeader>
+      <SheetTitle>Filters</SheetTitle>
+      <SheetDescription>Narrow the result set, then apply.</SheetDescription>
+    </SheetHeader>
+    <SheetFooter>
+      <SheetClose>Cancel</SheetClose>
+    </SheetFooter>
+  </SheetContent>
+</Sheet>
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Sheet` | `open` | `boolean` | uncontrolled |
+| `Sheet` | `onOpenChange` | `(open: boolean) => void` | none |
+| `Sheet` | `dismissible` | `boolean` | `true` |
+| `SheetTrigger` | `disabled` | `boolean` | `false` |
+| `SheetClose` | `disabled` | `boolean` | `false` |
+| `SheetContent` | `side` | "left" \| "right" \| "top" \| "bottom" | `"right"` |
+| `SheetContent` | `size` | "sm" \| "md" \| "lg" | `"md"` |
+| `SheetContent` | `label` | `string` (required) | none |
+| `SheetContent` | `initialFocus` | `() => number \| null` | none |
+| `SheetHeader` | `children` | `ReactNode` | — |
+| `SheetTitle` | `children` | `ReactNode` | — |
+| `SheetDescription` | `children` | `ReactNode` | — |
+| `SheetFooter` | `children` | `ReactNode` | — |
+
+## Limitations
+
+- No swipe-to-dismiss: the runtime has no drag host.
+- The surface fades and travels 12px from its edge rather than sliding its full
+  width; the runtime has no `transform`, and animating `width` would reflow the
+  content.
+- The veil is an anchored element at window coordinates, not a portalled surface.

@@ -352,6 +352,7 @@ the page and the package in the same change.
 | Hotkey-recorder input | `HotkeyRecorder` | — | plan 316 |
 | Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl`, `CarouselIndicators` | — | plan 315 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
+| Sheet | `Sheet`, `SheetTrigger`, `SheetClose`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetFooter` | `Sheet` (shape only) | plan 309 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 | Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
@@ -507,6 +508,7 @@ the tree a level's window later.
 | ------- | -------- | ----- |
 | Dialog, Command menu | fade + 8px rise | `slow` (320 ms) |
 | Drawer | fade + 12px from its own edge | `slow` |
+| Sheet | fade + 12px from its own edge (the drawer's surface) | `slow` |
 | Popover, Dropdown menu, Context menu, submenu | fade + 8px / 4px from the trigger's (or row's) side | `normal` (200 ms) |
 | Navigation menu | fade + 4px out from its trigger's side | `normal` |
 | Combobox popup | fade + 4px out from the requested side (a flipped popup keeps the first frame it mounted with; the rows it showed are kept for the exit) | `normal` |

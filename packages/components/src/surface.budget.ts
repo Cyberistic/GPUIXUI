@@ -117,11 +117,13 @@ export const surfaceBudget = {
   // seam they share (`internal/local-state.ts`): a `SubscriptionRef` is the
   // state, the store owns the one timer a surface can run, and React subscribes
   // through `useSyncExternalStore` instead of holding it in `useState`.
+  // 181 → 182 for `sheet.tsx`, shadcn's name for the drawer surface (the
+  // implementation stays in `drawer.tsx`).
   // 177 → 181 for the four that followed on the same seam: `rolling-text/store.ts`
   // (the swap and its exit window), `image-zoom/store.ts` (the pointer),
   // `pattern-field/store.ts` (the measured box and the breath's phase, shared by
   // Hexagon and Glyph) and `splitting-text/store.ts` (the phrase and its units).
-  modules: 181,
+  modules: 182,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
