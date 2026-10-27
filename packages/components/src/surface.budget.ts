@@ -137,7 +137,10 @@ export const surfaceBudget = {
   // barrel names them so the entry carries them.
   // 195 → 198 for the Calendar (`calendar.tsx`, `calendar/logic.ts`,
   // `calendar/store.ts`), which replaces the date picker's private grid.
-  modules: 198,
+  // 198 → 203 for AspectRatio, HoverCard, InputGroup and Item
+  // (`aspect-ratio.tsx`, `hover-card.tsx`, `input-group.tsx`, `item.tsx` and the
+  // hover waits they share, `internal/hover.ts`).
+  modules: 203,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -202,8 +205,9 @@ export const surfaceBudget = {
   // nine stores, 1 310 KiB with the Sidebar family and the account menu rebased
   // over them, and the calendar family beside the picker that composes it
   // (1 371 KiB measured) — so the ceiling moved 1260 → 1400 KiB for the next
-  // family's headroom.
-  bytes: 1400 * 1024,
+  // family's headroom. 1 407 KiB measured with AspectRatio, HoverCard,
+  // InputGroup and Item, so the ceiling moved 1400 → 1450 KiB.
+  bytes: 1450 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

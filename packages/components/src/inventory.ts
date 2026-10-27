@@ -9,6 +9,7 @@
 
 import { accordionMeta } from "./accordion.js";
 import { alertMeta } from "./alert.js";
+import { aspectRatioMeta } from "./aspect-ratio.js";
 import { autoHeightMeta } from "./auto-height.js";
 import { avatarMeta } from "./avatar.js";
 import { avatarGroupMeta } from "./avatar-group.js";
@@ -45,9 +46,12 @@ import { glyphMeta } from "./glyph.js";
 import { gravityStarsMeta } from "./gravity-stars.js";
 import { hexagonMeta } from "./hexagon.js";
 import { highlightTextMeta } from "./highlight-text.js";
+import { hoverCardMeta } from "./hover-card.js";
 import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
 import { imageZoomMeta } from "./image-zoom.js";
 import { inlineEditMeta } from "./inline-edit.js";
+import { inputGroupMeta } from "./input-group.js";
+import { itemMeta } from "./item.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { liquidButtonMeta } from "./liquid-button.js";
 import { listMeta } from "./list.js";
@@ -113,6 +117,7 @@ export interface ComponentMeta {
 /** Every implemented Tier 2 component. */
 export const inventory: ReadonlyArray<ComponentMeta> = [
   accordionMeta,
+  aspectRatioMeta,
   autoHeightMeta,
   alertMeta,
   avatarMeta,
@@ -153,6 +158,9 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   hotkeyRecorderMeta,
   imageZoomMeta,
   inlineEditMeta,
+  inputGroupMeta,
+  itemMeta,
+  hoverCardMeta,
   keyboardShortcutsMeta,
   liquidButtonMeta,
   listMeta,
