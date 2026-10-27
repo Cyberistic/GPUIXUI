@@ -33,8 +33,9 @@ import {
  *
  * Geometry comes from `drawer-preview.ts`, which reads the component's own
  * size tables in its test. The page says the paint is an approximation: the
- * native surface is square (its recipe names no radius) and travels 12px on an
- * inset, while this drawing is static.
+ * drawing's slide is a CSS `translate` of the surface's own span, while the
+ * native surface travels the same distance on `left`/`top` (the runtime has no
+ * `transform`); the inner corners and the grabber are the component's.
  */
 
 /** The logical window the drawing is laid out in. */
@@ -61,10 +62,10 @@ const trapTab = (event: KeyboardEvent, root: HTMLElement): void => {
 
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault();
-    last.focus();
+    last.focus({ preventScroll: true });
   } else if (!event.shiftKey && document.activeElement === last) {
     event.preventDefault();
-    first.focus();
+    first.focus({ preventScroll: true });
   }
 };
 
@@ -76,13 +77,18 @@ const trapTab = (event: KeyboardEvent, root: HTMLElement): void => {
  * it to whatever is underneath.
  */
 const useDrawer = (dismissible: boolean) => {
+  // The native drawer's focus enters through the renderer, which never scrolls.
+  // A browser `focus()` centres the focused box, and the surface is mid-slide
+  // when it takes focus — the scroll cancels the animation, which is what made
+  // the sheet look static. `preventScroll` is the cause-level fix.
+
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const panel = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => {
     setOpen(false);
-    trigger.current?.focus();
+    trigger.current?.focus({ preventScroll: true });
   }, []);
 
   const openFrom = (event: ReactMouseEvent<HTMLButtonElement>) => {
@@ -92,7 +98,7 @@ const useDrawer = (dismissible: boolean) => {
 
   useEffect(() => {
     if (!open) return;
-    panel.current?.focus();
+    panel.current?.focus({ preventScroll: true });
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && dismissible) {
@@ -146,7 +152,7 @@ const DrawerSurface = ({
 
   return (
     <div
-      className="gx-drawer-backdrop"
+      className="gx-drawer-backdrop gx-overlay-veil"
       onClick={onBackdrop}
       role="presentation"
     >
@@ -161,6 +167,9 @@ const DrawerSurface = ({
         style={{ width: box.width, height: box.height }}
         tabIndex={-1}
       >
+        {side === "bottom" ? (
+          <div aria-hidden="true" className="gx-drawer-grabber" />
+        ) : null}
         <button
           aria-label="Close drawer"
           className="gx-drawer-close"
@@ -461,8 +470,8 @@ const DrawerSides = () => {
           >
             <p className="gx-drawer-copy">
               The surface is the theme&apos;s <code>popover</code> fill with a{" "}
-              <code>border</code> edge and the <code>elevation.lg</code> lift.
-              It is square: the recipe names no radius utility.
+              <code>border</code> edge, the <code>elevation.lg</code> lift and
+              the inner corners rounded — the window edge stays flush.
             </p>
             <p className="gx-drawer-copy">
               {dismissible

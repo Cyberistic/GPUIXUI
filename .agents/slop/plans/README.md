@@ -179,6 +179,7 @@ component call sites adopt the outline in their own workstream.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [716](./716-chat-family-rebuild.md) | Chat family on shadcn's Bubble / Message / MessageScroller, with the fixed-row layout fix | D | `207`, `206` | implemented |
+| [717](./717-overlay-surface-fixes.md) | Overlay surfaces: sheet/drawer slide + redesign, popover sides, navigation-menu chevron, hover-card link trigger, one veil wash | D | — | implemented |
 
 ## How to use a plan
 

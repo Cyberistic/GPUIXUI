@@ -28,6 +28,31 @@ import {
 </Popover>;
 ```
 
+## Sides
+
+<ComponentPreview name="popover-sides" />
+
+`side` names the edge the surface opens on — `top`, `right`, `bottom` (the
+default) or `left` — and `sideOffset` the gap to the trigger, 6px by default. The
+requested side is kept unless it has **no room at all** for the surface; then it
+flips to the opposite one, and the roomier side wins when neither fits. A panel
+that merely overhangs the window keeps its side and slides back inside it.
+
+```tsx
+<PopoverContent side="right" align="start" sideOffset={8}>
+  <ColumnToggles />
+</PopoverContent>
+```
+
+## Collision
+
+<ComponentPreview name="popover-collision" />
+
+Near a window edge the runtime snaps the surface back by `collisionPadding`
+(8px). The panel keeps the side it opened on and moves along that side; the
+trigger does not move, and no sibling does either — the surface is an anchored
+layer, out of the layout flow.
+
 ## Composition
 
 ```text
@@ -52,8 +77,20 @@ Popover
 | `PopoverContent` | `alignOffset` | `number` | `0` |
 | `PopoverContent` | `className` | `string` | — |
 
+## Motion
+
+The panel fades and travels 8px out from the side it opens on, at the `normal`
+level (200 ms); `MotionProvider preference="reduced"` paints the resting frame at
+once. A leaving panel stays painted for its exit and takes no presses.
+
 ## Limitations
 
 - No `aria-haspopup`, `aria-controls` or `aria-labelledby`.
-- No arrow, custom anchor or backdrop.
+- No arrow, custom anchor or backdrop; a popover is non-modal, so it paints no
+  veil and does not blur the page (the modal families do).
 - `align="center"` cannot centre a surface at the window edge.
+- The anchored layer measures its **containing block** — the popover's own
+  positioning root — so put a side-anchored popover in a shrink-to-fit container
+  (a toolbar row, a button's wrapper). In a block that stretches its children the
+  root is wider than the trigger and a `left`/`right` panel opens from the
+  root's edge, not the trigger's.

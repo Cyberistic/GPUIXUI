@@ -23966,3 +23966,60 @@ green.
 
 `[x]` `packages/components` + docs-site: **the Context menu's pointer opened on the first `mouseEnter` and never closed** — hovering a submenu trigger opened it instantly, so sweeping the pointer across a menu left the last submenu it crossed open, and nothing closed it afterwards: the only close was *another row's* `closeSubmenu()`, and a pointer that left the menu entirely or rested on the surface's own padding left the surface painted forever. Base UI's menu opens a submenu only after the pointer **rests 100 ms** (`MenuSubmenuTrigger`'s `delay`) and closes it after its safe-polygon grace, so a diagonal trip from the row into the second level keeps it open; its parent row closes the previous submenu, and the popup's own hover interaction closes it when the pointer leaves (`closeDelay = 0`). The runtime has no polygon (one pointer point, no trail), so the grace stands in for it. `menu/hover.ts` now names the two waits (`submenuOpenDelayMs = 100`, `menuCloseGraceMs = 80`) and carries the tree's `MenuPointer`; `MenuSub` owns one `useHoverDelays` store (the one-timer seam `internal/hover.ts` already had, so no `setTimeout`), `MenuSubTrigger` rests/opens/holds and skips a disabled row, `MenuItem` reports its row's pointer and closes the open submenu **unless it is that submenu's trigger** (`closeSubmenu(rowId)`, `claim(close, triggerId)`), and `MenuSurface` reports the surface's whole box (padding included) while the Content/MenuSubContent surfaces hold the tree intent, so leaving both closes the menu after the grace. `onOpenChange` gained Base UI's reasons (`trigger-press`, `item-press`, `escape-key`, `outside-press`, `focus-out`, `pointer-leave`) as an additive second argument, `Enter`/`Space` toggle a submenu, `ArrowRight` enters an open one, and a disabled trigger opens nothing. **The shift is the drawing's focus, not the component's layout**: measured in Chrome, opening `/docs/components/context-menu`'s workflow preview scrolled the frame **84 px** (row y 414 → 330) because `ContextSurface` called `focus()` on a surface that lay outside the 206 px clip; with `overflow: visible` it scrolled the *page* 44 px instead. The native renderer never scrolls on focus (measured: a focused element outside a scroll container's box left `getScrollOffset` unchanged), and the surface is an `anchored` layer, so a sibling keeps its y — the shift was the drawing's default focus scroll plus a surface placed outside its frame. The preview now focuses with `{ preventScroll: true }` (the cause, not an offset), places the surface through `placeSurface` inside the frame (a real menu's collision rule, so nothing is clipped), and mirrors the two waits plus the sibling/leave rules. Tests: `src/behaviour/context-menu.test.tsx` gains 11 native cases — the delay (closed at 40 ms, open after the rest), the diagonal gap, the sibling row, the same trigger, the whole-menu leave, a disabled trigger, the shift (sibling and trigger bounds unchanged), a typed prefix, disabled-row skipping, a press inside the submenu, and the reason values; the docs preview gains 4 (`placeSurface`, the two waits read out of `menu/hover.ts`, the `preventScroll` call, and the frame-relative placement). Directions measured: `submenuOpenDelayMs = 0` fails the delay case; `menuCloseGraceMs = 0` fails the diagonal case (a pointer resting in the 4 px gap closes it); removing `closeSubmenu()` from the row hover fails the sibling case; dropping the trigger id fails the same-trigger case; `closeSubmenu()` without the id fails it too; `setOpen: () => undefined` on the tree intent fails the whole-menu leave; dropping the `disabled` guard opens a disabled trigger's submenu; painting the surface in flow (`<div>` instead of `<anchored>` with `deferred`) moves the sibling 120 → 188; breaking the type-ahead's prefix accumulation and the disabled skip in `collection.ts` fail their cases; the submenu's own press guard fails the inside-press case; a wrong reason mapping fails by name; and restoring the drawing's bare `focus()` fails the docs case. Gates: components 1163 unit + **1244** behaviour cases, docs 2144, `check-types`, `oxlint`, `oxfmt`, `check:tests`, `check:exports` clean; `/docs/components/context-menu` verified in Chrome (no console errors, rows and both scroll offsets unchanged, the surface resting wholly inside the frame) and the hover route measured with real pointer events (closed at 40 ms, open at 160 ms, held in the submenu, closed by a sibling row and by leaving the menu). Docs: `docs/context-menu.mdx` §Pointer in the package, §Pointer and keyboard on the curated page, the API rows for `onOpenChange`, and the `Context menus` inventory row.
 
+
+## Overlay surfaces (plan 717, 2026-10-28)
+
+`[x]` `[██████████]` 1/1 — the five overlay reports, in the library and the
+drawings.
+
+`[x]` `packages/components` + docs-site: **the five overlay defects** — (1) the
+sheet/drawer now *slides its own span* in from the edge it names (a right `md`
+drawer starts 400px outside the window, clipped by the window-sized veil), which
+is a numeric `left`/`top` offset because the runtime has no `transform`; the
+drawing mirrors it with `translate: 100%` on the motion table's `slow` level and
+honours reduced motion. (2) the drawer is vaul-shaped: inner corners
+(`radius.xl`), the 40×4 grabber on a top/bottom sheet (decoration — no drag host,
+no snap points), the theme's `elevation.lg`, and the grabber and close control
+riding the moving box. (3) the popover's requested side was **always flipped**:
+`resolvePlacement` read the surface's painted box, which is measured before the
+anchored layer places it, so the box sat on the trigger and "covers the trigger"
+was true for every side — the rule now chooses by the **room** each side offers;
+the page gains four-side and collision drawings, and the native suite measures
+the 6px gap on all four sides and the 8px pull-back at the window edge. (4) the
+navigation menu's trigger now ends in lucide's chevron in **one fixed 12px slot**
+(`internal/flip-mark.tsx`, shared with the accordion): `chevron-down` and
+`chevron-up` stay mounted and cross-fade 2px, so opening repaints the trigger
+without resizing it or moving a sibling; the drawing uses the same two lucide
+paths and animates the panel. (5) the hover card's drawing reserves the card's
+box (it overflowed the preview's scroller) and its trigger paints as the new
+`link` look (underlined text, no fill, no edge) instead of a toggle chip. **The
+veil is one wash for every modal family**: `alpha(theme.colors.background, 0.55)`
+on `Dialog`/`Drawer` (and so the confirmation dialog, the command palette and
+`Sheet`), with an outside press still dismissing; the 6px blur is drawing-only
+because `StyleDesc` has no `filter`. Directions measured: the old overlap rule
+fails `expected [ 'top', 'bottom', 'left', 'right' ] to deeply equal [ 'bottom',
+'top', 'right', 'left' ]` and `expected 390 to be 294`; the opaque veil fails
+`washes the page behind dialog`; a 12px travel fails `expected 892 to be 1280`
+(drawer) and `expected 492 to be 800` (sheet); no chevron fails `expected
+undefined to be defined`, and a chevron mounted only while open shifts the
+trigger (`expected { … } to deeply equal { x: 40, y: 40, width: 92, height: 32 }`);
+a ghost trigger fails `expected undefined to be 'underline'`; the drawing without
+its reserved frame fails `to contain 'min-height: 176px'`, with an 8px gap fails
+`to contain '--gx-popover-gap: 6px'`'s case, and with the `⌄` caret fails `not
+to match /[⌄⌃]/`. **The drawing's sheet also had a cause beyond the CSS**: the demo focused its
+surface while the surface was still sliding in, and the browser's `focus()`
+scrolled the preview's scroller by the surface's own travel — the animation ran
+but the view followed it, so the sheet looked static. Every focus in the drawing
+now passes `{ preventScroll: true }` (the native renderer's `focusElement` never
+scrolls), guarded by `overlay-motion.test.ts`'s `takes focus without scrolling
+the moving surface into place`. Gates: components 1 165 unit + 1 295 behaviour,
+docs 2 205, `check-types`, `oxlint`, `oxfmt`, `check:tests`, `check:exports`
+clean; the drawings verified in Chrome at 1280×900 (no console errors): the sheet
+measured `y 717 → 615 → 491 → 397` over its 320 ms slide (started wholly below
+the 340px frame), the navigation bar and its three triggers kept identical bounds
+(`x 360/377/467.9/537.3`, widths `560/86.9/65.4/104.9`) while the second panel
+opened and one chevron flipped, the four popover sides measured exactly
+**6.00px** from the trigger, the collision panel read `panel x 312 · pulled back
+150px · right margin 8` (7px on screen against the frame's 1px border) and the
+hover card sat wholly inside its reserved frame with a transparent, 0px-border,
+underlined, 0-padding trigger.

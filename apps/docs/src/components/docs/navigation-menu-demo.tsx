@@ -33,6 +33,48 @@ import {
  * that placement is the approximation this page records.
  */
 
+/**
+ * The chevron the native trigger paints, in the slot it reserves.
+ *
+ * shadcn's is lucide's `ChevronDown` with a rotate transition. The runtime has
+ * no `transform`, so the component cross-fades `chevron-down` and `chevron-up`
+ * in one fixed slot (`internal/flip-mark.tsx`); the drawing does the same, which
+ * is also why the trigger cannot resize under the pointer and move its
+ * siblings — the bug the character swap (`⌄` -> `⌃`) caused.
+ */
+const NavChevron = ({ open }: { readonly open: boolean }): ReactNode => (
+  <span
+    aria-hidden="true"
+    className="gx-nav-chevron"
+    data-open={open ? "" : undefined}
+  >
+    <svg
+      className="gx-nav-chevron-mark"
+      data-mark="down"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+    <svg
+      className="gx-nav-chevron-mark"
+      data-mark="up"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  </span>
+);
+
 /** The key a roving trigger hands to the group, if it is one. */
 const rovingKey = (key: string): NavRovingKey | undefined =>
   key === "ArrowLeft" || key === "ArrowRight" || key === "Home" || key === "End"
@@ -155,9 +197,7 @@ export const NavigationMenuDemo = (): ReactNode => {
                     type="button"
                   >
                     {item.label}
-                    <span aria-hidden="true" className="gx-nav-caret">
-                      {expanded ? "⌃" : "⌄"}
-                    </span>
+                    <NavChevron open={expanded} />
                   </button>
                   {expanded ? (
                     <div
@@ -270,9 +310,7 @@ const NavTile = ({
                 type="button"
               >
                 {item.label}
-                <span aria-hidden="true" className="gx-nav-caret">
-                  {expanded ? "⌃" : "⌄"}
-                </span>
+                <NavChevron open={expanded} />
               </button>
               {expanded ? (
                 <div

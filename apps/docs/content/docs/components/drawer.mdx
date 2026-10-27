@@ -62,6 +62,28 @@ visible way out of the surface. The Tab trap, Escape and an outside press read
 that same box
 (`packages/components/src/behaviour/drawer.test.tsx` holds the scroll case).
 
+## Surface and motion
+
+The shipped surface is vaul's drawer, not a docked column: the corners **inside**
+the window are rounded (`radius.xl`) while the edge it opens from stays flush,
+the recipe's `lg` lift is the theme's own, and a `top` or `bottom` sheet wears the
+**grabber** — the 40×4 handle at its inner edge, painted by default and removed
+with `grabber={false}`. The grabber is decoration: the runtime has no drag host,
+so nothing follows the pointer and there are no snap points.
+
+The panel **slides its own span** in from the edge it names — a right `md` drawer
+starts 400px outside the window — and the veil clips it while it travels. The
+runtime has no `transform`, so the movement is a numeric `left`/`top` offset on
+the surface's box; the content keeps its layout because the box moves, not the
+flow. It runs on the `slow` level (320 ms), and the grabber and close control
+ride the same box. `MotionProvider preference="reduced"` paints the settled
+frame at once.
+
+The veil is the page's own background at **55%** — a wash, so the page stays
+legible under the surface. The 6px blur shadcn's veil carries is **drawing-only**:
+`StyleDesc` has no `filter`/`backdrop-filter`, so the native veil cannot blur
+what is behind it.
+
 ## API reference
 
 ### `Drawer`
@@ -79,9 +101,10 @@ that same box
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` (required) | none | the dialog's accessible name |
-| `side` | `"left" \| "right" \| "bottom"` | `"right"` | the edge the surface is anchored to; a stored name the union does not carry opens on the default `"right"` edge |
+| `side` | `"left" \| "right" \| "top" \| "bottom"` | `"right"` | the edge the surface is anchored to; a stored name the union does not carry opens on the default `"right"` edge |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | the requested width or height, clamped by the window; a stored name the union does not carry paints the house `"md"` box |
 | `showClose` | `boolean` | `true` | renders the close control, a `@gpuixui/icons` `x` named "Close drawer" |
+| `grabber` | `boolean` | `true` | paints the vaul handle on a `top` or `bottom` sheet; a column never shows one |
 | `initialFocus` | `() => number \| null` | none | the native id to focus after the surface receives focus |
 | `className` | `string` | none | compiled through `@gpuixui/tw` and joined after the recipe |
 | `children` | parts | none | the header, title, description, body and footer |
@@ -103,7 +126,8 @@ that same box
   stop. A control you compose inside the body keeps its stop until the runtime
   publishes an inherited `inert`.
 - **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0`, and no
-  swipe-to-dismiss: the runtime publishes no drag host. A `side` restored from
-  storage that the union does not name opens on the house `right` edge — the
-  box, the layout and the entry travel read the one edge — and a `size` it does
-  not name paints the house `md` box instead of an unmeasured one.
+  swipe-to-dismiss or snap points: the runtime publishes no drag host, so the
+  grabber cannot be dragged. The slide is a numeric `left`/`top` offset rather
+  than a `transform`, and the veil cannot blur the page (no `filter`). A `side`
+  restored from storage that the union does not name opens on the house `right`
+  edge, and a `size` it does not name paints the house `md` box.

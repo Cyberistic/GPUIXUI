@@ -27,6 +27,23 @@ import {
 </Popover>;
 ```
 
+## Sides
+
+<ComponentPreview name="popover-sides" />
+
+`side` names the edge the surface opens on and `sideOffset` the gap to the
+trigger (6px by default): `top`, `right`, `bottom` (the default) or `left`. The
+requested side is kept unless it has **no room at all** for the surface; then it
+flips to the opposite side, and the roomier one wins when neither fits.
+
+## Collision
+
+<ComponentPreview name="popover-collision" />
+
+A surface that overhangs the window keeps its side and slides back by
+`collisionPadding` (8px); the trigger does not move, and no sibling does either —
+the surface is an anchored layer, out of the layout flow.
+
 ## Composition
 
 ```text
@@ -69,7 +86,13 @@ Popover
 
 - `aria-expanded` is on the trigger.
 - **No `aria-haspopup`, `aria-controls` or `aria-labelledby`** in `@gpuix/native@0.11.0`; the link between trigger and surface is positional, not semantic.
-- Positioning is the runtime's anchored layer: no arrow, no custom anchor element, no backdrop.
+- Positioning is the runtime's anchored layer: no arrow, no custom anchor element and no backdrop — a popover is non-modal, so it paints no veil and does not blur the page. It measures its **containing block** (the popover's positioning root), so a `left`/`right` popover belongs in a shrink-to-fit container: in a block that stretches its children the root is wider than the trigger.
+
+## Motion
+
+The panel fades and travels 8px out from the side it opens on, on the `normal`
+level (200 ms); `MotionProvider preference="reduced"` paints the resting frame at
+once. A leaving panel stays painted for its exit and takes no presses.
 
 ## Theming
 
