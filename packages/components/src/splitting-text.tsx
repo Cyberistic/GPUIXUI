@@ -13,6 +13,10 @@
  * A unit's key is its position and its text, so a parent re-render replays
  * nothing and a changed word replays that word. Redraw the whole phrase by
  * changing its identity: `<SplittingText key={step} text={phrase} />`.
+ *
+ * The split itself is `splitting-text/store.ts`: the phrase, the mode and the
+ * stagger are props, and a change is a write into an Effect `SubscriptionRef`
+ * rather than a split recomputed on every render.
  */
 
 import type { Props } from "@gpuix/react";
@@ -23,17 +27,15 @@ import {
 } from "@gpuix/react/floating";
 import type { StaggerFrom } from "@gpuixui/motion/timeline";
 import { cn } from "@gpuixui/tw";
-import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { useEffect } from "react";
+import { useOwnedStore, useStoreSnapshot } from "./internal/effect-store.js";
 import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
-import {
-  offsetOf,
-  splitUnits,
-  type SplitMode,
-} from "./splitting-text/logic.js";
+import { offsetOf, type SplitMode } from "./splitting-text/logic.js";
+import { makeSplittingStore } from "./splitting-text/store.js";
 
 /** What a splitting reveal draws at one frame. */
 export interface SplittingTextState {
@@ -89,12 +91,22 @@ export const SplittingText = ({
   const timing = useSurfaceTiming("normal");
   /** The phrase a saved layout may have lost; JSON writes `null` for it. */
   const phrase = textOf(text);
-  const lines = splitUnits(phrase, { mode: split, stepMs, from });
+  const store = useOwnedStore(() =>
+    makeSplittingStore({ text: phrase, split, stepMs, from }),
+  );
+  const reveal = useStoreSnapshot(store);
+
+  // The phrase and the split it needs are props, so a change is forwarded to
+  // the store; the reveal's keys stay put while none of them moves.
+  useEffect(() => {
+    store.show({ text: phrase, split, stepMs, from });
+  }, [store, phrase, split, stepMs, from]);
+
   const rise = offsetOf(Option.fromNullishOr(offset));
   const metrics = textStyle(theme, role);
   const state: SplittingTextState = {
-    text: phrase,
-    units: Arr.reduce(lines, 0, (count, line) => count + line.units.length),
+    text: reveal.text,
+    units: reveal.units,
     reducedMotion: timing.enter.duration === 0,
   };
 
@@ -109,7 +121,7 @@ export const SplittingText = ({
         resolveStyle(style, state),
       )}
     >
-      {lines.map((line) => (
+      {reveal.lines.map((line) => (
         <div
           key={line.key}
           style={{

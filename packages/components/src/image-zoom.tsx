@@ -19,6 +19,10 @@
  * `MotionProvider preference="reduced"` the magnification still happens — it is
  * the component's content — but the tween is gone, so the picture is already at
  * its new box in the frame the pointer moved.
+ *
+ * What the reader did — the pointer — is `image-zoom/store.ts`; the frame it is
+ * read against is measurement (`internal/surface-box.tsx`), and this file paints
+ * the snapshot.
  */
 
 import type { EventPayload, Props } from "@gpuix/react";
@@ -30,14 +34,14 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useState } from "react";
 import {
   zoomFollow,
   zoomFrames,
   zoomGeometry,
   zoomRest,
-  type ZoomPointer,
 } from "./image-zoom/logic.js";
+import { makeZoomStore } from "./image-zoom/store.js";
+import { useOwnedStore, useStoreSnapshot } from "./internal/effect-store.js";
 import { measuredPoint } from "./internal/measure.js";
 import { nameOf } from "./internal/text.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
@@ -130,9 +134,8 @@ export const ImageZoom = ({
     height: Option.fromNullishOr(height),
     scale: Option.fromNullishOr(scale),
   });
-  const [pointer, setPointer] = useState<Option.Option<ZoomPointer>>(
-    Option.none(),
-  );
+  const store = useOwnedStore(() => makeZoomStore());
+  const pointer = useStoreSnapshot(store);
   const surface = useSurfaceBox();
 
   const box = Option.match(Option.all({ pointer, surface: surface.box }), {
@@ -150,24 +153,13 @@ export const ImageZoom = ({
     surface.read();
     Option.match(measuredPoint(event), {
       onNone: () => undefined,
-      // A held pointer emits a move per frame; a repeat of the same point is a
-      // frame the runtime would paint identically, so it is not a state change.
-      onSome: (point) =>
-        setPointer((current) =>
-          Option.match(current, {
-            onNone: () => Option.some(point),
-            onSome: (previous) =>
-              previous.x === point.x && previous.y === point.y
-                ? current
-                : Option.some(point),
-          }),
-        ),
+      onSome: store.follow,
     });
   };
 
   const leave = (event: EventPayload) => {
     onMouseLeave?.(event);
-    setPointer(Option.none());
+    store.leave();
   };
 
   const corner = cornerOf(Option.fromNullishOr(radius), theme);

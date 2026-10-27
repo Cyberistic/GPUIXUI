@@ -12,6 +12,10 @@
  * Only one value is ever mounted. Keeping both halves in the tree at once would
  * put the outgoing value in the accessibility tree beside the incoming one, and
  * `0.11.0` has no `aria-hidden` to take it back out.
+ *
+ * The swap's state and its exit window live in `rolling-text/store.ts`: a value
+ * change is a write into an Effect `SubscriptionRef`, the window is one
+ * `Effect.sleep` owned by the store, and this file paints the snapshot.
  */
 
 import type { MotionProps, Props } from "@gpuix/react";
@@ -23,17 +27,12 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { rollFrames, type RollDirection } from "./rolling-text/logic.js";
+import { makeRollingStore } from "./rolling-text/store.js";
+import { useOwnedStore, useStoreSnapshot } from "./internal/effect-store.js";
 import { useMotionPreference } from "./internal/presence.js";
-import {
-  initialSwap,
-  requestSwap,
-  restSwap,
-  settleSwap,
-  swapHalves,
-  type SwapPhase,
-} from "./internal/text-swap.js";
+import { swapHalves, type SwapPhase } from "./internal/text-swap.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
@@ -87,24 +86,17 @@ export const RollingText = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = swapHalves(level, preference);
+  const reduced = preference === "reduced";
   /** The value a saved record may have lost; JSON writes `null` for it. */
   const value = textOf(text);
-  const [roll, setRoll] = useState(() => initialSwap(value));
+  const store = useOwnedStore(() => makeRollingStore(value));
+  const roll = useStoreSnapshot(store);
 
+  // The value is a prop, so a change is forwarded to the store rather than kept
+  // in React; the store decides whether it starts an exit.
   useEffect(() => {
-    setRoll((current) => requestSwap(current, value, preference === "reduced"));
-  }, [value, preference]);
-
-  useEffect(() => {
-    if (roll.phase !== "leaving") return;
-    // The window belongs to the exit that started, not to the value replaced
-    // while it runs: a timer re-armed on `pending` let a value changing faster
-    // than one swap push the swap back forever, and the clip stayed empty after
-    // the outgoing value had left it. `settleSwap` reads the newest pending
-    // value when it fires.
-    const handle = setTimeout(() => setRoll(settleSwap), timing.swapMs);
-    return () => clearTimeout(handle);
-  }, [roll.phase, timing.swapMs]);
+    store.show(value, { reduced, swapMs: timing.swapMs });
+  }, [store, value, reduced, timing.swapMs]);
 
   const metrics = textStyle(theme, role);
   const frames = rollFrames(direction, metrics.lineHeight);
@@ -165,7 +157,7 @@ export const RollingText = ({
         // The entry's own completion is what ends the swap: the runtime's
         // motion clock is the one the journey runs on, so the phase cannot
         // settle on a wall-clock window the software paint might outrun.
-        onMotionComplete={() => setRoll(restSwap)}
+        onMotionComplete={() => store.entered()}
         style={{
           position: "relative",
           ...metrics,
