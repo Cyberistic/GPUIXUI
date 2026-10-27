@@ -22,9 +22,9 @@ describe("the preview font", () => {
     expect(previewFontStack(platformTheme(themes.dark, "win32"), "win32")).toBe(
       platformFontStack("win32"),
     );
-    expect(previewFontStack(platformTheme(themes.dark, "darwin"), "darwin")).not.toBe(
-      platformFontStack("win32"),
-    );
+    expect(
+      previewFontStack(platformTheme(themes.dark, "darwin"), "darwin"),
+    ).not.toBe(platformFontStack("win32"));
   });
 
   it("leaves an authored family alone", () => {

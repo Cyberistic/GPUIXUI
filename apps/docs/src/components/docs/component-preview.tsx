@@ -21,7 +21,6 @@ export function ComponentPreview({ name }: { name: string }) {
     throw new Error(`ComponentPreview: no demo named "${name}"`);
   }
 
-
   return (
     <div className="gx-component not-prose">
       <Tabs defaultValue="preview" className="gx-component-tabs">

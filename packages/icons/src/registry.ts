@@ -189,7 +189,10 @@ const turned = new Map<string, IconMarkup>();
  * finite angle is passed through, and a non-finite one (a measured value that
  * never arrived) reads as no turn rather than painting nothing.
  */
-export const rotatedIconMarkup = (name: unknown, degrees: number): IconMarkup => {
+export const rotatedIconMarkup = (
+  name: unknown,
+  degrees: number,
+): IconMarkup => {
   const turn = Number.isFinite(degrees) ? ((degrees % 360) + 360) % 360 : 0;
   if (turn === 0) return iconMarkup(name);
 

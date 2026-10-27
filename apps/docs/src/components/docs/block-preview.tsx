@@ -29,7 +29,6 @@ export function BlockPreview({ name }: { name: string }) {
     throw new Error(`BlockPreview: no block named "${name}"`);
   }
 
-
   return (
     <div className="gx-component not-prose">
       <Tabs defaultValue="preview" className="gx-component-tabs">

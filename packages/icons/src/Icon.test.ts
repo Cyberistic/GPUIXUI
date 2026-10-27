@@ -56,7 +56,8 @@ describe("Icon", () => {
 
   it("normalises the turn and ignores a value that never arrived", () => {
     expect(
-      render({ name: "arrow-up", color: "#123456", rotation: -90 }).props.source,
+      render({ name: "arrow-up", color: "#123456", rotation: -90 }).props
+        .source,
     ).toBe(rotatedIconMarkup("arrow-up", 270));
     expect(
       render({
@@ -66,20 +67,23 @@ describe("Icon", () => {
       }).props.source,
     ).toBe(iconMarkup("arrow-up"));
     expect(
-      render({ name: "arrow-up", color: "#123456", rotation: 360 }).props.source,
+      render({ name: "arrow-up", color: "#123456", rotation: 360 }).props
+        .source,
     ).toBe(iconMarkup("arrow-up"));
   });
 
   it("turns the fallback mark rather than painting an unturned unknown", () => {
     expect(rotatedIconMarkup("not-an-icon", 180)).toContain(
-      'rotate(180 12 12)',
+      "rotate(180 12 12)",
     );
     const fallback = iconMarkup("not-an-icon");
     const geometry = fallback.slice(
       fallback.indexOf(">") + 1,
       fallback.lastIndexOf("</svg>"),
     );
-    expect(rotatedIconMarkup("not-an-icon", 180)).toContain('rotate(180 12 12)');
+    expect(rotatedIconMarkup("not-an-icon", 180)).toContain(
+      "rotate(180 12 12)",
+    );
     expect(rotatedIconMarkup("not-an-icon", 180)).toContain(geometry);
   });
 

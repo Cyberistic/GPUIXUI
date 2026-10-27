@@ -35,9 +35,9 @@ export const platformFontStack = (platform: PlatformName): string =>
 const PLATFORM_FONT_STACKS: Readonly<Record<PlatformName, string>> = {
   darwin:
     '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-  linux:
-    'Ubuntu, Cantarell, "DejaVu Sans", "Noto Sans", system-ui, sans-serif',
-  win32: '"Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif',
+  linux: 'Ubuntu, Cantarell, "DejaVu Sans", "Noto Sans", system-ui, sans-serif',
+  win32:
+    '"Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif',
   default: SYSTEM_FONT_STACK,
 };
 
