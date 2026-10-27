@@ -17,6 +17,8 @@
  */
 
 import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
 import { paintable, seededUnit, tenth } from "../internal/scatter.js";
 
 /** The house number of stars. */
@@ -278,3 +280,43 @@ export const gravityRest = (
   top: star.midY,
   opacity: star.peak,
 });
+
+/** How far one star is through its fall: brightening in, or plunging into the well. */
+export interface GravityLife {
+  /** How many falls the star has completed; a new lap mounts it fresh on the edge. */
+  readonly lap: number;
+  /** Whether it is on the plunge rather than the approach. */
+  readonly landing: boolean;
+}
+
+/** A star that has not completed a leg yet. */
+export const gravityBorn: GravityLife = { lap: 0, landing: false };
+
+/** The life a star is on; `gravityBorn` until its own tween reports a leg. */
+export const gravityLifeOf = (
+  lives: HashMap.HashMap<string, GravityLife>,
+  key: string,
+): GravityLife => Option.getOrElse(HashMap.get(lives, key), () => gravityBorn);
+
+/**
+ * The life after one leg completes: the approach hands over to the plunge, and a
+ * completed plunge reborns the star on the edge as the next lap.
+ */
+export const gravityAdvanced = (life: GravityLife): GravityLife =>
+  life.landing
+    ? { lap: life.lap + 1, landing: false }
+    : { lap: life.lap, landing: true };
+
+/** Whether two readings name the same box, so a repeated report changes nothing. */
+export const gravitySameBox = (
+  a: Option.Option<GravityBox>,
+  b: Option.Option<GravityBox>,
+): boolean =>
+  Option.match(a, {
+    onNone: () => Option.isNone(b),
+    onSome: (held) =>
+      Option.exists(
+        b,
+        (next) => held.width === next.width && held.height === next.height,
+      ),
+  });
