@@ -42,6 +42,15 @@ export const CHART_HEIGHT = 160;
 export const CHART_AXIS = 40;
 export const CHART_LABEL_ROW = 24;
 
+/**
+ * The space above the plot's top edge.
+ *
+ * The ceiling's own tick sits on the plot's top line, and an `<svg>` clips what
+ * it paints outside its viewBox: without this headroom the label the axis is
+ * read against lost its upper half.
+ */
+export const CHART_TOP_ROOM = 8;
+
 /** The plot box the package lays out for these sides. */
 export const chartPlot: ChartBox = chartBox(CHART_WIDTH, CHART_HEIGHT, {
   width: 320,
@@ -102,8 +111,8 @@ export function ChartDemoBody({
         aria-label="Revenue against cost by quarter"
         className="gx-chart-plot"
         role="img"
-        viewBox={`0 0 ${CHART_WIDTH + CHART_AXIS} ${
-          CHART_HEIGHT + CHART_LABEL_ROW
+        viewBox={`0 ${-CHART_TOP_ROOM} ${CHART_WIDTH + CHART_AXIS} ${
+          CHART_HEIGHT + CHART_TOP_ROOM + CHART_LABEL_ROW
         }`}
       >
         <g transform={`translate(${CHART_AXIS} 0)`}>

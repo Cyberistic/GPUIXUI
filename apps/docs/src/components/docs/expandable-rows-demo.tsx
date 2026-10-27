@@ -134,10 +134,9 @@ export function ExpandableRowsDemo() {
         <div className="gx-er-head" role="rowgroup">
           <div className="gx-er-headrow" role="row">
             <span
-              aria-label="Expanded"
               aria-hidden="true"
               className="gx-er-track"
-              role="columnheader"
+              role="presentation"
               style={{ width: DEFAULT_EXPANDER_WIDTH }}
             />
             <span className="gx-er-cell gx-er-name" role="columnheader">

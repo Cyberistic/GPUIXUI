@@ -165,4 +165,16 @@ describe("the filtering controls preview", () => {
     );
     expect(markup).toContain("reports");
   });
+
+  it("narrows on the field's own edit and reports the rows it keeps", () => {
+    // Guarded report: the drawing's input and its row count were suspected
+    // dead. The field owns no query, so the drawing holds it and the readout
+    // counts what the query kept.
+    const source = read("apps/docs/src/components/docs/table-filter-demo.tsx");
+
+    expect(source).toContain(
+      "onChange={(event) => setQuery(event.target.value)}",
+    );
+    expect(source).toContain("{rows.length} of {FILTER_ROWS.length} rows");
+  });
 });

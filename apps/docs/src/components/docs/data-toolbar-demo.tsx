@@ -178,9 +178,6 @@ export function DataToolbarDemo() {
         >
           Reset
         </button>
-        <button className="gx-btn gx-btn-sm gx-btn-ghost" type="button">
-          Columns
-        </button>
       </div>
       <ul aria-label="Matching records" className="gx-toolbar-rows">
         {rows.map((row) => (

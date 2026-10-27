@@ -24,6 +24,7 @@ import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import { useState, type KeyboardEvent } from "react";
 import { treeKeyOf } from "./tree-keys";
+import { viewReadout } from "./window-preview";
 
 /**
  * Browser previews for the two tree pages.
@@ -183,24 +184,32 @@ function RowContent({
 }) {
   return (
     <>
-      <button
-        aria-label={
-          row.expanded
-            ? `Collapse ${dependencyLabel(row.node)}`
-            : `Expand ${dependencyLabel(row.node)}`
-        }
-        className="gx-tree-chevron"
-        data-branch={row.hasChildren ? "true" : "false"}
-        disabled={!row.hasChildren}
-        onClick={(event) => {
-          event.stopPropagation();
-          onFlip();
-        }}
-        tabIndex={-1}
-        type="button"
-      >
-        {row.expanded ? "▾" : "▸"}
-      </button>
+      {row.hasChildren ? (
+        <button
+          aria-label={
+            row.expanded
+              ? `Collapse ${dependencyLabel(row.node)}`
+              : `Expand ${dependencyLabel(row.node)}`
+          }
+          className="gx-tree-chevron"
+          onClick={(event) => {
+            event.stopPropagation();
+            onFlip();
+          }}
+          tabIndex={-1}
+          type="button"
+        >
+          {row.expanded ? "▾" : "▸"}
+        </button>
+      ) : (
+        // A leaf keeps the chevron's track so its label lines up with a branch's,
+        // and paints no control: the package's own row has nothing to flip.
+        <span
+          aria-hidden="true"
+          className="gx-tree-chevron"
+          data-branch="false"
+        />
+      )}
       <span className="gx-tree-name">
         {treeName(dependencyLabel(row.node), row.key)}
       </span>
@@ -356,8 +365,8 @@ export const treeMountedRows = (
     treeOffset(count, offset),
   );
 
-/** The rows in view, `start` inclusive and `end` exclusive. */
-export const treeVisibleRows = (
+/** The mounted window, `start` inclusive and `end` exclusive. */
+export const treeMountedWindow = (
   count: number,
   offset: number,
 ): { start: number; end: number } =>
@@ -407,12 +416,12 @@ export const cursorAfterScroll = (
 };
 
 /** What the drawing reports about its window. */
-export const treeWindowReadout = (count: number, offset: number): string => {
-  const window = treeVisibleRows(count, offset);
-  return `${String(window.start + 1)}–${String(window.end)} of ${String(
-    count,
-  )} · ${String(treeMountedRows(count, offset).length)} mounted`;
-};
+export const treeWindowReadout = (count: number, offset: number): string =>
+  viewReadout(
+    virtualTreeSpecFor(count),
+    offset,
+    treeMountedRows(count, offset).length,
+  );
 
 /** A row's element id in the virtual tree's window. */
 export const windowRowId = (key: string): string =>

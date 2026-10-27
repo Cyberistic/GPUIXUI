@@ -25,6 +25,7 @@ import {
 } from "@gpuixui/data/surfaces/logic";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
@@ -40,6 +41,7 @@ import {
   COLUMN_DEFS,
   COLUMN_FILES,
   ColumnConfigurationDemo,
+  canHide,
   keyedWidth,
   movedColumn,
   openingColumns,
@@ -49,9 +51,10 @@ import {
 import {
   CHART_AXIS,
   CHART_HEIGHT,
-  CHART_LABELS,
   CHART_LABEL_ROW,
+  CHART_LABELS,
   CHART_SERIES,
+  CHART_TOP_ROOM,
   CHART_WIDTH,
   ChartDemoBody,
   chartBarGroups,
@@ -68,13 +71,14 @@ import {
   VIRTUAL_VIEWPORT,
   VirtualizationDemo,
   mountedRows,
+  mountedWindow,
   revealOffset,
   virtualMaxOffset,
   virtualOffset,
   virtualSpec,
-  visibleRows,
   windowReadout,
 } from "./virtualization-demo";
+import { rowsInView } from "./window-preview";
 
 /**
  * The data lane's new previews.
@@ -85,10 +89,21 @@ import {
  * cases read each drawing against the logic the component ships: the query the
  * page evaluates, the window the package calculates and the column reducers the
  * menu, the order and the divider call.
+ *
+ * Guarded bugs: the Virtualization drawing called every **mounted** row "in
+ * view" (the overdraw above the top edge is clipped, so the scene claimed rows
+ * nobody could see), the Charts viewBox cut the ceiling tick in half, and the
+ * column menu left the last visible column's toggle enabled, so a press claimed
+ * a change the reducer refuses.
  */
 
 const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
+
+const root = new URL("../../../../../", import.meta.url);
+
+const read = (path: string): string =>
+  readFileSync(new URL(path, root), "utf8");
 
 const ids = (
   rows: ReadonlyArray<{ readonly id: string }>,
@@ -179,7 +194,7 @@ describe("the Virtualization preview", () => {
 
     Arr.forEach([0, 400, 12_000, virtualMaxOffset], (offset) => {
       expect(mountedRows(offset)).toEqual(calculator.indicesAt(offset));
-      expect(visibleRows(offset)).toEqual(calculator.at(offset));
+      expect(mountedWindow(offset)).toEqual(calculator.at(offset));
     });
 
     // Only a window exists: the mounted set is wider than the viewport, and it
@@ -192,7 +207,28 @@ describe("the Virtualization preview", () => {
     expect(mounted.length).toBeGreaterThan(
       Math.ceil(VIRTUAL_VIEWPORT / VIRTUAL_ROW_HEIGHT),
     );
-    expect(visibleRows(4_000).start).toBe(firstVisible - VIRTUAL_OVERDRAW);
+    expect(mountedWindow(4_000).start).toBe(firstVisible - VIRTUAL_OVERDRAW);
+    // The view starts at the top edge; the mounted window reaches past it.
+    expect(rowsInView(virtualSpec, 4_000)).toEqual({
+      start: firstVisible,
+      end: firstVisible + Math.ceil(VIRTUAL_VIEWPORT / VIRTUAL_ROW_HEIGHT),
+    });
+  });
+
+  it("labels only the rows the viewport shows as in view", () => {
+    // The bug guarded: the drawing called every mounted row "in view", so the
+    // overdraw above the top edge — rows a reader cannot see — claimed to be on
+    // screen. The scene now reads the viewport's own range.
+    expect(rowsInView(virtualSpec, 0)).toEqual({
+      start: 0,
+      end: Math.ceil(VIRTUAL_VIEWPORT / VIRTUAL_ROW_HEIGHT),
+    });
+    const html = markup(<VirtualizationDemo />);
+    const overdraw = mountedRows(0).length - rowsInView(virtualSpec, 0).end;
+    expect(html.match(/>overdraw</g) ?? []).toHaveLength(overdraw);
+    expect(html.match(/>in view</g) ?? []).toHaveLength(
+      rowsInView(virtualSpec, 0).end,
+    );
   });
 
   it("clamps an offset past the rows it holds", () => {
@@ -205,7 +241,7 @@ describe("the Virtualization preview", () => {
 
   it("reveals a row by moving the window to it", () => {
     expect(revealOffset(499)).toBe(rowIndex(499) * VIRTUAL_ROW_HEIGHT);
-    const window = visibleRows(revealOffset(499));
+    const window = mountedWindow(revealOffset(499));
     expect(499).toBeGreaterThanOrEqual(window.start);
     expect(499).toBeLessThan(window.end);
   });
@@ -294,6 +330,31 @@ describe("the Column configuration preview", () => {
     }
     expect(html).toContain("no hidden columns");
   });
+
+  it("disables the last column's toggle instead of refusing its press", () => {
+    // Guarded bug: with one column left, the menu's toggle still claimed a
+    // change (`aria-pressed` true) and the press did nothing. The package
+    // disables that row (`column.visible && !canHide`), and a hidden column has
+    // no move arrows at all — the menu only paints moves for visible tracks.
+    const oneLeft = Arr.reduce(
+      ["status", "size", "updated"],
+      opening,
+      (state, id) => toggledColumn(state, id),
+    );
+    const source = read(
+      "apps/docs/src/components/docs/column-configuration-demo.tsx",
+    );
+
+    expect(canHide(opening)).toBe(true);
+    expect(canHide(oneLeft)).toBe(false);
+    expect(source).toContain("disabled={column.visible && !canHide(state)}");
+    expect(source).toContain("{shown < 0 ? null : (");
+    expect(source).toContain("disabled={shown === 0}");
+    expect(source).toContain("disabled={shown === columns.length - 1}");
+    // The menu the snippet passes `onReset` to offers the reset it names.
+    expect(source).toContain("Reset columns");
+    expect(source).toContain("setState(openingColumns())");
+  });
 });
 
 describe("the Charts preview", () => {
@@ -365,8 +426,14 @@ describe("the Charts preview", () => {
   it("prints the axis its own ticks read as", () => {
     const step = chartCeiling / 4;
     expect(bars).toContain(
-      `viewBox="0 0 ${CHART_WIDTH + CHART_AXIS} ${CHART_HEIGHT + CHART_LABEL_ROW}"`,
+      `viewBox="0 ${-CHART_TOP_ROOM} ${CHART_WIDTH + CHART_AXIS} ${
+        CHART_HEIGHT + CHART_TOP_ROOM + CHART_LABEL_ROW
+      }"`,
     );
+    // The ceiling's tick sits on the plot's top line, so the viewBox has to
+    // start above it: at `0` the label lost its upper half to the clip.
+    expect(chartTicks).toContain(chartCeiling);
+    expect(bars).toContain(`y="3"`);
     Arr.forEach(chartTicks, (tick) => {
       expect(bars).toContain(`>${tickLabel(tick, step)}</text>`);
     });

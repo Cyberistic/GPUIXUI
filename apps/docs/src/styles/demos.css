@@ -5946,6 +5946,22 @@
   background: var(--hover);
 }
 
+.gx-table-columns-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.gx-table-columns-item:disabled:hover {
+  background: transparent;
+}
+
+.gx-cols-reset {
+  margin-top: 4px;
+  border-top: 1px solid var(--divider-card);
+  border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
+  color: var(--muted-foreground);
+}
+
 .gx-table-columns-check {
   width: 14px;
   flex: none;
@@ -6446,10 +6462,6 @@
 .gx-cols-move:disabled {
   opacity: 0.4;
   cursor: default;
-}
-
-.gx-cols-order {
-  padding: 6px 8px 2px;
 }
 
 .gx-cols-head {
