@@ -39,6 +39,11 @@ export interface SheenStore {
   readonly enter: (inert: boolean, windowMs: number) => Effect.Effect<void>;
   /** Drop the band and its timer, e.g. when the control becomes inert. */
   readonly clear: Effect.Effect<void>;
+  /**
+   * Retime the sweep already running, for a `level` that changed under it: the
+   * window a journey is drawn in is that journey's, so the new one starts over.
+   */
+  readonly retime: (windowMs: number) => Effect.Effect<void>;
 }
 
 /** The store a mounted action shines through. */
@@ -83,6 +88,12 @@ export const makeSheenStore: Effect.Effect<SheenStore> = Effect.gen(
       yield* end;
     });
 
-    return { local, measure, enter, clear };
+    const retime = Effect.fnUntraced(function* (windowMs: number) {
+      const current = yield* SubscriptionRef.get(local.state);
+      if (!current.sweeping) return;
+      yield* local.after(windowMs, end);
+    });
+
+    return { local, measure, enter, clear, retime };
   },
 );

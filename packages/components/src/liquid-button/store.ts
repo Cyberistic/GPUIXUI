@@ -58,6 +58,11 @@ export interface LiquidStore {
   ) => Effect.Effect<void>;
   /** Drop the flood and its drain, e.g. when the control becomes inert. */
   readonly clear: Effect.Effect<void>;
+  /**
+   * Retime the drain already running, for a `level` that changed under it: the
+   * window a journey is drawn in is that journey's, so the new one starts over.
+   */
+  readonly retime: (windowMs: number) => Effect.Effect<void>;
 }
 
 /** The store a mounted control floods through. */
@@ -155,6 +160,12 @@ export const makeLiquidStore: Effect.Effect<LiquidStore> = Effect.gen(
       yield* dropFlood;
     });
 
-    return { local, measure, move, leave, clear };
+    const retime = Effect.fnUntraced(function* (windowMs: number) {
+      const current = yield* SubscriptionRef.get(local.state);
+      if (!Option.exists(current.flood, (flood) => !flood.filled)) return;
+      yield* local.after(windowMs, dropFlood);
+    });
+
+    return { local, measure, move, leave, clear, retime };
   },
 );
