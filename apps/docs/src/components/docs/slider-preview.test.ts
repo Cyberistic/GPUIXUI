@@ -35,10 +35,12 @@ describe("a range drag", () => {
   });
 
   it("opens a coincident pair around the press, in either direction", () => {
-    expect(dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 70, RANGE))
-      .toStrictEqual({ start: 50, end: 70 });
-    expect(dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 20, RANGE))
-      .toStrictEqual({ start: 20, end: 50 });
+    expect(
+      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 70, RANGE),
+    ).toStrictEqual({ start: 50, end: 70 });
+    expect(
+      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 20, RANGE),
+    ).toStrictEqual({ start: 20, end: 50 });
   });
 
   it("holds a press that does not move", () => {
@@ -57,7 +59,7 @@ describe("the slider drawings", () => {
       const source = read(demo);
       expect(source).toContain("pointerValue");
       expect(source).toContain("decideValueKey");
-      expect(source).toContain("from \"@gpuixui/primitives/core\"");
+      expect(source).toContain('from "@gpuixui/primitives/core"');
     }
   });
 

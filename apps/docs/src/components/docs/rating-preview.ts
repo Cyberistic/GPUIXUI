@@ -24,9 +24,4 @@ export const rateAt = (
   box: StarBox | null | undefined,
   half = false,
 ): number =>
-  pointerRating(
-    star,
-    Option.fromNullishOr(x),
-    Option.fromNullishOr(box),
-    half,
-  );
+  pointerRating(star, Option.fromNullishOr(x), Option.fromNullishOr(box), half);

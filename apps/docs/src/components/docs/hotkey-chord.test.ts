@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { acceleratorOf, chordOf, glyphsOf, type BrowserChord } from "./hotkey-chord";
+import {
+  acceleratorOf,
+  chordOf,
+  glyphsOf,
+  type BrowserChord,
+} from "./hotkey-chord";
 
 /**
  * The recorder reads the physical key and every modifier around it.

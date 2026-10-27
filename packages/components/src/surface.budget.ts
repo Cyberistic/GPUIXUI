@@ -147,7 +147,6 @@ export const surfaceBudget = {
   // the root surface and every submenu surface hold, so a diagonal trip into a
   // submenu is one gesture and leaving both closes the menu. The waits
   // themselves are `internal/hover.ts`'s, which the graph already carried.
-  
 
   // 203 → 204 for Spinner (`spinner.tsx`), the shadcn-shaped surface over the
   // primitives' three-dot mark; `Button`'s busy state now paints the same mark
@@ -220,7 +219,10 @@ export const surfaceBudget = {
   // (1 371 KiB measured) — so the ceiling moved 1260 → 1400 KiB for the next
   // family's headroom. 1 407 KiB measured with AspectRatio, HoverCard,
   // InputGroup and Item, so the ceiling moved 1400 → 1450 KiB.
-  bytes: 1450 * 1024,
+  // 1 452 KiB measured with the chat family's Bubble/Message/MessageScroller
+  // rebuild and the Spinner `Button` now paints while busy — two families in
+  // one tree, which the 1450 ceiling no longer held: 1450 → 1470 KiB.
+  bytes: 1470 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

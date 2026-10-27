@@ -10,10 +10,7 @@
  * `glyphsOf`, which is the component's own `formatSymbols`.
  */
 
-import {
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import * as Option from "effect/Option";
 import { chordOf, glyphsOf } from "./hotkey-chord";
 
@@ -134,7 +131,11 @@ export function HotkeyRecorderDemo() {
             tabIndex={0}
           >
             <Keys chord={BOUND} />
-            <button aria-label="Clear shortcut" className="gx-hotkey-clear" type="button">
+            <button
+              aria-label="Clear shortcut"
+              className="gx-hotkey-clear"
+              type="button"
+            >
               ✕
             </button>
           </div>

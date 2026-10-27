@@ -10,7 +10,12 @@
  * The Code tab shows the native usage.
  */
 
-import { useRef, useState, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import * as Option from "effect/Option";
 import {
   decideValueKey,

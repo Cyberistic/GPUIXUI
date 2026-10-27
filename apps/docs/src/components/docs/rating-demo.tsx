@@ -28,7 +28,12 @@ const Star = ({
   readonly label?: string;
 }) =>
   onPress === undefined ? (
-    <span aria-hidden="true" className="gx-rating-star" data-half={state === "half" ? "" : undefined} data-filled={state === "checked" ? "" : undefined}>
+    <span
+      aria-hidden="true"
+      className="gx-rating-star"
+      data-half={state === "half" ? "" : undefined}
+      data-filled={state === "checked" ? "" : undefined}
+    >
       ★
     </span>
   ) : (
@@ -38,9 +43,7 @@ const Star = ({
       data-filled={state === "checked" ? "" : undefined}
       data-half={state === "half" ? "" : undefined}
       type="button"
-      onClick={(event) =>
-        onPress(event.currentTarget, event.clientX)
-      }
+      onClick={(event) => onPress(event.currentTarget, event.clientX)}
     >
       ★
     </button>
@@ -70,7 +73,12 @@ export const RatingDemo = () => {
   return (
     <div className="gx-demo gx-demo-column gx-rating-scene">
       <div className="gx-rating-block">
-        <div className="gx-rating" onKeyDown={key} role="group" aria-label="Rate this">
+        <div
+          className="gx-rating"
+          onKeyDown={key}
+          role="group"
+          aria-label="Rate this"
+        >
           {Array.from({ length: starCount(MAX) }, (_, index) => (
             <Star
               key={index}

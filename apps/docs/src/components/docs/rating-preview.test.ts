@@ -45,7 +45,7 @@ describe("the rating drawing", () => {
   it("hands the press to the star rather than to a number row", () => {
     expect(source).toContain("rateAt");
     expect(source).toContain("onPress");
-    expect(source).not.toContain("gx-btn-sm gx-btn-outline\" key={score}");
+    expect(source).not.toContain('gx-btn-sm gx-btn-outline" key={score}');
   });
 
   it("steps with the primitive's keyboard contract", () => {
