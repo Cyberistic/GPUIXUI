@@ -84,6 +84,7 @@ import { skeletonMeta } from "./skeleton.js";
 import { sliderMeta } from "./slider.js";
 import { slidingNumberMeta } from "./sliding-number.js";
 import { slidingTextMeta } from "./sliding-text.js";
+import { spinnerMeta } from "./spinner.js";
 import { splittingTextMeta } from "./splitting-text.js";
 import { starsMeta } from "./stars.js";
 import { stepperMeta } from "./stepper.js";
@@ -194,6 +195,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   sliderMeta,
   slidingNumberMeta,
   slidingTextMeta,
+  spinnerMeta,
   splittingTextMeta,
   starsMeta,
   stepperMeta,

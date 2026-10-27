@@ -119,6 +119,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("spinner", "Spinner"),
       primitive("skeleton", "Skeleton"),
       component("progress", "Progress"),
+      component("spinner", "Spinner"),
       component("skeleton", "Skeleton"),
     ],
   },

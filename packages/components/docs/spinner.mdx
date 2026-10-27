@@ -1,0 +1,61 @@
+---
+title: Spinner
+description: A three-dot activity indicator in three sizes
+---
+
+<ComponentPreview name="spinner-sizes" />
+
+<ComponentPreview name="spinner-in-buttons" />
+
+## Usage
+
+```tsx
+import { Spinner } from "@gpuixui/components/spinner";
+
+<Spinner label="Refreshing revenue" />;
+<Spinner size="sm" />;
+<Spinner size="lg" accent="muted" label="Archiving" />;
+```
+
+`size` is a step on the theme's icon scale, so a spinner lines up with the text
+or glyph beside it. A button takes the same mark through `Button`'s `loading`
+prop instead of composing one.
+
+## Why the mark steps
+
+`@gpuix/native@0.11.0` publishes no `transform`, so nothing can rotate. The mark
+is the primitives' three dots: one lights per step and its trail fades, which
+reads as travel because the eye follows the lit position. `MotionProvider
+preference="reduced"` — or `reducedMotion` on this spinner — holds one frame and
+schedules no interval. The preview above is a browser drawing: it cycles the
+dots' opacity, while the native component advances one lit position.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `label` | `string` | the provider's `loading.busy` (`"Loading"`) |
+| `accent` | `"primary" \| "destructive" \| "muted" \| "on-primary" \| "on-secondary" \| "on-destructive" \| "on-accent" \| "on-disabled"` | `"primary"` |
+| `reducedMotion` | `boolean` | the motion provider |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
+| `testId` | `string` | — |
+| `ref` / `aria-id` / `onLayout` | host props | — |
+
+## Accessibility
+
+- The mark is a `status` node named by `label`, so a reader hears "Loading" (or
+  the caller's own words) rather than a decorative row of dots.
+- A blank `label` paints the dots as decoration: a `status` node with no name is
+  still a node an assistive technology walks into.
+- The action that owns a busy spinner carries the same word as its
+  `aria-description`; this runtime has no `aria-busy`.
+
+## Limitations
+
+- Cannot rotate or trace an arc: the runtime has no `transform`. The lit dot
+  steps instead.
+- No smooth interpolation: the lit position advances once per interval.
+- Every dot shares one size, and a spinner cannot sit inside a text run; put it
+  in a `Stack` or a button.

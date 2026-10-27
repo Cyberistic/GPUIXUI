@@ -5,8 +5,8 @@
  * Enter destroys something); a cancel that confirms; a confirm that closes the
  * dialog itself (a failed save would vanish); a loading state that still accepts
  * a click or lets Escape dismiss the dialog mid-write; a danger tone that
- * does not paint the destructive role; and a busy state whose mark was a text
- * glyph — the one chrome mark in the package that was not a vector icon.
+ * does not paint the destructive role; and a busy state whose mark was the
+ * `loader` icon — a frozen glyph where the package's spinner belongs.
  */
 
 import * as Option from "effect/Option";
@@ -112,25 +112,42 @@ describe("ConfirmDialog", () => {
     confirm.unmount();
   });
 
-  it("paints the busy mark as the loader icon, not a text glyph", () => {
+  it("paints the busy spinner, not a glyph, and keeps the action's label", () => {
     const confirm = renderComponent(<Harness onConfirm={vi.fn()} loading />);
 
     try {
-      // The chrome marks are vector icons; a painted `…` would be the one text
-      // stand-in left in the package.
+      // The label is what the action does; the mark is added beside it.
+      expect(confirm.renderer.getAllText()).toContain("Confirm");
       expect(confirm.renderer.getAllText()).not.toContain("…");
-      expect(confirm.renderer.findByTestId("confirm-busy")).toBeDefined();
-      expect(confirm.renderer.findByType("svg")).toHaveLength(1);
-
-      // The mark sits on the action's own fill, so it takes the label's role.
-      expect(confirm.renderer.findByTestId("confirm-busy")?.style.color).toBe(
-        darkTheme.colors.primaryForeground,
-      );
+      expect(confirm.renderer.findByType("svg")).toHaveLength(0);
 
       // And it is named, so a screen reader hears the state rather than a mark.
       expect(
-        nodesWithRole(confirm.renderer, "image").map((node) => node.name),
-      ).toContain("In progress");
+        nodesWithRole(confirm.renderer, "status").map((node) => node.name),
+      ).toEqual(["In progress"]);
+    } finally {
+      confirm.unmount();
+    }
+  });
+
+  it("paints the busy mark in the action's own label role", () => {
+    const confirm = renderComponent(
+      <Harness onConfirm={vi.fn()} loading tone="danger" />,
+    );
+
+    try {
+      const action = confirm.renderer.findByTestId("confirm-accept");
+      const mark = confirm.renderer
+        .findByType("div")
+        .find((element) => element.customProps?.role === "status");
+      const dots = (mark?.children ?? []).map((id) =>
+        confirm.renderer.getElement(id),
+      );
+
+      expect(dots).toHaveLength(3);
+      expect(dots.map((dot) => dot?.style.backgroundColor)).toEqual(
+        Array.from({ length: 3 }, () => action?.style.color),
+      );
     } finally {
       confirm.unmount();
     }
@@ -187,20 +204,6 @@ describe("ConfirmDialog", () => {
         (node) => node.name,
       );
       expect(names).toEqual(expect.arrayContaining(["Cancel", "Confirm"]));
-    } finally {
-      confirm.unmount();
-    }
-  });
-
-  it("paints the busy mark in the destructive tone's own label role", () => {
-    const confirm = renderComponent(
-      <Harness onConfirm={vi.fn()} loading tone="danger" />,
-    );
-
-    try {
-      expect(confirm.renderer.findByTestId("confirm-busy")?.style.color).toBe(
-        darkTheme.colors.destructiveForeground,
-      );
     } finally {
       confirm.unmount();
     }

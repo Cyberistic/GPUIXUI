@@ -317,11 +317,22 @@ import { ScrollAreaDemo, scrollAreaDemoSource } from "./scroll-area-demo";
 import { SeparatorDemo, separatorDemoSource } from "./separator-demo";
 import { SeparatorRoles, separatorRolesSource } from "./separator-roles-demo";
 import { SkeletonDemo, skeletonDemoSource } from "./skeleton-demo";
-import { SkeletonStates, skeletonStatesSource } from "./skeleton-states-demo";
+import {
+  SkeletonList,
+  SkeletonStates,
+  skeletonListSource,
+  skeletonStatesSource,
+} from "./skeleton-states-demo";
 import { SliderDemo, sliderDemoSource } from "./slider-demo";
 import { SliderValues, sliderValuesSource } from "./slider-values-demo";
 import { SpacerDemo, spacerDemoSource } from "./spacer-demo";
-import { SpinnerDemo, spinnerDemoSource } from "./spinner-demo";
+import {
+  SpinnerDemo,
+  SpinnerInButtons,
+  spinnerDemoSource,
+  spinnerInButtonsSource,
+  spinnerSizesSource,
+} from "./spinner-demo";
 import { StackDemo, stackDemoSource } from "./stack-demo";
 import { TextDemo, textDemoSource } from "./text-demo";
 import { TextAreaDemo, textareaDemoSource } from "./textarea-demo";
@@ -1656,26 +1667,22 @@ const AlertComposition = () => {
 /**
  * The busy mark the confirm action paints while `loading`.
  *
- * The shipped mark is `@gpuixui/icons`' `loader` at `size="sm"`, in the action's
- * own label role and named "In progress". The preview draws the same spokes and
- * freezes them, because the runtime has no transform — a rotating mark would be
- * a behaviour the library cannot ship.
+ * The shipped mark is the package's `Spinner`: three dots whose lit position
+ * advances, in the action's own label role. The preview cycles the dots'
+ * opacity instead of rotating them, because 0.11.0 has no transform — a
+ * rotating mark would be a behaviour the library cannot ship.
  */
 const ConfirmBusyMark = () => (
-  <svg
+  <span
     aria-label="In progress"
-    className="gx-confirm-busy"
-    role="img"
-    viewBox="0 0 24 24"
+    className="gx-spin3"
+    data-size="sm"
+    role="status"
   >
-    <path
-      d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeWidth="2"
-    />
-  </svg>
+    <span className="gx-spin3-dot" />
+    <span className="gx-spin3-dot" />
+    <span className="gx-spin3-dot" />
+  </span>
 );
 
 /** `ConfirmDialog`'s surface: the dialog's `sm`, without a close control. */
@@ -3406,6 +3413,10 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: separatorRolesSource,
   },
   "skeleton-demo": { render: SkeletonDemo, source: skeletonDemoSource },
+  "skeleton-list": {
+    render: SkeletonList,
+    source: skeletonListSource,
+  },
   "skeleton-states": {
     render: SkeletonStates,
     source: skeletonStatesSource,
@@ -3417,6 +3428,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "spacer-demo": { render: SpacerDemo, source: spacerDemoSource },
   "spinner-demo": { render: SpinnerDemo, source: spinnerDemoSource },
+  "spinner-sizes": { render: SpinnerDemo, source: spinnerSizesSource },
+  "spinner-in-buttons": {
+    render: SpinnerInButtons,
+    source: spinnerInButtonsSource,
+  },
   "stack-demo": { render: StackDemo, source: stackDemoSource },
   "text-demo": { render: TextDemo, source: textDemoSource },
   "textarea-demo": { render: TextAreaDemo, source: textareaDemoSource },

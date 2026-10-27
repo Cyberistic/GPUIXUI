@@ -12,16 +12,14 @@
  *   closes through `open` when it succeeds, so a failed save can stay open with
  *   the error visible instead of vanishing mid-flight.
  *
- * While `loading`, the confirm action paints the `loader` icon beside its
- * label: the package's chrome marks are vector icons, so a text glyph would be
- * the one stand-in left. The icon is frozen — 0.11.0 has no transform, so
- * nothing rotates.
+ * While `loading`, the confirm action paints the package's spinner beside its
+ * label and refuses activation: the package's busy mark is the three-dot
+ * indicator, because 0.11.0 has no transform and nothing rotates.
  */
 
 import { Match } from "effect";
 import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
-import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "@gpuixui/primitives/core";
 import {
   Dialog,
@@ -32,9 +30,8 @@ import {
   DialogTitle,
 } from "./dialog.js";
 import type { PartChildren } from "./internal/parts.js";
-import { Button, actionOnColor } from "./internal/button.js";
+import { Button } from "./internal/button.js";
 import { textOf } from "./internal/text.js";
-import { useTheme } from "./internal/theme.js";
 
 /** The words a blank action label falls back to. */
 const DEFAULT_CONFIRM_LABEL = "Confirm";
@@ -84,7 +81,6 @@ export const ConfirmDialog = ({
   onConfirm,
   children,
 }: ConfirmDialogProps) => {
-  const theme = useTheme();
   // A default covers only an absent prop, so a label table's missing key would
   // paint both actions nameless — including the one that cannot be undone.
   const confirmWord =
@@ -96,9 +92,6 @@ export const ConfirmDialog = ({
     Match.when("danger", () => "danger" as const),
     Match.orElse(() => "primary" as const),
   );
-  // The busy mark sits on the action's own fill, so it takes the label's role
-  // rather than a colour of its own: the same pair `contrastPairs` measures.
-  const busyColor = actionOnColor(theme, variant);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} dismissible={!loading}>
@@ -127,17 +120,10 @@ export const ConfirmDialog = ({
             testId="confirm-accept"
             variant={variant}
             disabled={loading}
+            loading={loading}
+            loadingLabel="In progress"
             onClick={onConfirm}
           >
-            {loading ? (
-              <Icon
-                name="loader"
-                size="sm"
-                color={busyColor}
-                label="In progress"
-                testId="confirm-busy"
-              />
-            ) : null}
             {confirmWord}
           </Button>
         </DialogFooter>
@@ -154,7 +140,7 @@ export const confirmDialogMeta = {
   gpuixSupport: "partial",
   limitations: [
     "shares the dialog's 0.11.0 gaps: no aria-modal, no aria-labelledby",
-    "the busy mark is the loader icon and it does not spin: 0.11.0 has no transform, so a frozen spinner is the honest alternative to a text glyph",
+    "the busy mark is the three-dot spinner and it does not rotate: 0.11.0 has no transform, so a stepped mark is the honest alternative",
     "confirm does not close the dialog by design: the caller owns the close after its work succeeds",
   ],
   docs: "docs/confirm-dialog.mdx",

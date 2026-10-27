@@ -88,6 +88,7 @@ import { ShineButtonExample } from "./shine-button.example.js";
 import { SidebarExample } from "./sidebar.example.js";
 import { SkeletonExample } from "./skeleton.example.js";
 import { SliderExample } from "./slider.example.js";
+import { SpinnerExample } from "./spinner.example.js";
 import { SlidingNumberExample } from "./sliding-number.example.js";
 import { SlidingTextExample } from "./sliding-text.example.js";
 import { SplittingTextExample } from "./splitting-text.example.js";
@@ -182,6 +183,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   sidebar: SidebarExample,
   skeleton: SkeletonExample,
   slider: SliderExample,
+  spinner: SpinnerExample,
   "sliding-number": SlidingNumberExample,
   "sliding-text": SlidingTextExample,
   "splitting-text": SplittingTextExample,

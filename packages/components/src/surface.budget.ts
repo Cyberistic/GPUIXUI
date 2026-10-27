@@ -147,7 +147,12 @@ export const surfaceBudget = {
   // the root surface and every submenu surface hold, so a diagonal trip into a
   // submenu is one gesture and leaving both closes the menu. The waits
   // themselves are `internal/hover.ts`'s, which the graph already carried.
-  modules: 206,
+  
+
+  // 203 → 204 for Spinner (`spinner.tsx`), the shadcn-shaped surface over the
+  // primitives' three-dot mark; `Button`'s busy state now paints the same mark
+  // through it.
+  modules: 207,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
