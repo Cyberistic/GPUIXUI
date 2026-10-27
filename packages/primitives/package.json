@@ -17,6 +17,30 @@
       "types": "./src/components/hint.tsx",
       "default": "./src/components/hint.tsx"
     },
+    "./progress": {
+      "types": "./src/progress.ts",
+      "default": "./src/progress.ts"
+    },
+    "./slider": {
+      "types": "./src/slider.ts",
+      "default": "./src/slider.ts"
+    },
+    "./separator": {
+      "types": "./src/separator.ts",
+      "default": "./src/separator.ts"
+    },
+    "./skeleton": {
+      "types": "./src/skeleton.ts",
+      "default": "./src/skeleton.ts"
+    },
+    "./toggle": {
+      "types": "./src/toggle.ts",
+      "default": "./src/toggle.ts"
+    },
+    "./toggle-group": {
+      "types": "./src/toggle-group.ts",
+      "default": "./src/toggle-group.ts"
+    },
     "./button": {
       "types": "./src/button.ts",
       "default": "./src/button.ts"
