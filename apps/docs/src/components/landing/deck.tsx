@@ -1,53 +1,49 @@
 /**
  * The hero deck: one platform window per desktop in `landingPlatformOrder`,
  * each running the **conversations block** in its own dress — macOS Messages,
- * Windows 11 Fluent, Linux Breeze and Omarchy's Tokyo Night look — so each card
- * is recognisably its desktop.
+ * Windows 11 Fluent and Linux Breeze — so each card is recognisably its
+ * desktop.
  *
- * macOS and Windows show on the light palette, Linux and Omarchy on the dark
- * one. The shuffle pauses on hover; the stack is a clean fan with no rotation.
+ * macOS and Windows show on the light palette, Linux on the dark one. The
+ * shuffle pauses on hover; the stack is a clean fan with no rotation.
+ *
+ * Omarchy is not a fourth desktop: it is the Linux desktop following your own
+ * theme, so its claims sit under the deck as four small cards instead of a
+ * fourth window.
  */
 import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import {
-  applyStyle,
   darkTheme,
   lightTheme,
   platformTheme,
-  retroStyles,
-  themes,
   type PlatformName,
   type Theme,
 } from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
 import { BlockIcon } from "../docs/block-icons";
 import { ConversationWindow } from "../docs/conversations-block";
-import { platforms, countWord, landingLookCount, repo } from "./data";
-import type { Platform } from "./data";
+import {
+  platforms,
+  omarchyCards,
+  countWord,
+  landingLookCount,
+  repo,
+} from "./data";
+import type { OmarchyIcon, Platform } from "./data";
+import { usePrefersReducedMotion } from "./reduced-motion";
 
 const SHUFFLE_MS = 1600;
 
-/** The library's platform name for a landing card. Omarchy rides Linux. */
+/** The library's platform name for a landing card. */
 const platformOfDesktop: Readonly<Record<Platform["id"], PlatformName>> = {
   macos: "darwin",
   windows: "win32",
   linux: "linux",
-  omarchy: "linux",
 };
 
-/**
- * The theme a card paints.
- *
- * Omarchy is the one card that is a look rather than a platform variant: its
- * bubbles, selection and radii are `retroStyles.omarchy` applied over the Linux
- * dark base, so the deck shows the Tokyo Night palette rather than Breeze.
- */
+/** The theme a card paints: Linux on the dark palette, the others on light. */
 const desktopTheme = (id: Platform["id"]): Theme =>
-  id === "omarchy"
-    ? applyStyle(platformTheme(themes.dark, "linux"), retroStyles.omarchy)
-    : platformTheme(
-        id === "linux" ? darkTheme : lightTheme,
-        platformOfDesktop[id],
-      );
+  platformTheme(id === "linux" ? darkTheme : lightTheme, platformOfDesktop[id]);
 
 /** The card the shuffle raises next; a pure function so the wrap is testable. */
 export const nextDesktop = (top: number): number =>
@@ -85,15 +81,7 @@ export function LandingFormula() {
 export function Hero() {
   const [top, setTop] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setReduced(query.matches);
-    onChange();
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     if (paused || reduced) return;
@@ -116,15 +104,10 @@ export function Hero() {
 
       <p className="landing-sub">
         Components that run on GPUix, styled to feel at home on macOS, Windows
-        11, Linux and Omarchy — with the source in your hands.
+        11 and Linux — with the source in your hands.
       </p>
 
       <LandingFormula />
-
-      <p className="landing-omarchy-note">
-        Omarchy reads your active theme and re-applies it live when{" "}
-        <code>omarchy-theme-set</code> runs.
-      </p>
 
       <div className="landing-actions">
         <a
@@ -162,7 +145,85 @@ export function Hero() {
           />
         ))}
       </div>
+
+      <OmarchyStrip />
     </header>
+  );
+}
+
+/**
+ * The four claims Omarchy makes, under the deck.
+ *
+ * They sit where the fourth desktop stood: same width as the deck, four small
+ * cards in one row on a desktop and two columns on a phone.
+ */
+function OmarchyStrip() {
+  return (
+    <div className="landing-omarchy">
+      <ul className="landing-omarchy-cards">
+        {omarchyCards.map((card) => (
+          <li
+            className="landing-omarchy-card"
+            data-icon={card.icon}
+            key={card.title}
+          >
+            <span aria-hidden="true" className="landing-omarchy-glyph">
+              <OmarchyGlyph name={card.icon} />
+            </span>
+            <h2 className="landing-omarchy-title">{card.title}</h2>
+            <p className="landing-omarchy-body">{card.body}</p>
+          </li>
+        ))}
+      </ul>
+      <p className="landing-omarchy-note">
+        Omarchy re-applies the palette live whenever{" "}
+        <code>omarchy-theme-set</code> runs.
+      </p>
+    </div>
+  );
+}
+
+/** One card's mark: a palette, a terminal, code brackets, a chip. */
+function OmarchyGlyph({ name }: { name: OmarchyIcon }) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      {name === "palette" ? (
+        <>
+          <path d="M12 3a9 9 0 1 0 0 18h1.2a1.9 1.9 0 0 0 0-3.8h-.7a2.6 2.6 0 0 1 0-5.2H17a4 4 0 0 0 0-8h-5Z" />
+          <circle cx="8" cy="9" r="1" />
+          <circle cx="12.5" cy="7" r="1" />
+          <circle cx="7.5" cy="14.5" r="1" />
+        </>
+      ) : null}
+      {name === "terminal" ? (
+        <>
+          <rect height="16" rx="2" width="20" x="2" y="4" />
+          <path d="m6 9 3 3-3 3M13 15h4" />
+        </>
+      ) : null}
+      {name === "code" ? (
+        <>
+          <path d="m9 18-6-6 6-6M15 6l6 6-6 6" />
+          <path d="m13 4-2 16" />
+        </>
+      ) : null}
+      {name === "gpu" ? (
+        <>
+          <rect height="10" rx="2" width="10" x="7" y="7" />
+          <path d="M10 2v5M14 2v5M10 17v5M14 17v5M2 10h5M2 14h5M17 10h5M17 14h5" />
+        </>
+      ) : null}
+    </svg>
   );
 }
 
@@ -184,15 +245,6 @@ const DOCK_TONES = [
 
 const WINDOW_TONES = ["blue", "green", "amber", "sky"] as const;
 
-/** Omarchy's dock: the look's accent, brand green and status roles, one each. */
-const OMARCHY_TONES = [
-  "accent",
-  "accent-soft",
-  "success",
-  "info",
-  "warning",
-] as const;
-
 /** One platform desktop, with the conversations block floating on it. */
 function PlatformMini({
   platform,
@@ -212,15 +264,10 @@ function PlatformMini({
     >
       <span
         aria-hidden="true"
-        className={`landing-wall landing-wall-${platform.wall}`}
+        className={`landing-wall landing-wall-${platform.chrome}`}
       />
       {platform.id === "macos" ? <MacMenuBar /> : null}
       {platform.id === "linux" ? <LinuxPanel /> : null}
-      {platform.id === "omarchy" ? (
-        <span className="landing-omarchy-chip">
-          Omarchy · follows your theme
-        </span>
-      ) : null}
 
       <div className="landing-desktop-stage">
         <ConversationWindow platform={platform.id} />
@@ -228,7 +275,6 @@ function PlatformMini({
 
       {platform.id === "windows" ? <WindowsTaskbar /> : null}
       {platform.id === "linux" ? <LinuxDock /> : null}
-      {platform.id === "omarchy" ? <OmarchyDock /> : null}
       {platform.id === "macos" ? <MacDock /> : null}
     </div>
   );
@@ -321,19 +367,6 @@ function LinuxDock() {
       ))}
       <span className="landing-dock-sep" />
       <i className="landing-dock-tile" data-tone="trash" />
-    </div>
-  );
-}
-
-/** Omarchy: a flat dock of near-square tiles in the look's accent. */
-function OmarchyDock() {
-  return (
-    <div aria-hidden="true" className="landing-dock landing-dock-omarchy">
-      {OMARCHY_TONES.map((tone) => (
-        <i className="landing-dock-tile" data-tone={tone} key={tone} />
-      ))}
-      <span className="landing-dock-sep" />
-      <i className="landing-dock-tile" data-tone="dim" />
     </div>
   );
 }

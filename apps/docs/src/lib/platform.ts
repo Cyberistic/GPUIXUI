@@ -38,17 +38,13 @@ export const platformLabel = (platform: PlatformName): string =>
 /**
  * The desktops the landing deck shows, in card order.
  *
- * Omarchy is a Linux desktop with an authored look (`retroStyles.omarchy`), not
- * a fourth `PlatformName`: the platform axis is what a consumer persists and
- * what the preview switch offers, so the landing carries its own ids and the
- * docs toggle stays the library's three platforms plus the default.
+ * These are the three native looks, not every desktop the library talks about:
+ * Omarchy is a Linux desktop that follows your theme, and the deck says that in
+ * a strip of its own rather than by dressing a fourth window. The platform axis
+ * is what a consumer persists and what the preview switch offers, so the docs
+ * toggle stays the library's three platforms plus the default.
  */
-export const landingPlatformOrder = [
-  "macos",
-  "windows",
-  "linux",
-  "omarchy",
-] as const;
+export const landingPlatformOrder = ["macos", "windows", "linux"] as const;
 
 /** A desktop the landing deck shows. */
 export type LandingPlatform = (typeof landingPlatformOrder)[number];
@@ -57,7 +53,6 @@ const landingPlatformLabels: Readonly<Record<LandingPlatform, string>> = {
   macos: "macOS",
   windows: "Windows 11",
   linux: "Linux / Arch",
-  omarchy: "Omarchy",
 };
 
 /** The label the landing switch shows a desktop under. */

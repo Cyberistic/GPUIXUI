@@ -8,31 +8,59 @@ export interface Platform {
   readonly id: LandingPlatform;
   readonly label: string;
   readonly chrome: "mac" | "win" | "lnx";
-  readonly wall: "mac" | "win" | "lnx" | "omarchy";
 }
 
-/** The chrome each desktop wears; Omarchy is a Linux desktop. */
+/** The chrome each desktop wears; the wallpaper is the same picture. */
 const chromeOf: Readonly<Record<LandingPlatform, Platform["chrome"]>> = {
   macos: "mac",
   windows: "win",
   linux: "lnx",
-  omarchy: "lnx",
-};
-
-/** The wallpaper each desktop paints; Omarchy has its own Tokyo Night scene. */
-const wallOf: Readonly<Record<LandingPlatform, Platform["wall"]>> = {
-  macos: "mac",
-  windows: "win",
-  linux: "lnx",
-  omarchy: "omarchy",
 };
 
 export const platforms = landingPlatformOrder.map((id) => ({
   id,
   label: landingPlatformLabel(id),
   chrome: chromeOf[id],
-  wall: wallOf[id],
 })) satisfies ReadonlyArray<Platform>;
+
+/** A glyph the Omarchy strip draws beside its claim. */
+export type OmarchyIcon = "palette" | "terminal" | "code" | "gpu";
+
+export interface OmarchyCard {
+  readonly icon: OmarchyIcon;
+  readonly title: string;
+  readonly body: string;
+}
+
+/**
+ * What Omarchy means for a GPUIxUI app, in the strip under the deck.
+ *
+ * Omarchy is not a fourth look: it is the Desktop where the look comes from your
+ * own theme, and these four lines are the whole claim — a theme follower, a
+ * terminal surface, shadcn/React syntax, and a GPU renderer.
+ */
+export const omarchyCards: ReadonlyArray<OmarchyCard> = [
+  {
+    icon: "palette",
+    title: "Follows your theme in Omarchy",
+    body: "The palette comes from your Omarchy theme, so the window matches the rest of the desktop.",
+  },
+  {
+    icon: "terminal",
+    title: "Your apps in the terminal",
+    body: "The terminal surface is a first-class block: the same tree draws in kitty or Ghostty.",
+  },
+  {
+    icon: "code",
+    title: "shadcn and React syntax",
+    body: "The same component code, with no new API to learn.",
+  },
+  {
+    icon: "gpu",
+    title: "Everything on the GPU",
+    body: "Rendering, motion and text all run on the GPU.",
+  },
+];
 
 export const repo = "https://github.com/Cyberistic/GPUIXUI";
 
@@ -53,7 +81,7 @@ const countWords = [
 export const countWord = (count: number): string =>
   countWords[count] ?? String(count);
 
-/** The desktops the deck shows; the hero and the terminal sample print it. */
+/** The desktops the deck shows; the hero and the editor sample print it. */
 export const landingLookCount = platforms.length;
 
 export const navLinks = [

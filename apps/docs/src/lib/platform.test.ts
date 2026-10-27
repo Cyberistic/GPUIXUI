@@ -202,22 +202,18 @@ describe("the platform theme", () => {
 });
 
 describe("the landing's desktops", () => {
-  it("offers Omarchy as a fourth card without widening the platform axis", () => {
-    // Omarchy is a Linux desktop with an authored look, so the landing may show
-    // it while `?platform=` keeps accepting only the library's platforms.
-    expect(landingPlatformOrder).toEqual([
-      "macos",
-      "windows",
-      "linux",
-      "omarchy",
-    ]);
+  it("shows the three native looks and leaves Omarchy off the axis", () => {
+    // Omarchy is a Linux desktop that follows your theme, not a fourth look:
+    // the deck keeps the three windows and `?platform=` keeps accepting only
+    // the library's platforms.
+    expect(landingPlatformOrder).toEqual(["macos", "windows", "linux"]);
     expect(platformOrder).not.toContain("omarchy");
   });
 
   it("labels every landing desktop, with no two sharing a name", () => {
     const labels = landingPlatformOrder.map(landingPlatformLabel);
 
-    expect(labels).toEqual(["macOS", "Windows 11", "Linux / Arch", "Omarchy"]);
+    expect(labels).toEqual(["macOS", "Windows 11", "Linux / Arch"]);
     expect(new Set(labels).size).toBe(landingPlatformOrder.length);
   });
 });
