@@ -29,8 +29,8 @@ import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useState } from "react";
 import { measuredBox } from "./internal/measure.js";
+import { send, useLocalSlice, useLocalStore } from "./internal/local-state.js";
 import {
   fadeOnly,
   useMotionPreference,
@@ -45,6 +45,7 @@ import {
 } from "./internal/scatter.js";
 import { useTheme } from "./internal/theme.js";
 import {
+  directionOf,
   starAt,
   starCount,
   starCountCap,
@@ -54,9 +55,9 @@ import {
   starTwinkleCap,
   starTwinkleFloor,
   starTwinkleMs,
-  type StarDirection,
   type StarSpec,
 } from "./stars/logic.js";
+import { makeStarsStore, type StarsStore } from "./stars/store.js";
 
 /** What a field draws at one frame. */
 export interface StarsState {
@@ -97,6 +98,7 @@ interface StarProps {
   readonly ink: string;
   readonly radius: number;
   readonly still: boolean;
+  readonly store: StarsStore;
 }
 
 /**
@@ -104,10 +106,13 @@ interface StarProps {
  *
  * A plain `div` with a `motion` prop rather than `motion.div`: the component owns
  * the turnaround, so the generation guard `motion.div` wraps around
- * `onMotionComplete` is not wanted here.
+ * `onMotionComplete` is not wanted here. The turnaround is the runtime's report,
+ * held in the field's store as this star's slice.
  */
-const Star = ({ spec, ink, radius, still }: StarProps) => {
-  const [direction, setDirection] = useState<StarDirection>(1);
+const Star = ({ spec, ink, radius, still, store }: StarProps) => {
+  const direction = useLocalSlice(store.local, (state) =>
+    directionOf(state.directions, spec.key),
+  );
   const motion: MotionProps = {
     initial: { opacity: spec.dim },
     animate: { opacity: starAt(spec, direction) },
@@ -125,8 +130,7 @@ const Star = ({ spec, ink, radius, still }: StarProps) => {
         ? {}
         : {
             motion,
-            onMotionComplete: () =>
-              setDirection((current) => (current === 1 ? -1 : 1)),
+            onMotionComplete: () => send(store.turn(spec.key)),
           })}
       style={{
         position: "absolute",
@@ -186,29 +190,13 @@ export const Stars = ({
   );
   const ink = color ?? theme.colors.foreground;
   const still = preference === "reduced";
-  // The box the field is laid out in. Reporting the same size again must not
-  // churn the tree; a new size re-draws the sky from the same seed.
-  const [box, setBox] = useState<
-    Option.Option<{
-      readonly width: number;
-      readonly height: number;
-    }>
-  >(Option.none());
+  const store = useLocalStore(makeStarsStore);
+  // The field follows the box alone: a star's turnaround is that star's slice,
+  // so a completion repaints one star instead of re-laying the whole sky.
+  const box = useLocalSlice(store.local, (current) => current.box);
 
   const noteBox = (event: EventPayload): void => {
-    Option.match(measuredBox(event), {
-      onNone: () => undefined,
-      onSome: (next) =>
-        setBox((held) =>
-          Option.match(held, {
-            onNone: () => Option.some(next),
-            onSome: (current) =>
-              current.width === next.width && current.height === next.height
-                ? held
-                : Option.some(next),
-          }),
-        ),
-    });
+    send(store.measure(measuredBox(event)));
   };
 
   const specs: ReadonlyArray<StarSpec> = Option.match(box, {
@@ -260,6 +248,7 @@ export const Stars = ({
           ink={ink}
           radius={theme.radius.full}
           still={still}
+          store={store}
         />
       ))}
     </div>

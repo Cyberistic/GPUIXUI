@@ -20,6 +20,8 @@
  */
 
 import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
 import { paintable, seededUnit, tenth } from "../internal/scatter.js";
 
 /** The house number of stars. */
@@ -85,9 +87,39 @@ export interface StarFieldInput {
 /** Which light a star is heading for: `1` brightening, `-1` dimming. */
 export type StarDirection = 1 | -1;
 
+/** The box a field is laid out in. */
+export interface StarBox {
+  readonly width: number;
+  readonly height: number;
+}
+
 /** The opacity a star paints on the run it is on. */
 export const starAt = (spec: StarSpec, direction: StarDirection): number =>
   direction === 1 ? spec.glow : spec.dim;
+
+/** The light the other end of a twinkle is, which is where a completion sends a star. */
+export const turned = (direction: StarDirection): StarDirection =>
+  direction === 1 ? -1 : 1;
+
+/** The light a star is heading for; `1` until its own tween reports a turnaround. */
+export const directionOf = (
+  directions: HashMap.HashMap<string, StarDirection>,
+  key: string,
+): StarDirection => Option.getOrElse(HashMap.get(directions, key), () => 1);
+
+/** Whether two readings name the same box, so a repeated report changes nothing. */
+export const sameBox = (
+  a: Option.Option<StarBox>,
+  b: Option.Option<StarBox>,
+): boolean =>
+  Option.match(a, {
+    onNone: () => Option.isNone(b),
+    onSome: (held) =>
+      Option.exists(
+        b,
+        (next) => held.width === next.width && held.height === next.height,
+      ),
+  });
 
 /**
  * The field for one measured box.
