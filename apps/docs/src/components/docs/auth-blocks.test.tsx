@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
@@ -30,6 +31,17 @@ const text = (markup: string): string =>
     .replaceAll("&quot;", '"')
     .replaceAll("&amp;", "&");
 
+const css = readFileSync(
+  new URL("../../styles/blocks.css", import.meta.url),
+  "utf8",
+);
+
+/** The declarations of the first `selector { … }` block in the style sheet. */
+const rule = (selector: string): string => {
+  const start = css.indexOf(`${selector} {`);
+  return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
+};
+
 describe("login block", () => {
   const markup = renderToStaticMarkup(<LoginRender />);
 
@@ -43,9 +55,25 @@ describe("login block", () => {
     expect(text(markup)).toContain("Don't have an account?");
   });
 
-  it("opens with a live status row, so a state never moves the card", () => {
+  it("opens with a live status row that paints only when it has words", () => {
     expect(markup).toContain('aria-live="polite"');
     expect(markup).toContain('class="gx-auth-status"');
+  });
+
+  it("labels its fields as the shipped Field does, on a mark and a divider", () => {
+    // The preview painted each label as a 10px uppercase mono eyebrow; the
+    // shipped `FieldLabel` is 14px medium sans in the body role, so the drawing
+    // now names the control rather than annotating a diagram.
+    expect(markup).toContain('class="gx-auth-label"');
+    expect(markup).not.toContain("gx-block-label");
+    expect(markup).toContain('class="gx-auth-mark"');
+    expect(markup).toContain('class="gx-auth-divider"');
+    expect(rule(".gx-auth-label")).toContain("font-size: 14px");
+    expect(rule(".gx-auth-label")).not.toContain("text-transform");
+    expect(rule(".gx-auth-card")).toContain("gap: 14px");
+    // At rest the reserved note is absent, so the primary action and the
+    // divider are not separated by an empty row.
+    expect(rule(".gx-auth-status:empty")).toContain("display: none");
   });
 
   it("refuses an empty or malformed submission and accepts a real one", () => {

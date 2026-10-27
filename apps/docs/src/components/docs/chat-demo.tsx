@@ -19,18 +19,66 @@ const transcript: ReadonlyArray<{
   readonly role: "assistant" | "user";
   readonly author: string;
   readonly body: string;
+  readonly time: string;
 }> = [
   {
     role: "assistant",
-    author: "Assistant",
+    author: "Atlas",
     body: "The deploy finished — every check is green.",
+    time: "09:41",
   },
   {
     role: "user",
     author: "You",
     body: "Roll it to the whole team, then.",
+    time: "09:42",
+  },
+  {
+    role: "assistant",
+    author: "Atlas",
+    body: "Rolled out. I'll post here if a check fails.",
+    time: "09:42",
   },
 ];
+
+/** What the conversation line says in each state: metadata, not a status dump. */
+const summaries: Readonly<Record<ChatStatus, string>> = {
+  idle: "3 messages · all checks passed",
+  streaming: "Streaming a reply…",
+  error: "The last reply failed",
+};
+
+/** One row: an avatar, an author and time, and the body. */
+const ChatRow = ({
+  author,
+  body,
+  live,
+  role,
+  time,
+}: {
+  readonly author: string;
+  readonly body: string;
+  readonly live?: boolean;
+  readonly role: "assistant" | "user";
+  readonly time: string;
+}) => (
+  <div
+    className="gx-chat-row"
+    data-live={live ? "" : undefined}
+    data-role={role}
+  >
+    <span aria-hidden="true" className="gx-chat-avatar">
+      {role === "user" ? "Y" : "A"}
+    </span>
+    <div className="gx-chat-bubble" data-role={role}>
+      <span className="gx-chat-meta">
+        <span className="gx-chat-author">{author}</span>
+        <span className="gx-chat-time">{time}</span>
+      </span>
+      <span className="gx-chat-body">{body}</span>
+    </div>
+  </div>
+);
 
 export function ChatDemo() {
   const [status, setStatus] = useState<ChatStatus>("idle");
@@ -42,8 +90,8 @@ export function ChatDemo() {
       <div className="gx-chat-head">
         <div className="gx-chat-head-copy">
           <p className="gx-chat-title">Atlas support</p>
-          <p className="gx-chat-status" role="status">
-            status: <b>{status}</b>
+          <p className="gx-chat-summary" role="status">
+            {summaries[status]}
           </p>
         </div>
         <div aria-label="Conversation status" className="gx-chat-switch">
@@ -64,25 +112,29 @@ export function ChatDemo() {
 
       <div className="gx-chat-messages">
         {transcript.map((message) => (
-          <div
-            className="gx-chat-row"
-            data-role={message.role}
-            key={message.role}
-          >
-            <span aria-hidden="true" className="gx-chat-avatar">
-              {message.role === "user" ? "Y" : "A"}
-            </span>
-            <div className="gx-chat-bubble" data-role={message.role}>
-              <span className="gx-chat-author">{message.author}</span>
-              <span className="gx-chat-body">{message.body}</span>
-            </div>
-          </div>
+          <ChatRow key={message.body} {...message} />
         ))}
+        {busy ? (
+          <>
+            <div className="gx-chat-divider">
+              <span>Streaming</span>
+            </div>
+            <ChatRow
+              author="Atlas"
+              body="Checking every service…"
+              live
+              role="assistant"
+              time="now"
+            />
+          </>
+        ) : null}
       </div>
 
       {status === "error" ? (
-        <div className="gx-chat-error">
-          <span className="gx-chat-error-text">The reply failed.</span>
+        <div className="gx-chat-error" role="alert">
+          <span className="gx-chat-error-text">
+            The reply failed. Nothing was sent.
+          </span>
           <button
             className="gx-btn gx-btn-secondary gx-btn-sm"
             onClick={() => setStatus("idle")}
@@ -100,6 +152,7 @@ export function ChatDemo() {
             className="gx-chat-field"
             onChange={(event) => setDraft(event.currentTarget.value)}
             placeholder="Send a message…"
+            rows={1}
             value={draft}
           />
           {busy ? (

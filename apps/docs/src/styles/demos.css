@@ -379,7 +379,7 @@
 .gx-card {
   display: flex;
   flex-direction: column;
-  width: 260px;
+  width: 100%;
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--card);
@@ -395,20 +395,37 @@
 }
 
 .gx-card-wide {
-  width: 340px;
+  max-width: 340px;
 }
 
+/* Three treatments, one comparison: equal columns at a page width, one column
+   on a phone, so the cards share a width and a title baseline instead of
+   floating apart. */
 .gx-card-grid {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  align-items: start;
+  width: 100%;
+  gap: 16px;
 }
 
 .gx-card-column {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+}
+
+.gx-card-caption {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted-foreground);
+}
+
+.gx-card-caption b {
+  color: var(--foreground);
+  font-weight: 600;
 }
 
 .gx-card-header {
@@ -462,17 +479,15 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
-  padding: 12px 12px 0;
+  padding: 12px;
   border-top: 1px solid var(--input);
   font-size: 14px;
   line-height: 20px;
   color: var(--muted-foreground);
 }
 
-/* The recipe's footer has no bottom padding; a control adds it through `style`. */
-.gx-card-footer-padded {
-  padding-bottom: 12px;
-}
+/* The recipe's footer has no bottom padding; the drawing adds 12px so a last
+   row clears the card's clipped corner instead of sitting on its edge. */
 
 /* ---- dialog: mirrors components/src/dialog.tsx ---- */
 .gx-demo-dialog {
@@ -4349,21 +4364,33 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 150px;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 2px);
   background: var(--card);
 }
 
-.gx-carousel-slide {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* One cell per slide, stacked: the tallest slide sets the frame's height, so
+   stepping never resizes it. Inactive slides stay mounted (their drafts live)
+   and keep their layout with `visibility`; `inert` keeps them out of reach. */
+.gx-carousel-viewport {
+  display: grid;
+  align-content: start;
 }
 
-.gx-carousel-slide[hidden] {
-  display: none;
+.gx-carousel-slide {
+  display: flex;
+  grid-area: 1 / 1;
+  flex-direction: column;
+  align-self: start;
+  gap: 4px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gx-carousel-slide[data-active] {
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .gx-carousel-kicker {
@@ -9757,11 +9784,13 @@
 /* ---- chat: mirrors components/src/chat.tsx's CHAT_* recipes ----
    A `ChatRoot` column: the transcript is a scroller that owns the empty and
    failed-reply panels, and the composer swaps Send for Stop while a reply is
-   open. The status machine is the one authority. */
+   open. The transcript has no frame of its own — an assistant speaks in prose
+   on the page, a user in a filled bubble — and the composer is the only
+   bordered surface, as `CHAT_COMPOSER` draws it. */
 .gx-chat {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   width: min(460px, 100%);
 }
 
@@ -9770,6 +9799,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .gx-chat-head-copy {
@@ -9780,43 +9811,45 @@
 
 .gx-chat-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 650;
   color: var(--foreground);
 }
 
-.gx-chat-status {
+.gx-chat-summary {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 
-.gx-chat-status b {
-  color: var(--primary);
-  font-weight: 600;
-}
-
+/* A segmented control: one track, one raised choice — not three buttons. */
 .gx-chat-switch {
-  display: flex;
-  gap: 4px;
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--muted);
 }
 
 .gx-chat-choice {
-  min-height: var(--target-size);
-  padding: 0 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--card);
-  color: var(--card-foreground);
+  min-height: calc(var(--target-size) - 4px);
+  padding: 0 9px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .gx-chat-choice[data-chosen] {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px var(--shadow);
 }
 
 .gx-chat-choice:focus-visible {
@@ -9827,17 +9860,13 @@
 .gx-chat-messages {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--background);
+  gap: 16px;
 }
 
 .gx-chat-row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
 }
 
 .gx-chat-row[data-role="user"] {
@@ -9849,13 +9878,13 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: var(--icon-size-lg);
-  height: var(--icon-size-lg);
+  width: var(--target-size);
+  height: var(--target-size);
   border-radius: 50%;
-  background: var(--muted);
-  color: var(--foreground);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
 }
@@ -9863,19 +9892,36 @@
 .gx-chat-bubble {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
   max-width: 78%;
 }
 
+/* The shipped user variant is a soft bubble; a reader's eye lands on the end
+   edge, so the meta moves with it. */
 .gx-chat-bubble[data-role="user"] {
   align-items: flex-end;
   padding: 8px 12px;
-  border-radius: var(--radius-lg);
+  border-radius: calc(var(--radius) + 8px) calc(var(--radius) + 8px)
+    var(--radius) calc(var(--radius) + 8px);
   background: var(--muted);
 }
 
+.gx-chat-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .gx-chat-author {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-chat-time {
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
   color: var(--muted-foreground);
 }
 
@@ -9885,15 +9931,36 @@
   color: var(--foreground);
 }
 
+.gx-chat-row[data-live] .gx-chat-body {
+  color: var(--muted-foreground);
+}
+
+/* The live seam: the divider separates the settled transcript from the reply
+   the status machine is still streaming. */
+.gx-chat-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-chat-divider::before,
+.gx-chat-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .gx-chat-error {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: var(--radius);
-  background: var(--card);
+  background: var(--destructive-soft);
 }
 
 .gx-chat-error-text {
@@ -9908,8 +9975,13 @@
   gap: 6px;
   padding: 8px;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--background);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-chat-composer:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 30%, transparent);
 }
 
 .gx-chat-composer-row {
@@ -9922,31 +9994,25 @@
   flex: 1;
   min-width: 0;
   min-height: var(--control-height-md);
-  padding: 6px 8px;
+  padding: 5px 2px;
   border: 0;
-  border-radius: var(--radius);
   background: transparent;
   color: var(--input-foreground);
   font-family: var(--font-sans);
   font-size: 13px;
   line-height: 20px;
   outline: none;
-  resize: vertical;
+  resize: none;
 }
 
 .gx-chat-field::placeholder {
   color: var(--placeholder);
 }
 
-.gx-chat-field:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
-}
-
 .gx-chat-hint {
+  padding-left: 2px;
   font-size: 11px;
   color: var(--muted-foreground);
-  color: var(--placeholder);
 }
 
 .gx-scroll {
@@ -10980,11 +11046,15 @@
   font-size: 12px;
 }
 
-/* ---- code block: title bar, gutter and source. ---- */
+/* ---- code block: title bar, gutter and source ----
+   The shipped block is a page-filled card with a field's edge, a header row
+   (title, language, copy), a hairline and one row per line. Every token paints
+   the syntax palette `@gpuixui/tokens` measures, published by the bridge as
+   `--syntax-*`, so a platform style repaints the code as well as the chrome. */
 .gx-codeblock {
   display: flex;
   flex-direction: column;
-  width: min(460px, 100%);
+  width: min(520px, 100%);
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
@@ -11002,26 +11072,51 @@
 }
 
 .gx-codeblock-title {
+  overflow: hidden;
   color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.gx-codeblock-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-codeblock-lang {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* The copy action is an icon button, as `CopyButton` ships it: 24px square so
+   the glyph has a press target, and the glyph itself is 14px. */
 .gx-codeblock-copy {
-  height: 22px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--muted-foreground);
-  font: inherit;
-  font-size: 11px;
   cursor: pointer;
 }
 
 .gx-codeblock-copy:hover {
   background: var(--hover);
   color: var(--foreground);
+}
+
+.gx-codeblock-copy:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
 }
 
 .gx-codeblock-body {
@@ -11040,14 +11135,59 @@
 .gx-codeblock-num {
   flex: 0 0 auto;
   width: 40px;
-  padding-right: 12px;
+  margin-right: 12px;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
   color: var(--placeholder);
   text-align: right;
   user-select: none;
 }
 
 .gx-codeblock-code {
+  min-width: 0;
+  padding-right: 14px;
   color: var(--foreground);
+  white-space: pre;
+}
+
+.gx-codeblock-code [data-token="boolean"] {
+  color: var(--syntax-boolean);
+}
+
+.gx-codeblock-code [data-token="comment"] {
+  color: var(--syntax-comment);
+}
+
+.gx-codeblock-code [data-token="function"] {
+  color: var(--syntax-function);
+}
+
+.gx-codeblock-code [data-token="functionBuiltin"] {
+  color: var(--syntax-function-builtin);
+}
+
+.gx-codeblock-code [data-token="keyword"] {
+  color: var(--syntax-keyword);
+}
+
+.gx-codeblock-code [data-token="number"] {
+  color: var(--syntax-number);
+}
+
+.gx-codeblock-code [data-token="property"] {
+  color: var(--syntax-property);
+}
+
+.gx-codeblock-code [data-token="string"] {
+  color: var(--syntax-string);
+}
+
+.gx-codeblock-code [data-token="typeBuiltin"] {
+  color: var(--syntax-type-builtin);
+}
+
+.gx-codeblock-code [data-token="typeName"] {
+  color: var(--syntax-type-name);
 }
 
 /* ---- image zoom: a picture magnifying under the pointer. ---- */

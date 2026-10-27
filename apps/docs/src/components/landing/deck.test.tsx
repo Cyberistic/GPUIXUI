@@ -42,7 +42,12 @@ const rule = (selector: string, last = false): string => {
 
 const omarchyCard = (): string => {
   const at = markup.indexOf('data-desktop="omarchy"');
-  return at === -1 ? "" : markup.slice(at, at + 2400);
+  if (at === -1) return "";
+  // The slice ends at the opening tag, not a fixed length: the style now also
+  // carries the syntax palette, and a character count cut the roles that
+  // follow it — the card's `--selected` was silently outside the window.
+  const end = markup.indexOf(">", at);
+  return markup.slice(at, end === -1 ? undefined : end);
 };
 
 /** The theme the Omarchy card must paint: its look over the Linux dark base. */
