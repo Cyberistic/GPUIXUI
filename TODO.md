@@ -295,10 +295,24 @@ gone from both preview surfaces (component and block), with its imports and the
 test that required its live link. `/live` is now reachable by address only; the
 route still mounts the real renderer. The `.gx-component-note` rule stays for the
 theme editor, which still renders one.
-`[~]` **Effects onto Effect** — two agents: `magnetic`, `liquid-button`,
-`shine-button`, `stars`, `gravity-stars` on one branch; `hexagon`,
-`splitting-text`, plus the reported-broken `rolling-text` and `image-zoom` on the
-other. Shared internals are off-limits so the branches cannot collide.
+`[x]` **Pointer effects on Effect** — `magnetic`, `liquid-button`,
+`shine-button`, `stars` and `gravity-stars` keep their pointer/flood/sweep state
+in a `SubscriptionRef` through `internal/local-state.ts` (same-turn signalling,
+one replaceable timer, `useSyncExternalStore` views); 1086 package and 1138
+behaviour tests, 31 of 41 cases fail with `send` neutered. The liquid flood now
+paints under its label in the native component too (a later child paints over an
+earlier one), matching the preview fix.
+`[~]` **Text effects on Effect** — `rolling-text`, `image-zoom`, `hexagon` and
+`splitting-text` are ported, and the two reported defects were preview CSS
+(rolling's clip was `1.3em` against a 26px value; image zoom's `max-width: 100%`
+squashed the height). Merging waits on the seam unification below, because the
+two branches each added one and only `local-state.ts` may survive.
+`[~]` **Sidebar component** — the library has none today. An agent is building
+shadcn's family (Provider/Trigger/Rail/Inset/Header/Content/Footer/Group/Menu/…,
+offcanvas/icon/none, ⌘B, cookie, mobile sheet) plus the standalone user menu from
+the screenshot.
+`[ ]` **Sidebar blocks 01–16** — recreated from shadcn's
+`apps/v4/registry/bases/base/blocks/sidebar-0x`, after the shell lands.
 `[x]` **Blocks full size, indexed as images** — a block page renders the screen
 in the page column (`.gx-block-stage`, 836×1310 for the dashboard) with the
 recipe in a collapsed disclosure under it; no 520px card, no Preview/Code frame.
