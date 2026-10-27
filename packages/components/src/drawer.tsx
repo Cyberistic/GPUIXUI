@@ -61,7 +61,7 @@ import {
 import { useMergedRef } from "./internal/ref.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { DismissScope } from "./internal/dismiss-scope.js";
-import { overlaySurfaceStyle } from "./internal/overlay.js";
+import { overlaySurfaceStyle, overlayVeilColor } from "./internal/overlay.js";
 import { useTheme, type Theme } from "./internal/theme.js";
 
 /** The window edge a drawer opens from. */
@@ -193,6 +193,12 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
   readonly label: string;
   /** Renders the top-right close control. Default `true`. */
   readonly showClose?: boolean;
+  /**
+   * Paints the grabber a top or bottom sheet wears. Default `true`; a column
+   * never paints one. It is decoration: the runtime has no drag host, so no
+   * gesture follows it (vaul's handle without the drag).
+   */
+  readonly grabber?: boolean;
   /** The native id focus should land on after the drawer takes focus. */
   readonly initialFocus?: () => number | null;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -242,19 +248,75 @@ const surfaceSize = (
     ? { width: window.width, height: Math.min(HEIGHT[size], window.height) }
     : { width: Math.min(WIDTH[size], window.width), height: window.height };
 
-/** The surface's look: the popover role, a border, the largest elevation. The
- * measured box, `position` and `overflow` stay here — the renderer owns them. */
+/**
+ * The corner radius each edge wears: the **inner** corners only, so the surface
+ * still reads flush to the window edge it opens from (shadcn's sheet is square
+ * to its edge; vaul's drawer rounds the top it rises out of).
+ */
+const innerCorners = (side: DrawerSide, radius: number) => ({
+  borderTopLeftRadius: side === "right" || side === "bottom" ? radius : 0,
+  borderTopRightRadius: side === "left" || side === "bottom" ? radius : 0,
+  borderBottomLeftRadius: side === "right" || side === "top" ? radius : 0,
+  borderBottomRightRadius: side === "left" || side === "top" ? radius : 0,
+});
+
+/**
+ * The grabber a top or bottom sheet wears: the vaul handle, painted as a bar on
+ * the inner edge. It is decoration — 0.11.0 has no drag host, so nothing follows
+ * the pointer — and it travels with the surface because it belongs to the box
+ * that slides.
+ */
+const GRABBER_WIDTH = 40;
+const GRABBER_HEIGHT = 4;
+
+const grabberStyle = (theme: Theme, side: DrawerSide) => ({
+  position: "absolute" as const,
+  left: 0,
+  right: 0,
+  top: side === "bottom" ? theme.spacing.sm : undefined,
+  bottom: side === "top" ? theme.spacing.sm : undefined,
+  display: "flex" as const,
+  justifyContent: "center" as const,
+  pointerEvents: "none" as const,
+});
+
+const grabberBarStyle = (theme: Theme) => ({
+  width: GRABBER_WIDTH,
+  height: GRABBER_HEIGHT,
+  borderRadius: theme.radius.full,
+  backgroundColor: theme.colors.borderStrong,
+});
+
+/** The surface's look: the popover role, a border, the largest elevation and the
+ * inner corners. The measured box, `position` and `overflow` stay here — the
+ * renderer owns them. */
 const surfaceStyle = (
   theme: Theme,
   box: { width: number; height: number },
+  side: DrawerSide,
   className?: string,
 ) => ({
-  ...overlaySurfaceStyle(DRAWER_CONTENT, className, theme),
+  ...overlaySurfaceStyle(DRAWER_CONTENT, className, theme, "lg"),
   width: box.width,
   height: box.height,
   position: "relative" as const,
   overflow: "scroll" as const,
+  ...innerCorners(side, theme.radius.xl),
 });
+
+/**
+ * The distance the surface slides on entry and exit: its own span, so a sheet
+ * arrives from outside the window rather than nudging 12px.
+ *
+ * The runtime has no `transform`, so this is a numeric `left`/`top` offset on
+ * the surface's box. The veil is the window-sized box with `overflow: hidden`,
+ * so the travelling surface is clipped at the window edge; the surface's content
+ * keeps its layout because a relative offset moves the box, not the flow.
+ */
+const entryTravel = (
+  side: DrawerSide,
+  box: { readonly width: number; readonly height: number },
+): number => (isVertical(side) ? box.height : box.width);
 
 /**
  * The veil and the edge surface, rendered while the drawer is open. Focus enters
@@ -266,6 +328,7 @@ export const DrawerContent = ({
   size: requestedSize = "md",
   label,
   showClose = true,
+  grabber = true,
   initialFocus,
   className,
   children,
@@ -317,6 +380,8 @@ export const DrawerContent = ({
     handleModalKeyDown({ event, contentId: trapId, renderer, onKeyDown });
   };
 
+  const travel = entryTravel(side, box);
+
   return (
     <anchored
       position={{ x: 0, y: 0 }}
@@ -329,8 +394,12 @@ export const DrawerContent = ({
         style={mergeStyles(
           overlaySurfaceStyle(DRAWER_OVERLAY, undefined, theme),
           {
+            // The house veil: the page's own background at 55%, not a blackout.
+            backgroundColor: overlayVeilColor(theme),
             width: window.width,
             height: window.height,
+            // A sheet slides its own span; the veil is the window that clips it.
+            overflow: "hidden",
             display: "flex",
             flexDirection: isVertical(side) ? "column" : "row",
             alignItems: "stretch",
@@ -342,7 +411,7 @@ export const DrawerContent = ({
       >
         {/* The shield's box sits outside the surface's own scroller, so a
             drawer scrolled down cannot carry the leaving guard off screen. The
-            close control lives here for the same reason. */}
+            surface, its grabber and its close control slide as one box. */}
         <div
           ref={outlineRef}
           onMouseDownOutside={(event) => {
@@ -359,46 +428,56 @@ export const DrawerContent = ({
           }}
         >
           <div
-            role="dialog"
-            aria-label={label}
-            tabIndex={-1}
-            {...rest}
-            ref={setContentElement}
-            testId={testId}
-            motion={presenceMotion(fadeFromSide(side, 12), presence)}
-            style={mergeStyles(
-              mergeStyles(
-                surfaceStyle(theme, box, className),
-                presenceStyle(presence.present),
-              ),
-              style,
-            )}
+            motion={presenceMotion(fadeFromSide(side, travel), presence)}
+            style={{
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              width: box.width,
+              height: box.height,
+              ...presenceStyle(presence.present),
+            }}
           >
-            <DismissScope>{children}</DismissScope>
-          </div>
-          {showClose ? (
-            // The motion's travel is written to `top`, so the placement lives
-            // on the wrapper and the control rides it.
+            {grabber && isVertical(side) ? (
+              <div testId="drawer-grabber" style={grabberStyle(theme, side)}>
+                <div style={grabberBarStyle(theme)} />
+              </div>
+            ) : null}
             <div
-              style={{
-                position: "absolute",
-                top: theme.spacing.lg,
-                right: theme.spacing.lg,
-                display: "flex",
-              }}
+              role="dialog"
+              aria-label={label}
+              tabIndex={-1}
+              {...rest}
+              ref={setContentElement}
+              testId={testId}
+              style={mergeStyles(
+                surfaceStyle(theme, box, side, className),
+                style,
+              )}
             >
-              <IconButton
-                label="Close drawer"
-                size="sm"
-                testId="drawer-close"
-                {...presenceTabStop(presence.present)}
-                onClick={close}
-                motion={presenceMotion(fadeFromSide(side, 12), presence)}
-              >
-                <Icon name="x" size="sm" color={theme.colors.foreground} />
-              </IconButton>
+              <DismissScope>{children}</DismissScope>
             </div>
-          ) : null}
+            {showClose ? (
+              <div
+                style={{
+                  position: "absolute",
+                  top: theme.spacing.lg,
+                  right: theme.spacing.lg,
+                  display: "flex",
+                }}
+              >
+                <IconButton
+                  label="Close drawer"
+                  size="sm"
+                  testId="drawer-close"
+                  {...presenceTabStop(presence.present)}
+                  onClick={close}
+                >
+                  <Icon name="x" size="sm" color={theme.colors.foreground} />
+                </IconButton>
+              </div>
+            ) : null}
+          </div>
           <PresenceShield present={presence.present} />
         </div>
       </div>
@@ -549,8 +628,10 @@ export const drawerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no swipe-to-dismiss: 0.11.0 has no drag host feature",
-    "the surface fades and travels 12px from its own edge rather than sliding its full width: the runtime has no transform, and width/left would reflow the content",
+    "no swipe-to-dismiss or snap points: 0.11.0 has no drag host, so the grabber cannot be dragged",
+    "the surface slides its own span from the named edge: the runtime has no transform, so the travel is a numeric left/top offset on the surface's own box, and the window-sized veil (overflow hidden) clips it",
+    "the veil cannot blur the page: StyleDesc has no filter or backdropFilter, so the 6px blur the drawings paint is drawing-only",
+    "the inner corners round (radius.xl) while the window edge stays flush, and a top/bottom sheet paints the vaul grabber as decoration",
     "no aria-modal or aria-labelledby in 0.11.0: the surface is named with aria-label",
     "the veil is an anchored element at window coordinates: the styled Dialog is a local overlay, not `@gpuix/react/dialog`'s portalled surface",
     "sizes are layout constants: tokens carry no drawer-size role",

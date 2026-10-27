@@ -638,8 +638,9 @@ describe("an edge panel", () => {
 
     page.renderer.clockFastForward(400);
     await delay();
-    // A right-hand panel starts to the right of its resting place.
-    expect(entering - where(page.renderer, "drawer", "x")).toBe(12);
+    // A right-hand panel starts outside the window, one surface width past its
+    // resting place, and slides in; the veil is the window that clips it.
+    expect(entering - where(page.renderer, "drawer", "x")).toBe(400);
     page.unmount();
   });
 });

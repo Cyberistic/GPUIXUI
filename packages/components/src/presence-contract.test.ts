@@ -849,9 +849,9 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
   },
   {
     surface: "Drawer",
-    prints: ["fade", "12px", "slow"],
+    prints: ["fade", "own span", "slow"],
     paints: [
-      { file: "src/drawer.tsx", marker: "fadeFromSide(side, 12)" },
+      { file: "src/drawer.tsx", marker: "fadeFromSide(side, travel)" },
       { file: "src/drawer.tsx", marker: 'useSurfaceTiming("slow")' },
     ],
   },

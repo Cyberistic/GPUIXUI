@@ -2,9 +2,12 @@
  * Drawer behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a drawer that opens from the wrong edge, a veil that
- * dims only its parent, focus left outside or not returned, Escape closing the
- * wrong layer, Tab escaping a modal, an uninterruptible drawer that closes, and
- * a controlled drawer that moves on its own.
+ * dims only its parent or blackens it instead of washing it, focus left outside
+ * or not returned, Escape closing the wrong layer, Tab escaping a modal, an
+ * uninterruptible drawer that closes, a controlled drawer that moves on its own,
+ * a sheet that nudges 12px instead of arriving from outside the window, a
+ * surface with no inner corners and no grabber, and a reduced reader made to
+ * watch the slide.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -20,7 +23,8 @@ import {
   DrawerTrigger,
 } from "../drawer.js";
 import { Button } from "../internal/button.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { alpha, darkTheme, lightTheme } from "../internal/theme.js";
+import { MotionProvider } from "../motion.js";
 import {
   after,
   boundsOf,
@@ -272,11 +276,108 @@ describe("Drawer", () => {
       // The resting box is the default edge's: a column against the right edge.
       expect(resting.x + resting.width).toBe(window.width);
       // The travel comes from that edge too, so the panel arrives from the
-      // right and rises from nowhere.
-      expect(entering.x - resting.x).toBe(12);
+      // right — its own width — and does not rise.
+      expect(entering.x - resting.x).toBe(resting.width);
       expect(entering.y).toBe(resting.y);
     } finally {
       page.unmount();
+    }
+  });
+
+  it("slides its whole span from the named edge and lands flush", async () => {
+    // The bug this guards: a sheet that "is not animating in". The surface used
+    // to nudge 12px; a vaul/shadow sheet arrives from outside the window, so the
+    // first frame is the whole box past the edge it owns, and the last frame is
+    // flush to it. The runtime has no `transform`, so this is a numeric offset
+    // on the surface's own box, clipped by the window-sized veil.
+    const window = { width: 1280, height: 800 };
+
+    const right = renderComponent(<Workspace side="right" />);
+    try {
+      right.renderer.clockPause();
+      clickCentreOf(right, "open");
+      await after(30);
+      const enteringRight = requireBounds(right, "drawer");
+      right.renderer.clockFastForward(400);
+      await after(30);
+      const restingRight = requireBounds(right, "drawer");
+
+      expect(enteringRight.x).toBe(window.width);
+      expect(enteringRight.x - restingRight.x).toBe(restingRight.width);
+      expect(restingRight.x + restingRight.width).toBe(window.width);
+    } finally {
+      right.unmount();
+    }
+
+    const bottom = renderComponent(<Workspace side="bottom" />);
+    try {
+      bottom.renderer.clockPause();
+      clickCentreOf(bottom, "open");
+      await after(30);
+      const enteringBottom = requireBounds(bottom, "drawer");
+      bottom.renderer.clockFastForward(400);
+      await after(30);
+      const restingBottom = requireBounds(bottom, "drawer");
+
+      expect(enteringBottom.y).toBe(window.height);
+      expect(enteringBottom.y - restingBottom.y).toBe(restingBottom.height);
+      expect(restingBottom.y + restingBottom.height).toBe(window.height);
+    } finally {
+      bottom.unmount();
+    }
+  });
+
+  it("paints the settled frame at once under the reduced preference", async () => {
+    const page = renderComponent(
+      <MotionProvider preference="reduced">
+        <Workspace side="right" />
+      </MotionProvider>,
+    );
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "open");
+      await after(30);
+      const first = requireBounds(page, "drawer");
+
+      page.renderer.clockFastForward(400);
+      await after(30);
+      const settled = requireBounds(page, "drawer");
+
+      expect(first).toEqual(settled);
+      expect(first.x + first.width).toBe(page.renderer.getWindowSize().width);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("rounds the inner corners and paints the vaul grabber on a sheet", () => {
+    // The bug this guards: every surface was square, so a bottom sheet looked
+    // like a docked column rather than the drawer shadcn/vaul draws. Only the
+    // corners inside the window round; the edge the surface opens from stays
+    // flush. The grabber is the handle the sheet wears — decoration, because
+    // 0.11.0 has no drag host.
+    const right = renderComponent(<Workspace side="right" />);
+    try {
+      clickCentreOf(right, "open");
+      const surface = right.renderer.findByTestId("drawer")?.style;
+      expect(surface?.borderTopLeftRadius).toBe(darkTheme.radius.xl);
+      expect(surface?.borderBottomLeftRadius).toBe(darkTheme.radius.xl);
+      expect(surface?.borderTopRightRadius).toBe(0);
+      expect(right.renderer.findByTestId("drawer-grabber")).toBeUndefined();
+    } finally {
+      right.unmount();
+    }
+
+    const bottom = renderComponent(<Workspace side="bottom" />);
+    try {
+      clickCentreOf(bottom, "open");
+      const surface = bottom.renderer.findByTestId("drawer")?.style;
+      expect(surface?.borderTopLeftRadius).toBe(darkTheme.radius.xl);
+      expect(surface?.borderTopRightRadius).toBe(darkTheme.radius.xl);
+      expect(surface?.borderBottomLeftRadius).toBe(0);
+      expect(bottom.renderer.findByTestId("drawer-grabber")).toBeDefined();
+    } finally {
+      bottom.unmount();
     }
   });
 
@@ -312,9 +413,11 @@ describe("Drawer", () => {
     expect(theme.renderer.findByTestId("drawer")?.style.backgroundColor).toBe(
       lightTheme.colors.popover,
     );
+    // The house veil is the page's own background at 55% — a wash, not the
+    // opaque `overlay` scrim the token package keeps for captions.
     expect(
       theme.renderer.findByTestId("drawer-backdrop")?.style.backgroundColor,
-    ).toBe(lightTheme.colors.overlay);
+    ).toBe(alpha(lightTheme.colors.background, 0.55));
 
     theme.unmount();
 

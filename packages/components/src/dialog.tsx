@@ -55,7 +55,7 @@ import {
   useModalFocus,
   useModalState,
 } from "./internal/modal.js";
-import { overlaySurfaceStyle } from "./internal/overlay.js";
+import { overlaySurfaceStyle, overlayVeilColor } from "./internal/overlay.js";
 import {
   assertParts,
   type PartChildren,
@@ -299,6 +299,8 @@ export const DialogContent = ({
         style={mergeStyles(
           overlaySurfaceStyle(DIALOG_OVERLAY, undefined, theme),
           {
+            // The house veil: the page's own background at 55%, not a blackout.
+            backgroundColor: overlayVeilColor(theme),
             width: window.width,
             height: window.height,
             display: "flex",

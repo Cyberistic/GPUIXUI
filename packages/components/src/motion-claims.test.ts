@@ -319,21 +319,16 @@ describe("the motion the records deny", () => {
     expect(mentions(limitationsOf("Message"), "measured height")).toBe(true);
   });
 
-  it("records the travel the drawer paints, at the offset it paints it", () => {
+  it("records the span the drawer slides, and the axis it travels on", () => {
     const source = Option.getOrElse(readText("src/drawer.tsx"), () => "");
-    const offset = Option.flatMap(
-      Option.fromNullishOr(/fadeFromSide\(side, (\d+)\)/.exec(source)),
-      (match) => Option.fromNullishOr(match[1]),
-    );
     const page = Option.getOrElse(readText("docs/drawer.mdx"), () => "");
-    const travel = Option.match(offset, {
-      onNone: () => "",
-      onSome: (value) => `${value}px`,
-    });
 
-    expect(travel).not.toBe("");
+    // The surface travels its own measured box, not a pixel nudge.
+    expect(source).toContain("fadeFromSide(side, travel)");
+    expect(source).toContain("isVertical(side) ? box.height : box.width");
+    expect(source).toContain("overflow");
     expect(denialsIn(limitationsOf("Drawer").join("\n"))).toEqual([]);
-    expect(mentions(limitationsOf("Drawer"), travel)).toBe(true);
-    expect(page).toContain(travel);
+    expect(mentions(limitationsOf("Drawer"), "own span")).toBe(true);
+    expect(page).toContain("own span");
   });
 });
