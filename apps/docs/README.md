@@ -282,9 +282,9 @@ src/components/docs/license-table.tsx     LICENSES/*.md, rendered
 src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
-src/components/docs/block-index.tsx       The Blocks index
+src/components/docs/block-index.tsx       The Blocks index, one thumbnail card per block
 src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Dashboard management, Kanban, Settings dialog, File manager and Email inbox
-src/components/docs/block-preview.tsx     A block's browser rendering
+src/components/docs/block-preview.tsx     A block page: the screen at the page's own width, then its recipe
 src/components/docs/block-icons.tsx       The glyphs the block previews draw
 src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
 src/components/docs/auth-blocks.tsx       The auth examples, the sign-in page and their recipes
@@ -439,6 +439,7 @@ src/lib/live-surface.test.ts        /live's batch, its route and the isolation h
 
 scripts/live-frame.ts               The live surface's frame contract: page, report, pixel
 scripts/chrome-session.ts           The headless-Chrome page every probe drives, preload script included
+scripts/block-thumbnails.ts          Captures each block's own page as the index tile image
 scripts/live-surface-probe.ts       Drives headless Chrome to prove a real GPUix frame paints
 scripts/live-route-probe.ts         Holds /live to the same rule, and a press to the renderer's path
 scripts/preview-press-probe.ts      Presses a hydrated preview and reads the carousel's own state
@@ -688,13 +689,29 @@ role on the card surface in both schemes.
 A block page mounts its reproduction by registry key (`<BlockPreview
 name="dashboard-01" />`); `src/lib/block-page.test.ts` holds every page to a
 registered key and every registered block to a page, and checks both are in the
-Blocks sidebar. The dashboard's charts are `@gpuixui/data`'s — `BarChart`,
-`DonutChart` and `StackedBar` — and the page states the runtime's measured rule
-the package implements: one `<svg source>` paints one tint, so a multi-series
-chart is one stacked element per colour. The Code tab is the real source too:
-`src/lib/block-source.test.ts` resolves every recipe's `@gpuixui/*` imports
-against the workspace, so a renamed export fails instead of teaching a broken
-import.
+Blocks sidebar. A block is a page, so it is not a specimen in the component
+pages' Preview/Code card: `<BlockPreview>` paints the screen at the page
+column's own width — no 520px panel and no scroll box, which cropped a dashboard
+and squeezed an inbox — and the recipe follows in a disclosure under it
+(`block-preview.test.tsx` fails if the scene goes back inside `gx-component`).
+The dashboard's charts are `@gpuixui/data`'s — `BarChart`, `DonutChart` and
+`StackedBar` — and the page states the runtime's measured rule the package
+implements: one `<svg source>` paints one tint, so a multi-series chart is one
+stacked element per colour. Every recipe is the real source too:
+`src/lib/block-source.test.ts` resolves each one's `@gpuixui/*` imports against
+the workspace, so a renamed export fails instead of teaching a broken import.
+
+The Blocks index paints one checked-in capture per block
+(`public/blocks/<slug>.webp`) instead of mounting the scene, so the grid costs
+twelve images rather than twelve live compositions. A capture is one rendering
+and one palette, so a tile does not repaint with the switch; the block page it
+links to does. The captures are made from the blocks' own pages, never drawn for
+the index:
+`nub run --filter @gpuixui/docs blocks:thumbnails` opens `/docs/blocks`, reads
+the tile `src` list the index prints, captures each page's `.gx-block-stage` top
+at 16:10 and writes it in place. A new block needs one run, and
+`block-index.test.tsx` fails on a registered block whose image is missing or is
+not a WebP capture.
 
 ## The live surface
 
@@ -833,6 +850,7 @@ the link as well: the file is derived from the page, never typed beside it.
 ```sh
 nub run dev:docs                                 # dev server
 nub run --filter @gpuixui/docs test              # vitest, including the page guards
+nub run --filter @gpuixui/docs blocks:thumbnails # recapture the Blocks index images
 nub run --filter @gpuixui/docs build             # production build
 nub run --filter @gpuixui/docs check-types       # tsc
 ```
