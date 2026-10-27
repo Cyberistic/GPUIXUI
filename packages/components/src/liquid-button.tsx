@@ -25,13 +25,10 @@ import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import * as Option from "effect/Option";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Button, actionOnColor, type ButtonProps } from "./internal/button.js";
-import {
-  measuredBox,
-  measuredPoint,
-  type MeasuredBox,
-} from "./internal/measure.js";
+import { measuredBox, measuredPoint } from "./internal/measure.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import {
   transitionWindowMs,
   useMotionPreference,
@@ -40,19 +37,10 @@ import {
 import { alpha, useTheme } from "./internal/theme.js";
 import {
   liquidAcross,
-  liquidEdge,
   liquidEmpty,
   liquidOpacity,
-  type LiquidEdge,
 } from "./liquid-button/logic.js";
-
-/** One flood on screen: the edge it entered from, the edge it drains to, and its phase. */
-interface Flood {
-  readonly entry: LiquidEdge;
-  readonly drain: LiquidEdge;
-  readonly filled: boolean;
-  readonly run: number;
-}
+import { makeLiquidStore, type Flood } from "./liquid-button/store.js";
 
 /** The frame the flood is heading for: across while filled, empty at its drain edge. */
 const frameFor = (flood: Flood, full: number) =>
@@ -89,12 +77,11 @@ export const LiquidButton = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level).enter;
-  const box = useRef<Option.Option<MeasuredBox>>(Option.none());
-  const pointer = useRef<Option.Option<number>>(Option.none());
-  const [flood, setFlood] = useState<Option.Option<Flood>>(Option.none());
+  const store = useLocalStore(makeLiquidStore);
+  const { box, flood } = useLocalState(store.local);
   const wash =
     liquidColor ?? alpha(actionOnColor(theme, variant), liquidOpacity);
-  const draining = Option.exists(flood, (current) => !current.filled);
+  const inert = disabled || preference === "reduced";
 
   const windowMs = transitionWindowMs(timing);
 
@@ -103,81 +90,28 @@ export const LiquidButton = ({
   // the caller disables is the same rule — the wash marks a pointer on an action
   // that can no longer answer one, and nothing else would ever drain it.
   useEffect(() => {
-    if (preference === "reduced" || disabled) setFlood(Option.none());
-  }, [disabled, preference]);
-
-  useEffect(() => {
-    if (!draining || preference === "reduced") return;
-    const handle = setTimeout(() => setFlood(Option.none()), windowMs);
-    return () => clearTimeout(handle);
-  }, [draining, preference, windowMs]);
+    if (inert) send(store.clear);
+  }, [inert, store]);
 
   const measure = (event: EventPayload) => {
-    box.current = measuredBox(event);
+    send(store.measure(measuredBox(event)));
     onLayout?.(event);
   };
 
-  /** The edge an x-coordinate falls on, when the box has been measured. */
-  const edgeAt = (x: number): Option.Option<LiquidEdge> =>
-    Option.map(box.current, (surface) => liquidEdge(x, surface));
-
-  /**
-   * The edge the pointer is on.
-   *
-   * A move carries its position; an enter or a leave does not, so those read the
-   * last move that landed inside the control. That is the side the pointer was
-   * over when it left, which is the edge it drains through.
-   */
-  const edgeOf = (event: EventPayload): Option.Option<LiquidEdge> =>
-    Option.match(
-      Option.map(measuredPoint(event), (point) => point.x),
-      {
-        onNone: () => Option.flatMap(pointer.current, edgeAt),
-        onSome: edgeAt,
-      },
-    );
-
   const move = (event: EventPayload) => {
     onMouseMove?.(event);
-    pointer.current = Option.match(measuredPoint(event), {
-      onNone: () => pointer.current,
-      onSome: (point) => Option.some(point.x),
-    });
-    if (disabled || preference === "reduced") return;
-    if (Option.exists(flood, (current) => current.filled)) return;
-    Option.match(edgeOf(event), {
-      onNone: () => undefined,
-      onSome: (edge) =>
-        setFlood((current) =>
-          Option.some({
-            entry: edge,
-            drain: edge,
-            filled: true,
-            run: Option.match(current, {
-              onNone: () => 0,
-              onSome: (previous) => previous.run + 1,
-            }),
-          }),
-        ),
-    });
+    send(store.move(measuredPoint(event), inert));
   };
 
   const leave = (event: EventPayload) => {
     onMouseLeave?.(event);
-    if (disabled || preference === "reduced") return;
-    setFlood((current) =>
-      Option.map(current, (previous) => ({
-        ...previous,
-        drain: Option.getOrElse(edgeOf(event), () => previous.entry),
-        filled: false,
-      })),
-    );
+    send(store.leave(measuredPoint(event), inert, windowMs));
   };
 
   const layer = Option.match(flood, {
     onNone: () => null,
     onSome: (current) =>
-      Option.match(box.current, {
+      Option.match(box, {
         onNone: () => null,
         onSome: (measured) => (
           <div
