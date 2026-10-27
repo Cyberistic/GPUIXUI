@@ -330,6 +330,7 @@ import {
   SpinnerInButtons,
   spinnerDemoSource,
   spinnerInButtonsSource,
+  spinnerSizesSource,
 } from "./spinner-demo";
 import { StackDemo, stackDemoSource } from "./stack-demo";
 import { TextDemo, textDemoSource } from "./text-demo";
@@ -3425,6 +3426,7 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "spacer-demo": { render: SpacerDemo, source: spacerDemoSource },
   "spinner-demo": { render: SpinnerDemo, source: spinnerDemoSource },
+  "spinner-sizes": { render: SpinnerDemo, source: spinnerSizesSource },
   "spinner-in-buttons": {
     render: SpinnerInButtons,
     source: spinnerInButtonsSource,

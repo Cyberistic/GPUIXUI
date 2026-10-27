@@ -59,6 +59,18 @@ const spinnerDemoSource = `import { Spinner, Stack, Text } from "@gpuixui/primit
 
 export { spinnerDemoSource };
 
+/** The sizes, as the component page's own code tab. */
+const spinnerSizesSource = `import { Spinner } from "@gpuixui/components/spinner";
+
+<Spinner size="sm" label="Loading" />;
+<Spinner size="md" label="Loading" />;
+<Spinner size="lg" label="Loading" />;
+
+<Spinner accent="destructive" label="Deleting" />;
+<Spinner accent="muted" label="Refreshing" />;`;
+
+export { spinnerSizesSource };
+
 /** The action state a reader meets most often: a button holding the mark. */
 export const SpinnerInButtons = () => (
   <div className="gx-demo gx-demo-column gx-spin3-scene">
