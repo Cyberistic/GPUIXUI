@@ -14,6 +14,7 @@ import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import {
   MessageScroller,
+  MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerJumpToLatest,
   MessageScrollerViewport,
@@ -118,19 +119,21 @@ export const MessageScrollerExample = () => {
             backgroundColor: theme.colors.card,
           }}
         >
-          {messages.map((message) => (
-            <MessageScrollerItem key={message.id}>
-              <text
-                style={{
-                  ...textStyle(theme, "label"),
-                  color: theme.colors.mutedForeground,
-                }}
-              >
-                {message.from}
-              </text>
-              <text>{message.body}</text>
-            </MessageScrollerItem>
-          ))}
+          <MessageScrollerContent>
+            {messages.map((message) => (
+              <MessageScrollerItem key={message.id}>
+                <text
+                  style={{
+                    ...textStyle(theme, "label"),
+                    color: theme.colors.mutedForeground,
+                  }}
+                >
+                  {message.from}
+                </text>
+                <text>{message.body}</text>
+              </MessageScrollerItem>
+            ))}
+          </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerJumpToLatest />
       </MessageScroller>

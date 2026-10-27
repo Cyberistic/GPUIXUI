@@ -1068,7 +1068,7 @@ describe("the label an accent row paints", () => {
  *
  * `Box`/`surfaceStyle` paints six content tones, and the default `Text` inside
  * one keeps `foreground` — a `muted` panel, a popover, a message bubble
- * (`MESSAGE_BUBBLES.user` is `bg-muted`). Only `background`, `card`, `accent`
+ * (`BUBBLE_VARIANTS.muted` is `bg-muted`). Only `background`, `card`, `accent`
  * and `selected` were measured, while `docs/design-system.md` already claimed
  * body text on a popover, so a brand whose `muted` drifted toward its body role
  * erased the copy inside it and passed every suite.
@@ -1120,13 +1120,13 @@ describe("the body role on a box's own surface", () => {
       "utf8",
     );
     const bubbles = recipes.slice(
-      recipes.indexOf("export const MESSAGE_BUBBLES"),
-      recipes.indexOf("export const MESSAGE_AUTHOR"),
+      recipes.indexOf("export const BUBBLE_VARIANTS"),
+      recipes.indexOf("export const BUBBLE_ACTIONS"),
     );
 
     // The bubble sets no colour of its own, and `Text`'s default tone is the
     // body role — so the pair above is the one a user message paints.
-    expect(bubbles).toContain('user: "bg-muted"');
+    expect(bubbles).toContain('muted: "bg-muted text-foreground"');
     expect(style).toContain(
       'default: (theme) => colorRole(theme, "foreground")',
     );

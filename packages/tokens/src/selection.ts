@@ -26,7 +26,7 @@
  * one — 30% to 26% — because its secondary text is held to the AAA floor.
  *
  * The fifth content surface is **`muted`**, the fill the library paints behind a
- * user's chat bubble (`MESSAGE_BUBBLES.user` is `bg-muted`) and behind a
+ * user's chat bubble (`BUBBLE_VARIANTS.muted` is `bg-muted`) and behind a
  * `surface="muted"` box, and a `Text selectable` inside either one hands the
  * runtime the wash over that fill. It was measured by nothing, and it found one
  * style: Aero dark's 30% wash buried the bubble's body text at 6.74:1 under the

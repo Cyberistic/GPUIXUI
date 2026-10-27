@@ -10,8 +10,10 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "../src/internal/button.js";
 import {
   ChatComposer,
+  ChatHeader,
   ChatMessages,
   ChatRoot,
   chatMove,
@@ -19,11 +21,13 @@ import {
 } from "../src/chat.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import {
+  Message,
   MessageAvatar,
   MessageContent,
-  MessageRoot,
+  MessageHeader,
   type MessageVariant,
 } from "../src/message.js";
+import { Bubble, BubbleContent } from "../src/bubble.js";
 
 const REPLY =
   "The release is green. Three fixes landed: the overlay dismissal order, the tabs anchor and the disabled label.";
@@ -162,21 +166,39 @@ export const ChatExample = () => {
         onRetry={retry}
         error="The reply failed. Retry, or send a shorter prompt."
       >
+        <ChatHeader
+          testId="chat-example-header"
+          title="Release thread"
+          actions={
+            <Button size="sm" variant="ghost" onClick={() => setRows(seed)}>
+              Reset
+            </Button>
+          }
+        />
         <ChatMessages testId="chat-example-messages">
           {rows.map((row) => (
-            <MessageRoot
+            <Message
               key={row.id}
               testId={`chat-row-${row.id}`}
               variant={row.variant}
+              timestamp={row.variant === "user" ? "now" : undefined}
             >
               <MessageAvatar />
               <MessageContent
                 testId={`chat-body-${row.id}`}
                 streaming={row.streaming}
               >
-                <text>{row.body}</text>
+                <MessageHeader />
+                <Bubble
+                  align={row.variant === "user" ? "end" : "start"}
+                  variant={row.variant === "user" ? "muted" : "ghost"}
+                >
+                  <BubbleContent>
+                    <text>{row.body}</text>
+                  </BubbleContent>
+                </Bubble>
               </MessageContent>
-            </MessageRoot>
+            </Message>
           ))}
         </ChatMessages>
         <ChatComposer

@@ -85,6 +85,10 @@ const wheel = (root: ComponentTestRoot, deltaY: number): void => {
   );
 };
 
+/** Whether the jump control is painted and reachable, or only reserving rail. */
+const jumpActive = (root: ComponentTestRoot): boolean =>
+  root.renderer.findByTestId("jump")?.customProps?.tabIndex === 0;
+
 /** Whether the last row sits inside the viewport, i.e. the end is visible. */
 const endIsVisible = (root: ComponentTestRoot, last: number): boolean => {
   const viewport = requireBounds(root, "viewport");
@@ -101,7 +105,7 @@ describe("MessageScroller", () => {
 
     expect(offsetOf(root)).toBeLessThan(0);
     expect(endIsVisible(root, 39)).toBe(true);
-    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+    expect(jumpActive(root)).toBe(false);
 
     root.unmount();
   });
@@ -110,7 +114,7 @@ describe("MessageScroller", () => {
     const root = renderComponent(<Transcript count={2} />);
 
     expect(offsetOf(root)).toBe(0);
-    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+    expect(jumpActive(root)).toBe(false);
 
     root.unmount();
   });
@@ -123,7 +127,7 @@ describe("MessageScroller", () => {
 
     expect(offsetOf(root)).toBeLessThan(before);
     expect(endIsVisible(root, 40)).toBe(true);
-    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+    expect(jumpActive(root)).toBe(false);
     expect(text(root)).toContain("message 40");
 
     root.unmount();
@@ -133,13 +137,13 @@ describe("MessageScroller", () => {
     const root = renderComponent(<Transcript count={40} />);
     wheel(root, 120);
     const before = offsetOf(root);
-    expect(root.renderer.findByTestId("jump")).toBeDefined();
+    expect(jumpActive(root)).toBe(true);
 
     root.rerender(<Transcript count={41} />);
 
     expect(offsetOf(root)).toBe(before);
     expect(endIsVisible(root, 40)).toBe(false);
-    expect(root.renderer.findByTestId("jump")).toBeDefined();
+    expect(jumpActive(root)).toBe(true);
     expect(text(root)).toContain("1 new message");
 
     root.unmount();
@@ -161,13 +165,13 @@ describe("MessageScroller", () => {
 
     const after = offsetOf(root);
     const endVisible = endIsVisible(root, 40);
-    const jump = root.renderer.findByTestId("jump");
+    const jump = jumpActive(root);
     const painted = text(root);
     root.unmount();
 
     expect(after).toBeLessThan(before);
     expect(endVisible).toBe(true);
-    expect(jump).toBeUndefined();
+    expect(jump).toBe(false);
     expect(painted).not.toContain("1 new message");
   });
 
@@ -194,7 +198,7 @@ describe("MessageScroller", () => {
     clickCentreOf(root, "jump");
 
     expect(endIsVisible(root, 42)).toBe(true);
-    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+    expect(jumpActive(root)).toBe(false);
     expect(onPinnedChange).toHaveBeenCalledWith(true);
 
     root.unmount();
@@ -204,12 +208,12 @@ describe("MessageScroller", () => {
     const root = renderComponent(<Transcript count={40} />);
     wheel(root, 120);
     root.rerender(<Transcript count={41} />);
-    expect(root.renderer.findByTestId("jump")).toBeDefined();
+    expect(jumpActive(root)).toBe(true);
 
     wheel(root, -2000);
 
     expect(endIsVisible(root, 40)).toBe(true);
-    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+    expect(jumpActive(root)).toBe(false);
 
     root.unmount();
   });
@@ -220,7 +224,7 @@ describe("MessageScroller", () => {
     root.rerender(<Transcript count={40} grown />);
 
     expect(endIsVisible(root, 39)).toBe(true);
-    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+    expect(jumpActive(root)).toBe(false);
 
     root.unmount();
   });
@@ -233,7 +237,7 @@ describe("MessageScroller", () => {
     root.rerender(<Transcript count={40} grown />);
 
     expect(offsetOf(root)).toBe(before);
-    expect(root.renderer.findByTestId("jump")).toBeDefined();
+    expect(jumpActive(root)).toBe(true);
 
     root.unmount();
   });

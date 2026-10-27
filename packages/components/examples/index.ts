@@ -20,6 +20,7 @@ import { AvatarExample } from "./avatar.example.js";
 import { AvatarGroupExample } from "./avatar-group.example.js";
 import { BadgeExample } from "./badge.example.js";
 import { BreadcrumbExample } from "./breadcrumb.example.js";
+import { BubbleExample } from "./bubble.example.js";
 import { BubblesExample } from "./bubbles.example.js";
 import { CalendarExample } from "./calendar.example.js";
 import { CardExample } from "./card.example.js";
@@ -113,6 +114,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "avatar-group": AvatarGroupExample,
   badge: BadgeExample,
   breadcrumb: BreadcrumbExample,
+  bubble: BubbleExample,
   bubbles: BubblesExample,
   calendar: CalendarExample,
   card: CardExample,

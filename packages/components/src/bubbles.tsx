@@ -97,7 +97,7 @@ export interface BubblesProps extends Omit<Props, "children" | "style"> {
   readonly style?: StateStyle<BubblesState>;
 }
 
-interface BubbleProps {
+interface BubbleLapProps {
   readonly spec: BubbleSpec;
   readonly ink: string;
   readonly radius: number;
@@ -112,7 +112,7 @@ interface BubbleProps {
  * element at the bottom; the component's own state survives that remount, which
  * is what lets the next lap start without a caller-driven timer.
  */
-const Bubble = ({ spec, ink, radius, still, box }: BubbleProps) => {
+const BubbleLap = ({ spec, ink, radius, still, box }: BubbleLapProps) => {
   const [lap, setLap] = useState(0);
   const journey = bubbleJourney(spec, box);
   const motion: MotionProps = {
@@ -259,7 +259,7 @@ export const Bubbles = ({
       )}
     >
       {Arr.map(specs, (spec) => (
-        <Bubble
+        <BubbleLap
           key={spec.key}
           spec={spec}
           ink={ink}

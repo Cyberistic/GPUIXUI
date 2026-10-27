@@ -16,15 +16,20 @@
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import type { ChatStatus } from "../chat/logic.js";
-import { ChatComposer, ChatMessages, ChatRoot } from "../chat.js";
+import { ChatComposer, ChatHeader, ChatMessages, ChatRoot } from "../chat.js";
 import { nodesWithRole } from "../internal/a11y.js";
-import { clickCentreOf, requireBounds } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  requireBounds,
+  settle,
+} from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
 } from "../internal/test-root.js";
-import { MessageContent, MessageRoot } from "../message.js";
+import { Message, MessageContent } from "../message.js";
+import { Bubble, BubbleContent } from "../bubble.js";
 
 /** One conversation: a bounded transcript, then the composer. */
 const Conversation = ({
@@ -36,6 +41,7 @@ const Conversation = ({
   onStatusChange,
   error,
   empty,
+  grown,
 }: {
   readonly rows: number;
   readonly status?: ChatStatus;
@@ -45,6 +51,7 @@ const Conversation = ({
   readonly onStatusChange?: (status: ChatStatus) => void;
   readonly error?: string;
   readonly empty?: string;
+  readonly grown?: boolean;
 }) => (
   <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
     <ChatRoot
@@ -56,17 +63,27 @@ const Conversation = ({
       onStatusChange={onStatusChange}
       error={error}
     >
+      <ChatHeader title="Release thread" />
       <ChatMessages
         empty={
           empty === undefined ? undefined : <text testId="empty">{empty}</text>
         }
       >
         {Array.from({ length: rows }, (_, index) => (
-          <MessageRoot key={index} testId={`row-${index}`} variant="assistant">
+          <Message
+            key={index}
+            testId={`row-${index}`}
+            variant="assistant"
+            style={grown && index === rows - 1 ? { height: 120 } : undefined}
+          >
             <MessageContent testId={`body-${index}`}>
-              <text>{`message ${index}`}</text>
+              <Bubble>
+                <BubbleContent>
+                  <text>{`message ${index}`}</text>
+                </BubbleContent>
+              </Bubble>
             </MessageContent>
-          </MessageRoot>
+          </Message>
         ))}
       </ChatMessages>
       <ChatComposer testId="composer" hint="Enter to send" />
@@ -81,6 +98,10 @@ const type = (root: ComponentTestRoot, text: string): void => {
   );
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
+
+/** Whether the jump control is painted and reachable, or only reserving rail. */
+const jumpActive = (root: ComponentTestRoot): boolean =>
+  root.renderer.findByTestId("chat-jump")?.customProps?.tabIndex === 0;
 
 /** The viewport's vertical scroll offset; `0` when it has not scrolled. */
 const offsetOf = (root: ComponentTestRoot): number =>
@@ -271,6 +292,15 @@ describe("Chat", () => {
     const root = renderComponent(
       <Conversation
         rows={2}
+        onRetry={onRetry}
+        onStatusChange={onStatusChange}
+      />,
+    );
+    const composer = requireBounds(root, "composer").y;
+
+    root.rerender(
+      <Conversation
+        rows={2}
         status="error"
         error="The model timed out."
         onRetry={onRetry}
@@ -278,6 +308,9 @@ describe("Chat", () => {
       />,
     );
 
+    // The failure is painted in the fixed header, so it does not take height
+    // from the transcript or move the composer.
+    expect(requireBounds(root, "composer").y).toBe(composer);
     expect(root.renderer.findByTestId("chat-error")).toBeDefined();
     expect(root.renderer.getAllText()).toContain("The model timed out.");
 
@@ -294,16 +327,16 @@ describe("Chat", () => {
     );
     wheel(root, 2000);
 
-    // The failure is laid out between the viewport and the affordance, so a
-    // reader at the top of a long transcript still sees it without scrolling.
-    // Inside the scroller it would sit past the viewport's box, off the window.
+    // The failure lives in the fixed header, so a reader at the top of a long
+    // transcript still sees it without scrolling, and it never takes height
+    // from the viewport the way a row between the transcript and the composer
+    // did. The full sentence is the status line's description; the line itself
+    // is truncated to the header's fixed line.
     const error = requireBounds(root, "chat-error");
     const viewport = requireBounds(root, "chat-messages");
     const chat = requireBounds(root, "chat");
-    expect(error.y).toBeGreaterThanOrEqual(viewport.y + viewport.height);
-    expect(error.y + error.height).toBeLessThanOrEqual(
-      chat.y + chat.height + 1,
-    );
+    expect(error.y).toBeGreaterThanOrEqual(chat.y);
+    expect(error.y + error.height).toBeLessThanOrEqual(viewport.y);
 
     root.unmount();
   });
@@ -313,11 +346,15 @@ describe("Chat", () => {
       <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
         <ChatRoot onSubmit={() => undefined}>
           <ChatMessages>
-            <MessageRoot testId="row">
+            <Message testId="row">
               <MessageContent>
-                <text>hi</text>
+                <Bubble>
+                  <BubbleContent>
+                    <text>hi</text>
+                  </BubbleContent>
+                </Bubble>
               </MessageContent>
-            </MessageRoot>
+            </Message>
           </ChatMessages>
           <ChatComposer testId="composer" disabled />
         </ChatRoot>
@@ -359,16 +396,86 @@ describe("Chat", () => {
     root.unmount();
   });
 
+  it("appends three messages without moving the composer, following only at the bottom", () => {
+    const root = renderComponent(<Conversation rows={30} />);
+    const composer = requireBounds(root, "composer").y;
+    const viewport = requireBounds(root, "chat-messages");
+    expect(viewport.height).toBeGreaterThan(100);
+    expect(composer).toBeGreaterThan(viewport.y + viewport.height);
+    const before = offsetOf(root);
+    expect(endIsVisible(root, 29)).toBe(true);
+
+    [31, 32, 33].forEach((rows) => {
+      root.rerender(<Conversation rows={rows} />);
+      expect(requireBounds(root, "composer").y).toBe(composer);
+      expect(endIsVisible(root, rows - 1)).toBe(true);
+    });
+
+    // The viewport followed the tail: its offset moved further from the start.
+    expect(offsetOf(root)).toBeLessThan(before);
+    expect(jumpActive(root)).toBe(false);
+
+    root.unmount();
+  });
+
+  it("appends three messages without moving a reader who scrolled up", () => {
+    const root = renderComponent(<Conversation rows={30} />);
+    const composer = requireBounds(root, "composer").y;
+    const viewport = requireBounds(root, "chat-messages").height;
+    wheel(root, 160);
+    settle(root);
+    // The jump control appeared in its reserved rail: neither the transcript's
+    // height nor the composer's place moved.
+    expect(requireBounds(root, "chat-messages").height).toBe(viewport);
+    expect(requireBounds(root, "composer").y).toBe(composer);
+    const before = offsetOf(root);
+    expect(before).toBeLessThan(0);
+
+    [31, 32, 33].forEach((rows) => {
+      root.rerender(<Conversation rows={rows} />);
+      expect(requireBounds(root, "composer").y).toBe(composer);
+      expect(offsetOf(root)).toBe(before);
+      expect(endIsVisible(root, rows - 1)).toBe(false);
+    });
+
+    expect(jumpActive(root)).toBe(true);
+    expect(root.renderer.getAllText()).toContain("3 new messages");
+
+    root.unmount();
+  });
+
+  it("grows a streaming row without moving the composer, pinned or away", () => {
+    const pinnedRoot = renderComponent(<Conversation rows={30} />);
+    const pinnedComposer = requireBounds(pinnedRoot, "composer").y;
+    pinnedRoot.rerender(<Conversation rows={30} status="streaming" grown />);
+    expect(requireBounds(pinnedRoot, "composer").y).toBe(pinnedComposer);
+    expect(endIsVisible(pinnedRoot, 29)).toBe(true);
+    pinnedRoot.unmount();
+
+    const awayRoot = renderComponent(<Conversation rows={30} />);
+    wheel(awayRoot, 160);
+    const awayComposer = requireBounds(awayRoot, "composer").y;
+    const awayOffset = offsetOf(awayRoot);
+    awayRoot.rerender(<Conversation rows={30} status="streaming" grown />);
+    expect(requireBounds(awayRoot, "composer").y).toBe(awayComposer);
+    expect(offsetOf(awayRoot)).toBe(awayOffset);
+    awayRoot.unmount();
+  });
+
   it("renders the attachments and hint a caller supplies", () => {
     const root = renderComponent(
       <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
         <ChatRoot onSubmit={() => undefined}>
           <ChatMessages>
-            <MessageRoot testId="row">
+            <Message testId="row">
               <MessageContent>
-                <text>hi</text>
+                <Bubble>
+                  <BubbleContent>
+                    <text>hi</text>
+                  </BubbleContent>
+                </Bubble>
               </MessageContent>
-            </MessageRoot>
+            </Message>
           </ChatMessages>
           <ChatComposer
             testId="composer"
@@ -441,6 +548,7 @@ describe("Chat", () => {
           onSubmit={() => undefined}
           onStop={() => undefined}
         >
+          <ChatHeader />
           <ChatMessages emptyTitle="" emptyDescription="  " />
           <ChatComposer label="" submitLabel="  " stopLabel="" hint="   " />
         </ChatRoot>

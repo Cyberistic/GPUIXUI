@@ -623,16 +623,57 @@ export const COLOR_PICKER_INPUT =
   "text-sm font-sans flex-grow px-2 bg-background text-input-foreground rounded-md border border-border";
 
 /** `message-scroller.tsx` — the scroller root. */
-export const MESSAGE_SCROLLER_ROOT = "flex flex-col gap-1.5 min-h-0";
+export const MESSAGE_SCROLLER_ROOT = "flex flex-col min-h-0 min-w-0";
 
 /** `message-scroller.tsx` — the scroll viewport. `overflow-y: scroll` stays in
  * `style` (scroll logic). */
 export const MESSAGE_SCROLLER_VIEWPORT =
-  "flex flex-col min-h-0 bg-background text-foreground";
+  "flex flex-col min-h-0 min-w-0 bg-background text-foreground";
+
+/** `message-scroller.tsx` — the rows column. */
+export const MESSAGE_SCROLLER_CONTENT = "flex flex-col min-w-0";
 
 /** `message-scroller.tsx` — one message row. */
 export const MESSAGE_SCROLLER_ITEM =
-  "flex flex-col gap-1 shrink-0 self-stretch pb-1.5";
+  "flex flex-col min-w-0 shrink-0 self-stretch";
+
+/** `message-scroller.tsx` — the reserved rail the jump control travels in. Its
+ * height is a theme metric and stays in `style`, because the rail is what keeps
+ * the viewport from resizing when the control appears. */
+export const MESSAGE_SCROLLER_RAIL =
+  "flex flex-row items-center justify-center shrink-0";
+
+/** `bubble.tsx` — the bubble's row: an optional avatar beside the column. */
+export const BUBBLE_ROOT = "flex flex-row items-end gap-2 min-w-0";
+
+/** `bubble.tsx` — the content/actions column inside the bubble row. */
+export const BUBBLE_COLUMN = "flex flex-col gap-1 min-w-0";
+
+/** `bubble.tsx` — the framed surface. */
+export const BUBBLE_CONTENT =
+  "flex flex-col gap-1 rounded-xl px-3 py-2 text-sm min-w-0";
+
+/** `bubble.tsx` — the seven surfaces. `ghost` has no frame or padding; the
+ * padding is removed in `style` because the recipe's box is the same. */
+export const BUBBLE_VARIANTS = {
+  default: "bg-primary text-primary-foreground",
+  secondary: "bg-secondary text-secondary-foreground",
+  muted: "bg-muted text-foreground",
+  tinted: "bg-transparent text-foreground",
+  outline: "bg-background text-foreground border border-border",
+  ghost: "bg-transparent text-foreground",
+  destructive: "bg-destructiveSoft text-destructiveSoftForeground",
+} as const;
+
+/** `bubble.tsx` — the hover/focus action strip under the content. */
+export const BUBBLE_ACTIONS = "flex flex-row items-center gap-1 min-h-0";
+
+/** `bubble.tsx` — the reaction row. It sits in the column, not over the edge. */
+export const BUBBLE_REACTIONS =
+  "flex flex-row items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-xs";
+
+/** `bubble.tsx` — consecutive bubbles from one sender. */
+export const BUBBLE_GROUP = "flex flex-col min-w-0";
 
 /** `message.tsx` — one conversation row. The variant's direction and alignment
  * are state, and stay in `style`. */
@@ -641,17 +682,15 @@ export const MESSAGE_ROOT = "flex flex-row gap-3 self-stretch px-1";
 /** `message.tsx` — the column beside the avatar. */
 export const MESSAGE_CONTENT = "flex flex-col gap-2 min-w-0 flex-grow";
 
-/** `message.tsx` — the body box. Its fill and type come from the variant. */
-export const MESSAGE_BUBBLE =
-  "flex flex-col gap-2 rounded-lg px-3 py-2 text-sm";
+/** `message.tsx` — the author/timestamp line. */
+export const MESSAGE_HEADER =
+  "flex flex-row items-center gap-2 min-w-0 text-xs font-medium font-sans text-muted-foreground";
 
-/** `message.tsx` — the body box per variant: a user message is a soft bubble,
- * an assistant's is plain prose, and a system note is small muted copy. */
-export const MESSAGE_BUBBLES = {
-  user: "bg-muted",
-  assistant: "bg-transparent",
-  system: "bg-transparent text-xs text-muted-foreground",
-} as const;
+/** `message.tsx` — the under-bubble line (actions, delivery state). */
+export const MESSAGE_FOOTER = "flex flex-row items-center gap-2 min-w-0";
+
+/** `message.tsx` — consecutive rows from one sender. */
+export const MESSAGE_GROUP = "flex flex-col min-w-0";
 
 /** `message.tsx` — the variant's author line. */
 export const MESSAGE_AUTHOR =
@@ -704,10 +743,29 @@ export const MESSAGE_STREAMING =
 export const MESSAGE_ACTIONS = "flex flex-row items-center gap-1";
 
 /** `chat.tsx` — the conversation column. */
-export const CHAT_ROOT = "flex flex-col gap-3 min-h-0 flex-grow";
+export const CHAT_ROOT = "flex flex-col gap-3 min-h-0 min-w-0 flex-grow";
 
-/** `chat.tsx` — the scroller inside the conversation. */
-export const CHAT_MESSAGES = "flex flex-col gap-1.5 min-h-0 flex-grow";
+/** `chat.tsx` — the fixed header row. */
+export const CHAT_HEADER =
+  "flex flex-row items-start justify-between gap-3 shrink-0";
+
+/** `chat.tsx` — the header's title and status column. */
+export const CHAT_HEADER_COPY = "flex flex-col gap-0.5 min-w-0 flex-grow";
+
+/** `chat.tsx` — the conversation title. */
+export const CHAT_HEADER_TITLE =
+  "text-sm font-medium font-sans text-foreground";
+
+/** `chat.tsx` — the one-line status under the title. */
+export const CHAT_HEADER_STATUS = "text-xs font-sans text-muted-foreground";
+
+/** `chat.tsx` — the header's action row. */
+export const CHAT_HEADER_ACTIONS = "flex flex-row items-center gap-1 shrink-0";
+
+/** `chat.tsx` — the scroller inside the conversation. It owns the flexible
+ * middle: `flex: 1 1 0` and `min-height: 0` keep the header and composer fixed
+ * while rows arrive. */
+export const CHAT_MESSAGES = "flex flex-col min-h-0 min-w-0 flex-grow";
 
 /** `chat.tsx` — the empty-conversation panel. */
 export const CHAT_EMPTY =
@@ -718,13 +776,6 @@ export const CHAT_EMPTY_TITLE = "text-sm font-medium font-sans text-foreground";
 
 /** `chat.tsx` — the empty panel's description. */
 export const CHAT_EMPTY_DESCRIPTION = "text-xs font-sans text-muted-foreground";
-
-/** `chat.tsx` — the failed-reply row above the composer. */
-export const CHAT_ERROR =
-  "flex flex-row items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2";
-
-/** `chat.tsx` — the failed-reply copy. The tone's role is painted in `style`. */
-export const CHAT_ERROR_TEXT = "text-xs font-sans flex-grow";
 
 /** `chat.tsx` — the composer surface. */
 export const CHAT_COMPOSER =
