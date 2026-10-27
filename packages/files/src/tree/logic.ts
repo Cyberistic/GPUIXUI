@@ -7,13 +7,20 @@
  * right glyph. {@link buildFileTree} turns a flat list of `/`-separated paths
  * into the nested {@link FileNode} tree the generic controller flattens;
  * {@link fileKindOf} and {@link fileIcon} answer the glyph. Expansion, the
- * cursor, type-ahead and selection stay the generic tree's and selection's own
- * rules (`@gpuixui/data`), which this package reuses rather than re-implements.
+ * cursor, type-ahead and the keyboard stay the generic tree's rules
+ * (`@gpuixui/data`), which this package reuses rather than re-implements.
  */
 
+import {
+  findRow,
+  flattenTree,
+  type TreeRow,
+  type TreeSpec,
+} from "@gpuixui/data";
 import type { IconName } from "@gpuixui/icons";
 import { Result, pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -30,6 +37,8 @@ export interface FileNode {
   readonly path: string;
   /** The folder's children, in paint order. Absent on a file. */
   readonly children?: ReadonlyArray<FileNode>;
+  /** A glyph that overrides the kind's own — `FileTreeFile`'s `icon` slot. */
+  readonly icon?: IconName;
 }
 
 /** Extensions painted as an image glyph. */
@@ -185,3 +194,40 @@ const build = (
 export const buildFileTree = (
   paths: ReadonlyArray<string>,
 ): ReadonlyArray<FileNode> => build([], Arr.filterMap(paths, toSegments));
+
+/** The hierarchy the generic tree walks: a node's path is its key. */
+export const fileTreeSpec: TreeSpec<FileNode> = {
+  keyOf: (node) => node.path,
+  childrenOf: (node) => node.children ?? [],
+};
+
+/**
+ * The rows a reader can see, from the open folder paths.
+ *
+ * A stored expansion is read by the caller (`expandedSet`) before it reaches
+ * this walk, so a list that is not a list never opens a row.
+ */
+export const visibleFileRows = (
+  roots: ReadonlyArray<FileNode>,
+  expanded: Iterable<string>,
+): ReadonlyArray<TreeRow<FileNode>> =>
+  flattenTree(roots, fileTreeSpec, HashSet.fromIterable(expanded));
+
+/**
+ * The row the tab stop sits on: the selected file while it paints, else the
+ * first visible row. A selection hidden inside a closed folder is not a tab
+ * stop, because the keyboard cannot stand on a row that is not painted.
+ */
+export const fileTreeTab = <T>(
+  rows: ReadonlyArray<TreeRow<T>>,
+  selected: string | undefined,
+): Option.Option<TreeRow<T>> =>
+  Option.orElse(findRow(rows, Option.fromNullishOr(selected)), () =>
+    Arr.head(rows),
+  );
+
+/** The open paths as a stable, store-friendly list: sorted, one copy each. */
+export const fileTreePaths = (
+  expanded: Iterable<string>,
+): ReadonlyArray<string> =>
+  Arr.sort(Arr.fromIterable(HashSet.fromIterable(expanded)), Order.String);

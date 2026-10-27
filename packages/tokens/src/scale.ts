@@ -419,7 +419,9 @@ export interface Density {
    * The height a **row** is built at: a dense list row
    * (`packages/components/src/list.tsx`), a tree row and its virtual twin
    * (`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`),
-   * a log viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a
+   * the files package's own tree rows
+   * (`packages/files/src/tree/file-tree.tsx`), a log viewer's row
+   * (`packages/files/src/log/log-viewer.tsx`) and the line a
    * scroller moves per arrow key
    * (`packages/primitives/src/components/ScrollArea.tsx`); `@gpuixui/tw` also
    * registers it as its `row-height` utility (`packages/tw/src/calc.ts`). The

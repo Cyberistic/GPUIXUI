@@ -1,34 +1,23 @@
 /**
  * A project file tree: open a folder, walk the rows from the keyboard, and
- * choose files with a press (single) or the checkbox (multi).
+ * choose a file.
  *
- * This is the whole composition a consumer copies. `FileTree` composes
- * `@gpuixui/data`'s tree (expansion, the roving tab stop, type-ahead and the
- * arrow keys) with a glyph per kind and a selection: a press on a row chooses it
- * alone, and the leading checkbox toggles it in the set.
+ * This is the whole composition a consumer copies. `FileTree` paints the rows;
+ * `FileTreeFolder` and `FileTreeFile` declare them, in paint order. A press on
+ * a folder toggles its subtree, and a press on a file reports its path once.
  *
- * The readout paints the selected count, so a behaviour suite can read the
+ * The readout paints the selected path, so a behaviour suite can read the
  * selection without reaching into the component.
  */
 
-import * as Arr from "effect/Array";
 import { useState } from "react";
-import { buildFileTree, FileTree } from "../src/index.js";
+import { FileTree, FileTreeFile, FileTreeFolder } from "../src/index.js";
 import { textStyle, useTheme } from "../src/theme.js";
-
-const paths = [
-  "src/index.ts",
-  "src/components/button.tsx",
-  "src/components/table/row.tsx",
-  "docs/readme.md",
-  "assets/logo.png",
-  "package.json",
-];
 
 /** The tree and the readout that proves what it selected. */
 export const FileTreeExample = () => {
   const theme = useTheme();
-  const [selected, setSelected] = useState<ReadonlyArray<string>>([]);
+  const [selected, setSelected] = useState<string | undefined>("src/index.ts");
 
   return (
     <div
@@ -36,7 +25,7 @@ export const FileTreeExample = () => {
         display: "flex",
         flexDirection: "column",
         gap: theme.spacing.md,
-        width: 420,
+        width: 360,
       }}
     >
       <text
@@ -46,18 +35,36 @@ export const FileTreeExample = () => {
           color: theme.colors.mutedForeground,
         }}
       >
-        {`${Arr.length(selected)} selected · ${Arr.join(", ")(selected) || "none"}`}
+        {selected === undefined ? "nothing selected" : `selected: ${selected}`}
       </text>
       <FileTree
         testId="files"
         aria-label="Project files"
         height={280}
-        roots={buildFileTree(paths)}
-        keyOf={(node) => node.path}
-        childrenOf={(node) => node.children ?? []}
-        labelOf={(node) => node.name}
-        onSelectionChange={setSelected}
-      />
+        defaultExpanded={["src", "src/components"]}
+        selected={selected}
+        onSelect={setSelected}
+      >
+        <FileTreeFolder path="src" name="src">
+          <FileTreeFolder path="src/components" name="components">
+            <FileTreeFile path="src/components/button.tsx" name="button.tsx" />
+            <FileTreeFolder path="src/components/table" name="table">
+              <FileTreeFile
+                path="src/components/table/row.tsx"
+                name="row.tsx"
+              />
+            </FileTreeFolder>
+          </FileTreeFolder>
+          <FileTreeFile path="src/index.ts" name="index.ts" />
+        </FileTreeFolder>
+        <FileTreeFolder path="docs" name="docs">
+          <FileTreeFile path="docs/readme.md" name="readme.md" />
+        </FileTreeFolder>
+        <FileTreeFolder path="assets" name="assets">
+          <FileTreeFile path="assets/logo.png" name="logo.png" />
+        </FileTreeFolder>
+        <FileTreeFile path="package.json" name="package.json" />
+      </FileTree>
     </div>
   );
 };

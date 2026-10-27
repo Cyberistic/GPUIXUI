@@ -1,10 +1,15 @@
 /**
  * The file tree's resting appearance, as Tailwind class strings.
  *
- * The row and chevron chrome are `@gpuixui/data`'s `TreeView`; only the content
- * the file tree adds — the selection box, the glyph and the label in one row —
- * lives here.
+ * Only chrome is here. A row's guide cells, height, inset and chevron slot are
+ * geometry the runtime exposes as behaviour, and the guides' colour is a token,
+ * so they are set in `style`.
  */
 
-/** One row's content: the checkbox, the glyph and the label. */
-export const FILE_TREE_CONTENT = "flex flex-row items-center gap-2 min-w-0";
+/** The frame: a clipped card that the rows scroll inside. */
+export const FILE_TREE_ROOT =
+  "flex flex-col overflow-hidden rounded-md border border-border bg-background";
+
+/** One row: the guides, the chevron slot and the content on one line. */
+export const FILE_TREE_ROW =
+  "flex flex-row items-center shrink-0 text-sm cursor-pointer";

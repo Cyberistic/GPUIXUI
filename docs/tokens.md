@@ -3914,7 +3914,8 @@ described from memory.
 `rowHeight` is the height a **row** is built at, and the row painters read it:
 a dense list row and the base a normal row adds `spacing.md` to
 (`packages/components/src/list.tsx`), a tree row and its virtual twin
-(`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`), a log
+(`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`), the
+files package's own tree rows (`packages/files/src/tree/file-tree.tsx`), a log
 viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a scroller
 moves per arrow key (`packages/primitives/src/components/ScrollArea.tsx`, through
 the primitives' `rowHeightOf` in `packages/primitives/src/core/theme.ts`, which

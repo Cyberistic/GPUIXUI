@@ -1,171 +1,543 @@
 /**
- * `FileTree` — a file tree with a kind per row, over `@gpuixui/data`'s tree.
+ * `FileTree` — shadcn's AI Elements file tree over `@gpuixui/data`'s tree.
  *
- * The expansion set, the cursor (the single roving tab stop), the arrow keys and
- * type-ahead are `@gpuixui/data`'s `useExpandedRows` + `TreeView`; this component
- * adds the two things a file tree owns: the **glyph** a row paints for its kind,
- * and the **selection** — a press on a row replaces the selection, and the
- * leading checkbox toggles a row in it. A flat list of paths is built with
- * `buildFileTree`; a nested tree is passed straight through.
+ * The reference composes a tree from declarative parts:
  *
  * ```tsx
- * const roots = buildFileTree(["src/index.ts", "src/button.tsx", "readme.md"]);
- *
- * <FileTree
- *   aria-label="Workspace files"
- *   height={320}
- *   roots={roots}
- *   keyOf={(node) => node.path}
- *   childrenOf={(node) => node.children ?? []}
- *   labelOf={(node) => node.name}
- *   onSelectionChange={(keys) => setChosen(keys)}
- *   onActivate={(node) => open(node.path)}
- * />
+ * <FileTree defaultExpanded={["src"]} selected={file} onSelect={setFile}>
+ *   <FileTreeFolder path="src" name="src">
+ *     <FileTreeFile path="src/index.ts" name="index.ts" />
+ *   </FileTreeFolder>
+ *   <FileTreeFile path="readme.md" name="readme.md" />
+ * </FileTree>
  * ```
+ *
+ * `FileTreeFolder` and `FileTreeFile` **declare** the tree; the root reads
+ * their props into the `FileNode` model and paints one flat row list. A flat
+ * list is what makes the generic tree's one tab stop, arrow walk and
+ * Left/Right collapse/expand possible — a recursive part renderer would need a
+ * second registration pass to know the visible order.
+ *
+ * The rows are the generic tree's (`useTree`, `flattenTree`); this file adds
+ * the file-tree anatomy: one guide cell per ancestor, a chevron that swaps
+ * glyphs (the runtime has no transform, so it cannot rotate), a glyph per kind,
+ * a monospace name, and one selected file path.
  */
 
-import type { Props } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import { mergeStyles } from "@gpuix/react/floating";
 import {
-  emptySelection,
-  isSelected,
-  pressSelection,
-  TreeView,
-  useExpandedRows,
-  type SelectionState,
+  TREE_INDENT,
+  TREE_INSET,
+  expandedSet,
+  treeName,
+  type TreeCursor,
   type TreeRow,
 } from "@gpuixui/data";
-import { Icon } from "@gpuixui/icons";
-import { Checkbox } from "@gpuixui/primitives";
+import { useTree } from "@gpuixui/data/tree/use-tree";
+import { Icon, type IconName } from "@gpuixui/icons";
+import {
+  borderWidthOf,
+  iconSideOf,
+  rowHeightOf,
+  storedText,
+} from "@gpuixui/primitives/core";
+import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  Children,
+  Fragment,
+  createContext,
+  isValidElement,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { recipeStyle } from "../recipe.js";
-import { textStyle, useTheme } from "../theme.js";
-import { fileIcon, fileKindOf, type FileKind } from "./logic.js";
-import { FILE_TREE_CONTENT } from "./recipe.js";
+import { pointerWash, textStyle, themeColors, useTheme } from "../theme.js";
+import {
+  fileIcon,
+  fileKindOf,
+  fileTreePaths,
+  fileTreeTab,
+  visibleFileRows,
+  type FileKind,
+  type FileNode,
+} from "./logic.js";
+import { FILE_TREE_ROOT, FILE_TREE_ROW } from "./recipe.js";
 
 /** {@link FileTree} props. */
-export interface FileTreeProps<T> extends Omit<Props, "children"> {
-  /** The tree's roots, in paint order. */
-  readonly roots: ReadonlyArray<T>;
-  /** The stable identity a row is expanded, selected and focused by. */
-  readonly keyOf: (node: T) => string;
-  /** The children a node has, in paint order. A leaf answers `[]`. */
-  readonly childrenOf: (node: T) => ReadonlyArray<T>;
-  /** The row's label: its accessible name and what type-ahead matches. */
-  readonly labelOf: (node: T) => string;
-  /**
-   * A node's kind, for its glyph. Defaults to `fileKindOf` over the label and
-   * whether the node has children.
-   */
-  readonly kindOf?: (node: T, hasChildren: boolean) => FileKind;
-  /** The keys selected at first paint. Defaults to none. */
-  readonly initialSelected?: Iterable<string>;
-  /** Reports the selected keys after every press. */
-  readonly onSelectionChange?: (keys: ReadonlyArray<string>) => void;
-  /** A press or Enter on a row, after the selection is replaced. */
-  readonly onActivate?: (node: T) => void;
+export interface FileTreeProps extends Omit<Props, "children"> {
+  /** The open folder paths, when the caller holds them. Omit for uncontrolled. */
+  readonly expanded?: Iterable<string>;
+  /** The open folder paths at first paint. Defaults to none. */
+  readonly defaultExpanded?: Iterable<string>;
+  /** The selected file path. Absence paints no selection. */
+  readonly selected?: string | null;
+  /** A press or Enter on a file row, after the row becomes the tab stop. */
+  readonly onSelect?: (path: string) => void;
+  /** Reports the open paths, sorted, after every change. */
+  readonly onExpandedChange?: (expanded: ReadonlyArray<string>) => void;
+  /** The folders and files, in paint order. */
+  readonly children?: ReactNode;
   /** A definite height. The rows scroll inside it; omit it to lay out naturally. */
   readonly height?: number;
   readonly className?: string;
-  /** The tree's test id. Each row is `${testId}-row-${key}`. */
+  /** The tree's test id. Each row is `${testId}-row-${path}`. */
   readonly testId?: string;
 }
 
+/** {@link FileTreeFolder} props. */
+export interface FileTreeFolderProps {
+  /** The folder's stable path, and the key its expansion is stored by. */
+  readonly path: string;
+  /** The leaf name the row paints and type-ahead matches. */
+  readonly name: string;
+  /** The folder's entries, in paint order. */
+  readonly children?: ReactNode;
+}
+
+/** {@link FileTreeFile} props. */
+export interface FileTreeFileProps {
+  /** The file's stable path, and what {@link FileTreeProps.onSelect} reports. */
+  readonly path: string;
+  /** The leaf name the row paints and type-ahead matches. */
+  readonly name: string;
+  /** A glyph that overrides the one the file's kind picks. */
+  readonly icon?: IconName;
+  /**
+   * A custom row after the guides and chevron slot. A file with this slot
+   * supplies its own {@link FileTreeIcon}, {@link FileTreeName} and actions; the
+   * default row is the kind's glyph and the name.
+   */
+  readonly children?: ReactNode;
+}
+
+/** {@link FileTreeIcon} props. */
+export interface FileTreeIconProps {
+  /** The glyph to paint. A `children` slot wins when `name` is absent. */
+  readonly name?: IconName;
+  /** Paint the glyph in the selected row's ink. */
+  readonly selected?: boolean;
+  /** A custom glyph, painted in an icon-sized box. */
+  readonly children?: ReactNode;
+}
+
+/** {@link FileTreeName} props. */
+export interface FileTreeNameProps {
+  /** Paint the name in the selected row's ink. */
+  readonly selected?: boolean;
+  /** The name. */
+  readonly children?: ReactNode;
+}
+
+/** Whether a part is being rendered at all, so a declaration outside a tree fails. */
+const Declared = createContext(false);
+
+/** The name a part is called in a rejection. */
+const nameOf = (type: unknown): string =>
+  typeof type === "function" && type.name !== "" ? type.name : "element";
+
+/** Reject a part rendered outside the tree that reads it. */
+const useDeclared = (part: string): void => {
+  if (!useContext(Declared)) {
+    throw new Error(`${part} must be used inside FileTree.`);
+  }
+};
+
 /**
- * A file tree: expandable rows with a glyph per kind and single/multi selection.
- *
- * A press on a row chooses it alone and reports the node; the leading checkbox
- * toggles the row in the selection, so several files can be chosen at once.
- * Set `aria-label` on the tree, exactly as on `TreeView`.
+ * A folder row. The root reads its `path`, `name` and children; it paints the
+ * row itself, so this part renders nothing.
  */
-export const FileTree = <T,>({
-  roots,
-  keyOf,
-  childrenOf,
-  labelOf,
-  kindOf,
-  initialSelected,
-  onSelectionChange,
-  onActivate,
+export const FileTreeFolder = (_props: FileTreeFolderProps): null => {
+  useDeclared("FileTreeFolder");
+  return null;
+};
+
+/**
+ * A file row. The root reads its `path`, `name`, `icon` and custom row; it
+ * paints the row itself, so this part renders nothing.
+ */
+export const FileTreeFile = (_props: FileTreeFileProps): null => {
+  useDeclared("FileTreeFile");
+  return null;
+};
+
+/** A row's icon slot: the default glyph, or a caller's own. */
+export const FileTreeIcon = ({
+  name,
+  selected = false,
+  children,
+}: FileTreeIconProps) => {
+  const theme = useTheme();
+  const colors = themeColors(theme);
+  const tint = selected ? colors.selectedForeground : colors.mutedForeground;
+  return (
+    <div
+      role="presentation"
+      style={{
+        width: iconSideOf(theme, "md"),
+        height: iconSideOf(theme, "md"),
+        display: "flex",
+        flexShrink: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: theme.spacing.xs,
+        pointerEvents: "none",
+      }}
+    >
+      {name === undefined ? (
+        children
+      ) : tint === undefined ? undefined : (
+        <Icon name={name} size="md" color={tint} />
+      )}
+    </div>
+  );
+};
+
+/** A row's name slot: one truncated line in the theme's mono role. */
+export const FileTreeName = ({
+  selected = false,
+  children,
+}: FileTreeNameProps) => {
+  const theme = useTheme();
+  const colors = themeColors(theme);
+  return (
+    <div
+      style={{
+        flexGrow: 1,
+        minWidth: 0,
+        marginLeft: theme.spacing.xs,
+        overflow: "hidden",
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "code"),
+          color: selected ? colors.selectedForeground : colors.foreground,
+          display: "block",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {children}
+      </text>
+    </div>
+  );
+};
+
+/** The parts' declared tree and the custom rows a file supplied. */
+interface DeclaredTree {
+  readonly nodes: ReadonlyArray<FileNode>;
+  readonly content: ReadonlyMap<string, ReactNode>;
+}
+
+/** Read the parts' props into the pure tree model. */
+const declare = (children: ReactNode): DeclaredTree => {
+  const content = new Map<string, ReactNode>();
+
+  const nodes = (next: ReactNode): ReadonlyArray<FileNode> =>
+    Arr.flatMap(Children.toArray(next), (child) => {
+      if (!isValidElement(child)) {
+        throw new Error(
+          `FileTree renders FileTreeFolder and FileTreeFile parts; received ${typeof child}.`,
+        );
+      }
+      if (child.type === Fragment) {
+        return nodes(
+          (child.props as { readonly children?: ReactNode }).children,
+        );
+      }
+      if (
+        isValidElement<FileTreeFolderProps>(child) &&
+        child.type === FileTreeFolder
+      ) {
+        return [
+          {
+            path: child.props.path,
+            name: child.props.name,
+            children: nodes(child.props.children),
+          },
+        ];
+      }
+      if (
+        isValidElement<FileTreeFileProps>(child) &&
+        child.type === FileTreeFile
+      ) {
+        if (child.props.children !== undefined) {
+          content.set(child.props.path, child.props.children);
+        }
+        return [
+          {
+            path: child.props.path,
+            name: child.props.name,
+            ...(child.props.icon === undefined
+              ? {}
+              : { icon: child.props.icon }),
+          },
+        ];
+      }
+      throw new Error(
+        `FileTree renders FileTreeFolder and FileTreeFile parts; ${nameOf(child.type)} is neither.`,
+      );
+    });
+
+  return { nodes: nodes(children), content };
+};
+
+/** A folder is a node with a children list, even an empty one. */
+const kindOf = (node: FileNode): FileKind =>
+  node.children === undefined ? fileKindOf(node.name, false) : "folder";
+
+/** The glyph a row paints: the file's override, else the kind's own. */
+const glyphOf = (node: FileNode, expanded: boolean): IconName =>
+  node.icon ?? fileIcon(kindOf(node), expanded);
+
+/** {@link FileTreeRow} props. */
+interface FileTreeRowProps {
+  readonly row: TreeRow<FileNode>;
+  readonly selected: boolean;
+  readonly tabbable: boolean;
+  readonly content: ReactNode;
+  readonly testId: string | undefined;
+  readonly onPress: () => void;
+  readonly onKeyDown: (event: EventPayload) => void;
+  readonly attach: (instance: PublicInstance | null) => void;
+}
+
+/** One painted row: guides, the chevron slot, the glyph, the name. */
+const FileTreeRow = ({
+  row,
+  selected,
+  tabbable,
+  content,
+  testId,
+  onPress,
+  onKeyDown,
+  attach,
+}: FileTreeRowProps) => {
+  const theme = useTheme();
+  const colors = themeColors(theme);
+  const tint = selected ? colors.selectedForeground : colors.mutedForeground;
+  const guide = borderWidthOf(theme, "thin");
+  const hover = selected ? colors.accent : colors.hover;
+  const press =
+    pointerWash(theme, "active", selected ? "accent" : "hover") ??
+    colors.active;
+
+  return (
+    <div
+      ref={attach}
+      role="treeitem"
+      aria-label={treeName(row.node.name, row.key)}
+      aria-level={row.depth + 1}
+      {...(row.node.children === undefined
+        ? { "aria-selected": selected }
+        : row.hasChildren
+          ? { "aria-expanded": row.expanded }
+          : {})}
+      tabIndex={tabbable ? 0 : -1}
+      testId={testId}
+      onClick={onPress}
+      onKeyDown={onKeyDown}
+      style={{
+        ...recipeStyle(FILE_TREE_ROW, theme),
+        height: rowHeightOf(theme),
+        paddingLeft: TREE_INSET,
+        paddingRight: theme.spacing.sm,
+        backgroundColor: selected ? colors.selected : undefined,
+        hover: { backgroundColor: hover },
+        active: { backgroundColor: press },
+        focusVisible: {
+          outlineWidth: 2,
+          outlineColor: colors.ring,
+          outlineOffset: -2,
+        },
+      }}
+    >
+      {row.depth === 0
+        ? undefined
+        : Arr.map(Arr.range(1, row.depth), (level) => (
+            <div
+              key={level}
+              role="presentation"
+              style={{
+                width: TREE_INDENT,
+                alignSelf: "stretch",
+                borderLeftWidth: guide,
+                borderColor: colors.border,
+                pointerEvents: "none",
+              }}
+            />
+          ))}
+      <div
+        role="presentation"
+        testId={testId === undefined ? undefined : `${testId}-slot`}
+        style={{
+          width: iconSideOf(theme, "md"),
+          height: iconSideOf(theme, "md"),
+          display: "flex",
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
+        {row.hasChildren && tint !== undefined ? (
+          <Icon
+            name={row.expanded ? "chevron-down" : "chevron-right"}
+            size="md"
+            color={tint}
+          />
+        ) : undefined}
+      </div>
+      {content === undefined ? (
+        <>
+          <FileTreeIcon
+            name={glyphOf(row.node, row.expanded)}
+            selected={selected}
+          />
+          <FileTreeName selected={selected}>{row.node.name}</FileTreeName>
+        </>
+      ) : (
+        content
+      )}
+    </div>
+  );
+};
+
+/**
+ * A file tree: folders that open, one selected file, guide lines and a glyph
+ * per kind.
+ *
+ * A press on a folder toggles **only that folder's** subtree; a press on a file
+ * selects it and reports it once through `onSelect`. The tree holds one tab
+ * stop — the selected file while it paints, else the first row — and the arrow
+ * keys walk the visible rows, with Right opening and Left closing a folder.
+ */
+export const FileTree = ({
+  expanded,
+  defaultExpanded,
+  selected,
+  onSelect,
+  onExpandedChange,
+  children,
   height,
   className,
   testId,
   style,
   ...rest
-}: FileTreeProps<T>) => {
+}: FileTreeProps) => {
   const theme = useTheme();
-  const tree = useExpandedRows({ roots, keyOf, childrenOf, labelOf });
-  const [selection, setSelection] = useState<SelectionState>(() =>
-    initialSelected === undefined
-      ? emptySelection
-      : {
-          selected: HashSet.fromIterable(initialSelected),
-          anchor: Option.none(),
-        },
+  const colors = themeColors(theme);
+  const declared = useMemo(() => declare(children), [children]);
+  const [storedExpanded, setStoredExpanded] = useState<HashSet.HashSet<string>>(
+    () => expandedSet(defaultExpanded),
   );
-  const order = Arr.map(tree.rows, (row) => row.key);
+  const open = expanded === undefined ? storedExpanded : expandedSet(expanded);
+  const rows = useMemo(
+    () => visibleFileRows(declared.nodes, open),
+    [declared.nodes, open],
+  );
+  const selectedPath = storedText(selected);
+  const [active, setActive] = useState<Option.Option<string>>(() =>
+    Option.map(fileTreeTab(rows, selectedPath), (row) => row.key),
+  );
+  const pendingSelection = useRef(false);
+
+  const report = (next: HashSet.HashSet<string>): void => {
+    if (HashSet.isSubset(open, next) && HashSet.isSubset(next, open)) return;
+    if (expanded === undefined) setStoredExpanded(next);
+    onExpandedChange?.(fileTreePaths(next));
+  };
+
+  const commit = (next: TreeCursor): void => {
+    setActive(next.active);
+    report(next.expanded);
+  };
+
+  const tree = useTree({
+    rows,
+    labelOf: (node) => node.name,
+    cursor: { expanded: open, active },
+    onCursorChange: commit,
+    onActivate: (row) => {
+      if (row.node.children === undefined) onSelect?.(row.key);
+    },
+  });
+
+  // A selection the caller changes waits for the row to paint, then moves the
+  // tab stop without taking focus. The flag is a *reaction to the prop*, not a
+  // rule that drags the cursor back after every arrow key; a selection hidden
+  // inside a closed folder stays pending until its folder opens.
+  useEffect(() => {
+    pendingSelection.current = true;
+  }, [selectedPath]);
 
   useEffect(() => {
-    onSelectionChange?.(Arr.fromIterable(selection.selected));
-  }, [selection, onSelectionChange]);
-
-  const kind = (node: T, hasChildren: boolean): FileKind =>
-    kindOf?.(node, hasChildren) ?? fileKindOf(labelOf(node), hasChildren);
-
-  const toggleSelect = (key: string): void =>
-    setSelection((current) => pressSelection(current, key, "toggle", order));
-
-  const activate = (row: TreeRow<T>): void => {
-    setSelection((current) =>
-      pressSelection(current, row.key, "replace", order),
+    if (!pendingSelection.current) return;
+    if (selectedPath === undefined) {
+      pendingSelection.current = false;
+      return;
+    }
+    const tab = fileTreeTab(rows, selectedPath);
+    if (Option.isNone(tab) || tab.value.key !== selectedPath) return;
+    pendingSelection.current = false;
+    if (Option.contains(active, selectedPath)) return;
+    tree.commit(
+      { expanded: open, active: Option.some(selectedPath) },
+      { focus: false },
     );
-    onActivate?.(row.node);
-  };
+  }, [selectedPath, active, rows, open, tree]);
 
-  const renderRow = (row: TreeRow<T>): ReactNode => {
-    const active = Option.contains(tree.active, row.key);
-    const color = active
-      ? theme.colors.selectedForeground
-      : theme.colors.foreground;
-    return (
-      <div style={recipeStyle(FILE_TREE_CONTENT, theme)}>
-        <Checkbox
-          checked={isSelected(selection, row.key)}
-          onCheckedChange={() => toggleSelect(row.key)}
-          size="sm"
-          label={`Select ${labelOf(row.node)}`}
-        />
-        <Icon
-          name={fileIcon(kind(row.node, row.hasChildren), row.expanded)}
-          size="sm"
-          color={
-            active
-              ? theme.colors.selectedForeground
-              : theme.colors.mutedForeground
-          }
-        />
-        <text style={{ ...textStyle(theme, "body"), color }}>
-          {labelOf(row.node)}
-        </text>
-      </div>
-    );
-  };
+  const bound =
+    height !== undefined && Number.isFinite(height) && height > 0
+      ? height
+      : undefined;
 
   return (
-    <TreeView
-      {...rest}
-      rows={tree.rows}
-      cursor={tree.cursor}
-      onCursorChange={tree.setCursor}
-      labelOf={labelOf}
-      renderRow={renderRow}
-      onActivate={activate}
-      height={height}
-      className={className}
-      testId={testId}
-      style={style}
-    />
+    <Declared.Provider value={true}>
+      <div
+        {...rest}
+        role="tree"
+        testId={testId}
+        style={mergeStyles(
+          mergeStyles(recipeStyle(cn(FILE_TREE_ROOT, className), theme), {
+            ...(bound === undefined
+              ? {}
+              : {
+                  height: bound,
+                  flexGrow: 0,
+                  flexShrink: 0,
+                  flexBasis: bound,
+                }),
+            overflowY: "scroll",
+            scrollbarColor: colors.scrollbar,
+          }),
+          style,
+        )}
+      >
+        {Arr.map(rows, (row) => (
+          <FileTreeRow
+            key={row.key}
+            row={row}
+            selected={row.key === selectedPath}
+            tabbable={Option.contains(tree.tabKey, row.key)}
+            content={declared.content.get(row.key)}
+            testId={
+              testId === undefined ? undefined : `${testId}-row-${row.key}`
+            }
+            onPress={() => tree.activate(row)}
+            onKeyDown={tree.handleKey}
+            attach={tree.attach(row.key)}
+          />
+        ))}
+      </div>
+    </Declared.Provider>
   );
 };

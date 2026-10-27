@@ -170,12 +170,15 @@ defined by where the pointer is *inside* it, so a magnifier, a crop handle or a
 marquee aims at the spot it samples rather than at the centre. The
 `image-zoom-lifecycle` probe is the first consumer.
 `clickAt(testId, offset)` **presses** that same point, which is how a probe
-reaches a part a component renders without an address: `FileTree` forwards no
-`testId` to the checkbox in each row, so `file-tree-lifecycle` presses it at the
-point the library's own target geometry puts it. The verb moves the pointer onto
-the point and then presses it, because the move is what gives the renderer a hit
-test there — measured, a click sent with no preceding move landed on whatever the
-last move had hovered, so a row press after a wheel reached nothing.
+reaches a part a component renders without an address. The old `FileTree` was
+the measured example — it forwarded no `testId` to the checkbox in each row, so
+`file-tree-lifecycle` pressed that box at the point the library's own target
+geometry put it — and the AI Elements rebuild removed the control; the verb
+still serves a part whose only address is a point. The verb moves the pointer
+onto the point and then presses it, because the move is what gives the renderer
+a hit test there — measured, a click sent with no preceding move landed on
+whatever the last move had hovered, so a row press after a wheel reached
+nothing.
 `drag` cannot stand in: its `offset` (`AsyncDragOptions`, the distance from the
 element's centre where the press lands) is applied to the press **and again** to
 the release, so a zero-length drag presses and releases two different points —
