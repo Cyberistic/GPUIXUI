@@ -380,6 +380,15 @@ spring is impossible and the swipe-back is a fast-out return. 27 behaviour
 cases (3 new, each failing on the old source), 1057 package, 1138
 behaviour, 2065 docs; deployed and checked in Chrome — the stack reads as card
 tops now.
+`[x]` **Five preview drawings polished** — card (one grid of equal columns, a
+real caption per treatment, footer bottom padding), carousel (all slides stacked
+in one cell so the frame is as tall as the tallest and the controls never move),
+chat (transcript on the page, avatars/authors/times, filled user bubble, streaming
+divider, one composer surface, segmented status control), code block (12-line
+snippet, syntax palette through new `--syntax-*` bridge vars, language + copy
+icon, gutter rule) and auth (field labels in the shipped `FieldLabel` role, mark
+tile, divider, providers, no empty status gap). Ten screenshots at 836/420 in
+`apps/playground/.artifacts/live/`; docs suite 2131 green, lint/fmt/build clean.
 `[x]` **Raven study** — 73.5k-LOC C11 toolkit; take the layout-height spring for
 disclosure components, the four motion presets with one reduce-motion gate, an
 `announce` capability, and the `run_until_still` test pattern. Not the renderer,
