@@ -110,6 +110,27 @@ describe("ImageZoom", () => {
     }
   });
 
+  it("magnifies both axes by the same factor, so the picture keeps the frame's shape", () => {
+    // The rule the docs preview broke: a magnifier is a box measured against the
+    // frame, so both sides grow by the zoom and the picture is never stretched.
+    // A preview that inherited a width cap grew the height alone.
+    const page = render();
+    try {
+      page.renderer.clockPause();
+
+      pointAt(page, 0.75, 0.5);
+      advance(page, 400);
+
+      const picture = painted(page).picture;
+      expect(picture.width / frame.width).toBeCloseTo(
+        picture.height / frame.height,
+        5,
+      );
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("travels to the new box instead of jumping to it", () => {
     const page = render();
     try {

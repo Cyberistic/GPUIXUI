@@ -57,6 +57,23 @@ const byTestId = (
   return element;
 };
 
+/** One element's painted box, failing rather than casting. */
+const boundsOf = (
+  page: ReturnType<typeof renderComponent>,
+  element: TestElement,
+): {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+} => {
+  const bounds = page.renderer.getElementBounds(element.id);
+  if (bounds === null) {
+    throw new Error("behaviour: the element painted no box");
+  }
+  return bounds;
+};
+
 /** Change the value and let the effect that starts the roll run. */
 const change = async (
   page: ReturnType<typeof renderComponent>,
@@ -89,6 +106,30 @@ describe("RollingText", () => {
       expect(box.style.height).toBe(lineHeight);
       expect(page.renderer.getA11yTree).toBeTypeOf("function");
       expect(page.renderer.getAllText()).toEqual(["42"]);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps the whole value inside its one-line clip", () => {
+    // The rule the docs preview broke: the clip is one line of the **value**,
+    // not one line of the page around it. A clip sized from anything else cuts
+    // the ascenders and descenders off the value it is supposed to show.
+    const page = renderComponent(
+      <RollingText testId="roll" text="Idle" role="display" />,
+    );
+    try {
+      const clip = boundsOf(page, byTestId(page, "roll"));
+      const run = page.renderer
+        .findByType("text")
+        .find((element) => element.text === "Idle");
+      if (run === undefined) {
+        throw new Error("behaviour: the roll painted no run");
+      }
+      const value = boundsOf(page, run);
+
+      expect(value.y).toBeGreaterThanOrEqual(clip.y);
+      expect(value.y + value.height).toBeLessThanOrEqual(clip.y + clip.height);
     } finally {
       page.unmount();
     }
