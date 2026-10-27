@@ -1,0 +1,29 @@
+---
+title: Sidebar 15 — Two panels
+description: A workspace on the left, the open project in the middle and a calendar on the right.
+---
+
+Both edges at once: the workspace and its favorites on the left, the project in
+the middle and the calendar on the right, all in one provider.
+
+<BlockPreview name="sidebar-15" />
+
+## Composition
+
+- `SidebarProvider` with three children: a left `Sidebar`, `SidebarInset` and a
+  right `Sidebar collapsible="none" side="right"`
+- `SidebarRail` on the left panel only
+- `DatePicker` and `DatePickerCalendar` in the right panel
+- `SidebarUserMenu`, `SidebarSeparator` and the calendar groups in the right
+  panel; the account sits in its header
+- `Breadcrumb`, `Stack`, `Text` and `Separator` for the page
+
+## Notes
+
+The right panel is `collapsible="none"` so the middle page never pays for a
+second gap, and it declares `side="right"` itself. The left panel keeps the
+icon collapse from block 07. The page is the workspace's open project, with its
+task list; the right panel's month is the same drawn October 2024.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

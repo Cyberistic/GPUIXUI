@@ -1,0 +1,28 @@
+---
+title: Sidebar 03 — Submenus
+description: One always-open tree — five sections with their pages listed under each.
+---
+
+A docs tree where the section is the row and its pages hang beneath it, with no
+labels and no disclosure: everything the sidebar can reach is on screen.
+
+<BlockPreview name="sidebar-03" />
+
+## Composition
+
+- `SidebarProvider`, `Sidebar`, `SidebarInset` and `SidebarRail` from
+  `@gpuixui/components`
+- `SidebarMenu`, `SidebarMenuItem` and `SidebarMenuButton` for the sections
+- `SidebarMenuSub`, `SidebarMenuSubItem` and `SidebarMenuSubButton` for the
+  pages, with `isActive` on **Data Fetching**
+- `SidebarMenuButton size="lg"` for the brand row
+- `Stack` and `Text` from `@gpuixui/primitives`
+
+## Notes
+
+The sub list is a child of its section's `SidebarMenuItem`, so a long section
+grows its row rather than a second list. `SidebarMenuSub` keeps the vertical
+rule and the 14px indent; icon mode hides the sub lists with the labels.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

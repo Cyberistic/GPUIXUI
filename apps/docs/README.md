@@ -50,6 +50,22 @@ blocks/command-centre.mdx    A command palette over a dimmed page: filter, highl
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
 blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
+blocks/sidebar-01.mdx        Sectioned docs navigation: version switcher, search, four labelled sections
+blocks/sidebar-02.mdx        The same sections with every heading collapsible
+blocks/sidebar-03.mdx        One always-open tree of sections and pages
+blocks/sidebar-04.mdx        The tree on a floating, lifted panel
+blocks/sidebar-05.mdx        Parent rows that open their pages in place
+blocks/sidebar-06.mdx        Sections as dropdown menus, with the newsletter footer
+blocks/sidebar-07.mdx        A workspace nav that collapses to an icon rail
+blocks/sidebar-08.mdx        An inset workspace panel with secondary links pinned low
+blocks/sidebar-09.mdx        A nested inbox: folder rail, message list, open thread
+blocks/sidebar-10.mdx        A header popover built from a chrome-free sidebar
+blocks/sidebar-11.mdx        Changed files and a collapsible repository tree
+blocks/sidebar-12.mdx        A calendar panel with an inline month
+blocks/sidebar-13.mdx        A settings dialog with its own sidebar of sections
+blocks/sidebar-14.mdx        The docs contents on the right edge
+blocks/sidebar-15.mdx        A workspace, a project page and a calendar, three panels wide
+blocks/sidebar-16.mdx        A sticky site header above both columns
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
@@ -298,6 +314,23 @@ src/components/docs/command-centre.tsx    The command centre's matcher, highligh
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe
 src/components/docs/email-inbox-block.tsx The mail client's reducer, panes and recipe
 src/components/docs/conversations-block.tsx The messages window's reducer, list, thread and recipe
+src/components/docs/blocks/sidebar-kit.tsx The geometry, glyphs, data and parts the sixteen sidebar blocks share
+src/components/docs/blocks/sidebar-01.tsx The sidebar block 01's browser reproduction and recipe
+src/components/docs/blocks/sidebar-02.tsx The sidebar block 02's browser reproduction and recipe
+src/components/docs/blocks/sidebar-03.tsx The sidebar block 03's browser reproduction and recipe
+src/components/docs/blocks/sidebar-04.tsx The sidebar block 04's browser reproduction and recipe
+src/components/docs/blocks/sidebar-05.tsx The sidebar block 05's browser reproduction and recipe
+src/components/docs/blocks/sidebar-06.tsx The sidebar block 06's browser reproduction and recipe
+src/components/docs/blocks/sidebar-07.tsx The sidebar block 07's browser reproduction and recipe
+src/components/docs/blocks/sidebar-08.tsx The sidebar block 08's browser reproduction and recipe
+src/components/docs/blocks/sidebar-09.tsx The sidebar block 09's browser reproduction and recipe
+src/components/docs/blocks/sidebar-10.tsx The sidebar block 10's browser reproduction and recipe
+src/components/docs/blocks/sidebar-11.tsx The sidebar block 11's browser reproduction and recipe
+src/components/docs/blocks/sidebar-12.tsx The sidebar block 12's browser reproduction and recipe
+src/components/docs/blocks/sidebar-13.tsx The sidebar block 13's browser reproduction and recipe
+src/components/docs/blocks/sidebar-14.tsx The sidebar block 14's browser reproduction and recipe
+src/components/docs/blocks/sidebar-15.tsx The sidebar block 15's browser reproduction and recipe
+src/components/docs/blocks/sidebar-16.tsx The sidebar block 16's browser reproduction and recipe
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live, mounts the reconciler and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor
 src/components/docs/theme-editor-storage.ts The editor's remembered pins, through the guarded store

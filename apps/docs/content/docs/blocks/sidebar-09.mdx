@@ -1,0 +1,30 @@
+---
+title: Sidebar 09 — Nested inbox
+description: An icon folder rail, a searchable message column and the open thread.
+---
+
+Two panels in one provider: a 48px folder rail, the message list with its
+search and unread switch, and the selected mail beside them.
+
+<BlockPreview name="sidebar-09" />
+
+## Composition
+
+- `SidebarProvider collapsible="icon" defaultOpen={false}` with two `Sidebar`
+  siblings from `@gpuixui/components`
+- the first `Sidebar` inherits the icon collapse and paints the folder rail
+- the second `Sidebar collapsible="none"` paints the message column
+- `SidebarInput` for the search field, `Switch` for unreads
+- `SidebarMenuButton` rows with `tooltip` on the rail
+- `Breadcrumb`, `Stack`, `Text` and `Separator` for the thread page
+
+## Notes
+
+The shell's provider owns one panel and one gap; two `Sidebar` siblings are the
+translation of shadcn's nested pair. The provider starts collapsed so the first
+panel is the icon rail and the second keeps its full width — the same two
+columns, without a second layout. The list draws ten threads so the block paints
+a real inbox, not a placeholder.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

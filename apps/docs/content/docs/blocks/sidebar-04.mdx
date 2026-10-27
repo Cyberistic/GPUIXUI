@@ -1,0 +1,27 @@
+---
+title: Sidebar 04 — Floating submenus
+description: The same tree on a floating, lifted panel with a gutter around it.
+---
+
+Block 03's tree on the floating variant: the panel is a rounded, lifted box
+inside the window's gutter rather than a rail against the content.
+
+<BlockPreview name="sidebar-04" />
+
+## Composition
+
+- `SidebarProvider variant="floating"` and `Sidebar variant="floating"` from
+  `@gpuixui/components`
+- `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarMenuSub`,
+  `SidebarMenuSubItem` and `SidebarMenuSubButton` for the tree
+- `SidebarHeader` for the brand, `SidebarInset` for the page
+- `Stack`, `Text` and `Separator` from `@gpuixui/primitives`
+
+## Notes
+
+The variant is declared once on the provider: the panel keeps the 8px gutter
+and the inset sits flush. The block has no rail — shadcn's floating recipe
+toggles from the page header instead, so the panel's outer edge stays clean.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.
