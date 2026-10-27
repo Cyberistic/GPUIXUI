@@ -494,7 +494,10 @@
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 100%;
+  /* The veil is `inset: 0` inside this frame, so the frame owns the height the
+     veil fills. It used to say `min-height: 100%` against a panel that no longer
+     has one, which left the dialog with a 28px box and clipped it away. */
+  min-height: 360px;
 }
 
 .gx-dialog-backdrop {
@@ -869,6 +872,9 @@
   place-items: center;
   align-self: stretch;
   width: 100%;
+  /* Same stage as the dialog's: the confirmation's veil is `inset: 0`, so a
+     frame with no height of its own painted a 28px strip of the dialog. */
+  min-height: 360px;
 }
 
 .gx-confirm {
