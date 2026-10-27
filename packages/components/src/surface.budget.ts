@@ -142,7 +142,6 @@ export const surfaceBudget = {
   // hover waits they share, `internal/hover.ts`).
   // 203 → 205 for the chat family rebuild (plan 716): `bubble.tsx` and its
   // `bubble/logic.ts` rule, plus `message-scroller/store.ts` beside the scroller.
-  modules: 205,
   // 203 → 204 for `menu/hover.ts`: the menu family's pointer intent — Base UI's
   // 100 ms submenu rest and 80 ms close grace, and the tree-wide `MenuPointer`
   // the root surface and every submenu surface hold, so a diagonal trip into a
