@@ -170,29 +170,37 @@ const DateSurface = ({
         {monthWindow(month, months).map((panel) => (
           <div className="gx-date-panel" key={panel}>
             <div className="gx-date-nav">
-              <button
-                aria-label="Previous month"
-                className="gx-date-navbtn"
-                disabled={!canBrowseMonth(panel, -1, bounds)}
-                onClick={() => onMonth(addMonths(month, -1))}
-                tabIndex={panel === month ? 0 : -1}
-                type="button"
-              >
-                <span aria-hidden="true">‹</span>
-              </button>
+              {/* One nav pair for the window, as the shipped Calendar paints
+                  it: previous beside the first month, next after the last. */}
+              {panel === month ? (
+                <button
+                  aria-label="Previous month"
+                  className="gx-date-navbtn"
+                  disabled={!canBrowseMonth(panel, -1, bounds)}
+                  onClick={() => onMonth(addMonths(month, -1))}
+                  type="button"
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+              ) : (
+                <span aria-hidden="true" className="gx-date-navbtn" />
+              )}
               <span className="gx-date-month" role="status">
                 {monthLabel(panel)}
               </span>
-              <button
-                aria-label="Next month"
-                className="gx-date-navbtn"
-                disabled={!canBrowseMonth(panel, 1, bounds)}
-                onClick={() => onMonth(addMonths(month, 1))}
-                tabIndex={panel === addMonths(month, months - 1) ? 0 : -1}
-                type="button"
-              >
-                <span aria-hidden="true">›</span>
-              </button>
+              {panel === addMonths(month, months - 1) ? (
+                <button
+                  aria-label="Next month"
+                  className="gx-date-navbtn"
+                  disabled={!canBrowseMonth(panel, 1, bounds)}
+                  onClick={() => onMonth(addMonths(month, 1))}
+                  type="button"
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+              ) : (
+                <span aria-hidden="true" className="gx-date-navbtn" />
+              )}
             </div>
             <div
               aria-label={`${label}, ${monthLabel(panel)}`}
