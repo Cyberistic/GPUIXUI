@@ -1081,13 +1081,15 @@ describe("DropdownMenu submenus", () => {
     menu.unmount();
   });
 
-  it("opens on hover and focuses the first row", () => {
+  it("opens on hover, after Base UI's rest, and focuses the first row", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
 
     hoverCentreOf(menu, "share");
 
-    expect(menu.renderer.findByTestId("submenu")).toBeDefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeDefined(),
+    );
     expect(focusedTestId(menu)).toEqual(Option.some("copy-link"));
 
     menu.unmount();
@@ -1112,7 +1114,9 @@ describe("DropdownMenu submenus", () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     hoverCentreOf(menu, "share");
-    expect(menu.renderer.findByTestId("submenu")).toBeDefined();
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("submenu")).toBeDefined(),
+    );
 
     hoverCentreOf(menu, "rename");
 
