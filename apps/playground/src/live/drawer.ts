@@ -79,6 +79,7 @@ export const drawerBox = (
       y: window.height - sheet.height,
       ...sheet,
     })),
+    Match.when("top", () => ({ x: 0, y: 0, ...sheet })),
     Match.exhaustive,
   );
 };

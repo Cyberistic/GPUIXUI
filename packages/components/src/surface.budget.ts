@@ -176,7 +176,6 @@ export const surfaceBudget = {
   // surface + measured body, the shared hold, the promise phase and the swipe
   // gesture (two pure rules, `toast/stack.ts` and `toast/swipe.ts`). The
   // ceiling moved 1190 → 1230 KiB for the next family's headroom.
-<<<<<<< HEAD
   // 1 231 KiB measured 2026-10-27 with the five Effect stores and the seam they
   // share (`internal/local-state.ts`): a `SubscriptionRef` of the surface's
   // state, a synchronous signal for `useSyncExternalStore` and the one timer a
@@ -190,10 +189,10 @@ export const surfaceBudget = {
   // (`internal/effect-store.ts`), now deleted: one seam binds a store to React,
   // so the module count is the four stores alone. 1 243 KiB measured with all
   // nine stores, under the ceiling.
-  bytes: 1300 * 1024,
-=======
-  bytes: 1276 * 1024,
->>>>>>> e788f7fc9 (feat(components): bring shadcn's sidebar family and the account menu)
+  // 1 243 KiB measured with the nine stores, and 1 310 KiB with the Sidebar
+  // family and the account menu (plan 340) rebased over them: the ceiling moved
+  // 1260 → 1350 KiB so the next family keeps the same headroom.
+  bytes: 1350 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

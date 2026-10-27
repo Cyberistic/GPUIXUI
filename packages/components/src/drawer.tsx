@@ -65,7 +65,7 @@ import { overlaySurfaceStyle } from "./internal/overlay.js";
 import { useTheme, type Theme } from "./internal/theme.js";
 
 /** The window edge a drawer opens from. */
-export type DrawerSide = "left" | "right" | "bottom";
+export type DrawerSide = "left" | "right" | "top" | "bottom";
 
 /** The edges a drawer can open from, as the guard reads them. */
 const DrawerEdges = Schema.Literals(["left", "right", "top", "bottom"]);
