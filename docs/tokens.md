@@ -4444,7 +4444,7 @@ rather than raise the share: the contract measures the composite, and 30% of a
 mid accent over a light card is exactly what put those three under the floor.
 
 **It found one more on the bubble.** The fifth content surface is `muted` — the
-fill a user message bubble is painted on (`MESSAGE_BUBBLES.user` is `bg-muted`)
+fill a user message bubble is painted on (`BUBBLE_VARIANTS.muted` is `bg-muted`)
 — and a selectable `Text` inside it hands the runtime the same wash over that
 fill. Aero dark still carried a 30% share, which left the bubble's body text at
 6.74:1, so it takes the 24% its siblings use; the tightest placement over a

@@ -115,9 +115,11 @@ function Actions({ onCopy }: { readonly onCopy: () => void }) {
 
 function Row({
   variant,
+  timestamp,
   children,
 }: {
   readonly variant: Variant;
+  readonly timestamp: string;
   readonly children: ReactNode;
 }) {
   return (
@@ -129,6 +131,10 @@ function Row({
     >
       <Avatar variant={variant} />
       <div className="gx-message-content" data-variant={variant}>
+        <div className="gx-message-header">
+          <span className="gx-message-author">{AUTHOR[variant]}</span>
+          <span className="gx-message-time">{timestamp}</span>
+        </div>
         {children}
       </div>
     </div>
@@ -140,7 +146,7 @@ export function MessageDemo() {
 
   return (
     <div className="gx-message-scene">
-      <Row variant="assistant">
+      <Row timestamp="09:41" variant="assistant">
         <Reasoning text="The error is a timeout, not a schema mismatch, so the retry can reuse the same payload." />
         <div className="gx-message-bubble" data-variant="assistant">
           <p className="gx-message-body">
@@ -154,12 +160,14 @@ export function MessageDemo() {
           status="done"
         />
         <Sources items={["docs/release-notes.md", "api/export"]} />
-        <Actions
-          onCopy={() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1200);
-          }}
-        />
+        <div className="gx-message-footer">
+          <Actions
+            onCopy={() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1200);
+            }}
+          />
+        </div>
         {copied ? (
           <span className="gx-message-copied" role="status">
             Copied — the consumer owns the clipboard path.
@@ -167,13 +175,13 @@ export function MessageDemo() {
         ) : null}
       </Row>
 
-      <Row variant="user">
+      <Row timestamp="09:42" variant="user">
         <div className="gx-message-bubble" data-variant="user">
           <p className="gx-message-body">Thanks — roll it to staging.</p>
         </div>
       </Row>
 
-      <Row variant="assistant">
+      <Row timestamp="09:42" variant="assistant">
         <div className="gx-message-bubble" data-variant="assistant">
           <p className="gx-message-body">Rolling it out now…</p>
         </div>
@@ -194,14 +202,18 @@ export function MessageDemo() {
 }
 
 export const messageDemoSource = `import {
+  Bubble,
+  BubbleContent,
+  Message,
   MessageActions,
   MessageAvatar,
   MessageContent,
-  MessageRoot,
+  MessageFooter,
+  MessageHeader,
 } from "@gpuixui/components";
 
 export const Reply = ({ message, copy, retry, feedback }) => (
-  <MessageRoot variant={message.role}>
+  <Message variant={message.role} timestamp={message.at}>
     <MessageAvatar />
     <MessageContent
       reasoning={message.reasoning}
@@ -209,8 +221,16 @@ export const Reply = ({ message, copy, retry, feedback }) => (
       sources={message.sources}
       streaming={message.streaming}
     >
-      <text>{message.body}</text>
-      <MessageActions onCopy={copy} onRetry={retry} onFeedback={feedback} />
+      <MessageHeader />
+      <Bubble
+        align={message.role === "user" ? "end" : "start"}
+        variant={message.role === "user" ? "muted" : "ghost"}
+      >
+        <BubbleContent>{message.body}</BubbleContent>
+      </Bubble>
+      <MessageFooter>
+        <MessageActions onCopy={copy} onRetry={retry} onFeedback={feedback} />
+      </MessageFooter>
     </MessageContent>
-  </MessageRoot>
+  </Message>
 );`;

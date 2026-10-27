@@ -1,149 +1,265 @@
 /**
- * Browser preview for the Chat page.
+ * Browser block for the Chat page — the dashboard-style chat, drawn as HTML.
  *
- * The shipped chat is a conversation scaffold: `ChatRoot` owns a four-state
- * status machine (`idle` / `submitting` / `streaming` / `error`), `ChatMessages`
- * is the scroller that follows the tail and holds the empty and failed-reply
- * panels, and `ChatComposer` is the field whose control swaps between Send and
- * Stop. The preview mirrors that contract with HTML: the composer refuses an
- * empty send, a busy conversation shows Stop, and the failed-reply row sits
- * between the transcript and the composer, where a reader who scrolled up still
- * sees it. The transport is the consumer's; the preview never calls a model.
+ * The shipped parts are GPUix host elements, so the docs mirror the composition
+ * instead of mounting it: a fixed header, the transcript as the only flexible
+ * row, a composer that never moves, and a reserved rail for the jump control.
+ * The shape is shadcn's chat block, not a diagram: title and status on the
+ * left, a reset action on the right, end-aligned reader bubbles, plain assistant
+ * prose, and one composer with send and stop.
+ *
+ * The transport is scripted. The transcript follows the live edge only while the
+ * reader is at it; scrolling up releases the view and the rail's control counts
+ * what arrived. The third send fails on purpose so Retry is one press away.
  */
 
-import { useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 type ChatStatus = "idle" | "streaming" | "error";
 
-const transcript: ReadonlyArray<{
+interface Row {
+  readonly id: number;
   readonly role: "assistant" | "user";
-  readonly author: string;
   readonly body: string;
-  readonly time: string;
-}> = [
+  readonly live: boolean;
+}
+
+const REPLY =
+  "The release is green. Three fixes landed: the overlay dismissal order, the tabs anchor and the disabled label.";
+
+const seed: ReadonlyArray<Row> = [
   {
+    id: 1,
     role: "assistant",
-    author: "Atlas",
-    body: "The deploy finished — every check is green.",
-    time: "09:41",
+    body: "Not yet — the last fix is still running.",
+    live: false,
   },
+  { id: 2, role: "user", body: "Is the release green?", live: false },
   {
-    role: "user",
-    author: "You",
-    body: "Roll it to the whole team, then.",
-    time: "09:42",
-  },
-  {
+    id: 3,
     role: "assistant",
-    author: "Atlas",
-    body: "Rolled out. I'll post here if a check fails.",
-    time: "09:42",
+    body: "Every check passed except the last fix.",
+    live: false,
   },
 ];
 
-/** What the conversation line says in each state: metadata, not a status dump. */
-const summaries: Readonly<Record<ChatStatus, string>> = {
-  idle: "3 messages · all checks passed",
-  streaming: "Streaming a reply…",
-  error: "The last reply failed",
+const STATUS_COPY: Readonly<Record<ChatStatus, string>> = {
+  idle: "Ready",
+  streaming: "Replying…",
+  error: "The reply failed. Retry, or send a shorter prompt.",
 };
 
-/** One row: an avatar, an author and time, and the body. */
-const ChatRow = ({
-  author,
-  body,
-  live,
-  role,
-  time,
-}: {
-  readonly author: string;
-  readonly body: string;
-  readonly live?: boolean;
-  readonly role: "assistant" | "user";
-  readonly time: string;
-}) => (
-  <div
-    className="gx-chat-row"
-    data-live={live ? "" : undefined}
-    data-role={role}
-  >
-    <span aria-hidden="true" className="gx-chat-avatar">
-      {role === "user" ? "Y" : "A"}
-    </span>
-    <div className="gx-chat-bubble" data-role={role}>
-      <span className="gx-chat-meta">
-        <span className="gx-chat-author">{author}</span>
-        <span className="gx-chat-time">{time}</span>
-      </span>
-      <span className="gx-chat-body">{body}</span>
+/** One transcript row: reader bubbles on the end edge, assistant prose plain. */
+function Row({ row }: { readonly row: Row }) {
+  return (
+    <div
+      className={`gx-chat-row`}
+      data-live={row.live ? "" : undefined}
+      data-role={row.role}
+    >
+      <div className="gx-chat-bubble" data-role={row.role}>
+        <p className="gx-chat-body">{row.body === "" ? "…" : row.body}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 export function ChatDemo() {
   const [status, setStatus] = useState<ChatStatus>("idle");
+  const [rows, setRows] = useState<ReadonlyArray<Row>>(seed);
   const [draft, setDraft] = useState("");
+  const [pinned, setPinned] = useState(true);
+  const [unread, setUnread] = useState(0);
+  const [sends, setSends] = useState(0);
+  const transcript = useRef<HTMLDivElement | null>(null);
+  const words = useRef<ReadonlyArray<string>>([]);
+  const nextId = useRef(seed.length + 1);
   const busy = status === "streaming";
+
+  const scrollToEnd = useCallback(() => {
+    const element = transcript.current;
+    if (element !== null) element.scrollTop = element.scrollHeight;
+  }, []);
+
+  useLayoutEffect(() => {
+    if (pinned) scrollToEnd();
+  }, [pinned, rows, scrollToEnd]);
+
+  useEffect(() => {
+    if (status !== "streaming") return;
+    const timer = setInterval(() => {
+      const word = words.current[0];
+      if (word === undefined) {
+        setStatus("idle");
+        setRows((current) =>
+          current.map((row) => (row.live ? { ...row, live: false } : row)),
+        );
+        return;
+      }
+      words.current = words.current.slice(1);
+      setRows((current) =>
+        current.map((row) =>
+          row.live
+            ? { ...row, body: row.body === "" ? word : `${row.body} ${word}` }
+            : row,
+        ),
+      );
+    }, 110);
+    return () => clearInterval(timer);
+  }, [status]);
+
+  const send = (): void => {
+    if (busy || draft.trim() === "") return;
+    const failing = (sends + 1) % 3 === 0;
+    setSends((count) => count + 1);
+    words.current = REPLY.split(" ");
+    setStatus("streaming");
+    setRows((current) => {
+      const next = [
+        ...current,
+        {
+          id: nextId.current++,
+          role: "user" as const,
+          body: draft,
+          live: false,
+        },
+        {
+          id: nextId.current++,
+          role: "assistant" as const,
+          body: "",
+          live: true,
+        },
+      ];
+      return failing
+        ? next.map((row) =>
+            row.id === next[next.length - 1]?.id
+              ? { ...row, body: "The deploy timed out.", live: false }
+              : row,
+          )
+        : next;
+    });
+    if (failing) {
+      setStatus("error");
+    } else if (!pinned) {
+      setUnread((count) => count + 2);
+    }
+    setDraft("");
+  };
+
+  const stop = (): void => {
+    words.current = [];
+    setStatus("idle");
+    setRows((current) =>
+      current.map((row) => (row.live ? { ...row, live: false } : row)),
+    );
+  };
+
+  const retry = (): void => {
+    words.current = REPLY.split(" ");
+    setStatus("streaming");
+    setRows((current) => [
+      ...current,
+      {
+        id: nextId.current++,
+        role: "assistant",
+        body: "",
+        live: true,
+      },
+    ]);
+  };
+
+  const reset = (): void => {
+    words.current = [];
+    setStatus("idle");
+    setRows(seed);
+    setDraft("");
+    setUnread(0);
+    setPinned(true);
+  };
+
+  const atEnd = (): boolean => {
+    const element = transcript.current;
+    if (element === null) return true;
+    return (
+      element.scrollHeight - element.scrollTop - element.clientHeight <= 24
+    );
+  };
 
   return (
     <div className="gx-chat">
       <div className="gx-chat-head">
         <div className="gx-chat-head-copy">
-          <p className="gx-chat-title">Atlas support</p>
-          <p className="gx-chat-summary" role="status">
-            {summaries[status]}
+          <p className="gx-chat-title">New Thread</p>
+          <p
+            className="gx-chat-summary"
+            data-error={status === "error" ? "" : undefined}
+            role="status"
+          >
+            {STATUS_COPY[status]}
           </p>
         </div>
-        <div aria-label="Conversation status" className="gx-chat-switch">
-          {(["idle", "streaming", "error"] as const).map((value) => (
-            <button
-              aria-pressed={status === value}
-              className="gx-chat-choice"
-              data-chosen={status === value ? "" : undefined}
-              key={value}
-              onClick={() => setStatus(value)}
-              type="button"
-            >
-              {value}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="gx-chat-messages">
-        {transcript.map((message) => (
-          <ChatRow key={message.body} {...message} />
-        ))}
-        {busy ? (
-          <>
-            <div className="gx-chat-divider">
-              <span>Streaming</span>
-            </div>
-            <ChatRow
-              author="Atlas"
-              body="Checking every service…"
-              live
-              role="assistant"
-              time="now"
-            />
-          </>
-        ) : null}
-      </div>
-
-      {status === "error" ? (
-        <div className="gx-chat-error" role="alert">
-          <span className="gx-chat-error-text">
-            The reply failed. Nothing was sent.
-          </span>
+        <div className="gx-chat-head-actions">
           <button
-            className="gx-btn gx-btn-secondary gx-btn-sm"
-            onClick={() => setStatus("idle")}
+            className="gx-btn gx-btn-ghost gx-btn-sm"
+            disabled={busy}
+            onClick={reset}
             type="button"
           >
-            Retry
+            Reset
           </button>
+          {status === "error" ? (
+            <button
+              className="gx-btn gx-btn-primary gx-btn-sm"
+              onClick={retry}
+              type="button"
+            >
+              Retry
+            </button>
+          ) : null}
         </div>
-      ) : null}
+      </div>
+
+      <div
+        className="gx-chat-messages"
+        onScroll={() => {
+          const next = atEnd();
+          setPinned(next);
+          if (next) setUnread(0);
+        }}
+        ref={transcript}
+      >
+        <div className="gx-chat-content">
+          {rows.map((row) => (
+            <Row key={row.id} row={row} />
+          ))}
+          {busy ? <p className="gx-chat-sr">Assistant is replying.</p> : null}
+        </div>
+      </div>
+
+      <div className="gx-chat-rail">
+        <button
+          aria-hidden={pinned}
+          className="gx-btn gx-btn-secondary gx-btn-sm"
+          data-active={!pinned}
+          onClick={() => {
+            scrollToEnd();
+            setPinned(true);
+            setUnread(0);
+          }}
+          tabIndex={pinned ? -1 : 0}
+          type="button"
+        >
+          {unread === 0
+            ? "Jump to latest"
+            : `${unread} new ${unread === 1 ? "message" : "messages"}`}
+        </button>
+      </div>
 
       <div className="gx-chat-composer">
         <div className="gx-chat-composer-row">
@@ -151,14 +267,20 @@ export function ChatDemo() {
             aria-label="Message"
             className="gx-chat-field"
             onChange={(event) => setDraft(event.currentTarget.value)}
-            placeholder="Send a message…"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                send();
+              }
+            }}
+            placeholder="Ask the agent to change your code…"
             rows={1}
             value={draft}
           />
           {busy ? (
             <button
               className="gx-btn gx-btn-secondary gx-btn-sm"
-              onClick={() => setStatus("idle")}
+              onClick={stop}
               type="button"
             >
               Stop
@@ -167,7 +289,7 @@ export function ChatDemo() {
             <button
               className="gx-btn gx-btn-primary gx-btn-sm"
               disabled={draft.trim() === ""}
-              onClick={() => setDraft("")}
+              onClick={send}
               type="button"
             >
               Send
@@ -183,23 +305,22 @@ export function ChatDemo() {
 }
 
 export const chatDemoSource = `import {
+  Bubble,
+  BubbleContent,
   ChatComposer,
+  ChatHeader,
   ChatMessages,
   ChatRoot,
+  Message,
+  MessageAvatar,
   MessageContent,
-  MessageRoot,
+  MessageHeader,
+  chatMove,
 } from "@gpuixui/components";
 
-export const Conversation = ({
-  status,
-  setStatus,
-  messages,
-  send,
-  stop,
-  retry,
-}) => (
-  // The status machine is the one authority: while a reply is open the composer
-  // shows Stop, and a submit is refused. The transport is the consumer's.
+export const Conversation = ({ status, setStatus, messages, send, stop, retry }) => (
+  // The middle grows; the header and composer do not. Appending a row or
+  // streaming a reply cannot move the composer.
   <ChatRoot
     status={status}
     onStatusChange={setStatus}
@@ -207,11 +328,21 @@ export const Conversation = ({
     onStop={stop}
     onRetry={retry}
   >
+    <ChatHeader title="New Thread" description="Ask the agent to change your code." />
     <ChatMessages>
       {messages.map((message) => (
-        <MessageRoot key={message.id} variant={message.role}>
-          <MessageContent>{message.body}</MessageContent>
-        </MessageRoot>
+        <Message key={message.id} variant={message.role} timestamp={message.at}>
+          <MessageAvatar />
+          <MessageContent streaming={message.streaming}>
+            <MessageHeader />
+            <Bubble
+              align={message.role === "user" ? "end" : "start"}
+              variant={message.role === "user" ? "muted" : "ghost"}
+            >
+              <BubbleContent>{message.body}</BubbleContent>
+            </Bubble>
+          </MessageContent>
+        </Message>
       ))}
     </ChatMessages>
     <ChatComposer hint="Enter sends · Shift+Enter adds a line" />

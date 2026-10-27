@@ -174,6 +174,12 @@ component call sites adopt the outline in their own workstream.
 | [537](./537-gpui-ce.md) | `gpui-ce`: capability delta, patch-vs-switch, and the integration verdict | infra (runtime) | `020`, `524`, `525` | research complete — **do not switch**; port binding-level patches, keep renderer features unsupported |
 | [538](./538-transform-build-fork-source.md) | Transform build plumbing: fetch the GPUix Zed fork at the pin and apply the transform patch behind `GPUIX_TRANSFORM=1` | infra (renderer) | `525`, `530`, `140` | source integration done — fetch, patch apply and flag transitions proven without a build; transform-enabled build deliberately deferred |
 
+### Components
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [716](./716-chat-family-rebuild.md) | Chat family on shadcn's Bubble / Message / MessageScroller, with the fixed-row layout fix | D | `207`, `206` | implemented |
+
 ## How to use a plan
 
 1. Read it fully before starting. Do not skim the STOP conditions.

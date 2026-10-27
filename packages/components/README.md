@@ -370,7 +370,10 @@ number, so the two cannot drift.
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
 | `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers |
 | `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |
-| `src/message-scroller.tsx`, `src/message-scroller/logic.ts` | MessageScroller: pinned follow, no yank, unread count and jump-to-latest over a bounded scroll viewport |
+| `src/bubble.tsx`, `src/bubble/logic.ts` | Bubble: seven shadcn surfaces, start/end alignment, an 80% cap, joined corners on a grouped run, a hover/focus action strip and a reaction row |
+| `src/message.tsx` | Message: the row around a Bubble — author, avatar, timestamp, header/footer, and the reasoning/tool/citation/streaming data slots |
+| `src/message-scroller.tsx`, `src/message-scroller/logic.ts`, `src/message-scroller/store.ts` | MessageScroller: a `LocalState` pin/unread/stream store, no yank, turn anchoring, and a jump control in a reserved rail |
+| `src/chat.tsx`, `src/chat/logic.ts` | Chat: a fixed header, transcript and composer over the status machine; the middle grows, so appending or streaming never moves the composer |
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |
 | `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no radial gradient for a saturation/value square in 0.11.0) |
 | `src/hotkey-recorder.tsx` | HotkeyRecorder: capture a chord, reusing `@gpuixui/keyboard` |

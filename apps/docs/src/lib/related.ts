@@ -200,6 +200,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("collapsible", "Collapsible"),
       component("carousel", "Carousel"),
       component("tabs", "Tabs"),
+      component("bubble", "Bubble"),
       component("message", "Message"),
       component("message-scroller", "Message Scroller"),
       component("chat", "Chat"),

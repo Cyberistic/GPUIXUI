@@ -42,6 +42,9 @@ export interface PageRef {
  */
 export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   Box: ["Boxes / containers"],
+  // `Bubble` and `Bubbles` share a stem, so each page names its own row.
+  Bubble: ["Bubble"],
+  Bubbles: ["Bubbles"],
   Checkbox: ["Checkboxes"],
   Collapsible: ["Collapsible sections"],
   Combobox: ["Comboboxes"],

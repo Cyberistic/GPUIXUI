@@ -1,0 +1,113 @@
+---
+title: Bubble
+description: The message surface — seven variants, start/end alignment, grouping, an avatar slot, hover actions and reactions
+---
+
+<ComponentPreview name="bubble-demo" />
+
+A bubble is the surface one message wears. It is independent of `Message`: use
+it for a reply, a quoted message, a suggestion or a notification. `Message` owns
+the author, avatar, timestamp and row layout; `Bubble` owns the painted box.
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
+
+```tsx
+import {
+  Bubble,
+  BubbleAction,
+  BubbleActions,
+  BubbleContent,
+} from "@gpuixui/components";
+
+<Bubble variant="muted" align="end">
+  <BubbleContent>Roll it out to the whole team.</BubbleContent>
+  <BubbleActions label="Message actions">
+    <BubbleAction label="Copy" onClick={copy} />
+  </BubbleActions>
+</Bubble>;
+```
+
+## Composition
+
+```text
+Bubble
+├── BubbleContent
+├── BubbleActions
+│   └── BubbleAction
+└── BubbleReactions
+```
+
+`BubbleGroup` stacks consecutive bubbles from one sender:
+
+```text
+BubbleGroup
+├── Bubble group="first"
+├── Bubble group="middle"
+└── Bubble group="last"
+```
+
+## Variants
+
+| Variant       | Description                                                |
+| ------------- | ---------------------------------------------------------- |
+| `default`     | The primary fill, usually the reader's own message.         |
+| `secondary`   | The neutral secondary fill.                                 |
+| `muted`       | A quiet supporting surface.                                 |
+| `tinted`      | A soft primary tint.                                        |
+| `outline`     | A bordered surface on the page fill.                        |
+| `ghost`       | Unframed prose; it takes the whole row instead of 80%.      |
+| `destructive` | A soft destructive surface for a failed turn or an error.   |
+
+A bubble is at most 80% of its row (`ghost` is 100%). Pass `maxWidth` to change
+the cap.
+
+## Grouping
+
+`BubbleGroup` tightens the gap to the theme's `xs` (4px). Each bubble names its
+place with `group`: `first` joins below, `middle` joins both sides, `last`
+joins above and keeps a short tail on the sender's corner, and `single` is the
+whole radius.
+
+## Actions and reactions
+
+`BubbleActions` is laid out even while hidden and fades in on pointer-over or
+when one of its `BubbleAction`s holds focus, so revealing it never moves the
+bubble. `BubbleReactions` is a named row under the surface.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Bubble` | the row: optional avatar, content column, 80% cap | `variant?`, `align?`, `group?`, `maxWidth?`, `avatar?`, `className?`, `children` |
+| `BubbleContent` | the framed surface | `className?`, `children` |
+| `BubbleActions` | a named group that reserves its height and fades in | `label?`, `className?`, `children` |
+| `BubbleAction` | one small ghost action | `label` (required), `onClick`, `disabled?`, `className?` |
+| `BubbleReactions` | a named reaction row | `label` (required), `className?`, `children` |
+| `BubbleGroup` | a tighter column | `gap?`, `className?`, `children` |
+
+## Limitations
+
+- A reaction row sits in the bubble's column, not overlapping the bubble edge:
+  `position: absolute` resolves against the mount parent in
+  `@gpuix/native@0.11.0`, so an overlapping badge would be a window layer.
+- The avatar is a prop slot rather than a part, because the runtime cannot wrap
+  a caller's children in the bubble's column selectively.
+- `BubbleContent` is always a `div`; the runtime has no anchor host, so there is
+  no polymorphic `render`.
+- A caller-supplied control inside `BubbleActions` that is not a `BubbleAction`
+  does not reveal the strip on keyboard focus: a focus event belongs to the
+  focused element, so the action has to report it.
+- A `variant`, `align` or `group` this release does not name reads as its
+  documented default rather than painting an unnamed surface.
+
+## Related
+
+- [Message](/docs/components/message) — the row around a bubble.
+- [Message Scroller](/docs/components/message-scroller) — the transcript.
+- [Chat](/docs/components/chat) — header, transcript and composer.

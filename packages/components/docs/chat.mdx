@@ -1,19 +1,35 @@
 ---
 title: Chat
-description: A conversation scaffold with a composer and status machine
+description: A fixed-row conversation — header, transcript that follows the tail, and a composer with a status machine
 ---
 
 <ComponentPreview name="chat-demo" />
+
+Chat is the whole conversation: a fixed header, the flexible transcript and a
+fixed composer. The transcript is a `MessageScroller`, each turn is a `Message`
+around a `Bubble`, and the field is `ChatComposer`. The transport is yours; the
+status machine is shared so the composer and the header cannot disagree.
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
 ```tsx
 import {
+  Bubble,
+  BubbleContent,
   ChatComposer,
+  ChatHeader,
   ChatMessages,
   ChatRoot,
+  Message,
+  MessageAvatar,
   MessageContent,
-  MessageRoot,
+  MessageHeader,
   chatMove,
 } from "@gpuixui/components";
 
@@ -24,11 +40,21 @@ import {
   onStop={stop}
   onRetry={retry}
 >
+  <ChatHeader title="Release thread" />
   <ChatMessages>
     {messages.map((message) => (
-      <MessageRoot key={message.id} variant={message.role}>
-        <MessageContent>{message.body}</MessageContent>
-      </MessageRoot>
+      <Message key={message.id} variant={message.role} timestamp={message.at}>
+        <MessageAvatar />
+        <MessageContent streaming={message.streaming}>
+          <MessageHeader />
+          <Bubble
+            align={message.role === "user" ? "end" : "start"}
+            variant={message.role === "user" ? "muted" : "ghost"}
+          >
+            <BubbleContent>{message.body}</BubbleContent>
+          </Bubble>
+        </MessageContent>
+      </Message>
     ))}
   </ChatMessages>
   <ChatComposer hint="Enter sends · Shift+Enter adds a line" />
@@ -39,22 +65,82 @@ import {
 
 ```text
 ChatRoot
-├── ChatMessages
+├── ChatHeader
+├── ChatMessages        the MessageScroller
+│   ├── MessageScrollerViewport
+│   │   └── MessageScrollerContent
+│   │       └── MessageScrollerItem
+│   └── MessageScrollerJumpToLatest
 └── ChatComposer
 ```
+
+## The fixed rows
+
+`ChatRoot` is a column whose middle grows. `ChatHeader` and `ChatComposer` do
+not shrink; `ChatMessages` is `flex: 1 1 0` with `min-height: 0`, so a row
+arriving, a reply streaming or the jump control appearing changes nothing above
+or below the transcript. Give `ChatRoot` a bounded height — directly, or through
+a sized flex parent — because the transcript needs one to scroll.
+
+The passed-in `ChatMessages` children are rows. Wrap each turn in a `Message`
+(or a `MessageGroup` for consecutive rows from one sender). A `Bubble` is always
+a child of `MessageContent`; the message never builds one.
+
+## Status
+
+The four states are `idle`, `submitting`, `streaming` and `error`, and
+`chatMove` is the only rule set. Send is refused while a reply is open, the
+refused draft stays in the field, Stop emits the stop intent, and Escape stops a
+reply. The header announces the state; the failure sentence replaces the status
+line in place, so a failed reply does not take height from the transcript.
+
+## While a reply is open
+
+- Send is replaced by Stop.
+- Enter still arrives as the field's image submit; the machine refuses it, so
+  the draft is kept.
+- A reply's row can grow token by token; the transcript follows it only while
+  the reader is at the end.
+
+## Failed replies
+
+The failure copy is one line in the header with the full sentence in
+`aria-description`; Retry is beside it. It used to be a row between the viewport
+and the composer, which shrank the viewport when it appeared — the layout shift
+this release removes.
 
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `ChatRoot` | `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?` (a blank value reads as `"The reply failed."`), `label?` (a blank value reads as `"Conversation"`), `className?`, `children` |
-| `ChatMessages` | the transcript viewport and empty panel | `empty?`, `emptyTitle?`, `emptyDescription?` (a blank value reads as the documented default), `className?`, `children` |
-| `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?` (a value that is not text reads as an empty draft), `onValueChange?`, `label?` (a blank value reads as `"Message"`), `placeholder?`, `submitLabel?` (default `"Send"`), `stopLabel?` (default `"Stop"`), `hint?` (a blank value paints no line), `attachments?` (a row above the field), `disabled?`, `className?`, `style?` |
+| `ChatRoot` | `role="region"` named by `label` | `status?`, `defaultStatus?`, `onStatusChange?`, `onSubmit` (required), `onStop?`, `onRetry?`, `error?`, `label?`, `className?`, `children` |
+| `ChatHeader` | a fixed row: title, status/error, actions | `title?`, `description?`, `actions?`, `className?` |
+| `ChatMessages` | the scroller, the empty panel and the jump rail | `empty?`, `emptyTitle?`, `emptyDescription?`, `className?`, `children` |
+| `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `submitLabel?`, `stopLabel?`, `hint?`, `attachments?`, `disabled?`, `className?`, `style?` |
+
+`ChatMessages` is also the transcript's public seam: render
+`MessageScrollerItem` rows inside it (through `Message`) and pass
+`MessageScrollerItem scrollAnchor` on a turn's first row if you want that turn
+placed near the top.
 
 ## Limitations
 
 - The transport is yours; the component never calls a model.
-- No streaming API; drive the status with `chatMove`.
-- No `aria-live`; new rows are not announced.
-- **Every name and sentence is read failsafe**: a blank `label`, `error`, `emptyTitle`, `emptyDescription`, `submitLabel` or `stopLabel` — an i18n row with a missing key, or a saved record — reads as the documented default rather than publishing a nameless control, and a blank `hint` paints no line (the runtime measures `""` at 0px and `"   "` at 16px).
-- **A stored draft is read failsafe**: a `value` or `defaultValue` restored from storage as `null` reads once as an empty draft, so the composer paints instead of throwing out of `draft.trim()`; an absent controlled `value` still means uncontrolled.
+- No `aria-live`; the header's status line is a marker, not a live region, so a
+  new row is painted but not announced.
+- The composer's key contract is the runtime's: Enter reaches the textarea's
+  `onSubmit`, Shift+Enter inserts a newline and reaches no handler, Escape is a
+  keydown. A textarea without an `onSubmit` consumes Enter as a newline.
+- The failure line is clamped to one line in the header; the full sentence is
+  the status node's description.
+- The jump control owns a reserved rail under the viewport; the runtime cannot
+  position it over the viewport's corner (`position: absolute` resolves against
+  the mount parent in `0.11.0`).
+- A blank name or sentence reads as the documented default; a stored draft that
+  is not text reads as an empty composer.
+
+## Related
+
+- [Bubble](/docs/components/bubble) — the message surface.
+- [Message](/docs/components/message) — the row.
+- [Message Scroller](/docs/components/message-scroller) — the transcript rules.
