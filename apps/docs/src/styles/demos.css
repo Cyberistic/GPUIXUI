@@ -961,6 +961,7 @@
 
 /* ---- dropdown menu: mirrors components/src/dropdown-menu.tsx ---- */
 .gx-demo-menu {
+  display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
@@ -1214,6 +1215,7 @@
 
 /* ---- command menu: mirrors components/src/command-menu.tsx ---- */
 .gx-demo-command {
+  display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
@@ -2745,6 +2747,7 @@
    `selected` over `hover`, and the chosen one carries the check mark that
    `renderSelectRow` draws from the state the runtime reports. */
 .gx-demo-select {
+  display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
