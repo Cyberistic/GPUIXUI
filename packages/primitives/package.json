@@ -13,6 +13,14 @@
       "types": "./src/core/index.ts",
       "default": "./src/core/index.ts"
     },
+    "./input": {
+      "types": "./src/components/Input.tsx",
+      "default": "./src/components/Input.tsx"
+    },
+    "./textarea": {
+      "types": "./src/components/TextArea.tsx",
+      "default": "./src/components/TextArea.tsx"
+    },
     "./hint": {
       "types": "./src/components/hint.tsx",
       "default": "./src/components/hint.tsx"

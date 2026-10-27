@@ -877,3 +877,96 @@ export const USER_MENU_NAME =
 /** `user-menu.tsx` — the address. */
 export const USER_MENU_EMAIL =
   "text-xs font-sans text-muted-foreground whitespace-nowrap text-ellipsis";
+
+/** `aspect-ratio.tsx` — the box. `aspect-(--ratio)` is the runtime's
+ * `aspectRatio` value, so the recipe keeps only what the box owns. */
+export const ASPECT_RATIO = "relative w-full";
+
+/** `hover-card.tsx` — the surface. shadcn's `w-64 p-4` card; the travel is the
+ * motion seam's. */
+export const HOVER_CARD_CONTENT =
+  "bg-popover text-popover-foreground w-64 p-4 rounded-md border border-border shadow-md text-sm font-sans pointer-events-auto";
+
+/** `item.tsx` — the group (`role="list"`). */
+export const ITEM_GROUP = "flex flex-col w-full gap-2";
+
+/** `item.tsx` — one row. Padding and gap are the size's, not the variant's. */
+export const ITEM_BASE = "flex flex-row flex-wrap items-center w-full";
+
+/** `item.tsx` — the surface treatment. */
+export const ITEM_VARIANTS = {
+  default: "",
+  outline: "border border-input rounded-md",
+  muted: "bg-muted rounded-md",
+} as const;
+
+/** `item.tsx` — the row's density. */
+export const ITEM_SIZES = {
+  default: "gap-3 p-3",
+  sm: "gap-2 p-2",
+} as const;
+
+/** `item.tsx` — the leading slot. */
+export const ITEM_MEDIA = "flex flex-row items-center justify-center shrink-0";
+
+/** `item.tsx` — the media box a variant paints; the caller sizes `default`. */
+export const ITEM_MEDIA_VARIANTS = {
+  default: "",
+  icon: "size-9 rounded-md bg-muted",
+  image: "size-10 rounded-md overflow-hidden",
+} as const;
+
+/** `item.tsx` — the text column. */
+export const ITEM_CONTENT = "flex flex-col flex-1 min-w-0 gap-1";
+
+/** `item.tsx` — the title: one line, clipped. */
+export const ITEM_TITLE =
+  "text-sm font-medium font-sans text-foreground whitespace-nowrap text-ellipsis overflow-hidden";
+
+/** `item.tsx` — the supporting copy. */
+export const ITEM_DESCRIPTION =
+  "text-sm font-sans text-muted-foreground overflow-hidden";
+
+/** `item.tsx` — the trailing actions. */
+export const ITEM_ACTIONS = "flex flex-row items-center gap-2";
+
+/** `item.tsx` — the full-width row above the content. */
+export const ITEM_HEADER =
+  "flex flex-row items-center justify-between w-full gap-2";
+
+/** `item.tsx` — the full-width row below the content. */
+export const ITEM_FOOTER =
+  "flex flex-row items-center justify-between w-full gap-2";
+
+/** `input-group.tsx` — the bordered row. The focus and invalid rings are the
+ * state recipes below; the field inside paints none of its own. */
+export const INPUT_GROUP =
+  "flex flex-col w-full min-w-0 rounded-md border border-input bg-transparent";
+
+/** `input-group.tsx` — the line the field and its inline addons share. */
+export const INPUT_GROUP_ROW = "flex flex-row items-center w-full min-w-0";
+
+/** `input-group.tsx` — a block addon's own line. */
+export const INPUT_GROUP_BLOCK = "flex flex-row items-center w-full min-w-0";
+
+/** `input-group.tsx` — the ring and edge while the field holds focus. */
+export const INPUT_GROUP_FOCUS = "border-ring ring-[3px] ring-ring/50";
+
+/** `input-group.tsx` — the ring and edge while the field is invalid. */
+export const INPUT_GROUP_INVALID =
+  "border-destructive ring-[3px] ring-destructive/20";
+
+/** `input-group.tsx` — where an addon sits. The group lays the alignments out,
+ * so an `inline-start` addon may be written after the field it leads. */
+export const INPUT_GROUP_ADDONS = {
+  "inline-start": "flex flex-row items-center shrink-0 pl-3 gap-2",
+  "inline-end": "flex flex-row items-center shrink-0 pr-3 gap-2",
+  "block-start":
+    "flex flex-row items-center justify-start w-full shrink-0 px-3 pt-2 gap-2",
+  "block-end":
+    "flex flex-row items-center justify-start w-full shrink-0 px-3 pb-2 gap-2",
+} as const;
+
+/** `input-group.tsx` — a leading or trailing mark's text. */
+export const INPUT_GROUP_TEXT =
+  "flex flex-row items-center text-sm font-sans text-muted-foreground whitespace-nowrap";
