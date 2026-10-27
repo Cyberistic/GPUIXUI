@@ -120,14 +120,6 @@ const BreadcrumbWorkflow = (): ReactNode => {
           </span>
         </div>
       </div>
-      <p aria-live="polite" className="gx-breadcrumb-readout" role="status">
-        maxItems={budget} · {opened}
-      </p>
-      <p className="gx-breadcrumb-hint">
-        Below three the budget is clamped, because a trail needs its start, a
-        gap and its end. A hidden entry takes its separator with it: the count
-        above follows what is rendered, not what was authored.
-      </p>
     </div>
   );
 };

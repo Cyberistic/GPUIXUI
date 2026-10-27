@@ -1190,11 +1190,12 @@ const CommandMenuDemo = () => {
         Last action: <b>{lastAction ?? "none yet"}</b>
       </p>
       {open ? (
-        <div className="gx-dialog-backdrop" role="presentation">
+        <div className="gx-dialog-backdrop" onClick={close} role="presentation">
           <div
             aria-label="Command menu"
             aria-modal="true"
             className="gx-palette"
+            onClick={(event) => event.stopPropagation()}
             role="dialog"
           >
             <input

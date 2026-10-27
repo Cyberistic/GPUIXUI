@@ -52,7 +52,15 @@ export function AspectRatioDemo() {
           ))}
         </div>
       </div>
-      <div className="gx-aspect-frame" style={{ width }}>
+      <div
+        className="gx-aspect-frame"
+        style={{
+          width,
+          // Reserve the tallest treatment at this width (the 3:4 portrait), so
+          // changing the ratio or the width never moves the controls.
+          minHeight: Math.round(width / 0.75),
+        }}
+      >
         <div className="gx-aspect-box" style={{ aspectRatio: String(ratio) }} />
       </div>
       <p className="gx-aspect-note">

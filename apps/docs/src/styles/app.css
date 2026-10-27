@@ -181,10 +181,9 @@ body {
    switching a theme never moves the page under the reader. */
 .gx-component-panel {
   margin: 0;
-  /* The panel used to be a 520px box; a short demo then sat in half a card of
-     empty space and a tall one (a 3:4 aspect box at 400px) was clipped. It
-     keeps a floor for the small scenes and grows with the demo. */
-  min-height: 320px;
+  /* The panel hugs its demo: a 320px floor left a band of empty card under
+     every short component, and a fixed 520px clipped the tall ones. */
+  min-height: 0;
   padding: 0;
   border-radius: 0;
   background: transparent;

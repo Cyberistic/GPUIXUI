@@ -129,7 +129,9 @@ export const Avatar = ({
           <text
             role="presentation"
             style={mergeStyles(recipeStyle(AVATAR_FALLBACK, theme), {
-              fontSize: Math.round(diameter * 0.4),
+              // shadcn's fallback is text-sm at the default 32px disc: 44% of the
+              // diameter, not the 40% that read small beside it.
+              fontSize: Math.round(diameter * 0.44),
             })}
           >
             {initials(name)}

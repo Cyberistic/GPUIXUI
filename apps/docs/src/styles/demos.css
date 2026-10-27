@@ -504,8 +504,10 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--overlay);
-  backdrop-filter: blur(2px);
+  /* shadcn's `bg-black/50 backdrop-blur-sm`: the page stays legible through the
+     veil, so a dialog reads as a layer over it, not a blackout. */
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  backdrop-filter: blur(6px);
 }
 
 .gx-dialog {
@@ -720,8 +722,8 @@
   position: absolute;
   inset: 0;
   display: flex;
-  background: var(--overlay);
-  backdrop-filter: blur(2px);
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  backdrop-filter: blur(6px);
 }
 
 .gx-drawer {
