@@ -96,6 +96,37 @@ describe("sidebar geometry", () => {
   });
 });
 
+describe("a caller's widths", () => {
+  it("replaces the open panel and the icon rail", () => {
+    const wide = {
+      open: true,
+      variant: "sidebar" as const,
+      collapsible: "icon" as const,
+      width: 304,
+      iconWidth: 56,
+    };
+
+    expect(sidebarWidth(wide)).toBe(304);
+    expect(sidebarGap(wide)).toBe(304);
+    expect(sidebarWidth({ ...wide, open: false })).toBe(56);
+    expect(sidebarGap({ ...wide, open: false })).toBe(56);
+    // A floating rail pays its gutter on both sides of the caller's icon width.
+    expect(sidebarWidth({ ...wide, open: false, variant: "floating" })).toBe(
+      56 + 8 * 2,
+    );
+  });
+
+  it("falls back to shadcn's numbers when the layout names none", () => {
+    expect(
+      sidebarWidth({
+        open: true,
+        variant: "sidebar",
+        collapsible: "offcanvas",
+      }),
+    ).toBe(256);
+  });
+});
+
 describe("stored names", () => {
   it("reads a name this release does not ship as the documented default", () => {
     expect(sideOf("right")).toBe("right");

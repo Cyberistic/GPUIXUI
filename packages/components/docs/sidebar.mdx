@@ -113,7 +113,7 @@ layout for mobile.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `SidebarProvider` | a full-size row and the state | `defaultOpen?`, `open?`, `onOpenChange?`, `preference?`, `side?`, `variant?`, `collapsible?`, `className?`, `style?`, `children` |
+| `SidebarProvider` | a full-size row and the state | `defaultOpen?`, `open?`, `onOpenChange?`, `preference?`, `side?`, `variant?`, `collapsible?`, `width?`, `iconWidth?`, `mobileWidth?`, `className?`, `style?`, `children` |
 | `Sidebar` | the panel, or the sheet below 768px | `side?`, `variant?`, `collapsible?`, `className?`, `style?`, `children` |
 | `SidebarTrigger` | the toggle action | `size?` |
 | `SidebarRail` | the edge strip | `className?`, `style?` |
@@ -173,3 +173,14 @@ and `SIDEBAR_KEYBOARD_SHORTCUT` are exported from the component module.
 - **Dropdown menu** — the account menu inside the footer.
 - **Avatar** — the identity mark in the footer.
 - **Toast** — the other family with an Effect store and a provider.
+
+## Widths and the shortcut
+
+`width` (default 256, shadcn's 16rem), `iconWidth` (48, 3rem) and `mobileWidth`
+(288, 18rem) are shadcn's CSS variables as numbers a caller can override. A
+non-finite, zero or negative value reads as the default.
+
+The provider hears Cmd/Ctrl+B through the keys that bubble inside its subtree.
+GPUix delivers window keys only to the application's render handler, so an app
+that wants the shortcut to work with focus outside the sidebar forwards its root
+`onKeyDown` through `isSidebarShortcut(event)` — the same rule the provider runs.

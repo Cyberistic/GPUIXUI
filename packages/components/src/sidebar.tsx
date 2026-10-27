@@ -137,6 +137,8 @@ import {
   skeletonWidth,
   variantOf,
   SIDEBAR_KEYBOARD_SHORTCUT,
+  SIDEBAR_WIDTH,
+  SIDEBAR_WIDTH_ICON,
   SIDEBAR_WIDTH_MOBILE,
   type SidebarCollapsible,
   type SidebarSide,
@@ -171,6 +173,12 @@ export interface SidebarContextValue {
   readonly side: SidebarSide;
   readonly variant: SidebarVariant;
   readonly collapsible: SidebarCollapsible;
+  /** The open panel's width, from the provider. */
+  readonly width: number;
+  /** The icon rail's width, from the provider. */
+  readonly iconWidth: number;
+  /** The mobile sheet's width, from the provider. */
+  readonly mobileWidth: number;
   /** The icon-mode tip showing, if any. */
   readonly tooltip: Option.Option<string>;
   readonly showTooltip: (label: string) => void;
@@ -190,6 +198,24 @@ export const useSidebar = (): SidebarContextValue => {
   return value;
 };
 
+/**
+ * The sidebar's toggle, as a rule an app root can forward.
+ *
+ * The provider hears the keys that bubble through its own subtree. GPUix
+ * delivers window keys only to the application's render handler, so an app that
+ * wants ⌘/Ctrl+B to work with focus outside the sidebar forwards its root
+ * `onKeyDown` through this predicate — the same rule, one implementation.
+ */
+export const isSidebarShortcut = (event: KeyEvent): boolean =>
+  // A held key is one gesture: GPUI reports every repeat with `isHeld`.
+  event.isHeld !== true &&
+  event.key?.toLowerCase() === SIDEBAR_KEYBOARD_SHORTCUT &&
+  (event.modifiers?.cmd === true || event.modifiers?.ctrl === true);
+
+/** A width a caller may have stored: a finite, positive number, or the default. */
+const positiveWidth = (value: number | undefined, fallback: number): number =>
+  value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
+
 /** Whether the panel is collapsed to icons. */
 const iconCollapsed = (context: SidebarContextValue): boolean =>
   context.state === "collapsed" && context.collapsible === "icon";
@@ -199,6 +225,8 @@ const layoutOf = (context: SidebarContextValue) => ({
   open: context.open,
   variant: context.variant,
   collapsible: context.collapsible,
+  width: context.width,
+  iconWidth: context.iconWidth,
 });
 
 /** {@link SidebarProvider} props. */
@@ -216,6 +244,12 @@ export interface SidebarProviderProps extends Omit<Props, "children"> {
   readonly variant?: SidebarVariant;
   /** What collapsing does. Default `"offcanvas"`. */
   readonly collapsible?: SidebarCollapsible;
+  /** The open panel's width. Default `256` (shadcn's `16rem`). */
+  readonly width?: number;
+  /** The icon rail's width. Default `48` (shadcn's `3rem`). */
+  readonly iconWidth?: number;
+  /** The mobile sheet's width. Default `288` (shadcn's `18rem`). */
+  readonly mobileWidth?: number;
   readonly children?: ReactNode;
 }
 
@@ -231,6 +265,9 @@ export const SidebarProvider = ({
   side: requestedSide = "left",
   variant: requestedVariant = "sidebar",
   collapsible: requestedCollapsible = "offcanvas",
+  width: requestedWidth,
+  iconWidth: requestedIconWidth,
+  mobileWidth: requestedMobileWidth,
   onKeyDown,
   style,
   children,
@@ -242,6 +279,9 @@ export const SidebarProvider = ({
   const side = sideOf(requestedSide);
   const variant = variantOf(requestedVariant);
   const collapsible = collapsibleOf(requestedCollapsible);
+  const width = positiveWidth(requestedWidth, SIDEBAR_WIDTH);
+  const iconWidth = positiveWidth(requestedIconWidth, SIDEBAR_WIDTH_ICON);
+  const mobileWidth = positiveWidth(requestedMobileWidth, SIDEBAR_WIDTH_MOBILE);
 
   const store = useLocalStore(
     makeSidebarStore({
@@ -286,10 +326,7 @@ export const SidebarProvider = ({
 
   const handleKeyDown = (event: KeyEvent): void => {
     onKeyDown?.(event);
-    // A held key is one gesture: GPUI reports every repeat with `isHeld`.
-    if (event.isHeld === true) return;
-    if (event.key?.toLowerCase() !== SIDEBAR_KEYBOARD_SHORTCUT) return;
-    if (event.modifiers?.cmd !== true && event.modifiers?.ctrl !== true) return;
+    if (!isSidebarShortcut(event)) return;
     event.preventDefault();
     toggleSidebar();
   };
@@ -306,6 +343,9 @@ export const SidebarProvider = ({
       side,
       variant,
       collapsible,
+      width,
+      iconWidth,
+      mobileWidth,
       tooltip: snapshot.tooltip,
       showTooltip,
       hideTooltip,
@@ -313,7 +353,9 @@ export const SidebarProvider = ({
     [
       collapsible,
       hideTooltip,
+      iconWidth,
       isMobile,
+      mobileWidth,
       open,
       setOpen,
       setOpenMobile,
@@ -323,6 +365,7 @@ export const SidebarProvider = ({
       snapshot.tooltip,
       toggleSidebar,
       variant,
+      width,
     ],
   );
 
@@ -396,7 +439,7 @@ export const Sidebar = ({
     );
   }
 
-  const layout = { open: context.open, variant, collapsible };
+  const layout = layoutOf(context);
   const inner = mergeStyles(
     mergeStyles(recipeStyle(cn(SIDEBAR_INNER, className), theme), {
       position: "relative",
@@ -481,7 +524,7 @@ const SidebarSheet = ({
 }) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer ?? undefined;
-  const { openMobile, setOpenMobile } = useSidebar();
+  const { openMobile, setOpenMobile, mobileWidth } = useSidebar();
   const window = useWindowSize();
   const modal = useModalState({
     open: openMobile,
@@ -493,7 +536,7 @@ const SidebarSheet = ({
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
   }, []);
-  const width = Math.min(SIDEBAR_WIDTH_MOBILE, window.width);
+  const width = Math.min(mobileWidth, window.width);
 
   useModalFocus(content?.id, undefined, openMobile, modal.restoreTarget);
 

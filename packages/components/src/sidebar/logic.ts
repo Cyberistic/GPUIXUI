@@ -68,6 +68,10 @@ export interface SidebarLayout {
   readonly open: boolean;
   readonly variant: SidebarVariant;
   readonly collapsible: SidebarCollapsible;
+  /** The open panel's width. Default {@link SIDEBAR_WIDTH}. */
+  readonly width?: number;
+  /** The icon rail's width. Default {@link SIDEBAR_WIDTH_ICON}. */
+  readonly iconWidth?: number;
 }
 
 /** Whether the panel is collapsed to its icon rail. */
@@ -83,16 +87,13 @@ export const isIconCollapsed = ({
  * window rather than shrinking. A floating or inset panel keeps its gutter, so
  * its collapsed width is the icon rail plus both sides of `p-2`.
  */
-export const sidebarWidth = ({
-  open,
-  variant,
-  collapsible,
-}: SidebarLayout): number => {
-  if (collapsible === "none" || open) return SIDEBAR_WIDTH;
-  if (collapsible === "offcanvas") return SIDEBAR_WIDTH;
-  return variant === "sidebar"
-    ? SIDEBAR_WIDTH_ICON
-    : SIDEBAR_WIDTH_ICON + SIDEBAR_GUTTER * 2;
+export const sidebarWidth = (layout: SidebarLayout): number => {
+  const { open, variant, collapsible } = layout;
+  const full = layout.width ?? SIDEBAR_WIDTH;
+  const icon = layout.iconWidth ?? SIDEBAR_WIDTH_ICON;
+  if (collapsible === "none" || open) return full;
+  if (collapsible === "offcanvas") return full;
+  return variant === "sidebar" ? icon : icon + SIDEBAR_GUTTER * 2;
 };
 
 /**
@@ -102,11 +103,11 @@ export const sidebarWidth = ({
  * icon rail, or nothing while an offcanvas panel is parked off-screen.
  */
 export const sidebarGap = (layout: SidebarLayout): number => {
-  if (layout.collapsible === "none" || layout.open) return SIDEBAR_WIDTH;
+  const full = layout.width ?? SIDEBAR_WIDTH;
+  const icon = layout.iconWidth ?? SIDEBAR_WIDTH_ICON;
+  if (layout.collapsible === "none" || layout.open) return full;
   if (layout.collapsible === "offcanvas") return 0;
-  return layout.variant === "sidebar"
-    ? SIDEBAR_WIDTH_ICON
-    : SIDEBAR_WIDTH_ICON + SIDEBAR_GUTTER * 2;
+  return layout.variant === "sidebar" ? icon : icon + SIDEBAR_GUTTER * 2;
 };
 
 /**

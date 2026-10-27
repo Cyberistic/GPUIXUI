@@ -373,3 +373,28 @@ describe("Sidebar on a narrow window", () => {
     root.unmount();
   });
 });
+
+describe("Sidebar widths", () => {
+  it("paints the panel and the gap at the caller's width", () => {
+    const page = renderComponent(
+      <SidebarProvider width={304} defaultOpen>
+        <Sidebar>
+          <SidebarContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton label="One">One</SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>Content</SidebarInset>
+      </SidebarProvider>,
+    );
+
+    settleMotion(page);
+    expect(requireBounds(page, "sidebar").width).toBe(304);
+    expect(requireBounds(page, "sidebar-gap").width).toBe(304);
+
+    page.unmount();
+  });
+});
