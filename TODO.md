@@ -329,6 +329,18 @@ because no width override exists, `09` is two `Sidebar` siblings in one provider
 rather than a nested sidebar, `07/08/16` paint expanded (no collapse is faked).
 `block-index.test.tsx` now accepts digits in a slug — its `[a-z-]+` pattern had
 silently skipped every `sidebar-NN` card.
+`[x]` **One sidebar block page** — the sixteen pages are now
+`/docs/blocks/sidebar`: one registry entry, one tile and one checked-in
+`sidebar.webp`; sixteen MDX sections (heading, shadcn link, drawing) mounting
+the kept drawings through `<SidebarExample>`. The drawings are live: offcanvas
+and icon collapse from the header trigger and the rail (48px rail, hover
+tooltips), a 200ms `0fr → 1fr` fold for sections, submenus and 06's dropdowns,
+the 10 actions popover, the footer user menu, 13's settings dialog and Escape
+for every overlay; 13/15's `collapsible="none"` panels carry a caption. The
+guards read the one page and hold all sixteen examples, links, states and the
+single thumbnail. `nub run --filter @gpuixui/docs test` 2122 green; live Chrome
+probe 01/02/07/11/13/10 with 0 console errors under
+`apps/playground/.artifacts/live/`.
 `[x]` **Sidebar parity audit** — the surface matches shadcn's 24 exports and
 their props; two gaps closed: `SidebarProvider width/iconWidth/mobileWidth` (the
 CSS variables as numbers, a bad value reading as the default) and

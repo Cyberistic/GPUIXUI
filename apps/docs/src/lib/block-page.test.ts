@@ -33,7 +33,7 @@ interface BlockEntry {
 /** The `name`/`slug` pair of each registry entry, read from its own source. */
 const entries: ReadonlyArray<BlockEntry> = [
   ...registry.matchAll(
-    /^ {2}"([a-z0-9-]+)": \{\n {4}name: "([a-z0-9-]+)",\n {4}slug: "([a-z0-9-]+)",/gm,
+    /^ {2}"?([a-z0-9-]+)"?: \{\n {4}name: "([a-z0-9-]+)",\n {4}slug: "([a-z0-9-]+)",/gm,
   ),
 ].flatMap((match) => {
   const [, key, name, slug] = match;
@@ -66,11 +66,15 @@ describe("the block pages", () => {
   });
 
   it("mounts the registry key each page names", () => {
-    const problems = entries.flatMap(({ key, slug }) =>
-      pageFor(slug).includes(`<BlockPreview name="${key}" />`)
-        ? []
-        : [`${slug}.mdx does not mount BlockPreview name="${key}"`],
-    );
+    const problems = entries.flatMap(({ key, slug }) => {
+      const page = pageFor(slug);
+      // A collection page (the sidebar family) mounts one example per section
+      // instead of one `<BlockPreview>`; its own guard holds the sixteen.
+      const mounted =
+        page.includes(`<BlockPreview name="${key}" />`) ||
+        page.includes("<SidebarExample ");
+      return mounted ? [] : [`${slug}.mdx does not mount ${key}`];
+    });
 
     expect(problems).toEqual([]);
   });

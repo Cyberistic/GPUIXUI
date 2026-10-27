@@ -50,22 +50,7 @@ blocks/command-centre.mdx    A command palette over a dimmed page: filter, highl
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
 blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
-blocks/sidebar-01.mdx        Sectioned docs navigation: version switcher, search, four labelled sections
-blocks/sidebar-02.mdx        The same sections with every heading collapsible
-blocks/sidebar-03.mdx        One always-open tree of sections and pages
-blocks/sidebar-04.mdx        The tree on a floating, lifted panel
-blocks/sidebar-05.mdx        Parent rows that open their pages in place
-blocks/sidebar-06.mdx        Sections as dropdown menus, with the newsletter footer
-blocks/sidebar-07.mdx        A workspace nav that collapses to an icon rail
-blocks/sidebar-08.mdx        An inset workspace panel with secondary links pinned low
-blocks/sidebar-09.mdx        A nested inbox: folder rail, message list, open thread
-blocks/sidebar-10.mdx        A header popover built from a chrome-free sidebar
-blocks/sidebar-11.mdx        Changed files and a collapsible repository tree
-blocks/sidebar-12.mdx        A calendar panel with an inline month
-blocks/sidebar-13.mdx        A settings dialog with its own sidebar of sections
-blocks/sidebar-14.mdx        The docs contents on the right edge
-blocks/sidebar-15.mdx        A workspace, a project page and a calendar, three panels wide
-blocks/sidebar-16.mdx        A sticky site header above both columns
+blocks/sidebar.mdx           All sixteen sidebar blocks on one page, each linked to shadcn and live
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
@@ -325,7 +310,9 @@ src/components/docs/command-centre.tsx    The command centre's matcher, highligh
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe
 src/components/docs/email-inbox-block.tsx The mail client's reducer, panes and recipe
 src/components/docs/conversations-block.tsx The messages window's reducer, list, thread and recipe
-src/components/docs/blocks/sidebar-kit.tsx The geometry, glyphs, data and parts the sixteen sidebar blocks share
+src/components/docs/blocks/sidebar-kit.tsx The geometry, glyphs, data, live controls and parts the sixteen sidebar examples share
+src/components/docs/sidebar-examples.tsx  The sixteen examples' order, shadcn links, drawings and recipes
+src/components/docs/recipe-source.tsx      The copy button and disclosure a block page ends with
 src/components/docs/blocks/sidebar-01.tsx The sidebar block 01's browser reproduction and recipe
 src/components/docs/blocks/sidebar-02.tsx The sidebar block 02's browser reproduction and recipe
 src/components/docs/blocks/sidebar-03.tsx The sidebar block 03's browser reproduction and recipe
