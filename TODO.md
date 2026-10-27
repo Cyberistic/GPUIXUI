@@ -22217,7 +22217,46 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 16/16
+`[x]` `[██████████]` 17/17
+
+`[x]` `packages/components`: **the four effect components kept their state in
+      React, and two of their docs previews were broken** — `RollingText`,
+      `ImageZoom`, `SplittingText` and the generated field behind `Hexagon`
+      (shared with `Glyph`) sequenced their work with `useState` + `useEffect` +
+      `setTimeout`, against the doctrine that state and timing live in Effect and
+      React only paints. One seam now binds a component's `SubscriptionRef` to
+      React (`internal/effect-store.ts`: `makeEffectStore`, `useStoreSnapshot`,
+      `useOwnedStore`; a write is `Effect.runSync`, a timer is `Effect.runFork`,
+      `stop` interrupts what the mount started), and four stores hold the state:
+      `rolling-text/store.ts` (the swap and its exit window — the window belongs
+      to the exit the change started, `Effect.sleep` + `cancel` on replace),
+      `image-zoom/store.ts` (the pointer, with the repeated-point read as no
+      change), `pattern-field/store.ts` (the measured box and the breath's phase,
+      read by Hexagon and Glyph) and `splitting-text/store.ts` (the phrase and the
+      units it splits into, written once per change instead of per render). The
+      two reported-broken previews, measured live on
+      `/docs/components/rolling-text?platform=darwin&mode=dark` and
+      `/docs/components/image-zoom?platform=darwin&mode=dark`: the roll's clip was
+      `height: 1.3em` of the **page's** 15px type while the value paints at 26px,
+      so every value was cut at both edges (measured 19.49px clip against a 28px
+      value); and the zoom's picture inherited the preflight's `max-width: 100%`,
+      so the hover rule grew the **height alone** and squashed it (measured
+      358.75 × 312.16 inside the 360 × 200 frame instead of 574 × 318). Fixed in
+      `apps/docs/src/styles/demos.css` (the clip is one line of the value, the
+      magnifier lifts the cap), guarded by `rolling-text-demo.test.tsx` and
+      `image-zoom-demo.test.tsx` (each derives the rule from the style sheet;
+      directions measured: `expected '' to be 'none'`, `expected '' to be '28px'`,
+      `expected 1.3 to be greater than or equal to 26` before the fix, 7/7 after)
+      plus the components' own parity cases (`keeps the whole value inside its
+      one-line clip`, `magnifies both axes by the same factor`) — proven by
+      inducing each defect in the component: `expected 36 to be less than or equal
+      to 28` and `expected 1 to be close to 1.6`. The stores have their own suites
+      (`rolling-text/store.test.ts` 7, `image-zoom/store.test.ts` 5,
+      `pattern-field/store.test.ts` 5, `splitting-text/store.test.ts` 5) and the
+      existing behaviour suites are the parity proof, unchanged: 112 unit files /
+      **1 079** cases and 99 behaviour files / **1 140** cases green. The entry
+      graph moved 171 → 176 modules (1 222 KiB measured), so `surface.budget.ts`
+      records the seam and the four stores.
 
 `[x]` `packages/components`: **a stored value made the swap state's `text` a
       non-string** — `RollingText` and `SlidingText` hand their prop to
