@@ -167,10 +167,10 @@ export const surfaceBudget = {
   // surface + measured body, the shared hold, the promise phase and the swipe
   // gesture (two pure rules, `toast/stack.ts` and `toast/swipe.ts`). The
   // ceiling moved 1190 → 1230 KiB for the next family's headroom.
-  // 1 229 KiB measured 2026-10-26 with the five Effect stores and the seam they
+  // 1 231 KiB measured 2026-10-27 with the five Effect stores and the seam they
   // share (`internal/local-state.ts`): a `SubscriptionRef` of the surface's
   // state, a synchronous signal for `useSyncExternalStore` and the one timer a
-  // drain or a sweep holds, which is 22 KiB over the five `useState`/`useEffect`
+  // drain or a sweep holds, which is 24 KiB over the five `useState`/`useEffect`
   // seams they replace. The ceiling moved 1230 → 1260 KiB so the next family
   // keeps the same headroom.
   bytes: 1260 * 1024,
