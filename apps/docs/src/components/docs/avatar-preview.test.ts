@@ -176,8 +176,8 @@ describe("the avatar preview's geometry", () => {
     expect(["xs", "sm", "md", "lg"].map(value)).toEqual([20, 26, 32, 40]);
   });
 
-  it("draws the initials at 40% of the diameter, as the component does", () => {
-    expect(component).toContain("Math.round(diameter * 0.4)");
+  it("draws the initials at 44% of the diameter, as the component does", () => {
+    expect(component).toContain("Math.round(diameter * 0.44)");
     // A stored size name reads as `md` through the token package's resolver,
     // which the components' seam re-publishes: a bare `avatarSize[size]`
     // answered `undefined` for a name a release had dropped, and the preview

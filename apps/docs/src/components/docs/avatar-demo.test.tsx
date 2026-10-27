@@ -81,7 +81,7 @@ describe("the avatar states preview", () => {
   it("prints the initials at the sizes the component computes", () => {
     for (const step of ["xs", "sm", "md", "lg"] as const) {
       expect(states).toContain(
-        `font-size:${Math.round(avatarSize[step] * 0.4)}px`,
+        `font-size:${Math.round(avatarSize[step] * 0.44)}px`,
       );
     }
   });

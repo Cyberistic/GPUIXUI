@@ -19,10 +19,10 @@ export type Presence = (typeof presenceStates)[number];
 /**
  * The initials' size as a share of the diameter, and the presence dot's size.
  *
- * The component computes `Math.round(diameter * 0.4)` and paints a 10px dot
+ * The component computes `Math.round(diameter * 0.44)` and paints a 10px dot
  * inside a strong edge; the preview draws the same numbers.
  */
-export const initialsShare = 0.4;
+export const initialsShare = 0.44;
 export const dotSize = 10;
 
 /** One person on the panel. */

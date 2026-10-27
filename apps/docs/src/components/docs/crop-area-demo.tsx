@@ -71,20 +71,37 @@ export const CropAreaDemo = () => {
     };
   };
 
-  const move = (event: MouseEvent<HTMLDivElement>): void => {
+  const moveTo = (clientX: number, clientY: number): void => {
+    const rect = frame.current?.getBoundingClientRect();
+    const point = {
+      x: clientX - (rect?.left ?? 0),
+      y: clientY - (rect?.top ?? 0),
+    };
     Option.match(drag.current, {
       onNone: () => undefined,
       onSome: (gesture) =>
-        setCrop(gestureCrop(gesture, at(event), CROP_FRAME, CROP_MIN_SIZE, 1)),
+        setCrop(gestureCrop(gesture, point, CROP_FRAME, CROP_MIN_SIZE, 1)),
     });
   };
 
-  const release = (): void => {
-    drag.current = Option.none();
-  };
-
+  /**
+   * Start a drag and follow it on the window.
+   *
+   * A drag that ends at the frame's edge used to stop the moment the pointer
+   * left the picture, which is exactly where a corner drag goes; the listeners
+   * are the window's for the length of the gesture.
+   */
   const begin = (gesture: CropGesture): void => {
     drag.current = Option.some(gesture);
+    const onMove = (event: globalThis.MouseEvent): void =>
+      moveTo(event.clientX, event.clientY);
+    const onUp = (): void => {
+      drag.current = Option.none();
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   };
 
   return (
@@ -93,13 +110,10 @@ export const CropAreaDemo = () => {
         aria-label="Crop the thumbnail"
         className="gx-crop-frame"
         onMouseDown={(event) => {
-          if (isPrimaryPress(event.button)) {
-            begin({ kind: "move", start: crop, ...at(event) });
-          }
+          if (!isPrimaryPress(event.button)) return;
+          event.preventDefault();
+          begin({ kind: "move", start: crop, ...at(event) });
         }}
-        onMouseLeave={release}
-        onMouseMove={move}
-        onMouseUp={release}
         ref={frame}
         role="group"
       >
@@ -155,11 +169,10 @@ export const CropAreaDemo = () => {
             }}
             onMouseDown={(event) => {
               if (!isPrimaryPress(event.button)) return;
+              event.preventDefault();
               event.stopPropagation();
               begin({ kind: "corner", corner, start: crop, ...at(event) });
             }}
-            onMouseMove={move}
-            onMouseUp={release}
             role="slider"
             style={{
               ...box(handleBox(crop, corner, CROP_HANDLE_SIZE, CROP_FRAME)),
@@ -170,10 +183,6 @@ export const CropAreaDemo = () => {
         ))}
       </div>
       <p className="gx-crop-readout">{cropLabel(crop)}</p>
-      <p className="gx-crop-hint">
-        Drag the picture or a corner; a focused handle takes the arrows, Shift
-        for 8 points and Alt to move the hole.
-      </p>
     </div>
   );
 };
