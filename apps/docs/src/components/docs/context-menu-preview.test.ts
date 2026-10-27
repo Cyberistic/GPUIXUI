@@ -1,10 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  MENU_CLOSE_GRACE_MS,
+  SUBMENU_OPEN_DELAY_MS,
   TYPEAHEAD_WINDOW_MS,
   focusAfterClose,
   idleTyped,
   keyboardAnchor,
+  placeSurface,
   pointerAnchor,
   restoresFocus,
   rightPress,
@@ -40,6 +43,19 @@ const typeahead = readFileSync(
     "../../../../../packages/components/src/typeahead.ts",
     import.meta.url,
   ),
+  "utf8",
+);
+
+const menuHover = readFileSync(
+  new URL(
+    "../../../../../packages/components/src/menu/hover.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
+const demo = readFileSync(
+  new URL("./context-menu-demo.tsx", import.meta.url),
   "utf8",
 );
 
@@ -200,5 +216,53 @@ describe("type-ahead", () => {
     expect(source).toContain("Duration.millis(500)");
     expect(source).toContain("candidate.index > fromIndex");
     expect(source).toContain("Option.orElse(() => Arr.head(candidates))");
+  });
+});
+
+/**
+ * The measured shift: opening the drawing scrolled its frame 84px, so the file
+ * rows jumped, because the surface took focus by default and lay outside the
+ * frame. These cases hold the two things that cause it — the surface's placement
+ * inside the frame and the focus call that must not scroll.
+ */
+describe("opening the drawing moves nothing", () => {
+  it("rests the surface inside the frame it is drawn in", () => {
+    const frame = { width: 520, height: 206 };
+    const surface = { width: 208, height: 156 };
+
+    // A press near the bottom edge would put the surface 70px outside the frame.
+    expect(placeSurface({ x: 300, y: 120 }, surface, frame)).toEqual({
+      x: 300,
+      y: 50,
+    });
+    // A press that fits keeps the pointer's own point.
+    expect(placeSurface({ x: 40, y: 20 }, surface, frame)).toEqual({
+      x: 40,
+      y: 20,
+    });
+  });
+
+  it("never places a surface outside its frame, even one that cannot fit", () => {
+    expect(
+      placeSurface(
+        { x: 500, y: 500 },
+        { width: 640, height: 320 },
+        { width: 520, height: 206 },
+      ),
+    ).toEqual({ x: 0, y: 0 });
+  });
+
+  it("focuses the surface without scrolling the page it opened over", () => {
+    expect(flat(demo)).toContain(
+      "surface.current?.focus({ preventScroll: true })",
+    );
+    expect(flat(demo)).not.toContain("surface.current?.focus();");
+  });
+
+  it("keeps Base UI's two waits, read from the shipped menu", () => {
+    expect(SUBMENU_OPEN_DELAY_MS).toBe(100);
+    expect(MENU_CLOSE_GRACE_MS).toBe(80);
+    expect(flat(menuHover)).toContain("submenuOpenDelayMs = 100");
+    expect(flat(menuHover)).toContain("menuCloseGraceMs = 80");
   });
 });
