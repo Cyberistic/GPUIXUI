@@ -1,0 +1,73 @@
+---
+title: User menu
+description: An avatar, a name and an address that open the account actions.
+---
+
+<ComponentPreview name="user-menu-demo" />
+
+## Usage
+
+```tsx
+import { UserMenu, SidebarUserMenu } from "@gpuixui/components";
+
+const user = { name: "Benji", email: "benji@example.com" };
+
+<UserMenu
+  user={user}
+  onUpgrade={() => undefined}
+  onAccount={() => undefined}
+  onBilling={() => undefined}
+  onNotifications={() => undefined}
+  onLogOut={() => undefined}
+/>;
+```
+
+In a sidebar footer, use `SidebarUserMenu`: it wraps the same menu in
+`SidebarMenu` / `SidebarMenuItem`, reads the panel's collapse state, and opens to
+the right of an icon rail instead of over it.
+
+```tsx
+<SidebarFooter>
+  <SidebarUserMenu user={user} onLogOut={signOut} />
+</SidebarFooter>;
+```
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `UserMenu` | the trigger and its account menu | `user`, `onUpgrade?`, `onAccount?`, `onBilling?`, `onNotifications?`, `onLogOut?`, `side?`, `align?`, `collapsed?`, `className?`, `testId?`, `menuTestId?` |
+| `SidebarUserMenu` | `UserMenu` in `SidebarMenu` / `SidebarMenuItem` | the same, without `collapsed` (the sidebar supplies it) |
+
+`user` is `{ name: string; email: string; avatar?: string }`. Without `avatar`
+the avatar paints the initials.
+
+## Behaviour
+
+- The trigger is one row: the avatar, the name over the address, and a
+  `chevrons-up-down` affordance. Its accessible name says it opens the account
+  menu.
+- The menu repeats the identity, then **Upgrade to Pro**, a separator, **Account
+  / Billing / Notifications** with their marks, another separator, and **Log
+  out** — at the same density as a menu row.
+- Activating a row runs its callback once and closes the menu; the menu's own
+  dismissal, focus return and Escape rules are the DropdownMenu's.
+- In an icon-collapsed sidebar the trigger paints only its avatar and the menu
+  opens beside the rail.
+- Standalone use is the same component: it does not require a `SidebarProvider`
+  (only `SidebarUserMenu` does, because it reads the panel).
+
+## Limitations
+
+- No `aria-haspopup` in 0.11.0: the trigger announces `aria-expanded` only.
+- The trigger is the local DropdownMenu's own action because that component owns
+  the element it anchors and measures; a row composed inside `SidebarMenu` keeps
+  the list semantics.
+- The avatar paints a path or URL; there is no image-loading or error state, and
+  a missing file paints nothing rather than restoring the initials.
+
+## Related
+
+- **Sidebar** — the panel whose footer this menu usually sits in.
+- **Dropdown menu** — the actions surface underneath.
+- **Avatar** — the identity mark.

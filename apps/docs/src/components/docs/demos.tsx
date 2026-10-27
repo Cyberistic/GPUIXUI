@@ -161,6 +161,12 @@ import {
   drawerWorkflowSource,
 } from "./drawer-demo";
 import {
+  SidebarDemo,
+  UserMenuDemo,
+  sidebarDemoSource,
+  userMenuDemoSource,
+} from "./sidebar-demo";
+import {
   FormStates,
   FormWorkflow,
   formStatesSource,
@@ -3149,6 +3155,8 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "drawer-sides": { render: DrawerSides, source: drawerSidesSource },
   "drawer-workflow": { render: DrawerWorkflow, source: drawerWorkflowSource },
+  "sidebar-demo": { render: SidebarDemo, source: sidebarDemoSource },
+  "user-menu-demo": { render: UserMenuDemo, source: userMenuDemoSource },
   "dropdown-menu-demo": {
     render: DropdownMenuDemo,
     source: dropdownMenuSource,

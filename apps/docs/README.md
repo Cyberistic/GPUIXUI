@@ -160,6 +160,7 @@ src/components/docs/time-picker-preview.ts The time field's clock, its segment c
 src/components/docs/time-picker-demo.tsx  The time picker's two browser renderings and their source strings
 src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss stack and filter rules
 src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
+src/components/docs/sidebar-demo.tsx      The sidebar and account-menu drawings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
 src/components/docs/dock-preview.ts       The split preview's rule, read from the dock package's reducers

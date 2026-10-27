@@ -322,6 +322,13 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
     ],
   },
   {
+    name: "Navigation and account",
+    pages: [
+      component("sidebar", "Sidebar"),
+      component("user-menu", "User menu"),
+    ],
+  },
+  {
     name: "Media surfaces",
     pages: [
       media("media-player", "MediaPlayer"),

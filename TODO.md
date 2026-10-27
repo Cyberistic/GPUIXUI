@@ -11375,6 +11375,21 @@ a merge over a stored theme.
       paragraph and the `COMPONENTS.md` Text row. No live scenario applies —
       the trio lands on the same element the existing paint cases measure.
 
+## Sidebar and user menu (plan 340)
+
+`[x]` `[██████████]` 1/1
+
+`[x]` **Bring shadcn's Sidebar family into `@gpuixui/components`** — 24 parts
+      (`SidebarProvider` … `useSidebar`) plus `UserMenu` / `SidebarUserMenu`:
+      one Effect store for the panel, the sheet and the one open tooltip; an
+      in-process `sidebar_state` preference (shadcn's key and seven-day
+      lifetime) behind a callback seam; width/edge motion instead of a
+      transform; the icon rail and its tooltip; the mobile sheet over the shared
+      modal rules; docs pages, demos, examples, inventory rows and native
+      behaviour suites. Runtime limits: no `transform`, no window handler
+      outside `render()`, no `zIndex` (a rail strip outside the panel would
+      paint under the inset), and no cookie jar.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
