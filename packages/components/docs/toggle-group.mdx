@@ -1,0 +1,91 @@
+---
+title: Toggle group
+description: A toolbar of related modes with one tab stop
+---
+
+<ComponentPreview name="toggle-group-toolbar" />
+
+## Usage
+
+```tsx
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@gpuixui/components/toggle-group";
+
+<ToggleGroup type="single" label="Alignment" defaultValue="left">
+  <ToggleGroupItem value="left" label="Align left">
+    Left
+  </ToggleGroupItem>
+  <ToggleGroupItem value="centre" label="Align centre">
+    Centre
+  </ToggleGroupItem>
+</ToggleGroup>;
+
+<ToggleGroup type="multiple" label="Formatting" defaultValue={["bold"]}>
+  <ToggleGroupItem value="bold" label="Bold">
+    Bold
+  </ToggleGroupItem>
+  <ToggleGroupItem value="italic" label="Italic">
+    Italic
+  </ToggleGroupItem>
+</ToggleGroup>;
+```
+
+`type="single"` keeps at most one mode on and clears it when the live option is
+pressed again; `type="multiple"` lets any number stay on. The group is one tab
+stop: the arrow keys move focus between options without pressing them.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `ArrowRight` / `ArrowLeft` | move focus along a horizontal group |
+| `ArrowDown` / `ArrowUp` | move focus along a vertical group |
+| `Home` / `End` | the first or last enabled option |
+| `Enter` / `Space` | press the focused option |
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `ToggleGroup` | `type` | `"single" \| "multiple"` | `"multiple"` |
+| `ToggleGroup` | `value` | `string` for single, `readonly string[]` for multiple | — |
+| `ToggleGroup` | `defaultValue` | the same shape as `value` | — |
+| `ToggleGroup` | `onValueChange` | `(next: string) => void` or `(next: readonly string[]) => void` | — |
+| `ToggleGroup` | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
+| `ToggleGroup` | `variant` | `"default" \| "outline"` | `"default"` |
+| `ToggleGroup` | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `ToggleGroup` | `square` | `boolean` | `false` |
+| `ToggleGroup` | `disabled` | `boolean` | `false` |
+| `ToggleGroup` | `label` | `string` | — |
+| `ToggleGroup` | `description` | `string` | — |
+| `ToggleGroup` | `options` / `children` | option data, or the item elements | — |
+| `ToggleGroup` | `style` / `itemStyle` | `StateStyle<…>` | — |
+| `ToggleGroup` | `className` | `string` | — |
+| `ToggleGroup` | `testId` | `string` | — |
+| `ToggleGroup` | `itemTestId` | `(value: string) => string` | — |
+| `ToggleGroup` | `ref` / `aria-id` / `onLayout` | host props (on the tab stop) | — |
+| `ToggleGroupItem` | `value` | `string` (required) | — |
+| `ToggleGroupItem` | `label` | `string` (required) | — |
+| `ToggleGroupItem` | `description` | `string` | — |
+| `ToggleGroupItem` | `disabled` | `boolean` | `false` |
+| `ToggleGroupItem` | `children` | `ReactNode` | `label` |
+
+## Accessibility
+
+- The group is a named `group` node; each option is a `button`.
+- Each option announces its state through `aria-valuetext`, because 0.11.0
+  publishes no `aria-pressed`.
+- One option holds the tab stop — the focused one, or the selected one while
+  nothing holds focus — so Tab enters and leaves the toolbar once.
+- `label` on an item is the accessible name even when `children` paints richer
+  content, so a glyph-only option is still named.
+
+## Limitations
+
+- **No `aria-pressed`** on an option.
+- No attached `spacing={0}` variant: the options keep the theme's `xs` gap
+  because the runtime's flex layout has no negative margin to close it.
+- An option a stored list marks `disabled` leaves the tab and arrow rotation
+  but keeps its place in the drawing.

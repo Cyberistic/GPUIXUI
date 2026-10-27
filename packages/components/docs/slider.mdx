@@ -1,0 +1,75 @@
+---
+title: Slider
+description: One value on a track, or the two ends of a range
+---
+
+<ComponentPreview name="slider-values" />
+
+## Usage
+
+```tsx
+import { Slider } from "@gpuixui/components/slider";
+
+<Slider label="Volume" defaultValue={40} onValueChange={setVolume} />;
+
+// A pair paints two thumbs; the ends are kept in order.
+<Slider label="Price" defaultValue={[20, 80]} min={0} max={200} step={5} />;
+```
+
+The shape of `value` chooses the surface: a number is one thumb, a
+`[from, to]` pair is a range. A pair passed as `[70, 20]` paints as `20 … 70`,
+and each end stops on the other rather than crossing it.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `ArrowRight` / `ArrowUp` | one `step` forward |
+| `ArrowLeft` / `ArrowDown` | one `step` back |
+| `PageUp` / `PageDown` | ten steps |
+| `Home` / `End` | the track's ends |
+
+A disabled slider stays out of the tab order and answers none of these keys.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `number \| readonly [number, number]` | — |
+| `defaultValue` | `number \| readonly [number, number]` | — |
+| `onValueChange` | `(value: SliderValue) => void` | — |
+| `onValueCommit` | `(value: SliderValue) => void` | — |
+| `min` | `number` | `0` |
+| `max` | `number` | `100` |
+| `step` | `number` | `1` (`0` is continuous) |
+| `disabled` | `boolean` | `false` |
+| `invalid` | `boolean` | `false` |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
+| `label` | `string` | — |
+| `description` | `string` | — |
+| `formatValue` | `(value: number) => string` | `String(value)` |
+| `className` | `string` | — |
+| `testId` | `string` | — |
+| `style` | `StyleDesc` | — |
+| `ref` / `aria-id` / `onLayout` | host props | — |
+
+## Accessibility
+
+- A single slider is one `slider` node; a range is a named `group` with two
+  `slider` nodes, named from the group's label with a minimum and maximum
+  suffix (`Price minimum`, `Price maximum`).
+- Each thumb announces its value through `aria-valuetext`, which `formatValue`
+  words (a percentage, a price, a time).
+- 0.11.0 publishes no `aria-valuenow`, `aria-valuemin`, `aria-valuemax` or
+  `aria-orientation`; the value is text and the axis is the caller's layout
+  fact.
+- A disabled slider is out of the tab order and refuses every key and press.
+
+## Limitations
+
+- **No value tooltip**: the primitive publishes no popup beside a thumb, so a
+  visible value is a label the caller composes above the track.
+- A vertical track has no natural length; give it a definite height.
+- A stored array with a missing or non-numeric end is a single slider with no
+  value rather than a range with a hole.
+- `invalid` paints the destructive role; there is no `aria-invalid` in 0.11.0.

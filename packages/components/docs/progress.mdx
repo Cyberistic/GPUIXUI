@@ -1,0 +1,81 @@
+---
+title: Progress
+description: A determinate or indeterminate bar stated in the caller's scale
+---
+
+<ComponentPreview name="progress-values" />
+
+## Usage
+
+```tsx
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@gpuixui/components/progress";
+
+<Progress value={30} max={120} label="Uploading">
+  <ProgressLabel />
+  <ProgressValue />
+</Progress>;
+```
+
+`value` and `max` are the caller's units: `30 of 120` above paints the same
+quarter-full bar as `25 of 100`. Omit `value` — or pass the `null` JSON writes
+for a field a record never carried — for the indeterminate segment.
+
+## Composition
+
+```text
+Progress
+├── ProgressLabel
+├── ProgressValue
+└── ProgressTrack
+    └── ProgressIndicator
+```
+
+The root always paints the track and its fill after the children, so a caller
+who composes only the label and the value still gets a bar. The four parts read
+the root's state, so a share is computed once.
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Progress` | `value` | `number \| null` | — (indeterminate) |
+| `Progress` | `max` | `number` | `100` |
+| `Progress` | `tone` | `"primary" \| "success" \| "destructive" \| "muted"` | `"primary"` |
+| `Progress` | `size` | `"sm" \| "md"` | `"md"` |
+| `Progress` | `label` | `string` | — |
+| `Progress` | `formatValue` | `(percent: number) => string` | `` `${percent}%` `` |
+| `Progress` | `loadingText` | `string` | the provider's `loading` word |
+| `Progress` | `reducedMotion` | `boolean` | the motion provider |
+| `Progress` | `children` | `ReactNode` | the track |
+| `Progress` | `style` | `StyleDesc` | — |
+| `Progress` | `className` | `string` | — |
+| `Progress` | `testId` | `string` | — |
+| `Progress` | `ref` / `aria-id` / `onLayout` | host props | — |
+| `ProgressTrack` | `style`, `className`, `testId` | — | — |
+| `ProgressIndicator` | `style`, `className`, `testId` | — | — |
+| `ProgressLabel` | `children`, `testId` | `ReactNode`, `string` | the root's `label` |
+| `ProgressValue` | `testId` | `string` | — |
+
+## Accessibility
+
+- The bar is a `progressbar` node named by `label`, and its share is announced
+  through `aria-valuetext`.
+- 0.11.0 publishes no `aria-valuenow`, `aria-valuemin` or `aria-valuemax`, so
+  `max` is not a separate announcement: use `formatValue` to say "30 of 120"
+  when the scale matters to a reader.
+- The indeterminate state says the provider's `loading.indeterminate` word, or
+  `loadingText` when the whole interface is localised.
+
+## Limitations
+
+- **No `aria-valuenow` family** — the measured gap above; the value is text.
+- The indeterminate segment is a discrete eight-step move, not a smooth sweep:
+  the runtime animates opacity and size only.
+- No buffered segment in this surface. The primitive can paint one, but a
+  buffer is a second value with no shadcn equivalent, so it is not exposed here.
+- A `value` that is not a number (a stored string, a `NaN` measurement) is
+  absence and paints the indeterminate segment rather than a bar at 0%.

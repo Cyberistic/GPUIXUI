@@ -70,6 +70,8 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("button-group", "ButtonGroup"),
       primitive("toggle", "Toggle"),
       primitive("toggle-group", "Toggle group"),
+      component("toggle", "Toggle"),
+      component("toggle-group", "Toggle group"),
     ],
   },
   {
@@ -82,6 +84,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("rating", "Rating"),
       primitive("slider", "Slider"),
       primitive("range-slider", "RangeSlider"),
+      component("slider", "Slider"),
     ],
   },
   {
@@ -103,6 +106,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("spacer", "Spacer"),
       primitive("separator", "Separator"),
       primitive("scroll-area", "ScrollArea"),
+      component("separator", "Separator"),
     ],
   },
   {
@@ -112,6 +116,8 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("meter", "Meter"),
       primitive("spinner", "Spinner"),
       primitive("skeleton", "Skeleton"),
+      component("progress", "Progress"),
+      component("skeleton", "Skeleton"),
     ],
   },
   {

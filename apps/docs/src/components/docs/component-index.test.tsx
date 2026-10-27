@@ -187,8 +187,9 @@ describe("the component index", () => {
   it("points a query the composed lane cannot answer at the lane that can", () => {
     // A reader who types a primitive's name on the composed lane has not made a
     // mistake, and "no component matches" is a dead end that hides the page one
-    // section down the sidebar.
-    const query = "range slider";
+    // section down the sidebar. The sample names a primitive this lane does not
+    // document; "range slider" used to, until the Slider page landed here.
+    const query = "spacer";
 
     expect(filterEntries(componentPages, query)).toEqual([]);
     const elsewhere = otherLaneMatches(componentIndex, query);

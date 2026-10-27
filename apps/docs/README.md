@@ -231,13 +231,17 @@ src/components/docs/meter-demo.tsx        The measurement's four tones
 src/components/docs/number-field-demo.tsx The field chrome and its pointer steppers
 src/components/docs/otp-field-demo.tsx    The six cells and an invalid code
 src/components/docs/progress-demo.tsx     The determinate fill, buffer and indeterminate segment
+src/components/docs/progress-values-demo.tsx A value stated against its maximum, and an indeterminate bar
 src/components/docs/radio-group-demo.tsx  The one-choice group and its selected dot
 src/components/docs/range-slider-demo.tsx The two thumbs and the fill between them
 src/components/docs/rating-demo.tsx       The stars, whole and half
 src/components/docs/scroll-area-demo.tsx  The vertical and horizontal bounded frames
 src/components/docs/separator-demo.tsx    The horizontal, vertical and captioned rules
+src/components/docs/separator-roles-demo.tsx The semantic and decorative rules
 src/components/docs/skeleton-demo.tsx     The pulsing placeholder shapes
+src/components/docs/skeleton-states-demo.tsx The composed card, the circle and the still frame
 src/components/docs/slider-demo.tsx       The track, fill, thumb and disabled paint
+src/components/docs/slider-values-demo.tsx One value and a two-thumb range
 src/components/docs/spacer-demo.tsx       The fixed step and the flexible filler
 src/components/docs/spinner-demo.tsx      The three dots, their sizes and accents
 src/components/docs/stack-demo.tsx        The row, column and justified arrangements
@@ -245,7 +249,9 @@ src/components/docs/text-demo.tsx         The roles and tones of one run of type
 src/components/docs/textarea-demo.tsx     The multi-line field's chrome and invalid paint
 src/components/docs/theme-provider-demo.tsx The same surface painted dark and light
 src/components/docs/toggle-demo.tsx       The pressed paint and the disabled state
+src/components/docs/toggle-toolbar-demo.tsx The text, outline and icon-only modes
 src/components/docs/toggle-group-demo.tsx The single and multiple mode toolbars
+src/components/docs/toggle-group-toolbar-demo.tsx The single and multiple groups a page teaches
 src/components/docs/sources.ts            The real source files the Code tab shows
 src/components/docs/component-source.tsx  The copyable source block, for a curated page
 src/components/docs/package-source.tsx    The generated source block a package page ends with
