@@ -179,6 +179,7 @@ component call sites adopt the outline in their own workstream.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [716](./716-chat-family-rebuild.md) | Chat family on shadcn's Bubble / Message / MessageScroller, with the fixed-row layout fix | D | `207`, `206` | implemented |
+| [717](./717-file-tree-ai-elements.md) | FileTree on shadcn's AI Elements `file-tree`: parts, guides, one selected path | D | `610` | landed |
 
 ## How to use a plan
 

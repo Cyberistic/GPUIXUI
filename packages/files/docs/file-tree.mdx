@@ -1,48 +1,118 @@
 ---
 title: File trees
-description: A hierarchical file tree with a glyph per kind, single and multi selection, one roving tab stop and type-ahead
+description: A monospace file tree with declarative folder and file parts, guide lines, per-kind icons, one selected file and one roving tab stop
 ---
 
 ## Usage
 
 ```tsx
-import { buildFileTree, FileTree } from "@gpuixui/files";
+import {
+  FileTree,
+  FileTreeFile,
+  FileTreeFolder,
+} from "@gpuixui/files";
 
-const roots = buildFileTree([
-  "src/index.ts",
-  "src/components/button.tsx",
-  "readme.md",
-]);
+const [file, setFile] = useState("src/index.ts");
 
 <FileTree
   aria-label="Project files"
+  defaultExpanded={["src"]}
   height={280}
-  roots={roots}
-  keyOf={(node) => node.path}
-  childrenOf={(node) => node.children ?? []}
-  labelOf={(node) => node.name}
-  onSelectionChange={(keys) => setChosen(keys)}
-  onActivate={(node) => open(node.path)}
-/>;
+  selected={file}
+  onSelect={setFile}
+>
+  <FileTreeFolder path="src" name="src">
+    <FileTreeFolder path="src/components" name="components">
+      <FileTreeFile path="src/components/button.tsx" name="button.tsx" />
+    </FileTreeFolder>
+    <FileTreeFile path="src/index.ts" name="index.ts" />
+  </FileTreeFolder>
+  <FileTreeFile path="readme.md" name="readme.md" />
+</FileTree>;
 ```
+
+A folder press toggles **only that folder's** subtree. A file press selects it
+and calls `onSelect` once. The tree holds one tab stop — the selected file while
+it paints, else the first row — and the arrow keys walk the visible rows, with
+Right opening and Left closing a folder.
+
+`FileTreeFolder` and `FileTreeFile` declare the tree; `FileTree` reads their
+props into the same `FileNode` model `buildFileTree` produces and paints one
+flat row list. The declarations are not rendered recursively, which is what
+lets the generic tree keep its single tab stop and its visible-row order.
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `roots` | `T[]` | — | the tree's roots, in paint order |
-| `keyOf` | `(node: T) => string` | — | the stable identity a row is addressed by |
-| `childrenOf` | `(node: T) => T[]` | — | the children, in paint order |
-| `labelOf` | `(node: T) => string` | — | the row's name and what type-ahead matches |
-| `kindOf` | `(node: T, hasChildren: boolean) => FileKind` | `fileKindOf` | the glyph a row paints |
-| `initialSelected` | `Iterable<string>` | none | the keys selected at first paint |
-| `onSelectionChange` | `(keys: string[]) => void` | — | reports the chosen keys after every press |
-| `onActivate` | `(node: T) => void` | — | a press or Enter on a row, after the selection is replaced |
+| `expanded` | `Iterable<string>` | — | the open folder paths, when the caller holds them |
+| `defaultExpanded` | `Iterable<string>` | none | the open paths at first paint; a saved JSON list works |
+| `selected` | `string \| null` | none | the selected file path; a non-text stored value paints no selection |
+| `onSelect` | `(path: string) => void` | — | a file press or Enter, called once per activation |
+| `onExpandedChange` | `(expanded: string[]) => void` | — | the open paths after every change, sorted |
 | `height` | `number` | — | a definite height; the rows scroll inside it |
-| `testId` | `string` | — | the tree; each row is `${testId}-row-${key}` |
+| `className` | `string` | — | merged after the frame's own recipe |
+| `testId` | `string` | — | the tree; each row is `${testId}-row-${path}` |
+
+## Parts
+
+### `FileTreeFolder`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `path` | `string` | — | the folder's stable path and expansion key |
+| `name` | `string` | — | the row's visible and accessible name |
+| `children` | `ReactNode` | — | the folder's entries, in paint order |
+
+### `FileTreeFile`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `path` | `string` | — | the file's stable path and what `onSelect` reports |
+| `name` | `string` | — | the row's visible and accessible name |
+| `icon` | `IconName` | the kind's glyph | an icon that overrides the file's kind |
+| `children` | `ReactNode` | the default row | a custom row after the guides and chevron slot |
+
+A custom row is how a file carries actions or an inline editor: the caller
+supplies its own `FileTreeIcon`, `FileTreeName` and controls, exactly as the
+reference's `FileTreeActions` sits beside its button.
+
+### `FileTreeIcon` and `FileTreeName`
+
+The two row slots the default row composes. `FileTreeIcon` takes `name`
+(`IconName`), `selected` and a `children` fallback; `FileTreeName` takes
+`selected` and the name. Both paint in the selected row's ink when `selected` is
+set, so a custom row can match the tree.
+
+## Reference anatomy
+
+| shadcn AI Elements | GPUixUI |
+| ------------------ | ------- |
+| `FileTree` (`role="tree"`, frame, `expanded` / `defaultExpanded` / `selectedPath` / `onSelect`) | `FileTree` (`role="tree"`, frame, `expanded` / `defaultExpanded` / `selected` / `onSelect`) |
+| `FileTreeFolder` (Collapsible, trigger, `FileTreeIcon`, `FileTreeName`, nested lane) | `FileTreeFolder` (one row, chevron glyph, kind glyph, name, guide cells per depth) |
+| `FileTreeFile` (Button, spacer, icon, name) | `FileTreeFile` (one row, blank chevron slot, kind glyph, name) |
+| `FileTreeIcon` (shrink-0 span) | `FileTreeIcon` (icon-sized slot) |
+| `FileTreeName` (truncate span) | `FileTreeName` (one ellipsized mono line) |
+| `FileTreeActions` (right-aligned, stops the row press) | omitted: a `FileTreeFile` custom row is the action slot |
+
+The tree is monospace through the theme's `code` type role, and every row is the
+density's `rowHeight`.
 
 ## Limitations
 
-- Selection is press-and-checkbox, not a Shift-drag range; the range mode of `pressSelection` is available to a caller driving the reducer directly.
-- The tree does not virtualize itself.
-- The docs site cannot render this component live — it is a GPUix host tree, not DOM.
+- **The chevron cannot rotate.** GPUix 0.11.0 has no renderer transform, so the
+  open and closed states paint `chevron-down` and `chevron-right` instead of
+  rotating one glyph.
+- **Guide lines are inline, not positioned.** `position: absolute` resolves
+  against the mount parent in 0.11.0, so a parent-relative rail is not honest;
+  each row paints one 16px cell with a left border per ancestor.
+- **No inline rename.** The reference has no rename and neither did the previous
+  surface. A caller that needs one passes an editor as a `FileTreeFile` custom
+  row; the tree does not own an empty-name rule.
+- **One selected path.** Multi-select is not part of the AI Elements tree; the
+  generic `@gpuixui/data` tree and `pressSelection` remain available to a caller
+  that needs it.
+- **The tree does not virtualize itself.** A tree of thousands composes
+  `@gpuixui/data`'s `VirtualTree`, which paints the same rows.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM; the drawing above is the browser preview.

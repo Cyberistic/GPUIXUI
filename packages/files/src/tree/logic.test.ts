@@ -15,6 +15,7 @@
 import {
   collapseAll,
   expandAll,
+  expandedSet,
   flattenTree,
   isExpanded,
   toggleExpanded,
@@ -26,7 +27,15 @@ import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { buildFileTree, fileIcon, fileKindOf, type FileNode } from "./logic.js";
+import {
+  buildFileTree,
+  fileIcon,
+  fileKindOf,
+  fileTreePaths,
+  fileTreeTab,
+  visibleFileRows,
+  type FileNode,
+} from "./logic.js";
 
 const spec: TreeSpec<FileNode> = {
   keyOf: (node) => node.path,
@@ -73,6 +82,47 @@ describe("buildFileTree", () => {
       { name: "a.ts", path: "src/a.ts" },
       { name: "b.ts", path: "src/b.ts" },
     ]);
+  });
+});
+
+describe("the declared rows", () => {
+  const roots = buildFileTree(["readme.md", "src/index.ts", "src/row.tsx"]);
+
+  it("reads a stored expanded list as the same tree a set opens", () => {
+    const stored = visibleFileRows(roots, expandedSet(["src"]));
+    const live = visibleFileRows(roots, HashSet.make("src"));
+
+    expect(keys(stored)).toEqual([
+      "src",
+      "src/index.ts",
+      "src/row.tsx",
+      "readme.md",
+    ]);
+    expect(keys(stored)).toEqual(keys(live));
+  });
+
+  it("paints the collapsed tree for a stored value that is not a list", () => {
+    expect(keys(visibleFileRows(roots, expandedSet(null)))).toEqual([
+      "src",
+      "readme.md",
+    ]);
+  });
+
+  it("stands the tab stop on the selected row, else the first painted row", () => {
+    const rows = visibleFileRows(roots, expandedSet(["src"]));
+    const tabOf = (selected: string | undefined): Option.Option<string> =>
+      Option.map(fileTreeTab(rows, selected), (row) => row.key);
+
+    expect(tabOf("src/row.tsx")).toEqual(Option.some("src/row.tsx"));
+    // A selection inside a closed folder names no painted row, so the first
+    // row is the tab stop rather than a row the keyboard cannot reach.
+    expect(tabOf("missing.ts")).toEqual(Option.some("src"));
+    expect(tabOf(undefined)).toEqual(Option.some("src"));
+  });
+
+  it("reports the open paths once each, sorted", () => {
+    expect(fileTreePaths(HashSet.make("src", "docs"))).toEqual(["docs", "src"]);
+    expect(fileTreePaths(["src", "src", "docs"])).toEqual(["docs", "src"]);
   });
 });
 

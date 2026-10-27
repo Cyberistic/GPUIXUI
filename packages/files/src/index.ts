@@ -16,8 +16,20 @@
 export { buildFileTree, fileIcon, fileKindOf } from "./tree/logic.js";
 export type { FileKind, FileNode } from "./tree/logic.js";
 
-export { FileTree } from "./tree/file-tree.js";
-export type { FileTreeProps } from "./tree/file-tree.js";
+export {
+  FileTree,
+  FileTreeFile,
+  FileTreeFolder,
+  FileTreeIcon,
+  FileTreeName,
+} from "./tree/file-tree.js";
+export type {
+  FileTreeFileProps,
+  FileTreeFolderProps,
+  FileTreeIconProps,
+  FileTreeNameProps,
+  FileTreeProps,
+} from "./tree/file-tree.js";
 
 export {
   DEFAULT_LEVEL,

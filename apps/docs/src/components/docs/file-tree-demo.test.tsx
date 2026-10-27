@@ -4,18 +4,18 @@ import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { fileIcon, fileKindOf } from "@gpuixui/files/tree/logic";
 import { treeCursorMove, type TreeCursor } from "@gpuixui/data/tree/logic";
-import { emptySelection, pressSelection } from "@gpuixui/data/selection/logic";
 import {
   FileTreeFrame,
+  OPEN_SELECTED,
   WORKSPACE_PATHS,
-  chosenKeys,
   fileRows,
   glyphOf,
   openCursor,
   rowId,
   selectionReadout,
+  tabRow,
+  toggleRow,
   withActive,
   workspaceTree,
 } from "./file-tree-demo";
@@ -28,9 +28,9 @@ import { treeKeyOf } from "./tree-keys";
  * mounts the drawing from `package-preview.ts` and the page itself carries no
  * `<ComponentPreview>`. The registry's own guard sees the demo; what it cannot
  * see is whether the drawing still runs the package's rules instead of a copy
- * of them. These cases hold the rows to `@gpuixui/files`' `buildFileTree` and
- * `fileIcon`, the flattening and the keyboard to `@gpuixui/data`'s tree, and
- * the selection to its `pressSelection`.
+ * of them. These cases hold the rows to `@gpuixui/files`' `visibleFileRows`,
+ * the glyphs to its `fileIcon`, the tab stop to its `fileTreeTab`, the folder
+ * toggle to the generic `treeCursorMove` and the source to the new parts.
  */
 
 const root = new URL("../../../../../", import.meta.url);
@@ -38,16 +38,23 @@ const root = new URL("../../../../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
-const markup = (cursor: TreeCursor = openCursor()): string =>
+const markup = (
+  cursor: TreeCursor = openCursor(),
+  selected: string | undefined = OPEN_SELECTED,
+): string =>
   renderToStaticMarkup(
     <FileTreeFrame
       cursor={cursor}
       onCursorChange={() => undefined}
-      onSelectionChange={() => undefined}
+      onSelect={() => undefined}
       roots={workspaceTree()}
-      selection={emptySelection}
+      selected={selected}
     />,
   );
+
+/** How many non-root rows a tree paints, and the guides they need. */
+const depthGuides = (rows: ReadonlyArray<{ readonly depth: number }>): number =>
+  Arr.reduce(rows, 0, (sum, row) => sum + row.depth);
 
 describe("the FileTree preview", () => {
   it("paints the rows the package's tree flattens, and none of the closed ones", () => {
@@ -69,22 +76,11 @@ describe("the FileTree preview", () => {
     expect(html).toContain("app.tsx");
   });
 
-  it("reads each glyph from the package's kind rule, through the open state", () => {
+  it("reads each glyph from the package's kind rule and gives each depth a guide", () => {
     const roots = workspaceTree();
     const rows = fileRows(roots, openCursor());
-
-    expect(glyphOf({ name: "logo.svg", path: "logo.svg" }, false)).toBe(
-      fileIcon(fileKindOf("logo.svg", false), false),
-    );
-    const folder = {
-      name: "src",
-      path: "src",
-      children: [{ name: "index.ts", path: "src/index.ts" }],
-    };
-    expect(glyphOf(folder, false)).toBe("folder");
-    expect(glyphOf(folder, true)).toBe("folder-open");
-
     const html = markup();
+
     const missing = Arr.map(
       Arr.filter(
         rows,
@@ -94,28 +90,82 @@ describe("the FileTree preview", () => {
       (row) => row.key,
     );
     expect(missing).toEqual([]);
+
+    const guides = html.match(/data-guide="true"/g) ?? [];
+    expect(guides).toHaveLength(depthGuides(rows));
+    // A root paints no guide; a child paints one, a grandchild two.
+    const guidesIn = (key: string): number => {
+      const start = html.indexOf(`id="${rowId(key)}"`);
+      const end = html.indexOf("</div>", start);
+      return (html.slice(start, end).match(/data-guide="true"/g) ?? []).length;
+    };
+    expect(guidesIn("src")).toBe(0);
+    expect(guidesIn("src/components")).toBe(1);
+    expect(guidesIn("src/components/button.tsx")).toBe(2);
   });
 
-  it("names the row it stands on, so a reader hears the cursor move", () => {
-    const cursor = {
-      expanded: HashSet.make("src"),
-      active: Option.some("src/index.ts"),
-    };
+  it("swaps the folder chevron and leaves a file a blank slot", () => {
+    const roots = workspaceTree();
+    const open = markup(openCursor());
+    const closed = markup({ ...openCursor(), expanded: HashSet.empty() });
 
-    expect(rowId("src/index.ts")).toBe("gx-tree-src-index-ts");
-    expect(markup(cursor)).toContain(
-      'aria-activedescendant="gx-tree-src-index-ts"',
+    expect(open).toContain("▾");
+    expect(closed).toContain("▸");
+    // The file rows have no chevron to turn.
+    expect(open.match(/data-branch="true"/g)).toHaveLength(
+      Arr.filter(fileRows(roots, openCursor()), (row) => row.hasChildren)
+        .length,
     );
-    expect(markup(cursor)).toContain('id="gx-tree-src-index-ts"');
+    expect(open.match(/data-branch="false"/g)?.length).toBeGreaterThan(0);
+  });
 
-    // A press moves the roving tab stop onto the row it chose.
-    expect(Option.getOrNull(withActive(cursor, "readme.md").active)).toBe(
-      "readme.md",
+  it("flips only the folder a press lands on", () => {
+    const roots = workspaceTree();
+    const cursor = openCursor();
+    const rows = fileRows(roots, cursor);
+    const toggled = toggleRow(rows, cursor, "docs");
+
+    expect(HashSet.has(toggled.expanded, "docs")).toBe(false);
+    expect(HashSet.has(toggled.expanded, "src")).toBe(true);
+    expect(HashSet.size(toggled.expanded)).toBe(
+      HashSet.size(cursor.expanded) - 1,
     );
-    // A cursor with no row names none, rather than naming an id no row has.
-    expect(markup({ ...cursor, active: Option.none() })).not.toContain(
-      "aria-activedescendant",
+    expect(Option.getOrNull(toggled.active)).toBe("docs");
+  });
+
+  it("stands the tab stop on the selected file, else the first row", () => {
+    const rows = fileRows(workspaceTree(), openCursor());
+
+    expect(Option.map(tabRow(rows, OPEN_SELECTED), (row) => row.key)).toEqual(
+      Option.some(OPEN_SELECTED),
     );
+    expect(Option.map(tabRow(rows, undefined), (row) => row.key)).toEqual(
+      Option.map(Arr.head(rows), (row) => row.key),
+    );
+    // A selection inside a closed folder names no painted row.
+    expect(
+      Option.map(
+        tabRow(
+          fileRows(workspaceTree(), {
+            ...openCursor(),
+            expanded: HashSet.empty(),
+          }),
+          OPEN_SELECTED,
+        ),
+        (row) => row.key,
+      ),
+    ).toEqual(Option.some("assets"));
+  });
+
+  it("names the row it stands on and paints the selected file", () => {
+    const cursor = withActive(openCursor(), "src/app.tsx");
+    const html = markup(cursor, "src/app.tsx");
+
+    expect(rowId("src/index.ts")).toBe("gx-filetree-src-index-ts");
+    expect(html).toContain('aria-activedescendant="gx-filetree-src-app-tsx"');
+    expect(html).toContain('data-selected="true"');
+    expect(selectionReadout("src/app.tsx")).toBe("selected: src/app.tsx");
+    expect(selectionReadout(undefined)).toBe("nothing selected");
   });
 
   it("opens a folder with the package's key move, not a local toggle", () => {
@@ -125,10 +175,7 @@ describe("the FileTree preview", () => {
       active: Option.some("src"),
     };
     const rows = fileRows(roots, closed);
-    const opened = treeCursorMove(rows, withActive(closed, "src"), "enter");
 
-    expect(HashSet.has(opened.expanded, "src")).toBe(true);
-    // Right on a closed branch opens it; Left closes it again.
     expect(
       HashSet.has(treeCursorMove(rows, closed, "right").expanded, "src"),
     ).toBe(true);
@@ -141,28 +188,13 @@ describe("the FileTree preview", () => {
     ).toBe(false);
   });
 
-  it("reports the selection the package's press rule produces", () => {
-    const order = Arr.map(
-      fileRows(workspaceTree(), openCursor()),
-      (row) => row.key,
-    );
-    const one = pressSelection(emptySelection, "src/app.tsx", "replace", order);
-    const two = pressSelection(one, "readme.md", "toggle", order);
-
-    expect(chosenKeys(one)).toEqual(["src/app.tsx"]);
-    expect(chosenKeys(two)).toEqual(["readme.md", "src/app.tsx"]);
-    expect(selectionReadout(two)).toBe("2 chosen: readme.md, src/app.tsx");
-    expect(selectionReadout(emptySelection)).toBe("nothing chosen");
-  });
-
   it("answers the eight keys the tree owns and passes the rest on", () => {
     expect(Option.getOrNull(treeKeyOf("ArrowDown"))).toBe("down");
     expect(Option.getOrNull(treeKeyOf(" "))).toBe("space");
     expect(Option.isNone(treeKeyOf("PageDown"))).toBe(true);
     expect(Arr.length(WORKSPACE_PATHS)).toBeGreaterThanOrEqual(12);
     // `buildFileTree` sorts folders first, then by name.
-    const roots = workspaceTree();
-    expect(Arr.map(roots, (node) => node.name)).toEqual([
+    expect(Arr.map(workspaceTree(), (node) => node.name)).toEqual([
       "assets",
       "docs",
       "src",
@@ -176,10 +208,13 @@ describe("the FileTree preview", () => {
     const source = read("apps/docs/src/components/docs/file-tree-demo.tsx");
 
     expect(source).toContain('from "@gpuixui/files/tree/logic"');
-    expect(source).toContain("buildFileTree");
-    expect(source).toContain("flattenTree");
+    expect(source).toContain("visibleFileRows");
+    expect(source).toContain("fileTreeTab");
     expect(source).toContain("treeCursorMove");
-    expect(source).toContain("pressSelection");
+    expect(source).not.toContain("pressSelection");
+    expect(source).not.toContain("flattenTree");
+    expect(source).not.toContain('type="checkbox"');
+    expect(source).not.toContain("flip(row)");
     // A second copy of the kind rule or the flattening would show up as the
     // shape it re-implements: splitting a path, or sorting rows with the native
     // helper instead of the package's order value.

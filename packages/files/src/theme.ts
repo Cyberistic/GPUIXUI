@@ -10,7 +10,12 @@
 import type { Theme } from "@gpuixui/tokens";
 import { useTheme as useTokenTheme } from "@gpuixui/tokens/react";
 
-export { statusTone, textStyle } from "@gpuixui/tokens";
+export {
+  pointerWash,
+  statusTone,
+  textStyle,
+  themeColors,
+} from "@gpuixui/tokens";
 export type { Theme };
 
 /** The theme a file or inspector surface is rendered in. */

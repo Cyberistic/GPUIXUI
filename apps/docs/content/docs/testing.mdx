@@ -61,9 +61,10 @@ protocol exposes no accessibility dump, so both are offscreen facts.
 
 `clickAt(testId, offset)` presses a point measured from the element's painted
 top-left corner, the convention `hoverAt` takes. It exists for a part a shipped
-component renders without an address: `FileTree` forwards no `testId` to the
-checkbox in each row, so the probe presses that box where the library's own
-target geometry puts it.
+component renders without an address. The old `FileTree` was the example — its
+row checkbox had no `testId`, so the probe pressed that box where the library's
+own target geometry put it — and the AI Elements rebuild removed the control;
+the verb still serves any part whose only address is a point.
 
 Two measured facts make it a verb rather than an option on another one. `drag`
 applies its `offset` to the press **and again** to the release, so a zero-length

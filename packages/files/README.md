@@ -16,7 +16,7 @@ live here and depend on the packages below them.
 
 | Surface | Reuses | Adds |
 | ------- | ------ | ---- |
-| `FileTree` | `@gpuixui/data`'s tree (`useExpandedRows`, `TreeView`) and selection (`pressSelection`) | a glyph per kind, single/multi selection |
+| `FileTree` | `@gpuixui/data`'s tree (`useTree`, `flattenTree`) | declarative folder/file parts, guide lines, a chevron per folder, a glyph per kind, one selected file |
 | `LogViewer` | `@gpuixui/data`'s `VirtualList` | the `level message` parser, the level filter, the follow toggle, per-level tints |
 | `PropertyPanel` | `@gpuixui/primitives`' `Input`, `NumberField`, `Switch`, `Select` | the row/record model and the whole-record edit |
 
@@ -24,9 +24,10 @@ live here and depend on the packages below them.
 
 ```
 src/
-  tree/       FileTree, buildFileTree, fileKindOf, fileIcon
+  tree/       FileTree + parts, buildFileTree, fileKindOf, fileIcon
   log/        LogViewer, parseLogLine, filterByLevel, levelTone
   property/   PropertyPanel, propertyRecord, setProperty
+  behaviour/  the native suites (test:behaviour)
   theme.ts    the single seam over @gpuixui/tokens
   recipe.ts   the recipe compile cache
 examples/     mountable screens (registered in examples/index.ts)
@@ -36,17 +37,26 @@ docs/         one page per surface
 ## Usage
 
 ```tsx
-import { buildFileTree, FileTree, LogViewer, PropertyPanel } from "@gpuixui/files";
+import {
+  FileTree,
+  FileTreeFile,
+  FileTreeFolder,
+  LogViewer,
+  PropertyPanel,
+} from "@gpuixui/files";
 
 <FileTree
   aria-label="Files"
   height={280}
-  roots={buildFileTree(["src/index.ts", "readme.md"])}
-  keyOf={(n) => n.path}
-  childrenOf={(n) => n.children ?? []}
-  labelOf={(n) => n.name}
-  onSelectionChange={setChosen}
-/>;
+  defaultExpanded={["src"]}
+  selected={file}
+  onSelect={setFile}
+>
+  <FileTreeFolder path="src" name="src">
+    <FileTreeFile path="src/index.ts" name="index.ts" />
+  </FileTreeFolder>
+  <FileTreeFile path="readme.md" name="readme.md" />
+</FileTree>;
 
 <LogViewer height={240} lines={lines} followTail={follow} onFollowTailChange={setFollow} />;
 
@@ -67,6 +77,7 @@ caller's theme through `src/theme.ts`; geometry the runtime exposes as behaviour
 ## Commands
 
 ```sh
-nub run --filter @gpuixui/files test          # the pure logic
+nub run --filter @gpuixui/files test             # the pure logic
+nub run --filter @gpuixui/files test:behaviour   # the native renderer
 nub run --filter @gpuixui/files check-types
 ```

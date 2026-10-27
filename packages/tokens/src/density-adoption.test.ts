@@ -272,6 +272,7 @@ describe("the row height's readers", () => {
         "packages/data/src/tree/row.tsx",
         "packages/data/src/virtual/tree.tsx",
         "packages/files/src/log/log-viewer.tsx",
+        "packages/files/src/tree/file-tree.tsx",
         "packages/primitives/src/components/ScrollArea.tsx",
         "packages/tw/src/calc.ts",
       ]),

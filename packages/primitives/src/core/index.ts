@@ -103,6 +103,13 @@ export {
 export type { OtpEdit } from "./otp.js";
 
 export {
+  storedList,
+  storedNumber,
+  storedText,
+  storedTextList,
+} from "./stored.js";
+
+export {
   clampValue,
   decideValueKey,
   fractionValue,
