@@ -20,7 +20,7 @@ import type {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { pipe } from "effect";
+import { Match, pipe } from "effect";
 import * as Option from "effect/Option";
 import {
   createContext,
@@ -34,7 +34,9 @@ import {
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { useDismissDepth } from "./internal/dismiss-scope.js";
+import { useHoverDelays } from "./internal/hover.js";
 import { isMenuKey } from "./internal/key.js";
+import { MenuPointer, menuCloseGraceMs } from "./menu/hover.js";
 import {
   assertParts,
   type PartChildren,
@@ -98,19 +100,62 @@ const useContextMenuContext = (): ContextMenuContextValue => {
   return value;
 };
 
+/** Why the menu opened or closed, in Base UI's vocabulary. */
+export type ContextMenuOpenChangeReason =
+  | "trigger-press"
+  | "escape-key"
+  | "item-press"
+  | "outside-press"
+  | "focus-out"
+  | "pointer-leave";
+
+/** What {@link ContextMenuProps.onOpenChange} receives beside the new state. */
+export interface ContextMenuOpenChangeDetails {
+  readonly reason: ContextMenuOpenChangeReason;
+}
+
 /** {@link ContextMenu} props. */
 export interface ContextMenuProps {
   /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
-  readonly onOpenChange?: (open: boolean) => void;
+  /**
+   * Called with the new state and why it changed: a trigger press, a chosen row,
+   * Escape, a press outside, focus leaving, or the pointer leaving the menu.
+   */
+  readonly onOpenChange?: (
+    open: boolean,
+    details: ContextMenuOpenChangeDetails,
+  ) => void;
   readonly children?: PartChildren;
 }
+
+/**
+ * The reason a close reports. Base UI names the gesture, not the menu's internal
+ * bookkeeping, so a row's activation is `item-press` even though the menu calls
+ * it `activate`.
+ */
+export const openChangeReason = (
+  reason: MenuCloseReason,
+): ContextMenuOpenChangeReason =>
+  Match.value(reason).pipe(
+    Match.when("activate", () => "item-press" as const),
+    Match.when("dismiss", () => "escape-key" as const),
+    Match.when("outside", () => "outside-press" as const),
+    Match.when("leave", () => "focus-out" as const),
+    Match.when("pointer", () => "pointer-leave" as const),
+    Match.exhaustive,
+  );
 
 /**
  * The context menu's open state, pointer point and dismiss layer. It paints
  * nothing itself: the surface appears where {@link ContextMenuContent} is
  * mounted.
+ *
+ * The pointer-leave intent is the whole tree's — the root surface and every
+ * submenu surface hold it — so a diagonal trip from a row into its submenu is one
+ * gesture and leaving both closes the menu, without a scroll or a reflow: the
+ * surface is an `anchored` layer, out of the layout flow.
  */
 export const ContextMenu = ({
   open: openProp,
@@ -119,10 +164,13 @@ export const ContextMenu = ({
   children,
 }: ContextMenuProps) => {
   const renderer = useGpuix().renderer;
+  // `useControllableState` reports a plain value, so the reason of the change it
+  // is about to report is recorded first.
+  const changeReason = useRef<ContextMenuOpenChangeReason>("trigger-press");
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onOpenChange,
+    onChange: (next) => onOpenChange?.(next, { reason: changeReason.current }),
   });
   const [point, setPoint] = useState<Point>({ x: 0, y: 0 });
   const triggerId = useRef<number | undefined>(undefined);
@@ -136,6 +184,7 @@ export const ContextMenu = ({
 
   const close = useCallback(
     (reason: MenuCloseReason) => {
+      changeReason.current = openChangeReason(reason);
       setOpenRef.current(false);
       const target = triggerId.current;
       if (
@@ -149,7 +198,19 @@ export const ContextMenu = ({
     },
     [renderer],
   );
-  const menu = useMenuState(close);
+  // One timer for the whole tree: entering any row or surface of it cancels the
+  // wait, leaving every one of them arms the grace.
+  const pointer = useHoverDelays({
+    open,
+    setOpen: (next) => {
+      if (!next) close("pointer");
+    },
+    openDelay: 0,
+    closeDelay: menuCloseGraceMs,
+  });
+  const menu = useMenuState(close, (present) =>
+    pointer.pointer("trigger", present),
+  );
 
   const depth = useDismissDepth();
   useLayoutEffect(() => {
@@ -162,12 +223,14 @@ export const ContextMenu = ({
 
   const openAt = useCallback((next: Point) => {
     restoreFocus.current = false;
+    changeReason.current = "trigger-press";
     setPoint(next);
     setOpenRef.current(true);
   }, []);
 
   const openFromKeyboard = useCallback((next: Point) => {
     restoreFocus.current = true;
+    changeReason.current = "trigger-press";
     setPoint(next);
     setOpenRef.current(true);
   }, []);
@@ -189,9 +252,12 @@ export const ContextMenu = ({
   return (
     <ContextMenuContext.Provider value={context}>
       <MenuContext.Provider value={menu}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {children}
-        </div>
+        {/* The tree's pointer intent, inherited by every submenu surface. */}
+        <MenuPointer.Provider value={pointer}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {children}
+          </div>
+        </MenuPointer.Provider>
       </MenuContext.Provider>
     </ContextMenuContext.Provider>
   );
@@ -292,7 +358,8 @@ export interface ContextMenuContentProps extends Omit<Props, "children"> {
 
 /**
  * The surface at the pointer, rendered while open. Escape and an outside press
- * close it; the arrow keys and Enter follow the shared menu rules.
+ * close it, the arrow keys and Enter follow the shared menu rules, and the pointer
+ * leaving the menu and every submenu's closes it after a grace.
  */
 export const ContextMenuContent = ({
   label = "Context menu",
@@ -431,6 +498,8 @@ export const contextMenuMeta = {
     "one level of submenus is tested; deeper nesting follows the same rule but is untested",
     "no aria-haspopup in 0.11.0; a submenu trigger announces aria-expanded only",
     "the radio rows use aria-selected and a check icon because 0.11.0 has no aria-checked",
+    "submenus open after a 100 ms pointer rest and close after an 80 ms grace (Base UI's delays)",
+    "the surface is an anchored layer, out of the layout flow: opening it moves nothing behind it",
   ],
   docs: "docs/context-menu.mdx",
   example: "examples/context-menu.example.tsx",

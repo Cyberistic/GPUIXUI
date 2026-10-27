@@ -51,6 +51,21 @@ import {
 </ContextMenu>;
 ```
 
+## Pointer and keyboard
+
+The pointer follows Base UI's menu rules: **hovering a submenu trigger opens it
+after a 100 ms rest**, and the submenu closes 80 ms after the pointer leaves it,
+so a diagonal trip from the row into the second level keeps it open. A pointer
+that reaches a row which is not that submenu's trigger closes it at once, and one
+that leaves the menu and every submenu closes the whole menu. A disabled trigger
+opens nothing. Moving from the submenu back onto its trigger keeps it open.
+
+The keyboard is the same set of rules: `ArrowDown`/`ArrowUp` move the highlight
+and skip disabled rows, `Home`/`End` go to the ends, a typed prefix (500 ms
+window) jumps to the row that starts with it, `Enter` acts on the press and
+`Space` on the release, `ArrowRight` opens a submenu and `ArrowLeft` closes it,
+and `Escape` closes only the innermost layer.
+
 ## Composition
 
 ```text
@@ -77,7 +92,7 @@ ContextMenu
 | ---- | ---- | ------- | ----------- |
 | `open` | `boolean` | uncontrolled | controlled open state |
 | `defaultOpen` | `boolean` | `false` | the initial state when uncontrolled |
-| `onOpenChange` | `(open: boolean) => void` | none | reports the next state; a controlled menu waits for the caller |
+| `onOpenChange` | `(open: boolean, details: { reason }) => void` | none | reports the next state and why it changed: `trigger-press`, `item-press`, `escape-key`, `outside-press`, `focus-out` or `pointer-leave`; a controlled menu waits for the caller |
 | `children` | parts | none | `ContextMenuTrigger` and `ContextMenuContent` |
 
 ### `ContextMenuTrigger`
@@ -141,7 +156,7 @@ ContextMenu
 - The runtime role is `menu`, with `menuitem` and `menuitemcheckbox` on rows; no
   `aria-haspopup` on the trigger and no `aria-activedescendant`, so the keyboard
   route is documented here rather than announced.
-- The surface is **not portalled**: it is an anchored layer at window coordinates, so it paints correctly but is not clipped by a scroll container.
+- The surface is **not portalled**: it is an anchored layer at window coordinates, so it paints correctly but is not clipped by a scroll container. It is also **out of the layout flow** — opening it moves nothing behind it, and the trigger keeps its own box.
 - **A dismissed menu is a ghost, not a target.** The surface stays painted for
   its **200 ms** exit and the seam's shield takes the presses, while every row
   inside it leaves the window's Tab order for that window: the runtime decides

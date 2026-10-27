@@ -13,6 +13,16 @@
  * Submenu regression: the Context menu had no submenu parts, and in both menus a
  * pointer press on a submenu row was treated as an outside press, closing both
  * levels before the click ran the row.
+ *
+ * Hover regression (guarded by the suite below): a submenu opened on the first
+ * `mouseEnter` — so sweeping the pointer across a menu left the last submenu it
+ * crossed open — and nothing closed it when the pointer left, because the only
+ * close was another row's. Base UI rests ~100 ms before an open and holds a
+ * grace before a close; these cases hold the same two waits.
+ *
+ * Shift regression: opening the menu must not move the page. The surface is an
+ * `anchored` layer, out of the layout flow, so a sibling keeps its y — the case
+ * below is the guard, and painting the surface in flow is what fails it.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -20,9 +30,12 @@ import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
 import * as Option from "effect/Option";
 import {
+  after,
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  hoverCentreOf,
+  requireBounds,
   waitFor,
 } from "../internal/interaction.js";
 import {
@@ -438,5 +451,304 @@ describe("ContextMenu submenus", () => {
     expect(focusedTestId(row)).toEqual(Option.some("share"));
 
     row.unmount();
+  });
+});
+
+/** Whether the trigger row says its submenu is open, which outlives its paint. */
+const submenuOpen = (root: ComponentTestRoot): boolean =>
+  root.renderer.findByTestId("share")?.customProps?.["aria-expanded"] === true;
+
+/** A menu whose pointer routes can be followed: a submenu, a disabled row, and a neighbour. */
+const PointerPage = ({
+  onSelect,
+  onReason,
+}: {
+  readonly onSelect?: (action: string) => void;
+  readonly onReason?: (open: boolean, reason: string) => void;
+}) => (
+  <div
+    style={{ display: "flex", flexDirection: "row", alignItems: "flex-start" }}
+  >
+    <ContextMenu
+      onOpenChange={(open, details) => onReason?.(open, details.reason)}
+    >
+      <ContextMenuTrigger testId="row" style={{ width: 320, height: 60 }}>
+        <text>Project</text>
+      </ContextMenuTrigger>
+      <ContextMenuContent testId="menu" label="Project actions">
+        <ContextMenuItem testId="open" onSelect={() => onSelect?.("open")}>
+          Open
+        </ContextMenuItem>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger testId="share">Share</ContextMenuSubTrigger>
+          <ContextMenuSubContent testId="submenu" label="Share">
+            <ContextMenuItem
+              testId="copy-link"
+              onSelect={() => onSelect?.("copy-link")}
+            >
+              Copy link
+            </ContextMenuItem>
+            <ContextMenuItem
+              testId="email"
+              onSelect={() => onSelect?.("email")}
+            >
+              Email
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+        <ContextMenuItem testId="rename" onSelect={() => onSelect?.("rename")}>
+          Rename
+        </ContextMenuItem>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger testId="disabled-share" disabled>
+            Disabled share
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent
+            testId="disabled-submenu"
+            label="Disabled share"
+          >
+            <ContextMenuItem testId="never">Never</ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+        <ContextMenuItem testId="blocked" disabled>
+          Blocked
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+    <div
+      testId="elsewhere"
+      style={{ width: 200, height: 200, marginLeft: 300 }}
+    />
+  </div>
+);
+
+/** Open the pointer menu at a point clear of the neighbour. */
+const openPointerMenu = (root: ComponentTestRoot): void => {
+  rightClickAt(root, 160, 30);
+};
+
+describe("ContextMenu hover, in Base UI's shape", () => {
+  it("opens a submenu only after the rest Base UI asks for", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+
+    hoverCentreOf(page, "share");
+    await after(40);
+    expect(page.renderer.findByTestId("submenu")).toBeUndefined();
+
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("submenu")).toBeDefined(),
+    );
+    page.unmount();
+  });
+
+  it("keeps the submenu through a diagonal move across the gap", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+    hoverCentreOf(page, "share");
+    await waitFor(() => expect(submenuOpen(page)).toBe(true));
+
+    const menu = requireBounds(page, "menu");
+    const share = requireBounds(page, "share");
+    // The 4px between the menu's edge and the submenu's: neither surface holds it.
+    page.renderer.nativeSimulateMouseMove(menu.x + menu.width + 2, share.y + 4);
+    await after(40);
+    hoverCentreOf(page, "copy-link");
+    await after(60);
+
+    expect(submenuOpen(page)).toBe(true);
+    expect(page.renderer.findByTestId("submenu")).toBeDefined();
+    page.unmount();
+  });
+
+  it("closes a submenu when the pointer reaches a row that is not its trigger", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+    hoverCentreOf(page, "share");
+    await waitFor(() => expect(submenuOpen(page)).toBe(true));
+
+    hoverCentreOf(page, "rename");
+
+    expect(submenuOpen(page)).toBe(false);
+    // The submenu's rows unmount, so the focus they held goes back to the row the
+    // submenu belongs to rather than nowhere.
+    expect(focusedTestId(page)).toEqual(Option.some("share"));
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("submenu")).toBeUndefined(),
+    );
+    expect(page.renderer.findByTestId("menu")).toBeDefined();
+    page.unmount();
+  });
+
+  it("keeps its own submenu when the pointer comes back to its trigger", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+    hoverCentreOf(page, "share");
+    await waitFor(() => expect(submenuOpen(page)).toBe(true));
+
+    hoverCentreOf(page, "copy-link");
+    await after(40);
+    hoverCentreOf(page, "share");
+
+    // No close and no second wait: the row that opens the submenu is inside it.
+    expect(submenuOpen(page)).toBe(true);
+    page.unmount();
+  });
+
+  it("closes the menu after the pointer leaves it and its submenu", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+    hoverCentreOf(page, "share");
+    await waitFor(() => expect(submenuOpen(page)).toBe(true));
+    hoverCentreOf(page, "copy-link");
+
+    hoverCentreOf(page, "elsewhere");
+    await after(40);
+    // Still inside the grace: a pointer crossing a corner on its way back is
+    // not a dismissal.
+    expect(submenuOpen(page)).toBe(true);
+
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+    expect(page.renderer.findByTestId("submenu")).toBeUndefined();
+    page.unmount();
+  });
+
+  it("does not open a disabled submenu trigger on hover", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+
+    hoverCentreOf(page, "disabled-share");
+    await after(150);
+
+    expect(page.renderer.findByTestId("disabled-submenu")).toBeUndefined();
+    page.unmount();
+  });
+});
+
+describe("ContextMenu keeps the page still", () => {
+  it("opens without moving a sibling or its own trigger", async () => {
+    const page = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <ContextMenu>
+          <ContextMenuTrigger testId="row" style={{ width: 320, height: 120 }}>
+            <text>Project</text>
+          </ContextMenuTrigger>
+          <ContextMenuContent testId="menu" label="Project actions">
+            <ContextMenuItem testId="open">Open</ContextMenuItem>
+            <ContextMenuItem testId="copy">Copy path</ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+        <div testId="sibling" style={{ width: 320, height: 40 }} />
+      </div>,
+    );
+    const sibling = requireBounds(page, "sibling");
+    const trigger = requireBounds(page, "row");
+
+    rightClickAt(page, 100, 40);
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("menu")).toBeDefined(),
+    );
+
+    expect(requireBounds(page, "sibling")).toEqual(sibling);
+    expect(requireBounds(page, "row")).toEqual(trigger);
+    page.unmount();
+  });
+});
+
+describe("ContextMenu keyboard, in Base UI's shape", () => {
+  it("moves to the row a typed prefix names", () => {
+    const page = renderComponent(
+      <ContextMenu defaultOpen>
+        <ContextMenuTrigger testId="row" style={{ height: 60 }}>
+          <text>Project</text>
+        </ContextMenuTrigger>
+        <ContextMenuContent testId="menu" label="Project actions">
+          <ContextMenuItem testId="open">Open</ContextMenuItem>
+          <ContextMenuItem testId="duplicate">Duplicate</ContextMenuItem>
+          <ContextMenuItem testId="delete">Delete</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    page.renderer.simulateKeystrokes("d e");
+
+    expect(focusedTestId(page)).toEqual(Option.some("delete"));
+    page.unmount();
+  });
+
+  it("skips a disabled row with the arrow keys", () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+
+    // The last row is disabled, so Up lands on the row before it.
+    page.renderer.simulateKeystrokes("up");
+
+    expect(focusedTestId(page)).toEqual(Option.some("rename"));
+    page.unmount();
+  });
+
+  it("treats a press inside the submenu as inside the menu", async () => {
+    const page = renderComponent(<PointerPage />);
+    openPointerMenu(page);
+    hoverCentreOf(page, "share");
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("submenu")).toBeDefined(),
+    );
+
+    const surface = requireBounds(page, "submenu");
+    page.renderer.nativeSimulateClick(
+      surface.x + surface.width - 3,
+      surface.y + surface.height - 3,
+      0,
+    );
+
+    // The state, not the paint: a closing submenu is still mounted for its exit.
+    expect(submenuOpen(page)).toBe(true);
+    expect(page.renderer.findByTestId("menu")).toBeDefined();
+    page.unmount();
+  });
+});
+
+describe("ContextMenu reports why it changed", () => {
+  it("names the gesture that opened it and each that closed it", async () => {
+    const reasons: Array<readonly [boolean, string]> = [];
+    const page = renderComponent(
+      <PointerPage onReason={(open, reason) => reasons.push([open, reason])} />,
+    );
+
+    openPointerMenu(page);
+    expect(reasons).toEqual([[true, "trigger-press"]]);
+
+    clickCentreOf(page, "open");
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+    expect(reasons.at(-1)).toEqual([false, "item-press"]);
+
+    openPointerMenu(page);
+    page.renderer.simulateKeystrokes("escape");
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+    expect(reasons.at(-1)).toEqual([false, "escape-key"]);
+
+    openPointerMenu(page);
+    clickCentreOf(page, "elsewhere");
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+    expect(reasons.at(-1)).toEqual([false, "outside-press"]);
+
+    openPointerMenu(page);
+    hoverCentreOf(page, "menu");
+    hoverCentreOf(page, "elsewhere");
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+    expect(reasons.at(-1)).toEqual([false, "pointer-leave"]);
+
+    page.unmount();
   });
 });

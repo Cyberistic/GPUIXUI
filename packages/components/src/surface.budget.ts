@@ -143,6 +143,13 @@ export const surfaceBudget = {
   // 203 → 205 for the chat family rebuild (plan 716): `bubble.tsx` and its
   // `bubble/logic.ts` rule, plus `message-scroller/store.ts` beside the scroller.
   modules: 205,
+  // 203 → 204 for `menu/hover.ts`: the menu family's pointer intent — Base UI's
+  // 100 ms submenu rest and 80 ms close grace, and the tree-wide `MenuPointer`
+  // the root surface and every submenu surface hold, so a diagonal trip into a
+  // submenu is one gesture and leaving both closes the menu. The waits
+  // themselves are `internal/hover.ts`'s, which the graph already carried.
+  modules: 206,
+
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB

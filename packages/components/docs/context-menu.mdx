@@ -53,7 +53,7 @@ ContextMenu
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `ContextMenu` | root context | `open?`, `defaultOpen?` (default `false`), `onOpenChange?`, `children` |
+| `ContextMenu` | root context | `open?`, `defaultOpen?` (default `false`), `onOpenChange?` — called with `open` and `details.reason` (`trigger-press`, `item-press`, `escape-key`, `outside-press`, `focus-out`, `pointer-leave`), `children` |
 | `ContextMenuTrigger` | the area whose right click opens the menu | `disabled?` |
 | `ContextMenuContent` | `anchored` surface at the pointer | `label?` (default `"Context menu"`), `className?`, `children` |
 | `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows | `onSelect?`, `disabled?`, `tone?` (default `"default"`; a stored name that is neither tone reads as `"default"`), `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` |
@@ -61,11 +61,26 @@ ContextMenu
 | `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure | `ContextMenuGroup` takes `label?` — the group's accessible name |
 | `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level | `ContextMenuSubContent` takes the root surface's placement props |
 
+## Pointer
+
+The pointer follows Base UI's menu rules, with one timer per surface:
+
+- a submenu trigger opens after the pointer **rests 100 ms** on it, and its
+  submenu closes **80 ms** after the pointer leaves, so a diagonal trip from the
+  row into the second level keeps it open;
+- a row that is not that trigger closes the open submenu at once — the trigger
+  itself does not, so moving back keeps it open;
+- leaving the menu and every submenu closes the whole menu;
+- a disabled submenu trigger opens nothing;
+- the waits are `Effect` timers in `internal/local-state.ts`, cancelled with the
+  surface that armed them, never `setTimeout`.
+
 ## Limitations
 
 - No `onContextMenu`; a right click arrives as `onAuxClick`.
 - The surface is not portalled; it is painted at window coordinates.
-- One level of submenus is tested.
+- One level of submenus is tested; a deeper level follows the same hover and `Escape` rules but is not measured.
+- The surface is an `anchored` layer, out of the layout flow: opening it moves nothing behind it.
 - **A stored `tone` the union does not carry paints `"default"`**: a menu built
   from a saved action list may hold another vocabulary's word for the same idea
   (`"danger"`) or the `null` a store writes for a field it never set, and the

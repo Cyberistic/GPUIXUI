@@ -27,7 +27,47 @@ export interface Box extends Point {
 export type OpenSource = "pointer" | "keyboard";
 
 /** Why a menu closed, which decides where focus goes afterwards. */
-export type CloseReason = "activate" | "dismiss" | "leave" | "outside";
+export type CloseReason =
+  | "activate"
+  | "dismiss"
+  | "leave"
+  | "outside"
+  | "pointer";
+
+/**
+ * How long the pointer rests on a submenu trigger before it opens, in
+ * milliseconds — Base UI's `delay` on a `Menu.SubmenuTrigger`.
+ */
+export const SUBMENU_OPEN_DELAY_MS = 100;
+
+/**
+ * How long a surface stays open after the pointer leaves it, in milliseconds.
+ * The components' timer is `menuCloseGraceMs`; the drawing keeps the same wait.
+ */
+export const MENU_CLOSE_GRACE_MS = 80;
+
+/** A measured box's width and height. */
+export interface Size {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Where a surface of `surface` size rests inside a drawing of `frame` size.
+ *
+ * The press point is where the surface *wants* to be, and a press near the frame's
+ * bottom edge would put it half outside — a clipped menu, and in a browser a
+ * scrolled page once the surface takes focus. A real menu flips and shifts to stay
+ * in the window; this keeps the drawing's frame the window.
+ */
+export const placeSurface = (
+  point: Point,
+  surface: Size,
+  frame: Size,
+): Point => ({
+  x: Math.max(0, Math.min(point.x, frame.width - surface.width)),
+  y: Math.max(0, Math.min(point.y, frame.height - surface.height)),
+});
 
 /**
  * The point `Shift+F10` opens at: the trigger's bottom-left corner.

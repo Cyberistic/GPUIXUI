@@ -1,14 +1,18 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import {
+  MENU_CLOSE_GRACE_MS,
+  SUBMENU_OPEN_DELAY_MS,
   focusAfterClose,
   idleTyped,
   keyboardAnchor,
+  placeSurface,
   pointerAnchor,
   typeChar,
   type CloseReason,
@@ -89,6 +93,8 @@ const describeClose = (reason: CloseReason): string => {
       return "Tab";
     case "outside":
       return "a press outside";
+    case "pointer":
+      return "the pointer leaving";
   }
 };
 
@@ -116,10 +122,32 @@ const ContextSurface = ({
   const [highlight, setHighlight] = useState<string | null>(null);
   const [submenu, setSubmenu] = useState(false);
   const [subHighlight, setSubHighlight] = useState<string | null>(null);
+  const [placed, setPlaced] = useState(point);
   const surface = useRef<HTMLDivElement | null>(null);
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
   const subRefs = useRef(new Map<string, HTMLButtonElement>());
   const buffer = useRef<TypedBuffer>(idleTyped);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  /**
+   * The pointer waits Base UI waits: a rest before a submenu opens, a grace
+   * before it closes. One timer per surface, so the last wait replaces the last.
+   */
+  const later = (delay: number, run: () => void): void => {
+    if (timer.current !== undefined) clearTimeout(timer.current);
+    timer.current = setTimeout(run, delay);
+  };
+
+  const hold = (): void => {
+    if (timer.current !== undefined) clearTimeout(timer.current);
+  };
+
+  useEffect(
+    () => () => {
+      if (timer.current !== undefined) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   const focusRow = (id: string | null) => {
     if (id === null) return;
@@ -135,6 +163,7 @@ const ContextSurface = ({
 
   /** Close the second level and put the focus back on the row that opened it. */
   const closeSubmenu = () => {
+    hold();
     setSubmenu(false);
     setSubHighlight(null);
     focusRow("share");
@@ -152,8 +181,27 @@ const ContextSurface = ({
     if (row.kind !== "checkbox") onClose("activate", row.label);
   };
 
+  // A press near the frame's bottom edge would put the surface half outside it,
+  // so the drawing places it the way a real menu collides: pulled back inside.
+  useLayoutEffect(() => {
+    const element = surface.current;
+    const frame = element?.offsetParent;
+    if (element === null || !(frame instanceof HTMLElement)) return;
+    const next = placeSurface(
+      point,
+      element.getBoundingClientRect(),
+      frame.getBoundingClientRect(),
+    );
+    setPlaced((current) =>
+      current.x === next.x && current.y === next.y ? current : next,
+    );
+  }, [point]);
+
+  // The shift, measured: without `preventScroll` a press near the frame's bottom
+  // edge scrolled the frame **84 px** to reveal the focused surface, and the file
+  // rows jumped with it. Focus must never scroll the page the menu opened over.
   useEffect(() => {
-    surface.current?.focus();
+    surface.current?.focus({ preventScroll: true });
   }, []);
 
   useEffect(() => {
@@ -239,9 +287,11 @@ const ContextSurface = ({
       aria-label="Project actions"
       className="gx-menu gx-context-surface"
       onKeyDown={onKeyDown}
+      onMouseEnter={hold}
+      onMouseLeave={() => later(MENU_CLOSE_GRACE_MS, () => onClose("pointer"))}
       ref={surface}
       role="menu"
-      style={{ left: point.x, top: point.y }}
+      style={{ left: placed.x, top: placed.y }}
       tabIndex={-1}
     >
       {rows.map((row) => (
@@ -255,6 +305,24 @@ const ContextSurface = ({
           key={row.id}
           onClick={() => activate(row)}
           onFocus={() => setHighlight(row.id)}
+          onMouseEnter={() => {
+            if (row.kind !== "submenu") {
+              // A row that is not the submenu's trigger drops it, without moving
+              // the focus the pointer never put on this row.
+              if (submenu) {
+                hold();
+                setSubmenu(false);
+                setSubHighlight(null);
+              }
+              return;
+            }
+            if (submenu) hold();
+            else later(SUBMENU_OPEN_DELAY_MS, () => setSubmenu(true));
+          }}
+          onMouseLeave={() => {
+            if (row.kind !== "submenu" || !submenu) return;
+            later(MENU_CLOSE_GRACE_MS, () => setSubmenu(false));
+          }}
           ref={(element) => {
             if (element === null) rowRefs.current.delete(row.id);
             else rowRefs.current.set(row.id, element);
@@ -277,7 +345,15 @@ const ContextSurface = ({
         </button>
       ))}
       {submenu ? (
-        <div aria-label="Share" className="gx-menu gx-context-sub" role="menu">
+        <div
+          aria-label="Share"
+          className="gx-menu gx-context-sub"
+          onMouseEnter={hold}
+          onMouseLeave={() =>
+            later(MENU_CLOSE_GRACE_MS, () => setSubmenu(false))
+          }
+          role="menu"
+        >
           {shareRows.map((row) => (
             <button
               className="gx-menu-row"
@@ -501,15 +577,15 @@ const ContextMenuStates = () => {
           </tr>
         </thead>
         <tbody>
-          {(["dismiss", "activate", "leave", "outside"] as const).map(
-            (reason) => (
-              <tr key={reason}>
-                <th scope="row">{describeClose(reason)}</th>
-                <td>{focusAfterClose("keyboard", reason)}</td>
-                <td>{focusAfterClose("pointer", reason)}</td>
-              </tr>
-            ),
-          )}
+          {(
+            ["dismiss", "activate", "leave", "outside", "pointer"] as const
+          ).map((reason) => (
+            <tr key={reason}>
+              <th scope="row">{describeClose(reason)}</th>
+              <td>{focusAfterClose("keyboard", reason)}</td>
+              <td>{focusAfterClose("pointer", reason)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
