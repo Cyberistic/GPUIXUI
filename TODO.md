@@ -11468,6 +11468,32 @@ a merge over a stored theme.
       paragraph and the `COMPONENTS.md` Text row. No live scenario applies —
       the trio lands on the same element the existing paint cases measure.
 
+## Demo quality pass (2026-10-27)
+
+`[x]` **One sidebar block page** — `/docs/blocks/sidebar` carries all sixteen
+examples with their shadcn anchors (`ui.shadcn.com/blocks/sidebar#sidebar-01…16`),
+one index tile and one `sidebar.webp`; the sixteen `sidebar-NN` pages, registry
+entries and thumbnails are gone. The drawings are interactive: collapse
+triggers and rails (offcanvas 256→0, icon 256→48), group folds at 200ms, action
+popovers, the settings dialog, account menus and inputs. Navigation rows,
+calendar cells and recipe fields stay paint (no router, out of scope).
+`[x]` **Five previews rebuilt** — card (equal columns, captions, footer clears
+the edge), carousel (all slides stacked in one grid cell, frame 238px and footer
+fixed at 627/725 across steps), chat (real conversation, bubbles, streaming
+divider and error strip, segmented state switch), code block (12-line snippet
+with the theme's syntax palette, gutter, copy icon), auth (field labels from
+`FieldLabel`, 44px mark tile, no dead gap).
+`[x]` **Card footer recipe** — the component's own `CARD_FOOTER` was `px-3 pt-3`
+with no bottom padding; it is `px-4 pb-4` now, so a card's actions cannot sit on
+its rounded edge. The drawing was right; the recipe followed.
+`[!]` **Native carousel frame** — the preview stacks every slide so its height is
+stable; the shipped carousel mounts only the slide on screen and resizes
+(measured 122 → 162 → 102). If the frame should hold, the component needs a
+measure-all-slides rule.
+`[ ]` **Message meta slot** — the chat drawing shows timestamps and a streaming
+divider; `Message` exposes an author but no timestamp slot, so those are
+drawing-only today.
+
 ## Four more shadcn surfaces (2026-10-27)
 
 `[x]` **HoverCard, AspectRatio, Item, InputGroup** — the four absent components,
