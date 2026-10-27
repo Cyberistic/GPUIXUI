@@ -11406,6 +11406,24 @@ a merge over a stored theme.
       paragraph and the `COMPONENTS.md` Text row. No live scenario applies —
       the trio lands on the same element the existing paint cases measure.
 
+## Tier 1 surfaces, calendar and blocks (2026-10-27)
+
+`[x]` **Six primitive-backed components** — `Progress`, `Slider`, `Separator`,
+`Skeleton`, `Toggle` and `ToggleGroup` now exist as shadcn-shaped surfaces over
+the Tier 1 primitives, each with a package page, a preview, inventory and
+behaviour cases (25 new, every one proven by inverting its source). The
+primitives already owned the paint and keyboard; the surfaces added the
+`max → percent` rule, the single/range union, the decorative role, the animate
+switch and the public API. `aria-valuenow`/`aria-pressed` remain absent from
+0.11.0, so the value is announced through `aria-valuetext` and the pages say so.
+`[x]` **Calendar and DatePicker** — a real `Calendar` (single/multiple/range,
+`numberOfMonths`, outside days, matcher vocabulary, dropdown caption, page-year
+keys, roving focus) with 40 pure-rule cases and 16 native ones, and `DatePicker`
+rebuilt on it: range selection over `{ from, to }`, shadcn's trigger labels
+(`Jan 20 – Feb 4, 2026`), two months on a range, close when the span completes.
+The old parts stay as thin wrappers. The live probe caught and fixed a real
+`PageDown` clamp bug (45/45 green on 0.11.0).
+
 ## Sidebar and user menu (plan 340)
 
 `[x]` `[██████████]` 1/1
