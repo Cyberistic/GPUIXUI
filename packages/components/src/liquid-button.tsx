@@ -93,6 +93,11 @@ export const LiquidButton = ({
     if (inert) send(store.clear);
   }, [inert, store]);
 
+  // A level change retimes the drain it finds running.
+  useEffect(() => {
+    send(store.retime(windowMs));
+  }, [store, windowMs]);
+
   const measure = (event: EventPayload) => {
     send(store.measure(measuredBox(event)));
     onLayout?.(event);

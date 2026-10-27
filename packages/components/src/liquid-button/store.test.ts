@@ -137,4 +137,36 @@ describe("LiquidStore", () => {
       expect(Option.isNone(store.local.read().flood)).toBe(true);
     }),
   );
+
+  it.effect("a level change retimes the drain it finds running", () =>
+    Effect.gen(function* () {
+      const store = yield* measured;
+      yield* store.move(at(40), false);
+      yield* store.leave(Option.none(), false, 200);
+      yield* TestClock.adjust("150 millis");
+
+      // The newer, longer level restarts the window instead of keeping the end
+      // the level before it named.
+      yield* store.retime(600);
+      yield* TestClock.adjust("300 millis");
+      expect(Option.isSome(store.local.read().flood)).toBe(true);
+
+      yield* TestClock.adjust("300 millis");
+      expect(Option.isNone(store.local.read().flood)).toBe(true);
+    }),
+  );
+
+  it.effect("a retime with no drain running starts nothing", () =>
+    Effect.gen(function* () {
+      const store = yield* measured;
+      yield* store.move(at(40), false);
+      yield* store.retime(200);
+
+      // A filled flood has no end to retime, so it stays across the window.
+      yield* TestClock.adjust("1 second");
+      expect(Option.getOrUndefined(store.local.read().flood)).toMatchObject({
+        filled: true,
+      });
+    }),
+  );
 });

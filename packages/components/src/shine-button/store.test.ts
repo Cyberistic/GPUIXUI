@@ -75,4 +75,21 @@ describe("SheenStore", () => {
       expect(store.local.read()).toMatchObject({ sweeping: false, run: 1 });
     }),
   );
+
+  it.effect("a level change retimes the sweep it finds running", () =>
+    Effect.gen(function* () {
+      const store = yield* measured;
+      yield* store.enter(false, 500);
+      yield* TestClock.adjust("400 millis");
+
+      // The newer, longer level restarts the window instead of keeping the end
+      // the level before it named.
+      yield* store.retime(700);
+      yield* TestClock.adjust("400 millis");
+      expect(store.local.read().sweeping).toBe(true);
+
+      yield* TestClock.adjust("300 millis");
+      expect(store.local.read().sweeping).toBe(false);
+    }),
+  );
 });
