@@ -8053,7 +8053,7 @@ a merge over a stored theme.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 27/27
+`[x]` `[██████████]` 28/28
 
 `[x]` `packages/primitives`: **one `StackSpec`, two axes** — a `direction` is
       stored with the layout that draws it (a saved workspace records each
@@ -11374,6 +11374,8 @@ a merge over a stored theme.
       clean. Docs: `docs/text.mdx`'s API row, the README's layout-primitive
       paragraph and the `COMPONENTS.md` Text row. No live scenario applies —
       the trio lands on the same element the existing paint cases measure.
+
+`[x]` `packages/components`: **six Tier 1 primitives gained their shadcn-shaped surface** — `Progress`, `Slider`, `Separator`, `Skeleton`, `Toggle` and `ToggleGroup` existed only as unstyled primitives, so a consumer of the composition package could not import the shape a shadcn page documents: the caller's `max` and the indeterminate state, one `Slider` over a number or a `[from, to]` pair, a rule's `decorative` decision, the `animate` switch, and the pressed/roving parts a toolbar composes. The primitives keep every paint, gesture and key; this package adds the shape and the two rules the surface owns — `progressShare` (`value`/`max` stated in the caller's units, absence for a share the bar cannot measure, the documented 100 for a maximum it cannot divide by) and `sliderMode`/`isSliderSpan` (a pair chooses the range surface, an unreadable stored shape is one thumb). `Separator` paints the primitive rule inside a `role="separator"` wrapper when it is semantic (the platform reports the token as `Splitter`), and paints it alone when `decorative`; `Skeleton` maps `animate={false}` to the primitive's still frame and leaves the provider's preference alone otherwise. Plan 392; the primitives gained six subpath seams (`./progress`, `./slider`, `./separator`, `./skeleton`, `./toggle`, `./toggle-group`) because the barrel route is 52 modules / 416 KiB. Proof: 25 native behaviour cases across the six suites (a share of the caller's max and the indeterminate segment; one step, ten on PageUp/PageDown, Home/End; a disabled slider takes no key; a pair keeps from ≤ to; a decorative rule is absent from the a11y tree while a semantic one is present; the pulse stops for `animate={false}` and a reduced provider; the pressed state on the one channel 0.11.0 carries; one tab stop, one selection and a deselect in a single group; each paints the active platform's role — every case measured failing with its module reverted), plus four `progressShare`, five `isSliderSpan` and two `sliderMode` table cases. Docs: six package pages, six browser previews and their registry/dependency/related rows, the `COMPONENTS.md` rows, `docs/component-api.md` §8 (the executed table now reads Tier 1 as well as Tier 2) and the two READMEs. The entry graph moved 181 → 189 modules and 1 264 KiB measured, so `surface.budget.ts` records the six modules and the two rules with the ceiling 1260 → 1280 KiB. `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, `aria-orientation` and `aria-pressed` cannot be published by 0.11.0: each page and row records the gap and the `aria-valuetext` channel the suites hold. Green: components 120 files / 1 121 unit and the six behaviour files 25/25, primitives 59 files / 1 261, docs 204 files / 2 087, `check-types` clean.
 
 ## Blockers (project-level, with evidence)
 
