@@ -81,7 +81,7 @@ export const CARD_TITLE = "text-base font-semibold font-sans text-foreground";
 export const CARD_DESCRIPTION = "text-sm font-sans text-muted-foreground";
 export const CARD_CONTENT = "flex flex-col gap-3 px-4";
 export const CARD_FOOTER =
-  "flex flex-row items-center justify-end gap-2 px-3 pt-3 border-t border-input";
+  "flex flex-row items-center justify-end gap-2 px-4 pt-3 pb-4 border-t border-input";
 
 /** `badge.tsx` — the status pill. */
 export const BADGE_BASE =

@@ -317,9 +317,12 @@ describe("Card recipe", () => {
       alignItems: "center",
       justifyContent: "flex-end",
       gap: 8,
-      paddingLeft: 12,
-      paddingRight: 12,
+      // The footer closes the card: it pays the same 16px the header and the
+      // content do, so its actions cannot sit on the rounded edge.
+      paddingLeft: 16,
+      paddingRight: 16,
       paddingTop: 12,
+      paddingBottom: 16,
       borderTopWidth: 1,
       borderColor: darkTheme.colors.border,
     });
