@@ -11440,6 +11440,28 @@ a merge over a stored theme.
       paragraph and the `COMPONENTS.md` Text row. No live scenario applies —
       the trio lands on the same element the existing paint cases measure.
 
+## Four more shadcn surfaces (2026-10-27)
+
+`[x]` **HoverCard, AspectRatio, Item, InputGroup** — the four absent components,
+each with a page, preview, example, inventory row and behaviour suite
+(`aspect-ratio` 4, `hover-card` 12, `item` 6, `input-group` 6; the suite went
+1204 → 1232). HoverCard reuses Popover's anchored layer, placement correction and
+presence seam, waits 700/300ms through one Effect store that PreviewCard now
+shares too, and opens on focus immediately. InputGroup wraps the primitives'
+`Input`/`TextArea` with one ring and four addon alignments.
+`[x]` **`AspectRatio` uses the runtime, not arithmetic** — `StyleDesc.aspectRatio`
+exists in 0.11.0 (documented and measured by `aspect-ratio-paint`), so the
+component hands the ratio over instead of measuring a width; the test reads
+painted bounds at two widths. The earlier capability list was wrong about this.
+`[!]` **`resizable` is not missing** — `@gpuixui/dock` already ships `SplitPane`
+and `PanelGroup` (primary-button drag, 16px key steps, Home/End, bounds clamping,
+`role="separator"`, 29- and 48-check window probes). shadcn's `Resizable` is a
+`react-resizable-panels` wrapper; the open question is whether to alias the dock
+names, not whether to build a second drag.
+`[ ]` **Still absent**: `native-select` (no `<select>` host in 0.11.0), `menubar`
+(the OS menu bar is `app-menu`, not an in-window menubar), `chart`, and the new
+chat set (`attachment`, `bubble`, `marker`, `questionnaire`, `trace`).
+
 ## Tier 1 surfaces, calendar and blocks (2026-10-27)
 
 `[x]` **Six primitive-backed components** — `Progress`, `Slider`, `Separator`,
