@@ -103,7 +103,14 @@ describe("the month grid", () => {
     root.unmount();
   });
 
-  it("paints outside days only when asked", () => {
+  it("paints outside days by default, and only when asked otherwise", () => {
+    // shadcn's Calendar paints the neighbouring months unless told not to.
+    const byDefault = single();
+    expect(
+      byDefault.renderer.findByTestId("date-day-2026-09-28"),
+    ).toBeDefined();
+    byDefault.unmount();
+
     const withOutside = single({ showOutsideDays: true });
     expect(
       withOutside.renderer.findByTestId("date-day-2026-09-28"),
