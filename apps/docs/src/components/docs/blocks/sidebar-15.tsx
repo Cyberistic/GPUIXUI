@@ -25,7 +25,11 @@ export const Sidebar15Render = () => (
     >
       <SbFocusBody />
     </SbInset>
-    <SbCalendarPanel className="gx-sb-panel--calendar" side="right" />
+    <SbCalendarPanel
+      className="gx-sb-panel--calendar"
+      collapse="none"
+      side="right"
+    />
   </SbShell>
 );
 

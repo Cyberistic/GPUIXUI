@@ -1,14 +1,44 @@
-import type { ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { railToggleLabel, useRailCollapse } from "../sidebar-rail";
 
 /**
- * The browser drawing shared by the sixteen sidebar blocks.
+ * The browser drawing shared by the sixteen sidebar examples.
  *
  * The shipped sidebar is a GPUix tree — a width tween, an anchored sheet and a
  * modal's focus rules — so a block page cannot mount it. These are the same
  * parts and the same geometry (256px panel, 48px rail, 8px gutters, 36px rows),
  * painted in the browser and reading only the preview surface's theme roles.
- * The recipes beside each block are the `@gpuixui/*` source a reader copies.
+ * The controls are live: a section folds, a rail collapses, an overlay opens.
+ * The recipes beside each example are the `@gpuixui/*` source a reader copies.
  */
+
+/** The panel's collapse behaviour, as shadcn's `Sidebar` names it. */
+export type SbCollapse = "icon" | "offcanvas" | "none";
+
+interface SbFrame {
+  readonly collapsed: boolean;
+  readonly collapse: SbCollapse;
+  readonly toggle: () => void;
+  readonly overlay: string | null;
+  readonly setOverlay: (overlay: string | null) => void;
+}
+
+const SbFrameContext = createContext<SbFrame>({
+  collapsed: false,
+  collapse: "offcanvas",
+  toggle: () => undefined,
+  overlay: null,
+  setOverlay: () => undefined,
+});
+
+const useSbFrame = (): SbFrame => useContext(SbFrameContext);
 
 /** A glyph drawn at the library's own 24-unit box. */
 export type SbIconName =
@@ -349,6 +379,19 @@ export const TEAMS: ReadonlyArray<SbTeam> = [
   { name: "Evil Corp.", plan: "Free", icon: "terminal" },
 ];
 
+/** The account dropdown shadcn ships in the footer of its workspace blocks. */
+export const USER_MENU: ReadonlyArray<
+  ReadonlyArray<{ readonly label: string; readonly icon: SbIconName }>
+> = [
+  [{ label: "Upgrade to Pro", icon: "sparkles" }],
+  [
+    { label: "Account", icon: "user" },
+    { label: "Billing", icon: "table" },
+    { label: "Notifications", icon: "bell" },
+  ],
+  [{ label: "Log out", icon: "arrow-right" }],
+];
+
 export interface SbNavItem {
   readonly label: string;
   readonly icon: SbIconName;
@@ -646,19 +689,71 @@ export const SbBrand = ({
   </div>
 );
 
-/** The account row: avatar, name over address, and the disclosure mark. */
-export const SbAccount = ({ user = USER }: { readonly user?: SbUser }) => (
-  <div className="gx-sb-account">
-    <span className="gx-sb-avatar">{user.initials}</span>
+/**
+ * The account row: avatar, name over address, and the disclosure mark. Pressing
+ * it opens the footer menu shadcn ships; `rail` drops the text for 09's 48px
+ * folder column and anchors the menu to its right.
+ */
+export const SbAccount = ({
+  user = USER,
+  rail = false,
+}: {
+  readonly user?: SbUser;
+  readonly rail?: boolean;
+}) => {
+  const { overlay, setOverlay } = useSbFrame();
+  const id = "user-menu";
+  const open = overlay === id;
+  const text = (
     <span className="gx-sb-account-text">
       <span className="gx-sb-account-name">{user.name}</span>
       <span className="gx-sb-account-mail">{user.email}</span>
     </span>
-    <span className="gx-sb-account-chevron">
-      <SbIcon name="chevrons-up-down" size={14} />
-    </span>
-  </div>
-);
+  );
+
+  return (
+    <div className="gx-sb-account-wrap" data-rail={rail}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="gx-sb-account"
+        onClick={() => setOverlay(open ? null : id)}
+        type="button"
+      >
+        <span className="gx-sb-avatar">{user.initials}</span>
+        {rail ? null : (
+          <>
+            {text}
+            <span className="gx-sb-account-chevron">
+              <SbIcon name="chevrons-up-down" size={14} />
+            </span>
+          </>
+        )}
+      </button>
+      <SbOverlay className="gx-sb-pop gx-sb-pop--user" id={id} label="Account">
+        <div className="gx-sb-pop-profile">
+          <span className="gx-sb-avatar">{user.initials}</span>
+          {rail ? null : text}
+        </div>
+        {USER_MENU.map((group, index) => (
+          <div className="gx-sb-pop-group" key={index}>
+            {group.map((item) => (
+              <button
+                className="gx-sb-pop-row"
+                key={item.label}
+                onClick={() => setOverlay(null)}
+                type="button"
+              >
+                <SbIcon name={item.icon} size={14} />
+                {item.label}
+              </button>
+            ))}
+          </div>
+        ))}
+      </SbOverlay>
+    </div>
+  );
+};
 
 /** The panel's search field. */
 export const SbSearch = ({
@@ -666,34 +761,84 @@ export const SbSearch = ({
 }: {
   readonly placeholder?: string;
 }) => (
-  <div className="gx-sb-search">
+  <label className="gx-sb-search">
     <SbIcon name="search" size={14} />
-    <span className="gx-sb-search-text">{placeholder}</span>
+    <input
+      aria-label={placeholder}
+      className="gx-sb-search-input"
+      placeholder={placeholder}
+    />
+  </label>
+);
+
+/**
+ * A 200ms height tween around content that stays mounted, the same reveal the
+ * docs accordion uses: the row track grows from `0fr` to `1fr` and the inner
+ * box clips the part that has not arrived.
+ */
+export const SbFold = ({
+  open,
+  children,
+}: {
+  readonly open: boolean;
+  readonly children: ReactNode;
+}) => (
+  <div className="gx-sb-fold" data-open={open}>
+    <div className="gx-sb-fold-inner">{children}</div>
   </div>
 );
 
-/** One labelled group. `action` paints a trailing glyph in the label row. */
+/**
+ * One labelled group. `collapsible` turns the label into the disclosure the
+ * shipped `Collapsible` group header is; static groups keep a plain label.
+ */
 export const SbGroup = ({
   label,
   trailing,
+  collapsible = false,
+  defaultOpen = true,
   children,
 }: {
   readonly label?: string;
   readonly trailing?: ReactNode;
+  readonly collapsible?: boolean;
+  readonly defaultOpen?: boolean;
   readonly children: ReactNode;
-}) => (
-  <section className="gx-sb-group">
-    {label === undefined ? null : (
-      <p className="gx-sb-group-label">
-        {label}
-        {trailing === undefined ? null : (
-          <span className="gx-sb-group-trailing">{trailing}</span>
-        )}
-      </p>
-    )}
-    <div className="gx-sb-menu">{children}</div>
-  </section>
-);
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <section className="gx-sb-group">
+      {label === undefined ? null : collapsible ? (
+        <button
+          aria-expanded={open}
+          className="gx-sb-group-label"
+          onClick={() => setOpen(!open)}
+          type="button"
+        >
+          {label}
+          <span className="gx-sb-group-trailing">
+            <SbChevron open={open} />
+          </span>
+        </button>
+      ) : (
+        <p className="gx-sb-group-label">
+          {label}
+          {trailing === undefined ? null : (
+            <span className="gx-sb-group-trailing">{trailing}</span>
+          )}
+        </p>
+      )}
+      {collapsible ? (
+        <SbFold open={open}>
+          <div className="gx-sb-menu">{children}</div>
+        </SbFold>
+      ) : (
+        <div className="gx-sb-menu">{children}</div>
+      )}
+    </section>
+  );
+};
 
 /** The trailing chevron a collapsible row opens with. */
 export const SbChevron = ({ open = false }: { readonly open?: boolean }) => (
@@ -709,7 +854,135 @@ export const SbDots = () => (
   </span>
 );
 
-/** One row: a glyph, a label, and optional trailing content. */
+/**
+ * An overlay anchored inside a shell. The shell paints the scrim and owns the
+ * Escape key, so a press outside, Escape and the close control all dismiss the
+ * same state.
+ */
+export const SbOverlay = ({
+  id,
+  label,
+  className,
+  children,
+}: {
+  readonly id: string;
+  readonly label: string;
+  readonly className: string;
+  readonly children: ReactNode;
+}) => {
+  const { overlay } = useSbFrame();
+
+  return overlay === id ? (
+    <div aria-label={label} className={className} role="menu">
+      {children}
+    </div>
+  ) : null;
+};
+
+/** An icon control that opens an overlay, as the page-actions dots do. */
+export const SbIconButton = ({
+  icon,
+  label,
+  overlay,
+}: {
+  readonly icon: SbIconName;
+  readonly label: string;
+  readonly overlay: string;
+}) => {
+  const { overlay: open, setOverlay } = useSbFrame();
+  const pressed = open === overlay;
+
+  return (
+    <button
+      aria-expanded={pressed}
+      aria-haspopup="menu"
+      aria-label={label}
+      className="gx-sb-iconbtn"
+      data-open={pressed}
+      onClick={() => setOverlay(pressed ? null : overlay)}
+      type="button"
+    >
+      <SbIcon name={icon} size={14} />
+    </button>
+  );
+};
+
+/** The header's page-actions menu: one trigger and its grouped rows. */
+export const SbActionsMenu = ({
+  id,
+  label,
+  title,
+  groups,
+}: {
+  readonly id: string;
+  readonly label: string;
+  readonly title?: string;
+  readonly groups: ReadonlyArray<
+    ReadonlyArray<{ readonly label: string; readonly icon: SbIconName }>
+  >;
+}) => {
+  const { setOverlay } = useSbFrame();
+
+  return (
+    <>
+      <SbIconButton icon="ellipsis" label={label} overlay={id} />
+      <SbOverlay className="gx-sb-pop gx-sb-pop--actions" id={id} label={label}>
+        {title === undefined ? null : (
+          <p className="gx-sb-pop-title">{title}</p>
+        )}
+        {groups.map((group, index) => (
+          <div className="gx-sb-pop-group" key={index}>
+            {group.map((action) => (
+              <button
+                className="gx-sb-pop-row"
+                key={action.label}
+                onClick={() => setOverlay(null)}
+                type="button"
+              >
+                <SbIcon name={action.icon} size={14} />
+                {action.label}
+              </button>
+            ))}
+          </div>
+        ))}
+      </SbOverlay>
+    </>
+  );
+};
+
+/**
+ * The header's panel trigger: one button for the toggle the reader presses and
+ * the state it announces. A `none` panel has no collapse, so the button says so
+ * instead of pretending to move.
+ */
+export const SbTrigger = ({
+  icon = "panel-left",
+}: {
+  readonly icon?: "panel-left" | "panel-right";
+}) => {
+  const { collapsed, collapse, toggle } = useSbFrame();
+  const inert = collapse === "none";
+  const label = inert
+    ? 'This sidebar is collapsible="none"'
+    : railToggleLabel(collapsed);
+
+  return (
+    <button
+      aria-disabled={inert || undefined}
+      aria-expanded={inert ? undefined : !collapsed}
+      aria-label={label}
+      className="gx-sb-trigger"
+      onClick={inert ? undefined : toggle}
+      title={label}
+      type="button"
+    >
+      <SbIcon name={icon} size={16} />
+    </button>
+  );
+};
+
+/** One row: a glyph, a label, and optional trailing content. A row with a
+ * press is a button, so a disclosure trigger is keyboard-reachable. */
 export const SbRow = ({
   icon,
   label,
@@ -718,6 +991,8 @@ export const SbRow = ({
   trailing,
   emoji,
   iconOnly = false,
+  expanded,
+  onPress,
 }: {
   readonly icon?: SbIconName;
   readonly label?: string;
@@ -726,22 +1001,45 @@ export const SbRow = ({
   readonly trailing?: ReactNode;
   readonly emoji?: string;
   readonly iconOnly?: boolean;
-}) => (
-  <div
-    aria-current={active ? "page" : undefined}
-    className="gx-sb-row"
-    data-active={active}
-    data-icon-only={iconOnly}
-  >
-    {emoji === undefined ? null : <span className="gx-sb-emoji">{emoji}</span>}
-    {icon === undefined ? null : <SbIcon name={icon} size={16} />}
-    {label === undefined ? null : (
-      <span className="gx-sb-row-label">{label}</span>
-    )}
-    {badge === undefined ? null : <span className="gx-sb-badge">{badge}</span>}
-    {trailing}
-  </div>
-);
+  readonly expanded?: boolean;
+  readonly onPress?: () => void;
+}) => {
+  const content = (
+    <>
+      {emoji === undefined ? null : (
+        <span className="gx-sb-emoji">{emoji}</span>
+      )}
+      {icon === undefined ? null : <SbIcon name={icon} size={16} />}
+      {label === undefined ? null : (
+        <span className="gx-sb-row-label">{label}</span>
+      )}
+      {badge === undefined ? null : (
+        <span className="gx-sb-badge">{badge}</span>
+      )}
+      {trailing}
+    </>
+  );
+  const shared = {
+    "aria-current": active ? ("page" as const) : undefined,
+    "data-active": active,
+    "data-icon-only": iconOnly,
+    "data-tooltip": label,
+    className: "gx-sb-row",
+  };
+
+  return onPress === undefined ? (
+    <div {...shared}>{content}</div>
+  ) : (
+    <button
+      aria-expanded={expanded}
+      onClick={onPress}
+      type="button"
+      {...shared}
+    >
+      {content}
+    </button>
+  );
+};
 
 /** A submenu list under a row. */
 export const SbSub = ({ children }: { readonly children: ReactNode }) => (
@@ -765,21 +1063,119 @@ export const SbSubRow = ({
   </div>
 );
 
-/** The switch a panel header draws: the track and its knob, no interaction. */
-export const SbSwitch = ({ on = false }: { readonly on?: boolean }) => (
-  <span aria-checked={on} className="gx-sb-switch" data-on={on} role="switch" />
-);
+/**
+ * A row that opens its own submenu in place. The shipped tree's parent rows are
+ * `CollapsibleTrigger`s; this is the same disclosure, with the family's chevron
+ * or the docs tree's plus/minus marker.
+ */
+export const SbDisclosure = ({
+  icon,
+  label,
+  active = false,
+  defaultOpen = false,
+  indicator = "chevron",
+  children,
+}: {
+  readonly icon?: SbIconName;
+  readonly label: string;
+  readonly active?: boolean;
+  readonly defaultOpen?: boolean;
+  readonly indicator?: "chevron" | "plus";
+  readonly children?: ReactNode;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="gx-sb-item">
+      <SbRow
+        active={active}
+        expanded={open}
+        icon={icon}
+        label={label}
+        onPress={() => setOpen(!open)}
+        trailing={
+          indicator === "plus" ? (
+            <span className="gx-sb-trail">
+              <SbIcon name={open ? "minus" : "plus"} size={14} />
+            </span>
+          ) : (
+            <SbChevron open={open} />
+          )
+        }
+      />
+      <SbFold open={open}>
+        <SbSub>{children}</SbSub>
+      </SbFold>
+    </div>
+  );
+};
+
+/** A group row whose dots open its pages, as block 06's dropdown sections do. */
+export const SbMenu = ({
+  label,
+  items,
+}: {
+  readonly label: string;
+  readonly items: ReadonlyArray<string>;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="gx-sb-item">
+      <SbRow
+        expanded={open}
+        label={label}
+        onPress={() => setOpen(!open)}
+        trailing={<SbDots />}
+      />
+      <SbFold open={open}>
+        <div className="gx-sb-menu-list">
+          {items.map((item) => (
+            <button
+              className="gx-sb-pop-row"
+              key={item}
+              onClick={() => setOpen(false)}
+              type="button"
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </SbFold>
+    </div>
+  );
+};
+
+/** The switch a panel header draws. */
+export const SbSwitch = ({ on = false }: { readonly on?: boolean }) => {
+  const [checked, setChecked] = useState(on);
+
+  return (
+    <button
+      aria-checked={checked}
+      aria-label="Unreads"
+      className="gx-sb-switch"
+      data-on={checked}
+      onClick={() => setChecked(!checked)}
+      role="switch"
+      type="button"
+    />
+  );
+};
 
 // ── The frame ────────────────────────────────────────────────────────────────
 
 /**
  * The panel. `size` is the 256px default, the 48px icon rail (09's first
- * column) and the 300px list column beside it.
+ * column) and the 300px list column beside it. A panel inherits the shell's
+ * collapse behaviour; `collapse` overrides it for a secondary column that the
+ * page's trigger must leave alone.
  */
 export const SbPanel = ({
   side = "left",
   size = "default",
   rail = false,
+  collapse,
   header,
   footer,
   children,
@@ -788,25 +1184,43 @@ export const SbPanel = ({
   readonly side?: "left" | "right";
   readonly size?: "default" | "rail" | "wide";
   readonly rail?: boolean;
+  readonly collapse?: SbCollapse;
   readonly header?: ReactNode;
   readonly footer?: ReactNode;
   readonly children: ReactNode;
   readonly className?: string;
-}) => (
-  <aside
-    className={`gx-sb-panel gx-sb-panel--${size}${className === undefined ? "" : ` ${className}`}`}
-    data-edge={side}
-  >
-    {header === undefined ? null : (
-      <div className="gx-sb-panel-head">{header}</div>
-    )}
-    <div className="gx-sb-panel-body">{children}</div>
-    {footer === undefined ? null : (
-      <div className="gx-sb-panel-foot">{footer}</div>
-    )}
-    {rail ? <span aria-hidden="true" className="gx-sb-rail" /> : null}
-  </aside>
-);
+}) => {
+  const frame = useSbFrame();
+  const behaviour = collapse ?? frame.collapse;
+  const collapsed = behaviour !== "none" && frame.collapsed;
+
+  return (
+    <aside
+      className={`gx-sb-panel gx-sb-panel--${size}${className === undefined ? "" : ` ${className}`}`}
+      data-collapse={behaviour}
+      data-collapsed={collapsed}
+      data-edge={side}
+    >
+      {header === undefined ? null : (
+        <div className="gx-sb-panel-head">{header}</div>
+      )}
+      <div className="gx-sb-panel-body">{children}</div>
+      {footer === undefined ? null : (
+        <div className="gx-sb-panel-foot">{footer}</div>
+      )}
+      {rail && behaviour !== "none" ? (
+        <button
+          aria-expanded={!frame.collapsed}
+          aria-label={railToggleLabel(frame.collapsed)}
+          className="gx-sb-rail"
+          onClick={frame.toggle}
+          title={railToggleLabel(frame.collapsed)}
+          type="button"
+        />
+      ) : null}
+    </aside>
+  );
+};
 
 /** The inset beside the panel, and its scroll column. */
 export const SbInset = ({
@@ -839,11 +1253,7 @@ export const SbInsetHeader = ({
   readonly triggerIcon?: "panel-left" | "panel-right";
 }) => (
   <header className="gx-sb-head" data-border={border} style={{ height }}>
-    {trigger ? (
-      <span className="gx-sb-trigger">
-        <SbIcon name={triggerIcon} size={16} />
-      </span>
-    ) : null}
+    {trigger ? <SbTrigger icon={triggerIcon} /> : null}
     {trigger ? <span className="gx-sb-head-rule" /> : null}
     <SbCrumbs trail={trail} />
     {trailing === undefined ? null : (
@@ -877,30 +1287,63 @@ export const SbCrumbs = ({
   </nav>
 );
 
-/** The frame both the panel and the inset sit in. */
+/**
+ * The frame both the panel and the inset sit in. It owns one collapse state and
+ * one open overlay, so a rail, a header trigger and a group header in the same
+ * example agree, and an overlay's scrim and Escape key are painted once.
+ */
 export const SbShell = ({
   variant = "sidebar",
   height = "standard",
+  collapse = "offcanvas",
   top,
-  overlay,
   children,
 }: {
   readonly variant?: "sidebar" | "floating" | "inset";
   readonly height?: "standard" | "tall";
+  readonly collapse?: SbCollapse;
   readonly top?: ReactNode;
-  /** A dropdown drawn outside the panel, where its scroller cannot clip it. */
-  readonly overlay?: ReactNode;
   readonly children: ReactNode;
-}) => (
-  <div className="gx-sb" data-height={height} data-variant={variant}>
-    {top}
-    <div className="gx-sb-frame">{children}</div>
-    {overlay}
-  </div>
-);
+}) => {
+  const { collapsed, toggle } = useRailCollapse();
+  const [overlay, setOverlay] = useState<string | null>(null);
+  const frame = useMemo(
+    () => ({ collapsed, collapse, toggle, overlay, setOverlay }),
+    [collapsed, collapse, toggle, overlay],
+  );
 
-/** The thin strip on a panel's outer edge. */
-export const SbRail = () => <span aria-hidden="true" className="gx-sb-rail" />;
+  useEffect(() => {
+    if (overlay === null) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOverlay(null);
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [overlay]);
+
+  return (
+    <SbFrameContext.Provider value={frame}>
+      <div
+        className="gx-sb"
+        data-collapse={collapse}
+        data-collapsed={collapsed}
+        data-height={height}
+        data-variant={variant}
+      >
+        {top}
+        <div className="gx-sb-frame">{children}</div>
+        {overlay === null ? null : (
+          <button
+            aria-label="Close menu"
+            className="gx-sb-scrim"
+            onClick={() => setOverlay(null)}
+            type="button"
+          />
+        )}
+      </div>
+    </SbFrameContext.Provider>
+  );
+};
 
 // ── Inset content ────────────────────────────────────────────────────────────
 
@@ -1168,14 +1611,17 @@ export const SbWorkspacePanel = ({
 export const SbCalendarPanel = ({
   rail = false,
   side = "left",
+  collapse,
   className,
 }: {
   readonly rail?: boolean;
   readonly side?: "left" | "right";
+  readonly collapse?: SbCollapse;
   readonly className?: string;
 }) => (
   <SbPanel
     className={className}
+    collapse={collapse}
     side={side}
     header={
       <div className="gx-sb-panel-head-account">
@@ -1251,25 +1697,17 @@ export const SbAppPanel = () => (
   >
     <SbGroup label="Platform">
       {MAIN_NAV.map((item) => (
-        <div className="gx-sb-item" key={item.label}>
-          <SbRow
-            active={item.label === "Playground"}
-            icon={item.icon}
-            label={item.label}
-            trailing={
-              item.items.length > 0 ? (
-                <SbChevron open={item.active === true} />
-              ) : undefined
-            }
-          />
-          {item.active === true ? (
-            <SbSub>
-              {item.items.map((sub) => (
-                <SbSubRow key={sub} label={sub} />
-              ))}
-            </SbSub>
-          ) : null}
-        </div>
+        <SbDisclosure
+          active={item.active === true}
+          defaultOpen={item.active === true}
+          icon={item.icon}
+          key={item.label}
+          label={item.label}
+        >
+          {item.items.map((sub) => (
+            <SbSubRow key={sub} label={sub} />
+          ))}
+        </SbDisclosure>
       ))}
     </SbGroup>
     <SbGroup label="Projects">

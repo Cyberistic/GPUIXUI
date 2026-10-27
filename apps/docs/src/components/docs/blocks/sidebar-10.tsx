@@ -1,5 +1,7 @@
+import { useState } from "react";
 import {
   POPOVER_ACTIONS,
+  SbActionsMenu,
   SbFocusBody,
   SbIcon,
   SbInset,
@@ -9,49 +11,50 @@ import {
 } from "./sidebar-kit";
 
 /**
- * Sidebar 10 — the workspace panel on the left, and shadcn's header popover
- * open on the right: four groups of actions, drawn as a second sidebar.
+ * Sidebar 10 — the workspace panel on the left, and shadcn's header popover on
+ * the right: four groups of actions, opened from the header's dots.
  */
-export const Sidebar10Render = () => (
-  <SbShell height="tall">
-    <SbWorkspacePanel />
-    <SbInset
-      header={
-        <SbInsetHeader
-          border={false}
-          height={56}
-          trail={["Project Management & Task Tracking"]}
-          trailing={
-            <div className="gx-sb-actions">
-              <span className="gx-sb-note">Edit Oct 08</span>
-              <span className="gx-sb-iconbtn">
-                <SbIcon name="star" size={14} />
-              </span>
-              <span className="gx-sb-iconbtn" data-open="">
-                <SbIcon name="ellipsis" size={14} />
-              </span>
-              <div className="gx-sb-pop gx-sb-pop--actions">
-                <p className="gx-sb-pop-title">Page</p>
-                {POPOVER_ACTIONS.flatMap((group, index) => (
-                  <div className="gx-sb-pop-group" key={index}>
-                    {group.map((action) => (
-                      <span className="gx-sb-pop-row" key={action.label}>
-                        <SbIcon name={action.icon} size={14} />
-                        {action.label}
-                      </span>
-                    ))}
-                  </div>
-                ))}
+export const Sidebar10Render = () => {
+  const [starred, setStarred] = useState(false);
+
+  return (
+    <SbShell height="tall">
+      <SbWorkspacePanel />
+      <SbInset
+        header={
+          <SbInsetHeader
+            border={false}
+            height={56}
+            trail={["Project Management & Task Tracking"]}
+            trailing={
+              <div className="gx-sb-actions">
+                <span className="gx-sb-note">Edit Oct 08</span>
+                <button
+                  aria-label="Star page"
+                  aria-pressed={starred}
+                  className="gx-sb-iconbtn"
+                  data-on={starred}
+                  onClick={() => setStarred(!starred)}
+                  type="button"
+                >
+                  <SbIcon name="star" size={14} />
+                </button>
+                <SbActionsMenu
+                  groups={POPOVER_ACTIONS}
+                  id="page-actions"
+                  label="Page actions"
+                  title="Page"
+                />
               </div>
-            </div>
-          }
-        />
-      }
-    >
-      <SbFocusBody />
-    </SbInset>
-  </SbShell>
-);
+            }
+          />
+        }
+      >
+        <SbFocusBody />
+      </SbInset>
+    </SbShell>
+  );
+};
 
 export const sidebar10Source = `import { Icon } from "@gpuixui/icons";
 import {

@@ -2,7 +2,6 @@ import {
   DOCS_NAV,
   SbDocBody,
   SbGroup,
-  SbIcon,
   SbInset,
   SbInsetHeader,
   SbPanel,
@@ -10,6 +9,7 @@ import {
   SbShell,
   SbSub,
   SbSubRow,
+  SbTrigger,
 } from "./sidebar-kit";
 
 /**
@@ -23,11 +23,7 @@ export const Sidebar14Render = () => (
         <SbInsetHeader
           trail={["Build Your Application", "Data Fetching"]}
           trigger={false}
-          trailing={
-            <span className="gx-sb-trigger">
-              <SbIcon name="panel-right" size={16} />
-            </span>
-          }
+          trailing={<SbTrigger icon="panel-right" />}
         />
       }
     >
