@@ -1,0 +1,30 @@
+---
+title: Sidebar 07 — Icon rail
+description: A workspace that collapses to icons — team switcher, platform sections, project actions and the account.
+---
+
+The workspace sidebar on shadcn's icon collapse: the team switcher, four
+platform sections that open in place, the project list with its row actions and
+the account in the footer.
+
+<BlockPreview name="sidebar-07" />
+
+## Composition
+
+- `SidebarProvider collapsible="icon"` and `Sidebar` from `@gpuixui/components`
+- `SidebarHeader` with a `DropdownMenu` team switcher
+- `Collapsible` around each platform section, with `SidebarMenuSub` for its pages
+- `SidebarMenuAction` for the project dots, `SidebarUserMenu` for the footer
+- `Icon` from `@gpuixui/icons`; `Stack` and `Text` for the switcher
+- `Separator` from `@gpuixui/primitives`
+
+## Notes
+
+`collapsible="icon"` is the block's contract: the panel is 256px open and 48px
+collapsed, the labels clip to icons, and every row's `tooltip` is what icon mode
+shows. The panel starts open, so the screen paints the full labels; the rail and
+⌘/Ctrl+B flip it. The **Playground** section starts open because it is the
+current page.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

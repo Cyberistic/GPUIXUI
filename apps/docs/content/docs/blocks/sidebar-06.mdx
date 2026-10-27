@@ -1,0 +1,29 @@
+---
+title: Sidebar 06 — Dropdown sections
+description: Each section is a dropdown menu, with the newsletter card in the footer.
+---
+
+The whole docs tree folded into four parent rows: a row opens its pages as a
+menu beside the panel, and the footer carries shadcn's newsletter card.
+
+<BlockPreview name="sidebar-06" />
+
+## Composition
+
+- `SidebarProvider`, `Sidebar`, `SidebarInset` and `SidebarRail` from
+  `@gpuixui/components`
+- `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent` and
+  `DropdownMenuItem` for the section menus
+- `SidebarFooter` for the newsletter card, `SidebarInput` for the email field
+- `Icon` from `@gpuixui/icons`; `Stack` and `Text` for the copy
+- `Separator` from `@gpuixui/primitives`
+
+## Notes
+
+The row is the menu trigger, so a press anywhere on the label opens the pages;
+the ellipsis only says the row has more behind it. The card in the footer is the
+panel's own column, not a floating surface, and the menu opens to the right of
+the panel on a wide window.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

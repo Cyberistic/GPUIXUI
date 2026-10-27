@@ -1,0 +1,29 @@
+---
+title: Sidebar 02 — Collapsible sections
+description: Every docs section folds away, over a long page that scrolls under a sticky header.
+---
+
+The sectioned sidebar with each heading acting as its own disclosure, over a
+page long enough that the header has something to stick above.
+
+<BlockPreview name="sidebar-02" />
+
+## Composition
+
+- `SidebarProvider`, `Sidebar`, `SidebarInset` and `SidebarRail` from
+  `@gpuixui/components`
+- `Collapsible`, `CollapsibleTrigger` and `CollapsibleContent` around each
+  `SidebarGroup`
+- `SidebarMenuButton` for the rows, `SidebarInput` for the search field
+- `Breadcrumb` and its parts for the sticky header
+- `Stack`, `Text` and `Separator` from `@gpuixui/primitives`
+
+## Notes
+
+A section that is closed keeps its heading row, so the panel never paints an
+empty group. The sticky header is the `SidebarInset`'s own header; nothing in
+the sidebar needs to know the page scrolled. The body lists every topic in the
+nav so the scroll is real, not a spacer.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

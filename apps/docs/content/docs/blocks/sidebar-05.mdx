@@ -1,0 +1,30 @@
+---
+title: Sidebar 05 — Collapsible submenus
+description: Parent rows open their pages in place; one section starts open.
+---
+
+Each docs section is a row that opens its pages beneath itself. The second
+section lands open and the rest wait behind a plus, so the panel starts at the
+size of its headings.
+
+<BlockPreview name="sidebar-05" />
+
+## Composition
+
+- `SidebarProvider`, `Sidebar`, `SidebarInset` and `SidebarRail` from
+  `@gpuixui/components`
+- `Collapsible` and `CollapsibleContent` per section, with the row as its
+  trigger
+- `SidebarMenuSub`, `SidebarMenuSubItem` and `SidebarMenuSubButton` for the
+  pages
+- `SidebarInput` for the search field, `Icon` for the plus and minus marks
+- `Stack`, `Text` and `Separator` from `@gpuixui/primitives`
+
+## Notes
+
+Only the open section raises its own disclosure, so a reader can tell which
+section the pages belong to. The closed sections are still full rows with a
+plus, never an empty box. The panel keeps its rail.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.

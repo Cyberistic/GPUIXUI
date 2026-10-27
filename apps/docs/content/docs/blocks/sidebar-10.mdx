@@ -1,0 +1,31 @@
+---
+title: Sidebar 10 — Actions popover
+description: The workspace panel with a header popover holding four groups of page actions.
+---
+
+A workspace panel and the page's action popover, drawn open: edit, star, and a
+menu of page actions split into four groups, built from a second, chrome-free
+sidebar.
+
+<BlockPreview name="sidebar-10" />
+
+## Composition
+
+- `SidebarProvider` and `Sidebar` from `@gpuixui/components`
+- `SidebarHeader` with the team row, `SidebarContent` with favorites and
+  workspaces
+- `Popover`, `PopoverTrigger` and `PopoverContent` for the menu
+- a nested `Sidebar collapsible="none"` inside the popover, so the actions use
+  the same rows and groups as the panel
+- `Button` for the star and the actions trigger
+- `Breadcrumb`, `Stack`, `Text` and `Separator`
+
+## Notes
+
+The popover is drawn open on the block page because a closed one is a single
+ellipsis; the recipe's `defaultOpen` gives a reader the same screen without a
+press. The nested sidebar carries no variant or rail — it is a list that happens
+to be a sidebar, which is the point of the composition.
+
+The screen above is a browser reproduction of the recipe's geometry and
+palette; the disclosure under it holds the `@gpuixui/*` source to copy.
