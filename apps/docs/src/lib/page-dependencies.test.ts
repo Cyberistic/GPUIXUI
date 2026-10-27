@@ -206,7 +206,7 @@ describe("the dependency index", () => {
     });
 
     expect(mismatched).toEqual([]);
-    expect(curated).toHaveLength(39);
+    expect(curated).toHaveLength(40);
     // The two pages the package does not also document at this URL.
     expect(index.pages["/docs/components/button"]?.module).toBe(
       "packages/primitives/src/components/Button.tsx",

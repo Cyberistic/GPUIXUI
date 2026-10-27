@@ -87,9 +87,9 @@ const landed = (route: DatePickerRoute): string => {
 const label = (value: string): string =>
   DateTime.format(day(value), {
     day: "numeric",
-    month: "long",
+    month: "short",
     year: "numeric",
-    locale: "en-GB",
+    locale: "en-US",
   });
 
 /** The `date-picker-lifecycle` section, without the headings after it. */

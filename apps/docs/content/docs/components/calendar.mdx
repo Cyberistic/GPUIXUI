@@ -1,0 +1,75 @@
+---
+title: Calendar
+description: A month grid with one roving tab stop — a day, several days, or a span of ISO days
+---
+
+<ComponentPreview name="calendar-single" />
+
+<ComponentPreview name="calendar-range" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Calendar" />
+<ComponentSource name="calendar" file="packages/components/src/calendar.tsx" />
+
+## Usage
+
+```tsx
+import { Calendar } from "@gpuixui/components/calendar";
+import { useState } from "react";
+
+export const ReviewDate = () => {
+  const [day, setDay] = useState<string | null>("2026-10-17");
+
+  return <Calendar selected={day} onSelect={setDay} today="2026-10-17" />;
+};
+```
+
+A span is `mode="range"`; the value is `{ from, to }` of ISO days and `to` is
+`null` until the second day is chosen.
+
+```tsx
+<Calendar
+  mode="range"
+  numberOfMonths={2}
+  disabled={{ weekdays: [0, 6] }}
+  selected={range}
+  onSelect={setRange}
+  today="2026-10-17"
+/>
+```
+
+## API reference
+
+### `Calendar`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `mode` | `"single" \| "multiple" \| "range"` | `"single"` | selects the value shape `selected` and `onSelect` speak |
+| `selected` | `string \| null` · `ReadonlyArray<string>` · `{ from, to } \| null` | none | the controlled selection, typed by `mode` |
+| `onSelect` | `(day \| days \| range) => void` | none | the next selection; the component never stores it |
+| `numberOfMonths` | `1 \| 2` | `1` | months painted side by side, sharing one nav pair |
+| `showOutsideDays` | `boolean` | `true` | paints the neighbouring months' days, which are also selectable |
+| `captionLayout` | `"label" \| "dropdown"` | `"label"` | a month caption, or month and year jump controls |
+| `weekStartsOn` | `0 \| 1` | `1` | the first column: Sunday (`0`) or Monday (`1`) |
+| `fromYear` / `toYear` | `number` | today ± 10 | the years a dropdown or a `Shift` page may reach |
+| `disabled` | `{ before?, after?, range?, weekdays?, filter? }` | none | refuses days; `before`/`after` also bound paging and the arrows |
+| `today` | `string` | the runtime clock | the ISO day painted as today; pass it for a deterministic surface |
+| `defaultMonth` | `string` | the selection or today | the ISO day whose month the grid opens on |
+| `autoFocus` | `boolean` | `false` | takes focus on mount, for a calendar opened inside a popover |
+| `label` | `string` | `"Calendar"` | the grid's accessible name, followed by the selection summary |
+| `onDismiss` | `() => void` | none | called by `Escape`; a popover passes its close |
+| `className` | `string` | none | joined after the recipe, so it wins conflicts |
+
+## Limitations
+
+- No `aria-current`, so today is a border rather than an attribute.
+- No `aria-disabled` and no live region: an unavailable day leaves the tab
+  order, and a selection change is named by the focused cell, not announced.
+- Fixed English labels; no week numbers and no time of day.
+
+## Related
+
+- **Date picker** — the calendar inside a popover field.
+- **Popover** — the surface the picker anchors it in.
+- **Time picker** — the time of day this control does not own.

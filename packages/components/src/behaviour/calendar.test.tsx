@@ -66,10 +66,7 @@ const several = (
   );
 
 /** Put real focus on a day cell, the way Tab or a press would. */
-const focusDay = (
-  root: ReturnType<typeof single>,
-  iso: string,
-): void => {
+const focusDay = (root: ReturnType<typeof single>, iso: string): void => {
   const cell = root.renderer.findByTestId(`date-day-${iso}`);
   if (cell === undefined) throw new Error(`behaviour: no cell for ${iso}`);
   root.renderer.focusElement(cell.id);
@@ -108,7 +105,9 @@ describe("the month grid", () => {
 
   it("paints outside days only when asked", () => {
     const withOutside = single({ showOutsideDays: true });
-    expect(withOutside.renderer.findByTestId("date-day-2026-09-28")).toBeDefined();
+    expect(
+      withOutside.renderer.findByTestId("date-day-2026-09-28"),
+    ).toBeDefined();
     withOutside.unmount();
 
     const clean = single({ showOutsideDays: false });
@@ -209,7 +208,8 @@ describe("the selection", () => {
         theme,
       );
       expect(
-        root.renderer.findByTestId("date-day-2026-10-17")?.style.backgroundColor,
+        root.renderer.findByTestId("date-day-2026-10-17")?.style
+          .backgroundColor,
       ).toBe(primary);
       root.unmount();
     };
@@ -280,9 +280,9 @@ describe("the selection", () => {
     );
     expect(start?.customProps?.["aria-selected"]).toBe(true);
     expect(
-      root.renderer
-        .findByTestId("date-day-2026-10-19")
-        ?.customProps?.["aria-label"],
+      root.renderer.findByTestId("date-day-2026-10-19")?.customProps?.[
+        "aria-label"
+      ],
     ).toBe("19 October 2026, in range");
     // The grid carries the span, so a reader who reaches it hears the value.
     expect(

@@ -8050,7 +8050,27 @@ a merge over a stored theme.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 27/27
+`[x]` `[██████████]` 28/28
+
+`[x]` `packages/components`: **a `Calendar`, and a `DatePicker` composed from
+      it** — the picker's grid had grown its own month maths, its own keyboard
+      and a one-day public value, while shadcn's Calendar is the component a
+      consumer composes and the picker is one surface over it. `calendar.tsx`
+      now owns the grid with `mode` (`single`/`multiple`/`range`) as a
+      discriminated union, one or two months, outside days, disabled matchers
+      (`before`/`after`/`range`/`weekdays`/`filter`), label or dropdown captions,
+      `weekStartsOn`, `fromYear`/`toYear`, a roving tab stop and the key contract
+      (arrows, Home/End, PageUp/PageDown with Shift, Enter, Space, Escape); its
+      arithmetic is pure in `calendar/logic.ts` and its view month/focus live in
+      an Effect store (`calendar/store.ts`). `DatePicker` keeps
+      `DatePickerTrigger`/`Content`/`Calendar` and its ISO-day value, gains
+      `mode="range"` over `{ from, to }` of ISO days, and prints shadcn's labels
+      (`Oct 17, 2026`, `Jan 20 – Feb 4, 2026`). Docs: `calendar.mdx` (package and
+      site), the reworked `date-picker.mdx` with a migration note, demos for
+      single, range and presets, the `COMPONENTS.md`/`docs/component-api.md`
+      rows. Tests: 40 logic cases, 16 Calendar native cases, 24 DatePicker native
+      cases, the docs preview suite, and a screenshot pass through the native
+      test renderer (`.artifacts/live/calendar-*.png`).
 
 `[x]` `packages/primitives`: **one `StackSpec`, two axes** — a `direction` is
       stored with the layout that draws it (a saved workspace records each

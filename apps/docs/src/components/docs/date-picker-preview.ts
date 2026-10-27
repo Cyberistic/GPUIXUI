@@ -180,20 +180,24 @@ export const weekdayLabels = (weekStartsOn: WeekStart): ReadonlyArray<string> =>
   weekStartsOn === 1 ? [...WEEKDAYS.slice(1), WEEKDAYS[0] ?? ""] : WEEKDAYS;
 
 /**
- * Six weeks of seven cells for `month`. A cell is the day it paints, or `null`
- * for the blanks before the first and after the last day — the shipped grid
- * shows no adjacent-month days, so a grid is always 42 cells tall.
+ * Six weeks of seven cells for `month`. A cell is the day it paints; with
+ * outside days hidden the leading and trailing cells are `null`, and with them
+ * shown (the shipped default) they carry their own day.
  */
 export const monthGrid = (
   month: IsoMonth,
   weekStartsOn: WeekStart,
+  showOutsideDays = true,
 ): ReadonlyArray<ReadonlyArray<IsoDay | null>> => {
   const offset = (weekdayOf(`${month}-01`) - weekStartsOn + 7) % 7;
   const count = daysInMonth(month);
   return Array.from({ length: 6 }, (_, week) =>
     Array.from({ length: 7 }, (_, column) => {
-      const index = week * 7 + column - offset + 1;
-      return index < 1 || index > count ? null : `${month}-${pad(index)}`;
+      const index = week * 7 + column - offset;
+      if (index < 0 || index >= count) {
+        return showOutsideDays ? addDays(`${month}-01`, index) : null;
+      }
+      return `${month}-${pad(index + 1)}`;
     }),
   );
 };
@@ -205,6 +209,85 @@ export const monthLabel = (month: IsoMonth): string =>
 /** `"17 October 2026"`, the accessible name of a day cell. */
 export const dayLabel = (day: IsoDay): string =>
   `${dayOfMonth(day)} ${monthLabel(monthOf(day))}`;
+
+const SHORT_MONTHS: ReadonlyArray<string> = MONTHS.map((name) =>
+  name.slice(0, 3),
+);
+
+/** `"Oct 17"`, the month and day a span prints once. */
+const shortDayOfMonth = (day: IsoDay): string =>
+  `${SHORT_MONTHS[Number(day.slice(5, 7)) - 1] ?? ""} ${dayOfMonth(day)}`;
+
+/** `"Oct 17, 2026"`, the way the shipped trigger prints a day. */
+export const shortDayLabel = (day: IsoDay): string =>
+  `${shortDayOfMonth(day)}, ${day.slice(0, 4)}`;
+
+/** One span of days, both ends inclusive; `to` is `null` until it is chosen. */
+export interface PreviewRange {
+  readonly from: IsoDay;
+  readonly to: IsoDay | null;
+}
+
+/** How a cell is painted in a range. */
+export type RangePaint = "start" | "middle" | "end" | null;
+
+/** The paint a day takes in a span, or `null` outside it. */
+export const rangePaint = (
+  range: PreviewRange | null,
+  day: IsoDay,
+): RangePaint => {
+  if (range === null) return null;
+  if (range.from === day) return "start";
+  if (range.to === day) return "end";
+  if (range.to === null) return null;
+  const value = epochDay(day);
+  return value > epochDay(range.from) && value < epochDay(range.to)
+    ? "middle"
+    : null;
+};
+
+/** The next span after a press: a completed span starts again. */
+export const nextRange = (
+  range: PreviewRange | null,
+  day: IsoDay,
+): PreviewRange =>
+  range === null || range.to !== null || day < range.from
+    ? { from: day, to: null }
+    : { from: range.from, to: day };
+
+/** The trigger's span label: `"Jan 20 – Feb 4, 2026"` inside one year. */
+export const formatRange = (
+  range: PreviewRange | null,
+  placeholder: string,
+): string => {
+  if (range === null) return placeholder;
+  if (range.to === null) return shortDayLabel(range.from);
+  return range.from.slice(0, 4) === range.to.slice(0, 4)
+    ? `${shortDayOfMonth(range.from)} – ${shortDayLabel(range.to)}`
+    : `${shortDayLabel(range.from)} – ${shortDayLabel(range.to)}`;
+};
+
+/** The months a calendar paints, starting at `month`. */
+export const monthWindow = (
+  month: IsoMonth,
+  count: 1 | 2,
+): ReadonlyArray<IsoMonth> =>
+  Array.from({ length: count }, (_, index) => addMonths(month, index));
+
+/**
+ * The window's first month once `day` is focused: a day already painted leaves
+ * the window alone, and one outside it pulls the window to keep itself visible.
+ */
+export const windowMonth = (
+  month: IsoMonth,
+  count: 1 | 2,
+  day: IsoDay,
+): IsoMonth => {
+  const target = monthOf(day);
+  if (target < month) return target;
+  const last = addMonths(month, count - 1);
+  return target > last ? addMonths(target, -(count - 1)) : month;
+};
 
 /** Parse the public bound props; an absent or malformed side is unbounded. */
 export const boundsOf = (
@@ -286,7 +369,7 @@ export const moveFocus = (
 export const formatValue = (
   value: IsoDay | null,
   placeholder: string,
-): string => (value === null ? placeholder : dayLabel(value));
+): string => (value === null ? placeholder : shortDayLabel(value));
 
 /** The readout under a preview: the value the control would report. */
 export const describeValue = (value: IsoDay | null): string =>

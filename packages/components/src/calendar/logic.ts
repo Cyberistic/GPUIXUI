@@ -92,10 +92,6 @@ export const formatMonthLabel = (value: DateTime.Utc): string => {
   return `${monthName(parts)} ${parts.year}`;
 };
 
-/** `"Oct"`, the month a dropdown row shows. */
-export const formatMonthShort = (value: DateTime.Utc): string =>
-  shortMonthName(DateTime.toPartsUtc(value));
-
 /** `"Oct"` for month `10`, whatever the year; the caption dropdown's rows. */
 export const monthShortName = (month: number): string =>
   Option.getOrElse(Arr.get(SHORT_MONTHS, month - 1), () => String(month));
@@ -126,10 +122,11 @@ export const formatRangeLabel = (range: DayRange): string => {
   const from = parseIsoDay(range.from);
   const to = Option.flatMap(Option.fromNullishOr(range.to), parseIsoDay);
   return Option.match(to, {
-    onNone: () => Option.match(from, {
-      onNone: () => range.from,
-      onSome: formatShortDay,
-    }),
+    onNone: () =>
+      Option.match(from, {
+        onNone: () => range.from,
+        onSome: formatShortDay,
+      }),
     onSome: (end) => {
       const start = Option.getOrNull(from);
       if (start === null) return formatShortDay(end);
@@ -209,9 +206,7 @@ export const monthGrid = (
     const parts = DateTime.toPartsUtc(day);
     const own =
       parts.year === monthParts.year && parts.month === monthParts.month;
-    return own || showOutsideDays
-      ? Option.some(day)
-      : Option.none();
+    return own || showOutsideDays ? Option.some(day) : Option.none();
   };
 
   return Arr.map(Arr.range(0, 5), (week) =>
@@ -254,7 +249,7 @@ export const visibleMonth = (
 };
 
 /** The first cell of `month`'s grid, which may belong to the month before it. */
-export const gridStart = (
+const gridStart = (
   month: DateTime.Utc,
   weekStartsOn: WeekStart,
 ): DateTime.Utc => {
@@ -264,23 +259,8 @@ export const gridStart = (
 };
 
 /** The last cell of `month`'s six-row grid, which may belong to the month after. */
-export const gridEnd = (
-  month: DateTime.Utc,
-  weekStartsOn: WeekStart,
-): DateTime.Utc => addDays(gridStart(month, weekStartsOn), 41);
-
-/** Whether the painted window holds `day`. */
-export const inWindow = (
-  viewMonth: DateTime.Utc,
-  count: MonthCount,
-  day: DateTime.Utc,
-): boolean => {
-  const millis = DateTime.toEpochMillis(day);
-  return (
-    millis >= DateTime.toEpochMillis(windowStart(viewMonth)) &&
-    millis <= DateTime.toEpochMillis(windowEnd(viewMonth, count))
-  );
-};
+const gridEnd = (month: DateTime.Utc, weekStartsOn: WeekStart): DateTime.Utc =>
+  addDays(gridStart(month, weekStartsOn), 41);
 
 /** Inclusive day bounds; an absent side is unbounded. */
 export interface DayBounds {
@@ -330,10 +310,14 @@ export interface DayMatchers {
  * A calendar's arrows, paging and month controls are bounded by these, so a
  * `before` matcher also stops the narration at the first legal month.
  */
-export const boundsOfMatchers = (matchers: DayMatchers | undefined): DayBounds => {
+export const boundsOfMatchers = (
+  matchers: DayMatchers | undefined,
+): DayBounds => {
   const shift = (end: "before" | "after") =>
     Option.flatMap(
-      Option.fromNullishOr(end === "before" ? matchers?.before : matchers?.after),
+      Option.fromNullishOr(
+        end === "before" ? matchers?.before : matchers?.after,
+      ),
       (iso) =>
         Option.map(parseIsoDay(iso), (day) =>
           addDays(day, end === "before" ? 1 : -1),
@@ -516,7 +500,10 @@ const clampYear = (
   return Option.match(first, {
     onNone: () => day,
     onSome: (month) =>
-      addDays(month, Math.min(parts.day, DateTime.toPartsUtc(lastDayOfMonth(month)).day) - 1),
+      addDays(
+        month,
+        Math.min(parts.day, DateTime.toPartsUtc(lastDayOfMonth(month)).day) - 1,
+      ),
   });
 };
 
@@ -538,14 +525,17 @@ export const moveDay = (
     move.year === true
       ? clampYear(stepOf(from, move, options), options.fromYear, options.toYear)
       : stepOf(from, move, options);
-  // A page is what moves the window; an arrow is what must stay inside it.
+  // A page is what moves the window; an arrow is what must stay inside it. The
+  // paging window is the month the *bounded* target lands in, so a page that
+  // clamps onto `max` is searched in the month `max` belongs to.
+  const bounded = clampToBounds(raw, options.bounds);
   const paging = move.key === "page-up" || move.key === "page-down";
-  const windowFirst = paging ? startOfMonth(raw) : options.viewMonth;
+  const windowFirst = paging ? startOfMonth(bounded) : options.viewMonth;
   const windowLast = paging
-    ? startOfMonth(raw)
+    ? startOfMonth(bounded)
     : addMonths(options.viewMonth, options.months - 1);
-  const ownFirst = paging ? startOfMonth(raw) : startOfMonth(from);
-  const ownLast = paging ? lastDayOfMonth(raw) : lastDayOfMonth(from);
+  const ownFirst = paging ? startOfMonth(bounded) : startOfMonth(from);
+  const ownLast = paging ? lastDayOfMonth(bounded) : lastDayOfMonth(from);
   const lower = options.showOutsideDays
     ? gridStart(windowFirst, options.weekStartsOn)
     : ownFirst;
@@ -558,7 +548,7 @@ export const moveDay = (
     if (millis > DateTime.toEpochMillis(upper)) return upper;
     return day;
   };
-  const target = clamp(clampToBounds(raw, options.bounds));
+  const target = clamp(bounded);
   const direction =
     DateTime.toEpochMillis(target) < DateTime.toEpochMillis(from) ? -1 : 1;
   const inside = (day: DateTime.Utc): boolean => {
@@ -601,9 +591,10 @@ export const singleSelection = (day: string | null): Selection => ({
 });
 
 /** A several-days selection. */
-export const multipleSelection = (
-  days: ReadonlyArray<string>,
-): Selection => ({ mode: "multiple", days });
+export const multipleSelection = (days: ReadonlyArray<string>): Selection => ({
+  mode: "multiple",
+  days,
+});
 
 /** A span selection. */
 export const rangeSelection = (range: DayRange | null): Selection => ({
@@ -669,24 +660,6 @@ export const toggleDay = (
     ? Arr.filter(days, (held) => held !== day)
     : [...days, day];
 
-/** The selection after a press on `day`: single day, toggled set, or range. */
-export const nextSelection = (selection: Selection, day: string): Selection =>
-  Match.value(selection).pipe(
-    Match.when({ mode: "single" }, (current) => ({
-      mode: "single" as const,
-      day: nextDay(current.day, day),
-    })),
-    Match.when({ mode: "multiple" }, (current) => ({
-      mode: "multiple" as const,
-      days: toggleDay(current.days, day),
-    })),
-    Match.when({ mode: "range" }, (current) => ({
-      mode: "range" as const,
-      range: nextRange(current.range, day),
-    })),
-    Match.exhaustive,
-  );
-
 /** The same day-of-month inside `month`, clamped to that month's length. */
 export const dayInMonth = (
   value: DateTime.Utc,
@@ -745,7 +718,10 @@ export const describeSelection = (selection: Selection): string => {
   if (selection.mode === "single")
     return Option.match(
       Option.flatMap(Option.fromNullishOr(selection.day), parseIsoDay),
-      { onNone: () => "no day selected", onSome: (day) => `${formatDayLabel(day)} selected` },
+      {
+        onNone: () => "no day selected",
+        onSome: (day) => `${formatDayLabel(day)} selected`,
+      },
     );
   if (selection.mode === "multiple")
     return selection.days.length === 0
@@ -784,7 +760,10 @@ export const formatSelectionLabel = (
     ),
     Match.when({ mode: "multiple" }, (current) =>
       current.days.length === 1
-        ? formatSelectionLabel(singleSelection(current.days[0] ?? null), placeholder)
+        ? formatSelectionLabel(
+            singleSelection(current.days[0] ?? null),
+            placeholder,
+          )
         : `${current.days.length} days`,
     ),
     Match.when({ mode: "range" }, (current) =>

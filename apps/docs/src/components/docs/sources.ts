@@ -1,5 +1,6 @@
 import auth from "./auth-blocks.tsx?raw";
 import accordion from "../../../../../packages/components/src/accordion.tsx?raw";
+import calendar from "../../../../../packages/components/src/calendar.tsx?raw";
 import alert from "../../../../../packages/components/src/alert.tsx?raw";
 import avatar from "../../../../../packages/components/src/avatar.tsx?raw";
 import badge from "../../../../../packages/components/src/badge.tsx?raw";
@@ -53,6 +54,7 @@ export const componentSources = {
   breadcrumb,
   button,
   card,
+  calendar,
   carousel,
   checkbox,
   collapsible,

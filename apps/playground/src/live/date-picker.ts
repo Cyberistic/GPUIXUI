@@ -70,13 +70,13 @@ export const DATE_PICKER_PLACEHOLDER = "Pick a date";
 /**
  * The labels the trigger paints for the two days the probe asserts.
  *
- * The component formats a day as `"27 March 2026"` (`formatDayLabel`); the
- * fixture restates the labels the window check names, and
- * `date-picker.test.ts` derives them again from `Intl` in UTC so a mistyped
- * month cannot pass.
+ * The component formats a day the way shadcn's date picker does
+ * (`"Mar 11, 2026"`, `formatShortDay`); the fixture restates the labels the
+ * window check names, and `date-picker.test.ts` derives them again from `Intl`
+ * in UTC so a mistyped month cannot pass.
  */
-export const DATE_PICKER_TODAY_LABEL = "11 March 2026";
-export const DATE_PICKER_CHOSEN_LABEL = "27 March 2026";
+export const DATE_PICKER_TODAY_LABEL = "Mar 11, 2026";
+export const DATE_PICKER_CHOSEN_LABEL = "Mar 27, 2026";
 
 /** The focused day's `testId`, one per grid cell. */
 export const datePickerCell = (iso: string): string => `date-day-${iso}`;

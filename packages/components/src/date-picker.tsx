@@ -340,7 +340,11 @@ const RangePicker = (props: RangeDatePickerProps): ReactElement => {
 
 /** The picker's state. Compose the trigger and the content inside it. */
 export const DatePicker = (props: DatePickerProps): ReactElement =>
-  props.mode === "range" ? <RangePicker {...props} /> : <SinglePicker {...props} />;
+  props.mode === "range" ? (
+    <RangePicker {...props} />
+  ) : (
+    <SinglePicker {...props} />
+  );
 
 /** {@link DatePickerTrigger} props. */
 export interface DatePickerTriggerProps extends Omit<

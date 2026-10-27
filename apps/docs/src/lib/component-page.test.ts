@@ -232,6 +232,7 @@ const PAGE_PARTS: Readonly<
       types: ["MenuSubProps", "MenuSubTriggerProps", "MenuSubContentProps"],
     },
   ],
+  "calendar.mdx": [{ part: "Calendar", types: ["CalendarProps"] }],
   "date-picker.mdx": [
     { part: "DatePicker", types: ["DatePickerProps"] },
     { part: "DatePickerTrigger", types: ["DatePickerTriggerProps"] },

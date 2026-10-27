@@ -1,11 +1,15 @@
 ---
 title: Date picker
-description: One day, chosen from a six-row month grid in a popover — ISO value, inclusive bounds and a keyboard path that clamps
+description: A day or a span of days, chosen from a Calendar in a popover — ISO values, inclusive bounds and a keyboard path that clamps
 ---
 
 <ComponentPreview name="date-picker-workflow" />
 
 <ComponentPreview name="date-picker-states" />
+
+<ComponentPreview name="date-picker-range" />
+
+<ComponentPreview name="date-picker-presets" />
 
 ## Installation
 
@@ -44,6 +48,24 @@ export const DeploymentWindow = () => {
 };
 ```
 
+A span is `mode="range"`: the value is `{ from, to }` of ISO days, the surface
+opens on two months, and it closes when the second day completes the span.
+
+```tsx
+<DatePicker
+  mode="range"
+  clearable
+  onValueChange={setWindow}
+  today="2026-10-22"
+  value={window}
+>
+  <DatePickerTrigger label="Booking window" />
+  <DatePickerContent>
+    <DatePickerCalendar label="Booking calendar" />
+  </DatePickerContent>
+</DatePicker>
+```
+
 ## Composition
 
 ```text
@@ -59,22 +81,27 @@ DatePicker
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `string \| null` | — | the controlled ISO day; `undefined` makes the picker uncontrolled |
-| `defaultValue` | `string \| null` | `null` | the opening day when uncontrolled |
-| `onValueChange` | `(value: string \| null) => void` | none | the chosen day, or `null` from Clear |
-| `weekStartsOn` | `0 \| 1` | `1` | the first column: Sunday (`0`) or Monday (`1`) |
+| `mode` | `"single" \| "range"` | `"single"` | selects the value shape `value` and `onValueChange` speak |
+| `value` | `string \| null` · `{ from, to } \| null` | none | the controlled value; `undefined` makes the picker uncontrolled |
+| `defaultValue` | `string \| null` · `{ from, to } \| null` | `null` | the opening value when uncontrolled |
+| `onValueChange` | `(value \| range \| null) => void` | none | the chosen day, the span, or `null` from Clear |
+| `weekStartsOn` | `0 \| 1` | `1` | the grid's first column |
 | `min` | `string` | unbounded | the first selectable ISO day, inclusive |
 | `max` | `string` | unbounded | the last selectable ISO day, inclusive |
-| `clearable` | `boolean` | `false` | adds the Clear row while a day is set |
+| `clearable` | `boolean` | `false` | adds the Clear row while a value is set |
 | `disabled` | `boolean` | `false` | leaves the tab order and does not open the surface |
-| `today` | `string` | the runtime clock | the ISO day the grid marks as today; pass it for a deterministic surface |
+| `today` | `string` | the runtime clock | the ISO day the grid marks as today |
+| `numberOfMonths` | `1 \| 2` | `1`, or `2` in range mode | months painted side by side |
+| `showOutsideDays` | `boolean` | `true` | paints the neighbouring months' days |
+| `captionLayout` | `"label" \| "dropdown"` | `"label"` | a caption, or month and year jump controls |
+| `fromYear` / `toYear` | `number` | today ± 10 | the years a dropdown may reach |
 | `children` | `ReactNode` | none | the trigger and the content, directly inside |
 
 ### `DatePickerTrigger`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `placeholder` | `string` | `"Pick a date"` | the text painted while no day is set |
+| `placeholder` | `string` | `"Pick a date"` | the text painted while no value is set |
 | `label` | `string` | — | the trigger's accessible name (the caret is decorative) |
 | `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` | the trigger's fill and label role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | the control height the trigger takes from the theme's density |
@@ -100,8 +127,29 @@ DatePicker
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` | `"Calendar"` | the grid's accessible name |
 
+## Migration
+
+`DatePickerTrigger`, `DatePickerContent` and `DatePickerCalendar` keep their
+names and props; `DatePickerCalendar` is now a thin wrapper over `Calendar`, so
+the old composition keeps working and the grid gains the new keyboard, the
+dropdown caption and the span modes.
+
+Two things changed on purpose:
+
+- the trigger prints shadcn's labels — `"Oct 17, 2026"` instead of
+  `"17 October 2026"`, and `"Jan 20 – Feb 4, 2026"` for a span;
+- the surface paints the neighbouring months' days by default. Pass
+  `showOutsideDays={false}` for the old blank-cell grid.
+
 ## Limitations
 
-- The grid is `grid`/`row`/`gridcell`; a cell's label is the full day.
-- **No `aria-current`** in 0.11.0: today is a border, not an attribute.
-- **No `aria-disabled`** in 0.11.0: an unavailable day leaves the tab order and its name ends `, unavailable`.
+- No `aria-current`: today is a border, not an attribute.
+- No `aria-disabled`: an unavailable day leaves the tab order and is named
+  "unavailable".
+- Fixed English labels; time of day is the separate Time picker.
+
+## Related
+
+- **Calendar** — the grid this control anchors in a popover.
+- **Popover** — the surface and its dismissal rules.
+- **Time picker** — the time of day this control does not own.

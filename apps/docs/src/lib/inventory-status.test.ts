@@ -263,7 +263,7 @@ describe("the status a package page reports", () => {
     });
 
     expect(missing).toEqual([]);
-    expect(curatedPages.length).toBe(39);
+    expect(curatedPages.length).toBe(40);
   });
 
   it("throws on a title two rows could answer, instead of guessing", () => {

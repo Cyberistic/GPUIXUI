@@ -58,6 +58,7 @@ components/avatar.mdx        Curated: the fallback table, the measured dot roles
 components/badge.mdx         Curated: the seven variants, the fixed sizes, the press it leaves to its row
 components/breadcrumb.mdx    Curated: the collapse budget, the separator that leaves with its item
 components/button.mdx        Curated: previews, install, source, variants and its own API table
+components/calendar.mdx      Curated: three selection modes, outside days, the roving key path
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
 components/carousel.mdx      Curated: discrete stepping, the dot pill and the kept slides
 components/checkbox.mdx      Curated: the three states, the 24px target, the mixed parent
@@ -67,7 +68,7 @@ components/combobox.mdx      Curated: the ranked list, the disabled row, the cre
 components/command-menu.mdx  Curated: the palette's matcher, group ranking, keys and exit window
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
 components/context-menu.mdx  Curated: the pointer point, the restore gate, the type-ahead window
-components/date-picker.mdx   Curated: the six-row grid, inclusive bounds, the clamped key path
+components/date-picker.mdx   Curated: the calendar in a popover, ISO or span values, inclusive bounds
 components/dialog.mdx        Curated: a real confirmation workflow
 components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit frame
 components/dropdown-menu.mdx Curated: highlighted row is the focused row

@@ -52,8 +52,8 @@ export const CalendarExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Weekends are refused: the arrows step over them. Two months are painted
-          side by side, and Escape is the owner's to handle.
+          Weekends are refused: the arrows step over them. Two months are
+          painted side by side, and Escape is the owner's to handle.
         </text>
       </div>
     </Card>
