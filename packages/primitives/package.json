@@ -24,6 +24,10 @@
     "./scroll-area": {
       "types": "./src/scroll-area.ts",
       "default": "./src/scroll-area.ts"
+    },
+    "./select": {
+      "types": "./src/select.ts",
+      "default": "./src/select.ts"
     }
   },
   "scripts": {

@@ -1,5 +1,6 @@
 /**
- * DatePicker behaviour, in the real GPUix renderer.
+ * DatePicker behaviour, in the real GPUix renderer: the trigger's shadcn labels,
+ * the calendar it now delegates to, and the range mode that calendar added.
  *
  * The bugs these guard: a popover that opens without focusing a day; a selection
  * that reports a `DateTime` or a locale string instead of the ISO day; a
@@ -79,11 +80,42 @@ const open = (picker: ReturnType<typeof renderComponent>): void => {
   clickCentreOf(picker, "date-picker-trigger");
 };
 
+/** A span picker: two months, the same fixed today, and the ISO-pair value. */
+const RangePicker = ({
+  value,
+  defaultValue,
+  onValueChange,
+  clearable,
+}: {
+  readonly value?: { readonly from: string; readonly to: string | null } | null;
+  readonly defaultValue?: { readonly from: string; readonly to: string | null };
+  readonly onValueChange?: (
+    value: { readonly from: string; readonly to: string | null } | null,
+  ) => void;
+  readonly clearable?: boolean;
+}) => (
+  <div style={{ width: 720, padding: 40 }}>
+    <DatePicker
+      mode="range"
+      today="2026-10-17"
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange}
+      clearable={clearable}
+    >
+      <DatePickerTrigger label="Booking window" />
+      <DatePickerContent>
+        <DatePickerCalendar label="Booking calendar" />
+      </DatePickerContent>
+    </DatePicker>
+  </div>
+);
+
 describe("DatePicker", () => {
   it("opens on the selected month and focuses a day", () => {
     const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
 
-    expect(picker.renderer.getAllText()).toContain("17 October 2026");
+    expect(picker.renderer.getAllText()).toContain("Oct 17, 2026");
 
     open(picker);
 
@@ -161,7 +193,7 @@ describe("DatePicker", () => {
         picker.renderer.findByTestId("date-picker-content"),
       ).toBeUndefined(),
     );
-    expect(picker.renderer.getAllText()).toContain("20 October 2026");
+    expect(picker.renderer.getAllText()).toContain("Oct 20, 2026");
     expect(picker.renderer.getAllText()).not.toContain("Pick a date");
     expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 
@@ -178,8 +210,8 @@ describe("DatePicker", () => {
     clickCentreOf(picker, "date-day-2026-10-20");
 
     expect(onValueChange).toHaveBeenCalledWith("2026-10-20");
-    expect(picker.renderer.getAllText()).toContain("17 October 2026");
-    expect(picker.renderer.getAllText()).not.toContain("20 October 2026");
+    expect(picker.renderer.getAllText()).toContain("Oct 17, 2026");
+    expect(picker.renderer.getAllText()).not.toContain("Oct 20, 2026");
 
     picker.unmount();
   });
@@ -215,7 +247,7 @@ describe("DatePicker", () => {
 
     expect(picker.renderer.findByText("November 2026")).toBeDefined();
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-11-17"));
-    expect(picker.renderer.getAllText()).toContain("17 October 2026");
+    expect(picker.renderer.getAllText()).toContain("Oct 17, 2026");
     expect(onValueChange).not.toHaveBeenCalled();
 
     picker.unmount();
@@ -246,7 +278,7 @@ describe("DatePicker", () => {
     expect(picker.renderer.findByText("November 2026")).toBeDefined();
     clickCentreOf(picker, "date-day-2026-11-03");
 
-    expect(picker.renderer.getAllText()).toContain("3 November 2026");
+    expect(picker.renderer.getAllText()).toContain("Nov 3, 2026");
 
     picker.unmount();
   });
@@ -312,7 +344,7 @@ describe("DatePicker", () => {
       ).toBeUndefined(),
     );
     expect(onValueChange).not.toHaveBeenCalled();
-    expect(picker.renderer.getAllText()).toContain("17 October 2026");
+    expect(picker.renderer.getAllText()).toContain("Oct 17, 2026");
 
     picker.unmount();
   });
@@ -349,8 +381,8 @@ describe("DatePicker", () => {
     picker.renderer.simulateKeystrokes("left");
 
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
-    expect(picker.renderer.getAllText()).toContain("18 October 2026");
-    expect(picker.renderer.getAllText()).not.toContain("17 October 2026");
+    expect(picker.renderer.getAllText()).toContain("Oct 18, 2026");
+    expect(picker.renderer.getAllText()).not.toContain("Oct 17, 2026");
 
     picker.unmount();
   });
@@ -459,6 +491,81 @@ describe("DatePicker", () => {
         "aria-label"
       ],
     ).toBe("Due date");
+
+    picker.unmount();
+  });
+
+  it("formats a span the way shadcn does, in one year", () => {
+    const picker = renderComponent(
+      <RangePicker
+        defaultValue={{ from: "2026-01-20", to: "2026-02-04" }}
+      />,
+    );
+
+    expect(picker.renderer.getAllText()).toContain("Jan 20 – Feb 4, 2026");
+    picker.unmount();
+  });
+
+  it("paints two months and reports a start, then a completed span", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<RangePicker onValueChange={onValueChange} />);
+
+    // The placeholder is shadcn's, and range mode opens on two months.
+    expect(picker.renderer.getAllText()).toContain("Pick a date");
+    open(picker);
+    expect(picker.renderer.findByText("October 2026")).toBeDefined();
+    expect(picker.renderer.findByText("November 2026")).toBeDefined();
+
+    clickCentreOf(picker, "date-day-2026-10-20");
+    expect(onValueChange).toHaveBeenLastCalledWith({
+      from: "2026-10-20",
+      to: null,
+    });
+    // The first press keeps the surface open: the span is not complete.
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+    expect(
+      picker.renderer.findByTestId("date-day-2026-10-20")?.style
+        .backgroundColor,
+    ).toBe(darkTheme.colors.primary);
+
+    clickCentreOf(picker, "date-day-2026-11-04");
+    expect(onValueChange).toHaveBeenLastCalledWith({
+      from: "2026-10-20",
+      to: "2026-11-04",
+    });
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
+    expect(picker.renderer.getAllText()).toContain("Oct 20 – Nov 4, 2026");
+    expect(focusedTestId(picker)).toEqual(
+      Option.some("date-picker-trigger"),
+    );
+
+    picker.unmount();
+  });
+
+  it("clears a span back to null", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <RangePicker
+        clearable
+        defaultValue={{ from: "2026-10-20", to: "2026-11-04" }}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    open(picker);
+    clickCentreOf(picker, "date-clear");
+
+    expect(onValueChange).toHaveBeenCalledWith(null);
+    await waitFor(() =>
+      expect(
+        picker.renderer.findByTestId("date-picker-content"),
+      ).toBeUndefined(),
+    );
+    expect(picker.renderer.getAllText()).toContain("Pick a date");
 
     picker.unmount();
   });

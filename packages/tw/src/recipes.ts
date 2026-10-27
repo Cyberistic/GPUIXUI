@@ -562,26 +562,28 @@ export const DATE_PICKER_CARET = "text-xs font-sans text-muted-foreground";
 export const DATE_PICKER_CONTENT =
   "flex flex-col gap-2 p-2 bg-popover text-popover-foreground rounded-md border border-border pointer-events-auto";
 
-/** `date-picker.tsx` — the month nav row. */
-export const DATE_PICKER_NAV =
-  "flex flex-row items-center justify-between gap-2";
+/** `calendar.tsx` — the month row: one panel per painted month. */
+export const CALENDAR_ROOT = "flex flex-row items-start";
 
-/** `date-picker.tsx` — the month caption. */
-export const DATE_PICKER_MONTH =
+/** `calendar.tsx` — one month panel (caption, weekday header, grid). */
+export const CALENDAR_MONTH = "flex flex-col gap-0.5";
+
+/** `calendar.tsx` — the month caption. */
+export const CALENDAR_MONTH_LABEL =
   "text-sm font-medium font-sans text-foreground";
 
-/** `date-picker.tsx` — the grid column. The cell size (`CELL`) and day states
- * stay in `style` (the cell is a measured square, and selection/today/focus are
+/** `calendar.tsx` — the grid column. The cell size (`CELL`) and day states stay
+ * in `style` (the cell is a measured square, and selection/today/focus are
  * state). */
-export const DATE_PICKER_GRID = "flex flex-col gap-0.5";
+export const CALENDAR_GRID = "flex flex-col gap-0.5";
 
-/** `date-picker.tsx` — the weekday header cell. */
-export const DATE_PICKER_WEEKDAY =
+/** `calendar.tsx` — the weekday header cell. */
+export const CALENDAR_WEEKDAY =
   "text-xs font-sans text-muted-foreground text-center";
 
-/** `date-picker.tsx` — a day cell's resting box; the measured `CELL` square and
- * the selected/today/focus states stay in `style`. */
-export const DATE_PICKER_DAY =
+/** `calendar.tsx` — a day cell's resting box; the measured `CELL` square and the
+ * selected/range/today/focus states stay in `style`. */
+export const CALENDAR_DAY =
   "text-xs font-sans flex items-center justify-center rounded-sm";
 
 /** `time-picker.tsx` — the field group. The density height and focus ring stay

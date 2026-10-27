@@ -190,15 +190,16 @@ import {
   COMBOBOX_TRIGGER,
   COMBOBOX_TRIGGER_TEXT,
   CONFIRM_DIALOG_BUSY,
+  CALENDAR_DAY,
+  CALENDAR_GRID,
+  CALENDAR_MONTH,
+  CALENDAR_MONTH_LABEL,
+  CALENDAR_ROOT,
+  CALENDAR_WEEKDAY,
   DATE_PICKER_CARET,
   DATE_PICKER_CONTENT,
-  DATE_PICKER_DAY,
-  DATE_PICKER_GRID,
-  DATE_PICKER_MONTH,
-  DATE_PICKER_NAV,
   DATE_PICKER_TRIGGER,
   DATE_PICKER_TRIGGER_TEXT,
-  DATE_PICKER_WEEKDAY,
   DRAWER_CONTENT,
   DRAWER_DESCRIPTION,
   DRAWER_FOOTER,
@@ -1682,7 +1683,7 @@ describe("Combobox recipe", () => {
 });
 
 describe("DatePicker recipe", () => {
-  it("resolves the trigger, content, nav, grid and cells", () => {
+  it("resolves the trigger and the popup surface", () => {
     expect(style(DATE_PICKER_TRIGGER)).toEqual({
       display: "flex",
       flexDirection: "row",
@@ -1717,33 +1718,41 @@ describe("DatePicker recipe", () => {
       borderColor: darkTheme.colors.border,
       pointerEvents: "auto",
     });
-    expect(style(DATE_PICKER_NAV)).toEqual({
+  });
+});
+
+describe("Calendar recipe", () => {
+  it("resolves the month row, caption, grid and cells", () => {
+    expect(style(CALENDAR_ROOT)).toEqual({
       display: "flex",
       flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 8,
+      alignItems: "flex-start",
     });
-    expect(style(DATE_PICKER_MONTH)).toEqual({
+    expect(style(CALENDAR_MONTH)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+    });
+    expect(style(CALENDAR_MONTH_LABEL)).toEqual({
       fontSize: 14,
       lineHeight: 20,
       fontWeight: 500,
       fontFamily: sans,
       color: darkTheme.colors.foreground,
     });
-    expect(style(DATE_PICKER_GRID)).toEqual({
+    expect(style(CALENDAR_GRID)).toEqual({
       display: "flex",
       flexDirection: "column",
       gap: 2,
     });
-    expect(style(DATE_PICKER_WEEKDAY)).toEqual({
+    expect(style(CALENDAR_WEEKDAY)).toEqual({
       fontSize: 12,
       lineHeight: 16,
       fontFamily: sans,
       color: darkTheme.colors.mutedForeground,
       textAlign: "center",
     });
-    expect(style(DATE_PICKER_DAY)).toEqual({
+    expect(style(CALENDAR_DAY)).toEqual({
       fontSize: 12,
       lineHeight: 16,
       fontFamily: sans,
@@ -2336,11 +2345,12 @@ describe("no unsupported classes", () => {
       DATE_PICKER_TRIGGER_TEXT,
       DATE_PICKER_CARET,
       DATE_PICKER_CONTENT,
-      DATE_PICKER_NAV,
-      DATE_PICKER_MONTH,
-      DATE_PICKER_GRID,
-      DATE_PICKER_WEEKDAY,
-      DATE_PICKER_DAY,
+      CALENDAR_ROOT,
+      CALENDAR_MONTH,
+      CALENDAR_MONTH_LABEL,
+      CALENDAR_GRID,
+      CALENDAR_WEEKDAY,
+      CALENDAR_DAY,
       TIME_PICKER_ROOT,
       TIME_PICKER_SEGMENT,
       TIME_PICKER_SEPARATOR,

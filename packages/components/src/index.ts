@@ -14,6 +14,7 @@ export * from "./avatar-group.js";
 export * from "./badge.js";
 export * from "./breadcrumb.js";
 export * from "./bubbles.js";
+export * from "./calendar.js";
 export * from "./carousel.js";
 export * from "./card.js";
 export * from "./chat.js";

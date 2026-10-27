@@ -1,28 +1,27 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * DatePicker: one day, chosen from a month grid in a popover.
+ * DatePicker: a day, or a span of days, chosen from a `Calendar` in a popover.
  *
- * GPUix has no calendar primitive and no native date input, so the grid is ours
- * (`date-picker/calendar.ts`, pure `DateTime` math) and the surface is the
- * package's **Popover** — which brings the anchored layer, the dismiss stack and
- * Escape focus-return with it.
+ * The grid is the package's `Calendar` (`calendar.tsx`); the surface is the
+ * package's **Popover**, which brings the anchored layer, the dismiss stack and
+ * Escape focus-return with it. This file owns the value, the open state, the
+ * field-shaped trigger and the Clear row — nothing about the month maths.
  *
- * The public value is an ISO day (`YYYY-MM-DD`), never a `DateTime` and never a
- * locale-formatted string: a stored value must not depend on the display.
- * `min`/`max` bound selection inclusively, keyboard movement clamps to them, and
- * `clearable` adds the reset to `null`; none of that rewrites a controlled value.
+ * The public value is an ISO day (`YYYY-MM-DD`) in `"single"` mode and
+ * `{ from, to }` of ISO days in `"range"`: never a `DateTime` and never a
+ * locale-formatted string, because a stored value must not depend on the
+ * display. `min`/`max` bound selection inclusively and `clearable` adds the
+ * reset to `null`; neither rewrites a controlled value.
  *
- * The root owns the value, the bounds and the open state; `DatePickerTrigger`,
- * `DatePickerContent` and `DatePickerCalendar` are the caller's parts. The
- * calendar keeps its own view month and focused day — those reset on open and
- * are not the component's value.
+ * The trigger prints shadcn's labels: `"Pick a date"`, `"Jan 20, 2026"`, and
+ * `"Jan 20 – Feb 4, 2026"` for a span inside one year.
  *
- * Known scope, recorded in the docs: fixed English month/day labels (no i18n
- * layer in the repo yet), no adjacent-month days in the grid, and no time: a time
- * of day is the separate TimePicker.
+ * Known scope, recorded in the docs: fixed English labels (no i18n layer), no
+ * time (a time of day is the separate TimePicker), and the runtime's closed
+ * `aria-*` set (no `aria-current`, no live region).
  */
 
-import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
@@ -35,16 +34,9 @@ import {
   cn,
   DATE_PICKER_CARET,
   DATE_PICKER_CONTENT,
-  DATE_PICKER_DAY,
-  DATE_PICKER_GRID,
-  DATE_PICKER_MONTH,
-  DATE_PICKER_NAV,
   DATE_PICKER_TRIGGER,
   DATE_PICKER_TRIGGER_TEXT,
-  DATE_PICKER_WEEKDAY,
 } from "@gpuixui/tw";
-import { Match, pipe } from "effect";
-import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import {
@@ -53,41 +45,31 @@ import {
   useContext,
   useLayoutEffect,
   useRef,
-  useState,
+  type ReactElement,
 } from "react";
+import { Calendar } from "./calendar.js";
 import {
-  addDays,
-  addMonths,
   boundsOf,
-  canBrowseMonth,
-  clampToBounds,
-  formatDayLabel,
   formatIsoDay,
-  formatMonthLabel,
-  isAvailable,
-  isSameDay,
-  lastDayOfMonth,
-  monthGrid,
+  formatSelectionLabel,
+  hasSelection,
   parseIsoDay,
-  startOfMonth,
-  weekdayLabels,
+  rangeOf,
+  rangeSelection,
+  singleSelection,
+  todayUtc,
+  type CaptionLayout,
   type DayBounds,
+  type DayMatchers,
+  type DayRange,
+  type MonthCount,
+  type Selection,
   type WeekStart,
-} from "./date-picker/calendar.js";
-import { Button, IconButton } from "./internal/button.js";
+} from "./calendar/logic.js";
+import { makePickerOpen } from "./date-picker/store.js";
+import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
-import {
-  isActivation,
-  isDown,
-  isFirst,
-  isLast,
-  isLeft,
-  isPageDown,
-  isPageUp,
-  isRight,
-  isUp,
-  swallowsDefault,
-} from "./internal/key.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import {
   assertParts,
   type PartChildren,
@@ -96,20 +78,26 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, controlRing, useTheme } from "./internal/theme.js";
+import { controlHeight, useTheme } from "./internal/theme.js";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover.js";
 
 /** The rules a date-picker part follows; throws outside a {@link DatePicker}. */
 interface DatePickerContextValue {
-  readonly selectedDay: Option.Option<DateTime.Utc>;
-  readonly selectedIso: Option.Option<string>;
+  readonly selection: Selection;
   readonly bounds: DayBounds;
+  readonly matchers: DayMatchers | undefined;
   readonly weekStartsOn: WeekStart;
   readonly todayDay: DateTime.Utc;
   readonly clearable: boolean;
   readonly disabled: boolean;
   readonly open: boolean;
-  readonly choose: (day: DateTime.Utc) => void;
+  readonly numberOfMonths: MonthCount;
+  readonly showOutsideDays: boolean;
+  readonly captionLayout: CaptionLayout;
+  readonly fromYear: number | undefined;
+  readonly toYear: number | undefined;
+  readonly chooseSingle: (day: string | null) => void;
+  readonly chooseRange: (range: DayRange | null) => void;
   readonly clear: () => void;
   readonly closeToTrigger: () => void;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
@@ -128,12 +116,8 @@ const useDatePicker = (): DatePickerContextValue => {
   return value;
 };
 
-/** {@link DatePicker} props. */
-export interface DatePickerProps {
-  /** The controlled ISO day, or `null` for none. `undefined` means uncontrolled. */
-  readonly value?: string | null;
-  readonly defaultValue?: string | null;
-  readonly onValueChange?: (value: string | null) => void;
+/** The props both modes share. */
+export interface DatePickerBaseProps {
   /** Default `1` (Monday). */
   readonly weekStartsOn?: WeekStart;
   /**
@@ -143,7 +127,7 @@ export interface DatePickerProps {
   readonly min?: string;
   /** The last selectable ISO day, inclusive. Absent or malformed is unbounded. */
   readonly max?: string;
-  /** Show a `Clear` action in the surface while a day is selected. Default `false`. */
+  /** Show a `Clear` action in the surface while a value is set. Default `false`. */
   readonly clearable?: boolean;
   readonly disabled?: boolean;
   /**
@@ -151,107 +135,212 @@ export interface DatePickerProps {
    * it when a test or a server boundary needs a fixed day.
    */
   readonly today?: string;
+  /** Months painted side by side. Default `1`, or `2` in range mode. */
+  readonly numberOfMonths?: MonthCount;
+  /** Paint adjacent-month days. Default `true`. */
+  readonly showOutsideDays?: boolean;
+  /** Default `"label"`: a caption, or month and year dropdowns. */
+  readonly captionLayout?: CaptionLayout;
+  readonly fromYear?: number;
+  readonly toYear?: number;
   readonly children?: PartChildren;
 }
 
+/** One day at a time; the ISO day, or `null` for none. */
+export interface SingleDatePickerProps extends DatePickerBaseProps {
+  readonly mode?: "single";
+  /** The controlled ISO day, or `null` for none. `undefined` means uncontrolled. */
+  readonly value?: string | null;
+  readonly defaultValue?: string | null;
+  readonly onValueChange?: (value: string | null) => void;
+}
+
+/** A span of days; `to` is absent until the second day is chosen. */
+export interface RangeDatePickerProps extends DatePickerBaseProps {
+  readonly mode: "range";
+  /** The controlled span, or `null` for none. `undefined` means uncontrolled. */
+  readonly value?: DayRange | null;
+  readonly defaultValue?: DayRange | null;
+  readonly onValueChange?: (value: DayRange | null) => void;
+}
+
+/** {@link DatePicker} props, one variant per mode. */
+export type DatePickerProps = SingleDatePickerProps | RangeDatePickerProps;
+
+/** What the root needs from the mode: its selection and how to change it. */
+interface PickerRootProps {
+  readonly base: DatePickerBaseProps;
+  readonly selection: Selection;
+  /** Store the next selection; the returned flag closes the surface. */
+  readonly commit: (next: Selection) => boolean;
+  readonly clear: () => void;
+}
+
 /** The day the picker calls today, at UTC midnight. */
-const todayOf = (value: string | undefined): DateTime.Utc => {
-  const parsed = Option.flatMap(Option.fromNullishOr(value), parseIsoDay);
-  return Option.getOrElse(parsed, () =>
-    DateTime.startOf("day")(DateTime.nowUnsafe()),
+const todayOf = (value: string | undefined): DateTime.Utc =>
+  Option.getOrElse(
+    Option.flatMap(Option.fromNullishOr(value), parseIsoDay),
+    () => todayUtc(DateTime.nowUnsafe()),
   );
+
+/**
+ * The bounds as matchers: `react-day-picker` disables the days *before* a
+ * `before` matcher, while `min` is itself selectable, so the edge moves by a day.
+ */
+const matchersOf = (
+  bounds: DayBounds,
+  disabled: boolean,
+): DayMatchers | undefined => {
+  const before = Option.map(bounds.min, (min) =>
+    formatIsoDay(DateTime.add({ days: -1 })(min)),
+  );
+  const after = Option.map(bounds.max, (max) =>
+    formatIsoDay(DateTime.add({ days: 1 })(max)),
+  );
+  const edges: DayMatchers = {
+    ...Option.match(before, {
+      onNone: () => ({}),
+      onSome: (day) => ({ before: day }),
+    }),
+    ...Option.match(after, {
+      onNone: () => ({}),
+      onSome: (day) => ({ after: day }),
+    }),
+  };
+  if (disabled) return { ...edges, filter: () => true };
+  return Option.isNone(before) && Option.isNone(after) ? undefined : edges;
 };
 
-/** The picker's state. Compose the trigger and the content inside it. */
-export const DatePicker = ({
-  value: valueProp,
-  defaultValue,
-  onValueChange,
-  weekStartsOn = 1,
-  min,
-  max,
-  clearable = false,
-  disabled = false,
-  today,
-  children,
-}: DatePickerProps) => {
+/** The picker's state, shared by both modes. */
+const PickerRoot = ({
+  base,
+  selection,
+  commit,
+  clear,
+}: PickerRootProps): ReactElement => {
   const renderer = useGpuix().renderer;
-  const todayIso = today ?? DateTime.formatIsoDateUtc(DateTime.nowUnsafe());
-  const todayDay = todayOf(todayIso);
-  const [selected, setSelected] = useControllableState<string | null>({
-    value: valueProp,
-    defaultValue: defaultValue ?? null,
-    onChange: onValueChange,
-  });
-  const selectedDay = Option.flatMap(
-    Option.fromNullishOr(selected),
-    parseIsoDay,
-  );
-  const selectedIso = Option.map(selectedDay, formatIsoDay);
-  const bounds = boundsOf(min, max);
-  const [open, setOpen] = useState(false);
+  const store = useLocalStore(makePickerOpen);
+  const open = useLocalState(store.local);
   const trigger = useRef<PublicInstance | null>(null);
+  const bounds = boundsOf(base.min, base.max);
+  const todayDay = todayOf(base.today);
+  const clearable = base.clearable === true;
+  const disabled = base.disabled === true;
 
   /** Close the surface and hand focus back to the trigger. */
   const closeToTrigger = useCallback((): void => {
-    setOpen(false);
+    send(store.set(false));
     const instance = trigger.current;
     if (instance !== null) renderer?.focusElement?.(instance.id);
-  }, [renderer]);
-
-  const choose = useCallback(
-    (day: DateTime.Utc): void => {
-      // A caller that disables the picker refuses the edit, whichever half of
-      // the surface the press or key reaches: the value is the caller's.
-      if (disabled || !isAvailable(day, bounds)) return;
-      setSelected(formatIsoDay(day));
-      closeToTrigger();
-    },
-    [bounds, closeToTrigger, disabled, setSelected],
-  );
-
-  /** Drop the selection and close; the next open anchors on today. */
-  const clear = useCallback((): void => {
-    if (disabled) return;
-    setSelected(null);
-    closeToTrigger();
-  }, [closeToTrigger, disabled, setSelected]);
+  }, [renderer, store]);
 
   // A surface already open when the caller disables the picker closes with it:
   // a calendar no day can be chosen from is not an affordance, and the stored
   // request is dropped so re-enabling does not resurrect it. A layout effect
   // retires it before the frame paints.
   useLayoutEffect(() => {
-    if (disabled) setOpen(false);
-  }, [disabled]);
+    if (disabled) send(store.set(false));
+  }, [disabled, store]);
 
-  assertParts(datePickerRoot, children);
+  // A choice is a selection the calendar already refused an unavailable day
+  // for, and the picker's own `disabled` turns every day unavailable; the
+  // root's job is to report it and decide whether the surface closes.
+  const report = (next: Selection): void => {
+    if (commit(next)) closeToTrigger();
+  };
+
+  assertParts(datePickerRoot, base.children);
 
   return (
     <DatePickerContext.Provider
       value={{
-        selectedDay,
-        selectedIso,
+        selection,
         bounds,
-        weekStartsOn,
+        matchers: matchersOf(bounds, disabled),
+        weekStartsOn: base.weekStartsOn ?? 1,
         todayDay,
         clearable,
         disabled,
         open,
-        choose,
-        clear,
+        numberOfMonths:
+          base.numberOfMonths ?? (selection.mode === "range" ? 2 : 1),
+        showOutsideDays: base.showOutsideDays ?? true,
+        captionLayout: base.captionLayout ?? "label",
+        fromYear: base.fromYear,
+        toYear: base.toYear,
+        chooseSingle: (day) => report(singleSelection(day)),
+        chooseRange: (range) => report(rangeSelection(range)),
+        clear: () => {
+          clear();
+          closeToTrigger();
+        },
         closeToTrigger,
         registerTrigger: (instance) => {
           trigger.current = instance;
         },
       }}
     >
-      <Popover open={open} onOpenChange={setOpen}>
-        {children}
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          if (disabled && next) return;
+          send(store.set(next));
+        }}
+      >
+        {base.children}
       </Popover>
     </DatePickerContext.Provider>
   );
 };
+
+/** A one-day picker: the ISO day in, the ISO day out. */
+const SinglePicker = (props: SingleDatePickerProps): ReactElement => {
+  const [value, setValue] = useControllableState<string | null>({
+    value: props.value,
+    defaultValue: props.defaultValue ?? null,
+    onChange: props.onValueChange,
+  });
+  const selection: Selection = { mode: "single", day: value };
+
+  return (
+    <PickerRoot
+      base={props}
+      selection={selection}
+      commit={(next) => {
+        if (next.mode === "single") setValue(next.day);
+        return true;
+      }}
+      clear={() => setValue(null)}
+    />
+  );
+};
+
+/** A span picker: two presses make a range, and the second closes it. */
+const RangePicker = (props: RangeDatePickerProps): ReactElement => {
+  const [value, setValue] = useControllableState<DayRange | null>({
+    value: props.value,
+    defaultValue: props.defaultValue ?? null,
+    onChange: props.onValueChange,
+  });
+  const selection: Selection = { mode: "range", range: rangeOf(value) };
+
+  return (
+    <PickerRoot
+      base={props}
+      selection={selection}
+      commit={(next) => {
+        if (next.mode !== "range") return false;
+        setValue(next.range);
+        return next.range?.to != null;
+      }}
+      clear={() => setValue(null)}
+    />
+  );
+};
+
+/** The picker's state. Compose the trigger and the content inside it. */
+export const DatePicker = (props: DatePickerProps): ReactElement =>
+  props.mode === "range" ? <RangePicker {...props} /> : <SinglePicker {...props} />;
 
 /** {@link DatePickerTrigger} props. */
 export interface DatePickerTriggerProps extends Omit<
@@ -273,7 +362,7 @@ export interface DatePickerTriggerProps extends Omit<
   readonly onClick?: (event: EventPayload) => void;
 }
 
-/** The field-shaped trigger: the selected day or the placeholder, plus a caret. */
+/** The field-shaped trigger: the selected day or span, plus a caret. */
 export const DatePickerTrigger = ({
   placeholder = "Pick a date",
   className,
@@ -282,16 +371,13 @@ export const DatePickerTrigger = ({
   ...rest
 }: DatePickerTriggerProps) => {
   const theme = useTheme();
-  const { selectedDay, disabled, registerTrigger } = useDatePicker();
+  const { selection, disabled, registerTrigger } = useDatePicker();
   const setTrigger = useMergedRef<PublicInstance | null>(
     registerTrigger,
     rest.ref,
   );
-  const labelText = Option.match(selectedDay, {
-    onNone: () => placeholder,
-    onSome: formatDayLabel,
-  });
-  const isPlaceholder = Option.isNone(selectedDay);
+  const labelText = formatSelectionLabel(selection, placeholder);
+  const isPlaceholder = !hasSelection(selection);
   const fieldStyle = mergeStyles(
     recipeStyle(cn(DATE_PICKER_TRIGGER, className), theme),
     {
@@ -376,287 +462,71 @@ export const DatePickerContent = ({
   );
 };
 
-const CELL = 34;
-
 /** {@link DatePickerCalendar} props. */
 export interface DatePickerCalendarProps {
   /** The grid's accessible name. Default `"Calendar"`. */
   readonly label?: string;
 }
 
-/** The month navigation, the weekday header and the day grid. */
+/**
+ * The picker's `Calendar`, plus the Clear row.
+ *
+ * The calendar is the standalone component in every respect — the picker only
+ * supplies the mode, the value, the bounds and the press handler, so the
+ * keyboard, the roving focus and the paint are the calendar's own.
+ */
 export const DatePickerCalendar = ({
   label = "Calendar",
-}: DatePickerCalendarProps) => {
-  const theme = useTheme();
-  const renderer = useGpuix().renderer;
+}: DatePickerCalendarProps): ReactElement => {
   const {
-    selectedDay,
-    selectedIso,
-    bounds,
+    selection,
+    matchers,
     weekStartsOn,
     todayDay,
     clearable,
     open,
-    choose,
+    numberOfMonths,
+    showOutsideDays,
+    captionLayout,
+    fromYear,
+    toYear,
+    chooseSingle,
+    chooseRange,
     clear,
+    closeToTrigger,
   } = useDatePicker();
-
-  const [viewMonth, setViewMonth] = useState<DateTime.Utc>(() =>
-    startOfMonth(Option.getOrElse(selectedDay, () => todayDay)),
-  );
-  const [active, setActive] =
-    useState<Option.Option<DateTime.Utc>>(selectedDay);
-  const cellIds = useRef<Record<string, number>>({});
-  const pendingFocus = useRef(false);
-  const focusTarget = useRef<Option.Option<DateTime.Utc>>(Option.none());
-  const wasOpen = useRef(false);
-
-  /**
-   * Focus the active cell after the month it lives in has rendered.
-   *
-   * The target is a ref, not the `active` state: the open effect sets the anchor
-   * in the same commit whose focus effect runs, and a state write is not visible
-   * to a sibling effect in that pass — an empty picker therefore focused the
-   * first of the month instead of the day it documents (`date-picker-lifecycle`
-   * measured `date-day-2026-03-01` against the anchor's `-11`).
-   */
-  const focusActive = useCallback((day: DateTime.Utc) => {
-    pendingFocus.current = true;
-    focusTarget.current = Option.some(day);
-    setViewMonth(startOfMonth(day));
-    setActive(Option.some(day));
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!open || wasOpen.current) {
-      wasOpen.current = open;
-      return;
-    }
-    wasOpen.current = true;
-    const anchor = Option.getOrElse(selectedDay, () => todayDay);
-    setViewMonth(startOfMonth(anchor));
-    setActive(Option.some(anchor));
-    focusTarget.current = Option.some(anchor);
-    pendingFocus.current = true;
-    // `open` is the trigger; the anchor is stable while it is open.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    open,
-    Option.getOrNull(selectedIso),
-    DateTime.formatIsoDateUtc(todayDay),
-  ]);
-
-  useLayoutEffect(() => {
-    if (!pendingFocus.current) return;
-    const day = Option.orElse(focusTarget.current, () => active);
-    const target = Option.getOrElse(day, () => startOfMonth(viewMonth));
-    const id = cellIds.current[formatIsoDay(target)];
-    if (id === undefined) return;
-    pendingFocus.current = false;
-    focusTarget.current = Option.none();
-    renderer?.focusElement?.(id);
-  });
-
-  const attachCell = (iso: string) => (instance: PublicInstance | null) => {
-    if (instance === null) {
-      delete cellIds.current[iso];
-      return;
-    }
-    cellIds.current[iso] = instance.id;
-  };
-
-  const moveDays = (delta: number): void => {
-    const from = Option.getOrElse(active, () => startOfMonth(viewMonth));
-    focusActive(clampToBounds(addDays(from, delta), bounds));
-  };
-
-  const moveToWeekEdge = (edge: "first" | "last"): void => {
-    const from = Option.getOrElse(active, () => startOfMonth(viewMonth));
-    const parts = DateTime.toPartsUtc(from);
-    const offset = (parts.weekDay - weekStartsOn + 7) % 7;
-    focusActive(
-      clampToBounds(
-        addDays(from, edge === "first" ? -offset : 6 - offset),
-        bounds,
-      ),
-    );
-  };
-
-  const moveMonths = (delta: number): void => {
-    const from = Option.getOrElse(active, () => startOfMonth(viewMonth));
-    const parts = DateTime.toPartsUtc(from);
-    const target = addMonths(from, delta);
-    const lastDay = DateTime.toPartsUtc(lastDayOfMonth(target)).day;
-    const day = Math.min(parts.day, lastDay);
-    focusActive(clampToBounds(addDays(startOfMonth(target), day - 1), bounds));
-  };
-
-  const chooseActive = (): void => {
-    pipe(
-      active,
-      Option.match({
-        onNone: () => undefined,
-        onSome: choose,
-      }),
-    );
-  };
-
-  /**
-   * The movement keys the calendar answers, wherever the focus is.
-   *
-   * The month controls are the grid's **siblings**, so a key the runtime
-   * delivers to a month button does not bubble through the grid: a pointer press
-   * on a disabled month control parks the focus there (the runtime focuses the
-   * element it pressed, `date-picker-lifecycle` measured `date-next` holding it
-   * at its bound), and every later arrow moved nothing. Both containers answer
-   * the movement keys; only the grid answers activation, because `Enter`/`Space`
-   * on a month control is that control's own press.
-   */
-  const moveByKey = (event: KeyEvent): void => {
-    if (swallowsDefault(event, "down")) event.preventDefault();
-    Match.value(event).pipe(
-      Match.when(isLeft, () => moveDays(-1)),
-      Match.when(isRight, () => moveDays(1)),
-      Match.when(isUp, () => moveDays(-7)),
-      Match.when(isDown, () => moveDays(7)),
-      Match.when(isFirst, () => moveToWeekEdge("first")),
-      Match.when(isLast, () => moveToWeekEdge("last")),
-      Match.when(isPageUp, () => moveMonths(-1)),
-      Match.when(isPageDown, () => moveMonths(1)),
-      Match.orElse(() => undefined),
-    );
-  };
-
-  const handleKeyDown = (event: KeyEvent): void => {
-    moveByKey(event);
-    if (isActivation(event, "down")) chooseActive();
-  };
-
-  const grid = monthGrid(viewMonth, weekStartsOn);
-  const tabbable = clampToBounds(
-    Option.getOrElse(
-      Option.filter(active, (day) => isSameDay(startOfMonth(day), viewMonth)),
-      () => startOfMonth(viewMonth),
-    ),
-    bounds,
-  );
+  const shared = {
+    weekStartsOn,
+    today: formatIsoDay(todayDay),
+    numberOfMonths,
+    showOutsideDays,
+    captionLayout,
+    fromYear,
+    toYear,
+    disabled: matchers,
+    label,
+    autoFocus: open,
+    onDismiss: closeToTrigger,
+  } as const;
 
   return (
     <>
-      <div style={recipeStyle(DATE_PICKER_NAV, theme)} onKeyDown={moveByKey}>
-        <IconButton
-          label="Previous month"
-          size="sm"
-          testId="date-prev"
-          disabled={!canBrowseMonth(viewMonth, -1, bounds)}
-          onClick={() => setViewMonth(addMonths(viewMonth, -1))}
-        >
-          <Icon name="chevron-left" size="md" color={theme.colors.foreground} />
-        </IconButton>
-        <text testId="date-month" style={recipeStyle(DATE_PICKER_MONTH, theme)}>
-          {formatMonthLabel(viewMonth)}
-        </text>
-        <IconButton
-          label="Next month"
-          size="sm"
-          testId="date-next"
-          disabled={!canBrowseMonth(viewMonth, 1, bounds)}
-          onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-        >
-          <Icon
-            name="chevron-right"
-            size="md"
-            color={theme.colors.foreground}
-          />
-        </IconButton>
-      </div>
-      <div
-        role="grid"
-        aria-label={label}
-        onKeyDown={handleKeyDown}
-        onKeyUp={(event) => {
-          if (isActivation(event, "up")) chooseActive();
-        }}
-        style={recipeStyle(DATE_PICKER_GRID, theme)}
-      >
-        <div role="row" style={{ display: "flex", flexDirection: "row" }}>
-          {Arr.map(weekdayLabels(weekStartsOn), (name) => (
-            <text
-              key={name}
-              aria-label={name}
-              style={mergeStyles(recipeStyle(DATE_PICKER_WEEKDAY, theme), {
-                width: CELL,
-              })}
-            >
-              {name}
-            </text>
-          ))}
-        </div>
-        {Arr.map(grid, (week, weekIndex) => (
-          <div
-            key={weekIndex}
-            role="row"
-            style={{ display: "flex", flexDirection: "row" }}
-          >
-            {Arr.map(week, (cell, dayIndex) =>
-              Option.match(cell, {
-                onNone: () => (
-                  <div key={dayIndex} style={{ width: CELL, height: CELL }} />
-                ),
-                onSome: (day) => {
-                  const iso = formatIsoDay(day);
-                  const available = isAvailable(day, bounds);
-                  const isSelected = Option.contains(selectedIso, iso);
-                  const isToday = isSameDay(day, todayDay);
-                  return (
-                    <div
-                      key={iso}
-                      role="gridcell"
-                      aria-label={
-                        available
-                          ? formatDayLabel(day)
-                          : `${formatDayLabel(day)}, unavailable`
-                      }
-                      aria-selected={isSelected}
-                      tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
-                      ref={attachCell(iso)}
-                      testId={`date-day-${iso}`}
-                      onClick={available ? () => choose(day) : undefined}
-                      onFocus={() => setActive(Option.some(day))}
-                      style={mergeStyles(recipeStyle(DATE_PICKER_DAY, theme), {
-                        width: CELL,
-                        height: CELL,
-                        backgroundColor: isSelected
-                          ? theme.colors.primary
-                          : undefined,
-                        color: isSelected
-                          ? theme.colors.primaryForeground
-                          : available
-                            ? theme.colors.foreground
-                            : theme.colors.mutedForeground,
-                        borderWidth: isToday
-                          ? theme.borderWidth.thin
-                          : undefined,
-                        borderColor: isToday ? theme.colors.primary : undefined,
-                        cursor: available ? "pointer" : "not-allowed",
-                        hover:
-                          isSelected || !available
-                            ? undefined
-                            : { backgroundColor: theme.colors.hover },
-                        ...controlRing(theme, { disabled: !available }),
-                      })}
-                    >
-                      {DateTime.toPartsUtc(day).day}
-                    </div>
-                  );
-                },
-              }),
-            )}
-          </div>
-        ))}
-      </div>
-      {clearable && Option.isSome(selectedDay) ? (
+      {selection.mode === "range" ? (
+        <Calendar
+          {...shared}
+          mode="range"
+          selected={selection.range}
+          onSelect={chooseRange}
+        />
+      ) : (
+        <Calendar
+          {...shared}
+          mode="single"
+          selected={selection.mode === "single" ? selection.day : null}
+          onSelect={chooseSingle}
+        />
+      )}
+      {clearable && hasSelection(selection) ? (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button variant="ghost" size="sm" testId="date-clear" onClick={clear}>
             Clear
@@ -696,9 +566,9 @@ export const datePickerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "day and month labels are fixed English strings: the repo has no i18n layer",
-    "the grid shows only the current month; adjacent-month days are blank",
-    "time is a separate TimePicker: this control owns one day only",
+    "day, month and weekday labels are fixed English strings: the repo has no i18n layer",
+    "no adjacent-month selection rule is hidden: outside days are painted and selectable by default",
+    "time is a separate TimePicker: this control owns days only",
     "0.11.0 has no aria-current, so today is marked by a border only",
     "0.11.0 has no aria-disabled: an unavailable day leaves the tab order and its accessible name ends in ', unavailable'",
     "a min after max makes no day selectable; the grid is visible and inert rather than throwing from render",

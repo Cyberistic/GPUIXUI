@@ -1,0 +1,62 @@
+---
+title: Calendar
+description: A month grid with one roving tab stop — single, multiple or a range of ISO days
+---
+
+<ComponentPreview name="calendar-single" />
+
+## Usage
+
+```tsx
+import { Calendar } from "@gpuixui/components/calendar";
+import { useState } from "react";
+
+export const Review = () => {
+  const [day, setDay] = useState<string | null>("2026-10-17");
+
+  return <Calendar selected={day} onSelect={setDay} today="2026-10-17" />;
+};
+```
+
+## Composition
+
+```text
+Calendar
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Calendar` | `mode` | `"single" \| "multiple" \| "range"` | `"single"` |
+| `Calendar` | `selected` | `string \| null` · `string[]` · `{ from, to }` — by mode | — |
+| `Calendar` | `onSelect` | `(day \| days \| range) => void` — by mode | — |
+| `Calendar` | `numberOfMonths` | `1 \| 2` | `1` |
+| `Calendar` | `showOutsideDays` | `boolean` | `true` |
+| `Calendar` | `captionLayout` | `"label" \| "dropdown"` | `"label"` |
+| `Calendar` | `weekStartsOn` | `0 \| 1` | `1` |
+| `Calendar` | `fromYear` / `toYear` | `number` | today ± 10 |
+| `Calendar` | `disabled.before` / `disabled.after` | ISO day — strictly before / after is refused | — |
+| `Calendar` | `disabled.range` | `{ from?, to? }` — both ends inclusive | — |
+| `Calendar` | `disabled.weekdays` | `ReadonlyArray<0 \| 1 \| 2 \| 3 \| 4 \| 5 \| 6>` | — |
+| `Calendar` | `disabled.filter` | `(day: string) => boolean` — `true` disables | — |
+| `Calendar` | `today` | ISO day | runtime clock |
+| `Calendar` | `defaultMonth` | ISO day | the selection or today |
+| `Calendar` | `autoFocus` | `boolean` | `false` |
+| `Calendar` | `label` | `string` | `"Calendar"` |
+| `Calendar` | `onDismiss` | `() => void` | — |
+| `Calendar` | `className` | `string` | — |
+
+
+## Limitations
+
+- No `aria-current`, so today is a border rather than an attribute.
+- No `aria-disabled` and no live region: an unavailable day leaves the tab order,
+  and a selection change is named by the focused cell, not announced.
+- Fixed English labels; no week numbers and no time of day.
+
+## Related
+
+- **Date picker** — the calendar inside a popover field.
+- **Popover** — the surface the picker anchors it in.
+- **Time picker** — the time of day this control does not own.
