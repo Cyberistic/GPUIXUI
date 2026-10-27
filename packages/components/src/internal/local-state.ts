@@ -135,3 +135,21 @@ export const send = (command: Effect.Effect<void>): void => {
 /** Subscribe a component to a store's state. */
 export const useLocalState = <A>(local: LocalState<A>): A =>
   useSyncExternalStore(local.subscribe, local.read, local.read);
+
+/**
+ * Subscribe a component to one slice of a store's state.
+ *
+ * A field of many twinkling stars subscribes to the box it is laid out in, and
+ * each star to its own turnaround, so one star's completion repaints only that
+ * star. The selector must return a stable value for an unchanged slice — a
+ * primitive, or the object already held — or React has no way to bail out.
+ */
+export const useLocalSlice = <A, B>(
+  local: LocalState<A>,
+  select: (state: A) => B,
+): B =>
+  useSyncExternalStore(
+    local.subscribe,
+    () => select(local.read()),
+    () => select(local.read()),
+  );
