@@ -40,7 +40,9 @@ export const SheetTopExample = () => (
     <SheetContent side="top" size="sm" label="Command bar">
       <SheetHeader>
         <SheetTitle>Command bar</SheetTitle>
-        <SheetDescription>Escape or a press outside closes it.</SheetDescription>
+        <SheetDescription>
+          Escape or a press outside closes it.
+        </SheetDescription>
       </SheetHeader>
     </SheetContent>
   </Sheet>
