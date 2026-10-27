@@ -352,6 +352,8 @@ the page and the package in the same change.
 | Hotkey-recorder input | `HotkeyRecorder` | — | plan 316 |
 | Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl`, `CarouselIndicators` | — | plan 315 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
+| Sidebar | `SidebarProvider`, `Sidebar`, `SidebarTrigger`, `SidebarRail`, `SidebarInset`, `SidebarHeader`, `SidebarContent`, `SidebarFooter`, `SidebarSeparator`, `SidebarGroup`, `SidebarGroupLabel`, `SidebarGroupAction`, `SidebarGroupContent`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarMenuAction`, `SidebarMenuBadge`, `SidebarMenuSkeleton`, `SidebarMenuSub`, `SidebarMenuSubItem`, `SidebarMenuSubButton`, `SidebarInput`, `useSidebar` | — | plan 340 |
+| User menu | `UserMenu`, `SidebarUserMenu` | — | plan 340 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 | Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
@@ -517,6 +519,7 @@ the tree a level's window later.
 | Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes, on the `standard` phase (it eases at both ends) | `normal` |
 | Carousel indicator | `width` between the 6px dot and the 18px pill, on the `standard` phase (both dots retarget from the widths on screen) | `fast` (160 ms) |
 | Page transition | the outgoing view fades and travels 16px out, the incoming one travels in from the far edge | `normal` (200 ms) |
+| Sidebar | `width` and the window-edge offset (`left`/`right`) travel between the expanded and icon/offcanvas boxes; the mobile sheet fades and travels 12px from its edge | `normal` (200 ms) |
 
 A surface that **enters** or **leaves** moves through the seam's frames; the two
 that only ever move **between two resting states** — the tab pill and the

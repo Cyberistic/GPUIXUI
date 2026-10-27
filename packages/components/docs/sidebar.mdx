@@ -1,0 +1,175 @@
+---
+title: Sidebar
+description: The persistent navigation panel — collapsible, icon-aware and a sheet on a narrow window.
+---
+
+<ComponentPreview name="sidebar-demo" />
+
+## Usage
+
+```tsx
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  SidebarUserMenu,
+} from "@gpuixui/components";
+
+<SidebarProvider collapsible="icon">
+  <Sidebar>
+    <SidebarHeader>…</SidebarHeader>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton label="Playground" tooltip="Playground" isActive>
+                <Icon name="terminal" size="sm" color={theme.colors.accentForeground} />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+    <SidebarFooter>
+      <SidebarUserMenu user={{ name: "Benji", email: "benji@example.com" }} />
+    </SidebarFooter>
+    <SidebarRail />
+  </Sidebar>
+  <SidebarInset>
+    <SidebarTrigger />
+  </SidebarInset>
+</SidebarProvider>;
+```
+
+## Composition
+
+```text
+SidebarProvider
+├── Sidebar
+│   ├── SidebarHeader
+│   │   └── SidebarMenu
+│   │       └── SidebarMenuItem
+│   │           ├── SidebarMenuButton
+│   │           ├── SidebarMenuAction
+│   │           └── SidebarMenuBadge
+│   ├── SidebarContent
+│   │   └── SidebarGroup
+│   │       ├── SidebarGroupLabel
+│   │       ├── SidebarGroupAction
+│   │       └── SidebarGroupContent
+│   │           └── SidebarMenu
+│   │               └── SidebarMenuItem
+│   │                   ├── SidebarMenuButton
+│   │                   └── SidebarMenuSub
+│   │                       └── SidebarMenuSubItem
+│   │                           └── SidebarMenuSubButton
+│   ├── SidebarFooter
+│   │   └── SidebarUserMenu
+│   └── SidebarRail
+└── SidebarInset
+```
+
+`Sidebar` renders its children once. On a window narrower than 768px that tree
+is the modal sheet; the parts are the same, so a panel does not need a second
+layout for mobile.
+
+## Behaviour
+
+- **Collapsing** is `collapsible`: `"offcanvas"` parks the panel outside the
+  window edge, `"icon"` shrinks it to a 48px rail (64px for the floating and
+  inset variants, which keep their `p-2` gutter), and `"none"` leaves it fixed.
+  The gap in the flow pays the same width, so the content beside it moves by
+  exactly the panel it loses.
+- **The keyboard** is ⌘/Ctrl + B. `SIDEBAR_KEYBOARD_SHORTCUT` is exported, and
+  `toggleSidebar()` is on `useSidebar()`. On a narrow window the shortcut opens
+  and closes the sheet.
+- **The open state persists** through `SidebarPreference`: the default jar uses
+  shadcn's `sidebar_state` key and seven-day lifetime, in process memory. Pass
+  `preference` to keep it across launches.
+- **Icon mode** clips the label and publishes the row's `tooltip`; only one tip
+  can be open, and the active row keeps its accent. `badge`, `action` and
+  sub-menus hide with the labels, as shadcn's selectors do.
+- **The mobile sheet** is a `role="dialog"` with a scrim: pressing the scrim
+  dismisses it, Tab wraps inside it, Escape closes it, and focus returns to the
+  trigger. The desktop state is untouched.
+- **The rail** toggles on a press and on an 8px drag toward its edge. It stays
+  at the window edge while an offcanvas panel is parked, so the panel can be
+  reopened.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `SidebarProvider` | a full-size row and the state | `defaultOpen?`, `open?`, `onOpenChange?`, `preference?`, `side?`, `variant?`, `collapsible?`, `className?`, `style?`, `children` |
+| `Sidebar` | the panel, or the sheet below 768px | `side?`, `variant?`, `collapsible?`, `className?`, `style?`, `children` |
+| `SidebarTrigger` | the toggle action | `size?` |
+| `SidebarRail` | the edge strip | `className?`, `style?` |
+| `SidebarInset` | `role="main"` content | `className?`, `style?`, `children` |
+| `SidebarHeader` | the heading block | `className?`, `children` |
+| `SidebarContent` | the scrolling middle | `className?`, `style?`, `children` |
+| `SidebarFooter` | the footer block | `className?`, `children` |
+| `SidebarSeparator` | a hairline | `className?`, `style?` |
+| `SidebarGroup` | a labelled group | `className?`, `children` |
+| `SidebarGroupLabel` | the group heading (text) | `children?`, `className?` |
+| `SidebarGroupAction` | an icon-only group action | `label`, `children?`, `className?` |
+| `SidebarGroupContent` | the rows under a heading | `className?`, `children` |
+| `SidebarMenu` | `role="list"` | `className?`, `children` |
+| `SidebarMenuItem` | `role="listitem"` | `className?`, `children` |
+| `SidebarMenuButton` | a row action | `label?`, `isActive?`, `variant?`, `size?`, `tooltip?`, `disabled?`, `children?`, `trailing?`, `className?`, `onClick?` |
+| `SidebarMenuAction` | a row's trailing action | `label`, `showOnHover?`, `children?`, `className?` |
+| `SidebarMenuBadge` | a row's count | `children?`, `className?` |
+| `SidebarMenuSkeleton` | a loading row | `showIcon?`, `className?` |
+| `SidebarMenuSub` | a submenu list | `className?`, `children` |
+| `SidebarMenuSubItem` | one submenu row | `className?`, `children` |
+| `SidebarMenuSubButton` | a submenu action | `label?`, `isActive?`, `size?`, `disabled?`, `children?`, `className?`, `onClick?` |
+| `SidebarInput` | a plain field at the panel height | `value?`, `placeholder?`, `readOnly?`, `disabled?`, `className?`, `style?`, `testId?`, `onChange?` |
+| `useSidebar` | the context | returns `state`, `open`, `setOpen`, `openMobile`, `setOpenMobile`, `isMobile`, `toggleSidebar`, `side`, `variant`, `collapsible`, `tooltip`, `showTooltip`, `hideTooltip` |
+
+`SIDEBAR_WIDTH`, `SIDEBAR_WIDTH_ICON`, `SIDEBAR_WIDTH_MOBILE`, `SIDEBAR_BREAKPOINT`
+and `SIDEBAR_KEYBOARD_SHORTCUT` are exported from the component module.
+
+## Limitations
+
+- No `transform` in 0.11.0: the offcanvas panel animates `left`/`right` and
+  `width`, so it travels as a box rather than a translated layer. The mobile
+  sheet fades and travels 12px from its edge instead of sliding its full width.
+- The ⌘/Ctrl + B handler lives on the provider's wrapper. The runtime accepts a
+  window-level handler only at `render()` (`docs/gpuix-capabilities.md`), so a
+  key typed while focus is outside the provider's subtree is not seen.
+- There is no cookie jar. The default `SidebarPreference` is an in-process jar
+  with shadcn's key and lifetime; a state kept across launches needs a caller's
+  preference.
+- The provider owns `side`/`variant`/`collapsible`. shadcn derives the inset's
+  margin from a parent selector; GPUix has none, and `SidebarInset` is a sibling
+  of `Sidebar`, so the layout is declared once on the provider. `Sidebar`
+  accepts the same three props as overrides for its own paint.
+- Icons clip their labels in icon mode; there is no CSS descendant selector to
+  truncate arbitrary children, so `SidebarMenuButton` and
+  `SidebarMenuSubButton` own their label text through `label`.
+- The rail toggles on a press and a short drag **inside the panel's edge**. A
+  strip outside it would paint under the inset: order is paint order and 0.11.0
+  has no `zIndex`. An offcanvas panel parked outside the window is reopened by
+  `SidebarTrigger` or ⌘/Ctrl+B.
+- There is no resize gesture on the rail because the runtime has no pointer
+  capture.
+- A `side`, `variant` or `collapsible` restored from storage that this release
+  does not name reads as `left`, `sidebar` and `offcanvas`.
+
+## Related
+
+- **Dropdown menu** — the account menu inside the footer.
+- **Avatar** — the identity mark in the footer.
+- **Toast** — the other family with an Effect store and a provider.

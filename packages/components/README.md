@@ -55,30 +55,33 @@ cost, which is why `List` subscribes each row to its own slice
 
 `@gpuixui/components` resolves to `src/index.ts`, and that barrel re-exports all
 every family, so importing any one component from the package root reads all of
-them. Measured 2026-10-22 with
+them. Measured 2026-10-27 with
 `nub run --filter @gpuixui/components measure:surface`:
 
 | Surface | Modules | Source |
 | ------- | ------: | -----: |
-| the package's own graph | 163 | 1029 KiB |
-| `@gpuixui/tokens` it reaches | 25 | 267 KiB |
-| `@gpuixui/tw` | 9 | 104 KiB |
-| `@gpuixui/primitives` (the `hint` subpath only) | 5 | 51 KiB |
-| `@gpuixui/motion` (`./timing`) | 8 | 34 KiB |
-| `@gpuixui/icons` | 5 | 16 KiB |
+| the package's own graph | 176 | 1272 KiB |
+| `@gpuixui/tokens` it reaches | 33 | 555 KiB |
+| `@gpuixui/tw` | 10 | 115 KiB |
+| `@gpuixui/primitives` (the `button` and `hint` subpaths) | 33 | 333 KiB |
+| `@gpuixui/motion` (`./timing`, `./presence`, `./react/presence`) | 14 | 125 KiB |
+| `@gpuixui/icons` | 5 | 22 KiB |
 | `@gpuixui/keyboard` | 8 | 12 KiB |
-| **total** | **223** | **≈1.5 MiB** |
+| **total** | **279** | **≈2.4 MiB** |
 
 The table counts the workspace source a consumer compiles. `react`, `effect` and
 `@gpuix/react` are dependencies the app already holds, so their bytes are not in
 it; their cost is in the cold-import numbers below.
 
-Two rows are subpath-only on purpose: the surfaces need the motion level table
-and the reduced-motion policy, not the physics; and the eight hinted text hosts
-need the primitives' published hint seam, not its Tier 1 barrel (reaching the
-same seam through the barrel measured 52 modules / 416 KiB, which is why
-`@gpuixui/primitives` declares the `./hint` export and `src/hints-seam.test.ts`
-fails on the barrel path).
+Two rows are subpath-only on purpose: the surfaces need the motion level table,
+the presence frames and the reduced-motion policy, not the physics; and the
+actions, the eight hinted text hosts and the sidebar's rows take the primitives'
+published `./button` and `./hint` seams rather than its Tier 1 barrel (reaching
+the hint seam through the barrel measured 52 modules / 416 KiB, which is why the
+package declares both exports and `src/hints-seam.test.ts` fails on the barrel
+path). The Sidebar family and `UserMenu` added five modules — `sidebar.tsx`, its
+logic, store and preference, and `user-menu.tsx` — and the ceiling in
+`src/surface.budget.ts` records the measured 1 272 KiB.
 
 The package's own modules import exactly three packages: `@gpuix/react`, `effect`
 and `react`. Cold import through the repo's loader,
@@ -343,6 +346,8 @@ number, so the two cannot drift.
 | `src/list.tsx`, `src/list/selection.ts`, `src/list/store.ts` | List / ListItem: rows with a roving tab stop, single or multiple selection, select-all, type-ahead and single/none row activation; each row subscribes to its own slice of the selection, so only the rows whose state moved repaint |
 | `src/typeahead.ts` | the published type-ahead seam (`@gpuixui/components/typeahead`): the buffer's window and repeat rule, the prefix matcher as a position, the typed-character rule and the hook the List and the menus share |
 | `src/drawer.tsx` | Drawer: an edge-anchored modal over the shared `internal/modal.ts` rules |
+| `src/sidebar.tsx`, `src/sidebar/*` | Sidebar: shadcn's part family over one Layout value — a persisted Effect store (`SubscriptionRef` + `sidebar_state` preference), width/edge motion, the icon rail and its single tooltip, and the mobile sheet over the shared modal rules |
+| `src/user-menu.tsx` | UserMenu / SidebarUserMenu: the account trigger and its DropdownMenu rows, standalone and in a panel footer |
 | `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
