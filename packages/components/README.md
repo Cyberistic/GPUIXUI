@@ -344,6 +344,7 @@ number, so the two cannot drift.
 | `src/slider.tsx`, `src/slider/logic.ts` | Slider — one `Slider` over a number or a `[from, to]` pair, with the primitive's single/range surface behind it |
 | `src/separator.tsx` | Separator — `decorative` leaves the tree, a semantic rule is a `separator` node |
 | `src/skeleton.tsx` | Skeleton — the placeholder block with shadcn's `animate` switch |
+| `src/spinner.tsx` | Spinner — the three-dot activity mark at `sm`/`md`/`lg`, and the mark `Button`'s `loading` prop paints beside a kept label |
 | `src/toggle.tsx`, `src/toggle-group.tsx` | Toggle and its mode toolbar — the shadcn-shaped surface of the primitives' pressed paint and roving contract |
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |

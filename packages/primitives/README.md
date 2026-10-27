@@ -457,15 +457,15 @@ namespace and the import closure, and
 `runtime/layout.runtime.test.tsx` mounts the routed export in a window and
 reads its layout and offset back.
 
-### The six value and status leaves load from their own subpaths
+### The seven value and status leaves load from their own subpaths
 
 Import one of `Progress`, `Slider`/`RangeSlider`, `Separator`, `Skeleton`,
-`Toggle` or `ToggleGroup` from `@gpuixui/primitives/progress`, `/slider`,
-`/separator`, `/skeleton`, `/toggle` or `/toggle-group` when the package root is
-too much to load. Each entry is a re-export seam beside `src/button.ts` and
-`src/scroll-area.ts` — the component, its parts and its prop types, never a
-second implementation — so `@gpuixui/components` can compose the primitive
-without paying for all of Tier 1.
+`Spinner`, `Toggle` or `ToggleGroup` from `@gpuixui/primitives/progress`,
+`/slider`, `/separator`, `/skeleton`, `/spinner`, `/toggle` or `/toggle-group`
+when the package root is too much to load. Each entry is a re-export seam beside
+`src/button.ts` and `src/scroll-area.ts` — the component, its parts and its prop
+types, never a second implementation — so `@gpuixui/components` can compose the
+primitive without paying for all of Tier 1.
 
 ### The reduced-motion preference loads from the light entry
 

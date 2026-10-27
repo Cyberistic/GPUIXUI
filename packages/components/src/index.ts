@@ -83,6 +83,7 @@ export * from "./skeleton.js";
 export * from "./slider.js";
 export * from "./sliding-number.js";
 export * from "./sliding-text.js";
+export * from "./spinner.js";
 export * from "./splitting-text.js";
 export * from "./stars.js";
 export * from "./stepper.js";

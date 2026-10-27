@@ -31,6 +31,7 @@
  */
 
 import type { Props } from "@gpuix/react";
+import type { ReactNode } from "react";
 import {
   Button as PrimitiveButton,
   IconButton as PrimitiveIconButton,
@@ -66,6 +67,23 @@ export interface ButtonProps extends Props {
   readonly size?: ButtonSize;
   /** Leave the tab order, drop the handlers and paint the disabled state. */
   readonly disabled?: boolean;
+  /**
+   * Busy: paint the spinner in place of `leading`, keep the label, and refuse
+   * activation. The button stays focusable, unlike `disabled`.
+   */
+  readonly loading?: boolean;
+  /**
+   * The words a busy button announces — its `aria-description` and the
+   * spinner's accessible name. Defaults to the provider's `loading.busy`
+   * (`"Loading"`); a blank label announces nothing.
+   */
+  readonly loadingLabel?: string;
+  /** Hold the busy spinner. Defaults to the motion provider's preference. */
+  readonly reducedMotion?: boolean;
+  /** A slot before the label; the spinner replaces it while `loading`. */
+  readonly leading?: ReactNode;
+  /** A slot after the label. */
+  readonly trailing?: ReactNode;
 }
 
 /** {@link IconButton} props. */

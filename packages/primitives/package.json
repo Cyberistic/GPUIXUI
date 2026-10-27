@@ -41,6 +41,10 @@
       "types": "./src/skeleton.ts",
       "default": "./src/skeleton.ts"
     },
+    "./spinner": {
+      "types": "./src/spinner.ts",
+      "default": "./src/spinner.ts"
+    },
     "./toggle": {
       "types": "./src/toggle.ts",
       "default": "./src/toggle.ts"
