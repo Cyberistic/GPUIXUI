@@ -340,6 +340,11 @@ number, so the two cannot drift.
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
 | `src/card.tsx` | Card and its five parts — verified natively |
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
+| `src/progress.tsx`, `src/progress/logic.ts` | Progress — a bar stated in the caller's `value`/`max`, indeterminate without a measurement |
+| `src/slider.tsx`, `src/slider/logic.ts` | Slider — one `Slider` over a number or a `[from, to]` pair, with the primitive's single/range surface behind it |
+| `src/separator.tsx` | Separator — `decorative` leaves the tree, a semantic rule is a `separator` node |
+| `src/skeleton.tsx` | Skeleton — the placeholder block with shadcn's `animate` switch |
+| `src/toggle.tsx`, `src/toggle-group.tsx` | Toggle and its mode toolbar — the shadcn-shaped surface of the primitives' pressed paint and roving contract |
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
 | `src/empty-state.tsx` | EmptyState: the centred "nothing here yet" panel |

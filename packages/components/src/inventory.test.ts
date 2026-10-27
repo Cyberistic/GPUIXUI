@@ -142,8 +142,21 @@ const packageRows = (): ReadonlyArray<Row> => [
 const tier5Rows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 5 — specialised", "## Animated primitives (plan 600)");
 
-/** Every row a record of this package's can name, wherever its table lives. */
-const recordRows = (): ReadonlyArray<Row> => [...packageRows(), ...tier5Rows()];
+/**
+ * Every row a record of this package's can name, wherever its table lives.
+ *
+ * The Tier 1 table is included because six components here are the shadcn-shaped
+ * surface of a primitive concept: `Progress`, `Slider`, `Separators`,
+ * `Skeletons`, `Toggle` and `Toggle group` own one row each, and a second row
+ * for the same concept would leave the docs site's status strip resolving two
+ * verdicts for one page. The primitive and the component share the row; the
+ * records below still belong to this package.
+ */
+const recordRows = (): ReadonlyArray<Row> => [
+  ...tier1Rows(),
+  ...packageRows(),
+  ...tier5Rows(),
+];
 
 /**
  * A **composed** row ships no component of its own — it is a documented

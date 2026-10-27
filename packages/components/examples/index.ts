@@ -69,6 +69,7 @@ import { ParticlesExample } from "./particles.example.js";
 import { PinnedListExample } from "./pinned-list.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { PreviewCardExample } from "./preview-card.example.js";
+import { ProgressExample } from "./progress.example.js";
 import { RevealExample } from "./reveal.example.js";
 import { RippleButtonExample } from "./ripple-button.example.js";
 import { RollingTextExample } from "./rolling-text.example.js";
@@ -76,8 +77,11 @@ import { RotatingTextExample } from "./rotating-text.example.js";
 import { ScrollFadeExample } from "./scroll-fade.example.js";
 import { ScrollProgressExample } from "./scroll-progress.example.js";
 import { SearchInputExample } from "./search-input.example.js";
+import { SeparatorExample } from "./separator.example.js";
 import { ShineButtonExample } from "./shine-button.example.js";
 import { SidebarExample } from "./sidebar.example.js";
+import { SkeletonExample } from "./skeleton.example.js";
+import { SliderExample } from "./slider.example.js";
 import { SlidingNumberExample } from "./sliding-number.example.js";
 import { SlidingTextExample } from "./sliding-text.example.js";
 import { SplittingTextExample } from "./splitting-text.example.js";
@@ -89,6 +93,8 @@ import { ThemeTogglerExample } from "./theme-toggler.example.js";
 import { TimePickerExample } from "./time-picker.example.js";
 import { TimelineExample } from "./timeline.example.js";
 import { ToastExample } from "./toast.example.js";
+import { ToggleExample } from "./toggle.example.js";
+import { ToggleGroupExample } from "./toggle-group.example.js";
 import { TypingTextExample } from "./typing-text.example.js";
 import { UserMenuExample } from "./user-menu.example.js";
 
@@ -151,6 +157,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "pinned-list": PinnedListExample,
   popover: PopoverExample,
   "preview-card": PreviewCardExample,
+  progress: ProgressExample,
   reveal: RevealExample,
   "ripple-button": RippleButtonExample,
   "rolling-text": RollingTextExample,
@@ -158,8 +165,11 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "scroll-fade": ScrollFadeExample,
   "scroll-progress": ScrollProgressExample,
   "search-input": SearchInputExample,
+  separator: SeparatorExample,
   "shine-button": ShineButtonExample,
   sidebar: SidebarExample,
+  skeleton: SkeletonExample,
+  slider: SliderExample,
   "sliding-number": SlidingNumberExample,
   "sliding-text": SlidingTextExample,
   "splitting-text": SplittingTextExample,
@@ -171,6 +181,8 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "time-picker": TimePickerExample,
   timeline: TimelineExample,
   toast: ToastExample,
+  toggle: ToggleExample,
+  "toggle-group": ToggleGroupExample,
   "typing-text": TypingTextExample,
   "user-menu": UserMenuExample,
 };

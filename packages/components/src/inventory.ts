@@ -63,6 +63,7 @@ import { particlesMeta } from "./particles.js";
 import { pinnedListMeta } from "./pinned-list.js";
 import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
+import { progressMeta } from "./progress.js";
 import { revealMeta } from "./reveal.js";
 import { rippleButtonMeta } from "./ripple-button.js";
 import { rollingTextMeta } from "./rolling-text.js";
@@ -70,8 +71,11 @@ import { rotatingTextMeta } from "./rotating-text.js";
 import { scrollFadeMeta } from "./scroll-fade.js";
 import { scrollProgressMeta } from "./scroll-progress.js";
 import { searchInputMeta } from "./search-input.js";
+import { separatorMeta } from "./separator.js";
 import { shineButtonMeta } from "./shine-button.js";
 import { sidebarMeta } from "./sidebar.js";
+import { skeletonMeta } from "./skeleton.js";
+import { sliderMeta } from "./slider.js";
 import { slidingNumberMeta } from "./sliding-number.js";
 import { slidingTextMeta } from "./sliding-text.js";
 import { splittingTextMeta } from "./splitting-text.js";
@@ -82,6 +86,8 @@ import { tagInputMeta } from "./tag-input.js";
 import { themeTogglerMeta } from "./theme-toggler.js";
 import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
+import { toggleMeta } from "./toggle.js";
+import { toggleGroupMeta } from "./toggle-group.js";
 import { toastMeta } from "./toast.js";
 import { typingTextMeta } from "./typing-text.js";
 import { userMenuMeta } from "./user-menu.js";
@@ -161,6 +167,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   pinnedListMeta,
   popoverMeta,
   previewCardMeta,
+  progressMeta,
   revealMeta,
   rippleButtonMeta,
   rollingTextMeta,
@@ -168,8 +175,11 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   scrollFadeMeta,
   scrollProgressMeta,
   searchInputMeta,
+  separatorMeta,
   shineButtonMeta,
   sidebarMeta,
+  skeletonMeta,
+  sliderMeta,
   slidingNumberMeta,
   slidingTextMeta,
   splittingTextMeta,
@@ -181,6 +191,8 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   timelineMeta,
   timePickerMeta,
   toastMeta,
+  toggleMeta,
+  toggleGroupMeta,
   typingTextMeta,
   userMenuMeta,
 ];
