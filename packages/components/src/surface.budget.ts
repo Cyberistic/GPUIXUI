@@ -151,7 +151,10 @@ export const surfaceBudget = {
   // 203 → 204 for Spinner (`spinner.tsx`), the shadcn-shaped surface over the
   // primitives' three-dot mark; `Button`'s busy state now paints the same mark
   // through it.
-  modules: 207,
+  // 207 → 208 for `internal/flip-mark.tsx` (plan 717): the two-glyph indicator
+  // the accordion's header and the navigation menu's trigger now share, so the
+  // cross-fade frames live in one module rather than two.
+  modules: 208,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB

@@ -20,7 +20,6 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { Icon, iconPixels, type IconName } from "@gpuixui/icons";
 import {
   ACCORDION_CONTENT,
   ACCORDION_INDICATOR,
@@ -39,7 +38,6 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import {
@@ -50,6 +48,7 @@ import {
   type AccordionState,
 } from "./accordion/logic.js";
 import { AutoHeight } from "./auto-height.js";
+import { FlipMark } from "./internal/flip-mark.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -71,7 +70,6 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -413,63 +411,6 @@ export interface AccordionTriggerState {
   readonly focused: boolean;
 }
 
-/** The square the indicator reserves; both marks are painted inside it. */
-const CHEVRON_SIZE = iconPixels("xs");
-
-/** How far a mark travels while it fades, so a cross-fade reads as a flip. */
-const CHEVRON_TRAVEL = 2;
-
-/**
- * One of the two marks the indicator cross-fades.
- *
- * The runtime has no `transform`, so the 180° turn is a swap of two glyphs:
- * both stay mounted, and the slot's `opacity` and `top` move together. The mark
- * the section is not showing keeps no accessible name, so it stays decoration.
- */
-const Chevron = ({
-  name,
-  shown,
-  travel,
-  roleLabel,
-  color,
-  testId,
-}: {
-  readonly name: IconName;
-  readonly shown: boolean;
-  readonly travel: number;
-  readonly roleLabel: string;
-  readonly color: string;
-  readonly testId?: string;
-}) => {
-  const timing = useSurfaceTiming("normal");
-  // The frame the mark mounted with, so a later toggle tweens from where it is
-  // rather than from a start frame that moved with the target.
-  const mountedShown = useRef(shown).current;
-  const frame = (atRest: boolean) => ({
-    opacity: atRest ? 1 : 0,
-    top: atRest ? 0 : travel,
-  });
-
-  return (
-    <div
-      motion={{
-        initial: frame(mountedShown),
-        animate: frame(shown),
-        transition: shown ? timing.enter : timing.exit,
-      }}
-      style={{ position: "absolute", left: 0 }}
-      testId={testId}
-    >
-      <Icon
-        name={name}
-        size="xs"
-        color={color}
-        label={shown ? roleLabel : undefined}
-      />
-    </div>
-  );
-};
-
 /** The full-width heading button of one section. */
 export const AccordionTrigger = ({
   onClick,
@@ -578,29 +519,15 @@ export const AccordionTrigger = ({
       )}
     >
       <div style={recipeStyle(ACCORDION_TRIGGER_ROW, theme)}>{children}</div>
-      <div
-        style={{
-          ...recipeStyle(ACCORDION_INDICATOR, theme),
-          position: "relative",
-          width: CHEVRON_SIZE,
-          height: CHEVRON_SIZE,
-        }}
-      >
-        <Chevron
-          name="chevron-down"
-          shown={!open}
-          travel={-CHEVRON_TRAVEL}
-          roleLabel="Expand"
-          color={theme.colors.mutedForeground}
-          testId={glyphId("down")}
-        />
-        <Chevron
-          name="chevron-up"
+      <div style={recipeStyle(ACCORDION_INDICATOR, theme)}>
+        <FlipMark
+          off="chevron-down"
+          on="chevron-up"
           shown={open}
-          travel={CHEVRON_TRAVEL}
-          roleLabel="Collapse"
+          offLabel="Expand"
+          onLabel="Collapse"
           color={theme.colors.mutedForeground}
-          testId={glyphId("up")}
+          testIdFor={(mark) => glyphId(mark === "on" ? "up" : "down")}
         />
       </div>
     </div>
