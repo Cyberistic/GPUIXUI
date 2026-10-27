@@ -140,7 +140,9 @@ export const surfaceBudget = {
   // 198 → 203 for AspectRatio, HoverCard, InputGroup and Item
   // (`aspect-ratio.tsx`, `hover-card.tsx`, `input-group.tsx`, `item.tsx` and the
   // hover waits they share, `internal/hover.ts`).
-  modules: 203,
+  // 203 → 205 for the chat family rebuild (plan 716): `bubble.tsx` and its
+  // `bubble/logic.ts` rule, plus `message-scroller/store.ts` beside the scroller.
+  modules: 205,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB

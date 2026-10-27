@@ -1,24 +1,22 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Message: one row of a conversation (plan 207).
+ * Message: one row of a conversation.
  *
- * The behaviour is ported from **shadcn/ui's AI Elements `message`**; the
- * implementation is ours and runs on GPUix host elements. A row is a variant
- * (`user`, `assistant`, `system`) plus optional slots — reasoning, tool calls,
- * citations and a streaming marker — that are **data props, not booleans and not
- * extra parts**: presence is the only switch, so a slot is rendered when it is
- * supplied and omitted otherwise. The four parts stay the four `docs/component-api.md`
- * §8 names.
+ * Ported from shadcn/ui's `Message` and `MessageGroup`
+ * (`registry/bases/ui/message.tsx`): the row owns the author, avatar, metadata
+ * and alignment; `MessageContent` is the column between the avatar and the
+ * bubble; `Bubble` is the visible surface and is always a child, never built
+ * here. That split is the point — a bubble can be quoted, grouped or reused on
+ * its own, and a message is the layout around it.
  *
- * Variant is the difference a row paints: a user message is a soft bubble on the
- * right of its avatar, an assistant's is plain prose on the left, and a system
- * note is small muted copy. The rules live in `MessageContext`, so a part is
- * never given a duplicated `variant` prop.
+ * The data slots the earlier row carried stay as props on `MessageContent`
+ * (reasoning, tool calls, citations, streaming) because they are data, not
+ * markup: presence is the only switch, and a restored record's absent slot
+ * paints nothing. They sit outside the bubble surface — the bubble is the
+ * caller's child — so a trace can be read without being painted into the reply.
  *
  * Actions are **the consumer's**: `MessageActions` renders no control unless a
- * handler is supplied, because the runtime publishes no clipboard write — the
- * capability record's workaround (a read-only field the user copies) is the
- * consumer's to build, and this component only emits the intent.
+ * handler is supplied, because the runtime publishes no clipboard write.
  */
 
 import type { Props } from "@gpuix/react";
@@ -32,9 +30,10 @@ import { accessibleName, visibleCopy } from "@gpuixui/primitives/core";
 import {
   cn,
   MESSAGE_ACTIONS,
-  MESSAGE_BUBBLE,
-  MESSAGE_BUBBLES,
   MESSAGE_CONTENT,
+  MESSAGE_FOOTER,
+  MESSAGE_GROUP,
+  MESSAGE_HEADER,
   MESSAGE_REASONING,
   MESSAGE_REASONING_CONTENT,
   MESSAGE_REASONING_TRIGGER,
@@ -48,8 +47,8 @@ import {
   MESSAGE_TOOL_CALL_RESULT,
   MESSAGE_TOOL_CALL_STATUS,
 } from "@gpuixui/tw";
-import { createContext, useContext, type ReactNode } from "react";
 import * as Schema from "effect/Schema";
+import { createContext, useContext, type ReactNode } from "react";
 import { Avatar } from "./avatar.js";
 import {
   Collapsible,
@@ -73,9 +72,7 @@ const MessageVariants = Schema.Literals(["user", "assistant", "system"]);
 /** Who a row is from. The default is `assistant`. */
 export type MessageVariant = typeof MessageVariants.Type;
 
-/**
- * The author line each variant derives, and the avatar's name.
- */
+/** The author line each variant derives, and the avatar's name. */
 const AUTHOR: Readonly<Record<MessageVariant, string>> = {
   user: "You",
   assistant: "Assistant",
@@ -85,26 +82,34 @@ const AUTHOR: Readonly<Record<MessageVariant, string>> = {
 /**
  * The row a stored variant name paints.
  *
- * A row's variant is conversation data as often as a literal: a transcript
- * restored from storage carries the role it was written with, so a name this
- * release renamed or dropped arrives as a string the union no longer names.
- * `AUTHOR[variant]` and `MESSAGE_BUBBLES[variant]` answered `undefined`, so the
- * row published no accessible name — `aria-label` was the absent author — and
- * painted neither the mirror nor the bubble its reader was written as. A name
- * the table does not carry is the component's documented default, `assistant`.
+ * A variant arrives with a saved transcript as often as a literal: a role this
+ * release renamed or dropped reaches the component as a name the union no
+ * longer carries. `AUTHOR[variant]` answered `undefined`, so the row published
+ * no accessible name; a name the table does not carry reads as the documented
+ * default, `assistant`.
  */
 const rowVariant = (variant: unknown): MessageVariant =>
   Schema.is(MessageVariants)(variant) ? variant : "assistant";
 
+/** The inline side a row takes. */
+const MessageAlignments = Schema.Literals(["start", "end"]);
+
+/** The inline side a row takes. */
+export type MessageAlign = typeof MessageAlignments.Type;
+
+/** The alignment a stored name paints; the variant's own side when absent. */
+const rowAlign = (align: unknown, variant: MessageVariant): MessageAlign =>
+  Schema.is(MessageAlignments)(align)
+    ? align
+    : variant === "user"
+      ? "end"
+      : "start";
+
 /**
  * The rows a saved reply's slot carries: only a list is a list.
  *
- * `toolCalls` and `sources` are conversation data as often as literals — a
- * transcript restored from storage writes `null` where it carried no slot, and a
- * record from an older shape may carry another value there. `.map` and `.length`
- * on it threw out of the render and took the whole row down, where the rule is
- * that a slot with nothing to show paints nothing (the reading `peaks` follows
- * in the media player).
+ * A transcript restored from storage writes `null` where it carried no slot;
+ * `.map`/`.length` on it threw out of the render and took the whole row down.
  */
 const listOf = <A,>(value: ReadonlyArray<A> | undefined): ReadonlyArray<A> =>
   Array.isArray(value) ? value : [];
@@ -132,9 +137,18 @@ export interface MessageSource {
   readonly href?: string;
 }
 
-/** What a part derives from the root. */
+/** What a part derives from the row. */
 interface MessageContextValue {
   readonly variant: MessageVariant;
+  readonly align: MessageAlign;
+  /** The author's name, and the avatar's name. */
+  readonly author: string;
+  /** The formatted time the caller supplied, if any. */
+  readonly timestamp: string | undefined;
+  /** Extra metadata the header paints after the timestamp. */
+  readonly meta: ReactNode;
+  /** The avatar's picture, when the caller supplied one. */
+  readonly avatarSrc: string | undefined;
 }
 
 const MessageContext = createContext<MessageContextValue | undefined>(
@@ -145,7 +159,7 @@ const MessageContext = createContext<MessageContextValue | undefined>(
 const useMessage = (): MessageContextValue => {
   const value = useContext(MessageContext);
   if (value === undefined) {
-    throw new Error("Message parts must be used inside MessageRoot");
+    throw new Error("Message parts must be used inside Message");
   }
   return value;
 };
@@ -160,63 +174,81 @@ const TOOL_STATUS: Readonly<Record<MessageToolStatus, string>> = {
 /** The word a status this release cannot name paints. */
 const TOOL_STATUS_UNKNOWN = "Unknown";
 
-/**
- * The status a saved tool call paints.
- *
- * A status is conversation data as often as a literal: a transcript restored
- * from storage carries the status its transport wrote, so a name this release
- * renamed or dropped arrives as a string the union no longer names.
- * `TOOL_STATUS[call.status]` answered `undefined`, so the call painted its
- * name, its result and no state at all. The table does not carry such a name,
- * so it paints `Unknown` — the honest word for a state this release cannot
- * name, where `Done` or `Running` would claim one.
- */
+/** The status a saved tool call paints. */
 const toolStatusWord = (status: unknown): string =>
   Schema.is(MessageToolStatuses)(status)
     ? TOOL_STATUS[status]
     : TOOL_STATUS_UNKNOWN;
 
-/** {@link MessageRoot} props. */
-export interface MessageRootProps extends Omit<Props, "children"> {
+/** {@link Message} props. */
+export interface MessageProps extends Omit<Props, "children"> {
   /**
    * Who the row is from. Default `"assistant"`; a name this release does not
-   * ship — a role a saved transcript carries, or one a release renamed — reads
-   * as that default.
+   * ship reads as that default.
    */
   readonly variant?: MessageVariant;
-  /** The row's accessible name. Default is the variant's author. */
+  /**
+   * The row's side. Default `"end"` for a user and `"start"` otherwise.
+   */
+  readonly align?: MessageAlign;
+  /** The author's name. Defaults to the variant's word. */
+  readonly author?: string;
+  /** A formatted timestamp. It is the caller's own string; no locale is applied. */
+  readonly timestamp?: string;
+  /** Extra metadata painted after the timestamp. */
+  readonly meta?: ReactNode;
+  /** The avatar's picture; `MessageAvatar` shows the author's initials without it. */
+  readonly avatarSrc?: string;
+  /** The row's accessible name. Default is the author. */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  /** A Tailwind class string, joined after the recipe. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** One conversation row: its variant, its avatar and its content. */
-export const MessageRoot = ({
+/**
+ * One conversation row. The metadata is read once here and shared with the
+ * header and the avatar, so a row cannot publish two different authors.
+ */
+export const Message = ({
   variant: variantProp = "assistant",
+  align: alignProp,
+  author,
+  timestamp,
+  meta = null,
+  avatarSrc,
   label,
   className,
   children,
   style,
   ...rest
-}: MessageRootProps) => {
+}: MessageProps) => {
   const theme = useTheme();
   assertParts(messageRoot, children);
   const variant = rowVariant(variantProp);
-  const author = AUTHOR[variant];
+  const align = rowAlign(alignProp, variant);
+  const name = accessibleName(textOf(author)) ?? AUTHOR[variant];
+  const time = accessibleName(textOf(timestamp));
 
   return (
-    <MessageContext.Provider value={{ variant }}>
+    <MessageContext.Provider
+      value={{
+        variant,
+        align,
+        author: name,
+        timestamp: time,
+        meta,
+        avatarSrc,
+      }}
+    >
       <div
         role="group"
-        aria-label={label ?? author}
+        aria-label={accessibleName(textOf(label)) ?? name}
         {...rest}
         style={mergeStyles(
           mergeStyles(recipeStyle(cn(MESSAGE_ROOT, className), theme), {
-            // A user's row is the mirror of an assistant's: avatar on the outer
-            // edge, content grown away from it. The runtime has no
-            // `flex-row-reverse` utility, so the direction is a state value.
-            flexDirection: variant === "user" ? "row-reverse" : "row",
+            // The runtime has no `flex-row-reverse` utility for this seam.
+            flexDirection: align === "end" ? "row-reverse" : "row",
             alignItems: variant === "system" ? "center" : "flex-start",
           }),
           style,
@@ -230,66 +262,128 @@ export const MessageRoot = ({
 
 /** {@link MessageAvatar} props. */
 export interface MessageAvatarProps extends Omit<Props, "children"> {
-  /** The name to show, overriding the variant's author. */
+  /** The name to show, overriding the row's author. */
   readonly name?: string;
-  /** A picture; the initials of `name` show until it paints. */
+  /** A picture, overriding the row's `avatarSrc`. */
   readonly src?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  /** A Tailwind class string, joined after the recipe. */
   readonly className?: string;
 }
 
-/** The row's avatar, named by the variant unless the caller says otherwise. */
+/** The row's avatar, named and pictured by the row unless overridden. */
 export const MessageAvatar = ({
   name,
   src,
   className,
   ...rest
 }: MessageAvatarProps) => {
-  const { variant } = useMessage();
+  const { author, avatarSrc } = useMessage();
   return (
     <Avatar
       {...rest}
-      name={name ?? AUTHOR[variant]}
-      src={src}
+      name={name ?? author}
+      src={src ?? avatarSrc}
       size="sm"
       className={className}
     />
   );
 };
 
+/** {@link MessageHeader} props. */
+export interface MessageHeaderProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe. */
+  readonly className?: string;
+}
+
+/**
+ * The author and timestamp line above the bubble. The root owns the words; the
+ * part only paints them, so a header cannot disagree with the avatar.
+ */
+export const MessageHeader = ({
+  className,
+  style,
+  ...rest
+}: MessageHeaderProps) => {
+  const theme = useTheme();
+  const { author, timestamp, meta } = useMessage();
+  return (
+    <div
+      {...rest}
+      style={mergeStyles(
+        mergeStyles(recipeStyle(cn(MESSAGE_HEADER, className), theme), {
+          alignSelf: "flex-start",
+        }),
+        style,
+      )}
+    >
+      <text>{author}</text>
+      {timestamp === undefined ? null : <text>{timestamp}</text>}
+      {meta}
+    </div>
+  );
+};
+
+/** {@link MessageFooter} props. */
+export interface MessageFooterProps extends Omit<Props, "children"> {
+  /** A Tailwind class string, joined after the recipe. */
+  readonly className?: string;
+  readonly children?: PartChildren;
+}
+
+/** The under-bubble line: actions, delivery state, anything the row keeps. */
+export const MessageFooter = ({
+  className,
+  children,
+  style,
+  ...rest
+}: MessageFooterProps) => {
+  const theme = useTheme();
+  const { align } = useMessage();
+  assertParts(messageFooter, children);
+  return (
+    <div
+      {...rest}
+      style={mergeStyles(
+        mergeStyles(recipeStyle(cn(MESSAGE_FOOTER, className), theme), {
+          alignSelf: align === "end" ? "flex-end" : "flex-start",
+          justifyContent: align === "end" ? "flex-end" : "flex-start",
+        }),
+        style,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
 /** What the content draws. */
 export interface MessageContentState {
   readonly variant: MessageVariant;
+  readonly align: MessageAlign;
   readonly streaming: boolean;
 }
 
 /** {@link MessageContent} props. */
 export interface MessageContentProps extends Omit<Props, "children" | "style"> {
-  /** The body: prose, or a `<markdown>` element from the consumer. */
+  /** The body: a `Bubble`, or plain prose for a trace row. */
   readonly children?: ReactNode;
   /** Collapsed reasoning, closed by default. A blank one paints no panel. */
   readonly reasoning?: string;
-  /**
-   * The tool calls the reply made, in order. A value that is not a list — a
-   * saved record's `null` — carries no calls.
-   */
+  /** The tool calls the reply made, in order. A non-list carries no calls. */
   readonly toolCalls?: ReadonlyArray<MessageToolCall>;
-  /**
-   * The citations the reply used. A value that is not a list — a saved record's
-   * `null` — carries no citations.
-   */
+  /** The citations the reply used. A non-list carries no citations. */
   readonly sources?: ReadonlyArray<MessageSource>;
   /** Show the streaming marker while tokens are still arriving. */
   readonly streaming?: boolean;
   /** The marker's copy. Default `"Streaming…"`; a blank one reads as the default. */
   readonly streamingLabel?: string;
-  /** The reasoning disclosure's copy. Default `"Reasoning"`; a blank one reads as the default. */
+  /** The reasoning disclosure's copy. Default `"Reasoning"`. */
   readonly reasoningLabel?: string;
-  /** The citations list's accessible name. Default `"Sources"`; a blank one reads as the default. */
+  /** The citations list's accessible name. Default `"Sources"`. */
   readonly sourcesLabel?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  /** A Tailwind class string, joined after the recipe. */
   readonly className?: string;
-  /** A style, or a function of the row's variant and streaming state. */
+  /** A style, or a function of the row's variant, side and streaming state. */
   readonly style?: StateStyle<MessageContentState>;
 }
 
@@ -340,8 +434,6 @@ const ToolCall = ({ call }: { readonly call: MessageToolCall }) => {
         </text>
         <div style={recipeStyle(MESSAGE_TOOL_CALL_STATUS, theme)}>
           {call.status === "error" ? (
-            // The status colour is a mark, measured at the mark floor on the
-            // surfaces a card sits on; the word carries the meaning.
             <Icon name="error" size="xs" color={theme.colors.destructive} />
           ) : null}
           <text>{toolStatusWord(call.status)}</text>
@@ -380,8 +472,9 @@ const StreamingMarker = ({ label }: { readonly label: string }) => {
 };
 
 /**
- * The row's body and its optional slots. Put `MessageActions` directly inside
- * it; the reasoning, tool-call, citation and streaming slots are props.
+ * The slot column between the avatar and the row's edge. The caller composes
+ * `MessageHeader`, `Bubble` and `MessageFooter` inside it; the data slots are
+ * props and sit outside the bubble.
  */
 export const MessageContent = ({
   children,
@@ -397,11 +490,8 @@ export const MessageContent = ({
   ...rest
 }: MessageContentProps) => {
   const theme = useTheme();
-  const { variant } = useMessage();
+  const { variant, align } = useMessage();
   assertParts(messageContent, children);
-  // The slots and their copy arrive with a saved reply: a slot that is not a
-  // list carries nothing, and a name or a sentence that is blank reads as its
-  // documented words rather than painting an unnamed list or an empty line.
   const calls = listOf(toolCalls);
   const citations = listOf(sources);
   const thought = visibleCopy(textOf(reasoning));
@@ -414,23 +504,15 @@ export const MessageContent = ({
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(MESSAGE_CONTENT, className), theme), {
-          alignItems: variant === "user" ? "flex-end" : "flex-start",
+          alignItems: align === "end" ? "flex-end" : "flex-start",
         }),
-        resolveStyle(style, { variant, streaming }),
+        resolveStyle(style, { variant, align, streaming }),
       )}
     >
       {thought === undefined ? null : (
         <Reasoning text={thought} label={reasoningWord} />
       )}
-      <div
-        testId="message-bubble"
-        style={mergeStyles(
-          recipeStyle(cn(MESSAGE_BUBBLE, MESSAGE_BUBBLES[variant]), theme),
-          { alignSelf: variant === "user" ? "flex-end" : "flex-start" },
-        )}
-      >
-        {children}
-      </div>
+      {children}
       {calls.map((call) => (
         <ToolCall key={call.name} call={call} />
       ))}
@@ -480,14 +562,11 @@ export interface MessageActionsProps extends Omit<Props, "children"> {
   readonly helpfulLabel?: string;
   /** Default `"Not helpful"`. */
   readonly notHelpfulLabel?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  /** A Tailwind class string, joined after the recipe. */
   readonly className?: string;
 }
 
-/**
- * The action row. It renders **nothing** when no handler is supplied: an
- * affordance that cannot act is worse than no affordance.
- */
+/** The action row. It renders nothing when no handler can serve a control. */
 export const MessageActions = ({
   onCopy,
   onRetry,
@@ -555,40 +634,83 @@ const MessageAction = ({
   </Button>
 );
 
-/** Every part of Message, so a misplaced sibling is named. */
-const messageParts: ReadonlyArray<PartComponent> = [
-  MessageRoot,
+/** {@link MessageGroup} props. */
+export interface MessageGroupProps extends Omit<Props, "children"> {
+  /** The gap between rows. Default the theme's `sm` (6px). */
+  readonly gap?: number;
+  /** A Tailwind class string, joined after the recipe. */
+  readonly className?: string;
+  readonly children?: PartChildren;
+}
+
+/** Consecutive rows from one sender. */
+export const MessageGroup = ({
+  gap,
+  className,
+  children,
+  style,
+  ...rest
+}: MessageGroupProps) => {
+  const theme = useTheme();
+  return (
+    <div
+      {...rest}
+      style={mergeStyles(
+        mergeStyles(recipeStyle(cn(MESSAGE_GROUP, className), theme), {
+          gap: gap ?? theme.spacing.sm,
+        }),
+        style,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
+const messageFamily: ReadonlyArray<PartComponent> = [
+  Message,
   MessageAvatar,
+  MessageHeader,
   MessageContent,
+  MessageFooter,
   MessageActions,
+  MessageGroup,
 ];
 
 const messageRoot: PartsContract = {
-  parent: "MessageRoot",
-  family: messageParts,
+  parent: "Message",
+  family: messageFamily,
   accepts: [MessageAvatar, MessageContent],
-  hint: "Put MessageAvatar and MessageContent directly inside MessageRoot.",
+  hint: "Put MessageAvatar and MessageContent directly inside it.",
 };
 
 const messageContent: PartsContract = {
   parent: "MessageContent",
-  family: messageParts,
-  accepts: [MessageActions],
-  hint: "Put MessageActions directly inside MessageContent.",
+  family: messageFamily,
+  accepts: [MessageHeader, MessageFooter],
+  hint: "Put MessageHeader and MessageFooter directly inside it; the bubble is a child too.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+const messageFooter: PartsContract = {
+  parent: "MessageFooter",
+  family: messageFamily,
+  accepts: [MessageActions],
+  hint: "Put MessageActions directly inside it.",
+};
+
+/** Inventory record, mirrored into `COMPONENTS.md`. */
 export const messageMeta = {
   name: "Message",
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
   limitations: [
+    "the bubble is a child (`Bubble`), not built by `MessageContent`: reusing a surface on its own is the point of the split",
     "the reasoning panel grows through `Collapsible`'s measured height (`AutoHeight`), so its height is the body's measurement rather than a fixed box",
     "no aria-labelledby or aria-describedby, so a tool call's result and a citation's href are not associated with the row that names them",
     "no clipboard write, so Copy is the consumer's handler; the runtime's own path is a read-only field the user copies",
     "a citation is a labelled row, not a link: there is no anchor element, and opening an href is the consumer's callback surface",
-    "a reply restored from storage is read structurally: a slot that is not a list (`toolCalls`/`sources` as `null`) carries nothing, a blank label or sentence reads as its documented words, and a role a release renamed reads as the `assistant` default",
+    "a reply restored from storage is read structurally: a slot that is not a list carries nothing, a blank label or sentence reads as its documented words, and a role a release renamed reads as the assistant default",
   ],
   docs: "docs/message.mdx",
   example: "examples/message.example.tsx",

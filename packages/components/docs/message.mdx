@@ -1,9 +1,15 @@
 ---
 title: Message
-description: One row of a conversation, with reasoning, tool calls, citations and wiring-free actions
+description: One conversation row — author, avatar, timestamp, header, the bubble child and its footer
 ---
 
 <ComponentPreview name="message-demo" />
+
+`Message` is the layout of one turn. It owns the author, avatar, timestamp,
+metadata and alignment; `MessageContent` is the column between the avatar and
+the row's edge; a `Bubble` is always a child and is never built here. The data
+slots the row carried before — reasoning, tool calls, citations, streaming —
+stay as props on `MessageContent` and paint outside the bubble surface.
 
 ## Installation
 
@@ -15,13 +21,17 @@ nub add @gpuixui/components
 
 ```tsx
 import {
+  Bubble,
+  BubbleContent,
+  Message,
   MessageActions,
   MessageAvatar,
   MessageContent,
-  MessageRoot,
+  MessageFooter,
+  MessageHeader,
 } from "@gpuixui/components";
 
-<MessageRoot variant={message.role}>
+<Message variant="assistant" timestamp="09:42">
   <MessageAvatar />
   <MessageContent
     reasoning={message.reasoning}
@@ -29,45 +39,89 @@ import {
     sources={message.sources}
     streaming={message.streaming}
   >
-    <text>{message.body}</text>
-    <MessageActions onCopy={copy} onRetry={retry} />
+    <MessageHeader />
+    <Bubble>
+      <BubbleContent>{message.body}</BubbleContent>
+    </Bubble>
+    <MessageFooter>
+      <MessageActions onCopy={copy} onRetry={retry} />
+    </MessageFooter>
   </MessageContent>
-</MessageRoot>;
+</Message>;
 ```
 
 ## Composition
 
 ```text
-MessageRoot
+Message
 ├── MessageAvatar
 └── MessageContent
-    └── MessageActions
+    ├── MessageHeader
+    ├── Bubble
+    │   └── BubbleContent
+    └── MessageFooter
+        └── MessageActions
 ```
+
+`MessageGroup` stacks consecutive rows from one sender.
+
+## Author and timestamp
+
+`Message` reads the author once and shares it with `MessageHeader` and
+`MessageAvatar`, so a row cannot publish two different names. `variant` selects
+the default author (`You`, `Assistant`, `System`) and the default side (`end`
+for a user, `start` otherwise); `author`, `timestamp` and `meta` override what
+the header paints. A timestamp is the caller's formatted string; no locale is
+applied.
+
+## Data slots
+
+Reasoning, tool calls, citations and the streaming marker are data, not
+markup: presence is the only switch, and a restored record's absent slot paints
+nothing. They sit outside the bubble, so a trace can be read without being
+painted into the reply.
+
+## Actions
+
+`MessageActions` renders nothing when no handler can serve a control. Put it in
+`MessageFooter`; the footer follows the row's side.
 
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `MessageRoot` | `role="group"` named by `label` or the variant | `variant?`, `label?`, `className?`, `children` |
+| `Message` | `role="group"` named by `label` or the author | `variant?`, `align?`, `author?`, `timestamp?`, `meta?`, `avatarSrc?`, `label?`, `className?`, `children` |
 | `MessageAvatar` | the shipped `Avatar` at `sm` | `name?`, `src?`, `className?` |
-| `MessageContent` | the slot column and the variant's body box | `reasoning?`, `toolCalls?`, `sources?`, `streaming?`, `streamingLabel?`, `reasoningLabel?`, `sourcesLabel?`, `className?`, `style?`, `children` |
-| `MessageActions` | a `role="group"` action row, or `null` | `onCopy?`, `onRetry?`, `onFeedback?`, `copyLabel?`, `retryLabel?`, `helpfulLabel?`, `notHelpfulLabel?`, `className?` |
+| `MessageHeader` | the author, timestamp and meta line | `className?` |
+| `MessageContent` | the slot column between avatar and edge | `reasoning?`, `toolCalls?`, `sources?`, `streaming?`, `streamingLabel?`, `reasoningLabel?`, `sourcesLabel?`, `className?`, `style?`, `children` |
+| `MessageFooter` | the under-bubble line, on the row's side | `className?`, `children` |
+| `MessageActions` | a named action row, or `null` | `onCopy?`, `onRetry?`, `onFeedback?`, `copyLabel?`, `retryLabel?`, `helpfulLabel?`, `notHelpfulLabel?`, `className?` |
+| `MessageGroup` | consecutive rows, tighter | `gap?`, `className?`, `children` |
 
 ## Limitations
 
-- Reasoning grows through a measured height.
+- The bubble is a child: a caller can reuse `Bubble` on its own, and `Message`
+  never invents one.
+- No `aria-labelledby` or `aria-describedby`; a tool call's result and a
+  citation's href are not associated with the row that names them.
 - No clipboard write; `onCopy` is the consumer's path.
-- A citation is a row, not a link.
-- A slot restored from a saved reply that is not a list (`toolCalls`/`sources`
-  as `null`) carries nothing, so the reply still paints instead of unmounting.
-- A blank slot name or sentence — `streamingLabel`, `reasoningLabel`,
-  `sourcesLabel`, `reasoning` — reads as its documented words, or paints no
-  panel for the reasoning slot, rather than publishing an unnamed list.
-- A `variant` restored from a saved transcript that this release no longer
-  ships reads as the documented `assistant` default, so the row keeps its
-  author name, its mirror and its body box instead of painting an unnamed
-  assistant line.
-- A tool call's `status` restored from a saved transcript that this release no
-  longer names paints `Unknown`. A state the component cannot name is not a
-  blank line, and it is not claimed to be `Done` or `Running`; only a shipped
-  `error` paints the failure glyph.
+- A citation is a row, not a link: the runtime has no anchor host.
+- A slot restored from storage that is not a list (`toolCalls`/`sources` as
+  `null`) carries nothing; a blank label or sentence reads as its documented
+  words; a role a release renamed reads as the `assistant` default.
+- A tool call's `status` a release renamed or dropped paints `Unknown`, never a
+  claimed `Done` or `Running`; only a shipped `error` paints the failure glyph.
+
+## Breaking change
+
+`MessageRoot` is now `Message`. The old root built the bubble itself; the new
+one does not. Every row must place a `Bubble` inside `MessageContent`, and
+actions move from `MessageContent` to `MessageFooter`. This is the shadcn
+structure the component is modelled on; the split is what lets a bubble be
+quoted, grouped or reused on its own.
+
+## Related
+
+- [Bubble](/docs/components/bubble) — the surface inside the row.
+- [Message Scroller](/docs/components/message-scroller) — the transcript.
+- [Chat](/docs/components/chat) — the full conversation.

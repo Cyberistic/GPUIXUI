@@ -198,7 +198,7 @@ describe("selectionFailures", () => {
 
   it("reports the wash Aero dark painted over its own message bubble", () => {
     // The regression: the fifth content surface is the `muted` bubble a chat
-    // user message is painted on (`MESSAGE_BUBBLES.user` is `bg-muted`), and a
+    // user message is painted on (`BUBBLE_VARIANTS.muted` is `bg-muted`), and a
     // selectable `Text` inside it washes its run over that fill. Aero dark's
     // 30% wash took the bubble's body text to 6.74:1 against the 7:1 floor.
     const before = {
@@ -224,7 +224,7 @@ describe("selectionFailures", () => {
     const recipes = read("../../tw/src/recipes.ts");
     const style = read("../../primitives/src/core/style.ts");
 
-    expect(recipes).toContain('user: "bg-muted"');
+    expect(recipes).toContain('muted: "bg-muted text-foreground"');
     expect(style).toContain('muted: (theme) => colorRole(theme, "muted")');
     expect(style).toContain(
       'style.selectionColor = colorRole(theme, "selection");',
@@ -358,7 +358,7 @@ describe("the documents describe the contract they are held to", () => {
     // The fifth surface is the bubble the library paints; a page that stops
     // naming it teaches the contract as the four page surfaces.
     expect(catalogue).toContain("message bubble");
-    expect(catalogue).toContain("MESSAGE_BUBBLES.user");
+    expect(catalogue).toContain("BUBBLE_VARIANTS.muted");
     expect(design).toContain("message bubble");
     expect(readme).toContain("message bubble");
     // The secondary half is the contract a reader copies: the page has to name

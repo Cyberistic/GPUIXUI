@@ -11490,9 +11490,9 @@ its rounded edge. The drawing was right; the recipe followed.
 stable; the shipped carousel mounts only the slide on screen and resizes
 (measured 122 → 162 → 102). If the frame should hold, the component needs a
 measure-all-slides rule.
-`[ ]` **Message meta slot** — the chat drawing shows timestamps and a streaming
-divider; `Message` exposes an author but no timestamp slot, so those are
-drawing-only today.
+`[x]` **Message meta slot** — `Message` now owns `timestamp` and `meta` beside
+`author`/`avatarSrc`, `MessageHeader` paints them, and a blank one reads as no
+line. The chat block's time column is the shipped part, not drawing-only.
 
 ## Four more shadcn surfaces (2026-10-27)
 
@@ -23929,3 +23929,31 @@ render's, read in the real renderer the behaviour suite drives. Owner: data.
 `[x]` `packages/primitives`: **a restored code the record kept as a number took the window down** — a one-time code is content a form record carries as often as a literal, and a verification code is numeric enough that the record keeps it as a **number** (a settings row, an integer column, a decoder's answer). `normalizeOtp` typed its argument as `string` and called `Str.replace` on it, so a controlled `value` or an uncontrolled `defaultValue` in that shape answered `TypeError: self.replace is not a function` out of `OTPField`'s first paint — measured at the render, the whole field gone — while the field's own `length` guard showed every other stored read in the file was failsafe. Only text is a code (`storedText`'s rule, the read `storedNumber` and `storedTextList` follow), so `normalizeOtp`, `otpCells`, `applyOtpInput` and `decideOtpKey` take the decoded value as `unknown` and read a value that is not text as **no code** — the empty field an omitted value already means — and the completion rule in `apply` measures from the code the cells painted (`normalizeOtp(state.value.current, limit)`) instead of the raw prop, so a stored shape cannot make an edit look like a completion. Proof: `core/otp.test.ts` gains `reads a stored code that is not text as no code` (a number, `0`, a boolean, an object and JSON's `null`/absent, with a text code and its separators as the control) and `pads a stored code that is not text to empty cells`; `components/OTPField.test.tsx` gains `paints a stored code that is not text as empty, editable cells` (three empty cells, the tab stop on the first); `runtime/otp.runtime.test.tsx` gains `paints a stored code that is not text as an empty field a reader can still fill` (six cells, no `TextInput` announces a value, the first typed key reports `"1"`, and the controlled shape paints the same). Directions measured: with the raw `Str.replace` read restored, the three unit/tree cases fail on the exact `TypeError` and the window case fails at mount (`expected [] to have a length of 6 but got +0`, the throw having unmounted the field); restored, the package is 59 files / **1 258** unit cases (the page's new case included) and 22 files / **366** runtime cases green with `check-types` clean. Docs: `docs/otp-field.mdx`'s `value`/`defaultValue` rows (the page keeps the three-limitation contract), the package README's stored-choices list and the `COMPONENTS.md` OTP Field row state the read; `src/docs.test.ts` gains `holds the code a stored form wrote to the field's own read`, which reads the seam's `storedText(value) ?? ""` and `unknown` signature and both page rows in both directions. No live scenario applies — the throw is the render's own, and the playground mounts literal codes.
 
 `[x]` `packages/primitives`: **a stored cell count painted a one-character box and completed the code on its first key** — a one-time field's `length` is a setting saved beside the form as often as a literal, and a record can keep it as text (a settings field, a decoder's answer). `OTPField` read `props.length ?? 6` and handed it to `otpLength`, whose whole job is to floor a **number** — so a stored `"4"` was not a number, took the one-cell floor, and the field painted **one** cell for a four-digit code: measured in a window, the six-cell code became one `input`, and `onComplete` fired with `"1"` on the first character, a verifier handed a one-character code. `otpCellCount` (`core/otp.ts`, published from the core barrel with `DEFAULT_OTP_LENGTH`) reads only a real number as a count (`storedNumber`'s rule, the read `fieldRows` and `precisionOf` follow) and answers the documented **six** for a stored shape it cannot read, while a number that cannot be laid out still resolves to the one-cell floor the page documents. Both the part and the component read it, so the cells, the tab stop and the completion share one count. Proof: `core/otp.test.ts` gains `draws the documented six cells for a length that is not a number` (text, `null`, absent and an object, with `0`/`NaN`/`2.7` as the numeric controls) and `keeps a real count…`; `components/OTPField.test.tsx` gains `draws the documented six cells for a stored length that is not a number`; `runtime/otp.runtime.test.tsx` gains the same rule in a window (six `input`s, five digits report no completion, the sixth reports `"123456"`). Directions measured: with `otpLength(props.length ?? 6)` restored, the tree case fails `expected [ { …(10) } ] to have a length of 6 but got 1` and the window case `expected [ { id: 1, type: 'input', …(7) } ] to have a length of 6 but got 1`; restored, the package is 59 files / **1 261** unit cases and `runtime/otp.runtime.test.tsx` **16/16**. Docs: `docs/otp-field.mdx`'s `length` row, the `OTPFieldProps.length` JSDoc, the package README's stored-choices list and the `COMPONENTS.md` OTP Field row state the read, and `src/docs.test.ts`'s `holds the code a stored form wrote to the field's own read` also reads `storedNumber(length)` and the row in both directions. No live scenario applies — the count is the renderer's own tree and no playground probe mounts a stored length.
+
+
+## Chat family on shadcn's primitives (plan 716, 2026-10-27)
+
+`[x]` `[██████████]` 1/1 — **the chat family is Bubble/Message/MessageScroller/Chat
+on shadcn's structure, and the reported layout shift is gone.** New `Bubble`
+(seven variants, align, an 80% cap, grouped corners, an avatar slot, a reserved
+hover/focus action strip and a reaction row); `Message` now owns author,
+timestamp, meta, avatar and the row layout, and the bubble is a child (the old
+`MessageRoot` is `Message` — a documented break); `MessageScroller` moved its
+pin/unread/stream state into one `LocalState` store, added
+`MessageScrollerContent` and opt-in `scrollAnchor`, and put the jump control in a
+reserved rail; `Chat` gained a fixed `ChatHeader` and kept the composer fixed, so
+the transcript is the only flexible row. The failure copy moved from a row
+between the transcript and the composer (which shrank the viewport when it
+appeared) into the header. Proof: 3 new layout cases in `chat.test.tsx` (three
+appends while pinned follow the tail with the composer's `y` unchanged; three
+while scrolled up leave both the offset and the composer unchanged with
+`3 new messages`; a streaming row grows without moving either), 8 `Bubble`
+cases, 2 `Message` metadata cases, and four native frames
+(`chat-idle`, `chat-streaming`, `chat-scrolled`, `chat-block`) under
+`apps/playground/.artifacts/live/`. Directions measured by inverting the
+viewport's flexible sizing, the pinned scroll effect and the reserved rail (see
+the report). Docs: `bubble.mdx` is new; `chat.mdx`/`message.mdx`/
+`message-scroller.mdx` are rebuilt; the browser chat block is the shadcn shape,
+not a diagram. `nub run check`, the components unit suite, the full behaviour
+suite (116 files / 1 250 cases) and the docs suite (209 files / 2 143 cases) are
+green.

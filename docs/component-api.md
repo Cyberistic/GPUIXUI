@@ -365,9 +365,10 @@ the page and the package in the same change.
 | User menu | `UserMenu`, `SidebarUserMenu` | — | plan 340 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
-| Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
-| Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | — | plan 207 |
-| Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | — | plan 207 |
+| Bubble | `Bubble`, `BubbleContent`, `BubbleActions`, `BubbleAction`, `BubbleReactions`, `BubbleGroup` | `Bubble` (shape only) | plan 716 |
+| Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerContent`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206, 716 |
+| Chat | `ChatRoot`, `ChatHeader`, `ChatMessages`, `ChatComposer` | — | plan 207, 716 |
+| Message | `Message`, `MessageAvatar`, `MessageHeader`, `MessageContent`, `MessageFooter`, `MessageActions`, `MessageGroup` | `Message` (shape only) | plan 207, 716 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -417,8 +418,8 @@ the honest parts.
 | Image zoom | `ImageZoom` (one part) | — | plan 600 |
 | Motion grid | `MotionGrid` (one part) | — | plan 600 |
 
-**Planned Tier 2 additions** — none. The last reserved family, Chat and
-Message (plan `207`), landed with its parts unchanged, so every part table above
+**Planned Tier 2 additions** — none. Chat and Message (plan `207`) were
+rebuilt on shadcn's Bubble/Message split in plan `716`, so every part table above
 is implemented. A new reservation goes here with its parts fixed before the
 implementation starts, and `src/api.test.ts` refuses a reserved part the package
 already exports.

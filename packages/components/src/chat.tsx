@@ -40,8 +40,11 @@ import {
   CHAT_EMPTY,
   CHAT_EMPTY_DESCRIPTION,
   CHAT_EMPTY_TITLE,
-  CHAT_ERROR,
-  CHAT_ERROR_TEXT,
+  CHAT_HEADER,
+  CHAT_HEADER_ACTIONS,
+  CHAT_HEADER_COPY,
+  CHAT_HEADER_STATUS,
+  CHAT_HEADER_TITLE,
   CHAT_MESSAGES,
   CHAT_ROOT,
   cn,
@@ -55,6 +58,7 @@ import * as Option from "effect/Option";
 import {
   Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useMemo,
@@ -94,6 +98,8 @@ import {
 } from "./internal/theme.js";
 import {
   MessageScroller,
+  MessageScrollerContent,
+  MessageScrollerItem,
   MessageScrollerJumpToLatest,
   MessageScrollerViewport,
 } from "./message-scroller.js";
@@ -244,6 +250,94 @@ export const ChatRoot = ({
   );
 };
 
+/** {@link ChatHeader} props. */
+export interface ChatHeaderProps extends Omit<Props, "children" | "title"> {
+  /** The conversation title. Defaults to the root's `label`. */
+  readonly title?: string;
+  /** One line under the title. Defaults to the status machine's word; the
+   * failure sentence replaces it when the last reply failed. */
+  readonly description?: string;
+  /** Trailing controls: reset, model picker, call actions. */
+  readonly actions?: ReactNode;
+  /** A Tailwind class string, joined after the recipe. */
+  readonly className?: string;
+}
+
+/** The status word a state paints when the caller writes no description. */
+const STATUS_COPY: Readonly<Record<Machine.ChatStatus, string>> = {
+  idle: "Ready",
+  submitting: "Sending…",
+  streaming: "Replying…",
+  error: "The reply failed.",
+};
+
+/**
+ * The fixed header: title, status and actions. The failure sentence lives here
+ * rather than in a row between the transcript and the composer, because a row
+ * that appears there takes height from the viewport and moves the composer.
+ */
+export const ChatHeader = ({
+  title,
+  description,
+  actions,
+  className,
+  style,
+  ...rest
+}: ChatHeaderProps) => {
+  const theme = useTheme();
+  const { label, status, error, canRetry, retry } = useChat();
+  const name = accessibleName(textOf(title)) ?? label;
+  const failed = status === "error";
+  const line = failed
+    ? error
+    : (accessibleName(textOf(description)) ?? STATUS_COPY[status]);
+
+  return (
+    <div
+      {...rest}
+      style={mergeStyles(
+        mergeStyles(recipeStyle(cn(CHAT_HEADER, className), theme), {
+          flexShrink: 0,
+        }),
+        style,
+      )}
+    >
+      <div style={recipeStyle(CHAT_HEADER_COPY, theme)}>
+        <text style={recipeStyle(CHAT_HEADER_TITLE, theme)}>{name}</text>
+        <text
+          testId={failed ? "chat-error" : "chat-status"}
+          role="status"
+          aria-description={failed ? error : undefined}
+          style={mergeStyles(recipeStyle(CHAT_HEADER_STATUS, theme), {
+            ...(failed
+              ? { color: statusTone(theme, "destructive").foreground }
+              : {}),
+            // One line, always: the header is a fixed row, so a long failure
+            // sentence is truncated rather than allowed to push the composer.
+            // `lineClamp` paints nothing on 0.11.0; a definite line box with a
+            // hidden overflow and an ellipsis is the measured route.
+            width: "100%",
+            height: 16,
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          })}
+        >
+          {line}
+        </text>
+      </div>
+      <div style={recipeStyle(CHAT_HEADER_ACTIONS, theme)}>
+        {actions}
+        {failed && canRetry ? (
+          <Button testId="chat-error-retry" size="sm" onClick={retry}>
+            Retry
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
 /** {@link ChatMessages} props. */
 export interface ChatMessagesProps extends Omit<Props, "children"> {
   /** Replaces the default empty-conversation panel. */
@@ -258,7 +352,8 @@ export interface ChatMessagesProps extends Omit<Props, "children"> {
 }
 
 /** The scrolled transcript: follows the tail, offers the way back, and owns the
- * empty and failed-reply panels. */
+ * empty panel. The failure copy is in the header, so this part never loses
+ * viewport height when a reply fails. */
 export const ChatMessages = ({
   empty,
   emptyTitle,
@@ -269,8 +364,9 @@ export const ChatMessages = ({
   ...rest
 }: ChatMessagesProps) => {
   const theme = useTheme();
-  const { status, label, error, canRetry, retry } = useChat();
-  const emptyConversation = Children.toArray(children).length === 0;
+  const { status, label } = useChat();
+  const rows = Children.toArray(children);
+  const emptyConversation = rows.length === 0;
   // The empty panel's copy is interface copy like a name: a blank title or
   // description lays out a line that says nothing, so it reads as the
   // component's own sentence.
@@ -281,57 +377,49 @@ export const ChatMessages = ({
   );
 
   return (
-    <MessageScroller label={label}>
+    <MessageScroller
+      label={label}
+      streaming={Machine.isChatBusy(status)}
+      style={{ flexGrow: 1, flexBasis: 0, flexShrink: 1, minHeight: 0 }}
+    >
       <MessageScrollerViewport
         {...rest}
         testId={rest.testId ?? "chat-messages"}
         style={mergeStyles(
-          mergeStyles(recipeStyle(cn(CHAT_MESSAGES, className), theme), {
-            flexGrow: 1,
-            minHeight: 0,
-          }),
+          recipeStyle(cn(CHAT_MESSAGES, className), theme),
           style,
         )}
       >
-        {emptyConversation ? (
-          <div style={recipeStyle(CHAT_EMPTY, theme)} testId="chat-empty">
-            {empty ?? (
-              <>
-                <text style={recipeStyle(CHAT_EMPTY_TITLE, theme)}>
-                  {title}
-                </text>
-                <text style={recipeStyle(CHAT_EMPTY_DESCRIPTION, theme)}>
-                  {description}
-                </text>
-              </>
-            )}
-          </div>
-        ) : (
-          children
-        )}
+        <MessageScrollerContent>
+          {emptyConversation ? (
+            <div style={recipeStyle(CHAT_EMPTY, theme)} testId="chat-empty">
+              {empty ?? (
+                <>
+                  <text style={recipeStyle(CHAT_EMPTY_TITLE, theme)}>
+                    {title}
+                  </text>
+                  <text style={recipeStyle(CHAT_EMPTY_DESCRIPTION, theme)}>
+                    {description}
+                  </text>
+                </>
+              )}
+            </div>
+          ) : (
+            // A caller's rows are wrapped in the scroller's item boundary, so
+            // arrival counting and turn anchoring work without every chat
+            // writing the same wrapper. An explicit item is kept, which is how
+            // a caller opts into `scrollAnchor`.
+            rows.map((child, index) =>
+              isValidElement(child) && child.type === MessageScrollerItem ? (
+                child
+              ) : (
+                <MessageScrollerItem key={index}>{child}</MessageScrollerItem>
+              ),
+            )
+          )}
+        </MessageScrollerContent>
       </MessageScrollerViewport>
-      {/*
-        The failure is not a row: it sits between the transcript and the
-        affordance so a reader who scrolled up still sees it — a row inside the
-        viewport would be off screen exactly when it matters.
-      */}
-      {status !== "error" ? null : (
-        <div style={recipeStyle(CHAT_ERROR, theme)} testId="chat-error">
-          <div
-            style={mergeStyles(recipeStyle(CHAT_ERROR_TEXT, theme), {
-              color: statusTone(theme, "destructive").foreground,
-            })}
-          >
-            <text>{error}</text>
-          </div>
-          {canRetry ? (
-            <Button testId="chat-error-retry" size="sm" onClick={retry}>
-              Retry
-            </Button>
-          ) : null}
-        </div>
-      )}
-      <MessageScrollerJumpToLatest />
+      <MessageScrollerJumpToLatest testId="chat-jump" />
     </MessageScroller>
   );
 };
@@ -448,7 +536,9 @@ export const ChatComposer = ({
     <div
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(CHAT_COMPOSER, className), theme),
+        mergeStyles(recipeStyle(cn(CHAT_COMPOSER, className), theme), {
+          flexShrink: 0,
+        }),
         resolveStyle(style, state),
       )}
     >
@@ -521,6 +611,7 @@ export const ChatComposer = ({
 /** Every part of Chat, so a misplaced sibling is named. */
 const chatParts: ReadonlyArray<PartComponent> = [
   ChatRoot,
+  ChatHeader,
   ChatMessages,
   ChatComposer,
 ];
@@ -528,11 +619,11 @@ const chatParts: ReadonlyArray<PartComponent> = [
 const chatRoot: PartsContract = {
   parent: "ChatRoot",
   family: chatParts,
-  accepts: [ChatMessages, ChatComposer],
-  hint: "Put ChatMessages and ChatComposer directly inside ChatRoot.",
+  accepts: [ChatHeader, ChatMessages, ChatComposer],
+  hint: "Put ChatHeader, ChatMessages and ChatComposer directly inside ChatRoot.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `COMPONENTS.md`. */
 export const chatMeta = {
   name: "Chat",
   tier: 2,
@@ -542,7 +633,9 @@ export const chatMeta = {
     "the transport is the consumer's: the component emits submit/stop/retry intents and never talks to a model",
     "Enter reaches the textarea's onSubmit listener; a textarea without it consumes Enter as a newline and no keydown arrives (measured in a window)",
     "Shift+Enter inserts a newline and reaches no handler at all (measured), so a composer cannot distinguish it from a paste",
-    "no aria-labelledby, so the conversation name and the field's name are written separately",
+    "no aria-live, so a new row is painted but not announced; the header's status line is a marker, not a live region",
+    "the failure copy is one line in the fixed header (full sentence in aria-description), not a row between the viewport and the composer: a row there took height from the transcript and moved the composer when it appeared",
+    "the jump control owns a reserved rail under the viewport, because position: absolute resolves against the mount parent in 0.11.0",
   ],
   docs: "docs/chat.mdx",
   example: "examples/chat.example.tsx",

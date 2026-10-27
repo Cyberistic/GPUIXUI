@@ -23,13 +23,16 @@ import {
   type TestTheme,
 } from "../internal/test-root.js";
 import {
+  Message,
   MessageActions,
   MessageAvatar,
   MessageContent,
-  MessageRoot,
+  MessageFooter,
+  MessageHeader,
   type MessageToolCall,
   type MessageVariant,
 } from "../message.js";
+import { Bubble, BubbleContent } from "../bubble.js";
 
 const themes: ReadonlyArray<readonly [TestTheme, Theme]> = [
   ["light", lightTheme],
@@ -62,7 +65,12 @@ const Row = ({
   readonly onFeedback?: (feedback: "helpful" | "not-helpful") => void;
 }) => (
   <div style={{ width: 520, padding: 24 }}>
-    <MessageRoot testId="row" variant={variant}>
+    <Message
+      testId="row"
+      variant={variant}
+      timestamp="09:41"
+      meta={<text>read</text>}
+    >
       <MessageAvatar />
       <MessageContent
         testId="content"
@@ -71,15 +79,25 @@ const Row = ({
         sources={sources}
         streaming={streaming}
       >
-        <text>{body}</text>
-        <MessageActions
-          testId="actions"
-          onCopy={onCopy}
-          onRetry={onRetry}
-          onFeedback={onFeedback}
-        />
+        <MessageHeader />
+        <Bubble
+          align={variant === "user" ? "end" : "start"}
+          variant={variant === "user" ? "muted" : "ghost"}
+        >
+          <BubbleContent testId="message-bubble">
+            <text>{body}</text>
+          </BubbleContent>
+        </Bubble>
+        <MessageFooter>
+          <MessageActions
+            testId="actions"
+            onCopy={onCopy}
+            onRetry={onRetry}
+            onFeedback={onFeedback}
+          />
+        </MessageFooter>
       </MessageContent>
-    </MessageRoot>
+    </Message>
   </div>
 );
 
@@ -187,7 +205,7 @@ describe("Message", () => {
     // painting the reply without it.
     const root = renderComponent(
       <div style={{ width: 520, padding: 24 }}>
-        <MessageRoot testId="row" variant="assistant">
+        <Message testId="row" variant="assistant">
           <MessageAvatar />
           <MessageContent
             testId="content"
@@ -196,9 +214,13 @@ describe("Message", () => {
             // @ts-expect-error — a slot a store wrote as absent.
             sources={null}
           >
-            <text>The layout pass is done.</text>
+            <Bubble>
+              <BubbleContent>
+                <text>The layout pass is done.</text>
+              </BubbleContent>
+            </Bubble>
           </MessageContent>
-        </MessageRoot>
+        </Message>
       </div>,
     );
 
@@ -217,7 +239,7 @@ describe("Message", () => {
     // — while a whitespace sentence painted a full blank line in the panel.
     const root = renderComponent(
       <div style={{ width: 520, padding: 24 }}>
-        <MessageRoot variant="assistant">
+        <Message variant="assistant">
           <MessageAvatar />
           <MessageContent
             reasoning="Checked the layout pass."
@@ -227,14 +249,22 @@ describe("Message", () => {
             streaming
             streamingLabel="  "
           >
-            <text>Body</text>
+            <Bubble>
+              <BubbleContent>
+                <text>Body</text>
+              </BubbleContent>
+            </Bubble>
           </MessageContent>
-        </MessageRoot>
-        <MessageRoot variant="assistant">
+        </Message>
+        <Message variant="assistant">
           <MessageContent reasoning="   ">
-            <text>Body</text>
+            <Bubble>
+              <BubbleContent>
+                <text>Body</text>
+              </BubbleContent>
+            </Bubble>
           </MessageContent>
-        </MessageRoot>
+        </Message>
       </div>,
     );
 
@@ -260,7 +290,7 @@ describe("Message", () => {
     // transcript down with it.
     const root = renderComponent(
       <div style={{ width: 520, padding: 24 }}>
-        <MessageRoot variant="assistant">
+        <Message variant="assistant">
           <MessageContent
             reasoning="Checked the layout pass."
             // @ts-expect-error — the names a stored reply wrote.
@@ -272,9 +302,13 @@ describe("Message", () => {
             // @ts-expect-error — the names a stored reply wrote.
             streamingLabel={42}
           >
-            <text>Body</text>
+            <Bubble>
+              <BubbleContent>
+                <text>Body</text>
+              </BubbleContent>
+            </Bubble>
           </MessageContent>
-        </MessageRoot>
+        </Message>
       </div>,
     );
 
@@ -319,6 +353,41 @@ describe("Message", () => {
       );
       assistant.unmount();
     });
+  });
+
+  it("paints the author, timestamp and meta the root owns", () => {
+    const root = renderComponent(<Row />);
+
+    expect(root.renderer.getAllText()).toEqual(
+      expect.arrayContaining(["Assistant", "09:41", "read"]),
+    );
+
+    root.unmount();
+  });
+
+  it("reads a blank timestamp as no timestamp, never a blank line", () => {
+    const root = renderComponent(
+      <div style={{ width: 520 }}>
+        <Message timestamp="   ">
+          <MessageAvatar />
+          <MessageContent>
+            <MessageHeader />
+            <Bubble>
+              <BubbleContent>
+                <text>Body</text>
+              </BubbleContent>
+            </Bubble>
+          </MessageContent>
+        </Message>
+      </div>,
+    );
+
+    expect(root.renderer.getAllText()).toContain("Assistant");
+    expect(
+      root.renderer.getAllText().filter((line) => line.trim() === ""),
+    ).toEqual([]);
+
+    root.unmount();
   });
 
   it("keeps reasoning closed until its trigger is activated", () => {
@@ -475,25 +544,33 @@ describe("Message", () => {
   it("rejects an action row directly in the root", () => {
     expect(
       caught(
-        <MessageRoot>
+        <Message>
           <MessageContent>
-            <text>Body</text>
+            <Bubble>
+              <BubbleContent>
+                <text>Body</text>
+              </BubbleContent>
+            </Bubble>
           </MessageContent>
           <MessageActions onCopy={() => undefined} />
-        </MessageRoot>,
+        </Message>,
       ),
-    ).toContain("MessageActions cannot be used inside MessageRoot");
+    ).toContain("MessageActions cannot be used inside Message");
   });
 
   it("rejects an avatar inside the content", () => {
     expect(
       caught(
-        <MessageRoot>
+        <Message>
           <MessageContent>
             <MessageAvatar />
-            <text>Body</text>
+            <Bubble>
+              <BubbleContent>
+                <text>Body</text>
+              </BubbleContent>
+            </Bubble>
           </MessageContent>
-        </MessageRoot>,
+        </Message>,
       ),
     ).toContain("MessageAvatar cannot be used inside MessageContent");
   });

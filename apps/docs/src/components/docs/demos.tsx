@@ -263,6 +263,7 @@ import {
   timePickerWorkflowSource,
 } from "./time-picker-demo";
 import { ChatDemo, chatDemoSource } from "./chat-demo";
+import { BubbleDemo, bubbleDemoSource } from "./bubble-demo";
 import { EmptyStateDemo, emptyStateDemoSource } from "./empty-state-demo";
 import { FieldsetDemo, fieldsetDemoSource } from "./fieldset-demo";
 import {
@@ -3286,6 +3287,7 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: timePickerWorkflowSource,
   },
   "chat-demo": { render: ChatDemo, source: chatDemoSource },
+  "bubble-demo": { render: BubbleDemo, source: bubbleDemoSource },
   "empty-state-demo": { render: EmptyStateDemo, source: emptyStateDemoSource },
   "fieldset-demo": { render: FieldsetDemo, source: fieldsetDemoSource },
   "property-panel-demo": {

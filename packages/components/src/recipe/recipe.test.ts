@@ -153,14 +153,25 @@ import {
   CHAT_EMPTY,
   CHAT_EMPTY_DESCRIPTION,
   CHAT_EMPTY_TITLE,
-  CHAT_ERROR,
-  CHAT_ERROR_TEXT,
+  CHAT_HEADER,
+  CHAT_HEADER_ACTIONS,
+  CHAT_HEADER_COPY,
+  CHAT_HEADER_STATUS,
+  CHAT_HEADER_TITLE,
   CHAT_MESSAGES,
   CHAT_ROOT,
+  BUBBLE_ACTIONS,
+  BUBBLE_COLUMN,
+  BUBBLE_CONTENT,
+  BUBBLE_GROUP,
+  BUBBLE_REACTIONS,
+  BUBBLE_ROOT,
+  BUBBLE_VARIANTS,
   MESSAGE_ACTIONS,
-  MESSAGE_BUBBLE,
-  MESSAGE_BUBBLES,
   MESSAGE_CONTENT,
+  MESSAGE_FOOTER,
+  MESSAGE_GROUP,
+  MESSAGE_HEADER,
   MESSAGE_REASONING,
   MESSAGE_REASONING_CONTENT,
   MESSAGE_REASONING_TRIGGER,
@@ -206,7 +217,9 @@ import {
   DRAWER_HEADER,
   DRAWER_OVERLAY,
   DRAWER_TITLE,
+  MESSAGE_SCROLLER_CONTENT,
   MESSAGE_SCROLLER_ITEM,
+  MESSAGE_SCROLLER_RAIL,
   MESSAGE_SCROLLER_ROOT,
   MESSAGE_SCROLLER_VIEWPORT,
   NAVIGATION_MENU_CONTENT,
@@ -1854,33 +1867,135 @@ describe("ColorPicker recipe", () => {
 });
 
 describe("MessageScroller recipe", () => {
-  it("resolves the root, viewport and row", () => {
+  it("resolves the root, viewport, content, row and the reserved rail", () => {
     expect(style(MESSAGE_SCROLLER_ROOT)).toEqual({
       display: "flex",
       flexDirection: "column",
-      gap: 6,
       minHeight: 0,
+      minWidth: 0,
     });
     expect(style(MESSAGE_SCROLLER_VIEWPORT)).toEqual({
       display: "flex",
       flexDirection: "column",
       minHeight: 0,
+      minWidth: 0,
       backgroundColor: darkTheme.colors.background,
       color: darkTheme.colors.foreground,
+    });
+    expect(style(MESSAGE_SCROLLER_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 0,
     });
     expect(style(MESSAGE_SCROLLER_ITEM)).toEqual({
       display: "flex",
       flexDirection: "column",
-      gap: 4,
+      minWidth: 0,
       flexShrink: 0,
       alignSelf: "stretch",
-      paddingBottom: 6,
+    });
+    expect(style(MESSAGE_SCROLLER_RAIL)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    });
+  });
+});
+
+describe("Bubble recipe", () => {
+  it("resolves the row, column, surface and the seven variants", () => {
+    expect(style(BUBBLE_ROOT)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-end",
+      gap: 8,
+      minWidth: 0,
+    });
+    expect(style(BUBBLE_COLUMN)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      minWidth: 0,
+    });
+    expect(style(BUBBLE_CONTENT)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      borderRadius: 12,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingLeft: 12,
+      paddingRight: 12,
+      fontSize: 14,
+      lineHeight: 20,
+      minWidth: 0,
+    });
+    expect(style(BUBBLE_VARIANTS.default)).toEqual({
+      backgroundColor: darkTheme.colors.primary,
+      color: darkTheme.colors.primaryForeground,
+    });
+    expect(style(BUBBLE_VARIANTS.secondary)).toEqual({
+      backgroundColor: darkTheme.colors.secondary,
+      color: darkTheme.colors.secondaryForeground,
+    });
+    expect(style(BUBBLE_VARIANTS.muted)).toEqual({
+      backgroundColor: darkTheme.colors.muted,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(BUBBLE_VARIANTS.tinted)).toEqual({
+      backgroundColor: "transparent",
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(BUBBLE_VARIANTS.outline)).toEqual({
+      backgroundColor: darkTheme.colors.background,
+      color: darkTheme.colors.foreground,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+    });
+    expect(style(BUBBLE_VARIANTS.ghost)).toEqual({
+      backgroundColor: "transparent",
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(BUBBLE_VARIANTS.destructive)).toEqual({
+      backgroundColor: darkTheme.colors.destructiveSoft,
+      color: darkTheme.colors.destructiveSoftForeground,
+    });
+  });
+
+  it("resolves the action strip, its reaction row and the group", () => {
+    expect(style(BUBBLE_ACTIONS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      minHeight: 0,
+    });
+    expect(style(BUBBLE_REACTIONS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      borderRadius: 9999,
+      backgroundColor: darkTheme.colors.muted,
+      paddingLeft: 6,
+      paddingRight: 6,
+      paddingTop: 2,
+      paddingBottom: 2,
+      fontSize: 12,
+      lineHeight: 16,
+    });
+    expect(style(BUBBLE_GROUP)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 0,
     });
   });
 });
 
 describe("Message recipe", () => {
-  it("resolves the row, its body and the three variant strips", () => {
+  it("resolves the row, its column, header, footer and group", () => {
     expect(style(MESSAGE_ROOT)).toEqual({
       display: "flex",
       flexDirection: "row",
@@ -1896,29 +2011,29 @@ describe("Message recipe", () => {
       flexGrow: 1,
       minWidth: 0,
     });
-    expect(style(MESSAGE_BUBBLE)).toEqual({
+    expect(style(MESSAGE_HEADER)).toEqual({
       display: "flex",
-      flexDirection: "column",
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
-      borderRadius: 8,
-      paddingTop: 8,
-      paddingBottom: 8,
-      paddingLeft: 12,
-      paddingRight: 12,
-      fontSize: 14,
-      lineHeight: 20,
-    });
-    expect(style(MESSAGE_BUBBLES.user)).toEqual({
-      backgroundColor: darkTheme.colors.muted,
-    });
-    expect(style(MESSAGE_BUBBLES.assistant)).toEqual({
-      backgroundColor: "transparent",
-    });
-    expect(style(MESSAGE_BUBBLES.system)).toEqual({
-      backgroundColor: "transparent",
+      minWidth: 0,
       fontSize: 12,
       lineHeight: 16,
+      fontWeight: 500,
+      fontFamily: sans,
       color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(MESSAGE_FOOTER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      minWidth: 0,
+    });
+    expect(style(MESSAGE_GROUP)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 0,
     });
   });
 
@@ -2023,19 +2138,55 @@ describe("Message recipe", () => {
 });
 
 describe("Chat recipe", () => {
-  it("resolves the conversation column and its transcript", () => {
+  it("resolves the conversation column, header and its transcript", () => {
     expect(style(CHAT_ROOT)).toEqual({
       display: "flex",
       flexDirection: "column",
       gap: 12,
       minHeight: 0,
+      minWidth: 0,
       flexGrow: 1,
+    });
+    expect(style(CHAT_HEADER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      gap: 12,
+      flexShrink: 0,
+    });
+    expect(style(CHAT_HEADER_COPY)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      minWidth: 0,
+      flexGrow: 1,
+    });
+    expect(style(CHAT_HEADER_TITLE)).toEqual({
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: 500,
+      fontFamily: sans,
+      color: darkTheme.colors.foreground,
+    });
+    expect(style(CHAT_HEADER_STATUS)).toEqual({
+      fontSize: 12,
+      lineHeight: 16,
+      fontFamily: sans,
+      color: darkTheme.colors.mutedForeground,
+    });
+    expect(style(CHAT_HEADER_ACTIONS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      flexShrink: 0,
     });
     expect(style(CHAT_MESSAGES)).toEqual({
       display: "flex",
       flexDirection: "column",
-      gap: 6,
       minHeight: 0,
+      minWidth: 0,
       flexGrow: 1,
     });
   });
@@ -2063,30 +2214,6 @@ describe("Chat recipe", () => {
       lineHeight: 16,
       fontFamily: sans,
       color: darkTheme.colors.mutedForeground,
-    });
-  });
-
-  it("resolves the failed-reply row", () => {
-    expect(style(CHAT_ERROR)).toEqual({
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 8,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: darkTheme.colors.border,
-      backgroundColor: darkTheme.colors.card,
-      paddingTop: 8,
-      paddingBottom: 8,
-      paddingLeft: 12,
-      paddingRight: 12,
-    });
-    expect(style(CHAT_ERROR_TEXT)).toEqual({
-      fontSize: 12,
-      lineHeight: 16,
-      fontFamily: sans,
-      flexGrow: 1,
     });
   });
 
@@ -2365,13 +2492,27 @@ describe("no unsupported classes", () => {
       COLOR_PICKER_INPUT,
       MESSAGE_SCROLLER_ROOT,
       MESSAGE_SCROLLER_VIEWPORT,
+      MESSAGE_SCROLLER_CONTENT,
       MESSAGE_SCROLLER_ITEM,
+      MESSAGE_SCROLLER_RAIL,
+      BUBBLE_ROOT,
+      BUBBLE_COLUMN,
+      BUBBLE_CONTENT,
+      BUBBLE_VARIANTS.default,
+      BUBBLE_VARIANTS.secondary,
+      BUBBLE_VARIANTS.muted,
+      BUBBLE_VARIANTS.tinted,
+      BUBBLE_VARIANTS.outline,
+      BUBBLE_VARIANTS.ghost,
+      BUBBLE_VARIANTS.destructive,
+      BUBBLE_ACTIONS,
+      BUBBLE_REACTIONS,
+      BUBBLE_GROUP,
       MESSAGE_ROOT,
       MESSAGE_CONTENT,
-      MESSAGE_BUBBLE,
-      MESSAGE_BUBBLES.user,
-      MESSAGE_BUBBLES.assistant,
-      MESSAGE_BUBBLES.system,
+      MESSAGE_HEADER,
+      MESSAGE_FOOTER,
+      MESSAGE_GROUP,
       MESSAGE_REASONING,
       MESSAGE_REASONING_TRIGGER,
       MESSAGE_REASONING_CONTENT,
@@ -2385,12 +2526,15 @@ describe("no unsupported classes", () => {
       MESSAGE_STREAMING,
       MESSAGE_ACTIONS,
       CHAT_ROOT,
+      CHAT_HEADER,
+      CHAT_HEADER_COPY,
+      CHAT_HEADER_TITLE,
+      CHAT_HEADER_STATUS,
+      CHAT_HEADER_ACTIONS,
       CHAT_MESSAGES,
       CHAT_EMPTY,
       CHAT_EMPTY_TITLE,
       CHAT_EMPTY_DESCRIPTION,
-      CHAT_ERROR,
-      CHAT_ERROR_TEXT,
       CHAT_COMPOSER,
       CHAT_COMPOSER_ROW,
       CHAT_COMPOSER_FIELD,

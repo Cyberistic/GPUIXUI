@@ -9205,6 +9205,35 @@
   align-items: flex-end;
 }
 
+.gx-message-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-message-author {
+  font-weight: 500;
+}
+
+.gx-message-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-message-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-message-content[data-variant="user"] .gx-message-footer {
+  align-self: flex-end;
+}
+
 .gx-message-bubble {
   display: flex;
   flex-direction: column;
@@ -9811,196 +9840,169 @@
   color: var(--primary);
 }
 
-/* ---- chat: mirrors components/src/chat.tsx's CHAT_* recipes ----
-   A `ChatRoot` column: the transcript is a scroller that owns the empty and
-   failed-reply panels, and the composer swaps Send for Stop while a reply is
-   open. The transcript has no frame of its own — an assistant speaks in prose
-   on the page, a user in a filled bubble — and the composer is the only
-   bordered surface, as `CHAT_COMPOSER` draws it. */
+/* ---- chat: the block, on the fixed-row contract of ChatRoot ----
+   A bounded frame: the header, the jump rail and the composer do not shrink;
+   the transcript is the only row that grows. Appending a message, streaming a
+   reply or revealing the jump control cannot move the composer. The jump
+   control owns a reserved rail, so it never takes height from the viewport. */
 .gx-chat {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: min(460px, 100%);
+  gap: 12px;
+  width: min(560px, 100%);
+  height: 560px;
+  min-height: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 12px);
+  background: var(--card);
+  color: var(--card-foreground);
 }
 
 .gx-chat-head {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
 }
 
 .gx-chat-head-copy {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .gx-chat-title {
   margin: 0;
-  font-size: 15px;
-  font-weight: 650;
+  overflow: hidden;
   color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gx-chat-summary {
   margin: 0;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-/* A segmented control: one track, one raised choice — not three buttons. */
-.gx-chat-switch {
-  display: inline-flex;
-  flex: none;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--muted);
-}
-
-.gx-chat-choice {
-  min-height: calc(var(--target-size) - 4px);
-  padding: 0 9px;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
+  overflow: hidden;
   color: var(--muted-foreground);
   font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.gx-chat-choice[data-chosen] {
-  background: var(--card);
-  color: var(--foreground);
-  box-shadow: 0 1px 2px var(--shadow);
+.gx-chat-summary[data-error] {
+  color: var(--destructive);
 }
 
-.gx-chat-choice:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
+.gx-chat-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
 }
 
+/* The only flexible row. `flex-basis: 0` keeps a tall transcript from asking
+   the frame for more height; `overflow-y` is the scroller. */
 .gx-chat-messages {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gx-chat-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 2px;
 }
 
 .gx-chat-row {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .gx-chat-row[data-role="user"] {
-  flex-direction: row-reverse;
-}
-
-.gx-chat-avatar {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: var(--target-size);
-  height: var(--target-size);
-  border-radius: 50%;
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
+  align-items: flex-end;
 }
 
 .gx-chat-bubble {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   min-width: 0;
-  max-width: 78%;
+  max-width: 80%;
+  border-radius: 12px;
 }
 
-/* The shipped user variant is a soft bubble; a reader's eye lands on the end
-   edge, so the meta moves with it. */
 .gx-chat-bubble[data-role="user"] {
-  align-items: flex-end;
   padding: 8px 12px;
-  border-radius: calc(var(--radius) + 8px) calc(var(--radius) + 8px)
-    var(--radius) calc(var(--radius) + 8px);
   background: var(--muted);
-}
-
-.gx-chat-meta {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.gx-chat-author {
-  font-size: 12px;
-  font-weight: 600;
   color: var(--foreground);
 }
 
-.gx-chat-time {
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted-foreground);
+.gx-chat-bubble[data-role="assistant"] {
+  padding: 0;
+  background: transparent;
+  color: var(--foreground);
 }
 
 .gx-chat-body {
+  margin: 0;
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 20px;
-  color: var(--foreground);
+  white-space: pre-wrap;
 }
 
 .gx-chat-row[data-live] .gx-chat-body {
   color: var(--muted-foreground);
 }
 
-/* The live seam: the divider separates the settled transcript from the reply
-   the status machine is still streaming. */
-.gx-chat-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
+.gx-chat-sr {
+  margin: 0;
   color: var(--muted-foreground);
-}
-
-.gx-chat-divider::before,
-.gx-chat-divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.gx-chat-error {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  background: var(--destructive-soft);
-}
-
-.gx-chat-error-text {
-  flex: 1;
+  font-family: var(--font-sans);
   font-size: 12px;
-  color: var(--destructive-soft-foreground);
+}
+
+/* A reserved rail: the control fades and travels 4px inside it, so it never
+   changes the transcript's height. */
+.gx-chat-rail {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+}
+
+.gx-chat-rail .gx-btn {
+  opacity: 0;
+  pointer-events: none;
+  position: relative;
+  top: 4px;
+  transition:
+    opacity 160ms ease-out,
+    top 160ms ease-out;
+}
+
+.gx-chat-rail .gx-btn[data-active="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  top: 0;
 }
 
 .gx-chat-composer {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 6px;
   padding: 8px;
@@ -10024,6 +10026,7 @@
   flex: 1;
   min-width: 0;
   min-height: var(--control-height-md);
+  max-height: 120px;
   padding: 5px 2px;
   border: 0;
   background: transparent;
@@ -10041,47 +10044,137 @@
 
 .gx-chat-hint {
   padding-left: 2px;
-  font-size: 11px;
   color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
 }
 
-.gx-scroll {
+/* ---- bubble: mirrors components/src/bubble.tsx ----
+   Seven surfaces, start/end alignment, a hidden-until-hover action strip that
+   reserves its height, and joined corners on a grouped run. */
+.gx-bubble-scene {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  height: 120px;
-  padding: 8px;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
+  gap: 12px;
+  width: min(480px, 100%);
 }
 
-.gx-scroll-row {
-  padding: 5px 8px;
-  border-radius: calc(var(--radius) - 2px);
-  font-size: 12.5px;
+.gx-bubble-row {
+  display: flex;
+  min-width: 0;
+}
+
+.gx-bubble-row[data-align="end"] {
+  justify-content: flex-end;
+}
+
+.gx-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  max-width: 80%;
+  border-radius: 12px;
+}
+
+.gx-bubble-text {
+  margin: 0;
+  padding: 8px 12px;
+  color: inherit;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.gx-bubble-ghost .gx-bubble-text {
+  padding: 0;
+}
+
+.gx-bubble-default {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-bubble-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-bubble-muted {
+  background: var(--muted);
   color: var(--foreground);
 }
 
-.gx-scroll-row:hover {
-  background: var(--hover);
+.gx-bubble-tinted {
+  background: var(--accent);
+  color: var(--accent-foreground);
 }
 
-.gx-scroll-h {
-  flex-direction: row;
-  height: auto;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.gx-scroll-chip {
-  flex: none;
-  padding: 5px 10px;
+.gx-bubble-outline {
   border: 1px solid var(--border);
-  border-radius: 9999px;
-  font-size: 12px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.gx-bubble-ghost {
+  max-width: 100%;
+  background: transparent;
+  color: var(--foreground);
+}
+
+.gx-bubble-destructive {
+  background: var(--destructive-soft);
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-bubble-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gx-bubble:hover .gx-bubble-actions,
+.gx-bubble:focus-within .gx-bubble-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gx-bubble-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  width: min(480px, 100%);
+}
+
+.gx-bubble-group .gx-bubble {
+  max-width: 80%;
+  border-radius: 12px;
+}
+
+.gx-bubble-group .gx-bubble[data-group="first"] {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.gx-bubble-group .gx-bubble[data-group="middle"] {
+  border-radius: 4px;
+}
+
+.gx-bubble-group .gx-bubble[data-group="last"] {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.gx-bubble-note {
+  margin: 0;
   color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
 }
 
 /* ---- theme provider: the same surface, light and dark ---- */
