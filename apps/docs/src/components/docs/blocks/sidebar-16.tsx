@@ -2,10 +2,10 @@ import {
   SbAppPanel,
   SbCrumbs,
   SbDocBody,
-  SbIcon,
   SbInset,
   SbSearch,
   SbShell,
+  SbTrigger,
 } from "./sidebar-kit";
 
 /**
@@ -17,9 +17,7 @@ export const Sidebar16Render = () => (
     height="tall"
     top={
       <header className="gx-sb-site">
-        <span className="gx-sb-trigger">
-          <SbIcon name="panel-left" size={16} />
-        </span>
+        <SbTrigger />
         <span className="gx-sb-head-rule" />
         <SbCrumbs trail={["Build Your Application", "Data Fetching"]} />
         <div className="gx-sb-site-search">

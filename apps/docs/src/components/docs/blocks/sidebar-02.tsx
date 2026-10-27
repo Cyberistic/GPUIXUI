@@ -2,7 +2,6 @@ import {
   DOCS_COMMUNITY,
   DOCS_NAV,
   SbBrand,
-  SbChevron,
   SbGroup,
   SbInset,
   SbInsetHeader,
@@ -32,11 +31,7 @@ export const Sidebar02Render = () => (
       rail
     >
       {GROUPS.map((group) => (
-        <SbGroup
-          key={group.label}
-          label={group.label}
-          trailing={<SbChevron open />}
-        >
+        <SbGroup collapsible key={group.label} label={group.label}>
           {group.items.map((item) => (
             <SbRow active={item === "Data Fetching"} key={item} label={item} />
           ))}

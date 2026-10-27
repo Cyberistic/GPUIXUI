@@ -6016,12 +6016,17 @@
   align-self: stretch;
   width: 256px;
   min-height: 0;
+  overflow: hidden;
   background: var(--card);
   color: var(--card-foreground);
+  transition:
+    width 200ms ease,
+    margin 200ms ease;
 }
 
 .gx-sb-panel--rail {
   width: 48px;
+  overflow: visible;
 }
 
 .gx-sb-panel--wide {
@@ -6075,9 +6080,12 @@
 .gx-sb-rail {
   position: absolute;
   top: 0;
-  bottom: 0;
   right: 0;
+  bottom: 0;
   width: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
 }
 
@@ -6146,9 +6154,36 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   height: 44px;
   padding: 0 4px;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-sb-account-wrap {
+  position: relative;
+}
+
+.gx-sb-account:hover,
+.gx-sb-account:focus-visible {
+  background: var(--hover);
+}
+
+.gx-sb-account-wrap[data-rail="true"] .gx-sb-account {
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+}
+
+.gx-sb-account-wrap[data-rail="true"] .gx-sb-pop--user {
+  bottom: 0;
+  left: calc(100% + 8px);
 }
 
 .gx-sb-avatar {
@@ -6214,10 +6249,24 @@
   font-size: 12.5px;
 }
 
-.gx-sb-search-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.gx-sb-search:focus-within {
+  border-color: var(--ring);
+}
+
+.gx-sb-search-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.gx-sb-search-input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
 }
 
 /* Groups and rows */
@@ -6231,15 +6280,29 @@
 .gx-sb-group-label {
   display: flex;
   align-items: center;
+  width: 100%;
   height: 32px;
   margin: 0;
   padding: 0 8px;
   overflow: hidden;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
   color: var(--muted-foreground);
+  font: inherit;
   font-size: 12px;
   font-weight: 500;
+  text-align: left;
   white-space: nowrap;
+}
+
+button.gx-sb-group-label {
+  cursor: pointer;
+}
+
+button.gx-sb-group-label:hover,
+button.gx-sb-group-label:focus-visible {
+  background: var(--hover);
 }
 
 .gx-sb-group-trailing {
@@ -6261,19 +6324,36 @@
 }
 
 .gx-sb-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   height: 36px;
   padding: 0 8px;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
   color: var(--card-foreground);
+  font: inherit;
   font-size: 13px;
+  text-align: left;
   cursor: default;
 }
 
-.gx-sb-row:hover {
+button.gx-sb-row {
+  cursor: pointer;
+}
+
+.gx-sb-row:hover,
+.gx-sb-row:focus-visible {
   background: var(--hover);
+}
+
+.gx-sb-row:focus-visible,
+.gx-sb-sub-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
 .gx-sb-row[data-active="true"] {
@@ -6396,8 +6476,12 @@
   justify-content: center;
   width: 28px;
   height: 28px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
   color: var(--foreground);
+  cursor: pointer;
 }
 
 .gx-sb-trigger:hover {
@@ -6752,16 +6836,9 @@
   font-weight: 600;
 }
 
-.gx-sb-scene::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background: var(--overlay);
-}
-
 .gx-sb-dialog {
   position: relative;
-  z-index: 1;
+  z-index: 4;
   width: min(800px, calc(100% - 48px));
   height: 520px;
   overflow: hidden;
@@ -6804,13 +6881,21 @@
   justify-content: center;
   width: 28px;
   height: 28px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
   color: var(--foreground);
+  cursor: pointer;
 }
 
 .gx-sb-iconbtn:hover,
 .gx-sb-iconbtn[data-open="true"] {
   background: var(--hover);
+}
+
+.gx-sb-iconbtn[data-on="true"] {
+  color: var(--primary);
 }
 
 .gx-sb-body--settings {
@@ -6879,8 +6964,10 @@
   width: 30px;
   height: 18px;
   padding: 2px;
+  border: 0;
   border-radius: 999px;
   background: var(--secondary);
+  cursor: pointer;
 }
 
 .gx-sb-switch::after {
@@ -6989,10 +7076,10 @@
   color: var(--foreground);
 }
 
-/* A dropdown (06) or popover (10) drawn open */
+/* A dropdown (10) or the account menu, drawn open */
 .gx-sb-pop {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -7005,9 +7092,18 @@
   box-shadow: 0 12px 28px -18px var(--shadow);
 }
 
-.gx-sb-pop--panel {
-  top: 128px;
-  left: 244px;
+.gx-sb-pop--user {
+  right: auto;
+  bottom: calc(100% + 6px);
+  left: 4px;
+  width: 224px;
+}
+
+.gx-sb-pop-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
 }
 
 .gx-sb-pop--actions {
@@ -7042,17 +7138,30 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   height: 30px;
   padding: 0 8px;
   overflow: hidden;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
   font-size: 12.5px;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.gx-sb-pop-row:hover {
+.gx-sb-pop-row:hover,
+.gx-sb-pop-row:focus-visible {
   background: var(--hover);
+}
+
+.gx-sb-pop-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
 /* The newsletter card (06) */
@@ -7356,4 +7465,199 @@
 .gx-sb-cal-check[data-on="true"] {
   border-color: var(--primary);
   background: var(--primary);
+}
+
+/* ---- sidebar interactions ----
+   The drawings are live, so the sheet owns the same rules the shipped family
+   does: one 200ms reveal for a section, one 200ms width for a panel, a scrim
+   above every overlay and a tooltip when the icon rail hides a label. */
+
+.gx-sb-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.gx-sb-fold[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.gx-sb-fold-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The dropdown 06 opens in place, still painted as a menu. */
+.gx-sb-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+
+/* Offcanvas takes the panel's width back; a rail keeps 48px of icons. */
+.gx-sb-panel[data-collapse="offcanvas"][data-collapsed="true"] {
+  width: 0;
+  margin: 0;
+  border-width: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] {
+  width: 48px;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-panel-head {
+  align-items: center;
+  padding: 8px 4px;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-brand {
+  justify-content: center;
+  padding: 0;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-brand-text,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-brand-chevron,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-account-text,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"]
+  .gx-sb-account-chevron,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-search,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-group-label,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-row-label,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-badge,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-trail,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-sub {
+  display: none;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-group {
+  padding: 4px;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-row {
+  justify-content: center;
+  gap: 0;
+  height: 40px;
+  padding: 0;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-account {
+  justify-content: center;
+  width: 40px;
+  padding: 0;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-panel-foot {
+  padding: 8px 4px;
+}
+
+/* A clipped panel cannot show a tooltip that leaves it. */
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"] .gx-sb-panel-body {
+  overflow: visible;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"]
+  .gx-sb-row[data-tooltip]::after {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  z-index: 6;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 18px -12px var(--shadow);
+  content: attr(data-tooltip);
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 120ms ease-out;
+  white-space: nowrap;
+}
+
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"]
+  .gx-sb-row[data-tooltip]:hover::after,
+.gx-sb-panel[data-collapse="icon"][data-collapsed="true"]
+  .gx-sb-row[data-tooltip]:focus-visible::after {
+  opacity: 1;
+}
+
+/* One scrim closes any overlay: the shell's popover and the modal's dialog. */
+.gx-sb-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.gx-sb-scrim--scene {
+  background: var(--overlay);
+}
+
+.gx-sb-caption {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.gx-sb-caption code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.gx-sb-scene-open {
+  margin-top: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gx-sb-news-button {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.gx-sb-field-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.gx-sb-field-input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-sb-fold,
+  .gx-sb-panel,
+  .gx-sb-row[data-tooltip]::after {
+    transition: none;
+  }
 }

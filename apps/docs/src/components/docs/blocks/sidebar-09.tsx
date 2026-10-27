@@ -1,5 +1,6 @@
 import {
   MAIL,
+  SbAccount,
   SbInset,
   SbInsetHeader,
   SbMailBody,
@@ -30,8 +31,8 @@ const FOLDERS: ReadonlyArray<{
 const first = MAIL[0];
 
 export const Sidebar09Render = () => (
-  <SbShell>
-    <SbPanel header={<SbMark icon="terminal" />} size="rail">
+  <SbShell collapse="icon">
+    <SbPanel collapse="none" header={<SbMark icon="terminal" />} size="rail">
       <div className="gx-sb-group">
         {FOLDERS.map((folder) => (
           <SbRow
@@ -43,11 +44,12 @@ export const Sidebar09Render = () => (
         ))}
       </div>
       <div className="gx-sb-push gx-sb-rail-account">
-        <span className="gx-sb-avatar">AL</span>
+        <SbAccount rail />
       </div>
     </SbPanel>
     <SbPanel
       className="gx-sb-panel--list"
+      collapse="offcanvas"
       header={
         <div className="gx-sb-mail-head">
           <div className="gx-sb-mail-title">

@@ -1,57 +1,61 @@
+import { useState } from "react";
 import {
   DOCS_NAV,
   SbBrand,
   SbDocBody,
-  SbDots,
   SbGroup,
   SbIcon,
   SbInset,
   SbInsetHeader,
+  SbMenu,
   SbPanel,
-  SbRow,
   SbShell,
 } from "./sidebar-kit";
 
 /**
  * Sidebar 06 — the docs sections as dropdown menus on each row, over the
- * newsletter card shadcn puts in the footer. The first menu is drawn open so
- * the block reads without a press.
+ * newsletter card shadcn puts in the footer.
  */
-const FIRST_MENU = DOCS_NAV[0]?.items ?? [];
+const Newsletter = () => {
+  const [subscribed, setSubscribed] = useState(false);
+
+  return (
+    <div className="gx-sb-news">
+      <p className="gx-sb-news-title">Subscribe to our newsletter</p>
+      <p className="gx-sb-note">
+        Opt-in to receive updates and news about the sidebar.
+      </p>
+      <label className="gx-sb-field">
+        <SbIcon name="mail" size={13} />
+        <input
+          aria-label="Email"
+          className="gx-sb-field-input"
+          placeholder="Email"
+          type="email"
+        />
+      </label>
+      <button
+        className="gx-sb-news-button"
+        onClick={() => setSubscribed(true)}
+        type="button"
+      >
+        {subscribed ? "Subscribed" : "Subscribe"}
+      </button>
+    </div>
+  );
+};
 
 export const Sidebar06Render = () => (
-  <SbShell
-    overlay={
-      <div className="gx-sb-pop gx-sb-pop--panel">
-        {FIRST_MENU.map((item) => (
-          <span className="gx-sb-pop-row" key={item}>
-            {item}
-          </span>
-        ))}
-      </div>
-    }
-  >
+  <SbShell>
     <SbPanel
       className="gx-sb-panel--docs"
+      footer={<Newsletter />}
       header={<SbBrand detail="v1.0.0" name="Documentation" />}
-      footer={
-        <div className="gx-sb-news">
-          <p className="gx-sb-news-title">Subscribe to our newsletter</p>
-          <p className="gx-sb-note">
-            Opt-in to receive updates and news about the sidebar.
-          </p>
-          <span className="gx-sb-field">
-            <SbIcon name="mail" size={13} />
-            <span>Email</span>
-          </span>
-          <span className="gx-sb-news-button">Subscribe</span>
-        </div>
-      }
       rail
     >
       <SbGroup>
         {DOCS_NAV.map((group) => (
-          <SbRow key={group.label} label={group.label} trailing={<SbDots />} />
+          <SbMenu items={group.items} key={group.label} label={group.label} />
         ))}
       </SbGroup>
     </SbPanel>

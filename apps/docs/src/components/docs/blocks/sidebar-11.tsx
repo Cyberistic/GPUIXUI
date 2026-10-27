@@ -1,6 +1,6 @@
 import {
   CHANGES,
-  SbChevron,
+  SbDisclosure,
   SbDocBody,
   SbGroup,
   SbInset,
@@ -8,7 +8,6 @@ import {
   SbPanel,
   SbRow,
   SbShell,
-  SbSub,
 } from "./sidebar-kit";
 
 /**
@@ -29,27 +28,17 @@ export const Sidebar11Render = () => (
         ))}
       </SbGroup>
       <SbGroup label="Files">
-        <div className="gx-sb-item">
-          <SbRow
-            icon="folder"
-            label="components"
-            trailing={<SbChevron open />}
-          />
-          <SbSub>
-            <div className="gx-sb-item">
-              <SbRow icon="folder" label="ui" trailing={<SbChevron open />} />
-              <SbSub>
-                <SbRow active icon="file" label="button.tsx" />
-                <SbRow icon="file" label="card.tsx" />
-              </SbSub>
-            </div>
-            <SbRow icon="file" label="header.tsx" />
-            <SbRow icon="file" label="footer.tsx" />
-          </SbSub>
-        </div>
-        <SbRow icon="folder" label="app" trailing={<SbChevron />} />
-        <SbRow icon="folder" label="lib" trailing={<SbChevron />} />
-        <SbRow icon="folder" label="public" trailing={<SbChevron />} />
+        <SbDisclosure defaultOpen icon="folder" label="components">
+          <SbDisclosure defaultOpen icon="folder" label="ui">
+            <SbRow active icon="file" label="button.tsx" />
+            <SbRow icon="file" label="card.tsx" />
+          </SbDisclosure>
+          <SbRow icon="file" label="header.tsx" />
+          <SbRow icon="file" label="footer.tsx" />
+        </SbDisclosure>
+        <SbDisclosure icon="folder" label="app" />
+        <SbDisclosure icon="folder" label="lib" />
+        <SbDisclosure icon="folder" label="public" />
         <SbRow icon="file" label=".eslintrc.json" />
         <SbRow icon="file" label=".gitignore" />
         <SbRow icon="file" label="next.config.js" />

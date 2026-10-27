@@ -3,7 +3,7 @@ import {
   PROJECTS,
   SbAccount,
   SbBrand,
-  SbChevron,
+  SbDisclosure,
   SbDocBody,
   SbDots,
   SbGroup,
@@ -12,7 +12,6 @@ import {
   SbPanel,
   SbRow,
   SbShell,
-  SbSub,
   SbSubRow,
 } from "./sidebar-kit";
 
@@ -24,7 +23,7 @@ import {
 const OPEN = "Playground";
 
 export const Sidebar07Render = () => (
-  <SbShell height="tall">
+  <SbShell collapse="icon" height="tall">
     <SbPanel
       header={<SbBrand detail="Enterprise" icon="terminal" name="Acme Inc" />}
       footer={<SbAccount />}
@@ -32,21 +31,17 @@ export const Sidebar07Render = () => (
     >
       <SbGroup label="Platform">
         {MAIN_NAV.map((item) => (
-          <div className="gx-sb-item" key={item.label}>
-            <SbRow
-              active={item.label === OPEN}
-              icon={item.icon}
-              label={item.label}
-              trailing={<SbChevron open={item.label === OPEN} />}
-            />
-            {item.label === OPEN ? (
-              <SbSub>
-                {item.items.map((sub) => (
-                  <SbSubRow key={sub} label={sub} />
-                ))}
-              </SbSub>
-            ) : null}
-          </div>
+          <SbDisclosure
+            active={item.label === OPEN}
+            defaultOpen={item.label === OPEN}
+            icon={item.icon}
+            key={item.label}
+            label={item.label}
+          >
+            {item.items.map((sub) => (
+              <SbSubRow key={sub} label={sub} />
+            ))}
+          </SbDisclosure>
         ))}
       </SbGroup>
       <SbGroup label="Projects">

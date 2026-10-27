@@ -1,16 +1,14 @@
 import {
   DOCS_NAV,
   SbBrand,
+  SbDisclosure,
   SbDocBody,
   SbGroup,
-  SbIcon,
   SbInset,
   SbInsetHeader,
   SbPanel,
-  SbRow,
   SbSearch,
   SbShell,
-  SbSub,
   SbSubRow,
 } from "./sidebar-kit";
 
@@ -18,8 +16,6 @@ import {
  * Sidebar 05 — one docs group whose parent rows open their submenu in place;
  * the second section is open on landing, the rest wait behind a plus.
  */
-const OPEN = "Build Your Application";
-
 export const Sidebar05Render = () => (
   <SbShell>
     <SbPanel
@@ -33,34 +29,21 @@ export const Sidebar05Render = () => (
       rail
     >
       <SbGroup>
-        {DOCS_NAV.map((group) => (
-          <div className="gx-sb-item" key={group.label}>
-            <SbRow
-              label={group.label}
-              trailing={
-                group.label === OPEN ? (
-                  <span className="gx-sb-trail">
-                    <SbIcon name="minus" size={14} />
-                  </span>
-                ) : (
-                  <span className="gx-sb-trail">
-                    <SbIcon name="plus" size={14} />
-                  </span>
-                )
-              }
-            />
-            {group.label === OPEN ? (
-              <SbSub>
-                {group.items.map((item) => (
-                  <SbSubRow
-                    active={item === "Data Fetching"}
-                    key={item}
-                    label={item}
-                  />
-                ))}
-              </SbSub>
-            ) : null}
-          </div>
+        {DOCS_NAV.map((group, index) => (
+          <SbDisclosure
+            defaultOpen={index === 1}
+            indicator="plus"
+            key={group.label}
+            label={group.label}
+          >
+            {group.items.map((item) => (
+              <SbSubRow
+                active={item === "Data Fetching"}
+                key={item}
+                label={item}
+              />
+            ))}
+          </SbDisclosure>
         ))}
       </SbGroup>
     </SbPanel>
