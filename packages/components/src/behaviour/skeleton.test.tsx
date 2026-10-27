@@ -43,6 +43,20 @@ describe("Skeleton", () => {
     pulsing.unmount();
   });
 
+  it("alternates between the two skeleton frames while it pulses", async () => {
+    const pulsing = renderComponent(
+      <Skeleton testId="s" width={120} height={20} />,
+    );
+
+    expect(opacityOf(pulsing)).toBe(1);
+    // The dim frame the pulse visits, not an arbitrary intermediate value: the
+    // runtime interpolates nothing on its own, so a step is the whole motion.
+    await waitFor(() => expect(opacityOf(pulsing)).toBe(0.6));
+    await waitFor(() => expect(opacityOf(pulsing)).toBe(1));
+
+    pulsing.unmount();
+  });
+
   it("holds the still frame for a reduced-motion provider", async () => {
     const still = renderComponent(
       <MotionProvider preference="reduced">

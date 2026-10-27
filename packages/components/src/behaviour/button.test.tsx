@@ -18,6 +18,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Icon } from "@gpuixui/icons";
 import {
   actionFeedbackFailures,
   contrastFloors,
@@ -134,6 +135,47 @@ describe("Button", () => {
     ).toBeUndefined();
 
     button.unmount();
+  });
+
+  it("keeps its label and swaps the leading icon for the spinner while loading", () => {
+    const onClick = vi.fn();
+    const button = renderComponent(
+      <Button
+        testId="button"
+        loading
+        leading={
+          <Icon
+            name="save"
+            size="sm"
+            color={lightTheme.colors.foreground}
+            label="Save"
+          />
+        }
+        onClick={onClick}
+      >
+        Save changes
+      </Button>,
+      "light",
+    );
+
+    try {
+      // The label is the control, so it stays beside the busy mark.
+      expect(button.renderer.getAllText()).toContain("Save changes");
+      // The leading glyph is what the spinner stands in for.
+      expect(button.renderer.findByType("svg")).toHaveLength(0);
+      expect(
+        nodesWithRole(button.renderer, "status").map((node) => node.name),
+      ).toEqual(["Loading"]);
+
+      // Busy refuses the press without leaving the tab order.
+      clickCentreOf(button, "button");
+      expect(onClick).not.toHaveBeenCalled();
+      expect(
+        button.renderer.findByTestId("button")?.customProps?.tabIndex,
+      ).toBe(0);
+    } finally {
+      button.unmount();
+    }
   });
 
   it("paints a disabled filled action with the measured pair, not a fade", () => {
