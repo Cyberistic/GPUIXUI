@@ -19,9 +19,10 @@ import { mergeStyles } from "@gpuix/react/floating";
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Button, actionOnColor, type ButtonProps } from "./internal/button.js";
-import { measuredBox, type MeasuredBox } from "./internal/measure.js";
+import { measuredBox } from "./internal/measure.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import {
   transitionWindowMs,
   useMotionPreference,
@@ -35,6 +36,7 @@ import {
   sheenOpacity,
   type SheenHalf,
 } from "./shine-button/logic.js";
+import { makeSheenStore } from "./shine-button/store.js";
 
 /** The two halves, in paint order. */
 const halves: ReadonlyArray<SheenHalf> = ["lead", "trail"];
@@ -68,39 +70,31 @@ export const ShineButton = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level).enter;
-  const box = useRef<Option.Option<MeasuredBox>>(Option.none());
-  const [sweeping, setSweeping] = useState(false);
-  const [run, setRun] = useState(0);
+  const store = useLocalStore(makeSheenStore);
+  const { box, sweeping, run } = useLocalState(store.local);
   const ink = sheenColor ?? actionOnColor(theme, variant);
   const windowMs = transitionWindowMs(timing);
+  const inert = disabled || preference === "reduced";
 
   // A sheen is pure journey, so a reader who turns the preference on mid-sweep
   // keeps no band: it goes with the travel the setting removed. An action that
   // becomes disabled under a sweep can no longer answer the hover it marks, so
   // the band goes with the control instead of crossing an inert action.
   useEffect(() => {
-    if (preference === "reduced" || disabled) setSweeping(false);
-  }, [disabled, preference]);
-
-  useEffect(() => {
-    if (!sweeping || preference === "reduced") return;
-    const handle = setTimeout(() => setSweeping(false), windowMs);
-    return () => clearTimeout(handle);
-  }, [preference, run, sweeping, windowMs]);
+    if (inert) send(store.clear);
+  }, [inert, store]);
 
   const measure = (event: EventPayload) => {
-    box.current = measuredBox(event);
+    send(store.measure(measuredBox(event)));
     onLayout?.(event);
   };
 
   const enter = (event: EventPayload) => {
     onMouseEnter?.(event);
-    if (disabled || preference === "reduced") return;
-    setRun((current) => current + 1);
-    setSweeping(true);
+    send(store.enter(inert, windowMs));
   };
 
-  const sheen = Option.match(box.current, {
+  const sheen = Option.match(box, {
     onNone: () => null,
     onSome: (measured) => {
       const half = sheenHalf(measured.width);
