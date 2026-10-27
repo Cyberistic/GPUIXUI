@@ -1352,6 +1352,36 @@ the two inventories together in both directions — a page naming an unregistere
 key throws at render, and a registered block with no page is dead code — plus the
 blueprint sidebar entry.
 
+**A block is shown as the screen, not as a specimen.** The component pages wrap
+a demo in the fixed `.gx-component` card — a 520px-tall scroll panel — which is
+right for a button and wrong for a dashboard: at the card's ~356px width the
+window was cropped and squeezed. `<BlockPreview>` therefore paints the scene
+(`.gx-block-stage`, still a `PreviewSurface`, so palette, `data-platform` and
+platform font follow the switch) at the page column's own width, with no fixed
+height and no scroll box, and puts the recipe in a disclosure under it. The
+scene keeps the block's own responsive rules — the dashboard now lets its donut
+legend take its own line when the card cannot fit both — because the page
+column, not a preview panel, is the width it is drawn at.
+`src/components/docs/block-preview.test.tsx` fails if the scene goes back
+inside `.gx-component`.
+
+**The index is images, not scenes.** `/docs/blocks` used to mount every block's
+reproduction in its card: twelve compositions with their own state and window
+listeners, all repainted by one platform switch. Each tile now paints a
+checked-in capture of the block's own page, `public/blocks/<slug>.webp`. A
+capture is one rendering in one palette, so a tile does not repaint with the
+palette switch (the block page it links to does). The captures are generated
+from the real pages — never drawn for the index — by
+`nub run --filter @gpuixui/docs blocks:thumbnails`
+(`apps/docs/scripts/block-thumbnails.ts`): it opens `/docs/blocks`, reads the
+tile `src` list the index itself prints, opens each block page, waits for
+`.gx-block-stage` and the fonts, and captures the scene's top at the tile's 16:10
+with headless Chrome (`scripts/chrome-session.ts`). A docs server already
+answering on 4175 is reused; otherwise the script starts one and stops it.
+`block-index.test.tsx` holds the list both ways: every registered block has an
+`alt=""`-decorated image naming `/blocks/<slug>.webp`, no tile mounts a scene,
+and every file is a WebP capture rather than a placeholder.
+
 A block that draws must state the runtime's measured rule, not a browser one: one
 `<svg source>` paints **one tint** (a shape's own `fill` never reaches the
 frame), so a multi-series chart is one stacked element per colour. The dashboard
@@ -1362,12 +1392,12 @@ reimplementing the geometry; the evidence is `docs/gpuix-capabilities.md`
 
 **A block's source is code too.** A recipe is a `source` string in
 `src/components/docs/blocks.tsx`, not a fence, so the page-snippet walk never
-read it: a renamed export would leave every block's Code tab teaching an import
+read it: a renamed export would leave every block's recipe teaching an import
 that no longer resolves while the build stayed green. `src/lib/block-source.test.ts`
 walks the registry instead — it resolves each block's `source` through the
 workspace symbol index, follows a constant the registry imports from another
 module (the dashboard's lives in `dashboard.tsx`), and fails a block whose source
-is nearly empty, because a Code tab that prints nothing is the same lie as a
+is nearly empty, because a recipe that prints nothing is the same lie as a
 wrong import. Directions measured: `Input` → `Inputt` in `loginSource` fails
 `login-01: @gpuixui/primitives does not export Inputt`, and emptying that
 constant fails the near-empty case.
