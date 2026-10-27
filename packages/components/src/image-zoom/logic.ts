@@ -164,3 +164,13 @@ export const sameZoom = (a: ZoomBox, b: ZoomBox): boolean =>
   a.top === b.top &&
   a.width === b.width &&
   a.height === b.height;
+
+/**
+ * Whether two pointer readings are the same point.
+ *
+ * A held pointer emits a move per frame; a repeat of the point the frame has
+ * already followed is a frame the runtime would paint identically, so it is not
+ * a state change.
+ */
+export const samePointer = (a: ZoomPointer, b: ZoomPointer): boolean =>
+  a.x === b.x && a.y === b.y;
