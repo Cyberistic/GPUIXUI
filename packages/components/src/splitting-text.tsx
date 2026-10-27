@@ -29,7 +29,7 @@ import type { StaggerFrom } from "@gpuixui/motion/timeline";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useEffect } from "react";
-import { useOwnedStore, useStoreSnapshot } from "./internal/effect-store.js";
+import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import { delayedTiming, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textOf } from "./internal/text.js";
@@ -91,15 +91,15 @@ export const SplittingText = ({
   const timing = useSurfaceTiming("normal");
   /** The phrase a saved layout may have lost; JSON writes `null` for it. */
   const phrase = textOf(text);
-  const store = useOwnedStore(() =>
+  const store = useLocalStore(
     makeSplittingStore({ text: phrase, split, stepMs, from }),
   );
-  const reveal = useStoreSnapshot(store);
+  const reveal = useLocalState(store.local);
 
   // The phrase and the split it needs are props, so a change is forwarded to
   // the store; the reveal's keys stay put while none of them moves.
   useEffect(() => {
-    store.show({ text: phrase, split, stepMs, from });
+    send(store.show({ text: phrase, split, stepMs, from }));
   }, [store, phrase, split, stepMs, from]);
 
   const rise = offsetOf(Option.fromNullishOr(offset));

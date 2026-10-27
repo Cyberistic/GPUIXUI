@@ -13,8 +13,10 @@
  * that duration here would drift from the paint.
  */
 
-import { Option } from "effect";
-import { makeEffectStore, type EffectStore } from "../effect-store.js";
+import { Effect } from "effect";
+import * as Option from "effect/Option";
+import * as SubscriptionRef from "effect/SubscriptionRef";
+import { makeLocalState, type LocalState } from "../local-state.js";
 import type { PatternBox } from "../svg-pattern.js";
 
 /** What a field paints at one frame. */
@@ -26,37 +28,38 @@ export interface FieldStoreState {
 }
 
 /** {@link FieldStoreState} and the two events that move it. */
-export interface FieldStore extends EffectStore<FieldStoreState> {
+export interface FieldStore {
+  readonly local: LocalState<FieldStoreState>;
   /** Record a measured box; a box of the same size writes nothing. */
-  readonly note: (box: PatternBox) => void;
+  readonly note: (box: PatternBox) => Effect.Effect<void>;
   /** The breath's tween landed: turn it around. */
-  readonly breathe: () => void;
+  readonly breathe: Effect.Effect<void>;
 }
 
 const resting: FieldStoreState = { box: Option.none(), lit: false };
 
 /** A field with no box and its breath at rest. */
-export const makeFieldStore = (): FieldStore => {
-  const store = makeEffectStore(resting);
+export const makeFieldStore: Effect.Effect<FieldStore> = Effect.gen(
+  function* () {
+    const local = yield* makeLocalState<FieldStoreState>(resting);
 
-  return {
-    ...store,
-    note: (box) => {
-      const held = store.read().box;
+    const note = Effect.fnUntraced(function* (box: PatternBox) {
+      const current = yield* SubscriptionRef.get(local.state);
       if (
         Option.exists(
-          held,
-          (current) =>
-            current.width === box.width && current.height === box.height,
+          current.box,
+          (held) => held.width === box.width && held.height === box.height,
         )
-      ) {
+      )
         return;
-      }
-      store.set({ ...store.read(), box: Option.some(box) });
-    },
-    breathe: () => {
-      const current = store.read();
-      store.set({ ...current, lit: !current.lit });
-    },
-  };
-};
+      yield* local.write({ ...current, box: Option.some(box) });
+    });
+
+    const breathe = Effect.gen(function* () {
+      const current = yield* SubscriptionRef.get(local.state);
+      yield* local.write({ ...current, lit: !current.lit });
+    });
+
+    return { local, note, breathe };
+  },
+);

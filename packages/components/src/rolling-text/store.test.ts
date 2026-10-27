@@ -1,124 +1,120 @@
 /**
- * The rolling swap's clock, without a renderer.
+ * The rolling swap's clock, under `TestClock`.
  *
  * The bugs these guard: an exit window re-armed by every value that arrives
  * mid-exit, which pushed the swap back until the stream stopped and left the
  * clip empty; an entry that never settles, so the phase kept reporting a value
  * still arriving; and a window that outlives the component that started it.
  *
- * A window is real time here (a few milliseconds), so every case waits on the
- * state the window lands rather than on a frame.
+ * The window is a `TestClock` sleep, so every case advances the window the
+ * exit armed rather than waiting on real time.
  */
 
-import { Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as Option from "effect/Option";
+import * as TestClock from "effect/testing/TestClock";
 import { makeRollingStore } from "./store.js";
-
-/** Let real time pass: the window is an Effect sleep on the default clock. */
-const after = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 const policy = { reduced: false, swapMs: 20 };
 
 describe("RollingStore", () => {
-  it("holds the outgoing value through the exit, then paints the pending one", async () => {
-    const roll = makeRollingStore("first");
-    try {
-      roll.show("second", policy);
-      expect(roll.read().shown).toBe("first");
-      expect(roll.read().phase).toBe("leaving");
+  it.effect(
+    "holds the outgoing value through the exit, then paints the pending one",
+    () =>
+      Effect.gen(function* () {
+        const roll = yield* makeRollingStore("first");
+        yield* roll.show("second", policy);
+        expect(roll.local.read().shown).toBe("first");
+        expect(roll.local.read().phase).toBe("leaving");
 
-      await after(60);
+        yield* TestClock.adjust("20 millis");
 
-      expect(roll.read().shown).toBe("second");
-      expect(roll.read().phase).toBe("entering");
-    } finally {
-      roll.stop();
-    }
-  });
+        expect(roll.local.read().shown).toBe("second");
+        expect(roll.local.read().phase).toBe("entering");
+      }),
+  );
 
-  it("lands on the newest value without re-arming the exit it arrived in", async () => {
-    // The bug this guards: every arrival restarted the window, so a value
-    // changing faster than one swap never committed and the clip stayed empty.
-    const roll = makeRollingStore("v1");
-    try {
-      roll.show("v2", policy);
-      await after(8);
-      roll.show("v3", policy);
-      await after(8);
-      roll.show("v4", policy);
+  it.effect(
+    "lands on the newest value without re-arming the exit it arrived in",
+    () =>
+      Effect.gen(function* () {
+        // The bug this guards: every arrival restarted the window, so a value
+        // changing faster than one swap never committed and the clip stayed empty.
+        const roll = yield* makeRollingStore("v1");
+        yield* roll.show("v2", policy);
+        yield* TestClock.adjust("8 millis");
+        yield* roll.show("v3", policy);
+        yield* TestClock.adjust("8 millis");
+        yield* roll.show("v4", policy);
 
-      // The first change's window has run by now, so a newer value is painted
-      // even though the stream never stopped.
-      await after(40);
-      expect(roll.read().shown).toBe("v4");
-      expect(roll.read().phase).toBe("entering");
-    } finally {
-      roll.stop();
-    }
-  });
+        // The first change's window has run by now — four milliseconds after
+        // the last arrival, not one window after it — so a newer value is
+        // painted even though the stream never stopped.
+        yield* TestClock.adjust("4 millis");
+        expect(roll.local.read().shown).toBe("v4");
+        expect(roll.local.read().phase).toBe("entering");
+      }),
+  );
 
-  it("travels a value back when it returns mid-exit", () => {
-    const roll = makeRollingStore("first");
-    try {
-      roll.show("second", policy);
-      expect(roll.read().phase).toBe("leaving");
+  it.effect("travels a value back when it returns mid-exit", () =>
+    Effect.gen(function* () {
+      const roll = yield* makeRollingStore("first");
+      yield* roll.show("second", policy);
+      expect(roll.local.read().phase).toBe("leaving");
 
-      roll.show("first", policy);
+      yield* roll.show("first", policy);
 
-      expect(roll.read().phase).toBe("entering");
-      expect(Option.isNone(roll.read().pending)).toBe(true);
-    } finally {
-      roll.stop();
-    }
-  });
+      expect(roll.local.read().phase).toBe("entering");
+      expect(Option.isNone(roll.local.read().pending)).toBe(true);
+      // The window belonged to the exit this return ended.
+      expect(roll.local.running()).toBe(false);
+    }),
+  );
 
-  it("paints a reduced value at once, with no window", () => {
-    const roll = makeRollingStore("first");
-    try {
-      roll.show("second", { ...policy, reduced: true });
+  it.effect("paints a reduced value at once, with no window", () =>
+    Effect.gen(function* () {
+      const roll = yield* makeRollingStore("first");
+      yield* roll.show("second", { ...policy, reduced: true });
 
-      expect(roll.read().shown).toBe("second");
-      expect(roll.read().phase).toBe("rest");
-    } finally {
-      roll.stop();
-    }
-  });
+      expect(roll.local.read().shown).toBe("second");
+      expect(roll.local.read().phase).toBe("rest");
+      expect(roll.local.running()).toBe(false);
+    }),
+  );
 
-  it("settles the entry only once the runtime reports it landed", async () => {
-    const roll = makeRollingStore("first");
-    try {
-      roll.show("second", policy);
-      await after(60);
-      expect(roll.read().phase).toBe("entering");
+  it.effect("settles the entry only once the runtime reports it landed", () =>
+    Effect.gen(function* () {
+      const roll = yield* makeRollingStore("first");
+      yield* roll.show("second", policy);
+      yield* TestClock.adjust("20 millis");
+      expect(roll.local.read().phase).toBe("entering");
 
-      roll.entered();
+      yield* roll.entered;
 
-      expect(roll.read().phase).toBe("rest");
-    } finally {
-      roll.stop();
-    }
-  });
+      expect(roll.local.read().phase).toBe("rest");
+    }),
+  );
 
-  it("stops the window when the component unmounts", async () => {
-    const roll = makeRollingStore("first");
-    roll.show("second", policy);
-    roll.stop();
+  it.effect("stops the window when the component unmounts", () =>
+    Effect.gen(function* () {
+      const roll = yield* makeRollingStore("first");
+      yield* roll.show("second", policy);
+      yield* roll.local.cancel;
 
-    await after(60);
+      yield* TestClock.adjust("20 millis");
 
-    expect(roll.read().shown).toBe("first");
-    expect(roll.read().phase).toBe("leaving");
-  });
+      expect(roll.local.read().shown).toBe("first");
+      expect(roll.local.read().phase).toBe("leaving");
+    }),
+  );
 
-  it("does not publish a swap for the value already on screen", () => {
-    const roll = makeRollingStore("first");
-    try {
-      const before = roll.read();
-      roll.show("first", policy);
-      expect(roll.read()).toBe(before);
-    } finally {
-      roll.stop();
-    }
-  });
+  it.effect("does not publish a swap for the value already on screen", () =>
+    Effect.gen(function* () {
+      const roll = yield* makeRollingStore("first");
+      const before = roll.local.read();
+      yield* roll.show("first", policy);
+      expect(roll.local.read()).toBe(before);
+    }),
+  );
 });

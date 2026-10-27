@@ -12,7 +12,9 @@
  * {@link LocalState.after} holds the one timer such a store can run — a layer
  * that outlives its tween. It replaces the timer already running and
  * {@link LocalState.cancel}, the component's teardown, interrupts it, so no
- * sleep outlives the tree that scheduled it.
+ * sleep outlives the tree that scheduled it. {@link LocalState.running} reads
+ * that timer, which is how a handler tells a window already armed from the next
+ * one it must start.
  *
  * `Effect.run*` lives here and nowhere else among these components (EF-21):
  * building a store, subscribing to it and starting a command are the three
@@ -46,6 +48,13 @@ export interface LocalState<A> {
   ) => Effect.Effect<void>;
   /** Stop the timer; a store with none is unaffected. */
   readonly cancel: Effect.Effect<void>;
+  /**
+   * Whether the timer {@link LocalState.after} armed is still to fire — false
+   * before one is armed, once it has run its effect, and after `cancel`. This is
+   * the window a handler reads to tell one already running from the next it must
+   * start.
+   */
+  readonly running: () => boolean;
 }
 
 /** A store with its state at `initial`. */
@@ -64,8 +73,8 @@ export const makeLocalState = <A>(initial: A): Effect.Effect<LocalState<A>> =>
     });
 
     const cancel = Effect.gen(function* () {
-      const running = yield* Ref.getAndSet(timer, Option.none());
-      yield* Option.match(running, {
+      const held = yield* Ref.getAndSet(timer, Option.none());
+      yield* Option.match(held, {
         onNone: () => Effect.void,
         onSome: Fiber.interrupt,
       });
@@ -81,6 +90,17 @@ export const makeLocalState = <A>(initial: A): Effect.Effect<LocalState<A>> =>
       );
       yield* Ref.set(timer, Option.some(fiber));
     });
+
+    /**
+     * A held fiber that has finished is a timer that fired or was cancelled.
+     * The slot keeps the handle rather than clearing itself, so a timer that
+     * replaces this one cannot be cleared by the one it replaced.
+     */
+    const running = (): boolean =>
+      Option.exists(
+        Ref.getUnsafe(timer),
+        (fiber) => fiber.pollUnsafe() === undefined,
+      );
 
     const subscribe = (listener: () => void): (() => void) => {
       Effect.runSync(
@@ -104,6 +124,7 @@ export const makeLocalState = <A>(initial: A): Effect.Effect<LocalState<A>> =>
       write,
       after,
       cancel,
+      running,
     };
   });
 

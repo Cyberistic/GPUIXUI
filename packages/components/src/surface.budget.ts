@@ -171,20 +171,20 @@ export const surfaceBudget = {
   // surface + measured body, the shared hold, the promise phase and the swipe
   // gesture (two pure rules, `toast/stack.ts` and `toast/swipe.ts`). The
   // ceiling moved 1190 → 1230 KiB for the next family's headroom.
-<<<<<<< HEAD
   // 1 231 KiB measured 2026-10-27 with the five Effect stores and the seam they
   // share (`internal/local-state.ts`): a `SubscriptionRef` of the surface's
   // state, a synchronous signal for `useSyncExternalStore` and the one timer a
   // drain or a sweep holds, which is 24 KiB over the five `useState`/`useEffect`
   // seams they replace. The ceiling moved 1230 → 1260 KiB so the next family
   // keeps the same headroom.
+  // 177 → 181 for the four stores that followed on the same seam: the swap and
+  // its exit window (`rolling-text/store.ts`), the pointer (`image-zoom/store.ts`),
+  // the measured box and the breath's phase (`pattern-field/store.ts`) and the
+  // phrase's units (`splitting-text/store.ts`). They landed on a parallel seam
+  // (`internal/effect-store.ts`), now deleted: one seam binds a store to React,
+  // so the module count is the four stores alone. 1 243 KiB measured with all
+  // nine stores, under the ceiling.
   bytes: 1260 * 1024,
-=======
-  // 1 222 KiB measured 2026-10-27 with the Effect state seam and the four
-  // stores it holds (`internal/effect-store.ts`, the rolling, zoom, field and
-  // splitting stores): 5 modules, and the ceiling keeps its 1230 KiB.
-  bytes: 1230 * 1024,
->>>>>>> fcdad776f (refactor(components): hold four effect components' state in Effect)
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

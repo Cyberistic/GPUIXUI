@@ -39,7 +39,7 @@ import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
-import { useOwnedStore, useStoreSnapshot } from "./effect-store.js";
+import { send, useLocalState, useLocalStore } from "./local-state.js";
 import { measuredBox } from "./measure.js";
 import { makeFieldStore } from "./pattern-field/store.js";
 import { fadeOnly, useMotionPreference, useSurfaceTiming } from "./presence.js";
@@ -173,13 +173,14 @@ export const DecorativeField = ({
     patternBreatheFloor,
     patternBreatheCap,
   );
-  const store = useOwnedStore(() => makeFieldStore());
-  const field = useStoreSnapshot(store);
+  const store = useLocalStore(makeFieldStore);
+  const field = useLocalState(store.local);
 
   const noteBox = (event: EventPayload): void => {
     Option.match(measuredBox(event), {
       onNone: () => undefined,
-      onSome: (next) => store.note({ width: next.width, height: next.height }),
+      onSome: (next) =>
+        send(store.note({ width: next.width, height: next.height })),
     });
   };
 
@@ -219,7 +220,7 @@ export const DecorativeField = ({
             legMs={legMs}
             id={id}
             lit={field.lit}
-            onLanded={store.breathe}
+            onLanded={() => send(store.breathe)}
           />
         )
       ) : undefined}
