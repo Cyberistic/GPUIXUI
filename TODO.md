@@ -11498,6 +11498,26 @@ measure-all-slides rule.
 `author`/`avatarSrc`, `MessageHeader` paints them, and a blank one reads as no
 line. The chat block's time column is the shipped part, not drawing-only.
 
+## Data display lane (2026-10-28)
+
+`[x]` **Fifteen drawings pressed** — every control on `/docs/data-display/*`
+was driven in headless Chrome against the local build. Four were not what they
+claimed: the toolbar's `Columns` had no handler (removed — the shipped toolbar
+owns no column control); a tree leaf painted a hidden disabled `Expand` button
+the package's row never has (branches alone paint a chevron now); the
+Virtualization scene labelled every **mounted** row "in view" (the overdraw
+above the top edge is clipped — `window-preview.ts` shares the viewport range
+with the tree page and the browser test's readout); the column menu accepted a
+press on the last visible column's toggle (disabled now, as `ColumnMenu` does),
+painted move arrows for hidden columns (only visible tracks move) and offered
+no reset although its snippet passes `onReset` (added). The chart viewBox cut
+the `100` tick in half (headroom); the expandable header counted the expander
+track as a fourth column (`role="presentation"`). Verified live: sort/select/
+filter/rows/trees/windows/resize all change the scene; `Reset size` returns
+`120 x 80` after `Wide`; the debounce choices report `3 of 6 rows` at 150 ms and
+immediately at 0 ms. Docs suite 2198 green, `nub run check` clean; every new
+case fails when its source is inverted.
+
 ## Four more shadcn surfaces (2026-10-27)
 
 `[x]` **HoverCard, AspectRatio, Item, InputGroup** — the four absent components,

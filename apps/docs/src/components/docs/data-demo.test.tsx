@@ -430,9 +430,12 @@ describe("the Charts preview", () => {
         CHART_HEIGHT + CHART_TOP_ROOM + CHART_LABEL_ROW
       }"`,
     );
-    // The ceiling's tick sits on the plot's top line, so the viewBox has to
-    // start above it: at `0` the label lost its upper half to the clip.
-    expect(chartTicks).toContain(chartCeiling);
+    // The ceiling's tick sits on the plot's top line (baseline 3), so the
+    // viewBox has to start **above** it: at `0` the label lost its upper half
+    // to the clip, which is what this whole case exists to prevent.
+    const viewBox = /viewBox="0 (-?\d+) \d+ \d+"/.exec(bars);
+    expect(viewBox).not.toBeNull();
+    expect(Number(viewBox?.[1])).toBeLessThan(0);
     expect(bars).toContain(`y="3"`);
     Arr.forEach(chartTicks, (tick) => {
       expect(bars).toContain(`>${tickLabel(tick, step)}</text>`);
