@@ -13278,7 +13278,12 @@
 .gx-aspect-scene {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* Centred, and pinned to the top: the box grows downward as the reader drags
+     the width, so the controls must not be re-centred under the pointer. */
+  align-items: center;
+  align-self: stretch;
+  justify-content: flex-start;
+  padding-top: 16px;
   gap: 14px;
   width: 100%;
 }

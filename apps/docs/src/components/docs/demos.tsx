@@ -2179,16 +2179,18 @@ const AccordionComposition = () => {
                 <path d={expanded ? "m18 15-6-6-6 6" : "m6 9 6 6 6-6"} />
               </svg>
             </button>
-            {expanded ? (
-              <div className="gx-acc-body" id={`${id}-${section.value}`}>
-                {section.rows.map(([label, value]) => (
-                  <div className="gx-acc-row" key={label}>
-                    <span>{label}</span>
-                    <span className="gx-acc-value">{value}</span>
-                  </div>
-                ))}
+            <div className="gx-acc-reveal" data-open={expanded}>
+              <div className="gx-acc-reveal-inner">
+                <div className="gx-acc-body" id={`${id}-${section.value}`}>
+                  {section.rows.map(([label, value]) => (
+                    <div className="gx-acc-row" key={label}>
+                      <span>{label}</span>
+                      <span className="gx-acc-value">{value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ) : null}
+            </div>
           </div>
         );
       })}

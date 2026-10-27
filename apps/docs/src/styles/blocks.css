@@ -15,6 +15,10 @@
   padding: 0;
   align-items: stretch;
   overflow: visible;
+  /* The block paints its own surface to its own corners; the scene's dots and
+     fill showed past a rounded corner as a halo. */
+  background-color: transparent;
+  background-image: none;
 }
 
 /* The index tile is a capture of that same page, not a live scene: a grid of
