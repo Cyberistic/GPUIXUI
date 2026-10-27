@@ -314,8 +314,17 @@ mid-exit; 1114 package and 1140 behaviour tests, and 28 of 46 cases fail with
 shadcn's family (Provider/Trigger/Rail/Inset/Header/Content/Footer/Group/Menu/…,
 offcanvas/icon/none, ⌘B, cookie, mobile sheet) plus the standalone user menu from
 the screenshot.
-`[ ]` **Sidebar blocks 01–16** — recreated from shadcn's
-`apps/v4/registry/bases/base/blocks/sidebar-0x`, after the shell lands.
+`[x]` **Sidebar blocks 01–16** — recreated from shadcn's
+`apps/v4/registry/bases/base/blocks/sidebar-0x` on the shipped Sidebar family:
+sixteen browser renderings in `src/components/docs/blocks/sidebar-0[1-9].tsx`
+and `sidebar-1[0-6].tsx`, one shared geometry/data kit
+(`blocks/sidebar-kit.tsx`), a copyable `@gpuixui/*` recipe per block, an MDX
+page and a checked-in WebP each, all on `/docs/blocks` (27 tiles, 2084 docs
+tests). Adapted where the shell has no equivalent: 04's 19rem width and 09's
+350px nested pair paint at the family's 256/48/300 widths, 09 is two `Sidebar`
+siblings under one provider rather than a nested tree, and the two-line
+brand/account rows compose `Stack`/`Text` because `SidebarMenuButton` owns a
+single-line label. 10 and 13 paint open (`defaultOpen`), as shadcn mounts them.
 `[x]` **Blocks full size, indexed as images** — a block page renders the screen
 in the page column (`.gx-block-stage`, 836×1310 for the dashboard) with the
 recipe in a collapsed disclosure under it; no 520px card, no Preview/Code frame.
