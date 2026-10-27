@@ -32,7 +32,10 @@ export interface CalendarStore {
   /** Move the focused day, pulling the window along if it left it. */
   readonly focusDay: (day: DateTime.Utc) => Effect.Effect<void>;
   /** Page the window to `month` and focus `day`. */
-  readonly show: (month: DateTime.Utc, day: DateTime.Utc) => Effect.Effect<void>;
+  readonly show: (
+    month: DateTime.Utc,
+    day: DateTime.Utc,
+  ) => Effect.Effect<void>;
   /** Record the focus the runtime already moved, without asking for it again. */
   readonly visited: (day: DateTime.Utc) => Effect.Effect<void>;
   /** The request was honoured; the next paint must not focus again. */
@@ -72,9 +75,7 @@ export const makeCalendarStore = (initial: {
 
     const visited = Effect.fnUntraced(function* (day: DateTime.Utc) {
       const current = yield* SubscriptionRef.get(local.state);
-      if (
-        DateTime.toEpochMillis(current.focus) === DateTime.toEpochMillis(day)
-      )
+      if (DateTime.toEpochMillis(current.focus) === DateTime.toEpochMillis(day))
         return;
       yield* local.write({
         month: visibleMonth(current.month, count, day),
@@ -84,7 +85,9 @@ export const makeCalendarStore = (initial: {
     });
 
     const settle = Effect.flatMap(SubscriptionRef.get(local.state), (current) =>
-      current.pending ? local.write({ ...current, pending: false }) : Effect.void,
+      current.pending
+        ? local.write({ ...current, pending: false })
+        : Effect.void,
     );
 
     return { local, count, focusDay, show, visited, settle };

@@ -8,7 +8,11 @@
  * reimplement.
  */
 
-export { Select, selectOptions, selectValueLabel } from "./components/Select.js";
+export {
+  Select,
+  selectOptions,
+  selectValueLabel,
+} from "./components/Select.js";
 export type {
   SelectEntry,
   SelectOption,

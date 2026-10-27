@@ -4594,6 +4594,18 @@
   flex: none;
 }
 
+.gx-date-months {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gx-date-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .gx-date-surface {
   position: absolute;
   top: calc(100% + 6px);
@@ -4700,15 +4712,32 @@
   border-color: var(--primary);
 }
 
-.gx-date-cell[data-selected] {
+.gx-date-cell[data-selected],
+.gx-date-cell[data-paint="selected"],
+.gx-date-cell[data-paint="start"],
+.gx-date-cell[data-paint="end"] {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--primary-foreground);
 }
 
+/* The middle of a span: the muted wash the native cells paint, no edge. */
+.gx-date-cell[data-paint="middle"] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-date-cell[data-outside] {
+  color: var(--muted-foreground);
+}
+
+.gx-date-cell[data-paint="middle"][data-outside] {
+  color: var(--foreground);
+}
+
 .gx-date-cell:hover:not([data-blank]):not([data-unavailable]):not(
   [data-selected]
-) {
+):not([data-paint]) {
   background: var(--hover);
 }
 
@@ -4741,6 +4770,29 @@
   color: var(--placeholder);
 }
 
+.gx-date-wide,
+.gx-date-frame.gx-date-wide {
+  width: min(560px, 100%);
+}
+
+.gx-date-select {
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.gx-date-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(560px, 100%);
+}
+
 .gx-date-gallery {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4755,6 +4807,12 @@
 }
 
 @media (max-width: 720px) {
+  .gx-date-wide,
+  .gx-date-frame.gx-date-wide,
+  .gx-date-presets {
+    width: 100%;
+  }
+
   .gx-date-gallery {
     grid-template-columns: minmax(0, 1fr);
   }

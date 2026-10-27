@@ -192,6 +192,7 @@ describe("the package docs collections", () => {
     "/docs/components/badge",
     "/docs/components/breadcrumb",
     "/docs/components/card",
+    "/docs/components/calendar",
     "/docs/components/carousel",
     "/docs/components/collapsible",
     "/docs/components/color-picker",

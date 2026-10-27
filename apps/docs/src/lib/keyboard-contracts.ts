@@ -218,9 +218,36 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
+    url: "/docs/components/calendar",
+    sources: [
+      "packages/components/src/calendar.tsx",
+      "packages/components/src/calendar/logic.ts",
+    ],
+    notes: [
+      {
+        keys: ["Arrow Left", "Arrow Right"],
+        action: "moves a day",
+      },
+      { keys: ["Arrow Down", "Arrow Up"], action: "moves a week" },
+      { keys: ["Home", "End"], action: "the week's first or last day" },
+      {
+        keys: ["Page Up", "Page Down"],
+        action:
+          "the previous or next month; with Shift, the same month a year away",
+      },
+      { keys: activation, action: "chooses the focused day" },
+      {
+        keys: ["Escape"],
+        action: "closes the surface that opened the calendar",
+      },
+    ],
+  },
+  {
     url: "/docs/components/date-picker",
     sources: [
       "packages/components/src/date-picker.tsx",
+      "packages/components/src/calendar.tsx",
+      "packages/components/src/calendar/logic.ts",
       "packages/components/src/popover.tsx",
     ],
     notes: [
@@ -228,10 +255,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
         keys: ["Arrow Left", "Arrow Right"],
         action: "moves a day",
       },
-      {
-        keys: ["Arrow Down", "Arrow Up", "Ctrl+N", "Ctrl+P"],
-        action: "moves a week",
-      },
+      { keys: ["Arrow Down", "Arrow Up"], action: "moves a week" },
       { keys: ["Home", "End"], action: "the week's first or last day" },
       { keys: ["Page Up", "Page Down"], action: "the previous or next month" },
       { keys: activation, action: "chooses the focused day" },

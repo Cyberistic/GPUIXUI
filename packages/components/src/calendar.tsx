@@ -79,7 +79,12 @@ import { isActivation, isDismiss, swallowsDefault } from "./internal/key.js";
 import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { mergeStyles } from "@gpuix/react/floating";
-import { controlRing, useTheme, type Theme } from "./internal/theme.js";
+import {
+  controlRing,
+  disabledOpacity,
+  useTheme,
+  type Theme,
+} from "./internal/theme.js";
 
 /** The measured day square, in pixels. Kept out of the recipe (see the tw doc). */
 const CELL = 34;
@@ -189,10 +194,7 @@ const anchorOf = (selection: Selection, today: DateTime.Utc): DateTime.Utc =>
         Option.flatMap(Arr.head(current.days), parseIsoDay),
       ),
       Match.when({ mode: "range" }, (current) =>
-        Option.flatMap(
-          Option.fromNullishOr(current.range?.from),
-          parseIsoDay,
-        ),
+        Option.flatMap(Option.fromNullishOr(current.range?.from), parseIsoDay),
       ),
       Match.exhaustive,
     ),
@@ -296,9 +298,11 @@ const cellStyle = (
   borderWidth: today && !isPainted(paint) ? theme.borderWidth.thin : undefined,
   borderColor: today ? theme.colors.primary : undefined,
   cursor: available ? "pointer" : "not-allowed",
-  opacity: available ? undefined : 0.5,
+  opacity: available ? undefined : disabledOpacity,
   hover:
-    isPainted(paint) || !available ? undefined : { backgroundColor: theme.colors.hover },
+    isPainted(paint) || !available
+      ? undefined
+      : { backgroundColor: theme.colors.hover },
   ...controlRing(theme, { disabled: !available }),
 });
 
@@ -392,16 +396,20 @@ export const Calendar = (props: CalendarProps) => {
           send(
             store.focusDay(
               clampToBounds(
-                moveDay(view.focus, { key, year: event.modifiers?.shift === true }, {
-                  weekStartsOn,
-                  viewMonth: view.month,
-                  months: numberOfMonths,
-                  showOutsideDays,
-                  bounds,
-                  matchers: props.disabled,
-                  fromYear,
-                  toYear,
-                }),
+                moveDay(
+                  view.focus,
+                  { key, year: event.modifiers?.shift === true },
+                  {
+                    weekStartsOn,
+                    viewMonth: view.month,
+                    months: numberOfMonths,
+                    showOutsideDays,
+                    bounds,
+                    matchers: props.disabled,
+                    fromYear,
+                    toYear,
+                  },
+                ),
                 bounds,
               ),
             ),
@@ -431,14 +439,20 @@ export const Calendar = (props: CalendarProps) => {
       aria-label={calendarLabel(label, selection)}
       role="group"
       onKeyDown={movement}
-      style={mergeStyles(recipeStyle(cn(CALENDAR_ROOT, props.className), theme), {
-        gap: theme.spacing.md,
-      })}
+      style={mergeStyles(
+        recipeStyle(cn(CALENDAR_ROOT, props.className), theme),
+        {
+          gap: theme.spacing.md,
+        },
+      )}
     >
       {Arr.map(months, (month, index) => {
         const grid = monthGrid(month, weekStartsOn, showOutsideDays);
         return (
-          <div key={formatIsoDay(month)} style={recipeStyle(CALENDAR_MONTH, theme)}>
+          <div
+            key={formatIsoDay(month)}
+            style={recipeStyle(CALENDAR_MONTH, theme)}
+          >
             <div
               style={{
                 display: "flex",
@@ -472,7 +486,10 @@ export const Calendar = (props: CalendarProps) => {
                 years={yearOptions}
                 testId={index === 0 ? "date-month" : `date-month-${index}`}
                 onMonth={(next) => {
-                  const target = addMonths(startOfMonth(month), next - DateTime.toPartsUtc(month).month);
+                  const target = addMonths(
+                    startOfMonth(month),
+                    next - DateTime.toPartsUtc(month).month,
+                  );
                   send(store.show(target, monthFocus(target)));
                 }}
                 onYear={(year) => {
@@ -503,7 +520,10 @@ export const Calendar = (props: CalendarProps) => {
             </div>
             <div
               role="grid"
-              aria-label={calendarLabel(`${label}, ${formatMonthLabel(month)}`, selection)}
+              aria-label={calendarLabel(
+                `${label}, ${formatMonthLabel(month)}`,
+                selection,
+              )}
               style={recipeStyle(CALENDAR_GRID, theme)}
             >
               <div role="row" style={{ display: "flex", flexDirection: "row" }}>
@@ -529,7 +549,10 @@ export const Calendar = (props: CalendarProps) => {
                   {Arr.map(week, (cell, dayIndex) =>
                     Option.match(cell, {
                       onNone: () => (
-                        <div key={dayIndex} style={{ width: CELL, height: CELL }} />
+                        <div
+                          key={dayIndex}
+                          style={{ width: CELL, height: CELL }}
+                        />
                       ),
                       onSome: (day) => {
                         const iso = formatIsoDay(day);

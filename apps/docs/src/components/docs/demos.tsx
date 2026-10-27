@@ -149,8 +149,16 @@ import {
   listMultipleSource,
 } from "./list-demo";
 import {
+  CalendarRange,
+  CalendarSingle,
+  DatePickerPresets,
+  DatePickerRange,
   DatePickerStates,
   DatePickerWorkflow,
+  calendarRangeSource,
+  calendarSingleSource,
+  datePickerPresetsSource,
+  datePickerRangeSource,
   datePickerStatesSource,
   datePickerWorkflowSource,
 } from "./date-picker-demo";
@@ -3161,6 +3169,22 @@ export const demos: Readonly<Record<string, Demo>> = {
   "date-picker-states": {
     render: DatePickerStates,
     source: datePickerStatesSource,
+  },
+  "date-picker-range": {
+    render: DatePickerRange,
+    source: datePickerRangeSource,
+  },
+  "date-picker-presets": {
+    render: DatePickerPresets,
+    source: datePickerPresetsSource,
+  },
+  "calendar-single": {
+    render: CalendarSingle,
+    source: calendarSingleSource,
+  },
+  "calendar-range": {
+    render: CalendarRange,
+    source: calendarRangeSource,
   },
   "drawer-sides": { render: DrawerSides, source: drawerSidesSource },
   "drawer-workflow": { render: DrawerWorkflow, source: drawerWorkflowSource },

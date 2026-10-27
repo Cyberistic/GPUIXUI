@@ -255,6 +255,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("mention-input", "Mention input"),
       component("combobox", "Combobox"),
       component("color-picker", "Color picker"),
+      component("calendar", "Calendar"),
       component("date-picker", "Date picker"),
       component("time-picker", "Time picker"),
       component("select", "Select"),

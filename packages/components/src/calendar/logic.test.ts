@@ -31,7 +31,6 @@ import {
   formatDayLabel,
   formatIsoDay,
   formatMonthLabel,
-  formatMonthShort,
   formatRangeLabel,
   formatSelectionLabel,
   formatShortDay,
@@ -47,7 +46,6 @@ import {
   moveDay,
   nextDay,
   nextRange,
-  nextSelection,
   paintOf,
   parseIsoDay,
   rangeContains,
@@ -126,10 +124,7 @@ describe("monthGrid", () => {
 
   it("paints the neighbouring days only when outside days are shown", () => {
     const shown = Arr.map(days(monthGrid(day("2026-10-01"), 1)), iso);
-    const hidden = Arr.map(
-      days(monthGrid(day("2026-10-01"), 1, false)),
-      iso,
-    );
+    const hidden = Arr.map(days(monthGrid(day("2026-10-01"), 1, false)), iso);
 
     // October opens on a Thursday and closes on a Saturday: the Monday-start
     // grid runs 28 September – 8 November.
@@ -144,9 +139,7 @@ describe("monthGrid", () => {
 
 describe("month arithmetic", () => {
   it("clears the time when starting a month", () => {
-    expect(
-      DateTime.toPartsUtc(startOfMonth(day("2026-10-17"))),
-    ).toMatchObject({
+    expect(DateTime.toPartsUtc(startOfMonth(day("2026-10-17")))).toMatchObject({
       year: 2026,
       month: 10,
       day: 1,
@@ -179,9 +172,9 @@ describe("month arithmetic", () => {
   });
 
   it("windows one or two months and pulls the window to a day", () => {
-    expect(Arr.map(monthWindow(day("2026-10-17"), 2), formatMonthLabel)).toEqual(
-      ["October 2026", "November 2026"],
-    );
+    expect(
+      Arr.map(monthWindow(day("2026-10-17"), 2), formatMonthLabel),
+    ).toEqual(["October 2026", "November 2026"]);
     expect(iso(windowStart(day("2026-10-17")))).toBe("2026-10-01");
     expect(iso(windowEnd(day("2026-10-17"), 2))).toBe("2026-11-30");
     // A day already in the window leaves it alone.
@@ -206,8 +199,8 @@ describe("day identity and labels", () => {
 
   it("formats the labels a trigger and a grid paint", () => {
     expect(formatMonthLabel(day("2026-10-17"))).toBe("October 2026");
-    expect(formatMonthShort(day("2026-10-17"))).toBe("Oct");
     expect(monthShortName(3)).toBe("Mar");
+    expect(monthShortName(10)).toBe("Oct");
     expect(formatDayLabel(day("2026-10-17"))).toBe("17 October 2026");
     // shadcn's trigger label: `"Oct 17, 2026"`.
     expect(formatShortDay(day("2026-10-17"))).toBe("Oct 17, 2026");
@@ -300,7 +293,10 @@ describe("day bounds", () => {
 
   it("reads matchers exclusive of the edge day", () => {
     // react-day-picker's vocabulary: everything *before* the day is disabled.
-    const bounds = boundsOfMatchers({ before: "2026-10-12", after: "2026-10-20" });
+    const bounds = boundsOfMatchers({
+      before: "2026-10-12",
+      after: "2026-10-20",
+    });
     expect(Option.map(bounds.min, iso)).toEqual(Option.some("2026-10-13"));
     expect(Option.map(bounds.max, iso)).toEqual(Option.some("2026-10-19"));
     expect(iso(clampToBounds(day("2026-10-01"), bounds))).toBe("2026-10-13");
@@ -326,15 +322,19 @@ describe("day bounds", () => {
     expect(
       isDisabled(day("2026-11-01"), { range: { from: "2026-10-12" } }),
     ).toBe(true);
-    expect(
-      isDisabled(day("2026-10-01"), { range: { to: "2026-10-12" } }),
-    ).toBe(true);
+    expect(isDisabled(day("2026-10-01"), { range: { to: "2026-10-12" } })).toBe(
+      true,
+    );
 
     expect(
-      isDisabled(day("2026-10-17"), { filter: (value) => value.endsWith("17") }),
+      isDisabled(day("2026-10-17"), {
+        filter: (value) => value.endsWith("17"),
+      }),
     ).toBe(true);
     expect(
-      isDisabled(day("2026-10-18"), { filter: (value) => value.endsWith("17") }),
+      isDisabled(day("2026-10-18"), {
+        filter: (value) => value.endsWith("17"),
+      }),
     ).toBe(false);
     expect(isDisabled(day("2026-10-18"), undefined)).toBe(false);
   });
@@ -406,9 +406,7 @@ describe("moveDay", () => {
     // 17 October 2026 is a Saturday, so a Monday-start week is 12–18.
     expect(move("2026-10-17", "home")).toBe("2026-10-12");
     expect(move("2026-10-17", "end")).toBe("2026-10-18");
-    expect(
-      move("2026-10-17", "home", { ...october, weekStartsOn: 0 }),
-    ).toBe(
+    expect(move("2026-10-17", "home", { ...october, weekStartsOn: 0 })).toBe(
       "2026-10-11",
     );
   });
@@ -429,6 +427,21 @@ describe("moveDay", () => {
     expect(
       move("2026-10-17", "page-down", { ...october, toYear: 2026 }, true),
     ).toBe("2026-10-17");
+  });
+
+  it("searches the month a page lands in once the bound clamps it", () => {
+    // The live `date-picker-lifecycle` probe measured this: PageDown from the
+    // earliest legal day bounded inside March clamped onto 27 March, then
+    // searched April's grid (which starts on 30 March) and found the target
+    // outside it, so the focus stayed on 2 March. The window follows the
+    // bounded target, not the raw month.
+    const bounds = boundsOf("2026-03-02", "2026-03-27");
+    expect(move("2026-03-02", "page-down", { ...october, bounds })).toBe(
+      "2026-03-27",
+    );
+    expect(move("2026-03-27", "page-up", { ...october, bounds })).toBe(
+      "2026-03-02",
+    );
   });
 
   it("clamps to the bounds and skips a refused day", () => {
@@ -477,32 +490,6 @@ describe("selection", () => {
     ).toEqual({ from: "2026-11-02", to: null });
   });
 
-  it("reports the next selection per mode", () => {
-    const single: Selection = { mode: "single", day: "2026-10-17" };
-    expect(nextSelection(single, "2026-10-17")).toEqual({
-      mode: "single",
-      day: null,
-    });
-
-    const multiple: Selection = {
-      mode: "multiple",
-      days: ["2026-10-17"],
-    };
-    expect(nextSelection(multiple, "2026-10-18")).toEqual({
-      mode: "multiple",
-      days: ["2026-10-17", "2026-10-18"],
-    });
-
-    const range: Selection = {
-      mode: "range",
-      range: { from: "2026-10-17", to: null },
-    };
-    expect(nextSelection(range, "2026-10-20")).toEqual({
-      mode: "range",
-      range: { from: "2026-10-17", to: "2026-10-20" },
-    });
-  });
-
   it("paints the ends and the middle of a range, and single days", () => {
     const range: Selection = {
       mode: "range",
@@ -521,9 +508,9 @@ describe("selection", () => {
     expect(paintOf(open, "2026-10-17")).toBe("range-start");
     expect(paintOf(open, "2026-10-18")).toBe("none");
 
-    expect(
-      paintOf({ mode: "single", day: "2026-10-17" }, "2026-10-17"),
-    ).toBe("selected");
+    expect(paintOf({ mode: "single", day: "2026-10-17" }, "2026-10-17")).toBe(
+      "selected",
+    );
     expect(
       paintOf({ mode: "multiple", days: ["2026-10-17"] }, "2026-10-17"),
     ).toBe("selected");
@@ -588,9 +575,9 @@ describe("the names a calendar announces", () => {
 
   it("formats a trigger label for both modes, falling back to the placeholder", () => {
     const placeholder = "Pick a date";
-    expect(formatSelectionLabel({ mode: "single", day: null }, placeholder)).toBe(
-      placeholder,
-    );
+    expect(
+      formatSelectionLabel({ mode: "single", day: null }, placeholder),
+    ).toBe(placeholder);
     expect(
       formatSelectionLabel({ mode: "single", day: "2026-10-17" }, placeholder),
     ).toBe("Oct 17, 2026");
@@ -627,12 +614,24 @@ describe("two-month windows", () => {
     const two = { ...october, months: 2 as const };
     // November is painted beside October, so the day is not clamped away.
     expect(
-      iso(moveDay(day("2026-10-31"), { key: "right" }, { ...two, showOutsideDays: true })),
+      iso(
+        moveDay(
+          day("2026-10-31"),
+          { key: "right" },
+          { ...two, showOutsideDays: true },
+        ),
+      ),
     ).toBe("2026-11-01");
     // November's grid paints the first December days, so the arrow reaches
     // one; the window then follows the day it focused.
     expect(
-      iso(moveDay(day("2026-11-30"), { key: "right" }, { ...two, showOutsideDays: true })),
+      iso(
+        moveDay(
+          day("2026-11-30"),
+          { key: "right" },
+          { ...two, showOutsideDays: true },
+        ),
+      ),
     ).toBe("2026-12-01");
     expect(iso(visibleMonth(day("2026-10-01"), 2, day("2026-11-30")))).toBe(
       "2026-10-01",

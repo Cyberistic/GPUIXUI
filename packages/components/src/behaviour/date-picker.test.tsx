@@ -497,9 +497,7 @@ describe("DatePicker", () => {
 
   it("formats a span the way shadcn does, in one year", () => {
     const picker = renderComponent(
-      <RangePicker
-        defaultValue={{ from: "2026-01-20", to: "2026-02-04" }}
-      />,
+      <RangePicker defaultValue={{ from: "2026-01-20", to: "2026-02-04" }} />,
     );
 
     expect(picker.renderer.getAllText()).toContain("Jan 20 – Feb 4, 2026");
@@ -508,7 +506,9 @@ describe("DatePicker", () => {
 
   it("paints two months and reports a start, then a completed span", async () => {
     const onValueChange = vi.fn();
-    const picker = renderComponent(<RangePicker onValueChange={onValueChange} />);
+    const picker = renderComponent(
+      <RangePicker onValueChange={onValueChange} />,
+    );
 
     // The placeholder is shadcn's, and range mode opens on two months.
     expect(picker.renderer.getAllText()).toContain("Pick a date");
@@ -539,9 +539,7 @@ describe("DatePicker", () => {
       ).toBeUndefined(),
     );
     expect(picker.renderer.getAllText()).toContain("Oct 20 – Nov 4, 2026");
-    expect(focusedTestId(picker)).toEqual(
-      Option.some("date-picker-trigger"),
-    );
+    expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 
     picker.unmount();
   });

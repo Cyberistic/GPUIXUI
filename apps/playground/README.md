@@ -4921,9 +4921,9 @@ hands its eight `onClick` call sites to the primitives' `Button` must map them t
 ### `date-picker-lifecycle` — measured on 0.11.0 here
 
 **Does the one calendar the library ships behave the same in a window?** GPUix
-publishes no date input, so `DatePicker` is the library's calendar, and its key
-table was proved against a `TestRenderer` where a key goes straight to the grid's
-`onKeyDown`. A window is a different path: the key lands on the **focused day
+publishes no date input, so `Calendar` — the grid `DatePicker` now composes — is
+the library's calendar, and its key table was proved against a `TestRenderer`
+where a key goes straight to the grid's `onKeyDown`. A window is a different path: the key lands on the **focused day
 cell**, it has to reach the grid above it, and the runtime moves focus only when
 component code calls `focusElement`. The probe mounts the shipped picker twice —
 one holding a day, one empty — pins `today` and both bounds inside March 2026,
@@ -4942,7 +4942,7 @@ was handed.
 | a week forward crosses into the next row | `date-day-2026-03-22` | the grid's rows are real tabs, not a flat count |
 | a week past the last bound lands on it | `date-day-2026-03-27` | `max` clamps the move instead of painting an unavailable day |
 | a day past the last bound stays on it | `date-day-2026-03-27` | and so does a one-day step |
-| `enter` | `date-picker-trigger` | the focused day is chosen, the surface goes, and the focus returns; the trigger paints `27 March 2026` |
+| `enter` | `date-picker-trigger` | the focused day is chosen, the surface goes, and the focus returns; the trigger paints `Mar 27, 2026` |
 | reopen | `date-day-2026-03-27` | a reopened picker anchors on the chosen day, and Clear paints |
 | `pageup` | `date-day-2026-03-02` | a page step clamps to the earliest bound |
 | `pagedown` | `date-day-2026-03-27` | and back to the latest |
@@ -4957,7 +4957,10 @@ leaves it there, and Clear is the second and last change. A day past `max`
 (`2026-03-30`) is painted and refuses the press: the surface stays and the value
 does not move.
 
-Two rows record what a **refused** month control does. Its press parks the focus
+The grid paints the neighbouring months' days (`showOutsideDays` defaults to
+`true`), so a step past 1 March lands on a February day when one is available;
+the pinned bounds keep every move inside March here, which is what makes the
+bound rows below unambiguous. Two rows record what a **refused** month control does. Its press parks the focus
 on the control — the button leaves the Tab order, but the runtime still focuses
 the element a pointer pressed, the same press-focus rule `button-activation-lifecycle`
 measured on a disabled `Button`. The nav row answers the same movement keys as the

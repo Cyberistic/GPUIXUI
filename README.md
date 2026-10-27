@@ -9,12 +9,15 @@ source of truth for what is left to do. `COMPONENTS.md` is the inventory.
 ## Status
 
 Phase C — Tier 1–2 components. **Tier 2 is complete in `packages/components`**:
-38 components/areas, each with a native behaviour suite, at least one working
+39 components/areas, each with a native behaviour suite, at least one working
 example, a docs page and an inventory record checked against `COMPONENTS.md`.
+The newest is **`Calendar`** — the shadcn-shaped month grid the Date picker now
+composes — with single/multiple/range selection, one or two months, outside days,
+disabled matchers and label/dropdown captions.
 The last batch closed the twelve gap rows from plan 205 (Drawer, Navigation Menu,
 Preview Card, Timeline, Countdown, Keyboard shortcuts, Carousel, Inline edit,
 Tag input, Mention input, Hotkey recorder, Color picker) — `nub run --filter
-@gpuixui/components test:behaviour` covers them in 451 tests.
+@gpuixui/components test:behaviour` covers them in 1 157 tests.
 Phase D has started: **`packages/data` (`@gpuixui/data`) ships the table core
 with sort, selection and filtering** — the measured fixed header (one horizontal
 scroller, the header a sibling of the row scroller), measured body height, empty
