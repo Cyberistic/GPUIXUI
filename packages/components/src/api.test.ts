@@ -58,13 +58,20 @@ const section = (heading: string): string => {
   return next < 0 ? markdown.slice(start) : markdown.slice(start, next);
 };
 
-/** The Tier 2 table of §8: implemented parts, not the planned shape table. */
-const tier2Table = (): string => {
-  const tier2 = section("## 8. Parts by component");
-  const start = tier2.indexOf("### Tier 2 — composition and feedback");
-  const end = tier2.indexOf("**Planned Tier 2 additions**");
+/**
+ * The implemented parts of §8, Tier 1 and Tier 2.
+ *
+ * The Tier 1 rows matter here because six components in this package are the
+ * shadcn-shaped surface of a primitive concept (`Progress`, `Slider`,
+ * `Separators`, `Skeletons`, `Toggle`, `Toggle group`); their parts are exported
+ * from this package too, so the rows that name them are the same rows.
+ */
+const partsTable = (): string => {
+  const parts = section("## 8. Parts by component");
+  const start = parts.indexOf("### Tier 1 — foundational");
+  const end = parts.indexOf("**Planned Tier 2 additions**");
   if (start < 0 || end <= start) return "";
-  return tier2.slice(start, end);
+  return parts.slice(start, end);
 };
 
 /** One row's component name and the parts it names in backticks. */
@@ -92,7 +99,7 @@ const rowOf = (
 const rows: ReadonlyArray<{
   readonly name: string;
   readonly parts: ReadonlyArray<string>;
-}> = Arr.filterMap(tier2Table().split("\n"), rowOf);
+}> = Arr.filterMap(partsTable().split("\n"), rowOf);
 
 /** The §8 reservation table: parts fixed before their component lands. */
 const plannedTable = (): string => {
@@ -246,7 +253,7 @@ describe("component API contract", () => {
   });
 
   it("has a §8 parts row for every shipped component", () => {
-    expect(tier2Table()).not.toBe("");
+    expect(partsTable()).not.toBe("");
     const missing = Arr.filter(inventory, (meta) =>
       Option.isNone(partsOf(meta.name)),
     ).map((meta) => meta.name);
@@ -407,7 +414,7 @@ describe("component API contract", () => {
     // was the one place a prop could ship undocumented.
     const recorded: ReadonlyArray<ComponentMeta> = Arr.filter(
       inventory,
-      (meta) => meta.tier === 2 || meta.tier === 5,
+      (meta) => meta.tier === 1 || meta.tier === 2 || meta.tier === 5,
     );
     let checked = 0;
     const problems = Arr.flatMap(recorded, (meta) => {

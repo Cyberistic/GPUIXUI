@@ -121,7 +121,12 @@ export const surfaceBudget = {
   // (the swap and its exit window), `image-zoom/store.ts` (the pointer),
   // `pattern-field/store.ts` (the measured box and the breath's phase, shared by
   // Hexagon and Glyph) and `splitting-text/store.ts` (the phrase and its units).
-  modules: 181,
+  // 181 → 189 for the six shadcn-shaped surfaces of Tier 1 primitives
+  // (`progress.tsx`, `slider.tsx`, `separator.tsx`, `skeleton.tsx`,
+  // `toggle.tsx`, `toggle-group.tsx`) and the two pure rules they own
+  // (`progress/logic.ts`, `slider/logic.ts`): each file is a family, and the
+  // barrel names them so the entry carries them.
+  modules: 189,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -183,8 +188,10 @@ export const surfaceBudget = {
   // phrase's units (`splitting-text/store.ts`). They landed on a parallel seam
   // (`internal/effect-store.ts`), now deleted: one seam binds a store to React,
   // so the module count is the four stores alone. 1 243 KiB measured with all
-  // nine stores, under the ceiling.
-  bytes: 1260 * 1024,
+  // nine stores, under the ceiling. 1 264 KiB measured with the six shadcn
+  // surfaces and their two rules, so the ceiling moved 1260 → 1280 KiB and the
+  // next family keeps its headroom.
+  bytes: 1280 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
