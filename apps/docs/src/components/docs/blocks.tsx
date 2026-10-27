@@ -55,11 +55,6 @@ export interface Block {
   readonly packages: ReadonlyArray<string>;
   readonly render: () => ReactNode;
   readonly source: string;
-  /**
-   * A page-level recipe: the rendering fills the preview surface instead of
-   * sitting in its padding, the way the page fills a window.
-   */
-  readonly fullBleed?: boolean;
 }
 
 const SettingsRender = () => (
@@ -216,7 +211,6 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: SignInPageRender,
     source: signInPageSource,
-    fullBleed: true,
   },
   "dashboard-management-01": {
     name: "dashboard-management-01",

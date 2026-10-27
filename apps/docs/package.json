@@ -7,6 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "blocks:thumbnails": "nub scripts/block-thumbnails.ts",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },

@@ -1,24 +1,32 @@
 import { blockList } from "./blocks";
-import { PreviewSurface } from "./preview-surface";
 
 /**
  * The blocks index: one card per block, linking to its page, the way shadcn/ui
  * lists its blocks on `/blocks`. The cards live here so the index page stays a
  * thin MDX shell.
  *
- * The card is not an anchor: a block's preview is a page-level recipe and can
+ * Each tile paints a checked-in capture of the block's own page
+ * (`public/blocks/<slug>.webp`, written by `scripts/block-thumbnails.ts`) rather
+ * than mounting the scene: a dozen live compositions made the index pay for
+ * every block's state and listeners, and repaint them all on a platform switch.
+ *
+ * The card is not an anchor: a block's rendering is a page-level recipe and can
  * carry its own links (the sign-in page's navbar and footer do), and an anchor
  * around them would nest one link inside another — invalid HTML and a
- * hydration error. The title is the card's link.
+ * hydration error. The title is the card's link, and the image is decorative
+ * for the same reason: the title already names it.
  */
 export function BlockIndex() {
   return (
     <div className="gx-block-index not-prose">
       {blockList.map((block) => (
         <div className="gx-block-card-link" key={block.name}>
-          <PreviewSurface className="gx-block-card-thumb">
-            {block.render()}
-          </PreviewSurface>
+          <img
+            alt=""
+            className="gx-block-card-thumb"
+            loading="lazy"
+            src={`/blocks/${block.slug}.webp`}
+          />
           <div className="gx-block-card-body">
             <h3 className="gx-block-card-title">
               <a href={`/docs/blocks/${block.slug}`}>{block.title}</a>

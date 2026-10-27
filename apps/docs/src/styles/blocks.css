@@ -4,31 +4,30 @@
  * `.gx-field` rules in `demos.css`; these classes only lay out the recipe.
  */
 
-.gx-block-demo {
-  min-height: 420px;
-}
-
-/* A page-level recipe fills the surface it is mounted in: the preview is a
-   window, so the recipe starts at its edges rather than floating in the
-   demo's padding. Its panel is tall enough for the whole page, still one fixed
-   height so neither a state nor the platform switch moves the page under the
-   reader. */
-.gx-block-page {
-  min-height: 100%;
+/*
+ * A block page is the screen itself. The scene takes the page column's own
+ * width and paints the composition at its natural size — no fixed panel and no
+ * scroll box, which is what cropped a dashboard and squeezed an inbox into
+ * 520px on the component pages.
+ */
+.gx-block-stage {
+  min-height: 0;
   padding: 0;
   align-items: stretch;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.gx-component-panel.gx-component-panel-page {
-  height: 700px;
-}
-
+/* The index tile is a capture of that same page, not a live scene: a grid of
+   twelve mounted compositions paid for every scene's listeners and repainted
+   all of them on a platform switch. The images live in `public/blocks/` and are
+   written by `scripts/block-thumbnails.ts`. */
 .gx-block-card-thumb {
-  min-height: 0;
-  height: 210px;
-  padding: 20px 16px;
-  align-items: flex-start;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top center;
+  background: var(--background);
 }
 
 .gx-block-settings {
@@ -1164,6 +1163,9 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  /* The legend takes the line under the ring when the card is too narrow for
+     both, so the block fits the docs column as well as a wide window. */
+  flex-wrap: wrap;
 }
 
 .gx-dash-donut {
@@ -1190,7 +1192,10 @@
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-  flex: 1;
+  /* A basis the rows need: the ring and the legend share a line while there is
+     room for both, and the legend takes its own line under the ring when the
+     card (the docs column, a narrow window) cannot fit them side by side. */
+  flex: 1 1 170px;
 }
 
 .gx-dash-legend-item {
@@ -1337,10 +1342,6 @@
   .gx-dash-grid-row,
   .gx-dash-grid-wide {
     grid-template-columns: 1fr;
-  }
-
-  .gx-dash-donut-row {
-    flex-wrap: wrap;
   }
 }
 

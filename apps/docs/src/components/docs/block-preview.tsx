@@ -1,11 +1,6 @@
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { useState } from "react";
 import { HighlightedCode } from "@/components/highlighted-code";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "fumadocs-ui/components/tabs";
 import { writeClipboard } from "../../lib/clipboard";
 import { blocks, type Block } from "./blocks";
 import { PreviewSurface } from "./preview-surface";
@@ -19,9 +14,15 @@ const copyLabel = {
 type CopyState = keyof typeof copyLabel;
 
 /**
- * One block page's Preview / Code surface, as shadcn/ui presents a block: the
- * browser rendering and the recipe source, plus a copy affordance and the note
- * that a block is a recipe composed from the library — not a new component.
+ * One block page: the recipe's screen, then the source that draws it.
+ *
+ * A block is a page, not a specimen, so it is not mounted in the component
+ * pages' fixed-height Preview/Code panel — that box cropped a dashboard and
+ * squeezed an inbox into 520px. The screen takes the page column's own width
+ * and paints at its natural size; the recipe follows in a disclosure beneath.
+ *
+ * The scene is still `PreviewSurface`, so the palette, `data-platform` and
+ * platform font keep following the switch.
  */
 export function BlockPreview({ name }: { name: string }) {
   const block = blocks[name];
@@ -29,42 +30,19 @@ export function BlockPreview({ name }: { name: string }) {
     throw new Error(`BlockPreview: no block named "${name}"`);
   }
 
-
   return (
-    <div className="gx-component not-prose">
-      <Tabs defaultValue="preview" className="gx-component-tabs">
-        <div className="gx-component-bar">
-          <TabsList>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-            <TabsTrigger value="code">Code</TabsTrigger>
-          </TabsList>
-          <CopyRecipe block={block} />
-        </div>
-        <TabsContent
-          className={
-            block.fullBleed === true
-              ? "gx-component-panel gx-component-panel-page"
-              : "gx-component-panel"
-          }
-          value="preview"
-        >
-          <PreviewSurface
-            className={
-              block.fullBleed === true
-                ? "gx-block-demo gx-block-page"
-                : "gx-block-demo"
-            }
-          >
-            {block.render()}
-          </PreviewSurface>
-        </TabsContent>
-        <TabsContent
-          className="gx-component-panel gx-component-code"
-          value="code"
-        >
-          <HighlightedCode lang="tsx" code={block.source} />
-        </TabsContent>
-      </Tabs>
+    <div className="gx-block-screen not-prose">
+      <PreviewSurface className="gx-block-stage">
+        {block.render()}
+      </PreviewSurface>
+      <div className="gx-source">
+        <Accordions collapsible type="single">
+          <Accordion title={`Recipe — ${block.name}`}>
+            <CopyRecipe block={block} />
+            <HighlightedCode lang="tsx" code={block.source} />
+          </Accordion>
+        </Accordions>
+      </div>
     </div>
   );
 }
