@@ -18,7 +18,7 @@
  * runtime's closed `aria-*` set (no `aria-current`, no live region).
  */
 
-import type { KeyEvent, Props, StyleDesc } from "@gpuix/react";
+import type { KeyEvent, StyleDesc } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Select, type SelectOption } from "@gpuixui/primitives/select";
 import {
@@ -90,7 +90,7 @@ import {
 const CELL = 34;
 
 /** The props every mode shares. */
-export interface CalendarBaseProps extends Omit<Props, "children"> {
+export interface CalendarBaseProps {
   /** How many months are painted side by side. Default `1`. */
   readonly numberOfMonths?: MonthCount;
   /** Paint the leading and trailing days of the neighbouring months. Default `true`. */
