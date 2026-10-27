@@ -15,7 +15,7 @@
  * sleep outlives the tree that scheduled it.
  *
  * `Effect.run*` lives here and nowhere else among these components (EF-21):
- * building a store, reading its snapshot and starting a command are the three
+ * building a store, subscribing to it and starting a command are the three
  * things a React render and a React handler need, and everything they reach is
  * an effect.
  */
@@ -97,7 +97,9 @@ export const makeLocalState = <A>(initial: A): Effect.Effect<LocalState<A>> =>
 
     return {
       state,
-      read: () => Effect.runSync(SubscriptionRef.get(state)),
+      // `getUnsafe` is the read `useSyncExternalStore` needs: the value as it
+      // stands, in the turn the write signalled.
+      read: () => SubscriptionRef.getUnsafe(state),
       subscribe,
       write,
       after,
@@ -105,16 +107,19 @@ export const makeLocalState = <A>(initial: A): Effect.Effect<LocalState<A>> =>
     };
   });
 
+/** What a local store hands the hook that owns its lifetime: the timer to stop. */
+interface Teardown {
+  readonly local: { readonly cancel: Effect.Effect<void> };
+}
+
 /**
  * One store for the life of the component.
  *
  * The factory is a module constant, so the store is built on the first render
  * and kept across every later one; the tree that owns it is the tree that
- * cancels its timer.
+ * cancels the timer it may be running.
  */
-export const useLocalStore = <
-  Store extends { readonly local: Pick<LocalState<unknown>, "cancel"> },
->(
+export const useLocalStore = <Store extends Teardown>(
   make: Effect.Effect<Store>,
 ): Store => {
   const [store] = useState(() => Effect.runSync(make));
@@ -125,8 +130,8 @@ export const useLocalStore = <
 /**
  * Run a store command.
  *
- * A command completes before the handler that sent it returns, so the write is
- * in the tree the caller flushes next.
+ * The command's write lands before the handler that sent it returns, so the
+ * tree the caller flushes next paints it.
  */
 export const send = (command: Effect.Effect<void>): void => {
   Effect.runFork(command);
