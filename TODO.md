@@ -271,11 +271,24 @@ mounted through the exit; the first open now reads the target through
 frame). Chevrons cross-fade 200ms — no transform, so no rotation. Reduced
 motion snaps. 31 behaviour tests, reverting four files fails 5 of them; native
 `accordion-lifecycle` 1/1.
+`[x]` **Combobox preview** — the control sat left because `.gx-demo-combobox`
+filled the row without being a flex container; the prose card is gone, the field
+is a 320px column centred in the scene, the caret/check/search marks are icons
+(the shipped combobox already painted `chevron-down`; the preview drew text
+glyphs), the trigger is normal weight, and the popup uses the command shape and
+fits inside the 520px scene. Menu, command and select wrappers had the same
+missing `display: flex`.
 `[x]` **Preview note removed** — the "Browser preview … not the DOM" paragraph is
 gone from both preview surfaces (component and block), with its imports and the
 test that required its live link. `/live` is now reachable by address only; the
 route still mounts the real renderer. The `.gx-component-note` rule stays for the
 theme editor, which still renders one.
+`[~]` **Effects onto Effect** — two agents: `magnetic`, `liquid-button`,
+`shine-button`, `stars`, `gravity-stars` on one branch; `hexagon`,
+`splitting-text`, plus the reported-broken `rolling-text` and `image-zoom` on the
+other. Shared internals are off-limits so the branches cannot collide.
+`[~]` **Blocks full size** — an agent strips the 520px card from block pages and
+replaces the index's live tiles with images.
 `[x]` **Fixed-height controls centre their label** — the toast action and close
 mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
 the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The
