@@ -217,6 +217,7 @@ src/components/docs/advanced-filter-demo.tsx The query builder's tree, its sente
 src/components/docs/virtualization-demo.tsx The window calculator's mounted rows and their offsets
 src/components/docs/tree-demo.tsx         The two tree drawings: the package's controller and its window calculator
 src/components/docs/tree-keys.ts          The browser keys both tree drawings report as the package's own
+src/components/docs/window-preview.ts      The rows a viewport shows, against the window that mounts them
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
 src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint

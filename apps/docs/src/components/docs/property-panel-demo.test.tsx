@@ -12,8 +12,10 @@ import {
  * The page's whole subject is that one object is read by four surfaces without
  * a second copy of it: the stage, the editable row, the key-value table and the
  * metric. A drawing that printed the area from a constant, dropped the field,
- * or drew a blank `Tag` cell would still build. These cases hold the markup to
- * the model's numbers and the sample to the imports a reader copies.
+ * drew a blank `Tag` cell or left `Reset size` without its handler would still
+ * build. These cases hold the markup to the model's numbers, the two size
+ * actions to the handlers that run the model, and the sample to the imports a
+ * reader copies.
  */
 
 const markup = renderToStaticMarkup(<PropertyPanelDemo />);
@@ -95,5 +97,14 @@ describe("the property panel preview", () => {
     expect(propertyPanelDemoSource).toContain(
       'value: object.tag === "" ? "none" : object.tag',
     );
+  });
+
+  it("wires both size actions to the model", () => {
+    // Guarded report: `Reset size` looked inert after `Wide`. The rule is the
+    // model's (the test above), so this pins the two handlers that run it.
+    const source = read("./property-panel-demo.tsx");
+
+    expect(source).toContain("setObject(widen(object))");
+    expect(source).toContain("setObject(resetSize(object))");
   });
 });

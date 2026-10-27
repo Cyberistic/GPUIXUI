@@ -106,6 +106,17 @@ describe("the expandable-rows preview", () => {
     expect(cell.slice(0, cell.indexOf("}"))).toContain("padding: 12px;");
   });
 
+  it("keeps the expander track out of the table's columns", () => {
+    // Guarded bug: the track was a fourth `columnheader` (and `aria-hidden`, so
+    // no reader could meet it), while a body row holds three cells. It is
+    // decoration: the package's header cell is empty too.
+    const html = renderToStaticMarkup(<ExpandableRowsDemo />);
+
+    expect(html.match(/role="columnheader"/g) ?? []).toHaveLength(3);
+    expect(html.match(/role="presentation"/g) ?? []).toHaveLength(1);
+    expect(html).not.toContain('aria-label="Expanded"');
+  });
+
   it("is wired to the page the package ships", () => {
     expect(demos["expandable-rows-demo"]).toBeDefined();
     const row = packagePreviews.find(

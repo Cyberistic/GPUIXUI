@@ -108,6 +108,16 @@ export const hiddenNames = (state: ColumnState): ReadonlyArray<string> =>
   );
 
 /**
+ * Whether the menu can hide one more column.
+ *
+ * The last visible column stays: a grid with no track paints a header with no
+ * cells, so the package disables that column's toggle rather than accepting a
+ * press it refuses.
+ */
+export const canHide = (state: ColumnState): boolean =>
+  visibleColumns(state).length > 1;
+
+/**
  * The width a resize key produces for one column.
  *
  * The divider announces and steps the width the package clamps, so Home/End
@@ -191,6 +201,7 @@ export function ColumnConfigurationDemo() {
                     <button
                       aria-pressed={column.visible}
                       className="gx-table-columns-item gx-cols-toggle"
+                      disabled={column.visible && !canHide(state)}
                       onClick={() =>
                         setState((current) => toggledColumn(current, column.id))
                       }
@@ -204,39 +215,46 @@ export function ColumnConfigurationDemo() {
                       </span>
                       {columnName(column.label, column.id)}
                     </button>
-                    <button
-                      aria-label={`Move ${columnName(column.label, column.id)} left`}
-                      className="gx-cols-move"
-                      disabled={shown <= 0}
-                      onClick={() =>
-                        setState((current) =>
-                          movedColumn(current, column.id, -1),
-                        )
-                      }
-                      type="button"
-                    >
-                      ←
-                    </button>
-                    <button
-                      aria-label={`Move ${columnName(column.label, column.id)} right`}
-                      className="gx-cols-move"
-                      disabled={shown < 0 || shown >= columns.length - 1}
-                      onClick={() =>
-                        setState((current) =>
-                          movedColumn(current, column.id, 1),
-                        )
-                      }
-                      type="button"
-                    >
-                      →
-                    </button>
+                    {shown < 0 ? null : (
+                      <>
+                        <button
+                          aria-label={`Move ${columnName(column.label, column.id)} left`}
+                          className="gx-cols-move"
+                          disabled={shown === 0}
+                          onClick={() =>
+                            setState((current) =>
+                              movedColumn(current, column.id, -1),
+                            )
+                          }
+                          type="button"
+                        >
+                          ←
+                        </button>
+                        <button
+                          aria-label={`Move ${columnName(column.label, column.id)} right`}
+                          className="gx-cols-move"
+                          disabled={shown === columns.length - 1}
+                          onClick={() =>
+                            setState((current) =>
+                              movedColumn(current, column.id, 1),
+                            )
+                          }
+                          type="button"
+                        >
+                          →
+                        </button>
+                      </>
+                    )}
                   </div>
                 );
               })}
-              <p className="gx-table-hint gx-cols-order">
-                Hidden columns keep their slot: showing one again returns it to
-                its own place rather than the end of the list.
-              </p>
+              <button
+                className="gx-table-columns-item gx-cols-reset"
+                onClick={() => setState(openingColumns())}
+                type="button"
+              >
+                Reset columns
+              </button>
             </div>
           ) : null}
         </div>
@@ -296,7 +314,8 @@ export function ColumnConfigurationDemo() {
         A press on a divider’s separator is a pointer drag; here the keyboard
         route is the one drawn: ← and → step 16px, Home and End name the
         column’s own bounds. Hiding a column takes its width out of the content
-        and shifts every later column by exactly that width.
+        and shifts every later column by exactly that width; a hidden column
+        keeps its slot, so showing it again returns it to its own place.
       </p>
     </div>
   );

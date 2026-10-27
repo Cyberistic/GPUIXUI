@@ -31,7 +31,7 @@ import {
   treeMountedRows,
   treeOffset,
   treeReadout,
-  treeVisibleRows,
+  treeMountedWindow,
   treeWindowReadout,
   virtualTreeExpanded,
   virtualTreeRows,
@@ -169,13 +169,24 @@ describe("the TreeView preview", () => {
   it("keeps the tree the one tab stop its page promises", () => {
     const html = markup(<DependencyTreeDemo />);
     const chevrons = html.match(/class="gx-tree-chevron"/g) ?? [];
+    const buttons = html.match(/<button[^>]*class="gx-tree-chevron"/g) ?? [];
 
-    // The tree itself is the tab stop. A chevron stays clickable but out of the
-    // tab order, so a keyboard reader does not traverse one button per row —
-    // the arrows and Enter own expansion, exactly as the page says.
+    // The tree itself is the tab stop. A branch's chevron stays clickable but
+    // out of the tab order, so a keyboard reader does not traverse one button
+    // per row — the arrows and Enter own expansion, exactly as the page says.
     expect(html.match(/tabindex="0"/g) ?? []).toHaveLength(1);
-    expect(chevrons.length).toBeGreaterThan(3);
-    expect(html.match(/tabindex="-1"/g) ?? []).toHaveLength(chevrons.length);
+    expect(html.match(/tabindex="-1"/g) ?? []).toHaveLength(buttons.length);
+    expect(buttons.length).toBeGreaterThan(0);
+    // A leaf keeps the chevron's track and paints no control: the package's own
+    // row has nothing to flip under a leaf.
+    expect(chevrons.length).toBeGreaterThan(buttons.length);
+    expect(html.match(/data-branch="false"/g) ?? []).toHaveLength(
+      chevrons.length - buttons.length,
+    );
+    expect(html).not.toContain("Expand @gpuixui/tokens");
+    expect(read("packages/data/src/tree/row.tsx")).toContain(
+      "row.hasChildren && chevron !== undefined",
+    );
   });
 
   it("reports the rows, the open branches and the row it stands on", () => {
@@ -203,7 +214,7 @@ describe("the VirtualTree preview", () => {
     expect(mounted).toEqual(calculator.indicesAt(0));
     // A non-zero offset is the case a fixed slice would still pass at the top.
     expect(treeMountedRows(count, 900)).toEqual(calculator.indicesAt(900));
-    expect(treeVisibleRows(count, 900)).toEqual({ start: 20, end: 35 });
+    expect(treeMountedWindow(count, 900)).toEqual({ start: 20, end: 35 });
     expect(mounted.length).toBeLessThan(100);
     // The whole set is what the tree holds; only the window is mounted.
     expect(virtualTreeRows.length).toBeGreaterThan(mounted.length * 10);
@@ -218,8 +229,10 @@ describe("the VirtualTree preview", () => {
     expect(treeOffset(count, 1e9)).toBe(revealed);
     expect(Arr.contains(treeMountedRows(count, revealed), last)).toBe(true);
     // The window at the top of the set: seven rows in view, four either side.
-    expect(treeWindowReadout(count, 0)).toBe(`1–11 of 1884 · 11 mounted`);
-    expect(treeVisibleRows(count, 0)).toEqual({ start: 0, end: 11 });
+    expect(treeWindowReadout(count, 0)).toBe(
+      `1–7 in view · 11 mounted of 1884`,
+    );
+    expect(treeMountedWindow(count, 0)).toEqual({ start: 0, end: 11 });
     // The overdraw the page prints is the package's default.
     expect(VIRTUAL_TREE_OVERDRAW).toBe(4);
     expect(HashSet.size(virtualTreeExpanded)).toBeGreaterThan(100);
@@ -326,6 +339,10 @@ describe("the VirtualTree preview", () => {
 
     expect(html.match(/role="treeitem"/g)).toHaveLength(mounted.length);
     expect(html).toContain('id="gx-vtree-registry-01"');
+    // A mounted branch offers its flip; a mounted leaf offers no Expand control
+    // at all, so the window cannot claim a press that would change nothing.
+    expect(html).toContain("Collapse registry-01");
+    expect(html).not.toContain("Expand package-01");
     // The first mounted row sits at the top of the window; the next is one row
     // height below it, which is the package's step.
     expect(html).toContain("top:0");

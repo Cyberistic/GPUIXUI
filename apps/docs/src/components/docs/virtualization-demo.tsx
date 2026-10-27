@@ -8,6 +8,7 @@ import {
   type WindowSpec,
 } from "@gpuixui/data/virtual/window";
 import { useState } from "react";
+import { rowsInView, viewReadout } from "./window-preview";
 
 /**
  * Browser preview for the Virtualization page.
@@ -52,8 +53,8 @@ export const virtualOffset = (offset: number): number =>
 export const mountedRows = (offset: number): ReadonlyArray<number> =>
   calculator.indicesAt(virtualOffset(offset));
 
-/** The rows in view, `start` inclusive and `end` exclusive. */
-export const visibleRows = (offset: number): { start: number; end: number } =>
+/** The rows the window mounts at an offset: the view plus the overdraw. */
+export const mountedWindow = (offset: number): { start: number; end: number } =>
   calculator.at(virtualOffset(offset));
 
 /** The offset a reveal of one row moves the window to. */
@@ -65,18 +66,14 @@ export const rowName = (index: number): string =>
   `row-${String(index + 1).padStart(4, "0")}.log`;
 
 /** What the drawing reports about a window. */
-export const windowReadout = (offset: number): string => {
-  const window = visibleRows(offset);
-  return `${window.start + 1}–${window.end} of ${VIRTUAL_COUNT} · ${
-    mountedRows(offset).length
-  } mounted`;
-};
+export const windowReadout = (offset: number): string =>
+  viewReadout(virtualSpec, offset, mountedRows(offset).length);
 
 /** The virtualization page's browser rendering. */
 export function VirtualizationDemo() {
   const [offset, setOffset] = useState(0);
   const mounted = mountedRows(offset);
-  const window = visibleRows(offset);
+  const view = rowsInView(virtualSpec, offset);
 
   return (
     <div className="gx-virt-demo" data-demo="virtualization">
@@ -127,7 +124,7 @@ export function VirtualizationDemo() {
             >
               <span>{rowName(index)}</span>
               <span className="gx-table-number">
-                {index >= window.start && index < window.end
+                {index >= view.start && index < view.end
                   ? "in view"
                   : "overdraw"}
               </span>
@@ -138,9 +135,9 @@ export function VirtualizationDemo() {
       <p className="gx-trule-readout">{windowReadout(offset)}</p>
       <p className="gx-trule-hint">
         The header is a sibling above the row scroller, which is the only fixed
-        header the runtime paints. Only the mounted rows exist: the window is{" "}
-        {VIRTUAL_OVERDRAW * 2} rows wider than the viewport on each side, and a
-        reveal moves the window before the body scrolls.
+        header the runtime paints. Only the mounted rows exist: the window keeps{" "}
+        {VIRTUAL_OVERDRAW} rows either side of the viewport, and a reveal moves
+        the window before the body scrolls.
       </p>
     </div>
   );

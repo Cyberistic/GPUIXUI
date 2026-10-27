@@ -25,6 +25,11 @@ import {
  * caller names a readable one, and a blank field name is the shipped
  * `Search` — so the cases below hold the drawing to
  * `packages/data/src/surfaces/toolbar.tsx` and drive the debounce it draws.
+ *
+ * Guarded bug: the drawing painted a `Columns` button with no handler — a dead
+ * control on the page about toolbars. The shipped toolbar has no column
+ * control (its children are the caller's), so the button is gone rather than
+ * wired to a menu the component does not own.
  */
 
 const root = new URL("../../../../../", import.meta.url);
@@ -129,7 +134,7 @@ describe("the data toolbar preview", () => {
     expect(html).toContain('aria-label="Search"');
     expect(html).toContain('placeholder="Filter services…"');
     expect(html).toContain(">Reset<");
-    expect(html).toContain(">Columns<");
+    expect(html).not.toContain(">Columns<");
     expect(html.match(/class="gx-toolbar-row"/g) ?? []).toHaveLength(
       QUEUE_ROWS.length,
     );
@@ -171,5 +176,16 @@ describe("the data toolbar preview", () => {
 
   it("offers the three waits its readout can resolve", () => {
     expect(WAITS.map((choice) => choice.wait)).toEqual([150, 0, Number.NaN]);
+  });
+
+  it("paints only a control the row can act on", () => {
+    // A press is the only thing a control promises; the toolbar's Reset is
+    // wired and the column button that had no handler is not painted at all.
+    const source = read("apps/docs/src/components/docs/data-toolbar-demo.tsx");
+
+    expect(renderToStaticMarkup(<DataToolbarDemo />)).not.toContain(
+      ">Columns<",
+    );
+    expect(source).toContain("onClick={reset}");
   });
 });
