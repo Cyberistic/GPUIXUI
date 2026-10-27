@@ -176,7 +176,7 @@ export const FileTreeIcon = ({
 }: FileTreeIconProps) => {
   const theme = useTheme();
   const colors = themeColors(theme);
-  const tint = selected ? colors.selectedForeground : colors.mutedForeground;
+  const tint = selected ? colors.accentForeground : colors.mutedForeground;
   return (
     <div
       role="presentation"
@@ -219,7 +219,7 @@ export const FileTreeName = ({
       <text
         style={{
           ...textStyle(theme, "code"),
-          color: selected ? colors.selectedForeground : colors.foreground,
+          color: selected ? colors.accentForeground : colors.foreground,
           display: "block",
           whiteSpace: "nowrap",
           textOverflow: "ellipsis",
@@ -323,7 +323,7 @@ const FileTreeRow = ({
 }: FileTreeRowProps) => {
   const theme = useTheme();
   const colors = themeColors(theme);
-  const tint = selected ? colors.selectedForeground : colors.mutedForeground;
+  const tint = selected ? colors.accentForeground : colors.mutedForeground;
   const guide = borderWidthOf(theme, "thin");
   const hover = selected ? colors.accent : colors.hover;
   const press =
@@ -350,7 +350,7 @@ const FileTreeRow = ({
         height: rowHeightOf(theme),
         paddingLeft: TREE_INSET,
         paddingRight: theme.spacing.sm,
-        backgroundColor: selected ? colors.selected : undefined,
+        backgroundColor: selected ? colors.accent : undefined,
         hover: { backgroundColor: hover },
         active: { backgroundColor: press },
         focusVisible: {

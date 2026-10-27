@@ -12604,6 +12604,9 @@ button.gx-rating-star:focus-visible {
 /* The AI Elements file tree: a mono card, one guide cell per ancestor, a
    chevron that swaps glyphs (no rotation) and one selected file. */
 .gx-filetree {
+  /* shadcn's demo column: `max-w-xs`. A tree that filled the preview read as a
+     panel rather than the sidebar slice the component is. */
+  width: min(320px, 100%);
   padding: 4px;
   overflow: auto;
   border: 1px solid var(--border);
@@ -12633,8 +12636,8 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-filetree-row[data-selected="true"] {
-  background: var(--selected);
-  color: var(--selected-foreground);
+  background: var(--accent);
+  color: var(--accent-foreground);
 }
 
 .gx-filetree-row[data-current="true"] {

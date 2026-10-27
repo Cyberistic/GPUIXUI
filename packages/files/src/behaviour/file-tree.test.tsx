@@ -261,6 +261,20 @@ describe("the keyboard", () => {
   });
 });
 
+describe("the selection's paint", () => {
+  it("is the accent pair the reference paints, not the brand fill", () => {
+    // The bug: the selected row wore `colors.selected` — a fill role designed to
+    // carry `selectedForeground` — so one row of a file tree read as a pressed
+    // primary button. shadcn's file tree selects with `bg-accent
+    // text-accent-foreground`, the wash every other row-level selection uses.
+    const { root: mounted } = mount({ initialSelected: "src/index.ts" });
+    const row = mounted.renderer.findByTestId(rowId("src/index.ts"));
+
+    expect(row?.style.backgroundColor).toBe(lightTheme.colors.accent);
+    expect(row?.style.backgroundColor).not.toBe(lightTheme.colors.selected);
+  });
+});
+
 describe("a stored expansion", () => {
   it("paints the same tree a press opens", () => {
     const stored = mount({ initialExpanded: ["src"] });

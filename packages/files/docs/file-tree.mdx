@@ -36,6 +36,10 @@ and calls `onSelect` once. The tree holds one tab stop — the selected file whi
 it paints, else the first row — and the arrow keys walk the visible rows, with
 Right opening and Left closing a folder.
 
+The selected file wears the **accent** wash with the accent's foreground, as
+the reference's `bg-accent text-accent-foreground` does: a row is one of many,
+so a brand fill would read as a pressed primary button.
+
 `FileTreeFolder` and `FileTreeFile` declare the tree; `FileTree` reads their
 props into the same `FileNode` model `buildFileTree` produces and paints one
 flat row list. The declarations are not rendered recursively, which is what
