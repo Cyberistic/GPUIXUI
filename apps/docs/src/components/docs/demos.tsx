@@ -155,12 +155,14 @@ import {
   listMultipleSource,
 } from "./list-demo";
 import {
+  CalendarDropdowns,
   CalendarRange,
   CalendarSingle,
   DatePickerPresets,
   DatePickerRange,
   DatePickerStates,
   DatePickerWorkflow,
+  calendarDropdownsSource,
   calendarRangeSource,
   calendarSingleSource,
   datePickerPresetsSource,
@@ -3258,6 +3260,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   "calendar-single": {
     render: CalendarSingle,
     source: calendarSingleSource,
+  },
+  "calendar-dropdowns": {
+    render: CalendarDropdowns,
+    source: calendarDropdownsSource,
   },
   "calendar-range": {
     render: CalendarRange,

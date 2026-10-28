@@ -220,21 +220,27 @@ describe("Bubble", () => {
     root.unmount();
   });
 
-  it("insets the reaction pill from the sender's edge", () => {
-    const gapToEdge = (align: "start" | "end") => {
+  it("keeps the reaction pill at the bubble's bottom right, on either side", () => {
+    // A reaction is a mark on the message, not a second voice: it does not
+    // change sides with the sender. (The bug: a start-aligned bubble put its
+    // pill at the bubble's left, so the same message reacted differently
+    // depending on who sent it.)
+    const gapFromRight = (align: "start" | "end") => {
       const root = renderComponent(<Surface align={align} reactions />);
       const content = requireBounds(root, "bubble-content");
       const pill = requireBounds(root, "bubble-reactions");
-      const gap =
-        align === "end"
-          ? content.x + content.width - (pill.x + pill.width)
-          : pill.x - content.x;
+      const gap = content.x + content.width - (pill.x + pill.width);
+      const leftGap = pill.x - content.x;
       root.unmount();
-      return gap;
+      return { gap, leftGap, width: content.width };
     };
 
-    expect(gapToEdge("end")).toBe(darkTheme.spacing.lg);
-    expect(gapToEdge("start")).toBe(darkTheme.spacing.lg);
+    for (const align of ["start", "end"] as const) {
+      const { gap, leftGap, width } = gapFromRight(align);
+      expect(gap).toBe(darkTheme.spacing.lg);
+      // The pill is at the far end, not a symmetric inset.
+      expect(leftGap).toBeGreaterThan(width / 2);
+    }
   });
 
   it("joins a grouped run's corners and keeps a tail on the last", () => {

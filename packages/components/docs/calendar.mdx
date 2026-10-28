@@ -35,7 +35,7 @@ Calendar
 | `Calendar` | `showOutsideDays` | `boolean` | `true` |
 | `Calendar` | `captionLayout` | `"label" \| "dropdown"` | `"label"` |
 | `Calendar` | `weekStartsOn` | `0 \| 1` | `1` |
-| `Calendar` | `fromYear` / `toYear` | `number` | today ± 10 |
+| `Calendar` | `fromYear` / `toYear` | `number` | 1900 … today + 100 |
 | `Calendar` | `disabled.before` / `disabled.after` | ISO day — strictly before / after is refused | — |
 | `Calendar` | `disabled.range` | `{ from?, to? }` — both ends inclusive | — |
 | `Calendar` | `disabled.weekdays` | `ReadonlyArray<0 \| 1 \| 2 \| 3 \| 4 \| 5 \| 6>` | — |
@@ -47,6 +47,16 @@ Calendar
 | `Calendar` | `onDismiss` | `() => void` | — |
 | `Calendar` | `className` | `string` | — |
 
+
+## Dropdown caption
+
+A date that is not near today is reached through two dropdowns rather than
+eleven presses of the previous-month arrow. `captionLayout="dropdown"` paints a
+month select and a year select; `fromYear`/`toYear` narrow the years on offer,
+and the default window is **1900 to a century past today** — a calendar is not
+limited to the decade it is looked at in.
+
+<ComponentPreview name="calendar-dropdowns" />
 
 ## Limitations
 

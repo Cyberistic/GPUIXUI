@@ -7,6 +7,16 @@ description: A month grid with one roving tab stop — a day, several days, or a
 
 <ComponentPreview name="calendar-range" />
 
+## Dropdown caption
+
+A date that is not near today is reached through two dropdowns rather than eleven
+presses of the previous-month arrow. `captionLayout="dropdown"` paints a month
+select and a year select; `fromYear`/`toYear` narrow the years on offer, and the
+default window is **1900 to a century past today** — the calendar is not limited
+to the decade it is looked at in.
+
+<ComponentPreview name="calendar-dropdowns" />
+
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="Calendar" />

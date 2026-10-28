@@ -17,8 +17,12 @@ import {
   isAvailable,
   monthGrid,
   monthLabel,
+  MONTH_NAMES,
+  monthNumber,
   monthOf,
   monthWindow,
+  yearChoices,
+  yearOfMonth,
   moveFocus,
   nextRange,
   rangePaint,
@@ -92,6 +96,12 @@ interface SurfaceProps {
   readonly inline?: boolean;
   /** Whether a value exists, so the Clear row only appears with something to clear. */
   readonly hasValue: boolean;
+  /** `"label"` (default) paints the month name; `"dropdown"` paints two selects. */
+  readonly captionLayout?: "label" | "dropdown";
+  /** The earliest year the year select offers. Default 1900, the calendar's own. */
+  readonly fromYear?: number;
+  /** The latest year the year select offers. Default the current year. */
+  readonly toYear?: number;
   readonly onMonth: (month: IsoMonth) => void;
   readonly onActive: (day: IsoDay) => void;
   readonly onChoose: (day: IsoDay) => void;
@@ -116,6 +126,9 @@ const DateSurface = ({
   weekStartsOn,
   clearable,
   hasValue,
+  captionLayout = "label",
+  fromYear = 1900,
+  toYear = 2026,
   autoFocus = false,
   inline = false,
   onMonth,
@@ -185,9 +198,55 @@ const DateSurface = ({
               ) : (
                 <span aria-hidden="true" className="gx-date-navbtn" />
               )}
-              <span className="gx-date-month" role="status">
-                {monthLabel(panel)}
-              </span>
+              {captionLayout === "dropdown" ? (
+                <span className="gx-date-caption">
+                  <select
+                    aria-label="Month"
+                    className="gx-date-select"
+                    onChange={(event) =>
+                      onMonth(
+                        addMonths(
+                          panel,
+                          Number(event.currentTarget.value) -
+                            monthNumber(panel),
+                        ),
+                      )
+                    }
+                    value={monthNumber(panel)}
+                  >
+                    {MONTH_NAMES.map((name, index) => (
+                      <option key={name} value={index + 1}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Year"
+                    className="gx-date-select"
+                    onChange={(event) =>
+                      onMonth(
+                        addMonths(
+                          panel,
+                          (Number(event.currentTarget.value) -
+                            yearOfMonth(panel)) *
+                            12,
+                        ),
+                      )
+                    }
+                    value={yearOfMonth(panel)}
+                  >
+                    {yearChoices(fromYear, toYear).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              ) : (
+                <span className="gx-date-month" role="status">
+                  {monthLabel(panel)}
+                </span>
+              )}
               {panel === addMonths(month, months - 1) ? (
                 <button
                   aria-label="Next month"
@@ -671,6 +730,51 @@ export const CalendarSingle = () => {
   );
 };
 
+/**
+ * A calendar whose caption is two dropdowns, for a date that is not near today.
+ *
+ * The window opens on 1979 with the year list reaching back to 1970: a calendar
+ * that only offers the decade around today cannot name a birthday, and the
+ * dropdowns are how a reader gets to one without paging eleven months at a time.
+ */
+export const CalendarDropdowns = () => {
+  const [day, setDay] = useState<IsoDay | null>("1979-06-14");
+  const [month, setMonth] = useState<IsoMonth>("1979-06");
+  const [active, setActive] = useState<IsoDay>("1979-06-14");
+
+  return (
+    <div className="gx-demo gx-demo-column gx-date-scene">
+      <DateSurface
+        active={active}
+        bounds={boundsOf()}
+        captionLayout="dropdown"
+        clearable={false}
+        fromYear={1970}
+        hasValue={day !== null}
+        inline
+        label="Date of birth"
+        month={month}
+        months={1}
+        onActive={(next) => {
+          setActive(next);
+          setMonth(monthOf(next));
+        }}
+        onChoose={setDay}
+        onClear={() => setDay(null)}
+        onEscape={() => undefined}
+        onMonth={setMonth}
+        toYear={2026}
+        today="2026-10-17"
+        value={{ mode: "single", day }}
+        weekStartsOn={1}
+      />
+      <p className="gx-date-readout" role="status">
+        {describeValue(day)}
+      </p>
+    </div>
+  );
+};
+
 /** A calendar showing two months and a span, with the ends painted apart. */
 export const CalendarRange = () => {
   const [range, setRange] = useState<PreviewRange | null>({
@@ -890,7 +994,23 @@ export const ReleaseWindow = () => {
   );
 };`;
 
+const calendarDropdownsSource = `import { Calendar } from "@gpuixui/components/calendar";
+import { useState } from "react";
+
+const [birthday, setBirthday] = useState("1979-06-14");
+
+<Calendar
+  mode="single"
+  captionLayout="dropdown"
+  fromYear={1970}
+  toYear={2026}
+  selected={birthday}
+  onSelect={setBirthday}
+  defaultMonth="1979-06-14"
+/>;`;
+
 export {
+  calendarDropdownsSource,
   calendarRangeSource,
   calendarSingleSource,
   presetsSource,

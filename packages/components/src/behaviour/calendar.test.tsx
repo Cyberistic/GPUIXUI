@@ -339,7 +339,14 @@ describe("the refused days", () => {
 
 describe("the caption dropdown", () => {
   it("jumps the grid to the month and the year it names", () => {
-    const root = single({ captionLayout: "dropdown" });
+    // A short window keeps the option in the list's first screen: a year three
+    // decades out is a real row but sits below the 320px viewport, and a press
+    // has to land on a painted row.
+    const root = single({
+      captionLayout: "dropdown",
+      fromYear: 2026,
+      toYear: 2030,
+    });
     expect(root.renderer.findByTestId("date-month")).toBeUndefined();
     expect(root.renderer.findByTestId("date-month-select")).toBeDefined();
     expect(root.renderer.findByTestId("date-month-year")).toBeDefined();
@@ -353,6 +360,37 @@ describe("the caption dropdown", () => {
     clickCentreOf(root, "date-month-year");
     clickCentreOf(root, "date-month-year-2028");
     expect(root.renderer.findByTestId("date-day-2028-03-01")).toBeDefined();
+
+    root.unmount();
+  });
+});
+
+describe("the year window", () => {
+  it("offers the century around today, not the decade", () => {
+    // Guarded bug: the default window was today ± 10, so a 1994 birthday had no
+    // year in the dropdown and `Shift`+Page refused the month before it.
+    const root = single({ captionLayout: "dropdown", today: "2026-10-17" });
+    clickCentreOf(root, "date-month-year");
+
+    expect(root.renderer.findByTestId("date-month-year-1900")).toBeDefined();
+    expect(root.renderer.findByTestId("date-month-year-1899")).toBeUndefined();
+    expect(root.renderer.findByTestId("date-month-year-1970")).toBeDefined();
+    expect(root.renderer.findByTestId("date-month-year-2060")).toBeDefined();
+    expect(root.renderer.findByTestId("date-month-year-2130")).toBeUndefined();
+
+    root.unmount();
+  });
+
+  it("narrows to the caller's own floor", () => {
+    const root = single({
+      captionLayout: "dropdown",
+      fromYear: 1970,
+      today: "2026-10-17",
+    });
+    clickCentreOf(root, "date-month-year");
+
+    expect(root.renderer.findByTestId("date-month-year-1970")).toBeDefined();
+    expect(root.renderer.findByTestId("date-month-year-1969")).toBeUndefined();
 
     root.unmount();
   });

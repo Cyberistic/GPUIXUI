@@ -114,6 +114,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--control-padding-x-md": `${theme.density.controlPaddingX.md}px`,
   "--control-padding-x-lg": `${theme.density.controlPaddingX.lg}px`,
   "--row-height": `${theme.density.rowHeight}px`,
+  "--spacing-xs": `${theme.spacing.xs}px`,
   "--spacing-sm": `${theme.spacing.sm}px`,
   "--spacing-md": `${theme.spacing.md}px`,
   "--spacing-lg": `${theme.spacing.lg}px`,

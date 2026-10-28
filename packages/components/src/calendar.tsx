@@ -89,6 +89,12 @@ import {
 /** The measured day square, in pixels. Kept out of the recipe (see the tw doc). */
 const CELL = 34;
 
+/** The earliest year the default window offers: 1900, a human's whole life. */
+const DEFAULT_FROM_YEAR = 1900;
+
+/** How far past today the default window reaches. */
+const DEFAULT_YEARS_AHEAD = 100;
+
 /** The props every mode shares. */
 export interface CalendarBaseProps {
   /** How many months are painted side by side. Default `1`. */
@@ -345,10 +351,15 @@ export const Calendar = (props: CalendarProps) => {
   const view = useLocalState(store.local);
   const cells = useRef<Record<string, number>>({});
   const months = monthWindow(view.month, numberOfMonths);
+  const year = DateTime.toPartsUtc(today).year;
+  // A calendar is not limited to the decade it is looked at in: the default
+  // window is a century back — a birthday, a hire date, an invoice — and a
+  // century forward, narrowed only by the caller's own bound. Read raw, the
+  // ±10 window refused 1994 and put no year before it in the dropdown.
   const fromYear =
     props.fromYear ??
     Math.max(
-      DateTime.toPartsUtc(today).year - 10,
+      DEFAULT_FROM_YEAR,
       Option.match(bounds.min, {
         onNone: () => Number.NEGATIVE_INFINITY,
         onSome: (min) => DateTime.toPartsUtc(min).year,
@@ -357,7 +368,7 @@ export const Calendar = (props: CalendarProps) => {
   const toYear =
     props.toYear ??
     Math.min(
-      DateTime.toPartsUtc(today).year + 10,
+      year + DEFAULT_YEARS_AHEAD,
       Option.match(bounds.max, {
         onNone: () => Number.POSITIVE_INFINITY,
         onSome: (max) => DateTime.toPartsUtc(max).year,

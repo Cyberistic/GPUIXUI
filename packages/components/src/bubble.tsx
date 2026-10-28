@@ -352,7 +352,9 @@ export interface BubbleReactionsProps extends Omit<Props, "children"> {
 /**
  * The reaction pill on the bubble's edge.
  *
- * It is inset from the sender's edge and hangs a quarter of its height over the
+ * It sits at the bubble's **bottom right** whichever side the bubble is on —
+ * a reaction is a mark on the message, not a second voice, so it does not
+ * change sides with the sender. It hangs a quarter of its height over the
  * surface, with the page fill drawn as a ring around it so the pill reads as cut
  * out of the bubble. shadcn's absolute anchor hangs three quarters; the runtime
  * cannot position a child against its parent, so the pill stays in the column
@@ -366,7 +368,6 @@ export const BubbleReactions = ({
   ...rest
 }: BubbleReactionsProps) => {
   const theme = useTheme();
-  const { align } = useBubble();
   const name = accessibleName(textOf(label)) ?? "Reactions";
   const recipe = recipeStyle(cn(BUBBLE_REACTIONS, className), theme);
   const height =
@@ -381,11 +382,9 @@ export const BubbleReactions = ({
       {...rest}
       style={mergeStyles(
         mergeStyles(recipe, {
-          alignSelf: align === "end" ? "flex-end" : "flex-start",
+          alignSelf: "flex-end",
           marginTop: reactionInset(height, theme.spacing.xs),
-          ...(align === "end"
-            ? { marginRight: theme.spacing.lg }
-            : { marginLeft: theme.spacing.lg }),
+          marginRight: theme.spacing.lg,
           boxShadow: {
             offsetX: 0,
             offsetY: 0,

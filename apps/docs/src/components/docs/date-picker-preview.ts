@@ -1,3 +1,4 @@
+import * as Arr from "effect/Array";
 /**
  * The calendar rules the Date picker preview runs on.
  *
@@ -201,6 +202,23 @@ export const monthGrid = (
     }),
   );
 };
+
+/** The month names, January first. */
+export const MONTH_NAMES: ReadonlyArray<string> = MONTHS;
+
+/** The month number an `IsoMonth` names, 1 for January. */
+export const monthNumber = (month: IsoMonth): number =>
+  Number(month.slice(5, 7));
+
+/** The year an `IsoMonth` names. */
+export const yearOfMonth = (month: IsoMonth): number => Number(month.slice(0, 4));
+
+/** The years a caption's year select offers, oldest first. */
+export const yearChoices = (
+  fromYear: number,
+  toYear: number,
+): ReadonlyArray<number> =>
+  fromYear <= toYear ? Arr.range(fromYear, toYear) : [];
 
 /** `"October 2026"`. */
 export const monthLabel = (month: IsoMonth): string =>

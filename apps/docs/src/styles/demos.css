@@ -4767,6 +4767,25 @@
   letter-spacing: -0.01em;
 }
 
+/* The caption's two selects, at the `Select`'s `sm` metrics: a bordered field
+   the width of its longest label, side by side where the month name sits. */
+.gx-date-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.gx-date-select {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
 .gx-date-grid {
   display: flex;
   flex-direction: column;
@@ -10583,14 +10602,11 @@ button.gx-rating-star:focus-visible {
   box-shadow: 0 0 0 2px var(--background);
 }
 
-.gx-bubble[data-align="end"] > .gx-bubble-reactions {
+/* A reaction marks the message, so it holds the bottom right whichever side
+   the bubble is on. */
+.gx-bubble > .gx-bubble-reactions {
   align-self: flex-end;
   margin-right: var(--spacing-lg);
-}
-
-.gx-bubble[data-align="start"] > .gx-bubble-reactions {
-  align-self: flex-start;
-  margin-left: var(--spacing-lg);
 }
 
 .gx-bubble-variants {
