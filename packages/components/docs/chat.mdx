@@ -10,6 +10,12 @@ fixed composer. The transcript is a `MessageScroller`, each turn is a `Message`
 around a `Bubble`, and the field is `ChatComposer`. The transport is yours; the
 status machine is shared so the composer and the header cannot disagree.
 
+Every turn wears a bubble — the reader's on the `default` fill and the end edge,
+the agent's `muted` on the start — and the row supplies the avatar, author and
+timestamp. Only the row that starts a run paints its avatar and meta line; the
+rows after it are a `MessageGroup` (6px apart) whose bubbles name `group="first"`
+and `group="last"` so their inner corners join.
+
 ## Installation
 
 ```bash
@@ -49,7 +55,8 @@ import {
           <MessageHeader />
           <Bubble
             align={message.role === "user" ? "end" : "start"}
-            variant={message.role === "user" ? "muted" : "ghost"}
+            variant={message.role === "user" ? "default" : "muted"}
+            group={message.group}
           >
             <BubbleContent>{message.body}</BubbleContent>
           </Bubble>

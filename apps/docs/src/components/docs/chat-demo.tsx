@@ -1,12 +1,13 @@
 /**
- * Browser block for the Chat page — the dashboard-style chat, drawn as HTML.
+ * Browser block for the Chat page — the conversation, drawn as HTML.
  *
  * The shipped parts are GPUix host elements, so the docs mirror the composition
  * instead of mounting it: a fixed header, the transcript as the only flexible
  * row, a composer that never moves, and a reserved rail for the jump control.
- * The shape is shadcn's chat block, not a diagram: title and status on the
- * left, a reset action on the right, end-aligned reader bubbles, plain assistant
- * prose, and one composer with send and stop.
+ * Every turn is a `Message` row — an avatar and a meta line where a speaker
+ * starts a run, then a `Bubble`; two consecutive replies share one run and join
+ * their corners. The reader's bubble is the primary fill, the agent's is muted,
+ * and one reply carries a reaction pill that crosses its bottom edge.
  *
  * The transport is scripted. The transcript follows the live edge only while the
  * reader is at it; scrolling up releases the view and the rail's control counts
@@ -23,11 +24,15 @@ import {
 
 type ChatStatus = "idle" | "streaming" | "error";
 
+type Group = "single" | "first" | "middle" | "last";
+
 interface Row {
   readonly id: number;
   readonly role: "assistant" | "user";
   readonly body: string;
+  readonly at: string;
   readonly live: boolean;
+  readonly reaction?: string;
 }
 
 const REPLY =
@@ -36,15 +41,31 @@ const REPLY =
 const seed: ReadonlyArray<Row> = [
   {
     id: 1,
-    role: "assistant",
-    body: "Not yet — the last fix is still running.",
+    role: "user",
+    body: "Is the release green?",
+    at: "09:41",
     live: false,
   },
-  { id: 2, role: "user", body: "Is the release green?", live: false },
+  {
+    id: 2,
+    role: "assistant",
+    body: "Not yet — the last fix is still running.",
+    at: "09:41",
+    live: false,
+  },
   {
     id: 3,
     role: "assistant",
     body: "Every check passed except the last fix.",
+    at: "09:42",
+    live: false,
+    reaction: "👍",
+  },
+  {
+    id: 4,
+    role: "user",
+    body: "Then roll it out.",
+    at: "09:42",
     live: false,
   },
 ];
@@ -55,16 +76,76 @@ const STATUS_COPY: Readonly<Record<ChatStatus, string>> = {
   error: "The reply failed. Retry, or send a shorter prompt.",
 };
 
-/** One transcript row: reader bubbles on the end edge, assistant prose plain. */
-function Row({ row }: { readonly row: Row }) {
+/** The turns of the transcript: consecutive rows from one speaker share a run. */
+const runsOf = (rows: ReadonlyArray<Row>): ReadonlyArray<ReadonlyArray<Row>> =>
+  rows.reduce<ReadonlyArray<ReadonlyArray<Row>>>((runs, row) => {
+    const last = runs[runs.length - 1];
+    return last?.[0]?.role === row.role
+      ? [...runs.slice(0, -1), [...last, row]]
+      : [...runs, [row]];
+  }, []);
+
+/** Where a row sits in its run, so a grouped bubble joins its inner corners. */
+const groupOf = (index: number, length: number): Group =>
+  length === 1
+    ? "single"
+    : index === 0
+      ? "first"
+      : index === length - 1
+        ? "last"
+        : "middle";
+
+/** One turn: the avatar and meta line where a speaker starts, then the bubble. */
+function Row({
+  row,
+  first,
+  group,
+}: {
+  readonly row: Row;
+  readonly first: boolean;
+  readonly group: Group;
+}) {
+  const reader = row.role === "user";
   return (
     <div
-      className={`gx-chat-row`}
+      className="gx-chat-row"
       data-live={row.live ? "" : undefined}
       data-role={row.role}
     >
-      <div className="gx-chat-bubble" data-role={row.role}>
-        <p className="gx-chat-body">{row.body === "" ? "…" : row.body}</p>
+      <span
+        aria-hidden="true"
+        className="gx-chat-avatar"
+        data-empty={first ? undefined : ""}
+      >
+        {reader ? "Y" : "A"}
+      </span>
+      <div className="gx-chat-message">
+        {first ? (
+          <p className="gx-chat-meta">
+            {reader ? "You" : "Assistant"} · {row.at}
+          </p>
+        ) : null}
+        <div
+          className="gx-bubble"
+          data-align={reader ? "end" : "start"}
+          data-group={group === "single" ? undefined : group}
+        >
+          <p
+            className="gx-bubble-surface"
+            data-variant={reader ? "default" : "muted"}
+          >
+            {row.body === "" ? "…" : row.body}
+          </p>
+          {row.reaction === undefined ? null : (
+            <div
+              aria-label={`Reaction: ${row.reaction}`}
+              className="gx-bubble-reactions"
+              role="img"
+            >
+              {row.reaction}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -127,12 +208,14 @@ export function ChatDemo() {
           id: nextId.current++,
           role: "user" as const,
           body: draft,
+          at: "now",
           live: false,
         },
         {
           id: nextId.current++,
           role: "assistant" as const,
           body: "",
+          at: "now",
           live: true,
         },
       ];
@@ -169,6 +252,7 @@ export function ChatDemo() {
         id: nextId.current++,
         role: "assistant",
         body: "",
+        at: "now",
         live: true,
       },
     ]);
@@ -235,8 +319,21 @@ export function ChatDemo() {
         ref={transcript}
       >
         <div className="gx-chat-content">
-          {rows.map((row) => (
-            <Row key={row.id} row={row} />
+          {runsOf(rows).map((run) => (
+            <div
+              className="gx-chat-turn"
+              data-role={run[0]?.role}
+              key={run[0]?.id}
+            >
+              {run.map((row, index) => (
+                <Row
+                  first={index === 0}
+                  group={groupOf(index, run.length)}
+                  key={row.id}
+                  row={row}
+                />
+              ))}
+            </div>
           ))}
           {busy ? <p className="gx-chat-sr">Assistant is replying.</p> : null}
         </div>
@@ -304,6 +401,7 @@ export function ChatDemo() {
 export const chatDemoSource = `import {
   Bubble,
   BubbleContent,
+  BubbleReactions,
   ChatComposer,
   ChatHeader,
   ChatMessages,
@@ -334,9 +432,15 @@ export const Conversation = ({ status, setStatus, messages, send, stop, retry })
             <MessageHeader />
             <Bubble
               align={message.role === "user" ? "end" : "start"}
-              variant={message.role === "user" ? "muted" : "ghost"}
+              variant={message.role === "user" ? "default" : "muted"}
+              group={message.group}
             >
               <BubbleContent>{message.body}</BubbleContent>
+              {message.reaction ? (
+                <BubbleReactions label={\`Reaction: \${message.reaction}\`}>
+                  {message.reaction}
+                </BubbleReactions>
+              ) : null}
             </Bubble>
           </MessageContent>
         </Message>

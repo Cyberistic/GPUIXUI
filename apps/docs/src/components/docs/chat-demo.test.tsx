@@ -11,6 +11,12 @@ import { ChatDemo } from "./chat-demo";
  * composer moved as messages arrived. The block is now a fixed-height frame
  * with a fixed header, the transcript as the only flexible row, a reserved rail
  * for the jump control and a fixed composer.
+ *
+ * The second bug this guards is the pair of plain rows: the agent's replies were
+ * unboxed prose and the reader's bubble was the neutral fill, so the block did
+ * not show the chat family it documents. Every turn is now a `Message` row with
+ * a `Bubble` — the reader on the primary fill, the agent muted — an avatar and
+ * meta line only where a speaker starts, and the grouped run's corners joined.
  */
 
 const markup = renderToStaticMarkup(<ChatDemo />);
@@ -35,15 +41,49 @@ describe("the chat block", () => {
     expect(markup).toContain('class="gx-chat-rail"');
   });
 
-  it("paints reader bubbles on the end edge and assistant prose plain", () => {
-    expect(markup.match(/class="gx-chat-row"/g)?.length).toBe(3);
-    expect(markup.match(/data-role="user"/g)?.length).toBe(2);
-    expect(markup.match(/data-role="assistant"/g)?.length).toBe(4);
-    expect(block('.gx-chat-bubble[data-role="user"]')).toContain(
+  it("puts every turn in a bubble: the reader on primary, the agent muted", () => {
+    expect(markup.match(/class="gx-bubble-surface"/g)?.length).toBe(4);
+    expect(markup.match(/data-variant="default"/g)?.length).toBe(2);
+    expect(markup.match(/data-variant="muted"/g)?.length).toBe(2);
+    expect(markup.match(/data-align="end"/g)?.length).toBe(2);
+    expect(markup.match(/data-align="start"/g)?.length).toBe(2);
+    expect(markup).not.toContain("gx-chat-bubble");
+    expect(block('.gx-bubble-surface[data-variant="default"]')).toContain(
+      "background: var(--primary)",
+    );
+    expect(block('.gx-bubble-surface[data-variant="muted"]')).toContain(
       "background: var(--muted)",
     );
-    expect(block('.gx-chat-bubble[data-role="assistant"]')).toContain(
-      "background: transparent",
+  });
+
+  it("shows an avatar and a meta line only where a speaker starts", () => {
+    expect(markup.match(/class="gx-chat-row"/g)?.length).toBe(4);
+    expect(markup.match(/class="gx-chat-avatar"/g)?.length).toBe(4);
+    expect(markup.match(/class="gx-chat-avatar" data-empty=""/g)?.length).toBe(
+      1,
+    );
+    expect(markup.match(/class="gx-chat-meta"/g)?.length).toBe(3);
+    expect(markup).toContain("Assistant · 09:41");
+  });
+
+  it("groups one speaker's consecutive rows and joins their corners", () => {
+    // One run of two assistant rows: its first bubble joins below, its last
+    // joins above, so the pair reads as one column.
+    expect(markup.match(/data-group="first"/g)?.length).toBe(1);
+    expect(markup.match(/data-group="last"/g)?.length).toBe(1);
+    expect(block(".gx-chat-turn")).toContain("gap: 6px");
+    expect(block(".gx-chat-content")).toContain("gap: 16px");
+    expect(
+      block('.gx-bubble[data-group="first"] > .gx-bubble-surface'),
+    ).toContain("border-bottom-left-radius: var(--radius-sm)");
+  });
+
+  it("hangs one reaction pill over its bubble's edge", () => {
+    expect(markup.match(/class="gx-bubble-reactions"/g)?.length).toBe(1);
+    expect(markup).toContain('aria-label="Reaction: 👍"');
+    expect(block(".gx-bubble-reactions")).toContain("margin-top: -10px");
+    expect(block(".gx-bubble-reactions")).toContain(
+      "box-shadow: 0 0 0 2px var(--background)",
     );
   });
 

@@ -24220,3 +24220,26 @@ rebuild swaps the HTML and its hashed assets, and the old hash is gone. Upload
 grows by 208 files / 38.4 MB (client 43.98 → 82.37 MB); the server graph is
 unchanged (27.65 MB).
 
+
+## Bubble parity with shadcn's demo (2026-10-28)
+
+`[x]` `[██████████]` 1/1 — **the bubble reads as shadcn's, and both drawings
+show a conversation.** `BubbleReactions` is a pill on the surface's edge now:
+`text-sm`, inset 12px from the sender's side, a page-fill ring, and an inset
+computed from its own compiled recipe so a quarter of the pill crosses the
+bubble's bottom edge (shadcn's `translate-y-3/4` crossing, expressed as a
+negative inset because the runtime has no parent-relative absolute positioning;
+the rest of the box lays out below the edge instead of over the next row).
+`BubbleGroup`'s default gap is the theme's `md` (8px), shadcn's `gap-2`, and the
+joined corners stay `sm`. The Bubble page draws shadcn's demo conversation —
+primary on the end edge, a muted run on the start edge with joined corners, two
+reaction pills — with the remaining variants in a smaller row, and the Chat page
+draws every turn as a `Message` row with a `Bubble` (reader primary, agent
+muted), an avatar and meta line only where a speaker starts, and one reaction
+pill. Proof: `bubble.test.tsx` gains the pill's hang and inset, the surface's
+recipe type/corner and the default group gap (11 cases); the docs gain
+`bubble-demo.test.tsx` (5) and `chat-demo.test.tsx`'s four bubble cases.
+Directions measured (see the report). Docs: `bubble.mdx` §Shape, §Actions and
+reactions, §Limitations (the quarter hang, the page-fill ring, the 12px vs 14px
+corner and the 20px vs 22.75px leading), `chat.mdx`, `docs/preview-strategy.md`,
+the `Bubble` inventory record and `COMPONENTS.md` row.
