@@ -1,7 +1,9 @@
 # `@gpuixui/dock`
 
 The Tier 4 panel workspace, rendered by GPUix through React: `SplitPane`,
-`PanelGroup` and `DockLayout`. They share one resize control — the divider — and
+`PanelGroup` and `DockLayout`, plus shadcn's `Resizable*` names over the same
+group (`ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle` — a skin, not a
+second drag). They share one resize control — the divider — and
 one data model, so a split, a group and a docking tree all obey the same runtime
 rules and persist through the same schema.
 

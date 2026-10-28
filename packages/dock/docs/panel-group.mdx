@@ -35,7 +35,43 @@ const [layout, setLayout] = useState(initial);
 | `layout` | `PanelLayout` | — | the persisted shape; controlled |
 | `onLayoutChange` | `(layout: PanelLayout) => void` | — | the next shape after a resize or a collapse |
 | `renderPanel` | `(id: string) => ReactNode` | — | one pane's content |
+| `dividerLabel` | `(index: number) => string \| undefined` | `Resize <left panel>` | one gap's accessible name |
 | `className` | `string` | — | joined after the recipe |
+
+## Resizable
+
+The same group answers to shadcn's names. `ResizablePanelGroup` declares its
+panes and handles, builds the `PanelLayout` they describe, and renders
+`PanelGroup` — one divider, one keyboard step, one persisted shape.
+
+```tsx
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@gpuixui/dock";
+
+<ResizablePanelGroup direction="horizontal" defaultLayout={saved}>
+  <ResizablePanel defaultSize={20} id="sidebar" label="Sidebar" collapsible>
+    <Explorer />
+  </ResizablePanel>
+  <ResizableHandle label="Resize the explorer" />
+  <ResizablePanel defaultSize={80} id="editor" label="Editor">
+    <Editor />
+  </ResizablePanel>
+</ResizablePanelGroup>;
+```
+
+| Part | Props | Consequence |
+| ---- | ----- | ----------- |
+| `ResizablePanelGroup` | `direction`, `layout`, `defaultLayout`, `onLayoutChange`, `className`, `testId`, `children` | the axis and the shape; a controlled `layout` wins, and an omitted one is held by the group |
+| `ResizablePanel` | `id`, `defaultSize`, `label`, `collapsible`, `children` | one pane; `defaultSize` is a share, and `label` defaults to `id` |
+| `ResizableHandle` | `label` | one gap's accessible name; the divider itself is the group's |
+
+`defaultSize` is a **fraction**, not a percentage that must sum to 100: `20` and
+`80` mean the same shares as `0.2` and `0.8`, and `normalizePanels` rescales a
+set that does not add up. The parts are declarations — they paint nothing — so
+the group keeps the single tab stop a divider needs.
 
 ## Limitations
 
