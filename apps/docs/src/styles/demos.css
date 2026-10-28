@@ -7501,6 +7501,19 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  /* The scene's box is the drawing's, not the readout's: the status line names
+     the focus, so a content-sized scene moved sideways every time it changed. */
+  width: min(360px, 100%);
+}
+
+/* The row's box, not the control's: the display is a `sm` action and the editor
+   an `md` field, so the slot reserves the taller of the two recipes and centres
+   both. View, edit and commit keep the lines below exactly where they were. */
+.gx-inline-slot {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--control-height-md);
 }
 
 .gx-inline-grid {
@@ -7587,7 +7600,11 @@
   line-height: 1.7;
 }
 
+/* The app's message keeps its line whether or not it has words: the refusal is
+   the one line this drawing can add after a commit, and a line that arrives
+   takes the height of the hint under it. */
 .gx-inline-refusal {
+  min-height: 1.7em;
   color: var(--destructive-soft-foreground);
   font-size: 12px;
   line-height: 1.7;

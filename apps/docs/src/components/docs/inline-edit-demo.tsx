@@ -125,13 +125,13 @@ export const InlineEditWorkflow = () => {
   return (
     <div className="gx-demo-column gx-inline-scene">
       <span className="gx-demo-label">Project name</span>
-      {current}
+      <div className="gx-inline-slot">{current}</div>
       <span className="gx-inline-readout" role="status">
         {`reported commits ${rename.commits} · discards ${rename.discards} · focus ${rename.focus}`}
       </span>
-      {refused === "" ? null : (
-        <span className="gx-inline-refusal">{refused}</span>
-      )}
+      {/* The app's refusal keeps its line whether or not it has words, so a
+          refused commit cannot push the hint it sits above. */}
+      <span className="gx-inline-refusal">{refused}</span>
       <span className="gx-inline-hint">{`Committed: "${saved}"`}</span>
     </div>
   );
@@ -145,49 +145,59 @@ export const InlineEditStates = () => {
     <div className="gx-inline-grid">
       <div className="gx-inline-tile">
         <span className="gx-demo-label">At rest</span>
-        <Display empty={false} onStart={() => {}} value="Design system" />
+        <div className="gx-inline-slot">
+          <Display empty={false} onStart={() => {}} value="Design system" />
+        </div>
       </div>
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Empty value</span>
-        <Display empty onStart={() => {}} value="" />
+        <div className="gx-inline-slot">
+          <Display empty onStart={() => {}} value="" />
+        </div>
       </div>
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Editing</span>
-        <Editor
-          draft="Design system"
-          label="Editing value"
-          onBlur={() => {}}
-          onChange={() => {}}
-          onKeyDown={() => {}}
-        />
+        <div className="gx-inline-slot">
+          <Editor
+            draft="Design system"
+            label="Editing value"
+            onBlur={() => {}}
+            onChange={() => {}}
+            onKeyDown={() => {}}
+          />
+        </div>
       </div>
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Disabled</span>
-        <Display
-          disabled
-          empty={false}
-          onStart={() => {}}
-          value="Design system"
-        />
+        <div className="gx-inline-slot">
+          <Display
+            disabled
+            empty={false}
+            onStart={() => {}}
+            value="Design system"
+          />
+        </div>
       </div>
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Controlled edit state</span>
-        {controlled ? (
-          <Editor
-            draft="Design system"
-            label="Controlled value"
-            onBlur={() => setControlled(false)}
-            onChange={() => {}}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                setControlled(false);
-              }
-            }}
-          />
-        ) : (
-          <Display empty={false} onStart={() => {}} value="Design system" />
-        )}
+        <div className="gx-inline-slot">
+          {controlled ? (
+            <Editor
+              draft="Design system"
+              label="Controlled value"
+              onBlur={() => setControlled(false)}
+              onChange={() => {}}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setControlled(false);
+                }
+              }}
+            />
+          ) : (
+            <Display empty={false} onStart={() => {}} value="Design system" />
+          )}
+        </div>
         <button
           className="gx-btn gx-btn-outline gx-btn-sm"
           onClick={() => setControlled(true)}
