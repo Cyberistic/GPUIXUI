@@ -113,14 +113,32 @@ const opening = (search: string): PreviewChoice => {
   );
 };
 
+/**
+ * The choice the page's HTML is painted with.
+ *
+ * Every route is prerendered, so the server cannot know a visitor's saved
+ * platform, look or palette: it paints the URL's choice, else the site's own
+ * default (macOS, the native look, the dark palette). Reading the store in the
+ * first render — which this used to do, to "open on the visitor's platform" —
+ * made the client disagree with that HTML on every page for a returning visitor,
+ * which is React's hydration-text mismatch: one console error per page. The
+ * effect below adopts the remembered choice immediately after mount, so the
+ * switch still opens on the visitor's platform; only the first frame is the
+ * server's.
+ */
+const painted = (search: string): PreviewChoice =>
+  openingChoice(search, {
+    platform: "darwin",
+    look: detectLook(false),
+    mode: previewMode,
+  });
+
 /** Provides the platform, palette and look every preview on the page renders. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
   const search = useRouterState({
     select: (state) => state.location.searchStr,
   });
-  // Resolved in the initializer rather than an effect: the first render already
-  // paints the visitor's platform, so no page opens on a theme it then replaces.
-  const [choice, setChoice] = useState<PreviewChoice>(() => opening(search));
+  const [choice, setChoice] = useState<PreviewChoice>(() => painted(search));
   // A choice made before the page content hydrates would repaint the switch and
   // the URL while every preview kept the server's palette, so the boundary
   // below the switch reports when there is something to repaint.

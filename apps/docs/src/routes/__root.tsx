@@ -5,8 +5,10 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
+import { useEffect } from "react";
 import { NotFound } from "@/components/not-found";
 import { SkipLink } from "@/components/skip-link";
+import { watchPreloadErrors } from "@/lib/preload-recovery";
 import { searchLinks } from "@/lib/search-links";
 import appCss from "@/styles/app.css?url";
 
@@ -40,6 +42,9 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  // A deploy replaces every hashed chunk; a tab that loaded the old build asks
+  // for a file that is gone, and one reload is what puts it right.
+  useEffect(watchPreloadErrors, []);
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
