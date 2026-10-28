@@ -16,10 +16,10 @@
  * the sender's side.
  *
  * The action strip is laid out even while hidden and fades in on pointer-over
- * or focus, so revealing it never moves the bubble. The reaction row sits in the
- * column rather than overlapping the bubble's edge: `position: "absolute"`
- * resolves against the mount parent in `@gpuix/native@0.11.0`, so an overlapping
- * badge would be a window-level layer, not a corner on this bubble.
+ * or focus, so revealing it never moves the bubble. The reaction pill hangs a
+ * quarter of its height over the surface's bottom edge from inside the column:
+ * `position: "absolute"` resolves against the mount parent in
+ * `@gpuix/native@0.11.0`, so shadcn's three-quarter overlap is not available.
  */
 
 import type { DimensionValue, Props } from "@gpuix/react";
@@ -51,6 +51,7 @@ import {
   bubbleCorners,
   bubbleGroupOf,
   bubbleVariantOf,
+  reactionInset,
   type BubbleAlign,
   type BubbleGroupPosition,
   type BubbleVariant,
@@ -348,7 +349,15 @@ export interface BubbleReactionsProps extends Omit<Props, "children"> {
   readonly children?: ReactNode;
 }
 
-/** A reaction row under the bubble. It sits in the column, not over the edge. */
+/**
+ * The reaction pill on the bubble's edge.
+ *
+ * It is inset from the sender's edge and hangs a quarter of its height over the
+ * surface, with the page fill drawn as a ring around it so the pill reads as cut
+ * out of the bubble. shadcn's absolute anchor hangs three quarters; the runtime
+ * cannot position a child against its parent, so the pill stays in the column
+ * and the rest of its box lays out below the edge (see the page's Limitations).
+ */
 export const BubbleReactions = ({
   label,
   className,
@@ -357,15 +366,34 @@ export const BubbleReactions = ({
   ...rest
 }: BubbleReactionsProps) => {
   const theme = useTheme();
-  useBubble();
+  const { align } = useBubble();
   const name = accessibleName(textOf(label)) ?? "Reactions";
+  const recipe = recipeStyle(cn(BUBBLE_REACTIONS, className), theme);
+  const height =
+    (recipe.lineHeight ?? 0) +
+    (recipe.paddingTop ?? 0) +
+    (recipe.paddingBottom ?? 0);
+
   return (
     <div
       role="group"
       aria-label={name}
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(BUBBLE_REACTIONS, className), theme),
+        mergeStyles(recipe, {
+          alignSelf: align === "end" ? "flex-end" : "flex-start",
+          marginTop: reactionInset(height, theme.spacing.xs),
+          ...(align === "end"
+            ? { marginRight: theme.spacing.lg }
+            : { marginLeft: theme.spacing.lg }),
+          boxShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blurRadius: 0,
+            spreadRadius: theme.borderWidth.strong,
+            color: theme.colors.background,
+          },
+        }),
         style,
       )}
     >
@@ -376,7 +404,7 @@ export const BubbleReactions = ({
 
 /** {@link BubbleGroup} props. */
 export interface BubbleGroupProps extends Omit<Props, "children"> {
-  /** The gap between bubbles. Default the theme's `xs` (4px). */
+  /** The gap between bubbles. Default the theme's `md` (8px). */
   readonly gap?: number;
   /** A Tailwind class string, joined after the recipe. */
   readonly className?: string;
@@ -400,7 +428,7 @@ export const BubbleGroup = ({
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(BUBBLE_GROUP, className), theme), {
-          gap: gap ?? theme.spacing.xs,
+          gap: gap ?? theme.spacing.md,
           alignItems: "flex-start",
         }),
         style,
@@ -434,7 +462,9 @@ export const bubbleMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "reactions sit in the bubble's column, not overlapping its edge: `position: absolute` resolves against the mount parent in 0.11.0",
+    "the reaction pill hangs a quarter of its height over the surface's edge; shadcn's three-quarter overlap needs parent-relative absolute positioning, which `position: absolute` does not provide in 0.11.0 (it resolves against the mount parent), so the hanging part also lays out below the edge instead of over the next row",
+    "the surface paints the theme's `xl` corner (12px in the default ladder, 16–18px on the platform skins); shadcn computes `--radius * 1.4` (14px with its default radius), and the library's ladder has no such step",
+    "the type is the recipe's `text-sm` (14px/20px); shadcn sets `leading-relaxed` (22.75px) and the type scale has no relaxed step",
     "the avatar is a prop slot, not a part, because the runtime cannot wrap a caller's children in the bubble's column selectively",
     "no `render`/polymorphic content: `BubbleContent` is always a div, because the runtime has no anchor host",
     "the action strip reserves its height while hidden, so revealing it does not move the bubble; a focus event belongs to the focused element, so a caller-supplied control that is not a `BubbleAction` does not reveal the strip on keyboard focus",

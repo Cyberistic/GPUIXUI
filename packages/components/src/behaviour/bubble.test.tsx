@@ -189,6 +189,54 @@ describe("Bubble", () => {
     root.unmount();
   });
 
+  it("paints the surface's type and corner from the theme", () => {
+    const root = renderComponent(<Surface />);
+    const content = root.renderer.findByTestId("bubble-content")?.style;
+
+    expect(content?.fontSize).toBe(14);
+    expect(content?.lineHeight).toBe(20);
+    expect(content?.paddingTop).toBe(8);
+    expect(content?.paddingLeft).toBe(12);
+    expect(content?.borderTopLeftRadius).toBe(darkTheme.radius.xl);
+    expect(content?.borderBottomRightRadius).toBe(darkTheme.radius.xl);
+
+    root.unmount();
+  });
+
+  it("hangs the reaction pill over the surface's edge", () => {
+    const root = renderComponent(<Surface reactions />);
+    const content = requireBounds(root, "bubble-content");
+    const pill = requireBounds(root, "bubble-reactions");
+    const painted = root.renderer.findByTestId("bubble-reactions")?.style;
+
+    // The pill is a 14px line in 2px of padding: 24 tall, and shadcn hangs a
+    // quarter of it over the edge (`translate-y-3/4`).
+    expect(pill.height).toBe(24);
+    expect(content.y + content.height - pill.y).toBe(6);
+    expect(painted?.fontSize).toBe(14);
+    expect(painted?.borderRadius).toBe(9999);
+    expect(painted?.marginTop).toBe(-(6 + 4));
+
+    root.unmount();
+  });
+
+  it("insets the reaction pill from the sender's edge", () => {
+    const gapToEdge = (align: "start" | "end") => {
+      const root = renderComponent(<Surface align={align} reactions />);
+      const content = requireBounds(root, "bubble-content");
+      const pill = requireBounds(root, "bubble-reactions");
+      const gap =
+        align === "end"
+          ? content.x + content.width - (pill.x + pill.width)
+          : pill.x - content.x;
+      root.unmount();
+      return gap;
+    };
+
+    expect(gapToEdge("end")).toBe(darkTheme.spacing.lg);
+    expect(gapToEdge("start")).toBe(darkTheme.spacing.lg);
+  });
+
   it("joins a grouped run's corners and keeps a tail on the last", () => {
     const corners = (group: "first" | "middle" | "last") => {
       const root = renderComponent(<Surface group={group} />);
@@ -225,7 +273,7 @@ describe("Bubble", () => {
     });
 
     const run = renderComponent(
-      <BubbleGroup testId="run" gap={4}>
+      <BubbleGroup testId="run">
         {(["first", "middle", "last"] as const).map((group) => (
           <Bubble key={group} testId={`run-${group}`} group={group}>
             <BubbleContent testId={`run-${group}-content`}>
@@ -238,8 +286,9 @@ describe("Bubble", () => {
     const first = requireBounds(run, "run-first");
     const middle = requireBounds(run, "run-middle");
     const last = requireBounds(run, "run-last");
-    expect(middle.y - (first.y + first.height)).toBe(4);
-    expect(last.y - (middle.y + middle.height)).toBe(4);
+    // shadcn's `BubbleGroup` gap is 8px, tighter than the transcript's turns.
+    expect(middle.y - (first.y + first.height)).toBe(8);
+    expect(last.y - (middle.y + middle.height)).toBe(8);
     run.unmount();
   });
 

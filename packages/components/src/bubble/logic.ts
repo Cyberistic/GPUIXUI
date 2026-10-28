@@ -82,3 +82,16 @@ export const bubbleCorners = (
     borderBottomRightRadius: align === "end" ? sender : bottom,
   };
 };
+
+/**
+ * The top inset that hangs a reaction row over the surface's bottom edge.
+ *
+ * shadcn anchors the row absolutely and translates it three quarters of its own
+ * height past the edge, so a quarter crosses the surface. The runtime has no
+ * parent-relative positioning, so the row stays in the column and this inset
+ * pulls it up by that quarter — plus the column's gap, which it also cancels.
+ * The row's remaining height still lays out, so the next row cannot paint over
+ * it.
+ */
+export const reactionInset = (rowHeight: number, gap: number): number =>
+  -(rowHeight / 4 + gap);

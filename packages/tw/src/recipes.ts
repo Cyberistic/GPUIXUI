@@ -668,9 +668,11 @@ export const BUBBLE_VARIANTS = {
 /** `bubble.tsx` — the hover/focus action strip under the content. */
 export const BUBBLE_ACTIONS = "flex flex-row items-center gap-1 min-h-0";
 
-/** `bubble.tsx` — the reaction row. It sits in the column, not over the edge. */
+/** `bubble.tsx` — the reaction pill. The part hangs it over the surface's edge;
+ * the type and the pill's box are the recipe's, so the hang can be measured
+ * from the compiled row. */
 export const BUBBLE_REACTIONS =
-  "flex flex-row items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-xs";
+  "flex flex-row items-center justify-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-sm";
 
 /** `bubble.tsx` — consecutive bubbles from one sender. */
 export const BUBBLE_GROUP = "flex flex-col min-w-0";

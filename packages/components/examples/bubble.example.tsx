@@ -1,7 +1,7 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Bubble example: the seven surfaces, a grouped run, an avatar slot, a hover
- * action strip and a reaction row.
+ * Bubble example: the seven surfaces, a grouped run, an avatar slot, a reaction
+ * pill on the surface's edge and a hover action strip.
  *
  * Hover a bubble to reveal its actions; the strip is laid out all along, so it
  * fades in without moving anything. The grouped run tightens its gap and each
@@ -62,6 +62,10 @@ export const BubbleExample = () => {
           </BubbleContent>
           {variant === "muted" ? (
             <>
+              <BubbleReactions label="Reactions: thumbs up and fire">
+                <text>👍</text>
+                <text>🔥</text>
+              </BubbleReactions>
               <BubbleActions label="Reply actions">
                 <BubbleAction
                   label="Copy"
@@ -72,10 +76,6 @@ export const BubbleExample = () => {
                   onClick={() => setCopied("Asked for another reply")}
                 />
               </BubbleActions>
-              <BubbleReactions label="Reactions: thumbs up and fire">
-                <text>👍</text>
-                <text>🔥</text>
-              </BubbleReactions>
             </>
           ) : null}
         </Bubble>
