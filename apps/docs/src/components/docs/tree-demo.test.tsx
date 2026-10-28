@@ -1,4 +1,5 @@
 import {
+  TREE_INDENT,
   flattenTree,
   treeCursorMove,
   treeName,
@@ -199,6 +200,33 @@ describe("the TreeView preview", () => {
     expect(treeReadout(rows, { ...cursor, active: Option.none() })).toBe(
       "11 rows · 3 open · no active row",
     );
+  });
+});
+
+describe("the tree drawing's shape", () => {
+  it("paints the tree's rows at the density's step and the 16px indent", () => {
+    const html = markup(<DependencyTreeDemo />);
+    const css = read("apps/docs/src/styles/demos.css");
+    const row = css.slice(css.indexOf("\n.gx-dtree-row {"));
+
+    expect(html).toContain('class="gx-dtree"');
+    expect(html).toContain('class="gx-dtree-row"');
+    expect(html).toContain('class="gx-dtree-slot"');
+    // `TREE_ROW` is `text-sm` and the row height is the density's `rowHeight`;
+    // `TREE_INDENT` is the measured 16px a level insets by.
+    expect(row.slice(0, row.indexOf("}"))).toContain(
+      "height: var(--row-height);",
+    );
+    expect(row.slice(0, row.indexOf("}"))).toContain("font-size: 14px;");
+    expect(read("packages/data/src/tree/row.tsx")).toContain(
+      "paddingLeft: TREE_INSET + row.depth * TREE_INDENT",
+    );
+    // Every painted row carries the measured inset, and a deeper row by one step.
+    const insets = (html.match(/padding-left:(\d+)px/g) ?? []).map((one) =>
+      Number(/\d+/.exec(one)?.[0]),
+    );
+    expect(insets).toHaveLength((html.match(/role="treeitem"/g) ?? []).length);
+    expect(Math.max(...insets) - Math.min(...insets)).toBe(TREE_INDENT * 2);
   });
 });
 

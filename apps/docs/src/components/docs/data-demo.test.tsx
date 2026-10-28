@@ -446,6 +446,33 @@ describe("the Charts preview", () => {
   });
 });
 
+describe("the four scenes this file owns", () => {
+  it("draw them in the components' own shapes", () => {
+    const scenes = [
+      [markup(<ColumnConfigurationDemo />), ["gx-dt", "gx-dt-divider"]],
+      [
+        markup(<ChartDemoBody mode="bars" theme={themes.dark} />),
+        ["gx-dchart", "gx-dchart-axis"],
+      ],
+      [markup(<VirtualizationDemo />), ["gx-dt", "gx-virt-row"]],
+      [
+        markup(<AdvancedFilterDemo />),
+        ["gx-dfilter", "gx-dfilter-clause", "gx-dt"],
+      ],
+    ] as const;
+
+    scenes.forEach(([html, present], index) => {
+      expect(present.filter((name) => !html.includes(name))).toEqual([]);
+      expect(html, `scene ${index}`).not.toContain("<table");
+    });
+    // The chart's plot is `chartBox`'s, so the frame paints that box and no
+    // second margin of its own.
+    expect(markup(<ChartDemoBody mode="bars" theme={themes.dark} />)).toContain(
+      `viewBox="0 0 ${chartPlot.width} ${chartPlot.height}"`,
+    );
+  });
+});
+
 describe("the previews' sources", () => {
   it("name the package entry points each drawing runs", async () => {
     const sources = await Promise.all([

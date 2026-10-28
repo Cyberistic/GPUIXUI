@@ -24173,7 +24173,9 @@ rests on the stack.
       controller/window, column reducers, the builder's `updateAt`/`removeAt`/
       `appendAt`/`setGroupKind`, the frozen mirror, the chart marks), and the
       builder gained working field/comparison pickers instead of a fixed pair.
-      `data-skin.test.tsx` (41 cases) is the seam: each style block is compared
+      `data-skin.test.tsx` (41 cases) is the seam, and the pages' own tests carry
+      a local shape case too (sorting header/button, filter field/table, tree
+      row/depth, and the four scenes `data-demo.test.tsx` owns): each style block is compared
       with `classesToStyle(recipe, themes.dark)` so a component change fails the
       drawing, and every page's markup is held to its class family with a sweep
       that rejects the hand-rolled families. Directions measured: `px-3` → `px-4`
