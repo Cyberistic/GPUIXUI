@@ -91,6 +91,17 @@ const Conversation = ({
   </div>
 );
 
+/**
+ * The deadline a transcript-layout case needs.
+ *
+ * These cases mount thirty rows and append three more, and the native renderer
+ * paints every row it is given — the transcript is not virtualised
+ * (`packages/components/docs/message-scroller.mdx`, Limitations). The work is
+ * real, so the case gets a deadline that fits it instead of failing on a busy
+ * machine.
+ */
+const LAYOUT_CASE_TIMEOUT_MS = 30_000;
+
 /** Focus the field and send each character as a real key press. */
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(
@@ -396,71 +407,83 @@ describe("Chat", () => {
     root.unmount();
   });
 
-  it("appends three messages without moving the composer, following only at the bottom", () => {
-    const root = renderComponent(<Conversation rows={30} />);
-    const composer = requireBounds(root, "composer").y;
-    const viewport = requireBounds(root, "chat-messages");
-    expect(viewport.height).toBeGreaterThan(100);
-    expect(composer).toBeGreaterThan(viewport.y + viewport.height);
-    const before = offsetOf(root);
-    expect(endIsVisible(root, 29)).toBe(true);
+  it(
+    "appends three messages without moving the composer, following only at the bottom",
+    () => {
+      const root = renderComponent(<Conversation rows={30} />);
+      const composer = requireBounds(root, "composer").y;
+      const viewport = requireBounds(root, "chat-messages");
+      expect(viewport.height).toBeGreaterThan(100);
+      expect(composer).toBeGreaterThan(viewport.y + viewport.height);
+      const before = offsetOf(root);
+      expect(endIsVisible(root, 29)).toBe(true);
 
-    [31, 32, 33].forEach((rows) => {
-      root.rerender(<Conversation rows={rows} />);
+      [31, 32, 33].forEach((rows) => {
+        root.rerender(<Conversation rows={rows} />);
+        expect(requireBounds(root, "composer").y).toBe(composer);
+        expect(endIsVisible(root, rows - 1)).toBe(true);
+      });
+
+      // The viewport followed the tail: its offset moved further from the start.
+      expect(offsetOf(root)).toBeLessThan(before);
+      expect(jumpActive(root)).toBe(false);
+
+      root.unmount();
+    },
+    LAYOUT_CASE_TIMEOUT_MS,
+  );
+
+  it(
+    "appends three messages without moving a reader who scrolled up",
+    () => {
+      const root = renderComponent(<Conversation rows={30} />);
+      const composer = requireBounds(root, "composer").y;
+      const viewport = requireBounds(root, "chat-messages").height;
+      wheel(root, 160);
+      settle(root);
+      // The jump control appeared in its reserved rail: neither the transcript's
+      // height nor the composer's place moved.
+      expect(requireBounds(root, "chat-messages").height).toBe(viewport);
       expect(requireBounds(root, "composer").y).toBe(composer);
-      expect(endIsVisible(root, rows - 1)).toBe(true);
-    });
+      const before = offsetOf(root);
+      expect(before).toBeLessThan(0);
 
-    // The viewport followed the tail: its offset moved further from the start.
-    expect(offsetOf(root)).toBeLessThan(before);
-    expect(jumpActive(root)).toBe(false);
+      [31, 32, 33].forEach((rows) => {
+        root.rerender(<Conversation rows={rows} />);
+        expect(requireBounds(root, "composer").y).toBe(composer);
+        expect(offsetOf(root)).toBe(before);
+        expect(endIsVisible(root, rows - 1)).toBe(false);
+      });
 
-    root.unmount();
-  });
+      expect(jumpActive(root)).toBe(true);
+      expect(root.renderer.getAllText()).toContain("3 new messages");
 
-  it("appends three messages without moving a reader who scrolled up", () => {
-    const root = renderComponent(<Conversation rows={30} />);
-    const composer = requireBounds(root, "composer").y;
-    const viewport = requireBounds(root, "chat-messages").height;
-    wheel(root, 160);
-    settle(root);
-    // The jump control appeared in its reserved rail: neither the transcript's
-    // height nor the composer's place moved.
-    expect(requireBounds(root, "chat-messages").height).toBe(viewport);
-    expect(requireBounds(root, "composer").y).toBe(composer);
-    const before = offsetOf(root);
-    expect(before).toBeLessThan(0);
+      root.unmount();
+    },
+    LAYOUT_CASE_TIMEOUT_MS,
+  );
 
-    [31, 32, 33].forEach((rows) => {
-      root.rerender(<Conversation rows={rows} />);
-      expect(requireBounds(root, "composer").y).toBe(composer);
-      expect(offsetOf(root)).toBe(before);
-      expect(endIsVisible(root, rows - 1)).toBe(false);
-    });
+  it(
+    "grows a streaming row without moving the composer, pinned or away",
+    () => {
+      const pinnedRoot = renderComponent(<Conversation rows={30} />);
+      const pinnedComposer = requireBounds(pinnedRoot, "composer").y;
+      pinnedRoot.rerender(<Conversation rows={30} status="streaming" grown />);
+      expect(requireBounds(pinnedRoot, "composer").y).toBe(pinnedComposer);
+      expect(endIsVisible(pinnedRoot, 29)).toBe(true);
+      pinnedRoot.unmount();
 
-    expect(jumpActive(root)).toBe(true);
-    expect(root.renderer.getAllText()).toContain("3 new messages");
-
-    root.unmount();
-  });
-
-  it("grows a streaming row without moving the composer, pinned or away", () => {
-    const pinnedRoot = renderComponent(<Conversation rows={30} />);
-    const pinnedComposer = requireBounds(pinnedRoot, "composer").y;
-    pinnedRoot.rerender(<Conversation rows={30} status="streaming" grown />);
-    expect(requireBounds(pinnedRoot, "composer").y).toBe(pinnedComposer);
-    expect(endIsVisible(pinnedRoot, 29)).toBe(true);
-    pinnedRoot.unmount();
-
-    const awayRoot = renderComponent(<Conversation rows={30} />);
-    wheel(awayRoot, 160);
-    const awayComposer = requireBounds(awayRoot, "composer").y;
-    const awayOffset = offsetOf(awayRoot);
-    awayRoot.rerender(<Conversation rows={30} status="streaming" grown />);
-    expect(requireBounds(awayRoot, "composer").y).toBe(awayComposer);
-    expect(offsetOf(awayRoot)).toBe(awayOffset);
-    awayRoot.unmount();
-  });
+      const awayRoot = renderComponent(<Conversation rows={30} />);
+      wheel(awayRoot, 160);
+      const awayComposer = requireBounds(awayRoot, "composer").y;
+      const awayOffset = offsetOf(awayRoot);
+      awayRoot.rerender(<Conversation rows={30} status="streaming" grown />);
+      expect(requireBounds(awayRoot, "composer").y).toBe(awayComposer);
+      expect(offsetOf(awayRoot)).toBe(awayOffset);
+      awayRoot.unmount();
+    },
+    LAYOUT_CASE_TIMEOUT_MS,
+  );
 
   it("renders the attachments and hint a caller supplies", () => {
     const root = renderComponent(

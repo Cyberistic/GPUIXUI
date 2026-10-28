@@ -24069,3 +24069,19 @@ opened and one chevron flipped, the four popover sides measured exactly
 hover card sat wholly inside its reserved frame with a transparent, 0px-border,
 underlined, 0-padding trigger.
 
+## Open: the chat transcript's mount cost
+
+`[ ]` `packages/components`: **a row mounted inside `MessageScrollerContent` costs
+about 40 ms, and every store write rebuilds the value every row consumes.** Measured
+with the native renderer: forty rows inside `ChatMessages` take **3.1 s** while the
+same forty rows in a plain `div` take **264 ms**; thirty rows mount in ~1.4 s and
+each rerender costs another ~0.5 s. Two causes, both measured: the renderer paints
+every row it is given (the transcript is not virtualised — `MessageScrollerItem`
+cannot skip offscreen rows, and `<virtual-list>` takes a count rather than compound
+children), and `MessageScrollerContext` carries `state`, so each per-row `arrived()`
+write re-renders **every** row — `n` arrivals cost `n²` row repaints. The three
+transcript-layout cases in `chat.test.tsx` now carry a 30 s deadline
+(`LAYOUT_CASE_TIMEOUT_MS`) instead of failing at the default 5 s on a busy machine.
+Fix: split the scroller's command context from its state (items read `pinned`
+through a ref, the jump control and `aria-busy` through state), and/or virtualise
+the transcript once the runtime offers a compound virtual list.
