@@ -156,10 +156,6 @@ const PolicyBody = ({
           value={note}
         />
       </label>
-      <p className="gx-collapse-hint">
-        The note belongs to the body, so collapsing removes it. The retry policy
-        above belongs to the page and survives.
-      </p>
     </div>
   );
 };

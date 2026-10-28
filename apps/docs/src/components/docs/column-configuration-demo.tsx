@@ -310,13 +310,6 @@ export function ColumnConfigurationDemo() {
           ? "no hidden columns"
           : `hidden: ${hidden.join(", ")}`}
       </p>
-      <p className="gx-trule-hint">
-        A press on a divider’s separator is a pointer drag; here the keyboard
-        route is the one drawn: ← and → step 16px, Home and End name the
-        column’s own bounds. Hiding a column takes its width out of the content
-        and shifts every later column by exactly that width; a hidden column
-        keeps its slot, so showing it again returns it to its own place.
-      </p>
     </div>
   );
 }

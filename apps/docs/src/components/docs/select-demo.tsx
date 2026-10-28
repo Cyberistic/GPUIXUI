@@ -410,11 +410,6 @@ export const SelectStates = () => {
           />
         </div>
       </div>
-      <p className="gx-select-readout">
-        Every trigger opens; the invalid one keeps the destructive edge the
-        caller asked for, because the component paints the state it is given
-        rather than deciding when a form is wrong.
-      </p>
     </div>
   );
 };

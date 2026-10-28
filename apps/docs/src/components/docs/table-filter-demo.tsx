@@ -117,13 +117,6 @@ export function TableFilterDemo() {
         “{query}” · {rows.length} of {FILTER_ROWS.length} rows · name “
         {filterLabel(label)}” · hint “{filterHint("")}”
       </p>
-      <p className="gx-demo-hint">
-        The field owns no query: every keystroke reaches{" "}
-        <code>onValueChange</code> and the table narrows on it. A blank name
-        reads as <code>{DEFAULT_FILTER_LABEL}</code> and a blank hint as{" "}
-        <code>{DEFAULT_FILTER_PLACEHOLDER}</code>, because a locale table&apos;s
-        missing row is absence, not an unnamed field.
-      </p>
     </div>
   );
 }

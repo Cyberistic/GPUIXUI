@@ -53,15 +53,9 @@ export function FieldsetDemo() {
             onChange={(event) => setDisabled(event.currentTarget.checked)}
             type="checkbox"
           />
-          Disabled — the legend dims and the inputs leave the tab order
+          Disabled
         </label>
       </div>
-
-      <p className="gx-fieldset-note">
-        A named group of fields. Only the legend dims; a control that reads the
-        context paints its own disabled roles, so dimming the subtree would
-        double-dim it.
-      </p>
     </div>
   );
 }

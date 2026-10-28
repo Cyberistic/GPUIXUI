@@ -106,10 +106,6 @@ const CarouselPreview = ({
             {count === 0 ? (
               <div className="gx-carousel-slide" data-active="">
                 <h4 className="gx-carousel-title">No slides</h4>
-                <p className="gx-carousel-copy">
-                  A track with no slides paints no dots and disables both
-                  controls.
-                </p>
               </div>
             ) : null}
           </div>
@@ -215,9 +211,7 @@ const MemberDraft = () => {
         value={name}
       />
       <span className="gx-carousel-hint" role="status">
-        {name.trim() === ""
-          ? "Type a name, step to another slide, then come back."
-          : `Draft kept: ${name.trim()}`}
+        {name.trim() === "" ? "" : `Draft kept: ${name.trim()}`}
       </span>
     </label>
   );

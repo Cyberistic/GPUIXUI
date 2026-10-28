@@ -162,9 +162,6 @@ export const ListDemo = () => {
       <div className="gx-list-card">
         <div>
           <p className="gx-list-heading">Workspace files</p>
-          <p className="gx-list-meta">
-            Arrows move one tab stop; Enter opens; a typed prefix jumps.
-          </p>
         </div>
         <div
           aria-label="Workspace files"
@@ -296,9 +293,6 @@ export const ListMultiple = () => {
       <div className="gx-list-card">
         <div>
           <p className="gx-list-heading">Assign reviewers</p>
-          <p className="gx-list-meta">
-            A click selects one; Cmd-click toggles; Shift-click takes the range.
-          </p>
         </div>
         <div
           aria-label="Reviewers"

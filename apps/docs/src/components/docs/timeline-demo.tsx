@@ -82,10 +82,6 @@ export const TimelineWorkflow = () => {
       <p className="gx-demo-label">Release Aurora</p>
       <div className="gx-timeline-card">
         <p className="gx-timeline-title-line">Release Aurora</p>
-        <p className="gx-timeline-lede">
-          Four planned steps. The app owns the cursor and marks every event; the
-          rail only paints what it is handed.
-        </p>
         <Rail events={events} label="Release Aurora" />
         <div className="gx-timeline-actions">
           <button
@@ -114,13 +110,6 @@ export const TimelineWorkflow = () => {
         </div>
         <p className="gx-timeline-readout" role="status">
           {describe(cursor)}
-        </p>
-        <p className="gx-timeline-note">
-          Promote moves the cursor one step; the current event is the one the
-          run waits on, and nothing after it carries a time. The last event
-          never paints a connector, and the app marks the whole history complete
-          by moving the cursor past the last step &mdash; the component has no
-          idea that happened.
         </p>
       </div>
     </div>
@@ -151,9 +140,7 @@ export const TimelineStates = () => (
       label="Cursor past the end — every event complete, no current"
     />
     <div className="gx-timeline-state">
-      <p className="gx-timeline-state-label">
-        One event — it is the whole rail, so no connector
-      </p>
+      <p className="gx-timeline-state-label">One event</p>
       <Rail
         events={[
           {
@@ -166,12 +153,6 @@ export const TimelineStates = () => (
         label="One event"
       />
     </div>
-    <p className="gx-timeline-note">
-      Every status is passed: the same four steps can be marked by a cursor, by
-      a failed build or by hand. An upcoming event&rsquo;s dot takes the muted
-      <em> text </em>role rather than the muted surface fill, which measured
-      1.06:1 on the page &mdash; a dot nobody could see.
-    </p>
   </div>
 );
 

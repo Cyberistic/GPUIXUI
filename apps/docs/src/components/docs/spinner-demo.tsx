@@ -74,7 +74,7 @@ export { spinnerSizesSource };
 /** The action state a reader meets most often: a button holding the mark. */
 export const SpinnerInButtons = () => (
   <div className="gx-demo gx-demo-column gx-spin3-scene">
-    <p className="gx-demo-label">Inside the action the mark belongs to</p>
+    <p className="gx-demo-label">In a button</p>
     <div className="gx-demo-row">
       <button className="gx-btn gx-btn-primary" type="button">
         <span
@@ -116,10 +116,7 @@ export const SpinnerInButtons = () => (
         Deleting…
       </button>
     </div>
-    <p className="gx-demo-label">
-      Native <code>Button loading</code>: the mark replaces the leading icon and
-      the label stays.
-    </p>
+    <p className="gx-demo-label">Button loading</p>
   </div>
 );
 

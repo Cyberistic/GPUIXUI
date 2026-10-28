@@ -35,9 +35,7 @@ export function MagneticDemo() {
         }
       >
         <p className="gx-magnetic-title">Notes</p>
-        <p className="gx-magnetic-copy">
-          The card leans toward the pointer, up to the offset cap.
-        </p>
+        <p className="gx-magnetic-copy">Ship the beta notes before Friday.</p>
       </div>
     </div>
   );

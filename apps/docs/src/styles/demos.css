@@ -1866,11 +1866,6 @@
   color: var(--muted-foreground);
 }
 
-.gx-dock-hint {
-  margin: 10px 0 0;
-  color: var(--muted-foreground);
-}
-
 .gx-dock-row {
   display: flex;
   align-items: center;
@@ -2049,8 +2044,7 @@
   box-shadow: 0 0 0 2px var(--ring);
 }
 
-.gx-group-readout,
-.gx-group-hint {
+.gx-group-readout {
   margin: 0;
   font-size: 12px;
   color: var(--muted-foreground);
@@ -2071,7 +2065,7 @@
   max-width: 640px;
 }
 
-.gx-layout {
+.gx-layout-frame {
   display: flex;
   width: 100%;
   height: 240px;
@@ -2166,7 +2160,7 @@
   gap: 2px;
 }
 
-.gx-layout-row {
+.gx-layout-fact {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2176,7 +2170,7 @@
   color: var(--muted-foreground);
 }
 
-.gx-layout-row code {
+.gx-layout-fact code {
   font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--foreground);
@@ -2198,8 +2192,7 @@
   box-shadow: 0 0 0 2px var(--ring);
 }
 
-.gx-layout-readout,
-.gx-layout-hint {
+.gx-layout-readout {
   margin: 0;
   font-size: 12px;
   color: var(--muted-foreground);
@@ -2255,12 +2248,6 @@
 .gx-inspector-box {
   border-radius: calc(var(--radius) - 1px);
   background: var(--primary);
-}
-
-.gx-inspector-stage-note {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted-foreground);
 }
 
 .gx-inspector-panel {
@@ -2646,8 +2633,7 @@
 }
 
 .gx-field-desc,
-.gx-field-error,
-.gx-field-note {
+.gx-field-error {
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
@@ -2659,10 +2645,6 @@
 
 .gx-field-error {
   color: var(--destructive-soft-foreground);
-}
-
-.gx-field-note {
-  color: var(--placeholder);
 }
 
 .gx-field-set {
@@ -2715,8 +2697,6 @@
 }
 
 .gx-form-title,
-.gx-form-lede,
-.gx-form-note,
 .gx-form-readout,
 .gx-form-success,
 .gx-form-state-label {
@@ -2727,20 +2707,6 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--foreground);
-}
-
-.gx-form-lede,
-.gx-form-note {
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.gx-form-lede {
-  color: var(--muted-foreground);
-}
-
-.gx-form-note {
-  color: var(--placeholder);
 }
 
 .gx-form-actions {
@@ -2816,26 +2782,10 @@
   padding: 24px 0 0 8px;
 }
 
-.gx-toast-lede {
-  margin: 0;
-  max-width: 240px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--muted-foreground);
-}
-
 .gx-toast-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.gx-toast-hint {
-  margin: 0;
-  max-width: 260px;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--placeholder);
 }
 
 .gx-toast-viewport {
@@ -3532,13 +3482,6 @@
   margin: 0;
   font-size: 13px;
   font-weight: 650;
-}
-
-.gx-list-meta {
-  margin: 4px 0 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--muted-foreground);
 }
 
 .gx-list {
@@ -4384,13 +4327,6 @@
   color: var(--muted-foreground);
 }
 
-.gx-search-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--placeholder);
-}
-
 .gx-search-states {
   flex-direction: column;
   align-items: stretch;
@@ -4543,12 +4479,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.gx-time-note {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--placeholder);
 }
 
 .gx-time-states {
@@ -5258,19 +5188,6 @@
   font-size: 12px;
 }
 
-.gx-pagination-hint {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.gx-pagination-hint code {
-  color: var(--foreground);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
 .gx-pagination-tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5298,13 +5215,6 @@
   display: flex;
   align-items: center;
   min-height: calc(var(--control-height-sm) + 2px);
-}
-
-.gx-pagination-tile-note {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  line-height: 1.5;
 }
 
 .gx-pagination-empty {
@@ -5448,19 +5358,6 @@
   font-size: 11px;
 }
 
-.gx-breadcrumb-hint {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.gx-breadcrumb-hint code {
-  color: var(--foreground);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
 .gx-breadcrumb-tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5488,13 +5385,6 @@
   display: flex;
   align-items: center;
   min-height: calc(var(--control-height-sm) + 2px);
-}
-
-.gx-breadcrumb-tile-note {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  line-height: 1.5;
 }
 
 @media (max-width: 720px) {
@@ -5810,7 +5700,6 @@
   outline: 2px solid var(--ring);
 }
 
-.gx-collapse-hint,
 .gx-collapse-readout {
   margin: 0;
   color: var(--muted-foreground);
@@ -6508,8 +6397,7 @@
   text-align: left;
 }
 
-.gx-trule-readout,
-.gx-trule-hint {
+.gx-trule-readout {
   margin: 0;
   font-size: 11px;
   color: var(--muted-foreground);
@@ -6818,13 +6706,6 @@
   line-height: 20px;
 }
 
-.gx-stepper-lede {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 16px;
-}
-
 .gx-stepper {
   display: flex;
   flex-direction: column;
@@ -6938,13 +6819,6 @@
   line-height: 1.7;
 }
 
-.gx-stepper-note {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 11.5px;
-  line-height: 1.7;
-}
-
 .gx-stepper-state {
   display: flex;
   flex-direction: column;
@@ -6998,13 +6872,6 @@
   font-size: 15px;
   font-weight: 600;
   line-height: 20px;
-}
-
-.gx-timeline-lede {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 16px;
 }
 
 .gx-timeline {
@@ -7119,13 +6986,6 @@
   font-size: 10.5px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-.gx-timeline-note {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 11.5px;
-  line-height: 1.7;
 }
 
 /* ---- color picker: mirrors components/src/color-picker.tsx's COLOR_PICKER_* ----
@@ -7297,13 +7157,6 @@
   text-transform: uppercase;
 }
 
-.gx-color-note {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 11.5px;
-  line-height: 1.7;
-}
-
 /* ---- inline edit: mirrors components/src/inline-edit.tsx ----
    The display is `INLINE_EDIT_DISPLAY` (`px-1`, the display text at 14/20) at
    the `sm` control height with the component's `accent` hover wash; the editor
@@ -7389,8 +7242,7 @@
   outline-offset: 2px;
 }
 
-.gx-inline-readout,
-.gx-inline-hint {
+.gx-inline-readout {
   color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -7398,8 +7250,10 @@
 }
 
 .gx-inline-hint {
+  color: var(--muted-foreground);
   font-family: var(--font-sans);
   font-size: 12px;
+  line-height: 1.7;
 }
 
 .gx-inline-refusal {
@@ -7461,7 +7315,6 @@
 }
 
 .gx-avatar-role,
-.gx-avatar-foot,
 .gx-avatar-readout,
 .gx-avatar-notice {
   margin: 0;
@@ -7674,18 +7527,12 @@
 }
 
 .gx-badge-readout,
-.gx-badge-foot,
 .gx-badge-status,
 .gx-badge-selected {
   margin: 0;
   color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.5;
-}
-
-.gx-badge-foot {
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border);
 }
 
 .gx-badge-status {
@@ -7995,6 +7842,7 @@
   width: 100%;
   max-width: 560px;
   text-align: left;
+  flex-direction: column;
 }
 
 .gx-layout-row {
@@ -8050,15 +7898,6 @@
 .gx-empty-action {
   display: flex;
   flex-direction: row;
-}
-
-.gx-empty-note {
-  flex-basis: 100%;
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
 }
 
 /* ---- fieldset: mirrors components/src/fieldset.tsx ----
@@ -8508,14 +8347,6 @@
   accent-color: var(--primary);
 }
 
-.gx-fieldset-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
 /* ---- hotkey recorder: mirrors components/src/hotkey-recorder.tsx ----
    The control is `bg-background border border-input rounded-md` with a `md`
    minimum height; the recorded chord is a run of keycaps and the clear control
@@ -8600,12 +8431,6 @@
   color: var(--accent-foreground);
 }
 
-.gx-hotkey-note {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
 .gx-label-block[data-invalid] .gx-label-name {
   color: var(--destructive-soft-foreground);
 }
@@ -8619,14 +8444,6 @@
   font-size: 12px;
   line-height: 1.45;
   color: var(--muted-foreground);
-}
-
-.gx-label-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--placeholder);
 }
 
 .gx-hotkey-states {
@@ -8643,11 +8460,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.gx-label-note code {
-  font-family: var(--font-mono);
-  color: var(--primary);
 }
 
 /* ---- toggle / toggle group: the pressed paint ---- */
@@ -9368,14 +9180,6 @@ button.gx-rating-star:focus-visible {
   background: var(--border);
 }
 
-.gx-shortcuts-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
 /* ---- mention input: mirrors components/src/mention-input.tsx ----
    The field is `bg-background rounded-md border border-input` at the `md`
    height, and the list is a `popover` surface anchored below it; a highlighted
@@ -9480,18 +9284,6 @@ button.gx-rating-star:focus-visible {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--placeholder);
-}
-
-.gx-mention-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
-.gx-mention-note code {
-  color: var(--primary);
 }
 
 /* ---- message: mirrors components/src/message.tsx's MESSAGE_* recipes ----
@@ -9726,16 +9518,6 @@ button.gx-rating-star:focus-visible {
   color: var(--muted-foreground);
 }
 
-.gx-message-note {
-  margin: 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
 /* ---- message scroller: mirrors components/src/message-scroller.tsx ----
    The viewport is a bounded scroll container; the pin is a 1px tail sentinel's
    position, and `JumpToLatest` renders beneath it only while unpinned, with the
@@ -9830,14 +9612,6 @@ button.gx-rating-star:focus-visible {
 .gx-scroller-readout b {
   color: var(--primary);
   font-weight: 600;
-}
-
-.gx-scroller-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
 }
 
 /* ---- navigation menu: mirrors components/src/navigation-menu.tsx ----
@@ -9983,14 +9757,6 @@ button.gx-rating-star:focus-visible {
   color: var(--accent-foreground);
 }
 
-.gx-nav-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
 /* The page's scene: a header, the bar, the outside-press control, the readout
    and the rules the drawing follows. `.gx-nav-tile` is the same bar inline. */
 .gx-demo-navigation {
@@ -10034,14 +9800,6 @@ button.gx-rating-star:focus-visible {
   flex-wrap: wrap;
 }
 
-.gx-nav-controls-note {
-  max-width: 320px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--placeholder);
-}
-
 .gx-nav-readout {
   margin: 0;
   padding: 8px 10px;
@@ -10052,24 +9810,6 @@ button.gx-rating-star:focus-visible {
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.5;
-}
-
-.gx-nav-hint {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
-.gx-nav-hint kbd {
-  padding: 0 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--foreground);
-  font-family: var(--font-mono);
-  font-size: 10px;
 }
 
 .gx-nav-trigger:focus-visible {
@@ -10110,14 +9850,6 @@ button.gx-rating-star:focus-visible {
   font-size: 12px;
   font-weight: 600;
   color: var(--foreground);
-}
-
-.gx-nav-tile-note {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--muted-foreground);
 }
 
 .gx-nav-content-static {
@@ -10209,18 +9941,6 @@ button.gx-rating-star:focus-visible {
 
 .gx-preview-card-link:hover {
   background: var(--hover);
-}
-
-.gx-preview-card-note {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--placeholder);
-}
-
-.gx-preview-card-note code {
-  color: var(--primary);
 }
 
 /* ---- chat: the block, on the fixed-row contract of ChatRoot ----
@@ -10423,13 +10143,6 @@ button.gx-rating-star:focus-visible {
 
 .gx-chat-field::placeholder {
   color: var(--placeholder);
-}
-
-.gx-chat-hint {
-  padding-left: 2px;
-  color: var(--muted-foreground);
-  font-family: var(--font-sans);
-  font-size: 11px;
 }
 
 /* ---- bubble: mirrors components/src/bubble.tsx ----
@@ -10867,14 +10580,6 @@ button.gx-rating-star:focus-visible {
   font-size: 24px;
   font-weight: 650;
   letter-spacing: -0.01em;
-}
-
-.gx-gradient-copy {
-  position: relative;
-  margin: 0;
-  color: var(--primary-foreground);
-  font-size: 13px;
-  opacity: 0.85;
 }
 
 /* ---- gradient text: a per-glyph ramp painted inline. ---- */
@@ -11731,18 +11436,6 @@ button.gx-rating-star:focus-visible {
   top: -30%;
 }
 
-.gx-imagezoom-readout {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  margin: 0;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--overlay);
-  color: var(--foreground);
-  font-size: 11px;
-}
-
 /* ---- page transition: a clipped region swapping views. ---- */
 .gx-pagetransition {
   display: flex;
@@ -12122,8 +11815,7 @@ button.gx-rating-star:focus-visible {
   outline-offset: 1px;
 }
 
-.gx-crop-readout,
-.gx-crop-hint {
+.gx-crop-readout {
   margin: 0;
   font-size: 11px;
   color: var(--muted-foreground);
@@ -12442,10 +12134,8 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-codeedit-meta,
-.gx-codeedit-hint,
 .gx-diff-meta,
 .gx-md-status,
-.gx-md-hint,
 .gx-find-status {
   margin: 0;
   font-size: 11px;
@@ -12735,14 +12425,8 @@ button.gx-rating-star:focus-visible {
   color: var(--muted-foreground);
 }
 
-.gx-player-hint {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-/* ---- the shared drawing frame: a column with a readout and a hint. Every
-   lane's browser preview mounts inside it. ---- */
+/* ---- the shared drawing frame: a column with a readout. Every lane's browser
+   preview mounts inside it. ---- */
 .gx-demo-frame {
   display: flex;
   flex-direction: column;
@@ -12755,12 +12439,6 @@ button.gx-rating-star:focus-visible {
 .gx-demo-readout {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.gx-demo-hint {
-  margin: 0;
   font-size: 11px;
   color: var(--muted-foreground);
 }
@@ -13503,12 +13181,6 @@ button.gx-rating-star:focus-visible {
   margin-left: auto;
 }
 
-.gx-props-note {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
 /* ---- data: the statistic card. The card's own recipe is
    `flex flex-col gap-1 rounded-lg border border-input bg-card px-3 py-2`, so
    the drawing takes the `border` role (the compiler's shadcn remap), the `lg`
@@ -14078,17 +13750,6 @@ button.gx-rating-star:focus-visible {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: linear-gradient(135deg, var(--accent), var(--muted));
-}
-
-.gx-aspect-note,
-.gx-item-note,
-.gx-ig-note,
-.gx-hovercard-note {
-  margin: 0;
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--muted-foreground);
 }
 
 /* ---- item: mirrors components/src/item.tsx's ITEM_* recipes ---- */

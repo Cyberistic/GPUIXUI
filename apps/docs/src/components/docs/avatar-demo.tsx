@@ -184,11 +184,6 @@ export function AvatarWorkflowBody() {
           {notice}
         </p>
       )}
-      <p className="gx-avatar-foot">
-        The panel, the filter and the invite are the preview&apos;s composition;
-        the shipped <code>Avatar</code> draws one face. A face keys on its name,
-        so a second Ada would be one face drawn twice.
-      </p>
     </div>
   );
 }
@@ -249,12 +244,6 @@ export function AvatarStatesBody() {
           <span className="gx-avatar-state-label">initials</span>
         </span>
       </Run>
-
-      <p className="gx-avatar-foot">
-        A dot is colour-only, so every presence state is printed beside its
-        face. The fallback runs are the names the component&apos;s own table
-        uses, including the placeholder a name with no letter gets.
-      </p>
     </div>
   );
 }

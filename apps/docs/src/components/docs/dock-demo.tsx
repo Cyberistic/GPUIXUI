@@ -92,10 +92,6 @@ export const DockPreview = () => {
             <span>size=</span>
             {`{${width}}`}
           </p>
-          <p className="gx-dock-hint">
-            Drag the divider, or focus it and press ← →; Home and End take the
-            bounds.
-          </p>
         </div>
       </div>
       <div

@@ -218,10 +218,6 @@ export function SortFrame({ order, rows, onSort }: SortFrameProps) {
         </tbody>
       </table>
       <p className="gx-trule-readout">{sortReadout(order)}</p>
-      <p className="gx-trule-hint">
-        Press a header to sort by its column; pressing the sorted column flips
-        it. Shift-press adds a tie-break — each glyph carries its place.
-      </p>
     </div>
   );
 }
@@ -324,11 +320,6 @@ export function SelectionFrame({
       </table>
       <p className="gx-trule-readout">
         {selectionReadout(selection, rows.length)}
-      </p>
-      <p className="gx-trule-hint">
-        Press a row to choose it, Shift-press to extend from the last press, or
-        ⌘/Ctrl-press to toggle one. The native grid keeps these choices by
-        record, so a re-sort never moves them onto another row.
       </p>
     </div>
   );

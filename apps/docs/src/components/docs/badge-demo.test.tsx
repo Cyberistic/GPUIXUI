@@ -60,15 +60,9 @@ describe("the deployments panel preview", () => {
 
   it("opens on every row, with the eager-pill control off", () => {
     expect(workflow).toContain(">All</button>");
-    expect(workflow).toContain("Press a row, or the pill inside it");
     expect(workflow).toContain('type="checkbox"');
     expect(workflow).not.toContain('data-eager=""');
     expect(workflow).not.toContain("data-selected");
-  });
-
-  it("says the panel is composition, not a component", () => {
-    expect(workflow).toContain("the preview&#x27;s");
-    expect(workflow).toContain("<code>Badge</code> draws one pill");
   });
 });
 

@@ -124,9 +124,6 @@ export const FormWorkflow = () => {
         }}
       >
         <p className="gx-form-title">Create account</p>
-        <p className="gx-form-lede">
-          Two fields, one schema, and a save the caller owns.
-        </p>
         <PreviewField
           hint="We never share it."
           id="gx-form-workflow-email"
@@ -163,10 +160,6 @@ export const FormWorkflow = () => {
           attempts={attempts} pending={pending ? "yes" : "no"} messages=
           {messages.length}
         </p>
-        <p className="gx-form-note">
-          Enter submits. A failed submit turns the messages on, and they follow
-          the draft from then on — nothing is reported before the first submit.
-        </p>
       </form>
     </div>
   );
@@ -182,7 +175,7 @@ export const FormStates = () => {
   return (
     <div className="gx-form-states">
       <div className="gx-form-state">
-        <p className="gx-form-state-label">Before a submit — no messages</p>
+        <p className="gx-form-state-label">Before a submit</p>
         <div className="gx-form-state-body">
           <PreviewField
             hint="We never share it."
@@ -201,7 +194,7 @@ export const FormStates = () => {
         </div>
       </div>
       <div className="gx-form-state">
-        <p className="gx-form-state-label">A failed submit — both fields</p>
+        <p className="gx-form-state-label">A failed submit</p>
         <div className="gx-form-state-body">
           <PreviewField
             hint="We never share it."
@@ -222,9 +215,7 @@ export const FormStates = () => {
         </div>
       </div>
       <div className="gx-form-state">
-        <p className="gx-form-state-label">
-          One field fixed — one message left
-        </p>
+        <p className="gx-form-state-label">One field fixed</p>
         <div className="gx-form-state-body">
           <PreviewField
             hint="We never share it."
@@ -244,7 +235,7 @@ export const FormStates = () => {
         </div>
       </div>
       <div className="gx-form-state">
-        <p className="gx-form-state-label">Pending — one submit at a time</p>
+        <p className="gx-form-state-label">Pending</p>
         <div className="gx-form-state-body">
           <PreviewField
             hint="We never share it."

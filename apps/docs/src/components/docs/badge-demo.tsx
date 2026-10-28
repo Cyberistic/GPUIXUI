@@ -202,9 +202,7 @@ export function BadgeWorkflowBody() {
       </label>
 
       <p className="gx-badge-status" role="status">
-        {route === ""
-          ? "Press a row, or the pill inside it, and watch which handler runs."
-          : route}
+        {route}
       </p>
       {chosen === undefined ? null : (
         <p className="gx-badge-selected">
@@ -212,12 +210,6 @@ export function BadgeWorkflowBody() {
           {chosen.branch}
         </p>
       )}
-
-      <p className="gx-badge-foot">
-        The panel, its filter and the eager-pill control are the preview&apos;s
-        composition; the shipped <code>Badge</code> draws one pill. Its fill is
-        never the only signal, so every state is printed as a word.
-      </p>
     </div>
   );
 }
@@ -269,12 +261,6 @@ export function BadgeStatesBody() {
           </span>
         ))}
       </Run>
-
-      <p className="gx-badge-foot">
-        Every state is printed as a word beside its tint. The outline pill is
-        the one variant with no fill, so its edge carries it on every wash a row
-        wears.
-      </p>
     </div>
   );
 }

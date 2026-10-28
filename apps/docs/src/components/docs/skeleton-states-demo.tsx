@@ -22,7 +22,7 @@ export const SkeletonStates = () => (
       </div>
     </div>
     <p className="gx-demo-label">
-      Last line: <code>{"animate={false}"}</code> — one frame, no timer.
+      Last line · <code>{"animate={false}"}</code>
     </p>
   </div>
 );
@@ -54,9 +54,7 @@ export const SkeletonList = () => (
         </div>
       ))}
     </div>
-    <p className="gx-demo-label">
-      Rows are composition: a circle, two lines and the caller's own gap.
-    </p>
+    <p className="gx-demo-label">Rows</p>
   </div>
 );
 

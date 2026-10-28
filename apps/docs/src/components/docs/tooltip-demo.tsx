@@ -134,11 +134,11 @@ const TipStates = () => {
     <div className="gx-tooltip-demo gx-tooltip-states">
       <div className="gx-tip-anchor">
         <span className="gx-btn gx-btn-ghost">First run</span>
-        <span className="gx-tip">Hover anything with a label.</span>
+        <span className="gx-tip">Search the workspace</span>
       </div>
       <div className="gx-tip-anchor">
         <button
-          aria-description="Held open by the caller."
+          aria-description="Pinned by the app."
           aria-expanded={held}
           className="gx-btn gx-btn-outline"
           onClick={() => setHeld((current) => !current)}
@@ -148,7 +148,7 @@ const TipStates = () => {
         </button>
         {held ? (
           <span className="gx-tip" role="tooltip">
-            Held open by the caller.
+            Pinned by the app.
           </span>
         ) : null}
       </div>
@@ -188,14 +188,14 @@ export const Hints = () => {
   return (
     <>
       {/* defaultOpen holds the first-run hint open with no interaction. */}
-      <Tooltip content="Hover anything with a label." defaultOpen>
+      <Tooltip content="Search the workspace" defaultOpen>
         <Button variant="ghost">First run</Button>
       </Tooltip>
 
       {/* A controlled tip paints only while open is true; the trigger still
           reports every request through onOpenChange. */}
       <Tooltip
-        content="Held open by the caller."
+        content="Pinned by the app."
         onOpenChange={setHeld}
         open={held}
       >
@@ -209,14 +209,14 @@ export const Hints = () => {
 
 export const TooltipDemo = () => (
   <div className="gx-demo gx-demo-column gx-tooltip-scene">
-    <p className="gx-demo-label">Hover the trigger — or press it</p>
+    <p className="gx-demo-label">Hover</p>
     <ClockedTip />
   </div>
 );
 
 export const TooltipStates = () => (
   <div className="gx-demo gx-demo-column gx-tooltip-scene">
-    <p className="gx-demo-label">defaultOpen and a controlled tip</p>
+    <p className="gx-demo-label">Controlled</p>
     <TipStates />
   </div>
 );

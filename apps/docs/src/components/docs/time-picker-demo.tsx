@@ -201,10 +201,6 @@ const TimePickerWorkflow = () => {
           >
             Save window
           </button>
-          <span className="gx-time-note">
-            ArrowUp/Down move 15 minutes · typing clamps · blur pads · Clear
-            reports null
-          </span>
         </div>
       </div>
     </div>
@@ -222,9 +218,7 @@ const TimePickerStates = () => {
   return (
     <div className="gx-demo gx-time gx-time-states">
       <div className="gx-time-state">
-        <span className="gx-time-state-label">
-          Empty — the HH/MM hints, and no clear control
-        </span>
+        <span className="gx-time-state-label">Empty</span>
         <PreviewTimeField
           label="Empty time"
           onChange={setEmpty}
@@ -235,9 +229,7 @@ const TimePickerStates = () => {
         </span>
       </div>
       <div className="gx-time-state">
-        <span className="gx-time-state-label">
-          Set — Clear is a 24px target that returns the focus
-        </span>
+        <span className="gx-time-state-label">Set</span>
         <PreviewTimeField
           clearable
           label="Set time"
@@ -249,9 +241,7 @@ const TimePickerStates = () => {
         </span>
       </div>
       <div className="gx-time-state">
-        <span className="gx-time-state-label">
-          Quarter-hour step — arrows only; typed minutes still take 00..59
-        </span>
+        <span className="gx-time-state-label">Quarter-hour step</span>
         <PreviewTimeField
           label="Quarter-hour time"
           minuteStep={15}
@@ -263,9 +253,7 @@ const TimePickerStates = () => {
         </span>
       </div>
       <div className="gx-time-state">
-        <span className="gx-time-state-label">
-          Midnight — one clock carries and wraps
-        </span>
+        <span className="gx-time-state-label">Midnight</span>
         <PreviewTimeField
           label="Midnight time"
           onChange={setMidnight}
@@ -276,9 +264,7 @@ const TimePickerStates = () => {
         </span>
       </div>
       <div className="gx-time-state">
-        <span className="gx-time-state-label">
-          Disabled — read-only, dimmed, out of the tab order, and no clear
-        </span>
+        <span className="gx-time-state-label">Disabled</span>
         <PreviewTimeField
           clearable
           disabled
@@ -286,9 +272,6 @@ const TimePickerStates = () => {
           onChange={() => undefined}
           value={archived}
         />
-        <span className="gx-time-state-note">
-          The value stays painted; no edit path exists.
-        </span>
       </div>
     </div>
   );

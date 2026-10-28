@@ -70,7 +70,7 @@ describe("the Code editor preview", () => {
     expect(markup).toContain(`>${lines}<`); // the last gutter number
     expect(markup).toContain('aria-label="Code editor"');
     expect(markup).toContain('class="gx-tok-keyword"');
-    expect(markup).toContain("Tab inserts two spaces at the end");
+    expect(markup).toContain("Read only");
   });
 });
 

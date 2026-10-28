@@ -230,10 +230,6 @@ export function PropertyPanelFrame({
         >
           {textField(record, "name", DEFAULTS.name)}
         </div>
-        <p className="gx-props-note">
-          The box reads the same record: width, visibility and alignment are the
-          panel&apos;s values, not a second copy.
-        </p>
       </div>
     </div>
   );

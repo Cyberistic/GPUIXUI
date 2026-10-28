@@ -170,7 +170,7 @@ export function MessageDemo() {
         </div>
         {copied ? (
           <span className="gx-message-copied" role="status">
-            Copied — the consumer owns the clipboard path.
+            Copied
           </span>
         ) : null}
       </Row>
@@ -190,13 +190,6 @@ export function MessageDemo() {
           Streaming…
         </span>
       </Row>
-
-      <p className="gx-message-note">
-        A user message is a soft bubble on the right of its avatar; an
-        assistant&rsquo;s is plain prose. The action row renders nothing without
-        a handler, and Copy is the consumer&rsquo;s — the runtime has no
-        clipboard write.
-      </p>
     </div>
   );
 }

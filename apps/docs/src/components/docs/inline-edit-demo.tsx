@@ -132,9 +132,7 @@ export const InlineEditWorkflow = () => {
       {refused === "" ? null : (
         <span className="gx-inline-refusal">{refused}</span>
       )}
-      <span className="gx-inline-hint">
-        {`The component commits an empty name; this app refuses one. Committed: "${saved}".`}
-      </span>
+      <span className="gx-inline-hint">{`Committed: "${saved}"`}</span>
     </div>
   );
 };
@@ -152,7 +150,6 @@ export const InlineEditStates = () => {
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Empty value</span>
         <Display empty onStart={() => {}} value="" />
-        <span className="gx-inline-hint">The placeholder is muted text.</span>
       </div>
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Editing</span>
@@ -172,9 +169,6 @@ export const InlineEditStates = () => {
           onStart={() => {}}
           value="Design system"
         />
-        <span className="gx-inline-hint">
-          Out of the tab order; the display ignores activation.
-        </span>
       </div>
       <div className="gx-inline-tile">
         <span className="gx-demo-label">Controlled edit state</span>
@@ -201,12 +195,6 @@ export const InlineEditStates = () => {
         >
           Edit from the app
         </button>
-        <span className="gx-inline-hint">
-          {`The app owns `}
-          <code>editing</code>
-          {`; the control only reports `}
-          <code>onEditingChange</code>.
-        </span>
       </div>
     </div>
   );

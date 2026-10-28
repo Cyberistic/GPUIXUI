@@ -116,10 +116,6 @@ export const MarkdownEditorDemo = () => {
           </div>
         )}
       </div>
-      <p className="gx-md-hint">
-        The preview is the browser's rendering of the source; the shipped editor
-        previews through the runtime's own markdown host.
-      </p>
     </div>
   );
 };

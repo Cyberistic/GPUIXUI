@@ -21,20 +21,15 @@ export const LabelDemo = () => (
             *
           </span>
         </span>
-        <span className="gx-label-desc">A required marker, visual only.</span>
+        <span className="gx-label-desc">
+          Shown to everyone in the workspace.
+        </span>
       </div>
       <div className="gx-label-block" data-invalid>
         <span className="gx-label-name">Workspace name</span>
-        <span className="gx-label-desc">
-          Invalid paints the name destructive.
-        </span>
+        <span className="gx-label-desc">Use 3–40 characters.</span>
       </div>
     </div>
-    <p className="gx-label-note">
-      The label is not associated with a control by reference — the control
-      carries its own <code>label</code> prop through{" "}
-      <code>labelledBy(name)</code>.
-    </p>
   </div>
 );
 

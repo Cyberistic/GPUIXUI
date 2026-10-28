@@ -178,10 +178,6 @@ export const MediaPlayerDemo = () => {
           {timeLabel(playhead, PLAYER_DURATION)}
         </span>
       </div>
-      <p className="gx-player-hint">
-        The buttons and Home/End/←/→ are the transport the component owns; the
-        frames and the peaks are what a caller hands it.
-      </p>
     </div>
   );
 };

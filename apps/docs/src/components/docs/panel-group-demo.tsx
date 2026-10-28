@@ -307,10 +307,6 @@ export const PanelGroupDemo = () => {
     <div className="gx-group-demo">
       <PanelGroupFrame layout={layout} onChange={setLayout} />
       <p className="gx-group-readout">{shareLabel(layout)}</p>
-      <p className="gx-group-hint">
-        Drag a divider, or focus it and press ← →; Home and End take the pair.
-        Press the rail's header to collapse it.
-      </p>
     </div>
   );
 };

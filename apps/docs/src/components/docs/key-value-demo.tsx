@@ -111,12 +111,6 @@ export function KeyValueDemo() {
         ))}
       </div>
       <p className="gx-demo-readout">{trackReadout(choice)}</p>
-      <p className="gx-demo-hint">
-        The label column is a fixed track, not a share: every value cell starts
-        at the same x, so the list scans down two columns. The shipped{" "}
-        <code>KeyValue</code> paints the same 12/16 rows at the theme&apos;s
-        spacing; only the paint here is the browser&apos;s.
-      </p>
     </div>
   );
 }

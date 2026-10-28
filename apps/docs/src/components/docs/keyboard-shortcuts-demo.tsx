@@ -86,10 +86,6 @@ export function KeyboardShortcutsDemo() {
         <Group heading="File" rows={file} />
         <Group heading="View" rows={view} />
       </div>
-      <p className="gx-shortcuts-note">
-        Display-only: a row documents a chord, it does not register a handler.
-        Rows are separated by 1px elements rather than borders.
-      </p>
     </div>
   );
 }

@@ -101,7 +101,7 @@ export const OTPFieldDemo = () => {
         </div>
         <span className="gx-input-help">
           {normalizeOtp(code, CODE_LENGTH).length === CODE_LENGTH
-            ? "Complete — a verifier can run."
+            ? "Complete"
             : "Six digits from your authenticator."}
         </span>
       </div>

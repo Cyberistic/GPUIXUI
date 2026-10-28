@@ -90,11 +90,6 @@ export function MentionInputDemo() {
           {query === undefined ? "no open token" : `query: "${query.query}"`}
         </p>
       </div>
-      <p className="gx-mention-note">
-        The query comes from the text, not the caret; a space typed while the
-        list is open is consumed by the runtime. Press a row to insert{" "}
-        <code>@name </code>.
-      </p>
     </div>
   );
 }

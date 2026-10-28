@@ -147,13 +147,13 @@ describe("the DockLayout preview", () => {
       return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
     };
 
-    expect(block(".gx-layout")).toContain("var(--background)");
+    expect(block(".gx-layout-frame")).toContain("var(--background)");
     expect(block(".gx-layout-tabs")).toContain("--control-height-sm");
     expect(block('.gx-layout-tab[aria-selected="true"]')).toContain(
       "var(--accent)",
     );
     expect(block(".gx-layout-tab:focus-visible")).toContain("var(--ring)");
-    expect(block(".gx-layout-row")).toContain("--row-height");
+    expect(block(".gx-layout-fact")).toContain("--row-height");
     expect(block(".gx-layout-handle")).toContain("cursor: col-resize");
     expect(block(".gx-layout-handle:focus-visible")).toContain("var(--ring)");
   });

@@ -197,9 +197,6 @@ export function LogViewerDemo() {
         >
           Append a line
         </button>
-        <span className="gx-demo-hint">
-          The caller owns the lines; follow mode anchors the list on the tail.
-        </span>
       </div>
     </div>
   );

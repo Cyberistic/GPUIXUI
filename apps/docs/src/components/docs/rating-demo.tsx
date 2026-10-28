@@ -89,8 +89,7 @@ export const RatingDemo = () => {
           ))}
         </div>
         <span className="gx-rating-readout">
-          {value === 0 ? "Not rated" : `${value} of ${MAX}`} — press a star's
-          left half for a half
+          {value === 0 ? "Not rated" : `${value} of ${MAX}`}
         </span>
         <div className="gx-demo-row">
           <button
@@ -104,9 +103,7 @@ export const RatingDemo = () => {
       </div>
       <div className="gx-rating-block">
         <Stars value={0} />
-        <span className="gx-rating-readout">
-          Read only — Delete or Backspace clears a rating
-        </span>
+        <span className="gx-rating-readout">Read only</span>
       </div>
     </div>
   );

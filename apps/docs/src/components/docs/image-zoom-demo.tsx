@@ -14,7 +14,6 @@ export function ImageZoomDemo() {
   return (
     <div className="gx-imagezoom">
       <img alt="A chart of the harbour with four approaches" src={chart} />
-      <p className="gx-imagezoom-readout">Hover to magnify</p>
     </div>
   );
 }

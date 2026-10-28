@@ -233,13 +233,6 @@ export function ChartDemo() {
           lines
         </button>
       </div>
-      <p className="gx-trule-hint">
-        Two series over four labelled quarters. The ceiling is the package’s
-        rounded scale ({chartCeiling}), both readings sit on the same category
-        centres, and a zero paints no bar while keeping its slot. The real
-        charts paint one tinted layer per series, which is why the swatches are
-        the theme’s categorical order.
-      </p>
     </div>
   );
 }

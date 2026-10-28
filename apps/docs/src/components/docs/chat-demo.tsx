@@ -296,9 +296,6 @@ export function ChatDemo() {
             </button>
           )}
         </div>
-        <span className="gx-chat-hint">
-          Enter sends · Shift+Enter adds a line
-        </span>
       </div>
     </div>
   );

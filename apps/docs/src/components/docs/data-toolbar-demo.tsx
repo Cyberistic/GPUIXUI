@@ -207,13 +207,6 @@ export function DataToolbarDemo() {
         typed “{typed}” · reported “{reported}” · {rows.length} of{" "}
         {QUEUE_ROWS.length} rows · wait {wait} ms
       </p>
-      <p className="gx-demo-hint">
-        The toolbar owns no query: it hands the caller the value once the wait
-        ends, so the rows narrow on a pause rather than on every keystroke. The
-        field&apos;s name is <code>{searchLabel("")}</code> when the caller
-        gives none, and a wait the timer cannot read is{" "}
-        {DEFAULT_SEARCH_DEBOUNCE_MS} ms.
-      </p>
     </div>
   );
 }

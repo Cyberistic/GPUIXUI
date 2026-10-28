@@ -151,18 +151,12 @@ const PaginationWorkflow = (): ReactNode => {
           />
         </div>
       </div>
-      <p className="gx-pagination-hint">
-        The footer and the rows read the same page. Press Next to the last page:
-        it holds six hidden pages, so the crop is <code>1 … 6 7 8 9 10</code>{" "}
-        rather than a rail that grows at the edge.
-      </p>
     </div>
   );
 };
 
 interface TileProps {
   readonly title: string;
-  readonly note: string;
   readonly page: number;
   readonly pageCount: number;
   readonly siblingCount?: number;
@@ -172,7 +166,6 @@ interface TileProps {
 /** One tile: its own page state, so the reader can page the crop it shows. */
 const PaginationTile = ({
   title,
-  note,
   page,
   pageCount,
   siblingCount,
@@ -197,7 +190,6 @@ const PaginationTile = ({
           />
         )}
       </div>
-      <p className="gx-pagination-tile-note">{note}</p>
     </div>
   );
 };
@@ -206,62 +198,25 @@ const PaginationTile = ({
 const PaginationStates = (): ReactNode => (
   <div className="gx-demo-pagination">
     <div className="gx-pagination-tiles">
+      <PaginationTile page={1} pageCount={10} title="First page of ten" />
+      <PaginationTile page={5} pageCount={10} title="A page in the middle" />
+      <PaginationTile page={10} pageCount={10} title="The last page" />
+      <PaginationTile page={8} pageCount={8} title="A gap of one" />
       <PaginationTile
-        note="A list that fits (siblings + 5 pages or fewer) is drawn whole."
-        page={1}
-        pageCount={10}
-        title="First page of ten"
-      />
-      <PaginationTile
-        note="Two gaps become two ellipses; the crop keeps its width."
-        page={5}
-        pageCount={10}
-        title="A page in the middle"
-      />
-      <PaginationTile
-        note="The same width at the end — Next is disabled, not hidden."
-        page={10}
-        pageCount={10}
-        title="The last page"
-      />
-      <PaginationTile
-        note="One hidden page is the number itself, not an ellipsis."
-        page={8}
-        pageCount={8}
-        title="A gap of one"
-      />
-      <PaginationTile
-        note="siblingCount={2} widens the crop around the current page."
         page={3}
         pageCount={20}
         siblingCount={2}
         title="Wider siblings"
       />
       <PaginationTile
-        note="showEdges={false} drops the first and last page entirely."
         page={3}
         pageCount={20}
         showEdges={false}
         title="No edges"
       />
-      <PaginationTile
-        note="A stored page past the end paints the last page, not a blank rail."
-        page={99}
-        pageCount={10}
-        title="page={99} on ten pages"
-      />
-      <PaginationTile
-        note="No pages is no control: the root returns nothing."
-        page={1}
-        pageCount={0}
-        title="pageCount={0}"
-      />
+      <PaginationTile page={99} pageCount={10} title="page={99} on ten pages" />
+      <PaginationTile page={1} pageCount={0} title="pageCount={0}" />
     </div>
-    <p className="gx-pagination-hint">
-      Every tile clamps and crops with the component&apos;s own rule — the
-      ellipsis only ever hides two or more pages, which is why a gap of one
-      prints the number.
-    </p>
   </div>
 );
 
