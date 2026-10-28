@@ -42,6 +42,11 @@ export interface PanelGroupProps {
   readonly onLayoutChange?: (layout: PanelLayout) => void;
   /** Renders one panel's content by its id. */
   readonly renderPanel: (id: string) => ReactNode;
+  /**
+   * The divider's accessible name for the gap at `index`. Omitted, it is
+   * `Resize <left panel>`; `ResizableHandle` passes its own label through here.
+   */
+  readonly dividerLabel?: (index: number) => string | undefined;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   /** Stable locator for automation. */
@@ -63,6 +68,7 @@ export const PanelGroup = ({
   layout,
   onLayoutChange,
   renderPanel,
+  dividerLabel,
   className,
   testId,
 }: PanelGroupProps): ReactElement => {
@@ -136,7 +142,7 @@ export const PanelGroup = ({
               <Divider
                 orientation={orientation}
                 valueText={`${Math.round(panel.size * 100)}%`}
-                label={`Resize ${panel.label}`}
+                label={dividerLabel?.(index) ?? `Resize ${panel.label}`}
                 testId={
                   testId === undefined
                     ? undefined
