@@ -70,13 +70,23 @@ import {
   type MessageScrollerState,
 } from "./message-scroller/store.js";
 
-/** The rules every part reads; throws outside a {@link MessageScroller}. */
+/**
+ * The rules every part reads; throws outside a {@link MessageScroller}.
+ *
+ * The state is deliberately **not** here. Every row consumes this value, so a
+ * scroller whose value carried the state re-rendered every row on every write:
+ * a row's own arrival wrote the store, which rebuilt the value, which repainted
+ * all `n` rows — `n` arrivals cost `n²` repaints, measured at 3.1s for forty
+ * rows. `pinned` is a ref read at event time, and the two parts that paint state
+ * read it through {@link useMessageScrollerState}.
+ */
 interface MessageScrollerContextValue {
-  readonly state: MessageScrollerState;
   readonly threshold: number;
   readonly peek: number;
   /** The first layout has happened; a row mounting now is an arrival. */
   readonly ready: { current: boolean };
+  /** Whether the viewport follows the tail, read at event and layout time. */
+  readonly pinned: { current: boolean };
   readonly observe: (distanceFromEnd: number) => void;
   readonly arrived: () => void;
   readonly jump: () => void;
@@ -90,9 +100,25 @@ const MessageScrollerContext = createContext<
   MessageScrollerContextValue | undefined
 >(undefined);
 
+/** The state, for the two parts that paint it. */
+const MessageScrollerStateContext = createContext<
+  MessageScrollerState | undefined
+>(undefined);
+
 /** The scroller a part belongs to. Throws when there is none. */
 const useMessageScroller = (): MessageScrollerContextValue => {
   const value = useContext(MessageScrollerContext);
+  if (value === undefined) {
+    throw new Error(
+      "MessageScroller parts must be used inside MessageScroller",
+    );
+  }
+  return value;
+};
+
+/** The scroller's state, for a part that paints it. Throws when there is none. */
+const useMessageScrollerState = (): MessageScrollerState => {
+  const value = useContext(MessageScrollerStateContext);
   if (value === undefined) {
     throw new Error(
       "MessageScroller parts must be used inside MessageScroller",
@@ -147,6 +173,8 @@ export const MessageScroller = ({
   const threshold = thresholdProp ?? theme.spacing["2xl"];
   const peek = previousItemPeek ?? theme.spacing["3xl"];
   const ready = useRef(false);
+  const pinned = useRef(state.pinned);
+  pinned.current = state.pinned;
   const scrollToEnd = useRef<() => void>(() => undefined);
   const alignTo = useRef<(instance: PublicInstance) => void>(() => undefined);
   assertParts(messageScrollerRoot, children);
@@ -189,33 +217,35 @@ export const MessageScroller = ({
 
   const context = useMemo<MessageScrollerContextValue>(
     () => ({
-      state,
       threshold,
       peek,
       ready,
+      pinned,
       observe,
       arrived,
       jump,
       scrollToEnd,
       alignTo,
     }),
-    [state, threshold, peek, observe, arrived, jump],
+    [threshold, peek, observe, arrived, jump],
   );
 
   return (
     <MessageScrollerContext.Provider value={context}>
-      <div
-        {...rest}
-        role="group"
-        aria-label={label}
-        aria-busy={state.streaming}
-        style={mergeStyles(
-          recipeStyle(cn(MESSAGE_SCROLLER_ROOT, className), theme),
-          style,
-        )}
-      >
-        {children}
-      </div>
+      <MessageScrollerStateContext.Provider value={state}>
+        <div
+          {...rest}
+          role="group"
+          aria-label={label}
+          aria-busy={state.streaming}
+          style={mergeStyles(
+            recipeStyle(cn(MESSAGE_SCROLLER_ROOT, className), theme),
+            style,
+          )}
+        >
+          {children}
+        </div>
+      </MessageScrollerStateContext.Provider>
     </MessageScrollerContext.Provider>
   );
 };
@@ -284,13 +314,13 @@ export const MessageScrollerViewport = ({
   useEffect(() => {
     if (scroller.ready.current) return;
     scroller.ready.current = true;
-    if (scroller.state.pinned) scrollToEnd();
+    if (scroller.pinned.current) scrollToEnd();
   }, []);
 
   // A row appended or a streamed reply grown: while pinned, the tail stays in
   // view. Unpinned, the position is never touched.
   useLayoutEffect(() => {
-    if (scroller.state.pinned) scrollToEnd();
+    if (scroller.pinned.current) scrollToEnd();
   });
 
   const align = (instance: PublicInstance): void => {
@@ -367,7 +397,7 @@ export const MessageScrollerViewport = ({
         // reports scroll-safe; the initial transcript is not an arrival.
         if (!scroller.ready.current) {
           scroller.ready.current = true;
-          if (scroller.state.pinned) scrollToEnd();
+          if (scroller.pinned.current) scrollToEnd();
         }
         onLayout?.(event);
       }}
@@ -379,7 +409,7 @@ export const MessageScrollerViewport = ({
         onLayout={() => {
           // A streamed reply that grows through its own state changes nothing
           // React renders, but the sentinel moves. While pinned, follow it.
-          if (scroller.state.pinned && scroller.ready.current) scrollToEnd();
+          if (scroller.pinned.current && scroller.ready.current) scrollToEnd();
         }}
         style={{ height: 1, flexShrink: 0 }}
       />
@@ -402,12 +432,12 @@ export const MessageScrollerContent = ({
   ...rest
 }: MessageScrollerContentProps) => {
   const theme = useTheme();
-  const scroller = useMessageScroller();
+  const state = useMessageScrollerState();
   assertParts(messageScrollerContent, children);
   return (
     <div
       {...rest}
-      aria-busy={scroller.state.streaming}
+      aria-busy={state.streaming}
       style={mergeStyles(
         mergeStyles(
           recipeStyle(cn(MESSAGE_SCROLLER_CONTENT, className), theme),
@@ -465,7 +495,11 @@ export const MessageScrollerItem = ({
       onLayout={(event) => {
         if (first.current) {
           first.current = false;
-          if (scrollAnchor && scroller.ready.current && scroller.state.pinned) {
+          if (
+            scrollAnchor &&
+            scroller.ready.current &&
+            scroller.pinned.current
+          ) {
             const instance = itemRef.current;
             if (instance !== null) scroller.alignTo.current(instance);
           }
@@ -510,11 +544,12 @@ export const MessageScrollerJumpToLatest = ({
 }: MessageScrollerJumpToLatestProps) => {
   const theme = useTheme();
   const scroller = useMessageScroller();
-  const active = !scroller.state.pinned;
+  const state = useMessageScrollerState();
+  const active = !state.pinned;
   const text =
-    scroller.state.unread === 0
+    state.unread === 0
       ? label
-      : `${scroller.state.unread} new ${scroller.state.unread === 1 ? "message" : "messages"}`;
+      : `${state.unread} new ${state.unread === 1 ? "message" : "messages"}`;
   const railHeight = controlHeight(theme, "sm") + theme.spacing.sm;
 
   return (

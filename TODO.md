@@ -24089,7 +24089,7 @@ Gates: docs 221 files / 2 226 tests, `check` clean.
 
 ## Open: the chat transcript's mount cost
 
-`[ ]` `packages/components`: **a row mounted inside `MessageScrollerContent` costs
+`[~]` `packages/components`: **a row mounted inside `MessageScrollerContent` costs
 about 40 ms, and every store write rebuilds the value every row consumes.** Measured
 with the native renderer: forty rows inside `ChatMessages` take **3.1 s** while the
 same forty rows in a plain `div` take **264 ms**; thirty rows mount in ~1.4 s and
@@ -24100,9 +24100,14 @@ children), and `MessageScrollerContext` carries `state`, so each per-row `arrive
 write re-renders **every** row — `n` arrivals cost `n²` row repaints. The three
 transcript-layout cases in `chat.test.tsx` now carry a 30 s deadline
 (`LAYOUT_CASE_TIMEOUT_MS`) instead of failing at the default 5 s on a busy machine.
-Fix: split the scroller's command context from its state (items read `pinned`
-through a ref, the jump control and `aria-busy` through state), and/or virtualise
-the transcript once the runtime offers a compound virtual list.
+**The n² half is fixed (2026-10-28).** `MessageScrollerContext` no longer carries
+the state: `pinned` is a ref read at event time, and only the two parts that paint
+state consume it (`useMessageScrollerState`). Measured in the native renderer, the
+same bench as above: 40 rows **3 114 → 1 111 ms** mount, **75 ms** rerender; 80
+rows **6 265 → 1 972 ms**, **151 ms**. The two chat suites fell from 43s to 15s, so
+the layout cases no longer sit near their deadline. **Still open:** the transcript
+paints every row it is given — virtualise it once the runtime offers a compound
+virtual list (or `<virtual-list>` grows one).
 
 ## Toasts: the peek is a tween (2026-10-28)
 
