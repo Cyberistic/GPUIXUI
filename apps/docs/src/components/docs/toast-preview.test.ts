@@ -89,3 +89,31 @@ describe("the toast preview", () => {
     expect(css).toContain("animation: none");
   });
 });
+
+describe("a card's slot", () => {
+  it("carries the measured height, so the peek is a tween and not a cut", () => {
+    // Guarded bug: a whole card left its slot at `height: auto`, and CSS cannot
+    // interpolate `auto` into the 12px peek the card drops to when the next
+    // toast arrives — measured in Chrome, the toast a reader was reading was
+    // 78px tall at t+0 and 12px at t+30. The card measures itself and the slot
+    // gets that number.
+    const source = demos();
+
+    expect(source).toContain("new ResizeObserver(measure)");
+    expect(source).toContain(
+      "slot.height ?? (natural === 0 ? undefined : natural)",
+    );
+    expect(source).toContain("leaving || !born ? 0 : settled");
+  });
+
+  it("grows into its box and closes to nothing", () => {
+    // The native viewport animates `height: 0 → measured` on arrival and
+    // `measured → 0` on leave; a browser drawing that painted both in one frame
+    // left the stack jumping by a card's height.
+    const source = demos();
+
+    expect(source).toContain("requestAnimationFrame(() => setBorn(true))");
+    // The slot is the thing that shrinks on the way out, and it must tween.
+    expect(styles()).toContain("height 260ms cubic-bezier(0.22, 1, 0.36, 1)");
+  });
+});
