@@ -21,6 +21,7 @@ import { Match } from "effect";
 import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import { accessibleName } from "@gpuixui/primitives/core";
+import { AutoHeight } from "./auto-height.js";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,9 @@ import {
 } from "./dialog.js";
 import type { PartChildren } from "./internal/parts.js";
 import { Button } from "./internal/button.js";
+import { useMoveTiming } from "./internal/presence.js";
 import { textOf } from "./internal/text.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The words a blank action label falls back to. */
 const DEFAULT_CONFIRM_LABEL = "Confirm";
@@ -87,7 +90,16 @@ export const ConfirmDialog = ({
     accessibleName(textOf(confirmLabel)) ?? DEFAULT_CONFIRM_LABEL;
   const cancelWord =
     accessibleName(textOf(cancelLabel)) ?? DEFAULT_CANCEL_LABEL;
+  const theme = useTheme();
   const cancel = useRef<PublicInstance | null>(null);
+  // The error slot is the caller's: the last body stays mounted for the
+  // collapse, so a retry does not empty it before its exit tween. The dialog's
+  // gap lives inside the slot, because a flex gap cannot grow with it.
+  const gap = theme.spacing["2xl"];
+  const hasBody = children !== undefined && children !== null;
+  const body = useRef(children);
+  if (hasBody) body.current = children;
+  const move = useMoveTiming("normal");
   const variant = Match.value(tone).pipe(
     Match.when("danger", () => "danger" as const),
     Match.orElse(() => "primary" as const),
@@ -101,12 +113,19 @@ export const ConfirmDialog = ({
         size="sm"
         showClose={false}
         initialFocus={() => cancel.current?.id ?? null}
+        style={{ gap: 0 }}
       >
-        <DialogHeader>
+        <DialogHeader style={{ marginBottom: gap }}>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {children}
+        <AutoHeight
+          open={hasBody}
+          testId="confirm-body"
+          timing={{ enter: move, exit: move }}
+        >
+          <div style={{ paddingBottom: gap }}>{body.current}</div>
+        </AutoHeight>
         <DialogFooter>
           <Button
             ref={cancel}

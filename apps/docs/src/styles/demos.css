@@ -781,6 +781,17 @@
   overflow: hidden;
 }
 
+/* The exit is the entry reversed: the surface travels its own span back past
+   the edge it owns and the veil fades, both over the library's `slow` level on
+   the exit curve. The surface stays mounted and is hidden when the run ends, so
+   the last frame is the closed window rather than a cut. */
+.gx-drawer-backdrop[data-open="false"] {
+  animation-name: gx-veil-out;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+
 /* A sheet arrives from outside the window: the native surface travels its own
    span on `left`/`top` (it has no `transform`), and the drawing does the same
    with `translate: 100%` of its own box. The content never reflows. */
@@ -850,6 +861,25 @@
   animation-name: gx-sheet-in-top;
 }
 
+.gx-drawer[data-open="false"] {
+  animation-name: gx-sheet-out-right;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+
+.gx-drawer[data-open="false"][data-side="left"] {
+  animation-name: gx-sheet-out-left;
+}
+
+.gx-drawer[data-open="false"][data-side="bottom"] {
+  animation-name: gx-sheet-out-bottom;
+}
+
+.gx-drawer[data-open="false"][data-side="top"] {
+  animation-name: gx-sheet-out-top;
+}
+
 @keyframes gx-sheet-in-right {
   from {
     translate: 100% 0;
@@ -871,6 +901,41 @@
 @keyframes gx-sheet-in-top {
   from {
     translate: 0 -100%;
+  }
+}
+
+@keyframes gx-veil-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes gx-sheet-out-right {
+  to {
+    translate: 100% 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes gx-sheet-out-left {
+  to {
+    translate: -100% 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes gx-sheet-out-bottom {
+  to {
+    translate: 0 100%;
+    visibility: hidden;
+  }
+}
+
+@keyframes gx-sheet-out-top {
+  to {
+    translate: 0 -100%;
+    visibility: hidden;
   }
 }
 
@@ -917,8 +982,19 @@
   .gx-drawer,
   .gx-drawer[data-side="left"],
   .gx-drawer[data-side="bottom"],
-  .gx-drawer[data-side="top"] {
+  .gx-drawer[data-side="top"],
+  .gx-drawer-backdrop[data-open="false"],
+  .gx-drawer[data-open="false"],
+  .gx-drawer[data-open="false"][data-side="left"],
+  .gx-drawer[data-open="false"][data-side="bottom"],
+  .gx-drawer[data-open="false"][data-side="top"] {
     animation: none;
+  }
+
+  /* With the run gone the closed frame is the settled one: hidden at once. */
+  .gx-drawer-backdrop[data-open="false"],
+  .gx-drawer[data-open="false"] {
+    visibility: hidden;
   }
 
   .gx-nav-chevron-mark {
@@ -1084,8 +1160,52 @@
   opacity: 1;
 }
 
+/* The block sits between the copy and the actions in every state, so the
+   copy's margin cannot collapse into the actions' while it is closed. */
+.gx-confirm .gx-dialog-desc {
+  margin-bottom: 0;
+}
+
 .gx-confirm-error {
-  margin-bottom: 16px;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  /* The toast's move: a box changing size between two resting states, on Base
+     UI's fast-out, slow-settle curve. The block keeps its height while closing
+     and is hidden only once the collapse has finished. */
+  transition:
+    grid-template-rows 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 260ms;
+}
+
+.gx-confirm-error[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+
+.gx-confirm-error-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The gap above the actions lives inside the clipped box, so a closed block
+   takes no room and the gap grows with the block. */
+.gx-confirm-error-body {
+  padding-bottom: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-confirm-error,
+  .gx-confirm-error[data-open="true"] {
+    transition: none;
+  }
 }
 
 .gx-confirm .gx-alert {
@@ -1337,6 +1457,12 @@
 .gx-menu-row[data-highlighted="true"] {
   background: var(--hover);
   border-left-color: var(--accent);
+}
+
+/* The command-menu drawing shares the menu row, whose emphasis bar belongs to
+   submenu-leading and checked rows. The palette's highlight is its wash alone. */
+.gx-palette .gx-menu-row {
+  border-left-width: 0;
 }
 
 .gx-menu-row:disabled {
@@ -3268,7 +3394,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  /* The row is the popup's seat for the field, not a list item: a long list
+     scrolls under it and must not squeeze the field it scrolls past. The gap
+     below keeps the first option off the separator. */
+  flex: none;
   height: var(--control-height-sm);
+  margin-bottom: 4px;
   padding: 0 8px;
   border-bottom: 1px solid var(--border);
   color: var(--muted-foreground);

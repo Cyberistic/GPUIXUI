@@ -222,6 +222,55 @@ describe("the sheet and drawer drawings", () => {
     expect(drawing).not.toMatch(/setTimeout|setInterval/);
   });
 
+  it("travels back out and stays mounted until the exit ends", () => {
+    // The bug this guards: closing painted nothing, because the scene unmounted
+    // the surface in the frame the state flipped. The drawing keeps it in the
+    // DOM, runs the entry reversed on the exit curve, and lets the final frame
+    // hide it — the native window, not a cut.
+    const closed = renderToStaticMarkup(
+      <DrawerSurface
+        description="preview"
+        footer={null}
+        onClose={() => undefined}
+        open={false}
+        panelRef={createRef()}
+        side="right"
+        size="md"
+        title="Preview"
+      >
+        body
+      </DrawerSurface>,
+    );
+    expect(count(closed, /data-open="false"/g)).toBe(2);
+
+    expect(block('.gx-drawer[data-open="false"]')).toContain(
+      "animation-name: gx-sheet-out-right",
+    );
+    for (const side of ["left", "bottom", "top"] as const) {
+      expect(
+        block(`.gx-drawer[data-open="false"][data-side="${side}"]`),
+        `${side} leaves on the wrong run`,
+      ).toContain(`animation-name: gx-sheet-out-${side}`);
+    }
+    for (const side of ["right", "left", "bottom", "top"]) {
+      expect(css).toContain(`@keyframes gx-sheet-out-${side}`);
+    }
+
+    expect(block('.gx-drawer[data-open="false"]')).toContain(
+      "animation-fill-mode: forwards",
+    );
+    expect(block('.gx-drawer-backdrop[data-open="false"]')).toContain(
+      "animation-name: gx-veil-out",
+    );
+    expect(css).toContain("@keyframes gx-veil-out");
+    // The hidden frame is the last one, not the exit's first: a closed surface
+    // must not be painted at rest before it has travelled out.
+    expect(css).toMatch(
+      /@keyframes gx-sheet-out-right \{[\s\S]*?visibility: hidden;/,
+    );
+    expect(reducedMotion()).toContain('.gx-drawer[data-open="false"]');
+  });
+
   it("wears the grabber only on a top or bottom edge", () => {
     expect(surface("right")).not.toContain("gx-drawer-grabber");
     expect(surface("left")).not.toContain("gx-drawer-grabber");

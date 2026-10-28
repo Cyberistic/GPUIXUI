@@ -16,10 +16,15 @@ import { ConfirmDialog } from "../confirm-dialog.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { darkTheme } from "../internal/theme.js";
 import {
+  after,
+  boundsOf,
   clickCentreOf,
-  waitFor,
   focusedTestId,
+  requireBounds,
+  settleMotion,
+  waitFor,
 } from "../internal/interaction.js";
+import { MotionProvider } from "../motion.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /** A caller that owns the open state, exactly as the API requires. */
@@ -45,6 +50,50 @@ const Harness = ({
     />
   );
 };
+
+/** The failure block a caller paints in the confirmation's body. */
+const FAILURE_HEIGHT = 40;
+
+/** The slot's settled height: the caller's block plus the dialog's gap. */
+const SLOT_HEIGHT = FAILURE_HEIGHT + darkTheme.spacing["2xl"];
+
+/** A caller whose acceptance fails; the retry clears the error. */
+const Failing = ({ reduced = false }: { readonly reduced?: boolean }) => {
+  const [error, setError] = useState<string>();
+
+  const dialog = (
+    <ConfirmDialog
+      open
+      onOpenChange={() => undefined}
+      title="Delete workspace"
+      description="The workspace and its 42 files are removed permanently."
+      onConfirm={() =>
+        setError(
+          error === undefined ? "The workspace service timed out." : undefined,
+        )
+      }
+    >
+      {error === undefined ? null : (
+        <div style={{ height: FAILURE_HEIGHT }} testId="failure">
+          <text>{error}</text>
+        </div>
+      )}
+    </ConfirmDialog>
+  );
+
+  return reduced ? (
+    <MotionProvider preference="reduced">{dialog}</MotionProvider>
+  ) : (
+    dialog
+  );
+};
+
+/** The failure slot's painted height, `-1` when it is unmounted. */
+const slotHeight = (root: ReturnType<typeof renderComponent>): number =>
+  Option.getOrElse(
+    Option.map(boundsOf(root, "confirm-body"), (box) => box.height),
+    () => -1,
+  );
 
 describe("ConfirmDialog", () => {
   it("publishes the alertdialog role, and the plain dialog keeps its own", () => {
@@ -219,5 +268,62 @@ describe("ConfirmDialog", () => {
     expect(accept?.style.color).toBe(darkTheme.colors.destructiveForeground);
 
     confirm.unmount();
+  });
+
+  /**
+   * The failure slot's bug: the caller's tone block appeared at its full height
+   * in one frame, so the dialog jumped between the pending and failed frames and
+   * emptied the slot in one frame when the reader retried.
+   */
+  it("grows the failure slot, and collapses it on a retry", async () => {
+    const confirm = renderComponent(<Failing />);
+    try {
+      settleMotion(confirm);
+      const pending = requireBounds(confirm, "dialog-content").height;
+
+      confirm.renderer.clockPause();
+      clickCentreOf(confirm, "confirm-accept");
+      await after(30);
+      // The block starts at zero rather than at the height it measured, so the
+      // dialog is still the pending height on the first failing frame.
+      expect(slotHeight(confirm)).toBe(0);
+      expect(requireBounds(confirm, "dialog-content").height).toBe(pending);
+
+      confirm.renderer.clockFastForward(400);
+      await after(30);
+      const failed = requireBounds(confirm, "dialog-content");
+      expect(slotHeight(confirm)).toBe(SLOT_HEIGHT);
+      expect(failed.height).toBeGreaterThan(pending);
+      expect(failed.height - pending).toBe(SLOT_HEIGHT);
+
+      // A retry empties the slot, but its box stays mounted while it collapses.
+      clickCentreOf(confirm, "confirm-accept");
+      await after(30);
+      expect(confirm.renderer.findByTestId("confirm-body")).toBeDefined();
+
+      await waitFor(() =>
+        expect(confirm.renderer.findByTestId("confirm-body")).toBeUndefined(),
+      );
+    } finally {
+      confirm.unmount();
+    }
+  });
+
+  it("paints the failed frame at once under the reduced preference", async () => {
+    const confirm = renderComponent(<Failing reduced />);
+    try {
+      settleMotion(confirm);
+      const pending = requireBounds(confirm, "dialog-content").height;
+
+      clickCentreOf(confirm, "confirm-accept");
+      await after(30);
+
+      expect(slotHeight(confirm)).toBe(SLOT_HEIGHT);
+      expect(requireBounds(confirm, "dialog-content").height).toBe(
+        pending + SLOT_HEIGHT,
+      );
+    } finally {
+      confirm.unmount();
+    }
   });
 });

@@ -474,9 +474,12 @@ export const CommandMenuItem = ({
       style={mergeStyles(
         menuRowStyle(
           theme,
-          "default",
-          highlighted,
-          action.disabled === true,
+          {
+            tone: "default",
+            active: highlighted,
+            disabled: action.disabled === true,
+            mark: false,
+          },
           className,
         ),
         style,

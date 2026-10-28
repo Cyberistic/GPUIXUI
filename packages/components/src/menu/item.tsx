@@ -104,6 +104,18 @@ export interface MenuItemState {
   readonly highlighted: boolean;
 }
 
+/** What a row paints: its emphasis, its state and whether it carries the bar. */
+export interface MenuRowState {
+  readonly tone: MenuItemTone;
+  readonly active: boolean;
+  readonly disabled: boolean;
+  /**
+   * Paints the emphasis bar a submenu-leading or checked row wears. Default
+   * `true`; the command palette's highlight is its wash alone.
+   */
+  readonly mark?: boolean;
+}
+
 /** The row's own look, shared by actions, checkbox rows and the Command menu.
  *
  * The resting geometry and type come from the `MENU_ITEM` recipe (fixed shadcn
@@ -112,11 +124,10 @@ export interface MenuItemState {
  */
 export const menuRowStyle = (
   theme: ReturnType<typeof useTheme>,
-  tone: MenuItemTone,
-  active: boolean,
-  disabled: boolean,
+  row: MenuRowState,
   className?: string,
 ): Props["style"] => {
+  const { tone, active, disabled, mark = true } = row;
   const color = disabled
     ? theme.colors.disabledForeground
     : Match.value(tone).pipe(
@@ -131,9 +142,9 @@ export const menuRowStyle = (
   return {
     ...overlaySurfaceStyle(MENU_ITEM, className, theme),
     height: controlHeight(theme, "sm"),
-    borderLeftWidth: theme.borderWidth.strong,
-    // The bar marks the row that leads an open submenu or holds the palette's
-    // highlight, and it sits on that row's `hover` wash. A mark has to be found
+    borderLeftWidth: mark ? theme.borderWidth.strong : 0,
+    // The bar marks the row that leads an open submenu or holds a checked
+    // state, and it sits on that row's `hover` wash. A mark has to be found
     // from across the surface, so it paints `primary` — the role the mark
     // contract measures at 3:1 on the popover and on the wash, as the check
     // mark beside it does. `accent` is a wash role: it read 1.000:1 on the
@@ -278,7 +289,7 @@ export const MenuItem = ({
         onMouseLeave?.(event);
       }}
       style={mergeStyles(
-        menuRowStyle(theme, emphasis, active, disabled, className),
+        menuRowStyle(theme, { tone: emphasis, active, disabled }, className),
         resolveStyle(style, state),
       )}
     >

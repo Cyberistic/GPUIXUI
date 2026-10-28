@@ -25,6 +25,7 @@ import {
   waitFor,
   focusedTestId,
   requireBounds,
+  settleMotion,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -170,6 +171,29 @@ describe("Combobox", () => {
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
 
     picker.unmount();
+  });
+
+  it("seats the search row on the popup's inset with a gap under it", async () => {
+    // The bug this guards: the field sat on the popup's edge and the first
+    // option started right under it, so the search row read as part of the list
+    // instead of its header. A long list must not squeeze the row either.
+    const picker = renderComponent(<Picker />);
+    try {
+      await open(picker);
+      settleMotion(picker);
+      const content = requireBounds(picker, "combobox-content");
+      const input = requireBounds(picker, "combobox-input");
+      const first = requireBounds(picker, "combobox-option-calendar");
+      const inset = darkTheme.spacing.xs + darkTheme.borderWidth.thin;
+
+      expect(input.x - content.x).toBeGreaterThanOrEqual(inset);
+      expect(input.y - content.y).toBeGreaterThanOrEqual(inset);
+      expect(first.y - (input.y + input.height)).toBeGreaterThanOrEqual(
+        darkTheme.spacing.xs,
+      );
+    } finally {
+      picker.unmount();
+    }
   });
 
   it("centres a requested popup on its trigger", async () => {

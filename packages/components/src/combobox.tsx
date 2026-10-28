@@ -677,7 +677,15 @@ export const ComboboxInput = ({
   });
 
   return (
-    <div style={hintHost({ width: "100%" })}>
+    <div
+      style={hintHost({
+        width: "100%",
+        // The popup's inset seats the row; a long list must not shrink it, and
+        // the gap below keeps the first option off the field.
+        flexShrink: 0,
+        paddingBottom: theme.spacing.xs,
+      })}
+    >
       <HeadlessInput
         testId="combobox-input"
         aria-label={label}

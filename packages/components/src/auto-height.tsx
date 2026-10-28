@@ -52,6 +52,7 @@ import {
   useMotionPreference,
   useSurfacePresence,
   useSurfaceTiming,
+  type SurfaceTiming,
 } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
@@ -81,6 +82,12 @@ export interface AutoHeightProps extends Omit<Props, "children" | "style"> {
   readonly children?: ReactNode;
   /** The motion level of the reveal. Default `"normal"` (200 ms). */
   readonly level?: MotionLevel;
+  /**
+   * A caller's own enter and exit pair, for a box that moves between resting
+   * states rather than arriving: it replaces the `level`'s presence timing, and
+   * the height and the fade both paint with it.
+   */
+  readonly timing?: SurfaceTiming;
   /** A Tailwind class string for the clipping box, joined after the resting style. */
   readonly className?: string;
   /** A Tailwind class string for the measured content box. */
@@ -99,6 +106,7 @@ export interface AutoHeightProps extends Omit<Props, "children" | "style"> {
 export const AutoHeight = ({
   open,
   level = "normal",
+  timing: ownTiming,
   className,
   contentClassName,
   testId,
@@ -109,7 +117,8 @@ export const AutoHeight = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const preference = useMotionPreference();
-  const timing = useSurfaceTiming(level);
+  const levelTiming = useSurfaceTiming(level);
+  const timing = ownTiming ?? levelTiming;
   const presence = useSurfacePresence(open, timing);
   const [measured, setMeasured] = useState(Option.none<number>());
   const content = useRef<PublicInstance | null>(null);

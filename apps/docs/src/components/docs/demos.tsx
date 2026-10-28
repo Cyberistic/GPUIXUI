@@ -1723,6 +1723,10 @@ const PreviewConfirm = ({
   readonly takesFocus?: boolean;
 }) => {
   const cancel = useRef<HTMLButtonElement>(null);
+  // The last failure stays painted while the block collapses, so a retry does
+  // not empty the slot before its exit has run.
+  const failure = useRef(error);
+  if (error !== undefined) failure.current = error;
   // The contract the component exists for: focus lands on Cancel, so Enter on an
   // untouched dialog cancels instead of destroying something. A static preview
   // (the page's first paint) leaves the reader's focus on the page.
@@ -1745,15 +1749,23 @@ const PreviewConfirm = ({
       >
         <h2 className="gx-dialog-title">{title}</h2>
         <p className="gx-dialog-desc">{description}</p>
-        {error === undefined ? null : (
-          <div className="gx-confirm-error">
-            <PreviewAlert
-              description={error}
-              title="Archive failed"
-              tone="danger"
-            />
+        <div
+          aria-hidden={error === undefined}
+          className="gx-confirm-error"
+          data-open={error !== undefined}
+        >
+          <div className="gx-confirm-error-inner">
+            <div className="gx-confirm-error-body">
+              {failure.current === undefined ? null : (
+                <PreviewAlert
+                  description={failure.current}
+                  title="Archive failed"
+                  tone="danger"
+                />
+              )}
+            </div>
           </div>
-        )}
+        </div>
         <div className="gx-dialog-actions">
           <button
             className="gx-btn gx-btn-secondary"

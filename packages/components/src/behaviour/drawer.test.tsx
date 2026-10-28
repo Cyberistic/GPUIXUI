@@ -327,6 +327,36 @@ describe("Drawer", () => {
     }
   });
 
+  it("travels back out its span and stays painted for the exit", async () => {
+    // The bug this guards: a dismissed drawer vanished in the frame it was
+    // dismissed, so the panel and veil the reader had just been reading were
+    // gone rather than leaving. It travels its own span back past the edge it
+    // owns, on the exit curve, and unmounts only when the window ends.
+    const page = renderComponent(<Workspace side="right" />);
+    try {
+      clickCentreOf(page, "open");
+      settleMotion(page);
+      const resting = requireBounds(page, "drawer");
+
+      page.renderer.clockPause();
+      clickCentreOf(page, "cancel");
+      await after(30);
+      expect(requireBounds(page, "drawer")).toEqual(resting);
+
+      page.renderer.clockFastForward(160);
+      await after(30);
+      const leaving = requireBounds(page, "drawer");
+      expect(leaving.x).toBeGreaterThan(resting.x);
+      expect(leaving.y).toBe(resting.y);
+
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("drawer")).toBeUndefined(),
+      );
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints the settled frame at once under the reduced preference", async () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">
@@ -345,6 +375,12 @@ describe("Drawer", () => {
 
       expect(first).toEqual(settled);
       expect(first.x + first.width).toBe(page.renderer.getWindowSize().width);
+
+      // And the leave snaps too: no exit frames to sit through.
+      clickCentreOf(page, "drawer-close");
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("drawer")).toBeUndefined(),
+      );
     } finally {
       page.unmount();
     }
