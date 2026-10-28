@@ -24014,8 +24014,8 @@ green.
 
 ## Overlay surfaces (plan 717, 2026-10-28)
 
-`[x]` `[██████████]` 1/1 — the five overlay reports, in the library and the
-drawings.
+`[x]` `[██████████]` 2/2 — the five overlay reports, in the library and the
+drawings, and the sheet/drawer drawings' empty stage.
 
 `[x]` `packages/components` + docs-site: **the five overlay defects** — (1) the
 sheet/drawer now *slides its own span* in from the edge it names (a right `md`
@@ -24068,6 +24068,24 @@ opened and one chevron flipped, the four popover sides measured exactly
 150px · right margin 8` (7px on screen against the frame's 1px border) and the
 hover card sat wholly inside its reserved frame with a transparent, 0px-border,
 underlined, 0-padding trigger.
+
+`[x]` **The sheet and drawer drawings open on the surface** (plan 719) — both
+pages mounted the drawer only after a press, so `/docs/components/sheet` and
+`/docs/components/drawer` shipped an empty stage; the drawer page's frame also
+hugged its content at 303px, too narrow for a 400px `md` panel. The frame is now
+the window (`width: 100%`, `height: 420px`), the surface takes its box from it in
+CSS (per-edge `min(var(--gx-drawer-*), 100%)` and edge margins), both scenes
+start open, the sheet gains the `top` edge, and the geometry buttons sit in a
+toolbar above the frame so they change a mounted surface. The grabber reads the
+6px theme step instead of a 10px literal, the lift is `var(--elevation-lg)` from
+the bridge, and the close control is outside the scroller. Measured in Chrome at
+1300×900: sheet frame 602×420 at (349,484), panel 400×418 at (550,485), bottom
+slide `y 876 → 583`; drawer frame 602×420 at (456), panel 400×418 at (550,457),
+right slide `x 916 → 550`; one server-rendered `role="dialog"` per page.
+`sheet-drawer-preview.test.tsx` (8 cases) and `theme-css.test.ts` (the lift) hold the first paint, the frame, the
+size tables, the travel/duration, reduced motion, the grabber, the corners/lift
+and `preventScroll`; all eight fail on their inversions (messages in the plan).
+Gates: docs 221 files / 2 226 tests, `check` clean.
 
 ## Open: the chat transcript's mount cost
 
