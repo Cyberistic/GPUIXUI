@@ -24103,3 +24103,19 @@ transcript-layout cases in `chat.test.tsx` now carry a 30 s deadline
 Fix: split the scroller's command context from its state (items read `pinned`
 through a ref, the jump control and `aria-busy` through state), and/or virtualise
 the transcript once the runtime offers a compound virtual list.
+
+## Toasts: the peek is a tween (2026-10-28)
+
+`[x]` `[██████████]` 1/1 — **the toast a reader is reading is no longer cut in
+half when the next one arrives.** The drawing left a whole card's slot at
+`height: auto`, and CSS cannot interpolate `auto` into the 12px peek a card drops
+to when it loses the front rank: measured in Chrome, the card was 78px at t+0 and
+12px at t+30. The card now measures itself (`ResizeObserver`) and the slot gets
+that number, so a rank change tweens (78 → 14 → 12 over the 260ms move curve), an
+arriving card grows from 0 and a leaving one closes to 0 — the same
+`height: 0 → measured` the native viewport animates. Proof:
+`apps/docs/src/components/docs/toast-preview.test.ts` gains two cases (the slot
+carries the measured height; the card grows into its box) and the first fails
+when the height expression goes back to `slot.height`. The stack below the peek
+is unchanged: inset peeks, hover-unfold, per-card clocks paused while the pointer
+rests on the stack.
