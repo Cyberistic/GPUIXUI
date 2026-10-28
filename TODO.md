@@ -24191,6 +24191,41 @@ rests on the stack.
       refusal). Green: docs suite 2 272 cases, `nub run check`, `lint`, `fmt`.
       Nothing native applies — browser reproductions over pure package rules.
 
+## Docs polish — the drawings match their components (2026-10-28)
+
+`[x]` `[██████████]` 5/5
+
+`[x]` **Accordion** — the settings frame carried `padding: 0 12px`, so the open
+      row's wash stopped 12px short on both sides and the item dividers were
+      inset. The frame now has no side padding (only its border and corner), and
+      the header's inset, gap, type and the body's `px-1 pb-2` are read from
+      `ACCORDION_TRIGGER`/`ACCORDION_CONTENT` (measured wash 494 → 518 of a
+      520px panel, i.e. the frame's inner edge).
+`[x]` **Aspect ratio** — the stage reserved `width / 0.75` for every state, so
+      16:9 left a 247px empty band (panel 561px for a 180px box). The stage is
+      now exactly the current box at rest (180px) and takes the tallest only
+      while the reader is in the controls (`:hover`, `:has(:focus-visible)`), so
+      a press still cannot move the page under the pointer (measured stage 180 →
+      427 while choosing → 180 settled; controls stay at y=354 in every state).
+`[x]` **Auth** — the sign-in card reads the reference: "Login to your account" /
+      "Enter your email below to login to your account", and the mark above the
+      form is gone (the other three recipes keep theirs).
+`[x]` **Badge filters** — `All` / `Failed` / `Running` were `.gx-badge-choice`,
+      a bordered box with its own radius, type and `[data-chosen]` fill. They
+      paint `gx-btn gx-btn-sm` with `secondary`/`outline`, and the same sweep
+      replaced the hand-rolled chrome on the carousel arrows, table paging and
+      columns, copy action, collapsible toggles, avatar choice, item/hover-card
+      actions, kanban filter, log follow, notification download, scroll jump,
+      toast action, sidebar opener, debug row and the liquid button.
+      `drawing-buttons.test.ts` scans every `<button>`/`<a>` in the docs app and
+      rejects a bordered, padded class outside `.gx-btn` (component triggers,
+      swatches, thumbs, steppers, rows and the skip link are named).
+`[x]` **Sheet** — verified, not changed: the drawing already rounds the inner
+      corners only (`18px 0 0 18px` right, `0 18px 18px 0` left, `18 18 0 0`
+      bottom, `0 0 18 18` top at `radius.xl`), matching `drawer.tsx`'s
+      `innerCorners`; `sheet-drawer-preview.test.tsx` already guards every side,
+      so rounding all four fails it (`right rounds the wrong corners`).
+
 ## Lighter SSR — the docs render once (2026-10-28)
 
 `[x]` `[██████████]` 1/1
