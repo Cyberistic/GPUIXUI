@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { writeClipboard } from "../../lib/clipboard";
 
 const token = "gp_7f2c9a4e8b1d";
 
@@ -23,7 +24,11 @@ export function CopyButtonDemo() {
       <button
         aria-label={copied ? "Copied" : "Copy"}
         className="gx-copybutton-btn"
-        onClick={() => {
+        onClick={async () => {
+          // A copy that did not write is not a copy: the control acknowledges
+          // only the text the browser accepted. (It used to flip to "Copied"
+          // and write nothing, which is the one thing a copy button may not do.)
+          if (!(await writeClipboard(token))) return;
           setCopied(true);
           clearTimeout(timer.current);
           timer.current = setTimeout(() => setCopied(false), 1200);

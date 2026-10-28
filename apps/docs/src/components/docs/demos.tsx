@@ -1579,10 +1579,12 @@ const PreviewAlert = ({
     )}
     <div className="gx-alert-content">
       <p className="gx-alert-title">{title}</p>
-      <p className="gx-alert-desc">
-        {description}
-        {action}
-      </p>
+      <p className="gx-alert-desc">{description}</p>
+      {/* The action is a row of its own, under the copy: rendered inside the
+          description it sat on the text's baseline like a chip in the sentence. */}
+      {action === undefined ? undefined : (
+        <div className="gx-alert-action">{action}</div>
+      )}
     </div>
     {onDismiss === undefined ? null : (
       <button
@@ -1660,10 +1662,7 @@ const AlertComposition = () => {
         title="Upload failed"
         description="Nothing left the machine."
         action={
-          <button
-            className="gx-btn gx-btn-secondary gx-btn-sm gx-alert-action"
-            type="button"
-          >
+          <button className="gx-btn gx-btn-secondary gx-btn-sm" type="button">
             Try again
           </button>
         }

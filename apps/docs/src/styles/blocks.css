@@ -2297,9 +2297,10 @@
   color: var(--foreground);
 }
 
+/* The highlight is the wash the component paints: a left rule here read as a
+   second selection edge the palette does not have. */
 .gx-cmd-row[data-highlighted="true"] {
   background: var(--accent);
-  box-shadow: inset 2px 0 0 var(--primary);
   color: var(--accent-foreground);
 }
 
