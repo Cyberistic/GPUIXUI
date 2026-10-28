@@ -1,53 +1,32 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  DRAWER_HEIGHT,
-  DRAWER_WIDTH,
   activeFilterCount,
   describeIssues,
   dismissTop,
-  drawerBox,
   filterIssues,
   initialFilter,
+  isVertical,
   matchesFilter,
   type DismissLayer,
   type Issue,
 } from "./drawer-preview";
 
 /**
- * The drawer preview's model has to say two things the component does: a
- * surface is clamped to the window it opens in, and one Escape/outside gesture
- * is offered to the topmost layer only.
+ * The drawer preview's model has to say two things the component does: an edge
+ * either lays the surface across the window or down it, and one Escape/outside
+ * gesture is offered to the topmost layer only.
  *
  * Both are easy to get subtly wrong in a browser drawing and impossible to
- * notice by looking at it: a clamped drawer stops short of the edge, and a
- * non-dismissible drawer that lets the gesture through closes the dialog the
- * reader was told to answer. These cases fail when the preview's arithmetic
- * drifts from `drawer.tsx`.
+ * notice by looking at it: a non-dismissible drawer that lets the gesture
+ * through closes the dialog the reader was told to answer. These cases fail when
+ * the preview's arithmetic drifts from `drawer.tsx`.
  */
 
 const source = readFileSync(
   new URL("../../../../../packages/components/src/drawer.tsx", import.meta.url),
   "utf8",
 );
-
-/** The `name: number` pairs of one exported size table in the component. */
-const sizeTable = (
-  name: "WIDTH" | "HEIGHT",
-): Readonly<Record<string, number>> => {
-  const block =
-    new RegExp(
-      `const ${name}: Readonly<Record<DrawerSize, number>> = \\{([\\s\\S]*?)\\};`,
-    ).exec(source)?.[1] ?? "";
-  return Object.fromEntries(
-    [...block.matchAll(/(\w+): (\d+)/g)].flatMap((match) => {
-      const [, key, value] = match;
-      return key === undefined || value === undefined
-        ? []
-        : [[key, Number(value)]];
-    }),
-  );
-};
 
 const issues: ReadonlyArray<Issue> = [
   {
@@ -85,45 +64,18 @@ const layers: ReadonlyArray<DismissLayer> = [
   { name: "drawer", dismissible: true },
 ];
 
-describe("a drawer's box", () => {
-  it("takes the requested column width and the window's height", () => {
-    expect(drawerBox("right", "md", { width: 1280, height: 800 })).toEqual({
-      width: 400,
-      height: 800,
-    });
-    expect(drawerBox("left", "sm", { width: 1280, height: 800 })).toEqual({
-      width: 320,
-      height: 800,
-    });
-  });
-
-  it("clamps a column to a window narrower than the request", () => {
-    // A `lg` drawer asks for 560; a 300px window is the whole surface it gets.
-    expect(drawerBox("right", "lg", { width: 300, height: 800 })).toEqual({
-      width: 300,
-      height: 800,
-    });
-  });
-
-  it("makes a bottom sheet the window's width and caps its height", () => {
-    expect(drawerBox("bottom", "md", { width: 1280, height: 800 })).toEqual({
-      width: 1280,
-      height: 320,
-    });
-    expect(drawerBox("bottom", "lg", { width: 180, height: 300 })).toEqual({
-      width: 180,
-      height: 300,
-    });
-  });
-
-  it("mirrors the size tables the component ships", () => {
-    // The preview cannot become a second source of truth for a size. If the
-    // component moves a step, this fails before the page prints the old number.
-    expect(sizeTable("WIDTH")).toEqual(DRAWER_WIDTH);
-    expect(sizeTable("HEIGHT")).toEqual(DRAWER_HEIGHT);
-    const flat = source.replace(/\s+/g, " ");
-    expect(flat).toContain("Math.min(HEIGHT[size], window.height)");
-    expect(flat).toContain("Math.min(WIDTH[size], window.width)");
+describe("a drawer's edge", () => {
+  it("lays a top or bottom sheet across the window, and a column down it", () => {
+    // The component's `isVertical` is the one rule the box, the layout and the
+    // travel read; a drawing that treated `top` as a column painted a panel on
+    // the wrong axis.
+    expect(isVertical("top")).toBe(true);
+    expect(isVertical("bottom")).toBe(true);
+    expect(isVertical("left")).toBe(false);
+    expect(isVertical("right")).toBe(false);
+    expect(source.replace(/\s+/g, " ")).toContain(
+      'side === "bottom" || side === "top"',
+    );
   });
 });
 

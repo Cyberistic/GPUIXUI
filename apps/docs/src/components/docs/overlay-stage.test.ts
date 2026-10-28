@@ -24,7 +24,7 @@ const stageOf: Readonly<Record<string, string>> = {
 const rule = (selector: string): string =>
   [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
     .filter(([, selectors]) =>
-      selectors.split(",").some((one) => one.trim() === `.${selector}`),
+      (selectors ?? "").split(",").some((one) => one.trim() === `.${selector}`),
     )
     .map(([, , body]) => body ?? "")
     .join("\n");
@@ -33,7 +33,7 @@ const veils = [
   ...new Set(
     [...css.matchAll(/\.(gx-[a-z-]+-backdrop)\s*\{([^}]*)\}/g)]
       .filter(([, , body]) => /inset:\s*0/.test(body ?? ""))
-      .map(([, name]) => name),
+      .flatMap(([, name]) => (name === undefined ? [] : [name])),
   ),
 ].sort();
 
@@ -43,11 +43,13 @@ describe("the drawings' overlay veils", () => {
   });
 
   it("sit in a frame that declares a real height", () => {
-    // A percentage of a panel that hugs its content is not a height:
-    // `min-height: 100%` resolved to the content's own 28px.
+    // A percentage of a panel that hugs its content is not a height: the drawer
+    // frame once hugged its issues list at 303px and `min-height: 100%` on the
+    // dialog's frame resolved to the content's own 28px. A frame is the window,
+    // so it declares its own box — a height or a floor either way.
     const collapsed = Object.values(stageOf).filter((frame) => {
-      const height = /min-height:\s*(\d+)px/.exec(rule(frame));
-      return height === null || Number(height[1]) < 200;
+      const height = /(?:min-)?height:\s*(\d+)px/.exec(rule(frame))?.[1];
+      return height === undefined || Number(height) < 200;
     });
     expect(collapsed).toEqual([]);
   });

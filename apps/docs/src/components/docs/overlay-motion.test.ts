@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
 const css = readFileSync(
   new URL("../../styles/demos.css", import.meta.url),
   "utf8",
-);
+).replace(/\/\*[\s\S]*?\*\//g, "");
 
 const read = (relative: string): string =>
   readFileSync(new URL(relative, import.meta.url), "utf8");
@@ -29,13 +29,16 @@ const overlaySource = read(
 );
 const timingSource = read("../../../../../packages/motion/src/timing.ts");
 const demoSource = read("../docs/demos.tsx");
-const drawerDemoSource = read("../docs/drawer-demo.tsx");
+const drawingSource = read("../docs/sheet-drawer-preview.tsx");
 
-/** The declarations of the first `selector { … }` block. */
-const block = (selector: string): string => {
-  const start = css.indexOf(`${selector} {`);
-  return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
-};
+/** The declarations of every block whose selector list names `selector`. */
+const block = (selector: string): string =>
+  [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, names]) =>
+      (names ?? "").split(",").some((one) => one.trim() === selector),
+    )
+    .map(([, , body]) => body ?? "")
+    .join("\n");
 
 /** The reduced-motion blocks, for the guard at the end. */
 const reduced = (): string => {
@@ -54,7 +57,7 @@ describe("the overlay drawings", () => {
 
     // One class, worn by every backdrop the drawings paint: the dialog, the
     // confirmation dialog, the command palette and the drawer/sheet.
-    for (const source of [demoSource, drawerDemoSource]) {
+    for (const source of [demoSource, drawingSource]) {
       const backdrops = [
         ...source.matchAll(/className="(gx-(?:dialog|drawer)-backdrop[^"]*)"/g),
       ].map((match) => match[1] ?? "");
@@ -101,8 +104,8 @@ describe("the overlay drawings", () => {
 
     // The drawing paints the handle exactly where the component does: a bottom
     // sheet, which is the only sheet the drawing opens.
-    expect(drawerDemoSource).toContain('side === "bottom" ? (');
-    expect(drawerDemoSource).toContain('className="gx-drawer-grabber"');
+    expect(drawingSource).toContain("isVertical(side) ? (");
+    expect(drawingSource).toContain('className="gx-drawer-grabber"');
   });
 
   it("takes focus without scrolling the moving surface into place", () => {
@@ -110,7 +113,7 @@ describe("the overlay drawings", () => {
     // view, and the drawer focuses its surface while the surface is still sliding
     // in — the scroll cancelled the animation, so the sheet looked static. The
     // native renderer's `focusElement` never scrolls; the drawing opts out.
-    const focuses = [...drawerDemoSource.matchAll(/\.focus\(([^)]*)\)/g)];
+    const focuses = [...drawingSource.matchAll(/\.focus\(([^)]*)\)/g)];
     expect(focuses.length).toBeGreaterThan(0);
     expect(
       focuses.filter((match) => !match[1]?.includes("preventScroll")),
