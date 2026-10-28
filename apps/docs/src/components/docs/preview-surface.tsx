@@ -55,6 +55,11 @@ export function PreviewSurface({
         data-look={look}
         data-mode={theme.mode}
         data-platform={platform}
+        // The visitor's platform, look and palette are the client's to know: the
+        // prerendered HTML carries the site default, and this element paints the
+        // saved choice on the first render. React would otherwise report the
+        // difference as a hydration mismatch on every page.
+        suppressHydrationWarning
         style={vars}
       >
         {children}
