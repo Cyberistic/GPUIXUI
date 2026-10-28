@@ -229,7 +229,10 @@ export const surfaceBudget = {
   // one tree, which the 1450 ceiling no longer held: 1450 → 1470 KiB.
   // 1489 KiB measured with the rebuilt ColorPicker (area, rails, alpha and
   // presets); the ceiling keeps the family at 1490 KiB.
-  bytes: 1490 * 1024,
+  // 1 491 KiB measured with that picker **and** the same wave's chat, overlay
+  // and docs fixes in one tree — the branch figures were each taken alone —
+  // so the ceiling moved 1490 → 1500 KiB.
+  bytes: 1500 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

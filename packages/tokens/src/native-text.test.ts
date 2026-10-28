@@ -1040,8 +1040,10 @@ describe("the adoption both packages carry", () => {
       /<(input|textarea|code)[\s>]/.test(text),
     );
 
-    // A rule that finds no host would pass by measuring nothing.
-    expect(hosts.length).toBeGreaterThanOrEqual(9);
+    // A rule that finds no host would pass by measuring nothing. The floor moved
+    // 9 → 8 with the Arc-shaped ColorPicker: its hex field is the primitives'
+    // `Input`, which paints its own text, so the picker no longer hosts one.
+    expect(hosts.length).toBeGreaterThanOrEqual(8);
     const missing = hosts
       .filter(({ text }) => !text.includes("nativeTextTheme("))
       .map(({ file }) => file);
@@ -1066,7 +1068,8 @@ describe("the adoption both packages carry", () => {
         fill !== undefined && !nativeTextFills.some((known) => known === fill),
     );
 
-    expect(named.length).toBeGreaterThanOrEqual(10);
+    // One fewer call site for the same reason as the host floor above.
+    expect(named.length).toBeGreaterThanOrEqual(9);
     expect(unknown).toEqual([]);
   });
 

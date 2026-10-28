@@ -621,6 +621,15 @@ export const COLOR_PICKER_AREA = "relative w-full rounded-xl";
 /** `color-picker.tsx` — the value field's row. */
 export const COLOR_PICKER_FIELD = "flex flex-row items-center gap-2";
 
+/**
+ * `color-picker.tsx` — the hex field.
+ *
+ * A field inside a layer is a hole in it: the page's fill, not the panel's, so
+ * the text keeps the contrast it has on the page. The shared `Input` paints the
+ * input fill instead, which on a popover is the surface under it.
+ */
+export const COLOR_PICKER_INPUT = "bg-background text-input-foreground";
+
 /** `color-picker.tsx` — the preset swatch row. */
 export const COLOR_PICKER_SWATCHES =
   "flex flex-row flex-wrap items-center gap-1.5";

@@ -32,6 +32,7 @@ import { Input } from "@gpuixui/primitives/input";
 import {
   cn,
   COLOR_PICKER_FIELD,
+  COLOR_PICKER_INPUT,
   COLOR_PICKER_PANEL,
   COLOR_PICKER_TRIGGER,
 } from "@gpuixui/tw";
@@ -388,6 +389,7 @@ export const ColorPicker = ({
               invalid={invalid}
               disabled={disabled}
               fullWidth
+              className={COLOR_PICKER_INPUT}
               style={controlRing(theme, { disabled, invalid })}
               onChange={(next: string) => {
                 setDraft(next);
