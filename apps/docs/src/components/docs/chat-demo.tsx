@@ -21,6 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { BrowserIcon } from "./browser-icon";
 
 type ChatStatus = "idle" | "streaming" | "error";
 
@@ -384,12 +385,13 @@ export function ChatDemo() {
             </button>
           ) : (
             <button
+              aria-label="Send"
               className="gx-btn gx-btn-primary gx-btn-sm"
               disabled={draft.trim() === ""}
               onClick={send}
               type="button"
             >
-              Send
+              <BrowserIcon className="gx-chat-send-icon" name="send" />
             </button>
           )}
         </div>

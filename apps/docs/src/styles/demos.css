@@ -414,10 +414,12 @@
 
 /* Three treatments, one comparison: equal columns at a page width, one column
    on a phone, so the cards share a width and a title baseline instead of
-   floating apart. */
+   floating apart. The floor is the footer's: two `sm` actions and the card's
+   own padding do not fit in a narrower column, and an action that wraps is not
+   the recipe's row. */
 .gx-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   align-items: start;
   width: 100%;
   gap: 16px;
@@ -492,8 +494,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 12px;
-  padding: 12px;
+  padding: 12px 16px 16px;
   border-top: 1px solid var(--input);
   font-size: 14px;
   line-height: 20px;
@@ -2707,16 +2708,9 @@
   color: var(--destructive-soft-foreground);
 }
 
-.gx-field-set {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 12px 14px 14px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 1px);
-}
-
+/* `.gx-field-set` is the group surface, shared with the Fieldset page's
+   drawing below — one rule, so a native `<fieldset>` and the shipped
+   `role="group"` cannot wear two different boxes. */
 .gx-field-legend {
   padding: 0 4px;
   font-size: 12px;
@@ -7638,6 +7632,19 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  /* The scene's box is the drawing's, not the readout's: the status line names
+     the focus, so a content-sized scene moved sideways every time it changed. */
+  width: min(360px, 100%);
+}
+
+/* The row's box, not the control's: the display is a `sm` action and the editor
+   an `md` field, so the slot reserves the taller of the two recipes and centres
+   both. View, edit and commit keep the lines below exactly where they were. */
+.gx-inline-slot {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--control-height-md);
 }
 
 .gx-inline-grid {
@@ -7724,7 +7731,11 @@
   line-height: 1.7;
 }
 
+/* The app's message keeps its line whether or not it has words: the refusal is
+   the one line this drawing can add after a commit, and a line that arrives
+   takes the height of the hint under it. */
 .gx-inline-refusal {
+  min-height: 1.7em;
   color: var(--destructive-soft-foreground);
   font-size: 12px;
   line-height: 1.7;
@@ -8325,9 +8336,11 @@
 }
 
 /* ---- fieldset: mirrors components/src/fieldset.tsx ----
-   A `div role="group"` named by its legend. Only the legend dims when the group
-   is disabled; a control that reads the context paints its own disabled roles,
-   so the subtree is not dimmed whole. */
+   A `div role="group"` named by its legend, on the card's surface: the same
+   fixed corner, 16px padding and `input` edge the card's outline treatment
+   paints, so the fields sit on something instead of a bare outline. Only the
+   legend dims when the group is disabled; a control that reads the context
+   paints its own disabled roles, so the subtree is not dimmed whole. */
 .gx-fieldset-scene {
   display: flex;
   flex-direction: column;
@@ -8343,13 +8356,16 @@
   width: 100%;
 }
 
-.gx-fieldset {
+.gx-fieldset,
+.gx-field-set {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px 14px 14px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 1px);
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  background: var(--card);
 }
 
 .gx-fieldset-legend {
@@ -10558,6 +10574,21 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+}
+
+/* The send action is the icon set's paper plane, in the button's own ink; the
+   word "Send" survives only as its accessible name. */
+.gx-chat-send-icon {
+  display: block;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  color: inherit;
+}
+
+.gx-chat-send-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .gx-chat-field {

@@ -423,6 +423,7 @@ src/lib/collection-index.ts         The index a collection route generates when 
 src/lib/page-tree.ts                Fills and alphabetically sorts each sidebar section
 src/lib/effects.ts                  The decorative slugs the Components lane groups as Effects
 src/lib/page-meta.ts                Title, description, canonical and social metadata
+src/lib/page-description.ts         A description's inline link: the runs the frame paints, the words the tags print
 src/lib/page-markdown.ts            Server function behind "Copy page"
 src/lib/page-edit.ts                The Markdown file behind a page, for its GitHub link
 src/lib/site.ts                     The one deployed origin

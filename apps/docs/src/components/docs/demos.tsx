@@ -516,8 +516,12 @@ const PlanCard = ({
       ))}
     </div>
     <div className="gx-card-footer">
-      <span>Manage billing</span>
-      <span>Cancel plan</span>
+      <button className="gx-btn gx-btn-ghost gx-btn-sm" type="button">
+        Manage billing
+      </button>
+      <button className="gx-btn gx-btn-ghost gx-btn-sm" type="button">
+        Cancel plan
+      </button>
     </div>
   </div>
 );
@@ -1316,6 +1320,7 @@ const cardVariantsSource = `import {
   CardHeader,
   CardTitle,
 } from "@gpuixui/components/card";
+import { Button } from "@gpuixui/primitives";
 
 const rows = [
   ["Seats", "12 of 20"],
@@ -1345,8 +1350,12 @@ export const PlanCards = () => (
           ))}
         </CardContent>
         <CardFooter>
-          <text>Manage billing</text>
-          <text>Cancel plan</text>
+          <Button variant="ghost" size="sm">
+            Manage billing
+          </Button>
+          <Button variant="ghost" size="sm">
+            Cancel plan
+          </Button>
         </CardFooter>
       </Card>
     ))}

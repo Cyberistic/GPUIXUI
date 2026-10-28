@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
+import { icons } from "@gpuixui/icons";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { galleryMarkup } from "@/lib/icon-gallery";
 import { ChatDemo } from "./chat-demo";
 
 /**
@@ -112,11 +114,22 @@ describe("the chat block", () => {
 
   it("puts Send, Stop and the field in the composer", () => {
     expect(markup).toContain('class="gx-chat-field"');
-    expect(markup).toContain(">Send</button>");
+    expect(markup).toContain('aria-label="Send"');
     expect(block(".gx-chat-composer")).toContain(
       "border: 1px solid var(--border)",
     );
     expect(block(".gx-chat-composer")).toContain("background: var(--card)");
+  });
+
+  it("draws Send as the icon set's paper plane, named by the word", () => {
+    // The bug: the composer said "Send" in text and the icon set already had a
+    // mark for it — shadcn's composer draws the plane. The drawing borrows the
+    // package's own markup rather than a second path, so the two cannot drift.
+    expect(markup).not.toContain(">Send<");
+    expect(markup).toContain('aria-label="Send"');
+    expect(markup).toContain(galleryMarkup(icons.send));
+    expect(markup).toContain('class="gx-chat-send-icon"');
+    expect(markup.match(/class="gx-chat-send-icon"/g)?.length).toBe(1);
   });
 
   it("has no segmented status switcher", () => {

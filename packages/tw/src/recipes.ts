@@ -215,8 +215,9 @@ export const FIELD_DESCRIPTION = "text-xs font-sans text-muted-foreground";
 export const FIELD_ERROR = "text-xs font-sans text-destructive";
 export const FIELD_INPUT = "text-sm font-sans w-full px-2 rounded-md border";
 
-/** `fieldset.tsx` — the named group. */
-export const FIELDSET_ROOT = "flex flex-col gap-3";
+/** `fieldset.tsx` — the named group, on the card's surface and edge. */
+export const FIELDSET_ROOT =
+  "flex flex-col gap-3 rounded-lg border border-input bg-card p-4";
 export const FIELDSET_LEGEND = "text-sm font-medium font-sans";
 
 /** `form.tsx` — the owned-value form boundary. */

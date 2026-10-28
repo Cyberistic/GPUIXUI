@@ -24252,6 +24252,45 @@ rests on the stack.
       `innerCorners`; `sheet-drawer-preview.test.tsx` already guards every side,
       so rounding all four fails it (`right rounds the wrong corners`).
 
+## Docs polish — five drawings corrected (2026-10-29)
+
+`[x]` `[██████████]` 5/5
+
+`[x]` **Card footer actions** — each of the three treatment cards ended in two
+      plain spans, and the 190px column broke both labels across two lines
+      (measured span 40px tall, two lines). They are the library's
+      `gx-btn gx-btn-ghost gx-btn-sm` now: one 24px line each, right-aligned with
+      the recipe's 8px gap, and the column floor is 240px so the pair fits
+      (footer 65 → 53px). The Code tab prints the same two `Button`s. The sweep
+      for the same pattern found no other offender: the dashboard, notification
+      centre, email inbox, stat cards, blocks, conversations, file manager and
+      kanban drawings already paint `.gx-btn`.
+`[x]` **Chat send** — the composer's submit control was the word "Send"; it is
+      the icon set's `send` paper plane in both the shipped `ChatComposer` and
+      the drawing, with the word kept as `aria-label` (measured 44×24 text →
+      28×24 with a 14px glyph, no text). Stop, retry and the field are unchanged.
+      `send` is a new mark in `@gpuixui/icons` (80 → 81).
+`[x]` **Collapsible cross-reference** — the curated page and the package page
+      both say "prefer [accordion](/docs/components/accordion) when prerendering
+      is not too heavy" in their description, and a description's one inline
+      link is painted as a link under the `h1` (`page-description.ts`); the
+      metadata tags keep the words without the Markdown.
+`[x]` **Fieldset surface** — the group was a bare outline on the page
+      (transparent, `12px 14px 14px`, radius 11). `FIELDSET_ROOT` is the card's
+      surface now — `bg-card`, `rounded-lg`, 16px gutter, `border-input` — and
+      the drawings mirror it (measured background `--card` `#26262A`, radius
+      `--radius-lg` 14, padding 16). The Field page's native `<fieldset>` shares
+      the one rule.
+`[x]` **Inline edit row** — the display is the recipe's `sm` action and the
+      editor its `md` field, so entering the edit state grew the row and pushed
+      the status line, the app's message and the hint down by 4px; the status
+      line also sized the scene, so the row recentred 6.6px sideways. The row
+      reserves the editor's height and centres both states in it, the scene is
+      360px wide, and the refusal keeps its line: measured scene box
+      311→298→311 wide / 131→135 tall before, and 360×165.47 with the readout at
+      y=452, the refusal at 480.69 and the hint at 511.08 in all four states
+      (view, edit, commit, refused).
+
 ## Lighter SSR — the docs render once (2026-10-28)
 
 `[x]` `[██████████]` 1/1

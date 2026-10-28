@@ -11,13 +11,18 @@
  * The composer's key contract is measured here rather than assumed: Enter
  * arrives as the textarea's `onSubmit` and Shift+Enter as a newline that reaches
  * no handler, so the suite proves the send path and the newline path separately.
+ *
+ * The send control is a glyph, not the word: shadcn's composer draws the icon
+ * set's paper plane and keeps the word as the control's name, because a button
+ * whose content is a picture has nothing else to be announced by.
  */
 
 import * as Option from "effect/Option";
+import { icons } from "@gpuixui/icons";
 import { describe, expect, it, vi } from "vitest";
 import type { ChatStatus } from "../chat/logic.js";
 import { ChatComposer, ChatHeader, ChatMessages, ChatRoot } from "../chat.js";
-import { nodesWithRole } from "../internal/a11y.js";
+import { a11yNodes, nodesWithRole } from "../internal/a11y.js";
 import {
   clickCentreOf,
   requireBounds,
@@ -231,6 +236,25 @@ describe("Chat", () => {
     expect(root.renderer.findByTestId("chat-send")).toBeUndefined();
 
     root.unmount();
+  });
+
+  it("draws Send as the icon set's paper plane and keeps the word as its name", () => {
+    const root = renderComponent(<Conversation rows={1} />);
+    try {
+      const [plane] = root.renderer.findByType("svg");
+
+      // The same markup the icon set publishes, not a second drawing of a plane.
+      expect(plane?.customProps?.source).toBe(icons.send);
+      // The word is the control's name now; the glyph is all a reader sees.
+      expect(root.renderer.getAllText()).not.toContain("Send");
+      expect(
+        a11yNodes(root.renderer)
+          .filter((node) => node.role === "button")
+          .map((node) => node.name),
+      ).toContain("Send");
+    } finally {
+      root.unmount();
+    }
   });
 
   it("refuses a send while a reply is open, and keeps the draft it refused", () => {
