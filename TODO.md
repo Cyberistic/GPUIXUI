@@ -301,6 +301,21 @@ that hugs its content — is gone, a demo root no longer scrolls under focus (th
 scroll carried an open calendar 286px out of its card), and the command list
 fades the row its clip cuts while the veil's stage stops being a scrollport.
 Six regression cases; each fails with the drawing reverted.
+`[x]` **Overlay motion and inset defects** — the confirmation dialog's failure
+block appeared at its full height in one frame (165 → 269 px) and emptied the
+same way on a retry: it now grows and collapses on the toast's move curve (a
+native `AutoHeight` slot, a grid-row track in the drawing), with the dialog's
+gap inside the slot so the first failing frame is the pending height. A closed
+drawer drawing vanished in one frame; it now stays mounted, travels its own
+400 px span back out over 320 ms with the veil fading, and hides on the final
+frame (0/120/240/320 ms: x 688/765/937/1088, veil 1.00/0.81/0.38/0). The
+command palette's highlighted row painted the menu row's 2 px `primary` bar; it
+is the wash alone now (native `menuRowStyle` mark, drawing `.gx-palette`). The
+combobox search row was a shrinking flex item (drawing 16 px, first option 2 px
+under it); it is fixed-height with 6 px under it (native gap 3 → 6 px, drawing
+row 16 → 24 px). Reduced motion snaps both. Inverted directions: confirm −1 vs 0,
+command 2 vs 0, combobox 3 vs 4, drawer no element; both drawings fail on the
+missing keyframes.
 `[x]` **Preview note removed** — the "Browser preview … not the DOM" paragraph is
 gone from both preview surfaces (component and block), with its imports and the
 test that required its live link. `/live` is now reachable by address only; the
