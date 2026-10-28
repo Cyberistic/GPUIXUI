@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { countWord, landingLookCount } from "./data";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
@@ -18,8 +18,8 @@ import { usePrefersReducedMotion } from "./reduced-motion";
  * `prefers-reduced-motion` is one CSS block plus a jump to the last stage.
  */
 
-/** The install command `docs/installation` documents for a workspace consumer. */
-const COMMAND = "nub add @gpuixui/primitives@workspace:*";
+/** The launch command `docs/installation` documents: GPUIXUI, in the terminal. */
+const COMMAND = "GPUIX_TERMINAL=1 code GPUIXUI";
 
 /** One typed character, the shell's pause, then the editor. */
 const TYPE_MS = 32;
@@ -242,9 +242,38 @@ const lineText = (line: ReadonlyArray<Token>): string =>
 
 export function Terminal() {
   const reduced = usePrefersReducedMotion();
+  const section = useRef<HTMLElement | null>(null);
+  /**
+   * Whether the reader has reached the block.
+   *
+   * The sequence used to start on mount, so it had finished typing before the
+   * reader scrolled to it — the terminal they arrived at was already an editor.
+   * It now waits for the section to come into view (a third of it is enough),
+   * and a replay re-runs it from where it stands.
+   */
+  const [armed, setArmed] = useState(false);
   const [typed, setTyped] = useState(0);
   const [stage, setStage] = useState<Stage>("typing");
   const [take, setTake] = useState(0);
+
+  useEffect(() => {
+    if (reduced) {
+      setArmed(true);
+      return undefined;
+    }
+    const node = section.current;
+    if (node === null) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setArmed(true);
+        observer.disconnect();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [reduced]);
 
   useEffect(() => {
     if (reduced) {
@@ -252,6 +281,7 @@ export function Terminal() {
       setStage("editor");
       return undefined;
     }
+    if (!armed) return undefined;
 
     setTyped(0);
     setStage("typing");
@@ -269,10 +299,10 @@ export function Terminal() {
     after(TYPE_MS * COMMAND.length + OPEN_MS, () => setStage("editor"));
 
     return () => timers.forEach(clearTimeout);
-  }, [reduced, take]);
+  }, [armed, reduced, take]);
 
   return (
-    <section className="landing-section" id="terminal">
+    <section className="landing-section" id="terminal" ref={section}>
       <p className="landing-kicker">From the terminal to the editor</p>
       <h2 className="landing-h2">One command, then your editor.</h2>
       <p className="landing-lead">
@@ -323,7 +353,9 @@ function TerminalWindow({ stage, typed }: { stage: Stage; typed: number }) {
           </span>
           <span className="landing-term-caret" data-on={stage === "typing"} />
         </span>
-        <span className="landing-term-out">added @gpuixui/primitives</span>
+        <span className="landing-term-out">
+          opening GPUIXUI — terminal mode
+        </span>
       </div>
     </div>
   );

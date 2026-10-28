@@ -95,13 +95,21 @@ page](/docs/playground) lists every probe it can run and what each one proves.
 
 ## Run it in a terminal
 
+Launch the workspace with its terminal surface on:
+
+```sh
+GPUIX_TERMINAL=1 code GPUIXUI
+```
+
+Or ask for it in code and change no environment:
+
 ```tsx
 import { render } from "@gpuix/react";
 
 render(<App />, { terminal: true });
 ```
 
-Set `GPUIX_TERMINAL=1` instead and change no code. `ctrl-c` quits and restores the terminal.
+`ctrl-c` quits and restores the terminal.
 
 ## Run the checks
 

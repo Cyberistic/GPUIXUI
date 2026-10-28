@@ -236,9 +236,12 @@
 }
 
 /* platform switch — the segmented control that drives the deck */
+/* The switch is centred under the hero's buttons, on the same axis as the
+   title and the formula: the hero is a centred column, and a start-aligned row
+   inside an 880px box left it hanging at the left edge of the deck. */
 .landing-switch-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   width: min(880px, 100%);
   margin: 24px auto 0;
 }

@@ -39,14 +39,23 @@ describe("the editor moment", () => {
   it("types the command the installation page documents", () => {
     // A landing command that no page documents is an invented CLI. This one is
     // read out of the page a reader is sent to.
-    const documented = [
-      ...installation.matchAll(/(nub add @gpuixui\/[a-z-]+@workspace:\*)/g),
-    ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
-    const typed = documented.filter((command) => markup.includes(command));
-
-    expect(typed).toEqual(["nub add @gpuixui/primitives@workspace:*"]);
-    expect(markup).toContain("added @gpuixui/primitives");
+    expect(installation).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
+    expect(markup).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
+    expect(markup).toContain("opening GPUIXUI — terminal mode");
     expect(markup).toContain('href="/docs/installation"');
+  });
+
+  it("waits for the reader to reach it before typing", () => {
+    // The sequence used to start on mount, so a reader who scrolled to the
+    // block found an editor and never saw the command. The first frame is the
+    // empty prompt, and the observer is what arms the typing.
+    const source = read("./terminal.tsx");
+
+    expect(markup).toContain('data-stage="typing"');
+    expect(source).toContain("new IntersectionObserver");
+    expect(source).toContain("threshold: 0.3");
+    expect(source).toContain("if (!armed) return undefined;");
+    expect(markup).toContain('style="width:0ch"');
   });
 
   it("reproduces the VS Code window, not a generic editor", () => {
