@@ -47,6 +47,11 @@ block (`/docs/blocks/dashboard`) is the landing's product window: a six-card
 activity dashboard composed from the library, with `BarChart`, `DonutChart` and
 `StackedBar` from `@gpuixui/data`.
 
+Every docs page is prerendered at build time and served from Cloudflare's asset
+layer, so a page request never runs the Worker; only `/live` (which needs its
+cross-origin isolation headers set per request) and `/api/search` are rendered
+there. `apps/docs/README.md` §Prerendering is the contract.
+
 ## Layout
 
 ```

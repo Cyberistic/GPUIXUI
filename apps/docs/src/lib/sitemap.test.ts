@@ -1,8 +1,9 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { curatedPrimitiveTwins, servedUrls } from "./curated-twins";
+import { sitePageUrls } from "./prerender-pages";
 import { absoluteUrl, siteOrigin } from "./site";
 import {
   siteRoutes,
@@ -24,26 +25,12 @@ import {
 
 const root = new URL("../../../../", import.meta.url);
 
-/** Every `.mdx` under `content/docs`, as the URL the site serves. */
-const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.isDirectory()) {
-      return sitePages(new URL(`${entry.name}/`, dir), [...slugs, entry.name]);
-    }
-    if (!entry.name.endsWith(".mdx")) return [];
-    const name = entry.name.replace(/\.mdx$/, "");
-    const path = name === "index" ? slugs : [...slugs, name];
-    return [`/docs${path.length === 0 ? "" : `/${path.join("/")}`}`];
-  });
-
 const packagedPages = (): string[] =>
   packageCollections.flatMap((collection) =>
     collectionPages(root, collection).map(
       (name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`,
     ),
   );
-
-const docsDir = new URL("apps/docs/content/docs/", root);
 
 describe("the sitemap", () => {
   it("lists one absolute URL per page, sorted", () => {
@@ -113,7 +100,7 @@ describe("the sitemap", () => {
   it("lists every page the site serves, and no page a curated page replaces", () => {
     // The five primitives documented under Components have a second page in
     // their package; only the curated URL is served, so only it is advertised.
-    const site = sitePages(docsDir);
+    const site = sitePageUrls(root);
     const packaged = packagedPages();
     const served = servedUrls(packaged);
     const paths = sitemapPaths(site, packaged);
@@ -121,7 +108,7 @@ describe("the sitemap", () => {
     expect(site.length).toBeGreaterThan(0);
     expect(packaged.length).toBeGreaterThan(0);
     expect(served.length).toBe(packaged.length - curatedPrimitiveTwins.length);
-    expect(paths).toEqual(expect.arrayContaining(site));
+    expect(paths).toEqual(expect.arrayContaining([...site]));
     expect(paths).toEqual(expect.arrayContaining(served));
     expect(
       curatedPrimitiveTwins.filter((twin) => paths.includes(twin.retired)),

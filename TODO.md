@@ -24190,3 +24190,33 @@ rests on the stack.
       chart mode, inspector edits, builder picks/remove/add/clear/stored
       refusal). Green: docs suite 2 272 cases, `nub run check`, `lint`, `fmt`.
       Nothing native applies — browser reproductions over pure package rules.
+
+## Lighter SSR — the docs render once (2026-10-28)
+
+`[x]` `[██████████]` 1/1
+
+`[x]` **Prerender every page at build time, and leave only `/live` and the
+search endpoint to the Worker.** The site 503'd under a burst with `error code:
+1102` (Worker exceeded CPU limit): a document cost 5–26 ms of Worker CPU, and
+`/docs/reference` 26 ms. Every route is content, so `src/lib/prerender-pages.ts`
+derives the list from the same inventory the sitemap advertises (both page trees,
+the six generated collection indexes, the landing, the three machine documents)
+and `vite.config.ts` hands it to TanStack Start's prerender: 205 pages to
+`dist/client/<path>/index.html` plus `sitemap.xml`, `llms.txt` and
+`llms-full.txt`. `packages/deploy` sets `htmlHandling: "drop-trailing-slash"`, so
+the asset layer answers `/docs/x` from `docs/x/index.html` with a 200 and the
+Worker is never invoked (`runWorkerFirst` stays off). `/live` stays rendered
+because its cross-origin isolation headers are set per request, and a retired
+curated twin stays a 301 rather than becoming a static page. Measured with the
+harness in `.agents/slop/bench/` against the built Worker (Node, `NODE_ENV`
+production as the deploy's rolldown build bakes it): landing 8.6 → 0 ms, prose
+5.1 → 0, component page 7.5 → 0, data-display 6.1 → 0, block 4.4 → 0,
+`/docs/reference` 25.7 → 0, `/llms-full.txt` 4.4 → 0; `/live` 0.5 ms and
+`/api/search` 1.3 ms remain. Every prerendered page answers byte-identically from
+the asset layer (287 asset responses, 4 Worker responses across the whole route
+set), five pages hydrate with no console error and the switch, shared link,
+search dialog and copy button still work, all 102 internal links resolve, a
+rebuild swaps the HTML and its hashed assets, and the old hash is gone. Upload
+grows by 208 files / 38.4 MB (client 43.98 → 82.37 MB); the server graph is
+unchanged (27.65 MB).
+

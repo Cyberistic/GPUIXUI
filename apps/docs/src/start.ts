@@ -5,12 +5,16 @@ import {
 } from "@tanstack/react-start";
 
 /**
- * Cache policy for the docs Worker.
+ * Cache policy for the responses the Worker renders.
  *
- * The document must not be cached: a deploy replaces the hashed asset names,
- * and an HTML copy from the previous deploy then dynamically imports a file
- * that no longer exists ("Failed to fetch dynamically imported module").
- * Hashed assets under `/assets/` are content-addressed, so they can be
+ * A prerendered page (`src/lib/prerender-pages.ts`) is a static asset: the
+ * asset layer answers it before the Worker runs, under the HTML policy
+ * `packages/deploy/alchemy.run.docs.ts` sets, and Cloudflare replaces the whole
+ * asset set with each deploy. That is the guarantee that matters here — an HTML
+ * copy from an earlier deploy would dynamically import hashed assets this
+ * deploy deleted ("Failed to fetch dynamically imported module"). This policy
+ * covers the documents the Worker still renders (`/live`) and the machine
+ * routes. Hashed assets under `/assets/` are content-addressed, so they can be
  * immutable.
  */
 const withCacheHeaders = (response: Response, pathname: string): Response => {

@@ -427,6 +427,7 @@ src/lib/page-edit.ts                The Markdown file behind a page, for its Git
 src/lib/site.ts                     The one deployed origin
 src/lib/shared.ts                   App name, docs route and the repository link
 src/lib/sitemap.ts                  The sitemap's URL set
+src/lib/prerender-pages.ts          The routes the build renders once, and the one route it leaves to the Worker
 src/lib/llms.ts                     /llms.txt: every page, grouped by the sidebar's section, with its note
 src/lib/llms-full.ts                /llms-full.txt: every page's own Markdown, in the index's order
 src/lib/virtual-modules.d.ts        The types of the build-time modules
@@ -907,6 +908,43 @@ live probes' evidence directory (`.artifacts/`, at the repository root) is held
 to the same rule. `src/lib/build-outputs.test.ts` asks git for each path's verdict
 with `check-ignore --no-index` and holds three contributor files as the negative
 control.
+
+## Prerendering
+
+Every page is content, so the build renders every page once and the Worker
+renders none of them per request. `src/lib/prerender-pages.ts` derives the list
+from the same inventory the sitemap advertises — this site's own collection, the
+nine mounted package collections, the indexes a collection route generates, and
+the landing — and `vite.config.ts` hands it to TanStack Start's prerender. Each
+path is written as `dist/client/<path>/index.html`; `packages/deploy` sets the
+asset layer's `htmlHandling` to `drop-trailing-slash`, so `/docs/components/button`
+is answered by that file with a 200, `/docs/components/button/` redirects to it,
+and the Worker is not invoked at all (`runWorkerFirst` stays off).
+
+The three machine documents are prerendered with the pages: `/sitemap.xml`,
+`/llms.txt` and `/llms-full.txt` are generated from the same collections, no
+request changes them, and `/llms-full.txt` — every page's Markdown in one
+response — is otherwise the most expensive thing the Worker could render.
+
+What stays server-rendered is what a static document cannot be:
+
+| Route | Why it renders per request |
+| ----- | -------------------------- |
+| `/live` | Boots the wasm renderer, which needs the per-request cross-origin isolation headers (`src/start.ts`) a static asset never carries |
+| `/api/search` | Builds the answer to a query |
+| A retired curated twin | A 301, which a prerendered file would answer with a page instead |
+| An address no page claims | The 404 page |
+
+Nothing interactive moves to the server with it: the preview switch, the search
+dialog, the copy buttons and the playground all run in the browser after the
+prerendered HTML hydrates, exactly as they did after an SSR response. A choice
+carried in `?platform=` is applied by the client, so a shared link still opens on
+the platform it asked for.
+
+`vite build` clears `dist/` before it writes, so a prerendered file can never
+outlive the page it renders. Serving a stale `dist/` by hand is the one way to
+see a page 404 on its own assets and never hydrate: the HTML names hashed files
+that the build it belongs to shipped.
 
 ## Deploy
 
